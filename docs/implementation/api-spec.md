@@ -1109,6 +1109,12 @@ type User implements Node & Actor {
    when none is confirmed (a requested-not-confirmed deletion has no
    status) and once cancelled."
   accountDeletion: AccountDeletion
+  "How the viewer's own account is deleted from here — the one
+   deletion verb that will answer, or LOCKED while neither will.
+   Computed on the server (never re-derived by a client from
+   `application.*`). Field-level: viewer-only; null on anyone else's
+   account."
+  deletionPath: AccountDeletionPath
 }
 
 "A group acting through one graph identity (household, band, co-op,
@@ -4919,14 +4925,18 @@ type RemoveContentPayload { records: [Record!]! }
  content-level redaction with includeContent). What remains after
  execution is the L1 husk: structural records, standing, and title
  persist; identity association, display content, and payloads go
- (erasure.md). Members only — an applicant account refuses
- FORBIDDEN and deletes through deleteApplicantAccount. The request
- records its includeContent and mails the confirmation link to the
- verified address; nothing is scheduled until the link is opened.
- A second request supersedes the first: the earlier link dies and
- the new request carries its own includeContent. The mail screen's
- \"Resend the link\" is exactly this re-call with the recorded
- choice. Requests spend a per-account mail budget, and a tripped
+ (erasure.md). Answers only on `User.deletionPath == BY_LINK`: a member,
+ or an applicant whose Registration has landed, vouched or not; any
+ other account refuses FORBIDDEN, re-checked under the account lock.
+ The request records its includeContent and mails the confirmation link
+ to the verified address; nothing is scheduled until the link is
+ opened. A second request supersedes the first: the earlier link
+ dies and the new request carries its own includeContent. The mail
+ screen's \"Resend the link\" is exactly this re-call with the
+ recorded choice. A request while a confirmed deletion is in its
+ grace changes nothing: it returns that deletion, never supersedes
+ it, mails nothing and never moves the deadline. Requests spend a
+ per-account mail budget, and a tripped
  budget answers a transport-tier RATE_LIMITED, never a silent
  drop — the mail screen claims a message goes, so a silent trip
  would falsify it (auth.md \"Rate limiting\")."
@@ -4968,17 +4978,40 @@ type AccountDeletion {
   includesContent: Boolean!
 }
 
+"How the viewer's own account is deleted from here (`User.deletionPath`).
+ Derived top-down in one place, which both deletion verbs re-check
+ under the account lock: a member is BY_LINK; an applicant whose
+ Registration is in the record mirror is BY_LINK; an applicant whose
+ address has a funding row in any state is LOCKED; any other applicant
+ is IMMEDIATE. `application.approvedAt` is never an input: a lapsed
+ vouch clears it, the funding stays, so IMMEDIATE stays shut while
+ funded. Whether the account is in its grace is `User.accountDeletion`,
+ not this."
+enum AccountDeletionPath {
+  "deleteApplicantAccount — removed at once (an applicant whose
+   address was never funded)."
+  IMMEDIATE
+  "requestAccountDeletion, then the mailed link and the seven-day
+   grace (a member, or an applicant whose Registration landed: the
+   husk path)."
+  BY_LINK
+  "Neither verb opens: funded, Registration not yet in the mirror,
+   not a member."
+  LOCKED
+}
+
 "Delete an applicant account at once — DeleteAccount's applicant
  case. Nothing has landed, so nothing waits: account, credentials,
  application, staged acts and any key backup go immediately, like
  the reaper's sweep, every session is revoked, and no mail is sent.
- FORBIDDEN for a member (members go through requestAccountDeletion),
- and FORBIDDEN for an applicant whose application is approved and
- whose registration has not landed — approval already funded the
- burn and staged the Registration, so nothing may vanish under it.
- DeleteAccount is locked in that window (design Settings.md), the
- client answers the tap itself, and this refusal is the backstop;
- the member path applies once the account lands. A dedicated verb,
+ Answers only on `User.deletionPath == IMMEDIATE`, re-checked under
+ the account lock: FORBIDDEN for a member (members go through
+ requestAccountDeletion), and FORBIDDEN for a funded applicant —
+ approval already burned for its address and staged the
+ Registration, so nothing may vanish under it. DeleteAccount is locked in that window (design
+ Settings.md), the client answers the tap itself, and this refusal
+ is the backstop; the member path applies once the Registration
+ lands. A dedicated verb,
  not a mode of requestAccountDeletion: mail-and-wait and immediate
  hard delete, chosen by account state, would be a hidden mode."
 type DeleteApplicantAccountPayload { ok: Boolean }
@@ -5058,6 +5091,11 @@ extend type Mutation {
   removeContent(input: RemoveContentInput!): RemoveContentPayload!
   requestAccountDeletion(input: RequestAccountDeletionInput!): AccountDeletionPayload!
   confirmAccountDeletion(input: ConfirmAccountDeletionInput!): AccountDeletionPayload!
+  "End the standing deletion, requested or confirmed, from any
+   signed-in device until the deadline executes it; its link then
+   answers DELETION_TOKEN_INVALID. Idempotent: with nothing standing
+   (a second device's cancel, an applicant) it answers
+   accountDeletion null and no error."
   cancelAccountDeletion: AccountDeletionPayload!
   deleteApplicantAccount: DeleteApplicantAccountPayload!
 }

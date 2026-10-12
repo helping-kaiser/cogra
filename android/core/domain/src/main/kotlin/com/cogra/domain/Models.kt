@@ -53,6 +53,26 @@ enum class AccountState {
     UNKNOWN,
 }
 
+/**
+ * How the viewer's own account is deleted from here (api-spec.md
+ * `AccountDeletionPath`): the one deletion verb that will answer, as the
+ * server computes it. The client never re-derives it from the
+ * application.
+ */
+enum class AccountDeletionPath {
+    /** deleteApplicantAccount: removed at once. */
+    IMMEDIATE,
+
+    /** requestAccountDeletion: the mailed link and the grace. */
+    BY_LINK,
+
+    /** Neither verb opens yet. */
+    LOCKED,
+
+    /** A path this client version does not know — treat as locked. */
+    UNKNOWN,
+}
+
 /** The viewer's own account. */
 data class UserProfile(
     val id: String,

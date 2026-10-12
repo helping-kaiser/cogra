@@ -48,6 +48,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
 import com.cogra.core.designsystem.CograSnackbarHost
@@ -59,6 +61,9 @@ import com.cogra.core.designsystem.dataNodeSurface
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.atom.CograOverflowMenu
 import com.cogra.core.designsystem.v2.atom.LoadingState
+import com.cogra.core.designsystem.v2.media.CoverKind
+import com.cogra.core.designsystem.v2.media.CoveringLayersHost
+import com.cogra.core.designsystem.v2.media.CoversSurface
 import com.cogra.core.designsystem.v2.media.DetailClip
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.MediaViewer
@@ -135,9 +140,9 @@ fun PostDetailRoute(
     var threadToken by remember { mutableIntStateOf(0) }
     // …and a reply landing changes the POST's own comment count, which is
     // read with the post rather than with the thread.
-    LaunchedEffect(commentsReturn.landed) {
-        if (commentsReturn.landed) viewModel.refresh()
-    }
+    // The reader asked for a reply, not for the post's newest version: the
+    // count read holds another version behind the line like any other read.
+    LaunchedEffect(commentsReturn.landed) { if (commentsReturn.landed) viewModel.recount() }
     PostDetailScreen(
         state = state,
         viewerId = viewerId,
@@ -145,6 +150,7 @@ fun PostDetailRoute(
             threadToken++
             viewModel.refresh()
         },
+        onSwapToNewer = viewModel::swapToNewer,
         onReveal = viewModel::onReveal,
         onEdit = onEdit,
         onOpenActor = onOpenActor,
@@ -220,6 +226,8 @@ fun PostDetailScreen(
     /** A reader chose to look at one veiled body, as it stands. */
     onReveal: (String, SensitiveMark) -> Unit,
     onEdit: (String) -> Unit,
+    /** The reader tapped the newer-version line ([PostDetailUiState.newer]). */
+    onSwapToNewer: () -> Unit = {},
     onOpenActor: (String) -> Unit,
     /** A post cited from the tags-and-references sheet. */
     onOpenPost: (String) -> Unit,
@@ -253,191 +261,213 @@ fun PostDetailScreen(
     // covered — and every way out of them comes back to it (`ReplyCompose` and
     // `CommentEdit` both cancel and advance to the thread).
     var commentsOpen by rememberSaveable { mutableStateOf(false) }
+    // THE PLATFORM'S SHARE SHEET IS A SHEET OVER THE POST TOO
+    // (PostDetailVideo.md:41): it rises with the tap that hands the post over,
+    // and it is down again when this screen is resumed — the chooser is
+    // another activity, and its dismissal is the one thing this activity
+    // hears of it (developer.android.com/guide/components/activities/activity-lifecycle,
+    // `onResume`).
+    var shareUp by remember { mutableStateOf(false) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { shareUp = false }
+    val share: (String) -> Unit = { id ->
+        shareUp = true
+        onShare(id)
+    }
     val header = POST_DETAIL / "header"
-    Scaffold(
-        modifier = Modifier.dataNodeSurface(),
-        snackbarHost = { CograSnackbarHost(snackbar) },
-        topBar = {
-            // THE DETAIL'S BAR IS PINNED (jakob 2026-09-15): collapsing the
-            // top is the READING SURFACES' motion, not every page's, and
-            // this bar is the only place the post's one menu and its way
-            // back live (`_shared.jsx:341-346` takes the ⋮ off the card
-            // here). A bar that leaves with the scroll takes the post's
-            // whole set of acts off screen mid-read, which is not a cost
-            // the collapse was ever meant to buy.
-            TopAppBar(
-                // The 48dp band every board draws (`spacing.css`
-                // `--top-bar-height`, `PageHeader.jsx`); M3's small bar
-                // defaults to 64dp, which is a rung the design does not
-                // have. `expandedHeight` is the documented way to set it.
-                expandedHeight = Layout.TopBarHeight,
-                colors = surfaceTopAppBarColors(),
-                modifier = Modifier.dataNode(header),
-                // No title in the band: the post's title is the card's
-                // heading, above its media (`_shared.jsx:287-289` — the
-                // detail header takes no title prop).
-                title = {},
-                navigationIcon = {
-                    IconButton(onClick = onBack, modifier = Modifier.dataNode(header / "back")) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.content_back),
+    // EVERY LAYER OVER THE POST SAYS IT IS UP (PostDetailVideo.md:39-51): the
+    // detail clip stops under a sheet or a dialog and pauses under the opinion
+    // pad, and what resumes it is its own rule ([CoveringLayers]).
+    CoveringLayersHost {
+        CoversSurface(open = commentsOpen, kind = CoverKind.Suspend)
+        CoversSurface(open = licenseShown != null, kind = CoverKind.Suspend)
+        CoversSurface(open = removeOpen, kind = CoverKind.Suspend)
+        CoversSurface(open = shareUp, kind = CoverKind.Suspend)
+        Scaffold(
+            modifier = Modifier.dataNodeSurface(),
+            snackbarHost = { CograSnackbarHost(snackbar) },
+            topBar = {
+                // THE DETAIL'S BAR IS PINNED (jakob 2026-09-15): collapsing the
+                // top is the READING SURFACES' motion, not every page's, and
+                // this bar is the only place the post's one menu and its way
+                // back live (`_shared.jsx:341-346` takes the ⋮ off the card
+                // here). A bar that leaves with the scroll takes the post's
+                // whole set of acts off screen mid-read, which is not a cost
+                // the collapse was ever meant to buy.
+                TopAppBar(
+                    // The 48dp band every board draws (`spacing.css`
+                    // `--top-bar-height`, `PageHeader.jsx`); M3's small bar
+                    // defaults to 64dp, which is a rung the design does not
+                    // have. `expandedHeight` is the documented way to set it.
+                    expandedHeight = Layout.TopBarHeight,
+                    colors = surfaceTopAppBarColors(),
+                    modifier = Modifier.dataNode(header),
+                    // No title in the band: the post's title is the card's
+                    // heading, above its media (`_shared.jsx:287-289` — the
+                    // detail header takes no title prop).
+                    title = {},
+                    navigationIcon = {
+                        IconButton(onClick = onBack, modifier = Modifier.dataNode(header / "back")) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.content_back),
+                            )
+                        }
+                    },
+                    actions = {
+                        DetailMenu(
+                            post = state.post,
+                            viewerId = viewerId,
+                            onEdit = onEdit,
+                            onCite = onReference,
+                            onRemove = { removeOpen = true },
+                            // Over the page — never stacked.
+                            onLicense = { license -> licenseShown = license },
+                            onShare = share,
+                            node = header / "menu",
                         )
+                    },
+                )
+            },
+        ) { padding ->
+            // PULL-TO-REFRESH BELONGS TO THE TOP OF THE THREAD: a reader
+            // correcting upward from the middle of a long post is scrolling,
+            // not asking for a re-read. With a pinned bar there is no collapse
+            // left to absorb that correction's leftover, so the rule is stated
+            // here instead of riding the bar's motion.
+            //
+            // IT IS LATCHED AT THE GESTURE'S START, never read live: a drag
+            // that travels through the top has ALREADY been spent as scroll,
+            // and re-arming as it arrives would turn the tail of every long
+            // correction into a refetch. This is the web's own rule — its
+            // `usePullToRefresh` asks `atTop()` on `touchstart` and not again
+            // (`lib/ui/pull-to-refresh.ts`).
+            val listState = rememberLazyListState()
+            var pullArmed by remember { mutableStateOf(true) }
+            LaunchedEffect(listState) {
+                snapshotFlow { listState.isScrollInProgress }.collect { scrolling ->
+                    if (scrolling) {
+                        pullArmed = listState.firstVisibleItemIndex == 0 &&
+                            listState.firstVisibleItemScrollOffset == 0
                     }
-                },
-                actions = {
-                    DetailMenu(
-                        post = state.post,
-                        viewerId = viewerId,
-                        onEdit = onEdit,
-                        onCite = onReference,
-                        onRemove = { removeOpen = true },
-                        // Over the page — never stacked.
-                        onLicense = { license -> licenseShown = license },
-                        onShare = onShare,
-                        node = header / "menu",
-                    )
-                },
-            )
-        },
-    ) { padding ->
-        // PULL-TO-REFRESH BELONGS TO THE TOP OF THE THREAD: a reader
-        // correcting upward from the middle of a long post is scrolling,
-        // not asking for a re-read. With a pinned bar there is no collapse
-        // left to absorb that correction's leftover, so the rule is stated
-        // here instead of riding the bar's motion.
-        //
-        // IT IS LATCHED AT THE GESTURE'S START, never read live: a drag
-        // that travels through the top has ALREADY been spent as scroll,
-        // and re-arming as it arrives would turn the tail of every long
-        // correction into a refetch. This is the web's own rule — its
-        // `usePullToRefresh` asks `atTop()` on `touchstart` and not again
-        // (`lib/ui/pull-to-refresh.ts`).
-        val listState = rememberLazyListState()
-        var pullArmed by remember { mutableStateOf(true) }
-        LaunchedEffect(listState) {
-            snapshotFlow { listState.isScrollInProgress }.collect { scrolling ->
-                if (scrolling) {
-                    pullArmed = listState.firstVisibleItemIndex == 0 &&
-                        listState.firstVisibleItemScrollOffset == 0
                 }
             }
-        }
-        val refreshState = rememberPullToRefreshState()
-        Box(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .pullToRefresh(
-                    // The read in flight, not the empty screen: a post
-                    // opened from the feed is already drawn while its read
-                    // runs, and an indicator over content the reader can
-                    // see says the screen is still arriving when it has
-                    // arrived (HT-10).
-                    isRefreshing = state.refreshing,
-                    state = refreshState,
-                    enabled = pullArmed,
-                    onRefresh = onRefresh,
-                ),
-        ) {
-            Box(Modifier.fillMaxSize()) {
-                when {
-                    state.notFound -> ErrorLine(
-                        R.string.content_error_not_found,
-                        "detail_not_found",
-                        modifier = Modifier.padding(24.dp),
-                    )
-                    state.transportFault != null && state.post == null -> Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                    ) {
-                        ErrorLine(R.string.content_error_transport, "detail_transport_error")
-                        TextButton(
-                            onClick = onRefresh,
-                            modifier = Modifier.testTag("detail_retry"),
+            val refreshState = rememberPullToRefreshState()
+            Box(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .pullToRefresh(
+                        // The read in flight, not the empty screen: a post
+                        // opened from the feed is already drawn while its read
+                        // runs, and an indicator over content the reader can
+                        // see says the screen is still arriving when it has
+                        // arrived (HT-10).
+                        isRefreshing = state.refreshing,
+                        state = refreshState,
+                        enabled = pullArmed,
+                        onRefresh = onRefresh,
+                    ),
+            ) {
+                Box(Modifier.fillMaxSize()) {
+                    when {
+                        state.notFound -> ErrorLine(
+                            R.string.content_error_not_found,
+                            "detail_not_found",
+                            modifier = Modifier.padding(24.dp),
+                        )
+                        state.transportFault != null && state.post == null -> Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
                         ) {
-                            Text(stringResource(R.string.content_retry))
-                        }
-                    }
-                    // Nothing held and nothing arrived: the reader opened
-                    // a post this device has never read. The surface says
-                    // what it is doing in a line of text — the boards
-                    // give a loading state no spinner
-                    // (design/components/states/EmptyState.prompt.md).
-                    state.loading && state.post == null -> LoadingState(
-                        testTag = "detail_loading",
-                        modifier = Modifier.padding(24.dp),
-                    )
-                    state.post != null -> Column(modifier = Modifier.fillMaxSize()) {
-                        // A transport fault never blanks content already
-                        // on screen, and it surfaces where the failed
-                        // fetch was requested: a failed refresh on this
-                        // banner, a failed comments page at the load-more
-                        // slot in the thread (android.md "Degrade, never
-                        // crash").
-                        if (state.transportFault == TransportFault.REFRESH) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 24.dp, vertical = 8.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ErrorLine(R.string.content_error_transport, "detail_transport_error")
+                            TextButton(
+                                onClick = onRefresh,
+                                modifier = Modifier.testTag("detail_retry"),
                             ) {
-                                ErrorLine(
-                                    R.string.content_error_transport,
-                                    "detail_transport_banner",
-                                )
-                                TextButton(
-                                    onClick = onRefresh,
-                                    modifier = Modifier.testTag("detail_retry"),
-                                ) {
-                                    Text(stringResource(R.string.content_retry))
-                                }
+                                Text(stringResource(R.string.content_retry))
                             }
                         }
-                        PostDetailBody(
-                            state = state,
-                            post = state.post,
-                            listState = listState,
-                            onReveal = onReveal,
-                            onOpenActor = onOpenActor,
-                            onOpenPost = onOpenPost,
-                            onOpenTopic = onOpenTopic,
-                            onOpenComments = { commentsOpen = true },
-                            onShare = onShare,
-                            stanceControl = stanceControl,
+                        // Nothing held and nothing arrived: the reader opened
+                        // a post this device has never read. The surface says
+                        // what it is doing in a line of text — the boards
+                        // give a loading state no spinner
+                        // (design/components/states/EmptyState.prompt.md).
+                        state.loading && state.post == null -> LoadingState(
+                            testTag = "detail_loading",
+                            modifier = Modifier.padding(24.dp),
                         )
+                        state.post != null -> Column(modifier = Modifier.fillMaxSize()) {
+                            // A transport fault never blanks content already
+                            // on screen, and it surfaces where the failed
+                            // fetch was requested: a failed refresh on this
+                            // banner, a failed comments page at the load-more
+                            // slot in the thread (android.md "Degrade, never
+                            // crash").
+                            if (state.transportFault == TransportFault.REFRESH) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 24.dp, vertical = 8.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                ) {
+                                    ErrorLine(
+                                        R.string.content_error_transport,
+                                        "detail_transport_banner",
+                                    )
+                                    TextButton(
+                                        onClick = onRefresh,
+                                        modifier = Modifier.testTag("detail_retry"),
+                                    ) {
+                                        Text(stringResource(R.string.content_retry))
+                                    }
+                                }
+                            }
+                            PostDetailBody(
+                                state = state,
+                                post = state.post,
+                                listState = listState,
+                                onSwapToNewer = onSwapToNewer,
+                                onReveal = onReveal,
+                                onOpenActor = onOpenActor,
+                                onOpenPost = onOpenPost,
+                                onOpenTopic = onOpenTopic,
+                                onOpenComments = { commentsOpen = true },
+                                onShare = share,
+                                stanceControl = stanceControl,
+                            )
+                        }
                     }
                 }
+                PullToRefreshDefaults.Indicator(
+                    state = refreshState,
+                    isRefreshing = state.refreshing,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                )
             }
-            PullToRefreshDefaults.Indicator(
-                state = refreshState,
-                isRefreshing = state.refreshing,
-                modifier = Modifier.align(Alignment.TopCenter),
+        }
+
+        if (commentsOpen) {
+            commentsSheet { commentsOpen = false }
+        }
+        // ONLY THE POST'S OWN TERMS REACH THIS MOUNT, so it is never stacked
+        // (design/readme.md:2364). A comment's terms are raised from inside the
+        // thread and stand over it — that mount moved into the sheet, which is
+        // now the one thing that knows it is a sheet over a sheet.
+        licenseShown?.let { license ->
+            LicenseSheet(license = license, onDismiss = { licenseShown = null })
+        }
+        // THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob 2026-09-14): erasure is
+        // slice 8's, whole — "we need to do erasure right so it should be one
+        // task" — so Remove closes the dialog and changes nothing.
+        if (removeOpen) {
+            RemoveConfirm(
+                onDismiss = { removeOpen = false },
+                onRemove = { removeOpen = false },
             )
         }
-    }
-
-    if (commentsOpen) {
-        commentsSheet { commentsOpen = false }
-    }
-    // ONLY THE POST'S OWN TERMS REACH THIS MOUNT, so it is never stacked
-    // (design/readme.md:2364). A comment's terms are raised from inside the
-    // thread and stand over it — that mount moved into the sheet, which is
-    // now the one thing that knows it is a sheet over a sheet.
-    licenseShown?.let { license ->
-        LicenseSheet(license = license, onDismiss = { licenseShown = null })
-    }
-    // THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob 2026-09-14): erasure is
-    // slice 8's, whole — "we need to do erasure right so it should be one
-    // task" — so Remove closes the dialog and changes nothing.
-    if (removeOpen) {
-        RemoveConfirm(
-            onDismiss = { removeOpen = false },
-            onRemove = { removeOpen = false },
-        )
     }
 }
 
@@ -499,6 +529,7 @@ private fun PostDetailBody(
     post: PostView,
     /** Hoisted: the refresh gesture is gated on this list's own place. */
     listState: LazyListState,
+    onSwapToNewer: () -> Unit,
     /** A reader chose to look at one veiled body, as it stands. */
     onReveal: (String, SensitiveMark) -> Unit,
     onOpenActor: (String) -> Unit,
@@ -551,14 +582,17 @@ private fun PostDetailBody(
     // The post is a card here too, edge to edge with its 8dp seam — on the
     // boards the post wears the card and the thread stands in its own sheet
     // over it, not as a second half of this page.
+    val flushTop = clip != null || state.newer != null
     LazyColumn(
         state = listState,
         modifier = Modifier
             .fillMaxSize()
             .testTag("detail_list"),
         // The clip heads the column flush under the bar, as the board draws
-        // it (`PostDetailVideo.jsx:30-33`); a card alone keeps its seam.
-        contentPadding = PaddingValues(top = if (clip != null) 0.dp else Space.x2, bottom = Space.x4),
+        // it (`PostDetailVideo.jsx:30-33`); a card alone keeps its seam. The
+        // newer-version line, standing, heads it flush the same way
+        // (`PostDetail.jsx` — the line is `DetailColumn`'s first child).
+        contentPadding = PaddingValues(top = if (flushTop) 0.dp else Space.x2, bottom = Space.x4),
         verticalArrangement = Arrangement.spacedBy(Space.x2),
     ) {
         item {
@@ -570,6 +604,11 @@ private fun PostDetailBody(
             // player there and stop, where the law says it plays on (:11).
             // The card's row is on screen for as long as any of the post is.
             Column(modifier = Modifier.fillMaxWidth().testTag(DETAIL_BLOCK_TAG)) {
+                // BETWEEN THE HEADER AND THE POST (PostDetail.md:7;
+                // PostDetailVideo.md:65 — "under the header", so above a video
+                // post's clip too), in this same row: in the page's flow, it
+                // scrolls away with the post and is never pinned (:11).
+                NewerVersionLine(state.newer != null, onSwapToNewer, POST_DETAIL / "newerVersion")
                 if (clip != null) {
                     // The clip's two routes into the viewer — the bar's
                     // fullscreen toggle and the clip's own tap (graph.json,
@@ -580,6 +619,7 @@ private fun PostDetailBody(
                 DetailCard(
                     post = post,
                     removed = removed,
+                    commentCount = (state.newer ?: post).commentCount,
                     mediaAbove = clip != null,
                     // THE POST'S TAP OPENS THE FRAME (graph.json, `PostDetail`
                     // via 4), on the page the reader was looking at.
@@ -660,6 +700,11 @@ private fun TurnToLandscapeOpensTheViewer(landscapeClip: Boolean, onTurn: () -> 
 private fun DetailCard(
     post: PostView,
     removed: Boolean,
+    /**
+     * The thread's size, from the freshest read: the freeze governs the post,
+     * and the thread is the sheet's own read, so its count is never held.
+     */
+    commentCount: Int,
     /** The gallery's tap, handed the page under the reader's thumb. */
     onOpenMedia: (Int) -> Unit,
     /** The clip stands above this card, so the body draws no gallery. */
@@ -725,6 +770,7 @@ private fun DetailCard(
             DetailCardFoot(
                 post = post,
                 removed = removed,
+                commentCount = commentCount,
                 onOpenTopic = onOpenTopic,
                 onOpenActor = onOpenActor,
                 onOpenPost = onOpenPost,
@@ -749,6 +795,7 @@ private fun DetailCard(
 private fun DetailCardFoot(
     post: PostView,
     removed: Boolean,
+    commentCount: Int,
     onOpenTopic: (String) -> Unit,
     /** The sheet the topics line opens: a mention lands on the profile. */
     onOpenActor: (String) -> Unit,
@@ -768,6 +815,8 @@ private fun DetailCardFoot(
         // THE WHOLE LINE IS THE OPENER on a detail surface (`TopicsLine.jsx`),
         // and what it opens is the sheet the counts have always pointed at.
         var refsOpen by rememberSaveable { mutableStateOf(false) }
+        // A sheet over the post (PostDetailVideo.md:41).
+        CoversSurface(open = refsOpen, kind = CoverKind.Suspend)
         TopicsLine(
             topics = post.topics,
             references = post.references,
@@ -789,7 +838,7 @@ private fun DetailCardFoot(
         }
     }
     PostAffordanceRow(
-        commentCount = post.commentCount,
+        commentCount = commentCount,
         onOpenComments = onOpenComments,
         onShare = { onShare(post.id) },
         testTagPrefix = "detail_post",

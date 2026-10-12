@@ -208,6 +208,10 @@
     <string name="content_feed_stale">Can\'t reach the server — new posts can\'t load right now.</string>
     <string name="content_thread_stale">Can\'t reach the server — more comments can\'t load right now.</string>
     <string name="content_error_not_found">This post no longer resolves.</string>
+    <!-- The detail's newer-version line, verbatim (PostDetail.md:7;
+         copy-voice.md "Honesty phrasings"): a fresh read found the post,
+         its tags or its citations changed since the detail opened. -->
+    <string name="content_detail_newer_version">Edited since you opened it — tap for the newest version.</string>
     <string name="content_retry">Retry</string>
     <string name="content_back">Back</string>
     <string name="content_comment_edited">Edited</string>

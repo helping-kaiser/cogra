@@ -11,6 +11,51 @@ type AbortMediaUploadPayload {
 }
 
 """
+A confirmed deletion in its grace period — what the Settings band and
+the pending screen read (`User.accountDeletion`). scheduledFor is the
+grace-period deadline, fixed at confirmation.
+"""
+type AccountDeletion {
+	scheduledFor: DateTime!
+	includesContent: Boolean!
+}
+
+"""
+How the viewer's own account is deleted from here (`User.deletionPath`,
+ruling OS-15): the one deletion verb that will answer, or LOCKED while
+neither will. Computed on the server by `store::deletion_path`; clients
+never re-derive it from `application.*`.
+"""
+enum AccountDeletionPath {
+	"""
+	deleteApplicantAccount — removed at once (an applicant whose
+	address was never funded).
+	"""
+	IMMEDIATE
+	"""
+	requestAccountDeletion, then the mailed link and the seven-day
+	grace (a member, or an applicant whose Registration landed: item
+	69's husk path).
+	"""
+	BY_LINK
+	"""
+	Neither verb opens: funded, Registration not yet in the mirror,
+	not a member.
+	"""
+	LOCKED
+}
+
+"""
+The result of request, confirm and cancel. accountDeletion is the
+confirmed deletion; null after a request (nothing is confirmed until
+the link is opened) and after a cancel.
+"""
+type AccountDeletionPayload {
+	accountDeletion: AccountDeletion
+	userErrors: [UserError!]!
+}
+
+"""
 A user account's service state (auth.md "Account states"): it gates
 acting through CoGra, never reading, and is distinct from the
 mutual-pair membership of invitations.md §2. GUEST is reserved — no
@@ -480,6 +525,17 @@ input CompleteMediaUploadInput {
 	uploadId: UUID!
 }
 
+input ConfirmAccountDeletionInput {
+	deletionToken: String!
+	"""
+	Opt into content-level redaction at or after confirmation. The
+	election is opt-in only: true upgrades an identity-only request,
+	including on a re-call inside the grace; null and false never
+	downgrade and leave the standing choice unchanged.
+	"""
+	includeContent: Boolean
+}
+
 input ConfirmEmailChangeInput {
 	"""
 	Either side's proof: the code mailed to the current (original)
@@ -539,6 +595,11 @@ Implement the DateTime<Utc> scalar
 The input/output is a string in RFC3339 format.
 """
 scalar DateTime
+
+type DeleteApplicantAccountPayload {
+	ok: Boolean
+	userErrors: [UserError!]!
+}
 
 """
 The server half of a device lock (auth.md "Device lock"): a 32-byte
@@ -699,6 +760,11 @@ enum ErrorCode {
 	The password-reset token is invalid, expired, or already used.
 	"""
 	RESET_TOKEN_INVALID
+	"""
+	The account-deletion link is unknown, superseded, cancelled,
+	expired, or spent.
+	"""
+	DELETION_TOKEN_INVALID
 	"""
 	Refresh token invalid, expired, or reuse-detected.
 	"""
@@ -1458,6 +1524,54 @@ type Mutation {
 	exactly like a deleted one and touches nothing.
 	"""
 	discardDeviceLock(input: DiscardDeviceLockInput!): DiscardDeviceLockPayload!
+	"""
+	Begins account deletion (auth.md "Self-service deletion";
+	erasure.md §5): records the content-sweep choice and mails the
+	confirmation link to the verified address; nothing is scheduled
+	until the link is opened. A second request supersedes the first —
+	the earlier link dies, the new one carries its own choice — and
+	is what the mail screen's Resend sends.
+	
+	Answers only on `User.deletionPath == BY_LINK`: a member, or an
+	applicant whose Registration landed. Any other account is FORBIDDEN,
+	checked before anything is spent and again under the account lock.
+	While a confirmed deletion is in its grace the request changes
+	nothing — it returns that deletion, mails nothing, spends nothing,
+	and never moves the deadline: superseding it would silently
+	un-confirm it. Otherwise each request spends the account's
+	deletion mail budget, and a spent one answers
+	RATE_LIMITED with nothing recorded, mailed or superseded.
+	"""
+	requestAccountDeletion(input: RequestAccountDeletionInput!): AccountDeletionPayload!
+	"""
+	Opens the mailed link: confirms the deletion and fixes its deadline
+	at now plus the grace period. Token-bearing, no session — the link
+	is the capability. A re-call with the same token inside the grace
+	never moves the deadline, and can add the content sweep. Every dead
+	link — unknown, superseded, cancelled, executed, or unopened past
+	its lifetime — is one DELETION_TOKEN_INVALID at deletionToken.
+	Spends the per-IP confirmation budget every token verb shares.
+	"""
+	confirmAccountDeletion(input: ConfirmAccountDeletionInput!): AccountDeletionPayload!
+	"""
+	Ends the account's standing deletion, requested or confirmed, from
+	any signed-in device until the deadline executes it; its link dies
+	with it. Idempotent: with nothing standing — two devices cancelling
+	at once, or an applicant — it answers the same null and no error.
+	"""
+	cancelAccountDeletion: AccountDeletionPayload!
+	"""
+	Deletes an applicant account at once — DeleteAccount's applicant
+	case: account, credentials, application, staged acts (those carried
+	with the application included), key backup and device locks go
+	immediately, every session with them, and no mail is sent. Nothing
+	of it reached L1. Answers only on `User.deletionPath == IMMEDIATE`,
+	re-checked under the account lock: FORBIDDEN for a member, who takes
+	the mailed path, and for an applicant whose address approval funded
+	— the burn is spent and the Registration staged, so nothing may
+	vanish under it; once it lands, the mailed path applies.
+	"""
+	deleteApplicantAccount: DeleteApplicantAccountPayload!
 	"""
 	Issues an invite link — pure service-side staging UX; its id is
 	the shareable capability. Nothing binds at issue and the link
@@ -2851,6 +2965,14 @@ enum ReplyOrder {
 	NEWEST_FIRST
 }
 
+input RequestAccountDeletionInput {
+	"""
+	Opt into content-level redaction; identity-only when absent or
+	false.
+	"""
+	includeContent: Boolean
+}
+
 input RequestEmailChangeInput {
 	newEmail: String!
 	currentPassword: String!
@@ -3472,6 +3594,19 @@ type User implements Node & Actor {
 	Field-level: viewer-only; false for any other viewer.
 	"""
 	vouchBackDismissed: Boolean!
+	"""
+	The account's confirmed deletion in its grace period — the
+	Settings band and the pending screen read it. Viewer-only; null
+	when none is confirmed (a requested-not-confirmed deletion has no
+	status) and once cancelled.
+	"""
+	accountDeletion: AccountDeletion
+	"""
+	How the viewer's own account is deleted from here — the one
+	deletion verb that will answer, or LOCKED while neither will.
+	Viewer-only: null on anyone else's account.
+	"""
+	deletionPath: AccountDeletionPath
 	"""
 	The account's service state — gates acting through CoGra (auth.md
 	"Account states"). Field-level: viewer-only.

@@ -361,6 +361,7 @@ reach, and one URL opens the app where one is installed
 - Password reset: `https://<web-origin>/reset?token=<token>`
 - Email change: `https://<web-origin>/email-change?token=<token>` —
   the unverified carve-out mails the verification URL instead
+- Account deletion: `https://<web-origin>/delete-account?token=<token>`
 
 Native apps also accept the pasted link or bare token directly —
 the universal fallback when link verification is unavailable (and
@@ -680,14 +681,21 @@ contribution:
   cancelled or spent link answers `DELETION_TOKEN_INVALID`. Once
   opened, the same link keeps working through the grace — re-opening
   it never moves the deadline, and can add the content sweep.
-- The user can cancel from any authenticated session during the
-  7-day grace window.
-- An applicant's deletion is immediate and in-app — no mailed link,
-  no grace window — through its own verb, and every session is
-  revoked at once. An applicant whose application is approved and
-  whose registration has not landed cannot delete: the server
-  refuses `FORBIDDEN`, and once the account lands the member path
-  applies.
+- The user can cancel from any authenticated session until the
+  deadline executes it — a requested or a confirmed deletion alike,
+  and its link dies with it. With nothing standing, a cancel is a
+  no-op. A request while a confirmed deletion is in its grace changes
+  nothing: it never supersedes it, mails nothing, and never moves the
+  deadline.
+- An unfunded applicant's deletion is immediate and in-app — no
+  mailed link, no grace window — through its own verb, and every
+  session is revoked at once. A funded applicant cannot take it: the
+  server refuses `FORBIDDEN`. Once the applicant's Registration
+  lands — vouched or not — the member path applies. Which verb
+  answers is one server-computed read, `User.deletionPath`, which both
+  verbs re-derive under the account lock; a funded address is a
+  funding row in any state, and a lapsed vouch never reopens the
+  immediate verb.
 - When deletion completes, all of the account's refresh tokens
   are revoked. Any outstanding access tokens age out within their
   normal TTL.

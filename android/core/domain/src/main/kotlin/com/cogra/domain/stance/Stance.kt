@@ -50,9 +50,11 @@ data class StancePair(val pDirected: Double, val pInterest: Double) {
         val Origin = StancePair(0.0, 0.0)
 
         /**
-         * What a plain tap commits: the modest positive of the repo-wide
-         * low-defaults policy, so stronger stances stay expressible
-         * (design.md §8.3, invitations.md §3).
+         * The low default: what a press-and-hold commits and where the
+         * pad opens — the modest positive of the repo-wide low-defaults
+         * policy, so stronger stances stay expressible (design.md §8.3,
+         * invitations.md §3). The name keeps the shared constants'
+         * `stance.tapDefault` key it is pinned against.
          */
         val TapDefault = StancePair(0.1, 0.1)
     }

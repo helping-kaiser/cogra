@@ -1590,31 +1590,38 @@ CREATE UNIQUE INDEX auth_email_changes_one_live_idx
 -- Account deletions: the grace-period state per
 -- erasure.md §5 — requested, then confirmed by opening the mailed
 -- link, cancellable from any logged-in session until the deadline,
--- executed by the worker after it. A requested-not-confirmed row
--- has no deadline: the table carries a confirmed state distinct
--- from requested, and the deadline exists only in it. A second
--- request supersedes the first (at most one standing request per
--- user). An unopened link expires 7 days after the request (the
--- token-expiry mark, as auth_email_changes carries); a confirmed
--- row's token stays valid through the grace for re-opening.
--- include_content records the content-level opt-in (settable at
--- request, confirmation, or a re-open inside the grace; never
--- cleared). The columns below are the foundation shape, which does
--- not yet represent the confirmed state, the supersede, or the link
--- expiry; the erasure slice reshapes them.
+-- executed by the worker after it. A requested row has no deadline:
+-- confirmed_at and scheduled_for are set together, at the first
+-- confirmation. A second request supersedes an unconfirmed one
+-- (superseded_at); a confirmed one is never superseded, so at most
+-- one request stands per user. token_expires_at ends an unopened
+-- link 7 days after the request; a confirmed row's token stays valid
+-- through the grace for re-opening. include_content records the
+-- content-level opt-in (settable at request, confirmation, or a
+-- re-open inside the grace; never cleared). A row ends once —
+-- cancelled, superseded, executed, or unopened past its link — and
+-- every end answers the same DELETION_TOKEN_INVALID; the spent-secret
+-- sweep drops the unexecuted ended rows after retention.
 CREATE TABLE auth_account_deletions (
     id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id             UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
     deletion_token_hash BYTEA       NOT NULL UNIQUE,
     include_content     BOOLEAN     NOT NULL DEFAULT FALSE,
     requested_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    scheduled_for       TIMESTAMPTZ NOT NULL,
+    token_expires_at    TIMESTAMPTZ NOT NULL,
+    confirmed_at        TIMESTAMPTZ,
+    scheduled_for       TIMESTAMPTZ,
+    superseded_at       TIMESTAMPTZ,
     cancelled_at        TIMESTAMPTZ,
-    executed_at         TIMESTAMPTZ
+    executed_at         TIMESTAMPTZ,
+    CHECK ((confirmed_at IS NULL) = (scheduled_for IS NULL))
 );
+CREATE UNIQUE INDEX auth_account_deletions_one_standing_idx
+    ON auth_account_deletions (user_id)
+    WHERE cancelled_at IS NULL AND superseded_at IS NULL AND executed_at IS NULL;
 CREATE INDEX auth_account_deletions_due_idx
     ON auth_account_deletions (scheduled_for)
-    WHERE cancelled_at IS NULL AND executed_at IS NULL;
+    WHERE confirmed_at IS NOT NULL AND cancelled_at IS NULL AND executed_at IS NULL;
 
 -- Auth-endpoint throttle state (auth.md "Rate limiting"): one row per
 -- (scope, key). Counted limits use window_start + count as a fixed
@@ -1798,10 +1805,14 @@ does **not** remove the `actors` row or its credentials — PII
 is redacted in place per
 [erasure.md §2](../instances/erasure.md#2-account-deletion-two-redaction-levels)
 — so `ON DELETE CASCADE` does not fire on account deletion, which
-deletes the user-scoped rows it means to delete explicitly. The one
-flow that deletes an `actors` row is the reaper's sweep of
-never-verified accounts ([auth.md "Reaper"](auth.md#approval-and-landing)), where
-the cascade is the whole-account delete it intends. The FK
+deletes the user-scoped rows it means to delete explicitly. Two
+flows delete an `actors` row, both for accounts with nothing on L1:
+the reaper's sweep of never-verified accounts
+([auth.md "Reaper"](auth.md#approval-and-landing)) and an unfunded
+applicant deleting itself
+([auth.md "Self-service deletion"](auth.md#self-service-deletion-handoff-out)).
+There the cascade is the whole-account delete they intend; the
+non-cascading `staged_writes.actor_id` is deleted first. The FK
 exists to prevent orphans from buggy code paths and to give an
 operator running an explicit `DELETE` (e.g. emergency cleanup) a
 single command that takes the user's private state with them.

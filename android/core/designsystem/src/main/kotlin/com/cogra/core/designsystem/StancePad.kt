@@ -1,15 +1,19 @@
 // CoGra's signature interaction (design.md §8), as pure UI.
 //
-// The shape of the thing: a single tap target at rest, a plain tap
-// commits the modest positive default, and a press-and-hold blooms a
-// pad — at one fixed spot, the lower centre of the viewport, whichever
-// control opened it — that the reader drifts across. Releasing leaves
-// the pick standing and the pad open, and the field goes on taking
-// drags for as long as it stands; an explicit Set is what signs.
+// The shape of the thing (design/guidelines/stance-control.md "The
+// gesture"): a single target at rest. A tap blooms the pad — at one
+// fixed spot, the lower centre of the viewport, whichever control
+// opened it — and stages nothing; a press-and-hold of the platform's
+// long-press timeout commits the modest positive default outright. The
+// light gesture costs nothing and the held one spends: a tap is what a
+// thumb gives by accident, so it opens the surface where a reader
+// chooses. On the open pad the reader drags the field, a release leaves
+// the pick standing and the pad open, and an explicit Set is what signs.
 // Horizontal is valence, vertical is connection, the pad opens at the
-// origin, and the whole square stays reachable — corners included,
-// because someone dragging to the far corner means it. The drawn field
-// IS the value space; its geometry lives in StanceFieldGeometry.kt.
+// default (+0.10, +0.10), and the whole square stays reachable — corners
+// included, because someone dragging to the far corner means it. The
+// drawn field IS the value space; its geometry lives in
+// StanceFieldGeometry.kt.
 //
 // The control owns its touches: nothing it is given may also reach the
 // surface underneath it (design.md §8.3).
@@ -45,11 +49,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -84,12 +87,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.IntOffset
@@ -97,13 +101,15 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.cogra.core.designsystem.v2.token.Space
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
+import com.cogra.core.designsystem.v2.media.CoverKind
+import com.cogra.core.designsystem.v2.media.CoversSurface
+import com.cogra.core.designsystem.v2.token.Space
+import kotlinx.coroutines.flow.filterNotNull
 import java.util.Locale
 import kotlin.math.roundToInt
-import kotlinx.coroutines.flow.filterNotNull
 
 /**
  * Which surface the control offers for picking (design.md §8.6), as the
@@ -112,17 +118,15 @@ import kotlinx.coroutines.flow.filterNotNull
  */
 enum class StanceInputSurface { PAD, SLIDERS, ENTRY }
 
-/** Where the pad is: shut, following a thumb, or parked open. */
+/** Where the pad is: shut, or parked open. */
 enum class StancePadMode {
     CLOSED,
 
-    /** Bloomed under a thumb that is still down. */
-    DRAGGING,
-
     /**
-     * Parked open after a hold that never drifted. The alternates and
-     * the severance route live here — they need a surface that outlasts
-     * the gesture to be reachable at all (design.md §8.5, §8.6).
+     * Parked open by the tap that bloomed it. The field, the alternates
+     * and the severance route live here — a surface that outlasts the
+     * gesture, so every one of them is reachable by touch (design.md
+     * §8.5, §8.6).
      */
     STICKY,
 }
@@ -179,8 +183,11 @@ data class StanceControlState(
     /** The reader's chosen input surface (design.md §8.6). */
     val inputMode: StanceInputSurface = StanceInputSurface.PAD,
     val severance: SeverancePrompt? = null,
-    /** The one-time teaching mark for the held gesture (design.md §8.7). */
-    val coachMark: Boolean = false,
+    /**
+     * This open is the account's first-ever pad open, so the pad carries
+     * the two coaching lines (stance-control.md "Teaching it").
+     */
+    val coaching: Boolean = false,
     /**
      * A stance just signed, as the standing it left the reader at — the
      * transient confirmation of design.md §8.3. A one-shot: the control
@@ -208,9 +215,6 @@ private const val RESTING_FACE = "🫥"
  * token kept this one for exactly that reason.
  */
 private const val RESTING_FACE_ALPHA = 0.4f
-
-/** How far an overlay stands off the target it belongs to. */
-private val PAD_GAP = 8.dp
 
 /** How close to the viewport's edge an overlay is allowed to sit. */
 private val PAD_MARGIN = 12.dp
@@ -253,27 +257,24 @@ private fun targetDescription(
  * The stance control: the resting target, the pad it blooms, and the
  * severance confirmation either can reach.
  *
- * [onHold] fires when a held gesture ends — drifted or not. The pad
- * parks open with the pick standing rather than committing it, which is
- * what makes Set the only signature and keeps the alternates and the
- * severance route reachable by touch at all (design.md §8.3, §8.5).
- * [onCommit] therefore reaches this file from the pad's own Set button
- * and from nowhere else.
+ * [onOpenPad] is the tap: it parks the pad open and stages nothing.
+ * [onHoldDefault] is the press-and-hold: it commits the low default
+ * without opening anything. [onCommit] is the pad's own Set button and
+ * reaches this file from nowhere else — a release never signs
+ * (design/guidelines/stance-control.md "The gesture").
  */
 @Composable
 fun StanceControl(
     state: StanceControlState,
-    onTapDefault: () -> Unit,
+    onHoldDefault: () -> Unit,
     onOpenPad: () -> Unit,
     onPick: (StancePoint) -> Unit,
     onCommit: () -> Unit,
-    onHold: () -> Unit,
     onDismissPad: () -> Unit,
     onToggleExactValues: () -> Unit,
     onOpenSeverance: () -> Unit,
     onConfirmSeverance: () -> Unit,
     onDismissSeverance: () -> Unit,
-    onCoachMarkDismissed: () -> Unit,
     onConfirmationShown: () -> Unit,
     testTagPrefix: String,
     modifier: Modifier = Modifier,
@@ -310,22 +311,19 @@ fun StanceControl(
     /**
      * The control's data-node on a registered screen
      * (`feed.card.actionRow.stance`): the control, its resting target and
-     * the target's face and pair then wear the registered paths. The pad,
-     * the coach mark and the severance confirmation are not drawn on any
-     * registered board, so they keep their [testTagPrefix] tags.
+     * the target's face and pair then wear the registered paths. The pad
+     * and the severance confirmation are not drawn on any registered
+     * board, so they keep their [testTagPrefix] tags.
      */
     node: DataNode? = null,
 ) {
-    val extentPx = with(LocalDensity.current) { FIELD_EXTENT.toPx() }
-    val gapPx = with(LocalDensity.current) { PAD_GAP.roundToPx() }
     val marginPx = with(LocalDensity.current) { PAD_MARGIN.roundToPx() }
     val bottomPx = with(LocalDensity.current) { PAD_BOTTOM.roundToPx() }
-    // Two placements, because the two overlays mean different things: the
-    // coach mark points at one target, the pad is the same surface
-    // wherever it was opened from (design.md §8.3, §8.7).
-    val besideTarget = remember(gapPx, marginPx) { PadBesideTarget(gapPx, marginPx) }
+    // The pad is the same surface wherever it was opened from
+    // (design.md §8.3), so it is placed by the window, not the target.
     val lowerCentre = remember(bottomPx, marginPx) { PadAtLowerCentre(bottomPx, marginPx) }
     val tapLabel = stringResource(R.string.stance_target)
+    val holdLabel = stringResource(R.string.stance_target_hold)
     val exactLabel = stringResource(R.string.stance_pick_exactly)
     val severLabel = stringResource(zeroWords.open)
     val standingLabel = stringResource(R.string.stance_standing)
@@ -343,6 +341,13 @@ fun StanceControl(
     val severable = state.standing != null
 
     StanceConfirmation(state.confirmation, standingLabel, axes, onConfirmationShown)
+    // THE PAD AND THE SEVERANCE DIALOG SAY THEY ARE UP, wherever the control
+    // stands — no surface that hosts one can forget to (the web's
+    // `stance-control.tsx` and `severance-confirm.tsx` do the same). Over a
+    // post's detail the pad PAUSES its clip and its closing resumes it
+    // (PostDetailVideo.md:49/51); the dialog is a dialog over the post (:41).
+    CoversSurface(open = state.pad != StancePadMode.CLOSED, kind = CoverKind.Pause)
+    CoversSurface(open = state.severance != null, kind = CoverKind.Suspend)
     val anchor = node?.div("anchor")
 
     Column(modifier.dataNode(node)) {
@@ -354,21 +359,14 @@ fun StanceControl(
                 .clip(RoundedCornerShape(50))
                 .stanceGesture(
                     enabled = !state.busy,
-                    // An alternate replaces the pad, so the hold has no
-                    // field to drift across: it parks the chosen surface
-                    // open instead (design.md §8.6).
-                    drifts = state.inputMode == StanceInputSurface.PAD,
-                    extentPx = extentPx,
-                    onTapDefault = onTapDefault,
+                    onHoldDefault = onHoldDefault,
                     onOpenPad = onOpenPad,
-                    onPick = onPick,
-                    onHold = onHold,
-                    onCancel = onDismissPad,
                 )
                 // Colour never carries meaning alone, and a drag gesture
                 // always has a non-drag equivalent (design.md §10): the
-                // node reads as a button, double-tap commits the
-                // default, and the alternates ride custom actions.
+                // node reads as a button, double-tap opens the pad as a
+                // tap does, double-tap-and-hold signs the default as a
+                // hold does, and the alternates ride custom actions.
                 // One node for the whole target: the face and the pair
                 // inside it are a readout of what this description
                 // already says in words, so they are absorbed rather
@@ -378,13 +376,16 @@ fun StanceControl(
                     role = Role.Button
                     contentDescription = description
                     onClick(label = tapLabel) {
-                        onTapDefault()
+                        onOpenPad()
+                        true
+                    }
+                    onLongClick(label = holdLabel) {
+                        onHoldDefault()
                         true
                     }
                     customActions = listOfNotNull(
                         CustomAccessibilityAction(exactLabel) {
                             onOpenPad()
-                            onHold()
                             if (!state.exactValues) onToggleExactValues()
                             true
                         },
@@ -401,29 +402,19 @@ fun StanceControl(
         ) {
             StanceRestingFace(state.standing, testTagPrefix, anchor)
 
-            // Both overlays are children of the TARGET, not siblings of
-            // it: that is what ties their lifetime to the control's, so
-            // neither can outlive the surface that owns it. The coach
-            // mark also takes its POSITION from the target; the pad
-            // takes only its lifetime (design.md §8.3, §8.7).
-            if (state.coachMark) {
-                StanceCoachMark(
-                    positionProvider = besideTarget,
-                    onDismissed = onCoachMarkDismissed,
-                    testTagPrefix = testTagPrefix,
-                )
-            }
-
+            // The pad is a child of the TARGET, not a sibling of it: that
+            // is what ties its lifetime to the control's, so it cannot
+            // outlive the surface that owns it. It takes only its
+            // lifetime from the target, never its position (design.md
+            // §8.3).
             if (state.pad != StancePadMode.CLOSED) {
-                val sticky = state.pad == StancePadMode.STICKY
                 Popup(
                     popupPositionProvider = lowerCentre,
-                    onDismissRequest = onDismissPad.takeIf { sticky },
-                    properties = PopupProperties(focusable = sticky),
+                    onDismissRequest = onDismissPad,
+                    properties = PopupProperties(focusable = true),
                 ) {
                     StancePadOverlay(
                         state = state,
-                        sticky = sticky,
                         onPick = onPick,
                         onCommit = onCommit,
                         onCancel = onDismissPad,
@@ -440,7 +431,7 @@ fun StanceControl(
         }
 
         // A refusal has to be visible even when the pad is shut, which is
-        // where a plain tap fails.
+        // where a hold fails.
         if (state.failed && state.pad == StancePadMode.CLOSED) {
             StanceFailure(state.needsKey, testTagPrefix)
         }
@@ -460,10 +451,12 @@ fun StanceControl(
 }
 
 /**
- * Tap versus hold, on one pointer stream. A tap that lands before the
- * platform's long-press threshold commits the default; past it the pad
- * blooms and the accumulated drag becomes the pick, clamped per axis so
- * the corners of the square stay reachable (design.md §8.2, §8.3).
+ * Tap versus hold, on one pointer stream (design/guidelines/
+ * stance-control.md "The gesture"). A tap that lifts before the
+ * platform's long-press timeout opens the pad and stages nothing; a
+ * press held past it commits the low default without opening anything.
+ * The timeout is the platform's own — 500ms on Android, the number the
+ * table names — so the two clients ask the same of the same thumb.
  *
  * **The control owns its touches** (design.md §8.3). The down is
  * consumed the moment it arrives, which is what stops the surface
@@ -476,53 +469,40 @@ fun StanceControl(
  * that, so a finger that starts here and travels still scrolls the feed
  * — and this gesture then reads the cancellation and stages nothing.
  *
- * **Releasing never commits** (design.md §8.3). A release leaves the
- * pick standing and the pad parked open; only Set signs. An accidental
- * lift must never sign a priced act, so no path here reaches
- * [onCommit] — the pad's own button is the only way in.
+ * **The hold signs once and owns the rest of its touch.** It fires under
+ * the finger, so the lift that follows is consumed here too: the hold's
+ * own release must never also reach the card, and must never read as a
+ * tap that opens the pad on top of the signature. No path here reaches
+ * [StanceControl]'s `onCommit` — the pad's own Set is the only way in.
  */
 private fun Modifier.stanceGesture(
     enabled: Boolean,
-    drifts: Boolean,
-    extentPx: Float,
-    onTapDefault: () -> Unit,
+    onHoldDefault: () -> Unit,
     onOpenPad: () -> Unit,
-    onPick: (StancePoint) -> Unit,
-    onHold: () -> Unit,
-    onCancel: () -> Unit,
-): Modifier = if (!enabled) this else pointerInput(extentPx, drifts) {
-    awaitEachGesture {
-        val down = awaitFirstDown(requireUnconsumed = false)
-        down.consume()
-        var held = false
-        val up = try {
-            withTimeout(viewConfiguration.longPressTimeoutMillis) {
-                waitForUpOrCancellation()
-            }
-        } catch (_: PointerEventTimeoutCancellationException) {
-            held = true
-            null
-        }
-        up?.consume()
-        when {
-            held && !drifts -> {
-                onOpenPad()
-                onHold()
-            }
-            held -> {
-                onOpenPad()
-                var travel = Offset.Zero
-                val completed = drag(down.id) { change ->
-                    travel += change.positionChange()
-                    change.consume()
-                    onPick(stancePointFromTravel(travel, extentPx))
+): Modifier = if (!enabled) {
+    this
+} else {
+    pointerInput(Unit) {
+        awaitEachGesture {
+            awaitFirstDown(requireUnconsumed = false).consume()
+            var held = false
+            val up = try {
+                withTimeout(viewConfiguration.longPressTimeoutMillis) {
+                    waitForUpOrCancellation()
                 }
-                // A release parks the pad with the pick standing; only a
-                // genuine cancellation stages nothing.
-                if (completed) onHold() else onCancel()
+            } catch (_: PointerEventTimeoutCancellationException) {
+                held = true
+                null
             }
-            up != null -> onTapDefault()
-            else -> Unit
+            up?.consume()
+            when {
+                held -> {
+                    onHoldDefault()
+                    waitForUpOrCancellation()?.consume()
+                }
+                up != null -> onOpenPad()
+                else -> Unit
+            }
         }
     }
 }
@@ -550,18 +530,22 @@ private fun Modifier.fieldGesture(
     extentPx: Float,
     pick: State<StancePoint>,
     onPick: State<(StancePoint) -> Unit>,
-): Modifier = if (!enabled) this else pointerInput(extentPx) {
-    awaitEachGesture {
-        val down = awaitFirstDown(requireUnconsumed = false)
-        down.consume()
-        // Read once, at the down: the base is what was standing when this
-        // drag began, and the picks it reports must not feed back into it.
-        val base = pick.value
-        var travel = Offset.Zero
-        drag(down.id) { change ->
-            travel += change.positionChange()
-            change.consume()
-            onPick.value(stancePointFrom(base, travel, extentPx))
+): Modifier = if (!enabled) {
+    this
+} else {
+    pointerInput(extentPx) {
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false)
+            down.consume()
+            // Read once, at the down: the base is what was standing when this
+            // drag began, and the picks it reports must not feed back into it.
+            val base = pick.value
+            var travel = Offset.Zero
+            drag(down.id) { change ->
+                travel += change.positionChange()
+                change.consume()
+                onPick.value(stancePointFrom(base, travel, extentPx))
+            }
         }
     }
 }
@@ -607,61 +591,9 @@ internal class PadAtLowerCentre(
         value.coerceIn(marginPx, maxOf(marginPx, windowSize - contentSize - marginPx))
 }
 
-/**
- * Places an overlay BESIDE the resting target rather than over it, and
- * fully inside the viewport (design.md §8.7). The coach mark's
- * placement: it explains one particular target, so it has to point at
- * it — unlike the pad, which is the same surface wherever it was opened
- * from.
- *
- * So: horizontally centred on the target, vertically in whichever gap
- * holds it — above by preference, below when the target sits near the
- * top — and clamped into the window with a margin either way.
- *
- * `windowSize` is the window's visible frame, so the clamp already keeps
- * clear of the system bars.
- */
-internal class PadBesideTarget(
-    private val gapPx: Int,
-    private val marginPx: Int,
-) : PopupPositionProvider {
-    override fun calculatePosition(
-        anchorBounds: IntRect,
-        windowSize: IntSize,
-        layoutDirection: LayoutDirection,
-        popupContentSize: IntSize,
-    ): IntOffset {
-        val above = anchorBounds.top - gapPx - popupContentSize.height
-        val below = anchorBounds.bottom + gapPx
-        val roomAbove = anchorBounds.top - gapPx - marginPx
-        val roomBelow = windowSize.height - anchorBounds.bottom - gapPx - marginPx
-        val y = when {
-            popupContentSize.height <= roomAbove -> above
-            popupContentSize.height <= roomBelow -> below
-            // Taller than either gap: take the roomier side and clamp.
-            // The pad scrolls, so on-screen beats beside-the-target.
-            roomAbove >= roomBelow -> above
-            else -> below
-        }
-        return IntOffset(
-            x = clamp(
-                anchorBounds.center.x - popupContentSize.width / 2,
-                popupContentSize.width,
-                windowSize.width,
-            ),
-            y = clamp(y, popupContentSize.height, windowSize.height),
-        )
-    }
-
-    /** Fully inside, margin included — unless the content is wider than the window. */
-    private fun clamp(value: Int, contentSize: Int, windowSize: Int): Int =
-        value.coerceIn(marginPx, maxOf(marginPx, windowSize - contentSize - marginPx))
-}
-
 @Composable
 private fun StancePadOverlay(
     state: StanceControlState,
-    sticky: Boolean,
     onPick: (StancePoint) -> Unit,
     onCommit: () -> Unit,
     onCancel: () -> Unit,
@@ -684,9 +616,9 @@ private fun StancePadOverlay(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // The coach mark is a one-time thing and it is spent on the
-            // first hold; the `?` is how anyone who met the control after
-            // that — or forgot — asks again (design.md §8.3, §8.7).
+            // The coaching lines ride the first-ever open only; the `?` is
+            // how anyone who opened the pad after that — or forgot — asks
+            // again (stance-control.md "The gesture", "Teaching it").
             var explaining by rememberSaveable { mutableStateOf(false) }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -724,62 +656,63 @@ private fun StancePadOverlay(
                 if (state.inputMode == StanceInputSurface.PAD) {
                     StancePadField(state.pick, onPick = onPick, enabled = !state.busy)
                 }
+                // Between the field and the landing line, where the
+                // master's `padNote` slot sits (`StanceControl.jsx`).
+                if (state.coaching) StanceCoaching(testTagPrefix)
                 StanceLandingLine(state.landing, testTagPrefix, axes, zeroWords)
             }
-            if (sticky) {
-                // The alternates are the accessible path, so the way into
-                // them is present whatever the stored preference is.
-                if (!explaining && (state.exactValues || state.inputMode != StanceInputSurface.PAD)) {
-                    StanceExactValues(state.inputMode, state.pick, onPick, testTagPrefix, axes)
+            // The alternates are the accessible path, so the way into
+            // them is present whatever the stored preference is.
+            if (!explaining && (state.exactValues || state.inputMode != StanceInputSurface.PAD)) {
+                StanceExactValues(state.inputMode, state.pick, onPick, testTagPrefix, axes)
+            }
+            if (state.failed) {
+                StanceFailure(state.needsKey, testTagPrefix)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    // Help can never be signed through: the field it
+                    // explains is not on screen to check against.
+                    onClick = onCommit,
+                    enabled = !state.busy && !explaining,
+                    modifier = Modifier.testTag("${testTagPrefix}_stance_set"),
+                ) {
+                    Text(stringResource(R.string.stance_set))
                 }
-                if (state.failed) {
-                    StanceFailure(state.needsKey, testTagPrefix)
+                TextButton(
+                    onClick = onCancel,
+                    modifier = Modifier.testTag("${testTagPrefix}_stance_cancel"),
+                ) {
+                    Text(stringResource(R.string.stance_cancel))
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
-                        // Help can never be signed through: the field it
-                        // explains is not on screen to check against.
-                        onClick = onCommit,
-                        enabled = !state.busy && !explaining,
-                        modifier = Modifier.testTag("${testTagPrefix}_stance_set"),
-                    ) {
-                        Text(stringResource(R.string.stance_set))
-                    }
-                    TextButton(
-                        onClick = onCancel,
-                        modifier = Modifier.testTag("${testTagPrefix}_stance_cancel"),
-                    ) {
-                        Text(stringResource(R.string.stance_cancel))
-                    }
+            }
+            if (state.inputMode == StanceInputSurface.PAD) {
+                TextButton(
+                    onClick = onToggleExactValues,
+                    modifier = Modifier.testTag("${testTagPrefix}_stance_exact"),
+                ) {
+                    Text(
+                        stringResource(
+                            if (state.exactValues) {
+                                R.string.stance_exact_values_hide
+                            } else {
+                                R.string.stance_exact_values_show
+                            },
+                        ),
+                    )
                 }
-                if (state.inputMode == StanceInputSurface.PAD) {
-                    TextButton(
-                        onClick = onToggleExactValues,
-                        modifier = Modifier.testTag("${testTagPrefix}_stance_exact"),
-                    ) {
-                        Text(
-                            stringResource(
-                                if (state.exactValues) {
-                                    R.string.stance_exact_values_hide
-                                } else {
-                                    R.string.stance_exact_values_show
-                                },
-                            ),
-                        )
-                    }
-                }
-                // The route for the reader who came here to sever: it has
-                // to be findable from the open pad (design.md §8.5) —
-                // and it stands only where there is something to walk
-                // back, which is what makes the held pad's four controls
-                // and the unheld pad's three (`TagPageHeldPad`).
-                if (severable) {
-                    TextButton(
-                        onClick = onOpenSeverance,
-                        modifier = Modifier.testTag("${testTagPrefix}_stance_sever"),
-                    ) {
-                        Text(stringResource(zeroWords.open))
-                    }
+            }
+            // The route for the reader who came here to sever: it has
+            // to be findable from the open pad (design.md §8.5) —
+            // and it stands only where there is something to walk
+            // back, which is what makes the held pad's four controls
+            // and the unheld pad's three (`TagPageHeldPad`).
+            if (severable) {
+                TextButton(
+                    onClick = onOpenSeverance,
+                    modifier = Modifier.testTag("${testTagPrefix}_stance_sever"),
+                ) {
+                    Text(stringResource(zeroWords.open))
                 }
             }
         }
@@ -1375,44 +1308,40 @@ private fun StanceEntry(
 }
 
 /**
- * The teaching mark of design.md §8.7: the FIRST tap on a stance target
- * opens it instead of acting, and it stays until the reader dismisses it
- * or completes their first hold.
+ * THE PAD IS THE TEACHER (stance-control.md "Teaching it"; copy-voice.md
+ * "The first-ever pad teaches in two coaching lines, and nothing else
+ * teaches it"). The tap that opens the pad costs nothing, so the reader
+ * finds the considered route on their own; what is left to teach is the
+ * shortcut. The account's first-ever pad open carries these two lines,
+ * between the field and the landing line (`StanceControl.jsx`'s
+ * `padNote` slot); they close with the pad and never show again.
  *
- * Two things it must not do. It must not vanish on the next touch — a
- * popup that dismisses on any outside click is gone before the sentence
- * is read, and the touch that spawned it counts as one — so nothing but
- * the explicit dismissal closes it. And it must not sit over the feed:
- * it is anchored beside the target it explains, clamped on-screen, by
- * the same provider the pad uses.
+ * The face is drawn and the digits are not: the coaching's exact pair
+ * shows only for a reader who asked for exact values, and its spoken
+ * twin says the face and the pair either way (`VouchBackPad`). Neither
+ * client has that reading preference yet, so the drawn line is the
+ * default reading's.
  */
 @Composable
-private fun StanceCoachMark(
-    positionProvider: PopupPositionProvider,
-    onDismissed: () -> Unit,
-    testTagPrefix: String,
-) {
-    Popup(
-        popupPositionProvider = positionProvider,
-        properties = PopupProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
+private fun StanceCoaching(testTagPrefix: String) {
+    val shortcut = stringResource(R.string.stance_coaching_shortcut)
+    val shortcutSpoken = stringResource(R.string.stance_coaching_shortcut_spoken)
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("${testTagPrefix}_stance_coaching"),
     ) {
-        Card(
-            modifier = Modifier
-                .widthIn(max = PAD_WIDTH)
-                .testTag("${testTagPrefix}_stance_coach"),
-        ) {
-            Column(
-                modifier = Modifier.padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Text(stringResource(R.string.stance_coach))
-                TextButton(
-                    onClick = onDismissed,
-                    modifier = Modifier.testTag("${testTagPrefix}_stance_coach_dismiss"),
-                ) {
-                    Text(stringResource(R.string.stance_coach_dismiss))
-                }
-            }
-        }
+        Text(
+            text = shortcut,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.semantics { contentDescription = shortcutSpoken },
+        )
+        Text(
+            text = stringResource(R.string.stance_coaching_set),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
