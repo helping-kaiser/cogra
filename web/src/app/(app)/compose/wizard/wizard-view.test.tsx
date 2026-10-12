@@ -1149,6 +1149,21 @@ describe("the sealed copy of a staged post (FC-G5)", () => {
     expect(copies[0]!.state.words).toBe("Three weekends at low tide.");
   });
 
+  // The whole loss path, end to end: published while relaying, expired after
+  // the wizard left, and the composer opened again.
+  it("a post that expires after the wizard left comes back as the draft", async () => {
+    server.use(preparePost());
+    const first = mount();
+    await publishWords("Three weekends at low tide.");
+    first.unmount();
+
+    server.use(stagedWriteIs("EXPIRED"));
+    mount();
+    expect(await screen.findByTestId("wizard-draft-card")).toHaveTextContent(
+      "Three weekends at low tide.",
+    );
+  });
+
   it("a batch already landed at signing seals nothing and keeps no draft", async () => {
     server.use(preparePost());
     mount(
