@@ -2412,12 +2412,11 @@ type Query {
 	"""
 	Candidate targets for the reference picker.
 	
-	**Exact-match resolution only.** Real search — prefix matching,
-	ranking, snippets — arrives with slice 2.7 *behind this same
-	field*, so a client binds to it once and does not change when the
-	implementation is replaced. Two shapes resolve today: a handle,
-	bare or `@`-sigilled, names a person; a UUID names whatever node
-	it addresses.
+	Candidates come from the one search matcher (see Search) — names
+	and titles, exact tier first, then newest — narrowed to what
+	`prepareReference` accepts: never a topic, never a keyless
+	account. A UUID still names whatever node it addresses, and a
+	leading `@` narrows to people.
 	
 	An empty or unresolvable query yields an empty list, never an
 	error. A finder runs on every keystroke, so most of what it is
@@ -2435,6 +2434,24 @@ type Query {
 	either.
 	"""
 	referenceCandidates(query: String!, limit: Int): [ReferenceCandidate!]!
+	"""
+	Global search across nodes; returns a `SearchResult` per edge.
+	Recall is lexical over the indexed name-class fields and post
+	titles — an untitled post is never matched by its words; order is
+	exact-match tier first, then newest first — viewer-independent,
+	the backend never graph-ranks (feed-ranking.md §11). A ranker may
+	re-order fetched results by the viewer's feed metric. Served kinds
+	grow with the slices: USER, POST, HASHTAG unscoped; COMMENT is
+	always a valid kind but is served only under a scope operator
+	(`@handle`, `#tag`) — unscoped, it contributes no rows, never an
+	error. COLLECTIVE, CHAT, CHAT_MESSAGE, ITEM and OFFER join with
+	their slices and read empty until then. An empty `kinds` list
+	means the same as null (no narrowing). `includeSeen: false` drops
+	nodes on the viewer's seen-list (`User.viewHistory`); it needs a
+	session and is ignored without one. Full semantics in the Search
+	section.
+	"""
+	search(query: String!, kinds: [NodeKind!], includeSeen: Boolean = true, first: Int, after: String, last: Int, before: String): SearchConnection!
 	"""
 	The chronological listing (roadmap "Slice 2"): every post,
 	newest-first — pending entries, then landed entries in landing
@@ -2908,6 +2925,47 @@ type RevokeSessionsPayload {
 	revokedCount: Int
 	userErrors: [UserError!]!
 }
+
+type SearchConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [SearchEdge!]!
+	"""
+	How many nodes the query matches in total, across every page,
+	independent of the cursor. Priced at zero like every connection
+	count; saturates at [`i32::MAX`].
+	"""
+	totalCount: Int
+}
+
+"""
+An edge in a connection.
+"""
+type SearchEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: SearchResult!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
+"""
+What search returns: the kinds it serves. Later slices add members as
+their kinds join (Collective, Chat, ChatMessage, Item, Offer).
+
+A union rather than the `Node` interface because a `Hashtag` is
+deliberately not a `Node` — it has nothing to date and nothing to land
+— and search serves topics (GraphQL spec §3.8, *Unions*).
+"""
+union SearchResult = Post | Comment | User | Hashtag
 
 type Session {
 	id: UUID!

@@ -408,6 +408,7 @@ pub async fn register_account(
     )
     .execute(&mut *tx)
     .await?;
+    crate::search::refresh_actors(&mut tx, &[account_id]).await?;
     sqlx::query!(
         "INSERT INTO auth_ask_links (account_id) VALUES ($1)",
         account_id,
@@ -464,7 +465,7 @@ async fn delete_account_rows(conn: &mut PgConnection, ids: &[Uuid]) -> Result<()
     sqlx::query!("DELETE FROM actors WHERE id = ANY($1)", ids)
         .execute(&mut *conn)
         .await?;
-    Ok(())
+    crate::search::refresh_actors(conn, ids).await
 }
 
 /// Maps one application row (a sqlx anonymous record, account rows
@@ -2611,28 +2612,36 @@ pub async fn apply_email_change(
 }
 
 /// Renames the account in the one actor namespace. False on a uniqueness
-/// collision (surfaced as HANDLE_TAKEN).
+/// collision (surfaced as HANDLE_TAKEN). The search index follows in the
+/// same transaction, so the old handle stops matching the moment the new
+/// one does.
 pub async fn change_handle(
     pool: &PgPool,
     user_id: Uuid,
     handle: &str,
 ) -> Result<bool, sqlx::Error> {
-    match sqlx::query!(
+    let mut tx = pool.begin().await?;
+    let renamed = match sqlx::query!(
         "UPDATE actors SET handle = $2 WHERE id = $1 AND kind = 'user'",
         user_id,
         handle,
     )
-    .execute(pool)
+    .execute(&mut *tx)
     .await
     {
-        Ok(r) => Ok(r.rows_affected() == 1),
+        Ok(r) => r.rows_affected() == 1,
         Err(sqlx::Error::Database(e))
             if e.is_unique_violation() && e.constraint() == Some(constraints::ACTORS_HANDLE) =>
         {
-            Ok(false)
+            return Ok(false);
         }
-        Err(e) => Err(e),
+        Err(e) => return Err(e),
+    };
+    if renamed {
+        crate::search::refresh_actors(&mut tx, &[user_id]).await?;
+        tx.commit().await?;
     }
+    Ok(renamed)
 }
 
 /// Stores a client-encrypted key-backup blob — one row per account,

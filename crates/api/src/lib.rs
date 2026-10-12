@@ -21,6 +21,7 @@ pub mod ratelimit;
 pub mod references;
 pub mod relay;
 pub mod schema;
+pub mod search;
 pub mod stance;
 pub mod topics;
 

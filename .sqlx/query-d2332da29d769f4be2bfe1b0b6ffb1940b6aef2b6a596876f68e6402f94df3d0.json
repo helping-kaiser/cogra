@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO search_index (node_id, field, kind, value, created_at)\n         SELECT a.id, f.field, 'user', f.value, a.created_at\n         FROM actors a\n         LEFT JOIN LATERAL (\n             SELECT display_name, redaction_reason\n             FROM actor_profile_versions\n             WHERE actor_id = a.id\n             ORDER BY landed_epoch DESC NULLS LAST,\n                      act_time DESC NULLS LAST,\n                      position DESC NULLS LAST,\n                      created_at DESC, version_id DESC\n             LIMIT 1\n         ) p ON TRUE\n         CROSS JOIN LATERAL (\n             VALUES ('handle', a.handle), ('display_name', p.display_name)\n         ) f (field, value)\n         WHERE a.id = ANY($1)\n           AND a.kind = 'user'\n           AND p.redaction_reason IS NULL\n           AND f.value IS NOT NULL\n           AND btrim(f.value) <> ''",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d2332da29d769f4be2bfe1b0b6ffb1940b6aef2b6a596876f68e6402f94df3d0"
+}

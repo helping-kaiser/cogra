@@ -149,6 +149,34 @@ async fn an_unpriced_connection_charges_the_default_page(pool: PgPool) {
     assert_eq!(first_error(&response), "Query is too complex.");
 }
 
+/// `search` is public and keystroke-driven with no read budget of its
+/// own, so the query budget is its bound: it prices as a connection — the
+/// requested page times the per-edge selection, a union member's fields
+/// included — and its `totalCount` rides free. The flip point pins both:
+/// `edges { node { ... on Post { id } } }` is three per edge.
+///
+/// (´claim:budgets:a-connection-prices-the-requested-or-default-page´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn search_prices_as_a_connection(pool: PgPool) {
+    let query = "{ search(query: \"\", first: 100) {
+        totalCount edges { node { ... on Post { id } } }
+    } }";
+    let cost = connection_cost(Some(100), None, 3);
+    let budgets = |complexity| QueryBudgets {
+        depth: 15,
+        complexity,
+        introspection_enabled: false,
+    };
+    let under = schema(pool.clone(), budgets(cost - 1));
+    assert_eq!(
+        first_error(&execute(&under, query).await),
+        "Query is too complex."
+    );
+    let exact = schema(pool, budgets(cost));
+    let response = execute(&exact, query).await;
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+}
+
 /// `totalCount` is one aggregate per connection, not one per edge, but
 /// async-graphql hands a connection field a single `child_complexity` —
 /// a flat sum over the whole selection set, drawing no line between the
