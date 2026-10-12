@@ -2900,11 +2900,12 @@ impl Mutation {
     ///
     /// Answers only on `User.deletionPath == BY_LINK`: a member, or an
     /// applicant whose Registration landed. Any other account is FORBIDDEN,
-    /// re-checked under the account lock. While a confirmed deletion is in its grace
-    /// the request changes nothing — it returns that deletion, mails
-    /// nothing, spends nothing, and never moves the deadline: superseding
-    /// it would silently un-confirm it. Otherwise each request spends the
-    /// account's deletion mail budget, and a spent one answers
+    /// checked before anything is spent and again under the account lock.
+    /// While a confirmed deletion is in its grace the request changes
+    /// nothing — it returns that deletion, mails nothing, spends nothing,
+    /// and never moves the deadline: superseding it would silently
+    /// un-confirm it. Otherwise each request spends the account's
+    /// deletion mail budget, and a spent one answers
     /// RATE_LIMITED with nothing recorded, mailed or superseded.
     async fn request_account_deletion(
         &self,
@@ -2919,9 +2920,6 @@ impl Mutation {
         let Some(credentials) = store::credentials_by_actor(pool, v.user_id).await? else {
             return Err(unauthenticated());
         };
-        // The early refusal: nothing is spent or recorded for a path the verb
-        // does not answer. open_account_deletion re-derives it under the
-        // account lock.
         match store::deletion_path(&mut *pool.acquire().await?, v.user_id).await? {
             None => return Err(unauthenticated()),
             Some(store::DeletionPath::ByLink) => {}

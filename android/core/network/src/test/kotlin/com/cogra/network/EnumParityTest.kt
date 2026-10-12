@@ -15,6 +15,7 @@
 package com.cogra.network
 
 import com.cogra.crypto.Family
+import com.cogra.domain.AccountDeletionPath
 import com.cogra.domain.AccountState
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.MediaAssetState
@@ -26,6 +27,7 @@ import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 
 private typealias GeneratedAccountState = com.cogra.network.graphql.type.AccountState
+private typealias GeneratedAccountDeletionPath = com.cogra.network.graphql.type.AccountDeletionPath
 private typealias GeneratedErrorCode = com.cogra.network.graphql.type.ErrorCode
 
 class EnumParityTest {
@@ -52,6 +54,11 @@ class EnumParityTest {
             "AccountState",
             GeneratedAccountState.knownValues().map { it.rawValue },
             AccountState.entries.filter { it != AccountState.UNKNOWN }.map { it.name },
+        )
+        assertParity(
+            "AccountDeletionPath",
+            GeneratedAccountDeletionPath.knownValues().map { it.rawValue },
+            AccountDeletionPath.entries.filter { it != AccountDeletionPath.UNKNOWN }.map { it.name },
         )
         assertParity(
             "Family",

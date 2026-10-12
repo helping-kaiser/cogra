@@ -1588,7 +1588,6 @@ async fn the_deletion_path_names_the_one_verb_that_answers(pool: PgPool) {
     let rig = rig(pool);
     let mira = member(&rig, "mira").await;
 
-    // BY_LINK: the mailed request opens, the applicant delete is refused.
     assert_eq!(deletion_path(&rig, &mira.token).await, "BY_LINK");
     let refused = rig
         .gql_raw(Some(&mira.token), DELETE_APPLICANT, json!({}))
@@ -1597,7 +1596,6 @@ async fn the_deletion_path_names_the_one_verb_that_answers(pool: PgPool) {
     let opened = request(&rig, &mira.token, None).await;
     assert_eq!(opened["userErrors"], json!([]), "{opened}");
 
-    // LOCKED: both are refused.
     let locked = applicant(&rig, &mira, "noa").await;
     approve(&rig, &mira, &locked).await;
     assert_eq!(deletion_path(&rig, &locked.token).await, "LOCKED");
@@ -1614,7 +1612,6 @@ async fn the_deletion_path_names_the_one_verb_that_answers(pool: PgPool) {
         .await;
     assert_eq!(transport_code(&refused), Some("FORBIDDEN"), "{refused}");
 
-    // IMMEDIATE: the request is refused, the applicant delete opens.
     let immediate = applicant(&rig, &mira, "ana").await;
     assert_eq!(deletion_path(&rig, &immediate.token).await, "IMMEDIATE");
     let refused = rig
