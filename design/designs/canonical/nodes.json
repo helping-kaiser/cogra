@@ -4800,6 +4800,9 @@
     "SettingsReading": {
       "prefix": "settings",
       "keys": {
+        "settings.feedSheet.people.everyone": "the people chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "settings.feedSheet.people.sign": "the people chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "settings.feedSheet.people.yourPeople": "the people chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
         "settings.sessions.session": "the session's position in the list, this device first, counted from 1 (Settings' sessions)"
       },
       "nodes": {
@@ -4893,16 +4896,52 @@
         "settings.feedSheet.order.seen.box": [],
         "settings.feedSheet.order.seen.label": [],
         "settings.feedSheet.people": [],
-        "settings.feedSheet.people.everyone": [],
-        "settings.feedSheet.people.everyone.dot": [],
-        "settings.feedSheet.people.everyone.hint": [],
-        "settings.feedSheet.people.everyone.label": [],
+        "settings.feedSheet.people.everyone": [
+          "everyone",
+          "your-people"
+        ],
+        "settings.feedSheet.people.everyone.dot": [
+          "everyone",
+          "your-people"
+        ],
+        "settings.feedSheet.people.everyone.hint": [
+          "everyone",
+          "your-people"
+        ],
+        "settings.feedSheet.people.everyone.label": [
+          "everyone",
+          "your-people"
+        ],
         "settings.feedSheet.people.hint": [],
         "settings.feedSheet.people.label": [],
-        "settings.feedSheet.people.yourPeople": [],
-        "settings.feedSheet.people.yourPeople.dot": [],
-        "settings.feedSheet.people.yourPeople.hint": [],
-        "settings.feedSheet.people.yourPeople.label": [],
+        "settings.feedSheet.people.sign": [
+          "your-people"
+        ],
+        "settings.feedSheet.people.sign.against": [
+          "your-people"
+        ],
+        "settings.feedSheet.people.sign.either": [
+          "your-people"
+        ],
+        "settings.feedSheet.people.sign.for": [
+          "your-people"
+        ],
+        "settings.feedSheet.people.yourPeople": [
+          "everyone",
+          "your-people"
+        ],
+        "settings.feedSheet.people.yourPeople.dot": [
+          "everyone",
+          "your-people"
+        ],
+        "settings.feedSheet.people.yourPeople.hint": [
+          "everyone",
+          "your-people"
+        ],
+        "settings.feedSheet.people.yourPeople.label": [
+          "everyone",
+          "your-people"
+        ],
         "settings.feedSheet.title": [],
         "settings.feedSheet.title.help": [],
         "settings.header": [],
