@@ -151,6 +151,13 @@ export function TopicsLine({
     );
   }, []);
 
+  // WHAT IS FITTED, as one value: the fit is re-read whenever the line is
+  // handed other candidates or other counts — a post's newer version brings
+  // its own tags (PostDetail.md:13), and a fit measured for the old set would
+  // keep drawing the old number of chips, or none at all where the line first
+  // mounted with nothing to state and so was never measured.
+  const fitting = `${candidates.map((topic) => topic.name).join("\n")}|${topics.length}|${references}`;
+
   useMeasureEffect(() => {
     measure();
     const line = lineRef.current;
@@ -160,7 +167,7 @@ export function TopicsLine({
     const observer = new ResizeObserver(measure);
     observer.observe(line);
     return () => observer.disconnect();
-  }, [measure]);
+  }, [measure, fitting]);
 
   if (topics.length === 0 && references === 0) return null;
 

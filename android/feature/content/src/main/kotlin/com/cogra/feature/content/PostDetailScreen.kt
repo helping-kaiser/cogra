@@ -135,9 +135,9 @@ fun PostDetailRoute(
     var threadToken by remember { mutableIntStateOf(0) }
     // …and a reply landing changes the POST's own comment count, which is
     // read with the post rather than with the thread.
-    LaunchedEffect(commentsReturn.landed) {
-        if (commentsReturn.landed) viewModel.refresh()
-    }
+    // The reader asked for a reply, not for the post's newest version: the
+    // count read holds another version behind the line like any other read.
+    LaunchedEffect(commentsReturn.landed) { if (commentsReturn.landed) viewModel.recount() }
     PostDetailScreen(
         state = state,
         viewerId = viewerId,
@@ -145,6 +145,7 @@ fun PostDetailRoute(
             threadToken++
             viewModel.refresh()
         },
+        onSwapToNewer = viewModel::swapToNewer,
         onReveal = viewModel::onReveal,
         onEdit = onEdit,
         onOpenActor = onOpenActor,
@@ -220,6 +221,8 @@ fun PostDetailScreen(
     /** A reader chose to look at one veiled body, as it stands. */
     onReveal: (String, SensitiveMark) -> Unit,
     onEdit: (String) -> Unit,
+    /** The reader tapped the newer-version line ([PostDetailUiState.newer]). */
+    onSwapToNewer: () -> Unit = {},
     onOpenActor: (String) -> Unit,
     /** A post cited from the tags-and-references sheet. */
     onOpenPost: (String) -> Unit,
@@ -401,6 +404,7 @@ fun PostDetailScreen(
                             state = state,
                             post = state.post,
                             listState = listState,
+                            onSwapToNewer = onSwapToNewer,
                             onReveal = onReveal,
                             onOpenActor = onOpenActor,
                             onOpenPost = onOpenPost,
@@ -499,6 +503,7 @@ private fun PostDetailBody(
     post: PostView,
     /** Hoisted: the refresh gesture is gated on this list's own place. */
     listState: LazyListState,
+    onSwapToNewer: () -> Unit,
     /** A reader chose to look at one veiled body, as it stands. */
     onReveal: (String, SensitiveMark) -> Unit,
     onOpenActor: (String) -> Unit,
@@ -551,14 +556,17 @@ private fun PostDetailBody(
     // The post is a card here too, edge to edge with its 8dp seam — on the
     // boards the post wears the card and the thread stands in its own sheet
     // over it, not as a second half of this page.
+    val flushTop = clip != null || state.newer != null
     LazyColumn(
         state = listState,
         modifier = Modifier
             .fillMaxSize()
             .testTag("detail_list"),
         // The clip heads the column flush under the bar, as the board draws
-        // it (`PostDetailVideo.jsx:30-33`); a card alone keeps its seam.
-        contentPadding = PaddingValues(top = if (clip != null) 0.dp else Space.x2, bottom = Space.x4),
+        // it (`PostDetailVideo.jsx:30-33`); a card alone keeps its seam. The
+        // newer-version line, standing, heads it flush the same way
+        // (`PostDetail.jsx` — the line is `DetailColumn`'s first child).
+        contentPadding = PaddingValues(top = if (flushTop) 0.dp else Space.x2, bottom = Space.x4),
         verticalArrangement = Arrangement.spacedBy(Space.x2),
     ) {
         item {
@@ -570,6 +578,11 @@ private fun PostDetailBody(
             // player there and stop, where the law says it plays on (:11).
             // The card's row is on screen for as long as any of the post is.
             Column(modifier = Modifier.fillMaxWidth().testTag(DETAIL_BLOCK_TAG)) {
+                // BETWEEN THE HEADER AND THE POST (PostDetail.md:7;
+                // PostDetailVideo.md:65 — "under the header", so above a video
+                // post's clip too), in this same row: in the page's flow, it
+                // scrolls away with the post and is never pinned (:11).
+                NewerVersionLine(state.newer != null, onSwapToNewer, POST_DETAIL / "newerVersion")
                 if (clip != null) {
                     // The clip's two routes into the viewer — the bar's
                     // fullscreen toggle and the clip's own tap (graph.json,
@@ -580,6 +593,7 @@ private fun PostDetailBody(
                 DetailCard(
                     post = post,
                     removed = removed,
+                    commentCount = (state.newer ?: post).commentCount,
                     mediaAbove = clip != null,
                     // THE POST'S TAP OPENS THE FRAME (graph.json, `PostDetail`
                     // via 4), on the page the reader was looking at.
@@ -660,6 +674,11 @@ private fun TurnToLandscapeOpensTheViewer(landscapeClip: Boolean, onTurn: () -> 
 private fun DetailCard(
     post: PostView,
     removed: Boolean,
+    /**
+     * The thread's size, from the freshest read: the freeze governs the post,
+     * and the thread is the sheet's own read, so its count is never held.
+     */
+    commentCount: Int,
     /** The gallery's tap, handed the page under the reader's thumb. */
     onOpenMedia: (Int) -> Unit,
     /** The clip stands above this card, so the body draws no gallery. */
@@ -725,6 +744,7 @@ private fun DetailCard(
             DetailCardFoot(
                 post = post,
                 removed = removed,
+                commentCount = commentCount,
                 onOpenTopic = onOpenTopic,
                 onOpenActor = onOpenActor,
                 onOpenPost = onOpenPost,
@@ -749,6 +769,7 @@ private fun DetailCard(
 private fun DetailCardFoot(
     post: PostView,
     removed: Boolean,
+    commentCount: Int,
     onOpenTopic: (String) -> Unit,
     /** The sheet the topics line opens: a mention lands on the profile. */
     onOpenActor: (String) -> Unit,
@@ -789,7 +810,7 @@ private fun DetailCardFoot(
         }
     }
     PostAffordanceRow(
-        commentCount = post.commentCount,
+        commentCount = commentCount,
         onOpenComments = onOpenComments,
         onShare = { onShare(post.id) },
         testTagPrefix = "detail_post",
