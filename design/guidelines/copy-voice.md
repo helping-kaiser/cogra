@@ -1652,7 +1652,9 @@ sentence; copy-voice follows the board, blessed (jakob 2026-10-05).)*
 **Sensitive content**: one switch, `Always unveil sensitive content`
 (jakob's own wording, 2026-10-09 — never a sheet, never a pair of
 rows), off by default, with the switch-exception second line
-`Off, the veil stays until you tap it.` and the group footnote
+`Off, the veil stays until you tap it.` — and switched on, `On,
+sensitive content stands unveiled wherever you read.` (*new 2026-10-12,
+ruled (jakob 2026-10-12)*) — and the group footnote
 `This choice follows your account to every device.` — the one settings
 group whose value travels (the People group's hiding travels too, but
 its rows are doors, not switches). The account-travel sentence is the
