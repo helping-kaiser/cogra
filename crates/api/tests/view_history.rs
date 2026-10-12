@@ -206,7 +206,8 @@ async fn count(pool: &PgPool, table: &str) -> i64 {
         .expect("count")
 }
 
-/// What is seen later stands above what was seen earlier.
+/// What is seen later stands above what was seen earlier. The posts are
+/// authored the other way round: authoring time never orders History.
 ///
 /// History stands newest first by first seeing.
 /// ´claim:history:newest-first-by-first-seeing´
@@ -215,7 +216,6 @@ async fn history_reads_newest_first_by_first_seeing(pool: PgPool) {
     let rig = rig(pool);
     let (_, token) = reader(&rig, "reader").await;
     let sol = person(&rig.pool, "sol").await;
-    // Authored the other way round: authoring time never orders History.
     let older_seen = post(&rig.pool, sol, 9, "Seen first").await;
     let newer_seen = post(&rig.pool, sol, 1, "Seen second").await;
 
@@ -306,7 +306,7 @@ async fn history_narrows_to_the_staged_kinds(pool: PgPool) {
 /// An empty kind list narrows nothing.
 /// ´claim:history:an-empty-kind-list-narrows-nothing´
 #[sqlx::test(migrations = "../../migrations")]
-async fn an_empty_kind_list_narrows_nothing(pool: PgPool) {
+async fn an_empty_kind_list_narrows_no_history(pool: PgPool) {
     let rig = rig(pool);
     let (_, token) = reader(&rig, "reader").await;
     let sol = person(&rig.pool, "sol").await;

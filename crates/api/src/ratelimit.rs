@@ -265,7 +265,8 @@ pub struct RateLimitConfig {
     /// no remove verb, so a script could otherwise grow an account's rows
     /// as fast as it can call; the primary key bounds the damage per
     /// node, this bounds the rate. Seeing has no surface, so a trip shows
-    /// nothing: the client keeps the batch for its next checkpoint.
+    /// nothing: the client keeps the batch for its next checkpoint. The
+    /// default, 600 an hour, is one full flush every 6 s of reading.
     pub mark_seen_account: Window,
     /// The per-account signing budget, spent at prepare.
     pub signing: SigningBudget,
@@ -330,7 +331,6 @@ impl Default for RateLimitConfig {
                 limit: 60,
                 window_secs: 3600.0,
             },
-            // One flush per 6 s of continuous reading, 100 ids each.
             mark_seen_account: Window {
                 limit: 600,
                 window_secs: 3600.0,

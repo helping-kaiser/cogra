@@ -94,7 +94,7 @@ mod tests {
     /// A history cursor decodes back to its position, and one this list did not issue decodes to nothing.
     /// ´claim:history:a-history-cursor-round-trips´
     #[test]
-    fn a_cursor_round_trips_and_a_foreign_one_does_not_decode() {
+    fn a_history_cursor_round_trips_and_a_foreign_one_does_not_decode() {
         let cursor = HistoryCursor {
             first_seen_at: chrono::DateTime::from_timestamp_micros(1_791_354_394_123_456)
                 .expect("instant"),
