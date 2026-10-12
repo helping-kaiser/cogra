@@ -80,12 +80,13 @@ export const FEED_FORMS = [
 export const FEED_ORDER = FILTER_ORDER;
 
 /* WHAT THE FEED ALSO ADMITS. `Sensitive` and `Removed` are off until asked
-   for. `Still settling` is ON by default (jakob, 2026-10-01; readme §13, the
-   V1.0 scope cut): content authored and not yet landed reaches the feed
-   wearing its pending marker, which is the feed every reader has always had.
-   Switched off, the feed keeps to what has landed — the landed-only view. Its
-   label is the pending marker's own words, so the chip names exactly what it
-   lets in. */
+   for. `Still settling` is ON by default (jakob 2026-10-12, seam 137: "on by
+   default would be fine if woven"): content authored and not yet landed is
+   WOVEN IN among the landed rows, wearing its pending marker, ranked by the
+   reader's reach to its author through the one edge it was born with — its
+   authorship edge's own rank, applied before it lands. Switched off, the
+   feed keeps to what has landed — the landed-only view. Its label is the
+   pending marker's own words, so the chip names exactly what it lets in. */
 export const FEED_ALSO = [
   { value: "sensitive", label: "Sensitive" },
   { value: "removed", label: "Removed" },
@@ -460,8 +461,8 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
       </FilterSection>
       <OrderSection order={value.order} onOrder={(order) => set({ order })} seen={value.seen === true} onSeen={(seen) => set({ seen })} node={node && "order"} />
       {/* `Still settling` is the group's one chip on by default (`FEED_ALSO`):
-          the default is the feed as it has always been, and off is the
-          landed-only view. */}
+          on, what has not landed is woven in among the landed rows; off is
+          the landed-only view. */}
       <FilterSection label="Also show" hint="How sensitive content is veiled is set in Settings." node={node && "also"}>
         {FEED_ALSO.map((entry) => (
           <Chip key={entry.value} label={entry.label} selected={(value.also || []).includes(entry.value)} onToggle={() => toggle("also", entry.value)} node={node && `${entry.value}Chip`} />

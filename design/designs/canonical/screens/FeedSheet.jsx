@@ -36,12 +36,12 @@
    held FOR; the way to everything held, including the ones held against, is the
    text button under them.
 
-   "ALSO SHOW" CARRIES THREE CHIPS, AND `Still settling` IS ON (jakob,
-   2026-10-01; readme §13, the V1.0 scope cut). Content authored and not yet
-   landed reaches the feed by default, wearing its pending marker — the feed
-   as it has always been. Switched off, the feed keeps to what has landed, and
-   the trigger says so: `settled only`. `Sensitive` and `Removed` stay off
-   until asked for.
+   "ALSO SHOW" CARRIES THREE CHIPS, AND `Still settling` IS ON (jakob
+   2026-10-12, seam 137). Content authored and not yet landed is woven in
+   among the landed rows by default, wearing its pending marker, ranked by
+   the reader's reach to its author through the one edge it was born with.
+   Switched off, the feed keeps to what has landed, and the trigger says so:
+   `settled only`. `Sensitive` and `Removed` stay off until asked for.
 
    THE `people` CHIP (jakob 2026-10-12, item 7). The sheet is drawn at the
    default, `Everyone`; the chip's `your-people` draws the section with `Your

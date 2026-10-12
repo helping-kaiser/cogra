@@ -44,7 +44,7 @@ ALWAYS Posts is the one kind on, Ranked is the order, Everyone is the people row
 
 ALWAYS the feed admits content not yet landed, wearing Still settling GIVEN the feed's filter has Still settling on
 
-ALWAYS content not yet landed leads the ranked feed, before every scored row GIVEN the feed's filter has Still settling on and the order is Ranked
+ALWAYS content not yet landed is woven in among the landed rows, ranked by the reader's reach to its author through the one edge it was born with GIVEN the feed's filter has Still settling on and the order is Ranked
 
 ALWAYS a row not yet landed wears Still settling and carries no score, its score slot bare
 

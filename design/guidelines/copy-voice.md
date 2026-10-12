@@ -136,7 +136,8 @@ glyph used as punctuation.
 
 - `Still settling` — content authored, not yet ordered. The same words
   label the feed filter's *Also show* chip, on by default (blessed
-  2026-10-01, jakob): switched off, the feed keeps to what has landed,
+  2026-10-01, jakob), its rows woven in among the landed ones (jakob
+  2026-10-12): switched off, the feed keeps to what has landed,
   and the trigger reads the deviation as `settled only` (blessed
   2026-10-01, jakob).
 - `Edited` — an edit, marked softly.
