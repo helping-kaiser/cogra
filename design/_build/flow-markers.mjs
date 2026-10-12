@@ -1212,6 +1212,8 @@ Object.assign(FLOW_MARKERS, {
     ...nav(10),
     { n: 15, find: 'opinions on this post</span>', tag: "button" },
     { n: 16, find: '<span>Cited by ', tag: "button" },
+    // The edited-while-you-read line (the `read` chip's `changed`, 2026-10-12).
+    { n: 17, find: ">Edited since you opened it", tag: "button" },
   ],
   // The detail a moment after Hide @ada (ruling 65): `PostDetail`'s numbers,
   // to the number, on the post the menu's board draws — which carries no

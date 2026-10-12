@@ -1774,6 +1774,7 @@
     { "from": "PostDetail", "via": 14, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "PostDetail", "via": 15, "kind": "advance", "label": "opinions on this post", "to": [{ "board": "PostOpinions" }] },
     { "from": "PostDetail", "via": 16, "kind": "advance", "label": "Cited by N", "to": [{ "board": "CitedBy" }] },
+    { "from": "PostDetail", "via": 17, "kind": "advance", "label": "Edited since you opened it", "to": [{ "terminal": "self", "case": "a fresh read found the post, its tags or its citations changed since the detail opened — the tap swaps the newest version in place and the line goes (the read chip's changed)" }] },
 
     { "from": "PostDetailHidden", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to wherever the reader came from, by the post detail's noun table — the feed, if that is where they return, holds none of the hidden person's rows" }] },
     { "from": "PostDetailHidden", "via": 2, "kind": "detour", "label": "post overflow ⋮", "to": [{ "board": "ReaderPostMenu", "case": "the reader's sheet (master)" }] },

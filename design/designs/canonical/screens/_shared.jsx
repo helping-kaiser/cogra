@@ -977,6 +977,53 @@ const Unsave = ({ name, node }) => (
 );
 
 /* The post-detail column: the read surface a card opens into. */
+/* THE EDITED-WHILE-YOU-READ LINE (jakob 2026-10-09, seam 120; drawn
+   2026-10-12, the slice-3 round). A detail HOLDS the post as it was opened —
+   nothing changes under a reader mid-sentence — and when a fresh read finds
+   the post changed, this one line says so between the header and the post.
+   The tap swaps the newest version in place and the line goes. A change to
+   the post's tags or citations raises the same line in the same words: on the
+   graph those are acts of their own, not edits of the post, but a reader
+   reading it is owed the newer state either way, and one rule needs no
+   taxonomy. A redaction is never held behind it — it patches through at once.
+
+   IT IS IN THE PAGE'S FLOW, never pinned: it scrolls away with the header's
+   content beneath it, full width, its 48dp target the row itself. One line of
+   `label-medium` in `primary`, because it is an offer and a fact at once —
+   the words say what happened, the colour says it can be acted on. Announced
+   politely: it is news, not a fault. */
+function EditedSinceLine({ node, display }) {
+  return (
+    <div role="status" aria-live="polite" style={{ display }}>
+      <button
+        type="button"
+        className="cg-state cg-focus"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          width: "100%",
+          minHeight: "var(--touch-target-min)",
+          border: 0,
+          background: "none",
+          padding: "0 16px",
+          cursor: "pointer",
+          fontFamily: "var(--font-sans)",
+          fontSize: "var(--text-label-medium)",
+          lineHeight: "var(--text-label-medium--line-height)",
+          letterSpacing: "var(--text-label-medium--letter-spacing)",
+          fontWeight: "var(--text-label-medium--font-weight)",
+          color: "var(--primary)",
+          textAlign: "left",
+          boxSizing: "border-box",
+        }}
+        data-node={node}
+      >
+        Edited since you opened it — tap for the newest version.
+      </button>
+    </div>
+  );
+}
+
 function DetailColumn({ children }) {
   return (
     <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 12, padding: "0 0 8px 0" }}>

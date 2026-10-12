@@ -2533,7 +2533,8 @@
         ],
         "postDetail.header": [],
         "postDetail.header.back": [],
-        "postDetail.header.menu": []
+        "postDetail.header.menu": [],
+        "postDetail.newerVersion": []
       }
     },
     "PostDetailHidden": {

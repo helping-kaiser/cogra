@@ -17,3 +17,5 @@ WHEN the clip unveils GIVEN the device allows autoplay -> the clip plays
 WHEN the clip unveils GIVEN the device suppresses autoplay -> NEVER the clip starts on its own
 
 ALWAYS a reveal holds for every move inside the app until the app is fully closed or the media is hard reset
+
+ALWAYS the detail holds the post as it opened and answers a change to the post, its tags or its citations with PostDetail's line Edited since you opened it — tap for the newest version. under the header, in the page's flow, a redaction never held behind it

@@ -140,6 +140,15 @@ glyph used as punctuation.
   and the trigger reads the deviation as `settled only` (blessed
   2026-10-01, jakob).
 - `Edited` — an edit, marked softly.
+- `Edited since you opened it — tap for the newest version.` — the one
+  line a post's detail raises when a fresh read finds the post, its tags
+  or its citations changed while it was being read (`PostDetail`'s
+  `read` chip). It says what happened and offers the newer state in the
+  same breath; the detail never changes under the reader on its own. A
+  tag or citation change is not an edit on the graph, and the line still
+  says *Edited*: the reader's word for "this is not what you opened",
+  one rule with no taxonomy (jakob 2026-10-12). (*new 2026-10-12, drafted
+  — its wording jakob's at review*.)
 - `Nothing is signed until Set.` — the opening of the first-ever pad's
   second coaching line, and of every pad help that says it.
 - `Signing needs your key, which isn't in this browser — the write waits
