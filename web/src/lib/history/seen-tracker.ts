@@ -18,14 +18,22 @@
 //   holds the same law by construction (re-seeing writes nothing), so this is
 //   traffic economy, not correctness.
 //
-// WHAT H1 DOES NOT COUNT, ON PURPOSE (the packet's excluded branches):
+// - A CARD TALLER THAN THE VIEWPORT, ONCE BOTH ITS EDGES HAVE BEEN ON SCREEN,
+//   not necessarily at once (History.md:13). Such a card never reaches ratio 1,
+//   so a second pass reads its edges: an observer at threshold 0 says which
+//   cards stand in the scroller at all, and for those the card's bounding rect
+//   is read against the root's box — at every observation and every scroll,
+//   because an observer only speaks at a threshold crossing and an edge can
+//   pass through the screen between two of them (MDN, "Intersection Observer
+//   API": thresholds; `getBoundingClientRect` for the geometry itself). An
+//   edge is on screen when its own pixel row is inside the box; the queue
+//   remembers the first edge for the session and queues the card when the
+//   other arrives (`SeenQueue.seeEdge`). A card that fits is the whole-card
+//   rule's alone: its edges are never recorded, so two halves seen apart never
+//   add up to a seeing.
 //
-// - A CARD TALLER THAN THE VIEWPORT never reaches ratio 1, so it never fires
-//   here. The ruled rule — "seen once both its top and its bottom edge have been
-//   on screen, not necessarily at once" (History.md:13) — needs per-card edge
-//   memory and lands with its own slice.
-// - PAGE RENDERINGS — an opened post, a profile's or a topic's header
-//   (History.md:11) — are not list cards and are not tracked here.
+// WHAT IS NOT COUNTED HERE: page renderings — an opened post, a profile's or a
+// topic's header (History.md:11) — are not list cards and are not tracked here.
 //
 // WHEN IT IS SENT: batched, and flushed at the natural checkpoints
 // (feed-ranking.md §9.4; architecture.md "Render"): the scroller coming to
@@ -50,9 +58,9 @@ import { useActiveAccountId } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useMeasureEffect } from "@/lib/ui/measure-effect";
 import { scrollElementOf } from "@/lib/ui/scroll-host";
-import { seenQueue, SeenQueue, type SendSeen } from "./seen-queue";
+import { seenQueue, SeenQueue, type CardEdge, type SendSeen } from "./seen-queue";
 
-export { SEEN_BATCH_MAX, SeenQueue, type SendSeen } from "./seen-queue";
+export { SEEN_BATCH_MAX, SeenQueue, type CardEdge, type SendSeen } from "./seen-queue";
 
 /** How long the scroller must rest before the queue is sent. */
 export const SCROLL_IDLE_MS = 600;
@@ -146,14 +154,7 @@ export function useSeenTracker({
           observer.unobserve(entry.target);
           if (id !== null && queue.see(id)) queued = true;
         }
-        if (!queued) return;
-        // A card can come wholly into view with no scroll at all — the first
-        // page under a short header — so a seeing arms the rest timer too.
-        if (idle.current !== null) clearTimeout(idle.current);
-        idle.current = setTimeout(() => {
-          idle.current = null;
-          void queue.flush((batch) => send.current(batch));
-        }, SCROLL_IDLE_MS);
+        if (queued) restThenFlush(idle, queue, send);
       },
       { root: scrollElementOf(root), threshold: 1 },
     );
@@ -163,4 +164,99 @@ export function useSeenTracker({
     }
     return () => observer.disconnect();
   }, [root, list, ids, account, queue, suspended]);
+
+  // The tall cards' edges (History.md:13): which cards stand in the scroller
+  // at all, and for those, which of their edges is on screen right now.
+  useMeasureEffect(() => {
+    const holder = list.current;
+    if (account === null || holder === null || suspended) return;
+    const scroller = scrollElementOf(root);
+    const inView = new Set<Element>();
+    const read = () => {
+      if (inView.size === 0) return;
+      const box = viewBoxOf(scroller);
+      let queued = false;
+      for (const card of inView) {
+        const id = card.getAttribute(SEEN_ATTRIBUTE);
+        if (id === null) continue;
+        for (const edge of edgesOnScreen(card.getBoundingClientRect(), box)) {
+          if (queue.seeEdge(id, edge)) queued = true;
+        }
+        if (queue.hasSeen(id)) {
+          inView.delete(card);
+          observer.unobserve(card);
+        }
+      }
+      if (queued) restThenFlush(idle, queue, send);
+    };
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) inView.add(entry.target);
+          else inView.delete(entry.target);
+        }
+        read();
+      },
+      { root: scroller, threshold: 0 },
+    );
+    for (const card of holder.querySelectorAll(`[${SEEN_ATTRIBUTE}]`)) {
+      const id = card.getAttribute(SEEN_ATTRIBUTE);
+      if (id !== null && !queue.hasSeen(id)) observer.observe(card);
+    }
+    const target: HTMLElement | Window = scroller ?? window;
+    target.addEventListener("scroll", read, { passive: true });
+    window.addEventListener("resize", read);
+    return () => {
+      observer.disconnect();
+      target.removeEventListener("scroll", read);
+      window.removeEventListener("resize", read);
+    };
+  }, [root, list, ids, account, queue, suspended]);
+}
+
+/**
+ * A card can join with no scroll at all — the first page under a short
+ * header — so a seeing arms the rest timer itself.
+ */
+function restThenFlush(
+  idle: RefObject<ReturnType<typeof setTimeout> | null>,
+  queue: SeenQueue,
+  send: RefObject<SendSeen>,
+): void {
+  if (idle.current !== null) clearTimeout(idle.current);
+  idle.current = setTimeout(() => {
+    idle.current = null;
+    void queue.flush((batch) => send.current(batch));
+  }, SCROLL_IDLE_MS);
+}
+
+/** A vertical span in viewport coordinates. */
+export type Span = { readonly top: number; readonly bottom: number };
+
+/**
+ * The box the observer measures against, in viewport coordinates: the
+ * scroller's padding area — the root intersection rectangle of an element
+ * with a content clip (W3C Intersection Observer, "root intersection
+ * rectangle") — or the window's height when the window scrolls, the same
+ * reading `viewportHeightOf` gives a screenful.
+ */
+function viewBoxOf(scroller: HTMLElement | null): Span {
+  if (scroller === null) return { top: 0, bottom: window.innerHeight };
+  const top = scroller.getBoundingClientRect().top + scroller.clientTop;
+  return { top, bottom: top + scroller.clientHeight };
+}
+
+/**
+ * The edges of `card` on screen in `view`, for a card TALLER than the view
+ * only — a card that fits is seen whole or not at all (History.md:5), so it
+ * has no edges to record. An edge is on screen when its own pixel row lies
+ * inside the view: the top row starts at `top`, the bottom row ends at
+ * `bottom`.
+ */
+export function edgesOnScreen(card: Span, view: Span): CardEdge[] {
+  if (card.bottom - card.top <= view.bottom - view.top) return [];
+  const edges: CardEdge[] = [];
+  if (card.top >= view.top && card.top < view.bottom) edges.push("top");
+  if (card.bottom > view.top && card.bottom <= view.bottom) edges.push("bottom");
+  return edges;
 }

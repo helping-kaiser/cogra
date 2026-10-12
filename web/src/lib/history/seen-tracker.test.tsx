@@ -17,6 +17,7 @@ import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { resetSeenQueueForTests } from "./seen-queue";
 import {
+  edgesOnScreen,
   SCROLL_IDLE_MS,
   SEEN_ATTRIBUTE,
   SEEN_BATCH_MAX,
@@ -72,6 +73,15 @@ function List({ ids, suspended = false }: { ids: readonly string[]; suspended?: 
       ))}
     </ul>
   );
+}
+
+/** The window's height: the box a list with no scroller is measured in. */
+const VIEW = window.innerHeight;
+
+/** Puts `card` at `top` in viewport coordinates, `height` tall. */
+function placeAt(card: HTMLElement, top: number, height: number) {
+  card.getBoundingClientRect = () =>
+    ({ top, bottom: top + height, height, left: 0, right: 0, width: 0, x: 0, y: top }) as DOMRect;
 }
 
 async function cards(...ids: string[]): Promise<HTMLElement[]> {
@@ -163,13 +173,16 @@ describe("the seen tracker on a list", () => {
     await waitFor(() => expect(sent).toEqual([["a"]]));
   });
 
-  it("a card taller than the viewport never reaches a whole view, so it never fires in H1", async () => {
+  it("a tall card covering the whole screen shows neither edge, so it is not seen yet", async () => {
     reset();
     const { unmount } = renderWithProviders(<List ids={["tall"]} />, { store: signedIn() });
     const [tall] = await cards("tall");
     // A card taller than the scroller tops out below ratio 1 however it is
-    // scrolled: the ruled both-edges rule (History.md:13) is its own slice.
-    intersectEach([{ target: tall, ratio: 0.8, isIntersecting: true }]);
+    // scrolled, so the whole-card gate never takes it; and while it covers the
+    // screen neither of its edges is on it, so the edge rule (History.md:13)
+    // has nothing to record either.
+    placeAt(tall, -100, VIEW * 2);
+    intersectEach([{ target: tall, ratio: 0.38, isIntersecting: true }]);
     unmount();
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(sent).toEqual([]);
@@ -265,5 +278,125 @@ describe("the seen tracker under a sheet", () => {
     intersectEach([{ target: a, ratio: 1 }]);
     unmount();
     await waitFor(() => expect(sent).toEqual([["a"]]));
+  });
+});
+
+describe("the tall-card rule (History.md:13)", () => {
+  it("an edge is on screen by its own pixel row, and only a card taller than the view has edges", () => {
+    const view = { top: 0, bottom: 1000 };
+    // A card that fits is the whole-card rule's alone, wherever it stands.
+    expect(edgesOnScreen({ top: -100, bottom: 400 }, view)).toEqual([]);
+    expect(edgesOnScreen({ top: 0, bottom: 1000 }, view)).toEqual([]);
+    // Taller by one pixel: its top row at the view's first row is on screen,
+    // at the view's bottom line it is not.
+    expect(edgesOnScreen({ top: 0, bottom: 1001 }, view)).toEqual(["top"]);
+    expect(edgesOnScreen({ top: 999, bottom: 2000 }, view)).toEqual(["top"]);
+    expect(edgesOnScreen({ top: 1000, bottom: 2001 }, view)).toEqual([]);
+    // Its bottom row ending on the view's last row is on screen, ending on
+    // the view's top line it is not.
+    expect(edgesOnScreen({ top: -1, bottom: 1000 }, view)).toEqual(["bottom"]);
+    expect(edgesOnScreen({ top: -1999, bottom: 1 }, view)).toEqual(["bottom"]);
+    expect(edgesOnScreen({ top: -2000, bottom: 0 }, view)).toEqual([]);
+    // Covering the view, it shows neither.
+    expect(edgesOnScreen({ top: -10, bottom: 1010 }, view)).toEqual([]);
+  });
+
+  it("the queue holds a card's first edge and queues it when the other arrives", () => {
+    const queue = new SeenQueue();
+    queue.belongTo("acct-1");
+    expect(queue.seeEdge("tall", "top")).toBe(false);
+    expect(queue.seeEdge("tall", "top")).toBe(false);
+    expect(queue.queued).toEqual([]);
+    expect(queue.seeEdge("tall", "bottom")).toBe(true);
+    expect(queue.queued).toEqual(["tall"]);
+    // Seen once: no edge queues it again.
+    expect(queue.seeEdge("tall", "top")).toBe(false);
+    expect(queue.seeEdge("tall", "bottom")).toBe(false);
+    expect(queue.queued).toEqual(["tall"]);
+    // Either order: bottom first, scrolling up into a card.
+    queue.seeEdge("up", "bottom");
+    expect(queue.seeEdge("up", "top")).toBe(true);
+  });
+
+  it("the session boundary forgets a remembered edge, and no session records none", () => {
+    const queue = new SeenQueue();
+    expect(queue.seeEdge("tall", "top")).toBe(false);
+    queue.belongTo("acct-1");
+    // The signed-out top never counted.
+    expect(queue.seeEdge("tall", "bottom")).toBe(false);
+    queue.belongTo("acct-2");
+    // acct-1's bottom edge does not ride into acct-2's session.
+    expect(queue.seeEdge("tall", "top")).toBe(false);
+    expect(queue.queued).toEqual([]);
+    queue.belongTo(null);
+    queue.belongTo("acct-2");
+    expect(queue.seeEdge("tall", "bottom")).toBe(false);
+    expect(queue.queued).toEqual([]);
+  });
+
+  it("a tall card is seen once its top and its bottom were on screen in separate frames", async () => {
+    reset();
+    const { unmount } = renderWithProviders(<List ids={["tall"]} />, { store: signedIn() });
+    const [tall] = await cards("tall");
+    // The card scrolls in from below: its top row is on screen.
+    placeAt(tall, VIEW - 50, VIEW * 2);
+    intersectEach([{ target: tall, ratio: 0.03, isIntersecting: true }]);
+    // It covers the screen: no observer threshold is crossed, nothing reads.
+    placeAt(tall, -VIEW / 2, VIEW * 2);
+    window.dispatchEvent(new Event("scroll"));
+    // Its bottom arrives between two threshold crossings: the scroll reads it.
+    placeAt(tall, 50 - VIEW * 2, VIEW * 2);
+    window.dispatchEvent(new Event("scroll"));
+    unmount();
+    await waitFor(() => expect(sent).toEqual([["tall"]]));
+  });
+
+  it("a tall card whose bottom edge never reached the screen is never seen", async () => {
+    reset();
+    const { unmount } = renderWithProviders(<List ids={["tall"]} />, { store: signedIn() });
+    const [tall] = await cards("tall");
+    placeAt(tall, VIEW - 50, VIEW * 2);
+    intersectEach([{ target: tall, ratio: 0.03, isIntersecting: true }]);
+    placeAt(tall, 10, VIEW * 2);
+    window.dispatchEvent(new Event("scroll"));
+    placeAt(tall, -VIEW / 2, VIEW * 2);
+    window.dispatchEvent(new Event("scroll"));
+    // Back up and away again: the top, twice more, is still one edge.
+    placeAt(tall, VIEW / 2, VIEW * 2);
+    window.dispatchEvent(new Event("scroll"));
+    intersectEach([{ target: tall, ratio: 0, isIntersecting: false }]);
+    unmount();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(sent).toEqual([]);
+  });
+
+  it("a card that fits is never seen by halves: two edges seen apart are not a whole view", async () => {
+    reset();
+    const { unmount } = renderWithProviders(<List ids={["short"]} />, { store: signedIn() });
+    const [short] = await cards("short");
+    // Its top half at the bottom of the screen, then its bottom half at the top.
+    placeAt(short, VIEW - 100, 300);
+    intersectEach([{ target: short, ratio: 0.33, isIntersecting: true }]);
+    placeAt(short, -200, 300);
+    window.dispatchEvent(new Event("scroll"));
+    intersectEach([{ target: short, ratio: 0.33, isIntersecting: true }]);
+    unmount();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(sent).toEqual([]);
+  });
+
+  it("a tall card's edges are not read while a sheet covers the list", async () => {
+    reset();
+    const store = signedIn();
+    const { unmount } = renderWithProviders(<List ids={["tall"]} suspended />, { store });
+    const tall = await screen.findByTestId("card-tall");
+    expect(isObserved(tall)).toBe(false);
+    placeAt(tall, VIEW - 50, VIEW * 2);
+    window.dispatchEvent(new Event("scroll"));
+    placeAt(tall, 50 - VIEW * 2, VIEW * 2);
+    window.dispatchEvent(new Event("scroll"));
+    unmount();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(sent).toEqual([]);
   });
 });
