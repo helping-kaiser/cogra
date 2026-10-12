@@ -1,11 +1,11 @@
 package com.cogra.domain.stance
 
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * A stance was just signed, somewhere in the app — the one fact the

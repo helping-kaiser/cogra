@@ -603,6 +603,7 @@ private fun CograNavGraphContent(
             )
         }
     }
+
     // THE CEREMONY OPENS OVER THE FEED ROOT ALONE (VouchedIn.md:35): the
     // pad, the card or the profile it was signed from never come back on
     // Back, so the entry is pushed with everything above the feed popped.

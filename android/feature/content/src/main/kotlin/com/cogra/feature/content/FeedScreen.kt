@@ -180,10 +180,7 @@ fun FeedRoute(
         expiredLabel = expiredLabel,
         onExpiredDismissed = onExpiredDismissed,
         onOpenDraft = onOpenDraft,
-        onRefresh = {
-            onPulled()
-            viewModel.refresh()
-        },
+        onRefresh = then(onPulled, viewModel::refresh),
         onLoadMore = viewModel::loadMore,
         onReveal = viewModel::onReveal,
         onOpenPost = onOpenPost,
@@ -201,6 +198,12 @@ fun FeedRoute(
             StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node)
         },
     )
+}
+
+/** One callback after another — the pull tells the shell, then refreshes. */
+private fun then(first: () -> Unit, second: () -> Unit): () -> Unit = {
+    first()
+    second()
 }
 
 /**

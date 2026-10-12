@@ -91,6 +91,10 @@ fun CograButton(
         Text(text = text, style = MaterialTheme.typography.labelLarge)
     }
 
+    // The text button's ink: `primary` on the page, the panel's own on a tonal panel.
+    val textInk = MaterialTheme.colorScheme.let {
+        if (kind == ButtonKind.InverseText) it.onTertiaryContainer else it.primary
+    }
     when (kind) {
         ButtonKind.Filled -> Button(
             onClick = onClick,
@@ -114,25 +118,12 @@ fun CograButton(
             contentPadding = padding,
         ) { label() }
 
-        ButtonKind.Text -> TextButton(
+        ButtonKind.Text, ButtonKind.InverseText -> TextButton(
             onClick = onClick,
             modifier = shared,
             enabled = enabled,
             shape = CircleShape,
-            colors = ButtonDefaults.textButtonColors(
-                contentColor = MaterialTheme.colorScheme.primary,
-            ),
-            contentPadding = padding,
-        ) { label() }
-
-        ButtonKind.InverseText -> TextButton(
-            onClick = onClick,
-            modifier = shared,
-            enabled = enabled,
-            shape = CircleShape,
-            colors = ButtonDefaults.textButtonColors(
-                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-            ),
+            colors = ButtonDefaults.textButtonColors(contentColor = textInk),
             contentPadding = padding,
         ) { label() }
 

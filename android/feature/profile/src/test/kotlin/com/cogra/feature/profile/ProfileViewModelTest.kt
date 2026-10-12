@@ -145,7 +145,12 @@ class ProfileViewModelTest {
         profiles.byHandle["mira"] = Outcome.Success(testProfile(id = "u2", handle = "mira"))
         profiles.byHandle["sol"] = Outcome.Success(testProfile(id = "u3", handle = "sol"))
         account.profile = UserProfile(
-            "u1", "noa", null, AccountState.MEMBER, false, ActorRef("u2", "mira"),
+            "u1",
+            "noa",
+            null,
+            AccountState.MEMBER,
+            false,
+            ActorRef("u2", "mira"),
             vouchBackDismissed = true,
         )
         val vm = viewModel()

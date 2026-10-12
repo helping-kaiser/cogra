@@ -3,7 +3,9 @@ package com.cogra.feature.home
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -14,8 +16,11 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /** The ceremony (VouchedIn.md); the web's twin is `vouched-in-view.test.tsx`. */
+// The drawn frame: a phone tall enough for the sky and the words both.
+@Config(qualifiers = "w411dp-h891dp")
 @RunWith(RobolectricTestRunner::class)
 class VouchedInScreenTest {
 

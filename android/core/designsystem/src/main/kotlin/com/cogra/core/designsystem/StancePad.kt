@@ -36,11 +36,11 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -438,18 +438,21 @@ fun StanceControl(
                     onDismissRequest = onDismissPad,
                     properties = PopupProperties(focusable = true),
                 ) {
-                    Box(
-                        contentAlignment = Alignment.BottomCenter,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.scrim.copy(alpha = SCRIM_DIALOG_ALPHA))
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = onDismissPad,
-                            )
-                            .testTag("${testTagPrefix}_stance_scrim"),
-                    ) {
+                    // The wash and the pad are SIBLINGS, never parent and
+                    // child: a clickable merges its descendants, and the pad
+                    // must stay its own node for the reader.
+                    Box(contentAlignment = Alignment.BottomCenter, modifier = Modifier.fillMaxSize()) {
+                        Box(
+                            Modifier
+                                .matchParentSize()
+                                .background(MaterialTheme.colorScheme.scrim.copy(alpha = SCRIM_DIALOG_ALPHA))
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = onDismissPad,
+                                )
+                                .testTag("${testTagPrefix}_stance_scrim"),
+                        )
                         Box(Modifier.padding(bottom = variant.padInset)) { overlay() }
                     }
                 }
@@ -461,58 +464,58 @@ fun StanceControl(
         if (padOnly) {
             Box { pad() }
         } else {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .sizeIn(minWidth = TARGET_MIN, minHeight = TARGET_MIN)
-                .then(if (wide) Modifier.fillMaxWidth() else Modifier)
-                .clip(RoundedCornerShape(50))
-                .stanceGesture(
-                    enabled = !state.busy,
-                    onHoldDefault = onHoldDefault,
-                    onOpenPad = onOpenPad,
-                )
-                // Colour never carries meaning alone, and a drag gesture
-                // always has a non-drag equivalent (design.md §10): the
-                // node reads as a button, double-tap opens the pad as a
-                // tap does, double-tap-and-hold signs the default as a
-                // hold does, and the alternates ride custom actions.
-                // One node for the whole target: the face and the pair
-                // inside it are a readout of what this description
-                // already says in words, so they are absorbed rather
-                // than announced again — an emoji read out by its own
-                // name is noise (design.md §10).
-                .semantics(mergeDescendants = true) {
-                    role = Role.Button
-                    contentDescription = description
-                    onClick(label = tapLabel) {
-                        onOpenPad()
-                        true
-                    }
-                    onLongClick(label = holdLabel) {
-                        onHoldDefault()
-                        true
-                    }
-                    customActions = listOfNotNull(
-                        CustomAccessibilityAction(exactLabel) {
-                            onOpenPad()
-                            if (!state.exactValues) onToggleExactValues()
-                            true
-                        },
-                        // Offered on the same terms as the drawn route:
-                        // an action that can only open a dialog saying
-                        // there is nothing to walk back is not an action.
-                        CustomAccessibilityAction(severLabel) {
-                            onOpenSeverance()
-                            true
-                        }.takeIf { severable },
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .sizeIn(minWidth = TARGET_MIN, minHeight = TARGET_MIN)
+                    .then(if (wide) Modifier.fillMaxWidth() else Modifier)
+                    .clip(RoundedCornerShape(50))
+                    .stanceGesture(
+                        enabled = !state.busy,
+                        onHoldDefault = onHoldDefault,
+                        onOpenPad = onOpenPad,
                     )
-                }
-                .testTag(anchor?.tag ?: "${testTagPrefix}_stance"),
-        ) {
-            StanceRestingFace(state.standing, testTagPrefix, anchor)
-            pad()
-        }
+                    // Colour never carries meaning alone, and a drag gesture
+                    // always has a non-drag equivalent (design.md §10): the
+                    // node reads as a button, double-tap opens the pad as a
+                    // tap does, double-tap-and-hold signs the default as a
+                    // hold does, and the alternates ride custom actions.
+                    // One node for the whole target: the face and the pair
+                    // inside it are a readout of what this description
+                    // already says in words, so they are absorbed rather
+                    // than announced again — an emoji read out by its own
+                    // name is noise (design.md §10).
+                    .semantics(mergeDescendants = true) {
+                        role = Role.Button
+                        contentDescription = description
+                        onClick(label = tapLabel) {
+                            onOpenPad()
+                            true
+                        }
+                        onLongClick(label = holdLabel) {
+                            onHoldDefault()
+                            true
+                        }
+                        customActions = listOfNotNull(
+                            CustomAccessibilityAction(exactLabel) {
+                                onOpenPad()
+                                if (!state.exactValues) onToggleExactValues()
+                                true
+                            },
+                            // Offered on the same terms as the drawn route:
+                            // an action that can only open a dialog saying
+                            // there is nothing to walk back is not an action.
+                            CustomAccessibilityAction(severLabel) {
+                                onOpenSeverance()
+                                true
+                            }.takeIf { severable },
+                        )
+                    }
+                    .testTag(anchor?.tag ?: "${testTagPrefix}_stance"),
+            ) {
+                StanceRestingFace(state.standing, testTagPrefix, anchor)
+                pad()
+            }
         }
 
         // A refusal has to be visible even when the pad is shut, which is
@@ -706,28 +709,7 @@ private fun StancePadOverlay(
 ) {
     val explainLabel = variant?.title ?: stringResource(R.string.stance_explain)
     val padNode = variant?.padNode
-    // A signed act waits rather than answering at once (K4.1): past 200ms
-    // the variant's Set says it is still working, never a spinner.
-    var settingSlow by remember { mutableStateOf(false) }
-    LaunchedEffect(state.busy) {
-        settingSlow = false
-        if (state.busy) {
-            delay(SETTING_AFTER_MS)
-            settingSlow = true
-        }
-    }
-    Card(
-        modifier = Modifier
-            .width(PAD_WIDTH)
-            .testTag(padNode?.tag ?: "${testTagPrefix}_stance_pad")
-            .then(
-                if (variant != null) {
-                    Modifier.semantics { paneTitle = variant.title }
-                } else {
-                    Modifier
-                },
-            ),
-    ) {
+    Card(modifier = Modifier.width(PAD_WIDTH).padSemantics(variant, testTagPrefix)) {
         Column(
             // A parked pad carries its alternates and the severance
             // route, which is more than a short screen holds upright.
@@ -771,97 +753,15 @@ private fun StancePadOverlay(
                     lines = variant?.help,
                 )
             } else {
-                StanceReadout(state.pick, testTagPrefix, axes)
-                // The chosen surface replaces the pad, it does not sit beside
-                // it: an alternate is the input, not a second opinion
-                // (design.md §8.6).
-                if (state.inputMode == StanceInputSurface.PAD) {
-                    StancePadField(
-                        state.pick,
-                        onPick = onPick,
-                        enabled = !state.busy,
-                        modifier = Modifier.dataNode(padNode?.div("field")),
-                    )
-                }
-                // Between the field and the landing line, where the
-                // master's `padNote` slot sits (`StanceControl.jsx`). The
-                // variant's own line stands there on every open, the
-                // first-ever open's coaching under it (VouchBackPad.md:13-15).
-                if (variant != null) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag(padNode?.div("note")?.tag ?: "${testTagPrefix}_stance_note"),
-                    ) {
-                        Text(
-                            text = variant.note,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        if (state.coaching) StanceCoaching(testTagPrefix)
-                    }
-                } else if (state.coaching) {
-                    StanceCoaching(testTagPrefix)
-                }
-                StanceLandingLine(state.landing, testTagPrefix, axes, zeroWords)
+                PadBody(state, onPick, testTagPrefix, axes, zeroWords, variant)
             }
             // The alternates are the accessible path, so the way into
             // them is present whatever the stored preference is.
             if (!explaining && (state.exactValues || state.inputMode != StanceInputSurface.PAD)) {
                 StanceExactValues(state.inputMode, state.pick, onPick, testTagPrefix, axes)
             }
-            if (state.failed) {
-                if (variant != null && !state.needsKey) {
-                    // PadFailed's own line, above the commit row (:37).
-                    ErrorLine(R.string.stance_pad_failed, "${testTagPrefix}_stance_failed")
-                } else {
-                    StanceFailure(state.needsKey, testTagPrefix)
-                }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (variant == null) {
-                    Button(
-                        // Help can never be signed through: the field it
-                        // explains is not on screen to check against.
-                        onClick = onCommit,
-                        enabled = !state.busy && !explaining,
-                        modifier = Modifier.testTag("${testTagPrefix}_stance_set"),
-                    ) {
-                        Text(stringResource(R.string.stance_set))
-                    }
-                } else {
-                    // Inert while in flight — refusing a second press
-                    // without dimming — and saying so past 200ms; a signing
-                    // that did not go through puts Retry in Set's slot.
-                    val setNode = padNode?.div("set")?.tag ?: "${testTagPrefix}_stance_set"
-                    val label = when {
-                        state.busy && settingSlow -> stringResource(R.string.stance_setting)
-                        state.failed -> stringResource(R.string.stance_retry)
-                        else -> stringResource(R.string.stance_set)
-                    }
-                    val onSet = { if (!state.busy) onCommit() }
-                    if (state.failed && !state.busy) {
-                        OutlinedButton(
-                            onClick = onSet,
-                            enabled = !explaining,
-                            modifier = Modifier.testTag(setNode),
-                        ) { Text(label) }
-                    } else {
-                        Button(
-                            onClick = onSet,
-                            enabled = !explaining,
-                            modifier = Modifier.testTag(setNode),
-                        ) { Text(label) }
-                    }
-                }
-                TextButton(
-                    onClick = onCancel,
-                    modifier = Modifier.testTag(padNode?.div("cancel")?.tag ?: "${testTagPrefix}_stance_cancel"),
-                ) {
-                    Text(stringResource(R.string.stance_cancel))
-                }
-            }
+            if (state.failed) PadFault(variant, state.needsKey, testTagPrefix)
+            PadCommitRow(state, explaining, onCommit, onCancel, testTagPrefix, variant)
             if (state.inputMode == StanceInputSurface.PAD) {
                 TextButton(
                     onClick = onToggleExactValues,
@@ -892,6 +792,136 @@ private fun StancePadOverlay(
                 }
             }
         }
+    }
+}
+
+/** The pad's body under the standing line: readout, field, note, landing. */
+@Composable
+private fun PadBody(
+    state: StanceControlState,
+    onPick: (StancePoint) -> Unit,
+    testTagPrefix: String,
+    axes: StanceAxes,
+    zeroWords: StanceZeroWords,
+    variant: StancePadVariant?,
+) {
+    StanceReadout(state.pick, testTagPrefix, axes)
+    // The chosen surface replaces the pad, it does not sit beside it: an
+    // alternate is the input, not a second opinion (design.md §8.6).
+    if (state.inputMode == StanceInputSurface.PAD) {
+        StancePadField(
+            state.pick,
+            onPick = onPick,
+            enabled = !state.busy,
+            modifier = Modifier.dataNode(variant?.padNode?.div("field")),
+        )
+    }
+    PadNote(variant, state.coaching, testTagPrefix)
+    StanceLandingLine(state.landing, testTagPrefix, axes, zeroWords)
+}
+
+/** The pad's tag and, for a variant, its title (VouchBackPad.md:9). */
+private fun Modifier.padSemantics(variant: StancePadVariant?, testTagPrefix: String): Modifier =
+    testTag(variant?.padNode?.tag ?: "${testTagPrefix}_stance_pad").then(
+        if (variant != null) Modifier.semantics { paneTitle = variant.title } else Modifier,
+    )
+
+/**
+ * The master's `padNote` slot, between the field and the landing line
+ * (`StanceControl.jsx`). A variant's own line stands there on every open,
+ * the first-ever open's coaching under it (VouchBackPad.md:13-15).
+ */
+@Composable
+private fun PadNote(variant: StancePadVariant?, coaching: Boolean, testTagPrefix: String) {
+    if (variant == null) {
+        if (coaching) StanceCoaching(testTagPrefix)
+        return
+    }
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(variant.padNode?.div("note")?.tag ?: "${testTagPrefix}_stance_note"),
+    ) {
+        Text(
+            text = variant.note,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        if (coaching) StanceCoaching(testTagPrefix)
+    }
+}
+
+/** Set and Cancel — a variant's Set waiting and retrying in its own way. */
+@Composable
+private fun PadCommitRow(
+    state: StanceControlState,
+    explaining: Boolean,
+    onCommit: () -> Unit,
+    onCancel: () -> Unit,
+    testTagPrefix: String,
+    variant: StancePadVariant?,
+) {
+    val padNode = variant?.padNode
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (variant == null) {
+            Button(
+                // Help can never be signed through: the field it explains
+                // is not on screen to check against.
+                onClick = onCommit,
+                enabled = !state.busy && !explaining,
+                modifier = Modifier.testTag("${testTagPrefix}_stance_set"),
+            ) {
+                Text(stringResource(R.string.stance_set))
+            }
+        } else {
+            VariantSet(state, explaining, onCommit, padNode?.div("set")?.tag ?: "${testTagPrefix}_stance_set")
+        }
+        TextButton(
+            onClick = onCancel,
+            modifier = Modifier.testTag(padNode?.div("cancel")?.tag ?: "${testTagPrefix}_stance_cancel"),
+        ) {
+            Text(stringResource(R.string.stance_cancel))
+        }
+    }
+}
+
+/** The fault above the commit row: PadFailed's own line on a variant (:37). */
+@Composable
+private fun PadFault(variant: StancePadVariant?, needsKey: Boolean, testTagPrefix: String) {
+    if (variant != null && !needsKey) {
+        ErrorLine(R.string.stance_pad_failed, "${testTagPrefix}_stance_failed")
+    } else {
+        StanceFailure(needsKey, testTagPrefix)
+    }
+}
+
+/**
+ * A variant's Set. A signed act waits rather than answering at once
+ * (K4.1): inert while in flight — refusing a second press without
+ * dimming — and saying so past 200ms, never a spinner (VouchBackPad.md:31);
+ * a signing that did not go through puts Retry in Set's slot (:37).
+ */
+@Composable
+private fun VariantSet(state: StanceControlState, explaining: Boolean, onCommit: () -> Unit, tag: String) {
+    var settingSlow by remember { mutableStateOf(false) }
+    LaunchedEffect(state.busy) {
+        settingSlow = false
+        if (state.busy) {
+            delay(SETTING_AFTER_MS)
+            settingSlow = true
+        }
+    }
+    val label = when {
+        state.busy && settingSlow -> stringResource(R.string.stance_setting)
+        state.failed -> stringResource(R.string.stance_retry)
+        else -> stringResource(R.string.stance_set)
+    }
+    val onSet = { if (!state.busy) onCommit() }
+    if (state.failed && !state.busy) {
+        OutlinedButton(onClick = onSet, enabled = !explaining, modifier = Modifier.testTag(tag)) { Text(label) }
+    } else {
+        Button(onClick = onSet, enabled = !explaining, modifier = Modifier.testTag(tag)) { Text(label) }
     }
 }
 

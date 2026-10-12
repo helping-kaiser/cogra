@@ -23,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -226,7 +227,12 @@ class StanceViewModelTest {
     @Test
     fun aTakenSigningIsAnnouncedAndMarkedTaken() = runTest(dispatcher) {
         val heard = mutableListOf<Unit>()
-        val listening = backgroundScope.launch { signals.signed.collect { heard += it } }
+        val listening = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            signals.signed.collect {
+                heard +=
+                    it
+            }
+        }
         val vm = viewModel()
         vm.observe(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
@@ -245,7 +251,12 @@ class StanceViewModelTest {
     @Test
     fun aSigningThatDidNotGoThroughIsNeitherAnnouncedNorTaken() = runTest(dispatcher) {
         val heard = mutableListOf<Unit>()
-        val listening = backgroundScope.launch { signals.signed.collect { heard += it } }
+        val listening = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            signals.signed.collect {
+                heard +=
+                    it
+            }
+        }
         stances.prepareOutcome = Outcome.Failed(IllegalStateException("offline"))
         val vm = viewModel()
         vm.observe(TARGET)

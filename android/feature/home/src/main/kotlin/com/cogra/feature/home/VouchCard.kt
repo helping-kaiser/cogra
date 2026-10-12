@@ -133,42 +133,49 @@ fun VouchCard(
             color = ink,
             modifier = Modifier.dataNode(VOUCH_CARD / "body"),
         )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Space.x2, Alignment.End),
-        ) {
-            if (putAwayFailed) {
-                // The row's own line, then Retry in Got it's slot.
-                Text(
-                    text = stringResource(R.string.vouch_card_put_away_failed),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = ink,
-                    modifier = Modifier
-                        .weight(1f)
-                        .semantics { liveRegion = LiveRegionMode.Polite }
-                        .testTag("feed_vouch_card_failed"),
-                )
-                CograButton(
-                    text = stringResource(R.string.vouch_card_retry),
-                    onClick = onPutAway,
-                    kind = ButtonKind.InverseText,
-                    testTag = "feed_vouch_card_retry",
-                )
-            } else {
-                CograButton(
-                    text = stringResource(R.string.vouch_card_got_it),
-                    onClick = onPutAway,
-                    kind = ButtonKind.InverseText,
-                    testTag = (VOUCH_CARD / "dismiss").tag,
-                )
-            }
+        VouchCardActions(putAwayFailed, onPutAway, onVouchBack)
+    }
+}
+
+/** The card's row: `Got it` — or, failed, the line and `Retry` — then `Vouch back`. */
+@Composable
+private fun VouchCardActions(putAwayFailed: Boolean, onPutAway: () -> Unit, onVouchBack: () -> Unit) {
+    val ink = MaterialTheme.colorScheme.onTertiaryContainer
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.x2, Alignment.End),
+    ) {
+        if (putAwayFailed) {
+            // The row's own line, then Retry in Got it's slot.
+            Text(
+                text = stringResource(R.string.vouch_card_put_away_failed),
+                style = MaterialTheme.typography.bodySmall,
+                color = ink,
+                modifier = Modifier
+                    .weight(1f)
+                    .semantics { liveRegion = LiveRegionMode.Polite }
+                    .testTag("feed_vouch_card_failed"),
+            )
             CograButton(
-                text = stringResource(R.string.vouch_card_vouch_back),
-                onClick = onVouchBack,
-                kind = ButtonKind.Inverse,
-                testTag = (VOUCH_CARD / "vouch").tag,
+                text = stringResource(R.string.vouch_card_retry),
+                onClick = onPutAway,
+                kind = ButtonKind.InverseText,
+                testTag = "feed_vouch_card_retry",
+            )
+        } else {
+            CograButton(
+                text = stringResource(R.string.vouch_card_got_it),
+                onClick = onPutAway,
+                kind = ButtonKind.InverseText,
+                testTag = (VOUCH_CARD / "dismiss").tag,
             )
         }
+        CograButton(
+            text = stringResource(R.string.vouch_card_vouch_back),
+            onClick = onVouchBack,
+            kind = ButtonKind.Inverse,
+            testTag = (VOUCH_CARD / "vouch").tag,
+        )
     }
 }

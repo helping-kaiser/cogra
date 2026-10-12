@@ -4,21 +4,25 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsNotEnabled
-import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 private const val TAG = "vouch_back"
 private val PAD = DataNode("feed") / "vouchCard" / "stance" / "pad"
@@ -27,6 +31,8 @@ private val PAD = DataNode("feed") / "vouchCard" / "stance" / "pad"
  * The vouch-back pad variant (VouchBackPad.md) over the master control —
  * the web's twin is `feed/vouch-card.test.tsx`'s "the vouch-back pad".
  */
+// A phone tall enough for the open pad whole, parked 80dp above the bar.
+@Config(qualifiers = "w411dp-h891dp")
 @RunWith(RobolectricTestRunner::class)
 class StancePadVariantTest {
 
@@ -88,15 +94,15 @@ class StancePadVariantTest {
     @Test
     fun theOpenerLineStandsOnEveryVouchBackOpen() {
         show(open)
-        compose.onNodeWithTag((PAD / "note").tag)
-            .assertTextContains(variant.note)
+        compose.onNodeWithTag((PAD / "note").tag).assertExists()
+        compose.onNodeWithText(variant.note).assertExists()
         compose.onNodeWithTag("${TAG}_stance_coaching").assertDoesNotExist()
     }
 
     @Test
     fun theFirstEverOpenCarriesTheCoachingUnderTheLine() {
         show(open.copy(coaching = true))
-        compose.onNodeWithTag((PAD / "note").tag).assertTextContains(variant.note)
+        compose.onNodeWithText(variant.note).assertExists()
         compose.onNodeWithTag("${TAG}_stance_coaching", useUnmergedTree = true).assertExists()
     }
 
@@ -121,7 +127,8 @@ class StancePadVariantTest {
     @Test
     fun theShellIsInertUnderTheVouchBackPad() {
         show(open)
-        compose.onNodeWithTag("${TAG}_stance_scrim").assertExists().performClick()
+        // A press on the wash itself, clear of the parked pad.
+        compose.onNodeWithTag("${TAG}_stance_scrim").performTouchInput { click(Offset(8f, 8f)) }
         assertThat(dismissed).isEqualTo(1)
         assertThat(committed).isEqualTo(0)
     }

@@ -33,7 +33,10 @@ class StatusBannersTest {
         compose.setContent {
             StatusBanners(
                 state = state,
-                onTokenChange = {}, onVerify = {}, onResendEmailChange = {}, onResend = {},
+                onTokenChange = {},
+                onVerify = {},
+                onResendEmailChange = {},
+                onResend = {},
                 onDismissWaitingHint = {},
                 onResumePending = {},
                 onStartKeyCeremony = {},
