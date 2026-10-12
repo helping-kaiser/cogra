@@ -16,6 +16,7 @@ import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import type { RegistrationFlow } from "@/lib/signing/registration-flow";
 import type { RegistrationProgress } from "@/lib/signing/registration-signer";
 import { byNode } from "@/test/data-node";
+import { announceStanceSigned } from "@/lib/stance/signed-events";
 
 // The feed reads `?compose=` to say that the last post did not land, and
 // rewrites the URL when the notice is dismissed.
@@ -32,7 +33,12 @@ vi.mock("next/navigation", () => ({
  * genesis moderator is the default and the tests that care override it.
  */
 function borrowedViewHandler(
-  vantage: { id: string; handle: string; displayName: string | null } | null = {
+  vantage: {
+    id: string;
+    handle: string;
+    displayName: string | null;
+    avatarUrl?: string;
+  } | null = {
     id: "genesis-id",
     handle: "genesis_mod",
     displayName: "Genesis Moderator",
@@ -49,6 +55,10 @@ function borrowedViewHandler(
                 id: vantage.id,
                 handle: vantage.handle,
                 displayName: { __typename: "ModeratedText", value: vantage.displayName },
+                avatar:
+                  vantage.avatarUrl === undefined
+                    ? null
+                    : { __typename: "MediaAttachment", url: vantage.avatarUrl },
               },
       },
     }),
@@ -631,9 +641,10 @@ describe("FeedView", () => {
     expect(screen.queryByTestId("feed-borrowed-view-action")).not.toBeInTheDocument();
   });
 
-  // Landing grants membership; the vouch-back is what gives the reader a
-  // view of their own (§13). Between them the band still names the inviter.
-  it("asks a landed member who has not pointed back to vouch back", async () => {
+  // Landing grants membership; the member's FIRST SIGNED OPINION, toward
+  // anyone, is what gives them a view of their own (VouchBack.md:13, :21).
+  // Until then the band names the vantage and asks for nothing (:17).
+  it("the landed member's band says the first opinion starts their own", async () => {
     server.use(
       graphql.query("Posts", () => HttpResponse.json({ data: postsPage([], null, false) })),
     );
@@ -643,11 +654,161 @@ describe("FeedView", () => {
     );
     renderWithProviders(<FeedView />, { store: signedInStore() });
 
-    expect(await screen.findByTestId("feed-borrowed-view-line")).toHaveTextContent(
-      "Browsing from @mira's view — vouch back to start your own.",
+    // The member's band is the registered one (VouchBack board).
+    expect(await screen.findByTestId("feed.borrowedViewBand.line")).toHaveTextContent(
+      "Browsing from @mira's view — your first opinion starts your own.",
     );
-    // The reciprocation card below carries the control; the band names it.
+    // The members band carries no action.
     expect(screen.queryByTestId("feed-borrowed-view-action")).not.toBeInTheDocument();
+    expect(screen.getByTestId("feed.borrowedViewBand").querySelector("button")).toBeNull();
+  });
+
+  // The band wears the vantage's own face (`... on User { avatar }`).
+  it("the band shows the vantage's face", async () => {
+    server.use(
+      graphql.query("Posts", () => HttpResponse.json({ data: postsPage([], null, false) })),
+    );
+    server.use(
+      meHandler(),
+      borrowedViewHandler({
+        id: "inv-1",
+        handle: "mira",
+        displayName: "Mira Voss",
+        avatarUrl: "https://media.example/mira.jpg",
+      }),
+    );
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+
+    const avatar = await screen.findByTestId("feed.borrowedViewBand.avatar");
+    expect(avatar.querySelector("img")?.getAttribute("src")).toContain("mira.jpg");
+  });
+
+  // A signing taken anywhere re-reads the band, and the server's null takes
+  // it away at once — with no reload of the feed under the reader (:21).
+  it("an opinion signed anywhere takes the band away", async () => {
+    let borrowing = true;
+    let feedReads = 0;
+    server.use(
+      graphql.query("Posts", () => {
+        feedReads += 1;
+        return HttpResponse.json({ data: postsPage([post("p1", "First")], null, false) });
+      }),
+    );
+    server.use(meHandler());
+    server.use(
+      graphql.query("BorrowedView", () =>
+        HttpResponse.json({
+          data: {
+            borrowedView: borrowing
+              ? {
+                  __typename: "User",
+                  id: "inv-1",
+                  handle: "mira",
+                  displayName: { __typename: "ModeratedText", value: "Mira Voss" },
+                  avatar: null,
+                }
+              : null,
+          },
+        }),
+      ),
+    );
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+    expect(await screen.findByTestId("feed.borrowedViewBand")).toBeInTheDocument();
+    expect(feedReads).toBe(1);
+
+    borrowing = false;
+    act(() => announceStanceSigned());
+    await waitFor(() =>
+      expect(screen.queryByTestId("feed.borrowedViewBand")).not.toBeInTheDocument(),
+    );
+    expect(feedReads).toBe(1);
+  });
+
+  // An Affinity never ends the borrowing (:25): the signing is announced like
+  // any other, the contract still answers the vantage, and the band stands.
+  it("an affinity leaves the band standing", async () => {
+    let reads = 0;
+    server.use(
+      graphql.query("Posts", () => HttpResponse.json({ data: postsPage([], null, false) })),
+    );
+    server.use(meHandler());
+    server.use(
+      graphql.query("BorrowedView", () => {
+        reads += 1;
+        return HttpResponse.json({
+          data: {
+            borrowedView: {
+              __typename: "User",
+              id: "inv-1",
+              handle: "mira",
+              displayName: { __typename: "ModeratedText", value: "Mira Voss" },
+              avatar: null,
+            },
+          },
+        });
+      }),
+    );
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+    expect(await screen.findByTestId("feed.borrowedViewBand")).toBeInTheDocument();
+
+    act(() => announceStanceSigned());
+    await waitFor(() => expect(reads).toBe(2));
+    expect(screen.getByTestId("feed.borrowedViewBand")).toBeInTheDocument();
+  });
+
+  // A first opinion that expired with nothing landed brings the borrowing
+  // back (:23); the feed's next refresh is where the band reads it.
+  it("an expired first opinion brings the band back", async () => {
+    let borrowing = false;
+    server.use(
+      graphql.query("Posts", () =>
+        HttpResponse.json({ data: postsPage([post("p1", "First")], null, false) }),
+      ),
+    );
+    server.use(meHandler());
+    server.use(
+      graphql.query("BorrowedView", () =>
+        HttpResponse.json({
+          data: {
+            borrowedView: borrowing
+              ? {
+                  __typename: "User",
+                  id: "inv-1",
+                  handle: "mira",
+                  displayName: { __typename: "ModeratedText", value: "Mira Voss" },
+                  avatar: null,
+                }
+              : null,
+          },
+        }),
+      ),
+    );
+    const scroller = document.createElement("div");
+    document.body.append(scroller);
+    renderWithProviders(
+      <ScrollHostProvider value={{ current: scroller }}>
+        <FeedView store={fakeIdentityStore({ keyOnDevice: true })} />
+      </ScrollHostProvider>,
+      { store: signedInStore() },
+    );
+    await screen.findByTestId(byNode("feed.card", "p1"));
+    expect(screen.queryByTestId("feed.borrowedViewBand")).not.toBeInTheDocument();
+
+    borrowing = true;
+    const touch = (type: string, clientY: number) => {
+      const event = new Event(type, { bubbles: true });
+      const points = [{ clientY }];
+      Object.defineProperty(event, "touches", { value: points });
+      Object.defineProperty(event, "changedTouches", { value: points });
+      return event;
+    };
+    fireEvent(scroller, touch("touchstart", 100));
+    fireEvent(scroller, touch("touchmove", 100 + PULL_THRESHOLD));
+    fireEvent(scroller, touch("touchend", 100 + PULL_THRESHOLD));
+    expect(await screen.findByTestId("feed.borrowedViewBand.line")).toHaveTextContent(
+      "Browsing from @mira's view — your first opinion starts your own.",
+    );
+    scroller.remove();
   });
 
   it("shows no band to a reader whose view is their own", async () => {

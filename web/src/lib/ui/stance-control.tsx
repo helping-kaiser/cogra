@@ -78,6 +78,7 @@ import { localLanding } from "@/lib/stance/landing";
 import { ORIGIN, TAP_DEFAULT, type StancePair } from "@/lib/stance/model";
 import { KNOB_TRAVEL_INSET_PX, padPairFrom, padPercentOf } from "@/lib/stance/pad-geometry";
 import { useStanceData } from "@/lib/stance/provider";
+import { announceStanceSigned } from "@/lib/stance/signed-events";
 import { useStanceTaught } from "@/lib/stance/stance-coach";
 import type { StanceBundle, StanceLanding, StanceTargetRef } from "@/lib/stance/stance-data";
 import { useAuthPhase } from "@/lib/session/provider";
@@ -124,12 +125,58 @@ const SEVERED: StanceLanding = { landing: ORIGIN, inert: true, severed: true };
 /** A drag in progress: where the pointer went down, and the pick it started from. */
 type Drag = { x: number; y: number; base: StancePair };
 
+/**
+ * How long a Set may stay unanswered before it says it is still working
+ * (VouchBackPad.md:31) — the 200ms of K4.2, past which a signed act waits
+ * visibly rather than looking ignored.
+ */
+export const SETTING_AFTER_MS = 200;
+
+/**
+ * A PAD OPENED AS SOMETHING IN PARTICULAR — the vouch-back (VouchBackPad.md,
+ * the master's own additive props in `StanceControl.jsx`: `helpLabel`,
+ * `help`, `padNote`). Off by default, so every other host renders exactly
+ * the master it always did.
+ *
+ * The variant changes what the pad SAYS and where a taken signing GOES; the
+ * gesture law is the master's and is not touched: a tap opens the pad, a
+ * hold signs the default, Set signs the pick (stance-control.md "The
+ * gesture").
+ */
+export type PadVariant = {
+  /** The pad's title and its ?'s name (VouchBackPad.md:9). */
+  readonly title: string;
+  /** The help that replaces the pad's body in place (:21). */
+  readonly help: readonly string[];
+  /** The line above the field's foot on every open of this variant (:13). */
+  readonly note: string;
+  /**
+   * A signing was taken — by Set or by the hold. The host routes on (the
+   * ceremony, :33; ProfileOther.md:37), so the master's own snackbar does
+   * not also answer: the ceremony replaces it.
+   */
+  readonly onTaken: () => void;
+  /**
+   * The registered pad (`<host>.stance.pad`, ruling 40): the pad and the
+   * parts this control draws itself wear its paths.
+   */
+  readonly padNode?: DataNode;
+  /**
+   * Where the pad parks over a screen with a bar: 16px above it
+   * (VouchBackPad.md:3, `padInset` on the master) rather than above the
+   * viewport's edge.
+   */
+  readonly padInset?: number;
+};
+
 export function StanceControl({
   target,
   bundle: suppliedBundle,
   testIdPrefix,
   axes = STANCE_AXES,
   node,
+  variant,
+  padOnly,
 }: {
   target: StanceTargetRef;
   /**
@@ -154,6 +201,15 @@ export function StanceControl({
    * drawn route and the accessible one never name the same axis two ways.
    */
   axes?: StanceAxes;
+  /** The pad opened as something in particular; see [PadVariant]. */
+  variant?: PadVariant;
+  /**
+   * A host that IS the opening gesture — the vouch card's `Vouch back`
+   * (VouchBack.md:31) — mounts the control with its pad already open and no
+   * resting anchor of its own, and hears the close: a pad closed with
+   * nothing taken closes back onto that host (VouchBackPad.md:45).
+   */
+  padOnly?: { readonly onClose: () => void };
 }) {
   const data = useStanceData();
   const phase = useAuthPhase();
@@ -177,12 +233,18 @@ export function StanceControl({
   const [own, setOwn] = useState<{ value: BundleState } | null>(null);
   const bundle: BundleState = own !== null ? own.value : suppliedBundle;
 
-  const [open, setOpen] = useState(false);
-  const [alternates, setAlternates] = useState(false);
+  // A pad-only host is the opening gesture itself, so the control mounts
+  // already open, exactly as `openConsidered` below would leave it.
+  const [open, setOpen] = useState(padOnly !== undefined && mode === "pad");
+  const [alternates, setAlternates] = useState(padOnly !== undefined && mode !== "pad");
   /** This open is the account's first-ever, so the pad carries the coaching lines. */
-  const [coaching, setCoaching] = useState(false);
+  const [coaching, setCoaching] = useState(padOnly !== undefined && mode === "pad" && !taught);
   const [explaining, setExplaining] = useState(false);
-  const [pick, setPick] = useState<StancePair>(ORIGIN);
+  const [pick, setPick] = useState<StancePair>(padOnly !== undefined ? TAP_DEFAULT : ORIGIN);
+  /** A variant's Set did not go through: the pad stays open at the pick (PadFailed). */
+  const [padFailed, setPadFailed] = useState(false);
+  /** A variant's Set has waited past [SETTING_AFTER_MS] (VouchBackPad.md:31). */
+  const [settingSlow, setSettingSlow] = useState(false);
   /**
    * Where the gesture just put the standing, as the fold projected it.
    * It holds the resting target until a fresh read replaces it, which is
@@ -255,6 +317,14 @@ export function StanceControl({
     readBundle();
   }, [readBundle]);
 
+  // The pad-only host's open spends the teaching the way a tap's does.
+  const taughtOnMount = useRef(false);
+  useEffect(() => {
+    if (padOnly === undefined || taughtOnMount.current) return;
+    taughtOnMount.current = true;
+    if (!taught) teach();
+  }, [padOnly, taught, teach]);
+
   // Nothing this control started may answer after it is gone: an armed
   // hold would open a pad on nothing, and an in-flight standing read
   // would set state on an unmounted tree (past teardown, the document
@@ -318,7 +388,8 @@ export function StanceControl({
     setExplaining(false);
     // The coaching lines close with the pad and never show again.
     setCoaching(false);
-  }, [releasePointer]);
+    padOnly?.onClose();
+  }, [releasePointer, padOnly]);
 
   // Escape cancels the open pad. The pad takes no focus of its own while
   // a pointer is driving it, so the listener sits on the document rather
@@ -339,6 +410,12 @@ export function StanceControl({
     const outcome = await data.commit(seamTarget, chosen);
     setBusy(false);
     if (outcome.kind !== "success") return false;
+    announceStanceSigned();
+    if (variant !== undefined) {
+      readBundle({ fresh: true });
+      variant.onTaken();
+      return true;
+    }
     setSigned(
       signedLine(
         landed.landing,
@@ -359,6 +436,7 @@ export function StanceControl({
     const outcome = await data.sever(seamTarget);
     setBusy(false);
     if (outcome.kind !== "success") return false;
+    announceStanceSigned();
     setSigned(
       signedLine(SEVERED.landing, outcome.value.records, true, target.label, axes, zeroWords),
     );
@@ -389,6 +467,10 @@ export function StanceControl({
     setSigned(null);
     setFailed(false);
     setConfirmFailed(false);
+    if (variant !== undefined) {
+      await commitInVariant(chosen);
+      return;
+    }
     const landed = await data.project(seamTarget, chosen);
     if (landed.kind !== "success") {
       setFailed(true);
@@ -404,6 +486,43 @@ export function StanceControl({
       // Nothing was staged, so the target must not keep claiming it was.
       setPending(null);
       setFailed(true);
+    }
+  };
+
+  /**
+   * THE VARIANT SIGNS FROM INSIDE THE OPEN PAD. A taken signing leaves for
+   * the host's destination (the ceremony), so the pad has nothing to close
+   * back onto first; until then it stays parked at the pick, says it is
+   * still working past [SETTING_AFTER_MS] (VouchBackPad.md:31), and a
+   * signing that did not go through keeps it open at the same pick with
+   * the fault above the commit row and Retry in Set's slot (:37, PadFailed).
+   * From the hold, with no pad open, a failure is the row's own line.
+   */
+  const commitInVariant = async (chosen: StancePair) => {
+    setPadFailed(false);
+    setSettingSlow(false);
+    const slow = setTimeout(() => setSettingSlow(true), SETTING_AFTER_MS);
+    const fail = () => {
+      if (open) setPadFailed(true);
+      else setFailed(true);
+    };
+    try {
+      setBusy(true);
+      const landed = await data.project(seamTarget, chosen);
+      if (landed.kind !== "success") {
+        fail();
+        return;
+      }
+      if (landed.value.severed) {
+        // Asked rather than refused (§8.2); the pad stays parked beneath.
+        setConfirming({ pick: chosen, records: 1, alreadySevered: false, landing: landed.value });
+        return;
+      }
+      if (!(await runCommit(chosen, landed.value))) fail();
+    } finally {
+      clearTimeout(slow);
+      setSettingSlow(false);
+      setBusy(false);
     }
   };
 
@@ -567,7 +686,12 @@ export function StanceControl({
   // bundle folding no records satisfies vacuously. A bundle that HAS
   // records and nets to zero is already covered by the count, and the
   // confirmation says so itself through `alreadySevered`.
-  const severable = bundle !== null && bundle !== undefined && bundle.records > 0;
+  //
+  // A VARIANT PAD CARRIES NO WALK IT BACK (VouchBackPad.md:11): the
+  // vouch-back opens a relationship, it is never the place to leave one.
+  const severable =
+    variant === undefined && bundle !== null && bundle !== undefined && bundle.records > 0;
+  const padNode = variant?.padNode;
 
   const padBody = (
     <>
@@ -585,7 +709,7 @@ export function StanceControl({
           it (§8.3). */}
       <div
         ref={fieldRef}
-        data-testid={`${testIdPrefix}-field`}
+        {...testAttributes(part(padNode, "field"), `${testIdPrefix}-field`)}
         onPointerDown={onFieldPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -611,7 +735,16 @@ export function StanceControl({
       </div>
       {/* Between the field and the landing line: the master's `padNote`
           slot, where the first-ever open speaks once. */}
-      {coaching && <StanceCoaching testId={`${testIdPrefix}-coaching`} />}
+      {variant !== undefined ? (
+        // The variant's own line stands on every open; the first-ever
+        // open's two coaching lines stand under it (VouchBackPad.md:13-15).
+        <div {...testAttributes(part(padNode, "note"), `${testIdPrefix}-note`)} className="flex flex-col gap-1">
+          <p className="m-0 text-body-small text-on-surface-variant">{variant.note}</p>
+          {coaching && <StanceCoaching testId={`${testIdPrefix}-coaching`} />}
+        </div>
+      ) : (
+        coaching && <StanceCoaching testId={`${testIdPrefix}-coaching`} />
+      )}
       {/* Below the field, and never merged into the line above it. */}
       <StanceLandingLine landing={landing} testIdPrefix={testIdPrefix} zero={zeroWords} />
     </>
@@ -622,7 +755,7 @@ export function StanceControl({
   // Set and Cancel away from the thumb defeats the parking.
   const helpBody = (
     <div data-testid={`${testIdPrefix}-explanation`} className="flex flex-col gap-2">
-      {padHelp(isTopic).map((line) => (
+      {(variant?.help ?? padHelp(isTopic)).map((line) => (
         <p key={line} className="text-body-small text-on-surface-variant">
           {line}
         </p>
@@ -654,6 +787,7 @@ export function StanceControl({
       onPointerDown={(event) => event.stopPropagation()}
       onPointerUp={(event) => event.stopPropagation()}
     >
+      {padOnly === undefined && (
       <div className="flex min-w-0 items-center gap-2">
         {/* 48px minimum, including at rest (design.md §4). */}
         <button
@@ -733,6 +867,7 @@ export function StanceControl({
           </button>
         )}
       </div>
+      )}
 
       {open && (
         <>
@@ -746,22 +881,35 @@ export function StanceControl({
               event.preventDefault();
               closeAll();
             }}
-            className="fixed inset-0 z-10 touch-none"
+            // The variant's wash covers the shell (`--scrim-dialog`,
+            // VouchBackPad.md:5); the master pad elsewhere draws none.
+            className={`fixed inset-0 z-10 touch-none${variant !== undefined ? " bg-scrim/50" : ""}`}
           />
           <div
             role="group"
-            aria-label={`Stance pad for ${target.label}`}
-            data-testid={`${testIdPrefix}-pad`}
-            style={parkedPadStyle()}
+            aria-label={variant?.title ?? `Stance pad for ${target.label}`}
+            {...testAttributes(padNode, `${testIdPrefix}-pad`)}
+            style={parkedPadStyle(variant?.padInset)}
             className="z-20 flex w-64 touch-none flex-col gap-2 overflow-y-auto rounded-extra-large bg-surface-container-high p-4"
           >
             {explaining ? helpBody : padBody}
+            {/* The fault stands above the commit row, in the failure voice
+                (PadFailed), the pad still parked at the pick. */}
+            {padFailed && (
+              <p
+                role="alert"
+                data-testid={`${testIdPrefix}-pad-failed`}
+                className="m-0 text-body-small text-error"
+              >
+                That didn&apos;t send. Try again.
+              </p>
+            )}
             <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
-                data-testid={`${testIdPrefix}-explain`}
+                {...testAttributes(part(padNode, "help"), `${testIdPrefix}-explain`)}
                 aria-expanded={explaining}
-                aria-label="How stances work"
+                aria-label={variant?.title ?? "How stances work"}
                 onClick={() => setExplaining((shown) => !shown)}
                 className={buttonClassName({ variant: "text", size: "sm" })}
               >
@@ -770,7 +918,7 @@ export function StanceControl({
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  data-testid={`${testIdPrefix}-cancel`}
+                  {...testAttributes(part(padNode, "cancel"), `${testIdPrefix}-cancel`)}
                   onClick={closeAll}
                   className={buttonClassName({ variant: "text", size: "sm" })}
                 >
@@ -779,15 +927,37 @@ export function StanceControl({
                 {/* The only thing on the pad that signs anything (§8.3) —
                     and never through the help, whose field is not there
                     to check against. */}
-                <button
-                  type="button"
-                  data-testid={`${testIdPrefix}-set`}
-                  disabled={busy || explaining}
-                  onClick={() => void commitChecked(pick)}
-                  className={buttonClassName({ variant: "primary", size: "sm" })}
-                >
-                  Set
-                </button>
+                {variant === undefined ? (
+                  <button
+                    type="button"
+                    data-testid={`${testIdPrefix}-set`}
+                    disabled={busy || explaining}
+                    onClick={() => void commitChecked(pick)}
+                    className={buttonClassName({ variant: "primary", size: "sm" })}
+                  >
+                    Set
+                  </button>
+                ) : (
+                  // A signed act waits rather than answering at once (K4.1):
+                  // inert while in flight — refusing a second press without
+                  // dimming — and saying so past 200ms, never a spinner.
+                  <button
+                    type="button"
+                    {...testAttributes(part(padNode, "set"), `${testIdPrefix}-set`)}
+                    disabled={explaining}
+                    aria-disabled={busy}
+                    onClick={() => {
+                      if (busy) return;
+                      void commitChecked(pick);
+                    }}
+                    className={buttonClassName({
+                      variant: padFailed ? "outline" : "primary",
+                      size: "sm",
+                    })}
+                  >
+                    {busy && settingSlow ? "Setting…" : padFailed ? "Retry" : "Set"}
+                  </button>
+                )}
               </div>
             </div>
             {severable && (

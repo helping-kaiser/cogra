@@ -1,14 +1,20 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { createStubStanceData } from "@/lib/stance/stub-stance-data";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { stanceBundle, stanceHandlers } from "@/test/stance";
 import { ProfileScreen } from "./profile-view";
+
+const push = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push, replace: vi.fn() }),
+}));
 
 // The header's stance control reads its own standing, so the read is a
 // default rather than something each test remembers: an unhandled one
@@ -402,5 +408,132 @@ describe("ProfileScreen", () => {
       await waitFor(() => expect(reads).toBe(1));
       scroller.remove();
     });
+  });
+});
+
+// THE VOUCH-BACK STAYS OPEN FROM THE VOUCHER'S PROFILE (VouchBack.md:51):
+// the anchor's tap opens the vouch-back pad (ProfileOther.md:35), and any
+// signing taken on that person — Set or the hold — opens the ceremony (:37).
+describe("ProfileScreen — the voucher's profile", () => {
+  function voucherMe(hasReciprocated = false) {
+    return graphql.query("Me", () =>
+      HttpResponse.json({
+        data: {
+          me: {
+            __typename: "User",
+            id: "u1",
+            handle: "noa",
+            displayName: { __typename: "ModeratedText", value: null },
+            accountState: "MEMBER",
+            hasReciprocated,
+            vouchBackDismissed: true,
+            invitedBy: {
+              __typename: "User",
+              id: "u2",
+              handle: "mira",
+              displayName: { __typename: "ModeratedText", value: "Mira Voss" },
+              avatar: null,
+            },
+          },
+        },
+      }),
+    );
+  }
+
+  function serveVoucher(hasReciprocated = false) {
+    server.use(
+      voucherMe(hasReciprocated),
+      graphql.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "mira") } }),
+      ),
+      recordsHandler([]),
+    );
+  }
+
+  beforeEach(() => push.mockClear());
+
+  // ProfileOther.md:35 — the card put away or not (this account put it away).
+  it("tapping the voucher's anchor opens the vouch-back pad", async () => {
+    serveVoucher();
+    renderWithProviders(<ProfileScreen handle="mira" />, {
+      store: signedInStore(),
+      stanceData: createStubStanceData(),
+    });
+    fireEvent.click(await screen.findByTestId("profile-stance"));
+    expect(await screen.findByTestId("profile-stance-pad")).toHaveAttribute(
+      "aria-label",
+      "Your vouch back",
+    );
+    expect(screen.getByTestId("profile-stance-note")).toHaveTextContent(
+      "Your vouch back. The pad is how you shape what reaches you — for or against, and how much.",
+    );
+  });
+
+  it("an opinion on the voucher from the profile opens the ceremony", async () => {
+    // By Set on the pad.
+    serveVoucher();
+    const data = createStubStanceData();
+    const { unmount } = renderWithProviders(<ProfileScreen handle="mira" />, {
+      store: signedInStore(),
+      stanceData: data,
+    });
+    fireEvent.click(await screen.findByTestId("profile-stance"));
+    fireEvent.click(await screen.findByTestId("profile-stance-set"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/vouched-in"));
+    expect(data.sent[0]?.target).toBe("u2");
+    unmount();
+
+    // By the hold, which signs without opening anything.
+    push.mockClear();
+    serveVoucher();
+    const held = createStubStanceData();
+    renderWithProviders(<ProfileScreen handle="mira" />, {
+      store: signedInStore(),
+      stanceData: held,
+    });
+    const anchor = await screen.findByTestId("profile-stance");
+    await waitFor(() => expect(anchor).not.toHaveAttribute("aria-busy", "true"));
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.pointerDown(anchor, { pointerId: 1 });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(600);
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/vouched-in"));
+    expect(held.sent[0]).toEqual({ target: "u2", pick: { pDirected: 0.1, pInterest: 0.1 } });
+    expect(screen.queryByTestId("profile-stance-pad")).not.toBeInTheDocument();
+  });
+
+  // ruling 42, VouchBackPad.md:47 — back onto the profile, nothing staged.
+  it("cancel on a profile-origin vouch-back pad closes onto the profile", async () => {
+    serveVoucher();
+    const data = createStubStanceData();
+    renderWithProviders(<ProfileScreen handle="mira" />, {
+      store: signedInStore(),
+      stanceData: data,
+    });
+    fireEvent.click(await screen.findByTestId("profile-stance"));
+    fireEvent.click(await screen.findByTestId("profile-stance-cancel"));
+    expect(screen.queryByTestId("profile-stance-pad")).not.toBeInTheDocument();
+    expect(screen.getByTestId("profile-display-name")).toBeInTheDocument();
+    expect(data.sent).toHaveLength(0);
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  // With the pair complete, the voucher's anchor is an ordinary one.
+  it("keeps the plain pad once the pair is complete", async () => {
+    serveVoucher(true);
+    renderWithProviders(<ProfileScreen handle="mira" />, {
+      store: signedInStore(),
+      stanceData: createStubStanceData(),
+    });
+    fireEvent.click(await screen.findByTestId("profile-stance"));
+    expect(await screen.findByTestId("profile-stance-pad")).toHaveAttribute(
+      "aria-label",
+      "Stance pad for @mira",
+    );
   });
 });

@@ -1,111 +1,37 @@
 "use client";
 
-// The member's cards in the shell (Android's Home member branch): the
-// husk warning, the first-login reciprocation prompt (auth.md "Approval
-// and landing"), and the resume card for parked handshake material.
+// The member's cards in the shell's banner stack (Android's Home member
+// branch): the resume card for parked handshake material. The husk warning
+// rides the screen's collapsing top, and the vouch card is the feed's own
+// first card (`feed/vouch-card.tsx`) — neither lives in this stack.
 
 import { useCallback, useEffect, useState } from "react";
-import { useApolloClient } from "@apollo/client/react";
 
-import { dismissVouchBack, type MeUser } from "@/lib/api/auth-api";
-import { prepareStance } from "@/lib/api/writes-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
-import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
-import { Snackbar } from "@/lib/ui/snackbar";
-import { DIRECTED_LABEL, INTEREST_LABEL } from "@/lib/ui/stance-format";
-import { StanceSlider } from "@/lib/ui/stance-slider";
-
-type DeviceState = {
-  keyOnDevice: boolean;
-  pendingCount: number;
-};
 
 export function MemberStatus({
-  me,
   store = identityStore,
 }: {
-  me: MeUser;
   /** Test injection. */
   store?: IdentityStore;
 }) {
-  const client = useApolloClient();
-  const guard = useAuthGuard();
   const signer = useWriteSigner();
 
-  const [device, setDevice] = useState<DeviceState | null>(null);
-  const [pDirected, setPDirected] = useState(0.1);
-  const [pInterest, setPInterest] = useState(0.1);
-  const [signing, setSigning] = useState(false);
-  const [signingFailed, setSigningFailed] = useState(false);
-  const [reciprocated, setReciprocated] = useState(false);
-  // Set once the server has the dismissal, so the card goes now rather
-  // than on the next `me` read; the account state is what keeps it away.
-  const [putAway, setPutAway] = useState(false);
-  // The confirmation is a separate flag from the fact: `reciprocated` keeps
-  // the card away for good, this one only says so once.
-  const [confirming, setConfirming] = useState(false);
+  const [pendingCount, setPendingCount] = useState<number | null>(null);
   const [resuming, setResuming] = useState(false);
-  // Stable, so the snackbar's timer is not restarted by every render around it.
-  const dismissConfirmation = useCallback(() => setConfirming(false), []);
 
   const readDevice = useCallback(() => {
-    return Promise.all([store.actorKey(), store.handshakeIds()]).then(([key, pending]) => {
-      setDevice({
-        keyOnDevice: key !== null,
-        pendingCount: pending.length,
-      });
-    });
+    return store.handshakeIds().then((pending) => setPendingCount(pending.length));
   }, [store]);
 
   useEffect(() => {
     void readDevice();
   }, [readDevice]);
 
-  if (device === null) return null;
-
-  // The pair's state is the graph's (hasReciprocated) and the dismissal
-  // is the account's (vouchBackDismissed); the device remembers neither.
-  const inviter = me.invitedBy;
-  const prompt =
-    inviter !== null &&
-    device.keyOnDevice &&
-    !me.hasReciprocated &&
-    !me.vouchBackDismissed &&
-    !putAway &&
-    !reciprocated;
-
-  const onReciprocate = async () => {
-    if (signing || inviter === null) return;
-    setSigning(true);
-    setSigningFailed(false);
-    const prepared = await guard.run(() =>
-      prepareStance(client, { target: inviter.id }, pDirected, pInterest),
-    );
-    if (prepared.kind !== "success") {
-      setSigning(false);
-      setSigningFailed(true);
-      return;
-    }
-    const results = await signer.sign(prepared.value);
-    if (results.every((result) => result.kind === "done")) {
-      // No device mark: the in-flight staged write already answers
-      // hasReciprocated on the next profile read.
-      setReciprocated(true);
-      setConfirming(true);
-    } else {
-      setSigningFailed(true);
-    }
-    setSigning(false);
-    await readDevice();
-  };
-
-  const onSkip = async () => {
-    const dismissed = await guard.run(() => dismissVouchBack(client));
-    if (dismissed.kind === "success") setPutAway(true);
-  };
+  if (pendingCount === null || pendingCount === 0) return null;
 
   const onResume = async () => {
     if (resuming) return;
@@ -116,71 +42,13 @@ export function MemberStatus({
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* The husk warning rides the screen's collapsing top, not this
-          stack — it must follow the reader (feed-view/profile-view). */}
-      {prompt && (
-        <Card testId="home_reciprocation">
-          <h2 className="text-title-medium">@{inviter.handle} vouched you in</h2>
-          <p className="text-body-medium text-on-surface-variant">
-            Membership completes when you point back. Choose your stance — it&apos;s your own signed
-            act, and you can change it any time.
-          </p>
-          <StanceSlider
-            label={DIRECTED_LABEL}
-            value={pDirected}
-            onChange={setPDirected}
-            testId="home_p_directed"
-          />
-          <StanceSlider
-            label={INTEREST_LABEL}
-            value={pInterest}
-            onChange={setPInterest}
-            testId="home_p_interest"
-          />
-          {signingFailed && (
-            <p role="alert" data-testid="home_signing_failed" className="text-body-medium text-error">
-              Signing didn&apos;t complete — check your connection and try again.
-            </p>
-          )}
-          <div className="flex gap-3">
-            <Button testId="home_reciprocate" size="sm" onClick={onReciprocate} disabled={signing}>
-              Vouch back
-            </Button>
-            <Button
-              testId="home_reciprocate_skip"
-              variant="outline"
-              size="sm"
-              onClick={onSkip}
-              disabled={signing}
-            >
-              Not now
-            </Button>
-          </div>
-        </Card>
-      )}
-      {/* A COMPLETED ACTION IS CONFIRMED BY A SNACKBAR (design/readme.md §3:
-          "The snackbar is the confirmation; a line of the layout turned green
-          is not one"). This was a line that appeared and never left — it
-          outlived the act it confirmed by the whole session. The card it
-          replaces stays gone on `reciprocated`, which is a fact about the
-          graph; the sentence is the transient half and goes with the
-          snackbar's own timer. */}
-      <Snackbar
-        testId="home_reciprocated"
-        message={confirming ? "Your vouch is on its way onto the graph." : null}
-        onDismiss={dismissConfirmation}
-      />
-      {device.pendingCount > 0 && (
-        <Card testId="home_pending">
-          <p className="text-body-medium text-on-surface-variant">
-            {device.pendingCount} signed act(s) waiting to finish their handshake.
-          </p>
-          <Button testId="home_resume" variant="outline" size="sm" selfStart onClick={onResume} disabled={resuming}>
-            Resume
-          </Button>
-        </Card>
-      )}
-    </div>
+    <Card testId="home_pending">
+      <p className="text-body-medium text-on-surface-variant">
+        {pendingCount} signed act(s) waiting to finish their handshake.
+      </p>
+      <Button testId="home_resume" variant="outline" size="sm" selfStart onClick={onResume} disabled={resuming}>
+        Resume
+      </Button>
+    </Card>
   );
 }
