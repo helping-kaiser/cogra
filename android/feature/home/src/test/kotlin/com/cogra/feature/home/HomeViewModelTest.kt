@@ -137,7 +137,7 @@ class HomeViewModelTest {
     )
 
     private fun viewModel(registration: RegistrationFlow = registrationFlow()) =
-        HomeViewModel(account, writes, WriteSigner(writes, identity), identity, onboarding, registration)
+        HomeViewModel(account, WriteSigner(writes, identity), identity, onboarding, registration)
 
     private fun applicationView(
         verified: Boolean = true,
@@ -158,12 +158,14 @@ class HomeViewModelTest {
     // Member shape
     // ----------------------------------------------------------------
 
+    /** VouchBack.md:3 — the vouch card stands on server state alone. */
     @Test
-    fun theFirstLoginShowsTheReciprocationPrompt() = homeTest {
+    fun theVouchCardStandsForALandedMemberWhosePairIsIncomplete() = homeTest {
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.applicant).isFalse()
-        assertThat(vm.state.value.reciprocationTarget?.handle).isEqualTo("inviter")
+        assertThat(vm.state.value.vouchVoucher?.handle).isEqualTo("inviter")
+        assertThat(vm.state.value.vouchCardStands).isTrue()
         assertThat(vm.state.value.huskWarning).isFalse()
     }
 
@@ -175,84 +177,107 @@ class HomeViewModelTest {
         assertThat(onboarding.polls).isEqualTo(0)
     }
 
+    /** The key gate is dropped: a husk member still has the card (VouchBack.md:3). */
     @Test
-    fun reciprocatingSignsWithoutDismissing() = homeTest {
-        val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.onReciprocate()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.reciprocated).isTrue()
-        assertThat(vm.state.value.reciprocationTarget).isNull()
-        // The graph knows (the staged write is in flight); vouching back
-        // is not a dismissal.
-        assertThat(account.dismissals).isEqualTo(0)
-
-        // The next profile read carries the server's answer.
-        account.profile = member(hasReciprocated = true)
-        val next = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(next.state.value.reciprocationTarget).isNull()
-    }
-
-    @Test
-    fun theServerAnswerSilencesThePromptAcrossDevices() = homeTest {
-        // A reciprocated pair, fresh device: no prompt.
-        account.profile = member(hasReciprocated = true)
-        val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.reciprocationTarget).isNull()
-    }
-
-    @Test
-    fun theAccountsDismissalSilencesThePromptOnAnyDevice() = homeTest {
-        account.profile = member(vouchBackDismissed = true)
-        val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.reciprocationTarget).isNull()
-    }
-
-    @Test
-    fun dismissalIsAccountState() = homeTest {
-        val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.reciprocationTarget).isNotNull()
-        vm.onDismissReciprocation()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(account.dismissals).isEqualTo(1)
-        assertThat(vm.state.value.reciprocationTarget).isNull()
-
-        // Kept by the server, still unreciprocated: no prompt on reload.
-        val next = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(next.state.value.reciprocationTarget).isNull()
-    }
-
-    @Test
-    fun aDismissalTheServerDidNotKeepLeavesThePrompt() = homeTest {
-        account.dismissal = Outcome.Failed(IllegalStateException("offline"))
-        val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.onDismissReciprocation()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(account.dismissals).isEqualTo(1)
-        assertThat(vm.state.value.reciprocationTarget).isNotNull()
-    }
-
-    @Test
-    fun aMissingActorKeyShowsTheHuskWarningAndNoPrompt() = homeTest {
+    fun theVouchCardStandsWithTheKeyElsewhere() = homeTest {
         identity.seed = null
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.huskWarning).isTrue()
-        assertThat(vm.state.value.reciprocationTarget).isNull()
+        assertThat(vm.state.value.vouchCardStands).isTrue()
     }
 
     @Test
-    fun genesisActorsGetNoPrompt() = homeTest {
+    fun aCompletedPairShowsNoCardOnAFreshDevice() = homeTest {
+        account.profile = member(hasReciprocated = true)
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.vouchVoucher).isNull()
+    }
+
+    /** VouchBack.md:45 — account state, read off the server on any device. */
+    @Test
+    fun aPutAwayCardStaysAwayOnAFreshDevice() = homeTest {
+        account.profile = member(vouchBackDismissed = true)
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.vouchCardStands).isFalse()
+    }
+
+    /** VouchBack.md:37 — away at once, silently, and kept by the server. */
+    @Test
+    fun gotItPutsTheCardAwaySilently() = homeTest {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.vouchCardStands).isTrue()
+        vm.onPutAway()
+        // Gone the moment it is pressed — before the server has answered.
+        assertThat(vm.state.value.vouchCardStands).isFalse()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(account.dismissals).isEqualTo(1)
+        assertThat(vm.state.value.vouchPutAway).isEqualTo(VouchPutAway.AWAY)
+
+        // Kept by the server, still unreciprocated: no card on reload.
+        val next = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(next.state.value.vouchCardStands).isFalse()
+    }
+
+    /** VouchBack.md:39, :41 — ruling 44: the failure reverts and says so. */
+    @Test
+    fun aFailedGotItBringsTheCardBackWithRetry() = homeTest {
+        account.dismissal = Outcome.Failed(IllegalStateException("offline"))
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onPutAway()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(account.dismissals).isEqualTo(1)
+        assertThat(vm.state.value.vouchPutAway).isEqualTo(VouchPutAway.FAILED)
+        assertThat(vm.state.value.vouchCardStands).isTrue()
+
+        // Retry: the card steps aside and the put-away is asked again.
+        account.dismissal = Outcome.Success(Unit)
+        vm.onPutAway()
+        assertThat(vm.state.value.vouchCardStands).isFalse()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(account.dismissals).isEqualTo(2)
+        assertThat(vm.state.value.vouchPutAway).isEqualTo(VouchPutAway.AWAY)
+    }
+
+    /** VouchBack.md:3 + the backend guard: another opinion leaves the pair incomplete. */
+    @Test
+    fun theVouchCardStandsAfterAnOpinionOnSomeoneElse() = homeTest {
+        account.profile = member(hasReciprocated = false)
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.vouchCardStands).isTrue()
+    }
+
+    /** VouchBack.md:57, :59 — the card returns with the next read, unless put away. */
+    @Test
+    fun anExpiredVouchBackReturnsTheCardUnlessPutAway() = homeTest {
+        account.profile = member(hasReciprocated = true)
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.vouchCardStands).isFalse()
+
+        account.profile = member(hasReciprocated = false)
+        vm.refresh()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.vouchCardStands).isTrue()
+
+        account.profile = member(hasReciprocated = false, vouchBackDismissed = true)
+        vm.refresh()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.vouchCardStands).isFalse()
+    }
+
+    @Test
+    fun genesisActorsGetNoCard() = homeTest {
         account.profile = member(invitedBy = null)
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.reciprocationTarget).isNull()
+        assertThat(vm.state.value.vouchVoucher).isNull()
     }
 
     @Test
@@ -327,8 +352,8 @@ class HomeViewModelTest {
         assertThat(vm.state.value.progress).isEqualTo(
             RegistrationProgress.AwaitingApproval(emailVerified = false, keyAttached = true, keyOnDevice = true),
         )
-        // No reciprocation prompt, no husk card — acting is member-gated.
-        assertThat(vm.state.value.reciprocationTarget).isNull()
+        // No vouch card, no husk card — acting is member-gated.
+        assertThat(vm.state.value.vouchVoucher).isNull()
         assertThat(vm.state.value.huskWarning).isFalse()
     }
 

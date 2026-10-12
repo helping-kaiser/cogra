@@ -122,7 +122,7 @@ export function StatusBanners({
         </p>
       )}
       {isApplicant && <ApplicantStatus progress={progress} />}
-      {me?.accountState === "MEMBER" && <MemberStatus me={me} />}
+      {me?.accountState === "MEMBER" && <MemberStatus />}
       {transportFailed && <TransportError testId="home_transport_error" />}
     </section>
   );

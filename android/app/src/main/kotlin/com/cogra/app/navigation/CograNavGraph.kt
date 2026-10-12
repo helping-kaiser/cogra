@@ -23,6 +23,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -76,6 +77,9 @@ import com.cogra.feature.content.reply.ReplyWizardRoute
 import com.cogra.feature.home.BorrowedViewBandRoute
 import com.cogra.feature.home.KeyRestoreBannerRoute
 import com.cogra.feature.home.StatusBannersRoute
+import com.cogra.feature.home.VOUCH_CARD
+import com.cogra.feature.home.VouchCardRoute
+import com.cogra.feature.home.VouchedInScreen
 import com.cogra.feature.invites.InvitesRoute
 import com.cogra.feature.onboarding.ApplyRoute
 import com.cogra.feature.onboarding.InviteEntryRoute
@@ -95,6 +99,7 @@ import com.cogra.feature.settings.KeyExportRoute
 import com.cogra.feature.settings.SettingsDoors
 import com.cogra.feature.settings.SettingsRoute
 import com.cogra.feature.stance.StanceControlRoute
+import com.cogra.feature.stance.vouchBackVariant
 import com.cogra.feature.topics.TopicRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -226,6 +231,14 @@ data object About
  */
 @Serializable
 data object ChatsComingSoon
+
+/**
+ * The vouch-back's ceremony (`VouchedIn`; VouchedIn.md). It carries the
+ * voucher it names — handle, name, face — from the surface the signing was
+ * taken on, so it needs no read of its own.
+ */
+@Serializable
+data class VouchedIn(val handle: String, val name: String, val avatarUrl: String? = null)
 
 /** The new address's link path (auth.md "Link URLs"), claimed beside `/join`. */
 private const val EMAIL_CHANGE_PATH = "/email-change"
@@ -578,11 +591,48 @@ private fun CograNavGraphContent(
     // the screen owns that navigation. Nothing is drawn while the auth
     // state is still unknown: the two readings differ, and guessing puts
     // the wrong sentence on screen for a frame.
+    // The feed's own pulls, counted: the readers that ride the feed (the
+    // band, the vouch card) read again with each one.
+    var feedPulls by rememberSaveable { mutableIntStateOf(0) }
     val borrowedViewBand: @Composable () -> Unit = {
         signedIn?.let { signed ->
             BorrowedViewBandRoute(
                 signedIn = signed,
                 onSignInOrJoin = { navController.navigate(Login) },
+                refreshSignal = feedPulls,
+            )
+        }
+    }
+
+    // THE CEREMONY OPENS OVER THE FEED ROOT ALONE (VouchedIn.md:35): the
+    // pad, the card or the profile it was signed from never come back on
+    // Back, so the entry is pushed with everything above the feed popped.
+    fun openCeremony(handle: String, name: String?, avatarUrl: String?) {
+        navController.navigate(VouchedIn(handle, name?.takeIf { it.isNotBlank() } ?: handle, avatarUrl)) {
+            popUpTo(Feed)
+            launchSingleTop = true
+        }
+    }
+    // The vouch card, the feed's own first card (`VouchBack`): `Vouch back`
+    // blooms the vouch-back pad over the shell, and a taken signing opens
+    // the ceremony (VouchBackPad.md:33).
+    val vouchCard: @Composable () -> Unit = {
+        if (signedIn == true) {
+            VouchCardRoute(
+                vouchBackPad = { voucher, onClose ->
+                    StanceControlRoute(
+                        target = StanceTarget.Node(voucher.id),
+                        testTagPrefix = "vouch_back",
+                        node = VOUCH_CARD / "stance",
+                        variant = vouchBackVariant(VOUCH_CARD / "stance" / "pad"),
+                        padOnly = true,
+                        onPadClosed = onClose,
+                        onTaken = {
+                            openCeremony(voucher.handle, voucher.displayName, voucher.avatar?.url)
+                        },
+                    )
+                },
+                refreshSignal = feedPulls,
             )
         }
     }
@@ -790,6 +840,23 @@ private fun CograNavGraphContent(
                     keyBanner = keyBanner,
                     borrowedViewBand = borrowedViewBand,
                     banners = { statusBanners(actorRestored, consumeRestored) },
+                    vouchCard = vouchCard,
+                    onPulled = { feedPulls += 1 },
+                )
+            }
+            composable<VouchedIn> { entry ->
+                val route = entry.toRoute<VouchedIn>()
+                VouchedInScreen(
+                    handle = route.handle,
+                    name = route.name,
+                    avatarUrl = route.avatarUrl,
+                    // The member's own feed — the root already under this
+                    // entry, so it comes back where the reader left it.
+                    onGoToFeed = {
+                        if (!navController.popBackStack(Feed, inclusive = false)) {
+                            navController.navigate(Feed) { launchSingleTop = true }
+                        }
+                    },
                 )
             }
             composable<ComposePost> { entry ->
@@ -995,6 +1062,11 @@ private fun CograNavGraphContent(
                     keyBanner = { if (route.handle == null) keyBanner() },
                     banners = {
                         if (route.handle == null) statusBanners(actorRestored, consumeRestored)
+                    },
+                    // A signing on the member who vouched the reader in opens
+                    // the ceremony, by Set or by the hold (ProfileOther.md:37).
+                    onVouchedBack = { profile ->
+                        openCeremony(profile.handle, profile.displayName.value, profile.avatar?.url)
                     },
                 )
             }

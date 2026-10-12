@@ -11,6 +11,7 @@ import com.cogra.domain.identity.KeyCeremony
 import com.cogra.domain.signing.RegistrationFlow
 import com.cogra.domain.signing.RegistrationSigner
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.stance.StanceSignals
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.ThrowingAccountRepository
@@ -56,6 +57,7 @@ class BorrowedViewViewModelTest {
     private val account = ScriptedVantage()
     private val identity = FakeIdentityStore().apply { seed = ActorKey.generate().seed() }
     private val onboarding = ThrowingOnboardingRepository()
+    private val signals = StanceSignals()
     private val loopScope = CoroutineScope(dispatcher + SupervisorJob())
 
     @Before
@@ -82,7 +84,7 @@ class BorrowedViewViewModelTest {
     )
 
     private fun viewModel(signedIn: Boolean) =
-        BorrowedViewViewModel(account, registrationFlow()).apply { onSession(signedIn) }
+        BorrowedViewViewModel(account, registrationFlow(), signals).apply { onSession(signedIn) }
 
     /**
      * A signed-out reader's wording is settled by the session alone, so
@@ -100,15 +102,65 @@ class BorrowedViewViewModelTest {
         assertThat(viewModel.state.value.reading).isEqualTo(BorrowedViewReading.JOIN)
     }
 
-    /** The landed member's line is the vouch-back ask, and it is theirs. */
+    /** The landed member's line: their first opinion starts their own (VouchBack.md:13). */
     @Test
-    fun aLandedMemberStillBorrowingIsGivenTheVouchBackReading() = runTest(dispatcher) {
+    fun aLandedMemberStillBorrowingIsGivenTheMemberReading() = runTest(dispatcher) {
         account.answer = Outcome.Success(ActorRef("a1", "mira"))
         val viewModel = viewModel(signedIn = true)
         advanceUntilIdle()
 
         assertThat(viewModel.state.value.vantage?.handle).isEqualTo("mira")
-        assertThat(viewModel.state.value.reading).isEqualTo(BorrowedViewReading.VOUCH_BACK)
+        assertThat(viewModel.state.value.reading).isEqualTo(BorrowedViewReading.MEMBER)
+    }
+
+    /**
+     * A signing taken anywhere re-reads the vantage, and the server's null
+     * takes the band away at once (VouchBack.md:21) — the web's
+     * `an opinion signed anywhere takes the band away`.
+     */
+    @Test
+    fun anOpinionSignedAnywhereTakesTheBandAway() = runTest(dispatcher) {
+        account.answer = Outcome.Success(ActorRef("a1", "mira"))
+        val viewModel = viewModel(signedIn = true)
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.vantage?.handle).isEqualTo("mira")
+
+        account.answer = Outcome.Success(null)
+        signals.announceSigned()
+        advanceUntilIdle()
+
+        assertThat(viewModel.state.value.vantage).isNull()
+        assertThat(account.reads).isEqualTo(2)
+    }
+
+    /** An Affinity never ends it (:25): the re-read still names the vantage. */
+    @Test
+    fun anAffinityLeavesTheBandStanding() = runTest(dispatcher) {
+        account.answer = Outcome.Success(ActorRef("a1", "mira"))
+        val viewModel = viewModel(signedIn = true)
+        advanceUntilIdle()
+
+        signals.announceSigned()
+        advanceUntilIdle()
+
+        assertThat(account.reads).isEqualTo(2)
+        assertThat(viewModel.state.value.vantage?.handle).isEqualTo("mira")
+    }
+
+    /** An expired first opinion brings it back (:23), read on the feed's next pull. */
+    @Test
+    fun anExpiredFirstOpinionBringsTheBandBack() = runTest(dispatcher) {
+        account.answer = Outcome.Success(null)
+        val viewModel = viewModel(signedIn = true)
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.vantage).isNull()
+
+        account.answer = Outcome.Success(ActorRef("a1", "mira"))
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        assertThat(viewModel.state.value.vantage?.handle).isEqualTo("mira")
+        assertThat(viewModel.state.value.reading).isEqualTo(BorrowedViewReading.MEMBER)
     }
 
     @Test

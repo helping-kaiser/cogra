@@ -20,9 +20,19 @@ query Me {
     # The vouch-back prompt's dismissal is account state, so it holds on
     # every device (auth.md "Reciprocation is the joiner's own act").
     vouchBackDismissed
+    # The member who vouched the account in — the vouch card, the
+    # vouch-back pad and the ceremony all name them, and wear their face.
     invitedBy {
       id
       handle
+      displayName {
+        value
+      }
+      ... on User {
+        avatar {
+          url
+        }
+      }
     }
     # The sensitive-content choice is the ACCOUNT's (Settings' Always
     # unveil sensitive content): 0 unveils wherever the account reads,
@@ -54,6 +64,13 @@ query BorrowedView {
     handle
     displayName {
       value
+    }
+    # The band wears the vantage's face (VouchBack board); `Actor` has
+    # no avatar of its own, so it is read off the User the vantage is.
+    ... on User {
+      avatar {
+        url
+      }
     }
   }
 }

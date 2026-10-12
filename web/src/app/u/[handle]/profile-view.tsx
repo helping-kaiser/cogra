@@ -9,9 +9,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
-import { fetchMe } from "@/lib/api/auth-api";
+import { fetchMe, type MeUser } from "@/lib/api/auth-api";
 import { appendDeduped } from "@/lib/api/pagination";
 import { useSeenOnOpen } from "@/lib/history/seen-tracker";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
@@ -37,6 +38,7 @@ import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
 import { useScrollHost } from "@/lib/ui/scroll-host";
 import { StanceControl } from "@/lib/ui/stance-control";
 import { TransportError } from "@/lib/ui/transport-error";
+import { opensVouchBackOn, VOUCHED_IN_PATH, vouchBackVariant } from "@/lib/vouch/vouch-back";
 
 const FILTERS: readonly { key: ChronicleFilter; label: string }[] = [
   { key: "posts", label: "Posts" },
@@ -57,6 +59,7 @@ export function ProfileScreen({
   const guard = useAuthGuard();
   const phase = useAuthPhase();
   const host = useScrollHost();
+  const router = useRouter();
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [own, setOwn] = useState(false);
@@ -71,6 +74,9 @@ export function ProfileScreen({
   const [endCursor, setEndCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [invitesLocked, setInvitesLocked] = useState(false);
+  // The viewer's own read, kept for the one profile it changes: the member
+  // who vouched them in, whose anchor opens the vouch-back.
+  const [viewer, setViewer] = useState<MeUser | null>(null);
 
   // OPENING SOMEONE'S PROFILE ADDS THE PROFILE TO HISTORY (History.md:11) —
   // the profile alone; its posts join only as the reader's lists see them.
@@ -131,6 +137,7 @@ export function ProfileScreen({
         setTransportFailed(false);
         setProfile(loaded);
         const me = viewer?.kind === "success" ? viewer.value : null;
+        setViewer(me);
         setOwn(me !== null && me.id === loaded.id);
         setApplicant(me?.accountState === "APPLICANT");
         void loadRows(loaded.id, "posts", null);
@@ -267,6 +274,16 @@ export function ProfileScreen({
                 <StanceControl
                   target={{ id: profile.id, kind: "profile", label: `@${profile.handle}` }}
                   testIdPrefix="profile-stance"
+                  // THE VOUCH-BACK STAYS OPEN FROM HERE (VouchBack.md:51): on
+                  // the member who vouched the reader in, the anchor's tap
+                  // opens the vouch-back pad (ProfileOther.md:35) and any
+                  // signing taken on it — Set or the hold — opens the ceremony
+                  // (:37). Cancel closes back onto this profile (VouchBackPad.md:47).
+                  variant={
+                    viewer !== null && opensVouchBackOn(viewer, profile.id)
+                      ? vouchBackVariant(() => router.push(VOUCHED_IN_PATH))
+                      : undefined
+                  }
                 />
               </div>
             )}

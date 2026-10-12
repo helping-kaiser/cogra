@@ -11,7 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.R
+import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.media.CograAvatar
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
@@ -33,12 +35,13 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  *
  * [actionLabel] drops away for the signed-in applicant, where the line
  * changes but the vantage point does not. The band disappears altogether the
- * moment the reader's own view exists — their first stance, the vouch-back.
+ * moment the reader's own view exists — their first signed opinion, toward
+ * anyone (VouchBack.md:21).
  *
  * The line is a parameter rather than a switch inside the band: the three
  * ruled readings live in `strings.xml` beside each other
  * ([R.string.borrowed_view_join], [R.string.borrowed_view_applicant],
- * [R.string.borrowed_view_vouch_back]), so the copy is read where copy is
+ * [R.string.borrowed_view_member]), so the copy is read where copy is
  * read and the component stays one drawing.
  */
 @Composable
@@ -51,12 +54,25 @@ fun BorrowedViewBand(
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
     testTag: String? = null,
+    /**
+     * The registered band (`feed.borrowedViewBand`) on a screen whose board
+     * draws it: the band, its avatar and its line then wear the node's
+     * paths. The guest's action is drawn on no registered board, so it keeps
+     * its [testTag] tag.
+     */
+    node: DataNode? = null,
 ) {
     Row(
         modifier = modifier
             .padding(horizontal = Layout.ScreenGutter)
             .padding(bottom = Space.x3)
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+            .then(
+                when {
+                    node != null -> Modifier.dataNode(node)
+                    testTag != null -> Modifier.testTag(testTag)
+                    else -> Modifier
+                },
+            ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
     ) {
@@ -64,6 +80,7 @@ fun BorrowedViewBand(
             name = displayName?.takeIf { it.isNotBlank() } ?: handle,
             size = 24.dp,
             url = avatarUrl,
+            testTag = node?.div("avatar")?.tag,
         )
         Text(
             text = line,
@@ -71,7 +88,9 @@ fun BorrowedViewBand(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .weight(1f)
-                .testTag(testTag?.let { "${it}_line" } ?: "borrowed_view_line"),
+                .testTag(
+                    node?.div("line")?.tag ?: testTag?.let { "${it}_line" } ?: "borrowed_view_line",
+                ),
         )
         // A text button, not a filled one: the band names a fact and offers a
         // way on, and the loud surface on a read screen belongs to the

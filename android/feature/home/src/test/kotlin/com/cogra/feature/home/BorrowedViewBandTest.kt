@@ -86,25 +86,27 @@ class BorrowedViewBandTest {
     }
 
     /**
-     * Landing grants membership; the vouch-back is what gives the reader a
-     * view of their own (§13). Between them the band still names the
-     * inviter, and its line names the act that ends the borrowing — the
-     * control for which is the reciprocation card below, not a second
-     * button up here.
+     * Landing grants membership; the member's first signed opinion, toward
+     * anyone, is what gives them a view of their own (VouchBack.md:13,
+     * :21). Until then the band names the vantage and asks for nothing
+     * (:17) — and it is the registered band, wearing the board's paths.
      */
     @Test
-    fun aLandedMemberWhoHasNotPointedBackIsAskedToVouchBack() {
+    fun theLandedMembersBandSaysTheFirstOpinionStartsTheirOwn() {
         render(
             BorrowedViewUiState(
                 loading = false,
                 vantage = ActorRef(id = "a2", handle = "mira", displayName = "Mira Voss"),
-                reading = BorrowedViewReading.VOUCH_BACK,
+                reading = BorrowedViewReading.MEMBER,
             ),
         )
 
-        compose.onNodeWithTag("home_borrowed_view_line").assertTextEquals(
-            context.getString(DesignSystemR.string.borrowed_view_vouch_back, "mira"),
+        compose.onNodeWithTag("feed.borrowedViewBand.line").assertTextEquals(
+            "Browsing from @mira's view — your first opinion starts your own.",
         )
+        compose.onNodeWithTag("feed.borrowedViewBand").assertExists()
+        compose.onNodeWithTag("feed.borrowedViewBand.avatar", useUnmergedTree = true).assertExists()
+        // The member's band carries no action.
         compose.onNodeWithTag("home_borrowed_view_action").assertDoesNotExist()
     }
 
@@ -119,7 +121,7 @@ class BorrowedViewBandTest {
             BorrowedViewUiState(
                 loading = false,
                 vantage = null,
-                reading = BorrowedViewReading.VOUCH_BACK,
+                reading = BorrowedViewReading.MEMBER,
             ),
         )
 
@@ -145,7 +147,7 @@ class BorrowedViewBandTest {
         assertThat(readingFor(signedIn = true, accountState = AccountState.APPLICANT))
             .isEqualTo(BorrowedViewReading.APPLICANT)
         assertThat(readingFor(signedIn = true, accountState = AccountState.MEMBER))
-            .isEqualTo(BorrowedViewReading.VOUCH_BACK)
+            .isEqualTo(BorrowedViewReading.MEMBER)
         assertThat(readingFor(signedIn = true, accountState = null))
             .isEqualTo(BorrowedViewReading.APPLICANT)
         assertThat(readingFor(signedIn = true, accountState = AccountState.UNKNOWN))
