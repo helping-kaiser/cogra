@@ -1,8 +1,9 @@
 // The seen tracker's half of H1 (history packet, "Test obligations →
 // Clients"): first-seeing dedupe in-session, batching and flushing at a
 // checkpoint, the retry of a refused batch, the bounded failure of a batch
-// refused for good (PR-46), and no tracking without a session. What counts as seen is the surface's question (`SeenCardsEffect`
-// in core:designsystem) and is tested there.
+// refused for good (PR-46), and no tracking without a session. What counts
+// as seen is the surface's question (`SeenCardsEffect` in core:designsystem)
+// and is tested there.
 
 package com.cogra.domain.history
 
