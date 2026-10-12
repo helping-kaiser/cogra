@@ -1,5 +1,6 @@
 /* THE FULLSCREEN VIEWER, over a clip (readme §13, the reel round). The same
-   black surface the picture opens into, with the clip's own transport on it:
+   black surface the picture opens into — ending below the system status bar,
+   never painting it (seam 117) — with the clip's own transport on it:
    the big centred play/pause flanked by the skips, and the bar along the
    bottom — elapsed, the timeline, total — held clear of the screen's edge,
    because Android's gesture zone lives there and a control in it is a swipe

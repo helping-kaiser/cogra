@@ -43,7 +43,7 @@ A kind list or row set shows only served kinds, never a dead chip
 | Search with Comments on and no scope (`ExploreUnscoped`) | unscoped comment results (readme §13, *The indirect kinds are scope-served*) | `Found through people and tags — start with @handle or #tag.` |
 | References (`RefsSheet`, `ReferencePicker`) | tag and message references | a person, a post or a comment; the picker's footnote drops `#tag` and messages, and the citing help names the three kinds (copy-voice) |
 | History doors (the change-histories round, post-MVP) | every door into a version history | the `Edited` marker is a plain marker, the stance readout carries no built-tail, a `StanceRow` value opens nothing |
-| The reader's menus (`ReaderPostMenu`, `ProfileMenu`, `CommentMenu`) | a content report row (readme §13, *The menus round*) | no Report row |
+| ~~The reader's menus (`ReaderPostMenu`, `ProfileMenu`, `CommentMenu`)~~ | ~~a content report row (readme §13, *The menus round*)~~ | ~~no Report row~~ — lifted 2026-10-09 by *The fabric-2 draws* (item 75): `Report` ships at every other-person menu's tail, its confirm's commit sending a mail |
 | An applicant's comment foot and `Reply` (`ReplyEntry`, `ProfileComments`) | commenting before approval (readme §13, *The applicant's life round*) | both stay drawn and answer in place: `You can comment once you're in.` |
 
 ## Copy held to what CoGra v1.0.0 does

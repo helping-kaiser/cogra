@@ -1,5 +1,7 @@
 # FeedTagShapes · `spec:design:behavior-feed-tag-shapes`
 
+ALWAYS a tag card's why-line names the people the tag reaches the reader through: the first person after the reader on each of its strongest paths, in the paths' strongest-first order, each named once
+
 ALWAYS a tag card's why-line reads Reaches you through @ada GIVEN the tag reaches the reader through one person
 
 ALWAYS a tag card's why-line reads Reaches you through @ada and @tobias GIVEN the tag reaches the reader through two people
@@ -13,6 +15,8 @@ ALWAYS a handle that does not fit even the compressed why-line ellipsizes
 ALWAYS a tag card's glimpse line reads the newest thing's author alone GIVEN one thing carries the tag
 
 ALWAYS a tag card's glimpse line reads the newest thing's author, then how many more, as in @tobias · and 2 more GIVEN more than one thing carries the tag
+
+ALWAYS the glimpse's how-many-more counts the things carrying the tag beside the newest one
 
 ALWAYS a tag card's glimpse leads with the newest thing's cover GIVEN the newest is a picture post
 

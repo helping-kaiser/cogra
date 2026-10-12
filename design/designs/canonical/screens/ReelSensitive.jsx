@@ -3,7 +3,8 @@
    reel in the stream — the same clip edge to edge, the same rail, caption and
    bottom bar — but it is blurred and does not play. Reached the way `Reel` is,
    when the clip on the stage is sensitive and unrevealed: the state the record
-   brings, not a different tap or swipe.
+   brings, not a different tap or swipe. Like `Reel`'s, its black ends below
+   the system status bar and never paints that strip (seam 117).
 
    THE VEIL IS THE STANDARD ONE, UNCHANGED. `SensitiveVeil`'s media face lies
    over the whole clip — the mark, whose mark it is, and the reason — and the
@@ -15,7 +16,8 @@
    law): a veiled clip has no playback and no sound-disc presence, so the sound
    disc and the seek line — the stream's rung of the control ladder — go with
    it, as the transport goes on `PostDetailVideoSensitive`. The rail stays
-   live: the acts on a post never waited on its veil.
+   live: the acts on a post never waited on its veil. The caption keeps
+   `Reel`'s place, 66px above the bar, so an unveil moves nothing.
 
    THE REVEAL IS SESSION-SCOPED (readme §13, the veil's scope): it survives
    every move inside the app and returns on a full app close or another hard
@@ -68,7 +70,7 @@ export function Screen() {
           handle={MIRA.handle}
           title={MIRA_CLIP_POST.title}
           description={MIRA_CLIP_POST.description}
-          bottom={BAND_HEIGHT + 22}
+          bottom={BAND_HEIGHT + 66}
           sensitive
         />
 

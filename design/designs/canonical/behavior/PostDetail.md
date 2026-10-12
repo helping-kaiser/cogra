@@ -2,6 +2,18 @@
 
 ALWAYS postDetail.header.menu is the post's one overflow and postDetail.card carries no overflow of its own
 
+ALWAYS postDetail.card holds the post as it was when the detail opened, never changing under the reader, until the reader asks for the newest
+
+WHEN a fresh read finds the post changed since the detail opened -> postDetail.newerVersion appears between postDetail.header and postDetail.card reading Edited since you opened it — tap for the newest version. AND NEVER postDetail.card changes
+
+WHEN a fresh read finds the post's tags or citations changed since the detail opened -> postDetail.newerVersion appears the same way, in the same words AND NEVER postDetail.card changes
+
+ALWAYS postDetail.newerVersion stands in the page's flow and scrolls with it, full width, answering to a 48dp target, and is never pinned
+
+WHEN tap postDetail.newerVersion -> postDetail.card swaps in place to the newest version of the post, its tags and its citations AND postDetail.newerVersion goes
+
+WHEN a fresh read finds the post or any of its parts redacted -> the redaction shows in postDetail.card at once, with its mark AND NEVER it waits behind postDetail.newerVersion
+
 ALWAYS postDetail.card.actionRow reads postDetail.card.actionRow.stance, then postDetail.card.actionRow.score, then postDetail.card.actionRow.comments, then postDetail.card.actionRow.share
 
 ALWAYS postDetail.card.actionRow.share carries no number

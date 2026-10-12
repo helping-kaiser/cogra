@@ -110,8 +110,14 @@ function TransportButton({ label, glyph, size = 22, box = 32, onClick, style }) 
    bar the space above the timeline is the clip's own tap, so the slider's 48px
    target cannot centre on its track. It hangs DOWN from the track's top
    instead — through the bar's lower half and the gesture-zone inset to the
-   frame's bottom edge — and the tap above stays whole. The ink never moves. */
-export function Timeline({ progress = 0, elapsed, duration, thin = false, tone = "media", hitBelow = false }) {
+   frame's bottom edge — and the tap above stays whole. The ink never moves.
+
+   `hitAbove` (jakob 2026-10-12, the slice-3 round: RL-G11, under rulings 92
+   and 101): the stream's seek line sits directly on the bottom bar, whose
+   slots own everything below it, so its 48px target RISES from the track's
+   foot instead, and the caption stands clear above that target rather than
+   the target shrinking under it. The 3px ink never moves. */
+export function Timeline({ progress = 0, elapsed, duration, thin = false, tone = "media", hitBelow = false, hitAbove = false }) {
   const at = Math.max(0, Math.min(1, progress));
   return (
     <div
@@ -138,6 +144,12 @@ export function Timeline({ progress = 0, elapsed, duration, thin = false, tone =
         <span
           aria-hidden="true"
           style={{ position: "absolute", left: 0, right: 0, top: 0, height: "var(--touch-target-min)" }}
+        />
+      )}
+      {hitAbove && (
+        <span
+          aria-hidden="true"
+          style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: "var(--touch-target-min)" }}
         />
       )}
       <span
@@ -274,7 +286,9 @@ export function VideoTransport({
 /* THE STREAM'S RUNG: a hairline dragged to seek, and the only transport the
    stream has — a play/pause there would answer a question nobody scrolling a
    stream is asking. It sits ABOVE the bottom bar, never on the screen's own
-   edge, where Android's gesture zone would swallow it. */
+   edge, where Android's gesture zone would swallow it. Its target is 48px,
+   risen from the track (`hitAbove`), and the surface keeps the caption clear
+   of it — no target on the stream falls below 48dp. */
 export function SeekLine({ progress = 0, elapsed, duration }) {
-  return <Timeline progress={progress} elapsed={elapsed} duration={duration} thin />;
+  return <Timeline progress={progress} elapsed={elapsed} duration={duration} thin hitAbove />;
 }

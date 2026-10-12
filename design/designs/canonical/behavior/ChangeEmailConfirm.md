@@ -10,14 +10,17 @@ ALWAYS the confirmation carries one field, for the code from the current address
 
 ALWAYS the confirmation carries no field and no Confirm the code, the pair reading the code's side confirmed and Resend sending the link alone GIVEN the code's side is confirmed and the link's side is still owed
 
+ALWAYS changeEmail.interim stands under changeEmail.pair and reads Done on this side — now open the link at, then the new address, as Done on this side — now open the link at sol@ferreira.studio. GIVEN the code's side is confirmed and the link's side is still owed
+
 ALWAYS the confirmation keeps its back arrow, and nothing is lost by leaving it
 
 WHEN the reader comes back to the confirmation GIVEN the change is still in its window -> the confirmation opens on the side still owed, each side's state as it stands
 
+WHEN the reader comes back to the confirmation GIVEN the change applied while they were away -> settings returns AND the Email row reads the new address AND NEVER the snackbar reads Email changed to
+
 WHEN press Confirm the code GIVEN the code is right and the link has not been opened -> the code's side reads confirmed AND the confirmation stays open, waiting on the link AND the Email row reads Change pending AND NEVER the address moves
 
 WHEN press Confirm the code GIVEN the code is right and the link was opened -> the address moves to the new one AND settings returns AND the snackbar reads Email changed to, then the new address, as Email changed to sol@ferreira.studio. AND the Email row reads the new address
-
 WHEN press Confirm the code GIVEN the code is wrong -> the field reads That code doesn't check out. AND NEVER the change moves
 
 WHEN press Confirm the code GIVEN the change ran out before both sides landed -> the fault line above Confirm the code reads This change ran out before both sides landed. Your email stays as it is — start again from settings. AND NEVER the address moves

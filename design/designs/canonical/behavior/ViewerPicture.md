@@ -1,6 +1,8 @@
 # ViewerPicture · `spec:design:behavior-viewer-picture`
 
-ALWAYS the viewer is the whole screen on black with nothing behind it
+ALWAYS the viewer is the whole screen below the system status bar, on black with nothing behind it
+
+ALWAYS the system status bar stays the system's, its strip never painted black or any colour by the viewer
 
 ALWAYS the frame stands whole at its own ratio, never cut
 

@@ -94,6 +94,8 @@ const {
   ExplainableNumber,
   MediaViewer,
   ReelRail,
+  ReelRailScore,
+  ReelPlate,
   ReelCaption,
   DetailClip,
   LICENSE_MENU_LABEL,
@@ -975,6 +977,53 @@ const Unsave = ({ name, node }) => (
 );
 
 /* The post-detail column: the read surface a card opens into. */
+/* THE EDITED-WHILE-YOU-READ LINE (jakob 2026-10-09, seam 120; drawn
+   2026-10-12, the slice-3 round). A detail HOLDS the post as it was opened —
+   nothing changes under a reader mid-sentence — and when a fresh read finds
+   the post changed, this one line says so between the header and the post.
+   The tap swaps the newest version in place and the line goes. A change to
+   the post's tags or citations raises the same line in the same words: on the
+   graph those are acts of their own, not edits of the post, but a reader
+   reading it is owed the newer state either way, and one rule needs no
+   taxonomy. A redaction is never held behind it — it patches through at once.
+
+   IT IS IN THE PAGE'S FLOW, never pinned: it scrolls away with the header's
+   content beneath it, full width, its 48dp target the row itself. One line of
+   `label-medium` in `primary`, because it is an offer and a fact at once —
+   the words say what happened, the colour says it can be acted on. Announced
+   politely: it is news, not a fault. */
+function EditedSinceLine({ node, display }) {
+  return (
+    <div role="status" aria-live="polite" style={{ display }}>
+      <button
+        type="button"
+        className="cg-state cg-focus"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          width: "100%",
+          minHeight: "var(--touch-target-min)",
+          border: 0,
+          background: "none",
+          padding: "0 16px",
+          cursor: "pointer",
+          fontFamily: "var(--font-sans)",
+          fontSize: "var(--text-label-medium)",
+          lineHeight: "var(--text-label-medium--line-height)",
+          letterSpacing: "var(--text-label-medium--letter-spacing)",
+          fontWeight: "var(--text-label-medium--font-weight)",
+          color: "var(--primary)",
+          textAlign: "left",
+          boxSizing: "border-box",
+        }}
+        data-node={node}
+      >
+        Edited since you opened it — tap for the newest version.
+      </button>
+    </div>
+  );
+}
+
 function DetailColumn({ children }) {
   return (
     <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 12, padding: "0 0 8px 0" }}>
@@ -3695,6 +3744,17 @@ const SCORE_PATHS = [
 ];
 const SCORE_MORE_PATHS = { count: 2, value: "+0.50" };
 
+/* THE SAME SET UNDER A BORROWED VIEW (jakob 2026-10-12, SR-G3): a guest on
+   @mira's invite link, or an applicant she let in, reads the walk from HER
+   opinions, so every path leads with her face — and the one that ran through
+   her runs through @sol instead, since a path never revisits its start. */
+const SCORE_PATHS_BORROWED = [
+  { through: "@ada", people: [MIRA_FACED, ADA_FACED], value: "+6.80" },
+  { through: "@tobias", people: [MIRA_FACED, TOBIAS], value: "+4.20" },
+  { through: "@sol", people: [MIRA_FACED, SOL], value: "+2.60" },
+  { through: "@kel and @wren", people: [MIRA_FACED, KEL, WREN], value: "+1.10" },
+];
+
 /* ScoreOrigin — THE THING THE SCORE BELONGS TO, carried on all four levels so
    a reader four taps deep never loses what they are reading about.
 
@@ -3737,7 +3797,9 @@ const SCORE_ORIGINS = {
   person: { title: MIRA.displayName, snippet: "@" + MIRA.handle, name: MIRA.displayName, src: "inviter.jpg" },
   topic: { title: "#saltmaps", mark: <NodeMark kind="topic" onCard /> },
 };
-const signedScore = (score) => (/^[−-]/.test(score) || /^0(\.0+)?$/.test(score) ? score : "+" + score);
+/* Only a positive figure takes the `+`: a negative carries its own sign, a
+   zero wears none, and the dash — no computed figure — is not a number at all. */
+const signedScore = (score) => (/^\d/.test(score) && !/^0(\.0+)?$/.test(score) ? "+" + score : score);
 
 function ScoreOrigin({ kind = "post", score = "15.20" }) {
   return (
@@ -3798,7 +3860,10 @@ const TRACE_ENDS = {
 
 function PathTrace({ people, size = 24, kind = "post", onCard = false }) {
   const between = people.length === 2 ? `@${people[1].handle}` : "several steps";
-  const spoken = `You, then ${between}, then what reached you`;
+  // A borrowed view's paths start at the account it borrows, and say so in the
+  // third person (jakob 2026-10-12, SR-G3): "You" is the reader's own view only.
+  const lead = people[0] === SCORE_VIEWER ? "You" : `@${people[0].handle}`;
+  const spoken = `${lead}, then ${between}, then what reached you`;
   return (
     <span style={{ display: "inline-flex", alignItems: "center" }}>
       {people.map((person, index) => (
