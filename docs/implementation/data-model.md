@@ -1074,6 +1074,57 @@ measured against the traffic that produced it rather than guessed
 at now, and the gallery-follows-the-version rule arrives with the
 code that can honor it.
 
+### Search index
+
+The one search matcher's projection
+([api-spec.md "Search"](api-spec.md#search)): one row per indexed
+field of a node's **current** value — a user actor's `handle` and
+`displayName`, a post's `title`, a registered topic's `name`. The
+version tables above are append-only with many rows per node, so an
+index over them would match superseded titles; this table carries
+only what a read serves now. It is a cache over display content and
+the registry, rebuildable from them at any time.
+
+An untitled post has no row, and neither has a redacted value — a
+node whose current version carries a non-null `redaction_reason`
+(the explicit skip api-spec.md "Moderation" names). The store
+functions that write a source refresh the node's rows in the same
+transaction, re-deriving them from the current version, so
+"current", "untitled" and "redacted" are decided in one place per
+kind.
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+CREATE TABLE search_index (
+    node_id    UUID        NOT NULL,
+    field      TEXT        NOT NULL,   -- handle | display_name | title | name
+    kind       TEXT        NOT NULL,   -- user | post | hashtag
+    value      TEXT        NOT NULL,
+    folded     TEXT        GENERATED ALWAYS AS (lower(value)) STORED,
+    words      TSVECTOR    GENERATED ALWAYS AS (
+                   CASE WHEN field = 'title'
+                        THEN to_tsvector('simple'::regconfig, value)
+                   END
+               ) STORED,
+    author_id  UUID,                   -- posts: the @-scope join
+    created_at TIMESTAMPTZ NOT NULL,   -- the node's createdAt; a topic's registry age
+    PRIMARY KEY (node_id, field)
+);
+-- Name-class fields: case-insensitive substring (which takes in the
+-- prefix) through the trigram operator class's LIKE support.
+CREATE INDEX search_index_names_trgm
+    ON search_index USING gin (folded gin_trgm_ops)
+    WHERE field <> 'title';
+-- Titles: word-level full text, no stemming, last word as a prefix.
+CREATE INDEX search_index_titles_fts
+    ON search_index USING gin (words)
+    WHERE field = 'title';
+CREATE INDEX search_index_author_recency
+    ON search_index (author_id, created_at DESC)
+    WHERE author_id IS NOT NULL;
+```
+
 ### Personal frontend state
 
 A category of per-viewer tables whose role is to feed the viewing user's

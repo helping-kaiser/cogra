@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO search_index (node_id, field, kind, value, created_at)\n         SELECT id, 'name', 'hashtag', name, created_at\n         FROM hashtags WHERE name = $1\n         ON CONFLICT (node_id, field) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8d9e394d9725332949946229ba128a3071e6813d148ea20ea9814f20d878f222"
+}

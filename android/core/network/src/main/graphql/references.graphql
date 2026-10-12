@@ -95,12 +95,12 @@ fragment ReferenceClaimFields on ReferenceClaim {
   pending
 }
 
-# Exact-match resolution only: a handle bare or `@`-sigilled, or a
-# UUID. An empty or unresolvable query yields an empty list rather
-# than an error — a finder runs on every keystroke, so most of what it
-# is asked is a prefix of something still being typed (D20). Real
-# search replaces the implementation in slice 2.7 behind this same
-# field.
+# The one search matcher (slice 2.7): names and titles, exact matches
+# first, then newest; a leading `@` narrows to people, and a UUID names
+# whatever node it addresses. An empty or unresolvable query yields an
+# empty list rather than an error — a finder runs on every keystroke,
+# so most of what it is asked is a prefix of something still being
+# typed (D20).
 query ReferenceCandidates($query: String!, $limit: Int) {
   referenceCandidates(query: $query, limit: $limit) {
     target {
