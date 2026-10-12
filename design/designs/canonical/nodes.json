@@ -1996,6 +1996,177 @@
         "feed.deletionBand.line": []
       }
     },
+    "FeedEntry": {
+      "prefix": "feedEntry",
+      "keys": {
+        "feedEntry.path": "the path's position in the list, strongest first, counted from 1 (the score's trace)"
+      },
+      "nodes": {
+        "feedEntry.bottomBar": [],
+        "feedEntry.bottomBar.composeSlot": [],
+        "feedEntry.bottomBar.feedSlot": [],
+        "feedEntry.bottomBar.profileSlot": [],
+        "feedEntry.bottomBar.searchSlot": [],
+        "feedEntry.bottomBar.walletSlot": [],
+        "feedEntry.header": [],
+        "feedEntry.header.back": [],
+        "feedEntry.header.title": [],
+        "feedEntry.morePaths": [],
+        "feedEntry.morePaths.label": [],
+        "feedEntry.morePaths.value": [],
+        "feedEntry.note": [],
+        "feedEntry.origin": [],
+        "feedEntry.origin.flag": [],
+        "feedEntry.origin.flag.value": [],
+        "feedEntry.origin.quote": [],
+        "feedEntry.origin.quote.disc": [],
+        "feedEntry.origin.quote.snippet": [],
+        "feedEntry.origin.quote.title": [],
+        "feedEntry.path": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "feedEntry.path.chevron": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "feedEntry.path.through": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "feedEntry.path.trace": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "feedEntry.path.value": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "feedEntry.pathsLabel": []
+      }
+    },
+    "FeedEntryKinds": {
+      "prefix": "feedEntry",
+      "keys": {
+        "feedEntry.block": "the kind of thing the block holds — post, comment, person or topic (FeedEntryKinds' blocks)"
+      },
+      "nodes": {
+        "feedEntry.block": [
+          "post",
+          "comment",
+          "person",
+          "topic"
+        ],
+        "feedEntry.block.origin": [
+          "post",
+          "comment",
+          "person",
+          "topic"
+        ],
+        "feedEntry.block.origin.flag": [
+          "post",
+          "comment",
+          "person",
+          "topic"
+        ],
+        "feedEntry.block.origin.flag.value": [
+          "post",
+          "comment",
+          "person",
+          "topic"
+        ],
+        "feedEntry.block.origin.quote": [
+          "post",
+          "comment",
+          "person",
+          "topic"
+        ],
+        "feedEntry.block.origin.quote.disc": [
+          "post",
+          "comment",
+          "person",
+          "topic"
+        ],
+        "feedEntry.block.origin.quote.snippet": [
+          "post",
+          "comment",
+          "person"
+        ],
+        "feedEntry.block.origin.quote.title": [
+          "post",
+          "comment",
+          "person",
+          "topic"
+        ],
+        "feedEntry.block.path": [
+          "post",
+          "comment",
+          "person",
+          "topic"
+        ],
+        "feedEntry.block.path.chevron": [
+          "post",
+          "comment",
+          "person",
+          "topic"
+        ],
+        "feedEntry.block.path.through": [
+          "post",
+          "comment",
+          "person",
+          "topic"
+        ],
+        "feedEntry.block.path.trace": [
+          "post",
+          "comment",
+          "person",
+          "topic"
+        ],
+        "feedEntry.block.path.value": [
+          "post",
+          "comment",
+          "person",
+          "topic"
+        ],
+        "feedEntry.header": [],
+        "feedEntry.header.back": [],
+        "feedEntry.header.title": [],
+        "feedEntry.note": []
+      }
+    },
+    "FeedEntryMoved": {
+      "prefix": "feedEntry",
+      "keys": {},
+      "nodes": {
+        "feedEntry.bottomBar": [],
+        "feedEntry.bottomBar.composeSlot": [],
+        "feedEntry.bottomBar.feedSlot": [],
+        "feedEntry.bottomBar.profileSlot": [],
+        "feedEntry.bottomBar.searchSlot": [],
+        "feedEntry.bottomBar.walletSlot": [],
+        "feedEntry.header": [],
+        "feedEntry.header.back": [],
+        "feedEntry.header.title": [],
+        "feedEntry.note": [],
+        "feedEntry.origin": [],
+        "feedEntry.origin.flag": [],
+        "feedEntry.origin.flag.value": [],
+        "feedEntry.origin.quote": [],
+        "feedEntry.origin.quote.disc": [],
+        "feedEntry.origin.quote.snippet": [],
+        "feedEntry.origin.quote.title": []
+      }
+    },
     "FeedHidden": {
       "prefix": "feed",
       "keys": {
@@ -4075,6 +4246,153 @@
         "profile.tabRow.commentsTab": [],
         "profile.tabRow.everythingTab": [],
         "profile.tabRow.postsTab": []
+      }
+    },
+    "RankHop": {
+      "prefix": "feedEntry",
+      "keys": {},
+      "nodes": {
+        "feedEntry.behind": [],
+        "feedEntry.behind.action": [],
+        "feedEntry.behind.label": [],
+        "feedEntry.behind.value": [],
+        "feedEntry.bottomBar": [],
+        "feedEntry.bottomBar.composeSlot": [],
+        "feedEntry.bottomBar.feedSlot": [],
+        "feedEntry.bottomBar.profileSlot": [],
+        "feedEntry.bottomBar.searchSlot": [],
+        "feedEntry.bottomBar.walletSlot": [],
+        "feedEntry.carries": [],
+        "feedEntry.carries.label": [],
+        "feedEntry.carries.value": [],
+        "feedEntry.carries.value.exact": [],
+        "feedEntry.carries.value.face": [],
+        "feedEntry.foldNote": [],
+        "feedEntry.header": [],
+        "feedEntry.header.back": [],
+        "feedEntry.header.title": [],
+        "feedEntry.newest": [],
+        "feedEntry.newest.label": [],
+        "feedEntry.newest.value": [],
+        "feedEntry.note": [],
+        "feedEntry.origin": [],
+        "feedEntry.origin.flag": [],
+        "feedEntry.origin.flag.value": [],
+        "feedEntry.origin.quote": [],
+        "feedEntry.origin.quote.disc": [],
+        "feedEntry.origin.quote.snippet": [],
+        "feedEntry.origin.quote.title": [],
+        "feedEntry.trace": []
+      }
+    },
+    "RankPath": {
+      "prefix": "feedEntry",
+      "keys": {
+        "feedEntry.step": "the step's position along its path, from the path's start, counted from 1 (the score's trace)"
+      },
+      "nodes": {
+        "feedEntry.adds": [],
+        "feedEntry.adds.label": [],
+        "feedEntry.adds.value": [],
+        "feedEntry.bottomBar": [],
+        "feedEntry.bottomBar.composeSlot": [],
+        "feedEntry.bottomBar.feedSlot": [],
+        "feedEntry.bottomBar.profileSlot": [],
+        "feedEntry.bottomBar.searchSlot": [],
+        "feedEntry.bottomBar.walletSlot": [],
+        "feedEntry.header": [],
+        "feedEntry.header.back": [],
+        "feedEntry.header.title": [],
+        "feedEntry.newest": [],
+        "feedEntry.newest.label": [],
+        "feedEntry.newest.value": [],
+        "feedEntry.origin": [],
+        "feedEntry.origin.flag": [],
+        "feedEntry.origin.flag.value": [],
+        "feedEntry.origin.quote": [],
+        "feedEntry.origin.quote.disc": [],
+        "feedEntry.origin.quote.snippet": [],
+        "feedEntry.origin.quote.title": [],
+        "feedEntry.step": [
+          "1",
+          "2"
+        ],
+        "feedEntry.step.chevron": [
+          "1",
+          "2"
+        ],
+        "feedEntry.step.disc": [
+          "1",
+          "2"
+        ],
+        "feedEntry.step.second": [
+          "1",
+          "2"
+        ],
+        "feedEntry.step.title": [
+          "1",
+          "2"
+        ],
+        "feedEntry.step.trailing": [
+          "1",
+          "2"
+        ],
+        "feedEntry.stepsLabel": [],
+        "feedEntry.trace": []
+      }
+    },
+    "RankRecords": {
+      "prefix": "feedEntry",
+      "keys": {
+        "feedEntry.record": "the record's key, as the row prints it (the score's trace)"
+      },
+      "nodes": {
+        "feedEntry.bottomBar": [],
+        "feedEntry.bottomBar.composeSlot": [],
+        "feedEntry.bottomBar.feedSlot": [],
+        "feedEntry.bottomBar.profileSlot": [],
+        "feedEntry.bottomBar.searchSlot": [],
+        "feedEntry.bottomBar.walletSlot": [],
+        "feedEntry.closingNote": [],
+        "feedEntry.header": [],
+        "feedEntry.header.back": [],
+        "feedEntry.header.title": [],
+        "feedEntry.note": [],
+        "feedEntry.origin": [],
+        "feedEntry.origin.flag": [],
+        "feedEntry.origin.flag.value": [],
+        "feedEntry.origin.quote": [],
+        "feedEntry.origin.quote.disc": [],
+        "feedEntry.origin.quote.snippet": [],
+        "feedEntry.origin.quote.title": [],
+        "feedEntry.record": [
+          "3f9c2a41b77e0d58",
+          "a0417be2c9d3f16b"
+        ],
+        "feedEntry.record.key": [
+          "3f9c2a41b77e0d58",
+          "a0417be2c9d3f16b"
+        ],
+        "feedEntry.record.pair": [
+          "3f9c2a41b77e0d58",
+          "a0417be2c9d3f16b"
+        ],
+        "feedEntry.record.pair.exact": [
+          "3f9c2a41b77e0d58",
+          "a0417be2c9d3f16b"
+        ],
+        "feedEntry.record.pair.face": [
+          "3f9c2a41b77e0d58",
+          "a0417be2c9d3f16b"
+        ],
+        "feedEntry.record.what": [
+          "3f9c2a41b77e0d58",
+          "a0417be2c9d3f16b"
+        ],
+        "feedEntry.record.when": [
+          "3f9c2a41b77e0d58",
+          "a0417be2c9d3f16b"
+        ]
       }
     },
     "ReaderPostMenu": {

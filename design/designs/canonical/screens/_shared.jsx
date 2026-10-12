@@ -3712,7 +3712,16 @@ function SettingsBackupBody({ app = false, value = "", error }) {
    along it (feed-ranking.md §3.1, §5.1: the per-step weight is damped and
    tier-bound, and the last step alone decays) — so a surface that put a number
    on every step would invite an arithmetic that does not hold. The path states
-   what it adds; the steps state what carries them and when. */
+   what it adds; the steps state what carries them and when.
+
+   THE PARTS' NAMES ARE THE `feedEntry` PREFIX'S (round 7), all four levels
+   under one, as the account screens share theirs: the held thing is `origin`
+   (its `flag` and `value`, the `quote` with its `disc`, `title`, `snippet`), a
+   path row `path` keyed by its place strongest first (`trace`, `through`,
+   `value`, `chevron`), the fact rows by what they state (`adds`, `newest`,
+   `carries`, `behind`), a record `record` keyed by the key it prints (`what`,
+   `when`, `pair`, `key`). Every board these parts stand on that is not
+   registered renders them stripped. */
 
 /* The cast this flow adds to the canvas's four — the people at the far end of
    the weaker paths, and the holders on the opinions sheet. They live beside the
@@ -3796,7 +3805,7 @@ const SCORE_ORIGINS = {
   post: { title: "The long way home — @ada", snippet: "Took the coast road instead of the tunnel. Four hours longer, worth every minute.", name: ADA.displayName, src: "comment-camera.jpg" },
   comment: { title: "@tobias", snippet: TOBIAS_COMMENT, name: TOBIAS.displayName },
   person: { title: MIRA.displayName, snippet: "@" + MIRA.handle, name: MIRA.displayName, src: "inviter.jpg" },
-  topic: { title: "#saltmaps", mark: <NodeMark kind="topic" onCard /> },
+  topic: { title: "#saltmaps", mark: <NodeMark kind="topic" onCard node="disc" /> },
 };
 /* Only a positive figure takes the `+`: a negative carries its own sign, a
    zero wears none, and the dash — no computed figure — is not a number at all. */
@@ -3804,7 +3813,7 @@ const signedScore = (score) => (/^\d/.test(score) && !/^0(\.0+)?$/.test(score) ?
 
 function ScoreOrigin({ kind = "post", score = "15.20" }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 0 }} data-node="origin">
       <span
         style={{
           display: "inline-flex",
@@ -3818,12 +3827,15 @@ function ScoreOrigin({ kind = "post", score = "15.20" }) {
           lineHeight: "var(--text-body-small--line-height)",
           color: "var(--text-secondary)",
         }}
+        data-node="flag"
       >
         <Icon name="graph" size={16} />
         <span style={SR_ONLY}>Feed score</span>
-        <span style={{ color: "var(--on-surface)", fontWeight: 500 }}>{signedScore(score)}</span>
+        <span style={{ color: "var(--on-surface)", fontWeight: 500 }} data-node="value">
+          {signedScore(score)}
+        </span>
       </span>
-      <QuotedRow attach {...SCORE_ORIGINS[kind]} />
+      <QuotedRow attach {...SCORE_ORIGINS[kind]} node="quote" />
     </div>
   );
 }
@@ -3859,14 +3871,14 @@ const TRACE_ENDS = {
   topic: { kind: "topic" },
 };
 
-function PathTrace({ people, size = 24, kind = "post", onCard = false }) {
+function PathTrace({ people, size = 24, kind = "post", onCard = false, node }) {
   const between = people.length === 2 ? `@${people[1].handle}` : "several steps";
   // A borrowed view's paths start at the account it borrows, and say so in the
   // third person (jakob 2026-10-12, SR-G3): "You" is the reader's own view only.
   const lead = people[0] === SCORE_VIEWER ? "You" : `@${people[0].handle}`;
   const spoken = `${lead}, then ${between}, then what reached you`;
   return (
-    <span style={{ display: "inline-flex", alignItems: "center" }}>
+    <span style={{ display: "inline-flex", alignItems: "center" }} data-node={node}>
       {people.map((person, index) => (
         <React.Fragment key={person.handle}>
           {index > 0 && (
@@ -3887,12 +3899,14 @@ function PathTrace({ people, size = 24, kind = "post", onCard = false }) {
    40px disc, and a path is a chain. Everything else about the row is the
    master's — the card ground, the medium corner, the 12px padding, the chevron
    that says this opens another surface. */
-function PathRow({ people, through, value, onOpen, kind = "post" }) {
+function PathRow({ people, through, value, onOpen, kind = "post", node, nodeKey }) {
   return (
     <button
       type="button"
       onClick={onOpen}
       className="cg-state cg-focus"
+      data-node={node}
+      data-node-key={node && nodeKey}
       style={{
         display: "flex",
         alignItems: "center",
@@ -3910,7 +3924,7 @@ function PathRow({ people, through, value, onOpen, kind = "post" }) {
       }}
     >
       <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
-        <PathTrace people={people} kind={kind} onCard />
+        <PathTrace people={people} kind={kind} onCard node={node && "trace"} />
         <span
           style={{
             fontSize: "var(--text-label-small)",
@@ -3920,12 +3934,19 @@ function PathRow({ people, through, value, onOpen, kind = "post" }) {
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
           }}
+          data-node={node && "through"}
         >
           Through {through}
         </span>
       </span>
-      <span style={{ flex: "none", fontSize: "var(--text-body-small)", fontWeight: 500 }}>{value}</span>
-      <span style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }} aria-hidden="true">
+      <span style={{ flex: "none", fontSize: "var(--text-body-small)", fontWeight: 500 }} data-node={node && "value"}>
+        {value}
+      </span>
+      <span
+        style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }}
+        aria-hidden="true"
+        data-node={node && "chevron"}
+      >
         <Icon name="chevron_right" size={18} />
       </span>
     </button>
@@ -3947,8 +3968,8 @@ function PathRow({ people, through, value, onOpen, kind = "post" }) {
 function PathSummary({ adds, newest }) {
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      <FactRow label="What it adds" value={adds} />
-      <FactRow label="Newest opinion on it" value={newest} last />
+      <FactRow label="What it adds" value={adds} node="adds" />
+      <FactRow label="Newest opinion on it" value={newest} last node="newest" />
     </div>
   );
 }
@@ -3960,9 +3981,13 @@ function PathSummary({ adds, newest }) {
 function StepSummary({ pair, behind, newest, onOpenRecords }) {
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      <FactRow label="What carries it" value={<StanceValue pDirected={pair.pDirected} pInterest={pair.pInterest} />} />
-      <FactRow label="Behind it" value={behind} action="Show them" onAction={onOpenRecords} />
-      <FactRow label="Newest of them" value={newest} last />
+      <FactRow
+        label="What carries it"
+        value={<StanceValue pDirected={pair.pDirected} pInterest={pair.pInterest} node="value" />}
+        node="carries"
+      />
+      <FactRow label="Behind it" value={behind} action="Show them" onAction={onOpenRecords} node="behind" />
+      <FactRow label="Newest of them" value={newest} last node="newest" />
     </div>
   );
 }
@@ -3999,20 +4024,31 @@ function ActionLog({ records }) {
             padding: "var(--space-3)",
             boxSizing: "border-box",
           }}
+          data-node="record"
+          data-node-key={record.key}
         >
           <span style={{ display: "flex", alignItems: "baseline", gap: "var(--space-2)" }}>
-            <span style={{ flex: 1, minWidth: 0, fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <span
+              style={{ flex: 1, minWidth: 0, fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+              data-node="what"
+            >
               {record.what}
             </span>
-            <span style={{ flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
+            <span
+              style={{ flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}
+              data-node="when"
+            >
               {record.when}
             </span>
           </span>
           <span style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
             <span style={{ flex: "none" }}>
-              <StanceValue pDirected={record.pair.pDirected} pInterest={record.pair.pInterest} />
+              <StanceValue pDirected={record.pair.pDirected} pInterest={record.pair.pInterest} node="pair" />
             </span>
-            <span style={{ flex: 1, minWidth: 0, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <span
+              style={{ flex: 1, minWidth: 0, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+              data-node="key"
+            >
               {record.key}
             </span>
           </span>

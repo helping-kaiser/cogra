@@ -23,6 +23,8 @@ export interface FactRowProps {
   emphasis?: "seal" | "ledger";
   /** Last row of the block — closes the `seal`'s box, drops the `ledger`'s rule. */
   last?: boolean;
+  /** The data-node name its placer gives this row (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its `label`, a value it wraps `value`, and a string action `action`; an unwrapped value or a node action is named by its own placer. */
+  node?: string;
 }
 
 export declare function FactRow(props: FactRowProps): JSX.Element;

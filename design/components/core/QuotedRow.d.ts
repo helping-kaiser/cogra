@@ -24,6 +24,8 @@ export interface QuotedRowProps {
    *  the score's trace hangs its figure there (`TaggedRow`'s attachment).
    *  Defaults to false. */
   attach?: boolean;
+  /** The data-node name its placer gives this row (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its `title`, its `snippet` and its monogram `disc`; a `mark` is named by its own placer. */
+  node?: string;
 }
 
 export declare function QuotedRow(props: QuotedRowProps): JSX.Element;

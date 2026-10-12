@@ -341,7 +341,7 @@ export function bundleReadout(pair, zeroLabel = SEVERED_LABEL) {
    — the opinions page's rows, the chronicle's opinion entries. Never
    interactive: acting on a person means opening their profile first (jakob —
    giving an opinion here is more deliberate than a follow). */
-export function StanceValue({ pDirected, pInterest, showPair = true }) {
+export function StanceValue({ pDirected, pInterest, showPair = true, node }) {
   const pair = { pDirected, pInterest };
   const readout = bundleReadout(pair);
   return (
@@ -349,10 +349,18 @@ export function StanceValue({ pDirected, pInterest, showPair = true }) {
       role="img"
       aria-label={`${readout.label}, ${formatStancePair(pair)}`}
       style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+      data-node={node}
     >
-      <span aria-hidden="true" style={{ fontSize: "var(--text-title-medium)" }}>{readout.emoji}</span>
+      <span aria-hidden="true" style={{ fontSize: "var(--text-title-medium)" }} data-node={node && "face"}>
+        {readout.emoji}
+      </span>
       {showPair && (
-        <span className="cg-exact" aria-hidden="true" style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
+        <span
+          className="cg-exact"
+          aria-hidden="true"
+          style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}
+          data-node={node && "exact"}
+        >
           {formatStancePair(pair)}
         </span>
       )}
