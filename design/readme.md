@@ -2733,7 +2733,9 @@ item 33, jakob's rulings the same day).
   the post, media in the post opens the frame — or the transport's own
   fullscreen toggle, which is the same door. It is **the whole surface
   on black with nothing behind it**: a viewer you can still read a card
-  through is not full screen. Nothing is cut there —
+  through is not full screen. The black ends below the system status bar,
+  which is never the app's to paint — the stream's black and washes stop
+  there too. Nothing is cut there —
   it is the surface every crop in the product is measured against — a
   picture pinch-zooms and **the gallery's swipe and its dots** carry
   over, dots only, no arrows (the pager ruling holds here too: arrows

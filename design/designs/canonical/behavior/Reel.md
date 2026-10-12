@@ -4,7 +4,9 @@ ALWAYS the stream carries only clips taller than they are wide, from the reader'
 
 ALWAYS no header labels the stream
 
-ALWAYS the clip runs at its own full frame, edge to edge
+ALWAYS the clip runs at its own full frame, edge to edge below the system status bar
+
+ALWAYS the system status bar stays the system's, its strip never painted black or any colour by the stream, its washes included
 
 ALWAYS the stream wears the sound control and a thin seek line, and never play and pause or the full transport
 

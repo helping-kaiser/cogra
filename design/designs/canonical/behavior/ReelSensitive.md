@@ -4,6 +4,8 @@ WHEN the clip on the stream's stage is sensitive and unrevealed -> the stream st
 
 ALWAYS a veiled clip has no playback and no sound-control presence
 
+ALWAYS the stream and its veil stand below the system status bar, whose strip stays the system's, never painted black or any colour
+
 ALWAYS the stream carries no sound control and no seek line GIVEN the clip is veiled
 
 ALWAYS the caption's handle and title stay readable and its description veils

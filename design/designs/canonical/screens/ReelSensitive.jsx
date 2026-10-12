@@ -3,7 +3,8 @@
    reel in the stream — the same clip edge to edge, the same rail, caption and
    bottom bar — but it is blurred and does not play. Reached the way `Reel` is,
    when the clip on the stage is sensitive and unrevealed: the state the record
-   brings, not a different tap or swipe.
+   brings, not a different tap or swipe. Like `Reel`'s, its black ends below
+   the system status bar and never paints that strip (seam 117).
 
    THE VEIL IS THE STANDARD ONE, UNCHANGED. `SensitiveVeil`'s media face lies
    over the whole clip — the mark, whose mark it is, and the reason — and the

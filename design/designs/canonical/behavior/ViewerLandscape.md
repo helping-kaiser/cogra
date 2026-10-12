@@ -8,6 +8,8 @@ ALWAYS the chrome is the upright viewer's own, nothing added and nothing taken a
 
 ALWAYS the transport's bar stays held clear of the screen's bottom edge
 
+ALWAYS the viewer's black ends below the system status bar, which stays the system's, its strip never painted black or any colour by the viewer
+
 WHEN tap play or pause -> the clip stops or starts where it is
 
 WHEN tap a skip -> the clip moves ten seconds back or forward

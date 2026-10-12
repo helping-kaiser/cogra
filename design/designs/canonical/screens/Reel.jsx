@@ -9,6 +9,11 @@
    The clip runs at its native 9:16, edge to edge — this is the surface the
    card's 4:5 clamp exists against. Swiping moves to the next clip.
 
+   THE STATUS BAR IS NOT THE STREAM'S (jakob 2026-10-09, seam 117): the black
+   and the top wash end below the system status bar and never paint its strip.
+   The board is the inset-zero case (readme §13, *The viewer-grammar close*),
+   so its `inset: 0` is what stands below the bar on a device.
+
    THE BOTTOM BAR STAYS (jakob, review round 1 — Instagram, TikTok and YouTube
    all keep theirs on a stream, and so does this): the stream is a way of reading
    the feed, not a place outside the app, so the way to every other tab stays
