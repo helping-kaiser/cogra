@@ -85,10 +85,17 @@ export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail, ove
           is failure only — a score below zero is a fact about reach, not a fault,
           and colouring it red would editorialise it the way readme §4, *Colour*, forbids for a
           negative stance. */}
-      <span style={{ color: overMedia ? "#fff" : "var(--on-surface)", fontWeight: 500 }} data-node={node && "value"}>
-        {value}
-        {unit ? <span style={{ color: "var(--text-secondary)", fontWeight: 400 }}>{unit}</span> : null}
-      </span>
+      {/* NO VALUE, NO FIGURE (ruling 90; the rail's settling door, RL-G7): a
+          figure still settling has nothing to show, and anything drawn in its
+          place — a 0, a dash — would say something false. The glyph stands
+          bare and the door still opens. A DASH is a value, passed as one: the
+          figure that is not computed (the trace found no paths). */}
+      {value !== undefined && value !== null && (
+        <span style={{ color: overMedia ? "#fff" : "var(--on-surface)", fontWeight: 500 }} data-node={node && "value"}>
+          {value}
+          {unit ? <span style={{ color: "var(--text-secondary)", fontWeight: 400 }}>{unit}</span> : null}
+        </span>
+      )}
     </button>
   );
 }

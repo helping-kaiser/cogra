@@ -9,7 +9,9 @@
    same number the card wore, still the reader's own reach into this post.
 
    The clip runs at its native 9:16, edge to edge — this is the surface the
-   card's 4:5 clamp exists against. Swiping moves to the next clip.
+   card's 4:5 clamp exists against. The stream pages vertically: up brings the
+   next clip, down the one before, from the tapped clip both ways through the
+   list; it never wraps and never moves on by itself.
 
    THE STATUS BAR IS NOT THE STREAM'S (jakob 2026-10-09, seam 117): the black
    and the top wash end below the system status bar and never paint its strip.
@@ -23,11 +25,35 @@
    screen's own edge, where Android's system gesture zone would take the drag
    and close the app instead.
 
+   NO TARGET ON THE STREAM FALLS BELOW 48dp (rulings 92 and 101, RL-G11). The
+   seek line's 3px ink stays on the bar; its 48px target rises from the track,
+   and the caption stands 62px above the bar so the target and `More`'s own
+   48px target meet without overlapping. The ink does not move.
+
    THE CHROME: the way back top-left and the sound disc top-right, both on the
    media disc's surface because they sit on photography; the rail down the right,
    white and shadowed so it survives a bright frame; the caption above the bar.
-   No play/pause: a clip in a stream plays, and stopping it is what the detail
-   view is for. */
+   No pause: a clip in a stream plays, and stopping it is what the detail view is
+   for. The one play is the card's own: where the device suppresses autoplay the
+   clip stands paused on its cover and the play disc takes the sound disc's
+   corner until the tap starts it (RL-G3).
+
+   THE `state` CHIP draws the stream's other faces, each one change from
+   `playing`: `suppressed` (the play disc); `settling` (the rail's score door a
+   bare glyph over `Still settling`, RL-G7); `moved` (the door reads the dash —
+   the trace's fetch found no paths, jakob 2026-10-12); `end` (the last clip's
+   line at the caption's head, RL-G4); `fault` (the load that did not come, the
+   clip still playing, RL-G13); `unsigned` and `refused` (a hold's row line
+   beside the face, RL-G8). Every line stands on the stream's plate. */
+export const PROPS = {
+  state: {
+    editor: "enum",
+    options: ["playing", "suppressed", "settling", "moved", "end", "fault", "unsigned", "refused"],
+    default: "playing",
+  },
+};
+export const VALS = `soundDisc: this.props.state === "suppressed" ? "none" : "contents", playDisc: this.props.state === "suppressed" ? "contents" : "none", railFigure: this.props.state === "settling" || this.props.state === "moved" ? "none" : "contents", railSettling: this.props.state === "settling" ? "contents" : "none", railDash: this.props.state === "moved" ? "contents" : "none", lineUnsigned: this.props.state === "unsigned" ? "block" : "none", lineRefused: this.props.state === "refused" ? "block" : "none", lineEnd: this.props.state === "end" ? "block" : "none", lineFault: this.props.state === "fault" ? "block" : "none"`;
+
 export function Screen() {
   return (
     <div data-theme="dark" style={{ position: "absolute", inset: 0, background: "#000", overflow: "hidden" }}>
@@ -48,19 +74,70 @@ export function Screen() {
       />
 
       <MediaDisc label="Back to feed" glyph="arrow_back" corner="top-left" onClick={() => {}} />
-      <MediaDisc label="Turn sound on" glyph="volume_off" corner="top-right" pressed={false} onClick={() => {}} />
+      <span style={{ display: "{{soundDisc}}" }}>
+        <MediaDisc label="Turn sound on" glyph="volume_off" corner="top-right" pressed={false} onClick={() => {}} />
+      </span>
+      <span style={{ display: "{{playDisc}}" }}>
+        <MediaDisc label="Play this video" glyph="play_arrow" corner="top-right" onClick={() => {}} />
+      </span>
 
       <ReelRail
         author={{ handle: MIRA.handle, displayName: MIRA.displayName, src: "inviter.jpg" }}
-        score={MIRA_CLIP_POST.score}
         comments={MIRA_CLIP_POST.comments}
         bottom={BAND_HEIGHT + 96}
+        scoreSlot={
+          <>
+            <span style={{ display: "{{railFigure}}" }}>
+              <ReelRailScore score={MIRA_CLIP_POST.score} />
+            </span>
+            <span style={{ display: "{{railSettling}}" }}>
+              <ReelRailScore settling />
+            </span>
+            <span style={{ display: "{{railDash}}" }}>
+              <ReelRailScore score="—" />
+            </span>
+          </>
+        }
+        stanceLine={
+          <>
+            <div style={{ display: "{{lineUnsigned}}" }}>
+              <ReelPlate role="alert">
+                <span style={{ color: "var(--text-failure)" }}>That didn&apos;t sign.</span>
+                <InlineAction size="sm" onClick={() => {}}>
+                  Retry
+                </InlineAction>
+              </ReelPlate>
+            </div>
+            <div style={{ display: "{{lineRefused}}" }}>
+              <ReelPlate>
+                <span style={{ color: "var(--text-secondary)" }}>You can&apos;t sign right now.</span>
+              </ReelPlate>
+            </div>
+          </>
+        }
       />
       <ReelCaption
         handle={MIRA.handle}
         title={MIRA_CLIP_POST.title}
         description={MIRA_CLIP_POST.description}
-        bottom={BAND_HEIGHT + 22}
+        bottom={BAND_HEIGHT + 66}
+        notice={
+          <>
+            <div style={{ display: "{{lineEnd}}" }}>
+              <ReelPlate>
+                <span style={{ color: "var(--text-secondary)" }}>That&apos;s the last clip here.</span>
+              </ReelPlate>
+            </div>
+            <div style={{ display: "{{lineFault}}" }}>
+              <ReelPlate>
+                <span style={{ color: "var(--text-secondary)" }}>Couldn&apos;t load more</span>
+                <InlineAction size="sm" ariaLabel="Retry loading more" onClick={() => {}}>
+                  Retry
+                </InlineAction>
+              </ReelPlate>
+            </div>
+          </>
+        }
       />
 
       <div style={{ position: "absolute", left: 0, right: 0, bottom: BAND_HEIGHT + 4, zIndex: 3 }}>

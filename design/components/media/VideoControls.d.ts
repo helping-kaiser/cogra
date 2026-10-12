@@ -60,6 +60,9 @@ export interface TimelineProps {
   /** The 48px target hangs down from the track's top instead of centring on
    *  it — the transport's bar, where the space above is the clip's own tap. */
   hitBelow?: boolean;
+  /** The 48px target rises from the track's foot — the stream's seek line,
+   *  which sits on the bottom bar; the surface keeps the caption clear above it. */
+  hitAbove?: boolean;
 }
 
 export declare function Timeline(props: TimelineProps): JSX.Element;

@@ -12,11 +12,19 @@ ALWAYS the caption's handle and title stay readable and its description veils
 
 ALWAYS the rail's acts stay live over the veil
 
-WHEN tap the clip's veil face -> the clip and the caption unveil together AND the clip joins the stage's rotation AND it plays
+ALWAYS the rail's score wears the faces it wears on an unveiled clip — the figure, the bare glyph over Still settling, the dash — and stays the door to the post
 
-WHEN tap Show on the caption's veil -> the clip and the caption unveil together AND the clip joins the stage's rotation AND it plays
+WHEN tap the clip's veil face GIVEN the device allows autoplay -> the clip and the caption unveil together AND the clip joins the stage's rotation AND it plays
 
-WHEN swipe the clip -> the next clip in the same list takes the screen AND this one stays veiled
+WHEN tap Show on the caption's veil GIVEN the device allows autoplay -> the clip and the caption unveil together AND the clip joins the stage's rotation AND it plays
+
+WHEN tap the clip's veil face or Show on the caption's veil GIVEN the device suppresses autoplay -> the clip and the caption unveil together AND the clip stands paused on its cover with the card's play disc in the sound control's corner AND NEVER it starts on its own
+
+WHEN swipe up on the clip -> the next clip in the same list takes the screen AND this one stays veiled
+
+WHEN the hold's signing does not go through -> the opinion face stays where it was AND the line beside it reads That didn't sign. in the failure voice followed by Retry, on the stream's plate AND NEVER the snackbar carries the failure
+
+WHEN the write rule refuses a hold's signing -> the opinion face stays where it was AND the line beside it reads You can't sign right now. in the quiet secondary ink, on the stream's plate AND NEVER Retry appears
 
 ALWAYS a reveal holds for every move inside the app until the app is fully closed or the media is hard reset
 

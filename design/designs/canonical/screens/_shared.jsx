@@ -94,6 +94,8 @@ const {
   ExplainableNumber,
   MediaViewer,
   ReelRail,
+  ReelRailScore,
+  ReelPlate,
   ReelCaption,
   DetailClip,
   LICENSE_MENU_LABEL,

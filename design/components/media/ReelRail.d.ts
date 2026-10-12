@@ -22,8 +22,18 @@ export interface ReelRailAuthor {
 
 export interface ReelRailProps {
   author?: ReelRailAuthor;
-  /** The Feed score, already formatted — the rail never does arithmetic. */
+  /**
+   * The Feed score, already formatted — the rail never does arithmetic: the
+   * figure the reader's own last feed fetch computed, the same the card wore,
+   * or `—` where the trace's fetch found no paths. The door stays either way.
+   */
   score?: string;
+  /** Still settling: the score glyph stands bare with `Still settling` under it, and still opens the post. */
+  settling?: boolean;
+  /** A board drawing the score door in more than one state hands the slot itself (`ReelRailScore` copies). */
+  scoreSlot?: React.ReactNode;
+  /** The opinion face's row line — a hold that did not sign, or the write rule's refusal — on a `ReelPlate` beside the face. */
+  stanceLine?: React.ReactNode;
   /** Omitted, the comment item is not drawn. */
   comments?: number;
   /** Distance from the surface's bottom edge; clears the bottom bar and the caption. */
@@ -46,3 +56,25 @@ export interface ReelRailItemProps {
 }
 
 export declare function ReelRailItem(props: ReelRailItemProps): JSX.Element;
+
+/** The rail's score door in its three faces: the figure, the dash, and settling's bare glyph over `Still settling`. */
+export interface ReelRailScoreProps {
+  score?: string;
+  settling?: boolean;
+  onOpen?: () => void;
+}
+
+export declare function ReelRailScore(props: ReelRailScoreProps): JSX.Element;
+
+/**
+ * The stream's plate: a line the stream owes the reader, on the wash's own
+ * black at 60 %, because over a clip there is no row for it to stand on. It
+ * stands until answered and never fades on a timer; the words keep their own
+ * registers. `role` is `status` for a notice, `alert` for a failure.
+ */
+export interface ReelPlateProps {
+  children: React.ReactNode;
+  role?: "status" | "alert";
+}
+
+export declare function ReelPlate(props: ReelPlateProps): JSX.Element;
