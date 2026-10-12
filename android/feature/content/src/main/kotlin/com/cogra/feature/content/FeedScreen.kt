@@ -45,6 +45,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
 import com.cogra.core.designsystem.CollapsingTopBanner
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.EdgeSighting
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.SeenCardsEffect
@@ -173,6 +174,7 @@ fun FeedRoute(
         onRefresh = viewModel::refresh,
         onLoadMore = viewModel::loadMore,
         onCardsSeen = viewModel::onCardsSeen,
+        onCardEdgesSeen = viewModel::onCardEdgesSeen,
         onSeenCheckpoint = viewModel::onSeenCheckpoint,
         onReveal = viewModel::onReveal,
         onOpenPost = onOpenPost,
@@ -210,6 +212,8 @@ fun FeedScreen(
     onOpenTopic: (String) -> Unit,
     /** Post cards that stood fully in the viewport (`SeenCardsEffect`). */
     onCardsSeen: (List<String>) -> Unit = {},
+    /** Tall cards with an edge on screen this frame (History.md:13). */
+    onCardEdgesSeen: (List<EdgeSighting>) -> Unit = {},
     /** The reading paused: the scroll rested, or the reader left. */
     onSeenCheckpoint: () -> Unit = {},
     /** Hands a post to the platform's own share sheet. */
@@ -283,6 +287,7 @@ fun FeedScreen(
         listState = listState,
         nodeIdOf = { key -> (key as? String)?.takeIf { it in postIds } },
         onSeen = onCardsSeen,
+        onEdgesSeen = onCardEdgesSeen,
         onCheckpoint = onSeenCheckpoint,
         suspended = commentsFor != null,
     )

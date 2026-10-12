@@ -1,5 +1,6 @@
 package com.cogra.feature.content
 
+import com.cogra.core.designsystem.EdgeSighting
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.Landing
 import com.cogra.domain.Outcome
@@ -359,6 +360,23 @@ class FeedViewModelTest {
         vm.onSeenCheckpoint()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(history.calls).containsExactly(listOf("p1", "p2"))
+    }
+
+    @Test
+    fun aTallPostTheFeedSawEdgeByEdgeGoesOutOnceBothEdgesCame() = runTest(dispatcher) {
+        content.pages[null] = Outcome.Success(Page(emptyList(), null, hasNextPage = false))
+        val vm = FeedViewModel(content, landings, reveals, seen, WEB_ORIGIN, seenTracker)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onCardEdgesSeen(listOf(EdgeSighting("p9", top = true, bottom = false)))
+        vm.onSeenCheckpoint()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(history.calls).isEmpty()
+
+        vm.onCardEdgesSeen(listOf(EdgeSighting("p9", top = false, bottom = true)))
+        vm.onSeenCheckpoint()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(history.calls).containsExactly(listOf("p9"))
     }
 }
 

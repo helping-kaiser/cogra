@@ -17,7 +17,8 @@ import javax.inject.Singleton
  * reader's seen-list (History.md "a content joins History the first time
  * it was fully in the viewport", "NEVER the reader has to act for it").
  *
- * The surfaces decide WHAT was seen and say so through [saw]. This holds
+ * The surfaces decide WHAT was seen and say so through [saw] — or, for a
+ * card taller than the viewport, through [sawEdges]. This holds
  * the reports and sends them, and four properties make it what it is:
  *
  * - **Signed-in only.** No session, no seen-list (history packet F6): with
@@ -80,6 +81,19 @@ class SeenTracker @Inject constructor(
         synchronized(lock) { book?.saw(nodeIds) }
     }
 
+    /**
+     * The surface's report for a card taller than the viewport: its [top]
+     * edge, its [bottom] edge, or both, stood on screen this frame. The
+     * card is seen once both have — "not necessarily at once"
+     * (History.md:13) — so its first edge is remembered for the session,
+     * in the same book as everything else and dropped with it, and the
+     * other one queues the card like any first seeing.
+     */
+    fun sawEdges(nodeId: String, top: Boolean, bottom: Boolean) {
+        if (!top && !bottom) return
+        synchronized(lock) { book?.sawEdges(nodeId, top, bottom) }
+    }
+
     /** A checkpoint: send what is queued, a page per call. */
     fun flush() {
         scope.launch { drain() }
@@ -109,16 +123,32 @@ class SeenTracker @Inject constructor(
 
 /**
  * One account's reports: every id it has reported this session, and those
- * still to send, in arrival order. Not thread-safe; [SeenTracker] guards it.
+ * still to send, in arrival order — and, for a tall card not yet seen, the
+ * one edge it has shown so far. Not thread-safe; [SeenTracker] guards it.
  */
 internal class SeenBook(val account: String) {
     private val reported = HashSet<String>()
     private val queue = ArrayDeque<String>()
 
+    /** A tall card's first edge on screen: true for its top, false for its bottom. */
+    private val firstEdge = HashMap<String, Boolean>()
+
     val queued: List<String> get() = queue.toList()
 
     fun saw(nodeIds: List<String>) {
         nodeIds.forEach { if (reported.add(it)) queue.addLast(it) }
+    }
+
+    fun sawEdges(nodeId: String, top: Boolean, bottom: Boolean) {
+        if (nodeId in reported) return
+        val earlier = firstEdge[nodeId]
+        val both = (top && bottom) || (earlier == true && bottom) || (earlier == false && top)
+        if (both) {
+            firstEdge.remove(nodeId)
+            saw(listOf(nodeId))
+        } else if (earlier == null) {
+            firstEdge[nodeId] = top
+        }
     }
 
     /** The next call's ids: the oldest page of the queue. */

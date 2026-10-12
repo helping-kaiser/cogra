@@ -8,6 +8,7 @@ package com.cogra.feature.topics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cogra.core.designsystem.EdgeSighting
 import com.cogra.domain.HashtagView
 import com.cogra.domain.Outcome
 import com.cogra.domain.TaggedContentView
@@ -41,6 +42,10 @@ class TopicViewModel @Inject constructor(
 
     /** Post and comment cards that stood fully in the viewport, in order. */
     fun onCardsSeen(nodeIds: List<String>) = seenTracker.saw(nodeIds)
+
+    /** Tall cards with an edge on screen; each joins once both edges have been. */
+    fun onCardEdgesSeen(sightings: List<EdgeSighting>) =
+        sightings.forEach { seenTracker.sawEdges(it.nodeId, top = it.top, bottom = it.bottom) }
 
     /** The reading paused — the scroll rested or the reader left. */
     fun onSeenCheckpoint() = seenTracker.flush()

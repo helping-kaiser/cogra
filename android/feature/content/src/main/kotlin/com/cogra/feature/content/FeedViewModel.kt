@@ -2,6 +2,7 @@ package com.cogra.feature.content
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cogra.core.designsystem.EdgeSighting
 import com.cogra.domain.Outcome
 import com.cogra.domain.PostView
 import com.cogra.domain.content.LandingSignal
@@ -72,6 +73,10 @@ class FeedViewModel @Inject constructor(
 
     /** Post cards that stood fully in the viewport, in the order they did. */
     fun onCardsSeen(postIds: List<String>) = seenTracker.saw(postIds)
+
+    /** Tall post cards with an edge on screen; each joins once both edges have been. */
+    fun onCardEdgesSeen(sightings: List<EdgeSighting>) =
+        sightings.forEach { seenTracker.sawEdges(it.nodeId, top = it.top, bottom = it.bottom) }
 
     /** The reading paused — the scroll rested or the reader left. */
     fun onSeenCheckpoint() = seenTracker.flush()
