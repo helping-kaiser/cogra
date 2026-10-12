@@ -1619,7 +1619,7 @@
     },
     {
       "name": "watch-the-stream",
-      "description": "A portrait clip's tap, wherever a post is drawn, opens the stream — the reader's own ranked feed narrowed to clips taller than they are wide, swiped onward from there.",
+      "description": "A portrait clip's tap, wherever a post is drawn, opens the stream — the list it was tapped in, narrowed to clips taller than they are wide in that list's order, swiped onward from there.",
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",

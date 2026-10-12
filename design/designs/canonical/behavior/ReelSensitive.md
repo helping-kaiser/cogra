@@ -16,7 +16,7 @@ WHEN tap the clip's veil face -> the clip and the caption unveil together AND th
 
 WHEN tap Show on the caption's veil -> the clip and the caption unveil together AND the clip joins the stage's rotation AND it plays
 
-WHEN swipe the clip -> the next clip in the same ranked feed takes the screen AND this one stays veiled
+WHEN swipe the clip -> the next clip in the same list takes the screen AND this one stays veiled
 
 ALWAYS a reveal holds for every move inside the app until the app is fully closed or the media is hard reset
 

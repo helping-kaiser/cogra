@@ -1,6 +1,6 @@
 # Reel · `spec:design:behavior-reel`
 
-ALWAYS the stream carries only clips taller than they are wide, from the reader's own ranked feed and by no second ranking
+ALWAYS the stream carries only clips taller than they are wide, from the list it was opened from narrowed to them in that list's order — the feed it narrowed, History's rows or the profile's posts — and by no ranking of its own
 
 ALWAYS no header labels the stream
 
@@ -18,7 +18,7 @@ ALWAYS the rail reads, top to bottom, the author, the opinion, the comments, the
 
 ALWAYS the score on the rail is the same number the card wore
 
-WHEN swipe the clip -> the next clip in the same ranked feed takes the screen
+WHEN swipe the clip -> the next clip in the same list takes the screen
 
 WHEN drag the seek line -> the clip moves under the finger
 

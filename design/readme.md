@@ -2661,9 +2661,10 @@ item 33, jakob's rulings the same day).
   rides above the bottom bar rather than under it.
 - **The stream carries portrait clips only** — clips taller than they
   are wide. Square and landscape clips keep the ordinary grammar, a
-  tap to their post. **It is the default feed narrowed to them**: the
-  same graph, the same ranking, a mechanical filter, and **no second
-  algorithm**. Nothing labels it, because a header saying "your feed"
+  tap to their post. **It is the list it was opened from narrowed to
+  them**, in that list's order — the feed, History's rows, a profile's
+  posts (jakob 2026-10-12): the same graph, the same order, a mechanical
+  filter, and **no second algorithm**. Nothing labels it, because a header saying "your feed"
   is the reassurance only a product that ranks two ways needs. What
   says it instead is the **score on the rail** — the reader's own
   reach into this post, the same number the card wore.

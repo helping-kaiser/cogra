@@ -1,6 +1,8 @@
 /* THE STREAM (readme §13, the reel round, jakob 2026-09-03). A portrait clip's
-   tap in the feed opens this: the reader's OWN ranked feed, narrowed to clips
-   taller than they are wide. Same graph, same ranking, a mechanical filter —
+   tap opens this: the list it was tapped in — the reader's OWN ranked feed, the
+   one the board draws, or History's rows, or a profile's posts — narrowed to
+   clips taller than they are wide, in that list's order (jakob 2026-10-12).
+   Same graph, same order, a mechanical filter —
    there is no second algorithm here, and no header says otherwise, because a
    label announcing "your feed" is the kind of reassurance only a product that
    ranks two ways ever needs. What says it instead is the SCORE on the rail: the
