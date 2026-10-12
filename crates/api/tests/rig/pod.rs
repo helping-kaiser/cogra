@@ -100,8 +100,16 @@ async fn answer(State(pod): State<Pod>, Json(request): Json<Value>) -> Json<Valu
     let pin = request["variables"]["asOfEpoch"].clone();
     pod.requests.lock().expect("requests").push(request);
     let mode = pod.mode.lock().expect("mode").clone();
+    // A fixture without its own epoch ranks at the pin it was asked for,
+    // as the real pod does; one that names an epoch keeps it.
+    let pinned = |mut rank: Value| {
+        if rank.get("asOfEpoch").is_none() {
+            rank["asOfEpoch"] = pin.clone();
+        }
+        rank
+    };
     Json(match mode {
-        Mode::Answer(rank) => json!({ "data": { "rank": rank } }),
+        Mode::Answer(rank) => json!({ "data": { "rank": pinned(rank) } }),
         Mode::Fault(code) => json!({
             "data": null,
             "errors": [{ "message": format!("stub {code}"), "extensions": { "code": code } }],
@@ -109,7 +117,7 @@ async fn answer(State(pod): State<Pod>, Json(request): Json<Value>) -> Json<Valu
         Mode::Raw(body) => body,
         Mode::Slow(delay, rank) => {
             tokio::time::sleep(delay).await;
-            json!({ "data": { "rank": rank } })
+            json!({ "data": { "rank": pinned(rank) } })
         }
         Mode::Hold => {
             tokio::time::sleep(Duration::from_secs(3600)).await;
@@ -134,21 +142,20 @@ async fn answer(State(pod): State<Pod>, Json(request): Json<Value>) -> Json<Valu
                 .expect("the slice body");
             let slice: Value = serde_json::from_slice(&bytes).expect("a JSON slice");
             assert!(slice["errors"].is_null(), "the slice read faulted: {slice}");
-            json!({ "data": { "rank": rank } })
+            json!({ "data": { "rank": pinned(rank) } })
         }
     })
 }
 
-/// A pod answer: `entries` as (targetId, kind, score, mark, newestIndex),
-/// `settling` as (ref, mark, rankedPosition, newestPosition). Every entry
-/// carries the pod's `tieBreakers`, which the relay must never pass on.
+/// A pod answer, ranked at whatever epoch it is asked for: `entries` as
+/// (targetId, kind, score, mark, newestIndex), `settling` as (ref, mark,
+/// rankedPosition, newestPosition). Every entry carries the pod's
+/// `tieBreakers`, which the relay must never pass on.
 pub fn ranking(
-    as_of_epoch: i64,
     entries: &[(uuid::Uuid, &str, f64, Option<&str>, i64)],
     settling: &[(uuid::Uuid, Option<&str>, i64, i64)],
 ) -> Value {
     json!({
-        "asOfEpoch": as_of_epoch,
         "entries": entries.iter().map(|(id, kind, score, mark, newest)| json!({
             "targetId": id,
             "targetKind": kind,
