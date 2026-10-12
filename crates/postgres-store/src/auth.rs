@@ -2660,6 +2660,10 @@ pub enum DeletionRequest {
     /// changed nothing: it is not superseded, its deadline does not move,
     /// and no link is minted.
     InGrace(AccountDeletion),
+    /// The account's path is not [`DeletionPath::ByLink`] — re-read under
+    /// the account lock, so an approval that funded the address after the
+    /// caller's own read is seen here.
+    WrongPath(DeletionPath),
 }
 
 /// Opens an account-deletion request with a fresh link, superseding an
@@ -2671,7 +2675,8 @@ pub enum DeletionRequest {
 /// instead. The account's credentials row is locked first, so two
 /// requests serialize, and the standing row is then locked: a confirm
 /// racing this request either lands first and is seen here, or finds its
-/// row superseded.
+/// row superseded. Under that same lock the account's
+/// [`deletion_path`] is re-derived and must still be `ByLink`.
 pub async fn open_account_deletion(
     pool: &PgPool,
     id: Uuid,
@@ -2683,6 +2688,11 @@ pub async fn open_account_deletion(
     let mut tx = pool.begin().await?;
     if !lock_account(&mut tx, user_id).await? {
         return Ok(None);
+    }
+    match deletion_path(&mut tx, user_id).await? {
+        None => return Ok(None),
+        Some(DeletionPath::ByLink) => {}
+        Some(path) => return Ok(Some(DeletionRequest::WrongPath(path))),
     }
     let standing = sqlx::query_as!(
         AccountDeletion,
@@ -2794,27 +2804,94 @@ pub async fn confirmed_account_deletion(
     .await
 }
 
-/// Whether the account's admission Registration has landed: a
-/// `registration_family` record by its address is in the mirror — the
-/// landing predicate's own Registration fact ([`evaluate_landing`]). From
-/// then on the account has a node on the graph, and deleting it is the
-/// member path's (design item 69).
-pub async fn registration_landed(
-    pool: &PgPool,
+/// How the account is deleted from here — the one derivation behind
+/// `User.deletionPath` and both deletion verbs (ruling OS-15). Computed
+/// once, server-side, so no client re-derives it and a verb cannot
+/// disagree with the read.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DeletionPath {
+    /// `deleteApplicantAccount` answers: an applicant whose address was
+    /// never funded; nothing of it reached L1.
+    Immediate,
+    /// `requestAccountDeletion` answers: a member, or an applicant whose
+    /// Registration is in the mirror — it has a node, so only the husk
+    /// path may remove it (design item 69).
+    ByLink,
+    /// Neither verb answers: funded, Registration not yet in the mirror,
+    /// not a member.
+    Locked,
+}
+
+/// Derives the account's [`DeletionPath`], top-down; None when the
+/// account is gone. A verb runs it inside its own transaction under
+/// [`lock_account`], so an approval that funds the address cannot slip in
+/// between the read and the write.
+///
+/// 1. A member is `ByLink`.
+/// 2. An applicant whose Registration is registered is `ByLink`: a
+///    `registration` record by its address is in `mirror_records`, the
+///    landing predicate's own first fact ([`evaluate_landing`]).
+/// 3. An applicant whose address is funded is `Locked`.
+/// 4. Any other applicant is `Immediate`.
+///
+/// `approvedAt` is never an input: a lapsed vouch clears it, but the
+/// funding row stays, so a lapsed, funded applicant never reads
+/// `Immediate`.
+///
+/// "Funded" is a funding row in ANY state — requested, settled or failed
+/// (ER-G17 option (a), ruled with OS-15): an account whose burn may still
+/// settle onto its address is never hard-deleted. This supersedes the
+/// earlier `failed_at IS NULL` reading; the two differ only for a failed
+/// row, which nothing writes today, since the stand-in settles at once.
+///
+/// The reserved Guest state has neither verb, so it reads `Locked`.
+pub async fn deletion_path(
+    conn: &mut PgConnection,
     account_id: Uuid,
-    registration_family: &str,
-) -> Result<bool, sqlx::Error> {
-    sqlx::query_scalar!(
+) -> Result<Option<DeletionPath>, sqlx::Error> {
+    let Some(account) = sqlx::query!(
+        "SELECT c.account_state, a.realization_address
+         FROM user_credentials c JOIN actors a ON a.id = c.actor_id
+         WHERE c.actor_id = $1",
+        account_id,
+    )
+    .fetch_optional(&mut *conn)
+    .await?
+    else {
+        return Ok(None);
+    };
+    match decode_account_state(&account.account_state)? {
+        AccountState::Member => return Ok(Some(DeletionPath::ByLink)),
+        AccountState::Guest => return Ok(Some(DeletionPath::Locked)),
+        AccountState::Applicant => {}
+    }
+    let registered = sqlx::query_scalar!(
         r#"SELECT EXISTS(
-               SELECT 1 FROM mirror_records m
-               JOIN actors a ON a.realization_address = m.author
-               WHERE a.id = $1 AND m.family = $2
+               SELECT 1 FROM mirror_records WHERE author = $1 AND family = $2
+           ) AS "exists!""#,
+        account.realization_address,
+        common::l1::census::Family::Registration.as_str(),
+    )
+    .fetch_one(&mut *conn)
+    .await?;
+    if registered {
+        return Ok(Some(DeletionPath::ByLink));
+    }
+    let funded = sqlx::query_scalar!(
+        r#"SELECT EXISTS(
+               SELECT 1 FROM auth_admission_fundings
+               WHERE account_id = $1 OR address = $2
            ) AS "exists!""#,
         account_id,
-        registration_family,
+        account.realization_address,
     )
-    .fetch_one(pool)
-    .await
+    .fetch_one(&mut *conn)
+    .await?;
+    Ok(Some(if funded {
+        DeletionPath::Locked
+    } else {
+        DeletionPath::Immediate
+    }))
 }
 
 /// What an applicant's deletion did.
@@ -2824,12 +2901,11 @@ pub enum ApplicantDeletion {
     Deleted,
     /// No such account — already deleted.
     Gone,
-    /// The account is not an applicant; members take the mailed path.
-    NotApplicant,
-    /// The applicant's address is funded: approval burned for it and staged
-    /// its Registration, so nothing may vanish under it (design item 69,
-    /// "funded and not member").
-    Funded,
+    /// The account's path is not [`DeletionPath::Immediate`]: a member, or
+    /// an applicant whose Registration landed, takes the mailed path
+    /// ([`DeletionPath::ByLink`]); a funded one waits for its Registration
+    /// ([`DeletionPath::Locked`], design item 69).
+    WrongPath(DeletionPath),
 }
 
 /// Deletes an applicant account at once and whole (auth.md
@@ -2840,12 +2916,12 @@ pub enum ApplicantDeletion {
 /// row. Nothing of it reached L1: an unfunded applicant has signed nothing
 /// that was relayed.
 ///
-/// The state is read under the account lock approval takes
+/// It answers only on [`DeletionPath::Immediate`], read by
+/// [`deletion_path`] under the account lock approval takes
 /// ([`lock_account`]), then the actor row's, which every staged write's
 /// actor FK contends for — in that order, approval's own, so the two
 /// never deadlock. An approval that funds the account either commits
-/// first and is refused here, or waits and finds the account gone. A
-/// failed funding never burned, so it does not hold the account.
+/// first and is refused here, or waits and finds the account gone.
 ///
 /// Email and handle are freed with the account. The account's single-use
 /// invite slot is NOT meant to be: a single-use invite is consumed for
@@ -2862,33 +2938,13 @@ pub async fn delete_applicant_account(
     if !lock_account(&mut tx, account_id).await? {
         return Ok(ApplicantDeletion::Gone);
     }
-    let Some(account) = sqlx::query!(
-        "SELECT c.account_state, a.realization_address
-         FROM user_credentials c JOIN actors a ON a.id = c.actor_id
-         WHERE c.actor_id = $1
-         FOR UPDATE OF a",
-        account_id,
-    )
-    .fetch_optional(&mut *tx)
-    .await?
-    else {
-        return Ok(ApplicantDeletion::Gone);
-    };
-    if decode_account_state(&account.account_state)? != AccountState::Applicant {
-        return Ok(ApplicantDeletion::NotApplicant);
-    }
-    let funded = sqlx::query_scalar!(
-        r#"SELECT EXISTS(
-               SELECT 1 FROM auth_admission_fundings
-               WHERE (account_id = $1 OR address = $2) AND failed_at IS NULL
-           ) AS "exists!""#,
-        account_id,
-        account.realization_address,
-    )
-    .fetch_one(&mut *tx)
-    .await?;
-    if funded {
-        return Ok(ApplicantDeletion::Funded);
+    sqlx::query!("SELECT id FROM actors WHERE id = $1 FOR UPDATE", account_id)
+        .fetch_optional(&mut *tx)
+        .await?;
+    match deletion_path(&mut tx, account_id).await? {
+        None => return Ok(ApplicantDeletion::Gone),
+        Some(DeletionPath::Immediate) => {}
+        Some(path) => return Ok(ApplicantDeletion::WrongPath(path)),
     }
     delete_account_rows(&mut tx, &[account_id]).await?;
     tx.commit().await?;

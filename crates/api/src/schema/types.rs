@@ -1451,6 +1451,24 @@ impl User {
             .and_then(AccountDeletion::from_store))
     }
 
+    /// How the viewer's own account is deleted from here — the one
+    /// deletion verb that will answer, or LOCKED while neither will.
+    /// Viewer-only: null on anyone else's account.
+    async fn deletion_path(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<AccountDeletionPath>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(
+            store::deletion_path(&mut *pool.acquire().await?, self.identity.id)
+                .await?
+                .map(AccountDeletionPath::from_store),
+        )
+    }
+
     /// The account's service state — gates acting through CoGra (auth.md
     /// "Account states"). Field-level: viewer-only.
     async fn account_state(
@@ -1683,6 +1701,35 @@ impl AccountDeletion {
             scheduled_for: deletion.scheduled_for?,
             includes_content: deletion.include_content,
         })
+    }
+}
+
+/// How the viewer's own account is deleted from here (`User.deletionPath`,
+/// ruling OS-15): the one deletion verb that will answer, or LOCKED while
+/// neither will. Computed on the server by `store::deletion_path`; clients
+/// never re-derive it from `application.*`.
+#[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
+#[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
+pub enum AccountDeletionPath {
+    /// deleteApplicantAccount — removed at once (an applicant whose
+    /// address was never funded).
+    Immediate,
+    /// requestAccountDeletion, then the mailed link and the seven-day
+    /// grace (a member, or an applicant whose Registration landed: item
+    /// 69's husk path).
+    ByLink,
+    /// Neither verb opens: funded, Registration not yet in the mirror,
+    /// not a member.
+    Locked,
+}
+
+impl AccountDeletionPath {
+    pub fn from_store(path: store::DeletionPath) -> Self {
+        match path {
+            store::DeletionPath::Immediate => Self::Immediate,
+            store::DeletionPath::ByLink => Self::ByLink,
+            store::DeletionPath::Locked => Self::Locked,
+        }
     }
 }
 

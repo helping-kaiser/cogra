@@ -18,6 +18,7 @@ package com.cogra.network
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Operation
 import com.cogra.crypto.Family
+import com.cogra.domain.AccountDeletionPath
 import com.cogra.domain.AccountState
 import com.cogra.domain.ActorRef
 import com.cogra.domain.ApplicationInfo
@@ -159,6 +160,10 @@ internal fun StagedWriteState.toDomain(): WriteState =
 /** An unknown state gates acting, like every non-member state. */
 internal fun com.cogra.network.graphql.type.AccountState.toDomain(): AccountState =
     runCatching { AccountState.valueOf(rawValue) }.getOrDefault(AccountState.UNKNOWN)
+
+/** An unknown path is treated as locked: neither verb is offered. */
+internal fun com.cogra.network.graphql.type.AccountDeletionPath.toDomain(): AccountDeletionPath =
+    runCatching { AccountDeletionPath.valueOf(rawValue) }.getOrDefault(AccountDeletionPath.UNKNOWN)
 
 /** An unknown family is never signed; the signer refuses it. */
 internal fun RecordFamily.toDomain(): Family =

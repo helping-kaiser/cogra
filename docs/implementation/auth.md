@@ -691,7 +691,11 @@ contribution:
   mailed link, no grace window — through its own verb, and every
   session is revoked at once. A funded applicant cannot take it: the
   server refuses `FORBIDDEN`. Once the applicant's Registration
-  lands — vouched or not — the member path applies.
+  lands — vouched or not — the member path applies. Which verb
+  answers is one server-computed read, `User.deletionPath`, which both
+  verbs re-derive under the account lock; a funded address is a
+  funding row in any state, and a lapsed vouch never reopens the
+  immediate verb.
 - When deletion completes, all of the account's refresh tokens
   are revoked. Any outstanding access tokens age out within their
   normal TTL.
