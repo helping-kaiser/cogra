@@ -1214,3 +1214,48 @@ describe("FeedView", () => {
     expect(screen.getByTestId(byNode("feed.card", "p1"))).toBeInTheDocument();
   });
 });
+
+// THE SEEN TRACKER RIDES THE FEED LIST (History.md:5; `seen-tracker.ts`): a
+// post wholly on screen joins History as itself — its id alone, never its
+// author's or its tags' — and the list leaving the screen sends it.
+describe("FeedView's seen tracker", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    searchParams = new URLSearchParams();
+    forgetFeed();
+  });
+
+  it("marks a post seen once it stands wholly in view, and nothing else", async () => {
+    const marked: unknown[] = [];
+    server.use(
+      graphql.query("Posts", () =>
+        HttpResponse.json({
+          data: postsPage(
+            [post("p1", "First", false, [topicClaim("salt")]), post("p2", "Second")],
+            null,
+            false,
+          ),
+        }),
+      ),
+      meHandler(),
+      graphql.mutation("MarkSeen", ({ variables }) => {
+        marked.push(variables.nodes);
+        return HttpResponse.json({
+          data: { markSeen: { __typename: "MarkSeenPayload", ok: true, userErrors: [] } },
+        });
+      }),
+    );
+    const { unmount } = renderWithProviders(<FeedView />, { store: signedInStore() });
+    await screen.findByTestId(byNode("feed.card", "p2"));
+    const [first, second] = ["p1", "p2"].map(
+      (id) => document.querySelector(`[data-seen-id="${id}"]`) as HTMLElement,
+    );
+    await whenObserved(first, second);
+    intersectEach([
+      { target: first, ratio: 1 },
+      { target: second, ratio: 0.5 },
+    ]);
+    unmount();
+    await waitFor(() => expect(marked).toEqual([["p1"]]));
+  });
+});

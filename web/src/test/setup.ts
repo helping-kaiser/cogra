@@ -5,6 +5,7 @@ import "fake-indexeddb/auto";
 import { cleanup } from "@testing-library/react";
 import { afterEach, beforeEach } from "vitest";
 
+import { resetSeenQueueForTests } from "@/lib/history/seen-tracker";
 import { resetClipMemoryForTests } from "@/lib/ui2/media/clip-memory";
 import { resetElementPoolForTests } from "@/lib/ui2/media/video-stage";
 
@@ -26,6 +27,9 @@ beforeEach(resetClipMemoryForTests);
 // The same for the clips' parked elements (`video-stage.ts`): the players the
 // unmounting `cleanup` takes down park theirs on the way out.
 beforeEach(resetElementPoolForTests);
+// And for the seen queue (`seen-tracker.ts`), which an unmounting list flushes
+// on the way out.
+beforeEach(resetSeenQueueForTests);
 
 // jsdom implements no Pointer Events (jsdom#2527), which the stance pad
 // is built on — they are the platform's own unification of mouse, touch,

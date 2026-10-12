@@ -1,0 +1,12 @@
+# The seen-list (api-spec.md `User.viewHistory`, `markSeen`): the seen
+# tracker's one write. Ids travel in the order they were seen; at most a
+# page of them per call.
+
+mutation MarkSeen($nodes: [UUID!]!) {
+  markSeen(input: { nodes: $nodes }) {
+    ok
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
