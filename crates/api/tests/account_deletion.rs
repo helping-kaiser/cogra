@@ -1418,3 +1418,285 @@ async fn the_secret_sweep_takes_ended_deletions_and_keeps_the_standing_one(pool:
         Vec::<&str>::new()
     );
 }
+
+const PATH: &str = "query { me { deletionPath } }";
+
+/// The viewer's own deletion path, as the server computes it (OS-15).
+async fn deletion_path(rig: &WireRig, token: &str) -> String {
+    let data = rig.gql(Some(token), PATH, json!({})).await;
+    data["me"]["deletionPath"]
+        .as_str()
+        .unwrap_or_else(|| panic!("deletionPath: {data}"))
+        .to_string()
+}
+
+/// Ends the vouch's staged write unsigned and runs the real lapse over
+/// it: the path's approval mark clears (`approvedAt` null) while the
+/// funding row stays.
+async fn lapse_vouch(rig: &WireRig, vouch: Uuid, who: &Applicant) {
+    sqlx::query("UPDATE staged_writes SET state = 'expired' WHERE id = $1")
+        .bind(vouch)
+        .execute(&rig.pool)
+        .await
+        .expect("expires the vouch's write");
+    let due = store::vouches_to_lapse(&rig.pool).await.expect("due");
+    let ids: Vec<Uuid> = due
+        .into_iter()
+        .filter(|(_, account)| *account == who.id)
+        .map(|(id, _)| id)
+        .collect();
+    assert_eq!(ids.len(), 1, "the vouch is due to lapse");
+    store::lapse_vouches(&rig.pool, who.id, &ids)
+        .await
+        .expect("lapses");
+}
+
+async fn approved_at(rig: &WireRig, token: &str) -> Value {
+    rig.gql(
+        Some(token),
+        "query { me { application { approvedAt } } }",
+        json!({}),
+    )
+    .await["me"]["application"]["approvedAt"]
+        .clone()
+}
+
+/// A member deletes through the mailed link, whatever else is true of
+/// them: the path reads BY_LINK.
+///
+/// A member reads the by-link deletion path.
+/// ´claim:deletion:a-member-reads-the-by-link-path´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_member_reads_the_by_link_path(pool: PgPool) {
+    let rig = rig(pool);
+    let alice = member(&rig, "alice").await;
+    assert_eq!(deletion_path(&rig, &alice.token).await, "BY_LINK");
+}
+
+/// An applicant whose Registration is in the mirror has a node on the
+/// graph, so item 69 gives it the member path: BY_LINK, though it is not
+/// yet a member and its address is funded.
+///
+/// A registered applicant reads the by-link deletion path.
+/// ´claim:deletion:a-registered-applicant-reads-the-by-link-path´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_registered_applicant_reads_the_by_link_path(pool: PgPool) {
+    let rig = rig(pool);
+    let mira = member(&rig, "mira").await;
+    let noa = applicant(&rig, &mira, "noa").await;
+    approve(&rig, &mira, &noa).await;
+    sign_registration(&rig, &noa).await;
+    rig.close_and_ingest().await;
+    assert_eq!(account_state(&rig, noa.id).await, "applicant");
+    assert_eq!(deletion_path(&rig, &noa.token).await, "BY_LINK");
+}
+
+/// An applicant whose address is funded but whose Registration has not
+/// landed is LOCKED, whatever state its funding row is in (ER-G17,
+/// option (a)). The suite's rig settles a burn at once, so the row is put
+/// back to requested, then failed, to read the states a settlement delay
+/// would show.
+///
+/// A funded applicant whose Registration is not in the mirror reads locked, in any funding state.
+/// ´claim:deletion:a-funded-unregistered-applicant-reads-locked´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_funded_unregistered_applicant_reads_locked(pool: PgPool) {
+    let rig = rig(pool);
+    let mira = member(&rig, "mira").await;
+    let noa = applicant(&rig, &mira, "noa").await;
+    assert_eq!(deletion_path(&rig, &noa.token).await, "IMMEDIATE");
+    approve(&rig, &mira, &noa).await;
+    assert_eq!(deletion_path(&rig, &noa.token).await, "LOCKED", "settled");
+
+    sqlx::query("UPDATE auth_admission_fundings SET settled_at = NULL WHERE account_id = $1")
+        .bind(noa.id)
+        .execute(&rig.pool)
+        .await
+        .expect("back to requested");
+    assert_eq!(deletion_path(&rig, &noa.token).await, "LOCKED", "requested");
+
+    assert!(
+        store::mark_funding_failed(&rig.pool, &noa.key.address())
+            .await
+            .expect("fails the funding")
+    );
+    assert_eq!(deletion_path(&rig, &noa.token).await, "LOCKED", "failed");
+}
+
+/// An applicant whose address was never funded deletes at once: the path
+/// reads IMMEDIATE.
+///
+/// An unfunded applicant reads the immediate deletion path.
+/// ´claim:deletion:an-unfunded-applicant-reads-the-immediate-path´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_unfunded_applicant_reads_the_immediate_path(pool: PgPool) {
+    let rig = rig(pool);
+    let mira = member(&rig, "mira").await;
+    let noa = applicant(&rig, &mira, "noa").await;
+    assert_eq!(deletion_path(&rig, &noa.token).await, "IMMEDIATE");
+}
+
+/// The trap: a lapsed vouch clears `approvedAt`, but the funding row
+/// stays, so the path never falls back to IMMEDIATE. A lapsed, funded
+/// applicant whose Registration has not landed reads LOCKED and the
+/// immediate verb is refused with nothing deleted; one whose Registration
+/// landed reads BY_LINK.
+///
+/// A lapsed vouch never unlocks the deletion row, whatever approvedAt reads.
+/// ´claim:deletion:a-lapsed-vouch-never-unlocks-the-deletion-row´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_lapsed_vouch_never_unlocks_the_deletion_row(pool: PgPool) {
+    let rig = rig(pool);
+    let mira = member(&rig, "mira").await;
+
+    let noa = applicant(&rig, &mira, "noa").await;
+    let vouch = approve(&rig, &mira, &noa).await;
+    assert!(!approved_at(&rig, &noa.token).await.is_null());
+    lapse_vouch(&rig, vouch, &noa).await;
+    assert!(approved_at(&rig, &noa.token).await.is_null(), "lapsed");
+    assert_eq!(deletion_path(&rig, &noa.token).await, "LOCKED");
+    let answer = rig
+        .gql_raw(Some(&noa.token), DELETE_APPLICANT, json!({}))
+        .await;
+    assert_eq!(transport_code(&answer), Some("FORBIDDEN"), "{answer}");
+    assert_eq!(
+        count(&rig, "SELECT COUNT(*) FROM actors WHERE id = $1", noa.id).await,
+        1
+    );
+
+    let ana = applicant(&rig, &mira, "ana").await;
+    let vouch = approve(&rig, &mira, &ana).await;
+    sign_registration(&rig, &ana).await;
+    rig.close_and_ingest().await;
+    lapse_vouch(&rig, vouch, &ana).await;
+    assert!(approved_at(&rig, &ana.token).await.is_null(), "lapsed");
+    assert_eq!(deletion_path(&rig, &ana.token).await, "BY_LINK");
+    let answer = rig
+        .gql_raw(Some(&ana.token), DELETE_APPLICANT, json!({}))
+        .await;
+    assert_eq!(transport_code(&answer), Some("FORBIDDEN"), "{answer}");
+}
+
+/// In every state exactly the named verb opens and the other is
+/// FORBIDDEN: BY_LINK takes the mailed request, IMMEDIATE the applicant
+/// delete, LOCKED neither.
+///
+/// The deletion path names the one verb that answers; the other is forbidden.
+/// ´claim:deletion:the-deletion-path-names-the-one-verb-that-answers´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_deletion_path_names_the_one_verb_that_answers(pool: PgPool) {
+    let rig = rig(pool);
+    let mira = member(&rig, "mira").await;
+
+    assert_eq!(deletion_path(&rig, &mira.token).await, "BY_LINK");
+    let refused = rig
+        .gql_raw(Some(&mira.token), DELETE_APPLICANT, json!({}))
+        .await;
+    assert_eq!(transport_code(&refused), Some("FORBIDDEN"), "{refused}");
+    let opened = request(&rig, &mira.token, None).await;
+    assert_eq!(opened["userErrors"], json!([]), "{opened}");
+
+    let locked = applicant(&rig, &mira, "noa").await;
+    approve(&rig, &mira, &locked).await;
+    assert_eq!(deletion_path(&rig, &locked.token).await, "LOCKED");
+    let refused = rig
+        .gql_raw(Some(&locked.token), DELETE_APPLICANT, json!({}))
+        .await;
+    assert_eq!(transport_code(&refused), Some("FORBIDDEN"), "{refused}");
+    let refused = rig
+        .gql_raw(
+            Some(&locked.token),
+            REQUEST,
+            json!({ "input": { "includeContent": null } }),
+        )
+        .await;
+    assert_eq!(transport_code(&refused), Some("FORBIDDEN"), "{refused}");
+
+    let immediate = applicant(&rig, &mira, "ana").await;
+    assert_eq!(deletion_path(&rig, &immediate.token).await, "IMMEDIATE");
+    let refused = rig
+        .gql_raw(
+            Some(&immediate.token),
+            REQUEST,
+            json!({ "input": { "includeContent": null } }),
+        )
+        .await;
+    assert_eq!(transport_code(&refused), Some("FORBIDDEN"), "{refused}");
+    let deleted = rig
+        .gql_raw(Some(&immediate.token), DELETE_APPLICANT, json!({}))
+        .await;
+    assert_eq!(deleted["data"]["deleteApplicantAccount"]["ok"], true);
+    assert_eq!(
+        count(
+            &rig,
+            "SELECT COUNT(*) FROM actors WHERE id = $1",
+            immediate.id
+        )
+        .await,
+        0
+    );
+}
+
+/// A verb re-derives the path under the account lock: an approval that
+/// funds the address after the path was read, while the verb waits on the
+/// lock, is seen by the verb, which is then refused and deletes nothing.
+///
+/// A deletion verb re-checks the path under the account lock, so a funding between read and verb refuses it.
+/// ´claim:deletion:a-deletion-verb-rechecks-the-path-under-the-lock´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_deletion_verb_rechecks_the_path_under_the_account_lock(pool: PgPool) {
+    let rig = rig(pool);
+    let mira = member(&rig, "mira").await;
+    let noa = applicant(&rig, &mira, "noa").await;
+    assert_eq!(deletion_path(&rig, &noa.token).await, "IMMEDIATE");
+
+    let mut tx = rig.pool.begin().await.expect("begins");
+    assert!(
+        store::lock_account(&mut tx, noa.id)
+            .await
+            .expect("locks the account")
+    );
+    let verb = rig.gql_raw(Some(&noa.token), DELETE_APPLICANT, json!({}));
+    let address = noa.key.address();
+    let account = noa.id;
+    let funder = async move {
+        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+        sqlx::query(
+            "INSERT INTO auth_admission_fundings (address, account_id, amount_micro, request_key)
+             VALUES ($1, $2, 1, gen_random_uuid())",
+        )
+        .bind(address)
+        .bind(account)
+        .execute(&mut *tx)
+        .await
+        .expect("the approval funds the address");
+        tx.commit().await.expect("commits");
+    };
+    let (answer, ()) = tokio::join!(verb, funder);
+    assert_eq!(transport_code(&answer), Some("FORBIDDEN"), "{answer}");
+    assert_eq!(
+        count(&rig, "SELECT COUNT(*) FROM actors WHERE id = $1", noa.id).await,
+        1
+    );
+    assert_eq!(deletion_path(&rig, &noa.token).await, "LOCKED");
+}
+
+/// The read is the account's own: another signed-in member and an
+/// anonymous reader both read null for someone else's account.
+///
+/// The deletion path is readable by its own account alone.
+/// ´claim:deletion:the-deletion-path-is-viewer-only´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_deletion_path_is_viewer_only(pool: PgPool) {
+    let rig = rig(pool);
+    let alice = member(&rig, "alice").await;
+    let bob = member(&rig, "bob").await;
+
+    let query = "query { user(handle: \"alice\") { deletionPath } }";
+    assert!(rig.gql(Some(&bob.token), query, json!({})).await["user"]["deletionPath"].is_null());
+    assert!(rig.gql(None, query, json!({})).await["user"]["deletionPath"].is_null());
+    assert_eq!(
+        rig.gql(Some(&alice.token), query, json!({})).await["user"]["deletionPath"],
+        "BY_LINK"
+    );
+}

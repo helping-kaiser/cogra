@@ -254,13 +254,16 @@ query EmailChangeLinkCheck($token: String!) {
 # mails a link and schedules nothing; `accountDeletion` is non-null only
 # once a deletion is confirmed — and on a request made while one already
 # is, which changes nothing. A spent deletion mail budget is a
-# transport-tier RATE_LIMITED.
+# transport-tier RATE_LIMITED. `deletionPath` is the server's read of which
+# deletion verb answers (IMMEDIATE, BY_LINK or LOCKED); clients never
+# re-derive it from `application.*`.
 query AccountDeletion {
   me {
     id
     accountDeletion {
       ...AccountDeletionFields
     }
+    deletionPath
   }
 }
 
