@@ -4,16 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.domain.AccountState
 import com.cogra.domain.ActorRef
-import com.cogra.domain.DEFAULT_STANCE
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserProfile
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.OnboardingRepository
-import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.signing.RegistrationFlow
 import com.cogra.domain.signing.RegistrationProgress
-import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.store.IdentityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,6 +19,25 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+/**
+ * Where the vouch card's put-away stands (VouchBack.md:37-41). `Got it` is a
+ * read-side comfort: it answers at once, so the card steps aside while the
+ * put-away is asked, and only a refusal brings it back.
+ */
+enum class VouchPutAway {
+    /** Never asked: the card stands. */
+    STANDING,
+
+    /** Asked, not yet answered: the card has stepped aside. */
+    ASKING,
+
+    /** Did not go through: the card is back, saying so, with Retry (ruling 44). */
+    FAILED,
+
+    /** Kept by the server: the card is away for good. */
+    AWAY,
+}
 
 data class HomeUiState(
     val loading: Boolean = true,
@@ -55,14 +71,14 @@ data class HomeUiState(
     val profile: UserProfile? = null,
     /** Signed in without the actor key — the husk state (auth.md). */
     val huskWarning: Boolean = false,
-    /** The first-login prompt (auth.md "Reciprocation is the joiner's own act"). */
-    val reciprocationTarget: ActorRef? = null,
-    val pDirected: Double = DEFAULT_STANCE,
-    val pInterest: Double = DEFAULT_STANCE,
-    val signing: Boolean = false,
-    /** One-shot: the vouch-back was just signed; cleared once shown. */
-    val reciprocated: Boolean = false,
-    val signingFailed: Boolean = false,
+    /**
+     * The member who vouched the account in, while the vouch card stands on
+     * server state alone (VouchBack.md:3): landed, the pair incomplete,
+     * never put away. No key term — a vouch-back set with the key
+     * elsewhere waits as any pick does (VouchBackPad.md:41).
+     */
+    val vouchVoucher: ActorRef? = null,
+    val vouchPutAway: VouchPutAway = VouchPutAway.STANDING,
     /** Handshakes parked mid-flight on this device. */
     val pendingHandshakes: Int = 0,
     val transportFailed: Boolean = false,
@@ -85,12 +101,16 @@ data class HomeUiState(
                 else -> false
             }
         }
+
+    /** The vouch card is on the feed: it stands and has not stepped aside. */
+    val vouchCardStands: Boolean
+        get() = vouchVoucher != null &&
+            (vouchPutAway == VouchPutAway.STANDING || vouchPutAway == VouchPutAway.FAILED)
 }
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val account: AccountRepository,
-    private val writes: WriteRepository,
     private val signer: WriteSigner,
     private val identity: IdentityStore,
     private val onboarding: OnboardingRepository,
@@ -158,10 +178,10 @@ class HomeViewModel @Inject constructor(
                     if (applicant) registration.ensureAdvancing()
                     val member = profile?.accountState == AccountState.MEMBER
                     // The pair's state is the graph's (hasReciprocated),
-                    // the dismissal the account's (vouchBackDismissed).
-                    val prompt = member &&
+                    // the dismissal the account's (vouchBackDismissed);
+                    // the device holds neither, and the key is no term.
+                    val stands = member &&
                         profile?.invitedBy != null &&
-                        seedOnDevice &&
                         profile?.hasReciprocated == false &&
                         profile?.vouchBackDismissed == false
                     _state.update {
@@ -173,7 +193,14 @@ class HomeViewModel @Inject constructor(
                             // The applicant cards carry their own key
                             // guidance; the husk card is the member's.
                             huskWarning = member && !seedOnDevice,
-                            reciprocationTarget = if (prompt) profile?.invitedBy else null,
+                            vouchVoucher = if (stands) profile?.invitedBy else null,
+                            // A failed put-away says so "until Retry or the
+                            // next fresh load" (ruling 55's comfort-revert).
+                            vouchPutAway = if (it.vouchPutAway == VouchPutAway.FAILED) {
+                                VouchPutAway.STANDING
+                            } else {
+                                it.vouchPutAway
+                            },
                             pendingHandshakes = pending,
                             transportFailed = false,
                         )
@@ -249,47 +276,21 @@ class HomeViewModel @Inject constructor(
 
     fun onWelcomeShown() = _state.update { it.copy(welcome = false) }
 
-    fun onPDirectedChange(v: Double) = _state.update { it.copy(pDirected = v) }
-
-    fun onPInterestChange(v: Double) = _state.update { it.copy(pInterest = v) }
-
-    /** The joiner points back — their own signed Opinion. */
-    fun onReciprocate() {
-        val target = _state.value.reciprocationTarget ?: return
-        if (_state.value.signing) return
-        _state.update { it.copy(signing = true, signingFailed = false) }
-        viewModelScope.launch {
-            val prepared = when (val outcome =
-                writes.prepareStance(target.id, _state.value.pDirected, _state.value.pInterest)) {
-                is Outcome.Success -> outcome.value
-                else -> {
-                    _state.update { it.copy(signing = false, signingFailed = true) }
-                    return@launch
-                }
-            }
-            val results = signer.sign(prepared)
-            if (results.all { it is WriteResult.Done }) {
-                // No device mark: the in-flight staged write already
-                // answers hasReciprocated on the next profile read.
-                _state.update {
-                    it.copy(signing = false, reciprocated = true, reciprocationTarget = null)
-                }
-            } else {
-                _state.update { it.copy(signing = false, signingFailed = true) }
-            }
-        }
-    }
-
     /**
-     * Dismissal is account state, for good on every device — the prompt
-     * is an offer, not a nag. The card goes only once the server keeps
-     * the dismissal: one that vanished on a failed call would come back
-     * on the next read, unexplained.
+     * `Got it` (and the failed put-away's `Retry`): the card steps aside
+     * at once, silently — no snackbar, no reminder, nothing in its place
+     * (VouchBack.md:37) — while the put-away is asked. It is account state,
+     * so it holds on every device (:45). A put-away that did not go through
+     * brings the card back with `That didn't go through.` and `Retry` in its
+     * row (:39, ruling 44): the NEVERs describe the successful outcome only.
      */
-    fun onDismissReciprocation() {
+    fun onPutAway() {
+        if (_state.value.vouchPutAway == VouchPutAway.ASKING) return
+        _state.update { it.copy(vouchPutAway = VouchPutAway.ASKING) }
         viewModelScope.launch {
-            if (account.dismissVouchBack() is Outcome.Success) {
-                _state.update { it.copy(reciprocationTarget = null) }
+            val kept = account.dismissVouchBack() is Outcome.Success
+            _state.update {
+                it.copy(vouchPutAway = if (kept) VouchPutAway.AWAY else VouchPutAway.FAILED)
             }
         }
     }
@@ -305,8 +306,6 @@ class HomeViewModel @Inject constructor(
     fun onActorRestoredShown() {
         _state.update { it.copy(actorRestored = false) }
     }
-
-    fun onReciprocatedShown() = _state.update { it.copy(reciprocated = false) }
 
     fun onResentShown() = _state.update { it.copy(resent = false) }
 }

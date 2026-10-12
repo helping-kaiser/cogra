@@ -102,6 +102,17 @@ fun FeedRoute(
     onRefreshSignalConsumed: () -> Unit = {},
     banners: @Composable () -> Unit = {},
     /**
+     * The vouch card (`VouchBack`): the list's first card, above the posts,
+     * after the head's notices (ruling 45). The feed's own slot — the own
+     * profile carries the banner stack but never this card.
+     */
+    vouchCard: @Composable () -> Unit = {},
+    /**
+     * The reader pulled for newer posts: the shell's readers that ride the
+     * feed (the borrowed-view band, the vouch card) read again with it.
+     */
+    onPulled: () -> Unit = {},
+    /**
      * A post the wizard staged whose acts were collected before they
      * landed: the label names it, and null means there is nothing to
      * say (`ComposeExpired`).
@@ -169,7 +180,10 @@ fun FeedRoute(
         expiredLabel = expiredLabel,
         onExpiredDismissed = onExpiredDismissed,
         onOpenDraft = onOpenDraft,
-        onRefresh = viewModel::refresh,
+        onRefresh = {
+            onPulled()
+            viewModel.refresh()
+        },
         onLoadMore = viewModel::loadMore,
         onReveal = viewModel::onReveal,
         onOpenPost = onOpenPost,
@@ -179,6 +193,7 @@ fun FeedRoute(
         keyBanner = keyBanner,
         borrowedViewBand = borrowedViewBand,
         banners = banners,
+        vouchCard = vouchCard,
         viewerId = viewerId,
         onEditPost = onEditPost,
         onCitePost = onCitePost,
@@ -211,6 +226,7 @@ fun FeedScreen(
     keyBanner: @Composable () -> Unit = {},
     borrowedViewBand: @Composable () -> Unit = {},
     banners: @Composable () -> Unit = {},
+    vouchCard: @Composable () -> Unit = {},
     expiredLabel: String? = null,
     onExpiredDismissed: () -> Unit = {},
     onOpenDraft: () -> Unit = {},
@@ -325,6 +341,7 @@ fun FeedScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         Box(Modifier.padding(horizontal = 16.dp)) { banners() }
+                        vouchCard()
                         ErrorLine(R.string.content_error_transport, "feed_transport_error")
                         TextButton(onClick = onRefresh, modifier = Modifier.testTag("feed_retry")) {
                             Text(stringResource(R.string.content_retry))
@@ -339,6 +356,7 @@ fun FeedScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         Box(Modifier.padding(horizontal = 16.dp)) { banners() }
+                        vouchCard()
                         Text(
                             stringResource(R.string.content_feed_empty),
                             modifier = Modifier.testTag("feed_empty"),
@@ -393,6 +411,9 @@ fun FeedScreen(
                                 verticalArrangement = Arrangement.spacedBy(Space.x2),
                             ) {
                                 item(key = "feed_banners") { Gutter { banners() } }
+                                // The vouch card is a feed card, full-width,
+                                // the list's first above the posts (`VouchBack.jsx`).
+                                item(key = "feed_vouch_card") { vouchCard() }
                                 // "Your post didn't land." The canonical
                                 // `ComposeExpired` board puts this here, at
                                 // the top of the feed the author returns

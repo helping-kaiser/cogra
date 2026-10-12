@@ -1,5 +1,5 @@
 // The account-status banners — the application cards, the husk/restore
-// card, the reciprocation prompt, and parked handshakes — shell-scoped:
+// card, and parked handshakes — shell-scoped:
 // they ride above whichever tab is active until resolved (design.md §6;
 // auth.md "Application": an applicant lands in the same shell as a
 // member, the application riding along as cards, never a wall).
@@ -32,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ErrorLine
-import com.cogra.core.designsystem.StanceSlider
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.signing.RegistrationProgress
 
@@ -57,7 +56,6 @@ fun StatusBannersRoute(
         onActorRestoredShown = viewModel::onActorRestoredShown,
         onApprovedShown = viewModel::onApprovedShown,
         onWelcomeShown = viewModel::onWelcomeShown,
-        onReciprocatedShown = viewModel::onReciprocatedShown,
         onResentShown = viewModel::onResentShown,
     )
     StatusBanners(
@@ -67,18 +65,14 @@ fun StatusBannersRoute(
         onResendEmailChange = viewModel::onResendEmailChange,
         onResend = viewModel::onResend,
         onDismissWaitingHint = viewModel::onDismissWaitingHint,
-        onPDirectedChange = viewModel::onPDirectedChange,
-        onPInterestChange = viewModel::onPInterestChange,
-        onReciprocate = viewModel::onReciprocate,
-        onDismissReciprocation = viewModel::onDismissReciprocation,
         onResumePending = viewModel::onResumePending,
         onStartKeyCeremony = onStartKeyCeremony,
     )
 }
 
 /**
- * The one-shot confirmations — restored, approved, landed, vouched
- * back, token re-sent — fired once per event on the shell's snackbar
+ * The one-shot confirmations — restored, approved, landed, token
+ * re-sent — fired once per event on the shell's snackbar
  * host. Every one of them confirms a completed action, and
  * `design/readme.md` §3 rules that such a confirmation is a snackbar:
  * "The snackbar is the confirmation; a line of the layout turned green
@@ -95,7 +89,6 @@ fun StatusBannerOneShots(
     onActorRestoredShown: () -> Unit,
     onApprovedShown: () -> Unit,
     onWelcomeShown: () -> Unit,
-    onReciprocatedShown: () -> Unit,
     onResentShown: () -> Unit,
 ) {
     val restoredMessage = stringResource(R.string.home_actor_restored)
@@ -117,13 +110,6 @@ fun StatusBannerOneShots(
         if (state.welcome) {
             snackbarHostState.showSnackbar(welcomeMessage)
             onWelcomeShown()
-        }
-    }
-    val reciprocatedMessage = stringResource(R.string.home_reciprocated)
-    LaunchedEffect(state.reciprocated) {
-        if (state.reciprocated) {
-            snackbarHostState.showSnackbar(reciprocatedMessage)
-            onReciprocatedShown()
         }
     }
     val resentMessage = stringResource(R.string.home_verify_resent)
@@ -171,10 +157,6 @@ fun StatusBanners(
     onResendEmailChange: (String) -> Unit,
     onResend: () -> Unit,
     onDismissWaitingHint: () -> Unit,
-    onPDirectedChange: (Double) -> Unit,
-    onPInterestChange: (Double) -> Unit,
-    onReciprocate: () -> Unit,
-    onDismissReciprocation: () -> Unit,
     onResumePending: () -> Unit,
     onStartKeyCeremony: () -> Unit,
 ) {
@@ -199,54 +181,8 @@ fun StatusBanners(
             // The member husk warning rides the screen's collapsing top
             // (KeyRestoreBannerRoute), not this stack — it must follow
             // the reader.
-            state.reciprocationTarget?.let { inviter ->
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(
-                            text = stringResource(R.string.home_reciprocate_title, inviter.handle),
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.testTag("home_reciprocation"),
-                        )
-                        Text(stringResource(R.string.home_reciprocate_body))
-                        StanceSlider(
-                            label = stringResource(R.string.stance_p_directed),
-                            value = state.pDirected,
-                            onChange = onPDirectedChange,
-                            testTag = "home_p_directed",
-                        )
-                        StanceSlider(
-                            label = stringResource(R.string.stance_p_interest),
-                            value = state.pInterest,
-                            onChange = onPInterestChange,
-                            testTag = "home_p_interest",
-                        )
-                        if (state.signingFailed) {
-                            Text(
-                                text = stringResource(R.string.home_signing_failed),
-                                color = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.testTag("home_signing_failed"),
-                            )
-                        }
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(
-                                onClick = onReciprocate,
-                                enabled = !state.signing,
-                                modifier = Modifier.testTag("home_reciprocate"),
-                            ) {
-                                Text(stringResource(R.string.home_reciprocate_sign))
-                            }
-                            TextButton(
-                                onClick = onDismissReciprocation,
-                                modifier = Modifier.testTag("home_reciprocate_skip"),
-                            ) {
-                                Text(stringResource(R.string.home_reciprocate_skip))
-                            }
-                        }
-                    }
-                }
-            }
-            // The vouch's confirmation is the shell's snackbar
-            // (StatusBannerOneShots), never a line in this stack.
+            // The vouch card is the feed's own first card (`VouchCardRoute`),
+            // never this stack — which the own profile carries too.
             if (state.pendingHandshakes > 0) {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

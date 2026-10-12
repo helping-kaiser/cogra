@@ -9,12 +9,14 @@
     <string name="recovery_code_mismatch">That doesn\'t match the code above.</string>
     <string name="pending_settling">Still settling</string>
 
-    <!-- The borrowed-view band (design.md §13, 2026-08-27). The band names
-         the vantage point a guest or applicant feed is ranked from; the
-         three readings differ only in what the reader can do about it. -->
+    <!-- The borrowed-view band (design/readme.md §13, "Guest and applicant
+         feeds borrow a vantage point — 2026-08-27"). The band names the
+         vantage point a borrowed feed is ranked from; the readings differ
+         only in what the reader can do about it. -->
     <string name="borrowed_view_join">Browsing from @%1$s\'s view — join to build your own.</string>
     <string name="borrowed_view_applicant">Browsing from @%1$s\'s view while your application lands.</string>
-    <string name="borrowed_view_vouch_back">Browsing from @%1$s\'s view — vouch back to start your own.</string>
+    <!-- The landed member, no opinion signed yet: it asks for nothing (VouchBack.md:13, :17). -->
+    <string name="borrowed_view_member">Browsing from @%1$s\'s view — your first opinion starts your own.</string>
     <string name="borrowed_view_sign_in_or_join">Sign in or join</string>
 
     <!-- The read shell's band (design.md §6). -->
@@ -166,6 +168,11 @@
     <string name="stance_set">Set this stance</string>
     <string name="stance_cancel">Cancel</string>
     <string name="stance_failed">That didn\'t go through. Try again.</string>
+    <!-- A variant pad's own fault line and its commit's two waiting words
+         (PadFailed; VouchBackPad.md:31, :37). -->
+    <string name="stance_pad_failed">That didn\'t send. Try again.</string>
+    <string name="stance_setting">Setting…</string>
+    <string name="stance_retry">Retry</string>
     <string name="stance_failed_no_key">This device can\'t sign yet. Restore your key first.</string>
 
     <!-- Severance: the one gesture that nets a bundle back to nothing

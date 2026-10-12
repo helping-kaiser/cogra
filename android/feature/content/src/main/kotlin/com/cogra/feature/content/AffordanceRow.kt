@@ -81,15 +81,13 @@ internal fun isNarrowShareWidth(): Boolean =
 /**
  * The row a post wears on the card and on the detail alike.
  *
- * **Two of the master's five are gated, and both for the same reason
- * (design/readme.md §2, the staging rule): a control whose destination
- * is neither designed nor built is a dead control.**
+ * **Two of the master's five carry a condition.**
  *
- * - **The Post Score** is routed at an acknowledged gap — `graph.json`
- *   sends every `Post Score` edge to *"Post Score drill-down (backlog
- *   item 13)"* — and the contract carries no score to draw either:
- *   `schema.graphql`'s `Post` has no such field. The element arrives
- *   when the drill-down and the field do.
+ * - **The score slot** waits on the score readout, not on a design: its
+ *   vocabulary is ruled — a figure is what a feed fetch computed, the
+ *   bare slot is a thing still settling's (ruling 90), the dash is no
+ *   computed figure (design/readme.md §13) — but no figure rides the
+ *   wire yet, so the slot arrives with the readout's fetch.
  * - **The overflow ⋮** opens `ReaderPostMenu`, whose rows (License
  *   terms, Cite in a new post) are W3's sheets. Its other possible
  *   content is a folded affordance — and strictly below 360dp of window

@@ -32,6 +32,7 @@ import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
+import com.cogra.domain.stance.StanceSignals
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.stance.localLanding
 import com.cogra.domain.store.IdentityStore
@@ -83,6 +84,12 @@ data class TargetStance(
      * [StanceViewModel.onConfirmationShown] (design.md §8.3).
      */
     val confirmation: StancePair? = null,
+    /**
+     * A signing on this target was just taken — by Set or by the hold. A
+     * one-shot for a host that routes on it (the vouch-back's ceremony,
+     * VouchBackPad.md:33); consumed by [StanceViewModel.onTakenShown].
+     */
+    val taken: Boolean = false,
 )
 
 /**
@@ -123,6 +130,8 @@ class StanceViewModel @Inject constructor(
     private val stances: StanceRepository,
     private val signer: WriteSigner,
     private val identity: IdentityStore,
+    /** Every signing taken here is announced, for the borrowed-view band. */
+    private val signals: StanceSignals,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StanceUiState())
@@ -276,6 +285,7 @@ class StanceViewModel @Inject constructor(
                 return@launch failSeverance(target)
             }
             if (results.all { it is WriteResult.Done }) {
+                signals.announceSigned()
                 update(target) { it.copy(severance = null, pad = PadMode.CLOSED, pick = StancePair.Origin) }
                 readStanding(target)
             } else {
@@ -305,6 +315,9 @@ class StanceViewModel @Inject constructor(
     /** Consumes the one-shot confirmation once the screen has shown it. */
     fun onConfirmationShown(target: StanceTarget) = update(target) { it.copy(confirmation = null) }
 
+    /** Consumes the one-shot [TargetStance.taken] once the host has routed on it. */
+    fun onTakenShown(target: StanceTarget) = update(target) { it.copy(taken = false) }
+
     private fun commit(target: StanceTarget, pick: StancePair) {
         val entry = _state.value.targets[target]
         if (entry?.busy == true) return
@@ -326,9 +339,11 @@ class StanceViewModel @Inject constructor(
                 return@launch fail(target, needsKey = true)
             }
             if (results.all { it is WriteResult.Done }) {
+                signals.announceSigned()
                 update(target) {
                     it.copy(
                         busy = false,
+                        taken = true,
                         pad = PadMode.CLOSED,
                         pick = StancePair.Origin,
                         landing = null,

@@ -2,6 +2,7 @@ package com.cogra.feature.profile
 
 import com.cogra.crypto.Family
 import com.cogra.domain.AccountState
+import com.cogra.domain.ActorRef
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.ProfileView
@@ -132,6 +133,36 @@ class ProfileViewModelTest {
         // what it had — which is where a single refetch left it anyway.
         assertThat(vm.state.value.profile?.handle).isEqualTo("jakob")
         assertThat(profiles.rowRequests.size).isEqualTo(readsBefore)
+    }
+
+    /**
+     * ProfileOther.md:35 — the member who vouched the reader in, the pair
+     * incomplete: the anchor opens the vouch-back, the card put away or
+     * not (VouchBack.md:51). Anyone else, or a completed pair, is plain.
+     */
+    @Test
+    fun theVouchersProfileOpensTheVouchBackWhileThePairIsIncomplete() = runTest(dispatcher) {
+        profiles.byHandle["mira"] = Outcome.Success(testProfile(id = "u2", handle = "mira"))
+        profiles.byHandle["sol"] = Outcome.Success(testProfile(id = "u3", handle = "sol"))
+        account.profile = UserProfile(
+            "u1", "noa", null, AccountState.MEMBER, false, ActorRef("u2", "mira"),
+            vouchBackDismissed = true,
+        )
+        val vm = viewModel()
+        vm.start("mira")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.vouchesBack).isTrue()
+
+        val other = viewModel()
+        other.start("sol")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(other.state.value.vouchesBack).isFalse()
+
+        account.profile = account.profile?.copy(hasReciprocated = true)
+        val done = viewModel()
+        done.start("mira")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(done.state.value.vouchesBack).isFalse()
     }
 
     @Test

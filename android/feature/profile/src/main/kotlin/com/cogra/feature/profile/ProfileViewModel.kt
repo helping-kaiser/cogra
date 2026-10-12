@@ -36,6 +36,12 @@ data class ProfileUiState(
     val own: Boolean = false,
     /** The viewer is an applicant — the invites entry locks. */
     val applicant: Boolean = false,
+    /**
+     * This is the member who vouched the viewer in, and the pair is still
+     * incomplete: the anchor opens the vouch-back (ProfileOther.md:35) —
+     * the card put away or not (VouchBack.md:51).
+     */
+    val vouchesBack: Boolean = false,
     val filter: ChronicleFilter = ChronicleFilter.POSTS,
     val rows: List<RecordRow> = emptyList(),
     val rowsLoading: Boolean = false,
@@ -153,6 +159,9 @@ class ProfileViewModel @Inject constructor(
                             profile = profile,
                             own = viewer != null && viewer.id == profile.id,
                             applicant = viewer?.accountState == AccountState.APPLICANT,
+                            vouchesBack = viewer?.accountState == AccountState.MEMBER &&
+                                viewer.invitedBy?.id == profile.id &&
+                                !viewer.hasReciprocated,
                         )
                     }
                     profile
