@@ -9,6 +9,7 @@ package com.cogra.network.store
 
 import android.content.Context
 import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -114,6 +115,29 @@ class EncryptedStore(
                 .filter { matches(it.name) }
                 .toList()
                 .forEach { prefs.remove(it) }
+        }
+    }
+
+    /**
+     * Several presence checks, puts and removals as ONE `DataStore.edit`
+     * — the documented atomic read-modify-write — for a change that must
+     * happen whole or not at all across more than one name (the sealed
+     * draft: the copy is written and the working draft dropped together).
+     */
+    suspend fun edit(block: Editor.() -> Unit) {
+        dataStore.edit { prefs -> Editor(prefs).block() }
+    }
+
+    /** The names one [edit] may touch, inside its transaction. */
+    inner class Editor internal constructor(private val prefs: MutablePreferences) {
+        operator fun contains(name: String): Boolean = stringPreferencesKey(name) in prefs
+
+        fun put(name: String, value: ByteArray) {
+            prefs[stringPreferencesKey(name)] = Base64.getEncoder().encodeToString(cipher.seal(value))
+        }
+
+        fun remove(name: String) {
+            prefs.remove(stringPreferencesKey(name))
         }
     }
 
