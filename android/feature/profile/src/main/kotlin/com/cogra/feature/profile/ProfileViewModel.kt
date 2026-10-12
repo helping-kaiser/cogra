@@ -7,6 +7,7 @@ import com.cogra.domain.AccountState
 import com.cogra.domain.Outcome
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
+import com.cogra.domain.history.SeenTracker
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -61,11 +62,21 @@ private const val LANDING_POLL = 1_000L
  * One profile — the viewer's own (null handle) or any actor's by
  * handle — with the authored chronicle under the filter chips
  * (roadmap "Slice 2.1": the honest labelled history).
+ *
+ * Opening someone else's profile adds the profile to the reader's History
+ * ("WHEN a profile opens -> the profile joins History", History.md:11) —
+ * a page event, reported to the [SeenTracker] the moment the profile is
+ * read, and sent at once: the opening is its own checkpoint. The profile
+ * alone: its posts join only as a list sees them. The reader's own profile
+ * is not reported — it is where History's own door stands
+ * (ProfileOwnMenu.md:3, :15), and a reader who has seen nothing must still
+ * find History empty there.
  */
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val profiles: ProfileRepository,
     private val account: AccountRepository,
+    private val seenTracker: SeenTracker,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProfileUiState())
@@ -144,6 +155,7 @@ class ProfileViewModel @Inject constructor(
                     _state.update { it.copy(loading = false, refreshing = false, notFound = true) }
                     null
                 } else {
+                    val own = viewer != null && viewer.id == profile.id
                     _state.update {
                         it.copy(
                             loading = false,
@@ -151,9 +163,13 @@ class ProfileViewModel @Inject constructor(
                             notFound = false,
                             transportFailed = false,
                             profile = profile,
-                            own = viewer != null && viewer.id == profile.id,
+                            own = own,
                             applicant = viewer?.accountState == AccountState.APPLICANT,
                         )
+                    }
+                    if (target != null && !own) {
+                        seenTracker.saw(listOf(profile.id))
+                        seenTracker.flush()
                     }
                     profile
                 }
