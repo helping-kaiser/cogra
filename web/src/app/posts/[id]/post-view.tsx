@@ -135,6 +135,11 @@ export function PostView({
 
   // `asked`: the reader's own pull — the one read that brings the newest in
   // over the opened version rather than holding it behind the line.
+  //
+  // A pull made while the opening read is still out cannot land an older
+  // answer second: the two are the same operation with the same variables,
+  // and Apollo Client deduplicates identical queries in flight
+  // (`queryDeduplication`, on by default), so both settle on one answer.
   const refresh = useCallback((asked = false) => {
     let cancelled = false;
     void fetchPostDetail(client, postId).then((outcome) => {

@@ -2781,6 +2781,19 @@ describe("PostView — opened from the feed", () => {
   const LINE = "Edited since you opened it — tap for the newest version.";
   const line = () => screen.queryByTestId(byNode("postDetail.newerVersion"));
 
+  /** The reader's own pull, from the top (the "pulling down at the top" suite's gesture). */
+  function pullDown(scroller: HTMLElement) {
+    const touch = (type: string, clientY: number) => {
+      const event = new Event(type, { bubbles: true });
+      Object.defineProperty(event, "touches", { value: [{ clientY }] });
+      Object.defineProperty(event, "changedTouches", { value: [{ clientY }] });
+      return event;
+    };
+    fireEvent(scroller, touch("touchstart", 100));
+    fireEvent(scroller, touch("touchmove", 100 + PULL_THRESHOLD));
+    fireEvent(scroller, touch("touchend", 100 + PULL_THRESHOLD));
+  }
+
   /** Opens the detail on the feed's card and lets the fresh read land. */
   async function openOnto(painted: PostPayload, fresh: PostPayload, count = 0) {
     const read = heldDetail(() => HttpResponse.json({ data: fresh }));
@@ -2921,19 +2934,53 @@ describe("PostView — opened from the feed", () => {
     );
     await screen.findByTestId(byNode("postDetail.newerVersion"));
 
-    const at = (type: string, clientY: number) => {
-      const event = new Event(type, { bubbles: true });
-      Object.defineProperty(event, "touches", { value: [{ clientY }] });
-      Object.defineProperty(event, "changedTouches", { value: [{ clientY }] });
-      return event;
-    };
-    fireEvent(scroller, at("touchstart", 100));
-    fireEvent(scroller, at("touchmove", 100 + PULL_THRESHOLD));
-    fireEvent(scroller, at("touchend", 100 + PULL_THRESHOLD));
+    pullDown(scroller);
 
     await waitFor(() =>
       expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("Edited twice"),
     );
+    expect(line()).not.toBeInTheDocument();
+    scroller.remove();
+  });
+
+  // A PULL WHILE THE OPENING READ IS OUT is the same operation with the same
+  // variables, which Apollo deduplicates in flight: one answer settles both,
+  // so no older answer can land second and raise a line for an older version.
+  it("settles a pull made during the opening read on that one answer, with no line", async () => {
+    const data = detail("u1", []);
+    let releaseOpening!: () => void;
+    const opening = new Promise<void>((resolve) => {
+      releaseOpening = resolve;
+    });
+    let reads = 0;
+    server.use(
+      graphql.query("PostDetail", async () => {
+        reads += 1;
+        if (reads === 1) {
+          await opening;
+          return HttpResponse.json({ data: edited(data, "Edited once") });
+        }
+        return HttpResponse.json({ data: edited(data, "Edited twice", "2026-08-12T13:00:00Z") });
+      }),
+    );
+    const scroller = document.createElement("div");
+    document.body.append(scroller);
+    renderWithProviders(
+      <ScrollHostProvider value={{ current: scroller }}>
+        <PostView postId="p1" />
+      </ScrollHostProvider>,
+      { writeSigner: fakeWriteSigner(), cache: feedCache(feedNode(data, 0)) },
+    );
+    await waitFor(() => expect(reads).toBe(1));
+
+    pullDown(scroller);
+    releaseOpening();
+    // The pull is the reader asking, so the one answer lands over the opened
+    // version — and nothing older is left in flight to land behind it.
+    await waitFor(() =>
+      expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("Edited once"),
+    );
+    expect(reads).toBe(1);
     expect(line()).not.toBeInTheDocument();
     scroller.remove();
   });
