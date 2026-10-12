@@ -26,7 +26,7 @@ ALWAYS a quiet day divider stands above the first thing first seen on each day, 
 
 ALWAYS a day divider is part of the list and never part of a card
 
-ALWAYS the score on a card in History is that card's own, and the scores never order History
+ALWAYS the score on a card in History is the figure the latest fetch of its thing found — the reader's own last feed fetch, or its trace's fetch since — a dash only where that fetch found none, and the scores never order History
 
 ALWAYS a card in History carries no age of the seeing, only the age the feed card itself carries
 

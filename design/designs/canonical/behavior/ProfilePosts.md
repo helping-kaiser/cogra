@@ -32,6 +32,8 @@ WHEN a guest taps Message -> the guest gate opens
 
 WHEN a guest taps the profile's stance anchor -> the guest gate opens
 
+ALWAYS a card's Feed score in the posts view is the figure the latest fetch of its post found — the reader's own last feed fetch, or its trace's fetch since — a dash only where that fetch found none
+
 WHEN tap a card's Feed score GIVEN the profile is another's -> the score's trace opens AND its back arrow reads Back to the profile
 
 WHEN tap a card's Feed score GIVEN the profile is the reader's own -> the score's trace opens AND its back arrow reads Back to your profile
