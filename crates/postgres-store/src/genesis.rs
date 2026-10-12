@@ -74,9 +74,9 @@ pub async fn insert_actor(
         actor_pubkey,
         address,
     )
-    .execute(conn)
+    .execute(&mut *conn)
     .await?;
-    Ok(())
+    crate::search::refresh_actors(conn, &[id]).await
 }
 
 pub async fn insert_profile_version(
@@ -92,9 +92,9 @@ pub async fn insert_profile_version(
         display_name,
         bio,
     )
-    .execute(conn)
+    .execute(&mut *conn)
     .await?;
-    Ok(())
+    crate::search::refresh_actors(conn, &[actor_id]).await
 }
 
 /// Stores a system actor's custodied signing seed (substrate.md §8 —
@@ -185,9 +185,9 @@ pub async fn seed_reserved_type(conn: &mut PgConnection, name: &str) -> Result<(
         common::hashtag_uuid(name),
         name,
     )
-    .execute(conn)
+    .execute(&mut *conn)
     .await?;
-    Ok(())
+    crate::search::index_hashtag(conn, name).await
 }
 
 /// Appends a parameter-carrier version row (newest row wins; the genesis

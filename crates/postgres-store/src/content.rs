@@ -244,6 +244,7 @@ pub async fn insert_post(
     )
     .fetch_one(&mut **tx)
     .await?;
+    crate::search::refresh_posts(tx, &[id]).await?;
     Ok(Some(version_id))
 }
 
@@ -266,7 +267,7 @@ pub async fn insert_post_version(
     order: Option<LandingOrder>,
     created_at: Timestamp,
 ) -> Result<Option<i64>, ContentError> {
-    Ok(sqlx::query_scalar!(
+    let version_id = sqlx::query_scalar!(
         "INSERT INTO post_versions
              (post_id, title, description, content, sensitive,
               sensitive_reason, pending, created_at,
@@ -287,7 +288,9 @@ pub async fn insert_post_version(
         order.map(|o| o.position),
     )
     .fetch_optional(&mut **tx)
-    .await?)
+    .await?;
+    crate::search::refresh_posts(tx, &[post_id]).await?;
+    Ok(version_id)
 }
 
 /// Inserts a comment's entity row and its first version row; same
@@ -418,7 +421,7 @@ pub async fn land_post_version(
     created_at: Timestamp,
     order: LandingOrder,
 ) -> Result<bool, ContentError> {
-    Ok(sqlx::query!(
+    let landed = sqlx::query!(
         "UPDATE post_versions
             SET pending = FALSE, landed_epoch = $3, act_time = $4,
                 position = $5
@@ -432,7 +435,11 @@ pub async fn land_post_version(
     .execute(&mut **tx)
     .await?
     .rows_affected()
-        == 1)
+        == 1;
+    // Landing reorders the versions (pending ones lead), so which one is
+    // current may change.
+    crate::search::refresh_posts(tx, &[post_id]).await?;
+    Ok(landed)
 }
 
 /// Confirm: the comment side of [`land_post`].
@@ -563,6 +570,9 @@ pub async fn discard_pending_many(
         .await?,
     );
     discard_pending_thread(tx, removed).await?;
+    // A discarded version may have been the current one, and a discarded
+    // post has no title left to match.
+    crate::search::refresh_posts(tx, nodes).await?;
     Ok(())
 }
 

@@ -38,8 +38,9 @@ pub async fn upsert(conn: &mut PgConnection, canonical_name: &str) -> Result<Uui
         id,
         canonical_name,
     )
-    .execute(conn)
+    .execute(&mut *conn)
     .await?;
+    crate::search::index_hashtag(conn, canonical_name).await?;
     Ok(id)
 }
 
