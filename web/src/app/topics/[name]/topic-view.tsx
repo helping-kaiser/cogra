@@ -85,7 +85,10 @@ export function TopicView({ name }: { name: string }) {
   const host = useScrollHost();
   const listRef = useRef<HTMLUListElement>(null);
   const seenIds = useMemo(
-    () => (hashtag?.taggedContent ?? []).map((item) => item.node.id),
+    () =>
+      (hashtag?.taggedContent ?? []).flatMap(({ node }) =>
+        node.__typename === "Post" || node.__typename === "Comment" ? [node.id] : [],
+      ),
     [hashtag],
   );
   useSeenTracker({ root: host, list: listRef, ids: seenIds });

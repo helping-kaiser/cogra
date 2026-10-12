@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { screen, waitFor } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { useRef } from "react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import {
@@ -15,6 +15,7 @@ import {
 } from "@/test/media-env";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
+import { resetSeenQueueForTests } from "./seen-queue";
 import {
   SCROLL_IDLE_MS,
   SEEN_ATTRIBUTE,
@@ -41,6 +42,10 @@ const server = startMswServer(
     });
   }),
 );
+
+// The queue is module memory: each test starts from a session that has seen
+// nothing.
+beforeEach(resetSeenQueueForTests);
 
 function reset() {
   sent = [];

@@ -10,6 +10,7 @@ import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
 import { intersect, intersectEach, whenObserved } from "@/test/media-env";
 import { FeedView } from "./feed-view";
+import { resetSeenQueueForTests } from "@/lib/history/seen-queue";
 import { forgetFeed, recallFeed } from "./feed-memory";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
@@ -1220,6 +1221,7 @@ describe("FeedView", () => {
 // author's or its tags' — and the list leaving the screen sends it.
 describe("FeedView's seen tracker", () => {
   beforeEach(() => {
+    resetSeenQueueForTests();
     window.localStorage.clear();
     searchParams = new URLSearchParams();
     forgetFeed();
