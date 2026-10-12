@@ -128,6 +128,10 @@ const CONFIRM_RESET: &str = "mutation($input: ConfirmPasswordResetInput!) {
     confirmPasswordReset(input: $input) { ok userErrors { code } }
 }";
 
+const CONFIRM_DELETION: &str = "mutation($input: ConfirmAccountDeletionInput!) {
+    confirmAccountDeletion(input: $input) { accountDeletion { scheduledFor } userErrors { code } }
+}";
+
 fn login_vars(email: &str, password: &str) -> Value {
     json!({ "input": { "email": email, "password": password } })
 }
@@ -558,8 +562,8 @@ async fn resends_trip_the_email_budget_silently(pool: PgPool) {
 }
 
 /// The confirmation verbs share one per-IP budget, so two guesses through
-/// `verifyEmail` spend it and the third is refused even through a
-/// different verb.
+/// `verifyEmail` and one through `confirmAccountDeletion` spend it and the
+/// next is refused through any of them.
 ///
 /// The confirmation verbs share one per-address budget, so guesses spent through one are refused through any other.
 /// ´claim:ratelimit:the-confirmation-verbs-share-one-budget´
@@ -567,7 +571,7 @@ async fn resends_trip_the_email_budget_silently(pool: PgPool) {
 async fn token_confirmations_share_one_ip_budget(pool: PgPool) {
     let mut limits = RateLimitConfig::unlimited();
     limits.confirm_ip = Window {
-        limit: 2,
+        limit: 3,
         window_secs: 3600.0,
     };
     let rig = Rig::new(pool, limits);
@@ -586,6 +590,18 @@ async fn token_confirmations_share_one_ip_budget(pool: PgPool) {
             Some("VERIFICATION_TOKEN_INVALID")
         );
     }
+    let json = rig
+        .gql("10.4.0.1", CONFIRM_DELETION, json!({ "input": { "deletionToken": "guess" } }))
+        .await;
+    assert_eq!(transport_code(&json), None, "{json}");
+    assert_eq!(
+        user_error_code(&json, "confirmAccountDeletion"),
+        Some("DELETION_TOKEN_INVALID")
+    );
+    let json = rig
+        .gql("10.4.0.1", CONFIRM_DELETION, json!({ "input": { "deletionToken": "guess" } }))
+        .await;
+    assert_eq!(transport_code(&json), Some("RATE_LIMITED"), "{json}");
     let json = rig
         .gql(
             "10.4.0.1",
