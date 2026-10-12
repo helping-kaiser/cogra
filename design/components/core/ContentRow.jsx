@@ -275,6 +275,7 @@ export function ContentRow({
               role="img"
               aria-label="New"
               style={{ width: "8px", height: "8px", borderRadius: "var(--radius-full)", background: "var(--primary)" }}
+              data-node={node && "dot"}
             />
           )}
         </span>
