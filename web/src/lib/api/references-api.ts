@@ -29,9 +29,9 @@ import { stagedFromPrepared, type StagedWriteView } from "./writes-api";
 export const CANDIDATE_LIMIT = 10;
 
 /**
- * The finder's lookup (D20). Exact-match resolution today; real search
- * arrives in slice 2.7 behind this same field, so nothing here changes
- * when the implementation is replaced.
+ * The finder's lookup (D20), served by the one search matcher (slice 2.7):
+ * names and titles, exact matches first. The matcher arrived behind this
+ * same field, so nothing here changed.
  *
  * A query that resolves nothing never leaves the browser — the server
  * would answer with an empty list anyway, and a finder runs on every

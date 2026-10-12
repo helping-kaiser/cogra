@@ -8,10 +8,11 @@
 # `PrepareCommentInput.references` in content.graphql, batched onto the
 # minting record. The shared selections live in `fragments.graphql`.
 
-# D20's finder. Exact-match resolution only today — a handle bare or
-# `@`-sigilled, or a UUID — with real search arriving in slice 2.7
-# BEHIND THIS SAME FIELD, so this document does not change when the
-# implementation is replaced. D21: a topic is tagged, never referenced,
+# D20's finder, on the one search matcher (slice 2.7): names and titles,
+# exact matches first, then newest; a leading `@` narrows to people, and
+# a UUID names whatever node it addresses. The matcher arrived behind
+# this same field, so this document did not change. D21: a topic is
+# tagged, never referenced,
 # so no topic is ever offered. An empty or unresolvable query
 # answers with an empty list, never an error: a finder runs on every
 # keystroke, so most of what it is asked is a prefix of something still
