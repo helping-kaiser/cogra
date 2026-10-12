@@ -1,18 +1,17 @@
 //! ´mod:module:search´
 //!
 //! The store side of the one search matcher (api-spec.md "Search";
-//! data-model.md "Search index"): the `search_index` projection's
-//! maintenance and the match read over it.
+//! data-model.md "Search index"): the match read over the `search_index`
+//! projection.
 //!
-//! # The projection is refreshed, never patched
+//! # Nothing here writes the projection
 //!
-//! Every function that writes a source of an indexed field — an actor's
-//! handle, a profile version, a post version, the topic registry — calls
-//! a `refresh_*` here inside its own transaction. A refresh deletes the
-//! node's rows and re-derives them from the current version, so the
-//! rules for "current", "untitled" and "redacted" live in one statement
-//! per kind rather than in every writer. The migration's backfill is the
-//! same derivation over every node.
+//! The database maintains it: a row-level trigger on every source of an
+//! indexed field — `actors`, `actor_profile_versions`, `posts`,
+//! `post_versions`, `hashtags` — re-derives the affected node's rows in
+//! the writing transaction (migration `search_index_trigger`). No store
+//! function carries an index duty, so no writer can forget one and leave
+//! redacted or removed content findable.
 //!
 //! # One matcher, two consumers
 //!
@@ -21,107 +20,10 @@
 //! [`MatchQuery`]: the kinds served, the seen-list exclusion, and the
 //! finder's narrowing to what `prepareReference` accepts.
 
-use sqlx::{PgConnection, PgPool};
+use sqlx::PgPool;
 use uuid::Uuid;
 
 type Timestamp = chrono::DateTime<chrono::Utc>;
-
-/// Re-derives the index rows of user actors from their handle and current
-/// profile version. An actor that no longer exists, is not a user, or
-/// whose current profile version is redacted ends with no rows.
-pub async fn refresh_actors(conn: &mut PgConnection, ids: &[Uuid]) -> Result<(), sqlx::Error> {
-    if ids.is_empty() {
-        return Ok(());
-    }
-    sqlx::query!(
-        "DELETE FROM search_index WHERE kind = 'user' AND node_id = ANY($1)",
-        ids,
-    )
-    .execute(&mut *conn)
-    .await?;
-    sqlx::query!(
-        "INSERT INTO search_index (node_id, field, kind, value, created_at)
-         SELECT a.id, f.field, 'user', f.value, a.created_at
-         FROM actors a
-         LEFT JOIN LATERAL (
-             SELECT display_name, redaction_reason
-             FROM actor_profile_versions
-             WHERE actor_id = a.id
-             ORDER BY landed_epoch DESC NULLS LAST,
-                      act_time DESC NULLS LAST,
-                      position DESC NULLS LAST,
-                      created_at DESC, version_id DESC
-             LIMIT 1
-         ) p ON TRUE
-         CROSS JOIN LATERAL (
-             VALUES ('handle', a.handle), ('display_name', p.display_name)
-         ) f (field, value)
-         WHERE a.id = ANY($1)
-           AND a.kind = 'user'
-           AND p.redaction_reason IS NULL
-           AND f.value IS NOT NULL
-           AND btrim(f.value) <> ''",
-        ids,
-    )
-    .execute(&mut *conn)
-    .await?;
-    Ok(())
-}
-
-/// Re-derives the title rows of posts from their current version — the
-/// same version the post reads serve, pending edits first. A post that no
-/// longer exists, whose current version is untitled, or whose current
-/// version is redacted ends with no row.
-pub async fn refresh_posts(conn: &mut PgConnection, ids: &[Uuid]) -> Result<(), sqlx::Error> {
-    if ids.is_empty() {
-        return Ok(());
-    }
-    sqlx::query!(
-        "DELETE FROM search_index WHERE kind = 'post' AND node_id = ANY($1)",
-        ids,
-    )
-    .execute(&mut *conn)
-    .await?;
-    sqlx::query!(
-        "INSERT INTO search_index (node_id, field, kind, value, author_id, created_at)
-         SELECT p.id, 'title', 'post', v.title, p.author_id, p.created_at
-         FROM posts p
-         JOIN LATERAL (
-             SELECT title, redaction_reason
-             FROM post_versions
-             WHERE post_id = p.id
-             ORDER BY pending DESC,
-                      landed_epoch DESC NULLS LAST,
-                      act_time DESC NULLS LAST,
-                      position DESC NULLS LAST,
-                      created_at DESC, version_id DESC
-             LIMIT 1
-         ) v ON TRUE
-         WHERE p.id = ANY($1)
-           AND v.redaction_reason IS NULL
-           AND v.title IS NOT NULL
-           AND btrim(v.title) <> ''",
-        ids,
-    )
-    .execute(&mut *conn)
-    .await?;
-    Ok(())
-}
-
-/// Indexes a registered topic by its canonical name. Registry rows are
-/// never rewritten, so neither is this one.
-pub async fn index_hashtag(conn: &mut PgConnection, name: &str) -> Result<(), sqlx::Error> {
-    sqlx::query!(
-        "INSERT INTO search_index (node_id, field, kind, value, created_at)
-         SELECT id, 'name', 'hashtag', name, created_at
-         FROM hashtags WHERE name = $1
-         ON CONFLICT (node_id, field) DO NOTHING",
-        name,
-    )
-    .execute(conn)
-    .await?;
-    Ok(())
-}
 
 /// One match request over the index. The text fields are built by the
 /// API's matcher; nothing here parses a query.
