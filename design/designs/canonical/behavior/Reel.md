@@ -24,7 +24,7 @@ WHEN drag the seek line -> the clip moves under the finger
 
 WHEN tap the sound control -> sound turns on or off as the one sticky decision every video shares
 
-WHEN tap the score -> the clip squishes to the top of the screen still playing AND the post rises beneath it AND NEVER a new page opens in its place
+WHEN tap the score -> the clip squishes to the head of the post's detail still playing AND the post rises beneath it AND NEVER a page slides in over the stream
 
 WHEN tap the opinion face -> the same pad opens over the clip AND the clip pauses
 

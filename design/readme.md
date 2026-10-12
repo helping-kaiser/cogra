@@ -465,7 +465,7 @@ inventing one:
 | The pad's bloom | the dialog's entrance at the pad's parked spot — 200ms fade and 8px rise — with the wash at the scrim's 200ms; closing is the reverse |
 | The scrim | 200ms linear, with the surface it belongs to |
 | The media handover, feed to detail and back | a shared element: the media frame persists in place while the chrome fades around it (M3's container transform), 300ms. A post with no media takes the forward motion |
-| The reel's squish, through the score's door | the clip, still playing, moves to the top of the screen and the post rises beneath it — a shared element, 300ms, never a new page |
+| The reel's squish, through the score's door | the clip, still playing, moves to the head of the post's detail and the post rises beneath it — a shared element, 300ms, never a page sliding in |
 | The collapsing top | a 200ms `translateY(-110%)` exit — it hides only once half its own slot has scrolled past, and returns after about a third of a screen of accumulated upward scroll, or at once when the surface reaches its hard top |
 | In place — `More`, `View n replies`, a row leaving and the rows closing up, the veil's reveal, the face after `Set`, the snackbar coming and going | height and opacity at `--duration-short-4`, `--ease-standard`; nothing travels in from elsewhere |
 | `Back to top` | the platform's smooth scroll to the top |
@@ -2672,9 +2672,10 @@ item 33, jakob's rulings the same day).
   expands back into the stream with the reader's place held.
 - **The detail door on a reel is the score element** — the exact
   element a feed card wears, so the way in is a thing the reader has
-  already met. Tapping it **squishes the clip to the top of the
-  screen**, still playing, and the post rises beneath it: a state
-  change, never a page portal. On a card the same element opens the
+  already met. Tapping it **squishes the clip to the head of the post's
+  detail**, still playing, and the post rises beneath it: a shared-element
+  morph, never a page sliding in. The detail it lands on is the ordinary
+  one, its clip scrolling with the page (*The clip detail rulings*). On a card the same element opens the
   score drill-down (item 13) — one element, two surfaces, two
   destinations.
 - **The rail, top to bottom: author · stance · comments · share ·

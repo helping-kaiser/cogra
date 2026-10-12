@@ -20,7 +20,7 @@ WHEN swipe the clip -> the next clip in the same ranked feed takes the screen AN
 
 ALWAYS a reveal holds for every move inside the app until the app is fully closed or the media is hard reset
 
-WHEN tap the score -> the veiled clip squishes to the top AND the post rises beneath it still unrevealed
+WHEN tap the score -> the veiled clip squishes to the head of the post's detail AND the post rises beneath it still unrevealed AND NEVER a page slides in over the stream
 
 WHEN tap the opinion face -> the same pad opens over the veiled clip
 

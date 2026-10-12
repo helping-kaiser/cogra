@@ -432,7 +432,7 @@
     },
     {
       "name": "reel-to-detail",
-      "description": "The score element on the stream's rail is the detail door: the clip squishes to the top of the screen, still playing, and the post rises beneath it — tapping the clip there expands it back into the stream, the reader's place held.",
+      "description": "The score element on the stream's rail is the detail door: the clip squishes to the head of the post's detail, still playing, and the post rises beneath it — tapping the clip there expands it back into the stream, the reader's place held.",
       "start": { "board": "Reel", "via": 7 }
     },
     {
