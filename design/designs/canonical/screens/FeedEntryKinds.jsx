@@ -21,7 +21,12 @@
    feed`, where every kind's card stands.
 
    A REFERENCE BOARD, like `FeedShapes`: wired nowhere, because each block is
-   the top of `FeedEntry`, which carries the wiring. */
+   the top of `FeedEntry`, which carries the wiring.
+
+   REGISTERED under the `feedEntry` prefix (round 7), each block named as
+   `FeedEntry` names its own top: a `block` keyed by the kind it holds, its
+   `origin` and its one `path`. */
+export const NODE = "feedEntry";
 
 const KIND_PATHS = [
   { kind: "post", score: "15.20", path: SCORE_PATHS[0] },
@@ -33,15 +38,15 @@ const KIND_PATHS = [
 export function Screen() {
   return (
     <>
-      <PageHeader title="Why this reached you" backHref="#" backLabel="Back to feed" />
+      <PageHeader title="Why this reached you" backHref="#" backLabel="Back to feed" node="header" />
       <ScoreColumn>
         {KIND_PATHS.map(({ kind, score, path }) => (
-          <div key={kind} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div key={kind} style={{ display: "flex", flexDirection: "column", gap: 8 }} data-node="block" data-node-key={kind}>
             <ScoreOrigin kind={kind} score={score} />
-            <PathRow kind={kind} people={path.people} through={path.through} value={path.value} onOpen={() => {}} />
+            <PathRow kind={kind} people={path.people} through={path.through} value={path.value} onOpen={() => {}} node="path" />
           </div>
         ))}
-        <QuietNote>Every path here starts with an opinion you gave.</QuietNote>
+        <QuietNote node="note">Every path here starts with an opinion you gave.</QuietNote>
       </ScoreColumn>
     </>
   );

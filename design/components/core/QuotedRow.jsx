@@ -26,7 +26,10 @@ import { MonogramAvatar } from "../people/ActorChip.jsx";
    one folder-tab silhouette — `TaggedRow`'s attachment, which the score's
    trace takes for the figure it hangs on the held thing (the closing batch,
    jakob 2026-10-01). Given none, the row renders exactly as before. */
-export function QuotedRow({ title, snippet, name, src, mark, attach = false }) {
+/* NAMED BY ITS PLACER (design ⇄ impl seam 002): given `node`, the row names
+   its `title`, its `snippet` and the monogram it draws as `disc`; a `mark` is
+   named by whoever placed it, `disc` too, since it stands in the same place. */
+export function QuotedRow({ title, snippet, name, src, mark, attach = false, node }) {
   return (
     <div
       style={{
@@ -39,8 +42,9 @@ export function QuotedRow({ title, snippet, name, src, mark, attach = false }) {
         ...(attach ? { borderTopLeftRadius: 0 } : null),
         background: "var(--surface-container-highest)",
       }}
+      data-node={node}
     >
-      {mark ?? <MonogramAvatar name={name} size={32} src={src} />}
+      {mark ?? <MonogramAvatar name={name} size={32} src={src} node={node && "disc"} />}
       <span style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         <span
           style={{
@@ -48,6 +52,7 @@ export function QuotedRow({ title, snippet, name, src, mark, attach = false }) {
             lineHeight: "var(--text-label-large--line-height)",
             fontWeight: "var(--text-label-large--font-weight)",
           }}
+          data-node={node && "title"}
         >
           {title}
         </span>
@@ -61,6 +66,7 @@ export function QuotedRow({ title, snippet, name, src, mark, attach = false }) {
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
             }}
+            data-node={node && "snippet"}
           >
             {snippet}
           </span>

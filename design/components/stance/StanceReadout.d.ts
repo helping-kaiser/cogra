@@ -66,6 +66,8 @@ export interface StanceValueProps {
   /** Draws the exact pair beside the face — geek mode decides whether it paints.
    *  Defaults to true; false is for a row that has no room for it at all. */
   showPair?: boolean;
+  /** The data-node name its placer gives the value (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its `face` and, while drawn, its `exact` pair. */
+  node?: string;
 }
 
 export declare function StanceValue(props: StanceValueProps): JSX.Element;

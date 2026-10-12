@@ -84,6 +84,7 @@ export const KEY_RULES = {
   account: "the hidden account's handle, without @ (the hidden-accounts sheet)",
   act: "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)",
   application: "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
+  block: "the kind of thing the block holds — post, comment, person or topic (FeedEntryKinds' blocks)",
   card: "the author's handle, without @ (PostCard)",
   commentCard: "the comment author's handle, without @ (CommentCard)",
   dateline: "the release's version, lowercased, each run of other characters one - (What's new's datelines)",
@@ -92,7 +93,10 @@ export const KEY_RULES = {
   frame: "the picture's position in the post's media, counted from 1 (MediaGallery)",
   group: "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
   link: "the invite link's id, the link's last path segment (Invites' live links)",
+  notification: "the notification's position in the list, newest first, counted from 1 (Notifications)",
+  path: "the path's position in the list, strongest first, counted from 1 (the score's trace)",
   profileCard: "the person's handle, without @ (the profile feed card)",
+  record: "the record's key, as the row prints it (the score's trace)",
   recent: "the recent query's words, lowercased, each run of other characters one -, none leading or trailing (Explore's recents)",
   release: "the release's version, lowercased, each run of other characters one - (What's new's release cards)",
   result: "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)",
@@ -103,6 +107,7 @@ export const KEY_RULES = {
   tier: "the reading's position on its license axis, the least asked first, counted from 1 (LicenseAxis)",
   session: "the session's position in the list, this device first, counted from 1 (Settings' sessions)",
   stagedReference: "the reference's position in the staged set, counted from 1 (the screen that stages it)",
+  step: "the step's position along its path, from the path's start, counted from 1 (the score's trace)",
 };
 
 // The key rule of a chip-drawn state duplicate (above): one rule for every

@@ -17,19 +17,25 @@
    THE WAY DOWN IS THE `FactRow`'s OWN ACTION, which is the master's slot for
    exactly this: one line, one word at its end. A separate row would have made
    the records look like a fifth fact about the step rather than what the step is
-   made of. */
+   made of.
+
+   REGISTERED under the `feedEntry` prefix (round 7): the held thing `origin`,
+   the step's `trace`, the place line `note`, its three facts `carries`,
+   `behind` (with `Show them` as its `action`) and `newest`, and the fold's
+   line `foldNote`. */
+export const NODE = "feedEntry";
 export function Screen() {
   return (
     <>
-      <PageHeader title="One step" backHref="#" backLabel="Back to the path" />
+      <PageHeader title="One step" backHref="#" backLabel="Back to the path" node="header" />
       <ScoreColumn>
         <ScoreOrigin />
 
         <div style={{ display: "flex", justifyContent: "center", padding: "4px 0" }}>
-          <PathTrace people={[SCORE_VIEWER, ADA_FACED]} size={32} />
+          <PathTrace people={[SCORE_VIEWER, ADA_FACED]} size={32} node="trace" />
         </div>
 
-        <QuietNote>Your opinion of @ada — the first of this path&apos;s two steps.</QuietNote>
+        <QuietNote node="note">Your opinion of @ada — the first of this path&apos;s two steps.</QuietNote>
 
         <StepSummary
           pair={{ pDirected: 0.55, pInterest: 0.2 }}
@@ -38,12 +44,12 @@ export function Screen() {
           onOpenRecords={() => {}}
         />
 
-        <QuietNote>
+        <QuietNote node="foldNote">
           You have given @ada two opinions. They add up to one, and that one is what carries — the same adding up the pad
           shows you as your current opinion.
         </QuietNote>
       </ScoreColumn>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

@@ -21,26 +21,38 @@
    here genuinely lets the registration land here, so the variant carries
    `Restore the key` in `TaskCard`'s secondary dress — outlined, left-aligned,
    the way `Got it` sits on the waiting card — opening `Restore`. The card with
-   the key here keeps no control: there the machine needs nothing. */
+   the key here keeps no control: there the machine needs nothing.
+
+   REGISTERED under the feed's own prefix (round 7), named as
+   `ApplicantRejected` names the same shell: the card is `application`; the
+   key-absent variant's door is `restore`, one element the `keyAt` chip shows
+   or hides. */
+export const NODE = "feed";
 export const PROPS = { keyAt: { editor: "enum", options: ["here", "elsewhere"], default: "here" } };
 export const VALS = `landingBody: this.props.keyAt === "elsewhere" ? "Your key was made on another device — open CoGra there, or restore the key to land here." : "@mira approved your application. Nothing is needed from you while it lands.", restoreDoor: this.props.keyAt === "elsewhere" ? "inline-flex" : "none"`;
 
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />}>
-        <BorrowedViewBand handle="mira" displayName="Mira Voss" avatarSrc="inviter.jpg" line="Browsing from @mira's view while your application lands." />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band">
+        <BorrowedViewBand
+          handle="mira"
+          displayName="Mira Voss"
+          avatarSrc="inviter.jpg"
+          line="Browsing from @mira's view while your application lands."
+          node="borrowedViewBand"
+        />
       </CograBand>
       <FeedList>
-        <TaskCard title="Approved — your registration is landing" body="{{landingBody}}">
-          <Button variant="outline" selfStart style={{ display: "{{restoreDoor}}" }}>
+        <TaskCard title="Approved — your registration is landing" body="{{landingBody}}" node="application">
+          <Button variant="outline" selfStart style={{ display: "{{restoreDoor}}" }} node="restore">
             Restore the key
           </Button>
         </TaskCard>
-        <PostCard {...ADA_POST} signedIn={false} />
-        <PostCard {...TOBIAS_POST} signedIn={false} />
+        <PostCard {...ADA_POST} signedIn={false} node="card" />
+        <PostCard {...TOBIAS_POST} signedIn={false} node="card" />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

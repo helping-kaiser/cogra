@@ -24,7 +24,7 @@ export interface CograBandProps {
   unread?: boolean;
   /** Rides below the band in the same non-shrinking block. */
   children?: React.ReactNode;
-  /** The data-node name its placer gives this band — the 48px row, not the children riding below it (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `mark`, `wordmark`, `chats`, `bell`. */
+  /** The data-node name its placer gives this band — the 48px row, not the children riding below it (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `mark`, `wordmark`, `chats`, `bell` (and the bell's `dot` when `unread`). */
   node?: string;
 }
 
@@ -40,7 +40,7 @@ export interface BandIconProps {
   size?: number;
   /** Pins the quiet unread marker to the glyph's top-right. */
   dot?: boolean;
-  /** The data-node name its placer gives this control (design ⇄ impl seam 002; renders as attributes only). */
+  /** The data-node name its placer gives this control (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its `dot`. */
   node?: string;
 }
 

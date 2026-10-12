@@ -20,14 +20,20 @@
 
    THE PLATFORM NOUN IS THE `wording` CHIP (jakob 2026-10-05, E13), as on
    `KeyElsewhere` and `Restore`: the pledge says `on this browser` or `in this app`. The app renderings are blessed
-   (jakob 2026-10-05; copy-voice, *The collected rulings' entry lines*). */
+   (jakob 2026-10-05; copy-voice, *The collected rulings' entry lines*).
+
+   REGISTERED under the `keyCeremony` prefix (round 7), named as the account
+   screens name theirs: the pledge is `body`, the recovery-code paragraph
+   `note`, `Create my recovery code` is `create` and `Not now` is `later`, as on
+   `VouchAsk`. */
+export const NODE = "keyCeremony";
 export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
 export const VALS = KEY_PLEDGE_VALS;
 
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back" />
+      <PageHeader backHref="#" backLabel="Back" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
@@ -36,6 +42,7 @@ export function Screen() {
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           Your key
         </h1>
@@ -46,6 +53,7 @@ export function Screen() {
             lineHeight: "var(--text-body-large--line-height)",
             letterSpacing: "var(--text-body-large--letter-spacing)",
           }}
+          data-node="body"
         >
           {"{{pledgeBody}}"}
         </p>
@@ -57,14 +65,17 @@ export function Screen() {
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="note"
         >
           A recovery code is the one way to bring your key to another device, or back after a loss. It is shown once; you
           keep it somewhere safe.
         </p>
 
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8 }}>
-          <Button style={{ width: "100%" }}>Create my recovery code</Button>
-          <Button variant="outline" style={{ width: "100%" }}>
+          <Button style={{ width: "100%" }} node="create">
+            Create my recovery code
+          </Button>
+          <Button variant="outline" style={{ width: "100%" }} node="later">
             Not now
           </Button>
         </div>
