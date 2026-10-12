@@ -5,11 +5,15 @@ import com.cogra.crypto.Family
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.CommentView
 import com.cogra.domain.ErrorCode
+import com.cogra.domain.FieldStatus
 import com.cogra.domain.Landing
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.MediaAssetView
+import com.cogra.domain.ModeratedField
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
+import com.cogra.domain.PostView
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ReferenceCandidateView
@@ -35,7 +39,7 @@ import com.cogra.domain.testing.testReferenceClaim
 import com.cogra.domain.testing.testTopicClaim
 import com.cogra.domain.topics.TagClaim
 import com.google.common.truth.Truth.assertThat
-import java.io.IOException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -47,6 +51,8 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
+import java.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class PostDetailViewModelTest {
@@ -80,8 +86,15 @@ class PostDetailViewModelTest {
         ): Outcome<PostDetail?> {
             detailReads += 1
             includePendingAsked += includePending
-            return detail
+            // The answer as it stood when the read was asked, held until the
+            // gate opens when the test overtakes the first read.
+            val answer = detail
+            if (detailReads == 1) firstReadGate?.await()
+            return answer
         }
+
+        /** Holds the first read's answer until completed (an overtaken read). */
+        var firstReadGate: CompletableDeferred<Unit>? = null
 
         var prepareFails = false
         var editPrepared = 0
@@ -129,7 +142,6 @@ class PostDetailViewModelTest {
 
         /** The gallery the last comment/reply creation carried. */
         var lastCommentAttachments: List<AttachmentClaim> = emptyList()
-
 
         override suspend fun prepareComment(
             target: String,
@@ -223,6 +235,7 @@ class PostDetailViewModelTest {
     fun tearDown() {
         Dispatchers.resetMain()
     }
+
     @Test
     fun startLoadsThePost() = runTest(dispatcher) {
         val vm = viewModel()
@@ -369,6 +382,149 @@ class PostDetailViewModelTest {
         vm.setIncludePending(false)
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(content.includePendingAsked).containsExactly(true, false).inOrder()
+    }
+
+    // ---- FC-7b · THE DETAIL HOLDS WHAT WAS OPENED (PostDetail.md:5-13) -----
+
+    private fun answer(post: PostView) {
+        content.detail = Outcome.Success(PostDetail(post = post, comments = Page(emptyList(), null, false)))
+    }
+
+    private val opened = testPost("post-1")
+    private val edited = testPost("post-1", title = "Edited").copy(updatedAt = Instant.ofEpochSecond(3_600))
+
+    /** Opens the detail on the device's own copy and lets the opening read land. */
+    private fun openOnto(painted: PostView, fresh: PostView): PostDetailViewModel {
+        seenPosts.saw(painted)
+        answer(fresh)
+        return viewModel().also {
+            it.start("post-1")
+            dispatcher.scheduler.advanceUntilIdle()
+        }
+    }
+
+    @Test
+    fun anEditFoundOnRefreshHoldsTheSnapshotAndOffersTheNewVersion() = runTest(dispatcher) {
+        val vm = openOnto(opened, edited)
+
+        assertThat(vm.state.value.post).isEqualTo(opened)
+        assertThat(vm.state.value.newer).isEqualTo(edited)
+        // The freshest word still reaches the next open.
+        assertThat(seenPosts.lastSeen("post-1")).isEqualTo(edited)
+    }
+
+    @Test
+    fun aTagOrCitationChangeIsHeldTheSameWay() = runTest(dispatcher) {
+        val retagged = opened.copy(topics = listOf(testTopicClaim("rust")))
+        val vm = openOnto(opened, retagged)
+        assertThat(vm.state.value.post).isEqualTo(opened)
+        assertThat(vm.state.value.newer).isEqualTo(retagged)
+    }
+
+    @Test
+    fun tappingTheLineSwapsTheNewestInAndTheLineGoes() = runTest(dispatcher) {
+        val vm = openOnto(opened, edited)
+        vm.swapToNewer()
+        assertThat(vm.state.value.post).isEqualTo(edited)
+        assertThat(vm.state.value.newer).isNull()
+    }
+
+    @Test
+    fun theSameVersionIsTakenSilently() = runTest(dispatcher) {
+        val grown = opened.copy(commentCount = 3)
+        val vm = openOnto(opened, grown)
+        assertThat(vm.state.value.post).isEqualTo(grown)
+        assertThat(vm.state.value.newer).isNull()
+    }
+
+    @Test
+    fun anEditedPostTheDeviceNeverHeldPaintsWithNoLine() = runTest(dispatcher) {
+        answer(edited)
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.post).isEqualTo(edited)
+        assertThat(vm.state.value.newer).isNull()
+    }
+
+    @Test
+    fun theReadersOwnPullLandsOverTheHeldVersion() = runTest(dispatcher) {
+        val vm = openOnto(opened, edited)
+        val twice = edited.copy(updatedAt = Instant.ofEpochSecond(7_200))
+        answer(twice)
+        vm.refresh()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.post).isEqualTo(twice)
+        assertThat(vm.state.value.newer).isNull()
+    }
+
+    // A reply landing asked for a reply, not for the post's newest version.
+    @Test
+    fun aReplysRecountHoldsAnotherVersionLikeAnyRead() = runTest(dispatcher) {
+        val vm = openOnto(opened, opened)
+        answer(edited)
+        vm.recount()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.post).isEqualTo(opened)
+        assertThat(vm.state.value.newer).isEqualTo(edited)
+    }
+
+    // THE LATEST READ ANSWERS: an opening read the reader's pull overtook
+    // lands nothing — never a line offering a version older than the one on
+    // screen.
+    @Test
+    fun noOvertakenReadLandsBehindTheReadersPull() = runTest(dispatcher) {
+        seenPosts.saw(opened)
+        content.firstReadGate = CompletableDeferred()
+        answer(edited)
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val twice = edited.copy(updatedAt = Instant.ofEpochSecond(7_200))
+        answer(twice)
+        vm.refresh()
+        dispatcher.scheduler.advanceUntilIdle()
+        content.firstReadGate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.post).isEqualTo(twice)
+        assertThat(vm.state.value.newer).isNull()
+    }
+
+    @Test
+    fun aFailedReadKeepsTheHeldVersionOnOffer() = runTest(dispatcher) {
+        val vm = openOnto(opened, edited)
+        content.detail = Outcome.Failed(IOException("offline"))
+        vm.recount()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.transportFault).isEqualTo(TransportFault.REFRESH)
+        assertThat(vm.state.value.newer).isEqualTo(edited)
+    }
+
+    // ---- FC-7c · A REDACTION PATCHES THROUGH (PostDetail.md:15) -------------
+
+    @Test
+    fun aRedactionPatchesThroughThePaintedSnapshotAtOnce() = runTest(dispatcher) {
+        val gone = ModeratedField(null, FieldStatus.REDACTED)
+        val removed = edited.copy(title = gone, description = gone, content = gone)
+        val vm = openOnto(opened, removed)
+        assertThat(vm.state.value.post).isEqualTo(removed)
+        assertThat(vm.state.value.newer).isNull()
+    }
+
+    @Test
+    fun aRedactionNeverWaitsBehindTheNewerVersionLine() = runTest(dispatcher) {
+        // ONE PART removed, in the same read as an edit that alone would wait.
+        val picture = MediaAssetView("m1", "https://example.invalid/m1.webp", null, FieldStatus.NORMAL, 1f)
+        val gallery = opened.copy(attachments = listOf(picture, picture.copy(id = "m2")))
+        val partGone = gallery.copy(
+            updatedAt = Instant.ofEpochSecond(3_600),
+            attachments = listOf(picture, picture.copy(id = "m2", status = FieldStatus.REDACTED)),
+        )
+        val vm = openOnto(gallery, partGone)
+        assertThat(vm.state.value.post).isEqualTo(partGone)
+        assertThat(vm.state.value.newer).isNull()
     }
 }
 
