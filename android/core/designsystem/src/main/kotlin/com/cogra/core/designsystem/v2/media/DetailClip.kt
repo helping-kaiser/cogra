@@ -206,11 +206,17 @@ private fun StagedDetailClip(
     )
 }
 
-/** The detail's clip as the one player holds it now — or as not on stage. */
+/**
+ * The detail's clip as the one player holds it now — or, when another clip
+ * has taken the player, as it stood at that swap ([VideoStage.swappedOut]).
+ */
 @OptIn(UnstableApi::class)
 private fun clipNow(url: String): ClipNow {
     val player = VideoStage.holding?.takeIf { it.url == url }?.player
-        ?: return ClipNow(onStage = false, playing = false, positionMs = 0L)
+    if (player == null) {
+        val out = VideoStage.swappedOut?.takeIf { it.url == url }
+        return ClipNow(onStage = false, playing = out?.playing == true, positionMs = out?.positionMs)
+    }
     return ClipNow(
         onStage = true,
         // Told to play and not run out: buffering is still playing, as far as

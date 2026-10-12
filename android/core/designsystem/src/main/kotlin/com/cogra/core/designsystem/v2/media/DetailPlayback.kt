@@ -38,8 +38,10 @@ import androidx.compose.runtime.saveable.listSaver
  *
  * **The clip can be taken while it stands stopped.** A sheet's own stage —
  * the comment thread's — claims the one player for its clip ([VideoStage]),
- * swapping the detail's clip out of it. The position is recorded when the
- * cover rises, so the lifting can claim the clip back where it stood
+ * swapping the detail's clip out of it — in either order with the cover
+ * reaching the detail, so the clip is read as the player holds it or, swapped
+ * out first, as the swap left it ([VideoStage.swappedOut]). The position is
+ * recorded when the cover rises, so the lifting can claim the clip back where it stood
  * ([Command.Reclaim]), whether or not it resumes: a detail whose clip never
  * came back would stand without its transport, which is drawn from a player.
  */
@@ -71,9 +73,12 @@ internal class DetailPlayback private constructor(
             if (next == SurfaceCover.Suspended) suspended = true
             // A second layer over the first changes nothing but the kind.
             if (prev != null) return Command.None
+            // Read wherever the clip stands: the sheet's own stage may have
+            // taken the player for its clip in the frame the sheet rose,
+            // before this — then the swap is what says (ClipNow).
             bindPlays = false
-            standingMs = clip.positionMs.takeIf { clip.onStage }
-            owed = clip.onStage && clip.playing
+            standingMs = clip.positionMs
+            owed = clip.playing
             return if (owed) Command.Pause else Command.None
         }
         val resume = owed && (!suspended || !suppressed())
@@ -161,11 +166,14 @@ internal class DetailPlayback private constructor(
 }
 
 /**
- * The detail's clip as the one player holds it right now.
+ * The detail's clip as the one player holds it right now — or, swapped out
+ * of it, as it stood at the swap ([VideoStage.swappedOut]).
  *
  * @property onStage the player holds this clip — no other clip has been
  *   swapped into it.
- * @property playing it is playing, or about to: told to play and not run out.
- * @property positionMs where it stands.
+ * @property playing it is playing, or about to: told to play and not run out
+ *   — or was, the moment another clip took the player.
+ * @property positionMs where it stands, or stood at the swap; null when
+ *   nothing says.
  */
-internal data class ClipNow(val onStage: Boolean, val playing: Boolean, val positionMs: Long)
+internal data class ClipNow(val onStage: Boolean, val playing: Boolean, val positionMs: Long?)
