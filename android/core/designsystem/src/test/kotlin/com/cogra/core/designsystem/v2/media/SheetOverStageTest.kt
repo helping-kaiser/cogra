@@ -213,21 +213,19 @@ class SheetOverStageTest {
     }
 
     /**
-     * The detail clip is not a stage at all — it composes its player
-     * unconditionally — so no suspension reaches it, and a sheet's clip takes
-     * the player from it by claiming last. When the sheet closes the detail
-     * clip is not handed it back, and the transport, which is drawn from a
-     * player, is gone with it.
+     * THE DETAIL CLIP UNDER THE THREAD'S SHEET (PostDetailVideo.md:41/43). The
+     * detail clip is a stage of its own kind ([DetailPlayback]): the sheet
+     * rising stops it where it is, and the sheet's own stage then takes the
+     * one player for the thread's clip by the law. When the sheet drops, the
+     * detail claims its clip back where it stopped and resumes it — the
+     * transport, which is drawn from a player, back with it.
      *
-     * PINNED AS IT STANDS, NOT AS RULED. The law is drawn now —
-     * PostDetailVideo.md:41-47: a sheet stops the clip where it is, and its
-     * dismissal resumes it where autoplay is allowed — and Android does not
-     * yet keep it: DRIFT, the Android port of the detail stage (the web's
-     * `stage.ts` detail mode), reported by FC-7a rather than built in the
-     * un-pin. When it lands this pin is re-aimed to :41/:43, never deleted.
+     * Re-aimed from FC-7a's pin "a detail clip under the sheet loses the player
+     * and is not handed it back" (the DRIFT the Android detail-stage port
+     * closed): the same scene, now held to the law.
      */
     @Test
-    fun aDetailClipUnderTheSheetLosesThePlayerAndIsNotHandedItBack() {
+    fun aDetailClipUnderTheSheetStopsAndIsHandedBackWhereItStoppedOnDismissal() {
         compose.setContent {
             Surfaces {
                 DetailClip(item = clipItem(DETAIL_P), maxHeight = CLIP)
@@ -236,16 +234,24 @@ class SheetOverStageTest {
         compose.waitForIdle()
         assertHolds(DETAIL_P)
         compose.onNodeWithTag(TRANSPORT_TAG, useUnmergedTree = true).assertExists()
+        val player = checkNotNull(VideoStage.holding?.player)
+        val stopped = compose.runOnIdle {
+            player.seekTo(STOPPED_AT_MS)
+            player.currentPosition
+        }
 
         openSheet()
 
         assertHolds(SHEET_S)
+        assertThat(playingFrames()).containsExactly(trace(SHEET_S))
 
         closeSheet()
 
-        assertThat(VideoStage.holding?.url).isEqualTo(url(SHEET_S))
-        assertThat(VideoStage.holding?.owner).isNull()
-        compose.onNodeWithTag(TRANSPORT_TAG, useUnmergedTree = true).assertDoesNotExist()
+        assertHolds(DETAIL_P)
+        assertThat(VideoStage.holding?.player).isSameInstanceAs(player)
+        assertThat(player.currentPosition).isEqualTo(stopped)
+        assertThat(player.playWhenReady).isTrue()
+        compose.onNodeWithTag(TRANSPORT_TAG, useUnmergedTree = true).assertExists()
     }
 
     private fun showFeedUnderSheet() {
@@ -272,14 +278,19 @@ class SheetOverStageTest {
         scope = rememberCoroutineScope()
         CompositionLocalProvider(LocalDensity provides Density(1f)) {
             Cogra2PreviewTheme {
-                Box(Modifier.size(WIDTH, THREAD_HEIGHT)) {
-                    base()
-                    if (sheetOpen) {
-                        thread = rememberLazyListState()
-                        // Wired as the real thread is: its own hard top re-elects.
-                        ScrollStageHost(thread, hardTopReelects = true) {
-                            LazyColumn(state = thread, modifier = Modifier.size(WIDTH, THREAD_HEIGHT)) {
-                                items(sheetClips, key = { it }) { row -> ScrollStageRow(row) { Clip(row) } }
+                // The detail's layers, as its screen announces them; the
+                // feed's stage takes its suspension as a parameter instead.
+                CoveringLayersHost {
+                    CoversSurface(open = sheetOpen, kind = CoverKind.Suspend)
+                    Box(Modifier.size(WIDTH, THREAD_HEIGHT)) {
+                        base()
+                        if (sheetOpen) {
+                            thread = rememberLazyListState()
+                            // Wired as the real thread is: its own hard top re-elects.
+                            ScrollStageHost(thread, hardTopReelects = true) {
+                                LazyColumn(state = thread, modifier = Modifier.size(WIDTH, THREAD_HEIGHT)) {
+                                    items(sheetClips, key = { it }) { row -> ScrollStageRow(row) { Clip(row) } }
+                                }
                             }
                         }
                     }
@@ -373,5 +384,8 @@ class SheetOverStageTest {
 
         /** A at 50/200, B whole. */
         const val PAST_A = 150f
+
+        /** Where the detail clip stood when the sheet rose — past zero, so starting over shows. */
+        const val STOPPED_AT_MS = 4_000L
     }
 }
