@@ -1235,7 +1235,8 @@ async fn a_comment_on_a_tagged_post_that_does_not_carry_the_tag_is_not_reached(p
 
 /// `@handle <text>` also returns the topics the person tagged their own
 /// content with, matched by name — not a topic only a stranger tagged
-/// their content with, not one they withdrew, not one whose name misses.
+/// their content with, not one they tagged a stranger's content with,
+/// not one they withdrew, not one whose name misses.
 ///
 /// A handle scope returns the topics the person tagged their own content with.
 /// ´claim:search:a-handle-scope-returns-the-tags-they-tagged-with´
@@ -1243,14 +1244,17 @@ async fn a_comment_on_a_tagged_post_that_does_not_carry_the_tag_is_not_reached(p
 async fn a_handle_scoped_query_returns_the_tags_they_tagged_with(pool: PgPool) {
     let rig = rig(pool);
     let sol = person(&rig.pool, "sol", None).await;
-    person(&rig.pool, "kel", None).await;
+    let kel = person(&rig.pool, "kel", None).await;
     let own = minted("sol", 1);
     post_as(&rig.pool, sol, &own, 1, Some("Rubbings")).await;
+    let strangers = minted("kel", 1);
+    post_as(&rig.pool, kel, &strangers, 2, Some("Wax charts")).await;
     claim(&rig.pool, 0, "sol", 10, &own, "saltmaps", 0.7).await;
     claim(&rig.pool, 1, "sol", 11, &own, "salty", 0.7).await;
     claim(&rig.pool, 2, "sol", 12, &own, "salty", 0.0).await;
     claim(&rig.pool, 3, "kel", 10, &own, "saltpans", 0.7).await;
     claim(&rig.pool, 4, "sol", 13, &own, "tides", 0.7).await;
+    claim(&rig.pool, 5, "sol", 14, &strangers, "saltflats", 0.7).await;
     tag(&rig.pool, "saltmarsh").await;
 
     let found = scoped(&rig, None, json!({ "query": "@sol salt" })).await;
