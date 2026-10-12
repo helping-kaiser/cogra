@@ -92,6 +92,7 @@ export const KEY_RULES = {
   frame: "the picture's position in the post's media, counted from 1 (MediaGallery)",
   group: "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
   link: "the invite link's id, the link's last path segment (Invites' live links)",
+  notification: "the notification's position in the list, newest first, counted from 1 (Notifications)",
   profileCard: "the person's handle, without @ (the profile feed card)",
   recent: "the recent query's words, lowercased, each run of other characters one -, none leading or trailing (Explore's recents)",
   release: "the release's version, lowercased, each run of other characters one - (What's new's release cards)",

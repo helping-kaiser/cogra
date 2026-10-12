@@ -11,15 +11,22 @@
 
    NO ACTION BUTTON. `EmptyState` takes the one action that fills the list where
    there is one, and nothing the reader can do from here fills this one — it
-   fills when somebody else acts. */
+   fills when somebody else acts.
+
+   REGISTERED under the `notifications` prefix (round 7), named as `Saved`'s
+   empty state is. */
+export const NODE = "notifications";
 export function Screen() {
   return (
     <>
-      <PageHeader title="Notifications" backHref="#" backLabel="Back to feed" />
+      <PageHeader title="Notifications" backHref="#" backLabel="Back to feed" node="header" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 24px" }}>
-        <EmptyState title="Nothing here yet. Comments, replies, citations, mentions and opinions on you arrive here as they happen, along with what becomes of your invites and your own application." />
+        <EmptyState
+          title="Nothing here yet. Comments, replies, citations, mentions and opinions on you arrive here as they happen, along with what becomes of your invites and your own application."
+          node="empty"
+        />
       </div>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }
