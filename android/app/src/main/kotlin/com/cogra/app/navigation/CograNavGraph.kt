@@ -53,6 +53,7 @@ import com.cogra.app.ui.SecurityNoticeHost
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.LocalSnackbarHostState
+import com.cogra.core.designsystem.v2.media.LocalAlwaysUnveil
 import com.cogra.core.designsystem.StanceAxes
 import com.cogra.core.designsystem.StanceZeroWords
 import com.cogra.core.designsystem.v2.token.NavTransitions
@@ -409,7 +410,14 @@ fun CograNavGraph(
     navController: NavHostController = rememberNavController(),
     shellSnackbar: SnackbarHostState = remember { SnackbarHostState() },
 ) {
-    CompositionLocalProvider(LocalSnackbarHostState provides shellSnackbar) {
+    // The account's sensitive-content choice reaches every veil from here
+    // (`AccountPreferences.kt`; `SensitiveVeil.kt`'s [LocalAlwaysUnveil]).
+    val preferences: AccountPreferencesViewModel = hiltViewModel()
+    val alwaysUnveil by preferences.alwaysUnveil.collectAsStateWithLifecycle()
+    CompositionLocalProvider(
+        LocalSnackbarHostState provides shellSnackbar,
+        LocalAlwaysUnveil provides alwaysUnveil,
+    ) {
         CograNavGraphContent(navController, shellSnackbar)
     }
 }

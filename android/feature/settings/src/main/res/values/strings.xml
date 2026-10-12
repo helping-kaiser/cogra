@@ -59,6 +59,11 @@
     <string name="settings_people_hidden_none">None</string>
     <string name="settings_people_footnote">Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking.</string>
 
+    <string name="settings_sensitive">Sensitive content</string>
+    <string name="settings_sensitive_unveil">Always unveil sensitive content</string>
+    <string name="settings_sensitive_unveil_off">Off, the veil stays until you tap it.</string>
+    <string name="settings_sensitive_footnote">This choice follows your account to every device.</string>
+
     <string name="settings_backup">Key backup</string>
     <string name="settings_backup_recovery">Recovery code</string>
     <string name="settings_backup_recovery_made">Last created %1$s</string>

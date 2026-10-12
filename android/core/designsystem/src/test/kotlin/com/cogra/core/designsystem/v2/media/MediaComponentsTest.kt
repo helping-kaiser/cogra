@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -136,6 +137,67 @@ class MediaComponentsTest {
         }
 
         compose.onNodeWithText("the plain body").assertIsDisplayed()
+        compose.onNodeWithTag("veil_reveal").assertDoesNotExist()
+    }
+
+    // ---- The account's choice (settings packet §3.1a) -------------------
+
+    /** veiled = sensitive AND the account does not always unveil — both faces. */
+    @Test
+    fun `unveil_on_shows_sensitive_content_unveiled_wherever_the_account_reads`() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                CompositionLocalProvider(LocalAlwaysUnveil provides true) {
+                    Column {
+                        SensitiveVeil(veiled = true, onReveal = {}, testTag = "post") { Text("the post body") }
+                        SensitiveVeilCompact(veiled = true, onReveal = {}, testTag = "comment") {
+                            Text("the comment body")
+                        }
+                        // A clip under an unveiled body is back in its stage's rotation.
+                        SensitiveVeil(veiled = true, onReveal = {}) { Text("stage veiled: ${LocalStageVeil.current}") }
+                    }
+                }
+            }
+        }
+
+        compose.onNodeWithText("the post body").assertIsDisplayed()
+        compose.onNodeWithText("the comment body").assertIsDisplayed()
+        compose.onNodeWithTag("post_reveal").assertDoesNotExist()
+        compose.onNodeWithText("stage veiled: false").assertExists()
+    }
+
+    @Test
+    fun `unveil_off_keeps_the_veil_until_tapped`() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                // The default: a guest, a signed-out reader, an account that never chose.
+                Column {
+                    SensitiveVeil(veiled = true, onReveal = {}, testTag = "post") { body("the post body")() }
+                    SensitiveVeilCompact(veiled = true, onReveal = {}, testTag = "comment") {
+                        Text("the comment body")
+                    }
+                }
+            }
+        }
+
+        compose.onNodeWithTag("post_reveal").assertIsDisplayed()
+        compose.onNodeWithText("the post body").assertDoesNotExist()
+        compose.onNodeWithText("the comment body").assertDoesNotExist()
+    }
+
+    @Test
+    fun theAccountsChoiceAnswersAMountedVeilAtOnce() {
+        var unveil by mutableStateOf(false)
+        compose.setContent {
+            Cogra2PreviewTheme {
+                CompositionLocalProvider(LocalAlwaysUnveil provides unveil) {
+                    SensitiveVeil(veiled = true, onReveal = {}, testTag = "veil") { body("the secret body")() }
+                }
+            }
+        }
+        compose.onNodeWithTag("veil_reveal").assertIsDisplayed()
+        unveil = true
+        compose.onNodeWithText("the secret body").assertIsDisplayed()
         compose.onNodeWithTag("veil_reveal").assertDoesNotExist()
     }
 

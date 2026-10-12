@@ -56,6 +56,8 @@ data class SettingsAccount(
     /** Null reads as public domain (api-spec.md `UserPreferences`). */
     val defaultLicense: LicenseChoice?,
     val sessions: List<SessionInfo>,
+    /** The sensitive-content threshold: 0 unveils, null or 1–10 keeps the veil ([unveilsSensitive]). */
+    val contentFilteringSeverityLevel: Int? = null,
 )
 
 /** Where a new-address link's change stands, read without a session. */
@@ -102,4 +104,11 @@ interface SettingsRepository {
 
     /** Null for any token that names no change. */
     suspend fun emailChangeLinkCheck(token: String): Outcome<EmailChangeLinkCheck?>
+
+    /**
+     * Saves Settings' `Always unveil sensitive content` on the account: on
+     * writes the threshold 0, off the explicit null that restores the veil.
+     * Returns the level the account now holds.
+     */
+    suspend fun setAlwaysUnveil(on: Boolean): Outcome<Int?>
 }
