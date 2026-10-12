@@ -2454,20 +2454,37 @@ only plaintext bodies are searchable there — encrypted content
 never is, since the backend only ever holds ciphertext
 ([chats.md §7](../instances/chats.md#7-encryption-as-the-privacy-mechanism)).
 
-**Scoped queries serve the indirect kinds.** A query carrying a
-scope operator (`@handle <text>`, `#tag <text>`) also returns the
-scoped author's comments, chat messages and offers, matched
-through the indexed fields alone: the remainder is matched against
-the names and titles of the acts' targets — a comment through its
-post's title, a message through its chat's name, an offer through
-its item's name — joined through authorship. No body index exists;
-the join runs against the same global index above. A scoped
-message result reaches any plaintext chat regardless of the
-viewer's membership — chats are public reads (the design record:
-readme §13, "The indirect kinds are scope-served"). An indirect
-result carries no extra field: it is a Comment (in the MVP's kind
-set), and the target it was found through is its own
-`Comment.target`; the scope is the caller's own query.
+**Scoped queries serve the indirect kinds.** A query starting with
+a scope operator and carrying text after it searches inside the
+scope. `@handle <text>` searches one person's work: their posts by
+title; their comments, chat messages and offers, matched through
+the indexed fields alone — the remainder is matched against the
+names and titles of the acts' targets, a comment through the title
+of the post its thread answers (a reply through its thread's root
+post), a message through its chat's name, an offer through its
+item's name, joined through authorship; and the Hashtags they
+tagged their own content with, by name. It returns no User row for
+the person it names. `#tag <text>` searches what carries the tag —
+the posts and comments whose own author's current claim names it,
+the tag page's own set
+([hashtag.md §4](../instances/hashtag.md#4-the-current-topics-fold)),
+the viewer's own in-flight claims included — the remainder matched
+against a carried post's title or a carried comment's thread root's
+title. No body index exists; every join runs against the same
+global index above. A scoped message result reaches any plaintext
+chat regardless of the viewer's membership — chats are public reads
+(the design record: readme §13, "The indirect kinds are
+scope-served"). An indirect result carries no extra field: it is a
+Comment, or a Hashtag reached through the scoped person's tags (in
+the MVP's kind set); the title a comment was found through is its
+thread root's, reached through `Comment.target`, and the scope is
+the caller's own query.
+
+**A bare scope is a lookup.** A scope operator with nothing after
+it (`@sol`, `#salt`) proposes Users whose handle, or Hashtags whose
+name, starts with what was typed — the exact name first — and lists
+no content: the remainder is what makes a query a content search.
+A handle or tag that names no one reads empty, never an error.
 
 `includeSeen` defaults to `true`, which keeps the anonymous read
 stable; the client passes the reader's "Show what you've already
