@@ -1170,11 +1170,20 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Choose your opinion on this post</button>", tag: "button" },
     { n: 5, find: 'aria-label="2 comments"', tag: "button" },
     { n: 6, find: 'aria-label="Share this post"', tag: "button" },
-    { n: 7, find: ">Feed score</span>", tag: "button" },
+    // The score door is drawn once per face the `state` chip shows (the
+    // figure, settling's bare glyph, the dash): one door, one number.
+    { n: 7, find: ">Feed score</span>", tag: "button", all: true },
     { n: 8, find: ">More</button>", tag: "button" },
     { n: 9, find: 'alt="A man standing at the edge', tag: "img" },
     { n: 10, find: 'aria-label="Seek"', tag: "div" },
     ...nav(11),
+    // The slice-3 round's faces (jakob 2026-10-12): the card's play disc under
+    // suppressed autoplay, the face's row line's Retry beside it (the rail
+    // comes before the caption, so the first bare Retry is the face's), and
+    // the load-more fault's Retry at the caption's head.
+    { n: 16, find: 'aria-label="Play this video"', tag: "button" },
+    { n: 17, find: ">Retry</button>", tag: "button" },
+    { n: 18, find: 'aria-label="Retry loading more"', tag: "button" },
   ],
   ReelSensitive: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "button" },
@@ -1203,6 +1212,8 @@ Object.assign(FLOW_MARKERS, {
     ...nav(10),
     { n: 15, find: 'opinions on this post</span>', tag: "button" },
     { n: 16, find: '<span>Cited by ', tag: "button" },
+    // The edited-while-you-read line (the `read` chip's `changed`, 2026-10-12).
+    { n: 17, find: ">Edited since you opened it", tag: "button" },
   ],
   // The detail a moment after Hide @ada (ruling 65): `PostDetail`'s numbers,
   // to the number, on the post the menu's board draws — which carries no

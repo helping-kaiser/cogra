@@ -1,8 +1,8 @@
 /**
  * The clip at the top of a video post's detail view — and what the stream's
- * squish morph leaves behind: the clip shrinks out of the stream to the top of
- * the screen, still playing, and the post rises beneath it (readme §13, the
- * reel round).
+ * squish morph leaves behind: the clip shrinks out of the stream to the head of
+ * the post's detail, still playing, and the post rises beneath it (readme §13,
+ * the reel round).
  *
  * It sits ABOVE the card, not inside it, which is why the author chip leads the
  * card on that surface rather than the screen. It is content and scrolls with

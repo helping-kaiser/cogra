@@ -23,15 +23,25 @@
    neither folded into the other: the references count is the tags-and-
    references sheet's length and stays exactly that.
 
+   THE DETAIL HOLDS WHAT WAS OPENED (jakob 2026-10-09, seam 120; the
+   `read` chip's `changed`, 2026-10-12). When a fresh read finds the post — or
+   its tags or citations — changed since the detail opened, one line stands
+   between the header and the post, `Edited since you opened it — tap for the
+   newest version.`, and the tap swaps the newest in place. A redaction never
+   waits behind it.
+
    A CALIBRATION SCREEN (design ⇄ impl seam 002): `NODE` registers the board,
    so its named elements carry `postDetail.…` data-node paths into the built
-   board and `nodes.json`. */
+   board and `nodes.json`. The line is `newerVersion`. */
 export const NODE = "postDetail";
+export const PROPS = { read: { editor: "enum", options: ["as-opened", "changed"], default: "as-opened" } };
+export const VALS = `newerVersion: this.props.read === "changed" ? "block" : "none"`;
 export function Screen() {
   return (
     <>
       <DetailHeader items={READER_POST_MENU} node="header" />
       <DetailColumn>
+        <EditedSinceLine node="newerVersion" display="{{newerVersion}}" />
         <PostCard
           {...MIRA_GALLERY_POST}
           variant="detail"

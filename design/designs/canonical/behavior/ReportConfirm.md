@@ -12,6 +12,8 @@ WHEN tap postDetail.reportSheet.report -> the sheet closes AND the report goes o
 
 WHEN tap postDetail.reportSheet.report GIVEN no answer reaches the device -> the sheet stays AND the snackbar reads That didn't send. Try again.
 
+WHEN tap postDetail.reportSheet.report GIVEN the report is refused, the day's reports spent or the thing gone -> the sheet stays AND the snackbar reads That didn't send. Try again. AND NEVER the snackbar reads Reported.
+
 WHEN tap postDetail.reportSheet.cancel -> the sheet closes AND NEVER anything is sent
 
 WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND NEVER anything is sent

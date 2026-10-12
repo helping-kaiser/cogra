@@ -1,12 +1,14 @@
 # ViewerLandscape · `spec:design:behavior-viewer-landscape`
 
-ALWAYS the clip takes the screen's whole height and stands whole, never cut to the edges
+ALWAYS the clip takes the screen's whole height below the system status bar and stands whole, never cut to the edges
 
 ALWAYS a clip whose shape is not the screen's leaves black ground at its sides
 
 ALWAYS the chrome is the upright viewer's own, nothing added and nothing taken away
 
 ALWAYS the transport's bar stays held clear of the screen's bottom edge
+
+ALWAYS the viewer's black ends below the system status bar, which stays the system's, its strip never painted black or any colour by the viewer
 
 WHEN tap play or pause -> the clip stops or starts where it is
 

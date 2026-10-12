@@ -38,6 +38,10 @@ WHEN tap Always unveil sensitive content GIVEN the switch is off -> the switch t
 
 WHEN tap Always unveil sensitive content GIVEN the switch is on -> the switch turns off AND sensitive content stays veiled until it is tapped
 
+ALWAYS settings.sensitive.unveil.status reads Off, the veil stays until you tap it. GIVEN the switch is off
+
+ALWAYS settings.sensitive.unveil.status reads On, sensitive content stands unveiled wherever you read. GIVEN the switch is on
+
 ALWAYS the Sensitive content choice follows the account, never this device alone
 
 ALWAYS the Hidden accounts row reads the bare count of hidden accounts GIVEN at least one account is hidden

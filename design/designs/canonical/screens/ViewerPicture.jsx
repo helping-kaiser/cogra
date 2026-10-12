@@ -5,7 +5,8 @@
    IT IS THE WHOLE SCREEN, ON BLACK, WITH NOTHING BEHIND IT. Not a scrim over
    the post — a viewer you can still read a card through is not full screen, and
    the black ground is what makes the frame's own edges the only edges on the
-   surface.
+   surface. The black ends below the system status bar, whose strip is never
+   the app's to paint (seam 117); the board is the inset-zero case.
 
    THE FRAME IS NEVER CUT HERE. This is the surface every crop in the product
    exists against — the post's one crop shape, the 4:5 cap, a portrait clip's

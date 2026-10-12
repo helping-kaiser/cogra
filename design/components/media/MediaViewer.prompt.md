@@ -10,6 +10,7 @@ Reach for it from a post's **detail** view, where tapping media opens it. Never 
 
 What holds:
 
+- **The black stops at the status bar.** The viewer is the whole screen below the system status bar; that strip is the system's and the viewer never paints it, black or otherwise.
 - **The frame is never cropped here.** `contain`, centred, as large as the viewport allows. The 4:5 clamp, a gallery crop, and a portrait clip's centre-crop are all card-layout devices; this view exists so none of them loses anything.
 - **It is dismissed, not navigated away from.** The X, a swipe **down** and Android's Back — Escape on a keyboard — close it everywhere, and the route never changes: the reader lands back exactly where they were. **Where a backdrop is visible** — a wide screen — **a tap on it closes the viewer too** (jakob 2026-10-02); a tap on the frame never does, and on a phone neither does one on the ground beside it. The X rather than a back arrow: this is a layer being closed, not a step of a journey being walked.
 - **The gestures are the platform photo viewer's** (readme §4, *Sheets*). Double tap toggles zoom, capped at about 4×; while zoomed, a pan wins over paging and dismissal; zoom resets on paging. The swipe down drags the frame with the black fading, closes past about **20 %** of the screen's height or on a fling, and otherwise snaps back; under reduced motion the close is plain. (A sheet's threshold is its own, 25 % — two numbers, stated apart.)

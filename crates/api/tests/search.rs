@@ -3,12 +3,13 @@
 //! query matches it, the order and the keyset over it, the kind and
 //! seen-list filters, and the three refusals.
 //!
-//! Content is seeded through the store's own writers, which keep the
-//! index current, so the authoring instants — the recency key — are
-//! chosen by the test. Two states have no writer yet and are seeded
-//! around one: a redaction (the moderation slice writes it) is a raw
-//! tombstone followed by the store's refresh, and the seen-list
-//! (`markSeen` is History's) is a raw `user_view_log` row.
+//! Content is seeded through the store's own writers, so the authoring
+//! instants — the recency key — are chosen by the test; the database's
+//! trigger keeps the index current behind every writer. Two states have
+//! no writer yet and are seeded by raw SQL, which the trigger follows
+//! like any other write: a redaction (the moderation slice writes it) is
+//! a raw tombstone, and the seen-list (`markSeen` is History's) is a raw
+//! `user_view_log` row.
 
 mod rig;
 
@@ -16,7 +17,7 @@ use api::ratelimit::RateLimitConfig;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use postgres_store::content::{self, LandingOrder};
-use postgres_store::{genesis, hashtag, search as search_store};
+use postgres_store::{genesis, hashtag};
 use rig::WireRig;
 use serde_json::{Value, json};
 use sqlx::PgPool;
@@ -365,11 +366,6 @@ async fn a_redacted_handle_never_matches_redacted(pool: PgPool) {
         .execute(&rig.pool)
         .await
         .expect("sentinel");
-    let mut conn = rig.pool.acquire().await.expect("conn");
-    search_store::refresh_actors(&mut conn, &[sol])
-        .await
-        .expect("refresh");
-    drop(conn);
 
     for typed in ["redacted", "sol", "brine", &sol.to_string()] {
         let found = search(&rig, None, json!({ "query": typed })).await;
@@ -399,11 +395,6 @@ async fn a_removed_posts_title_never_matches(pool: PgPool) {
     .execute(&rig.pool)
     .await
     .expect("tombstone");
-    let mut conn = rig.pool.acquire().await.expect("conn");
-    search_store::refresh_posts(&mut conn, &[id])
-        .await
-        .expect("refresh");
-    drop(conn);
 
     for typed in ["salt", "removed"] {
         let found = search(&rig, None, json!({ "query": typed })).await;
@@ -804,11 +795,6 @@ async fn the_finder_offers_a_person_by_handle_prefix(pool: PgPool) {
         .execute(&rig.pool)
         .await
         .expect("keyless");
-    let mut conn = rig.pool.acquire().await.expect("conn");
-    search_store::refresh_actors(&mut conn, &[keyless])
-        .await
-        .expect("refresh");
-    drop(conn);
     let searched = search(&rig, None, json!({ "query": "sol" })).await;
     assert_eq!(names(&searched).len(), 2);
 

@@ -12,6 +12,9 @@ import { useGlobalMute, PagerDots } from "./MediaAttachment.jsx";
    · IT IS THE WHOLE SURFACE, on BLACK, with nothing behind it. Not a scrim over
      the post: a viewer you can still read a card through is not full screen, and
      the ground has to be black so the frame's own edges are the only edges.
+     The black ends below the system status bar and never paints its strip —
+     the status bar is not the app's (jakob 2026-10-09); a board drawing
+     `inset: 0` is the inset-zero case.
    · The frame is never cut here. `contain`, centred, as large as the surface
      allows — a viewer that crops is not a viewer. This is the surface the feed
      card's 4:5 clamp exists against: whatever a card crops, the viewer restores.
