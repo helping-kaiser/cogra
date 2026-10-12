@@ -97,7 +97,15 @@
 
    THE LAST BUTTON READS `Start reading` — sentence case, the reader's own next
    act, and never "Done" or "Finish", which name the tour instead of the
-   product. */
+   product.
+
+   REGISTERED under the `onboarding` prefix (round 7). The frame names its own
+   parts (`IntroFrame`); this board names the stage's labelled pieces — the
+   inviter's face `inviter` (the face the client personalizes) with its
+   caption `inviterCaption`, and the reader's dot `you` with its dashed ring
+   `youRing` and its caption `youCaption` — and the applicant line `note`. The other members' dots and
+   every edge are the drawing, unnamed, as a scrim is. */
+export const NODE = "onboarding";
 
 const STAGE = { width: 342, height: 470 };
 
@@ -182,7 +190,7 @@ export function Screen() {
       lines={["You are here because @mira invited you. Her link is your first way in to everyone else, and theirs to you."]}
       note={
         <div style={{ paddingTop: 12 }}>
-          <QuietNote>A friend who's already in has to let you in. Ask around once you have verified your email.</QuietNote>
+          <QuietNote node="note">A friend who's already in has to let you in. Ask around once you have verified your email.</QuietNote>
         </div>
       }
     >
@@ -265,8 +273,10 @@ export function Screen() {
           />
         ))}
 
-        <IntroFace x={MIRA_AT.x} y={MIRA_AT.y} size={64} name="Mira Voss" src="inviter.jpg" />
-        <IntroCaption x={252} y={316}>@mira</IntroCaption>
+        <IntroFace x={MIRA_AT.x} y={MIRA_AT.y} size={64} name="Mira Voss" src="inviter.jpg" node="inviter" />
+        <IntroCaption x={252} y={316} node="inviterCaption">
+          @mira
+        </IntroCaption>
 
         <span
           aria-hidden="true"
@@ -280,6 +290,7 @@ export function Screen() {
             borderRadius: "var(--radius-full)",
             border: "1px dashed var(--border-field)",
           }}
+          data-node="youRing"
         />
         <span
           aria-hidden="true"
@@ -292,8 +303,11 @@ export function Screen() {
             borderRadius: "var(--radius-full)",
             background: "var(--primary)",
           }}
+          data-node="you"
         />
-        <IntroCaption x={252} y={426}>you</IntroCaption>
+        <IntroCaption x={252} y={426} node="youCaption">
+          you
+        </IntroCaption>
       </IntroStage>
     </IntroFrame>
   );

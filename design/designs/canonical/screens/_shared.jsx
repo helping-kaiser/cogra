@@ -4976,12 +4976,13 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
             action={
               approving ? (
                 <StanceControl
+                  node="stance"
                   targetLabel="@rafa"
                   helpLabel="How vouching works"
                   help={HOW_VOUCHING_WORKS_HELP}
                   defaultOpen
                   defaultPick={{ pDirected: 0.1, pInterest: 0.1 }}
-                  padNote={<ApprovePadNote handle="@rafa" />}
+                  padNote={<ApprovePadNote handle="@rafa" node="note" />}
                 />
               ) : (
                 <CloseApplication handle="@rafa" node="close" />
@@ -5118,12 +5119,17 @@ function NewInviteSheet() {
    Back walks the cards back, card 1 leaving the way Skip does. The seen flag
    sets on the first show (B6), so an interrupted intro never returns by
    itself; Settings' `Watch the intro again` re-opens it, and from there Skip
-   and `Start reading` land back on Settings (V4). */
+   and `Start reading` land back on Settings (V4).
+
+   The frame's names are the `onboarding` prefix's (round 7): `skip`, `title`,
+   `body`, `dots`, `next`, and `stage` for the illustration, whose labelled
+   pieces its board names; every board this frame stands on that is not
+   registered renders them stripped. */
 const INTRO_STEPS = 5;
 
 function IntroDots({ step }) {
   return (
-    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, padding: "20px 0 16px" }}>
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, padding: "20px 0 16px" }} data-node="dots">
       <span style={SR_ONLY}>{`Step ${step} of ${INTRO_STEPS}`}</span>
       {Array.from({ length: INTRO_STEPS }, (_, index) => (
         <span
@@ -5145,7 +5151,9 @@ function IntroFrame({ step, headline, lines, note = null, cta = "Next", children
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ flex: "none", display: "flex", justifyContent: "flex-end", padding: "8px 12px 0" }}>
-        <Button variant="text">Skip</Button>
+        <Button variant="text" node="skip">
+          Skip
+        </Button>
       </div>
       <div style={{ flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px" }}>
         {children}
@@ -5158,6 +5166,7 @@ function IntroFrame({ step, headline, lines, note = null, cta = "Next", children
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           {headline}
         </h1>
@@ -5171,13 +5180,16 @@ function IntroFrame({ step, headline, lines, note = null, cta = "Next", children
               letterSpacing: "var(--text-body-medium--letter-spacing)",
               color: "var(--text-secondary)",
             }}
+            data-node="body"
           >
             {line}
           </p>
         ))}
         {note}
         <IntroDots step={step} />
-        <Button style={{ width: "100%" }}>{cta}</Button>
+        <Button style={{ width: "100%" }} node="next">
+          {cta}
+        </Button>
       </div>
     </div>
   );
@@ -5189,7 +5201,9 @@ function IntroFrame({ step, headline, lines, note = null, cta = "Next", children
    a different text size. */
 function IntroStage({ width = 342, height = 300, children }) {
   return (
-    <div style={{ position: "relative", width, height, flex: "none" }}>{children}</div>
+    <div style={{ position: "relative", width, height, flex: "none" }} data-node="stage">
+      {children}
+    </div>
   );
 }
 
@@ -5209,9 +5223,10 @@ function IntroLines({ width = 342, height = 300, children }) {
 
 /* A node's caption — the word under a face, `label-small` and quiet, so the
    drawing says who each dot is without a legend beside it. */
-function IntroCaption({ children, x, y, width = 88 }) {
+function IntroCaption({ children, x, y, width = 88, node }) {
   return (
     <span
+      data-node={node}
       style={{
         position: "absolute",
         left: x - width / 2,
@@ -5230,10 +5245,10 @@ function IntroCaption({ children, x, y, width = 88 }) {
 }
 
 /* A face on the stage, centred on (x, y) — the real avatar, placed. */
-function IntroFace({ x, y, size = 44, name, src }) {
+function IntroFace({ x, y, size = 44, name, src, node }) {
   return (
     <span style={{ position: "absolute", left: x - size / 2, top: y - size / 2, display: "block" }}>
-      <MonogramAvatar name={name} size={size} src={src} />
+      <MonogramAvatar name={name} size={size} src={src} node={node} />
     </span>
   );
 }

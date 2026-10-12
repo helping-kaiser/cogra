@@ -41,7 +41,14 @@
    THE NOTE IS NOT COACHING. `VouchBackPad`'s lines teach a gesture once;
    these two state what Set does, every time, because approving is rare and
    because §3's honesty rule wants anything priced to say so before it is
-   signed. */
+   signed.
+
+   REGISTERED under the `invites` prefix (round 7), the page named as
+   `Invites` names it. The ready row's anchor is `stance`, and the open pad
+   carries `StanceControl`'s pad anatomy under `invites.application.stance.pad`,
+   the approval's two lines as its `note` — `VouchAskPad`'s names for the same
+   pad; the wash stays unnamed, as it does there. */
+export const NODE = "invites";
 export function Screen() {
   return (
     <>
