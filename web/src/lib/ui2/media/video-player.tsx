@@ -71,6 +71,7 @@
 import {
   useCallback,
   useEffect,
+  useEffectEvent,
   useLayoutEffect,
   useRef,
   useState,
@@ -150,6 +151,7 @@ function Player({
   mediaId,
   carry = false,
   handedOver = false,
+  openOnLandscape = false,
 }: {
   src: string;
   /**
@@ -225,6 +227,16 @@ function Player({
    * reveal tap intact and still gives the clip its own route in.
    */
   onOpenViewer?: () => void;
+  /**
+   * The phone TURNING to landscape opens the viewer too: "WHEN the phone turns
+   * to landscape GIVEN the detail holds a landscape clip -> the fullscreen
+   * viewer opens on the clip, filling the turned screen"
+   * (PostDetailVideo.md:63). The caller says whether its clip is one; the
+   * turn is the Screen Orientation API's `change` event — the device's own
+   * rotation, which a desktop window being resized never fires
+   * (https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/change_event).
+   */
+  openOnLandscape?: boolean;
   /**
    * Whether this player reaches the edges of the SCREEN rather than sitting in
    * a frame on the page.
@@ -353,6 +365,23 @@ function Player({
           }
           onOpenViewer();
         };
+
+  // THE TURN TO LANDSCAPE (PostDetailVideo.md:63) takes the same way in as
+  // the toggle and the tap, handing the clip over first. Read through an
+  // effect event (react.dev, `useEffectEvent`): the subscription lives as
+  // long as the clip may open, and always opens with the latest hand-over.
+  const turnedToLandscape = useEffectEvent((type: string) => {
+    if (type.startsWith("landscape")) openViewer?.();
+  });
+  const opensViewer = onOpenViewer !== undefined;
+  useEffect(() => {
+    if (!openOnLandscape || handedOver || !opensViewer) return;
+    const orientation = typeof screen === "undefined" ? undefined : screen.orientation;
+    if (orientation === undefined || orientation === null) return;
+    const onChange = () => turnedToLandscape(orientation.type);
+    orientation.addEventListener("change", onChange);
+    return () => orientation.removeEventListener("change", onChange);
+  }, [openOnLandscape, handedOver, opensViewer]);
 
   // WHAT THE ELEMENT SAYS, AS THE CONTROLS HEAR IT. The element's listeners
   // are added by hand (the element is not React's), so the current render's

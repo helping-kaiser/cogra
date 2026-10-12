@@ -122,6 +122,12 @@ export function DetailClip({
           durationMs={durationMs}
           mediaId={mediaId}
           handedOver={behindViewer}
+          // "WHEN the phone turns to landscape GIVEN the detail holds a
+          // landscape clip -> the fullscreen viewer opens on the clip"
+          // (PostDetailVideo.md:63) — a clip wider than tall, by the ratio the
+          // server probed. Never under the veil: nothing of a veiled clip
+          // plays, and the viewer would show it bare.
+          openOnLandscape={!veiled && (sourceRatio ?? 0) > 1}
           // On its stage: the detail stage starts it on the open, where the
           // device allows (PostDetailVideo.md:7/9). `VideoPlayer` itself
           // refuses the claim while veiled either way.

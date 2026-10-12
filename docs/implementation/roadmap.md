@@ -602,9 +602,9 @@ from the media path and carrying their own doc write-back:
   this product refuses — and the no-AI-in-ranking rule has no
   exception for a surface that is fun. Nothing labels the stream: the
   **Post Score on the rail** is what says whose feed it is, and it is
-  also the door to the post — the clip pins to the top of the screen,
-  still playing, and the body rises beneath it. The rail is author ·
-  stance · comments · share · score; the stream carries sound and a
+  also the door to the post — the clip shrinks to the head of the
+  post's detail, still playing, and the body rises beneath it. The
+  rail is author · stance · comments · share · score; the stream carries sound and a
   drag-to-seek line, never the full transport; guest and key-absent
   gate exactly as the feed does.
 - **Unhide topic follow** — the follow/unfollow control, backend-
