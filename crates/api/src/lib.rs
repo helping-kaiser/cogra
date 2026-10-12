@@ -202,6 +202,13 @@ fn is_query(request: &mut async_graphql::Request) -> bool {
 /// material (pinned by `no_query_reaches_session_material`), and a
 /// mutation is never compressed whatever it returns. The feed answer —
 /// the bytes the obligation exists for — is a query.
+///
+/// What a query does return to its own viewer (an email address, say)
+/// stays out of reach for a second reason: the attack needs the victim's
+/// client to send many authenticated requests carrying the attacker's
+/// guesses, and this api takes credentials from the `Authorization`
+/// header alone — never a cookie — so no other origin can make a browser
+/// send an authenticated request at all.
 fn not_marked_never(_: StatusCode, _: Version, _: &HeaderMap, ext: &Extensions) -> bool {
     ext.get::<NeverCompress>().is_none()
 }
