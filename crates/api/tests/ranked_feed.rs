@@ -1000,10 +1000,6 @@ async fn slice_for_an_unknown_viewer_reads_null(pool: PgPool) {
     assert!(full_slice(&rig, f.viewer).await.is_object());
 }
 
-// ---------------------------------------------------------------------
-// The relay: `feedRanking` against the stub ranker pod (RF-2).
-// ---------------------------------------------------------------------
-
 /// The client's whole selection (ranked-feed-api §12).
 const RANKING: &str = r#"query($viewer: UUID!, $asOf: Int, $filter: FeedRankFilter) {
   feedRanking(viewer: $viewer, asOfEpoch: $asOf, filter: $filter) {
@@ -2450,10 +2446,6 @@ async fn the_relay_completes_with_a_one_connection_pool(pool: PgPool) {
     assert_eq!(ids_of(&answer["entries"]), vec![f.post]);
     assert_eq!(pod.requests().len(), 1);
 }
-
-// ---------------------------------------------------------------------
-// The wire: compression and its BREACH posture (§4.13).
-// ---------------------------------------------------------------------
 
 /// One raw POST to `/graphql`: (status, headers, body bytes as sent).
 async fn post_graphql(

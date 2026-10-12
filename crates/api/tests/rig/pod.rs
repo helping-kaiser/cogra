@@ -95,13 +95,14 @@ impl StubPod {
     }
 }
 
+/// The pod's one route. A fixture without its own epoch ranks at the pin
+/// it was asked for, as the real pod does; one that names an epoch keeps
+/// it.
 async fn answer(State(pod): State<Pod>, Json(request): Json<Value>) -> Json<Value> {
     let viewer = request["variables"]["viewer"].clone();
     let pin = request["variables"]["asOfEpoch"].clone();
     pod.requests.lock().expect("requests").push(request);
     let mode = pod.mode.lock().expect("mode").clone();
-    // A fixture without its own epoch ranks at the pin it was asked for,
-    // as the real pod does; one that names an epoch keeps it.
     let pinned = |mut rank: Value| {
         if rank.get("asOfEpoch").is_none() {
             rank["asOfEpoch"] = pin.clone();

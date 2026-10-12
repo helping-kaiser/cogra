@@ -677,7 +677,9 @@ pub async fn feed_ranking(
 ///
 /// Only Posts and Comments can settle in a feed: a Type never pends, and
 /// a Profile pends only under its Registration, which an applicant
-/// carries — held, author-only, never a candidate.
+/// carries — held, author-only, never a candidate. A topic no Type carries
+/// admits no candidate; the pod answers the landed side of the same
+/// unknown topic.
 async fn settling_candidates(
     pool: &PgPool,
     kinds: &[NodeKind],
@@ -703,8 +705,6 @@ async fn settling_candidates(
             .next()
         {
             Some((_, name)) => Some(NodeId::name(&name).map_err(storage)?.to_string()),
-            // A topic no Type carries admits no settling candidate; the
-            // pod answers the landed side of the same unknown topic.
             None => return Ok(Vec::new()),
         },
     };
