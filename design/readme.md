@@ -9775,7 +9775,7 @@ himself are drafted and wait for his review (copy-voice marks each).
 
 ### Round 7's registration — 2026-10-12
 
-The formal ledger (design ⇄ impl seam 131.3): fifteen boards join the
+The formal ledger (design ⇄ impl seam 131.3): sixteen boards join the
 registry and two dots become component tails. Registration names what the
 boards already draw; nothing on any board moved.
 
@@ -9791,8 +9791,8 @@ boards already draw; nothing on any board moved.
   `FeedUnread` registers under `feed`, named as `Feed` is.
 - **The entry boards.** `ApplicantWaiting`, `ApplicantLanding` and
   `ApplicantFeed` register under `feed`, named as `ApplicantRejected`
-  names the shell: the card is `application`, `Got it` is `dismiss`, the
-  key-absent door `restore`; `ApplicantFeed`'s two cards are `verifyCard`
+  names the shell, and `ApplicantFellThrough` with them: the card is
+  `application`, `Got it` is `dismiss`, the key-absent door `restore`; `ApplicantFeed`'s two cards are `verifyCard`
   and `keyCard`, its sidecar's own words. `ApprovePad` registers under
   `invites`, its pad under `invites.application.stance.pad` with
   `VouchAskPad`'s names. `KeyCeremony` takes `keyCeremony` and
@@ -9804,16 +9804,16 @@ boards already draw; nothing on any board moved.
   `QuotedRow` and `StanceValue` take node tails for it. `FeedEntry`'s
   `view` chip draws the path list once per value, each row keeping its
   own key.
-- **Five key rules join**: `notification`, `path` (place, strongest
-  first), `step` (place along the path), `record` (the key the row
-  prints) and `block` (`FeedEntryKinds`' kind).
-- **Not in this round.** The redacted row (item 56(c)): no board draws a
-  deleted account's row in Hidden accounts, so its actor-id key has
-  nothing to register on, and rewording the `account` key rule is a
-  breaking change the seam agrees first. `Reel` and `ReelSensitive`
+- **Five key rules join** (jakob 2026-10-12): `notification`, `path`
+  (place, strongest first), `step` (place along the path), `record` (the
+  key the row prints) and `block` (`FeedEntryKinds`' kind).
+- **Not in this round.** The redacted row (item 56(c)) waits for the
+  settings round (jakob 2026-10-12): no board draws a deleted account's
+  row in Hidden accounts yet, so its actor-id key has nothing to register
+  on. `Reel` and `ReelSensitive`
   register in lockstep with their rework's build.
 - **The gate**: screens and edges unchanged; the registry **75 / 2928 →
-  90 / 3352**, fifteen boards and 424 paths added, nothing removed or
+  91 / 3401**, sixteen boards and 473 paths added, nothing removed or
   changed.
 
 ---
