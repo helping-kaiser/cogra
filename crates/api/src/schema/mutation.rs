@@ -151,24 +151,15 @@ fn wrong_deletion_path(message: &'static str) -> async_graphql::Error {
     )
 }
 
-/// Whether the account deletes through the mailed member path: a member,
-/// or an applicant whose admission Registration has landed — the account
-/// has a node, so only the husk path may remove it (design item 69).
-async fn takes_member_deletion_path(
-    pool: &PgPool,
-    credentials: &store::Credentials,
-) -> async_graphql::Result<bool> {
-    Ok(match credentials.account_state {
-        store::AccountState::Member => true,
-        store::AccountState::Applicant => {
-            store::registration_landed(
-                pool,
-                credentials.actor_id,
-                common::l1::census::Family::Registration.as_str(),
-            )
-            .await?
+/// The refusal of a deletion verb the account's [`store::DeletionPath`]
+/// does not name — one message per path the verb is not.
+fn path_refusal(path: store::DeletionPath) -> async_graphql::Error {
+    wrong_deletion_path(match path {
+        store::DeletionPath::Immediate => "an applicant deletes through deleteApplicantAccount",
+        store::DeletionPath::ByLink => "this account deletes through requestAccountDeletion",
+        store::DeletionPath::Locked => {
+            "approval funded this account; it can be deleted once it lands"
         }
-        store::AccountState::Guest => false,
     })
 }
 
@@ -2907,9 +2898,9 @@ impl Mutation {
     /// the earlier link dies, the new one carries its own choice — and
     /// is what the mail screen's Resend sends.
     ///
-    /// The member path: a member, or an applicant whose Registration
-    /// landed. Any other applicant is FORBIDDEN and deletes through
-    /// deleteApplicantAccount. While a confirmed deletion is in its grace
+    /// Answers only on `User.deletionPath == BY_LINK`: a member, or an
+    /// applicant whose Registration landed. Any other account is FORBIDDEN,
+    /// re-checked under the account lock. While a confirmed deletion is in its grace
     /// the request changes nothing — it returns that deletion, mails
     /// nothing, spends nothing, and never moves the deadline: superseding
     /// it would silently un-confirm it. Otherwise each request spends the
@@ -2928,10 +2919,13 @@ impl Mutation {
         let Some(credentials) = store::credentials_by_actor(pool, v.user_id).await? else {
             return Err(unauthenticated());
         };
-        if !takes_member_deletion_path(pool, &credentials).await? {
-            return Err(wrong_deletion_path(
-                "an applicant deletes through deleteApplicantAccount",
-            ));
+        // The early refusal: nothing is spent or recorded for a path the verb
+        // does not answer. open_account_deletion re-derives it under the
+        // account lock.
+        match store::deletion_path(&mut *pool.acquire().await?, v.user_id).await? {
+            None => return Err(unauthenticated()),
+            Some(store::DeletionPath::ByLink) => {}
+            Some(path) => return Err(path_refusal(path)),
         }
         if let Some(standing) = store::confirmed_account_deletion(pool, v.user_id).await? {
             return Ok(AccountDeletionPayload::standing(Some(standing)));
@@ -2961,6 +2955,7 @@ impl Mutation {
             Some(store::DeletionRequest::InGrace(standing)) => {
                 Ok(AccountDeletionPayload::standing(Some(standing)))
             }
+            Some(store::DeletionRequest::WrongPath(path)) => Err(path_refusal(path)),
             Some(store::DeletionRequest::Opened) => {
                 mailer
                     .send(deletion_mail(credentials.email, &web_origin.0, &link.token))
@@ -3024,10 +3019,11 @@ impl Mutation {
     /// case: account, credentials, application, staged acts (those carried
     /// with the application included), key backup and device locks go
     /// immediately, every session with them, and no mail is sent. Nothing
-    /// of it reached L1. FORBIDDEN for a member, who takes the mailed path,
-    /// and for an applicant whose address approval already funded — the
-    /// burn is spent and the Registration staged, so nothing may vanish
-    /// under it; once it lands, the mailed path applies.
+    /// of it reached L1. Answers only on `User.deletionPath == IMMEDIATE`,
+    /// re-checked under the account lock: FORBIDDEN for a member, who takes
+    /// the mailed path, and for an applicant whose address approval funded
+    /// — the burn is spent and the Registration staged, so nothing may
+    /// vanish under it; once it lands, the mailed path applies.
     async fn delete_applicant_account(
         &self,
         ctx: &Context<'_>,
@@ -3040,12 +3036,7 @@ impl Mutation {
                 user_errors: vec![],
             }),
             store::ApplicantDeletion::Gone => Err(unauthenticated()),
-            store::ApplicantDeletion::NotApplicant => Err(wrong_deletion_path(
-                "a member deletes through requestAccountDeletion",
-            )),
-            store::ApplicantDeletion::Funded => Err(wrong_deletion_path(
-                "approval funded this account; it can be deleted once it lands",
-            )),
+            store::ApplicantDeletion::WrongPath(path) => Err(path_refusal(path)),
         }
     }
 
