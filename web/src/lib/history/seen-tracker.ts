@@ -70,6 +70,7 @@ export function useSeenTracker({
   root,
   list,
   ids,
+  suspended = false,
   queue = seenQueue,
 }: {
   /** The scrolling element the list lives in; null means the viewport. */
@@ -78,6 +79,12 @@ export function useSeenTracker({
   list: RefObject<HTMLElement | null>;
   /** The ids the list renders, in order. */
   ids: readonly string[];
+  /**
+   * True while a sheet covers the list: a card under it is not on screen, so
+   * nothing is reported until it drops — and the fresh observer it drops to
+   * re-reads every card that stood whole all along.
+   */
+  suspended?: boolean;
   /** Test injection. */
   queue?: SeenQueue;
 }): void {
@@ -129,7 +136,7 @@ export function useSeenTracker({
   // The cards themselves.
   useMeasureEffect(() => {
     const holder = list.current;
-    if (account === null || holder === null) return;
+    if (account === null || holder === null || suspended) return;
     const observer = new IntersectionObserver(
       (entries) => {
         let queued = false;
@@ -155,5 +162,5 @@ export function useSeenTracker({
       if (id !== null && !queue.hasSeen(id)) observer.observe(card);
     }
     return () => observer.disconnect();
-  }, [root, list, ids, account, queue]);
+  }, [root, list, ids, account, queue, suspended]);
 }

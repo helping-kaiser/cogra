@@ -1,9 +1,9 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
@@ -60,9 +60,9 @@ function signedIn() {
 }
 
 /** A list the way a surface hosts it: the tracker at the list, ids on the items. */
-function List({ ids }: { ids: readonly string[] }) {
+function List({ ids, suspended = false }: { ids: readonly string[]; suspended?: boolean }) {
   const list = useRef<HTMLUListElement>(null);
-  useSeenTracker({ root: null, list, ids });
+  useSeenTracker({ root: null, list, ids, suspended });
   return (
     <ul ref={list}>
       {ids.map((id) => (
@@ -239,5 +239,31 @@ describe("the seen tracker on a list", () => {
     unmount();
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(sent).toEqual([]);
+  });
+});
+
+/** A list under a sheet the test can drop. */
+function Sheeted() {
+  const [raised, setRaised] = useState(true);
+  return (
+    <>
+      <button type="button" data-testid="drop-sheet" onClick={() => setRaised(false)} />
+      <List ids={["a"]} suspended={raised} />
+    </>
+  );
+}
+
+describe("the seen tracker under a sheet", () => {
+  it("reports nothing while a sheet covers the list, and re-reads the cards once it drops", async () => {
+    reset();
+    const store = signedIn();
+    const { unmount } = renderWithProviders(<Sheeted />, { store });
+    const a = await screen.findByTestId("card-a");
+    expect(isObserved(a)).toBe(false);
+    fireEvent.click(screen.getByTestId("drop-sheet"));
+    await whenObserved(a);
+    intersectEach([{ target: a, ratio: 1 }]);
+    unmount();
+    await waitFor(() => expect(sent).toEqual([["a"]]));
   });
 });

@@ -291,7 +291,7 @@ export function FeedView({
   // the feed's (`seen-tracker.ts` says what counts and when it is sent).
   const listRef = useRef<HTMLUListElement>(null);
   const postIds = useMemo(() => posts.map((post) => post.id), [posts]);
-  useSeenTracker({ root: host, list: listRef, ids: postIds });
+  useSeenTracker({ root: host, list: listRef, ids: postIds, suspended: commentsOpen });
 
   return (
     // The band is chrome and full-bleed, so the gutter belongs to the content
