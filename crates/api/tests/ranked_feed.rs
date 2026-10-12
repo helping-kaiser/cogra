@@ -5,10 +5,22 @@
 //!
 //! The slice fixtures land records straight into the mirror, one epoch
 //! package at a time, so each test names exactly the legs it walks.
+//!
+//! The relay (`feedRanking`) runs against the stub ranker pod
+//! (`rig::pod`), which answers from fixtures and records what it was
+//! sent: every relay test reads the request the pod received and the
+//! answer the client got back, so the relay's whole part — translation and
+//! carriage, never a computation — is visible at both ends.
 
 mod rig;
 
+use std::collections::{HashMap, HashSet};
+use std::io::Read as _;
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
+
 use api::bootstrap::{GenesisInput, run as bootstrap};
+use api::ranker_pod::RankerConfig;
 use api::ratelimit::RateLimitConfig;
 use common::l1::Family;
 use common::l1::census::LegRole;
@@ -17,6 +29,7 @@ use common::l1::identifier::{ActId, NodeId};
 use postgres_store::content::{self, LandingOrder};
 use postgres_store::{genesis, hashtag, mirror};
 use rig::WireRig;
+use rig::pod::{Mode, StubPod, ranking};
 use serde_json::{Value, json};
 use sqlx::PgPool;
 use std::collections::BTreeSet;
@@ -985,4 +998,1679 @@ async fn slice_for_an_unknown_viewer_reads_null(pool: PgPool) {
     let keyless = rig.gql(None, SLICE, json!({ "viewer": keyless })).await;
     assert_eq!(keyless["feedSlice"], Value::Null);
     assert!(full_slice(&rig, f.viewer).await.is_object());
+}
+
+/// The client's whole selection (ranked-feed-api §12).
+const RANKING: &str = r#"query($viewer: UUID!, $asOf: Int, $filter: FeedRankFilter) {
+  feedRanking(viewer: $viewer, asOfEpoch: $asOf, filter: $filter) {
+    asOfEpoch
+    entries { targetId kind score mark newestIndex }
+    settling { targetId kind mark rankedPosition newestPosition }
+  }
+}"#;
+
+/// A rig whose `feedRanking` relays to a fresh stub pod in `mode`.
+async fn pod_rig(pool: PgPool, mode: Mode) -> (WireRig, StubPod) {
+    pod_rig_with(pool, mode, |_| {}).await
+}
+
+/// `pod_rig`, with the relay's configuration adjusted first.
+async fn pod_rig_with(
+    pool: PgPool,
+    mode: Mode,
+    adjust: impl FnOnce(&mut RankerConfig),
+) -> (WireRig, StubPod) {
+    let pod = StubPod::start(mode).await;
+    let mut config = pod.config();
+    adjust(&mut config);
+    let rig = WireRig::with_ranker(pool, RateLimitConfig::unlimited(), &config);
+    (rig, pod)
+}
+
+/// One `feedRanking` call, returned whole.
+async fn rank_raw(rig: &WireRig, token: Option<&str>, variables: Value) -> Value {
+    rig.gql_raw(token, RANKING, variables).await
+}
+
+/// One `feedRanking` call that must not fault; returns the answer.
+async fn rank(rig: &WireRig, token: Option<&str>, variables: Value) -> Value {
+    rig.gql(token, RANKING, variables).await["feedRanking"].clone()
+}
+
+fn ids_of(rows: &Value) -> Vec<Uuid> {
+    rows.as_array()
+        .expect("rows")
+        .iter()
+        .map(|row| {
+            row["targetId"]
+                .as_str()
+                .expect("targetId")
+                .parse()
+                .expect("uuid")
+        })
+        .collect()
+}
+
+/// The settling candidates the pod was last sent.
+fn sent_candidates(pod: &StubPod) -> Vec<Value> {
+    pod.last_variables()["params"]["settling"]
+        .as_array()
+        .expect("candidates always ride")
+        .clone()
+}
+
+fn sent_refs(pod: &StubPod) -> HashSet<Uuid> {
+    sent_candidates(pod)
+        .iter()
+        .map(|c| c["ref"].as_str().expect("ref").parse().expect("uuid"))
+        .collect()
+}
+
+async fn actor_id(pool: &PgPool, handle: &str) -> Uuid {
+    genesis::actor_by_handle(pool, handle)
+        .await
+        .expect("lookup")
+        .expect("the actor exists")
+        .id
+}
+
+fn authored_at(secs: i64) -> chrono::DateTime<chrono::Utc> {
+    chrono::DateTime::from_timestamp(1_900_000_000 + secs, 0).expect("instant")
+}
+
+/// One staged write in flight, past its pre-commitment, as the relay's
+/// candidate read sees it.
+#[expect(
+    clippy::too_many_arguments,
+    reason = "a staged row's columns, named where each fixture states them"
+)]
+async fn staged_row(
+    pool: &PgPool,
+    actor: Uuid,
+    act: &ActId,
+    family: Family,
+    middle: Option<&str>,
+    target: &str,
+    p: (f64, f64),
+    node: Option<Uuid>,
+    secs: i64,
+) {
+    sqlx::query(
+        "INSERT INTO staged_writes
+             (id, actor_id, act_id, author, seq, family, middle, target, p_d, p_i,
+              payload, prepared_epoch, node_id, state, pre_signed_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, ''::bytea, 0, $11,
+                 'relaying', $12)",
+    )
+    .bind(Uuid::new_v4())
+    .bind(actor)
+    .bind(act.to_string())
+    .bind(act.to_string().split(':').nth(1).expect("author"))
+    .bind(
+        act.to_string()
+            .split(':')
+            .nth(2)
+            .expect("seq")
+            .parse::<i64>()
+            .expect("seq"),
+    )
+    .bind(family.as_str())
+    .bind(middle)
+    .bind(target)
+    .bind(p.0)
+    .bind(p.1)
+    .bind(node)
+    .bind(authored_at(secs))
+    .execute(pool)
+    .await
+    .expect("staged write");
+}
+
+/// Content still settling: a pending post by `handle` (or, with `parent`,
+/// a pending comment on it), minted by its own staged act with the edge
+/// parameters `p`, authored at `secs`.
+async fn settling_content(
+    pool: &PgPool,
+    handle: &str,
+    seq: u64,
+    parent: Option<Uuid>,
+    p: (f64, f64),
+    secs: i64,
+) -> Uuid {
+    let author = actor_id(pool, handle).await;
+    let family = if parent.is_some() {
+        Family::Review
+    } else {
+        Family::Publish
+    };
+    let act = act(handle, seq, family);
+    let node = NodeId::Mint(act.clone()).to_string();
+    let id = Uuid::new_v4();
+    let mut tx = pool.begin().await.expect("tx");
+    match parent {
+        None => content::insert_post(
+            &mut tx,
+            id,
+            author,
+            &node,
+            "a=0;o=0",
+            None,
+            authored_at(secs),
+            Some("still settling"),
+            None,
+            "pending",
+            None,
+        )
+        .await
+        .expect("pending post"),
+        Some(parent) => content::insert_comment(
+            &mut tx,
+            id,
+            parent,
+            "post",
+            author,
+            &node,
+            "a=0;o=0",
+            None,
+            authored_at(secs),
+            "pending",
+            None,
+        )
+        .await
+        .expect("pending comment"),
+    };
+    tx.commit().await.expect("commit");
+    staged_row(pool, author, &act, family, None, &node, p, Some(id), secs).await;
+    id
+}
+
+/// A pending Tag by `handle` on `node` toward `topic` at `relevance`.
+async fn pending_tag(
+    pool: &PgPool,
+    handle: &str,
+    seq: u64,
+    node: Uuid,
+    topic: &str,
+    relevance: f64,
+) {
+    let author = actor_id(pool, handle).await;
+    let node_id: String = sqlx::query_scalar(
+        "SELECT l1_node_id FROM posts WHERE id = $1
+         UNION ALL SELECT l1_node_id FROM comments WHERE id = $1",
+    )
+    .bind(node)
+    .fetch_one(pool)
+    .await
+    .expect("the tagged node");
+    staged_row(
+        pool,
+        author,
+        &act(handle, seq, Family::Tag),
+        Family::Tag,
+        Some(&node_id),
+        &format!("name:{topic}"),
+        (relevance, 1.0),
+        None,
+        10 + seq as i64,
+    )
+    .await;
+}
+
+async fn registered_topic(pool: &PgPool, name: &str) -> Uuid {
+    let mut conn = pool.acquire().await.expect("conn");
+    hashtag::upsert(&mut conn, name).await.expect("topic");
+    common::hashtag_uuid(name)
+}
+
+/// A member with a session: (actor id, access token).
+async fn reader(rig: &WireRig, handle: &str) -> (Uuid, String) {
+    let email = format!("{handle}@example.test");
+    let (id, _) = rig.seed_member(handle, &email).await;
+    (id, rig.log_in(&email).await)
+}
+
+/// Captures what the code under test logs, on this thread, while the
+/// guard lives.
+#[derive(Clone, Default)]
+struct Logs(Arc<Mutex<Vec<u8>>>);
+
+impl std::io::Write for Logs {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        self.0.lock().expect("logs").extend_from_slice(bytes);
+        Ok(bytes.len())
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
+impl Logs {
+    fn capture() -> (tracing::subscriber::DefaultGuard, Self) {
+        let logs = Self::default();
+        let sink = logs.clone();
+        let subscriber = tracing_subscriber::fmt()
+            .with_ansi(false)
+            .with_writer(move || sink.clone())
+            .finish();
+        (tracing::subscriber::set_default(subscriber), logs)
+    }
+
+    fn text(&self) -> String {
+        String::from_utf8_lossy(&self.0.lock().expect("logs")).into_owned()
+    }
+}
+
+/// The field names of one schema type, by introspection; None when the
+/// schema has no such type.
+async fn fields_of(rig: &WireRig, type_name: &str) -> Option<Vec<String>> {
+    let data = rig
+        .gql(
+            None,
+            "query($name: String!) { __type(name: $name) { fields { name } } }",
+            json!({ "name": type_name }),
+        )
+        .await;
+    data["__type"].as_object().map(|t| {
+        t["fields"]
+            .as_array()
+            .expect("fields")
+            .iter()
+            .map(|f| f["name"].as_str().expect("name").to_string())
+            .collect()
+    })
+}
+
+/// The pod's order is the answer's order: scores out of any sorted order
+/// come back exactly as the pod emitted them, because the relay never
+/// sorts.
+///
+/// The relay returns the pod's entries in the pod's own order.
+/// ´claim:relay:the-pods-order-passes-through´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_relay_returns_the_pods_order(pool: PgPool) {
+    let (t1, t2, t3) = (Uuid::new_v4(), Uuid::new_v4(), Uuid::new_v4());
+    let (rig, _pod) = pod_rig(
+        pool,
+        Mode::Answer(ranking(
+            &[
+                (t1, "POST", 0.2, None, 2),
+                (t2, "POST", 0.9, None, 0),
+                (t3, "POST", 0.5, None, 1),
+            ],
+            &[],
+        )),
+    )
+    .await;
+    let f = fixture(&rig.pool).await;
+    let answer = rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    assert_eq!(ids_of(&answer["entries"]), vec![t1, t2, t3]);
+    let scores: Vec<f64> = answer["entries"]
+        .as_array()
+        .expect("entries")
+        .iter()
+        .map(|e| e["score"].as_f64().expect("score"))
+        .collect();
+    assert_eq!(scores, vec![0.2, 0.9, 0.5]);
+}
+
+/// Strictly equal scores are the tie-break cascade's, which the pod
+/// applied (feed-ranking.md §7); the relay keeps the pod's order of them
+/// even where the ids sort the other way.
+///
+/// (´claim:relay:the-pods-order-passes-through´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_relay_never_resorts_equal_scores(pool: PgPool) {
+    let mut ids: Vec<Uuid> = (0..4).map(|_| Uuid::new_v4()).collect();
+    ids.sort();
+    ids.reverse();
+    let entries: Vec<(Uuid, &str, f64, Option<&str>, i64)> = ids
+        .iter()
+        .enumerate()
+        .map(|(i, id)| (*id, "POST", 0.5, None, i as i64))
+        .collect();
+    let (rig, _pod) = pod_rig(pool, Mode::Answer(ranking(&entries, &[]))).await;
+    let f = fixture(&rig.pool).await;
+    let answer = rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    assert_eq!(ids_of(&answer["entries"]), ids);
+}
+
+/// Seen content ranks too (PR-47/PR-49): the reader's seen record lives on
+/// the device, and the feed path reads none of it, so a target the reader
+/// has seen is still in the answer.
+///
+/// A target the reader has already seen stays in the ranked answer.
+/// ´claim:relay:seen-content-stays-in-the-answer´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_seen_target_stays_in_the_ranking(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Hold).await;
+    let f = fixture(&rig.pool).await;
+    let (me, token) = reader(&rig, "reader").await;
+    let seen = rig
+        .gql(
+            Some(&token),
+            "mutation($nodes: [UUID!]!) { markSeen(input: { nodes: $nodes }) { ok } }",
+            json!({ "nodes": [f.post] }),
+        )
+        .await;
+    assert_eq!(seen["markSeen"]["ok"], true);
+    pod.set(Mode::Answer(ranking(
+        &[(f.post, "POST", 0.4, None, 0)],
+        &[],
+    )));
+    let answer = rank(&rig, Some(&token), json!({ "viewer": me })).await;
+    assert_eq!(ids_of(&answer["entries"]), vec![f.post]);
+}
+
+/// No seen-list rides the in-house request (X-11; OC-8 omits the field
+/// from the pod's schema): the device cuts what it has seen.
+///
+/// The relay's request to the pod carries no seen-list.
+/// ´claim:relay:no-seen-list-reaches-the-pod´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_pod_request_carries_no_seen_list(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    let f = fixture(&rig.pool).await;
+    let (me, token) = reader(&rig, "reader").await;
+    rig.gql(
+        Some(&token),
+        "mutation($nodes: [UUID!]!) { markSeen(input: { nodes: $nodes }) { ok } }",
+        json!({ "nodes": [f.post] }),
+    )
+    .await;
+    rank(&rig, Some(&token), json!({ "viewer": me })).await;
+    let params = &pod.last_variables()["params"];
+    assert!(params.is_object(), "{params}");
+    assert!(params.get("seenList").is_none(), "{params}");
+    let sent = pod.requests().last().expect("a request").to_string();
+    assert!(
+        !sent.contains(&f.post.to_string()),
+        "the seen id never rides: {sent}"
+    );
+}
+
+/// The write path is unchanged: `markSeen` still records what History
+/// reads, whatever the feed path no longer reads.
+///
+/// What markSeen records still reads back through History.
+/// ´claim:relay:history-still-reads-what-mark-seen-wrote´
+#[sqlx::test(migrations = "../../migrations")]
+async fn mark_seen_still_feeds_history_after_the_feed_stops_reading_it(pool: PgPool) {
+    let (rig, _pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    let f = fixture(&rig.pool).await;
+    let (me, token) = reader(&rig, "reader").await;
+    rig.gql(
+        Some(&token),
+        "mutation($nodes: [UUID!]!) { markSeen(input: { nodes: $nodes }) { ok } }",
+        json!({ "nodes": [f.post] }),
+    )
+    .await;
+    rank(&rig, Some(&token), json!({ "viewer": me })).await;
+    let history = rig
+        .gql(
+            Some(&token),
+            "{ me { viewHistory(first: 10) { edges { node { ... on Post { id } } } } } }",
+            json!({}),
+        )
+        .await;
+    assert_eq!(
+        history["me"]["viewHistory"]["edges"][0]["node"]["id"],
+        json!(f.post)
+    );
+}
+
+/// The slice supply is generic (§3.6): one slice per viewer and epoch,
+/// never shaped by a filter, so `feedSlice` takes exactly its four
+/// arguments.
+///
+/// The slice supply takes no filter argument.
+/// ´claim:slice:the-supply-takes-no-filter´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_slice_supply_takes_no_filter_argument(pool: PgPool) {
+    let rig = rig(pool);
+    let data = rig
+        .gql(
+            None,
+            "{ __schema { queryType { fields { name args { name } } } } }",
+            json!({}),
+        )
+        .await;
+    let slice = data["__schema"]["queryType"]["fields"]
+        .as_array()
+        .expect("fields")
+        .iter()
+        .find(|f| f["name"] == "feedSlice")
+        .expect("feedSlice is a root")
+        .clone();
+    let args: Vec<&str> = slice["args"]
+        .as_array()
+        .expect("args")
+        .iter()
+        .map(|a| a["name"].as_str().expect("name"))
+        .collect();
+    assert_eq!(args, vec!["viewer", "dustFloor", "gamma", "asOfEpoch"]);
+}
+
+/// The P-7 hook: every first-page read of a (viewer, epoch) slice is
+/// counted and traced, so the would-be cache hit rate is measured before
+/// any cache is built. A later page of the same read is not a new read; a
+/// read pinned at another epoch is another key.
+///
+/// The slice supply counts first-page reads per viewer and epoch, logging each repeat.
+/// ´claim:slice:the-supply-counts-reads-per-key´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_slice_supply_counts_reads_per_viewer_and_epoch(pool: PgPool) {
+    let rig = rig(pool);
+    let f = fixture(&rig.pool).await;
+    let cursor = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
+    let (_guard, logs) = Logs::capture();
+    let first = slice(&rig, json!({ "viewer": f.viewer, "first": 2 })).await;
+    assert_eq!(rig.slice_reads.reads(f.viewer, cursor), 1);
+    let after = first["nodes"]["pageInfo"]["endCursor"].clone();
+    slice(
+        &rig,
+        json!({ "viewer": f.viewer, "first": 2, "after": after }),
+    )
+    .await;
+    assert_eq!(rig.slice_reads.reads(f.viewer, cursor), 1, "a later page");
+    slice(&rig, json!({ "viewer": f.viewer, "first": 2 })).await;
+    assert_eq!(rig.slice_reads.reads(f.viewer, cursor), 2);
+    slice(
+        &rig,
+        json!({ "viewer": f.viewer, "asOf": cursor - 1, "first": 2 }),
+    )
+    .await;
+    assert_eq!(rig.slice_reads.reads(f.viewer, cursor - 1), 1);
+    let text = logs.text();
+    assert!(text.contains("slice supply: first-page read"), "{text}");
+    assert!(text.contains("repeat=true"), "{text}");
+}
+
+/// The seeded carrier with no landed Charter has no epoch to report: an
+/// operational fault, refused loudly, never a row with a made-up epoch.
+///
+/// networkParameters on a carrier seeded before its Charter landed is INTERNAL and serves no row.
+/// ´claim:params:a-half-bootstrapped-carrier-is-internal´
+#[sqlx::test(migrations = "../../migrations")]
+async fn network_parameters_before_the_charter_lands_is_internal(pool: PgPool) {
+    let rig = rig(pool);
+    let mut conn = rig.pool.acquire().await.expect("conn");
+    genesis::seed_parameter(&mut conn, "gamma", &json!(1.0))
+        .await
+        .expect("seed");
+    genesis::seed_parameter(&mut conn, "dust_floor", &json!(0.0))
+        .await
+        .expect("seed");
+    drop(conn);
+    let (_guard, logs) = Logs::capture();
+    let response = rig.gql_raw(None, PARAMETERS, json!({ "keys": null })).await;
+    assert_eq!(codes(&response), vec!["INTERNAL"]);
+    assert!(response["data"].is_null(), "no row is served: {response}");
+    assert!(
+        logs.text()
+            .contains("the parameter carrier is seeded but the Charter has not landed"),
+        "{}",
+        logs.text()
+    );
+}
+
+/// Map, never compose (§4.2 step 6): both permutations — each entry's
+/// NEWEST index and each settling row's two woven positions — arrive
+/// exactly as the pod emitted them.
+///
+/// OS-17 (veto window open): the fixture's NEWEST places put the settling
+/// rows ahead of every landed row, newest authored first — the ruled
+/// reading the pod builds to (W-3). The relay passes whatever the pod
+/// emits, so a veto changes the pod's emission and this test's fixture,
+/// never the relay.
+///
+/// The relay passes the NEWEST permutation and both woven position sets through unchanged.
+/// ´claim:relay:both-permutations-pass-through´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_relay_passes_both_permutations_through_unchanged(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Hold).await;
+    let f = fixture(&rig.pool).await;
+    let older = settling_content(&rig.pool, "a", 20, None, (0.5, 0.5), 1).await;
+    let newer = settling_content(&rig.pool, "a", 21, None, (0.5, 0.5), 2).await;
+    let (t1, t2, t3) = (Uuid::new_v4(), Uuid::new_v4(), Uuid::new_v4());
+    pod.set(Mode::Answer(ranking(
+        &[
+            (t1, "POST", 0.9, None, 2),
+            (t2, "COMMENT", 0.7, None, 0),
+            (t3, "USER", 0.1, None, 1),
+        ],
+        &[(older, None, 1, 1), (newer, None, 4, 0)],
+    )));
+    let answer = rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    assert_eq!(
+        answer["entries"],
+        json!([
+            { "targetId": t1, "kind": "POST", "score": 0.9, "mark": null, "newestIndex": 2 },
+            { "targetId": t2, "kind": "COMMENT", "score": 0.7, "mark": null, "newestIndex": 0 },
+            { "targetId": t3, "kind": "USER", "score": 0.1, "mark": null, "newestIndex": 1 },
+        ])
+    );
+    assert_eq!(
+        answer["settling"],
+        json!([
+            { "targetId": older, "kind": "POST", "mark": null, "rankedPosition": 1, "newestPosition": 1 },
+            { "targetId": newer, "kind": "POST", "mark": null, "rankedPosition": 4, "newestPosition": 0 },
+        ])
+    );
+}
+
+/// A place names its candidate by the opaque `ref` the relay sent; the
+/// relay maps it back to the target and the kind its own staged read
+/// found, a comment here.
+///
+/// A settling place maps to its candidate's target and staged kind.
+/// ´claim:relay:a-place-maps-to-its-candidate´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_relay_maps_a_settling_ref_to_its_target_and_staged_kind(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Hold).await;
+    let f = fixture(&rig.pool).await;
+    let comment = settling_content(&rig.pool, "a", 20, Some(f.post), (0.3, 0.2), 1).await;
+    pod.set(Mode::Answer(ranking(&[], &[(comment, None, 0, 0)])));
+    let answer = rank(
+        &rig,
+        None,
+        json!({ "viewer": f.viewer, "filter": { "kinds": ["COMMENT"] } }),
+    )
+    .await;
+    assert_eq!(
+        answer["settling"],
+        json!([{ "targetId": comment, "kind": "COMMENT", "mark": null,
+                 "rankedPosition": 0, "newestPosition": 0 }])
+    );
+}
+
+/// `tieBreakers` leaves the public answer (§4.13): the public entry is
+/// exactly its five fields, no `TieBreakers` type exists, and a document
+/// asking for one is refused at validation.
+///
+/// The public answer carries no tie-breakers.
+/// ´claim:relay:no-tie-breakers-on-the-wire´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_public_answer_carries_no_tie_breakers(pool: PgPool) {
+    let (rig, _pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    assert_eq!(
+        fields_of(&rig, "FeedEntry").await.expect("FeedEntry"),
+        vec!["targetId", "kind", "score", "mark", "newestIndex"]
+    );
+    assert_eq!(fields_of(&rig, "TieBreakers").await, None);
+    let refused = rig
+        .gql_raw(
+            None,
+            "{ feedRanking(viewer: \"00000000-0000-0000-0000-000000000000\") {
+                 entries { tieBreakers { netStance } } } }",
+            json!({}),
+        )
+        .await;
+    assert!(refused["errors"].is_array(), "{refused}");
+    assert!(refused["data"].is_null(), "{refused}");
+}
+
+/// A settling row carries no score by construction (FeedSheet.md:49): the
+/// type has no such field.
+///
+/// A settling entry has no score field.
+/// ´claim:relay:a-settling-entry-has-no-score´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_settling_entry_carries_no_score(pool: PgPool) {
+    let (rig, _pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    assert_eq!(
+        fields_of(&rig, "SettlingEntry")
+            .await
+            .expect("SettlingEntry"),
+        vec![
+            "targetId",
+            "kind",
+            "mark",
+            "rankedPosition",
+            "newestPosition"
+        ]
+    );
+}
+
+/// The relay checks index sets and compares nothing: a NEWEST index that
+/// is no permutation, a position duplicated, out of range or colliding
+/// within one order, a place for something never sent, a candidate placed
+/// twice, or a ranking at another epoch than the pin — each would hand the
+/// device an undefined composition, so each is refused as INTERNAL and
+/// logged.
+///
+/// A malformed pod answer surfaces as INTERNAL and is logged.
+/// ´claim:relay:a-malformed-answer-is-internal´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_malformed_pod_permutation_surfaces_as_internal_and_is_logged(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Hold).await;
+    let f = fixture(&rig.pool).await;
+    let s1 = settling_content(&rig.pool, "a", 20, None, (0.5, 0.5), 1).await;
+    let s2 = settling_content(&rig.pool, "a", 21, None, (0.5, 0.5), 2).await;
+    let (t1, t2) = (Uuid::new_v4(), Uuid::new_v4());
+    let cursor = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
+    let malformed = [
+        ranking(
+            &[(t1, "POST", 0.9, None, 0), (t2, "POST", 0.5, None, 0)],
+            &[],
+        ),
+        ranking(
+            &[(t1, "POST", 0.9, None, 0), (t2, "POST", 0.5, None, 2)],
+            &[],
+        ),
+        ranking(
+            &[(t1, "POST", 0.9, None, 0)],
+            &[(s1, None, 0, 0), (s2, None, 0, 1)],
+        ),
+        ranking(
+            &[(t1, "POST", 0.9, None, 0)],
+            &[(s1, None, 0, 1), (s2, None, 2, 1)],
+        ),
+        ranking(&[(t1, "POST", 0.9, None, 0)], &[(s1, None, 3, 0)]),
+        ranking(&[], &[(Uuid::new_v4(), None, 0, 0)]),
+        ranking(&[], &[(s1, None, 0, 0), (s1, None, 1, 1)]),
+        ranking(&[(t1, "NOT_A_KIND", 0.9, None, 0)], &[]),
+        {
+            let mut wrong_epoch = ranking(&[], &[]);
+            wrong_epoch["asOfEpoch"] = json!(cursor - 1);
+            wrong_epoch
+        },
+    ];
+    for answer in malformed {
+        pod.set(Mode::Answer(answer.clone()));
+        let (_guard, logs) = Logs::capture();
+        let response = rank_raw(&rig, None, json!({ "viewer": f.viewer })).await;
+        assert_eq!(codes(&response), vec!["INTERNAL"], "for {answer}");
+        assert!(response["data"]["feedRanking"].is_null(), "for {answer}");
+        assert!(
+            logs.text().contains("pod answer malformed"),
+            "for {answer}: {}",
+            logs.text()
+        );
+    }
+}
+
+/// Marks ride when the session's own actor is the viewer: the pod's marks
+/// reach the reader on landed and settling rows alike.
+///
+/// The pod's people marks ride when the session's reader is the viewer.
+/// ´claim:relay:marks-ride-for-the-viewer´
+#[sqlx::test(migrations = "../../migrations")]
+async fn marks_ride_when_the_session_reader_is_the_viewer(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Hold).await;
+    fixture(&rig.pool).await;
+    let (me, token) = reader(&rig, "reader").await;
+    let settling = settling_content(&rig.pool, "a", 20, None, (0.5, 0.5), 1).await;
+    let (t1, t2, t3, t4) = (
+        Uuid::new_v4(),
+        Uuid::new_v4(),
+        Uuid::new_v4(),
+        Uuid::new_v4(),
+    );
+    pod.set(Mode::Answer(ranking(
+        &[
+            (t1, "POST", 0.9, Some("FOR"), 0),
+            (t2, "USER", 0.8, Some("AGAINST"), 1),
+            (t3, "COMMENT", 0.7, Some("SIGNLESS"), 2),
+            (t4, "HASHTAG", 0.6, None, 3),
+        ],
+        &[(settling, Some("AGAINST"), 0, 0)],
+    )));
+    let answer = rank(&rig, Some(&token), json!({ "viewer": me })).await;
+    let marks: Vec<Value> = answer["entries"]
+        .as_array()
+        .expect("entries")
+        .iter()
+        .map(|e| e["mark"].clone())
+        .collect();
+    assert_eq!(
+        marks,
+        vec![
+            json!("FOR"),
+            json!("AGAINST"),
+            json!("SIGNLESS"),
+            Value::Null
+        ]
+    );
+    assert_eq!(answer["settling"][0]["mark"], "AGAINST");
+}
+
+/// A borrowed view: the session's reader ranks another actor's view. The
+/// pod can only compute the viewer's people, never the reader's, so every
+/// mark is nulled — an id comparison, not a fold read (§5.4).
+///
+/// A reader ranking someone else's view reads no marks.
+/// ´claim:relay:a-borrowed-view-carries-no-marks´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_borrowing_readers_marks_are_null(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Hold).await;
+    let f = fixture(&rig.pool).await;
+    let (_me, token) = reader(&rig, "reader").await;
+    let settling = settling_content(&rig.pool, "a", 20, None, (0.5, 0.5), 1).await;
+    let t1 = Uuid::new_v4();
+    pod.set(Mode::Answer(ranking(
+        &[(t1, "POST", 0.9, Some("FOR"), 0)],
+        &[(settling, Some("AGAINST"), 0, 0)],
+    )));
+    let answer = rank(&rig, Some(&token), json!({ "viewer": f.viewer })).await;
+    assert_eq!(answer["entries"][0]["mark"], Value::Null);
+    assert_eq!(answer["settling"][0]["mark"], Value::Null);
+    assert_eq!(
+        ids_of(&answer["entries"]),
+        vec![t1],
+        "the rows themselves ride"
+    );
+}
+
+/// Without a session there is no reader to hold an opinion: every mark is
+/// null, and the ranking itself is served, never refused.
+///
+/// A session-less ranking is served with no marks.
+/// ´claim:relay:a-session-less-ranking-has-no-marks´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_session_less_ranking_carries_no_marks(pool: PgPool) {
+    let t1 = Uuid::new_v4();
+    let (rig, _pod) = pod_rig(
+        pool,
+        Mode::Answer(ranking(&[(t1, "POST", 0.9, Some("FOR"), 0)], &[])),
+    )
+    .await;
+    let f = fixture(&rig.pool).await;
+    let answer = rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    assert_eq!(answer["entries"][0]["mark"], Value::Null);
+    assert_eq!(ids_of(&answer["entries"]), vec![t1]);
+}
+
+/// The relay owns the id mapping: a staged row's author is L1's bare
+/// atom, and the relay forwards it in the slice's own person key, so the
+/// pod joins it against `SliceNode.graphId` with no rule of its own.
+///
+/// A settling candidate's author rides as the person's slice node identifier.
+/// ´claim:relay:the-candidate-author-is-the-slice-key´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_settling_candidates_author_rides_in_the_slices_prof_form(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    let f = fixture(&rig.pool).await;
+    settling_content(&rig.pool, "a", 20, None, (0.5, 0.5), 1).await;
+    rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    let author = sent_candidates(&pod)[0]["author"]
+        .as_str()
+        .expect("author")
+        .to_string();
+    assert_eq!(author, format!("prof:{}", atom("a")));
+    assert!(
+        node_ids(&full_slice(&rig, f.viewer).await).contains(&author),
+        "{author} is the slice's own node"
+    );
+}
+
+/// The pod's parameters for the relay: kinds and the topic, the network
+/// defaults for every calibration field, the friend reorder off (PR-18),
+/// and each candidate with its own authorship edge as staged — author,
+/// family, the authored parameters and the authoring instant.
+///
+/// Each candidate rides with its author, family, own parameters and authoring instant.
+/// ´claim:relay:a-candidate-rides-with-its-own-edge´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_relay_sends_each_candidate_with_its_author_family_and_own_params(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    let f = fixture(&rig.pool).await;
+    let post = settling_content(&rig.pool, "a", 20, None, (0.75, -0.25), 7).await;
+    rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    let candidates = sent_candidates(&pod);
+    assert_eq!(candidates.len(), 1);
+    let c = &candidates[0];
+    assert_eq!(c["ref"], json!(post));
+    assert_eq!(c["author"], format!("prof:{}", atom("a")));
+    assert_eq!(c["family"], "publish");
+    assert_eq!(c["pDirected"], 0.75);
+    assert_eq!(c["pInterest"], -0.25);
+    let authored: chrono::DateTime<chrono::Utc> = c["authoredAt"]
+        .as_str()
+        .expect("authoredAt")
+        .parse()
+        .expect("an instant");
+    assert_eq!(authored, authored_at(7));
+}
+
+/// The friend-fresh reorder is post-MVP (PR-18): the relay asks for it off.
+///
+/// The relay sends the friend reorder disabled.
+/// ´claim:relay:friend-reorder-is-off´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_relay_sends_friend_reorder_disabled(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    let f = fixture(&rig.pool).await;
+    rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    let params = &pod.last_variables()["params"];
+    assert_eq!(params["friendAuthorReorder"]["enabled"], false);
+    for default in ["gamma", "dustFloor", "recencyHalfLifeEpochs"] {
+        assert!(
+            params[default].is_null(),
+            "{default} is the network's: {params}"
+        );
+    }
+}
+
+/// A candidate the pod leaves unplaced has no woven place (OS-10's
+/// admission: the place is the admission), so it is absent from
+/// `settling`.
+///
+/// A candidate the pod leaves unplaced is never woven.
+/// ´claim:relay:an-unplaced-candidate-is-absent´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_candidate_the_pod_leaves_unkeyed_is_never_woven(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Hold).await;
+    let f = fixture(&rig.pool).await;
+    let placed = settling_content(&rig.pool, "a", 20, None, (0.5, 0.5), 1).await;
+    let unplaced = settling_content(&rig.pool, "a", 21, None, (0.5, 0.5), 2).await;
+    pod.set(Mode::Answer(ranking(&[], &[(placed, None, 0, 0)])));
+    let answer = rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    assert_eq!(sent_refs(&pod), HashSet::from([placed, unplaced]));
+    assert_eq!(ids_of(&answer["settling"]), vec![placed]);
+}
+
+/// Reach is the pod's to judge (OS-10; X-8′): the relay reads no fold, so
+/// a settling post by an author the viewer has severed rides to the pod
+/// like any other — and the pod, finding no live path, leaves it unwoven.
+///
+/// The severed author's settling post rides to the pod and is woven only by the pod's word.
+/// ´claim:relay:reach-is-the-pods-to-judge´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_settling_post_by_a_severed_author_is_never_woven(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    let f = fixture(&rig.pool).await;
+    let severed = settling_content(&rig.pool, "b", 20, None, (0.5, 0.5), 1).await;
+    let answer = rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    assert!(
+        sent_refs(&pod).contains(&severed),
+        "the relay never pre-judges reach"
+    );
+    assert_eq!(answer["settling"], json!([]));
+}
+
+/// The pod places a reached author's settling post, and the relay carries
+/// the place.
+///
+/// (´claim:relay:reach-is-the-pods-to-judge´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_settling_post_by_a_live_reached_author_is_woven(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Hold).await;
+    let f = fixture(&rig.pool).await;
+    let reached = settling_content(&rig.pool, "a", 20, None, (0.5, 0.5), 1).await;
+    pod.set(Mode::Answer(ranking(&[], &[(reached, None, 0, 0)])));
+    let answer = rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    assert!(sent_refs(&pod).contains(&reached));
+    assert_eq!(ids_of(&answer["settling"]), vec![reached]);
+}
+
+/// A write carried with an application is held and author-only: it is
+/// never served to anyone else, so it is never a candidate.
+///
+/// A carried application write is never a settling candidate.
+/// ´claim:relay:a-carried-write-is-never-a-candidate´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_carried_application_write_is_never_a_candidate(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    let f = fixture(&rig.pool).await;
+    let carried = settling_content(&rig.pool, "a", 20, None, (0.5, 0.5), 1).await;
+    sqlx::query("UPDATE staged_writes SET state = 'carried', carried = TRUE WHERE node_id = $1")
+        .bind(carried)
+        .execute(&rig.pool)
+        .await
+        .expect("carry");
+    let kept = settling_content(&rig.pool, "a", 21, None, (0.5, 0.5), 2).await;
+    rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    assert_eq!(sent_refs(&pod), HashSet::from([kept]));
+}
+
+/// The candidates narrow by what the ranker computes over and nothing
+/// else: `kinds` (a comment is no candidate of a Posts feed), and under a
+/// topic, the author's own current declaration of it (a third party's
+/// pending tag, or the author's withdrawn one, admits nothing).
+///
+/// Settling candidates narrow by kinds and topic only.
+/// ´claim:relay:candidates-narrow-by-kinds-and-topic´
+#[sqlx::test(migrations = "../../migrations")]
+async fn candidates_narrow_by_kinds_and_topic_only(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    let f = fixture(&rig.pool).await;
+    let post = settling_content(&rig.pool, "a", 20, None, (0.5, 0.5), 1).await;
+    let comment = settling_content(&rig.pool, "a", 21, Some(f.post), (0.5, 0.5), 2).await;
+    let rank_with = |filter: Value| {
+        let rig = &rig;
+        let viewer = f.viewer;
+        async move { rank(rig, None, json!({ "viewer": viewer, "filter": filter })).await }
+    };
+    rank_with(json!({ "kinds": ["POST"] })).await;
+    assert_eq!(sent_refs(&pod), HashSet::from([post]));
+    rank_with(json!({ "kinds": ["COMMENT"] })).await;
+    assert_eq!(sent_refs(&pod), HashSet::from([comment]));
+    rank_with(json!({ "kinds": ["POST", "COMMENT"] })).await;
+    assert_eq!(sent_refs(&pod), HashSet::from([post, comment]));
+    rank_with(json!({ "kinds": ["USER", "HASHTAG"] })).await;
+    assert_eq!(sent_refs(&pod), HashSet::new());
+
+    let salt = registered_topic(&rig.pool, "salt").await;
+    let own = settling_content(&rig.pool, "a", 22, None, (0.5, 0.5), 3).await;
+    pending_tag(&rig.pool, "a", 30, own, "salt", 1.0).await;
+    let others = settling_content(&rig.pool, "a", 23, None, (0.5, 0.5), 4).await;
+    pending_tag(&rig.pool, "b", 30, others, "salt", 1.0).await;
+    let withdrawn = settling_content(&rig.pool, "a", 24, None, (0.5, 0.5), 5).await;
+    pending_tag(&rig.pool, "a", 31, withdrawn, "salt", 1.0).await;
+    pending_tag(&rig.pool, "a", 32, withdrawn, "salt", 0.0).await;
+    rank_with(json!({ "topic": salt })).await;
+    assert_eq!(sent_refs(&pod), HashSet::from([own]));
+    assert_eq!(pod.last_variables()["params"]["topic"], json!(salt));
+}
+
+/// Seen and people are the device's cuts (PR-49): a candidate the reader
+/// has seen, by an author the reader holds no opinion of, still rides.
+///
+/// Settling candidates are never narrowed by seen or people.
+/// ´claim:relay:candidates-ignore-seen-and-people´
+#[sqlx::test(migrations = "../../migrations")]
+async fn candidates_are_never_narrowed_by_seen_or_people(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    fixture(&rig.pool).await;
+    let (me, token) = reader(&rig, "reader").await;
+    let by_a_stranger = settling_content(&rig.pool, "x", 20, None, (0.5, 0.5), 1).await;
+    sqlx::query(
+        "INSERT INTO user_view_log (user_id, content_id, kind, first_seen_at)
+         VALUES ($1, $2, 'post', NOW())",
+    )
+    .bind(me)
+    .bind(by_a_stranger)
+    .execute(&rig.pool)
+    .await
+    .expect("seen");
+    rank(&rig, Some(&token), json!({ "viewer": me })).await;
+    assert_eq!(sent_refs(&pod), HashSet::from([by_a_stranger]));
+}
+
+/// The candidates ride on every call — there is no Still-settling
+/// argument; a reader with it off cuts them on the device — each with its
+/// authoring instant, which orders it in its gap and under Newest.
+///
+/// Candidates always ride, each with its authoring instant.
+/// ´claim:relay:candidates-always-ride´
+#[sqlx::test(migrations = "../../migrations")]
+async fn candidates_always_ride_and_carry_their_authoring_instant(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    let f = fixture(&rig.pool).await;
+    rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    assert_eq!(pod.last_variables()["params"]["settling"], json!([]));
+    settling_content(&rig.pool, "a", 20, None, (0.5, 0.5), 9).await;
+    rank(&rig, None, json!({ "viewer": f.viewer, "filter": {} })).await;
+    let c = &sent_candidates(&pod)[0];
+    let authored: chrono::DateTime<chrono::Utc> = c["authoredAt"]
+        .as_str()
+        .expect("instant")
+        .parse()
+        .expect("instant");
+    assert_eq!(authored, authored_at(9));
+}
+
+/// Both woven position sets index their own list: `entries` and `settling`
+/// together, each order's positions distinct and inside it.
+///
+/// OS-17 (veto window open): the NEWEST positions follow the ruled
+/// reading, settling ahead of landed.
+///
+/// Each woven position set indexes its woven list exactly once.
+/// ´claim:relay:each-position-set-indexes-its-list´
+#[sqlx::test(migrations = "../../migrations")]
+async fn both_settling_position_sets_index_their_woven_lists(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Hold).await;
+    let f = fixture(&rig.pool).await;
+    let s1 = settling_content(&rig.pool, "a", 20, None, (0.5, 0.5), 1).await;
+    let s2 = settling_content(&rig.pool, "a", 21, None, (0.5, 0.5), 2).await;
+    let (t1, t2) = (Uuid::new_v4(), Uuid::new_v4());
+    pod.set(Mode::Answer(ranking(
+        &[(t1, "POST", 0.9, None, 1), (t2, "POST", 0.4, None, 0)],
+        &[(s1, None, 1, 1), (s2, None, 3, 0)],
+    )));
+    let answer = rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    let woven = answer["entries"].as_array().expect("entries").len()
+        + answer["settling"].as_array().expect("settling").len();
+    for order in ["rankedPosition", "newestPosition"] {
+        let positions: Vec<usize> = answer["settling"]
+            .as_array()
+            .expect("settling")
+            .iter()
+            .map(|s| s[order].as_u64().expect("position") as usize)
+            .collect();
+        let distinct: HashSet<usize> = positions.iter().copied().collect();
+        assert_eq!(distinct.len(), positions.len(), "{order}");
+        assert!(positions.iter().all(|p| *p < woven), "{order}");
+    }
+    let newest: HashSet<i64> = answer["entries"]
+        .as_array()
+        .expect("entries")
+        .iter()
+        .map(|e| e["newestIndex"].as_i64().expect("index"))
+        .collect();
+    assert_eq!(newest, HashSet::from([0, 1]));
+}
+
+/// Settling content never enters `entries`: it is never in the slice and
+/// never scored, and its place comes back on `settling` alone.
+///
+/// Settling content is never among the ranked entries.
+/// ´claim:relay:settling-is-never-an-entry´
+#[sqlx::test(migrations = "../../migrations")]
+async fn settling_is_never_in_the_ranked_entries(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Hold).await;
+    let f = fixture(&rig.pool).await;
+    let pending = settling_content(&rig.pool, "a", 20, None, (0.5, 0.5), 1).await;
+    pod.set(Mode::Answer(ranking(
+        &[(f.post, "POST", 0.5, None, 0)],
+        &[(pending, None, 0, 0)],
+    )));
+    let answer = rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    assert_eq!(ids_of(&answer["entries"]), vec![f.post]);
+    assert_eq!(ids_of(&answer["settling"]), vec![pending]);
+    let node_set = node_ids(&full_slice(&rig, f.viewer).await);
+    let pending_node: String = sqlx::query_scalar("SELECT l1_node_id FROM posts WHERE id = $1")
+        .bind(pending)
+        .fetch_one(&rig.pool)
+        .await
+        .expect("node");
+    assert!(
+        !node_set.contains(&pending_node),
+        "settling rides beside the slice"
+    );
+}
+
+/// A target whose record has landed is no longer settling (W-4), even
+/// while its content row has not caught up. Landed by the pin, it ranks
+/// among the entries, so it never repeats beside them; landed after the
+/// pin, it is in neither list for that call and arrives with the next.
+///
+/// A target whose record has landed is never a settling candidate.
+/// ´claim:relay:a-landed-id-never-repeats-as-settling´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_landed_id_never_repeats_in_settling(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    let f = fixture(&rig.pool).await;
+    let lagging = settling_content(&rig.pool, "a", 20, None, (0.5, 0.5), 1).await;
+    let still = settling_content(&rig.pool, "a", 21, None, (0.5, 0.5), 2).await;
+    rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    assert_eq!(sent_refs(&pod), HashSet::from([lagging, still]));
+    let landed_at = land(
+        &rig.pool,
+        vec![binary(
+            "a",
+            20,
+            Family::Publish,
+            minted("a", 20, Family::Publish),
+        )],
+    )
+    .await;
+    for pin in [landed_at, landed_at - 1] {
+        rank(&rig, None, json!({ "viewer": f.viewer, "asOf": pin })).await;
+        assert_eq!(sent_refs(&pod), HashSet::from([still]), "pinned at {pin}");
+    }
+}
+
+/// A repinned call reproduces `entries` and reads `settling` live (W-5):
+/// the pin rides to the pod again, while the candidates are re-read on
+/// every call, so content signed since the first call rides the second.
+///
+/// A ranking repinned at its epoch reproduces its entries and re-reads settling live.
+/// ´claim:relay:a-repin-reads-settling-live´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_repinned_ranking_reproduces_entries_and_reads_settling_live(pool: PgPool) {
+    let t1 = Uuid::new_v4();
+    let (rig, pod) = pod_rig(
+        pool,
+        Mode::Answer(ranking(&[(t1, "POST", 0.5, None, 0)], &[])),
+    )
+    .await;
+    let f = fixture(&rig.pool).await;
+    let first = rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    let pin = first["asOfEpoch"].as_i64().expect("epoch");
+    assert_eq!(sent_refs(&pod), HashSet::new());
+    let signed_since = settling_content(&rig.pool, "a", 20, None, (0.5, 0.5), 1).await;
+    land(&rig.pool, vec![binary("x", 30, Family::Opinion, prof("a"))]).await;
+    let again = rank(&rig, None, json!({ "viewer": f.viewer, "asOf": pin })).await;
+    assert_eq!(again["entries"], first["entries"]);
+    assert_eq!(pod.last_variables()["asOfEpoch"], pin);
+    assert_eq!(sent_refs(&pod), HashSet::from([signed_since]));
+}
+
+/// Null kinds rank Posts only (feed-ranking.md §9.3; miner-api.md:80).
+///
+/// A ranking with no kinds named ranks Posts only.
+/// ´claim:relay:null-kinds-rank-posts´
+#[sqlx::test(migrations = "../../migrations")]
+async fn null_kinds_rank_posts_only(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    let f = fixture(&rig.pool).await;
+    rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    assert_eq!(pod.last_variables()["params"]["kinds"], json!(["POST"]));
+    rank(
+        &rig,
+        None,
+        json!({ "viewer": f.viewer, "filter": { "kinds": null } }),
+    )
+    .await;
+    assert_eq!(pod.last_variables()["params"]["kinds"], json!(["POST"]));
+}
+
+/// No kind admits a candidate, so the server answers empty at the pin
+/// without asking the pod — the client never asks, but the server stays
+/// total.
+///
+/// An empty kind list ranks nothing and never calls the ranker.
+/// ´claim:relay:no-kinds-never-calls-the-ranker´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_empty_kind_list_ranks_nothing_and_never_calls_the_ranker(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    let f = fixture(&rig.pool).await;
+    settling_content(&rig.pool, "a", 20, None, (0.5, 0.5), 1).await;
+    let cursor = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
+    let answer = rank(
+        &rig,
+        None,
+        json!({ "viewer": f.viewer, "filter": { "kinds": [] } }),
+    )
+    .await;
+    assert_eq!(
+        answer,
+        json!({ "asOfEpoch": cursor, "entries": [], "settling": [] })
+    );
+    assert!(pod.requests().is_empty());
+}
+
+/// The topic narrows the pod's candidates (§5.2), so it rides the pod's
+/// parameters as the Hashtag id the client sent — known to the registry
+/// or not.
+///
+/// The topic rides the pod's parameters as sent.
+/// ´claim:relay:the-topic-rides´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_topic_rides_the_rank_params(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    let f = fixture(&rig.pool).await;
+    let salt = registered_topic(&rig.pool, "salt").await;
+    rank(
+        &rig,
+        None,
+        json!({ "viewer": f.viewer, "filter": { "topic": salt } }),
+    )
+    .await;
+    assert_eq!(pod.last_variables()["params"]["topic"], json!(salt));
+    let unknown = Uuid::new_v4();
+    let answer = rank(
+        &rig,
+        None,
+        json!({ "viewer": f.viewer, "filter": { "topic": unknown } }),
+    )
+    .await;
+    assert_eq!(pod.last_variables()["params"]["topic"], json!(unknown));
+    assert_eq!(answer["settling"], json!([]));
+}
+
+/// An unpinned call ranks at the mirror cursor, sends that epoch to the
+/// pod explicitly — so every slice page the pod pulls is one snapshot —
+/// and reports it.
+///
+/// A ranking reports the epoch it was ranked at, sent to the pod explicitly.
+/// ´claim:relay:the-ranking-reports-its-epoch´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_ranking_reports_its_epoch(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    let f = fixture(&rig.pool).await;
+    let cursor = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
+    let answer = rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    assert_eq!(answer["asOfEpoch"], cursor);
+    assert_eq!(pod.last_variables()["asOfEpoch"], cursor);
+    assert_eq!(pod.last_variables()["viewer"], json!(f.viewer));
+}
+
+/// A call pinned at a reported epoch asks the pod for that epoch again
+/// and passes the same answer through, after the mirror has moved on.
+///
+/// A ranking repinned at its epoch is identical.
+/// ´claim:relay:a-repinned-ranking-is-identical´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_ranking_repinned_at_its_epoch_is_identical(pool: PgPool) {
+    let (t1, t2) = (Uuid::new_v4(), Uuid::new_v4());
+    let (rig, pod) = pod_rig(
+        pool,
+        Mode::Answer(ranking(
+            &[(t1, "POST", 0.9, None, 1), (t2, "POST", 0.1, None, 0)],
+            &[],
+        )),
+    )
+    .await;
+    let f = fixture(&rig.pool).await;
+    let first = rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    land(&rig.pool, vec![binary("x", 30, Family::Opinion, prof("a"))]).await;
+    let pin = first["asOfEpoch"].clone();
+    let again = rank(&rig, None, json!({ "viewer": f.viewer, "asOf": pin })).await;
+    assert_eq!(pod.last_variables()["asOfEpoch"], pin);
+    assert_eq!(again, first);
+}
+
+/// The pin must name an ingested epoch.
+///
+/// A ranking pinned past the mirror cursor or below zero is BAD_INPUT, and the pod is never called.
+/// ´claim:relay:a-pin-past-the-mirror-is-bad-input´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranking_pinned_past_the_mirror_is_bad_input(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    let f = fixture(&rig.pool).await;
+    let cursor = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
+    for pin in [cursor + 1, -1] {
+        let response = rank_raw(&rig, None, json!({ "viewer": f.viewer, "asOf": pin })).await;
+        assert_eq!(codes(&response), vec!["BAD_INPUT"], "for {pin}");
+    }
+    assert!(pod.requests().is_empty());
+}
+
+/// A viewer the pod finds no slice for reads null, and so does a mirror
+/// with nothing ingested — there the relay never asks.
+///
+/// A ranking of an unrankable viewer reads null.
+/// ´claim:relay:an-unrankable-viewer-reads-null´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranking_an_unknown_viewer_reads_null(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Fault("NOT_FOUND")).await;
+    let empty = rank(&rig, None, json!({ "viewer": Uuid::new_v4() })).await;
+    assert_eq!(empty, Value::Null);
+    assert!(pod.requests().is_empty(), "an empty mirror ranks nothing");
+    fixture(&rig.pool).await;
+    let unknown = rank(&rig, None, json!({ "viewer": Uuid::new_v4() })).await;
+    assert_eq!(unknown, Value::Null);
+    assert_eq!(pod.requests().len(), 1);
+}
+
+/// The pod's NOT_FOUND (a null slice) is the relay's null, never an
+/// error.
+///
+/// (´claim:relay:an-unrankable-viewer-reads-null´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_pod_not_found_reads_null(pool: PgPool) {
+    let (rig, _pod) = pod_rig(pool, Mode::Fault("NOT_FOUND")).await;
+    let f = fixture(&rig.pool).await;
+    let response = rank_raw(&rig, None, json!({ "viewer": f.viewer })).await;
+    assert!(response["errors"].is_null(), "{response}");
+    assert_eq!(response["data"]["feedRanking"], Value::Null);
+}
+
+/// The relay sends no calibration of its own, so the pod refusing its
+/// request as bad input is a relay bug: INTERNAL, logged as one.
+///
+/// The pod's BAD_INPUT surfaces as INTERNAL and is logged as a relay bug.
+/// ´claim:relay:a-pod-bad-input-is-internal´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_pod_bad_input_surfaces_as_internal_and_is_logged(pool: PgPool) {
+    let (rig, _pod) = pod_rig(pool, Mode::Fault("BAD_INPUT")).await;
+    let f = fixture(&rig.pool).await;
+    let (_guard, logs) = Logs::capture();
+    let response = rank_raw(&rig, None, json!({ "viewer": f.viewer })).await;
+    assert_eq!(codes(&response), vec!["INTERNAL"]);
+    assert!(logs.text().contains("a relay bug"), "{}", logs.text());
+}
+
+/// No silent fallback (§4.5): with the pod unreachable the answer is the
+/// drawn fault, never a Newest listing standing in for the ranking.
+///
+/// A ranking with the ranker down is INTERNAL, never a silent Newest.
+/// ´claim:relay:the-ranker-down-is-internal´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranking_with_the_ranker_down_is_internal_never_newest(pool: PgPool) {
+    let closed = {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("bind");
+        listener.local_addr().expect("addr")
+    };
+    let rig = WireRig::with_ranker(
+        pool,
+        RateLimitConfig::unlimited(),
+        &RankerConfig {
+            url: format!("http://{closed}/graphql"),
+            ..RankerConfig::default()
+        },
+    );
+    let f = fixture(&rig.pool).await;
+    let (_guard, logs) = Logs::capture();
+    let response = rank_raw(&rig, None, json!({ "viewer": f.viewer })).await;
+    assert_eq!(codes(&response), vec!["INTERNAL"]);
+    assert!(response["data"]["feedRanking"].is_null(), "{response}");
+    assert!(logs.text().contains("unreachable"), "{}", logs.text());
+}
+
+/// A pod slower than `RANKER_TIMEOUT_MS` is a fault, not a wait.
+///
+/// A ranking past the timeout is INTERNAL.
+/// ´claim:relay:past-the-timeout-is-internal´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranking_past_the_timeout_is_internal(pool: PgPool) {
+    let (rig, _pod) = pod_rig_with(
+        pool,
+        Mode::Slow(Duration::from_secs(5), ranking(&[], &[])),
+        |config| config.timeout = Duration::from_millis(200),
+    )
+    .await;
+    let f = fixture(&rig.pool).await;
+    let (_guard, logs) = Logs::capture();
+    let response = rank_raw(&rig, None, json!({ "viewer": f.viewer })).await;
+    assert_eq!(codes(&response), vec!["INTERNAL"]);
+    assert!(
+        logs.text().contains("did not answer within"),
+        "{}",
+        logs.text()
+    );
+}
+
+/// Backpressure: with every slot held, a call that cannot get one within
+/// the timeout is refused without reaching the pod. One slot; the first
+/// call holds it at the pod until its own timeout, the second (queued once
+/// the first is at the pod) takes it then, and the third — queued behind
+/// both — runs out of time first.
+///
+/// A ranking over the in-flight cap is INTERNAL and never reaches the pod.
+/// ´claim:relay:over-the-cap-is-internal´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranking_over_the_in_flight_cap_is_internal(pool: PgPool) {
+    let (rig, pod) = pod_rig_with(pool, Mode::Hold, |config| {
+        config.timeout = Duration::from_millis(400);
+        config.max_in_flight = 1;
+    })
+    .await;
+    let f = fixture(&rig.pool).await;
+    let (_guard, logs) = Logs::capture();
+    let variables = json!({ "viewer": f.viewer });
+    let (first, (second, third)) = tokio::join!(rank_raw(&rig, None, variables.clone()), async {
+        tokio::time::timeout(Duration::from_secs(5), async {
+            while pod.requests().is_empty() {
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+        })
+        .await
+        .expect("the first call reaches the pod");
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        tokio::join!(
+            rank_raw(&rig, None, variables.clone()),
+            rank_raw(&rig, None, variables.clone())
+        )
+    });
+    for response in [&first, &second, &third] {
+        assert_eq!(codes(response), vec!["INTERNAL"]);
+    }
+    assert_eq!(
+        pod.requests().len(),
+        2,
+        "the third call never reached the pod"
+    );
+    let text = logs.text();
+    assert!(text.contains("over the in-flight cap"), "{text}");
+    assert!(text.contains("did not answer within"), "{text}");
+}
+
+/// T-POOL: the pod calls back into this api for the slice while the relay
+/// waits on it, so the relay must hold no pooled connection across the
+/// call. With a one-connection pool, a relay that held one would starve
+/// the pod's slice read until the call timed out.
+///
+/// The relay completes with a one-connection pool while the pod reads the slice back.
+/// ´claim:relay:no-connection-is-held-across-the-pod-call´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_relay_completes_with_a_one_connection_pool(pool: PgPool) {
+    let one = sqlx::postgres::PgPoolOptions::new()
+        .max_connections(1)
+        .connect_with((*pool.connect_options()).clone())
+        .await
+        .expect("a one-connection pool");
+    let f = fixture(&one).await;
+    let (rig, pod) = pod_rig_with(one, Mode::Hold, |config| {
+        config.timeout = Duration::from_secs(10);
+    })
+    .await;
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+        .await
+        .expect("bind the api");
+    let api_url = format!("http://{}/graphql", listener.local_addr().expect("addr"));
+    let app = rig.app.clone();
+    tokio::spawn(async move { axum::serve(listener, app).await.expect("the api serves") });
+    pod.set(Mode::FetchSliceThen(
+        api_url,
+        ranking(&[(f.post, "POST", 0.5, None, 0)], &[]),
+    ));
+    let answer = rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    assert_eq!(ids_of(&answer["entries"]), vec![f.post]);
+    assert_eq!(pod.requests().len(), 1);
+}
+
+/// One raw POST to `/graphql`: (status, headers, body bytes as sent).
+async fn post_graphql(
+    rig: &WireRig,
+    body: Value,
+    accept_gzip: bool,
+    token: Option<&str>,
+) -> (axum::http::HeaderMap, Vec<u8>) {
+    use http_body_util::BodyExt;
+    use tower::ServiceExt;
+    let mut builder = axum::http::Request::builder()
+        .method("POST")
+        .uri("/graphql")
+        .header("content-type", "application/json");
+    if accept_gzip {
+        builder = builder.header("accept-encoding", "gzip");
+    }
+    if let Some(token) = token {
+        builder = builder.header("authorization", format!("Bearer {token}"));
+    }
+    let response = rig
+        .app
+        .clone()
+        .oneshot(
+            builder
+                .body(axum::body::Body::from(body.to_string()))
+                .expect("request"),
+        )
+        .await
+        .expect("response");
+    let headers = response.headers().clone();
+    let bytes = response
+        .into_body()
+        .collect()
+        .await
+        .expect("body")
+        .to_bytes()
+        .to_vec();
+    (headers, bytes)
+}
+
+fn gunzip(bytes: &[u8]) -> Vec<u8> {
+    let mut out = Vec::new();
+    flate2::read::GzDecoder::new(bytes)
+        .read_to_end(&mut out)
+        .expect("valid gzip");
+    out
+}
+
+/// A pod answer worth compressing: twenty entries, marks and indices.
+fn a_page_of_entries() -> Value {
+    let entries: Vec<(Uuid, &str, f64, Option<&str>, i64)> = (0..20)
+        .map(|i| {
+            (
+                Uuid::new_v4(),
+                "POST",
+                1.0 / f64::from(i + 1),
+                Some("FOR"),
+                19 - i64::from(i),
+            )
+        })
+        .collect();
+    ranking(&entries, &[])
+}
+
+/// The feed answer goes out compressed to a client that accepts gzip, and
+/// decodes to exactly the JSON an identity answer carries (P-8 measures
+/// the bytes per row at the hand test).
+///
+/// The feed answer is gzip-compressed when the client accepts gzip, decoding to the identical JSON.
+/// ´claim:compression:the-feed-answer-compresses´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_feed_answer_is_compressed_when_the_client_accepts_gzip(pool: PgPool) {
+    let (rig, _pod) = pod_rig(pool, Mode::Answer(a_page_of_entries())).await;
+    let f = fixture(&rig.pool).await;
+    let body = json!({ "query": RANKING, "variables": { "viewer": f.viewer } });
+    let (headers, compressed) = post_graphql(&rig, body.clone(), true, None).await;
+    assert_eq!(headers["content-encoding"], "gzip");
+    let (_, identity) = post_graphql(&rig, body, false, None).await;
+    let decoded = gunzip(&compressed);
+    let decoded: Value = serde_json::from_slice(&decoded).expect("JSON inside");
+    let identity: Value = serde_json::from_slice(&identity).expect("JSON");
+    assert!(decoded["errors"].is_null(), "{decoded}");
+    assert_eq!(decoded, identity);
+    assert!(
+        compressed.len() < serde_json::to_vec(&identity).expect("bytes").len(),
+        "compression shrinks the answer"
+    );
+}
+
+/// A client that names no encoding gets the answer as it is.
+///
+/// The feed answer is identity-encoded without Accept-Encoding.
+/// ´claim:compression:identity-without-accept-encoding´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_feed_answer_is_identity_without_accept_encoding(pool: PgPool) {
+    let (rig, _pod) = pod_rig(pool, Mode::Answer(a_page_of_entries())).await;
+    let f = fixture(&rig.pool).await;
+    let body = json!({ "query": RANKING, "variables": { "viewer": f.viewer } });
+    let (headers, bytes) = post_graphql(&rig, body, false, None).await;
+    assert!(headers.get("content-encoding").is_none(), "{headers:?}");
+    let answer: Value = serde_json::from_slice(&bytes).expect("plain JSON");
+    assert_eq!(
+        answer["data"]["feedRanking"]["entries"]
+            .as_array()
+            .expect("entries")
+            .len(),
+        20
+    );
+}
+
+/// The BREACH posture, at the response: an answer minting a session —
+/// the access and refresh tokens — goes out uncompressed even to a client
+/// that accepts gzip, because no mutation's answer is ever compressed.
+///
+/// A mutation's answer is never compressed, so session material never meets the compressor.
+/// ´claim:compression:no-mutation-answer-compresses´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_session_minting_answer_is_never_compressed(pool: PgPool) {
+    let rig = rig(pool);
+    rig.seed_member("minter", "minter@example.test").await;
+    let body = json!({
+        "query": "mutation($input: LogInInput!) {
+                    logIn(input: $input) { auth { accessToken refreshToken } userErrors { code } }
+                  }",
+        "variables": { "input": { "email": "minter@example.test", "password": rig::MEMBER_PASSWORD } },
+    });
+    let (headers, bytes) = post_graphql(&rig, body, true, None).await;
+    assert!(headers.get("content-encoding").is_none(), "{headers:?}");
+    let answer: Value = serde_json::from_slice(&bytes).expect("plain JSON");
+    assert!(
+        answer["data"]["logIn"]["auth"]["accessToken"].is_string(),
+        "{answer}"
+    );
+}
+
+/// The BREACH posture, at the schema: compression is scoped to queries on
+/// the ground that nothing a query can reach carries session material. A
+/// walk of every output type reachable from `Query` finds no token and no
+/// secret field — while the same walk from `Mutation` does find them, so
+/// the walk sees session material where it lives. A field like that
+/// joining a query's reach fails here and forces the posture to be argued
+/// again.
+///
+/// No type a query can reach carries a token or a secret.
+/// ´claim:compression:no-query-reaches-session-material´
+#[test]
+fn no_query_reaches_session_material() {
+    use async_graphql::parser::parse_schema;
+    use async_graphql::parser::types::{BaseType, Type, TypeKind, TypeSystemDefinition};
+
+    fn named(ty: &Type) -> String {
+        match &ty.base {
+            BaseType::Named(name) => name.to_string(),
+            BaseType::List(inner) => named(inner),
+        }
+    }
+    let document = parse_schema(api::schema::sdl()).expect("the schema parses");
+    let mut fields: HashMap<String, Vec<(String, String)>> = HashMap::new();
+    let mut implementors: HashMap<String, Vec<String>> = HashMap::new();
+    for definition in document.definitions {
+        let TypeSystemDefinition::Type(ty) = definition else {
+            continue;
+        };
+        let ty = ty.node;
+        let name = ty.name.node.to_string();
+        let entry = fields.entry(name.clone()).or_default();
+        match ty.kind {
+            TypeKind::Object(object) => {
+                for field in object.fields {
+                    entry.push((field.node.name.node.to_string(), named(&field.node.ty.node)));
+                }
+                for interface in object.implements {
+                    implementors
+                        .entry(interface.node.to_string())
+                        .or_default()
+                        .push(name.clone());
+                }
+            }
+            TypeKind::Interface(interface) => {
+                for field in interface.fields {
+                    entry.push((field.node.name.node.to_string(), named(&field.node.ty.node)));
+                }
+            }
+            TypeKind::Union(union) => {
+                for member in union.members {
+                    entry.push((String::new(), member.node.to_string()));
+                }
+            }
+            _ => {}
+        }
+    }
+    let secrets_reachable_from = |root: &str| -> Vec<String> {
+        let mut seen = HashSet::from([root.to_string()]);
+        let mut queue = vec![root.to_string()];
+        let mut found = Vec::new();
+        while let Some(ty) = queue.pop() {
+            let mut next: Vec<String> = implementors.get(&ty).cloned().unwrap_or_default();
+            for (field, target) in fields.get(&ty).into_iter().flatten() {
+                if field.ends_with("Token") || field.ends_with("Secret") || field == "secret" {
+                    found.push(format!("{ty}.{field}"));
+                }
+                next.push(target.clone());
+            }
+            for target in next {
+                if seen.insert(target.clone()) {
+                    queue.push(target);
+                }
+            }
+        }
+        found.sort();
+        found
+    };
+    assert_eq!(secrets_reachable_from("Query"), Vec::<String>::new());
+    let from_mutations = secrets_reachable_from("Mutation");
+    assert!(
+        from_mutations.contains(&"AuthSession.accessToken".to_string()),
+        "{from_mutations:?}"
+    );
 }

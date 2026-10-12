@@ -68,6 +68,8 @@ impl Rig {
             breach: Arc::new(api::breach::DisabledCorpus),
             media: media.clone(),
             blobs: blobs.clone(),
+            ranker: api::ranker_pod::RankerClient::new(&Default::default()).expect("ranker client"),
+            slice_reads: Default::default(),
         };
         let uploads = rig::upload_routing(&ctx);
         let schema = api::schema::build(ctx);

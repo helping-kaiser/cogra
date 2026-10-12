@@ -27,7 +27,9 @@ use crate::l1::StandInBoundary;
 use crate::mailer::{Mailer, WebOrigin};
 use crate::media::{BlobStore, MediaConfig};
 use crate::onboarding::OnboardingConfig;
+use crate::ranker_pod::RankerClient;
 use crate::ratelimit::RateLimitConfig;
+use feed::SliceReadLog;
 
 pub type ApiSchema = Schema<Query, Mutation, EmptySubscription>;
 
@@ -45,6 +47,11 @@ pub struct ApiContext {
     /// The media service, as a client. Bytes never live in this process
     /// — the store is its own container with its own lifecycle.
     pub blobs: Arc<dyn BlobStore>,
+    /// The server ranker pod, as a client. Ranking never runs in this
+    /// process; `feedRanking` relays to it.
+    pub ranker: RankerClient,
+    /// The slice supply's per-(viewer, epoch) read log (perf watch P-7).
+    pub slice_reads: SliceReadLog,
 }
 
 /// The per-query demand budgets (roadmap.md slice 1.1; api-spec.md
@@ -142,6 +149,8 @@ pub fn build_with(ctx: ApiContext, budgets: QueryBudgets) -> ApiSchema {
         .data(ctx.breach)
         .data(ctx.media)
         .data(ctx.blobs)
+        .data(ctx.ranker)
+        .data(ctx.slice_reads)
         .limit_depth(budgets.depth)
         .limit_complexity(budgets.complexity);
     if !budgets.introspection_enabled {

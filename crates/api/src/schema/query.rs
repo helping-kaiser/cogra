@@ -757,6 +757,28 @@ impl Query {
         .await
     }
 
+    /// The ranked feed of `viewer`'s view, computed by the server's
+    /// standalone ranker container and relayed (miner-api.md). Ranking
+    /// never runs in the backend process: the backend serves the slice,
+    /// relays this request, and hydrates the result through `feed`. The
+    /// result is a snapshot. The client keeps it as the frozen order
+    /// (feed-ranking.md §9.5) and derives its views from it: order,
+    /// people, seen and Still settling are applied on the device, never
+    /// asked of the server. `asOfEpoch` reports the epoch its scored
+    /// entries were ranked at, and a call pinned there reproduces them;
+    /// the `asOfEpoch` argument pins the slice to an earlier epoch (null
+    /// ranks as of the newest ingested epoch). Null if `viewer` resolves
+    /// to no rankable actor.
+    async fn feed_ranking(
+        &self,
+        ctx: &Context<'_>,
+        viewer: Uuid,
+        as_of_epoch: Option<i64>,
+        filter: Option<super::feed::FeedRankFilter>,
+    ) -> async_graphql::Result<Option<super::feed::FeedRanking>> {
+        super::feed::feed_ranking(ctx, viewer, as_of_epoch, filter).await
+    }
+
     /// Hydrate a window of a ranking snapshot: the nodes behind the given
     /// ids, in the given order. At most 100 ids per call (the page
     /// budget). An id that resolves to nothing hydratable (a pending write

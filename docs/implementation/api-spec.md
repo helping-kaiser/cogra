@@ -2368,6 +2368,19 @@ type Query {
     first: Int, after: String, last: Int, before: String
   ): FeedConnection!
 
+  "The ranked feed of `viewer`'s view, computed by the server's
+   standalone ranker container and relayed (miner-api.md). Ranking never
+   runs in the backend process: the backend serves the slice, relays
+   this request, and hydrates the result through `feed`. The result is a
+   snapshot. The client keeps it as the frozen order (feed-ranking.md
+   §9.5) and derives its views from it: order, people, seen and Still
+   settling are applied on the device, never asked of the server.
+   `asOfEpoch` reports the epoch its scored entries were ranked at, and
+   a call pinned there reproduces them; the `asOfEpoch` argument pins
+   the slice to an earlier epoch (null ranks as of the newest ingested
+   epoch). Null if `viewer` resolves to no rankable actor."
+  feedRanking(viewer: UUID!, asOfEpoch: Int, filter: FeedRankFilter): FeedRanking
+
   "Global search across nodes; returns a `SearchResult` per edge. Recall is
    lexical over the indexed name-class fields and post titles — an
    untitled post is never matched by its words; order is exact-match
@@ -2422,7 +2435,8 @@ It serves the viewer's weight-bounded subgraph slice; a ranker —
 the viewer's device or a delegated miner — orders it and hands
 back an id list, which `feed` hydrates in order. The ranking
 metrics, the parameters, and the contributing paths live with the
-ranker, specified in [miner-api.md](miner-api.md).
+ranker, specified in [miner-api.md](miner-api.md). The slice is
+generic: one per viewer and epoch, never shaped by a filter.
 
 The slice contract is **raw L1 edge records plus their order
 coordinates**: the χ-bounded node set and the accepted records
@@ -2438,14 +2452,19 @@ permitted only as a wire optimization that changes nothing
 observable
 ([miner-api.md "The contract"](miner-api.md#the-contract)).
 
-The viewer's seen-list is not part of the slice: it is private
-operational state the device fetches under its own session
-(`User.viewHistory`) and forwards to a delegated ranker inside the
-request. Named opt-in feeds (topic, friends, guild) are read-side
-compositions the ranker and frontend build over the same slice
-surface — a named feed is presented as what it is and never as the
-neutral rank
-([feed-ranking.md §10](../primitive/feed-ranking.md#10-the-default-feed-and-named-feeds)).
+The reader's seen-list is not part of the slice and rides no ranking
+request: the ranker ranks seen and unseen content alike, and the
+reader's device cuts what it has already seen from the ranked answer,
+re-reading its own record at every change of view. `markSeen` writes
+the record History reads (`User.viewHistory`); the feed path never
+reads it back. Order, Still settling and the people scope are
+device-side too: the answer carries each row's people mark and its
+place in both orders. Named opt-in feeds (topic, friends, guild) are
+read-side compositions the ranker and frontend build over the same
+slice surface — a named feed is presented as what it is and never as
+the neutral rank
+([feed-ranking.md §10](../primitive/feed-ranking.md#10-the-default-feed-and-named-feeds));
+the topic feed narrows the candidates through `FeedRankFilter.topic`.
 
 ```graphql
 "The viewer's relevant subgraph for ranking: the slice's node set and
@@ -2510,6 +2529,66 @@ type FeedEdge {
   cursor: String!
   node: FeedItem!
 }
+
+"What narrows the ranker's candidates. Only arguments that change what
+ the ranker must compute ride here; every other sheet axis is a device
+ cut (feed-ranking.md §9.1; miner-api.md:63-64)."
+input FeedRankFilter {
+  "Rankable kinds in scope. Null means Posts only (feed-ranking.md
+   §9.3). An empty list ranks nothing."
+  kinds: [NodeKind!]
+  "A topic (Hashtag id). Only content reaching the viewer over Tag
+   records toward it is a candidate (FeedTopic; hashtag.md §5)."
+  topic: UUID
+}
+
+"One ranking snapshot."
+type FeedRanking {
+  "The epoch the ranked slice reads as of (FeedSlice.asOfEpoch)."
+  asOfEpoch: Int!
+  "The landed targets, scored, in RANKED order, best first. A target
+   no live path reaches is absent, not zero-scored (feed-ranking.md
+   §7). This is the pinned snapshot: a call pinned at `asOfEpoch`
+   reproduces it."
+  entries: [FeedEntry!]!
+  "Content still settling, with its place in both woven orders.
+   Carries no score by construction. Read live on every call, never
+   part of the pinned snapshot."
+  settling: [SettlingEntry!]!
+}
+
+"One landed target."
+type FeedEntry {
+  targetId: UUID!
+  kind: NodeKind!
+  "S(u, target) — the signed greedy disjoint-sum (feed-ranking.md §6.1)."
+  score: Float!
+  "The viewer's held opinion of the person behind the row, read at
+   `asOfEpoch`. Null when none is held, for a Tags row, or when the
+   reader is not the viewer."
+  mark: PeopleMark
+  "This entry's 0-based index among `entries` in NEWEST order. The
+   indices are a permutation of 0..|entries|-1."
+  newestIndex: Int!
+}
+
+"One settling row."
+type SettlingEntry {
+  targetId: UUID!
+  kind: NodeKind!
+  "As FeedEntry.mark: the viewer's held opinion of the row's author."
+  mark: PeopleMark
+  "The row's 0-based index in the woven RANKED list (`entries` and
+   `settling` together)."
+  rankedPosition: Int!
+  "The row's 0-based index in the woven NEWEST list."
+  newestPosition: Int!
+}
+
+"How the viewer holds the person behind a row (OS-18 S1): the sign of
+ the folded p̄_d of the viewer's own Opinion → Profile bundle toward
+ them. SIGNLESS is a held bundle with p̄_d = 0 and p̄_i ≠ 0."
+enum PeopleMark { FOR AGAINST SIGNLESS }
 
 "A generic page of nodes — any mixed-type node list."
 type NodeConnection {

@@ -2,25 +2,34 @@
 //!
 //! The backend's part in ranking (api-spec.md "Feed"): the governed
 //! parameters a ranker reads (`networkParameters`), the viewer's slice it
-//! ranks over (`feedSlice`), and the hydration of the ordered ids it
+//! ranks over (`feedSlice`), the relay of a ranking request to the server
+//! ranker pod (`feedRanking`), and the hydration of the ordered ids it
 //! hands back (`feed`).
 //!
 //! Ranking never runs in this process (feed-ranking.md §11). Nothing here
 //! orders, weighs or scores: the slice is a reachability closure (see
-//! `postgres_store::slice`), and `feed` serves the order it is handed.
+//! `postgres_store::slice`), the relay translates and carries (see
+//! [`feed_ranking`]), and `feed` serves the order it is handed.
 
-use std::collections::HashMap;
-use std::sync::Arc;
+use std::collections::{HashMap, HashSet};
+use std::sync::{Arc, Mutex};
 
 use async_graphql::connection::{
     Connection, ConnectionNameType, DisableNodesField, Edge, EdgeNameType, EmptyFields,
 };
-use async_graphql::{Context, ErrorExtensions, Object, SimpleObject, Union};
+use async_graphql::{Context, Enum, ErrorExtensions, InputObject, Object, SimpleObject, Union};
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD as B64;
 use common::hashtag_uuid;
-use postgres_store::{PgPool, auth as store, hashtag, mirror, params, slice};
+use common::l1::identifier::NodeId;
+use postgres_store::{PgPool, auth as store, hashtag, mirror, params, settling, slice};
 use uuid::Uuid;
+
+use crate::auth::Viewer;
+use crate::ranker_pod::{
+    FriendAuthorReorder, PodError, PodKind, PodMark, PodRanking, RankParams, RankVariables,
+    RankerClient, SettlingCandidate,
+};
 
 use super::query::bad_input;
 use super::types::{
@@ -103,8 +112,72 @@ pub async fn network_parameters(
 /// by the ranker. The backend computes no order over it. Pages of one
 /// slice stay consistent when every page is read at the same `asOfEpoch`.
 pub struct FeedSlice {
+    viewer: Uuid,
     as_of_epoch: i64,
     reach: Arc<Vec<String>>,
+}
+
+/// The slice supply's read log (ranked-feed-api §3.6, perf watch P-7): how
+/// often each (viewer, epoch) slice is read from its first page. The slice
+/// is generic — one per viewer and epoch, never shaped by a filter — so a
+/// repeat read of one key is exactly what a slice cache would have served.
+/// No cache is built ahead of that measurement; this log is the
+/// measurement's source, and every first-page read is traced with its
+/// running count.
+///
+/// Memory stays bounded by keeping only the keys of the newest epochs
+/// seen: a repeat is counted "in the same epoch", and a slice pinned far
+/// back is a spot-check, not traffic a cache would serve.
+#[derive(Clone, Default)]
+pub struct SliceReadLog(Arc<Mutex<SliceReads>>);
+
+#[derive(Default)]
+struct SliceReads {
+    counts: HashMap<(Uuid, i64), u64>,
+    newest_epoch: i64,
+}
+
+impl SliceReadLog {
+    /// Epochs behind the newest one whose keys are still counted.
+    const EPOCHS_KEPT: i64 = 2;
+
+    /// Counts one first-page read of the (viewer, epoch) slice and returns
+    /// the running count: above 1 is a repeat.
+    pub fn record(&self, viewer: Uuid, as_of_epoch: i64) -> u64 {
+        let reads = {
+            let mut log = self
+                .0
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
+            if as_of_epoch > log.newest_epoch {
+                log.newest_epoch = as_of_epoch;
+                let floor = as_of_epoch - Self::EPOCHS_KEPT;
+                log.counts.retain(|(_, epoch), _| *epoch >= floor);
+            }
+            let count = log.counts.entry((viewer, as_of_epoch)).or_insert(0);
+            *count += 1;
+            *count
+        };
+        tracing::info!(
+            %viewer,
+            as_of_epoch,
+            reads,
+            repeat = reads > 1,
+            "slice supply: first-page read"
+        );
+        reads
+    }
+
+    /// How many first-page reads the (viewer, epoch) slice has had.
+    pub fn reads(&self, viewer: Uuid, as_of_epoch: i64) -> u64 {
+        self.0
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .counts
+            .get(&(viewer, as_of_epoch))
+            .copied()
+            .unwrap_or(0)
+    }
 }
 
 /// The `feedSlice` read. Argument faults are `BAD_INPUT`; a governed χ
@@ -164,6 +237,7 @@ pub async fn feed_slice(
         .await
         .map_err(storage)?;
     Ok(Some(FeedSlice {
+        viewer,
         as_of_epoch,
         reach: Arc::new(reach),
     }))
@@ -191,6 +265,10 @@ impl FeedSlice {
         let pool = ctx.data::<PgPool>()?;
         validate_page_args(first, last, after.as_deref(), before.as_deref())
             .map_err(|e| bad_input(e.message))?;
+        if after.is_none() && before.is_none() {
+            ctx.data::<SliceReadLog>()?
+                .record(self.viewer, self.as_of_epoch);
+        }
         let backward = last.is_some() || before.is_some();
         let limit = i64::from(
             last.or(first)
@@ -415,6 +493,374 @@ pub type SliceNodeConnection = Connection<
     SliceNodeEdgeName,
     DisableNodesField,
 >;
+
+/// What narrows the ranker's candidates. Only arguments that change what
+/// the ranker must compute ride here; every other sheet axis is a device
+/// cut (feed-ranking.md §9.1; miner-api.md:63-64).
+#[derive(InputObject, Default)]
+pub struct FeedRankFilter {
+    /// Rankable kinds in scope. Null means Posts only (feed-ranking.md
+    /// §9.3). An empty list ranks nothing.
+    pub kinds: Option<Vec<NodeKind>>,
+    /// A topic (Hashtag id). Only content reaching the viewer over Tag
+    /// records toward it is a candidate (FeedTopic; hashtag.md §5).
+    pub topic: Option<Uuid>,
+}
+
+/// One ranking snapshot.
+#[derive(SimpleObject)]
+pub struct FeedRanking {
+    /// The epoch the ranked slice reads as of (FeedSlice.asOfEpoch).
+    pub as_of_epoch: i64,
+    /// The landed targets, scored, in RANKED order, best first. A target
+    /// no live path reaches is absent, not zero-scored (feed-ranking.md
+    /// §7). This is the pinned snapshot: a call pinned at `asOfEpoch`
+    /// reproduces it.
+    pub entries: Vec<FeedEntry>,
+    /// Content still settling, with its place in both woven orders.
+    /// Carries no score by construction. Read live on every call, never
+    /// part of the pinned snapshot.
+    pub settling: Vec<SettlingEntry>,
+}
+
+/// One landed target.
+#[derive(SimpleObject)]
+pub struct FeedEntry {
+    pub target_id: Uuid,
+    pub kind: NodeKind,
+    /// S(u, target) — the signed greedy disjoint-sum (feed-ranking.md
+    /// §6.1).
+    pub score: f64,
+    /// The viewer's held opinion of the person behind the row, read at
+    /// `asOfEpoch`. Null when none is held, for a Tags row, or when the
+    /// reader is not the viewer.
+    pub mark: Option<PeopleMark>,
+    /// This entry's 0-based index among `entries` in NEWEST order. The
+    /// indices are a permutation of 0..|entries|-1.
+    pub newest_index: i32,
+}
+
+/// One settling row.
+#[derive(SimpleObject)]
+pub struct SettlingEntry {
+    pub target_id: Uuid,
+    pub kind: NodeKind,
+    /// As FeedEntry.mark: the viewer's held opinion of the row's author.
+    pub mark: Option<PeopleMark>,
+    /// The row's 0-based index in the woven RANKED list (`entries` and
+    /// `settling` together).
+    pub ranked_position: i32,
+    /// The row's 0-based index in the woven NEWEST list.
+    pub newest_position: i32,
+}
+
+/// How the viewer holds the person behind a row (OS-18 S1): the sign of
+/// the folded p̄_d of the viewer's own Opinion → Profile bundle toward
+/// them. SIGNLESS is a held bundle with p̄_d = 0 and p̄_i ≠ 0.
+#[derive(Enum, Copy, Clone, Debug, PartialEq, Eq)]
+pub enum PeopleMark {
+    For,
+    Against,
+    Signless,
+}
+
+/// The `feedRanking` relay (ranked-feed-api §4.2): resolve the pin, read
+/// the settling candidates, forward the request to the ranker pod, and map
+/// its answer into the public shapes. Null when the viewer resolves to no
+/// rankable actor.
+///
+/// **The relay computes nothing** (PR-9/PR-10; PR-49 "main infra (DB +
+/// relay) under minimal load"). Its database reads are the mirror cursor
+/// and the staged candidates; the slice pages the pod pulls back are the
+/// slice supply's. It reads no stance fold and no `user_view_log`, and it
+/// never cuts, sorts, weighs, merges or weaves: the pod emits the order,
+/// both permutations, the woven places and the people marks, and the
+/// reader's device applies them. What the relay does to the answer is
+/// translation (the pod's id-level kinds and `ref`s into the public types),
+/// one id comparison (marks ride only when the session's reader is the
+/// viewer), and an index-set check that refuses a malformed permutation
+/// rather than handing the device an undefined composition.
+///
+/// No pooled connection is held across the pod call: the pod calls back
+/// into this api for the slice, so a held connection per relay request
+/// would starve the pool under load.
+pub async fn feed_ranking(
+    ctx: &Context<'_>,
+    viewer: Uuid,
+    as_of_epoch: Option<i64>,
+    filter: Option<FeedRankFilter>,
+) -> async_graphql::Result<Option<FeedRanking>> {
+    let pool = ctx.data::<PgPool>()?;
+    let ranker = ctx.data::<RankerClient>()?;
+    let filter = filter.unwrap_or_default();
+
+    let cursor = mirror::last_ingested_epoch(pool).await.map_err(storage)?;
+    if let Some(pin) = as_of_epoch
+        && !(0..=cursor).contains(&pin)
+    {
+        return Err(bad_input(format!(
+            "asOfEpoch must lie in 0..={cursor}, the ingested epochs"
+        )));
+    }
+    if cursor < 0 {
+        return Ok(None);
+    }
+    let pinned = as_of_epoch.unwrap_or(cursor);
+
+    let kinds = filter.kinds.unwrap_or_else(|| vec![NodeKind::Post]);
+    if kinds.is_empty() {
+        return Ok(Some(FeedRanking {
+            as_of_epoch: pinned,
+            entries: Vec::new(),
+            settling: Vec::new(),
+        }));
+    }
+
+    let candidates = settling_candidates(pool, &kinds, filter.topic).await?;
+    let staged_kinds: HashMap<Uuid, NodeKind> = candidates
+        .iter()
+        .map(|(candidate, kind)| (candidate.ref_, *kind))
+        .collect();
+    let params = RankParams {
+        kinds: Some(kinds.iter().copied().map(pod_kind).collect()),
+        topic: filter.topic,
+        gamma: None,
+        dust_floor: None,
+        recency_half_life_epochs: None,
+        friend_author_reorder: Some(FriendAuthorReorder {
+            enabled: false,
+            freshness_threshold_epochs: None,
+            placement: None,
+        }),
+        settling: Some(candidates.into_iter().map(|(c, _)| c).collect()),
+    };
+
+    let answer = match ranker
+        .rank(RankVariables {
+            viewer,
+            params,
+            as_of_epoch: Some(pinned),
+        })
+        .await
+    {
+        Ok(answer) => answer,
+        Err(PodError::NotFound) => return Ok(None),
+        Err(PodError::BadInput(message)) => {
+            tracing::error!(
+                %viewer,
+                pod_message = %message,
+                "the ranker pod refused the relay's request as bad input: a relay bug"
+            );
+            return Err(internal("the ranking failed"));
+        }
+        Err(e) => {
+            tracing::error!(%viewer, error = %e, "the ranker pod produced no ranking");
+            return Err(internal("the ranking failed"));
+        }
+    };
+
+    let reader_is_viewer =
+        matches!(ctx.data_opt::<Option<Viewer>>(), Some(Some(reader)) if reader.user_id == viewer);
+    map_answer(answer, pinned, &staged_kinds, reader_is_viewer)
+        .map(Some)
+        .map_err(|malformed| {
+            tracing::error!(%viewer, %malformed, "pod answer malformed");
+            internal("the ranking failed")
+        })
+}
+
+/// The settling candidates in the pod's wire form, each with its kind from
+/// the staged read. The author atom is translated into the slice's own
+/// person key (`prof:<atom>`), the one rule the slice applies to every
+/// person (`postgres_store::slice`), so the pod joins it against
+/// `SliceNode.graphId` without a mapping of its own.
+///
+/// Only Posts and Comments can settle in a feed: a Type never pends, and
+/// a Profile pends only under its Registration, which an applicant
+/// carries — held, author-only, never a candidate. A topic no Type carries
+/// admits no candidate; the pod answers the landed side of the same
+/// unknown topic.
+async fn settling_candidates(
+    pool: &PgPool,
+    kinds: &[NodeKind],
+    topic: Option<Uuid>,
+) -> async_graphql::Result<Vec<(SettlingCandidate, NodeKind)>> {
+    let tables: Vec<String> = kinds
+        .iter()
+        .filter_map(|kind| match kind {
+            NodeKind::Post => Some("post".to_string()),
+            NodeKind::Comment => Some("comment".to_string()),
+            _ => None,
+        })
+        .collect();
+    if tables.is_empty() {
+        return Ok(Vec::new());
+    }
+    let topic = match topic {
+        None => None,
+        Some(topic) => match hashtag::names_by_ids(pool, &[topic])
+            .await
+            .map_err(storage)?
+            .into_iter()
+            .next()
+        {
+            Some((_, name)) => Some(NodeId::name(&name).map_err(storage)?.to_string()),
+            None => return Ok(Vec::new()),
+        },
+    };
+    Ok(settling::candidates(pool, &tables, topic.as_deref())
+        .await
+        .map_err(storage)?
+        .into_iter()
+        .map(|row| {
+            let kind = if row.kind == "comment" {
+                NodeKind::Comment
+            } else {
+                NodeKind::Post
+            };
+            (
+                SettlingCandidate {
+                    ref_: row.node_id,
+                    author: NodeId::Prof(row.author).to_string(),
+                    family: row.family,
+                    p_directed: row.p_d,
+                    p_interest: row.p_i,
+                    authored_at: row.authored_at,
+                },
+                kind,
+            )
+        })
+        .collect())
+}
+
+/// The pod's answer in the public shapes, field for field. Composes
+/// nothing: entries keep the pod's array order, and the permutations and
+/// places pass through as the pod emitted them, once their index sets are
+/// checked. An `Err` names what is malformed.
+fn map_answer(
+    answer: PodRanking,
+    pinned: i64,
+    staged_kinds: &HashMap<Uuid, NodeKind>,
+    reader_is_viewer: bool,
+) -> Result<FeedRanking, String> {
+    if answer.as_of_epoch != pinned {
+        return Err(format!(
+            "ranked epoch {} where {pinned} was pinned",
+            answer.as_of_epoch
+        ));
+    }
+    let mark = |mark: Option<PodMark>| -> Result<Option<PeopleMark>, String> {
+        let mark = match mark {
+            None => None,
+            Some(PodMark::FOR) => Some(PeopleMark::For),
+            Some(PodMark::AGAINST) => Some(PeopleMark::Against),
+            Some(PodMark::SIGNLESS) => Some(PeopleMark::Signless),
+            Some(PodMark::Other(other)) => return Err(format!("unknown people mark {other}")),
+        };
+        Ok(mark.filter(|_| reader_is_viewer))
+    };
+
+    let landed = answer.entries.len();
+    if !is_index_set(answer.entries.iter().map(|e| e.newest_index), landed) {
+        return Err(format!("newestIndex is not a permutation of 0..{landed}"));
+    }
+    let entries = answer
+        .entries
+        .into_iter()
+        .map(|entry| {
+            Ok(FeedEntry {
+                target_id: entry.target_id,
+                kind: api_kind(&entry.target_kind)?,
+                score: entry.score,
+                mark: mark(entry.mark)?,
+                newest_index: index(entry.newest_index)?,
+            })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+
+    let woven = landed + answer.settling.len();
+    if !is_index_set(answer.settling.iter().map(|p| p.ranked_position), woven)
+        || !is_index_set(answer.settling.iter().map(|p| p.newest_position), woven)
+    {
+        return Err(format!(
+            "settling positions duplicated or outside the woven list of {woven}"
+        ));
+    }
+    let mut placed = HashSet::new();
+    let settling = answer
+        .settling
+        .into_iter()
+        .map(|place| {
+            let kind = *staged_kinds
+                .get(&place.ref_)
+                .ok_or_else(|| format!("a place for {} which was never a candidate", place.ref_))?;
+            if !placed.insert(place.ref_) {
+                return Err(format!("{} placed twice", place.ref_));
+            }
+            Ok(SettlingEntry {
+                target_id: place.ref_,
+                kind,
+                mark: mark(place.mark)?,
+                ranked_position: index(place.ranked_position)?,
+                newest_position: index(place.newest_position)?,
+            })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+
+    Ok(FeedRanking {
+        as_of_epoch: answer.as_of_epoch,
+        entries,
+        settling,
+    })
+}
+
+/// Whether `indices` are distinct and each lies in 0..`len` — an index-set
+/// check, never a comparison of keys.
+fn is_index_set(indices: impl Iterator<Item = i64>, len: usize) -> bool {
+    let mut seen = HashSet::new();
+    indices
+        .into_iter()
+        .all(|i| usize::try_from(i).is_ok_and(|i| i < len) && seen.insert(i))
+}
+
+fn index(i: i64) -> Result<i32, String> {
+    i32::try_from(i).map_err(|_| format!("index {i} exceeds the wire's Int"))
+}
+
+/// The public kind as the pod's schema spells it; the two enums carry the
+/// same values (ranker-schema.graphql).
+fn pod_kind(kind: NodeKind) -> PodKind {
+    match kind {
+        NodeKind::User => PodKind::USER,
+        NodeKind::Collective => PodKind::COLLECTIVE,
+        NodeKind::Post => PodKind::POST,
+        NodeKind::Comment => PodKind::COMMENT,
+        NodeKind::Chat => PodKind::CHAT,
+        NodeKind::ChatMessage => PodKind::CHAT_MESSAGE,
+        NodeKind::Item => PodKind::ITEM,
+        NodeKind::Hashtag => PodKind::HASHTAG,
+        NodeKind::Proposal => PodKind::PROPOSAL,
+        NodeKind::Campaign => PodKind::CAMPAIGN,
+        NodeKind::Offer => PodKind::OFFER,
+    }
+}
+
+fn api_kind(kind: &PodKind) -> Result<NodeKind, String> {
+    Ok(match kind {
+        PodKind::USER => NodeKind::User,
+        PodKind::COLLECTIVE => NodeKind::Collective,
+        PodKind::POST => NodeKind::Post,
+        PodKind::COMMENT => NodeKind::Comment,
+        PodKind::CHAT => NodeKind::Chat,
+        PodKind::CHAT_MESSAGE => NodeKind::ChatMessage,
+        PodKind::ITEM => NodeKind::Item,
+        PodKind::HASHTAG => NodeKind::Hashtag,
+        PodKind::PROPOSAL => NodeKind::Proposal,
+        PodKind::CAMPAIGN => NodeKind::Campaign,
+        PodKind::OFFER => NodeKind::Offer,
+        PodKind::Other(other) => return Err(format!("unknown node kind {other}")),
+    })
+}
 
 /// What a feed row can be: the kinds V1.0 ranks. Later slices add members
 /// as their kinds join. A union, not `Node`: a Hashtag is not a Node, and
