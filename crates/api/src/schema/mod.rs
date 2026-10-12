@@ -8,6 +8,7 @@
 //! credentials, invite links, and the client-signed write path's relay
 //! legs (api-spec.md).
 
+pub mod feed;
 mod mutation;
 mod query;
 pub mod types;
