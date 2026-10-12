@@ -44,7 +44,7 @@ import com.cogra.domain.LicenseChoice
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.MediaAssetView
-import com.cogra.core.designsystem.v2.media.PINNED_CLIP_TAG
+import com.cogra.core.designsystem.v2.media.DETAIL_CLIP_TAG
 import com.cogra.domain.ModeratedField
 import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testContentTarget
@@ -1575,17 +1575,18 @@ class ContentScreensTest {
     }
 
     // A VIDEO POST'S DETAIL IS ITS OWN BOARD (`screens/PostDetailVideo.jsx`):
-    // the clip is pinned ABOVE the card, wearing the full transport, and the
-    // card beneath it is the post as it always reads. DV-02/DV-03/DV-05.
+    // the clip stands ABOVE the card, flush on it (ruling 100), wearing the
+    // full transport, and the card beneath it is the post as it always reads.
+    // DV-02/DV-03/DV-05.
     @Test
-    fun aVideoPostsDetailPinsTheClipAboveTheCardAndNotInsideIt() {
+    fun aVideoPostsDetailStandsTheClipAboveTheCardAndNotInsideIt() {
         renderDetail(
             detailFixture(loading = false, post = testPost("p1").copy(attachments = listOf(clip()))),
         )
 
-        val pinned = compose.onNodeWithTag(PINNED_CLIP_TAG).getUnclippedBoundsInRoot()
+        val above = compose.onNodeWithTag(DETAIL_CLIP_TAG).getUnclippedBoundsInRoot()
         val card = compose.onNode(isDetailCard()).getUnclippedBoundsInRoot()
-        assertThat(pinned.bottom.value).isAtMost(card.top.value)
+        assertThat(above.bottom.value).isAtMost(card.top.value)
         // The clip LEFT the card: the body has no gallery left to draw.
         compose.onNodeWithTag("postDetail.card.media").assertDoesNotExist()
         // The card is still the post as it always reads.
@@ -1605,13 +1606,13 @@ class ContentScreensTest {
             ),
         )
 
-        compose.onNodeWithTag(PINNED_CLIP_TAG).assertDoesNotExist()
+        compose.onNodeWithTag(DETAIL_CLIP_TAG).assertDoesNotExist()
         compose.onNodeWithTag("postDetail.card.media").assertExists()
     }
 
-    /** A removed record is the skeleton: there is no clip left to pin. */
+    /** A removed record is the skeleton: there is no clip left to raise. */
     @Test
-    fun aRemovedVideoPostPinsNothing() {
+    fun aRemovedVideoPostRaisesNoClip() {
         renderDetail(
             detailFixture(
                 loading = false,
@@ -1622,7 +1623,7 @@ class ContentScreensTest {
             ),
         )
 
-        compose.onNodeWithTag(PINNED_CLIP_TAG).assertDoesNotExist()
+        compose.onNodeWithTag(DETAIL_CLIP_TAG).assertDoesNotExist()
         compose.onNodeWithTag("postDetail.card.media").assertDoesNotExist()
         // The skeleton says so where the body was.
         compose.onNodeWithText("Removed by its author").assertExists()

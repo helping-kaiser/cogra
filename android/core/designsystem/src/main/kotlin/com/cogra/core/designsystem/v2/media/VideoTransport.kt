@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -108,7 +109,7 @@ fun VideoTransport(
      */
     chromeInsets: PaddingValues = PaddingValues(0.dp),
     /**
-     * The way into the fullscreen viewer (`VideoControls.jsx:231-233`).
+     * The way into the fullscreen viewer (`VideoControls.jsx:265-267`).
      *
      * Drawn only where it is handed one, which is the master's own condition
      * (`{fullscreen && …}`): THE VIEWER DOES NOT DRAW IT, because "no
@@ -220,7 +221,16 @@ internal fun centreGlyph(playing: Boolean, ended: Boolean): ImageVector = when {
     else -> Icons.Filled.PlayArrow
 }
 
-/** Elapsed · the timeline · total · the sound, held clear of the gesture zone. */
+/**
+ * Elapsed · the timeline · total · the sound, held clear of the gesture zone.
+ *
+ * **The row stands at the 48dp floor** (`VideoControls.jsx:237-248` —
+ * `minHeight: var(--touch-target-min)`) above the board's [GESTURE_ZONE], and
+ * every glyph is centred in that row. The inset is part of the bar's own box
+ * rather than padding outside it, because the timeline's target reaches down
+ * through it (jakob's ruling 101 — [Timeline]'s `hitBelow`) and a target can
+ * only take presses inside the box it stands in.
+ */
 @Composable
 private fun Bar(
     elapsedMs: Long,
@@ -237,59 +247,91 @@ private fun Bar(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Space.x3)
-            // The board's own allowance for the gesture strip, on top of
-            // whatever the device says its bars actually take. Either alone is
-            // wrong: the board cannot know the bar, and the bar is not the
+            // Whatever the device says its bars take stands outside the bar;
+            // the board's own allowance for the gesture strip is the bar's
+            // lower edge, below the row. Either alone is wrong: the board
+            // cannot know the device's bar, and the device's bar is not the
             // whole of the swipe zone the board was drawn against.
-            .padding(bottom = GESTURE_ZONE + chromeInsets.calculateBottomPadding()),
+            .padding(bottom = chromeInsets.calculateBottomPadding())
+            .height(BAR_ROW + GESTURE_ZONE)
+            .testTag(BAR_TAG),
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Top,
     ) {
-        Text(
-            text = formatRunningTime(elapsedMs.toInt()),
-            style = MaterialTheme.typography.labelSmall,
-            color = MediaOverlay.BadgeInk,
-            modifier = Modifier.testTag("video_elapsed"),
-        )
+        InRow {
+            Text(
+                text = formatRunningTime(elapsedMs.toInt()),
+                style = MaterialTheme.typography.labelSmall,
+                color = MediaOverlay.BadgeInk,
+                modifier = Modifier.testTag("video_elapsed"),
+            )
+        }
         Timeline(
             progress = progress,
             onSeek = onSeek,
-            modifier = Modifier.weight(1f),
+            hitBelow = true,
+            // The 16dp timeline centred in the 48dp row: its top stands
+            // (48 - 16) / 2 below the row's.
+            modifier = Modifier
+                .weight(1f)
+                .padding(top = (BAR_ROW - TIMELINE_HEIGHT) / 2),
         )
-        Text(
-            text = formatRunningTime(durationMs.toInt()),
-            style = MaterialTheme.typography.labelSmall,
-            color = MediaOverlay.BadgeInk.copy(alpha = TOTAL_ALPHA),
-            modifier = Modifier.testTag("video_duration"),
-        )
-        TransportButton(
-            label = stringResource(
-                if (muted) R.string.designsystem_video_unmute else R.string.designsystem_video_mute,
-            ),
-            glyph = if (muted) {
-                Icons.AutoMirrored.Filled.VolumeOff
-            } else {
-                Icons.AutoMirrored.Filled.VolumeUp
-            },
-            box = BAR_CONTROL,
-            glyphSize = BAR_GLYPH,
-            onClick = onToggleMute,
-            testTag = "video_mute",
-        )
-        // THE BAR ENDS IN THE WAY INTO THE VIEWER (`VideoControls.jsx:231`).
-        // It is the transport's own route there; the clip's surface tap is the
-        // other (graph.json, `PostDetailVideo` via 19 and via 3).
-        if (onFullscreen != null) {
-            TransportButton(
-                label = stringResource(R.string.designsystem_video_fullscreen),
-                glyph = Icons.Filled.Fullscreen,
-                box = BAR_CONTROL,
-                glyphSize = BAR_GLYPH,
-                onClick = onFullscreen,
-                testTag = "video_fullscreen",
+        InRow {
+            Text(
+                text = formatRunningTime(durationMs.toInt()),
+                style = MaterialTheme.typography.labelSmall,
+                color = MediaOverlay.BadgeInk.copy(alpha = TOTAL_ALPHA),
+                modifier = Modifier.testTag("video_duration"),
             )
         }
+        // THE SOUND AND THE FULLSCREEN STAND 20dp APART (jakob's ruling 101,
+        // `VideoControls.jsx:252-268`): "two 28px boxes whose centres sit 48px
+        // apart, so their 48px targets meet and never overlap". Each button
+        // already lays out its whole 48dp target around the drawn 28dp disc
+        // ([TransportButton]), so the drawn 20dp gap is a layout gap of
+        // 20 - (48 - 28) = 0: the targets touch, edge on edge.
+        InRow {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(PAIR_GAP - (BAR_TARGET - BAR_CONTROL)),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.testTag(PAIR_TAG),
+            ) {
+                TransportButton(
+                    label = stringResource(
+                        if (muted) R.string.designsystem_video_unmute else R.string.designsystem_video_mute,
+                    ),
+                    glyph = if (muted) {
+                        Icons.AutoMirrored.Filled.VolumeOff
+                    } else {
+                        Icons.AutoMirrored.Filled.VolumeUp
+                    },
+                    box = BAR_CONTROL,
+                    glyphSize = BAR_GLYPH,
+                    onClick = onToggleMute,
+                    testTag = "video_mute",
+                )
+                // THE BAR ENDS IN THE WAY INTO THE VIEWER (`VideoControls.jsx:265-267`).
+                // It is the transport's own route there; the clip's surface tap
+                // is the other (graph.json, `PostDetailVideo` via 19 and via 3).
+                if (onFullscreen != null) {
+                    TransportButton(
+                        label = stringResource(R.string.designsystem_video_fullscreen),
+                        glyph = Icons.Filled.Fullscreen,
+                        box = BAR_CONTROL,
+                        glyphSize = BAR_GLYPH,
+                        onClick = onFullscreen,
+                        testTag = "video_fullscreen",
+                    )
+                }
+            }
+        }
     }
+}
+
+/** One of the bar's glyphs, centred in the 48dp row above the gesture-zone inset. */
+@Composable
+private fun InRow(content: @Composable () -> Unit) {
+    Box(modifier = Modifier.height(BAR_ROW), contentAlignment = Alignment.Center) { content() }
 }
 
 /**
@@ -303,6 +345,16 @@ private fun Bar(
  * one Material's own custom-slider sample uses. The alternative is redrawing
  * the slider outright, which would mean re-implementing the gesture and the
  * semantics this component exists to keep.
+ *
+ * **`hitBelow`** (jakob's ruling 101 — design/readme.md §13, "The clip detail
+ * rulings"; `VideoControls.jsx:109-113`): on the transport's bar the space
+ * above the timeline is the clip's own tap, so the 48dp target cannot centre
+ * on the track. It hangs DOWN from the timeline's top instead — "through the
+ * bar's lower half and the gesture-zone inset to the frame's bottom edge … so
+ * the clip's own tap above it stays whole. The ink does not move." The slider
+ * is laid out at the target's height, so every press inside it is the
+ * slider's, and Material centres its track and knob in that height; both are
+ * lifted back to the 16dp timeline's middle, where they were drawn.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -310,13 +362,16 @@ fun Timeline(
     progress: Float,
     onSeek: (Float) -> Unit,
     modifier: Modifier = Modifier,
+    hitBelow: Boolean = false,
 ) {
     val seekLabel = stringResource(R.string.designsystem_video_seek)
+    // The ink's lift: from the target's middle back up to the 16dp timeline's.
+    val lift = if (hitBelow) (BAR_TARGET - TIMELINE_HEIGHT) / 2 else 0.dp
     Slider(
         value = progress.coerceIn(0f, 1f),
         onValueChange = onSeek,
         modifier = modifier
-            .height(TIMELINE_HEIGHT)
+            .height(if (hitBelow) BAR_TARGET else TIMELINE_HEIGHT)
             .testTag(TIMELINE_TAG)
             .semantics { contentDescription = seekLabel },
         colors = SliderDefaults.colors(
@@ -327,13 +382,20 @@ fun Timeline(
         thumb = {
             Box(
                 modifier = Modifier
+                    .offset(y = -lift)
                     .size(KNOB)
                     .clip(RoundedCornerShape(KNOB / 2))
                     .background(MaterialTheme.colorScheme.primary),
             )
         },
         track = { state ->
-            Box(modifier = Modifier.fillMaxWidth().height(TRACK)) {
+            Box(
+                modifier = Modifier
+                    .offset(y = -lift)
+                    .fillMaxWidth()
+                    .height(TRACK)
+                    .testTag(TIMELINE_INK_TAG),
+            ) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -398,6 +460,15 @@ val GESTURE_ZONE = 16.dp
 internal const val TRANSPORT_TAG = "video_transport"
 internal const val TIMELINE_TAG = "video_timeline"
 
+/** The timeline's drawn track — the ink, as distinct from the slider's target. */
+internal const val TIMELINE_INK_TAG = "video_timeline_ink"
+
+/** The bar's own box: the 48dp row and the gesture-zone inset beneath it. */
+internal const val BAR_TAG = "video_bar"
+
+/** The sound and fullscreen pair (ruling 101). */
+internal const val PAIR_TAG = "video_bar_pair"
+
 /** `height: "45%"` — the wash's share of the frame (`VideoControls.jsx:177`). */
 private const val WASH_FRACTION = 0.45f
 
@@ -410,6 +481,18 @@ private val SKIP_DIAMETER = 44.dp
 private val SKIP_GLYPH = 26.dp
 private val BAR_CONTROL = 28.dp
 private val BAR_GLYPH = 20.dp
+
+/**
+ * The 48dp target every bar control reaches (design/readme.md §4, "touch
+ * targets never below 48px"; Material's `minimumInteractiveComponentSize`).
+ */
+internal val BAR_TARGET = 48.dp
+
+/** The bar's row, at the target's floor (`VideoControls.jsx:243`). */
+private val BAR_ROW = BAR_TARGET
+
+/** `gap: var(--space-5)` between sound and fullscreen (`VideoControls.jsx:257`). */
+internal val PAIR_GAP = 20.dp
 private val TIMELINE_HEIGHT = 16.dp
 private val TRACK = 3.dp
 private val KNOB = 12.dp

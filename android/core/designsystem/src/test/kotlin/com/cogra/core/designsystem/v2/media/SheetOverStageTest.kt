@@ -213,25 +213,28 @@ class SheetOverStageTest {
     }
 
     /**
-     * The detail's pinned clip is not a stage at all — it composes its player
+     * The detail clip is not a stage at all — it composes its player
      * unconditionally — so no suspension reaches it, and a sheet's clip takes
-     * the player from it by claiming last. When the sheet closes the pinned
+     * the player from it by claiming last. When the sheet closes the detail
      * clip is not handed it back, and the transport, which is drawn from a
      * player, is gone with it.
      *
-     * PINNED AS IT STANDS, NOT AS RULED: the stage law speaks of a scroll
-     * surface's stage, and what the pinned clip does under a sheet — and how it
-     * comes back — is flagged to design rather than invented here.
+     * PINNED AS IT STANDS, NOT AS RULED. The law is drawn now —
+     * PostDetailVideo.md:41-47: a sheet stops the clip where it is, and its
+     * dismissal resumes it where autoplay is allowed — and Android does not
+     * yet keep it: DRIFT, the Android port of the detail stage (the web's
+     * `stage.ts` detail mode), reported by FC-7a rather than built in the
+     * un-pin. When it lands this pin is re-aimed to :41/:43, never deleted.
      */
     @Test
-    fun aPinnedClipUnderTheSheetLosesThePlayerAndIsNotHandedItBack() {
+    fun aDetailClipUnderTheSheetLosesThePlayerAndIsNotHandedItBack() {
         compose.setContent {
             Surfaces {
-                PinnedClip(item = clipItem(PINNED_P), maxHeight = CLIP)
+                DetailClip(item = clipItem(DETAIL_P), maxHeight = CLIP)
             }
         }
         compose.waitForIdle()
-        assertHolds(PINNED_P)
+        assertHolds(DETAIL_P)
         compose.onNodeWithTag(TRANSPORT_TAG, useUnmergedTree = true).assertExists()
 
         openSheet()
@@ -353,7 +356,7 @@ class SheetOverStageTest {
         const val SHEET_S = "sheet-s"
         const val SHEET_T = "sheet-t"
         const val SHEET_U = "sheet-u"
-        const val PINNED_P = "pinned-p"
+        const val DETAIL_P = "detail-p"
 
         val WIDTH = 200.dp
         val HEIGHT = 300.dp

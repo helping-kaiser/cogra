@@ -99,7 +99,7 @@ import net.engawapg.lib.zoomable.zoomable
  * the accessible name rather than on the frame.
  *
  * **A video takes the full transport** (`:39-41`), the ladder's third rung,
- * with the same stop-at-end grammar the detail's pinned clip has. Rotating the
+ * with the same stop-at-end grammar the detail clip has. Rotating the
  * device fills the screen with it: rotation is the device's own gesture, so
  * there is no rotate control to draw, and the dialog follows the window.
  *
