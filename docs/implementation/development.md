@@ -115,6 +115,9 @@ over file values.
 | `MEDIA_INGEST_WORKERS` | `1` | Ingest workers in this process. Each runs one ffmpeg at a time and ffmpeg spreads an encode over every core, so more only help once uploads queue behind each other |
 | `MEDIA_STALE_UPLOADS_EXPIRY` | `24h` | The store-side backstop, for the uploads a crash orphans before their session row exists (compose-only). MinIO implements it as a server setting, not as an S3 `AbortIncompleteMultipartUpload` lifecycle rule — it rejects such a rule — and the expiry matches the TTL above: the same abandoned upload, seen from both sides. Another store needs the lifecycle rule instead |
 | `MEDIA_STALE_UPLOADS_CLEANUP_INTERVAL` | `6h` | How often the store looks for them (compose-only) |
+| `RANKER_URL` | `http://localhost:8090/graphql` | The server ranker pod `feedRanking` relays to ([miner-api.md](miner-api.md)); ranking never runs in the API process |
+| `RANKER_TIMEOUT_MS` | `10000` | The bound on one relay call, the wait for an in-flight slot included; a slower pod answers `INTERNAL`. Provisional until the first warm round trip is measured |
+| `RANKER_MAX_IN_FLIGHT` | `8` | Concurrent pod calls at most; a call that gets no slot within the timeout answers `INTERNAL`. Provisional |
 | `BREACH_CHECK` | `hibp` | The password breach corpus ([auth.md "Password requirements"](auth.md#password-requirements)): `hibp` (live range API) or `off` (offline dev — no lookup) |
 | `CLIENT_IP_SOURCE` | `ConnectInfo` | Client-IP derivation ([auth.md "Rate limiting"](auth.md#rate-limiting)): `ConnectInfo` (socket peer) by default; `RightmostXForwardedFor` only behind a reverse proxy that is the sole ingress |
 | `GENESIS_HANDLE` | `genesis` | The Genesis Moderator's handle (`make bootstrap`) |
