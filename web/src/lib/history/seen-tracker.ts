@@ -31,9 +31,12 @@
 //   other arrives (`SeenQueue.seeEdge`). A card that fits is the whole-card
 //   rule's alone: its edges are never recorded, so two halves seen apart never
 //   add up to a seeing.
+// - AN OPENED PROFILE (History.md:11): a page event, not geometry —
+//   `useSeenOnOpen` reports the profile the moment the page shows it; its
+//   posts join only through the list rule, never through the opening.
 //
-// WHAT IS NOT COUNTED HERE: page renderings — an opened post, a profile's or a
-// topic's header (History.md:11) — are not list cards and are not tracked here.
+// WHAT IS NOT COUNTED HERE: an opened post's detail and a topic's header
+// carry no ruled seeing of their own and are not tracked.
 //
 // WHEN IT IS SENT: batched, and flushed at the natural checkpoints
 // (feed-ranking.md §9.4; architecture.md "Render"): the scroller coming to
@@ -259,4 +262,25 @@ export function edgesOnScreen(card: Span, view: Span): CardEdge[] {
   if (card.top >= view.top && card.top < view.bottom) edges.push("top");
   if (card.bottom > view.top && card.bottom <= view.bottom) edges.push("bottom");
   return edges;
+}
+
+/**
+ * A page's own thing joins History the moment the page shows it — today, an
+ * opened profile ("WHEN a profile opens -> the profile joins History",
+ * History.md:11). `id` is null until the page knows what it shows, and stays
+ * null for a page that must not report (the reader's own profile). The
+ * opening is itself the checkpoint: no list may be mounted to flush later,
+ * so the queue is sent at once. No session, no seeing.
+ */
+export function useSeenOnOpen(id: string | null, queue: SeenQueue = seenQueue): void {
+  const client = useApolloClient();
+  const guard = useAuthGuard();
+  const account = useActiveAccountId();
+  useMeasureEffect(() => {
+    queue.belongTo(account);
+    if (id === null || !queue.see(id)) return;
+    void queue.flush(
+      async (batch) => (await guard.run(() => markSeen(client, batch))).kind === "success",
+    );
+  }, [id, account, queue, client, guard]);
 }

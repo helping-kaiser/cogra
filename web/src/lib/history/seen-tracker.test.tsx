@@ -22,6 +22,7 @@ import {
   SEEN_ATTRIBUTE,
   SEEN_BATCH_MAX,
   SeenQueue,
+  useSeenOnOpen,
   useSeenTracker,
 } from "./seen-tracker";
 
@@ -398,5 +399,54 @@ describe("the tall-card rule (History.md:13)", () => {
     unmount();
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(sent).toEqual([]);
+  });
+});
+
+/** A page that opens a thing: the profile screen's shape. */
+function Opened({ id }: { id: string | null }) {
+  useSeenOnOpen(id);
+  return <p data-testid="opened">{id}</p>;
+}
+
+describe("a page that opens a profile (History.md:11)", () => {
+  it("adds the profile the moment it opens, once per session", async () => {
+    reset();
+    const store = signedIn();
+    const first = renderWithProviders(<Opened id="u2" />, { store });
+    await waitFor(() => expect(sent).toEqual([["u2"]]));
+    first.unmount();
+    renderWithProviders(<Opened id="u2" />, { store });
+    await screen.findByTestId("opened");
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(sent).toEqual([["u2"]]);
+  });
+
+  it("adds nothing before the page knows what it shows", async () => {
+    reset();
+    renderWithProviders(<Opened id={null} />, { store: signedIn() });
+    await screen.findByTestId("opened");
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(sent).toEqual([]);
+  });
+
+  it("adds nothing without a session", async () => {
+    reset();
+    const store = createTokenStore();
+    store.clear();
+    renderWithProviders(<Opened id="u2" />, { store });
+    await screen.findByTestId("opened");
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(sent).toEqual([]);
+  });
+
+  it("a refused add stays queued for the next checkpoint", async () => {
+    reset();
+    refuseNext = 1;
+    const store = signedIn();
+    const first = renderWithProviders(<Opened id="u2" />, { store });
+    await waitFor(() => expect(sent).toEqual([["u2"]]));
+    first.unmount();
+    renderWithProviders(<Opened id="u3" />, { store });
+    await waitFor(() => expect(sent).toEqual([["u2"], ["u2", "u3"]]));
   });
 });
