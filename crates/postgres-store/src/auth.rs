@@ -2841,11 +2841,12 @@ pub enum ApplicantDeletion {
 /// row. Nothing of it reached L1: an unfunded applicant has signed nothing
 /// that was relayed.
 ///
-/// The state is read under the credentials and actor row locks, the ones
-/// approval (`lock_account`) and every staged write's actor FK take, so an
-/// approval that funds the account either commits first and is refused
-/// here, or waits and finds the account gone. A failed funding never
-/// burned, so it does not hold the account.
+/// The state is read under the account lock approval takes
+/// ([`lock_account`]), then the actor row's, which every staged write's
+/// actor FK contends for — in that order, approval's own, so the two
+/// never deadlock. An approval that funds the account either commits
+/// first and is refused here, or waits and finds the account gone. A
+/// failed funding never burned, so it does not hold the account.
 ///
 /// Email and handle are freed with the account. The account's single-use
 /// invite slot is NOT meant to be: a single-use invite is consumed for
@@ -2859,11 +2860,14 @@ pub async fn delete_applicant_account(
     account_id: Uuid,
 ) -> Result<ApplicantDeletion, sqlx::Error> {
     let mut tx = pool.begin().await?;
+    if !lock_account(&mut tx, account_id).await? {
+        return Ok(ApplicantDeletion::Gone);
+    }
     let Some(account) = sqlx::query!(
         "SELECT c.account_state, a.realization_address
          FROM user_credentials c JOIN actors a ON a.id = c.actor_id
          WHERE c.actor_id = $1
-         FOR UPDATE",
+         FOR UPDATE OF a",
         account_id,
     )
     .fetch_optional(&mut *tx)

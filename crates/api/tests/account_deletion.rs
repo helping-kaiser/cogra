@@ -320,8 +320,6 @@ async fn carry(rig: &WireRig, who: &Applicant, mutation: &str, input: Value) {
     }
 }
 
-// ---- requestAccountDeletion ------------------------------------------
-
 /// The member path needs a session: without one the request is refused
 /// at the transport tier and nothing is mailed.
 ///
@@ -580,8 +578,6 @@ async fn a_request_during_the_grace_changes_nothing(pool: PgPool) {
     assert_eq!(deadline(&reopened["confirmAccountDeletion"]), fixed);
 }
 
-// ---- confirmAccountDeletion ------------------------------------------
-
 /// Opening the link fixes the deadline at the confirm plus seven days,
 /// and the viewer's read now carries it.
 ///
@@ -839,8 +835,6 @@ async fn an_unopened_deletion_link_dies_after_its_ttl(pool: PgPool) {
     assert!(scheduled.is_none());
 }
 
-// ---- cancelAccountDeletion -------------------------------------------
-
 /// Cancel needs a session.
 ///
 /// Cancelling a deletion without a session is unauthenticated.
@@ -909,8 +903,6 @@ async fn cancel_with_nothing_standing_is_a_no_op(pool: PgPool) {
     assert!(applicant_cancel["accountDeletion"].is_null());
 }
 
-// ---- User.accountDeletion --------------------------------------------
-
 /// The read is the account's own: another signed-in member and an
 /// anonymous reader both read null for an account in its grace.
 ///
@@ -952,8 +944,6 @@ async fn account_deletion_reads_null_before_confirmation(pool: PgPool) {
         true
     );
 }
-
-// ---- deleteApplicantAccount ------------------------------------------
 
 /// The applicant verb needs a session.
 ///
@@ -1364,8 +1354,6 @@ async fn after_landing_the_member_path_opens(pool: PgPool) {
         Some("Confirm the deletion of your CoGra account")
     );
 }
-
-// ---- retention -------------------------------------------------------
 
 /// The spent-secret sweep takes deletions that ended unexecuted past the
 /// retention window — cancelled, superseded, unopened past their

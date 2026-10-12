@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT c.account_state, a.realization_address\n         FROM user_credentials c JOIN actors a ON a.id = c.actor_id\n         WHERE c.actor_id = $1\n         FOR UPDATE",
+  "query": "SELECT c.account_state, a.realization_address\n         FROM user_credentials c JOIN actors a ON a.id = c.actor_id\n         WHERE c.actor_id = $1\n         FOR UPDATE OF a",
   "describe": {
     "columns": [
       {
@@ -24,5 +24,5 @@
       true
     ]
   },
-  "hash": "a83ee2799d440b82218e08dedbbababc503da9626fde993298dcc42e9a2d3448"
+  "hash": "b110bf5c168eb4a8050a4d1a08610998b3c26f536514f20d8a88588910d270b1"
 }
