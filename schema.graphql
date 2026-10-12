@@ -825,11 +825,76 @@ type FeedEdge {
 }
 
 """
+One landed target.
+"""
+type FeedEntry {
+	targetId: UUID!
+	kind: NodeKind!
+	"""
+	S(u, target) — the signed greedy disjoint-sum (feed-ranking.md
+	§6.1).
+	"""
+	score: Float!
+	"""
+	The viewer's held opinion of the person behind the row, read at
+	`asOfEpoch`. Null when none is held, for a Tags row, or when the
+	reader is not the viewer.
+	"""
+	mark: PeopleMark
+	"""
+	This entry's 0-based index among `entries` in NEWEST order. The
+	indices are a permutation of 0..|entries|-1.
+	"""
+	newestIndex: Int!
+}
+
+"""
 What a feed row can be: the kinds V1.0 ranks. Later slices add members
 as their kinds join. A union, not `Node`: a Hashtag is not a Node, and
 the feed serves topics (GraphQL spec §3.8, *Unions*).
 """
 union FeedItem = Post | Comment | User | Hashtag
+
+"""
+What narrows the ranker's candidates. Only arguments that change what
+the ranker must compute ride here; every other sheet axis is a device
+cut (feed-ranking.md §9.1; miner-api.md:63-64).
+"""
+input FeedRankFilter {
+	"""
+	Rankable kinds in scope. Null means Posts only (feed-ranking.md
+	§9.3). An empty list ranks nothing.
+	"""
+	kinds: [NodeKind!]
+	"""
+	A topic (Hashtag id). Only content reaching the viewer over Tag
+	records toward it is a candidate (FeedTopic; hashtag.md §5).
+	"""
+	topic: UUID
+}
+
+"""
+One ranking snapshot.
+"""
+type FeedRanking {
+	"""
+	The epoch the ranked slice reads as of (FeedSlice.asOfEpoch).
+	"""
+	asOfEpoch: Int!
+	"""
+	The landed targets, scored, in RANKED order, best first. A target
+	no live path reaches is absent, not zero-scored (feed-ranking.md
+	§7). This is the pinned snapshot: a call pinned at `asOfEpoch`
+	reproduces it.
+	"""
+	entries: [FeedEntry!]!
+	"""
+	Content still settling, with its place in both woven orders.
+	Carries no score by construction. Read live on every call, never
+	part of the pinned snapshot.
+	"""
+	settling: [SettlingEntry!]!
+}
 
 type FeedSlice {
 	"""
@@ -1973,6 +2038,17 @@ type PendingEmailChange {
 	expiresAt: DateTime!
 }
 
+"""
+How the viewer holds the person behind a row (OS-18 S1): the sign of
+the folded p̄_d of the viewer's own Opinion → Profile bundle toward
+them. SIGNLESS is a held bundle with p̄_d = 0 and p̄_i ≠ 0.
+"""
+enum PeopleMark {
+	FOR
+	AGAINST
+	SIGNLESS
+}
+
 type Post implements Node {
 	id: UUID!
 	"""
@@ -2713,6 +2789,21 @@ type Query {
 	"""
 	feedSlice(viewer: UUID!, dustFloor: Float, gamma: Float, asOfEpoch: Int): FeedSlice
 	"""
+	The ranked feed of `viewer`'s view, computed by the server's
+	standalone ranker container and relayed (miner-api.md). Ranking
+	never runs in the backend process: the backend serves the slice,
+	relays this request, and hydrates the result through `feed`. The
+	result is a snapshot. The client keeps it as the frozen order
+	(feed-ranking.md §9.5) and derives its views from it: order,
+	people, seen and Still settling are applied on the device, never
+	asked of the server. `asOfEpoch` reports the epoch its scored
+	entries were ranked at, and a call pinned there reproduces them;
+	the `asOfEpoch` argument pins the slice to an earlier epoch (null
+	ranks as of the newest ingested epoch). Null if `viewer` resolves
+	to no rankable actor.
+	"""
+	feedRanking(viewer: UUID!, asOfEpoch: Int, filter: FeedRankFilter): FeedRanking
+	"""
 	Hydrate a window of a ranking snapshot: the nodes behind the given
 	ids, in the given order. At most 100 ids per call (the page
 	budget). An id that resolves to nothing hydratable (a pending write
@@ -3334,6 +3425,27 @@ input SetPreferencesInput {
 type SetPreferencesPayload {
 	preferences: UserPreferences
 	userErrors: [UserError!]!
+}
+
+"""
+One settling row.
+"""
+type SettlingEntry {
+	targetId: UUID!
+	kind: NodeKind!
+	"""
+	As FeedEntry.mark: the viewer's held opinion of the row's author.
+	"""
+	mark: PeopleMark
+	"""
+	The row's 0-based index in the woven RANKED list (`entries` and
+	`settling` together).
+	"""
+	rankedPosition: Int!
+	"""
+	The row's 0-based index in the woven NEWEST list.
+	"""
+	newestPosition: Int!
 }
 
 """

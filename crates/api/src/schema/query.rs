@@ -765,15 +765,14 @@ impl Query {
     /// (feed-ranking.md §9.5) and derives its views from it: order,
     /// people, seen and Still settling are applied on the device, never
     /// asked of the server. `asOfEpoch` reports the epoch its scored
-    /// entries were ranked at, and a call pinned there reproduces them.
-    /// Null if `viewer` resolves to no rankable actor.
+    /// entries were ranked at, and a call pinned there reproduces them;
+    /// the `asOfEpoch` argument pins the slice to an earlier epoch (null
+    /// ranks as of the newest ingested epoch). Null if `viewer` resolves
+    /// to no rankable actor.
     async fn feed_ranking(
         &self,
         ctx: &Context<'_>,
         viewer: Uuid,
-        #[graphql(
-            desc = "Pins the slice to an earlier epoch; null ranks as of the newest ingested epoch."
-        )]
         as_of_epoch: Option<i64>,
         filter: Option<super::feed::FeedRankFilter>,
     ) -> async_graphql::Result<Option<super::feed::FeedRanking>> {
