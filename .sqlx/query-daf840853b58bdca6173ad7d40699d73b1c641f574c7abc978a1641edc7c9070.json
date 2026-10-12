@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM auth_account_deletions\n         WHERE executed_at IS NULL\n           AND (cancelled_at < now() - make_interval(secs => $1)\n                OR superseded_at < now() - make_interval(secs => $1)\n                OR (confirmed_at IS NULL\n                    AND token_expires_at < now() - make_interval(secs => $1)))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Float8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "daf840853b58bdca6173ad7d40699d73b1c641f574c7abc978a1641edc7c9070"
+}

@@ -1331,7 +1331,8 @@ pub async fn lapse_dead_vouches(pool: &PgPool) -> u64 {
 /// reuse detection to still recognise a replayed one.
 const REFRESH_TOKEN_RETENTION_SECS: f64 = 30.0 * 24.0 * 60.0 * 60.0;
 
-/// How long a consumed or expired reset link or email change is kept.
+/// How long a consumed or expired reset link, an ended email change, or
+/// an account deletion that ended unexecuted is kept.
 /// Nothing reads them after that; only the hash would remain.
 const SINGLE_USE_RETENTION_SECS: f64 = 7.0 * 24.0 * 60.0 * 60.0;
 
@@ -1364,6 +1365,7 @@ pub async fn reaper_loop(pool: PgPool, interval_secs: u64) {
                 refresh_tokens = swept.refresh_tokens,
                 password_resets = swept.password_resets,
                 email_changes = swept.email_changes,
+                account_deletions = swept.account_deletions,
                 "spent auth secrets swept"
             ),
             Err(e) => tracing::error!(error = %e, "spent-secret sweep failed"),
