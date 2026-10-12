@@ -9704,7 +9704,7 @@ each).
 - **No target on the stream falls below 48dp.** The seek line keeps its
   3px ink on the bottom bar and its target rises 48px from the track
   (`Timeline hitAbove`, the transport's `hitBelow` mirrored); the caption
-  moves up to stand 62px above the bar, so `More`'s own target meets the
+  moves up to stand 66px above the bar, so `More`'s own target meets the
   seek line's without overlapping (rulings 92 and 101).
 - **The score is the reader's last feed fetch.** A card's and the rail's
   figure is what that fetch computed; the score's tap is the only fetch of

@@ -27,7 +27,7 @@
 
    NO TARGET ON THE STREAM FALLS BELOW 48dp (rulings 92 and 101, RL-G11). The
    seek line's 3px ink stays on the bar; its 48px target rises from the track,
-   and the caption stands 62px above the bar so the target and `More`'s own
+   and the caption stands 66px above the bar so the target and `More`'s own
    48px target meet without overlapping. The ink does not move.
 
    THE CHROME: the way back top-left and the sound disc top-right, both on the
