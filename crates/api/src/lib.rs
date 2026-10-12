@@ -18,6 +18,7 @@ pub mod nodes;
 pub mod onboarding;
 pub mod prepare;
 pub mod profile;
+pub mod ranker_pod;
 pub mod ratelimit;
 pub mod references;
 pub mod relay;

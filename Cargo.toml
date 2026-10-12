@@ -92,6 +92,14 @@ axum-client-ip = { version = "1" }
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 sha1 = { version = "0.10" }
 
+# The ranking relay's client to the server ranker pod (ranked-feed-api
+# §4.2 step 4): typed code generated at compile time from the pod's
+# checked-in `ranker-schema.graphql`, so a pod schema change that breaks
+# the relay's document fails the api's build — the same one-artifact,
+# generated-client discipline the apps keep toward `schema.graphql`. The
+# derive alone: requests ride the workspace's reqwest.
+graphql_client = { version = "0.16" }
+
 # Media carriage. `object_store` speaks the S3 object protocol behind one
 # small trait, which is the boundary the standalone media service needs —
 # the same code reaches a MinIO container, a cloud bucket, or a federated

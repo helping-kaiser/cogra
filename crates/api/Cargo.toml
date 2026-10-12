@@ -62,7 +62,8 @@ rand               = { workspace = true }
 ed25519-dalek      = { workspace = true }
 axum-client-ip     = { workspace = true }
 reqwest            = { workspace = true }
-sha1               = { workspace = true }
+graphql_client     = { workspace = true }
+sha1              = { workspace = true }
 object_store       = { workspace = true }
 image              = { workspace = true }
 mp4                = { workspace = true }
