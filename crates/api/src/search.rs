@@ -341,6 +341,28 @@ mod tests {
         );
     }
 
+    /// A lone operator has nothing to look up, and a bare scope looks up only the one kind it proposes, by prefix.
+    /// ´claim:search:a-lone-operator-looks-up-nothing´
+    #[test]
+    fn a_lone_operator_looks_up_nothing() {
+        assert!(lookup("", IndexKind::User, None).is_none());
+        let request = lookup("so_l", IndexKind::Hashtag, None).expect("a lookup");
+        assert!(request.lookup);
+        assert_eq!(request.kinds, vec!["hashtag"]);
+        assert_eq!(request.like_body, r"so\_l");
+        assert_eq!(request.title_query, None);
+    }
+
+    /// A `#` scope names a topic by the tag grammar with the operator as its one sigil, so a second `#` names nothing.
+    /// ´claim:search:a-tag-scope-names-a-canonical-topic´
+    #[test]
+    fn a_tag_scope_names_a_canonical_topic() {
+        assert_eq!(scoped_topic("SaltMaps").as_deref(), Some("saltmaps"));
+        assert_eq!(scoped_topic("#saltmaps"), None);
+        assert_eq!(scoped_topic("salt:maps"), None);
+        assert_eq!(scoped_topic(""), None);
+    }
+
     /// The pattern metacharacters a query carries match themselves, never as wildcards.
     /// ´claim:search:like-metacharacters-match-literally´
     #[test]

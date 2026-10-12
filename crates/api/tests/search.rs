@@ -16,8 +16,12 @@ mod rig;
 use api::ratelimit::RateLimitConfig;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
+use common::l1::Family;
+use common::l1::census::{LegRole, leg_params};
+use common::l1::handshake::{EpochPackage, PublishedLeg, PublishedRecord};
+use common::l1::identifier::{ActId, NodeId};
 use postgres_store::content::{self, LandingOrder};
-use postgres_store::{genesis, hashtag};
+use postgres_store::{genesis, hashtag, mirror};
 use rig::WireRig;
 use serde_json::{Value, json};
 use sqlx::PgPool;
@@ -854,4 +858,783 @@ async fn the_finder_offers_a_post_by_a_title_word(pool: PgPool) {
         )
         .await;
     assert_eq!(long["referenceCandidates"], json!([]));
+}
+
+// ── The scoped branch (search-surface B2; design digest item 21) ──────────
+//
+// Scoped content is minted under its author's address atom, as the seal
+// mints it: a topic read tells a content's own author from its identifier,
+// and "carries" is exactly that author's current claim. Claims land through
+// the mirror's own ingestion, one epoch per call, rendered through the
+// census as the seal renders them.
+
+/// `person`'s address atom — `addr-<handle>`, the realization address
+/// [`person`] gives them.
+fn atom(handle: &str) -> String {
+    format!("addr-{handle}")
+}
+
+/// The identifier of `handle`'s `seq`th minted publish.
+fn minted(handle: &str, seq: u64) -> NodeId {
+    NodeId::Mint(ActId::new(&atom(handle), seq, Family::Publish).expect("act id"))
+}
+
+/// A landed post minted as `node`, authored at `secs`.
+async fn post_as(
+    pool: &PgPool,
+    author: Uuid,
+    node: &NodeId,
+    secs: i64,
+    title: Option<&str>,
+) -> Uuid {
+    let id = Uuid::new_v4();
+    let mut tx = pool.begin().await.expect("tx");
+    content::insert_post(
+        &mut tx,
+        id,
+        author,
+        &node.to_string(),
+        "a=0;o=0",
+        Some(landed(secs)),
+        at(secs),
+        title,
+        None,
+        "a body about salt",
+        None,
+    )
+    .await
+    .expect("post");
+    tx.commit().await.expect("commit");
+    id
+}
+
+/// A landed comment minted as `node`, answering `target` (a post or a
+/// comment), authored at `secs`.
+async fn comment_as(
+    pool: &PgPool,
+    author: Uuid,
+    node: &NodeId,
+    target: (Uuid, &str),
+    secs: i64,
+) -> Uuid {
+    let id = Uuid::new_v4();
+    let mut tx = pool.begin().await.expect("tx");
+    content::insert_comment(
+        &mut tx,
+        id,
+        target.0,
+        target.1,
+        author,
+        &node.to_string(),
+        "a=0;o=0",
+        Some(landed(secs)),
+        at(secs),
+        "salt words in a comment body",
+        None,
+    )
+    .await
+    .expect("comment");
+    tx.commit().await.expect("commit");
+    id
+}
+
+/// Lands, as epoch `epoch` — the mirror's first is 0 — `handle`'s Tag
+/// claim (act `seq`) that `node` carries `name` at `relevance`: the A-leg
+/// into the content and the transposed T-leg out of it, as the seal
+/// renders a Tag.
+async fn claim(
+    pool: &PgPool,
+    epoch: i64,
+    handle: &str,
+    seq: u64,
+    node: &NodeId,
+    name: &str,
+    relevance: f64,
+) {
+    hashtag::upsert(&mut *pool.acquire().await.expect("conn"), name)
+        .await
+        .expect("registry");
+    let author = atom(handle);
+    let (a_pd, a_pi) = leg_params(LegRole::A, relevance, 1.0);
+    let (t_pd, t_pi) = leg_params(LegRole::T, relevance, 1.0);
+    let record = PublishedRecord {
+        act_id: ActId::new(&author, seq, Family::Tag).expect("act id"),
+        author: author.clone(),
+        family: Family::Tag,
+        epoch,
+        act_time: epoch,
+        position: 0,
+        payload_marked: false,
+        payload_witness: vec![0; 32],
+        legs: vec![
+            PublishedLeg {
+                role: LegRole::A,
+                source: NodeId::Addr(author.clone()),
+                target: node.clone(),
+                p_d: a_pd,
+                p_i: a_pi,
+                tau: 0.0,
+            },
+            PublishedLeg {
+                role: LegRole::T,
+                source: node.clone(),
+                target: NodeId::name(name).expect("type name"),
+                p_d: t_pd,
+                p_i: t_pi,
+                tau: 0.0,
+            },
+        ],
+    };
+    mirror::ingest_epoch(
+        pool,
+        &EpochPackage {
+            epoch,
+            records: vec![record],
+        },
+    )
+    .await
+    .expect("ingests");
+}
+
+const SCOPED: &str = r#"query($query: String!, $kinds: [NodeKind!], $includeSeen: Boolean,
+                               $first: Int, $after: String, $last: Int, $before: String) {
+  search(query: $query, kinds: $kinds, includeSeen: $includeSeen,
+         first: $first, after: $after, last: $last, before: $before) {
+    edges {
+      node {
+        __typename
+        ... on Post { id title { value } }
+        ... on Comment { id content { value } }
+        ... on User { id handle }
+        ... on Hashtag { name { value } }
+      }
+    }
+    pageInfo { hasNextPage hasPreviousPage startCursor endCursor }
+    totalCount
+  }
+}"#;
+
+async fn scoped(rig: &WireRig, token: Option<&str>, variables: Value) -> Value {
+    let response = rig.gql_raw(token, SCOPED, variables.clone()).await;
+    assert!(response.get("errors").is_none(), "{variables}: {response}");
+    response["data"]["search"].clone()
+}
+
+/// What each edge is, in order: `Post:<title>`, `Comment:<id>`,
+/// `User:<handle>`, `Hashtag:<name>`.
+fn hits(connection: &Value) -> Vec<String> {
+    connection["edges"]
+        .as_array()
+        .expect("edges")
+        .iter()
+        .map(|edge| {
+            let node = &edge["node"];
+            let kind = node["__typename"].as_str().expect("typename");
+            let name = match kind {
+                "Post" => node["title"]["value"].as_str().map(str::to_string),
+                "Comment" => node["id"].as_str().map(str::to_string),
+                "User" => node["handle"].as_str().map(str::to_string),
+                "Hashtag" => node["name"]["value"].as_str().map(str::to_string),
+                _ => None,
+            }
+            .unwrap_or_else(|| "?".to_string());
+            format!("{kind}:{name}")
+        })
+        .collect()
+}
+
+fn as_comment(id: Uuid) -> String {
+    format!("Comment:{id}")
+}
+
+/// `@handle <text>` searches one person's work: their posts by title,
+/// and their comments through the title of the post each answers — not
+/// another person's comment on the same post, and not their comment on a
+/// post whose title misses.
+///
+/// A handle scope finds the person's posts by title and their comments through the post's title.
+/// ´claim:search:a-handle-scope-finds-their-comments-through-the-post-title´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_handle_scoped_query_finds_their_comments_through_the_post_title(pool: PgPool) {
+    let rig = rig(pool);
+    let sol = person(&rig.pool, "sol", None).await;
+    let kel = person(&rig.pool, "kel", None).await;
+    let flats = post_as(
+        &rig.pool,
+        kel,
+        &minted("kel", 1),
+        1,
+        Some("Salt flats at first light"),
+    )
+    .await;
+    let rubbing = post_as(&rig.pool, kel, &minted("kel", 2), 2, Some("A rubbing")).await;
+    post_as(
+        &rig.pool,
+        sol,
+        &minted("sol", 1),
+        3,
+        Some("Salt maps of the coast road"),
+    )
+    .await;
+    let on_flats = comment_as(&rig.pool, sol, &minted("sol", 2), (flats, "post"), 4).await;
+    comment_as(&rig.pool, sol, &minted("sol", 3), (rubbing, "post"), 5).await;
+    comment_as(&rig.pool, kel, &minted("kel", 3), (flats, "post"), 6).await;
+
+    let found = scoped(&rig, None, json!({ "query": "@sol salt" })).await;
+    assert_eq!(
+        hits(&found),
+        vec![
+            as_comment(on_flats),
+            "Post:Salt maps of the coast road".to_string()
+        ]
+    );
+    assert_eq!(found["totalCount"], 2);
+    let typed = scoped(&rig, None, json!({ "query": "  @SOL   flats at fi " })).await;
+    assert_eq!(hits(&typed), vec![as_comment(on_flats)]);
+    let only_comments = scoped(
+        &rig,
+        None,
+        json!({ "query": "@sol salt", "kinds": ["COMMENT"] }),
+    )
+    .await;
+    assert_eq!(hits(&only_comments), vec![as_comment(on_flats)]);
+    assert_eq!(only_comments["totalCount"], 1);
+}
+
+/// An untitled post has no indexed field, so a comment answering it has
+/// nothing to be found through — under any text, its body's included.
+///
+/// A comment on an untitled post is never found through it.
+/// ´claim:search:a-comment-on-an-untitled-post-is-not-found-through-it´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_comment_on_an_untitled_post_is_not_found_through_it(pool: PgPool) {
+    let rig = rig(pool);
+    let sol = person(&rig.pool, "sol", None).await;
+    let kel = person(&rig.pool, "kel", None).await;
+    let untitled = post(&rig.pool, kel, 1, None, None, "Salt flats at first light").await;
+    comment_as(&rig.pool, sol, &minted("sol", 1), (untitled, "post"), 2).await;
+
+    for typed in ["@sol salt", "@sol flats", "@sol comment", "@sol body"] {
+        let found = scoped(&rig, None, json!({ "query": typed })).await;
+        assert_eq!(hits(&found), Vec::<String>::new(), "for {typed:?}");
+        assert_eq!(found["totalCount"], 0);
+    }
+}
+
+/// `#tag <text>` reaches what carries the topic — posts and comments
+/// whose own author's current claim names it — and the text narrows
+/// them by title. A post that carries another topic, or carries this one
+/// with a title that misses, is not reached.
+///
+/// A topic scope reaches the posts and comments that carry the topic.
+/// ´claim:search:a-tag-scope-reaches-what-carries-the-tag´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_tag_scoped_query_finds_what_carries_the_tag(pool: PgPool) {
+    let rig = rig(pool);
+    let sol = person(&rig.pool, "sol", None).await;
+    let kel = person(&rig.pool, "kel", None).await;
+    let carried = minted("sol", 1);
+    post_as(
+        &rig.pool,
+        sol,
+        &carried,
+        1,
+        Some("Salt maps of the coast road"),
+    )
+    .await;
+    let elsewhere = minted("kel", 1);
+    post_as(&rig.pool, kel, &elsewhere, 2, Some("Salt flats")).await;
+    let off_title = minted("kel", 2);
+    post_as(&rig.pool, kel, &off_title, 3, Some("Coast road rubbings")).await;
+    post_as(&rig.pool, kel, &minted("kel", 3), 4, Some("Salt untagged")).await;
+    claim(&rig.pool, 0, "sol", 10, &carried, "saltmaps", 0.8).await;
+    claim(&rig.pool, 1, "kel", 10, &elsewhere, "tides", 0.8).await;
+    claim(&rig.pool, 2, "kel", 11, &off_title, "saltmaps", 0.8).await;
+
+    let found = scoped(&rig, None, json!({ "query": "#saltmaps salt" })).await;
+    assert_eq!(hits(&found), vec!["Post:Salt maps of the coast road"]);
+    let both = scoped(&rig, None, json!({ "query": "#SaltMaps coast" })).await;
+    assert_eq!(
+        hits(&both),
+        vec![
+            "Post:Coast road rubbings",
+            "Post:Salt maps of the coast road"
+        ]
+    );
+    assert_eq!(both["totalCount"], 2);
+    let no_tags = scoped(
+        &rig,
+        None,
+        json!({ "query": "#saltmaps salt", "kinds": ["HASHTAG", "USER"] }),
+    )
+    .await;
+    assert_eq!(hits(&no_tags), Vec::<String>::new());
+    let unknown = scoped(&rig, None, json!({ "query": "#nosuchtag salt" })).await;
+    assert_eq!(hits(&unknown), Vec::<String>::new());
+    let illegal = scoped(&rig, None, json!({ "query": "##saltmaps salt" })).await;
+    assert_eq!(hits(&illegal), Vec::<String>::new());
+}
+
+/// A comment that carries the topic is reached through the title of the
+/// post it answers — and a reply through its thread root's title.
+///
+/// A topic scope matches a carried comment through its thread root's title.
+/// ´claim:search:a-tag-scope-matches-a-carried-comments-target-title´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_tag_scoped_query_matches_a_carried_comments_target_title(pool: PgPool) {
+    let rig = rig(pool);
+    let sol = person(&rig.pool, "sol", None).await;
+    let kel = person(&rig.pool, "kel", None).await;
+    let flats = post_as(
+        &rig.pool,
+        kel,
+        &minted("kel", 1),
+        1,
+        Some("Salt flats at first light"),
+    )
+    .await;
+    let top = minted("sol", 1);
+    let top_id = comment_as(&rig.pool, sol, &top, (flats, "post"), 2).await;
+    let reply = minted("kel", 2);
+    let reply_id = comment_as(&rig.pool, kel, &reply, (top_id, "comment"), 3).await;
+    claim(&rig.pool, 0, "sol", 10, &top, "saltmaps", 0.5).await;
+    claim(&rig.pool, 1, "kel", 10, &reply, "saltmaps", 0.5).await;
+
+    let found = scoped(&rig, None, json!({ "query": "#saltmaps flats" })).await;
+    assert_eq!(hits(&found), vec![as_comment(reply_id), as_comment(top_id)]);
+    let miss = scoped(&rig, None, json!({ "query": "#saltmaps rubbing" })).await;
+    assert_eq!(hits(&miss), Vec::<String>::new());
+}
+
+/// "Carries" is the content's own author's current claim. A comment on
+/// a post that carries the topic does not carry it; neither does content
+/// a stranger tagged, nor content whose author withdrew the claim
+/// (re-tagged at relevance 0).
+///
+/// Only the content's own author's current claim carries a topic.
+/// ´claim:search:only-the-authors-current-claim-carries´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_comment_on_a_tagged_post_that_does_not_carry_the_tag_is_not_reached(pool: PgPool) {
+    let rig = rig(pool);
+    let sol = person(&rig.pool, "sol", None).await;
+    let kel = person(&rig.pool, "kel", None).await;
+    let tagged = minted("sol", 1);
+    let tagged_id = post_as(&rig.pool, sol, &tagged, 1, Some("Salt maps")).await;
+    let on_it = minted("kel", 1);
+    comment_as(&rig.pool, kel, &on_it, (tagged_id, "post"), 2).await;
+    let strangers = minted("kel", 2);
+    post_as(&rig.pool, kel, &strangers, 3, Some("Salt study")).await;
+    let withdrawn = minted("kel", 3);
+    post_as(&rig.pool, kel, &withdrawn, 4, Some("Salt withdrawn")).await;
+    claim(&rig.pool, 0, "sol", 10, &tagged, "saltmaps", 0.9).await;
+    claim(&rig.pool, 1, "sol", 11, &strangers, "saltmaps", 0.9).await;
+    claim(&rig.pool, 2, "kel", 10, &withdrawn, "saltmaps", 0.9).await;
+    claim(&rig.pool, 3, "kel", 11, &withdrawn, "saltmaps", 0.0).await;
+
+    let found = scoped(&rig, None, json!({ "query": "#saltmaps salt" })).await;
+    assert_eq!(hits(&found), vec!["Post:Salt maps"]);
+    assert_eq!(found["totalCount"], 1);
+}
+
+/// `@handle <text>` also returns the topics the person tagged their own
+/// content with, matched by name — not a topic only a stranger tagged
+/// their content with, not one they withdrew, not one whose name misses.
+///
+/// A handle scope returns the topics the person tagged their own content with.
+/// ´claim:search:a-handle-scope-returns-the-tags-they-tagged-with´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_handle_scoped_query_returns_the_tags_they_tagged_with(pool: PgPool) {
+    let rig = rig(pool);
+    let sol = person(&rig.pool, "sol", None).await;
+    person(&rig.pool, "kel", None).await;
+    let own = minted("sol", 1);
+    post_as(&rig.pool, sol, &own, 1, Some("Rubbings")).await;
+    claim(&rig.pool, 0, "sol", 10, &own, "saltmaps", 0.7).await;
+    claim(&rig.pool, 1, "sol", 11, &own, "salty", 0.7).await;
+    claim(&rig.pool, 2, "sol", 12, &own, "salty", 0.0).await;
+    claim(&rig.pool, 3, "kel", 10, &own, "saltpans", 0.7).await;
+    claim(&rig.pool, 4, "sol", 13, &own, "tides", 0.7).await;
+    tag(&rig.pool, "saltmarsh").await;
+
+    let found = scoped(&rig, None, json!({ "query": "@sol salt" })).await;
+    assert_eq!(hits(&found), vec!["Hashtag:saltmaps"]);
+    let exact = scoped(
+        &rig,
+        None,
+        json!({ "query": "@sol tides", "kinds": ["HASHTAG"] }),
+    )
+    .await;
+    assert_eq!(hits(&exact), vec!["Hashtag:tides"]);
+    let unscoped = scoped(
+        &rig,
+        None,
+        json!({ "query": "#saltmaps salt", "kinds": ["HASHTAG"] }),
+    )
+    .await;
+    assert_eq!(
+        hits(&unscoped),
+        Vec::<String>::new(),
+        "a topic scope serves no topics"
+    );
+}
+
+/// A bare `@x` is a lookup in progress: it proposes people whose handle
+/// starts with what was typed — by handle alone, never by a display
+/// name or a substring — and lists nothing of theirs. The exact handle
+/// leads. A lone `@` proposes no one, and a filter that excludes people
+/// leaves nothing to propose.
+///
+/// A bare handle scope proposes people by handle prefix.
+/// ´claim:search:a-bare-handle-scope-proposes-users-by-handle-prefix´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_bare_handle_scope_proposes_users_by_handle_prefix(pool: PgPool) {
+    let rig = rig(pool);
+    person(&rig.pool, "solarium", None).await;
+    person(&rig.pool, "sol", None).await;
+    person(&rig.pool, "parasol", None).await;
+    person(&rig.pool, "kel", Some("Sol Brine")).await;
+    let keyless = Uuid::new_v4();
+    sqlx::query("INSERT INTO actors (id, kind, handle) VALUES ($1, 'user', 'solace')")
+        .bind(keyless)
+        .execute(&rig.pool)
+        .await
+        .expect("keyless");
+
+    let found = scoped(&rig, None, json!({ "query": "@sol" })).await;
+    let mut proposed = hits(&found);
+    assert_eq!(proposed.remove(0), "User:sol", "the exact handle leads");
+    proposed.sort();
+    assert_eq!(proposed, vec!["User:solace", "User:solarium"]);
+    assert_eq!(found["totalCount"], 3);
+    let short = scoped(&rig, None, json!({ "query": "@S" })).await;
+    assert_eq!(hits(&short).len(), 3);
+    for nothing in ["@", "@solx", "@sol_", "@brine"] {
+        let found = scoped(&rig, None, json!({ "query": nothing })).await;
+        assert_eq!(hits(&found), Vec::<String>::new(), "for {nothing:?}");
+    }
+    let filtered = scoped(
+        &rig,
+        None,
+        json!({ "query": "@sol", "kinds": ["POST", "HASHTAG"] }),
+    )
+    .await;
+    assert_eq!(hits(&filtered), Vec::<String>::new());
+    let people = scoped(&rig, None, json!({ "query": "@sol", "kinds": ["USER"] })).await;
+    assert_eq!(hits(&people).len(), 3);
+}
+
+/// A bare `#x` proposes topics whose name starts with what was typed —
+/// by prefix only, the exact name first.
+///
+/// A bare tag scope proposes topics by name prefix.
+/// ´claim:search:a-bare-tag-scope-proposes-tags-by-name-prefix´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_bare_tag_scope_proposes_tags_by_name_prefix(pool: PgPool) {
+    let rig = rig(pool);
+    tag(&rig.pool, "saltmaps").await;
+    tag(&rig.pool, "salt").await;
+    tag(&rig.pool, "rocksalt").await;
+    tag(&rig.pool, "tides").await;
+
+    let found = scoped(&rig, None, json!({ "query": "#SALT" })).await;
+    assert_eq!(hits(&found), vec!["Hashtag:salt", "Hashtag:saltmaps"]);
+    assert_eq!(found["totalCount"], 2);
+    for nothing in ["#", "#altm", "#salt%", "##salt"] {
+        let found = scoped(&rig, None, json!({ "query": nothing })).await;
+        assert_eq!(hits(&found), Vec::<String>::new(), "for {nothing:?}");
+    }
+    let filtered = scoped(&rig, None, json!({ "query": "#salt", "kinds": ["USER"] })).await;
+    assert_eq!(hits(&filtered), Vec::<String>::new());
+}
+
+/// A bare scope never lists anyone's content: not the named person's
+/// posts or comments, not what carries the named topic — even when
+/// every kind is asked for and the names would match those titles.
+///
+/// A bare scope never lists anyone's content.
+/// ´claim:search:a-bare-scope-never-lists-content´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_bare_scope_never_lists_anyones_content(pool: PgPool) {
+    let rig = rig(pool);
+    let sol = person(&rig.pool, "sol", None).await;
+    let carried = minted("sol", 1);
+    let post_id = post_as(&rig.pool, sol, &carried, 1, Some("sol saltmaps")).await;
+    comment_as(&rig.pool, sol, &minted("sol", 2), (post_id, "post"), 2).await;
+    claim(&rig.pool, 0, "sol", 10, &carried, "saltmaps", 0.9).await;
+
+    let every = json!(["POST", "COMMENT", "USER", "HASHTAG"]);
+    let person_only = scoped(&rig, None, json!({ "query": "@sol", "kinds": every })).await;
+    assert_eq!(hits(&person_only), vec!["User:sol"]);
+    let topic_only = scoped(&rig, None, json!({ "query": "#saltmaps", "kinds": every })).await;
+    assert_eq!(hits(&topic_only), vec!["Hashtag:saltmaps"]);
+    let content_only = scoped(
+        &rig,
+        None,
+        json!({ "query": "@sol", "kinds": ["POST", "COMMENT"] }),
+    )
+    .await;
+    assert_eq!(hits(&content_only), Vec::<String>::new());
+}
+
+/// A reply has no title and answers a comment that has none either: it
+/// is found through the title of the post its thread answers, however
+/// deep the reply sits.
+///
+/// A reply under a handle scope is found through its thread root's title.
+/// ´claim:search:a-reply-is-found-through-its-thread-roots-title´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_reply_under_a_handle_scope_is_found_through_its_thread_roots_title(pool: PgPool) {
+    let rig = rig(pool);
+    let sol = person(&rig.pool, "sol", None).await;
+    let kel = person(&rig.pool, "kel", None).await;
+    let root = post_as(
+        &rig.pool,
+        kel,
+        &minted("kel", 1),
+        1,
+        Some("Salt flats at first light"),
+    )
+    .await;
+    let top = comment_as(&rig.pool, kel, &minted("kel", 2), (root, "post"), 2).await;
+    let reply = comment_as(&rig.pool, sol, &minted("sol", 1), (top, "comment"), 3).await;
+    let deeper = comment_as(&rig.pool, kel, &minted("kel", 3), (reply, "comment"), 4).await;
+    let deepest = comment_as(&rig.pool, sol, &minted("sol", 2), (deeper, "comment"), 5).await;
+
+    let found = scoped(&rig, None, json!({ "query": "@sol flats" })).await;
+    assert_eq!(hits(&found), vec![as_comment(deepest), as_comment(reply)]);
+    let words = scoped(&rig, None, json!({ "query": "@sol comment body" })).await;
+    assert_eq!(
+        hits(&words),
+        Vec::<String>::new(),
+        "bodies are never matched"
+    );
+}
+
+/// A handle that names no one — unregistered, illegal, or redacted —
+/// scopes to nothing: the search reads empty, never an error.
+///
+/// An unknown handle scope with text reads empty.
+/// ´claim:search:an-unknown-handle-scope-reads-empty´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_unknown_handle_scope_with_text_reads_empty(pool: PgPool) {
+    let rig = rig(pool);
+    let sol = person(&rig.pool, "sol", None).await;
+    post_as(&rig.pool, sol, &minted("sol", 1), 1, Some("Salt maps")).await;
+    sqlx::query(
+        "INSERT INTO actor_profile_versions
+             (actor_id, display_name, redaction_reason, landed_epoch, act_time, position)
+         VALUES ($1, '[redacted]', 'policy', 99, 99, 0)",
+    )
+    .bind(sol)
+    .execute(&rig.pool)
+    .await
+    .expect("tombstone");
+
+    for typed in [
+        "@nobody salt",
+        "@so salt",
+        "@s!l salt",
+        "@sol salt",
+        "@ salt",
+    ] {
+        let found = scoped(&rig, None, json!({ "query": typed })).await;
+        assert_eq!(hits(&found), Vec::<String>::new(), "for {typed:?}");
+        assert_eq!(found["totalCount"], 0);
+    }
+}
+
+/// `@sol <text>` searches sol's work and never returns sol's own row —
+/// even when the text is sol's handle or display name.
+///
+/// A handle scope with text returns no row for the person it names.
+/// ´claim:search:a-handle-scope-returns-no-profile-row´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_handle_scope_with_text_returns_no_profile_row(pool: PgPool) {
+    let rig = rig(pool);
+    let sol = person(&rig.pool, "sol", Some("Sol Brine")).await;
+    person(&rig.pool, "solarium", None).await;
+    post_as(
+        &rig.pool,
+        sol,
+        &minted("sol", 1),
+        1,
+        Some("Sol at the brine pans"),
+    )
+    .await;
+
+    for typed in ["@sol sol", "@sol brine", "@sol solarium"] {
+        let found = scoped(&rig, None, json!({ "query": typed })).await;
+        assert!(
+            hits(&found).iter().all(|h| !h.starts_with("User:")),
+            "for {typed:?}: {found}"
+        );
+    }
+    let post_only = scoped(&rig, None, json!({ "query": "@sol brine" })).await;
+    assert_eq!(hits(&post_only), vec!["Post:Sol at the brine pans"]);
+    let users = scoped(
+        &rig,
+        None,
+        json!({ "query": "@sol sol", "kinds": ["USER"] }),
+    )
+    .await;
+    assert_eq!(hits(&users), Vec::<String>::new());
+}
+
+/// A scoped search keeps the matcher's order and keyset: exact title
+/// first, then newest first across posts, comments and topics alike;
+/// every page forward and backward yields the one-shot order; the seen
+/// exclusion applies inside a scope too.
+///
+/// Scoped pages keep the matcher's order and are stable in both directions.
+/// ´claim:search:scoped-pages-are-stable-and-complete´
+#[sqlx::test(migrations = "../../migrations")]
+async fn scoped_pages_are_stable_and_complete(pool: PgPool) {
+    let rig = rig(pool);
+    let (reader, _) = rig.seed_member("reader", "reader@example.test").await;
+    let token = rig.log_in("reader@example.test").await;
+    let sol = person(&rig.pool, "sol", None).await;
+    let kel = person(&rig.pool, "kel", None).await;
+    let exact = post_as(&rig.pool, kel, &minted("kel", 1), 0, Some("Salt")).await;
+    let mut seq = 1;
+    let mut comments = Vec::new();
+    for n in 0..7 {
+        seq += 1;
+        post_as(
+            &rig.pool,
+            sol,
+            &minted("sol", seq),
+            n,
+            Some(&format!("Salt study {n}")),
+        )
+        .await;
+        seq += 1;
+        comments.push(comment_as(&rig.pool, sol, &minted("sol", seq), (exact, "post"), n).await);
+    }
+    let tagged = minted("sol", 99);
+    post_as(&rig.pool, sol, &tagged, 50, Some("Rubbings")).await;
+    claim(&rig.pool, 0, "sol", 200, &tagged, "saltmaps", 0.9).await;
+
+    let whole = scoped(&rig, None, json!({ "query": "@sol salt", "first": 100 })).await;
+    let expected = hits(&whole);
+    assert_eq!(expected.len(), 15);
+    assert!(
+        expected[..7].iter().all(|h| h.starts_with("Comment:")),
+        "exact-title comments lead: {expected:?}"
+    );
+    assert_eq!(whole["totalCount"], 15);
+
+    let mut walked = Vec::new();
+    let mut after = Value::Null;
+    loop {
+        let page = scoped(
+            &rig,
+            None,
+            json!({ "query": "@sol salt", "first": 4, "after": after }),
+        )
+        .await;
+        walked.extend(hits(&page));
+        if page["pageInfo"]["hasNextPage"] != true {
+            break;
+        }
+        after = page["pageInfo"]["endCursor"].clone();
+    }
+    assert_eq!(walked, expected, "forward");
+    let mut back = Vec::new();
+    let mut before = Value::Null;
+    loop {
+        let page = scoped(
+            &rig,
+            None,
+            json!({ "query": "@sol salt", "last": 4, "before": before }),
+        )
+        .await;
+        let mut chunk = hits(&page);
+        chunk.append(&mut back);
+        back = chunk;
+        if page["pageInfo"]["hasPreviousPage"] != true {
+            break;
+        }
+        before = page["pageInfo"]["startCursor"].clone();
+    }
+    assert_eq!(back, expected, "backward");
+
+    let seen_comment = comments[3];
+    seen(&rig.pool, reader, seen_comment).await;
+    let unseen = scoped(
+        &rig,
+        Some(&token),
+        json!({ "query": "@sol salt", "first": 100, "includeSeen": false }),
+    )
+    .await;
+    assert_eq!(unseen["totalCount"], 14);
+    assert!(!hits(&unseen).contains(&as_comment(seen_comment)));
+}
+
+/// A removed comment's current version is a tombstone: it is never found
+/// under a scope, though the post it answered still is.
+///
+/// A redacted comment is never found under a scope.
+/// ´claim:search:a-removed-comment-is-never-found-under-a-scope´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_removed_comment_is_never_found_under_a_scope(pool: PgPool) {
+    let rig = rig(pool);
+    let sol = person(&rig.pool, "sol", None).await;
+    let flats = post_as(&rig.pool, sol, &minted("sol", 1), 1, Some("Salt flats")).await;
+    let removed = comment_as(&rig.pool, sol, &minted("sol", 2), (flats, "post"), 2).await;
+    sqlx::query(
+        "INSERT INTO comment_versions
+             (comment_id, content, redaction_reason, pending, created_at,
+              landed_epoch, act_time, position)
+         VALUES ($1, '[removed]', 'policy', FALSE, $2, 9, 9, 0)",
+    )
+    .bind(removed)
+    .bind(at(9))
+    .execute(&rig.pool)
+    .await
+    .expect("tombstone");
+
+    let found = scoped(&rig, None, json!({ "query": "@sol salt" })).await;
+    assert_eq!(hits(&found), vec!["Post:Salt flats"]);
+}
+
+/// A claim still in flight carries its topic for the viewer who staged
+/// it, as on the tag page — and for no one else.
+///
+/// The viewer's own in-flight claim carries a topic for them alone.
+/// ´claim:search:an-own-pending-claim-carries-for-its-author-alone´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_viewers_own_pending_tag_carries_for_them_alone(pool: PgPool) {
+    let rig = rig(pool);
+    let (reader, _) = rig.seed_member("reader", "reader@example.test").await;
+    let token = rig.log_in("reader@example.test").await;
+    let address: String =
+        sqlx::query_scalar("SELECT realization_address FROM actors WHERE id = $1")
+            .bind(reader)
+            .fetch_one(&rig.pool)
+            .await
+            .expect("address");
+    let node = NodeId::Mint(ActId::new(&address, 1, Family::Publish).expect("act id"));
+    post_as(&rig.pool, reader, &node, 1, Some("Salt maps")).await;
+    tag(&rig.pool, "saltmaps").await;
+    sqlx::query(
+        "INSERT INTO staged_writes
+             (id, actor_id, act_id, author, seq, family, middle, target,
+              p_d, p_i, payload, prepared_epoch, state, pre_signed_at)
+         VALUES ($1, $2, $3, $4, 7, 'tag', $5, 'name:saltmaps', 0.9, 1.0, ''::bytea, 0,
+                 'awaiting_approval', NOW())",
+    )
+    .bind(Uuid::new_v4())
+    .bind(reader)
+    .bind(format!("act:{address}:7:tag"))
+    .bind(&address)
+    .bind(node.to_string())
+    .execute(&rig.pool)
+    .await
+    .expect("staged tag");
+
+    let own = scoped(&rig, Some(&token), json!({ "query": "#saltmaps salt" })).await;
+    assert_eq!(hits(&own), vec!["Post:Salt maps"]);
+    assert_eq!(own["totalCount"], 1);
+    let anonymous = scoped(&rig, None, json!({ "query": "#saltmaps salt" })).await;
+    assert_eq!(hits(&anonymous), Vec::<String>::new());
 }

@@ -798,10 +798,7 @@ async fn hydrate(
     };
     let content = crate::nodes::resolve_content_many(
         pool,
-        &ids_of(&[
-            IndexKind::Post.as_store(),
-            ScopedKind::Comment.as_store(),
-        ]),
+        &ids_of(&[IndexKind::Post.as_store(), ScopedKind::Comment.as_store()]),
     )
     .await
     .map_err(|e| async_graphql::Error::new(e.to_string()))?;
