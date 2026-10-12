@@ -23,18 +23,32 @@
    THE KEY CARD NAMES ITS PLATFORM (jakob 2026-10-05; the `wording` chip):
    `…needs a key on this browser…` on the web, `…needs a key in this app…`
    in the app. `Resend the link` answers with the sent-shape snackbar
-   naming the address, the line `Wrong address?` already speaks. */
+   naming the address, the line `Wrong address?` already speaks.
+
+   REGISTERED under the feed's own prefix (round 7), the shell named as
+   `ApplicantRejected` names it. The two cards are `verifyCard` and `keyCard`,
+   the vouch-back card's shape of name: the verify card's address line is
+   `address`, `Wrong address?` is `wrongAddress`, the seven-day line `note` and
+   `Resend the link` `resend`, as on `VerifyExpired`; the key card's button is
+   `create`. */
+export const NODE = "feed";
 export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
 export const VALS = `keyCardBody: this.props.wording === "app" ? "Your application needs a key in this app before @mira can approve it." : "Your application needs a key on this browser before @mira can approve it."`;
 
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />}>
-        <BorrowedViewBand handle="mira" displayName="Mira Voss" avatarSrc="inviter.jpg" line="Browsing from @mira's view while your application lands." />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band">
+        <BorrowedViewBand
+          handle="mira"
+          displayName="Mira Voss"
+          avatarSrc="inviter.jpg"
+          line="Browsing from @mira's view while your application lands."
+          node="borrowedViewBand"
+        />
       </CograBand>
       <FeedList>
-        <TaskCard tone="notice" title="Verify your email" body="We sent you a verification link — open it to prove this email is yours.">
+        <TaskCard tone="notice" title="Verify your email" body="We sent you a verification link — open it to prove this email is yours." node="verifyCard">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <span
               style={{
@@ -44,10 +58,11 @@ export function Screen() {
                 lineHeight: "var(--text-body-medium--line-height)",
                 letterSpacing: "var(--text-body-medium--letter-spacing)",
               }}
+              data-node="address"
             >
               Sent to noor@fieldmail.org
             </span>
-            <InlineAction size="sm" onClick={() => {}}>
+            <InlineAction size="sm" onClick={() => {}} node="wrongAddress">
               Wrong address?
             </InlineAction>
           </div>
@@ -59,19 +74,22 @@ export function Screen() {
               letterSpacing: "var(--text-body-small--letter-spacing)",
               color: "var(--text-secondary)",
             }}
+            data-node="note"
           >
             An account left unverified for seven days is removed — joining again then starts over.
           </p>
-          <Button variant="outline" selfStart>
+          <Button variant="outline" selfStart node="resend">
             Resend the link
           </Button>
         </TaskCard>
-        <TaskCard tone="notice" title="Create your key" body="{{keyCardBody}}">
-          <Button variant="inverse" selfStart>Create my key</Button>
+        <TaskCard tone="notice" title="Create your key" body="{{keyCardBody}}" node="keyCard">
+          <Button variant="inverse" selfStart node="create">
+            Create my key
+          </Button>
         </TaskCard>
-        <PostCard {...ADA_POST} signedIn={false} />
+        <PostCard {...ADA_POST} signedIn={false} node="card" />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

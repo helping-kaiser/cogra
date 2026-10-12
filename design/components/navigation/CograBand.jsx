@@ -72,6 +72,7 @@ export function BandIcon({ name, label, size = 24, dot = false, node }) {
           <span
             aria-hidden="true"
             style={{ position: "absolute", top: "-1px", right: "-2px", width: "8px", height: "8px", borderRadius: "var(--radius-full)", background: "var(--primary)", border: "2px solid var(--surface)", boxSizing: "content-box" }}
+            data-node={node && "dot"}
           />
         )}
       </span>

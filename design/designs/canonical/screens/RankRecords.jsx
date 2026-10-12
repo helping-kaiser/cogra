@@ -24,7 +24,12 @@
    reader checking a claim has to be able to see it, and the control that copies
    it arrives with the spot-check tooling that would give a copied key somewhere
    to go — a control that fills a clipboard nothing can yet read promises a
-   workflow the product does not have. */
+   workflow the product does not have.
+
+   REGISTERED under the `feedEntry` prefix (round 7): the held thing `origin`,
+   the opening line `note`, each record a `record` keyed by the key it prints,
+   and the closing line `closingNote`. */
+export const NODE = "feedEntry";
 const STEP_RECORDS = [
   {
     what: "Your opinion of @ada",
@@ -43,18 +48,18 @@ const STEP_RECORDS = [
 export function Screen() {
   return (
     <>
-      <PageHeader title="What landed" backHref="#" backLabel="Back to the step" />
+      <PageHeader title="What landed" backHref="#" backLabel="Back to the step" node="header" />
       <ScoreColumn>
         <ScoreOrigin />
-        <QuietNote>The two records behind your opinion of @ada.</QuietNote>
+        <QuietNote node="note">The two records behind your opinion of @ada.</QuietNote>
 
         <ActionLog records={STEP_RECORDS} />
 
-        <QuietNote>
+        <QuietNote node="closingNote">
           These records are public. Anyone can run the same sum and land on the same number.
         </QuietNote>
       </ScoreColumn>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

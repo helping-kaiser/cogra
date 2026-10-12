@@ -8,33 +8,33 @@ ALWAYS the band reads Browsing from a deleted account's view while your applicat
 
 ALWAYS the application rides the feed as task cards above the posts
 
-ALWAYS the verify card stands GIVEN the email is not verified yet
+ALWAYS feed.verifyCard stands GIVEN the email is not verified yet
 
-ALWAYS the key card stands GIVEN no key is attached to the application yet
+ALWAYS feed.keyCard stands GIVEN no key is attached to the application yet
 
-ALWAYS the key card's body reads Your application needs a key on this browser before @mira can approve it. on the web and Your application needs a key in this app before @mira can approve it. in the app
+ALWAYS feed.keyCard.body reads Your application needs a key on this browser before @mira can approve it. on the web and Your application needs a key in this app before @mira can approve it. in the app
 
 ALWAYS either owed step can be done first, and the other's card stands until it is
 
-ALWAYS the verify card and the key card carry no way to put them away
+ALWAYS feed.verifyCard and feed.keyCard carry no way to put them away
 
-ALWAYS the verify card prints the address the link was sent to, beside Wrong address?
+ALWAYS feed.verifyCard prints the address the link was sent to, beside feed.verifyCard.wrongAddress
 
-ALWAYS the line An account left unverified for seven days is removed — joining again then starts over. stands on the verify card and on no other surface
+ALWAYS the line An account left unverified for seven days is removed — joining again then starts over. stands on feed.verifyCard and on no other surface
 
 ALWAYS no figure counts down the seven days on any surface
 
-WHEN the email is verified -> the verify card leaves AND the cards still owed stay
+WHEN the email is verified -> feed.verifyCard leaves AND the cards still owed stay
 
-WHEN the key is attached -> the key card leaves AND the cards still owed stay
+WHEN the key is attached -> feed.keyCard leaves AND the cards still owed stay
 
 WHEN the last owed step is done -> the waiting card takes the task cards' place
 
-WHEN tap Resend the link -> the verification mail goes out again AND the verify card stays AND the snackbar reads Sent — the link is on its way to noor@fieldmail.org. with the address the card prints
+WHEN tap Resend the link -> the verification mail goes out again AND feed.verifyCard stays AND the snackbar reads Sent — the link is on its way to noor@fieldmail.org. with the address the card prints
 
 WHEN tap Resend the link GIVEN the reader is offline -> the network error answers
 
-WHEN tap Wrong address? -> the applicant's email change opens
+WHEN tap feed.verifyCard.wrongAddress -> the applicant's email change opens
 
 WHEN tap Create my key -> the key ceremony opens
 

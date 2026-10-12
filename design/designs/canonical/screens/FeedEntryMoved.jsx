@@ -26,19 +26,23 @@
 
    IT REACHES THE SCREEN AS CONTENT, NOT AS A TAP. The score opens this same
    board in the state the fetch leaves it, exactly as `TagPageEmpty` is the page
-   any chip opens for a name nobody has used. */
+   any chip opens for a name nobody has used.
+
+   REGISTERED under the `feedEntry` prefix (round 7), named as `FeedEntry`
+   names the same screen: the quiet line stands where its note does, as `note`. */
+export const NODE = "feedEntry";
 export const PROPS = { cause: { editor: "enum", options: ["moved", "settling"], default: "moved" } };
 export const VALS = `traceLine: this.props.cause === "settling" ? "Still settling — its paths count once it lands." : "The paths that carried it here have moved on."`;
 
 export function Screen() {
   return (
     <>
-      <PageHeader title="Why this reached you" backHref="#" backLabel="Back to feed" />
+      <PageHeader title="Why this reached you" backHref="#" backLabel="Back to feed" node="header" />
       <ScoreColumn>
         <ScoreOrigin score="—" />
-        <QuietNote>{"{{traceLine}}"}</QuietNote>
+        <QuietNote node="note">{"{{traceLine}}"}</QuietNote>
       </ScoreColumn>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

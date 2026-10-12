@@ -14,7 +14,7 @@ ALWAYS the strongest handful stands drawn and the rest ride one quiet row statin
 
 ALWAYS the drawn paths and the quiet row add up to the trace's score, the figure its own fetch found
 
-WHEN tap the quiet row of more paths -> the weakest paths unfold in place AND NEVER a second page opens
+WHEN tap feedEntry.morePaths -> the weakest paths unfold in place AND NEVER a second page opens
 
 ALWAYS the trace carries no chart, no bar, no meter, no percentage and no trend arrow
 

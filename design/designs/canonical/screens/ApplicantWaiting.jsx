@@ -31,15 +31,26 @@
    whether or not this one was put away — `ApplicantLanding`,
    `ApplicantRejected` — because a reader who dismissed a wait has not
    dismissed what ended it. The wait itself has no clock: a verified
-   application waits on its vouch for as long as it takes. */
+   application waits on its vouch for as long as it takes.
+
+   REGISTERED under the feed's own prefix (round 7), named as
+   `ApplicantRejected` names the same shell: the card is `application`, its ask
+   link `link`, and `Got it` is `dismiss`, as on the vouch-back card. */
+export const NODE = "feed";
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />}>
-        <BorrowedViewBand handle="mira" displayName="Mira Voss" avatarSrc="inviter.jpg" line="Browsing from @mira's view while your application lands." />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band">
+        <BorrowedViewBand
+          handle="mira"
+          displayName="Mira Voss"
+          avatarSrc="inviter.jpg"
+          line="Browsing from @mira's view while your application lands."
+          node="borrowedViewBand"
+        />
       </CograBand>
       <FeedList>
-        <TaskCard title="All set — waiting on @mira" body="Their approval brings you in. Nothing else is needed from you.">
+        <TaskCard title="All set — waiting on @mira" body="Their approval brings you in. Nothing else is needed from you." node="application">
           <PayoutAddress
             bare
             label="Your ask link"
@@ -47,16 +58,17 @@ export function Screen() {
             onCopy={() => {}}
             copyLabel="Copy your ask link"
             caption="It does not expire."
+            node="link"
           />
-          <Button variant="outline" selfStart>
+          <Button variant="outline" selfStart node="dismiss">
             Got it
           </Button>
         </TaskCard>
-        <PostCard {...ADA_POST} signedIn={false} />
-        <PostCard {...TOBIAS_POST} signedIn={false} />
+        <PostCard {...ADA_POST} signedIn={false} node="card" />
+        <PostCard {...TOBIAS_POST} signedIn={false} node="card" />
       </FeedList>
-      <Snackbar message="Your post waits with your application — it arrives with you." />
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <Snackbar message="Your post waits with your application — it arrives with you." node="snackbar" />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }
