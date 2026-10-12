@@ -434,11 +434,11 @@ pub async fn find_scoped(
                           OR ($6::uuid IS NULL AND c.l1_node_id IN (SELECT node FROM carried)))
                      AND (SELECT v.redaction_reason IS NULL
                           FROM comment_versions v WHERE v.comment_id = c.id
-                          ORDER BY v.pending DESC,
-                                   v.landed_epoch DESC NULLS LAST,
-                                   v.act_time DESC NULLS LAST,
-                                   v.position DESC NULLS LAST,
-                                   v.created_at DESC, v.version_id DESC
+                          ORDER BY pending DESC,
+                                   landed_epoch DESC NULLS LAST,
+                                   act_time DESC NULLS LAST,
+                                   position DESC NULLS LAST,
+                                   created_at DESC, version_id DESC
                           LIMIT 1)
                  UNION ALL
                    SELECT ch.comment_id, ch.created_at, p.target_id, p.target_type
@@ -561,11 +561,11 @@ pub async fn find_scoped(
                           OR ($6::uuid IS NULL AND c.l1_node_id IN (SELECT node FROM carried)))
                      AND (SELECT v.redaction_reason IS NULL
                           FROM comment_versions v WHERE v.comment_id = c.id
-                          ORDER BY v.pending DESC,
-                                   v.landed_epoch DESC NULLS LAST,
-                                   v.act_time DESC NULLS LAST,
-                                   v.position DESC NULLS LAST,
-                                   v.created_at DESC, v.version_id DESC
+                          ORDER BY pending DESC,
+                                   landed_epoch DESC NULLS LAST,
+                                   act_time DESC NULLS LAST,
+                                   position DESC NULLS LAST,
+                                   created_at DESC, version_id DESC
                           LIMIT 1)
                  UNION ALL
                    SELECT ch.comment_id, ch.created_at, p.target_id, p.target_type
@@ -691,11 +691,11 @@ pub async fn count_scoped(pool: &PgPool, q: &ScopedQuery) -> Result<i64, sqlx::E
                       OR ($5::uuid IS NULL AND c.l1_node_id IN (SELECT node FROM carried)))
                  AND (SELECT v.redaction_reason IS NULL
                       FROM comment_versions v WHERE v.comment_id = c.id
-                      ORDER BY v.pending DESC,
-                               v.landed_epoch DESC NULLS LAST,
-                               v.act_time DESC NULLS LAST,
-                               v.position DESC NULLS LAST,
-                               v.created_at DESC, v.version_id DESC
+                      ORDER BY pending DESC,
+                               landed_epoch DESC NULLS LAST,
+                               act_time DESC NULLS LAST,
+                               position DESC NULLS LAST,
+                               created_at DESC, version_id DESC
                       LIMIT 1)
              UNION ALL
                SELECT ch.comment_id, p.target_id, p.target_type
