@@ -48,7 +48,7 @@ class VideoStageTest {
 
     @After
     fun tearDown() {
-        VideoStage.release()
+        VideoPreload.reset()
         VideoStage.dataSources = null
     }
 
@@ -96,6 +96,55 @@ class VideoStageTest {
         VideoStage.surrender(leaving)
 
         assertThat(VideoStage.playerFor(arriving, clip)).isNotNull()
+    }
+
+    @Test
+    fun aDepartingSurfaceCannotPauseTheClipItsReplacementHolds() {
+        // The holder guard, on the play state rather than the token: the
+        // leaving screen disposes after the arriving one claimed the clip and
+        // started it, and its surrender must not stop the clip that carried on.
+        val leaving = Any()
+        val arriving = Any()
+        VideoStage.claim(context, clip, leaving)
+        VideoStage.claim(context, clip, arriving)
+        val player = checkNotNull(VideoStage.playerFor(arriving, clip))
+        player.playWhenReady = true
+
+        VideoStage.surrender(leaving)
+
+        assertThat(player.playWhenReady).isTrue()
+        assertThat(VideoStage.holding?.owner).isSameInstanceAs(arriving)
+
+        // And the guard is what spares it: the holder's own surrender pauses.
+        VideoStage.surrender(arriving)
+        assertThat(player.playWhenReady).isFalse()
+    }
+
+    @Test
+    fun claimingTheClipOnStageNeitherPreparesNorSeeksNorAdoptsAPreload() {
+        // What carrying a clip into its next surface means: the source it is
+        // playing, the moment it reached and whether it plays all stay as they
+        // are. A preload of the same clip read since — its opening, at zero —
+        // is never put in its place; only a different clip takes one up.
+        val card = Any()
+        val detail = Any()
+        VideoStage.claim(context, clip, card)
+        val player = checkNotNull(VideoStage.playerFor(card, clip))
+        val playing = VideoStage.sourceOnStage
+        player.playWhenReady = true
+        player.seekTo(REACHED_MS)
+        VideoPreload.show(context, listOf(clip))
+        val preloaded = VideoPreload.preloaded(clip)
+        val reached = player.currentPosition
+
+        VideoStage.claim(context, clip, detail)
+
+        assertThat(preloaded).isNotNull()
+        assertThat(VideoStage.sourceOnStage).isSameInstanceAs(playing)
+        assertThat(VideoStage.sourceOnStage).isNotSameInstanceAs(preloaded)
+        assertThat(reached).isGreaterThan(0L)
+        assertThat(player.currentPosition).isEqualTo(reached)
+        assertThat(player.playWhenReady).isTrue()
     }
 
     @Test
@@ -305,6 +354,11 @@ class VideoStageTest {
         VideoStage.claim(context, clip, Any())
 
         assertThat(asked.await(10, TimeUnit.SECONDS)).isTrue()
+    }
+
+    private companion object {
+        /** A moment past the clip's start, so a re-prepare (back to zero) shows. */
+        const val REACHED_MS = 4_000L
     }
 
     /** A source that only says when it has been prepared. */
