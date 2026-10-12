@@ -555,7 +555,13 @@ pub async fn spend_mark_seen(
     cfg: &RateLimitConfig,
     account: Uuid,
 ) -> Result<bool, sqlx::Error> {
-    spend_mail_budget(pool, scope::MARK_SEEN_ACCOUNT, account, cfg.mark_seen_account).await
+    spend_mail_budget(
+        pool,
+        scope::MARK_SEEN_ACCOUNT,
+        account,
+        cfg.mark_seen_account,
+    )
+    .await
 }
 
 /// Counts the attempt and answers whether it is within the window's

@@ -19,7 +19,7 @@ use uuid::Uuid;
 /// The most ids one `markSeen` call carries: the page budget
 /// (api-spec.md "Pagination"), so a flush never outgrows the page that
 /// showed it.
-pub const MAX_MARK_SEEN: usize = 100;
+pub const MAX_MARK_SEEN: usize = crate::schema::types::MAX_PAGE_SIZE as usize;
 
 /// A kind History serves.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

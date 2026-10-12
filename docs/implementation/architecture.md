@@ -356,8 +356,7 @@ user count
    user over the indexed record tables, forward-only and bounded
    by the dust floor χ (weight-bounded, not hop-bounded), and
    returns the slice as raw L1 edge records per the slice contract
-   ([miner-api.md](miner-api.md)), together with the viewer's
-   seen-list.
+   ([miner-api.md](miner-api.md)).
 2. **Rank** — the client, the server's ranker container, or a
    delegated miner filters and ranks the slice with the `ranker`
    core.

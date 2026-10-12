@@ -295,8 +295,9 @@ pub enum ErrorCode {
     NotFound,
     /// Malformed input; `field` names the offender.
     BadInput,
-    /// An auth or upload endpoint's per-IP / per-account budget — never a
-    /// signing act. The login backoff serves no retry-after figure.
+    /// An auth or upload endpoint's per-IP / per-account budget, or a
+    /// private-viewer-state budget (markSeen) — never a signing act. The
+    /// login backoff serves no retry-after figure.
     RateLimited,
     /// Collapsed server fault; detail is logged, not surfaced.
     Internal,
@@ -1384,20 +1385,22 @@ impl User {
                 kinds,
             },
         );
-        connection.edges.extend(
-            hydrate_history(pool, entries)
-                .await?
-                .into_iter()
-                .map(|(entry, item)| {
-                    Edge::with_additional_fields(
-                        crate::history::encode_cursor(entry.cursor()),
-                        item,
-                        ViewHistoryEdgeFields {
-                            first_seen_at: entry.first_seen_at,
-                        },
-                    )
-                }),
-        );
+        connection
+            .edges
+            .extend(
+                hydrate_history(pool, entries)
+                    .await?
+                    .into_iter()
+                    .map(|(entry, item)| {
+                        Edge::with_additional_fields(
+                            crate::history::encode_cursor(entry.cursor()),
+                            item,
+                            ViewHistoryEdgeFields {
+                                first_seen_at: entry.first_seen_at,
+                            },
+                        )
+                    }),
+            );
         Ok(Some(connection))
     }
 
@@ -3680,8 +3683,8 @@ pub enum SearchResult {
 }
 
 /// What the seen-list holds: the kinds History serves; later slices add
-/// members as their kinds join. A union for [`SearchResult`]'s reason —
-/// a `Hashtag` is not a `Node`, and History serves topics.
+/// members as their kinds join. A union, not `Node`: a Hashtag is not a
+/// Node, and History serves topics (GraphQL spec §3.8, *Unions*).
 #[derive(async_graphql::Union)]
 pub enum ViewHistoryItem {
     Post(PostType),

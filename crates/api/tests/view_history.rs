@@ -177,9 +177,7 @@ fn ids(connection: &Value) -> Vec<Uuid> {
         .as_array()
         .expect("edges")
         .iter()
-        .map(|edge| {
-            Uuid::parse_str(edge["node"]["id"].as_str().expect("id")).expect("uuid")
-        })
+        .map(|edge| Uuid::parse_str(edge["node"]["id"].as_str().expect("id")).expect("uuid"))
         .collect()
 }
 
@@ -188,7 +186,12 @@ fn typenames(connection: &Value) -> Vec<String> {
         .as_array()
         .expect("edges")
         .iter()
-        .map(|edge| edge["node"]["__typename"].as_str().expect("typename").to_string())
+        .map(|edge| {
+            edge["node"]["__typename"]
+                .as_str()
+                .expect("typename")
+                .to_string()
+        })
         .collect()
 }
 
@@ -289,12 +292,7 @@ async fn history_narrows_to_the_staged_kinds(pool: PgPool) {
     let t = tag(&rig.pool, "saltmaps").await;
     mark(&rig, &token, &[p, c, sol, t]).await;
 
-    for (kind, expected) in [
-        ("POST", p),
-        ("COMMENT", c),
-        ("USER", sol),
-        ("HASHTAG", t),
-    ] {
+    for (kind, expected) in [("POST", p), ("COMMENT", c), ("USER", sol), ("HASHTAG", t)] {
         let page = history(&rig, &token, json!({ "kinds": [kind] })).await;
         assert_eq!(ids(&page), vec![expected], "for {kind}");
         assert_eq!(page["totalCount"], 1, "for {kind}");
@@ -613,10 +611,7 @@ async fn an_applicant_marks_seen_and_reads_history(pool: PgPool) {
 
     let marked = mark(&rig, &token, &[p, sol]).await;
     assert_eq!(marked["ok"], true, "{marked}");
-    assert_eq!(
-        ids(&history(&rig, &token, json!({})).await),
-        vec![sol, p]
-    );
+    assert_eq!(ids(&history(&rig, &token, json!({})).await), vec![sol, p]);
 }
 
 /// Without a session there is no seen-list to write to.
@@ -627,7 +622,9 @@ async fn an_applicant_marks_seen_and_reads_history(pool: PgPool) {
 async fn mark_seen_without_a_session_is_unauthenticated(pool: PgPool) {
     let rig = rig(pool);
     let sol = person(&rig.pool, "sol").await;
-    let response = rig.gql_raw(None, MARK_SEEN, json!({ "nodes": [sol] })).await;
+    let response = rig
+        .gql_raw(None, MARK_SEEN, json!({ "nodes": [sol] }))
+        .await;
     assert_eq!(first_error_code(&response), Some("UNAUTHENTICATED"));
     assert_eq!(count(&rig.pool, "user_view_log").await, 0);
 }
@@ -668,9 +665,16 @@ async fn mark_seen_skips_ids_that_name_nothing(pool: PgPool) {
     let p = post(&rig.pool, sol, 1, "P").await;
     let collective = Uuid::new_v4();
     let mut conn = rig.pool.acquire().await.expect("conn");
-    genesis::insert_actor(&mut conn, collective, "collective", "salters", b"pk-c", "addr-c")
-        .await
-        .expect("collective");
+    genesis::insert_actor(
+        &mut conn,
+        collective,
+        "collective",
+        "salters",
+        b"pk-c",
+        "addr-c",
+    )
+    .await
+    .expect("collective");
     drop(conn);
 
     let marked = mark(&rig, &token, &[Uuid::new_v4(), p, collective]).await;

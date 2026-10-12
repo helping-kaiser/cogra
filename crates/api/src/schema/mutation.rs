@@ -1459,6 +1459,8 @@ struct MarkSeenInput {
     nodes: Vec<Uuid>,
 }
 
+/// `ok` is null exactly when a userError refused the batch, which then
+/// wrote nothing.
 #[derive(SimpleObject)]
 struct MarkSeenPayload {
     ok: Option<bool>,
@@ -2699,8 +2701,8 @@ impl Mutation {
     /// order they were seen, and a batch keeps that order. Needs a
     /// session (UNAUTHENTICATED otherwise) and no particular account
     /// state — an applicant's seeing counts like a member's; this is
-    /// private viewer state, not acting. Spends the account's markSeen
-    /// budget; over it is RATE_LIMITED and writes nothing.
+    /// private viewer state, not acting. A per-account budget bounds the
+    /// rate: over it is RATE_LIMITED, and the batch writes nothing.
     async fn mark_seen(
         &self,
         ctx: &Context<'_>,
@@ -2714,10 +2716,7 @@ impl Mutation {
                 ok: None,
                 user_errors: vec![UserError::at(
                     ErrorCode::BadInput,
-                    format!(
-                        "at most {} nodes per call",
-                        crate::history::MAX_MARK_SEEN
-                    ),
+                    format!("at most {} nodes per call", crate::history::MAX_MARK_SEEN),
                     vec!["nodes".to_string()],
                 )],
             });
