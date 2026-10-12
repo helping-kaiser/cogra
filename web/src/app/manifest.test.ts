@@ -8,10 +8,16 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 
+import { metadata, viewport } from "./layout";
 import manifest from "./manifest";
 
 // The root layout loads its family through next/font, which only exists under
 // Next's compiler; the layout's head metadata is what is under test here.
+// vi.mock is hoisted above the imports. The layout is imported statically on
+// purpose: it pulls in the whole app shell, a module graph whose load time
+// swells under machine load, and a static import is paid at collection time,
+// outside every test's testTimeout (a dynamic import inside the test body is
+// charged to it).
 vi.mock("next/font/google", () => ({ Figtree: () => ({ variable: "font-figtree" }) }));
 
 const TOKENS = JSON.parse(
@@ -73,8 +79,7 @@ describe("manifest", () => {
 });
 
 describe("the document head", () => {
-  it("sets no theme-color", async () => {
-    const { metadata, viewport } = await import("./layout");
+  it("sets no theme-color", () => {
     expect(viewport).not.toHaveProperty("themeColor");
     expect(metadata).not.toHaveProperty("themeColor");
   });
