@@ -30,6 +30,7 @@ import {
   type SettingsAccount,
 } from "@/lib/api/settings-api";
 import { composeDraftStore, type ComposeDraftStore } from "@/lib/compose/draft-store";
+import { sealedDraftStore, type SealedDraftStore } from "@/lib/compose/sealed-draft";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDeviceState } from "@/lib/identity/use-key-on-device";
 import { licenseName, PUBLIC_DOMAIN, type License } from "@/lib/license";
@@ -117,10 +118,12 @@ const UNVEIL_ON_STATUS = "On, sensitive content stands unveiled wherever you rea
 export function SettingsView({
   store = identityStore,
   drafts = composeDraftStore,
+  seals = sealedDraftStore,
 }: {
   /** Test injection. */
   store?: IdentityStore;
   drafts?: Pick<ComposeDraftStore, "clear">;
+  seals?: Pick<SealedDraftStore, "forget">;
 } = {}) {
   const client = useApolloClient();
   const guard = useAuthGuard();
@@ -288,6 +291,13 @@ export function SettingsView({
     }
     try {
       await drafts.clear();
+    } catch {
+      // sign-out proceeds regardless
+    }
+    // A post's sealed copy is the draft it was written from, held until the
+    // write lands or expires — so it goes with the draft (Settings.md:145).
+    try {
+      await seals.forget();
     } catch {
       // sign-out proceeds regardless
     }

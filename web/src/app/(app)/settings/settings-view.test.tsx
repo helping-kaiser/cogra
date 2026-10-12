@@ -88,11 +88,13 @@ function renderSettings({
 } = {}) {
   const identity = fakeIdentityStore({ keyOnDevice, seed, ephemeral });
   const drafts = { clear: vi.fn(async () => {}) };
+  const seals = { forget: vi.fn(async () => {}) };
   const tokens = signedInStore();
-  const rendered = renderWithProviders(<SettingsView store={identity} drafts={drafts} />, {
-    store: tokens,
-  });
-  return { ...rendered, identity, drafts, tokens };
+  const rendered = renderWithProviders(
+    <SettingsView store={identity} drafts={drafts} seals={seals} />,
+    { store: tokens },
+  );
+  return { ...rendered, identity, drafts, seals, tokens };
 }
 
 /** The node a registered path names (`data-node.ts`). */
@@ -674,29 +676,32 @@ describe("signing out", () => {
 
   it("sign_out_remembered_keeps_the_key_and_offers_the_account — and keeps the draft (F4)", async () => {
     server.use(okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }));
-    const { identity, drafts, tokens } = renderSettings();
+    const { identity, drafts, seals, tokens } = renderSettings();
     await screen.findByTestId("settings.credentials.password.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     await waitFor(() => expect(tokens.accessToken()).toBeNull());
     expect(await identity.actorKey()).not.toBeNull();
-    // A remembered sign-out clears nothing — the draft included.
+    // A remembered sign-out clears nothing — the draft and its sealed copies included.
     expect(drafts.clear).not.toHaveBeenCalled();
+    expect(seals.forget).not.toHaveBeenCalled();
   });
 
   it("sign_out_forgotten_with_a_backup_clears_without_asking", async () => {
     server.use(okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }));
-    const { identity, drafts, tokens } = renderSettings({ ephemeral: true });
+    const { identity, drafts, seals, tokens } = renderSettings({ ephemeral: true });
     await screen.findByTestId("settings.credentials.password.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     await waitFor(() => expect(tokens.accessToken()).toBeNull());
     expect(screen.queryByTestId("settings.dialog")).not.toBeInTheDocument();
     expect(await identity.actorKey()).toBeNull();
     expect(drafts.clear).toHaveBeenCalled();
+    // A staged post's sealed copy is the draft it came from (Settings.md:145).
+    expect(seals.forget).toHaveBeenCalled();
   });
 
   it("sign_out_forgotten_with_the_only_key_asks_first", async () => {
     server.use(accountHandler({ keyBackupCreatedAt: null }));
-    const { identity, drafts, tokens } = renderSettings({ ephemeral: true });
+    const { identity, drafts, seals, tokens } = renderSettings({ ephemeral: true });
     await screen.findByTestId("settings.backup.recovery.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     const dialog = await screen.findByTestId("settings.dialog");
@@ -704,6 +709,7 @@ describe("signing out", () => {
     expect(tokens.accessToken()).toBe("access-1");
     expect(await identity.actorKey()).not.toBeNull();
     expect(drafts.clear).not.toHaveBeenCalled();
+    expect(seals.forget).not.toHaveBeenCalled();
     // dialog_names_key_draft_and_kept_picks
     expect(within(dialog).getByTestId("settings.dialog.title")).toHaveTextContent("Sign out without a backup?");
     expect(within(dialog).getByTestId("settings.dialog.body")).toHaveTextContent(
@@ -744,13 +750,14 @@ describe("signing out", () => {
       accountHandler({ keyBackupCreatedAt: null }),
       okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }),
     );
-    const { identity, drafts, tokens } = renderSettings({ ephemeral: true });
+    const { identity, drafts, seals, tokens } = renderSettings({ ephemeral: true });
     await screen.findByTestId("settings.backup.recovery.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     fireEvent.click(await screen.findByTestId("settings.dialog.erase"));
     await waitFor(() => expect(tokens.accessToken()).toBeNull());
     expect(await identity.actorKey()).toBeNull();
     expect(drafts.clear).toHaveBeenCalled();
+    expect(seals.forget).toHaveBeenCalled();
   });
 
   it("scrim_and_back_close_still_signed_in_focus_on_sign_out", async () => {
