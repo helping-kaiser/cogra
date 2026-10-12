@@ -17,6 +17,7 @@ pub mod profile;
 pub mod rate_limit;
 pub mod references;
 pub mod search;
+pub mod settling;
 pub mod slice;
 pub mod staged;
 pub mod stance;

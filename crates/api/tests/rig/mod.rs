@@ -8,23 +8,38 @@
     reason = "compiled per test binary; each suite uses a subset of the rig"
 )]
 
+pub mod pod;
+
 use std::sync::{Arc, Mutex};
 
 use api::auth::AuthConfig;
 use api::mailer::{Mail, Mailer, WebOrigin};
 use api::media::MediaConfig;
+use api::ranker_pod::{RankerClient, RankerConfig};
 use api::ratelimit::RateLimitConfig;
 use api::schema::ApiContext;
+use api::schema::feed::SliceReadLog;
 use axum_client_ip::ClientIpSource;
 use l1_standin::{StandIn, StandInConfig};
 use postgres_store::PgPool;
 
 /// The full ApiContext over a test pool, with the ephemeral session
-/// key it was built under — `api::app` wants both.
+/// key it was built under — `api::app` wants both. The ranker pod is the
+/// dev default address, which no suite but the ranked feed's ever calls.
 pub fn api_context(
     pool: PgPool,
     mailer: Arc<dyn Mailer>,
     rate_limits: RateLimitConfig,
+) -> (ApiContext, AuthConfig) {
+    api_context_with_ranker(pool, mailer, rate_limits, &RankerConfig::default())
+}
+
+/// `api_context` relaying `feedRanking` to the given pod.
+pub fn api_context_with_ranker(
+    pool: PgPool,
+    mailer: Arc<dyn Mailer>,
+    rate_limits: RateLimitConfig,
+    ranker: &RankerConfig,
 ) -> (ApiContext, AuthConfig) {
     let standin = StandIn::new(pool.clone(), StandInConfig::default());
     let auth = AuthConfig::ephemeral().expect("auth config");
@@ -40,6 +55,8 @@ pub fn api_context(
             breach: Arc::new(api::breach::DisabledCorpus),
             media: MediaConfig::default(),
             blobs: Arc::new(api::media::blob::in_memory()),
+            ranker: RankerClient::new(ranker).expect("ranker client"),
+            slice_reads: SliceReadLog::default(),
         },
         auth,
     )
@@ -64,8 +81,22 @@ pub fn connect_info_app_with_standin(
     mailer: Arc<dyn Mailer>,
     rate_limits: RateLimitConfig,
 ) -> (axum::Router, StandIn) {
-    let (ctx, auth) = api_context(pool, mailer, rate_limits);
+    let (app, standin, _) =
+        connect_info_app_with_ranker(pool, mailer, rate_limits, &RankerConfig::default());
+    (app, standin)
+}
+
+/// `connect_info_app_with_standin` relaying to the given pod, also handing
+/// back the slice supply's read log.
+pub fn connect_info_app_with_ranker(
+    pool: PgPool,
+    mailer: Arc<dyn Mailer>,
+    rate_limits: RateLimitConfig,
+    ranker: &RankerConfig,
+) -> (axum::Router, StandIn, SliceReadLog) {
+    let (ctx, auth) = api_context_with_ranker(pool, mailer, rate_limits, ranker);
     let standin = ctx.boundary.0.clone();
+    let slice_reads = ctx.slice_reads.clone();
     let uploads = upload_routing(&ctx);
     let app = api::app(
         api::schema::build(ctx),
@@ -76,7 +107,7 @@ pub fn connect_info_app_with_standin(
     .layer(axum::Extension(axum::extract::ConnectInfo(
         std::net::SocketAddr::from(([127, 0, 0, 1], 9999)),
     )));
-    (app, standin)
+    (app, standin, slice_reads)
 }
 
 /// The part route's state, taken off the context the schema is about to
@@ -194,6 +225,7 @@ pub struct WireRig {
     pub pool: PgPool,
     pub standin: StandIn,
     pub mailer: Arc<TestMailer>,
+    pub slice_reads: SliceReadLog,
 }
 
 /// The password every `WireRig::seed_member` account logs in with.
@@ -201,14 +233,20 @@ pub const MEMBER_PASSWORD: &str = "a strong password";
 
 impl WireRig {
     pub fn new(pool: PgPool, rate_limits: RateLimitConfig) -> Self {
+        Self::with_ranker(pool, rate_limits, &RankerConfig::default())
+    }
+
+    /// A rig whose `feedRanking` relays to the given pod.
+    pub fn with_ranker(pool: PgPool, rate_limits: RateLimitConfig, ranker: &RankerConfig) -> Self {
         let mailer = Arc::new(TestMailer::default());
-        let (app, standin) =
-            connect_info_app_with_standin(pool.clone(), mailer.clone(), rate_limits);
+        let (app, standin, slice_reads) =
+            connect_info_app_with_ranker(pool.clone(), mailer.clone(), rate_limits, ranker);
         Self {
             app,
             pool,
             standin,
             mailer,
+            slice_reads,
         }
     }
 

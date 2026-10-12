@@ -197,6 +197,16 @@ async fn main() -> anyhow::Result<()> {
         ));
     }
 
+    let ranker_config = api::ranker_pod::RankerConfig::from_env()?;
+    let ranker = api::ranker_pod::RankerClient::new(&ranker_config)
+        .context("building the ranker pod client")?;
+    tracing::info!(
+        url = %ranker_config.url,
+        timeout_ms = ranker_config.timeout.as_millis(),
+        max_in_flight = ranker_config.max_in_flight,
+        "feedRanking relays to the ranker pod"
+    );
+
     let auth = auth_config()?;
     let uploads = api::UploadRouting {
         pool: pool.clone(),
@@ -219,6 +229,8 @@ async fn main() -> anyhow::Result<()> {
         breach,
         media: media.clone(),
         blobs,
+        ranker,
+        slice_reads: Default::default(),
     });
     let addr = format!(
         "{}:{}",
