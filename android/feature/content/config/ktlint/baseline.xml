@@ -18,7 +18,6 @@
     </file>
     <file name="src/main/kotlin/com/cogra/feature/content/FeedViewModel.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="111" column="5" source="standard:spacing-between-declarations-with-comments" />
     </file>
     <file name="src/main/kotlin/com/cogra/feature/content/PostDetailScreen.kt">
         <error line="537" column="31" source="standard:multiline-if-else" />

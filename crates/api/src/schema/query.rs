@@ -737,10 +737,10 @@ async fn lookup_actor(
     }
 }
 
-/// The transport-tier refusal for a malformed search argument
+/// The transport-tier refusal for a malformed read argument
 /// (api-spec.md "Errors are tiered"): `BAD_INPUT` in
 /// `errors[].extensions.code`.
-fn bad_input(message: impl Into<String>) -> async_graphql::Error {
+pub(super) fn bad_input(message: impl Into<String>) -> async_graphql::Error {
     use async_graphql::ErrorExtensions;
     async_graphql::Error::new(message).extend_with(|_, e| e.set("code", "BAD_INPUT"))
 }

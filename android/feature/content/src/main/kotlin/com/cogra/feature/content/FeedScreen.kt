@@ -45,8 +45,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
 import com.cogra.core.designsystem.CollapsingTopBanner
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.EdgeSighting
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PendingMarker
+import com.cogra.core.designsystem.SeenCardsEffect
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.dataNodeSurface
@@ -160,9 +162,7 @@ fun FeedRoute(
                     val target = request.comment?.asReplyTarget() ?: post?.asReplyTarget()
                     target?.let(onReply)
                 },
-                onEditComment = { commentId ->
-                    onEditComment(commentId, post?.title?.value.orEmpty())
-                },
+                onEditComment = { commentId -> onEditComment(commentId, post?.title?.value.orEmpty()) },
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
                 onReference = onCitePost,
@@ -182,6 +182,9 @@ fun FeedRoute(
         onOpenDraft = onOpenDraft,
         onRefresh = then(onPulled, viewModel::refresh),
         onLoadMore = viewModel::loadMore,
+        onCardsSeen = viewModel::onCardsSeen,
+        onCardEdgesSeen = viewModel::onCardEdgesSeen,
+        onSeenCheckpoint = viewModel::onSeenCheckpoint,
         onReveal = viewModel::onReveal,
         onOpenPost = onOpenPost,
         onOpenActor = onOpenActor,
@@ -223,6 +226,12 @@ fun FeedScreen(
     onOpenPost: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
+    /** Post cards that stood fully in the viewport (`SeenCardsEffect`). */
+    onCardsSeen: (List<String>) -> Unit = {},
+    /** Tall cards with an edge on screen this frame (History.md:13). */
+    onCardEdgesSeen: (List<EdgeSighting>) -> Unit = {},
+    /** The reading paused: the scroll rested, or the reader left. */
+    onSeenCheckpoint: () -> Unit = {},
     /** Hands a post to the platform's own share sheet. */
     onShare: (String) -> Unit = {},
     onChats: (() -> Unit)? = null,
@@ -287,6 +296,18 @@ fun FeedScreen(
     // the moment it left.
     val collapsingTop = rememberCollapsingTop()
     WatchFeedTail(listState = listState, state = state, onLoadMore = onLoadMore)
+    // SEEN, AT THE LIST: a post card fully in the viewport joins the
+    // reader's History, as itself (History.md). Only the post rows map to
+    // an id; the banner and expiry rows are not cards.
+    val postIds = remember(state.posts) { state.posts.mapTo(HashSet()) { it.id } }
+    SeenCardsEffect(
+        listState = listState,
+        nodeIdOf = { key -> (key as? String)?.takeIf { it in postIds } },
+        onSeen = onCardsSeen,
+        onEdgesSeen = onCardEdgesSeen,
+        onCheckpoint = onSeenCheckpoint,
+        suspended = commentsFor != null,
+    )
     val band = FEED / "band"
     Scaffold(
         modifier = Modifier.dataNodeSurface(),

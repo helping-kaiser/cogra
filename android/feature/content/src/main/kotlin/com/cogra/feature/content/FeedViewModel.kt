@@ -2,6 +2,7 @@ package com.cogra.feature.content
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cogra.core.designsystem.EdgeSighting
 import com.cogra.domain.Outcome
 import com.cogra.domain.PostView
 import com.cogra.domain.content.LandingSignal
@@ -10,6 +11,7 @@ import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.SeenPosts
 import com.cogra.domain.content.SensitiveReveals
 import com.cogra.domain.di.WebOrigin
+import com.cogra.domain.history.SeenTracker
 import com.cogra.domain.repo.ContentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -63,10 +65,21 @@ class FeedViewModel @Inject constructor(
     private val reveals: SensitiveReveals,
     private val seen: SeenPosts,
     @WebOrigin private val webOrigin: String,
+    private val seenTracker: SeenTracker,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FeedUiState())
     val state = _state.asStateFlow()
+
+    /** Post cards that stood fully in the viewport, in the order they did. */
+    fun onCardsSeen(postIds: List<String>) = seenTracker.saw(postIds)
+
+    /** Tall post cards with an edge on screen; each joins once both edges have been. */
+    fun onCardEdgesSeen(sightings: List<EdgeSighting>) =
+        sightings.forEach { seenTracker.sawEdges(it.nodeId, top = it.top, bottom = it.bottom) }
+
+    /** The reading paused — the scroll rested or the reader left. */
+    fun onSeenCheckpoint() = seenTracker.flush()
 
     /** What the share control hands to the platform's own sheet. */
     fun shareUrl(postId: String): String = postShareUrl(webOrigin, postId)
@@ -108,6 +121,7 @@ class FeedViewModel @Inject constructor(
     // reappear — a visible flash — on every failed retry. It also
     // carries which fetch failed, so the fault can surface where
     // that fetch was requested.
+
     /**
      * The landed-only opt-out. The cursor namespaces differ, so a
      * change restarts the walk rather than continuing the held one.

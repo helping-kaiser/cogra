@@ -2,6 +2,7 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { resetSeenQueueForTests } from "@/lib/history/seen-queue";
 import { createTokenStore } from "@/lib/session/token-store";
 import { createStubStanceData } from "@/lib/stance/stub-stance-data";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
@@ -19,7 +20,19 @@ vi.mock("next/navigation", () => ({
 // The header's stance control reads its own standing, so the read is a
 // default rather than something each test remembers: an unhandled one
 // degrades the control silently instead of failing the test.
-const server = startMswServer(...stanceHandlers());
+//
+// Opening someone's profile adds it to History (History.md:11), so a signed-in
+// render sends a seeing; what was sent is recorded for the tests that ask.
+let marked: string[][] = [];
+const server = startMswServer(
+  ...stanceHandlers(),
+  graphql.mutation("MarkSeen", ({ variables }) => {
+    marked.push(variables.nodes as string[]);
+    return HttpResponse.json({
+      data: { markSeen: { __typename: "MarkSeenPayload", ok: true, userErrors: [] } },
+    });
+  }),
+);
 
 function signedInStore() {
   const store = createTokenStore();
@@ -97,6 +110,8 @@ function recordsHandler(
 
 beforeEach(() => {
   window.localStorage.clear();
+  resetSeenQueueForTests();
+  marked = [];
 });
 
 describe("ProfileScreen", () => {
@@ -241,6 +256,52 @@ describe("ProfileScreen", () => {
     renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
     expect(await screen.findByTestId("profile-edit")).toBeInTheDocument();
     expect(screen.queryByTestId("profile-stance")).not.toBeInTheDocument();
+  });
+
+  it("adds another's opened profile to History, the profile alone", async () => {
+    server.use(
+      meHandler(),
+      graphql.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      recordsHandler([{ id: "act:a:1:publish", family: "PUBLISH", postId: "p1" }]),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+    await screen.findByTestId("chronicle-row");
+    // The profile, never the chronicle's posts: those join only as a list
+    // sees them.
+    await waitFor(() => expect(marked).toEqual([["u2"]]));
+  });
+
+  it("adds nothing for a profile opened with no session", async () => {
+    server.use(
+      graphql.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    await screen.findByTestId("profile-display-name");
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(marked).toEqual([]);
+  });
+
+  it("adds nothing for the reader's own profile, by tab or by handle", async () => {
+    server.use(
+      meHandler(),
+      graphql.query("MyProfile", () => HttpResponse.json({ data: { me: profile("u1", "ada") } })),
+      graphql.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u1", "ada") } }),
+      ),
+      recordsHandler([]),
+    );
+    const tab = renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
+    await screen.findByTestId("profile-edit");
+    tab.unmount();
+    renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+    await screen.findByTestId("profile-edit");
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(marked).toEqual([]);
   });
 
   it("shows not-found for an unknown handle", async () => {

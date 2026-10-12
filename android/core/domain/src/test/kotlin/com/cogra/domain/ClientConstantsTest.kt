@@ -16,6 +16,7 @@ import com.cogra.domain.content.MAX_POST_BODY_CHARS
 import com.cogra.domain.content.MAX_SENSITIVE_REASON_CHARS
 import com.cogra.domain.content.MAX_TITLE_CHARS
 import com.cogra.domain.content.MAX_WEBSITE_URL_CHARS
+import com.cogra.domain.history.MAX_SEEN_BATCH
 import com.cogra.domain.media.MAX_ALT_TEXT_CHARS
 import com.cogra.domain.media.RESUMABLE_THRESHOLD_BYTES
 import com.cogra.domain.repo.ContentRepository
@@ -118,5 +119,12 @@ class ClientConstantsTest {
         val signer = WriteSigner(ThrowingWriteRepository(), FakeIdentityStore())
         assertThat(signer.sealPollAttempts).isEqualTo(declared.int("sealPollAttempts"))
         assertThat(signer.sealPollDelayMs).isEqualTo(declared.long("sealPollIntervalMs"))
+    }
+
+    // markSeen refuses a longer list as BAD_INPUT, and the tracker keeps
+    // every refused batch queued — so an over-long one would stick for good.
+    @Test
+    fun `a seen batch is at most the contract's page`() {
+        assertThat(MAX_SEEN_BATCH).isEqualTo(group("paging").int("maxPageSize"))
     }
 }

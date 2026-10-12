@@ -14,6 +14,7 @@ import { useApolloClient } from "@apollo/client/react";
 
 import { fetchMe, type MeUser } from "@/lib/api/auth-api";
 import { appendDeduped } from "@/lib/api/pagination";
+import { useSeenOnOpen } from "@/lib/history/seen-tracker";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { RestoreCard } from "@/app/applicant-status";
@@ -76,6 +77,13 @@ export function ProfileScreen({
   // The viewer's own read, kept for the one profile it changes: the member
   // who vouched them in, whose anchor opens the vouch-back.
   const [viewer, setViewer] = useState<MeUser | null>(null);
+
+  // OPENING SOMEONE'S PROFILE ADDS THE PROFILE TO HISTORY (History.md:11) —
+  // the profile alone; its posts join only as the reader's lists see them.
+  // The reader's own profile is not reported: it is where History's own door
+  // stands (ProfileOwnMenu.md:3, :15), and a reader who has seen nothing must
+  // still find History empty there.
+  useSeenOnOpen(profile !== null && handle !== null && !own ? profile.id : null);
 
   // Which chronicle read is the live one. A filter switch fires a new read
   // without cancelling the old, and the old one resolving afterwards would

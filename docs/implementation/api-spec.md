@@ -509,7 +509,7 @@ enum ErrorCode {
   EMAIL_NOT_VERIFIED           # acting before the address is proven
   NOT_FOUND                    # an id resolved to nothing
   BAD_INPUT                    # malformed args, or a constraint not modeled as data
-  RATE_LIMITED                 # an auth or upload endpoint's per-IP / per-account budget (incl. the email change's request and resend mail budget) — never a signing act
+  RATE_LIMITED                 # an auth or upload endpoint's per-IP / per-account budget (incl. the email change's request and resend mail budget), or a private-viewer-state budget (markSeen) — never a signing act
   INTERNAL                     # collapsed server fault; detail is logged, not surfaced
 
   # Expected business failures — carried in UserError.code
@@ -1021,13 +1021,15 @@ type User implements Node & Actor {
   "The seen-list (feed-ranking.md §9.4): every node the viewer has
    seen, once each, newest first by first seeing — the list the
    ranked feed filters by, and History's feed. Re-seeing never moves
-   an entry. `kinds` narrows (null = every kind History serves: POST,
-   COMMENT, USER, HASHTAG; a kind outside the served set is BAD_INPUT,
-   and later slices widen the set);
+   an entry. `kinds` narrows (null or empty = every kind History
+   serves: POST, COMMENT, USER, HASHTAG; a kind outside the served set
+   is BAD_INPUT, and later slices widen the set);
    `query` matches by the one search rule (\"Search\"), narrowing the
-   seen-list instead of searching the graph. A hidden actor's things
-   stay out while the actor is hidden; a removed thing keeps its
-   place and reads its removal mark."
+   seen-list instead of searching the graph. A hidden actor's posts
+   and comments stay out while the actor is hidden, and their own
+   profile stays; a removed thing keeps its place and reads its
+   removal mark. A thing whose node no longer resolves — a pending
+   write that never landed — is skipped."
   viewHistory(
     kinds: [NodeKind!]
     query: String
@@ -1708,9 +1710,13 @@ type ViewHistoryConnection {
   pageInfo: PageInfo!
   totalCount: Int
 }
+"What the seen-list holds: the kinds History serves; later slices
+ add members as their kinds join. A union, not `Node`: a Hashtag is
+ not a Node, and History serves topics."
+union ViewHistoryItem = Post | Comment | User | Hashtag
 type ViewHistoryEdge {
   cursor: String!
-  node: Node!
+  node: ViewHistoryItem!
   firstSeenAt: DateTime!
 }
 
@@ -5138,10 +5144,12 @@ input UnhideActorInput { actor: UUID! }
 type UnhideActorPayload { ok: Boolean! }
 
 input MarkSeenInput {
-  "The nodes the viewer has seen."
+  "The nodes the viewer has seen, in the order they were seen."
   nodes: [UUID!]!
 }
-type MarkSeenPayload { ok: Boolean! }
+"`ok` is null exactly when a userError refused the batch, which then
+ wrote nothing."
+type MarkSeenPayload { ok: Boolean }
 
 input MarkChatReadInput {
   chat: UUID!
@@ -5181,7 +5189,16 @@ extend type Mutation {
   "Record that the viewer has seen nodes — first seeing only: a node
    already on the list is left as it is (re-seeing never counts, never
    moves it). Posts, comments, profiles and topics are seeable. L2
-   only; nothing here becomes a graph record."
+   only; nothing here becomes a graph record.
+   At most 100 ids per call (the page budget); more is BAD_INPUT at
+   [\"nodes\"]. Ids that name nothing seeable are skipped, never an
+   error: a pending write the reader saw may be discarded before it
+   lands, and a batch must not fail for it. The ids arrive in the
+   order they were seen, and a batch keeps that order. Needs a
+   session (UNAUTHENTICATED otherwise) and no particular account
+   state — an applicant's seeing counts like a member's; this is
+   private viewer state, not acting. A per-account budget bounds the
+   rate: over it is RATE_LIMITED, and the batch writes nothing."
   markSeen(input: MarkSeenInput!): MarkSeenPayload!
   "Advance the viewer's last-read pointer in a Chat."
   markChatRead(input: MarkChatReadInput!): MarkChatReadPayload!

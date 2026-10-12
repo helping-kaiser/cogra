@@ -2088,7 +2088,7 @@ names      = [
 surface    = "mutation"
 built_by   = "UNTRIAGED: unbuilt surface the spec declares ahead of the schema; the owning feature packet is not yet named"
 names      = [
-  "hideActor", "markChatRead", "markSeen", "prepareAccept", "prepareBallot",
+  "hideActor", "markChatRead", "prepareAccept", "prepareBallot",
   "prepareBid", "prepareCampaign", "prepareCampaignAdjustment",
   "prepareChat", "prepareChatInvitation", "prepareChatJoin",
   "prepareChatJoinRequest", "prepareChatLeave", "prepareChatMessage",

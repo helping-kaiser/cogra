@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_view_log (user_id, content_id, kind, first_seen_at)\n           SELECT $1, n.id, k.kind,\n                  transaction_timestamp() + n.ord * INTERVAL '1 microsecond'\n           FROM unnest($2::uuid[]) WITH ORDINALITY AS n(id, ord)\n           CROSS JOIN LATERAL (\n               SELECT 'post' AS kind FROM posts WHERE id = n.id\n               UNION ALL\n               SELECT 'comment' FROM comments WHERE id = n.id\n               UNION ALL\n               SELECT 'user' FROM actors WHERE id = n.id AND kind = 'user'\n               UNION ALL\n               SELECT 'hashtag' FROM hashtags WHERE id = n.id\n               LIMIT 1\n           ) k\n           ON CONFLICT (user_id, content_id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "70ad72d775a06fd71d5578e87218fb744014f96b2054dc35537024bce16bd217"
+}

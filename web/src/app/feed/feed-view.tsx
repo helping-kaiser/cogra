@@ -12,13 +12,14 @@
 // opening a post and coming back is not a fresh feed; `scroll-pin.ts` says why
 // the place is an anchor rather than a number, and how it is held afterwards.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
 import { fetchBorrowedView, fetchMe, type BorrowedVantage } from "@/lib/api/auth-api";
 import { fetchPosts, type PostView } from "@/lib/api/content-api";
 import { appendDeduped } from "@/lib/api/pagination";
+import { SEEN_ATTRIBUTE, useSeenTracker } from "@/lib/history/seen-tracker";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthPhase } from "@/lib/session/provider";
@@ -308,6 +309,13 @@ export function FeedView({
   });
   const tailIndex = tailIndexOf(posts.length);
 
+  // A POST WHOLLY ON SCREEN JOINS HISTORY (History.md:5) — the card's own
+  // post, never its author or tags. Attached at the list, so the card stays
+  // the feed's (`seen-tracker.ts` says what counts and when it is sent).
+  const listRef = useRef<HTMLUListElement>(null);
+  const postIds = useMemo(() => posts.map((post) => post.id), [posts]);
+  useSeenTracker({ root: host, list: listRef, ids: postIds, suspended: commentsOpen });
+
   return (
     // The band is chrome and full-bleed, so the gutter belongs to the content
     // below it rather than to the column that holds both.
@@ -412,7 +420,7 @@ export function FeedView({
           post's, and a comment card's when the feed draws one (Feed.md:7) —
           competes for it, and it lands at the feed's own hard top. */}
       <StageHost key={listEra}>
-        <ul className="flex flex-col gap-2" data-testid="feed-list">
+        <ul ref={listRef} className="flex flex-col gap-2" data-testid="feed-list">
           {/* The vouch card is the list's first child, above the posts
               (`VouchBack.jsx`), after the security notice and the key card
               that head the column (ruling 45). */}
@@ -423,7 +431,7 @@ export function FeedView({
             // carries the watch that fetches the next page.
             <li
               key={post.id}
-              {...{ [ANCHOR_ATTRIBUTE]: post.id }}
+              {...{ [ANCHOR_ATTRIBUTE]: post.id, [SEEN_ATTRIBUTE]: post.id }}
               ref={index === tailIndex ? tailRef : undefined}
             >
               <PostCard
