@@ -287,7 +287,11 @@ async fn slice(rig: &WireRig, variables: Value) -> Value {
 }
 
 async fn full_slice(rig: &WireRig, viewer: Uuid) -> Value {
-    slice(rig, json!({ "viewer": viewer, "first": 100, "rfirst": 100 })).await
+    slice(
+        rig,
+        json!({ "viewer": viewer, "first": 100, "rfirst": 100 }),
+    )
+    .await
 }
 
 fn node_ids(slice: &Value) -> BTreeSet<String> {
@@ -707,9 +711,7 @@ async fn slice_pages_read_at_one_epoch_are_one_slice_while_ingestion_appends(poo
     let f = fixture(&rig.pool).await;
     let whole = full_slice(&rig, f.viewer).await;
     let pin = whole["asOfEpoch"].clone();
-    let page = |after: Value| {
-        json!({ "viewer": f.viewer, "asOf": pin, "first": 3, "after": after, "rfirst": 1 })
-    };
+    let page = |after: Value| json!({ "viewer": f.viewer, "asOf": pin, "first": 3, "after": after, "rfirst": 1 });
     let mut seen = BTreeSet::new();
     let mut after = Value::Null;
     let mut pages = 0;
@@ -720,7 +722,12 @@ async fn slice_pages_read_at_one_epoch_are_one_slice_while_ingestion_appends(poo
         if pages == 1 {
             land(
                 &rig.pool,
-                vec![binary("a", 9, Family::Publish, minted("a", 9, Family::Publish))],
+                vec![binary(
+                    "a",
+                    9,
+                    Family::Publish,
+                    minted("a", 9, Family::Publish),
+                )],
             )
             .await;
         }
@@ -886,7 +893,9 @@ async fn slice_negative_dust_floor_is_bad_input(pool: PgPool) {
 async fn slice_pinned_past_the_mirror_is_bad_input(pool: PgPool) {
     let rig = rig(pool);
     let f = fixture(&rig.pool).await;
-    let cursor = mirror::last_ingested_epoch(&rig.pool).await.expect("cursor");
+    let cursor = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
     for pin in [cursor + 1, -1] {
         let response = rig
             .gql_raw(None, SLICE, json!({ "viewer": f.viewer, "asOf": pin }))

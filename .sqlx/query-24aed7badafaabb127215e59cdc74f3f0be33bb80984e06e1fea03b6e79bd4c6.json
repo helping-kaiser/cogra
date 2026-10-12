@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT r.epoch\n         FROM mirror_records r\n         JOIN actors a ON a.realization_address = r.author\n         WHERE a.kind = 'system' AND a.handle = $1 AND r.family = 'publish'\n         ORDER BY r.epoch, r.act_time, r.position\n         LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "epoch",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "24aed7badafaabb127215e59cdc74f3f0be33bb80984e06e1fea03b6e79bd4c6"
+}

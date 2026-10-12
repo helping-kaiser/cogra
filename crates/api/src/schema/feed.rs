@@ -1,4 +1,4 @@
-//! ´mod:module:ranked-feed´
+//! ´mod:module:feed´
 //!
 //! The backend's part in ranking (api-spec.md "Feed"): the governed
 //! parameters a ranker reads (`networkParameters`), the viewer's slice it
@@ -24,8 +24,9 @@ use uuid::Uuid;
 
 use super::query::bad_input;
 use super::types::{
-    CommentType, DEFAULT_PAGE_SIZE, HashtagType, MAX_PAGE_SIZE, NodeKind, PostType, RecordConnection,
-    User, connection_cost, keyset_page, slice_record_connection, validate_page_args,
+    CommentType, DEFAULT_PAGE_SIZE, HashtagType, MAX_PAGE_SIZE, NodeKind, PostType,
+    RecordConnection, User, connection_cost, keyset_page, slice_record_connection,
+    validate_page_args,
 };
 
 /// The transport-tier fault for a server-side failure the caller cannot
@@ -74,7 +75,9 @@ pub async fn network_parameters(
                 .await
                 .map_err(storage)?
                 .ok_or_else(|| {
-                    tracing::error!("the parameter carrier is seeded but the Charter has not landed");
+                    tracing::error!(
+                        "the parameter carrier is seeded but the Charter has not landed"
+                    );
                     internal("the genesis Charter has not landed")
                 })?,
         )
@@ -116,14 +119,10 @@ pub async fn feed_slice(
     gamma: Option<f64>,
     as_of_epoch: Option<i64>,
 ) -> async_graphql::Result<Option<FeedSlice>> {
-    if let Some(gamma) = gamma
-        && !(gamma > 0.0 && gamma <= 1.0)
-    {
+    if gamma.is_some_and(|gamma| gamma.is_nan() || gamma <= 0.0 || gamma > 1.0) {
         return Err(bad_input("gamma must lie in (0, 1]"));
     }
-    if let Some(floor) = dust_floor
-        && !(floor >= 0.0)
-    {
+    if dust_floor.is_some_and(|floor| floor.is_nan() || floor < 0.0) {
         return Err(bad_input("dustFloor must be non-negative"));
     }
     let governed = params::current(pool, "dust_floor")
@@ -133,7 +132,9 @@ pub async fn feed_slice(
         .unwrap_or(0.0);
     if governed > 0.0 {
         tracing::error!(governed, "slice bound for χ > 0 not built");
-        return Err(internal("the slice bound for a positive dust floor is not built"));
+        return Err(internal(
+            "the slice bound for a positive dust floor is not built",
+        ));
     }
     if dust_floor.is_some_and(|floor| floor > governed) {
         return Err(bad_input(
@@ -312,9 +313,7 @@ async fn slice_nodes(
     graph_ids: Vec<String>,
     as_of_epoch: i64,
 ) -> async_graphql::Result<Vec<SliceNode>> {
-    let rows = slice::node_rows(pool, &graph_ids)
-        .await
-        .map_err(storage)?;
+    let rows = slice::node_rows(pool, &graph_ids).await.map_err(storage)?;
     let genesis = slice::genesis_keys(pool, &graph_ids, as_of_epoch)
         .await
         .map_err(storage)?;
@@ -323,21 +322,22 @@ async fn slice_nodes(
         .map(|graph_id| {
             let (id, kind) = match graph_id.strip_prefix("name:") {
                 Some(name) => (Some(hashtag_uuid(name)), Some(NodeKind::Hashtag)),
-                None => match rows.get(&graph_id).and_then(|row| {
-                    row_kind(&row.kind).map(|kind| (row.id, kind))
-                }) {
+                None => match rows
+                    .get(&graph_id)
+                    .and_then(|row| row_kind(&row.kind).map(|kind| (row.id, kind)))
+                {
                     Some((id, kind)) => (Some(id), Some(kind)),
                     None => (None, None),
                 },
             };
             SliceNode {
-                genesis: genesis.get(&graph_id).map(|&(landing_epoch, act_time, position)| {
-                    CausalKey {
+                genesis: genesis
+                    .get(&graph_id)
+                    .map(|&(landing_epoch, act_time, position)| CausalKey {
                         landing_epoch,
                         act_time,
                         position,
-                    }
-                }),
+                    }),
                 graph_id,
                 id,
                 kind,
@@ -468,9 +468,7 @@ pub async fn feed(
     before: Option<String>,
 ) -> async_graphql::Result<FeedConnection> {
     if ordered_ids.len() > MAX_PAGE_SIZE as usize {
-        return Err(bad_input(format!(
-            "at most {MAX_PAGE_SIZE} ids per window"
-        )));
+        return Err(bad_input(format!("at most {MAX_PAGE_SIZE} ids per window")));
     }
     validate_page_args(first, last, after.as_deref(), before.as_deref())
         .map_err(|e| bad_input(e.message))?;
@@ -521,7 +519,9 @@ pub async fn feed(
             Some(Hydrated::Topic(name)) => FeedItem::Hashtag(HashtagType { name: name.clone() }),
             None => continue,
         };
-        connection.edges.push(Edge::new(encode_slot_cursor(slot), item));
+        connection
+            .edges
+            .push(Edge::new(encode_slot_cursor(slot), item));
     }
     Ok(connection)
 }

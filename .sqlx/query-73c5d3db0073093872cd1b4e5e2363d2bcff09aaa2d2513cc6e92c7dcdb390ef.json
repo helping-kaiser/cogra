@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH RECURSIVE reach(node) AS (\n               SELECT unnest($1::text[])\n             UNION\n               SELECT next.node\n               FROM reach r\n               JOIN mirror_record_legs l ON l.source = r.node\n               CROSS JOIN LATERAL (VALUES\n                   (l.target),\n                   (CASE WHEN l.target LIKE 'addr:%' THEN 'prof:' || substr(l.target, 6)\n                         WHEN l.target LIKE 'prof:%' THEN 'addr:' || substr(l.target, 6)\n                         ELSE l.target END)) AS next(node)\n               WHERE r.node NOT LIKE 'name:%'\n                 AND l.epoch <= $2\n                 AND l.family <> ALL($3::text[])\n           )\n           SELECT node AS \"node!\" FROM reach",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "node!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Int8",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "73c5d3db0073093872cd1b4e5e2363d2bcff09aaa2d2513cc6e92c7dcdb390ef"
+}

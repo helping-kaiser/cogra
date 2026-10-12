@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT record_id, leg, source, target, p_d, p_i, census_unknown\n         FROM mirror_record_legs WHERE record_id = ANY($1)",
+  "query": "SELECT record_id, leg, source, target, p_d, p_i, tau, census_unknown\n         FROM mirror_record_legs WHERE record_id = ANY($1)\n         ORDER BY record_id, leg",
   "describe": {
     "columns": [
       {
@@ -35,6 +35,11 @@
       },
       {
         "ordinal": 6,
+        "name": "tau",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 7,
         "name": "census_unknown",
         "type_info": "Bool"
       }
@@ -51,8 +56,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "0f1b31e448837c36a81e7d1960889ff95987c4ae1b951fe428ae40e3ff5c383e"
+  "hash": "72ac483b54712354d4400c561f1f9df5bed6294fa9e3a193a228d6091b19b24d"
 }

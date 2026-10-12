@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH shipped AS (\n               SELECT DISTINCT l.record_id\n               FROM mirror_record_legs l\n               WHERE l.source = ANY($1)\n                 AND l.source NOT LIKE 'name:%'\n                 AND l.epoch <= $2\n                 AND l.family <> ALL($3::text[])\n           ),\n           ends AS (\n               SELECT unnest($1::text[]) AS node\n               UNION\n               SELECT e.source FROM mirror_record_legs e JOIN shipped s USING (record_id)\n               UNION\n               SELECT e.target FROM mirror_record_legs e JOIN shipped s USING (record_id)\n           )\n           SELECT COUNT(DISTINCT CASE WHEN node LIKE 'addr:%' THEN 'prof:' || substr(node, 6)\n                                      ELSE node END) AS \"count!\"\n           FROM ends",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Int8",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "e0167d73e862f03dfb94363149e161d65db1187de7a64886c57f9dd777e47445"
+}

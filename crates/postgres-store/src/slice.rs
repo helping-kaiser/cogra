@@ -45,8 +45,15 @@ pub fn canonical(node: &str) -> String {
 /// Both identifiers of every reached person are in the set, so the walk
 /// continues from a stance that landed on a Profile exactly as from one
 /// that landed on the Actor. A Type is reached but never expanded.
-pub async fn reach(pool: &PgPool, viewer_address: &str, as_of: i64) -> Result<Vec<String>, sqlx::Error> {
-    let seeds = vec![format!("addr:{viewer_address}"), format!("prof:{viewer_address}")];
+pub async fn reach(
+    pool: &PgPool,
+    viewer_address: &str,
+    as_of: i64,
+) -> Result<Vec<String>, sqlx::Error> {
+    let seeds = vec![
+        format!("addr:{viewer_address}"),
+        format!("prof:{viewer_address}"),
+    ];
     sqlx::query_scalar!(
         r#"WITH RECURSIVE reach(node) AS (
                SELECT unnest($1::text[])
@@ -151,7 +158,11 @@ pub async fn records(
 }
 
 /// How many records the slice ships, across every page.
-pub async fn count_records(pool: &PgPool, reach: &[String], as_of: i64) -> Result<i64, sqlx::Error> {
+pub async fn count_records(
+    pool: &PgPool,
+    reach: &[String],
+    as_of: i64,
+) -> Result<i64, sqlx::Error> {
     sqlx::query_scalar!(
         r#"SELECT COUNT(*) AS "count!"
            FROM mirror_records r

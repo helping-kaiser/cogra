@@ -366,6 +366,16 @@ type CancelEmailChangePayload {
 	userErrors: [UserError!]!
 }
 
+"""
+A record's place in the authoritative order: its landing epoch and
+causal key (𝕋^act, pos).
+"""
+type CausalKey {
+	landingEpoch: Int!
+	actTime: Int!
+	position: Int!
+}
+
 input ChangeHandleInput {
 	handle: String!
 }
@@ -787,6 +797,56 @@ enum ErrorCode {
 	The key-backup upload challenge is unknown, expired, or spent.
 	"""
 	CHALLENGE_EXPIRED
+}
+
+type FeedConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [FeedEdge!]!
+}
+
+"""
+An edge in a connection.
+"""
+type FeedEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: FeedItem!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
+"""
+What a feed row can be: the kinds V1.0 ranks. Later slices add members
+as their kinds join. A union, not `Node`: a Hashtag is not a Node, and
+the feed serves topics (GraphQL spec §3.8, *Unions*).
+"""
+union FeedItem = Post | Comment | User | Hashtag
+
+type FeedSlice {
+	"""
+	The newest epoch whose certificate the slice includes — the base
+	of every recency age (feed-ranking.md §5.3). Passing it back as
+	`feedSlice(asOfEpoch:)` re-reads the same slice.
+	"""
+	asOfEpoch: Int!
+	"""
+	The slice's nodes, ascending by L1 identifier.
+	"""
+	nodes(first: Int, after: String, last: Int, before: String): SliceNodeConnection!
+	"""
+	The accepted records among the slice's nodes, newest first in
+	landing order: every record owning a leg the walk traversed.
+	"""
+	records(first: Int, after: String, last: Int, before: String): RecordConnection!
 }
 
 """
@@ -1781,6 +1841,28 @@ type Mutation {
 }
 
 """
+One governed network parameter, from the operational carrier — the
+cache of the charter's replayable parameter schedule. The schedule on
+L1 is binding; the carrier is rebuildable from it.
+"""
+type NetworkParameter {
+	"""
+	The catalog key (network.md), e.g. "gamma", "dust_floor",
+	"reserve_share".
+	"""
+	key: String!
+	"""
+	The current value, serialized per the parameter's kind.
+	"""
+	value: String!
+	"""
+	The epoch of the finalization payload this value came from (the
+	genesis charter payload for never-amended parameters).
+	"""
+	asOfEpoch: Int!
+}
+
+"""
 Every graph-backed thing with an identity and a lifecycle
 (api-spec.md "Identity and actor interfaces"). Coverage grows with
 the slices; slice 2 carries the content nodes.
@@ -2608,6 +2690,36 @@ type Query {
 	landed on L1. Deliberately not the ranked feed.
 	"""
 	posts(after: String, before: String, first: Int, last: Int, includePending: Boolean! = true): PostConnection!
+	"""
+	The governed network parameters, from the operational carrier —
+	all of them, or the named keys. The catalog is network.md's; the
+	charter schedule on L1 is binding. Unknown keys are omitted; an
+	empty `keys` list reads empty.
+	"""
+	networkParameters(keys: [String!]): [NetworkParameter!]!
+	"""
+	Any actor's weight-bounded relevant subgraph — the raw material a
+	ranker orders into a feed: the viewer's own device, the server's
+	ranker container, or a delegated miner. Parameterized by the
+	`viewer` whose feed is ranked: computing any actor's view for any
+	reader is the public-graph default. Pruned by `dustFloor` (χ) and
+	`gamma` — defaults are the governed network parameters — not
+	hop-bounded: membership is best-possible path product ∏(γ·w̃) ≥ χ,
+	so both travel (miner-api.md "The slice path"). `asOfEpoch` pins
+	the slice to an earlier epoch (null: the newest ingested); every
+	page read at one `asOfEpoch` is the same slice. Null if the id
+	resolves to no rankable actor. Serving the slice is the backend's
+	whole part in ranking.
+	"""
+	feedSlice(viewer: UUID!, dustFloor: Float, gamma: Float, asOfEpoch: Int): FeedSlice
+	"""
+	Hydrate a window of a ranking snapshot: the nodes behind the given
+	ids, in the given order. At most 100 ids per call (the page
+	budget). An id that resolves to nothing hydratable (a pending write
+	that expired) is skipped, never an error. The backend serves the
+	order it is handed.
+	"""
+	feed(orderedIds: [UUID!]!, first: Int, after: String, last: Int, before: String): FeedConnection!
 }
 
 type Record {
@@ -2675,6 +2787,18 @@ type Record {
 	verify against it.
 	"""
 	payloadWitness: String!
+	"""
+	The authoring actor's raw L1 address — always present. `author`
+	resolves it to an account where one fronts it.
+	"""
+	authorId: String!
+	"""
+	Every leg of the act as Layer 1 published it. A binary family has
+	one; a hyper-edge has two (the actor's A leg into the middle node,
+	the terminal T leg out of it). `pDirected`/`pInterest` above
+	repeat the actor's leg.
+	"""
+	legs: [RecordLeg!]!
 }
 
 type RecordConnection {
@@ -2740,6 +2864,47 @@ enum RecordFamily {
 }
 
 scalar RecordId
+
+type RecordLeg {
+	role: RecordLegRole!
+	"""
+	Raw L1 identifier of the leg's source end.
+	"""
+	sourceId: String!
+	"""
+	Raw L1 identifier of the leg's target end.
+	"""
+	targetId: String!
+	"""
+	The leg's rendering of the act's authored directed parameter.
+	"""
+	pDirected: Dimension!
+	"""
+	The leg's rendering of the act's authored interest parameter.
+	"""
+	pInterest: Dimension!
+	"""
+	τ_e — the host-cached edge-projection maturity: a non-normative L1
+	by-product a distrusting consumer recomputes from the published
+	ordered history (layer1-interface.md §8.3).
+	"""
+	maturity: Float!
+	"""
+	True when ingestion had no census row for this leg and wrote
+	fallback metadata. Every fold skips a marked leg.
+	"""
+	censusUnknown: Boolean!
+}
+
+"""
+A leg's role in its record (layer1-interface.md §9): the one leg of a
+binary family, or the actor (A) or terminal (T) leg of a hyper-edge.
+"""
+enum RecordLegRole {
+	BINARY
+	A
+	T
+}
 
 """
 One thing the reference finder offers as a citation target.
@@ -3180,6 +3345,66 @@ enum Sign {
 	POSITIVE
 	NEGATIVE
 	ZERO
+}
+
+"""
+One node of a slice, keyed by its L1 identifier — the identifier every
+record leg names. Persons appear under their profile identifier: a leg
+naming `addr:a` names the same person as `prof:a`.
+"""
+type SliceNode {
+	"""
+	The node's raw L1 identifier (an `addr`/`prof`, `name`, or `mint`).
+	"""
+	graphId: String!
+	"""
+	CoGra's L2 id, when CoGra carries a row for the node. Null for a
+	node CoGra has no row for. Such a node still transits, and is never
+	a ranking candidate.
+	"""
+	id: UUID
+	"""
+	The node's kind, when CoGra carries a row for it. Null exactly
+	when `id` is.
+	"""
+	kind: NodeKind
+	"""
+	The node's genesis authorship record (a mint's own minting record,
+	a person's Registration) — the recency fallback's key
+	(feed-ranking.md §7), never refreshed by an update. Null for an
+	authorless node (a Type).
+	"""
+	genesis: CausalKey
+}
+
+type SliceNodeConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [SliceNodeEdge!]!
+	"""
+	How many nodes the slice holds, across every page, independent of
+	the cursor.
+	"""
+	totalCount: Int
+}
+
+"""
+An edge in a connection.
+"""
+type SliceNodeEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: SliceNode!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
 }
 
 input StageApplicantInput {
