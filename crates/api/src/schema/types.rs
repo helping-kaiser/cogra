@@ -764,6 +764,77 @@ impl Record {
     async fn payload_witness(&self) -> String {
         B64.encode(&self.0.payload_witness)
     }
+
+    /// The authoring actor's raw L1 address — always present. `author`
+    /// resolves it to an account where one fronts it.
+    async fn author_id(&self) -> String {
+        self.0.author.clone()
+    }
+
+    /// Every leg of the act as Layer 1 published it. A binary family has
+    /// one; a hyper-edge has two (the actor's A leg into the middle node,
+    /// the terminal T leg out of it). `pDirected`/`pInterest` above
+    /// repeat the actor's leg.
+    async fn legs(&self) -> Vec<RecordLegType> {
+        self.0.legs.iter().cloned().map(RecordLegType).collect()
+    }
+}
+
+/// A leg's role in its record (layer1-interface.md §9): the one leg of a
+/// binary family, or the actor (A) or terminal (T) leg of a hyper-edge.
+#[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
+#[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
+pub enum RecordLegRole {
+    Binary,
+    A,
+    T,
+}
+
+/// One edge projection of an accepted record.
+pub struct RecordLegType(pub mirror::RecordLeg);
+
+#[Object(name = "RecordLeg")]
+impl RecordLegType {
+    async fn role(&self) -> RecordLegRole {
+        match self.0.leg.as_str() {
+            "a" => RecordLegRole::A,
+            "t" => RecordLegRole::T,
+            _ => RecordLegRole::Binary,
+        }
+    }
+
+    /// Raw L1 identifier of the leg's source end.
+    async fn source_id(&self) -> &str {
+        &self.0.source
+    }
+
+    /// Raw L1 identifier of the leg's target end.
+    async fn target_id(&self) -> &str {
+        &self.0.target
+    }
+
+    /// The leg's rendering of the act's authored directed parameter.
+    async fn p_directed(&self) -> Dimension {
+        Dimension(self.0.p_d)
+    }
+
+    /// The leg's rendering of the act's authored interest parameter.
+    async fn p_interest(&self) -> Dimension {
+        Dimension(self.0.p_i)
+    }
+
+    /// τ_e — the host-cached edge-projection maturity: a non-normative L1
+    /// by-product a distrusting consumer recomputes from the published
+    /// ordered history (layer1-interface.md §8.3).
+    async fn maturity(&self) -> f64 {
+        self.0.tau
+    }
+
+    /// True when ingestion had no census row for this leg and wrote
+    /// fallback metadata. Every fold skips a marked leg.
+    async fn census_unknown(&self) -> bool {
+        self.0.census_unknown
+    }
 }
 
 /// One staged proposal for the device to verify and pre-sign. Each is
@@ -3974,6 +4045,9 @@ pub type RecordConnection = KeysetConnectionWith<Record, RecordConnectionFields>
 /// report the whole chronicle.
 pub struct RecordConnectionFields {
     filter: Option<mirror::RecordFilter>,
+    /// Set when the page is a ranking slice's records rather than a
+    /// chronicle filter's: the slice's reached set and its pin.
+    slice: Option<(std::sync::Arc<Vec<String>>, i64)>,
 }
 
 #[Object]
@@ -3989,10 +4063,16 @@ impl RecordConnectionFields {
     /// GraphQL's `Int` is 32-bit, and saturating beats failing the read.
     #[graphql(complexity = 0)]
     async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
+        let pool = ctx.data::<PgPool>()?;
+        if let Some((reach, as_of_epoch)) = &self.slice {
+            let total = postgres_store::slice::count_records(pool, reach, *as_of_epoch)
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            return Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)));
+        }
         let Some(filter) = &self.filter else {
             return Ok(Some(0));
         };
-        let pool = ctx.data::<PgPool>()?;
         let total = mirror::count_records(pool, filter)
             .await
             .map_err(|e| async_graphql::Error::new(e.to_string()))?;
@@ -4012,7 +4092,29 @@ pub(crate) fn record_connection(
         page,
         record_cursor,
         Record,
-        RecordConnectionFields { filter },
+        RecordConnectionFields {
+            filter,
+            slice: None,
+        },
+    )
+}
+
+/// A page of a ranking slice's records, counted over the same slice.
+pub(crate) fn slice_record_connection(
+    rows: Vec<mirror::RecordFull>,
+    page: &KeysetPage,
+    reach: std::sync::Arc<Vec<String>>,
+    as_of_epoch: i64,
+) -> RecordConnection {
+    keyset_connection_with(
+        rows,
+        page,
+        record_cursor,
+        Record,
+        RecordConnectionFields {
+            filter: None,
+            slice: Some((reach, as_of_epoch)),
+        },
     )
 }
 

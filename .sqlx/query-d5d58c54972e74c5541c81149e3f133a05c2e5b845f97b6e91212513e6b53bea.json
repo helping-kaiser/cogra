@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(*) AS \"count!\"\n           FROM mirror_records r\n           WHERE r.epoch <= $2\n             AND EXISTS (\n                 SELECT 1 FROM mirror_record_legs l\n                 WHERE l.record_id = r.record_id\n                   AND l.source = ANY($1)\n                   AND l.source NOT LIKE 'name:%'\n                   AND l.family <> ALL($3::text[]))",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Int8",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "d5d58c54972e74c5541c81149e3f133a05c2e5b845f97b6e91212513e6b53bea"
+}

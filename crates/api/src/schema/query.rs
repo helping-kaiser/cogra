@@ -714,6 +714,74 @@ impl Query {
             PostType,
         ))
     }
+
+    /// The governed network parameters, from the operational carrier —
+    /// all of them, or the named keys. The catalog is network.md's; the
+    /// charter schedule on L1 is binding. Unknown keys are omitted; an
+    /// empty `keys` list reads empty.
+    async fn network_parameters(
+        &self,
+        ctx: &Context<'_>,
+        keys: Option<Vec<String>>,
+    ) -> async_graphql::Result<Vec<super::feed::NetworkParameter>> {
+        super::feed::network_parameters(ctx.data::<PgPool>()?, keys).await
+    }
+
+    /// Any actor's weight-bounded relevant subgraph — the raw material a
+    /// ranker orders into a feed: the viewer's own device, the server's
+    /// ranker container, or a delegated miner. Parameterized by the
+    /// `viewer` whose feed is ranked: computing any actor's view for any
+    /// reader is the public-graph default. Pruned by `dustFloor` (χ) and
+    /// `gamma` — defaults are the governed network parameters — not
+    /// hop-bounded: membership is best-possible path product ∏(γ·w̃) ≥ χ,
+    /// so both travel (miner-api.md "The slice path"). `asOfEpoch` pins
+    /// the slice to an earlier epoch (null: the newest ingested); every
+    /// page read at one `asOfEpoch` is the same slice. Null if the id
+    /// resolves to no rankable actor. Serving the slice is the backend's
+    /// whole part in ranking.
+    async fn feed_slice(
+        &self,
+        ctx: &Context<'_>,
+        viewer: Uuid,
+        dust_floor: Option<f64>,
+        gamma: Option<f64>,
+        as_of_epoch: Option<i64>,
+    ) -> async_graphql::Result<Option<super::feed::FeedSlice>> {
+        super::feed::feed_slice(
+            ctx.data::<PgPool>()?,
+            viewer,
+            dust_floor,
+            gamma,
+            as_of_epoch,
+        )
+        .await
+    }
+
+    /// Hydrate a window of a ranking snapshot: the nodes behind the given
+    /// ids, in the given order. At most 100 ids per call (the page
+    /// budget). An id that resolves to nothing hydratable (a pending write
+    /// that expired) is skipped, never an error. The backend serves the
+    /// order it is handed.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    async fn feed(
+        &self,
+        ctx: &Context<'_>,
+        ordered_ids: Vec<Uuid>,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<super::feed::FeedConnection> {
+        super::feed::feed(
+            ctx.data::<PgPool>()?,
+            ordered_ids,
+            first,
+            after,
+            last,
+            before,
+        )
+        .await
+    }
 }
 
 /// The shared id-or-handle resolution behind `user` and `actor`:

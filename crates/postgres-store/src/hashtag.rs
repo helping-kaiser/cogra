@@ -64,3 +64,16 @@ pub async fn name_by_id(pool: &PgPool, id: Uuid) -> Result<Option<String>, sqlx:
         .fetch_optional(pool)
         .await
 }
+
+/// [`name_by_id`] for many ids in one round trip: each registered id with
+/// its canonical name; an id the registry never saw is absent.
+pub async fn names_by_ids(pool: &PgPool, ids: &[Uuid]) -> Result<Vec<(Uuid, String)>, sqlx::Error> {
+    Ok(
+        sqlx::query!("SELECT id, name FROM hashtags WHERE id = ANY($1)", ids)
+            .fetch_all(pool)
+            .await?
+            .into_iter()
+            .map(|row| (row.id, row.name))
+            .collect(),
+    )
+}

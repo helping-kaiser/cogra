@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH shipped AS (\n               SELECT DISTINCT l.record_id\n               FROM mirror_record_legs l\n               WHERE l.source = ANY($1)\n                 AND l.source NOT LIKE 'name:%'\n                 AND l.epoch <= $2\n                 AND l.family <> ALL($3::text[])\n           ),\n           ends AS (\n               SELECT unnest($1::text[]) AS node\n               UNION\n               SELECT e.source FROM mirror_record_legs e JOIN shipped s USING (record_id)\n               UNION\n               SELECT e.target FROM mirror_record_legs e JOIN shipped s USING (record_id)\n           ),\n           nodes AS (\n               SELECT DISTINCT CASE WHEN node LIKE 'addr:%' THEN 'prof:' || substr(node, 6)\n                                    ELSE node END AS graph_id\n               FROM ends\n           )\n           SELECT graph_id AS \"graph_id!\"\n           FROM nodes\n           WHERE ($4::text IS NULL OR graph_id > $4)\n             AND ($5::text IS NULL OR graph_id < $5)\n           ORDER BY CASE WHEN $6 THEN NULL ELSE graph_id END ASC,\n                    graph_id DESC\n           LIMIT $7",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "graph_id!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Int8",
+        "TextArray",
+        "Text",
+        "Text",
+        "Bool",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "93ee92d31954d2b3a1cbeccfd9e809b5fdfec0d8ae505461e8e26ebcb5f9bd24"
+}
