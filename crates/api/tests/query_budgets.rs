@@ -419,6 +419,25 @@ async fn a_full_slice_page_with_legs_fits_the_release_budget(pool: PgPool) {
     assert!(response.errors.is_empty(), "{:?}", response.errors);
 }
 
+/// The client's whole `feedRanking` selection (ranked-feed-api §12) fits
+/// the release budget. Its lists are a ranking snapshot, not connections:
+/// each field prices once however many rows come back, so the snapshot's
+/// length is never a validation question.
+///
+/// The client's feedRanking selection fits the release budget.
+/// ´claim:budgets:the-feed-ranking-selection-fits´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_feed_ranking_selection_fits_the_release_budget(pool: PgPool) {
+    let query = "{ feedRanking(viewer: \"00000000-0000-0000-0000-000000000000\",
+                              filter: { kinds: [POST], topic: null }) {
+        asOfEpoch
+        entries { targetId kind score mark newestIndex }
+        settling { targetId kind mark rankedPosition newestPosition }
+    } }";
+    let response = execute(&schema(pool, QueryBudgets::release()), query).await;
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+}
+
 /// Pricing follows the slice math: `first` wins when both are present,
 /// an omitted page charges the default, and out-of-range arguments price
 /// at the bounds — the resolver refuses those separately, so the cost
