@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
+import com.cogra.core.designsystem.EdgeSighting
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.SeenCardsEffect
@@ -87,6 +88,7 @@ fun TopicRoute(
         onBack = onBack,
         stanceControl = stanceControl,
         onCardsSeen = viewModel::onCardsSeen,
+        onCardEdgesSeen = viewModel::onCardEdgesSeen,
         onSeenCheckpoint = viewModel::onSeenCheckpoint,
     )
 }
@@ -108,6 +110,8 @@ fun TopicScreen(
     stanceControl: (@Composable () -> Unit)? = null,
     /** Content cards that stood fully in the viewport (`SeenCardsEffect`). */
     onCardsSeen: (List<String>) -> Unit = {},
+    /** Tall cards with an edge on screen this frame (History.md:13). */
+    onCardEdgesSeen: (List<EdgeSighting>) -> Unit = {},
     /** The reading paused: the scroll rested, or the reader left. */
     onSeenCheckpoint: () -> Unit = {},
 ) {
@@ -125,6 +129,7 @@ fun TopicScreen(
         listState = listState,
         nodeIdOf = { key -> cardIds[key] },
         onSeen = onCardsSeen,
+        onEdgesSeen = onCardEdgesSeen,
         onCheckpoint = onSeenCheckpoint,
     )
     Scaffold(
