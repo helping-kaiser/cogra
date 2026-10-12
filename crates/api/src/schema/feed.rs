@@ -393,8 +393,8 @@ pub struct SliceNodeConnectionFields {
 
 #[Object]
 impl SliceNodeConnectionFields {
-    /// How many nodes the slice holds, across every page. Saturates at
-    /// `i32::MAX`.
+    /// How many nodes the slice holds, across every page, independent of
+    /// the cursor.
     #[graphql(complexity = 0)]
     async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
         let pool = ctx.data::<PgPool>()?;

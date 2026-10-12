@@ -373,6 +373,52 @@ async fn explicit_pages_at_the_cap_still_work() {
     assert_eq!(connection.edges[0].node, "3");
 }
 
+/// `feed` hydrates a ranker's window and prices as a connection: the
+/// requested page times `edges { node { ... on Post { id } } }`, three per
+/// edge.
+///
+/// (´claim:budgets:a-connection-prices-the-requested-or-default-page´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn feed_prices_as_a_connection(pool: PgPool) {
+    let query = "{ feed(orderedIds: [], first: 100) {
+        edges { node { ... on Post { id } } }
+    } }";
+    let cost = connection_cost(Some(100), None, 3);
+    let budgets = |complexity| QueryBudgets {
+        depth: 15,
+        complexity,
+        introspection_enabled: false,
+    };
+    let under = schema(pool.clone(), budgets(cost - 1));
+    assert_eq!(
+        first_error(&execute(&under, query).await),
+        "Query is too complex."
+    );
+    let exact = schema(pool, budgets(cost));
+    let response = execute(&exact, query).await;
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+}
+
+/// The ranker pages the slice at the house cap with every leg selected.
+/// A record has at most two legs, so `legs` is a bounded list and the
+/// whole page — nodes and records at 100 — fits the release budget.
+///
+/// The ranker's slice page at the cap, legs included, fits the release budget.
+/// ´claim:budgets:the-slice-page-fits-the-release-budget´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_full_slice_page_with_legs_fits_the_release_budget(pool: PgPool) {
+    let query = "{ feedSlice(viewer: \"00000000-0000-0000-0000-000000000000\") {
+        asOfEpoch
+        nodes(first: 100) { totalCount pageInfo { hasNextPage endCursor }
+            edges { cursor node { graphId id kind genesis { landingEpoch actTime position } } } }
+        records(first: 100) { totalCount pageInfo { hasNextPage endCursor }
+            edges { cursor node { id family authorId landingEpoch actTime position
+                legs { role sourceId targetId pDirected pInterest maturity censusUnknown } } } }
+    } }";
+    let response = execute(&schema(pool, QueryBudgets::release()), query).await;
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+}
+
 /// Pricing follows the slice math: `first` wins when both are present,
 /// an omitted page charges the default, and out-of-range arguments price
 /// at the bounds — the resolver refuses those separately, so the cost
