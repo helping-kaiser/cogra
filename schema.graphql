@@ -21,6 +21,31 @@ type AccountDeletion {
 }
 
 """
+How the viewer's own account is deleted from here (`User.deletionPath`,
+ruling OS-15): the one deletion verb that will answer, or LOCKED while
+neither will. Computed on the server by `store::deletion_path`; clients
+never re-derive it from `application.*`.
+"""
+enum AccountDeletionPath {
+	"""
+	deleteApplicantAccount — removed at once (an applicant whose
+	address was never funded).
+	"""
+	IMMEDIATE
+	"""
+	requestAccountDeletion, then the mailed link and the seven-day
+	grace (a member, or an applicant whose Registration landed: item
+	69's husk path).
+	"""
+	BY_LINK
+	"""
+	Neither verb opens: funded, Registration not yet in the mirror,
+	not a member.
+	"""
+	LOCKED
+}
+
+"""
 The result of request, confirm and cancel. accountDeletion is the
 confirmed deletion; null after a request (nothing is confirmed until
 the link is opened) and after a cancel.
@@ -1507,9 +1532,9 @@ type Mutation {
 	the earlier link dies, the new one carries its own choice — and
 	is what the mail screen's Resend sends.
 	
-	The member path: a member, or an applicant whose Registration
-	landed. Any other applicant is FORBIDDEN and deletes through
-	deleteApplicantAccount. While a confirmed deletion is in its grace
+	Answers only on `User.deletionPath == BY_LINK`: a member, or an
+	applicant whose Registration landed. Any other account is FORBIDDEN,
+	re-checked under the account lock. While a confirmed deletion is in its grace
 	the request changes nothing — it returns that deletion, mails
 	nothing, spends nothing, and never moves the deadline: superseding
 	it would silently un-confirm it. Otherwise each request spends the
@@ -1539,10 +1564,11 @@ type Mutation {
 	case: account, credentials, application, staged acts (those carried
 	with the application included), key backup and device locks go
 	immediately, every session with them, and no mail is sent. Nothing
-	of it reached L1. FORBIDDEN for a member, who takes the mailed path,
-	and for an applicant whose address approval already funded — the
-	burn is spent and the Registration staged, so nothing may vanish
-	under it; once it lands, the mailed path applies.
+	of it reached L1. Answers only on `User.deletionPath == IMMEDIATE`,
+	re-checked under the account lock: FORBIDDEN for a member, who takes
+	the mailed path, and for an applicant whose address approval funded
+	— the burn is spent and the Registration staged, so nothing may
+	vanish under it; once it lands, the mailed path applies.
 	"""
 	deleteApplicantAccount: DeleteApplicantAccountPayload!
 	"""
@@ -3574,6 +3600,12 @@ type User implements Node & Actor {
 	status) and once cancelled.
 	"""
 	accountDeletion: AccountDeletion
+	"""
+	How the viewer's own account is deleted from here — the one
+	deletion verb that will answer, or LOCKED while neither will.
+	Viewer-only: null on anyone else's account.
+	"""
+	deletionPath: AccountDeletionPath
 	"""
 	The account's service state — gates acting through CoGra (auth.md
 	"Account states"). Field-level: viewer-only.
