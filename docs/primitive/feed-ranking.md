@@ -720,11 +720,14 @@ path can carry a score. Scope is a read-side filter:
 
 ### 9.4 The already-seen filter
 
-Per-viewer set of seen node keys, excluded from the candidate set
-**before** ranking (most candidates of an active user are already
-seen; excluding first avoids wasted extraction). New stance
-activity on a seen node does not resurface it — a new comment is
-its own node, ranked on its own merits.
+Per-viewer set of seen node keys that the reader's view excludes.
+The reference frontend ranks seen and unseen content alike and cuts
+seen content on the device: a reader's seen fraction of reachable
+content is small, so excluding first saves little. A calculator
+that is handed the list may still exclude it before ranking, with
+identical results. New stance activity on a seen node does not
+resurface it — a new comment is its own node, ranked on its own
+merits.
 
 The list belongs to the viewer, not the backend: backend storage
 (the central frontend's default,
