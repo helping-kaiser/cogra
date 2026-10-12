@@ -78,6 +78,7 @@ over file values.
 | `RATE_LIMIT_CONFIRM_PER_IP` | `30` | Token confirmations per IP per 15 min |
 | `RATE_LIMIT_EMAIL_CHANGE_REQUEST_PER_ACCOUNT` | `5` | Email-change requests per account per hour — the mail budget, refused visibly as `RATE_LIMITED` |
 | `RATE_LIMIT_EMAIL_CHANGE_RESEND_PER_ACCOUNT` | `5` | Email-change resends per account per hour, refused the same way |
+| `RATE_LIMIT_DELETION_REQUEST_PER_ACCOUNT` | `5` | Account-deletion requests (Resend included) per account per hour — the mail budget, refused visibly as `RATE_LIMITED` ([auth.md "Rate limiting"](auth.md#rate-limiting)) |
 | `RATE_LIMIT_EMAIL_CHANGE_CODE_TRIES` | `5` | Wrong codes before an email-change code is disabled until a resend ([auth.md "Email change"](auth.md#email-change)) |
 | `RATE_LIMIT_DEVICE_LOCK_ISSUE_PER_ACCOUNT` | `10` | Device-lock issues per account per hour, refused visibly as `RATE_LIMITED` ([auth.md "Device lock"](auth.md#device-lock)) |
 | `RATE_LIMIT_DEVICE_LOCK_LIVE_CAP` | `32` | Live device locks one account may hold at once, refused the same way |
