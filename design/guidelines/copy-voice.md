@@ -664,7 +664,18 @@ recorded so the registry is whole.
   the coast road — 2 pictures.` (`ComposeSeal` and its family).
 - **A post that didn't land** (`ComposeExpired`) — under `Your post didn't
   land`, `"Salt maps of the coast road" couldn't finish settling. Nothing
-  was spent — your draft is saved.` with `Open the draft`.
+  was spent — your draft is saved.` with `Open the draft`. Every other
+  family's notice keeps the shape and names itself (FC-G6): `Your opinion
+  didn't land` over `Your opinion of @ada couldn't finish settling.
+  Nothing was spent.`; `Your comment didn't land` over `Your comment on
+  "The long way home" couldn't finish settling. Nothing was spent.`;
+  `Your edit didn't land` over `Your edit of "Salt maps of the coast
+  road" couldn't finish settling. Nothing was spent.`; `Your tag didn't
+  land` over `#saltmaps on "The long way home" couldn't finish settling.
+  Nothing was spent.`; `Your citation didn't land` over `Your citation of
+  "The long way home" couldn't finish settling. Nothing was spent.` —
+  each with `Dismiss` alone, no draft being promised (*new 2026-10-12,
+  drafted — their wording jakob's at review*).
 - **The reply** — the composer's note `Words first — pictures can join
   them.`, once a picture is staged `Words first — pictures can join them,
   and they upload while you write.`, on a clip `Words first — a video can
@@ -1056,7 +1067,11 @@ spelling — one `License terms` everywhere, never the British spelling:
   over one body line, `It goes to the people who run CoGra for a look.`
   (*drafted 2026-10-09; the commit mails the report for MVP and the line
   names no mechanism*), the pair `Report` · `Cancel` and the snackbar
-  `Reported.` (**blessed**). It never connects to Report-a-problem.
+  `Reported.` (**blessed**). It never connects to Report-a-problem. A
+  report the server refuses — the day's reports spent, or the thing gone —
+  answers as no answer does, the sheet staying and the shared snackbar
+  `That didn't send. Try again.` (item 95's line, the interim for FC-G15;
+  *new 2026-10-12 as a placement — the line itself blessed*).
 - `Save` while a thing is not kept, `Unsave` while it is — one word
   either way (jakob 2026-09-11). It is the FIRST row of every menu that
   has it, a post's, a comment's, a person's and your own post's alike,
