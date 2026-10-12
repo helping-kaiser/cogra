@@ -1158,27 +1158,33 @@ three properties:
   rule that governs edges, node properties, and Postgres-side
   display content (see [layers.md](../primitive/layers.md)). These
   tables can be compacted, pruned, or replaced without leaving a
-  visible trace.
+  visible trace — except the seen-list, which never compacts (below).
 
 Instances below: the seen-list (`user_view_log`), the hidden-actors
 list (`user_hidden_actors`, frontend-side "don't show me Bob's
-content" — see [feed-ranking.md §5.1](../primitive/feed-ranking.md#91-filtering-vs-ranking)),
+content" — see [feed-ranking.md §9.1](../primitive/feed-ranking.md#91-filtering-vs-ranking)),
 the chat-read pointer (`chat_read_state`), and bookmarks
 (`user_bookmarks`).
 
 ```sql
--- View log: per-viewer record of which content nodes have been seen.
--- Used by the feed-ranking computation as an exclusion set
--- (see feed-ranking.md §8). History's `kinds` filter routes through
--- an indexed `kind` column; the slice-2.6 builder finalizes it.
+-- View log: per-viewer record of which nodes and topics have been
+-- seen, once each — History's feed, and the feed-ranking
+-- computation's exclusion set (see feed-ranking.md §9.4). `kind` is
+-- read from the L2 registries at write time; History's `kinds`
+-- filter and its keyset on (first_seen_at, content_id) route through
+-- the two indexes.
 CREATE TABLE user_view_log (
     user_id        UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
     content_id     UUID        NOT NULL,
     first_seen_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    kind           TEXT        NOT NULL
+                               CHECK (kind IN ('post', 'comment', 'user', 'hashtag')),
     PRIMARY KEY (user_id, content_id)
 );
 CREATE INDEX user_view_log_recency_idx
-    ON user_view_log (user_id, first_seen_at);
+    ON user_view_log (user_id, first_seen_at DESC, content_id DESC);
+CREATE INDEX user_view_log_kind_recency_idx
+    ON user_view_log (user_id, kind, first_seen_at DESC, content_id DESC);
 ```
 
 The seen-list is append-only and never compacts
@@ -1187,7 +1193,7 @@ The seen-list is append-only and never compacts
 ```sql
 -- Hidden actors: per-viewer list of actors the viewing user
 -- doesn't want in their feed. Applied as a post-rank exclusion
--- filter on the viewing user's side (see feed-ranking.md §5.1; §9
+-- filter on the viewing user's side (see feed-ranking.md §9.1; §9
 -- for where the filter computes).
 CREATE TABLE user_hidden_actors (
     viewer_id   UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
@@ -1212,8 +1218,8 @@ CREATE TABLE chat_read_state (
 -- User bookmarks: per-viewer "save this for later" list. Private
 -- state, never visible to other actors and never an input to the
 -- ranking math (see graph-model.md §3 — bookmarking is a frontend
--- event, not a stance). content_id can be any node UUID; a
--- discriminator is intentionally not stored, mirroring user_view_log.
+-- event, not a stance). content_id can be any node UUID; no
+-- discriminator is stored.
 CREATE TABLE user_bookmarks (
     user_id       UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
     content_id    UUID        NOT NULL,

@@ -1,0 +1,44 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT l.content_id, l.kind, l.first_seen_at, t.name AS \"name?\"\n               FROM user_view_log l\n               LEFT JOIN hashtags t ON l.kind = 'hashtag' AND t.id = l.content_id\n               WHERE l.user_id = $1\n                 AND l.kind = ANY($2)\n                 AND ($3::timestamptz IS NULL\n                      OR (l.first_seen_at, l.content_id) > ($3, $4::uuid))\n                 AND CASE l.kind\n                     WHEN 'post' THEN EXISTS (\n                         SELECT 1 FROM posts p\n                         WHERE p.id = l.content_id\n                           AND NOT EXISTS (SELECT 1 FROM user_hidden_actors h\n                                           WHERE h.viewer_id = $1\n                                             AND h.hidden_id = p.author_id))\n                     WHEN 'comment' THEN EXISTS (\n                         SELECT 1 FROM comments c\n                         WHERE c.id = l.content_id\n                           AND NOT EXISTS (SELECT 1 FROM user_hidden_actors h\n                                           WHERE h.viewer_id = $1\n                                             AND h.hidden_id = c.author_id))\n                     WHEN 'user' THEN EXISTS (\n                         SELECT 1 FROM actors a WHERE a.id = l.content_id)\n                     WHEN 'hashtag' THEN t.id IS NOT NULL\n                     ELSE FALSE\n                 END\n               ORDER BY l.first_seen_at ASC, l.content_id ASC\n               LIMIT $5",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "content_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "kind",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "first_seen_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "name?",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "TextArray",
+        "Timestamptz",
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "6005abe09169f7b5859afa7ac6324c5b619383f4669d4bfd360d259e07ebc681"
+}

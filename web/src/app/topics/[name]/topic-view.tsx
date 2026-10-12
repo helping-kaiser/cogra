@@ -29,15 +29,17 @@
 // substrate-illegal name, which reads as "not found" here.
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import { fetchHashtagDetail, type HashtagDetail } from "@/lib/api/topics-api";
+import { SEEN_ATTRIBUTE, useSeenTracker } from "@/lib/history/seen-tracker";
 import { ActorChip } from "@/lib/ui/actor-chip";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PostCard } from "@/lib/ui/post-card";
+import { useScrollHost } from "@/lib/ui/scroll-host";
 import { LINK_COPIED } from "@/lib/ui/share";
 import { StanceControl } from "@/lib/ui/stance-control";
 import { AFFINITY_AXES } from "@/lib/ui/stance-format";
@@ -76,6 +78,20 @@ export function TopicView({ name }: { name: string }) {
   }, [client, name]);
 
   useEffect(() => refresh(), [refresh]);
+
+  // A POST OR COMMENT CARD WHOLLY ON SCREEN JOINS HISTORY (History.md:5) —
+  // the card's own node, never its author or the topic. The topic's own
+  // header is a page rendering, not tracked in H1 (`seen-tracker.ts`).
+  const host = useScrollHost();
+  const listRef = useRef<HTMLUListElement>(null);
+  const seenIds = useMemo(
+    () =>
+      (hashtag?.taggedContent ?? []).flatMap(({ node }) =>
+        node.__typename === "Post" || node.__typename === "Comment" ? [node.id] : [],
+      ),
+    [hashtag],
+  );
+  useSeenTracker({ root: host, list: listRef, ids: seenIds });
 
   const header = (
     <PageHeader backHref="/feed" backScroll={false} backLabel="Back to feed" backTestId="topic-back" />
@@ -154,12 +170,12 @@ export function TopicView({ name }: { name: string }) {
           page, by the feed's stage law" (TagPage.md:23), re-electing at the
           page's own hard top (TagPage.md:25/27). */}
       <StageHost>
-        <ul className="flex flex-col gap-3" data-testid="topic-content-list">
+        <ul ref={listRef} className="flex flex-col gap-3" data-testid="topic-content-list">
           {hashtag.taggedContent.map((item) => {
             const node = item.node;
             if (node.__typename === "Post") {
               return (
-                <li key={node.id}>
+                <li key={node.id} {...{ [SEEN_ATTRIBUTE]: node.id }}>
                   <PostCard
                     post={node}
                     href={`/posts/${node.id}`}
@@ -175,7 +191,7 @@ export function TopicView({ name }: { name: string }) {
             if (node.__typename === "Comment") {
               const parentPost = node.target?.__typename === "Post" ? node.target : null;
               return (
-                <li key={node.id}>
+                <li key={node.id} {...{ [SEEN_ATTRIBUTE]: node.id }}>
                   <Card testId={`topic-comment-${node.id}`}>
                     {node.author && (
                       <ActorChip

@@ -5,8 +5,8 @@
 //! limiting"), the email-change and
 //! account-deletion mail budgets, the media upload budget, and the per-account signing
 //! budget spent at prepare (api-spec.md "Conventions") with the voucher's
-//! admission funding budget priced beside it, and the device-lock issue
-//! budget.
+//! admission funding budget priced beside it, the device-lock issue
+//! budget, and the seen-list's `markSeen` budget.
 //!
 //! The state is Postgres-held (`postgres_store::rate_limit`), so limits
 //! survive restarts and hold across instances. Auth keys that name an
@@ -46,6 +46,7 @@ pub mod scope {
     pub const DELETION_REQUEST_ACCOUNT: &str = "deletion_request_account";
     pub const DEVICE_LOCK_ACCOUNT: &str = "device_lock_account";
     pub const UPLOAD_ACCOUNT: &str = "upload_account";
+    pub const MARK_SEEN_ACCOUNT: &str = "mark_seen_account";
     pub const SIGN_POST: &str = "sign_post";
     pub const SIGN_COMMENT: &str = "sign_comment";
     pub const SIGN_EDIT: &str = "sign_edit";
@@ -260,6 +261,13 @@ pub struct RateLimitConfig {
     /// nothing about it and an insolvent actor can still fill the store —
     /// this is the only cost control media has.
     pub upload_account: Window,
+    /// `markSeen` calls per account. The seen-list never compacts and has
+    /// no remove verb, so a script could otherwise grow an account's rows
+    /// as fast as it can call; the primary key bounds the damage per
+    /// node, this bounds the rate. Seeing has no surface, so a trip shows
+    /// nothing: the client keeps the batch for its next checkpoint. The
+    /// default, 600 an hour, is one full flush every 6 s of reading.
+    pub mark_seen_account: Window,
     /// The per-account signing budget, spent at prepare.
     pub signing: SigningBudget,
 }
@@ -323,6 +331,10 @@ impl Default for RateLimitConfig {
                 limit: 60,
                 window_secs: 3600.0,
             },
+            mark_seen_account: Window {
+                limit: 600,
+                window_secs: 3600.0,
+            },
             signing: SigningBudget::default(),
         }
     }
@@ -369,6 +381,10 @@ impl RateLimitConfig {
             (
                 "RATE_LIMIT_UPLOAD_PER_ACCOUNT",
                 &mut cfg.upload_account.limit,
+            ),
+            (
+                "RATE_LIMIT_MARK_SEEN_PER_ACCOUNT",
+                &mut cfg.mark_seen_account.limit,
             ),
             ("RATE_LIMIT_SIGN_POST", &mut cfg.signing.post.limit),
             ("RATE_LIMIT_SIGN_COMMENT", &mut cfg.signing.comment.limit),
@@ -418,6 +434,7 @@ impl RateLimitConfig {
             device_lock_issue_account: generous,
             device_lock_live_cap: i32::MAX,
             upload_account: generous,
+            mark_seen_account: generous,
             signing: SigningBudget::UNLIMITED,
         }
     }
@@ -526,6 +543,23 @@ pub async fn spend_device_lock_issue(
         scope::DEVICE_LOCK_ACCOUNT,
         account,
         cfg.device_lock_issue_account,
+    )
+    .await
+}
+
+/// Spends one unit of the account's `markSeen` budget, answering whether
+/// it fit. A refusal spends nothing: a refused batch writes nothing and
+/// comes back whole at the client's next checkpoint.
+pub async fn spend_mark_seen(
+    pool: &PgPool,
+    cfg: &RateLimitConfig,
+    account: Uuid,
+) -> Result<bool, sqlx::Error> {
+    spend_mail_budget(
+        pool,
+        scope::MARK_SEEN_ACCOUNT,
+        account,
+        cfg.mark_seen_account,
     )
     .await
 }

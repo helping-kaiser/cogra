@@ -295,8 +295,9 @@ pub enum ErrorCode {
     NotFound,
     /// Malformed input; `field` names the offender.
     BadInput,
-    /// An auth or upload endpoint's per-IP / per-account budget — never a
-    /// signing act. The login backoff serves no retry-after figure.
+    /// An auth or upload endpoint's per-IP / per-account budget, or a
+    /// private-viewer-state budget (markSeen) — never a signing act. The
+    /// login backoff serves no retry-after figure.
     RateLimited,
     /// Collapsed server fault; detail is logged, not surfaced.
     Internal,
@@ -1312,6 +1313,95 @@ impl User {
                 })
                 .collect(),
         ))
+    }
+
+    /// The seen-list (feed-ranking.md §9.4): every node the viewer has
+    /// seen, once each, newest first by first seeing — the list the
+    /// ranked feed filters by, and History's feed. Re-seeing never moves
+    /// an entry. `kinds` narrows (null or empty = every kind History
+    /// serves: POST, COMMENT, USER, HASHTAG; a kind outside the served
+    /// set is BAD_INPUT, and later slices widen the set). A hidden
+    /// actor's posts and comments stay out while the actor is hidden,
+    /// and their own profile stays; a removed thing keeps its place and
+    /// reads its removal mark; a thing whose node no longer resolves — a
+    /// pending write that never landed — is skipped. Paging is keyset on
+    /// `(firstSeenAt, node id)`, so a thing first seen while the reader
+    /// scrolls sorts above the open page and never shifts the next one.
+    /// Field-level: viewer-only.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    async fn view_history(
+        &self,
+        ctx: &Context<'_>,
+        kinds: Option<Vec<NodeKind>>,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<Option<ViewHistoryConnection>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        validate_page_args(first, last, after.as_deref(), before.as_deref())
+            .map_err(|e| super::query::bad_input(e.message))?;
+        let kinds = history_kinds(kinds.as_deref())?;
+        let backward = last.is_some() || before.is_some();
+        let cursor = match if backward { &before } else { &after } {
+            Some(raw) => Some(
+                crate::history::decode_cursor(raw)
+                    .ok_or_else(|| super::query::bad_input("invalid cursor"))?,
+            ),
+            None => None,
+        };
+        let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
+        let mut entries = postgres_store::history::view_history(
+            pool,
+            self.identity.id,
+            &kinds,
+            cursor,
+            backward,
+            limit + 1,
+        )
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let has_more = entries.len() as i64 > limit;
+        if has_more {
+            if backward {
+                entries.remove(0);
+            } else {
+                entries.pop();
+            }
+        }
+        let (has_previous, has_next) = if backward {
+            (has_more, cursor.is_some())
+        } else {
+            (cursor.is_some(), has_more)
+        };
+        let mut connection = ViewHistoryConnection::with_additional_fields(
+            has_previous,
+            has_next,
+            ViewHistoryConnectionFields {
+                viewer: self.identity.id,
+                kinds,
+            },
+        );
+        connection
+            .edges
+            .extend(
+                hydrate_history(pool, entries)
+                    .await?
+                    .into_iter()
+                    .map(|(entry, item)| {
+                        Edge::with_additional_fields(
+                            crate::history::encode_cursor(entry.cursor()),
+                            item,
+                            ViewHistoryEdgeFields {
+                                first_seen_at: entry.first_seen_at,
+                            },
+                        )
+                    }),
+            );
+        Ok(Some(connection))
     }
 
     /// Acts mid-handshake — awaiting a signature, the host seal, or
@@ -3590,6 +3680,156 @@ pub enum SearchResult {
     Comment(CommentType),
     User(User),
     Hashtag(HashtagType),
+}
+
+/// What the seen-list holds: the kinds History serves; later slices add
+/// members as their kinds join. A union, not `Node`: a Hashtag is not a
+/// Node, and History serves topics (GraphQL spec §3.8, *Unions*).
+#[derive(async_graphql::Union)]
+pub enum ViewHistoryItem {
+    Post(PostType),
+    Comment(CommentType),
+    User(User),
+    Hashtag(HashtagType),
+}
+
+/// Names the seen-list connection `ViewHistoryConnection`, as the
+/// contract does.
+pub struct ViewHistoryConnectionName;
+
+impl async_graphql::connection::ConnectionNameType for ViewHistoryConnectionName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "ViewHistoryConnection".to_string()
+    }
+}
+
+/// Names the seen-list edge `ViewHistoryEdge`.
+pub struct ViewHistoryEdgeName;
+
+impl async_graphql::connection::EdgeNameType for ViewHistoryEdgeName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "ViewHistoryEdge".to_string()
+    }
+}
+
+/// `ViewHistoryEdge`'s own field: when the viewer first saw the thing.
+#[derive(SimpleObject)]
+pub struct ViewHistoryEdgeFields {
+    /// When the viewer first saw this thing — the list's order, newest
+    /// first. Re-seeing never moves it.
+    pub first_seen_at: DateTime<Utc>,
+}
+
+/// A page of the viewer's seen-list.
+pub type ViewHistoryConnection = Connection<
+    String,
+    ViewHistoryItem,
+    ViewHistoryConnectionFields,
+    ViewHistoryEdgeFields,
+    ViewHistoryConnectionName,
+    ViewHistoryEdgeName,
+    async_graphql::connection::DisableNodesField,
+>;
+
+/// `ViewHistoryConnection`'s connection-level fields: the viewer and the
+/// kinds that served the edges, so the count runs under exactly that
+/// predicate and only when asked.
+pub struct ViewHistoryConnectionFields {
+    viewer: Uuid,
+    kinds: Vec<String>,
+}
+
+#[Object]
+impl ViewHistoryConnectionFields {
+    /// How many things the viewer's seen-list serves under these kinds,
+    /// across every page. Priced at zero like every connection count;
+    /// saturates at [`i32::MAX`].
+    #[graphql(complexity = 0)]
+    async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
+        let pool = ctx.data::<PgPool>()?;
+        let total = postgres_store::history::count_view_history(pool, self.viewer, &self.kinds)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
+    }
+}
+
+/// The kinds a `viewHistory(kinds:)` argument serves: null or empty
+/// narrows nothing; a kind History does not serve is BAD_INPUT.
+fn history_kinds(kinds: Option<&[NodeKind]>) -> async_graphql::Result<Vec<String>> {
+    use crate::history::HistoryKind;
+    let served = |kind: NodeKind| match kind {
+        NodeKind::Post => Some(HistoryKind::Post),
+        NodeKind::Comment => Some(HistoryKind::Comment),
+        NodeKind::User => Some(HistoryKind::User),
+        NodeKind::Hashtag => Some(HistoryKind::Hashtag),
+        _ => None,
+    };
+    let kinds: Vec<HistoryKind> = match kinds {
+        None | Some([]) => HistoryKind::ALL.to_vec(),
+        Some(kinds) => kinds
+            .iter()
+            .map(|kind| {
+                served(*kind).ok_or_else(|| {
+                    super::query::bad_input("History serves POST, COMMENT, USER and HASHTAG only")
+                })
+            })
+            .collect::<async_graphql::Result<_>>()?,
+    };
+    Ok(kinds.iter().map(|k| k.as_store().to_string()).collect())
+}
+
+/// The seen-list entries, typed, in list order. An entry whose thing
+/// vanished between the read and the load is dropped rather than served
+/// empty.
+async fn hydrate_history(
+    pool: &PgPool,
+    entries: Vec<postgres_store::history::SeenEntry>,
+) -> async_graphql::Result<Vec<(postgres_store::history::SeenEntry, ViewHistoryItem)>> {
+    let ids_of = |kinds: &[&str]| -> Vec<Uuid> {
+        entries
+            .iter()
+            .filter(|e| kinds.contains(&e.kind.as_str()))
+            .map(|e| e.content_id)
+            .collect()
+    };
+    let content = crate::nodes::resolve_content_many(pool, &ids_of(&["post", "comment"]))
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+    let mut users: std::collections::HashMap<Uuid, store::ActorIdentity> =
+        store::actor_identities_by_ids(pool, &ids_of(&["user"]))
+            .await?
+            .into_iter()
+            .map(|identity| (identity.id, identity))
+            .collect();
+    Ok(entries
+        .into_iter()
+        .filter_map(|entry| {
+            let item = match entry.kind.as_str() {
+                "post" => match content.get(&entry.content_id) {
+                    Some(crate::nodes::ContentNode::Post(post)) => {
+                        ViewHistoryItem::Post(PostType(post.clone()))
+                    }
+                    _ => return None,
+                },
+                "comment" => match content.get(&entry.content_id) {
+                    Some(crate::nodes::ContentNode::Comment(comment)) => {
+                        ViewHistoryItem::Comment(CommentType(comment.clone()))
+                    }
+                    _ => return None,
+                },
+                "user" => ViewHistoryItem::User(User {
+                    identity: users.remove(&entry.content_id)?,
+                    viewer_session: None,
+                }),
+                "hashtag" => ViewHistoryItem::Hashtag(HashtagType {
+                    name: entry.name.clone()?,
+                }),
+                _ => return None,
+            };
+            Some((entry, item))
+        })
+        .collect())
 }
 
 /// Names the search connection `SearchConnection`, as the contract does,

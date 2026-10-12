@@ -8,6 +8,7 @@ pub mod auth;
 pub mod bootstrap;
 pub mod breach;
 pub mod content;
+pub mod history;
 pub mod ingest;
 pub mod l1;
 pub mod loaders;
