@@ -94,7 +94,10 @@
     <string name="tag_anchor_all_of_it">all of it, full stop</string>
 
     <string name="stance_target">Stance</string>
-    <string name="stance_target_action">Tap for a light yes, or press and hold to pick exactly</string>
+    <string name="stance_target_action">Tap to pick exactly, or press and hold for a light yes</string>
+    <!-- The press-and-hold shortcut's accessibility action: a long press
+         signs the low default (stance-control.md "The gesture"). -->
+    <string name="stance_target_hold">Light yes</string>
     <!-- A target that already carries a standing says so first. -->
     <string name="stance_target_with_standing">%1$s: %2$s. %3$s</string>
     <!-- WHAT IT STANCES TOWARD, FIRST (`TagPage`, the topic round). A
@@ -205,12 +208,16 @@
          the caller appends a reading to. -->
     <string name="stance_disconnect_standing_raw">Everything you\'ve said about %1$s adds up to %2$s, and disconnecting clears all of it.</string>
 
-    <string name="stance_coach">Press and hold to pick exactly where you stand.</string>
-    <string name="stance_coach_dismiss">Got it</string>
+    <!-- The first-ever pad open's two coaching lines, verbatim from
+         copy-voice.md "The first-ever pad teaches in two coaching lines,
+         and nothing else teaches it" (`VouchBackPad`). The face is drawn;
+         the spoken twin says the face and the pair. -->
+    <string name="stance_coaching_shortcut">Later, tap the small face under a post to open this — press and hold it instead and a gentle 🙂 is signed on the spot.</string>
+    <string name="stance_coaching_shortcut_spoken">Later, tap the small face under a post to open this — press and hold it instead and a gentle Nice, For or against +0.10, How much reaches you +0.10 is signed on the spot.</string>
+    <string name="stance_coaching_set">Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.</string>
 
-    <!-- The `?` on the pad (design.md §8.3): the explanation on demand,
-         for anyone who met the control after the one-time coach mark was
-         spent. It says what the two axes are and what actually signs,
+    <!-- The `?` on the pad (design.md §8.3): the explanation on demand.
+         It says what the two axes are and what actually signs,
          because nothing here should be learned by accident. -->
     <string name="stance_explain">How stances work</string>
     <!--
