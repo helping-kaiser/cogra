@@ -604,9 +604,9 @@ from the media path and carrying their own doc write-back:
   **Post Score on the rail** is what says whose feed it is, and it is
   also the door to the post — the clip shrinks to the head of the
   post's detail, still playing, and the body rises beneath it. The
-  rail is author · stance · comments · share · score; the stream carries sound and a
-  drag-to-seek line, never the full transport; guest and key-absent
-  gate exactly as the feed does.
+  rail is author · stance · comments · share · score; the stream
+  carries sound and a drag-to-seek line, never the full transport;
+  guest and key-absent gate exactly as the feed does.
 - **Unhide topic follow** — the follow/unfollow control, backend-
   accepted since 2.3 (`prepareStance` toward the Hashtag) but
   hidden from the client until the topic feed exists to receive it.
