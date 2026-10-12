@@ -486,6 +486,27 @@ describe("the hold", () => {
     expect(data.sent).toHaveLength(1);
   });
 
+  it("goes inert at the hold, so a second press in the signature's gap arms nothing", async () => {
+    // stance-control.md "Confirmation": the anchor goes inert at the
+    // hold. The projection is held open here, so the gap is observable.
+    const data = mount();
+    await settle();
+    const project = data.project;
+    const held: (() => void)[] = [];
+    data.project = (target, pick) =>
+      new Promise((resolve) => {
+        held.push(() => resolve(project(target, pick)));
+      });
+    await hold();
+    fireEvent.pointerDown(control(), { pointerId: 2, clientX: 0, clientY: 0 });
+    await settle(LONG_PRESS_MS + 1);
+    await act(async () => {
+      for (const open of held) open();
+    });
+    await settle();
+    expect(data.sent).toHaveLength(1);
+  });
+
   it("does not sign a press lifted before the threshold — that is a tap", async () => {
     const data = mount();
     await settle();

@@ -473,7 +473,11 @@ export function StanceControl({
     holdTimer.current = setTimeout(() => {
       holdTimer.current = null;
       suppressClick.current = true;
-      void commitChecked(TAP_DEFAULT);
+      // The anchor goes inert AT the hold, not once the projection has
+      // answered: a second press in that gap must not arm a second
+      // signature (stance-control.md "Confirmation").
+      setBusy(true);
+      void commitChecked(TAP_DEFAULT).finally(() => setBusy(false));
     }, LONG_PRESS_MS);
   };
 
