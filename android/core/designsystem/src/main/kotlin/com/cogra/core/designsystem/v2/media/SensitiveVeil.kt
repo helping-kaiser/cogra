@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -40,6 +41,20 @@ import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
 import com.cogra.core.designsystem.v2.token.Veil
+
+/**
+ * Whether the reading account always unveils sensitive content (Settings'
+ * `Always unveil sensitive content`; settings packet §3.1a).
+ *
+ * THE VEIL'S PREDICATE IS ANSWERED HERE: veiled = the node is sensitive AND
+ * the account does not always unveil. Both veils — [SensitiveVeil] over a
+ * post's body and the pinned clip, [SensitiveVeilCompact] over a comment —
+ * read it, so every veil site honours the account's choice without each
+ * screen threading it through. The app shell provides the account's value
+ * from `me.preferences`; the default is `false`, so a guest, a signed-out
+ * reader and an account that never chose all read veiled.
+ */
+val LocalAlwaysUnveil = compositionLocalOf { false }
 
 /**
  * The sensitive veil, over **the post's whole body as one state**.
@@ -98,6 +113,8 @@ fun SensitiveVeil(
     testTag: String? = null,
     content: @Composable () -> Unit,
 ) {
+    // The account's choice comes first ([LocalAlwaysUnveil]).
+    val covered = veiled && !LocalAlwaysUnveil.current
     val canBlur = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     val description = buildString {
         append(veilText)
@@ -109,7 +126,7 @@ fun SensitiveVeil(
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
     ) {
         Box(
-            modifier = if (veiled) {
+            modifier = if (covered) {
                 Modifier
                     .then(if (canBlur) Modifier.blur(Veil.BlurRadius) else Modifier)
                     // Pixels are hidden; the tree must be too.
@@ -118,10 +135,10 @@ fun SensitiveVeil(
                 Modifier
             },
         ) {
-            CompositionLocalProvider(LocalStageVeil provides veiled, content = content)
+            CompositionLocalProvider(LocalStageVeil provides covered, content = content)
         }
 
-        if (veiled) {
+        if (covered) {
             VeilFace(
                 canBlur = canBlur,
                 veilText = veilText,
@@ -249,7 +266,8 @@ fun SensitiveVeilCompact(
     testTag: String? = null,
     content: @Composable () -> Unit,
 ) {
-    if (!veiled) {
+    // The account's choice comes first ([LocalAlwaysUnveil]).
+    if (!veiled || LocalAlwaysUnveil.current) {
         Box(modifier.then(if (testTag != null) Modifier.testTag(testTag) else Modifier)) {
             CompositionLocalProvider(LocalStageVeil provides false, content = content)
         }

@@ -944,6 +944,32 @@ class CograNavGraphTest {
         assertThat(settings.confirmedTokens).containsExactly("held-token")
     }
 
+    /** ChangeEmailLinkedSignedOut.md: a dead link's Sign in NEVER holds the link. */
+    @Test
+    fun `signed_out_dead_link_sign_in_never_holds_the_link`() {
+        settings.linkCheck = com.cogra.domain.Outcome.Success(
+            com.cogra.domain.settings.EmailChangeLinkCheck(
+                "sol@ferreira.studio",
+                com.cogra.domain.settings.EmailChangeLinkState.EXPIRED,
+            ),
+        )
+        render()
+        waitForTag("login_email")
+        navController.handleDeepLink(joinIntent("/email-change?token=dead-token"))
+        waitForTag("changeEmail.onward")
+
+        compose.onNodeWithTag("changeEmail.onward").performClick()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<Login>() == true
+        }
+        account.profile = member()
+        signIn()
+        // Signed in, the reader lands home — never back on the dead link.
+        waitFor(barSlot("profile"))
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ChangeEmailLinked>()).isFalse()
+        assertThat(settings.confirmedTokens).isEmpty()
+    }
+
     @Test
     fun settingsReachesTheKeyExportScreen() {
         signIn()

@@ -1334,6 +1334,9 @@ struct DismissVouchBackPayload {
 #[derive(InputObject)]
 struct SetPreferencesInput {
     /// 0 (show everything) to 10 (strictest); null restores the default.
+    /// MVP reads it as one threshold: 0 unveils sensitive content wherever
+    /// the account reads (Settings' Always unveil sensitive content); null
+    /// or 1–10 keeps the veil. The 0–10 gradient is post-MVP.
     content_filtering_severity_level: async_graphql::MaybeUndefined<i32>,
     /// The license new posts start from; null restores public domain
     /// (0/0). Both axes take the same three readings the composer

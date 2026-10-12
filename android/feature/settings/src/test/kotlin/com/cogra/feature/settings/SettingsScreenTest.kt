@@ -67,10 +67,50 @@ class SettingsScreenTest {
     fun `groups_stand_in_the_ruled_order`() {
         render()
         val order = listOf(
-            "theme", "stance", "writing", "reading", "people", "backup", "sessions", "credentials", "about", "leaving",
-            "ending",
+            "theme", "stance", "writing", "reading", "people", "sensitive", "backup", "sessions", "credentials",
+            "about", "leaving", "ending",
         ).map { top("settings.$it") }
         assertThat(order).isInStrictOrder()
+    }
+
+    // ------------------------------------------------- sensitive content (B5)
+
+    @Test
+    fun `sensitive_group_stands_after_people`() {
+        render()
+        node("settings.sensitive").performScrollTo()
+        node("settings.sensitive.label").assertTextEquals("Sensitive content")
+        node("settings.sensitive.footnote").assertTextEquals("This choice follows your account to every device.")
+        assertThat(top("settings.people")).isLessThan(top("settings.sensitive"))
+        assertThat(top("settings.sensitive")).isLessThan(top("settings.backup"))
+        // One switch, never a sheet or a pair of rows.
+        assertThat(
+            compose.onAllNodes(
+                hasAnyAncestor(hasTestTag("settings.sensitive")) and
+                    SemanticsMatcher.keyIsDefined(SemanticsProperties.ToggleableState),
+            ).fetchSemanticsNodes(),
+        ).hasSize(1)
+    }
+
+    @Test
+    fun `unveil_switch_reads_off_by_default`() {
+        render()
+        node("settings.sensitive.unveil").performScrollTo().assertIsOff()
+        node("settings.sensitive.unveil.label").assertTextEquals("Always unveil sensitive content")
+        node("settings.sensitive.unveil.status").assertTextEquals("Off, the veil stays until you tap it.")
+    }
+
+    @Test
+    fun `the unveil switch reads on and drops its Off line - DRIFT G10, the On line is undrawn`() {
+        var flips = 0
+        render(
+            state = SettingsUiState(account = account(), actorKeyHere = true, now = NOW, alwaysUnveil = true),
+            actions = SettingsActions(onAlwaysUnveil = { flips++ }),
+        )
+        node("settings.sensitive.unveil").performScrollTo().assertIsOn().performClick()
+        val status = compose.onAllNodesWithTag("settings.sensitive.unveil.status", useUnmergedTree = true)
+        assertThat(status.fetchSemanticsNodes()).isEmpty()
+        assertThat(flips).isEqualTo(1)
     }
 
     @Test

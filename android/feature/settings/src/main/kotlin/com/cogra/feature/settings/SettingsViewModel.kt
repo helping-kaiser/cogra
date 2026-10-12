@@ -11,8 +11,10 @@ import com.cogra.domain.SessionInfo
 import com.cogra.domain.identity.SignOut
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.settings.PendingEmailChange
+import com.cogra.domain.settings.SensitiveContentChoice
 import com.cogra.domain.settings.SettingsAccount
 import com.cogra.domain.settings.SettingsRepository
+import com.cogra.domain.settings.UNVEIL_LEVEL
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.store.DevicePreferences
 import com.cogra.domain.store.IdentityStore
@@ -62,6 +64,8 @@ data class SettingsUiState(
     val licenseSaving: LicenseChoice? = null,
     /** A save that did not go through — what Retry sends again. */
     val licenseFailed: LicenseChoice? = null,
+    /** The account's `Always unveil sensitive content` — the account's, never this phone's. */
+    val alwaysUnveil: Boolean = false,
 ) {
     /** This device first, then the rest in the read's order — keyed 1..n by position. */
     val sessions: List<SessionInfo>
@@ -106,6 +110,7 @@ class SettingsViewModel @Inject constructor(
     private val signOut: SignOut,
     private val identity: IdentityStore,
     private val device: DevicePreferences,
+    private val sensitive: SensitiveContentChoice,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsUiState())
@@ -132,6 +137,9 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             device.showExactValues.collect { on -> _state.update { it.copy(showExactValues = on) } }
         }
+        viewModelScope.launch {
+            sensitive.alwaysUnveil.collect { on -> _state.update { it.copy(alwaysUnveil = on) } }
+        }
     }
 
     /** Re-reads the account — on every arrival, so a subpage's change shows on return. */
@@ -140,6 +148,9 @@ class SettingsViewModel @Inject constructor(
             val keyHere = identity.actorSeed() != null
             val forget = identity.forgetOnSignOut()
             val read = settings.settingsAccount()
+            // The account's own answer, so a choice made on the web (or
+            // another phone) reads here (Settings.md: it follows the account).
+            (read as? Outcome.Success)?.value?.let { sensitive.record(it.contentFilteringSeverityLevel) }
             _state.update {
                 it.copy(
                     account = (read as? Outcome.Success)?.value ?: it.account,
@@ -217,6 +228,34 @@ class SettingsViewModel @Inject constructor(
                     // It reverts, and the row says so with Retry (the hold's row vehicle).
                     else -> s.copy(licenseSaving = null, licenseFailed = choice)
                 }
+            }
+        }
+    }
+
+    // ------------------------------------------------- sensitive content
+
+    /** Only the latest flip's failure may put the switch back. */
+    private var unveilSave = 0
+
+    /**
+     * Flips with no dialog and saves to the account, optimistically (R8;
+     * seam 044 K4.1): every veil answers at once. Both values are valid, so
+     * the only failure is no answer — the switch goes back and the shared
+     * no-answer line says so (digest item 95).
+     */
+    fun onAlwaysUnveil() {
+        val before = sensitive.level.value
+        val on = !_state.value.alwaysUnveil
+        sensitive.record(if (on) UNVEIL_LEVEL else null)
+        val save = ++unveilSave
+        viewModelScope.launch {
+            val outcome = settings.setAlwaysUnveil(on)
+            if (save != unveilSave) return@launch
+            if (outcome is Outcome.Success) {
+                sensitive.record(outcome.value)
+            } else {
+                sensitive.record(before)
+                _events.send(SettingsEvent.Snackbar(R.string.network_error))
             }
         }
     }

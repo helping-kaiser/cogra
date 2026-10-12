@@ -19,6 +19,7 @@ import com.cogra.domain.settings.EmailChangeLinkState
 import com.cogra.domain.settings.PendingEmailChange
 import com.cogra.domain.settings.SettingsAccount
 import com.cogra.domain.settings.SettingsRepository
+import com.cogra.domain.settings.UNVEIL_LEVEL
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
 import com.cogra.network.graphql.CancelEmailChangeMutation
@@ -78,6 +79,7 @@ class SettingsRepositoryImpl @Inject constructor(
                     sessions = me.sessions.orEmpty().map {
                         SessionInfo(it.id, it.deviceLabel, it.createdAt, it.lastUsedAt, it.isCurrent)
                     },
+                    contentFilteringSeverityLevel = me.preferences?.contentFilteringSeverityLevel,
                 ),
             )
         }
@@ -107,6 +109,21 @@ class SettingsRepositoryImpl @Inject constructor(
                 SavedLicense(prefs.defaultLicense?.let { LicenseChoice(it.attribution, it.provenance) })
             }
         }.map { it.license }
+    }
+
+    // On writes the MVP threshold 0; off is `Optional.present(null)`, the
+    // explicit null that restores the default veil. The license stays
+    // absent and so is left as it is.
+    override suspend fun setAlwaysUnveil(on: Boolean): Outcome<Int?> = guard.run {
+        client.mutation(
+            SetPreferencesMutation(
+                SetPreferencesInput(
+                    contentFilteringSeverityLevel = Optional.present(if (on) UNVEIL_LEVEL else null),
+                ),
+            ),
+        ).payloadOutcome({ it.setPreferences.userErrors.map { e -> e.userErrorFields } }) { data ->
+            data.setPreferences.preferences?.let { prefs -> SavedLevel(prefs.contentFilteringSeverityLevel) }
+        }.map { it.level }
     }
 
     override suspend fun requestEmailChange(
@@ -154,4 +171,7 @@ class SettingsRepositoryImpl @Inject constructor(
 
     /** A non-null box, so a saved null (public domain) is not read as a fault. */
     private data class SavedLicense(val license: LicenseChoice?)
+
+    /** The same box for a saved filter level, whose null is the default veil. */
+    private data class SavedLevel(val level: Int?)
 }

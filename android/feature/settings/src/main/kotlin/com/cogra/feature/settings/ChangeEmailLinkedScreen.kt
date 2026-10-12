@@ -6,6 +6,11 @@
 // `confirmEmailChange(token)` and lands by the answer — it never calls the
 // anonymous check. Signed out, it reads `emailChangeLinkCheck(token)` and
 // applies nothing: the link counts once the reader signs in.
+//
+// A dead or unknown link signed out is one address-free landing (the
+// signed-out board's `dead` chip), and its `Sign in` NEVER holds the link
+// (ChangeEmailLinkedSignedOut.md); signed in, a link the app does not know
+// is the `unknown` chip (ChangeEmailLinked.md, item 98).
 
 package com.cogra.feature.settings
 
@@ -77,11 +82,10 @@ sealed interface LinkedLanding {
     data class SignedOut(val newEmail: String) : LinkedLanding
 
     /**
-     * Signed out with a dead or unknown link — and, signed in, a token the
-     * confirm does not know. G9 (ruled, DRAW ORDERED): VerifyExpired's
-     * heading and `Sign in`, a body naming no address; the body's words are
-     * jakob's at design exec, so none is drawn here yet. DRIFT until the
-     * drawing registers.
+     * Signed out with a dead or unknown link (the `dead` chip: `Sign in`,
+     * never holding the link) — and, signed in, a token the confirm does
+     * not know (the `unknown` chip: `Back to settings`). Neither names an
+     * address.
      */
     data class Dead(val signedIn: Boolean) : LinkedLanding
 
@@ -161,7 +165,7 @@ fun ChangeEmailLinkedRoute(
     signedIn: Boolean,
     onEnterTheCode: () -> Unit,
     onBackToSettings: () -> Unit,
-    onSignIn: () -> Unit,
+    onSignIn: (holdsLink: Boolean) -> Unit,
     viewModel: ChangeEmailLinkedViewModel = hiltViewModel(),
 ) {
     LaunchedEffect(token, signedIn) { viewModel.start(token, signedIn) }
@@ -180,13 +184,14 @@ fun ChangeEmailLinkedRoute(
  * arrow; the mark at 56 in `primary` where something worked (every signed-in
  * landing but the other-account one, R2); the `h1` in `headlineSmall`; the
  * body at most 300 wide; one text button, never a commitment. It scrolls.
+ * [onSignIn] says whether the sign-in holds the link: only a live link's does.
  */
 @Composable
 fun ChangeEmailLinkedScreen(
     landing: LinkedLanding,
     onEnterTheCode: () -> Unit,
     onBackToSettings: () -> Unit,
-    onSignIn: () -> Unit,
+    onSignIn: (holdsLink: Boolean) -> Unit,
     onRetry: () -> Unit = {},
 ) {
     val words = landing.words() ?: return
@@ -228,11 +233,14 @@ fun ChangeEmailLinkedScreen(
             }
             CograButton(
                 text = stringResource(words.onward),
-                onClick = when (words.way) {
-                    Way.EnterTheCode -> onEnterTheCode
-                    Way.BackToSettings -> onBackToSettings
-                    Way.SignIn -> onSignIn
-                    Way.Retry -> onRetry
+                onClick = {
+                    when (words.way) {
+                        Way.EnterTheCode -> onEnterTheCode()
+                        Way.BackToSettings -> onBackToSettings()
+                        Way.SignInHoldingTheLink -> onSignIn(true)
+                        Way.SignIn -> onSignIn(false)
+                        Way.Retry -> onRetry()
+                    }
                 },
                 kind = ButtonKind.Text,
                 modifier = Modifier
@@ -243,7 +251,8 @@ fun ChangeEmailLinkedScreen(
     }
 }
 
-private enum class Way { EnterTheCode, BackToSettings, SignIn, Retry }
+/** `SignIn` never holds the link; only a live link's sign-in does. */
+private enum class Way { EnterTheCode, BackToSettings, SignInHoldingTheLink, SignIn, Retry }
 
 /** A landing's words as resources, resolved where they are drawn. */
 private data class LandingWords(
@@ -259,8 +268,15 @@ private data class LandingWords(
 private fun toSettings(@StringRes title: Int, @StringRes body: Int?, arg: String? = null, mark: Boolean = true) =
     LandingWords(mark, title, body, arg, R.string.back_to_settings, Way.BackToSettings)
 
-private fun toSignIn(@StringRes title: Int?, @StringRes body: Int?, arg: String? = null) =
-    LandingWords(false, title, body, arg, R.string.linked_sign_in, Way.SignIn)
+private fun toSignIn(@StringRes title: Int?, @StringRes body: Int?, arg: String? = null, holdsLink: Boolean) =
+    LandingWords(
+        false,
+        title,
+        body,
+        arg,
+        R.string.linked_sign_in,
+        if (holdsLink) Way.SignInHoldingTheLink else Way.SignIn,
+    )
 
 private fun LinkedLanding.words(): LandingWords? = when (this) {
     LinkedLanding.Loading -> null
@@ -278,10 +294,15 @@ private fun LinkedLanding.words(): LandingWords? = when (this) {
     is LinkedLanding.RanOut -> toSettings(R.string.linked_dead_title, R.string.linked_ran_out_body, currentEmail)
     LinkedLanding.Taken -> toSettings(R.string.linked_taken_title, R.string.confirm_email_taken)
     LinkedLanding.OtherAccount -> toSettings(R.string.linked_other_title, R.string.linked_other_body, mark = false)
-    is LinkedLanding.SignedOut -> toSignIn(R.string.linked_signed_out_title, R.string.linked_signed_out_body, newEmail)
-    // G9: heading and Sign in, no body until design draws one. Signed in,
-    // the same construction says it with the way back to settings.
+    is LinkedLanding.SignedOut ->
+        toSignIn(R.string.linked_signed_out_title, R.string.linked_signed_out_body, newEmail, holdsLink = true)
+    // Signed in: the `unknown` chip, under the mark. Signed out: the `dead`
+    // chip, markless, its Sign in holding nothing.
     is LinkedLanding.Dead ->
-        if (signedIn) toSettings(R.string.linked_dead_title, null) else toSignIn(R.string.linked_dead_title, null)
+        if (signedIn) {
+            toSettings(R.string.linked_dead_title, R.string.linked_unknown_body)
+        } else {
+            toSignIn(R.string.linked_dead_title, R.string.linked_dead_signed_out_body, holdsLink = false)
+        }
     LinkedLanding.Unreachable -> LandingWords(false, null, R.string.error_transport, null, R.string.retry, Way.Retry)
 }
