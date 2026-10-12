@@ -18,7 +18,7 @@ ALWAYS the bottom bar stays on the stream
 
 ALWAYS the rail reads, top to bottom, the author, the opinion, the comments, the share and the score
 
-ALWAYS the score on the rail is the same figure the card wore, the one the reader's own last feed fetch computed
+ALWAYS the score on the rail is the same figure the card wore, and from a feed the one the reader's own last feed fetch computed
 
 ALWAYS the rail's score is the door to the post, whichever face it wears
 
