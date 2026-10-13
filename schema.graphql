@@ -1034,6 +1034,57 @@ type Health {
 	mirrorEpoch: Int
 }
 
+type HiddenActorConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [HiddenActorEdge!]!
+	"""
+	How many actors the viewer has hidden, across every page — the
+	settings row's count. Priced at zero like every connection count;
+	saturates at [`i32::MAX`].
+	"""
+	totalCount: Int
+}
+
+"""
+An edge in a connection.
+"""
+type HiddenActorEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: Actor!
+	"""
+	When the viewer hid this actor — the list's order, newest first,
+	and the moment an Undo of an unhide passes back to restore its place.
+	"""
+	hiddenAt: DateTime!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
+input HideActorInput {
+	actor: UUID!
+	"""
+	Restores an earlier hiding's moment — the Undo of an unhide puts the
+	row back where it stood. Null means now; a moment after now is
+	BAD_INPUT.
+	"""
+	hiddenAt: DateTime
+}
+
+type HideActorPayload {
+	hidden: HiddenActorEdge
+	userErrors: [UserError!]!
+}
+
 type InviteLink {
 	"""
 	The shareable capability: the URL carries only this id, so it is
@@ -1675,6 +1726,22 @@ type Mutation {
 	session; no account state.
 	"""
 	removeBookmark(input: RemoveBookmarkInput!): RemoveBookmarkPayload!
+	"""
+	Hide an actor from the viewer's own feed. Idempotent: an actor
+	already hidden keeps its edge and its moment. Any actor may be
+	hidden, a deleted account included; the viewer's own id is
+	BAD_INPUT, an id naming no actor NOT_FOUND, a restore moment after
+	now BAD_INPUT — all at the transport, client bugs no surface renders.
+	Needs a session and no particular account state — an applicant
+	hides like a member; this is private viewer state, not acting.
+	Nothing reaches the graph or the hidden actor.
+	"""
+	hideActor(input: HideActorInput!): HideActorPayload!
+	"""
+	Unhide an actor — a genuine delete. Idempotent: an actor not hidden
+	answers ok. Needs a session; no account state.
+	"""
+	unhideActor(input: UnhideActorInput!): UnhideActorPayload!
 	"""
 	Record that the viewer has seen nodes — first seeing only: a node
 	already on the list is left as it is (re-seeing never counts,
@@ -3898,6 +3965,15 @@ entities without requiring a central allocating authority.
 """
 scalar UUID
 
+input UnhideActorInput {
+	actor: UUID!
+}
+
+type UnhideActorPayload {
+	ok: Boolean
+	userErrors: [UserError!]!
+}
+
 """
 A multipart file upload
 """
@@ -4036,6 +4112,14 @@ type User implements Node & Actor {
 	is skipped. Field-level: viewer-only.
 	"""
 	bookmarks(first: Int, after: String, last: Int, before: String): BookmarkConnection
+	"""
+	Actors this user has hidden from their own feed — a read-side
+	comfort applied post-rank on the viewer's side (feed-ranking.md
+	§8.2, §9.1); it does not lift the viewer's own records' effect on
+	anyone else's feed. Most recently hidden first; keyset on
+	`(hiddenAt, actor id)`. Field-level: viewer-only.
+	"""
+	hiddenActors(first: Int, after: String, last: Int, before: String): HiddenActorConnection
 	"""
 	When the viewer saved this person; null when not kept, or with no
 	session. What the profile menus' Save / Unsave row reads.

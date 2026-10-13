@@ -79,11 +79,15 @@ async fn hide(rig: &WireRig, token: &str, actor: Uuid) -> Value {
 }
 
 async fn hide_at(rig: &WireRig, token: &str, actor: Uuid, at: &Value) -> Value {
-    rig.gql(Some(token), HIDE, json!({ "actor": actor, "at": at })).await["hideActor"].clone()
+    rig.gql(Some(token), HIDE, json!({ "actor": actor, "at": at }))
+        .await["hideActor"]
+        .clone()
 }
 
 async fn unhide(rig: &WireRig, token: &str, actor: Uuid) -> Value {
-    rig.gql(Some(token), UNHIDE, json!({ "actor": actor })).await["unhideActor"].clone()
+    rig.gql(Some(token), UNHIDE, json!({ "actor": actor }))
+        .await["unhideActor"]
+        .clone()
 }
 
 async fn hidden(rig: &WireRig, token: &str, variables: Value) -> Value {
@@ -320,7 +324,9 @@ async fn hiding_an_unknown_actor_is_not_found(pool: PgPool) {
 async fn hiding_yourself_is_bad_input(pool: PgPool) {
     let rig = rig(pool);
     let (me, token) = reader(&rig, "reader").await;
-    let response = rig.gql_raw(Some(&token), HIDE, json!({ "actor": me })).await;
+    let response = rig
+        .gql_raw(Some(&token), HIDE, json!({ "actor": me }))
+        .await;
     assert_eq!(first_error_code(&response), Some("BAD_INPUT"));
     assert_eq!(count(&rig.pool, "user_hidden_actors").await, 0);
 }
@@ -381,7 +387,9 @@ async fn an_applicant_hides_and_unhides(pool: PgPool) {
         .await
         .expect("applicant");
     let ada = person(&rig.pool, "ada").await;
-    let response = rig.gql_raw(Some(&token), HIDE, json!({ "actor": ada })).await;
+    let response = rig
+        .gql_raw(Some(&token), HIDE, json!({ "actor": ada }))
+        .await;
     assert!(response["errors"].is_null(), "{response}");
     assert_eq!(unhide(&rig, &token, ada).await["ok"], true);
 }
@@ -403,7 +411,9 @@ async fn an_unverified_applicant_hides(pool: PgPool) {
     .await
     .expect("unverified");
     let ada = person(&rig.pool, "ada").await;
-    let response = rig.gql_raw(Some(&token), HIDE, json!({ "actor": ada })).await;
+    let response = rig
+        .gql_raw(Some(&token), HIDE, json!({ "actor": ada }))
+        .await;
     assert!(response["errors"].is_null(), "{response}");
     assert_eq!(ids(&hidden(&rig, &token, json!({})).await), vec![ada]);
 }

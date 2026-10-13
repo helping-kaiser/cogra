@@ -2863,7 +2863,9 @@ impl Mutation {
         if let Some(at) = input.hidden_at
             && !crate::bookmarks::restore_time_ok(at, Utc::now())
         {
-            return Err(super::query::bad_input("a hiding moment may not be later than now"));
+            return Err(super::query::bad_input(
+                "a hiding moment may not be later than now",
+            ));
         }
         let Some(row) =
             postgres_store::hidden::hide(pool, v.user_id, input.actor, input.hidden_at).await?
