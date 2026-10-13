@@ -11,7 +11,6 @@
 // So what is left here is the post: its card, its media, its own menu and the
 // sheets that menu raises, and the read behind all of it.
 
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useReducer, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
@@ -23,10 +22,7 @@ import {
   type CitingRecordView,
 } from "@/lib/api/references-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
-import { useActiveAccountId } from "@/lib/session/provider";
 import { Button } from "@/lib/ui/button";
-import type { License } from "@/lib/license";
-import { useNarrowShare } from "@/lib/ui/narrow-share";
 import { PageHeader } from "@/lib/ui/page-header";
 import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
 import { useScrollHost } from "@/lib/ui/scroll-host";
@@ -41,13 +37,10 @@ import {
 import { MediaViewer } from "@/lib/ui2/media/media-viewer";
 import { DetailClip } from "@/lib/ui2/media/detail-clip";
 import { PostCard } from "@/lib/ui/post-card";
-import { LINK_COPIED, shareLink } from "@/lib/ui/share";
-import { useShareCapable } from "@/lib/ui/share-button";
+import { LINK_COPIED } from "@/lib/ui/share";
 import { CitedBySheet } from "@/lib/ui2/cited-by-sheet";
-import { LicenseSheet } from "@/lib/ui2/license-sheet";
-import { OverflowMenu, type MenuItem } from "@/lib/ui2/overflow-menu";
-import { postMenuItems } from "@/lib/ui2/post-menu";
-import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
+import { OverflowTrigger } from "@/lib/ui2/overflow-menu";
+import { PostMenuHost } from "@/lib/ui2/post-menu-host";
 import { CommentsSheet } from "@/app/comments/comments-sheet";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
@@ -64,15 +57,7 @@ export function PostView({
   store?: IdentityStore;
 }) {
   const client = useApolloClient();
-  const router = useRouter();
-  const viewerId = useActiveAccountId();
   const host = useScrollHost();
-  // THE NARROW-SHARE FOLD (design/readme.md, jakob 2026-09-17, sharpened
-  // 2026-09-22 — PR #794): the same ruling `PostCard`'s own menu applies,
-  // here for the page-header menu this detail surface carries instead
-  // (`_shared.jsx:341-346`).
-  const narrow = useNarrowShare();
-  const shareCapable = useShareCapable();
 
   // THE POST THE READER JUST TAPPED PAINTS AT ONCE (jakob 2026-10-09): the
   // feed already holds it, so the page opens on that card rather than on
@@ -107,14 +92,13 @@ export function PostView({
   // row's comment count and dropped like any other drawer. The post keeps its
   // place underneath: nothing about the page scrolls when the sheet opens.
   const [commentsOpen, setCommentsOpen] = useState(false);
-  const [linkCopied, setLinkCopied] = useState(false);
-  // THE LICENSE IS NEVER A STATE OF THE CARD (`ReaderPostMenu.jsx:27-29`): one
-  // sheet for the page, raised by the post's own menu row. The license it
-  // shows outlives the `open` flag so the block does not blank out mid-exit.
-  // It is never stacked — the post's menu lives in the page header, over the
-  // page; a comment's license is the thread's own sheet to raise.
-  const [licenseShown, setLicenseShown] = useState<License | null>(null);
-  const [licenseOpen, setLicenseOpen] = useState(false);
+  // THE PAGE'S ONE SNACKBAR (`postDetail.snackbar`): a copied link, and the
+  // aftermath of what the post's menu did.
+  const [snack, setSnack] = useState<string | null>(null);
+  // THE POST'S MENU, hosted by the page (`PostMenuHost`): the same sheet the
+  // feed hosts, raised here by the header's ⋮. What its rows raise — the
+  // license terms, the report's confirm — rises over this page.
+  const [menuOpen, setMenuOpen] = useState(false);
   // THE FULLSCREEN VIEWER, over one of this post's attachments (DV-01/H-25).
   // Null is closed; the number is which attachment it opened on. Held here
   // rather than in the card, because "it never changes the underlying route"
@@ -130,8 +114,7 @@ export function PostView({
   const [citedByLoadingMore, setCitedByLoadingMore] = useState(false);
   // The post's own inbound count, for the line that draws only above zero.
   const [citedByCount, setCitedByCount] = useState(0);
-  const [removeOpen, setRemoveOpen] = useState(false);
-  const dismissLinkCopied = useCallback(() => setLinkCopied(false), []);
+  const dismissSnack = useCallback(() => setSnack(null), []);
 
   // `asked`: the reader's own pull — the one read that brings the newest in
   // over the opened version rather than holding it behind the line.
@@ -225,44 +208,13 @@ export function PostView({
   // one drag is not also a refetch of the page underneath.
   usePullToRefresh({ host, onPull, enabled: !commentsOpen });
 
-  const openLicense = (license: License) => {
-    setLicenseShown(license);
-    setLicenseOpen(true);
-  };
-
-  /** The shared rows (`ui2/post-menu.ts`), bound to this page's doors. */
-  const menuFor = (own: boolean, handle: string | null, license: License | null) =>
-    postMenuItems({
-      postId,
-      own,
-      handle,
-      license,
-      navigate: (href) => router.push(href),
-      openLicense,
-      openRemove: () => setRemoveOpen(true),
-      shareRow:
-        narrow && shareCapable
-          ? {
-              label: "Share",
-              onSelect: () => {
-                void shareLink(new URL(`/posts/${postId}`, window.location.href).toString()).then(
-                  (outcome) => {
-                    if (outcome === "copied") setLinkCopied(true);
-                  },
-                );
-              },
-              testId: "post-menu-share",
-            }
-          : null,
-      testIdPrefix: "post-menu",
-    });
-
   // The header rides every branch — a dead end (not found, transport
   // fault) is exactly where the back arrow matters most.
   //
   // ON A DETAIL SURFACE THE MENU LIVES UP HERE and the card's own dot yields
   // (`_shared.jsx:341-346` — `PostCard` hides it in `detail`): two dots would
-  // be two menus for one post.
+  // be two menus for one post. The header carries the ⋮; the page hosts the
+  // sheet it raises.
   //
   // THE DETAIL'S HEADER PINS (design/readme.md §4, "Browse collapses, task
   // pins": the post detail is a pinning surface, and "on web, pinned means
@@ -271,7 +223,7 @@ export function PostView({
   // The wrapper bleeds through the page's gutter so its ground covers the
   // edge-to-edge clip and card passing beneath, the way `settings-view.tsx`
   // pins its own.
-  const header = (menu: readonly MenuItem[] | null) => (
+  const header = (menu: boolean) => (
     <div className="sticky top-0 z-10 -mx-6 bg-surface px-6" data-testid="post-header-bar">
       <PageHeader
         inGutter
@@ -283,14 +235,15 @@ export function PostView({
         backTestId="post-back"
         node={{ path: "postDetail.header" }}
         action={
-          menu === null || menu.length === 0 ? undefined : (
-            <OverflowMenu
-              items={menu}
+          menu ? (
+            <OverflowTrigger
               ariaLabel="More on this post"
               testId="post-menu"
               node={{ path: "postDetail.header.menu" }}
+              expanded={menuOpen}
+              onOpen={() => setMenuOpen(true)}
             />
-          )
+          ) : undefined
         }
       />
     </div>
@@ -299,7 +252,7 @@ export function PostView({
   if (loading) {
     return (
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
-        {header(null)}
+        {header(false)}
         <p data-testid="post-loading">Loading…</p>
       </main>
     );
@@ -307,7 +260,7 @@ export function PostView({
   if (notFound) {
     return (
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
-        {header(null)}
+        {header(false)}
         <p role="alert" data-testid="post-not-found">
           This post no longer resolves.
         </p>
@@ -317,7 +270,7 @@ export function PostView({
   if (post === null) {
     return (
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
-        {header(null)}
+        {header(false)}
         <div className="flex items-center gap-3">
           <TransportError testId="post-transport-error" />
           <Button
@@ -336,7 +289,6 @@ export function PostView({
     );
   }
 
-  const isOwnPost = viewerId !== null && post.author?.id === viewerId;
   // A REMOVED POST HAS NO MENU LEFT — back is the whole header (`Removed.jsx`),
   // and the license rode the payload, so a redacted record has none to show.
   // What survives is the skeleton the card draws: author, timestamp, thread
@@ -367,9 +319,7 @@ export function PostView({
           (`Removed.jsx:5-6`). There is nothing of it to edit, cite or license,
           and the skeleton that holds the thread's place is not a thing a reader
           keeps. */}
-      {header(
-        redacted ? null : menuFor(isOwnPost, post.author?.handle ?? null, post.license),
-      )}
+      {header(!redacted)}
       {refreshing && (
         <p role="status" aria-live="polite" data-testid="post-refreshing">
           Loading…
@@ -461,7 +411,7 @@ export function PostView({
           // edge advances to `ReplyEntry`), here as on every other board that
           // carries it.
           onOpenComments={() => setCommentsOpen(true)}
-          onLinkCopied={() => setLinkCopied(true)}
+          onLinkCopied={() => setSnack(LINK_COPIED)}
           citedBy={citedByCount}
           onOpenCitedBy={openCitedBy}
         />
@@ -477,15 +427,21 @@ export function PostView({
         onCount={setLiveComments}
         refreshToken={threadToken}
       />
-      {/* ONE LICENSE SHEET FOR THE PAGE, raised by the post's own menu row. */}
-      {licenseShown !== null && (
-        <LicenseSheet
-          open={licenseOpen}
-          onClose={() => setLicenseOpen(false)}
-          license={licenseShown}
-          testId="license-sheet"
-        />
-      )}
+      {/* THE POST'S MENU AND WHAT ITS ROWS RAISE, over this page
+          (ReaderPostMenu, ReportConfirm). A removed post has no menu left, so
+          nothing raises it. */}
+      <PostMenuHost
+        post={redacted ? null : post}
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        nodes={{
+          sheet: { path: "postDetail.menuSheet" },
+          row: (row) => ({ path: `postDetail.menuSheet.${row}` }),
+          reportSheet: { path: "postDetail.reportSheet" },
+        }}
+        testId="post-menu"
+        notify={setSnack}
+      />
       {/* The post's own count line. A comment's ⋮ raises the thread's own
           copy, stacked over the sheet, which is the sheet's to mount. */}
       {citedByOpen && (
@@ -499,20 +455,14 @@ export function PostView({
           testId="cited-by-sheet"
         />
       )}
-      {/* THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob 2026-09-14): erasure is
-          slice 8's, whole — "we need to do erasure right so it should be one
-          task" — so Remove closes the dialog and changes nothing. */}
-      <RemoveConfirm
-        open={removeOpen}
-        onClose={() => setRemoveOpen(false)}
-        onRemove={() => setRemoveOpen(false)}
-      />
       {/* Where the browser has no platform share sheet the control copies the
-          link, and this is what says so (readme §13, the audit answers). */}
+          link, and this is what says so (readme §13, the audit answers); the
+          menu's aftermath lands here too. */}
       <Snackbar
-        testId="post-link-copied"
-        message={linkCopied ? LINK_COPIED : null}
-        onDismiss={dismissLinkCopied}
+        testId="post-snackbar"
+        node={{ path: "postDetail.snackbar" }}
+        message={snack}
+        onDismiss={dismissSnack}
       />
       {/* THE VIEWER, over everything and answering to nothing behind it. Last
           in the tree because it covers the screen: the layer drawn last is the
