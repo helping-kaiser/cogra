@@ -22,6 +22,16 @@
 // with one snackbar (DeleteAccount.md:29) — not on the sign-in screen the
 // member gate would send a signed-out reader to, which is why the gate asks
 // `leaving` first.
+//
+// THE DEADLINE, MET WITH A SESSION ON THIS DEVICE (FeedDeleting.md:23; ER-G6)
+// lands the same way: signed out on the bare view under `Your account is
+// deleted.`, never on the sign-in screen. The execution ends every session,
+// so a session that ends once the standing deadline has passed is read as
+// the deletion having run; at the deadline itself the standing is re-read, so
+// the server's answer — the refused session — is what moves the reader. This
+// is the client half alone: the refusal does not yet name its cause (the
+// contract half rides B2), so a session that ends on this device after the
+// deadline for any other reason lands here too.
 
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -44,6 +54,9 @@ import { bandLine, CANCELED, DELETED, NO_ANSWER } from "./deletion-copy";
 
 /** How often the count re-reads the clock. */
 const TICK_MS = 60_000;
+
+/** The longest delay a browser timer holds (2^31 - 1 ms); a later deadline re-arms on the next read. */
+const MAX_TIMEOUT_MS = 2_147_483_647;
 
 /** Where the reader lands once their applicant account is deleted (DeleteAccount.md:29). */
 export const BARE_VIEW = "/feed";
@@ -121,6 +134,38 @@ export function AccountDeletionProvider({ children }: { children: ReactNode }) {
     const timer = setInterval(() => setNow(Date.now()), TICK_MS);
     return () => clearInterval(timer);
   }, [standingDeletion]);
+
+  // The clock also reads at the deadline itself, so the deadline is met on
+  // time rather than up to a tick late.
+  const deadline = standingDeletion === null ? null : Date.parse(standingDeletion.scheduledFor);
+  useEffect(() => {
+    if (deadline === null) return;
+    const wait = deadline - Date.now();
+    if (wait <= 0) return;
+    const timer = setTimeout(() => setNow(Date.now()), Math.min(wait, MAX_TIMEOUT_MS));
+    return () => clearTimeout(timer);
+  }, [deadline]);
+
+  // Due: the server says whether it ran. A session it ended is refused, the
+  // guard's refresh fails, and the phase turns signed-out below.
+  const due = deadline !== null && now >= deadline;
+  useEffect(() => {
+    if (due) void refresh();
+  }, [due, refresh]);
+
+  // The deadline last seen while signed in, adjusted during render (React's
+  // "adjusting state when a prop changes") so the landing is decided in the
+  // same render the session ends in — before the member gate's effect could
+  // send the reader to the sign-in screen.
+  const [seenDeadline, setSeenDeadline] = useState<number | null>(null);
+  if (phase === "signedIn" && seenDeadline !== deadline) setSeenDeadline(deadline);
+  if (phase === "signedOut" && seenDeadline !== null) {
+    setSeenDeadline(null);
+    if (now >= seenDeadline) {
+      setLeaving(true);
+      setMessage(DELETED);
+    }
+  }
 
   const setDeletion = useCallback(
     (deletion: AccountDeletion | null) => {

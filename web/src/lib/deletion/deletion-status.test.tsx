@@ -181,6 +181,66 @@ describe("the band under a padded host's header", () => {
   });
 });
 
+describe("the deadline met with a session on this device (ER-G6)", () => {
+  function sessionRefused() {
+    return graphql.mutation("RefreshSession", () =>
+      HttpResponse.json({
+        data: {
+          refreshSession: {
+            __typename: "RefreshSessionPayload",
+            auth: null,
+            userErrors: [{ __typename: "UserError", message: "gone", code: "REFRESH_TOKEN_INVALID", field: null }],
+          },
+        },
+      }),
+    );
+  }
+
+  it("lands_signed_out_on_the_bare_view_with_its_snackbar_never_the_sign_in", async () => {
+    let reads = 0;
+    server.use(
+      graphql.query("AccountDeletion", () => {
+        reads += 1;
+        // The first read is the grace about to end; once it has run, the
+        // server ends every session and refuses the account's reads.
+        if (reads === 1) {
+          return HttpResponse.json({
+            data: {
+              me: {
+                __typename: "User",
+                id: "u1",
+                deletionPath: "BY_LINK",
+                accountDeletion: {
+                  __typename: "AccountDeletion",
+                  scheduledFor: new Date(Date.now() + 300).toISOString(),
+                  includesContent: false,
+                },
+              },
+            },
+          });
+        }
+        return HttpResponse.json({ data: null, errors: [{ message: "x", extensions: { code: "UNAUTHENTICATED" } }] });
+      }),
+      sessionRefused(),
+    );
+    const { store } = renderUnder(<PageHeader title="Settings" />);
+    await waitFor(() => expect(store.hasSession()).toBe(false), { timeout: 3000 });
+    expect(await screen.findByTestId("deletion-snackbar")).toHaveTextContent("Your account is deleted.");
+    await waitFor(() => expect(replace).toHaveBeenCalledWith(BARE_VIEW));
+    expect(replace).not.toHaveBeenCalledWith("/login");
+  });
+
+  it("a_session_ending_inside_the_grace_is_no_deletion", async () => {
+    server.use(standing(grace(6)));
+    const { store } = renderUnder(<PageHeader title="Settings" />);
+    await screen.findByTestId("deletion-band");
+    act(() => store.clear());
+    await act(async () => {});
+    expect(screen.queryByText("Your account is deleted.")).not.toBeInTheDocument();
+    expect(replace).not.toHaveBeenCalledWith(BARE_VIEW);
+  });
+});
+
 function Leave() {
   const status = useAccountDeletion();
   return (
