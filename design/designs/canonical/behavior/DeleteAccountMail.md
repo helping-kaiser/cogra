@@ -1,6 +1,6 @@
 # DeleteAccountMail · `spec:design:behavior-delete-account-mail`
 
-WHEN press Send the confirmation link GIVEN the reader is a member -> the request is recorded with its content-sweep choice AND a confirmation link is mailed to the account's address AND the mail screen opens AND NEVER anything is scheduled AND NEVER anything is deleted
+WHEN press Send the confirmation link GIVEN User.deletionPath reads BY_LINK -> the request is recorded with its content-sweep choice AND a confirmation link is mailed to the account's address AND the mail screen opens AND NEVER anything is scheduled AND NEVER anything is deleted
 
 ALWAYS the mail screen names the address the link went to
 
