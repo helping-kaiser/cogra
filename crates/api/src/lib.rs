@@ -22,6 +22,7 @@ pub mod ranker_pod;
 pub mod ratelimit;
 pub mod references;
 pub mod relay;
+pub mod report;
 pub mod schema;
 pub mod search;
 pub mod stance;

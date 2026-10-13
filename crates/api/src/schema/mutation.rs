@@ -1467,6 +1467,20 @@ struct MarkSeenPayload {
     user_errors: Vec<UserError>,
 }
 
+#[derive(InputObject)]
+struct SendReportInput {
+    /// The reported node: a post, a comment, or a person's profile —
+    /// never the reporter's own.
+    target: Uuid,
+}
+
+#[derive(SimpleObject)]
+struct SendReportPayload {
+    /// When the report was sent; null when it was refused.
+    reported_at: Option<DateTime<Utc>>,
+    user_errors: Vec<UserError>,
+}
+
 #[derive(SimpleObject)]
 struct IssueDeviceLockPayload {
     lock: Option<DeviceLock>,
@@ -2730,6 +2744,61 @@ impl Mutation {
         }
         Ok(MarkSeenPayload {
             ok: Some(true),
+            user_errors: vec![],
+        })
+    }
+
+    /// Report a post, a comment or a person to CoGra by mail (the MVP's
+    /// report: no report machinery — moderation proposals come with
+    /// slice 8's moderation half). Mails the report address the reporter,
+    /// the reported node's id and the time; writes nothing to the graph
+    /// and keeps no row. Needs a session. Spends a per-account report
+    /// budget: a spent budget answers a transport-tier RATE_LIMITED and
+    /// nothing is mailed.
+    async fn send_report(
+        &self,
+        ctx: &Context<'_>,
+        input: SendReportInput,
+    ) -> async_graphql::Result<SendReportPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        let mailer = ctx.data::<Arc<dyn Mailer>>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        let refuse = |code: ErrorCode, message: &str| SendReportPayload {
+            reported_at: None,
+            user_errors: vec![UserError::at(code, message, vec!["target".to_string()])],
+        };
+        // What the id names is read off the registries, never taken from
+        // the client; a refused target spends no budget and mails nothing.
+        let Some(target) = postgres_store::report::target(pool, input.target).await? else {
+            return Ok(refuse(
+                ErrorCode::NotFound,
+                "no post, comment or profile has this id",
+            ));
+        };
+        if target.owner == v.user_id {
+            return Ok(refuse(ErrorCode::BadInput, "a report names someone else's"));
+        }
+        let Some(reporter) = store::actor_identity(pool, v.user_id).await? else {
+            return Err(unauthenticated());
+        };
+        if !ratelimit::spend_report(pool, limits, v.user_id).await? {
+            return Err(rate_limited());
+        }
+        let reported_at = Utc::now();
+        // Best-effort like every mail (mailer.rs): the report is answered
+        // as sent whatever the transport did with it.
+        mailer
+            .send(crate::report::report_mail(
+                v.user_id,
+                &reporter.handle,
+                input.target,
+                &target.kind,
+                reported_at,
+            ))
+            .await;
+        Ok(SendReportPayload {
+            reported_at: Some(reported_at),
             user_errors: vec![],
         })
     }
