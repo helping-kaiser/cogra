@@ -214,7 +214,8 @@ computation. All bucket: baseline.
 - **`recency_shape`** — functional form of `f(Δt)`; the
   exponential is the genesis default.
 - **`tie_breaker_composition`** — the ordered list of named
-  tie-breaker keys.
+  tie-breaker keys, drawn from `net_stance`, `gross_volume` and
+  `recency`; genesis value `["recency"]`.
 
 ### Economics
 

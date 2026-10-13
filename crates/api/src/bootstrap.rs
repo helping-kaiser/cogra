@@ -145,10 +145,7 @@ fn genesis_parameters(input: &GenesisInput) -> Vec<(&'static str, serde_json::Va
         ("dust_floor", json!(0.0)),
         ("recency_half_life_epochs", json!(30)),
         ("recency_shape", json!("exponential")),
-        (
-            "tie_breaker_composition",
-            json!(["recency", "global_engagement"]),
-        ),
+        ("tie_breaker_composition", json!(["recency"])),
         ("reserve_share", json!(0.01)),
         ("n_eval_epochs", json!(10)),
         ("subsidy_generosity", json!(0.5)),

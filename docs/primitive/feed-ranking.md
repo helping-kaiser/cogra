@@ -78,9 +78,9 @@ w̃(e) = |det Ψ_e^[P]|^(1/2) · √(1 + τ_e²) · e^(−β·H_τ(e))
 Adopting rather than re-deriving buys the proven structure:
 
 - **Invariant: every hop attenuates.** `w̃(e) ≤ |det Ψ^[P]|^(1/2) · √2`
-  (``prop:epoch:damped-weight-bounds``), and determinant magnitudes
-  top out near `0.36` (Full tier), so `w̃ < 1` everywhere. Path
-  products only shrink with depth.
+  (``prop:epoch:damped-weight-bounds``), and on every traversed leg
+  determinant magnitudes top out near `0.36` (Full tier), so
+  `w̃ < 1` everywhere. Path products only shrink with depth.
 - **The tier ladder is built in.** Full / Half / Marginal routing
   floors damp proposal-like and annotation-like hops by the
   published formula, which CoGra adopts as-is — an L1 terminal
@@ -415,8 +415,12 @@ S(u,c) = Σ_{i=1..k}  σ(π_i) · m(π_i) · f(Δt_{π_i})
 ```
 
 Ties on cost break by canonical key — the lexicographically least
-sequence of record identity keys — so every consumer extracts the
-same paths from the same records. `k` is governed (order 4–8).
+sequence of hop keys — so every consumer extracts the same paths
+from the same records. A folded hop's key is its bundle's
+full-incidence key (author, family, source, middle, semantic target)
+with its leg role, so a revision never reshuffles a tie; a hop read
+per record adds that record's identifier. `k` is governed (order
+4–8).
 
 **Exact, never sampled.** Binding on every implementation — the
 ranker crate, the miner, any future rewrite: the aggregation is
@@ -506,10 +510,10 @@ folded bundles toward `t`, summed per stance-author `a` — and
 genesis recency. The genesis seed names recency only; the
 statistics keys stay defined and governable but unseeded. Genesis
 recency is newest content first: the target's **genesis**
-authorship record read by its authoritative causal key (Lamport
-time, then host position;
-``def:graph:authoritative-act-order``), which is total over
-accepted acts, so no tie outlasts it. An update record never
+authorship record read by its place in the published order — its
+landing epoch, then its authoritative causal key (Lamport time, then
+host position; ``def:graph:authoritative-act-order``) — which is
+total over accepted acts, so no tie outlasts it. An update record never
 refreshes it: "newest" means newest content, not
 most-recently-edited.
 Global statistics enter here and only here, never the primary

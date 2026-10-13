@@ -31,6 +31,7 @@ import { fetchFeedRanking, fetchFeedWindow } from "@/lib/api/feed-api";
 import { failed, success } from "@/lib/api/outcome";
 import { appendDeduped } from "@/lib/api/pagination";
 import { onFeedDone } from "@/lib/feed/feed-done";
+import { onFeedReselect } from "@/lib/feed/feed-reselect";
 import { RankedFeed, type FeedIo, type FeedWindow } from "@/lib/feed/ranked-feed";
 import { seenRecord } from "@/lib/history/seen-record";
 import { SEEN_ATTRIBUTE, useSeenTracker } from "@/lib/history/seen-tracker";
@@ -54,7 +55,7 @@ import { JoinPrompt } from "@/lib/ui/join-prompt";
 import { PostCard } from "@/lib/ui/post-card";
 import { tailIndexOf, useApproachingTail } from "@/lib/ui/infinite-list";
 import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
-import { useScrollHost } from "@/lib/ui/scroll-host";
+import { scrollHostToTopAnimated, scrollOffsetOf, useScrollHost } from "@/lib/ui/scroll-host";
 import { ANCHOR_ATTRIBUTE, usePinnedPlace } from "@/lib/ui/scroll-pin";
 import { LINK_COPIED } from "@/lib/ui/share";
 import { useNewerVersionAnnouncement } from "@/lib/release/newer-version-announcer";
@@ -423,6 +424,22 @@ export function FeedView({
   }, [releasePin, refresh]);
   usePullToRefresh({ host, onPull, enabled: !commentsOpen });
 
+  // THE WAY BACK UP (FeedScrolled.md:11-13): the list goes to the top,
+  // animated, and NEVER refreshes — the pill's tap and the bar's re-tap from a
+  // scrolled root alike. Going up is a move, so the place stops being held.
+  const goToTop = useCallback(() => {
+    releasePin();
+    scrollHostToTopAnimated(host);
+  }, [host, releasePin]);
+
+  // THE BAR'S RE-TAP OVER THE ROOT (Feed.md:81-91): scrolled, it is the way up;
+  // already at the top, it is the feed's other refresh route, the one a pull
+  // takes there.
+  useEffect(
+    () => onFeedReselect(() => (scrollOffsetOf(host) > 0 ? goToTop() : onPull())),
+    [goToTop, host, onPull],
+  );
+
   // The next window of the derived list — a hydration, never a ranking: the
   // order was fixed when the list was derived, and nothing in it moves while
   // the reader scrolls (W-6).
@@ -476,6 +493,7 @@ export function FeedView({
         // from the same lazy-state source the restore itself reads, so this
         // and the actual landing offset can never disagree.
         initiallyHidden={rememberedPlace !== null && rememberedPlace.offset > 0}
+        onBackToTop={goToTop}
       >
         {/* A tab root wears the mark, not a page title: the reader knows which
             tab they are on from the bar, and the band's other half works. */}

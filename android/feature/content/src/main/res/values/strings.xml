@@ -189,6 +189,8 @@
     <string name="content_menu_opinions">Opinions on this</string>
     <string name="content_menu_license">License terms</string>
     <string name="content_menu_report">Report</string>
+    <!-- Back to top (BackToTop.jsx; FeedScrolled.md): plain words, no glyph. -->
+    <string name="content_back_to_top">Back to top</string>
     <!-- Report — the confirm sheet (ReportConfirm.jsx; ruling 75). Report is the filled commit, Cancel the quiet way out. -->
     <string name="content_report_title_post">Report this post?</string>
     <string name="content_report_body">It goes to the people who run CoGra for a look.</string>
