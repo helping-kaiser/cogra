@@ -1,0 +1,22 @@
+# The cogra-ranker image (ranker-core §4.1; production-deploy reserves the
+# unit). Build from the repository root, the workspace being the context:
+#
+#   podman build -f crates/ranker-server/Containerfile -t cogra-ranker .
+#
+# Two stages: the pinned toolchain builds the one binary; a slim runtime
+# carries it and nothing else. The pod needs no certificate store of the
+# system's (reqwest's rustls bundles its roots), no volume and no secret.
+# Configuration is API_URL and RANKER_BIND (ranker-core §4.4).
+
+FROM docker.io/library/rust:1.98.0-bookworm AS build
+WORKDIR /src
+COPY . .
+RUN cargo build --release --locked -p ranker-server --bin cogra-ranker
+
+FROM docker.io/library/debian:bookworm-slim
+RUN useradd --system --no-create-home --uid 10001 ranker
+COPY --from=build /src/target/release/cogra-ranker /usr/local/bin/cogra-ranker
+USER ranker
+ENV RANKER_BIND=0.0.0.0:8090
+EXPOSE 8090
+ENTRYPOINT ["/usr/local/bin/cogra-ranker"]
