@@ -183,8 +183,11 @@ fun ComposePostScreen(
                     title = {
                         Text(
                             stringResource(
-                                if (editing) R.string.content_compose_edit_title
-                                else R.string.content_compose_title,
+                                if (editing) {
+                                    R.string.content_compose_edit_title
+                                } else {
+                                    R.string.content_compose_title
+                                },
                             ),
                         )
                     },
