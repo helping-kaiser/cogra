@@ -247,7 +247,11 @@ class FakeLockCustodyStore : LockCustodyStore {
     }
 
     override suspend fun setLockPending(account: String, pending: Boolean) {
-        if (pending) this.pending += account else this.pending -= account
+        if (pending) {
+            this.pending.add(account)
+        } else {
+            this.pending.remove(account)
+        }
     }
 
     override suspend fun isLockPending(account: String): Boolean = account in pending
@@ -255,10 +259,10 @@ class FakeLockCustodyStore : LockCustodyStore {
     override suspend fun lock(account: String): Boolean {
         val secret = held[account]?.secret ?: return false
         if (account in locked) return false
-        val set = custodyOf(account)
-        if (account in backed) set.keys.removeAll { it.startsWith(KEY_MATERIAL) }
-        locked[account] = secret to set.toMap()
-        set.clear()
+        val slot = custodyOf(account)
+        if (account in backed) slot.keys.removeAll { it.startsWith(KEY_MATERIAL) }
+        locked[account] = Pair(secret, slot.toMap())
+        slot.clear()
         held.remove(account)
         return true
     }
@@ -266,9 +270,9 @@ class FakeLockCustodyStore : LockCustodyStore {
     override suspend fun isLocked(account: String): Boolean = account in locked
 
     override suspend fun unlock(account: String, secret: ByteArray): Boolean {
-        val (lockedWith, set) = locked[account] ?: return false
+        val (lockedWith, slot) = locked[account] ?: return false
         if (!lockedWith.contentEquals(secret)) return false
-        custodyOf(account).putAll(set)
+        custodyOf(account).putAll(slot)
         locked.remove(account)
         return true
     }
