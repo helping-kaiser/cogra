@@ -296,9 +296,9 @@ fn every_committed_register_is_current() {
         .expect("this corpus declares its activated owners");
     assert_eq!(
         registers.len(),
-        8 + activated,
+        9 + activated,
         "the companion register, the headline region, the test profile's label \
-         register for each of the six owners with covered assets, and one claim \
+         register for each of the seven owners with covered assets, and one claim \
          matrix per owner whose authoring wave has closed"
     );
     for reg in &registers {

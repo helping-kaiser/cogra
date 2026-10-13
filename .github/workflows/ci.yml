@@ -254,6 +254,8 @@ jobs:
         run: cargo test -p api --test client_constants
       - name: Check stance-fold-vectors.json drift
         run: cargo test -p common --test stance_fold_vectors
+      - name: Check ranker-vectors.json drift
+        run: cargo test -p ranker --test vectors
 
   # The client query-cost guards, on the change class they were written for.
   #

@@ -78,9 +78,9 @@ w̃(e) = |det Ψ_e^[P]|^(1/2) · √(1 + τ_e²) · e^(−β·H_τ(e))
 Adopting rather than re-deriving buys the proven structure:
 
 - **Invariant: every hop attenuates.** `w̃(e) ≤ |det Ψ^[P]|^(1/2) · √2`
-  (``prop:epoch:damped-weight-bounds``), and determinant magnitudes
-  top out near `0.36` (Full tier), so `w̃ < 1` everywhere. Path
-  products only shrink with depth.
+  (``prop:epoch:damped-weight-bounds``), and on every traversed leg
+  determinant magnitudes top out near `0.36` (Full tier), so
+  `w̃ < 1` everywhere. Path products only shrink with depth.
 - **The tier ladder is built in.** Full / Half / Marginal routing
   floors damp proposal-like and annotation-like hops by the
   published formula, which CoGra adopts as-is — an L1 terminal

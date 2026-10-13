@@ -27,7 +27,7 @@ WEB_APK_DIR       = web/public/downloads
 # guest APK trusts it so it can talk https to this machine's web origin.
 ANDROID_DEV_CA = android/app/src/devCa/res/raw/cogra_dev_ca.pem
 
-.PHONY: help init up down reset-db migrate wait-db wait-media api api-release bootstrap run ci ci-all lint lint-corpus regenerate fmt test build logs dev docs-link-check schema vectors constants fold-vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-format android-test android-build web-dev web-prod web-apk guest-apk web-ci design-ci fuzz-interchange fuzz-linter
+.PHONY: help init up down reset-db migrate wait-db wait-media api api-release bootstrap run ci ci-all lint lint-corpus regenerate fmt test build logs dev docs-link-check schema vectors constants fold-vectors ranker-vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-format android-test android-build web-dev web-prod web-apk guest-apk web-ci design-ci fuzz-interchange fuzz-linter
 
 help: ## Show available commands
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -114,6 +114,9 @@ constants: ## Regenerate client-constants.json (the caps, page size, registratio
 
 fold-vectors: ## Regenerate stance-fold-vectors.json (the local stance fold both clients re-implement) from common
 	UPDATE_STANCE_FOLD_VECTORS=1 $(CARGO) test -p common --test stance_fold_vectors
+
+ranker-vectors: ## Regenerate crates/ranker/tests/vectors/ranker-vectors.json (the ranker's bit-exact golden vectors) from ranker
+	UPDATE_RANKER_VECTORS=1 $(CARGO) test -p ranker --test vectors
 
 tokens: ## Regenerate design/tokens/scheme.json (the M3 scheme design/tokens/colors.css transcribes) from design.md §2.2
 	cd web && UPDATE_DESIGN_TOKENS=1 npx vitest run src/lib/ui/design-tokens.test.ts
