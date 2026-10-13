@@ -168,6 +168,20 @@
     <!-- DeleteLinkExpired (DeleteLinkExpired.jsx, .md; ER-G1). The way on is back_to_settings or linked_sign_in. -->
     <string name="delete_dead_title">This link doesn\'t work anymore</string>
     <string name="delete_dead_body">It may have been used already, or a newer request replaced it. If you still mean to delete your account, ask again from settings.</string>
+
+    <!-- The Clearing data group: Settings.md :139-145, SettingsBody's `clearing` (android's words). -->
+    <string name="settings_clearing">Clearing data</string>
+    <string name="settings_clearing_footnote_made">Your key lives only in this app. Clear the app\'s data, or uninstall it without keeping the data, and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you\'re signed out. What you\'ve seen comes back when you sign in.</string>
+    <string name="settings_clearing_footnote_none">Your key lives only in this app, and it has no recovery code yet. Clear the app\'s data, or uninstall it without keeping the data, and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you\'re signed out. What you\'ve seen comes back when you sign in.</string>
+    <string name="settings_clearing_erase">Erase everything from this app</string>
+
+    <!-- EraseConfirm (EraseConfirm.md, android's words). -->
+    <string name="erase_confirm_title">Erase everything from this app?</string>
+    <string name="erase_confirm_body_none">This app holds the only copy of your key, and it has no recovery code. Erase everything and your account is gone for good — no one, including CoGra, can bring it back. Your draft, any kept picks and the choices kept on this device go too, and you\'re signed out.</string>
+    <string name="erase_confirm_body_made">Your key is erased with everything else, and only your recovery code can bring it back — without the code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you\'re signed out. What you\'ve seen comes back when you sign in.</string>
+    <string name="erase_confirm_erase">Erase everything and sign out</string>
+    <string name="erase_confirm_cancel">Cancel</string>
+
     <!-- SignOutConfirm -->
     <string name="sign_out_confirm_title">Sign out without a backup?</string>
     <string name="sign_out_confirm_body">This app holds the only copy of your key. Signing out leaves your key, your draft and any opinions you kept pending here, locked until you sign in again. Erase them instead, and no one — including CoGra — can bring them back.</string>

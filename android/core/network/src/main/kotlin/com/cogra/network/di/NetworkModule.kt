@@ -24,6 +24,7 @@ import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.settings.SettingsRepository
+import com.cogra.domain.store.DeviceData
 import com.cogra.domain.store.DevicePreferences
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.StorageHealth
@@ -46,6 +47,7 @@ import com.cogra.network.repo.ViewHistoryRepositoryImpl
 import com.cogra.network.repo.WriteRepositoryImpl
 import com.cogra.network.store.ComposeDraftStoreImpl
 import com.cogra.network.store.SealedDraftStoreImpl
+import com.cogra.network.store.DeviceDataImpl
 import com.cogra.network.store.DevicePreferencesImpl
 import com.cogra.network.store.EncryptedStore
 import com.cogra.network.store.IdentityStoreImpl
@@ -167,6 +169,9 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun devicePreferences(impl: DevicePreferencesImpl): DevicePreferences
+
+    @Binds
+    abstract fun deviceData(impl: DeviceDataImpl): DeviceData
 
     @Binds
     abstract fun viewHistoryRepository(impl: ViewHistoryRepositoryImpl): ViewHistoryRepository

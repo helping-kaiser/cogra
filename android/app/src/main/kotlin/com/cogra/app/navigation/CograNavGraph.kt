@@ -274,6 +274,9 @@ private const val EMAIL_CHANGE_PATH = "/email-change"
 /** The account deletion's link path (auth.md "Link URLs"), claimed beside `/join`. */
 private const val DELETE_ACCOUNT_PATH = "/delete-account"
 
+/** What `ManageSpaceActivity` relays the system storage screen's "Manage space" as. */
+const val ACTION_MANAGE_SPACE = "com.cogra.app.action.MANAGE_SPACE"
+
 /** The app's coarse auth phase; each value owns a navigation graph root. */
 enum class AuthPhase { LOADING, SIGNED_OUT, SIGNED_IN }
 
@@ -304,6 +307,9 @@ private val handleChangedKey = NavResultKey("handle_changed", false)
  * @x.`, …). The page re-reads on every arrival; this carries the words.
  */
 private val settingsNoticeKey = NavResultKey<String?>("settings_notice", null)
+
+/** The manage-space door's ask: settings opens with Clearing data in view (Settings.md). */
+private val settingsClearingKey = NavResultKey("settings_clearing", false)
 
 /** The Compose→(Feed|PostDetail) result key: a write signed, re-read. */
 private val contentSignedKey = NavResultKey("content_signed", false)
@@ -559,8 +565,27 @@ private fun CograNavGraphContent(
     // either way (the deletion's link is the capability, session or none).
     val phaseNow by rememberUpdatedState(phase)
     val activity = LocalActivity.current as? ComponentActivity
+    // THE SYSTEM'S "MANAGE SPACE" DOOR (Settings.md: settings opens with
+    // Clearing data in view, and nothing is cleared). `ManageSpaceActivity`
+    // relays it here as one action, cold (the launch intent, read once) or
+    // warm (a new intent). Signed in, settings opens at the group; signed
+    // out there is no settings to open, and the app simply opens.
+    var manageSpaceAsked by rememberSaveable {
+        mutableStateOf(activity?.intent?.action == ACTION_MANAGE_SPACE)
+    }
+    LaunchedEffect(manageSpaceAsked, phase, graphReady) {
+        if (!manageSpaceAsked || !graphReady || phase == AuthPhase.LOADING) return@LaunchedEffect
+        manageSpaceAsked = false
+        if (phase != AuthPhase.SIGNED_IN) return@LaunchedEffect
+        navController.navigate(Settings) { launchSingleTop = true }
+        navController.reportToCurrent(settingsClearingKey, true)
+    }
     DisposableEffect(activity, navController) {
         val listener = Consumer<Intent> { newIntent ->
+            if (newIntent.action == ACTION_MANAGE_SPACE) {
+                manageSpaceAsked = true
+                return@Consumer
+            }
             val path = newIntent.data?.path
             val answersSignedIn = path?.startsWith(EMAIL_CHANGE_PATH) == true ||
                 path?.startsWith(DELETE_ACCOUNT_PATH) == true
@@ -1166,6 +1191,7 @@ private fun CograNavGraphContent(
             }
             composable<Settings> { entry ->
                 val (notice, consumeNotice) = entry.navResult(settingsNoticeKey)
+                val (clearing, consumeClearing) = entry.navResult(settingsClearingKey)
                 // No collapsing top and no key card here: the header is
                 // pinned (Settings.md) and the key card stands at the
                 // feed's head (KeyElsewhere.md :3).
@@ -1173,6 +1199,8 @@ private fun CograNavGraphContent(
                     versionName = BuildConfig.VERSION_NAME,
                     notice = notice,
                     onNoticeShown = consumeNotice,
+                    clearingInView = clearing,
+                    onClearingShown = consumeClearing,
                     doors = SettingsDoors(
                         // The own profile — or ProfileApplicant — where the gear was.
                         onBack = { navController.navigateUp() },

@@ -62,6 +62,8 @@ data class SettingsUiState(
     val revokingOthers: Boolean = false,
     val signingOut: Boolean = false,
     val signOutConfirmOpen: Boolean = false,
+    /** `EraseConfirm` stands over the page; nothing is erased before an answer. */
+    val eraseConfirmOpen: Boolean = false,
     /** The default license sheet's staged pair; null when the sheet is closed. */
     val licenseSheet: LicenseChoice? = null,
     /** The optimistic default while its save is in flight (K4.1). */
@@ -101,6 +103,10 @@ data class SettingsUiState(
     val pendingEmailChange: PendingEmailChange?
         get() = account?.pendingEmailChange?.takeIf { it.expiresAt.isAfter(now) }
 
+    /** A recovery code is known to exist; an unread account reads as none, the safe reading. */
+    val backupMade: Boolean
+        get() = account?.keyBackupCreatedAt != null
+
     /** The applicant before the key ceremony: no actor key is bound yet. */
     val beforeKeyCeremony: Boolean
         get() = account != null && account.actorPubkey == null
@@ -123,6 +129,9 @@ sealed interface SettingsEvent {
 
     /** The dialog closed without signing out: focus returns to the Sign out row. */
     data object FocusSignOut : SettingsEvent
+
+    /** The erase dialog closed with nothing erased: focus returns to its row (EraseConfirm.md:23). */
+    data object FocusErase : SettingsEvent
 
     /** The Delete account row opens [door]. */
     data class OpenDeletion(val door: DeletionDoor) : SettingsEvent
@@ -452,6 +461,30 @@ class SettingsViewModel @Inject constructor(
 
     /** Make a recovery code: the dialog closes; the caller opens the backup, still signed in. */
     fun onMakeRecoveryCode() = _state.update { it.copy(signOutConfirmOpen = false) }
+
+    // ------------------------------------------------------- clearing data
+
+    /** `Erase everything from this app`: the dialog asks; nothing is erased yet (EraseConfirm.md:3). */
+    fun onErase() = _state.update { it.copy(eraseConfirmOpen = true) }
+
+    /**
+     * The dialog's erase (`:21`): the session revoked, everything on this
+     * phone erased in one edit, the session ended — the shell lands on
+     * sign-in with no account offered, and no snackbar answers.
+     */
+    fun onEraseEverything() {
+        _state.update { it.copy(eraseConfirmOpen = false, signingOut = true) }
+        viewModelScope.launch { signOut.eraseEverything() }
+    }
+
+    /** Cancel, the scrim or Back: still signed in, nothing erased, focus back on the row (`:23`-`:27`). */
+    fun onDismissEraseConfirm() {
+        _state.update { it.copy(eraseConfirmOpen = false) }
+        viewModelScope.launch { _events.send(SettingsEvent.FocusErase) }
+    }
+
+    /** Make a recovery code: the dialog closes; the caller opens the backup, still signed in (`:19`). */
+    fun onMakeRecoveryCodeFromErase() = _state.update { it.copy(eraseConfirmOpen = false) }
 
     private suspend fun endSession() {
         _state.update { it.copy(signingOut = true) }
