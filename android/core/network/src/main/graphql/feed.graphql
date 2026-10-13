@@ -1,0 +1,49 @@
+# The ranked feed (ranked-feed-api packet §4.1, §4.4; api-spec.md
+# `feedRanking`, `feed`): one ranking per fetch, held on the device as the
+# frozen order, and windows of it hydrated by id. Order, people, seen and
+# Still settling are the device's own cuts and never ride a request.
+
+# The snapshot: every row's id, kind, figure, the vantage's mark of the
+# person behind it, and its place in both woven orders. Nothing else rides
+# (§4.13's tight row shapes). Reads are anonymous-capable: a guest ranks the
+# view it borrows.
+query FeedRanking($viewer: UUID!, $kinds: [NodeKind!], $topic: UUID) {
+  feedRanking(viewer: $viewer, filter: { kinds: $kinds, topic: $topic }) {
+    asOfEpoch
+    entries {
+      targetId
+      kind
+      score
+      mark
+      newestIndex
+    }
+    settling {
+      targetId
+      kind
+      mark
+      rankedPosition
+      newestPosition
+    }
+  }
+}
+
+# One window of the derived list, in the order handed (CD-2). The card
+# reads a post exactly as the chronological listing served it, the comment
+# count included; the other kinds hydrate to their typename only until a
+# surface renders them.
+query FeedWindow($ids: [UUID!]!, $first: Int!) {
+  feed(orderedIds: $ids, first: $first) {
+    edges {
+      node {
+        ... on Post {
+          ...PostFields
+          # The card's comment count, as `Posts` reads it: the woven list
+          # carries pending rows, so the count includes pending comments.
+          commentCount: comments(first: 0, includePending: true) {
+            totalCount
+          }
+        }
+      }
+    }
+  }
+}

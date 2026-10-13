@@ -313,6 +313,24 @@ carry, `ExploreFilter`, `HistoryFilter`):
   *drafted — jakob's at review*; *the section word and the Also-show
   pointer drafted — their wording jakob's at review*).
 
+**Under a borrowed view the sheet speaks the vantage's name** (the
+vantage law, jakob 2026-10-13, readme §13): what the sheet reads from
+the vantage's graph is the vantage's, so its first person becomes the
+vantage account's handle, the band's way. The row `@mira's people` over
+`Only the people @mira holds an opinion of — the same rank, narrowed to
+them.`; `Everyone` over `The whole feed, as far as @mira's eyes reach.`;
+the sign row's spoken name `Which of @mira's people`; the trigger's
+extra `@mira's people`, `@mira's people, for`, `@mira's people,
+against`, which past the pill's 154px collapses to the count like any
+extra — so for most handles it reads `Posts · 1 change`; `Order` over
+`Ranked puts what's closest to @mira first — the view you're browsing
+from. Newest ignores it and lists by time.`; and `One topic` over
+`Topics @mira holds and is for. A topic @mira holds against stays a
+record — it just never narrows a feed.` The reader's own axes keep the
+first person: the kinds' line, `Show what you've already seen`, `Also
+show`, `Reset` and the "?". (*new 2026-10-13, drafted — jakob's at
+review*, save `@mira's people`, the ruling's own example.)
+
 ## Platform nouns
 
 The key lives on a device, and the device is named as the reader sees
@@ -2318,6 +2336,10 @@ state (jakob 2026-10-02, **blessed**). The card's body, on `VouchBack`
 and `VouchBackPad`: `Vouch back to open the way from your side — your
 opinion toward @mira, and your feed grows from it.` (`VouchBack` adds
 `Vouching opens the opinion control, set to a gentle default.`). The
+card's act is the stance face, and one line beside it teaches the tap:
+`Tap the face to vouch back.` — on the deleted voucher's card too, and
+with no first-opinion words, because the card stands while the member
+holds other opinions (jakob's own, 2026-10-13). The
 pad's title and its "?" read `Your vouch back`, and the line above its
 two coaching lines opens on the title: `Your vouch back. The pad is how you shape what
 reaches you — for or against, and how much.` *Carried over — blessed by
@@ -2966,7 +2988,10 @@ and starts the seven days.` · `Until you open it nothing is scheduled and
 nothing has changed. Closing this screen changes nothing either — the
 link is the whole of it.` · `Resend the link`. No expiry is claimed: the
 reset link states its fifteen minutes because `auth.md` gives it fifteen
-minutes, and `erasure.md` sets no window on this one.
+minutes, and `erasure.md` sets no window on this one. A resend that goes
+out answers in the email change's resend register, naming the inbox:
+`Sent again — the link is on its way to sol@solferreira.art.` (*new
+2026-10-13, drafted — jakob's at review*).
 
 **The band is one sentence and one word.** `Your account is deleted in 6
 days.` with `Cancel`, and `Your account and everything you posted are

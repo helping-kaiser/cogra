@@ -18,7 +18,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
@@ -32,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.dataNodeSurface
+import com.cogra.core.designsystem.v2.atom.DeletionBand
 import com.cogra.core.designsystem.v2.atom.InlineAction
 import com.cogra.core.designsystem.v2.atom.PageHeader
 import com.cogra.core.designsystem.v2.atom.SegmentedFilter
@@ -41,9 +45,10 @@ import com.cogra.core.designsystem.v2.atom.SettingsRow
 import com.cogra.core.designsystem.v2.atom.SettingsRowKind
 import com.cogra.core.designsystem.v2.atom.rememberParticiple
 import com.cogra.core.designsystem.v2.compose.licenseName
-import com.cogra.domain.AccountState
+import com.cogra.domain.AccountDeletionPath
 import com.cogra.domain.ageLadder
 import com.cogra.domain.dateLine
+import com.cogra.domain.forwardLadder
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.store.ThemeChoice
 import kotlinx.coroutines.launch
@@ -64,6 +69,8 @@ data class SettingsDoors(
     val onOpenAbout: () -> Unit = {},
     /** The reader's own mail, addressed to the contact address — never the report. */
     val onContact: () -> Unit = {},
+    /** The Delete account row's two doors: the request screen, or the grace page. */
+    val onOpenDeletion: (DeletionDoor) -> Unit = {},
 )
 
 @Composable
@@ -107,6 +114,8 @@ fun SettingsRoute(
                 viewModel.onMakeRecoveryCode()
                 doors.onOpenBackup()
             },
+            onDeleteAccount = viewModel::onDeleteAccount,
+            onCancelDeletion = viewModel::onCancelDeletion,
         ),
         doors = doors.copy(
             onContact = {
@@ -138,6 +147,9 @@ data class SettingsActions(
     val onEraseAndSignOut: () -> Unit = {},
     val onDismissSignOutConfirm: () -> Unit = {},
     val onMakeRecoveryCode: () -> Unit = {},
+    val onDeleteAccount: () -> Unit = {},
+    /** The deletion band's Cancel, under the header. */
+    val onCancelDeletion: () -> Unit = {},
 )
 
 @Composable
@@ -155,19 +167,11 @@ fun SettingsScreen(
     val sessionFocus = remember { HashMap<String, FocusRequester>() }
     val signOutFocus = remember { FocusRequester() }
     val licenseFocus = remember { FocusRequester() }
-    SettingsEffects(events, snackbar, sessionFocus, signOutFocus, notice, onNoticeShown)
+    SettingsEffects(events, snackbar, sessionFocus, signOutFocus, notice, onNoticeShown, doors.onOpenDeletion)
 
     Scaffold(
         modifier = Modifier.dataNodeSurface(),
-        // The header is pinned: it stands outside the scrolling body.
-        topBar = {
-            PageHeader(
-                title = stringResource(R.string.settings_title),
-                onBack = doors.onBack,
-                backContentDescription = stringResource(R.string.settings_back),
-                node = Page / "header",
-            )
-        },
+        topBar = { SettingsTop(state, actions, doors) },
         snackbarHost = { CograSnackbarHost(snackbar, testTag = "settings_snackbar") },
     ) { padding ->
         Column(
@@ -189,7 +193,7 @@ fun SettingsScreen(
             CredentialsGroup(state, doors)
             AboutGroup(versionName, doors)
             LeavingGroup(state, actions, signOutFocus)
-            EndingGroup(state)
+            EndingGroup(state, actions)
         }
     }
 
@@ -213,6 +217,31 @@ fun SettingsScreen(
     }
 }
 
+/**
+ * The header is pinned: it stands outside the scrolling body — and so does
+ * the deletion band directly under it (SettingsDeleting.md:3), which no
+ * surface may scroll away.
+ */
+@Composable
+private fun SettingsTop(state: SettingsUiState, actions: SettingsActions, doors: SettingsDoors) {
+    Column {
+        PageHeader(
+            title = stringResource(R.string.settings_title),
+            onBack = doors.onBack,
+            backContentDescription = stringResource(R.string.settings_back),
+            node = Page / "header",
+        )
+        state.graceDeletion?.let { deletion ->
+            DeletionBand(
+                count = forwardLadder(deletion.scheduledFor, state.now).words(),
+                content = deletion.includesContent,
+                onCancel = actions.onCancelDeletion,
+                node = Page / "deletionBand",
+            )
+        }
+    }
+}
+
 /** The page's one-shots: snackbars, focus after a revoke or a closed dialog, and a subpage's notice. */
 @Composable
 private fun SettingsEffects(
@@ -222,11 +251,14 @@ private fun SettingsEffects(
     signOutFocus: FocusRequester,
     notice: String?,
     onNoticeShown: () -> Unit,
+    onOpenDeletion: (DeletionDoor) -> Unit,
 ) {
     val context = LocalContext.current
+    val openDeletion by rememberUpdatedState(onOpenDeletion)
     LaunchedEffect(events) {
         events.collect { event ->
             when (event) {
+                is SettingsEvent.OpenDeletion -> openDeletion(event.door)
                 is SettingsEvent.Snackbar -> {
                     val arg = event.arg ?: event.argRes?.let { context.getString(it) }
                     val text = if (arg == null) context.getString(event.text) else context.getString(event.text, arg)
@@ -239,11 +271,15 @@ private fun SettingsEffects(
             }
         }
     }
-    // A subpage's answer, said once, then consumed.
+    // A subpage's answer, said once, then consumed. The snackbar runs on a
+    // scope of its own: consuming flips the notice to null, which restarts
+    // this effect — had the snackbar lived here, that restart would cancel it
+    // the frame it appeared.
+    val noticeScope = rememberCoroutineScope()
     LaunchedEffect(notice) {
         if (notice != null) {
             onNoticeShown()
-            snackbar.showSnackbar(notice)
+            noticeScope.launch { snackbar.showSnackbar(notice) }
         }
     }
 }
@@ -679,31 +715,54 @@ private fun LeavingGroup(state: SettingsUiState, actions: SettingsActions, signO
 
 /**
  * The page's last row, in a group of its own after leaving — drawn quiet, a
- * navigating row with a chevron (`SettingsBody`'s `ending`). The footnote is
- * the applicant's when the reader is one (Settings.md :139-141).
+ * navigating row with a chevron (`SettingsBody`'s `ending`).
+ *
+ * EVERY STATE KEYS ON THE SERVER'S DELETION PATH (OS-15), never on the
+ * application: the member's footnote where the mailed link answers
+ * (BY_LINK), the applicant's where the delete is immediate (IMMEDIATE), and
+ * the locked look — visibly inactive at the disabled opacity and still
+ * tappable — where neither verb answers yet (LOCKED; Settings.md :38-40).
+ * In the grace the row counts down to the deadline and the footnote goes,
+ * since it describes a request not yet made (SettingsDeleting.md :5-9). No
+ * footnote is drawn before the path is read: the two readings differ.
  */
 @Composable
-private fun EndingGroup(state: SettingsUiState) {
+private fun EndingGroup(state: SettingsUiState, actions: SettingsActions) {
     val group = Page / "ending"
-    val applicant = state.account?.accountState == AccountState.APPLICANT
+    val grace = state.graceDeletion
+    val footnote = when {
+        grace != null -> null
+        state.deletion?.path == AccountDeletionPath.BY_LINK -> R.string.settings_ending_footnote_member
+        state.deletion != null -> R.string.settings_ending_footnote_applicant
+        else -> null
+    }
     SettingsGroup(
         ariaLabel = stringResource(R.string.settings_ending),
-        footnote = stringResource(
-            if (applicant) R.string.settings_ending_footnote_applicant else R.string.settings_ending_footnote_member,
-        ),
+        footnote = footnote?.let { stringResource(it) },
         node = group,
         rows = listOf(
             {
-                // DRIFT (the erasure-deletion packet): the deletion's request
-                // screen (DeleteAccount), its grace status and the applicant's
-                // locked look are not built, so the row opens nothing yet.
                 SettingsRow(
                     label = stringResource(R.string.settings_ending_delete),
+                    status = grace?.let {
+                        stringResource(
+                            R.string.settings_ending_deleting,
+                            forwardLadder(it.scheduledFor, state.now).words(),
+                        )
+                    },
                     kind = SettingsRowKind.Opens,
-                    onClick = {},
+                    onClick = actions.onDeleteAccount,
                     node = group / "delete",
+                    modifier = if (state.deletionLocked && grace == null) {
+                        Modifier.alpha(DISABLED_ALPHA)
+                    } else {
+                        Modifier
+                    },
                 )
             },
         ),
     )
 }
+
+/** The locked look's opacity — Material's disabled content alpha, the system's `disabled opacity`. */
+private const val DISABLED_ALPHA = 0.38f

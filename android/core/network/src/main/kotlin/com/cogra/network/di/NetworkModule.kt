@@ -11,6 +11,10 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import com.apollographql.apollo.ApolloClient
 import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.compose.SealedDraftStore
+import com.cogra.domain.deletion.AccountDeletionRepository
+import com.cogra.domain.feed.FeedRepository
+import com.cogra.domain.history.SeenHistorySource
+import com.cogra.domain.history.SeenRecordStore
 import com.cogra.domain.history.ViewHistoryRepository
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.AccountRepository
@@ -29,6 +33,7 @@ import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
 import com.cogra.network.auth.BearerInterceptor
 import com.cogra.network.auth.SessionGate
+import com.cogra.network.repo.AccountDeletionRepositoryImpl
 import com.cogra.network.repo.AccountRepositoryImpl
 import com.cogra.network.repo.ContentRepositoryImpl
 import com.cogra.network.repo.MediaRepositoryImpl
@@ -41,6 +46,8 @@ import com.cogra.network.repo.StanceRepositoryImpl
 import com.cogra.network.repo.ReferenceRepositoryImpl
 import com.cogra.network.repo.TopicRepositoryImpl
 import com.cogra.network.repo.ViewHistoryRepositoryImpl
+import com.cogra.network.repo.FeedRepositoryImpl
+import com.cogra.network.store.SeenRecordStoreImpl
 import com.cogra.network.repo.WriteRepositoryImpl
 import com.cogra.network.store.ComposeDraftStoreImpl
 import com.cogra.network.store.SealedDraftStoreImpl
@@ -168,4 +175,16 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun viewHistoryRepository(impl: ViewHistoryRepositoryImpl): ViewHistoryRepository
+
+    @Binds
+    abstract fun seenHistorySource(impl: ViewHistoryRepositoryImpl): SeenHistorySource
+
+    @Binds
+    abstract fun seenRecordStore(impl: SeenRecordStoreImpl): SeenRecordStore
+
+    @Binds
+    abstract fun feedRepository(impl: FeedRepositoryImpl): FeedRepository
+
+    @Binds
+    abstract fun accountDeletionRepository(impl: AccountDeletionRepositoryImpl): AccountDeletionRepository
 }

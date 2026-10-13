@@ -19,7 +19,9 @@ import com.cogra.domain.MediaAssetView
 import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.compose.SealedDraftStore
+import com.cogra.domain.deletion.AccountDeletionRepository
 import com.cogra.domain.testing.InMemoryComposeDraftStore
+import com.cogra.domain.testing.ScriptedAccountDeletionRepository
 import com.cogra.domain.testing.InMemorySealedDraftStore
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.ProcessedPicture
@@ -45,6 +47,14 @@ import com.cogra.domain.RecordRow
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.TaggedContentView
 import com.cogra.domain.UserProfile
+import com.cogra.domain.feed.FeedKind
+import com.cogra.domain.feed.FeedRankArgs
+import com.cogra.domain.feed.FeedRanking
+import com.cogra.domain.feed.FeedRepository
+import com.cogra.domain.feed.RankedEntry
+import com.cogra.domain.feed.SettlingRow
+import com.cogra.domain.history.SeenHistorySource
+import com.cogra.domain.history.SeenRecordStore
 import com.cogra.domain.history.ViewHistoryRepository
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.ContentRepository
@@ -70,6 +80,8 @@ import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.RecordingViewHistoryRepository
+import com.cogra.domain.testing.FakeSeenRecordStore
+import com.cogra.domain.testing.ScriptedSeenHistory
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.ThrowingOnboardingRepository
@@ -435,6 +447,34 @@ class ScriptedMediaRepository : ThrowingMediaRepository() {
     ): Outcome<MediaAssetView> = outcome
 }
 
+/**
+ * The ranked feed over the scripted listing, so every test that scripts
+ * `content.listing` scripts the feed too: the listing's order is the pod's
+ * RANKED order and its NEWEST order alike, a landed post is an entry, and a
+ * pending one is a settling row woven at its own place. A window hydrates
+ * from the listing as it stands when asked.
+ */
+class ListingFeedRepository(private val content: ScriptedContentRepository) : FeedRepository {
+    override suspend fun ranking(viewer: String, args: FeedRankArgs): Outcome<FeedRanking?> {
+        val listing = content.listing
+        val landed = listing.filterNot { it.landing.isPending }
+        return Outcome.Success(
+            FeedRanking(
+                asOfEpoch = 1,
+                entries = landed.mapIndexed { i, post -> RankedEntry(post.id, FeedKind.POST, 1.0, null, i) },
+                settling = listing.withIndex()
+                    .filter { it.value.landing.isPending }
+                    .map { (at, post) -> SettlingRow(post.id, FeedKind.POST, null, at, at) },
+            ),
+        )
+    }
+
+    override suspend fun window(ids: List<String>): Outcome<List<PostView>> {
+        val byId = content.listing.associateBy { it.id }
+        return Outcome.Success(ids.mapNotNull { byId[it] })
+    }
+}
+
 /** The wizard's local draft, in memory (the shared fixture, under the name the app tests use). */
 class FakeComposeDraftStore : InMemoryComposeDraftStore()
 
@@ -580,4 +620,38 @@ object FakeBindingsModule {
 
     @Provides
     fun viewHistoryRepository(fake: RecordingViewHistoryRepository): ViewHistoryRepository = fake
+
+    // The seen record's sync reads an empty server list by default, and
+    // the record itself rests in memory for the test process.
+    @Provides
+    @Singleton
+    fun scriptedSeenHistory(): ScriptedSeenHistory = ScriptedSeenHistory()
+
+    @Provides
+    fun seenHistorySource(fake: ScriptedSeenHistory): SeenHistorySource = fake
+
+    @Provides
+    @Singleton
+    fun fakeSeenRecordStore(): FakeSeenRecordStore = FakeSeenRecordStore()
+
+    @Provides
+    fun seenRecordStore(fake: FakeSeenRecordStore): SeenRecordStore = fake
+
+    // The ranked feed reads the same scripted listing the tests already set.
+    @Provides
+    @Singleton
+    fun listingFeedRepository(content: ScriptedContentRepository): ListingFeedRepository =
+        ListingFeedRepository(content)
+
+    @Provides
+    fun feedRepository(fake: ListingFeedRepository): FeedRepository = fake
+
+    // A member with nothing standing, by default: no band, and the row opens
+    // the request screen. Tests script the grace or the applicant's path.
+    @Provides
+    @Singleton
+    fun scriptedAccountDeletionRepository(): ScriptedAccountDeletionRepository = ScriptedAccountDeletionRepository()
+
+    @Provides
+    fun accountDeletionRepository(fake: ScriptedAccountDeletionRepository): AccountDeletionRepository = fake
 }

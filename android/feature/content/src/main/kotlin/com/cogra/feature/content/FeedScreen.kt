@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
+import com.cogra.core.designsystem.CollapsingTopBand
 import com.cogra.core.designsystem.CollapsingTopBanner
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.EdgeSighting
@@ -100,6 +101,8 @@ fun FeedRoute(
     keyBanner: @Composable () -> Unit = {},
     /** The borrowed-view band, for the reader whose feed is not their own. */
     borrowedViewBand: @Composable () -> Unit = {},
+    /** The deletion band, while the account's confirmed deletion is in its grace (`FeedDeleting`). */
+    deletionBand: @Composable () -> Unit = {},
     refreshSignal: Boolean = false,
     onRefreshSignalConsumed: () -> Unit = {},
     banners: @Composable () -> Unit = {},
@@ -192,6 +195,7 @@ fun FeedRoute(
         onChats = onChats,
         keyBanner = keyBanner,
         borrowedViewBand = borrowedViewBand,
+        deletionBand = deletionBand,
         banners = banners,
         vouchCard = vouchCard,
         viewerId = viewerId,
@@ -237,6 +241,7 @@ fun FeedScreen(
     onChats: (() -> Unit)? = null,
     keyBanner: @Composable () -> Unit = {},
     borrowedViewBand: @Composable () -> Unit = {},
+    deletionBand: @Composable () -> Unit = {},
     banners: @Composable () -> Unit = {},
     vouchCard: @Composable () -> Unit = {},
     expiredLabel: String? = null,
@@ -326,6 +331,10 @@ fun FeedScreen(
                     colors = surfaceTopAppBarColors(),
                     scrollBehavior = collapsingTop.scrollBehavior,
                 )
+                // The deletion band rides the root's band, directly under it,
+                // collapsing and returning with it (FeedDeleting.md:5) — full
+                // bleed, its own fill, so outside the banner strip's inset.
+                CollapsingTopBand(collapsingTop) { deletionBand() }
                 CollapsingTopBanner(collapsingTop) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         borrowedViewBand()

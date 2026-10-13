@@ -7038,8 +7038,11 @@
         "feed.vouchCard.avatar": [],
         "feed.vouchCard.body": [],
         "feed.vouchCard.dismiss": [],
-        "feed.vouchCard.title": [],
-        "feed.vouchCard.vouch": []
+        "feed.vouchCard.hint": [],
+        "feed.vouchCard.stance": [],
+        "feed.vouchCard.stance.anchor": [],
+        "feed.vouchCard.stance.anchor.face": [],
+        "feed.vouchCard.title": []
       }
     },
     "VouchBackPad": {
@@ -7065,6 +7068,7 @@
         "feed.vouchCard.avatar": [],
         "feed.vouchCard.body": [],
         "feed.vouchCard.dismiss": [],
+        "feed.vouchCard.hint": [],
         "feed.vouchCard.stance": [],
         "feed.vouchCard.stance.anchor": [],
         "feed.vouchCard.stance.anchor.face": [],

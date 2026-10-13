@@ -19,6 +19,22 @@
     <string name="borrowed_view_member">Browsing from @%1$s\'s view — your first opinion starts your own.</string>
     <string name="borrowed_view_sign_in_or_join">Sign in or join</string>
 
+    <!-- The deletion band (design/components/navigation/DeletionBand.*;
+         copy-voice "Deleting the account", "The band is one sentence and one
+         word"). The count is copy-voice's forward ladder, spelled out — the
+         nearest whole day while a day or more remains, then the hours. -->
+    <string name="deletion_band_account">Your account is deleted in %1$s.</string>
+    <string name="deletion_band_content">Your account and everything you posted are deleted in %1$s.</string>
+    <string name="deletion_band_cancel">Cancel</string>
+    <plurals name="forward_days">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <plurals name="forward_hours">
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
+    </plurals>
+
     <!-- The read shell's band (design.md §6). -->
     <string name="cogra_band_chats">Chats</string>
 
