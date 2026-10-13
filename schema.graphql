@@ -81,6 +81,78 @@ interface Actor {
 	displayName: ModeratedText!
 }
 
+"""
+A platform component with releases in the application registry.
+"""
+enum AppComponent {
+	BACKEND
+	IOS
+	ANDROID
+	WEB
+}
+
+"""
+One release of a platform component, from the append-only
+application registry — operational metadata, never ranked.
+"""
+type AppVersion {
+	component: AppComponent!
+	"""
+	Human-readable version string; unique per component.
+	"""
+	version: String!
+	"""
+	The release's notes in plain words, one line per entry, in the
+	order written — what a reader can now do. Written when the release
+	ships; the same words on every component the release ships on.
+	"""
+	notes: [String!]!
+	"""
+	The release's public page: its full notes and its code.
+	"""
+	patchNotesUrl: String!
+	"""
+	Actor ids the release credits beyond the upstream repo's commit
+	history (designers, translators, testers) — Users and Collectives
+	in one list, resolved via `nodes`. Empty when nobody beyond the
+	commit history is credited. Display-only, never an input to
+	ranking or economics.
+	"""
+	releasedBy: [UUID!]!
+	releasedAt: DateTime!
+}
+
+type AppVersionConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [AppVersionEdge!]!
+	"""
+	How many releases the registry holds under this narrowing, across
+	every page. Priced at zero like every connection count; saturates
+	at [`i32::MAX`].
+	"""
+	totalCount: Int
+}
+
+"""
+An edge in a connection.
+"""
+type AppVersionEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: AppVersion!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
 type Application {
 	id: UUID!
 	"""
@@ -1214,6 +1286,49 @@ type LogInPayload {
 	userErrors: [UserError!]!
 }
 
+"""
+Marks one row read.
+"""
+input MarkNotificationReadInput {
+	"""
+	One of the viewer's own rows.
+	"""
+	notification: UUID!
+}
+
+"""
+The row as the mark leaves it.
+"""
+type MarkNotificationReadPayload {
+	notification: Notification
+	userErrors: [UserError!]!
+}
+
+"""
+Clears the bell's dot: the seen pointer moves to `through`.
+"""
+input MarkNotificationsSeenInput {
+	"""
+	The createdAt of the newest row the opened list holds — everything
+	at or before it becomes seen. A row that arrived after the list was
+	read stays unseen and lights the bell at the next root load. A
+	moment after now is BAD_INPUT.
+	"""
+	through: DateTime!
+}
+
+"""
+The bell as the moved pointer leaves it.
+"""
+type MarkNotificationsSeenPayload {
+	"""
+	Whether anything is still unseen — a row that arrived after
+	`through`.
+	"""
+	hasUnreadNotifications: Boolean
+	userErrors: [UserError!]!
+}
+
 input MarkSeenInput {
 	"""
 	The nodes the viewer has seen, in the order they were seen.
@@ -1693,6 +1808,21 @@ type Mutation {
 	"""
 	markSeen(input: MarkSeenInput!): MarkSeenPayload!
 	"""
+	Clear the bell's dot (Notifications opening): the seen pointer moves
+	to `through`, never backwards, and row read state is untouched.
+	Idempotent; needs a session (UNAUTHENTICATED otherwise) and no
+	account state — reading one's notifications is private viewer
+	state, not acting. A `through` after now is BAD_INPUT.
+	"""
+	markNotificationsSeen(input: MarkNotificationsSeenInput!): MarkNotificationsSeenPayload!
+	"""
+	Mark one row read — the emphasis it keeps until opened. Idempotent:
+	a read row keeps its first readAt. An id that is not one of the
+	viewer's rows is NOT_FOUND (unknown and foreign read alike). Needs a
+	session and no account state.
+	"""
+	markNotificationRead(input: MarkNotificationReadInput!): MarkNotificationReadPayload!
+	"""
 	Report a post, a comment or a person to CoGra by mail (the MVP's
 	report: no report machinery — moderation proposals come with
 	slice 8's moderation half). Mails the report address the reporter,
@@ -2054,6 +2184,142 @@ enum NodeKind {
 	PROPOSAL
 	CAMPAIGN
 	OFFER
+}
+
+"""
+Something another actor did that reached the viewer's content, profile
+or application — one row per act (notifications.md). A pointer, never a
+copy: every displayed fact resolves through the nodes, record and
+application below.
+"""
+type Notification {
+	id: UUID!
+	kind: NotificationKind!
+	"""
+	Who acted. For APPLICATION_APPROVABLE this is the applicant account
+	— an actor row with a handle and nothing on the graph yet, named
+	only to the approver of the path that staged it.
+	"""
+	actor: Actor!
+	"""
+	What opening the row lands on: the new comment or reply, the citing
+	post or comment, the acting actor's profile. Null for
+	APPLICATION_APPROVABLE and APPLICATION_REJECTED, whose destinations
+	are the invites screen and the viewer's own application state, and
+	whenever the node no longer resolves.
+	"""
+	subject: Node
+	"""
+	The viewer's own node the act reached: the post commented on, the
+	comment replied to, the cited post or comment, the viewer's own
+	profile for a mention. Null for PROFILE_OPINION and the four
+	application kinds.
+	"""
+	context: Node
+	"""
+	The landed L1 record behind the act — the row's traceable source,
+	and where an opinion row reads its pair. INVITE_LANDED's record is
+	the admission Registration. Null for APPLICATION_APPROVABLE,
+	APPLICATION_APPROVED and APPLICATION_REJECTED, which are moments in
+	an application's life with no record of their own.
+	"""
+	record: Record
+	"""
+	The application the act concerns — the waiting application for
+	APPLICATION_APPROVABLE, the viewer's own path for
+	APPLICATION_APPROVED and APPLICATION_REJECTED, the landed path for
+	INVITE_LANDED; null for the five content kinds. Resolves while the
+	row exists; an application later closed or landed reads in its
+	current state.
+	"""
+	application: Application
+	"""
+	When the act reached the viewer — the moment its landing was
+	observed, or the moment the account transition committed.
+	"""
+	createdAt: DateTime!
+	"""
+	When the viewer opened this row; null while unread.
+	"""
+	readAt: DateTime
+}
+
+type NotificationConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [NotificationEdge!]!
+	"""
+	How many rows the viewer's list serves, across every page. Priced at
+	zero like every connection count; saturates at [`i32::MAX`].
+	"""
+	totalCount: Int
+}
+
+"""
+An edge in a connection.
+"""
+type NotificationEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: Notification!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
+"""
+The nine addressed acts. A kind is the act plus what it reached,
+which is what a reader needs to know before opening.
+"""
+enum NotificationKind {
+	"""
+	A comment on the viewer's post.
+	"""
+	COMMENT
+	"""
+	A reply to the viewer's comment.
+	"""
+	REPLY
+	"""
+	A citation whose target is the viewer's profile.
+	"""
+	MENTION
+	"""
+	A citation whose target is the viewer's post or comment.
+	"""
+	CITATION
+	"""
+	An opinion whose target is the viewer's profile — a first one or a
+	revision; a withdrawal reports nothing.
+	"""
+	PROFILE_OPINION
+	"""
+	An application waiting in the viewer's queue became approvable —
+	email verified and key attached.
+	"""
+	APPLICATION_APPROVABLE
+	"""
+	An account the viewer vouched for landed — the vouch that completed
+	its entry was the viewer's.
+	"""
+	INVITE_LANDED
+	"""
+	A member vouched for the viewer's application — their signed
+	approval.
+	"""
+	APPLICATION_APPROVED
+	"""
+	The approver closed the viewer's application without approving it —
+	that queue entry only; the account and its ask link remain.
+	"""
+	APPLICATION_REJECTED
 }
 
 """
@@ -2888,6 +3154,13 @@ type Query {
 	order it is handed.
 	"""
 	feed(orderedIds: [UUID!]!, first: Int, after: String, last: Int, before: String): FeedConnection!
+	"""
+	Releases from the application registry, newest first; `component`
+	narrows to one platform component. Answers "what's the current
+	version?" and "where are version X's patch notes?". Readable
+	anonymously; served in `released_at` order.
+	"""
+	appVersions(component: AppComponent, first: Int, after: String, last: Int, before: String): AppVersionConnection!
 }
 
 type Record {
@@ -4057,6 +4330,21 @@ type User implements Node & Actor {
 	Field-level: viewer-only.
 	"""
 	viewHistory(kinds: [NodeKind!], first: Int, after: String, last: Int, before: String): ViewHistoryConnection
+	"""
+	Acts other actors made that reached this user's content, profile or
+	application — newest first, one row per act (notifications.md). A
+	hidden actor's rows stay out while the actor is hidden. Keyset on
+	`(createdAt, id)`: a row arriving while the reader scrolls sorts
+	above the open page, so forward paging never shifts. Field-level:
+	viewer-only; null otherwise.
+	"""
+	notifications(first: Int, after: String, last: Int, before: String): NotificationConnection
+	"""
+	Whether a row has arrived since the viewer last opened the list —
+	the band's dot. A boolean, never a count; a hidden actor's rows
+	never light it. False for any viewer but the account's own.
+	"""
+	hasUnreadNotifications: Boolean!
 	"""
 	Acts mid-handshake — awaiting a signature, the host seal, or
 	confirmation — across devices. Field-level: viewer-only.

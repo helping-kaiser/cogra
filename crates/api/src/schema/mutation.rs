@@ -80,6 +80,17 @@ fn viewer(ctx: &Context<'_>) -> async_graphql::Result<Viewer> {
         .ok_or_else(unauthenticated)
 }
 
+/// The transport-tier refusal for an id that names nothing the viewer
+/// holds — unknown and foreign alike.
+fn not_found(message: &str) -> async_graphql::Error {
+    use async_graphql::ErrorExtensions;
+    async_graphql::Error::new(message).extend_with(
+        |_, e: &mut async_graphql::ErrorExtensionValues| {
+            e.set("code", "NOT_FOUND");
+        },
+    )
+}
+
 /// The transport-tier refusal for a throttled auth attempt (auth.md
 /// "Rate limiting"). RATE_LIMITED rides the `errors` array, never the
 /// payload — which also keeps the silent verbs' payloads shapeless.
@@ -2857,6 +2868,54 @@ impl Mutation {
         }
         Ok(MarkSeenPayload {
             ok: Some(true),
+            user_errors: vec![],
+        })
+    }
+
+    /// Clear the bell's dot (Notifications opening): the seen pointer moves
+    /// to `through`, never backwards, and row read state is untouched.
+    /// Idempotent; needs a session (UNAUTHENTICATED otherwise) and no
+    /// account state — reading one's notifications is private viewer
+    /// state, not acting. A `through` after now is BAD_INPUT.
+    async fn mark_notifications_seen(
+        &self,
+        ctx: &Context<'_>,
+        input: super::notifications::MarkNotificationsSeenInput,
+    ) -> async_graphql::Result<super::notifications::MarkNotificationsSeenPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        match postgres_store::notifications::mark_seen(pool, v.user_id, input.through).await? {
+            postgres_store::notifications::SeenOutcome::Moved { unread } => {
+                Ok(super::notifications::MarkNotificationsSeenPayload {
+                    has_unread_notifications: Some(unread),
+                    user_errors: vec![],
+                })
+            }
+            postgres_store::notifications::SeenOutcome::InTheFuture => Err(
+                super::query::bad_input("through lies after every row the list could hold"),
+            ),
+        }
+    }
+
+    /// Mark one row read — the emphasis it keeps until opened. Idempotent:
+    /// a read row keeps its first readAt. An id that is not one of the
+    /// viewer's rows is NOT_FOUND (unknown and foreign read alike). Needs a
+    /// session and no account state.
+    async fn mark_notification_read(
+        &self,
+        ctx: &Context<'_>,
+        input: super::notifications::MarkNotificationReadInput,
+    ) -> async_graphql::Result<super::notifications::MarkNotificationReadPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        let Some(row) =
+            postgres_store::notifications::mark_read(pool, v.user_id, input.notification).await?
+        else {
+            return Err(not_found("no such notification"));
+        };
+        let notification = super::notifications::hydrate(pool, vec![row]).await?.pop();
+        Ok(super::notifications::MarkNotificationReadPayload {
+            notification,
             user_errors: vec![],
         })
     }

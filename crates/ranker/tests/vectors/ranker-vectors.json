@@ -1,0 +1,4921 @@
+{
+  "costTies": [
+    {
+      "case": "equal-cost paths extract in hop-key order",
+      "entries": [
+        {
+          "genesisEpochAge": 9,
+          "kind": "POST",
+          "paths": [
+            {
+              "contributionBits": "3f9364653e72a372",
+              "hops": [
+                {
+                  "author": "v",
+                  "family": "OPINION",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:v:2:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:v",
+                  "target": "prof:alpha",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                },
+                {
+                  "author": "alpha",
+                  "family": "OPINION",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:alpha:1:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:alpha",
+                  "target": "mint:act:z:1:publish",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                }
+              ],
+              "magnitudeBits": "3f95c458743e48fb",
+              "nodes": [
+                "prof:v",
+                "prof:alpha",
+                "mint:act:z:1:publish"
+              ],
+              "recencyBits": "3fec823e074ec129",
+              "sign": 1
+            },
+            {
+              "contributionBits": "3f9364653e72a372",
+              "hops": [
+                {
+                  "author": "v",
+                  "family": "OPINION",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:v:1:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:v",
+                  "target": "prof:beta",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                },
+                {
+                  "author": "beta",
+                  "family": "OPINION",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:beta:1:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:beta",
+                  "target": "mint:act:z:1:publish",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                }
+              ],
+              "magnitudeBits": "3f95c458743e48fb",
+              "nodes": [
+                "prof:v",
+                "prof:beta",
+                "mint:act:z:1:publish"
+              ],
+              "recencyBits": "3fec823e074ec129",
+              "sign": 1
+            }
+          ],
+          "scoreBits": "3fa364653e72a372",
+          "targetGraphId": "mint:act:z:1:publish",
+          "targetId": "id/mint:act:z:1:publish"
+        }
+      ],
+      "k": 8,
+      "kinds": null,
+      "slice": {
+        "asOfEpoch": 10,
+        "nodes": [
+          {
+            "genesis": {
+              "actTime": 5,
+              "landingEpoch": 1,
+              "position": 5
+            },
+            "graphId": "mint:act:z:1:publish",
+            "id": "id/mint:act:z:1:publish",
+            "kind": "POST"
+          },
+          {
+            "genesis": {
+              "actTime": 2,
+              "landingEpoch": 1,
+              "position": 2
+            },
+            "graphId": "prof:alpha",
+            "id": "id/prof:alpha",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 3,
+              "landingEpoch": 1,
+              "position": 3
+            },
+            "graphId": "prof:beta",
+            "id": "id/prof:beta",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 1,
+              "landingEpoch": 1,
+              "position": 1
+            },
+            "graphId": "prof:v",
+            "id": "id/prof:v",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 4,
+              "landingEpoch": 1,
+              "position": 4
+            },
+            "graphId": "prof:z",
+            "id": "id/prof:z",
+            "kind": "USER"
+          }
+        ],
+        "records": [
+          {
+            "author": "z",
+            "family": "PUBLISH",
+            "key": {
+              "actTime": 5,
+              "landingEpoch": 1,
+              "position": 5
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:z",
+                "target": "mint:act:z:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:z:1:publish"
+          },
+          {
+            "author": "v",
+            "family": "OPINION",
+            "key": {
+              "actTime": 6,
+              "landingEpoch": 5,
+              "position": 6
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:v",
+                "target": "prof:beta",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:v:1:opinion"
+          },
+          {
+            "author": "v",
+            "family": "OPINION",
+            "key": {
+              "actTime": 7,
+              "landingEpoch": 5,
+              "position": 7
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:v",
+                "target": "prof:alpha",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:v:2:opinion"
+          },
+          {
+            "author": "beta",
+            "family": "OPINION",
+            "key": {
+              "actTime": 8,
+              "landingEpoch": 5,
+              "position": 8
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:beta",
+                "target": "mint:act:z:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:beta:1:opinion"
+          },
+          {
+            "author": "alpha",
+            "family": "OPINION",
+            "key": {
+              "actTime": 9,
+              "landingEpoch": 5,
+              "position": 9
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:alpha",
+                "target": "mint:act:z:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:alpha:1:opinion"
+          }
+        ],
+        "viewer": "id/prof:v"
+      }
+    },
+    {
+      "case": "at k = 1 the least hop key is the one path",
+      "entries": [
+        {
+          "genesisEpochAge": 9,
+          "kind": "POST",
+          "paths": [
+            {
+              "contributionBits": "3f9364653e72a372",
+              "hops": [
+                {
+                  "author": "v",
+                  "family": "OPINION",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:v:2:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:v",
+                  "target": "prof:alpha",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                },
+                {
+                  "author": "alpha",
+                  "family": "OPINION",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:alpha:1:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:alpha",
+                  "target": "mint:act:z:1:publish",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                }
+              ],
+              "magnitudeBits": "3f95c458743e48fb",
+              "nodes": [
+                "prof:v",
+                "prof:alpha",
+                "mint:act:z:1:publish"
+              ],
+              "recencyBits": "3fec823e074ec129",
+              "sign": 1
+            }
+          ],
+          "scoreBits": "3f9364653e72a372",
+          "targetGraphId": "mint:act:z:1:publish",
+          "targetId": "id/mint:act:z:1:publish"
+        }
+      ],
+      "k": 1,
+      "kinds": null,
+      "slice": {
+        "asOfEpoch": 10,
+        "nodes": [
+          {
+            "genesis": {
+              "actTime": 5,
+              "landingEpoch": 1,
+              "position": 5
+            },
+            "graphId": "mint:act:z:1:publish",
+            "id": "id/mint:act:z:1:publish",
+            "kind": "POST"
+          },
+          {
+            "genesis": {
+              "actTime": 2,
+              "landingEpoch": 1,
+              "position": 2
+            },
+            "graphId": "prof:alpha",
+            "id": "id/prof:alpha",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 3,
+              "landingEpoch": 1,
+              "position": 3
+            },
+            "graphId": "prof:beta",
+            "id": "id/prof:beta",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 1,
+              "landingEpoch": 1,
+              "position": 1
+            },
+            "graphId": "prof:v",
+            "id": "id/prof:v",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 4,
+              "landingEpoch": 1,
+              "position": 4
+            },
+            "graphId": "prof:z",
+            "id": "id/prof:z",
+            "kind": "USER"
+          }
+        ],
+        "records": [
+          {
+            "author": "z",
+            "family": "PUBLISH",
+            "key": {
+              "actTime": 5,
+              "landingEpoch": 1,
+              "position": 5
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:z",
+                "target": "mint:act:z:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:z:1:publish"
+          },
+          {
+            "author": "v",
+            "family": "OPINION",
+            "key": {
+              "actTime": 6,
+              "landingEpoch": 5,
+              "position": 6
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:v",
+                "target": "prof:beta",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:v:1:opinion"
+          },
+          {
+            "author": "v",
+            "family": "OPINION",
+            "key": {
+              "actTime": 7,
+              "landingEpoch": 5,
+              "position": 7
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:v",
+                "target": "prof:alpha",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:v:2:opinion"
+          },
+          {
+            "author": "beta",
+            "family": "OPINION",
+            "key": {
+              "actTime": 8,
+              "landingEpoch": 5,
+              "position": 8
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:beta",
+                "target": "mint:act:z:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:beta:1:opinion"
+          },
+          {
+            "author": "alpha",
+            "family": "OPINION",
+            "key": {
+              "actTime": 9,
+              "landingEpoch": 5,
+              "position": 9
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:alpha",
+                "target": "mint:act:z:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:alpha:1:opinion"
+          }
+        ],
+        "viewer": "id/prof:v"
+      }
+    }
+  ],
+  "dampedWeight": [
+    {
+      "coherenceBits": "3fe651d66d1b1368",
+      "family": "REGISTRATION",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fe651d66d1b1368"
+    },
+    {
+      "coherenceBits": "3fe651d66d1b1368",
+      "family": "REGISTRATION",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fe651d66d1b1368"
+    },
+    {
+      "coherenceBits": "3fe651d66d1b1368",
+      "family": "REGISTRATION",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fe651d66d1b1368"
+    },
+    {
+      "coherenceBits": "3fe651d66d1b1368",
+      "family": "REGISTRATION",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fe651d66d1b1368"
+    },
+    {
+      "coherenceBits": "3fc883f9969a3e38",
+      "family": "REGISTRATION",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc883f9969a3e38"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "REGISTRATION",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "REGISTRATION",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "REGISTRATION",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fe651d66d1b1368",
+      "family": "REGISTRATION",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fd3179ca276123d"
+    },
+    {
+      "coherenceBits": "3fc883f9969a3e38",
+      "family": "REGISTRATION",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fb4f876b30bbacd"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "PUBLISH",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "PUBLISH",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "PUBLISH",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "PUBLISH",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fc6f1b85be91e89",
+      "family": "PUBLISH",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc6f1b85be91e89"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "PUBLISH",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "PUBLISH",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "PUBLISH",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "PUBLISH",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fc2a97b345fa2ff"
+    },
+    {
+      "coherenceBits": "3fc6f1b85be91e89",
+      "family": "PUBLISH",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fb3a06010867784"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "OPINION",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "OPINION",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "OPINION",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "OPINION",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fc6f1b85be91e89",
+      "family": "OPINION",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc6f1b85be91e89"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "OPINION",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "OPINION",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "OPINION",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "OPINION",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fc2a97b345fa2ff"
+    },
+    {
+      "coherenceBits": "3fc6f1b85be91e89",
+      "family": "OPINION",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fb3a06010867784"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "AFFINITY",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "AFFINITY",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "AFFINITY",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "AFFINITY",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fa4859d71bb8791",
+      "family": "AFFINITY",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fa4859d71bb8791"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "AFFINITY",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "AFFINITY",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "AFFINITY",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "AFFINITY",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fa0b11bf149ab27"
+    },
+    {
+      "coherenceBits": "3fa4859d71bb8791",
+      "family": "AFFINITY",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3f918df0167fde55"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "OWNER",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "OWNER",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "OWNER",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "OWNER",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fc6f1b85be91e89",
+      "family": "OWNER",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc6f1b85be91e89"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "OWNER",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "OWNER",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "OWNER",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "OWNER",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fc2a97b345fa2ff"
+    },
+    {
+      "coherenceBits": "3fc6f1b85be91e89",
+      "family": "OWNER",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fb3a06010867784"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "JOIN_REQUEST",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "JOIN_REQUEST",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "JOIN_REQUEST",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "JOIN_REQUEST",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fb6dd41f899d096",
+      "family": "JOIN_REQUEST",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb6dd41f899d096"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "JOIN_REQUEST",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "JOIN_REQUEST",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "JOIN_REQUEST",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "JOIN_REQUEST",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fc0767b6907441f"
+    },
+    {
+      "coherenceBits": "3fb6dd41f899d096",
+      "family": "JOIN_REQUEST",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fa38edf26e5f7f5"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "ACCEPT",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "ACCEPT",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "ACCEPT",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "ACCEPT",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fb6dd41f899d096",
+      "family": "ACCEPT",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb6dd41f899d096"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "ACCEPT",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "ACCEPT",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "ACCEPT",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "ACCEPT",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fc0767b6907441f"
+    },
+    {
+      "coherenceBits": "3fb6dd41f899d096",
+      "family": "ACCEPT",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fa38edf26e5f7f5"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "RATIFY",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "RATIFY",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "RATIFY",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "RATIFY",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fb6dd41f899d096",
+      "family": "RATIFY",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb6dd41f899d096"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "RATIFY",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "RATIFY",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "RATIFY",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "RATIFY",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fc0767b6907441f"
+    },
+    {
+      "coherenceBits": "3fb6dd41f899d096",
+      "family": "RATIFY",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fa38edf26e5f7f5"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "WITHDRAW",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "WITHDRAW",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "WITHDRAW",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "WITHDRAW",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fa5dccb5d446333",
+      "family": "WITHDRAW",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fa5dccb5d446333"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "WITHDRAW",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "WITHDRAW",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "WITHDRAW",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "WITHDRAW",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fb0c3a86565a1a0"
+    },
+    {
+      "coherenceBits": "3fa5dccb5d446333",
+      "family": "WITHDRAW",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3f92b37e41bf4340"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "RESCIND",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "RESCIND",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "RESCIND",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "RESCIND",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fa5dccb5d446333",
+      "family": "RESCIND",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fa5dccb5d446333"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "RESCIND",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "RESCIND",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "RESCIND",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "RESCIND",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fb0c3a86565a1a0"
+    },
+    {
+      "coherenceBits": "3fa5dccb5d446333",
+      "family": "RESCIND",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3f92b37e41bf4340"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "LEAVE",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "LEAVE",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "LEAVE",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "LEAVE",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fa5dccb5d446333",
+      "family": "LEAVE",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fa5dccb5d446333"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "LEAVE",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "LEAVE",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "LEAVE",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "BINARY",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "LEAVE",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fb0c3a86565a1a0"
+    },
+    {
+      "coherenceBits": "3fa5dccb5d446333",
+      "family": "LEAVE",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3f92b37e41bf4340"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "TAG",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "TAG",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "TAG",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "TAG",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fa4859d71bb8791",
+      "family": "TAG",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fa4859d71bb8791"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "TAG",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "TAG",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "TAG",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "TAG",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fa0b11bf149ab27"
+    },
+    {
+      "coherenceBits": "3fa4859d71bb8791",
+      "family": "TAG",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "A",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3f918df0167fde55"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "TAG",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "TAG",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "TAG",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "TAG",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fa4859d71bb8791",
+      "family": "TAG",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fa4859d71bb8791"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "TAG",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "TAG",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "TAG",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "TAG",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fa0b11bf149ab27"
+    },
+    {
+      "coherenceBits": "3fa4859d71bb8791",
+      "family": "TAG",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "T",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3f918df0167fde55"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "REVIEW",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "REVIEW",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "REVIEW",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "REVIEW",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fc6f1b85be91e89",
+      "family": "REVIEW",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc6f1b85be91e89"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "REVIEW",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "REVIEW",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "REVIEW",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "REVIEW",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fc2a97b345fa2ff"
+    },
+    {
+      "coherenceBits": "3fc6f1b85be91e89",
+      "family": "REVIEW",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "A",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fb3a06010867784"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "REVIEW",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "REVIEW",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "REVIEW",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "REVIEW",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fa4859d71bb8791",
+      "family": "REVIEW",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fa4859d71bb8791"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "REVIEW",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "REVIEW",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "REVIEW",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "REVIEW",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fa0b11bf149ab27"
+    },
+    {
+      "coherenceBits": "3fa4859d71bb8791",
+      "family": "REVIEW",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "T",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3f918df0167fde55"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "BID",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "BID",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "BID",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "BID",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fb6dd41f899d096",
+      "family": "BID",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb6dd41f899d096"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "BID",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "BID",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "BID",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "BID",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fc0767b6907441f"
+    },
+    {
+      "coherenceBits": "3fb6dd41f899d096",
+      "family": "BID",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "A",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fa38edf26e5f7f5"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "BID",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "BID",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "BID",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "BID",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fb6dd41f899d096",
+      "family": "BID",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb6dd41f899d096"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "BID",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "BID",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "BID",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "BID",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fc0767b6907441f"
+    },
+    {
+      "coherenceBits": "3fb6dd41f899d096",
+      "family": "BID",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "T",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fa38edf26e5f7f5"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "INVITATION",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "INVITATION",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "INVITATION",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "INVITATION",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd33eeb2e799ee9"
+    },
+    {
+      "coherenceBits": "3fb6dd41f899d096",
+      "family": "INVITATION",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb6dd41f899d096"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "INVITATION",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "INVITATION",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "INVITATION",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fd33eeb2e799ee9",
+      "family": "INVITATION",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fc0767b6907441f"
+    },
+    {
+      "coherenceBits": "3fb6dd41f899d096",
+      "family": "INVITATION",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "A",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fa38edf26e5f7f5"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "INVITATION",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "INVITATION",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "INVITATION",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "INVITATION",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fa4859d71bb8791",
+      "family": "INVITATION",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fa4859d71bb8791"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "INVITATION",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "INVITATION",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "INVITATION",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "INVITATION",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fa0b11bf149ab27"
+    },
+    {
+      "coherenceBits": "3fa4859d71bb8791",
+      "family": "INVITATION",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "T",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3f918df0167fde55"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "DE_INVITE",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "DE_INVITE",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "DE_INVITE",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "DE_INVITE",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fa5dccb5d446333",
+      "family": "DE_INVITE",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fa5dccb5d446333"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "DE_INVITE",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "DE_INVITE",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "DE_INVITE",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "DE_INVITE",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fb0c3a86565a1a0"
+    },
+    {
+      "coherenceBits": "3fa5dccb5d446333",
+      "family": "DE_INVITE",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "A",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3f92b37e41bf4340"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "DE_INVITE",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "DE_INVITE",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "DE_INVITE",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "DE_INVITE",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fa5dccb5d446333",
+      "family": "DE_INVITE",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fa5dccb5d446333"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "DE_INVITE",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "DE_INVITE",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "DE_INVITE",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "DE_INVITE",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fb0c3a86565a1a0"
+    },
+    {
+      "coherenceBits": "3fa5dccb5d446333",
+      "family": "DE_INVITE",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "T",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3f92b37e41bf4340"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "SEND",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "SEND",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "SEND",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "SEND",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fc6f1b85be91e89",
+      "family": "SEND",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc6f1b85be91e89"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "SEND",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "SEND",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "SEND",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "SEND",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fc2a97b345fa2ff"
+    },
+    {
+      "coherenceBits": "3fc6f1b85be91e89",
+      "family": "SEND",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "A",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fb3a06010867784"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "SEND",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "SEND",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "SEND",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "SEND",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc39923fc0f676a"
+    },
+    {
+      "coherenceBits": "3fa5dccb5d446333",
+      "family": "SEND",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fa5dccb5d446333"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "SEND",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "SEND",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "SEND",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fc39923fc0f676a",
+      "family": "SEND",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fb0c3a86565a1a0"
+    },
+    {
+      "coherenceBits": "3fa5dccb5d446333",
+      "family": "SEND",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "T",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3f92b37e41bf4340"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "REFERENCE",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "REFERENCE",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "REFERENCE",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "REFERENCE",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fa4859d71bb8791",
+      "family": "REFERENCE",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fa4859d71bb8791"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "REFERENCE",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "REFERENCE",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "REFERENCE",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "REFERENCE",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fa0b11bf149ab27"
+    },
+    {
+      "coherenceBits": "3fa4859d71bb8791",
+      "family": "REFERENCE",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "A",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3f918df0167fde55"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "REFERENCE",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "REFERENCE",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "REFERENCE",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "REFERENCE",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fc6f1b85be91e89",
+      "family": "REFERENCE",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc6f1b85be91e89"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "REFERENCE",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "REFERENCE",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "REFERENCE",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "REFERENCE",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fc2a97b345fa2ff"
+    },
+    {
+      "coherenceBits": "3fc6f1b85be91e89",
+      "family": "REFERENCE",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "T",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fb3a06010867784"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "PARTICIPANT",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "PARTICIPANT",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "PARTICIPANT",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "PARTICIPANT",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fd5d1170a8e297d"
+    },
+    {
+      "coherenceBits": "3fc6f1b85be91e89",
+      "family": "PARTICIPANT",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fc6f1b85be91e89"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "PARTICIPANT",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "PARTICIPANT",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "PARTICIPANT",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "A",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "PARTICIPANT",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "A",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fc2a97b345fa2ff"
+    },
+    {
+      "coherenceBits": "3fc6f1b85be91e89",
+      "family": "PARTICIPANT",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "A",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fb3a06010867784"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "PARTICIPANT",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "PARTICIPANT",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "PARTICIPANT",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "PARTICIPANT",
+      "pDirectedBits": "bff0000000000000",
+      "pInterestBits": "bff0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fb38374d44d8ae3"
+    },
+    {
+      "coherenceBits": "3fa4859d71bb8791",
+      "family": "PARTICIPANT",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "3fa4859d71bb8791"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "PARTICIPANT",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "3fe0000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "PARTICIPANT",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "0000000000000000",
+      "family": "PARTICIPANT",
+      "pDirectedBits": "0000000000000000",
+      "pInterestBits": "0000000000000000",
+      "role": "T",
+      "tauBits": "0000000000000000",
+      "weightBits": "0000000000000000"
+    },
+    {
+      "coherenceBits": "3fb38374d44d8ae3",
+      "family": "PARTICIPANT",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "T",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3fa0b11bf149ab27"
+    },
+    {
+      "coherenceBits": "3fa4859d71bb8791",
+      "family": "PARTICIPANT",
+      "pDirectedBits": "3fe0000000000000",
+      "pInterestBits": "3fd0000000000000",
+      "role": "T",
+      "tauBits": "3fe0000000000000",
+      "weightBits": "3f918df0167fde55"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "OPINION",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fedc28f5c28f5c3",
+      "weightBits": "3fd4f6047e0007b3"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "OPINION",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fee10624dd2f1aa",
+      "weightBits": "3fd5cff1e5251cf7"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "OPINION",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fee147ae147ae14",
+      "weightBits": "3fd5dbfbdda42c66"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "OPINION",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fee666666666666",
+      "weightBits": "3fd6da3ffe3cb8c4"
+    },
+    {
+      "coherenceBits": "3fd5d1170a8e297d",
+      "family": "OPINION",
+      "pDirectedBits": "3ff0000000000000",
+      "pInterestBits": "3ff0000000000000",
+      "role": "BINARY",
+      "tauBits": "3fefae147ae147ae",
+      "weightBits": "3fdc680f5da6d156"
+    }
+  ],
+  "ranking": [
+    {
+      "case": "a reference crosses content-intrinsically from any arrival at its carrier",
+      "entries": [
+        {
+          "genesisEpochAge": 9,
+          "kind": "POST",
+          "paths": [
+            {
+              "contributionBits": "3fbe510a8d2f518b",
+              "hops": [
+                {
+                  "author": "v",
+                  "family": "OPINION",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:v:1:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:v",
+                  "target": "mint:act:owner:1:publish",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                }
+              ],
+              "magnitudeBits": "3fc2a97b345fa2ff",
+              "nodes": [
+                "prof:v",
+                "mint:act:owner:1:publish"
+              ],
+              "recencyBits": "3fe9fdf8bcce533e",
+              "sign": 1
+            }
+          ],
+          "scoreBits": "3fbe510a8d2f518b",
+          "targetGraphId": "mint:act:owner:1:publish",
+          "targetId": "id/mint:act:owner:1:publish"
+        },
+        {
+          "genesisEpochAge": 9,
+          "kind": "POST",
+          "paths": [
+            {
+              "contributionBits": "3f913d232384511e",
+              "hops": [
+                {
+                  "author": "v",
+                  "family": "OPINION",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:v:1:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:v",
+                  "target": "mint:act:owner:1:publish",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                },
+                {
+                  "author": "owner",
+                  "family": "REFERENCE",
+                  "pDirectedBits": "3fe0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:owner:2:reference"
+                  ],
+                  "role": "T",
+                  "source": "mint:act:owner:1:publish",
+                  "target": "mint:act:cited:1:publish",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2323129b6b862"
+                }
+              ],
+              "magnitudeBits": "3f953935939ffd40",
+              "nodes": [
+                "prof:v",
+                "mint:act:owner:1:publish",
+                "mint:act:cited:1:publish"
+              ],
+              "recencyBits": "3fe9fdf8bcce533e",
+              "sign": 1
+            }
+          ],
+          "scoreBits": "3f913d232384511e",
+          "targetGraphId": "mint:act:cited:1:publish",
+          "targetId": "id/mint:act:cited:1:publish"
+        }
+      ],
+      "k": 8,
+      "kinds": null,
+      "slice": {
+        "asOfEpoch": 10,
+        "nodes": [
+          {
+            "genesis": {
+              "actTime": 5,
+              "landingEpoch": 1,
+              "position": 5
+            },
+            "graphId": "mint:act:cited:1:publish",
+            "id": "id/mint:act:cited:1:publish",
+            "kind": "POST"
+          },
+          {
+            "genesis": {
+              "actTime": 4,
+              "landingEpoch": 1,
+              "position": 4
+            },
+            "graphId": "mint:act:owner:1:publish",
+            "id": "id/mint:act:owner:1:publish",
+            "kind": "POST"
+          },
+          {
+            "genesis": {
+              "actTime": 3,
+              "landingEpoch": 1,
+              "position": 3
+            },
+            "graphId": "prof:cited",
+            "id": "id/prof:cited",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 2,
+              "landingEpoch": 1,
+              "position": 2
+            },
+            "graphId": "prof:owner",
+            "id": "id/prof:owner",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 1,
+              "landingEpoch": 1,
+              "position": 1
+            },
+            "graphId": "prof:v",
+            "id": "id/prof:v",
+            "kind": "USER"
+          }
+        ],
+        "records": [
+          {
+            "author": "owner",
+            "family": "PUBLISH",
+            "key": {
+              "actTime": 4,
+              "landingEpoch": 1,
+              "position": 4
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:owner",
+                "target": "mint:act:owner:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:owner:1:publish"
+          },
+          {
+            "author": "cited",
+            "family": "PUBLISH",
+            "key": {
+              "actTime": 5,
+              "landingEpoch": 1,
+              "position": 5
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:cited",
+                "target": "mint:act:cited:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:cited:1:publish"
+          },
+          {
+            "author": "v",
+            "family": "OPINION",
+            "key": {
+              "actTime": 6,
+              "landingEpoch": 1,
+              "position": 6
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:v",
+                "target": "mint:act:owner:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:v:1:opinion"
+          },
+          {
+            "author": "owner",
+            "family": "REFERENCE",
+            "key": {
+              "actTime": 7,
+              "landingEpoch": 1,
+              "position": 7
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3fe0000000000000",
+                "role": "A",
+                "source": "addr:owner",
+                "target": "mint:act:owner:1:publish",
+                "tauBits": "3fe0000000000000"
+              },
+              {
+                "pDirectedBits": "3fe0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "T",
+                "source": "mint:act:owner:1:publish",
+                "target": "mint:act:cited:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:owner:2:reference"
+          }
+        ],
+        "viewer": "id/prof:v"
+      }
+    },
+    {
+      "case": "a stranger's reference crosses only as its author's own continuation",
+      "entries": [
+        {
+          "genesisEpochAge": 9,
+          "kind": "POST",
+          "paths": [
+            {
+              "contributionBits": "3fbe510a8d2f518b",
+              "hops": [
+                {
+                  "author": "v",
+                  "family": "OPINION",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:v:1:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:v",
+                  "target": "mint:act:owner:1:publish",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                }
+              ],
+              "magnitudeBits": "3fc2a97b345fa2ff",
+              "nodes": [
+                "prof:v",
+                "mint:act:owner:1:publish"
+              ],
+              "recencyBits": "3fe9fdf8bcce533e",
+              "sign": 1
+            },
+            {
+              "contributionBits": "3f6ed675bdc94db8",
+              "hops": [
+                {
+                  "author": "v",
+                  "family": "OPINION",
+                  "pDirectedBits": "3fe0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:v:2:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:v",
+                  "target": "prof:referrer",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2323129b6b862"
+                },
+                {
+                  "author": "referrer",
+                  "family": "REFERENCE",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:referrer:1:reference"
+                  ],
+                  "role": "A",
+                  "source": "prof:referrer",
+                  "target": "mint:act:owner:1:publish",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fa0b11bf149ab27"
+                }
+              ],
+              "magnitudeBits": "3f72fb9c30aef047",
+              "nodes": [
+                "prof:v",
+                "prof:referrer",
+                "mint:act:owner:1:publish"
+              ],
+              "recencyBits": "3fe9fdf8bcce533e",
+              "sign": 1
+            }
+          ],
+          "scoreBits": "3fbf47be3b1d9bf9",
+          "targetGraphId": "mint:act:owner:1:publish",
+          "targetId": "id/mint:act:owner:1:publish"
+        },
+        {
+          "genesisEpochAge": 9,
+          "kind": "POST",
+          "paths": [
+            {
+              "contributionBits": "3f41fbf59360c56d",
+              "hops": [
+                {
+                  "author": "v",
+                  "family": "OPINION",
+                  "pDirectedBits": "3fe0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:v:2:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:v",
+                  "target": "prof:referrer",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2323129b6b862"
+                },
+                {
+                  "author": "referrer",
+                  "family": "REFERENCE",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:referrer:1:reference"
+                  ],
+                  "role": "A",
+                  "source": "prof:referrer",
+                  "target": "mint:act:owner:1:publish",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fa0b11bf149ab27"
+                },
+                {
+                  "author": "referrer",
+                  "family": "REFERENCE",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:referrer:1:reference"
+                  ],
+                  "role": "T",
+                  "source": "mint:act:owner:1:publish",
+                  "target": "mint:act:cited:1:publish",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                }
+              ],
+              "magnitudeBits": "3f46242384eaef4a",
+              "nodes": [
+                "prof:v",
+                "prof:referrer",
+                "mint:act:owner:1:publish",
+                "mint:act:cited:1:publish"
+              ],
+              "recencyBits": "3fe9fdf8bcce533e",
+              "sign": 1
+            }
+          ],
+          "scoreBits": "3f41fbf59360c56d",
+          "targetGraphId": "mint:act:cited:1:publish",
+          "targetId": "id/mint:act:cited:1:publish"
+        }
+      ],
+      "k": 8,
+      "kinds": null,
+      "slice": {
+        "asOfEpoch": 10,
+        "nodes": [
+          {
+            "genesis": {
+              "actTime": 6,
+              "landingEpoch": 1,
+              "position": 6
+            },
+            "graphId": "mint:act:cited:1:publish",
+            "id": "id/mint:act:cited:1:publish",
+            "kind": "POST"
+          },
+          {
+            "genesis": {
+              "actTime": 5,
+              "landingEpoch": 1,
+              "position": 5
+            },
+            "graphId": "mint:act:owner:1:publish",
+            "id": "id/mint:act:owner:1:publish",
+            "kind": "POST"
+          },
+          {
+            "genesis": {
+              "actTime": 4,
+              "landingEpoch": 1,
+              "position": 4
+            },
+            "graphId": "prof:cited",
+            "id": "id/prof:cited",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 2,
+              "landingEpoch": 1,
+              "position": 2
+            },
+            "graphId": "prof:owner",
+            "id": "id/prof:owner",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 3,
+              "landingEpoch": 1,
+              "position": 3
+            },
+            "graphId": "prof:referrer",
+            "id": "id/prof:referrer",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 1,
+              "landingEpoch": 1,
+              "position": 1
+            },
+            "graphId": "prof:v",
+            "id": "id/prof:v",
+            "kind": "USER"
+          }
+        ],
+        "records": [
+          {
+            "author": "owner",
+            "family": "PUBLISH",
+            "key": {
+              "actTime": 5,
+              "landingEpoch": 1,
+              "position": 5
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:owner",
+                "target": "mint:act:owner:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:owner:1:publish"
+          },
+          {
+            "author": "cited",
+            "family": "PUBLISH",
+            "key": {
+              "actTime": 6,
+              "landingEpoch": 1,
+              "position": 6
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:cited",
+                "target": "mint:act:cited:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:cited:1:publish"
+          },
+          {
+            "author": "v",
+            "family": "OPINION",
+            "key": {
+              "actTime": 7,
+              "landingEpoch": 1,
+              "position": 7
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:v",
+                "target": "mint:act:owner:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:v:1:opinion"
+          },
+          {
+            "author": "v",
+            "family": "OPINION",
+            "key": {
+              "actTime": 8,
+              "landingEpoch": 1,
+              "position": 8
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3fe0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:v",
+                "target": "prof:referrer",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:v:2:opinion"
+          },
+          {
+            "author": "referrer",
+            "family": "REFERENCE",
+            "key": {
+              "actTime": 9,
+              "landingEpoch": 1,
+              "position": 9
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "A",
+                "source": "addr:referrer",
+                "target": "mint:act:owner:1:publish",
+                "tauBits": "3fe0000000000000"
+              },
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "T",
+                "source": "mint:act:owner:1:publish",
+                "target": "mint:act:cited:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:referrer:1:reference"
+          }
+        ],
+        "viewer": "id/prof:v"
+      }
+    },
+    {
+      "case": "a tag's topic leg lands on its Type",
+      "entries": [
+        {
+          "genesisEpochAge": 9,
+          "kind": "POST",
+          "paths": [
+            {
+              "contributionBits": "3fbe510a8d2f518b",
+              "hops": [
+                {
+                  "author": "v",
+                  "family": "OPINION",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:v:1:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:v",
+                  "target": "mint:act:writer:1:publish",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                }
+              ],
+              "magnitudeBits": "3fc2a97b345fa2ff",
+              "nodes": [
+                "prof:v",
+                "mint:act:writer:1:publish"
+              ],
+              "recencyBits": "3fe9fdf8bcce533e",
+              "sign": 1
+            }
+          ],
+          "scoreBits": "3fbe510a8d2f518b",
+          "targetGraphId": "mint:act:writer:1:publish",
+          "targetId": "id/mint:act:writer:1:publish"
+        },
+        {
+          "genesisEpochAge": null,
+          "kind": "HASHTAG",
+          "paths": [
+            {
+              "contributionBits": "3f6fa0a003db403b",
+              "hops": [
+                {
+                  "author": "v",
+                  "family": "OPINION",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:v:1:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:v",
+                  "target": "mint:act:writer:1:publish",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                },
+                {
+                  "author": "writer",
+                  "family": "TAG",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:writer:2:tag"
+                  ],
+                  "role": "T",
+                  "source": "mint:act:writer:1:publish",
+                  "target": "name:rust",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fa0b11bf149ab27"
+                }
+              ],
+              "magnitudeBits": "3f73780eaec1aa03",
+              "nodes": [
+                "prof:v",
+                "mint:act:writer:1:publish",
+                "name:rust"
+              ],
+              "recencyBits": "3fe9fdf8bcce533e",
+              "sign": 1
+            }
+          ],
+          "scoreBits": "3f6fa0a003db403b",
+          "targetGraphId": "name:rust",
+          "targetId": "id/name:rust"
+        }
+      ],
+      "k": 8,
+      "kinds": [
+        "USER",
+        "COLLECTIVE",
+        "POST",
+        "COMMENT",
+        "CHAT",
+        "CHAT_MESSAGE",
+        "ITEM",
+        "HASHTAG",
+        "PROPOSAL",
+        "CAMPAIGN",
+        "OFFER"
+      ],
+      "slice": {
+        "asOfEpoch": 10,
+        "nodes": [
+          {
+            "genesis": {
+              "actTime": 3,
+              "landingEpoch": 1,
+              "position": 3
+            },
+            "graphId": "mint:act:writer:1:publish",
+            "id": "id/mint:act:writer:1:publish",
+            "kind": "POST"
+          },
+          {
+            "genesis": null,
+            "graphId": "name:rust",
+            "id": "id/name:rust",
+            "kind": "HASHTAG"
+          },
+          {
+            "genesis": {
+              "actTime": 1,
+              "landingEpoch": 1,
+              "position": 1
+            },
+            "graphId": "prof:v",
+            "id": "id/prof:v",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 2,
+              "landingEpoch": 1,
+              "position": 2
+            },
+            "graphId": "prof:writer",
+            "id": "id/prof:writer",
+            "kind": "USER"
+          }
+        ],
+        "records": [
+          {
+            "author": "writer",
+            "family": "PUBLISH",
+            "key": {
+              "actTime": 3,
+              "landingEpoch": 1,
+              "position": 3
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:writer",
+                "target": "mint:act:writer:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:writer:1:publish"
+          },
+          {
+            "author": "v",
+            "family": "OPINION",
+            "key": {
+              "actTime": 4,
+              "landingEpoch": 1,
+              "position": 4
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:v",
+                "target": "mint:act:writer:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:v:1:opinion"
+          },
+          {
+            "author": "writer",
+            "family": "TAG",
+            "key": {
+              "actTime": 5,
+              "landingEpoch": 1,
+              "position": 5
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "A",
+                "source": "addr:writer",
+                "target": "mint:act:writer:1:publish",
+                "tauBits": "3fe0000000000000"
+              },
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "T",
+                "source": "mint:act:writer:1:publish",
+                "target": "name:rust",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:writer:2:tag"
+          }
+        ],
+        "viewer": "id/prof:v"
+      }
+    },
+    {
+      "case": "a stance landing on a profile continues from the person's own records",
+      "entries": [
+        {
+          "genesisEpochAge": 9,
+          "kind": "USER",
+          "paths": [
+            {
+              "contributionBits": "3fbe510a8d2f518b",
+              "hops": [
+                {
+                  "author": "v",
+                  "family": "OPINION",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:v:1:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:v",
+                  "target": "prof:friend",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                }
+              ],
+              "magnitudeBits": "3fc2a97b345fa2ff",
+              "nodes": [
+                "prof:v",
+                "prof:friend"
+              ],
+              "recencyBits": "3fe9fdf8bcce533e",
+              "sign": 1
+            }
+          ],
+          "scoreBits": "3fbe510a8d2f518b",
+          "targetGraphId": "prof:friend",
+          "targetId": "id/prof:friend"
+        },
+        {
+          "genesisEpochAge": 9,
+          "kind": "USER",
+          "paths": [
+            {
+              "contributionBits": "3f8a2188e95a19f3",
+              "hops": [
+                {
+                  "author": "v",
+                  "family": "OPINION",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:v:1:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:v",
+                  "target": "prof:friend",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                },
+                {
+                  "author": "friend",
+                  "family": "OPINION",
+                  "pDirectedBits": "3fe0000000000000",
+                  "pInterestBits": "3fe0000000000000",
+                  "records": [
+                    "act:friend:1:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:friend",
+                  "target": "prof:far",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fbb94fe960e50fe"
+                }
+              ],
+              "magnitudeBits": "3f9015e446c7a677",
+              "nodes": [
+                "prof:v",
+                "prof:friend",
+                "prof:far"
+              ],
+              "recencyBits": "3fe9fdf8bcce533e",
+              "sign": 1
+            }
+          ],
+          "scoreBits": "3f8a2188e95a19f3",
+          "targetGraphId": "prof:far",
+          "targetId": "id/prof:far"
+        },
+        {
+          "genesisEpochAge": 9,
+          "kind": "POST",
+          "paths": [
+            {
+              "contributionBits": "3f5e7a8573fbd50f",
+              "hops": [
+                {
+                  "author": "v",
+                  "family": "OPINION",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:v:1:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:v",
+                  "target": "prof:friend",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                },
+                {
+                  "author": "friend",
+                  "family": "OPINION",
+                  "pDirectedBits": "3fe0000000000000",
+                  "pInterestBits": "3fe0000000000000",
+                  "records": [
+                    "act:friend:1:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:friend",
+                  "target": "prof:far",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fbb94fe960e50fe"
+                },
+                {
+                  "author": "far",
+                  "family": "PUBLISH",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:far:1:publish"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:far",
+                  "target": "mint:act:far:1:publish",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                }
+              ],
+              "magnitudeBits": "3f62c303e7be63f2",
+              "nodes": [
+                "prof:v",
+                "prof:friend",
+                "prof:far",
+                "mint:act:far:1:publish"
+              ],
+              "recencyBits": "3fe9fdf8bcce533e",
+              "sign": 1
+            }
+          ],
+          "scoreBits": "3f5e7a8573fbd50f",
+          "targetGraphId": "mint:act:far:1:publish",
+          "targetId": "id/mint:act:far:1:publish"
+        }
+      ],
+      "k": 8,
+      "kinds": [
+        "USER",
+        "COLLECTIVE",
+        "POST",
+        "COMMENT",
+        "CHAT",
+        "CHAT_MESSAGE",
+        "ITEM",
+        "HASHTAG",
+        "PROPOSAL",
+        "CAMPAIGN",
+        "OFFER"
+      ],
+      "slice": {
+        "asOfEpoch": 10,
+        "nodes": [
+          {
+            "genesis": {
+              "actTime": 6,
+              "landingEpoch": 1,
+              "position": 6
+            },
+            "graphId": "mint:act:far:1:publish",
+            "id": "id/mint:act:far:1:publish",
+            "kind": "POST"
+          },
+          {
+            "genesis": {
+              "actTime": 3,
+              "landingEpoch": 1,
+              "position": 3
+            },
+            "graphId": "prof:far",
+            "id": "id/prof:far",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 2,
+              "landingEpoch": 1,
+              "position": 2
+            },
+            "graphId": "prof:friend",
+            "id": "id/prof:friend",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 1,
+              "landingEpoch": 1,
+              "position": 1
+            },
+            "graphId": "prof:v",
+            "id": "id/prof:v",
+            "kind": "USER"
+          }
+        ],
+        "records": [
+          {
+            "author": "v",
+            "family": "OPINION",
+            "key": {
+              "actTime": 4,
+              "landingEpoch": 1,
+              "position": 4
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:v",
+                "target": "prof:friend",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:v:1:opinion"
+          },
+          {
+            "author": "friend",
+            "family": "OPINION",
+            "key": {
+              "actTime": 5,
+              "landingEpoch": 1,
+              "position": 5
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3fe0000000000000",
+                "pInterestBits": "3fe0000000000000",
+                "role": "BINARY",
+                "source": "addr:friend",
+                "target": "prof:far",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:friend:1:opinion"
+          },
+          {
+            "author": "far",
+            "family": "PUBLISH",
+            "key": {
+              "actTime": 6,
+              "landingEpoch": 1,
+              "position": 6
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:far",
+                "target": "mint:act:far:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:far:1:publish"
+          }
+        ],
+        "viewer": "id/prof:v"
+      }
+    },
+    {
+      "case": "a Type ranks and never transits",
+      "entries": [
+        {
+          "genesisEpochAge": null,
+          "kind": "HASHTAG",
+          "paths": [
+            {
+              "contributionBits": "3f9b1dafb103dbb7",
+              "hops": [
+                {
+                  "author": "v",
+                  "family": "AFFINITY",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:v:1:affinity"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:v",
+                  "target": "name:sink",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fa0b11bf149ab27"
+                }
+              ],
+              "magnitudeBits": "3fa0b11bf149ab27",
+              "nodes": [
+                "prof:v",
+                "name:sink"
+              ],
+              "recencyBits": "3fe9fdf8bcce533e",
+              "sign": 1
+            }
+          ],
+          "scoreBits": "3f9b1dafb103dbb7",
+          "targetGraphId": "name:sink",
+          "targetId": "id/name:sink"
+        }
+      ],
+      "k": 8,
+      "kinds": [
+        "USER",
+        "COLLECTIVE",
+        "POST",
+        "COMMENT",
+        "CHAT",
+        "CHAT_MESSAGE",
+        "ITEM",
+        "HASHTAG",
+        "PROPOSAL",
+        "CAMPAIGN",
+        "OFFER"
+      ],
+      "slice": {
+        "asOfEpoch": 10,
+        "nodes": [
+          {
+            "genesis": {
+              "actTime": 3,
+              "landingEpoch": 1,
+              "position": 3
+            },
+            "graphId": "mint:act:stranger:1:publish",
+            "id": "id/mint:act:stranger:1:publish",
+            "kind": "POST"
+          },
+          {
+            "genesis": null,
+            "graphId": "name:sink",
+            "id": "id/name:sink",
+            "kind": "HASHTAG"
+          },
+          {
+            "genesis": {
+              "actTime": 2,
+              "landingEpoch": 1,
+              "position": 2
+            },
+            "graphId": "prof:stranger",
+            "id": "id/prof:stranger",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 1,
+              "landingEpoch": 1,
+              "position": 1
+            },
+            "graphId": "prof:v",
+            "id": "id/prof:v",
+            "kind": "USER"
+          }
+        ],
+        "records": [
+          {
+            "author": "stranger",
+            "family": "PUBLISH",
+            "key": {
+              "actTime": 3,
+              "landingEpoch": 1,
+              "position": 3
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:stranger",
+                "target": "mint:act:stranger:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:stranger:1:publish"
+          },
+          {
+            "author": "v",
+            "family": "AFFINITY",
+            "key": {
+              "actTime": 4,
+              "landingEpoch": 1,
+              "position": 4
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:v",
+                "target": "name:sink",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:v:1:affinity"
+          },
+          {
+            "author": "v",
+            "family": "REFERENCE",
+            "key": {
+              "actTime": 5,
+              "landingEpoch": 1,
+              "position": 5
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "A",
+                "source": "addr:v",
+                "target": "name:sink",
+                "tauBits": "3fe0000000000000"
+              },
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "T",
+                "source": "name:sink",
+                "target": "mint:act:stranger:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:v:2:reference"
+          }
+        ],
+        "viewer": "id/prof:v"
+      }
+    },
+    {
+      "case": "a negative score sorts at the bottom, present",
+      "entries": [
+        {
+          "genesisEpochAge": 9,
+          "kind": "POST",
+          "paths": [
+            {
+              "contributionBits": "bf91ae26a8431a9c",
+              "hops": [
+                {
+                  "author": "v",
+                  "family": "OPINION",
+                  "pDirectedBits": "bff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:v:1:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:v",
+                  "target": "prof:rival",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                },
+                {
+                  "author": "rival",
+                  "family": "PUBLISH",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:rival:1:publish"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:rival",
+                  "target": "mint:act:rival:1:publish",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                }
+              ],
+              "magnitudeBits": "3f95c458743e48fb",
+              "nodes": [
+                "prof:v",
+                "prof:rival",
+                "mint:act:rival:1:publish"
+              ],
+              "recencyBits": "3fe9fdf8bcce533e",
+              "sign": -1
+            }
+          ],
+          "scoreBits": "bf91ae26a8431a9c",
+          "targetGraphId": "mint:act:rival:1:publish",
+          "targetId": "id/mint:act:rival:1:publish"
+        },
+        {
+          "genesisEpochAge": 9,
+          "kind": "USER",
+          "paths": [
+            {
+              "contributionBits": "bfbe510a8d2f518b",
+              "hops": [
+                {
+                  "author": "v",
+                  "family": "OPINION",
+                  "pDirectedBits": "bff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:v:1:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:v",
+                  "target": "prof:rival",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                }
+              ],
+              "magnitudeBits": "3fc2a97b345fa2ff",
+              "nodes": [
+                "prof:v",
+                "prof:rival"
+              ],
+              "recencyBits": "3fe9fdf8bcce533e",
+              "sign": -1
+            }
+          ],
+          "scoreBits": "bfbe510a8d2f518b",
+          "targetGraphId": "prof:rival",
+          "targetId": "id/prof:rival"
+        }
+      ],
+      "k": 8,
+      "kinds": [
+        "USER",
+        "COLLECTIVE",
+        "POST",
+        "COMMENT",
+        "CHAT",
+        "CHAT_MESSAGE",
+        "ITEM",
+        "HASHTAG",
+        "PROPOSAL",
+        "CAMPAIGN",
+        "OFFER"
+      ],
+      "slice": {
+        "asOfEpoch": 10,
+        "nodes": [
+          {
+            "genesis": {
+              "actTime": 3,
+              "landingEpoch": 1,
+              "position": 3
+            },
+            "graphId": "mint:act:rival:1:publish",
+            "id": "id/mint:act:rival:1:publish",
+            "kind": "POST"
+          },
+          {
+            "genesis": {
+              "actTime": 2,
+              "landingEpoch": 1,
+              "position": 2
+            },
+            "graphId": "prof:rival",
+            "id": "id/prof:rival",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 1,
+              "landingEpoch": 1,
+              "position": 1
+            },
+            "graphId": "prof:v",
+            "id": "id/prof:v",
+            "kind": "USER"
+          }
+        ],
+        "records": [
+          {
+            "author": "rival",
+            "family": "PUBLISH",
+            "key": {
+              "actTime": 3,
+              "landingEpoch": 1,
+              "position": 3
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:rival",
+                "target": "mint:act:rival:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:rival:1:publish"
+          },
+          {
+            "author": "v",
+            "family": "OPINION",
+            "key": {
+              "actTime": 4,
+              "landingEpoch": 1,
+              "position": 4
+            },
+            "legs": [
+              {
+                "pDirectedBits": "bff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:v",
+                "target": "prof:rival",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:v:1:opinion"
+          }
+        ],
+        "viewer": "id/prof:v"
+      }
+    },
+    {
+      "case": "opposing paths cancel to a present zero",
+      "entries": [
+        {
+          "genesisEpochAge": 9,
+          "kind": "POST",
+          "paths": [
+            {
+              "contributionBits": "3f91ae26a8431a9c",
+              "hops": [
+                {
+                  "author": "v",
+                  "family": "OPINION",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:v:1:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:v",
+                  "target": "prof:a",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                },
+                {
+                  "author": "a",
+                  "family": "OPINION",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:a:1:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:a",
+                  "target": "mint:act:x:1:publish",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                }
+              ],
+              "magnitudeBits": "3f95c458743e48fb",
+              "nodes": [
+                "prof:v",
+                "prof:a",
+                "mint:act:x:1:publish"
+              ],
+              "recencyBits": "3fe9fdf8bcce533e",
+              "sign": 1
+            },
+            {
+              "contributionBits": "bf91ae26a8431a9c",
+              "hops": [
+                {
+                  "author": "v",
+                  "family": "OPINION",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:v:2:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:v",
+                  "target": "prof:c",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                },
+                {
+                  "author": "c",
+                  "family": "OPINION",
+                  "pDirectedBits": "bff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:c:1:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:c",
+                  "target": "mint:act:x:1:publish",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                }
+              ],
+              "magnitudeBits": "3f95c458743e48fb",
+              "nodes": [
+                "prof:v",
+                "prof:c",
+                "mint:act:x:1:publish"
+              ],
+              "recencyBits": "3fe9fdf8bcce533e",
+              "sign": -1
+            }
+          ],
+          "scoreBits": "0000000000000000",
+          "targetGraphId": "mint:act:x:1:publish",
+          "targetId": "id/mint:act:x:1:publish"
+        }
+      ],
+      "k": 8,
+      "kinds": null,
+      "slice": {
+        "asOfEpoch": 10,
+        "nodes": [
+          {
+            "genesis": {
+              "actTime": 5,
+              "landingEpoch": 1,
+              "position": 5
+            },
+            "graphId": "mint:act:x:1:publish",
+            "id": "id/mint:act:x:1:publish",
+            "kind": "POST"
+          },
+          {
+            "genesis": {
+              "actTime": 2,
+              "landingEpoch": 1,
+              "position": 2
+            },
+            "graphId": "prof:a",
+            "id": "id/prof:a",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 3,
+              "landingEpoch": 1,
+              "position": 3
+            },
+            "graphId": "prof:c",
+            "id": "id/prof:c",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 1,
+              "landingEpoch": 1,
+              "position": 1
+            },
+            "graphId": "prof:v",
+            "id": "id/prof:v",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 4,
+              "landingEpoch": 1,
+              "position": 4
+            },
+            "graphId": "prof:x",
+            "id": "id/prof:x",
+            "kind": "USER"
+          }
+        ],
+        "records": [
+          {
+            "author": "x",
+            "family": "PUBLISH",
+            "key": {
+              "actTime": 5,
+              "landingEpoch": 1,
+              "position": 5
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:x",
+                "target": "mint:act:x:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:x:1:publish"
+          },
+          {
+            "author": "v",
+            "family": "OPINION",
+            "key": {
+              "actTime": 6,
+              "landingEpoch": 1,
+              "position": 6
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:v",
+                "target": "prof:a",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:v:1:opinion"
+          },
+          {
+            "author": "v",
+            "family": "OPINION",
+            "key": {
+              "actTime": 7,
+              "landingEpoch": 1,
+              "position": 7
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:v",
+                "target": "prof:c",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:v:2:opinion"
+          },
+          {
+            "author": "a",
+            "family": "OPINION",
+            "key": {
+              "actTime": 8,
+              "landingEpoch": 1,
+              "position": 8
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:a",
+                "target": "mint:act:x:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:a:1:opinion"
+          },
+          {
+            "author": "c",
+            "family": "OPINION",
+            "key": {
+              "actTime": 9,
+              "landingEpoch": 1,
+              "position": 9
+            },
+            "legs": [
+              {
+                "pDirectedBits": "bff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:c",
+                "target": "mint:act:x:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:c:1:opinion"
+          }
+        ],
+        "viewer": "id/prof:v"
+      }
+    },
+    {
+      "case": "a strict score tie breaks by genesis recency, newest first",
+      "entries": [
+        {
+          "genesisEpochAge": 9,
+          "kind": "POST",
+          "paths": [
+            {
+              "contributionBits": "3fc0a0407efa2954",
+              "hops": [
+                {
+                  "author": "v",
+                  "family": "OPINION",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:v:2:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:v",
+                  "target": "mint:act:y:1:publish",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                }
+              ],
+              "magnitudeBits": "3fc2a97b345fa2ff",
+              "nodes": [
+                "prof:v",
+                "mint:act:y:1:publish"
+              ],
+              "recencyBits": "3fec823e074ec129",
+              "sign": 1
+            }
+          ],
+          "scoreBits": "3fc0a0407efa2954",
+          "targetGraphId": "mint:act:y:1:publish",
+          "targetId": "id/mint:act:y:1:publish"
+        },
+        {
+          "genesisEpochAge": 9,
+          "kind": "POST",
+          "paths": [
+            {
+              "contributionBits": "3fc0a0407efa2954",
+              "hops": [
+                {
+                  "author": "v",
+                  "family": "OPINION",
+                  "pDirectedBits": "3ff0000000000000",
+                  "pInterestBits": "3ff0000000000000",
+                  "records": [
+                    "act:v:1:opinion"
+                  ],
+                  "role": "BINARY",
+                  "source": "prof:v",
+                  "target": "mint:act:x:1:publish",
+                  "tauBits": "3fe0000000000000",
+                  "weightBits": "3fc2a97b345fa2ff"
+                }
+              ],
+              "magnitudeBits": "3fc2a97b345fa2ff",
+              "nodes": [
+                "prof:v",
+                "mint:act:x:1:publish"
+              ],
+              "recencyBits": "3fec823e074ec129",
+              "sign": 1
+            }
+          ],
+          "scoreBits": "3fc0a0407efa2954",
+          "targetGraphId": "mint:act:x:1:publish",
+          "targetId": "id/mint:act:x:1:publish"
+        }
+      ],
+      "k": 8,
+      "kinds": null,
+      "slice": {
+        "asOfEpoch": 10,
+        "nodes": [
+          {
+            "genesis": {
+              "actTime": 4,
+              "landingEpoch": 1,
+              "position": 4
+            },
+            "graphId": "mint:act:x:1:publish",
+            "id": "id/mint:act:x:1:publish",
+            "kind": "POST"
+          },
+          {
+            "genesis": {
+              "actTime": 5,
+              "landingEpoch": 1,
+              "position": 5
+            },
+            "graphId": "mint:act:y:1:publish",
+            "id": "id/mint:act:y:1:publish",
+            "kind": "POST"
+          },
+          {
+            "genesis": {
+              "actTime": 1,
+              "landingEpoch": 1,
+              "position": 1
+            },
+            "graphId": "prof:v",
+            "id": "id/prof:v",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 2,
+              "landingEpoch": 1,
+              "position": 2
+            },
+            "graphId": "prof:x",
+            "id": "id/prof:x",
+            "kind": "USER"
+          },
+          {
+            "genesis": {
+              "actTime": 3,
+              "landingEpoch": 1,
+              "position": 3
+            },
+            "graphId": "prof:y",
+            "id": "id/prof:y",
+            "kind": "USER"
+          }
+        ],
+        "records": [
+          {
+            "author": "x",
+            "family": "PUBLISH",
+            "key": {
+              "actTime": 4,
+              "landingEpoch": 1,
+              "position": 4
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:x",
+                "target": "mint:act:x:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:x:1:publish"
+          },
+          {
+            "author": "y",
+            "family": "PUBLISH",
+            "key": {
+              "actTime": 5,
+              "landingEpoch": 1,
+              "position": 5
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:y",
+                "target": "mint:act:y:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:y:1:publish"
+          },
+          {
+            "author": "v",
+            "family": "OPINION",
+            "key": {
+              "actTime": 6,
+              "landingEpoch": 5,
+              "position": 6
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:v",
+                "target": "mint:act:x:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:v:1:opinion"
+          },
+          {
+            "author": "v",
+            "family": "OPINION",
+            "key": {
+              "actTime": 7,
+              "landingEpoch": 5,
+              "position": 7
+            },
+            "legs": [
+              {
+                "pDirectedBits": "3ff0000000000000",
+                "pInterestBits": "3ff0000000000000",
+                "role": "BINARY",
+                "source": "addr:v",
+                "target": "mint:act:y:1:publish",
+                "tauBits": "3fe0000000000000"
+              }
+            ],
+            "recordId": "act:v:2:opinion"
+          }
+        ],
+        "viewer": "id/prof:v"
+      }
+    }
+  ],
+  "recency": [
+    {
+      "ageEpochs": -3,
+      "factorBits": "3ff0000000000000",
+      "halfLifeEpochs": 0
+    },
+    {
+      "ageEpochs": 0,
+      "factorBits": "3ff0000000000000",
+      "halfLifeEpochs": 0
+    },
+    {
+      "ageEpochs": 1,
+      "factorBits": "3ff0000000000000",
+      "halfLifeEpochs": 0
+    },
+    {
+      "ageEpochs": 0,
+      "factorBits": "3ff0000000000000",
+      "halfLifeEpochs": 0
+    },
+    {
+      "ageEpochs": 0,
+      "factorBits": "3ff0000000000000",
+      "halfLifeEpochs": 0
+    },
+    {
+      "ageEpochs": 10000,
+      "factorBits": "3ff0000000000000",
+      "halfLifeEpochs": 0
+    },
+    {
+      "ageEpochs": -3,
+      "factorBits": "3ff0000000000000",
+      "halfLifeEpochs": 1
+    },
+    {
+      "ageEpochs": 0,
+      "factorBits": "3ff0000000000000",
+      "halfLifeEpochs": 1
+    },
+    {
+      "ageEpochs": 1,
+      "factorBits": "3fe0000000000000",
+      "halfLifeEpochs": 1
+    },
+    {
+      "ageEpochs": 1,
+      "factorBits": "3fe0000000000000",
+      "halfLifeEpochs": 1
+    },
+    {
+      "ageEpochs": 3,
+      "factorBits": "3fc0000000000000",
+      "halfLifeEpochs": 1
+    },
+    {
+      "ageEpochs": 10000,
+      "factorBits": "0000000000000000",
+      "halfLifeEpochs": 1
+    },
+    {
+      "ageEpochs": -3,
+      "factorBits": "3ff0000000000000",
+      "halfLifeEpochs": 30
+    },
+    {
+      "ageEpochs": 0,
+      "factorBits": "3ff0000000000000",
+      "halfLifeEpochs": 30
+    },
+    {
+      "ageEpochs": 1,
+      "factorBits": "3fef44e4fb6c55d7",
+      "halfLifeEpochs": 30
+    },
+    {
+      "ageEpochs": 30,
+      "factorBits": "3fe0000000000000",
+      "halfLifeEpochs": 30
+    },
+    {
+      "ageEpochs": 90,
+      "factorBits": "3fc0000000000000",
+      "halfLifeEpochs": 30
+    },
+    {
+      "ageEpochs": 10000,
+      "factorBits": "2b1965fea53d6e9a",
+      "halfLifeEpochs": 30
+    }
+  ],
+  "version": 1
+}

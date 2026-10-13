@@ -1,0 +1,79 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT n.id, n.user_id, n.kind, n.actor_id, n.subject_id, n.context_id,\n                      n.record_id, n.application_id, n.created_at, n.read_at\n               FROM user_notifications n\n               WHERE n.user_id = $1\n                 AND NOT EXISTS (SELECT 1 FROM user_hidden_actors h\n                                 WHERE h.viewer_id = n.user_id AND h.hidden_id = n.actor_id)\n                 AND ($2::timestamptz IS NULL OR (n.created_at, n.id) < ($2, $3::uuid))\n               ORDER BY n.created_at DESC, n.id DESC\n               LIMIT $4",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "kind",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "actor_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "subject_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "context_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "record_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "application_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 8,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "read_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "da182efd5965c38961409436f5aecd1de0bb74aed73ae174d898938f5f8d6a5d"
+}

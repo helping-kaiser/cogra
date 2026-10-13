@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT $2::timestamptz <= GREATEST(\n                      clock_timestamp(),\n                      (SELECT MAX(created_at) FROM user_notifications WHERE user_id = $1))\n               AS \"reachable!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "reachable!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "416345fca19efa80207f7bc74dcbac2abe3422ce68f3b4f705a0ecc6e682bc29"
+}

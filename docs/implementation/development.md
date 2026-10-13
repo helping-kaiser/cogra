@@ -370,6 +370,49 @@ cargo run -p api --bin l1-dev balance <address>
 cargo run -p api --bin l1-dev status    # mirror cursor + records per epoch
 ```
 
+### The release CLI
+
+The one writer of the release registry `appVersions` serves
+([api-spec.md](api-spec.md), Application versions). A release row is
+operator state, so it is written by this binary against whatever
+`DATABASE_URL` names, never through the API.
+
+```bash
+cargo run -p api --bin release -- publish \
+    --component android|web|backend|ios [--component …] \
+    --version 0.1.3 --notes-file notes.txt \
+    [--patch-notes-url URL] [--released-by UUID …] [--released-at RFC3339]
+cargo run -p api --bin release -- list [--component …]
+make release-publish ARGS="--component web --version 0.1.3 --notes-file notes.txt"
+```
+
+- `notes.txt` holds one note per line; each line is one paragraph on
+  the release's card. A blank line refuses the publish.
+- The release page defaults to
+  `https://github.com/helping-kaiser/cogra/releases/tag/v<version>`.
+- `--released-at` backfills; the default is now.
+- Naming several components writes one row each in one transaction: a
+  component that already has the version refuses the whole publish.
+
+**The ordering law.** A component's row is published only once that
+component's artifact is live, because the row is what tells a running
+client it is behind, and Update now must lead somewhere that has the
+release:
+
+- **web**: as the deploy's last step, after the new build serves — a
+  reload then lands in the new version;
+- **android**: once the store track shows the release available to the
+  cohort, so the listing Update now opens offers it;
+- **before either**: the public GitHub release `v<version>` exists,
+  since every card's door opens it.
+
+One version string per release on every shipped client keeps the
+components' lists the same release line.
+
+For a hand test, the same CLI seeds a dev database: an `android` row
+matching the debug build's `versionName`, then a newer one, shows the
+behind state.
+
 ### Postgres
 
 Connect with any Postgres client using credentials from `.env`:

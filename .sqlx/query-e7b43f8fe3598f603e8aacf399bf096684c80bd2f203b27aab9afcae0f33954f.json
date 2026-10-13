@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(*) AS \"count!\"\n           FROM user_notifications n\n           WHERE n.user_id = $1\n             AND NOT EXISTS (SELECT 1 FROM user_hidden_actors h\n                             WHERE h.viewer_id = n.user_id AND h.hidden_id = n.actor_id)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "e7b43f8fe3598f603e8aacf399bf096684c80bd2f203b27aab9afcae0f33954f"
+}

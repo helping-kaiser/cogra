@@ -742,20 +742,24 @@ fn a_clean_clone_and_a_carrying_checkout_give_one_corpus_count() {
 /// because the last rule's empty prefix is what makes Ω total and the loader
 /// checks that it comes last. Inserting shifts every later rule's position,
 /// and the loader checks `order` against position too, so the fixture
-/// renumbers rather than hand-maintaining twenty integers.
+/// renumbers rather than hand-maintaining every integer below the insertion.
+/// The block is found by its heading's words, not its rule numbers, which
+/// move whenever the partition gains a rule.
 fn with_an_absent_required_root() -> Adoption {
     let at = Path::new(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../corpus-adoption.toml"
     ));
     let text = fs::read_to_string(at).expect("the adoption data is readable");
-    let marker = "# --- 18..19: working notes";
+    let marker = text
+        .lines()
+        .find(|line| line.starts_with("# --- ") && line.contains(": working notes"))
+        .expect("the working-note block keeps its heading");
     let added = text.replacen(
         marker,
-        concat!(
-            "[[partition.rule]]\norder = 0\npath  = \"absent-required/\"\n",
-            "owner = \"tree.docs-root\"\noptional = false\n\n",
-            "# --- 18..19: working notes",
+        &format!(
+            "[[partition.rule]]\norder = 0\npath  = \"absent-required/\"\n\
+             owner = \"tree.docs-root\"\noptional = false\n\n{marker}"
         ),
         1,
     );
