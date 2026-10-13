@@ -132,13 +132,17 @@ async fn post(pool: &PgPool, author: Uuid, secs: i64, title: &str) -> Uuid {
 }
 
 async fn comment(pool: &PgPool, author: Uuid, target: Uuid) -> Uuid {
+    comment_on(pool, author, target, "post").await
+}
+
+async fn comment_on(pool: &PgPool, author: Uuid, target: Uuid, target_type: &str) -> Uuid {
     let id = Uuid::new_v4();
     let mut tx = pool.begin().await.expect("tx");
     content::insert_comment(
         &mut tx,
         id,
         target,
-        "post",
+        target_type,
         author,
         &format!("mint:act:{id}:0:review"),
         "a=0;o=0",
@@ -770,6 +774,35 @@ async fn a_kept_sensitive_post_stays_with_its_status(pool: PgPool) {
     let page = saved(&rig, &token, json!({})).await;
     assert_eq!(ids(&page), vec![p]);
     assert_eq!(page["edges"][0]["node"]["content"]["status"], "SENSITIVE");
+}
+
+/// A comment row names and opens the post its thread hangs under: the
+/// target for a top-level comment, the thread's post for a reply however
+/// deep — read in one field, never by walking `target` (F2).
+///
+/// A comment's post is its thread's post at any depth.
+/// ´claim:bookmarks:a-comments-post-is-its-threads-post´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_replys_post_is_the_threads_post(pool: PgPool) {
+    let rig = rig(pool);
+    let (_, token) = reader(&rig, "reader").await;
+    let sol = person(&rig.pool, "sol").await;
+    let p = post(&rig.pool, sol, 1, "The long way home").await;
+    let top = comment(&rig.pool, sol, p).await;
+    let reply = comment_on(&rig.pool, sol, top, "comment").await;
+    let deep = comment_on(&rig.pool, sol, reply, "comment").await;
+    for c in [top, deep] {
+        save(&rig, &token, c).await;
+    }
+    let query = r#"{ me { bookmarks { edges { node {
+        id ... on Comment { post { id title { value } } } } } } } }"#;
+    let page = rig.gql(Some(&token), query, json!({})).await;
+    let edges = page["me"]["bookmarks"]["edges"].as_array().expect("edges");
+    assert_eq!(edges.len(), 2);
+    for edge in edges {
+        assert_eq!(edge["node"]["post"]["id"], json!(p), "{edge}");
+        assert_eq!(edge["node"]["post"]["title"]["value"], "The long way home");
+    }
 }
 
 /// Hiding is for the feed: a hidden actor's things and their profile stay

@@ -3023,6 +3023,14 @@ impl CommentType {
         })
     }
 
+    /// The post this comment's thread hangs under — the target itself for
+    /// a top-level comment, the thread's post for a reply at any depth.
+    /// Null when the chain ends at no post the server holds.
+    async fn post(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<PostType>> {
+        let loader = ctx.data::<DataLoader<crate::loaders::ThreadPostLoader>>()?;
+        Ok(loader.load_one(self.0.id).await?.map(PostType))
+    }
+
     async fn moderation_status(&self) -> ModerationStatus {
         node_moderation_status(SensitiveMarks::of(self.0.sensitive))
     }

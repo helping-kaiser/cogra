@@ -260,6 +260,36 @@ impl Loader<(Uuid, Uuid)> for BookmarkLoader {
     }
 }
 
+/// The post a comment's thread hangs under, keyed on the comment's id.
+///
+/// A Saved comment row names "the post it answers" and opens the post it
+/// hangs under; for a reply that is the thread's post, any number of
+/// levels up. A page of comment rows resolves in two reads: one walk
+/// for the whole batch, then the posts it found.
+pub struct ThreadPostLoader(PgPool);
+
+impl Loader<Uuid> for ThreadPostLoader {
+    type Value = Post;
+    type Error = LoadError;
+
+    async fn load(&self, keys: &[Uuid]) -> Result<HashMap<Uuid, Post>, LoadError> {
+        let pairs = content_store::thread_posts(&self.0, keys)
+            .await
+            .map_err(LoadError::from_display)?;
+        let post_ids: Vec<Uuid> = pairs.iter().map(|(_, post)| *post).collect();
+        let posts = crate::nodes::resolve_content_many(&self.0, &post_ids)
+            .await
+            .map_err(LoadError::from_display)?;
+        Ok(pairs
+            .into_iter()
+            .filter_map(|(comment, post)| match posts.get(&post) {
+                Some(crate::nodes::ContentNode::Post(p)) => Some((comment, p.clone())),
+                _ => None,
+            })
+            .collect())
+    }
+}
+
 /// Groups a flat gallery read back into one list per version, preserving
 /// the query's own ordering — which is gallery order.
 ///
@@ -287,6 +317,7 @@ pub struct NodeLoaders {
     pub media: DataLoader<MediaByIdLoader>,
     pub payload_states: DataLoader<PayloadStateLoader>,
     pub bookmarks: DataLoader<BookmarkLoader>,
+    pub thread_posts: DataLoader<ThreadPostLoader>,
 }
 
 impl NodeLoaders {
@@ -300,7 +331,8 @@ impl NodeLoaders {
             comment_galleries: DataLoader::new(CommentGalleryLoader(pool.clone()), tokio::spawn),
             media: DataLoader::new(MediaByIdLoader(pool.clone()), tokio::spawn),
             payload_states: DataLoader::new(PayloadStateLoader(pool.clone()), tokio::spawn),
-            bookmarks: DataLoader::new(BookmarkLoader(pool), tokio::spawn),
+            bookmarks: DataLoader::new(BookmarkLoader(pool.clone()), tokio::spawn),
+            thread_posts: DataLoader::new(ThreadPostLoader(pool), tokio::spawn),
         }
     }
 }
