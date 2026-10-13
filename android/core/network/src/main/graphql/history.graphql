@@ -3,6 +3,39 @@
 # page of them per call. The document is web's twin
 # (web/src/lib/graphql/history.graphql).
 
+# The seen record's sync (ranked-feed-api §4.3; PR-52): the reader's own
+# seen-list, ids and first seeings only, newest first — paged down to the
+# device's watermark. `me.id` names whose list it is, so a page read across
+# an account switch is never written into the wrong account's record.
+query SeenHistory($first: Int!, $after: String) {
+  me {
+    id
+    viewHistory(first: $first, after: $after) {
+      edges {
+        firstSeenAt
+        node {
+          ... on Post {
+            id
+          }
+          ... on Comment {
+            id
+          }
+          ... on User {
+            id
+          }
+          ... on Hashtag {
+            id
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
 mutation MarkSeen($nodes: [UUID!]!) {
   markSeen(input: { nodes: $nodes }) {
     ok

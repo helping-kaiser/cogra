@@ -54,12 +54,19 @@ import javax.inject.Singleton
  * In memory and process-wide, on the `SensitiveReveals` pattern; flushes
  * run on the app-lifetime scope, because the checkpoint that matters most
  * — the reader leaving — is exactly when the screen's own scope ends.
+ *
+ * Every first seeing is also written through to the account's durable
+ * [SeenRecord] (PR-51), which the feed's seen cut reads. The two answer
+ * different questions and so stay apart: this book is what is still owed
+ * to the server, the record what the reader has seen. The write path to
+ * the server is unchanged by it.
  */
 @Singleton
 class SeenTracker @Inject constructor(
     private val history: ViewHistoryRepository,
     tokens: TokenStore,
     @ApplicationScope private val scope: CoroutineScope,
+    private val record: SeenRecord,
 ) {
     private val lock = Any()
 
@@ -86,7 +93,7 @@ class SeenTracker @Inject constructor(
      */
     fun saw(nodeIds: List<String>) {
         if (nodeIds.isEmpty()) return
-        synchronized(lock) { book?.saw(nodeIds) }
+        remember(synchronized(lock) { book?.let { it.account to it.saw(nodeIds) } })
     }
 
     /**
@@ -99,7 +106,12 @@ class SeenTracker @Inject constructor(
      */
     fun sawEdges(nodeId: String, top: Boolean, bottom: Boolean) {
         if (!top && !bottom) return
-        synchronized(lock) { book?.sawEdges(nodeId, top, bottom) }
+        remember(synchronized(lock) { book?.let { it.account to it.sawEdges(nodeId, top, bottom) } })
+    }
+
+    /** A book's first seeings, written through to its account's record. */
+    private fun remember(firstSeen: Pair<String, List<String>>?) {
+        firstSeen?.let { (account, ids) -> record.add(account, ids) }
     }
 
     /** A checkpoint: send what is queued, a page per call. */
@@ -159,20 +171,21 @@ internal class SeenBook(val account: String) {
 
     val queued: List<String> get() = queue.toList()
 
-    fun saw(nodeIds: List<String>) {
-        nodeIds.forEach { if (reported.add(it)) queue.addLast(it) }
-    }
+    /** Queues the ids not reported before; returns them, in arrival order. */
+    fun saw(nodeIds: List<String>): List<String> =
+        nodeIds.filter { reported.add(it) }.onEach { queue.addLast(it) }
 
-    fun sawEdges(nodeId: String, top: Boolean, bottom: Boolean) {
-        if (nodeId in reported) return
+    /** The card's edges; returns it once both have stood on screen, else nothing. */
+    fun sawEdges(nodeId: String, top: Boolean, bottom: Boolean): List<String> {
+        if (nodeId in reported) return emptyList()
         val earlier = firstEdge[nodeId]
         val both = (top && bottom) || (earlier == true && bottom) || (earlier == false && top)
         if (both) {
             firstEdge.remove(nodeId)
-            saw(listOf(nodeId))
-        } else if (earlier == null) {
-            firstEdge[nodeId] = top
+            return saw(listOf(nodeId))
         }
+        if (earlier == null) firstEdge[nodeId] = top
+        return emptyList()
     }
 
     /**
