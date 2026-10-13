@@ -9,6 +9,7 @@ pub mod bookmarks;
 pub mod bootstrap;
 pub mod breach;
 pub mod content;
+pub mod hidden;
 pub mod history;
 pub mod ingest;
 pub mod l1;
