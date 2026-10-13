@@ -2318,6 +2318,10 @@ state (jakob 2026-10-02, **blessed**). The card's body, on `VouchBack`
 and `VouchBackPad`: `Vouch back to open the way from your side — your
 opinion toward @mira, and your feed grows from it.` (`VouchBack` adds
 `Vouching opens the opinion control, set to a gentle default.`). The
+card's act is the stance face, and one line beside it teaches the tap:
+`Tap the face to vouch back.` — on the deleted voucher's card too, and
+with no first-opinion words, because the card stands while the member
+holds other opinions (jakob's own, 2026-10-13). The
 pad's title and its "?" read `Your vouch back`, and the line above its
 two coaching lines opens on the title: `Your vouch back. The pad is how you shape what
 reaches you — for or against, and how much.` *Carried over — blessed by
