@@ -7,6 +7,7 @@ members = [
     "crates/cogra-interchange",
     "crates/cogra-linter",
     "crates/ranker",
+    "crates/ranker-server",
 ]
 resolver = "2"
 

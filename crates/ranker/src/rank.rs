@@ -110,6 +110,14 @@ pub(crate) fn calibrate(
     })
 }
 
+/// Checks the viewer's overrides against the published network parameters
+/// before any slice is fetched: `gamma` in `(0, 1]`, a dust floor finer
+/// than or equal to the network's, a half-life in range — and the network
+/// parameters against their own domains.
+pub fn check_params(params: &RankParams, net: &NetworkParams) -> Result<(), RankError> {
+    calibrate(params, net).map(|_| ())
+}
+
 /// Reads one extracted walk as its path: sign, magnitude, recency and
 /// contribution.
 pub(crate) fn path_of(g: &Graph, walk: &Walk, half_life: u32) -> RankPath {
@@ -339,6 +347,15 @@ pub fn rank_search(
 ) -> Result<Vec<FeedEntry>, RankError> {
     let cal = calibrate(params, net)?;
     let g = Graph::build(slice, cal.gamma)?;
+    rank_search_nodes(&g, candidates, &cal)
+}
+
+/// `rank_search` over a built graph.
+pub(crate) fn rank_search_nodes(
+    g: &Graph,
+    candidates: &[String],
+    cal: &Calibration,
+) -> Result<Vec<FeedEntry>, RankError> {
     let wanted: BTreeSet<&str> = candidates.iter().map(String::as_str).collect();
     let nodes: Vec<usize> = (0..g.nodes.len())
         .filter(|&i| i != g.root)
@@ -350,7 +367,7 @@ pub fn rank_search(
                     .is_some_and(|id| wanted.contains(id))
         })
         .collect();
-    rank_nodes(&g, &nodes, &cal)
+    rank_nodes(g, &nodes, cal)
 }
 
 /// One target's entry, computed alone — the device's spot-check primitive

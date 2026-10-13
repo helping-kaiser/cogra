@@ -263,8 +263,33 @@ pub fn feed_ranking(
     let g = Graph::build(slice, cal.gamma)?;
     let candidates = feed_candidates(&g, params, &cal)?;
     let entries = rank_nodes(&g, &candidates, &cal)?;
+    assemble(&g, &cal, entries, settling)
+}
 
-    let newest = newest_indices(&g, &entries);
+/// The search re-ranking in the pod's answer shape: the in-slice subset of
+/// `candidates` a live path reaches, ordered, marked and placed in NEWEST
+/// order among themselves. No settling rows: search candidates are given.
+pub fn search_ranking(
+    slice: &Slice,
+    candidates: &[String],
+    params: &RankParams,
+    net: &NetworkParams,
+) -> Result<FeedRanking, RankError> {
+    let cal = calibrate(params, net)?;
+    let g = Graph::build(slice, cal.gamma)?;
+    let entries = crate::rank::rank_search_nodes(&g, candidates, &cal)?;
+    assemble(&g, &cal, entries, &[])
+}
+
+/// Marks the ranked entries, places them in NEWEST order, and weaves the
+/// settling candidates into both orders.
+fn assemble(
+    g: &Graph,
+    cal: &Calibration,
+    entries: Vec<FeedEntry>,
+    settling: &[SettlingCandidate],
+) -> Result<FeedRanking, RankError> {
+    let newest = newest_indices(g, &entries);
     let mut ranked = Vec::with_capacity(entries.len());
     for (entry, newest_index) in entries.iter().zip(newest) {
         let mark = match row_person(&entry.target_graph_id, entry.kind) {
@@ -342,7 +367,7 @@ pub fn feed_ranking(
         });
     }
     Ok(FeedRanking {
-        as_of_epoch: slice.as_of_epoch,
+        as_of_epoch: g.as_of_epoch,
         entries: ranked,
         settling: places,
     })

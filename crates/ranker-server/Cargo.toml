@@ -1,0 +1,41 @@
+[package]
+name    = "ranker-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+# The server's ranker pod (ranker-core §4): the pure `ranker` crate behind a
+# small GraphQL schema, in its own process and container. It holds no
+# session, no database handle and no secret; it reads the viewer's slice and
+# the governed parameters back from the api like any anonymous reader. It
+# is never a dependency of `api` (PR-9: ranking never runs in the backend).
+
+[[bin]]
+name = "cogra-ranker"
+path = "src/main.rs"
+
+[[bin]]
+name = "export-ranker-schema"
+path = "src/bin/export-ranker-schema.rs"
+
+[dependencies]
+ranker             = { path = "../ranker" }
+tokio              = { workspace = true }
+axum               = { workspace = true }
+async-graphql      = { workspace = true, features = ["chrono", "uuid"] }
+async-graphql-axum = { workspace = true }
+reqwest            = { workspace = true }
+graphql_client     = { workspace = true }
+serde              = { workspace = true }
+serde_json         = { workspace = true }
+thiserror          = { workspace = true }
+anyhow             = { workspace = true }
+tracing            = { workspace = true }
+tracing-subscriber = { workspace = true }
+uuid               = { workspace = true }
+chrono             = { workspace = true }
+
+[dev-dependencies]
