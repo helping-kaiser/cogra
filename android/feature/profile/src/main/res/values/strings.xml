@@ -2,6 +2,22 @@
 <resources>
     <string name="profile_title">Profile</string>
     <string name="profile_back">Back</string>
+    <!-- A Saved row's person reads its origin (the origin-naming table). -->
+    <string name="profile_back_saved">Back to Saved</string>
+
+    <!-- The profile's ⋮ (ProfileOwnMenu.md, ProfileMenu.md, ProfileDeletedMenu.md). -->
+    <string name="profile_menu_own">More on your profile</string>
+    <string name="profile_menu_other">More about %1$s</string>
+    <string name="profile_menu_deleted">More about this account</string>
+    <string name="profile_menu_saved">Saved</string>
+    <string name="profile_menu_history">History</string>
+    <string name="profile_menu_share_yours">Share your profile</string>
+    <string name="profile_menu_save">Save</string>
+    <string name="profile_menu_mention">Mention in a new post</string>
+    <string name="profile_menu_share_this">Share this profile</string>
+    <string name="profile_menu_hide">Hide %1$s</string>
+    <string name="profile_menu_hide_account">Hide this account</string>
+    <string name="profile_menu_report">Report</string>
     <string name="profile_not_found">This profile doesn\'t exist.</string>
     <string name="error_transport">Something didn\'t load. Check your connection and try again.</string>
     <string name="profile_retry">Try again</string>

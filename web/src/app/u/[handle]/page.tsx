@@ -34,9 +34,13 @@ export async function generateMetadata({
 
 export default async function ProfilePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ handle: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { handle } = await params;
-  return <ProfileScreen handle={handle} />;
+  const { from } = await searchParams;
+  // A Saved row's person reads `Back to Saved` (the origin-naming table).
+  return <ProfileScreen handle={handle} from={typeof from === "string" ? from : null} />;
 }

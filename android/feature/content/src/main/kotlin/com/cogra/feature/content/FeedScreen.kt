@@ -53,6 +53,7 @@ import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.LocalSnackbarHostState
 import com.cogra.core.designsystem.NodeSnackbarVisuals
 import com.cogra.core.designsystem.PendingMarker
+import com.cogra.core.designsystem.RowLine
 import com.cogra.core.designsystem.SeenCardsEffect
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.dataNode
@@ -75,9 +76,13 @@ import com.cogra.domain.LicenseChoice
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
+import com.cogra.domain.saved.SavedWrites
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.R
 import com.cogra.feature.content.reply.ReplyTarget
+import com.cogra.feature.saved.LocalSavedHost
+import com.cogra.feature.saved.rememberSavedHost
+import com.cogra.feature.saved.rememberSavedWrites
 import com.cogra.feature.stance.StanceControlRoute
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -223,11 +228,15 @@ fun FeedRoute(
         viewerId = viewerId,
         onEditPost = onEditPost,
         onCitePost = onCitePost,
-        stanceControl = { target, tag, node ->
-            StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node)
-        },
+        stanceControl = nodeStanceControl,
+        saved = rememberSavedWrites(),
+        onRequireAccount = onRequireAccount,
     )
 }
+
+/** The stance control a route hands its cards: the live control on the node, wearing its registered path. */
+internal val nodeStanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit =
+    { target, tag, node -> StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node) }
 
 /** One callback after another — the pull tells the shell, then refreshes. */
 private fun then(first: () -> Unit, second: () -> Unit): () -> Unit = {
@@ -295,6 +304,13 @@ fun FeedScreen(
      * through a view model this screen keeps out of its own signature.
      */
     reportSheet: ReportSheetSlot = { _, _, _ -> },
+    /**
+     * The app's one Saved overlay (`SavedWrites`), which the cards' menus
+     * save through; null stands their Save rows inert.
+     */
+    saved: SavedWrites? = null,
+    /** The guest gate a signed-out reader's Save opens; null when signed in. */
+    onRequireAccount: (() -> Unit)? = null,
     /** The bar's Feed slot re-tapped over this root, counted ([FeedReselectEffect]). */
     reselectSignal: Int = 0,
 ) {
@@ -365,7 +381,10 @@ fun FeedScreen(
         suspended = commentsFor != null,
     )
     val band = FEED / "band"
-    CompositionLocalProvider(LocalCoveringLayers provides layers) {
+    // THE CARDS' MENUS SAVE THROUGH THE ONE OVERLAY, their aftermath on the
+    // feed's own snackbar (`saveMenuRow`).
+    val savedHost = rememberSavedHost(saved, snackbar, FEED / "snackbar", onRequireAccount)
+    CompositionLocalProvider(LocalCoveringLayers provides layers, LocalSavedHost provides savedHost) {
         Scaffold(
             modifier = Modifier.dataNodeSurface(),
             topBar = {
@@ -820,6 +839,9 @@ private fun PostCard(
             ) {
                 stanceControl(post.id, "feed_post_${post.id}", card / "actionRow" / "stance")
             }
+            // THE ROW LINE under the face (RowSigning.md): a save or unsave
+            // of this post that did not go through.
+            LocalSavedHost.current?.comfortLine(post.id)?.let { RowLine(it, "feed_post_${post.id}_row_line") }
         }
     }
 }
@@ -899,6 +921,11 @@ private fun CardMenuHeader(
                 testTagPrefix = "feed_${post.id}_menu",
                 onReport = onReport,
                 rowNode = { row -> (menuSheet / row.nodeName).takeIf { row in FEED_MENU_ROWS } },
+                saveRow = LocalSavedHost.current?.menuRow(
+                    post.id,
+                    post.viewerBookmarkedAt,
+                    "feed_${post.id}_menu_save",
+                ),
             )
         },
         menuContentDescription = stringResource(R.string.content_menu_post),

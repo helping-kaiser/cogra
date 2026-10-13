@@ -78,6 +78,12 @@ data class NodeSnackbarVisuals(
     override val message: String,
     val node: DataNode?,
     override val actionLabel: String? = null,
+    /**
+     * The node a read-side comfort was made on, when a comfort raised this:
+     * its revert clears the snackbar, which must not stand announcing what
+     * did not happen (Saved.md, SG-9).
+     */
+    val cause: String? = null,
 ) : SnackbarVisuals {
     override val withDismissAction: Boolean get() = false
     override val duration: SnackbarDuration get() = SnackbarDuration.Short

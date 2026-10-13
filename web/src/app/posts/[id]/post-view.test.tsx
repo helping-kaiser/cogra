@@ -19,6 +19,7 @@ import { whenObserved } from "@/test/media-env";
 import { stanceBundle, stanceHandlers } from "@/test/stance";
 import { PostView } from "./post-view";
 import { byNode } from "@/test/data-node";
+import { bookmarkHandlers, bookmarkLog } from "@/test/saved";
 
 // The menu rows that go somewhere navigate rather than link, because a sheet
 // row is a button — so the router is what a citing or editing row is measured
@@ -719,7 +720,7 @@ describe("PostView", () => {
 
   // THE INTRODUCED-BUT-INERT LAW (jakob 2026-09-14): a row whose destination is
   // not built yet stands and does nothing, rather than the menu growing a row
-  // per slice.
+  // per slice. Hide waits on the hidden-actors packet.
   it("renders the rows whose destinations are not built yet, and they do nothing", async () => {
     server.use(
       ...thread("someone-else", []),
@@ -729,12 +730,165 @@ describe("PostView", () => {
       writeSigner: fakeWriteSigner(),
     });
     fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
-    fireEvent.click(screen.getByTestId("postDetail.menuSheet.save"));
-    expect(screen.getByTestId(byNode("postDetail.card.body"))).toBeInTheDocument();
-
-    fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
     fireEvent.click(screen.getByTestId("postDetail.menuSheet.hide"));
     expect(screen.getByTestId(byNode("postDetail.card.body"))).toBeInTheDocument();
+  });
+
+  /** The detail's post, kept by the reader at `keptAt` (or not kept). */
+  function keptThread(keptAt: string | null) {
+    return threadFrom(() => {
+      const data = detail("someone-else", []);
+      return { post: { ...data.post, viewerBookmarkedAt: keptAt } };
+    });
+  }
+
+  // THE SAVE ACTION (ReaderPostMenu.md:5-13): the row reads Save while the post
+  // is not kept; the tap closes the sheet, keeps it and says `Saved.`.
+  it("save_row_keeps_the_post_and_snackbars_saved", async () => {
+    const log = bookmarkLog();
+    server.use(...keptThread(null), ...bookmarkHandlers(log));
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
+    expect(screen.getByTestId("postDetail.menuSheet.save")).toHaveTextContent(/^Save$/);
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.save"));
+    expect(await screen.findByTestId("postDetail.snackbar.message")).toHaveTextContent("Saved.");
+    expect(screen.queryByTestId("postDetail.snackbar.action")).not.toBeInTheDocument();
+    await waitFor(() => expect(log.sets).toEqual([{ node: "p1", at: null }]));
+    fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
+    expect(screen.getByTestId("postDetail.menuSheet.save")).toHaveTextContent("Unsave");
+  });
+
+  // UNSAVE ON A MENU (design digest item 48): the sheet closes and the
+  // snackbar reads `Removed from Saved.` with `Undo`, which keeps the post
+  // again at its own first time.
+  it("unsave_from_a_menu_closes_and_offers_undo", async () => {
+    const log = bookmarkLog();
+    server.use(...keptThread("2026-10-01T08:00:00Z"), ...bookmarkHandlers(log));
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
+    expect(screen.getByTestId("postDetail.menuSheet.save")).toHaveTextContent("Unsave");
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.save"));
+    expect(await screen.findByTestId("postDetail.snackbar.message")).toHaveTextContent(
+      "Removed from Saved.",
+    );
+    await waitFor(() => expect(log.removes).toEqual(["p1"]));
+    fireEvent.click(screen.getByTestId("postDetail.snackbar.action"));
+    await waitFor(() =>
+      expect(log.sets).toEqual([{ node: "p1", at: "2026-10-01T08:00:00Z" }]),
+    );
+  });
+
+  // A COMFORT THAT FAILS (ReaderPostMenu.md:13; RowSigning.md): the save
+  // reverts, the snackbar that announced it clears, and the target's row says
+  // `That didn't go through.` with Retry — never the snackbar.
+  it("a_failed_save_reverts_and_the_row_says_retry", async () => {
+    const log = bookmarkLog();
+    server.use(...keptThread(null), ...bookmarkHandlers(log, { failSet: true }));
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.save"));
+    const line = await screen.findByTestId("post-row-line");
+    expect(line).toHaveTextContent("That didn't go through.");
+    expect(line).toHaveAttribute("role", "alert");
+    expect(screen.queryByTestId("postDetail.snackbar.message")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
+    expect(screen.getByTestId("postDetail.menuSheet.save")).toHaveTextContent(/^Save$/);
+    // Retry asks the same save again, and signs nothing.
+    fireEvent.click(screen.getByTestId("post-row-line-retry"));
+    await waitFor(() => expect(log.sets).toHaveLength(2));
+  });
+
+  // GuestGate.md:5 — a guest's Save asks them to join and sends nothing.
+  it("a_guest_meets_the_ask_on_save", async () => {
+    const log = bookmarkLog();
+    server.use(...keptThread(null), ...bookmarkHandlers(log));
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.save"));
+    expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
+    expect(log.sets).toEqual([]);
+  });
+
+  // THE COMMENT MENUS GAIN THE SNACKBAR (design digest item 54): a comment's
+  // Save keeps it and says `Saved.` on the thread.
+  it("a_comments_save_keeps_it_and_snackbars_saved", async () => {
+    const log = bookmarkLog();
+    server.use(...thread("u1", [{ id: "c1", body: "First!" }]), ...bookmarkHandlers(log));
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    await openComments();
+    fireEvent.click(await screen.findByTestId("comment-menu-c1"));
+    fireEvent.click(screen.getByTestId("comment-menu-save-c1"));
+    expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent("Saved.");
+    await waitFor(() => expect(log.sets).toEqual([{ node: "c1", at: null }]));
+  });
+
+  // LANDING ON A COMMENT (jakob 2026-10-01; Saved.md "tap a comment's row"):
+  // the thread opens over the post, the reply's branch unfolds, and the reply
+  // takes focus.
+  it("a_saved_reply_opens_its_thread_landed_on_it", async () => {
+    server.use(
+      ...thread("u1", [{ id: "c1", body: "Top", replyCount: 1 }]),
+      graphql.query("CommentParent", ({ variables }) =>
+        HttpResponse.json({
+          data: {
+            comment: {
+              __typename: "Comment",
+              id: variables.id,
+              target:
+                variables.id === "r1"
+                  ? { __typename: "Comment", id: "c1" }
+                  : { __typename: "Post", id: "p1" },
+            },
+          },
+        }),
+      ),
+      graphql.query("CommentReplies", () =>
+        HttpResponse.json({
+          data: {
+            comment: {
+              __typename: "Comment",
+              id: "c1",
+              replies: {
+                __typename: "CommentConnection",
+                edges: [{ __typename: "CommentEdge", node: commentNode({ id: "r1", body: "nested" }) }],
+                pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+              },
+            },
+          },
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" landOn="r1" from="saved" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    const reply = await screen.findByTestId("post-comment-r1");
+    await waitFor(() => expect(document.activeElement).toBe(reply));
+    expect((screen.getByTestId("comments-sheet") as HTMLDialogElement).open).toBe(true);
+  });
+
+  // A SAVED ROW'S DESTINATION NAMES ITS ORIGIN (the origin-naming table).
+  it("opened_from_saved_the_back_arrow_reads_back_to_saved", async () => {
+    server.use(...thread("someone-else", []));
+    renderWithProviders(<PostView postId="p1" from="saved" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    const back = await screen.findByTestId(byNode("postDetail.header.back"));
+    expect(back).toHaveAttribute("aria-label", "Back to Saved");
+    expect(back).toHaveAttribute("href", "/saved");
   });
 
   // The dialog ships; the removal does not (jakob 2026-09-14 — erasure is

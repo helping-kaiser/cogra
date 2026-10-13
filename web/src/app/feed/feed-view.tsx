@@ -59,6 +59,7 @@ import { scrollHostToTopAnimated, scrollOffsetOf, useScrollHost } from "@/lib/ui
 import { ANCHOR_ATTRIBUTE, usePinnedPlace } from "@/lib/ui/scroll-pin";
 import { LINK_COPIED } from "@/lib/ui/share";
 import { useNewerVersionAnnouncement } from "@/lib/release/newer-version-announcer";
+import { useHostSnack } from "@/lib/saved/save-row";
 import { Snackbar } from "@/lib/ui/snackbar";
 import type { DataNode } from "@/lib/ui/data-node";
 import * as clipMemory from "@/lib/ui2/media/clip-memory";
@@ -263,10 +264,7 @@ export function FeedView({
   const [transportFault, setTransportFault] = useState<TransportFault | null>(null);
   // THE FEED'S ONE SNACKBAR (`feed.snackbar`): a copied link, and the
   // aftermath of what the card menus did.
-  const [snack, setSnack] = useState<string | null>(null);
-  // Stable, so the snackbar's own timer is not restarted by every render of
-  // the feed underneath it.
-  const dismissSnack = useCallback(() => setSnack(null), []);
+  const { snack, notify, dismiss: dismissSnack } = useHostSnack();
   // A NEWER VERSION, SAID ONCE (FeedNewerVersion.md): on the feed's arrival
   // in a cold open, the same one snackbar — queued behind whatever it is
   // already saying, as Material shows one at a time.
@@ -623,7 +621,7 @@ export function FeedView({
                   setCommentsPost(post);
                   setCommentsOpen(true);
                 }}
-                onLinkCopied={() => setSnack(LINK_COPIED)}
+                onLinkCopied={() => notify(LINK_COPIED)}
                 onOpenMenu={() => {
                   setMenuPost(post);
                   setMenuOpen(true);
@@ -672,8 +670,9 @@ export function FeedView({
         <Snackbar
           testId="feed-snackbar"
           node={{ path: "feed.snackbar" }}
-          message={newer.message ?? snack}
-          action={newer.action}
+          message={newer.message ?? snack?.message ?? null}
+          action={newer.message !== null ? newer.action : snack?.action}
+          token={newer.message !== null ? undefined : snack?.token}
           onDismiss={newer.message !== null ? newer.dismiss : dismissSnack}
         />
       </div>
@@ -687,7 +686,7 @@ export function FeedView({
         onClose={() => setMenuOpen(false)}
         nodes={{ sheet: { path: "feed.menuSheet" }, row: feedMenuRow }}
         testId="feed-menu"
-        notify={setSnack}
+        notify={notify}
       />
       {/* Conditionally mounted, matching `stance-control.tsx`'s own guest
           gate: `JoinPrompt` always draws its `data-testid`, so a second one

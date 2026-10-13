@@ -71,6 +71,7 @@ import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.release.AnnouncedReleaseStore
 import com.cogra.domain.release.ReleaseRegistry
 import com.cogra.domain.report.ReportRepository
+import com.cogra.domain.saved.SavedRepository
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
@@ -90,6 +91,7 @@ import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.InMemoryAnnouncedReleaseStore
 import com.cogra.domain.testing.RecordingReportRepository
+import com.cogra.domain.testing.RecordingSavedRepository
 import com.cogra.domain.testing.ScriptedReleaseRegistry
 import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.FakeSeenRecordStore
@@ -666,6 +668,15 @@ object FakeBindingsModule {
 
     @Provides
     fun reportRepository(fake: RecordingReportRepository): ReportRepository = fake
+
+    // Saving answers kept, and the Saved list reads empty unless a test
+    // scripts a page.
+    @Provides
+    @Singleton
+    fun recordingSavedRepository(): RecordingSavedRepository = RecordingSavedRepository()
+
+    @Provides
+    fun savedRepository(fake: RecordingSavedRepository): SavedRepository = fake
 
     // The seen record's sync reads an empty server list by default, and
     // the record itself rests in memory for the test process.

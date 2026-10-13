@@ -38,7 +38,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -49,6 +51,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.CollapsingTopBand
 import com.cogra.core.designsystem.CollapsingTopBanner
+import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.RowLine
+import com.cogra.core.designsystem.RowLineState
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
@@ -57,7 +62,10 @@ import com.cogra.crypto.Family
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordLink
 import com.cogra.domain.RecordRow
+import com.cogra.domain.saved.SavedWrites
 import com.cogra.domain.stance.StanceTarget
+import com.cogra.feature.saved.rememberSavedHost
+import com.cogra.feature.saved.rememberSavedWrites
 import com.cogra.feature.stance.StanceControlRoute
 import com.cogra.feature.stance.vouchBackVariant
 import kotlinx.coroutines.launch
@@ -84,9 +92,17 @@ fun ProfileRoute(
      * profile it was signed on.
      */
     onVouchedBack: (ProfileView) -> Unit = {},
+    /** The own menu's Saved row opens the Saved list. */
+    onOpenSaved: () -> Unit = {},
+    /** The guest gate a signed-out reader's rows open; null when signed in. */
+    onRequireAccount: (() -> Unit)? = null,
+    /** Where the reader came from, which the back arrow names (`saved`). */
+    from: String? = null,
     viewModel: ProfileViewModel = hiltViewModel(),
+    shareModel: ProfileShareViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     LaunchedEffect(handle) { viewModel.start(handle) }
     // Settings confirmed the handle change; the edit screen confirmed
     // the save — either way this screen re-reads.
@@ -137,8 +153,16 @@ fun ProfileRoute(
                 StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag)
             }
         },
+        saved = rememberSavedWrites(),
+        onRequireAccount = onRequireAccount,
+        onOpenSaved = onOpenSaved,
+        onShareProfile = { profileHandle -> context.shareProfile(shareModel.urlFor(profileHandle)) },
+        backDescription = if (from == SAVED_ORIGIN) stringResource(R.string.profile_back_saved) else null,
     )
 }
+
+/** The `from` a Saved row's person is opened with. */
+const val SAVED_ORIGIN = "saved"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -159,8 +183,21 @@ fun ProfileScreen(
     banners: @Composable () -> Unit = {},
     /** The header's stance control on someone else's profile (design.md §6). */
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { _, _ -> },
+    /** The app's one Saved overlay, which the ⋮'s Save row saves through; null stands it inert. */
+    saved: SavedWrites? = null,
+    /** The guest gate a signed-out reader's rows open; null when signed in. */
+    onRequireAccount: (() -> Unit)? = null,
+    /** The own menu's Saved row. */
+    onOpenSaved: () -> Unit = {},
+    /** Hands this profile to the platform's own share sheet. */
+    onShareProfile: (String) -> Unit = {},
+    /** The back arrow's spoken name, by where the reader came from (`Back to Saved`). */
+    backDescription: String? = null,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    // THE ⋮'S AFTERMATH READS ON THE PAGE'S OWN SNACKBAR (`profile.snackbar`):
+    // `Saved.`, and `Removed from Saved.` with `Undo` on its action.
+    val savedHost = rememberSavedHost(saved, snackbarHostState, DataNode("profile") / "snackbar", onRequireAccount)
     val scope = rememberCoroutineScope()
     val savedMessage = stringResource(R.string.profile_saved)
     // Consumed only after the snackbar is done: clearing first would flip
@@ -207,7 +244,7 @@ fun ProfileScreen(
                             IconButton(onClick = onBack, modifier = Modifier.testTag("profile_back")) {
                                 Icon(
                                     Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = stringResource(R.string.profile_back),
+                                    contentDescription = backDescription ?: stringResource(R.string.profile_back),
                                 )
                             }
                         }
@@ -282,6 +319,21 @@ fun ProfileScreen(
                                 onEdit = onEdit,
                                 onOpenInvites = openInvites,
                                 stanceControl = stanceControl,
+                                menu = { profile ->
+                                    ProfileMenu(
+                                        kind = when {
+                                            state.own -> ProfileMenuKind.OWN
+                                            profile.deleted -> ProfileMenuKind.DELETED
+                                            else -> ProfileMenuKind.OTHER
+                                        },
+                                        profile = profile,
+                                        saved = savedHost,
+                                        onOpenSaved = onOpenSaved,
+                                        onShare = { onShareProfile(profile.handle) },
+                                        onRequireAccount = onRequireAccount,
+                                    )
+                                },
+                                comfortLine = state.profile?.let { savedHost?.comfortLine(it.id) },
                             )
                         }
                         item(key = "filters") {
@@ -353,6 +405,10 @@ private fun ProfileHeader(
     onEdit: () -> Unit,
     onOpenInvites: () -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
+    /** The ⋮ closing the actions row (`profile.identity.actionRow.menu`). */
+    menu: @Composable (ProfileView) -> Unit = {},
+    /** The row line in the actions row (design digest item 46). */
+    comfortLine: RowLineState? = null,
 ) {
     val profile = state.profile ?: return
     val name = profile.displayName.value?.takeIf { it.isNotBlank() } ?: profile.handle
@@ -403,12 +459,21 @@ private fun ProfileHeader(
             // interpersonal Opinion (api-spec.md "The generic stance");
             // one's own profile keeps edit and invites instead.
             if (!state.own) {
-                Box(Modifier.padding(top = 12.dp)) {
+                // THE ⋮ CLOSES THE ACTIONS ROW (`otherProfileMenu`,
+                // `deletedProfileMenu`) — placed at its drawn node without
+                // conforming the rest of the page (SS-6).
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(top = 12.dp),
+                ) {
                     stanceControl(profile.id, "profile")
+                    menu(profile)
                 }
             }
             if (state.own) {
                 Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.padding(top = 12.dp),
                 ) {
@@ -427,8 +492,12 @@ private fun ProfileHeader(
                     ) {
                         Text(stringResource(R.string.profile_invites))
                     }
+                    // YOUR OWN ⋮, after Edit profile and Invites
+                    // (`ownProfileMenu`): Saved, History, Share your profile.
+                    menu(profile)
                 }
             }
+            comfortLine?.let { RowLine(it, "profile_row_line") }
         }
     }
 }

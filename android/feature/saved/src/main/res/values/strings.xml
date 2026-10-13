@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The save row (copy-voice "Saved, History and hiding"): one word each,
+         the first row of every menu that has it. -->
+    <string name="saved_menu_save">Save</string>
+    <string name="saved_menu_unsave">Unsave</string>
+    <!-- The confirmations, anywhere a save or an unsave is made. -->
+    <string name="saved_snackbar_saved">Saved.</string>
+    <string name="saved_snackbar_removed">Removed from Saved.</string>
+    <string name="saved_snackbar_undo">Undo</string>
+
+    <!-- Saved (Saved.md, SavedEmpty.md). -->
+    <string name="saved_title">Saved</string>
+    <string name="saved_back">Back to your profile</string>
+    <string name="saved_empty">Nothing saved yet. A post, a comment or a person can be saved from its own menu, and it waits here.</string>
+    <string name="saved_unsave">Unsave %1$s</string>
+    <string name="saved_more_failed">Couldn\'t load more</string>
+    <string name="saved_retry">Retry</string>
+    <string name="saved_load_failed">Can\'t reach the server. Check your connection and try again.</string>
+</resources>

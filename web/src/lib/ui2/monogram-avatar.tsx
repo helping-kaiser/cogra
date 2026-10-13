@@ -31,6 +31,7 @@ export function MonogramAvatar({
   size = 40,
   testId,
   node,
+  redacted = false,
 }: {
   name: string;
   src?: string | null;
@@ -38,9 +39,26 @@ export function MonogramAvatar({
   testId?: string;
   /** The registered node this avatar is, which then names it instead of `testId`. */
   node?: DataNode;
+  /**
+   * A DELETED ACCOUNT'S DISC (`ActorChip.jsx`, `erasure.md` §2–3): it keeps its
+   * space and fills with nothing — no picture, no letter, the reserved surface
+   * a redaction mark wears — because there is no name left to take one from.
+   */
+  redacted?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
-  const showPhoto = Boolean(src) && !failed;
+  const showPhoto = Boolean(src) && !failed && !redacted;
+
+  if (redacted) {
+    return (
+      <span
+        {...testAttributes(node, testId)}
+        aria-hidden="true"
+        style={{ width: size, height: size }}
+        className="relative flex flex-none overflow-hidden rounded-full bg-surface-container-high select-none"
+      />
+    );
+  }
 
   return (
     <span

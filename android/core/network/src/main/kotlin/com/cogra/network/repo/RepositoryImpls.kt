@@ -53,6 +53,7 @@ import com.cogra.network.graphql.BorrowedViewQuery
 import com.cogra.network.graphql.ChangeHandleMutation
 import com.cogra.network.graphql.ChangePasswordMutation
 import com.cogra.network.graphql.CommentForEditQuery
+import com.cogra.network.graphql.CommentParentQuery
 import com.cogra.network.graphql.CommentRepliesQuery
 import com.cogra.network.graphql.ConfirmPasswordResetMutation
 import com.cogra.network.graphql.CreateInviteLinkMutation
@@ -578,6 +579,12 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
                     ),
                 )
             }
+        }
+    }
+
+    override suspend fun commentParent(commentId: String): Outcome<String?> = guard.run {
+        client.query(CommentParentQuery(id = commentId)).fetch().map { data ->
+            data.comment?.target?.onComment?.id
         }
     }
 

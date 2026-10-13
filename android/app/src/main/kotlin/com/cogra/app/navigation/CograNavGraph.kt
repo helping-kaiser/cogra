@@ -61,6 +61,7 @@ import com.cogra.core.designsystem.StanceAxes
 import com.cogra.core.designsystem.StanceZeroWords
 import com.cogra.core.designsystem.v2.token.NavTransitions
 import com.cogra.domain.deletion.AccountDeletionState
+import com.cogra.domain.saved.SavedTarget
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.store.TokenStore
 import com.cogra.feature.auth.LoginRoute
@@ -91,6 +92,8 @@ import com.cogra.feature.onboarding.InviteEntryRoute
 import com.cogra.feature.onboarding.KeyCeremonyRoute
 import com.cogra.feature.profile.ProfileEditRoute
 import com.cogra.feature.profile.ProfileRoute
+import com.cogra.feature.profile.SAVED_ORIGIN
+import com.cogra.feature.saved.SavedRoute
 import com.cogra.feature.profile.avatar.AvatarFlowRoute
 import com.cogra.feature.settings.AboutScreen
 import com.cogra.feature.settings.BackupRoute
@@ -155,8 +158,13 @@ data class ComposePost(
     val referenceTargetId: String? = null,
 )
 
+/**
+ * A post's detail. [from] names where the reader came from, which the back
+ * arrow reads (`saved` → `Back to Saved`); [commentId] lands the thread on
+ * that comment, opened over the post (Saved.md "tap a comment's row").
+ */
 @Serializable
-data class PostDetail(val postId: String)
+data class PostDetail(val postId: String, val from: String? = null, val commentId: String? = null)
 
 /**
  * The reply wizard, pinned to what it answers (graph.json `ReplyEntry`
@@ -184,9 +192,13 @@ data class EditComment(val commentId: String, val parentTitle: String)
 @Serializable
 data class Topic(val name: String)
 
-/** An actor's profile; a null handle is the viewer's own (the tab). */
+/** An actor's profile; a null handle is the viewer's own (the tab). [from] names the back arrow's origin. */
 @Serializable
-data class Profile(val handle: String? = null)
+data class Profile(val handle: String? = null, val from: String? = null)
+
+/** The reader's Saved list, reached from their own profile's ⋮ (Saved.md). */
+@Serializable
+data object Saved
 
 @Serializable
 data object ProfileEdit
@@ -650,11 +662,15 @@ private fun CograNavGraphContent(
     // no tab; the task flows drop it for their back arrow.
     val onFeedTab = backStackEntry?.destination?.hasRoute(Feed::class) == true
     val onProfile = backStackEntry?.destination?.hasRoute(Profile::class) == true
-    val onOwnProfileTab = onProfile &&
-        backStackEntry?.toRoute<Profile>()?.handle == null
+    // SAVED KEEPS PROFILE LIT (Saved.md, design digest item 51: the
+    // originating root stays lit on a drill-in) — its one door is the
+    // reader's own profile.
+    val onSaved = backStackEntry?.destination?.hasRoute(Saved::class) == true
+    val onOwnProfileTab = onSaved ||
+        (onProfile && backStackEntry?.toRoute<Profile>()?.handle == null)
     val onPostDetail = backStackEntry?.destination?.hasRoute(PostDetail::class) == true
     val onChatsComingSoon = backStackEntry?.destination?.hasRoute(ChatsComingSoon::class) == true
-    val onReadSurface = onFeedTab || onProfile || onPostDetail || onChatsComingSoon
+    val onReadSurface = onFeedTab || onProfile || onPostDetail || onChatsComingSoon || onSaved
 
     // The documented tab pattern: pop to the signed-in root saving
     // state, single-top, restoring the target tab's state.
@@ -1037,8 +1053,11 @@ private fun CograNavGraphContent(
                 val (commentParent, consumeCommentParent) = entry.navResult(commentParentKey)
                 val (commentsPlace, consumeCommentsPlace) = entry.navResult(commentsPlaceKey)
                 val accountId by authState.accountId.collectAsStateWithLifecycle()
+                val detailRoute = entry.toRoute<PostDetail>()
                 PostDetailRoute(
-                    postId = entry.toRoute<PostDetail>().postId,
+                    postId = detailRoute.postId,
+                    from = detailRoute.from,
+                    landOn = detailRoute.commentId,
                     viewerId = accountId,
                     signedIn = signedIn,
                     onRequireAccount = { joinPrompt = true }.takeIf { signedIn == false },
@@ -1196,6 +1215,28 @@ private fun CograNavGraphContent(
                     // the ceremony, by Set or by the hold (ProfileOther.md:37).
                     onVouchedBack = { profile ->
                         openCeremony(profile.handle, profile.displayName.value, profile.avatar?.url)
+                    },
+                    // The own ⋮'s Saved row (ProfileOwnMenu.md).
+                    onOpenSaved = { navController.navigate(Saved) },
+                    onRequireAccount = { joinPrompt = true }.takeIf { signedIn == false },
+                    from = route.from,
+                )
+            }
+            // SAVED (Saved.md): reached from the own profile's ⋮, and every row
+            // opens its thing with a back arrow reading `Back to Saved`.
+            composable<Saved> {
+                SavedRoute(
+                    onBack = { navController.navigateUp() },
+                    onOpen = { target ->
+                        when (target) {
+                            is SavedTarget.Post -> navController.navigate(
+                                PostDetail(target.postId, from = SAVED_ORIGIN),
+                            )
+                            is SavedTarget.Comment -> navController.navigate(
+                                PostDetail(target.postId, from = SAVED_ORIGIN, commentId = target.commentId),
+                            )
+                            is SavedTarget.Person -> navController.navigate(Profile(target.handle, from = SAVED_ORIGIN))
+                        }
                     },
                 )
             }

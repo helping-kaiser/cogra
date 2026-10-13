@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 
 import { createGuardedClient } from "@/lib/session/browser-guard";
 import type { KeyCeremony } from "@/lib/identity/key-ceremony";
+import { SavedProvider } from "@/lib/saved/provider";
 import { SessionProvider } from "@/lib/session/provider";
 import { AuthRuntimeProvider } from "@/lib/session/runtime";
 import { createTokenStore, type TokenStore } from "@/lib/session/token-store";
@@ -52,7 +53,9 @@ export function renderWithProviders(
       <ApolloProvider client={client}>
         <AuthRuntimeProvider>
           <RegistrationProvider ceremony={ceremony} flow={flow} writeSigner={writeSigner}>
-            <StanceDataProvider data={stanceData}>{ui}</StanceDataProvider>
+            <StanceDataProvider data={stanceData}>
+              <SavedProvider>{ui}</SavedProvider>
+            </StanceDataProvider>
           </RegistrationProvider>
         </AuthRuntimeProvider>
       </ApolloProvider>

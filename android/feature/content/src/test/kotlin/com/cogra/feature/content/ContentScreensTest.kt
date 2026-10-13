@@ -47,6 +47,11 @@ import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.MediaAssetView
 import com.cogra.core.designsystem.v2.media.DETAIL_CLIP_TAG
 import com.cogra.domain.ModeratedField
+import com.cogra.domain.AuthTokens
+import com.cogra.domain.Outcome
+import com.cogra.domain.saved.SavedWrites
+import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.RecordingSavedRepository
 import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testContentTarget
 import com.cogra.domain.testing.testMentionTarget
@@ -55,6 +60,8 @@ import com.cogra.domain.testing.testReferenceClaim
 import com.cogra.domain.testing.testTopicClaim
 import com.cogra.feature.content.reply.ReplyTargetKind
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -88,9 +95,11 @@ class ContentScreensTest {
         onCitePost: (String) -> Unit = {},
         thread: CommentsUiState = CommentsUiState(loading = false),
         onThreadRaised: (String) -> Unit = {},
+        saved: SavedWrites? = null,
     ) {
         compose.setContent {
             FeedScreen(
+                saved = saved,
                 onShare = onShare,
                 stanceControl = { target, tag, node ->
                     onStance(target, tag)
@@ -466,6 +475,53 @@ class ContentScreensTest {
         compose.onNodeWithTag("feed_load_more_error").performScrollTo().assertExists()
         compose.onNodeWithTag("feed_load_more_retry").performClick()
         assertThat(more).isTrue()
+    }
+
+    // -- The save row (saved-surface packet, "The save action") --
+
+    private fun savedWrites(repository: RecordingSavedRepository) = SavedWrites(
+        repository,
+        FakeTokenStore().apply { tokens.value = AuthTokens("a", "r", "someone-else") },
+        CoroutineScope(Dispatchers.Unconfined),
+    )
+
+    /** ReaderPostMenu.md:5-11 — Save keeps the post at the tap, and the row then reads Unsave. */
+    @Test
+    fun theFeedMenusSaveKeepsThePostAndTheRowThenReadsUnsave() {
+        val repository = RecordingSavedRepository()
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            viewerId = "someone-else",
+            saved = savedWrites(repository),
+        )
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.save").assertTextEquals("Save")
+        compose.onNodeWithTag("feed.menuSheet.save").performClick()
+        compose.waitForIdle()
+        assertThat(repository.sets).containsExactly("p1" to null)
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.save").assertTextEquals("Unsave")
+    }
+
+    /** RowSigning.md — a save that does not go through reverts, and the card's row says so with Retry. */
+    @Test
+    fun aFailedSaveRevertsAndTheCardsRowSaysRetry() {
+        val repository = RecordingSavedRepository().apply {
+            setAnswers.addLast(Outcome.Failed(java.io.IOException("down")))
+        }
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            viewerId = "someone-else",
+            saved = savedWrites(repository),
+        )
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.save").performClick()
+        compose.waitForIdle()
+        // The card merges its descendants, so the line is found in the unmerged tree.
+        compose.onNodeWithTag("feed_post_p1_row_line", useUnmergedTree = true).assertExists()
+        compose.onNodeWithText("That didn't go through.", useUnmergedTree = true).assertExists()
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.save").assertTextEquals("Save")
     }
 
     // -- The feed card's ⋮ (`PostCard.jsx:262`) --

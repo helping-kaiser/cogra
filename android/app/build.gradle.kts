@@ -152,6 +152,7 @@ dependencies {
     implementation(project(":feature:home"))
     implementation(project(":feature:invites"))
     implementation(project(":feature:profile"))
+    implementation(project(":feature:saved"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:stance"))
     implementation(project(":feature:topics"))

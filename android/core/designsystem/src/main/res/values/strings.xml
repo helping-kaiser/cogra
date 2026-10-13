@@ -311,4 +311,15 @@
          a spinner: motion clarifies where something came from and never
          performs. -->
     <string name="loading_state">Loading…</string>
+
+    <!-- The row line (RowSigning.md; `SigningPending`'s row form): the one
+         line a target's own row carries for what happened to a gesture made
+         on it. -->
+    <string name="row_line_signing">Signing…</string>
+    <string name="row_line_didnt_sign">That didn\'t sign.</string>
+    <string name="row_line_didnt_go_through">That didn\'t go through.</string>
+    <string name="row_line_retry">Retry</string>
+
+    <!-- A deleted account's row (`ActorChip.jsx` REDACTED_ACTOR_NAME). -->
+    <string name="content_row_deleted_account">Deleted account</string>
 </resources>

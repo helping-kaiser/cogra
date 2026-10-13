@@ -224,6 +224,7 @@ internal fun ProfileFields.toDomain(): ProfileView = ProfileView(
     websiteUrl = ModeratedField(websiteUrl.value, websiteUrl.status.toDomain()),
     avatar = avatar?.mediaFields?.toDomain(),
     updatedAt = updatedAt,
+    viewerBookmarkedAt = viewerBookmarkedAt,
 )
 
 /**
@@ -418,6 +419,7 @@ internal fun PostFields.toDomain(): PostView = PostView(
     attachments = attachments.map { it.mediaFields.toDomain() },
     attachmentsStatus = attachmentsStatus.toDomain(),
     moderation = moderationStatus.toDomain(),
+    viewerBookmarkedAt = viewerBookmarkedAt,
 )
 
 internal fun CommentFields.toDomain(): CommentView = CommentView(
@@ -437,6 +439,7 @@ internal fun CommentFields.toDomain(): CommentView = CommentView(
     moderation = moderationStatus.toDomain(),
     sensitiveSelfMark = sensitiveSelfMark,
     sensitiveReason = sensitiveReason,
+    viewerBookmarkedAt = viewerBookmarkedAt,
 )
 
 internal fun LicenseChoice.toInput(): LicenseInput = LicenseInput(
