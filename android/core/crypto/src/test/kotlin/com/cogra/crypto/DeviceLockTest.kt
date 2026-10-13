@@ -5,9 +5,6 @@
 package com.cogra.crypto
 
 import com.google.common.truth.Truth.assertThat
-import java.io.File
-import java.util.Base64
-import java.util.UUID
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonArray
@@ -15,6 +12,9 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertThrows
 import org.junit.Test
+import java.io.File
+import java.util.Base64
+import java.util.UUID
 
 private val deviceLock: JsonElement by lazy {
     Json.parseToJsonElement(File("../../../client-crypto-vectors.json").readText())

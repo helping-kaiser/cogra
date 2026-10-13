@@ -12,14 +12,14 @@
 
 package com.cogra.crypto
 
+import org.bouncycastle.crypto.digests.SHA256Digest
+import org.bouncycastle.crypto.generators.HKDFBytesGenerator
+import org.bouncycastle.crypto.params.HKDFParameters
 import java.nio.ByteBuffer
 import java.util.UUID
 import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import org.bouncycastle.crypto.digests.SHA256Digest
-import org.bouncycastle.crypto.generators.HKDFBytesGenerator
-import org.bouncycastle.crypto.params.HKDFParameters
 
 /** A record that will not open under this lock and binding, or a malformed container. */
 class DeviceLockException(message: String, cause: Throwable? = null) : Exception(message, cause)
@@ -96,10 +96,15 @@ internal fun sealDeviceLockRecordWith(
     return header + ciphertext
 }
 
-/** Opens one record under its lock and binding; a failing GCM tag refuses. */
-fun openDeviceLockRecord(secret: ByteArray, record: ByteArray, binding: DeviceLockBinding): ByteArray {
+/** A container this format can read: a header and something after it, at version 1. */
+private fun checkRecordShape(record: ByteArray) {
     if (record.size <= LOCK_HEADER_LEN) throw DeviceLockException("malformed device-lock record")
     if (record[0] != LOCK_VERSION) throw DeviceLockException("unsupported device-lock version ${record[0]}")
+}
+
+/** Opens one record under its lock and binding; a failing GCM tag refuses. */
+fun openDeviceLockRecord(secret: ByteArray, record: ByteArray, binding: DeviceLockBinding): ByteArray {
+    checkRecordShape(record)
     val salt = record.copyOfRange(1, 1 + LOCK_SALT_LEN)
     val nonce = record.copyOfRange(1 + LOCK_SALT_LEN, LOCK_HEADER_LEN)
     val header = record.copyOfRange(0, LOCK_HEADER_LEN)
