@@ -14,6 +14,10 @@ pub enum RankError {
     /// "Inputs"; ranker-core §3.7). `field` is the parameter's wire name.
     #[error("the parameter {field} is out of range: {reason}")]
     BadInput { field: String, reason: String },
+    /// The published network parameters break their own domains — a
+    /// governance or carrier fault, never the viewer's.
+    #[error("the network parameters are unusable: {reason}")]
+    NetworkParameters { reason: String },
     /// The slice breaks the contract it is read under: a leg the census does
     /// not have, a parameter outside `[-1, 1]`, a maturity outside `[0, 1]`,
     /// a leg endpoint absent from the node set, a repeated record id, or two
