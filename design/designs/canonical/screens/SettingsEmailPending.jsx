@@ -15,7 +15,7 @@
    settings packet): the body names its parts as on `Settings`, and the Email
    row's `Change pending` is the row's own `status`. */
 export const NODE = "settings";
-export const FRAME = { width: 390, height: 2613 };
+export const FRAME = { width: 390, height: 2917 };
 
 export function Screen() {
   return <SettingsBody emailPending />;

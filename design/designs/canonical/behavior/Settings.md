@@ -1,6 +1,6 @@
 # Settings · `spec:design:behavior-settings`
 
-ALWAYS settings is one scrolling page, its groups in the ruled order: Theme, Giving an opinion, Writing, Reading, People, Sensitive content, Key backup, Sessions, Credentials, About, the sign-out group, the delete-account group
+ALWAYS settings is one scrolling page, its groups in the ruled order: Theme, Giving an opinion, Writing, Reading, People, Sensitive content, Key backup, Clearing data, Sessions, Credentials, About, the sign-out group, the delete-account group
 
 ALWAYS settings carries no bottom bar
 
@@ -135,6 +135,16 @@ ALWAYS the don't-remember switch's line reads Your key, your draft and any kept 
 ALWAYS settings.backup.footnote reads Your key signs everything you publish and lives only in this browser. Your recovery code is the only way back. on the web and Your key signs everything you publish and lives only in this app. Your recovery code is the only way back. on android GIVEN a recovery code exists
 
 ALWAYS settings.backup.footnote reads Your key signs everything you publish and lives only in this browser. Until you make a recovery code, it can't be brought back. on the web and Your key signs everything you publish and lives only in this app. Until you make a recovery code, it can't be brought back. on android GIVEN no recovery code exists
+
+ALWAYS settings.clearing.footnote reads Clearing CoGra's data from this browser erases your key, your draft, any kept picks and the choices kept on this device, and signs you out. What you've seen comes back when you sign in. Only your recovery code can bring your key back. on the web and Clearing this app's data erases your key, your draft, any kept picks and the choices kept on this device, and signs you out — uninstalling does too, unless you keep its data when asked. What you've seen comes back when you sign in. Only your recovery code can bring your key back. on android GIVEN a recovery code exists
+
+ALWAYS settings.clearing.footnote reads Clearing CoGra's data from this browser erases your key, your draft, any kept picks and the choices kept on this device, and signs you out. What you've seen comes back when you sign in. Until you make a recovery code, nothing can bring your key back. on the web and Clearing this app's data erases your key, your draft, any kept picks and the choices kept on this device, and signs you out — uninstalling does too, unless you keep its data when asked. What you've seen comes back when you sign in. Until you make a recovery code, nothing can bring your key back. on android GIVEN no recovery code exists
+
+ALWAYS settings.clearing carries settings.clearing.label and settings.clearing.footnote and no row, and nothing in it is tappable
+
+WHEN tap Manage space on the phone's own storage screen for CoGra on android -> settings opens with settings.clearing in view AND NEVER anything is cleared
+
+WHEN uninstalling CoGra on android -> the phone's own uninstall dialog offers to keep the app's data
 
 WHEN tap Don't remember this account on this device -> the switch flips AND NEVER a dialog asks AND NEVER the reader is signed out
 

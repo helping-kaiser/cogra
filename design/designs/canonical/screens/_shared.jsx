@@ -3403,6 +3403,42 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
           )}
         </SettingsGroup>
 
+        {/* WHAT CLEARING THIS DATA ERASES (jakob 2026-10-13, seams 164 and
+            166; the settings round). A reader can clear the app's data from
+            the phone's own storage screen, or uninstall, and the key goes
+            with it — the one loss nothing on the server can undo. An app
+            cannot write into Android's App-info page, so the warning lives
+            here, and the system's own door is routed to it: the manifest's
+            `android:manageSpaceActivity` turns App-info's "Clear data" into
+            "Manage space", which opens settings at this group, and
+            `android:hasFragileUserData="true"` makes the uninstall dialog
+            offer to keep the data. The section reads device state only; no
+            server field rides it.
+
+            IT SAYS WHAT GOES AND WHAT COMES BACK. The key, the draft, any
+            kept picks and the choices kept on this device die with the
+            data; the seen list is a copy of the server's and returns on the
+            next sign-in (PR-52), so the words never claim it is lost. The
+            last sentence is the Key backup footnote's two states, said from
+            the other side: with a recovery code there is a way back, and
+            without one there is none.
+
+            A HEADING AND A FOOTNOTE, NO ROWS. Nothing here is a setting or a
+            door — it is the fact a reader needs once, which is what a
+            footnote is for, under a heading that one string serves on both
+            platforms. It stands after Key backup because the loss it warns
+            of is the key's. */}
+        <SettingsGroup
+          bare
+          label="Clearing data"
+          footnote={
+            backup === "none"
+              ? "Clearing CoGra's data from this browser erases your key, your draft, any kept picks and the choices kept on this device, and signs you out. What you've seen comes back when you sign in. Until you make a recovery code, nothing can bring your key back."
+              : "Clearing CoGra's data from this browser erases your key, your draft, any kept picks and the choices kept on this device, and signs you out. What you've seen comes back when you sign in. Only your recovery code can bring your key back."
+          }
+          node="clearing"
+        />
+
         <SettingsGroup
           label="Sessions"
           footnote="A device you sign out can stay signed in for up to 15 minutes."

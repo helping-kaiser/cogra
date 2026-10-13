@@ -1641,7 +1641,7 @@ and both take it.
 **Group headings** — short noun phrases, sentence case, naming what a
 reader came for rather than what the system calls it: `Theme` ·
 `Giving an opinion` · `Writing` · `Reading` · `Sensitive content` ·
-`Key backup` · `Sessions` · `Credentials`. The sign-out group carries no heading; it is the end of
+`Key backup` · `Clearing data` · `Sessions` · `Credentials`. The sign-out group carries no heading; it is the end of
 the page, not a subject. `Writing` is the settled title — Android said
 Writing, web said Signing, and the setting is about what a submit does,
 not about the key.
@@ -1716,6 +1716,24 @@ this app. Your recovery code is the only way back.`, and with no code
 yet `Until you make a recovery code, it can't be brought back.` in the
 second sentence's place (*the app's lines blessed (jakob
 2026-10-07)*).
+
+**Clearing data** (jakob 2026-10-13, seams 164 and 166) says what
+clearing the stored data erases, and what comes back, under a heading
+one string serves on both platforms; the group has no rows, only its
+footnote. In the browser: `Clearing CoGra's data from this browser
+erases your key, your draft, any kept picks and the choices kept on
+this device, and signs you out. What you've seen comes back when you
+sign in. Only your recovery code can bring your key back.` — in the
+app: `Clearing this app's data erases your key, your draft, any kept
+picks and the choices kept on this device, and signs you out —
+uninstalling does too, unless you keep its data when asked. What
+you've seen comes back when you sign in. Only your recovery code can
+bring your key back.` With no code yet, the last sentence reads `Until
+you make a recovery code, nothing can bring your key back.` The key is
+the loss the group exists for; the seen list is a copy of the server's
+and returns on sign-in, so the words never call it lost; `the choices
+kept on this device` echoes Theme's and Reading's own phrase.
+(*New 2026-10-13, drafted — wording jakob's at review.*)
 
 **Sessions** keeps `Revoke` and `Sign out everywhere else`, and says the
 delay before it happens rather than only after:
@@ -2858,8 +2876,11 @@ it be, because the fact a reader needs before tapping is that the tap
 deletes nothing. An applicant's deletion is confirmed in the app and
 nothing is mailed, so their footnote stops at `Nothing is deleted here.
 The next screen says what goes and what stays.` (`Settings`' reader chip;
-**blessed**, jakob 2026-10-05). An applicant whose application is
-approved but whose registration has not landed meets the row in the
+**blessed**, jakob 2026-10-05). Which footnote stands, and whether the
+row is open, is read from `User.deletionPath` and never from the
+application: `BY_LINK` takes the mailed-link footnote, `IMMEDIATE` and
+`LOCKED` the applicant's. An applicant whose address is funded but
+whose Registration has not landed (`LOCKED`) meets the row in the
 applicant locked look, and its tap answers `You can delete your account
 once you're in.`, `You can vouch once you're in.`'s construction (*new
 2026-10-06, blessed (jakob 2026-10-06)*).

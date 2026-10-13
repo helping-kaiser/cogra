@@ -21,7 +21,7 @@
    deletion packet): the body names its parts as on `Settings`, and the band
    under the header is `deletionBand`. */
 export const NODE = "settings";
-export const FRAME = { width: 390, height: 2660 };
+export const FRAME = { width: 390, height: 2894 };
 
 export function Screen() {
   return <SettingsBody deleting />;
