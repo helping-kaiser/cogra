@@ -14,7 +14,9 @@ package com.cogra.feature.saved
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.Modifier
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.RowLine
 import com.cogra.core.designsystem.RowLineState
 import com.cogra.core.designsystem.v2.atom.MenuRow
 import com.cogra.domain.saved.SavedOverlay
@@ -38,6 +40,12 @@ class SavedHost(
 }
 
 val LocalSavedHost = compositionLocalOf<SavedHost?> { null }
+
+/** [node]'s row line under its face, drawn only while a comfort on it did not go through. */
+@Composable
+fun ComfortRowLine(host: SavedHost?, node: String, testTag: String, modifier: Modifier = Modifier) {
+    host?.comfortLine(node)?.let { RowLine(it, testTag, modifier) }
+}
 
 /**
  * The host a surface provides as [LocalSavedHost]: the menus under it save

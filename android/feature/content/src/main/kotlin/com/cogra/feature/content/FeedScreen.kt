@@ -53,6 +53,7 @@ import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.LocalSnackbarHostState
 import com.cogra.core.designsystem.NodeSnackbarVisuals
 import com.cogra.core.designsystem.PendingMarker
+import com.cogra.core.designsystem.RowLine
 import com.cogra.core.designsystem.SeenCardsEffect
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.dataNode
@@ -71,7 +72,6 @@ import com.cogra.core.designsystem.v2.media.ScrollStageRow
 import com.cogra.core.designsystem.v2.media.SurfaceCover
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
-import com.cogra.core.designsystem.RowLine
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
@@ -904,7 +904,11 @@ private fun CardMenuHeader(
                 testTagPrefix = "feed_${post.id}_menu",
                 onReport = onReport,
                 rowNode = { row -> (menuSheet / row.nodeName).takeIf { row in FEED_MENU_ROWS } },
-                saveRow = LocalSavedHost.current?.menuRow(post.id, post.viewerBookmarkedAt, "feed_${post.id}_menu_save"),
+                saveRow = LocalSavedHost.current?.menuRow(
+                    post.id,
+                    post.viewerBookmarkedAt,
+                    "feed_${post.id}_menu_save",
+                ),
             )
         },
         menuContentDescription = stringResource(R.string.content_menu_post),

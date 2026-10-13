@@ -36,7 +36,8 @@ class SavedWritesTest {
 
         override suspend fun setBookmark(node: String, at: Instant?): Outcome<Instant> {
             sent += "keep $node ${at ?: "now"}"
-            return if (next()) Outcome.Success(at ?: Instant.parse("2026-10-13T12:00:00Z")) else Outcome.Failed(IOException("down"))
+            val kept = at ?: Instant.parse("2026-10-13T12:00:00Z")
+            return if (next()) Outcome.Success(kept) else Outcome.Failed(IOException("down"))
         }
 
         override suspend fun removeBookmark(node: String): Outcome<Unit> {

@@ -24,25 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 /**
- * The line's three states, one master:
- * - [Signing] — a hold's signature past 200ms: `Signing…`, the pending
- *   marker's quiet register, announced politely;
- * - [DidntSign] — the hold did not sign: `That didn't sign.` in the failure
- *   voice and `Retry`, which asks the same hold again;
- * - [DidntGoThrough] — a read-side comfort (save, unsave, hide, undo,
- *   unhide) reverted: `That didn't go through.` and `Retry`, which asks the
- *   comfort again and signs nothing.
- */
-sealed interface RowLineState {
-    data object Signing : RowLineState
-
-    data class DidntSign(val onRetry: () -> Unit) : RowLineState
-
-    data class DidntGoThrough(val onRetry: () -> Unit) : RowLineState
-}
-
-/**
- * A failure is announced as an alert (an assertive live region), NEVER a
+ * The line in one of its [RowLineState]s. A failure is announced as an alert (an assertive live region), NEVER a
  * snackbar — the Snackbar charter keeps that for confirmations — and it
  * stands until Retry, another act on the same anchor, or the surface's next
  * fresh load, never on a timer.
@@ -64,7 +46,8 @@ fun RowLine(
                 .semantics { liveRegion = LiveRegionMode.Polite },
         )
 
-        is RowLineState.DidntSign -> FailureLine(stringResource(R.string.row_line_didnt_sign), state.onRetry, testTag, modifier)
+        is RowLineState.DidntSign ->
+            FailureLine(stringResource(R.string.row_line_didnt_sign), state.onRetry, testTag, modifier)
 
         is RowLineState.DidntGoThrough ->
             FailureLine(stringResource(R.string.row_line_didnt_go_through), state.onRetry, testTag, modifier)

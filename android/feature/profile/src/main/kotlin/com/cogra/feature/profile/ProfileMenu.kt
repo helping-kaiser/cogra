@@ -64,7 +64,11 @@ internal fun ProfileMenu(
             MenuRow(stringResource(R.string.profile_menu_mention), (SHEET / "mention").tag, gated(inert)),
             MenuRow(share, (SHEET / "share").tag, onShare),
             // INERT until the hidden-actors packet wires `hideActor`.
-            MenuRow(stringResource(R.string.profile_menu_hide, "@${profile.handle}"), (SHEET / "hide").tag, gated(inert)),
+            MenuRow(
+                stringResource(R.string.profile_menu_hide, "@${profile.handle}"),
+                (SHEET / "hide").tag,
+                gated(inert),
+            ),
             report,
         )
 

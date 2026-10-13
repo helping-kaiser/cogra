@@ -57,7 +57,6 @@ import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.NodeSnackbarVisuals
-import com.cogra.core.designsystem.RowLine
 import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.dataNodeSurface
@@ -83,6 +82,7 @@ import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.R
 import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.content.reply.ReplyTargetKind
+import com.cogra.feature.saved.ComfortRowLine
 import com.cogra.feature.saved.SavedHost
 import com.cogra.feature.saved.rememberSavedHost
 import com.cogra.feature.saved.rememberSavedWrites
@@ -184,16 +184,14 @@ fun PostDetailRoute(
             StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node)
         },
         commentsSheet = { onDismiss ->
-            CommentsSheetRoute(
+            DetailThread(
                 postId = postId,
+                post = state.post,
                 viewerId = viewerId,
                 signedIn = signedIn,
                 onDismiss = onDismiss,
-                onReply = { request ->
-                    val target = request.comment?.asReplyTarget() ?: state.post?.asReplyTarget()
-                    target?.let(onReply)
-                },
-                onEditComment = { commentId -> onEditComment(commentId, state.post?.title?.value.orEmpty()) },
+                onReply = onReply,
+                onEditComment = onEditComment,
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
                 onReference = onReference,
@@ -202,9 +200,6 @@ fun PostDetailRoute(
                 commentsReturn = commentsReturn,
                 onReturnConsumed = onCommentsReturnConsumed,
                 refreshToken = threadToken,
-                stanceControl = { target, tag ->
-                    StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag)
-                },
                 landOn = landOn,
                 onRequireAccount = onRequireAccount,
             )
@@ -213,6 +208,57 @@ fun PostDetailRoute(
         onRequireAccount = onRequireAccount,
         backDescription = if (from == "saved") stringResource(R.string.content_back_saved) else null,
         landOn = landOn,
+    )
+}
+
+/** The back arrow's spoken name: the origin's when one is named, else the plain `Back`. */
+@Composable
+private fun backLabel(named: String?): String = named ?: stringResource(R.string.content_back)
+
+/** The thread the detail raises over the post: the same sheet the feed raises. */
+@Composable
+private fun DetailThread(
+    postId: String,
+    post: PostView?,
+    viewerId: String?,
+    signedIn: Boolean?,
+    onDismiss: () -> Unit,
+    onReply: (ReplyTarget) -> Unit,
+    onEditComment: (commentId: String, parentTitle: String) -> Unit,
+    onOpenActor: (String) -> Unit,
+    onOpenTopic: (String) -> Unit,
+    onReference: (String) -> Unit,
+    onSignInOrJoin: () -> Unit,
+    onDepart: (CommentsScroll) -> Unit,
+    commentsReturn: CommentsReturn,
+    onReturnConsumed: () -> Unit,
+    refreshToken: Int,
+    landOn: String?,
+    onRequireAccount: (() -> Unit)?,
+) {
+    CommentsSheetRoute(
+        postId = postId,
+        viewerId = viewerId,
+        signedIn = signedIn,
+        onDismiss = onDismiss,
+        onReply = { request ->
+            val target = request.comment?.asReplyTarget() ?: post?.asReplyTarget()
+            target?.let(onReply)
+        },
+        onEditComment = { commentId -> onEditComment(commentId, post?.title?.value.orEmpty()) },
+        onOpenActor = onOpenActor,
+        onOpenTopic = onOpenTopic,
+        onReference = onReference,
+        onSignInOrJoin = onSignInOrJoin,
+        onDepart = onDepart,
+        commentsReturn = commentsReturn,
+        onReturnConsumed = onReturnConsumed,
+        refreshToken = refreshToken,
+        stanceControl = { target, tag ->
+            StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag)
+        },
+        landOn = landOn,
+        onRequireAccount = onRequireAccount,
     )
 }
 
@@ -368,7 +414,7 @@ fun PostDetailScreen(
                             IconButton(onClick = onBack, modifier = Modifier.dataNode(header / "back")) {
                                 Icon(
                                     Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = backDescription ?: stringResource(R.string.content_back),
+                                    contentDescription = backLabel(backDescription),
                                 )
                             }
                         },
@@ -716,9 +762,7 @@ private fun PostDetailBody(
                 )
                 // THE ROW LINE under the face (RowSigning.md): a save or
                 // unsave of this post that did not go through.
-                saved?.comfortLine(post.id)?.let {
-                    RowLine(it, "detail_row_line", Modifier.padding(horizontal = Space.x4))
-                }
+                ComfortRowLine(saved, post.id, "detail_row_line", Modifier.padding(horizontal = Space.x4))
             }
         }
     }

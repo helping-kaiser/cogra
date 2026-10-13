@@ -52,7 +52,8 @@ fun rememberSavedWrites(): SavedWrites = hiltViewModel<SavedHostViewModel>().wri
 /** The overlay as the screen reads it now; empty with no store. */
 @Composable
 fun SavedWrites?.overlayState(): SavedOverlay {
-    val overlay by (this?.overlay ?: remember { kotlinx.coroutines.flow.MutableStateFlow(SavedOverlay()) }).collectAsState()
+    val flow = this?.overlay ?: remember { kotlinx.coroutines.flow.MutableStateFlow(SavedOverlay()) }
+    val overlay by flow.collectAsState()
     return overlay
 }
 

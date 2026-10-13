@@ -19,9 +19,7 @@
 
 package com.cogra.domain.saved
 
-import com.cogra.domain.FieldStatus
 import com.cogra.domain.ModeratedField
-import com.cogra.domain.ModerationState
 
 /** The words a removed post's or comment's row carries, in the system's voice. */
 const val REMOVED_BY_AUTHOR = "Removed by its author"
@@ -66,19 +64,6 @@ data class SavedRowContent(
     val name: String,
 )
 
-private fun ModeratedField.text(): String = value?.trim().orEmpty()
-
-private fun ModeratedField.redacted(): Boolean = status == FieldStatus.REDACTED
-
-/** Words run onto one line; the row's own ellipsis does the cutting. */
-private fun oneLine(words: String): String = words.replace(Regex("\\s+"), " ").trim()
-
-private fun firstLine(words: String): Pair<String, String> {
-    val trimmed = words.trim()
-    val at = trimmed.indexOf('\n')
-    return if (at < 0) trimmed to "" else trimmed.substring(0, at).trim() to trimmed.substring(at + 1).trim()
-}
-
 /**
  * B11 (2): a media post (or a wordless comment) is named by what it holds and
  * who made it — `A video by @ada` when it holds a clip, `Pictures by @ada`
@@ -102,12 +87,6 @@ fun postTitle(title: ModeratedField, content: ModeratedField, mimeTypes: List<St
     return mediaStandIn(mimeTypes, handle)
 }
 
-private fun sensitiveReason(moderation: ModerationState, reason: String?): String? =
-    if (moderation != ModerationState.SENSITIVE) null else reason?.trim()?.takeIf { it.isNotEmpty() }
-
-private fun aside(title: String, handle: String?): String? =
-    if (handle == null || title.contains("@$handle")) null else "@$handle"
-
 private fun removed(id: String, target: SavedTarget, comment: Boolean) = SavedRowContent(
     title = REMOVED_BY_AUTHOR,
     titleQuiet = true,
@@ -120,81 +99,77 @@ private fun removed(id: String, target: SavedTarget, comment: Boolean) = SavedRo
 )
 
 fun savedRow(node: SavedNode): SavedRowContent = when (node) {
-    is SavedNode.Post -> {
-        val target = SavedTarget.Post(node.id)
-        if (node.title.redacted() || node.content.redacted()) {
-            removed(node.id, target, comment = false)
-        } else {
-            val media = node.mimeTypes.isNotEmpty()
-            val titled = node.title.text().isNotEmpty()
-            val title = postTitle(node.title, node.content, node.mimeTypes, node.authorHandle)
-            val second = when {
-                titled && media -> oneLine(node.description.text())
-                titled -> oneLine(node.content.text())
-                !media -> oneLine(firstLine(node.content.text()).second)
-                else -> ""
-            }
-            SavedRowContent(
-                title = title,
-                titleQuiet = false,
-                aside = aside(title, node.authorHandle),
-                second = sensitiveReason(node.moderation, node.sensitiveReason) ?: second.takeIf { it.isNotEmpty() },
-                disc = SavedDisc.Glyph(comment = false),
-                key = slug(title),
-                target = target,
-                name = title,
-            )
-        }
-    }
+    is SavedNode.Post -> postRow(node)
+    is SavedNode.Comment -> commentRow(node)
+    is SavedNode.Person -> personRow(node)
+}
 
-    is SavedNode.Comment -> {
-        val target = node.post?.let { SavedTarget.Comment(it.id, node.id) } ?: SavedTarget.Post(node.id)
-        if (node.content.redacted()) {
-            removed(node.id, target, comment = true)
-        } else {
-            val words = node.content.text()
-            val title = if (words.isNotEmpty()) firstLine(words).first else mediaStandIn(node.mimeTypes, node.authorHandle)
-            val on = node.post?.let { "on ${postTitle(it.title, it.content, it.mimeTypes, it.authorHandle)}" }
-            SavedRowContent(
-                title = title,
-                titleQuiet = false,
-                aside = aside(title, node.authorHandle),
-                second = sensitiveReason(node.moderation, node.sensitiveReason) ?: on,
-                disc = SavedDisc.Glyph(comment = true),
-                key = slug(title),
-                target = target,
-                name = title,
-            )
-        }
+private fun postRow(node: SavedNode.Post): SavedRowContent {
+    val target = SavedTarget.Post(node.id)
+    if (node.title.redacted() || node.content.redacted()) return removed(node.id, target, comment = false)
+    val media = node.mimeTypes.isNotEmpty()
+    val titled = node.title.text().isNotEmpty()
+    val title = postTitle(node.title, node.content, node.mimeTypes, node.authorHandle)
+    val second = when {
+        titled && media -> oneLine(node.description.text())
+        titled -> oneLine(node.content.text())
+        !media -> oneLine(firstLine(node.content.text()).second)
+        else -> ""
     }
+    return SavedRowContent(
+        title = title,
+        titleQuiet = false,
+        aside = aside(title, node.authorHandle),
+        second = sensitiveReason(node.moderation, node.sensitiveReason) ?: second.takeIf { it.isNotEmpty() },
+        disc = SavedDisc.Glyph(comment = false),
+        key = slug(title),
+        target = target,
+        name = title,
+    )
+}
 
-    is SavedNode.Person -> {
-        val target = SavedTarget.Person(node.handle)
-        if (node.displayName.redacted()) {
-            SavedRowContent(
-                title = DELETED_ACCOUNT,
-                titleQuiet = true,
-                aside = null,
-                second = null,
-                disc = SavedDisc.Redacted,
-                key = node.id,
-                target = target,
-                name = DELETED_ACCOUNT,
-            )
-        } else {
-            val name = node.displayName.text()
-            val title = name.ifEmpty { "@${node.handle}" }
-            val bio = node.bio.text()
-            SavedRowContent(
-                title = title,
-                titleQuiet = false,
-                aside = if (name.isNotEmpty()) "@${node.handle}" else null,
-                second = oneLine(bio).takeIf { it.isNotEmpty() },
-                disc = node.avatarUrl?.let { SavedDisc.Picture(it, title) } ?: SavedDisc.Monogram(title),
-                key = slug(name.ifEmpty { node.handle }),
-                target = target,
-                name = title,
-            )
-        }
+private fun commentRow(node: SavedNode.Comment): SavedRowContent {
+    val target = node.post?.let { SavedTarget.Comment(it.id, node.id) } ?: SavedTarget.Post(node.id)
+    if (node.content.redacted()) return removed(node.id, target, comment = true)
+    val words = node.content.text()
+    val title = if (words.isNotEmpty()) firstLine(words).first else mediaStandIn(node.mimeTypes, node.authorHandle)
+    val on = node.post?.let { "on ${postTitle(it.title, it.content, it.mimeTypes, it.authorHandle)}" }
+    return SavedRowContent(
+        title = title,
+        titleQuiet = false,
+        aside = aside(title, node.authorHandle),
+        second = sensitiveReason(node.moderation, node.sensitiveReason) ?: on,
+        disc = SavedDisc.Glyph(comment = true),
+        key = slug(title),
+        target = target,
+        name = title,
+    )
+}
+
+private fun personRow(node: SavedNode.Person): SavedRowContent {
+    val target = SavedTarget.Person(node.handle)
+    if (node.displayName.redacted()) {
+        return SavedRowContent(
+            title = DELETED_ACCOUNT,
+            titleQuiet = true,
+            aside = null,
+            second = null,
+            disc = SavedDisc.Redacted,
+            key = node.id,
+            target = target,
+            name = DELETED_ACCOUNT,
+        )
     }
+    val name = node.displayName.text()
+    val title = name.ifEmpty { "@${node.handle}" }
+    return SavedRowContent(
+        title = title,
+        titleQuiet = false,
+        aside = if (name.isNotEmpty()) "@${node.handle}" else null,
+        second = oneLine(node.bio.text()).takeIf { it.isNotEmpty() },
+        disc = node.avatarUrl?.let { SavedDisc.Picture(it, title) } ?: SavedDisc.Monogram(title),
+        key = slug(name.ifEmpty { node.handle }),
+        target = target,
+        name = title,
+    )
 }

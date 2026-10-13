@@ -61,7 +61,8 @@ class SavedRowsTest {
 
     @Test
     fun `a titled media post's second line is its description, else drops`() {
-        assertThat(savedRow(post(description = "All of it.", mimeTypes = listOf("image/webp"))).second).isEqualTo("All of it.")
+        val described = post(description = "All of it.", mimeTypes = listOf("image/webp"))
+        assertThat(savedRow(described).second).isEqualTo("All of it.")
         assertThat(savedRow(post(mimeTypes = listOf("image/webp"))).second).isNull()
     }
 
@@ -131,7 +132,8 @@ class SavedRowsTest {
         assertThat(row.second).isEqualTo("Runs the stand by the sea wall.")
         assertThat(row.disc).isEqualTo(SavedDisc.Monogram("Mira Voss"))
         assertThat(row.key).isEqualTo("mira-voss")
-        assertThat(savedRow(person(avatar = "https://m/a.webp")).disc).isEqualTo(SavedDisc.Picture("https://m/a.webp", "Mira Voss"))
+        val pictured = savedRow(person(avatar = "https://m/a.webp"))
+        assertThat(pictured.disc).isEqualTo(SavedDisc.Picture("https://m/a.webp", "Mira Voss"))
     }
 
     @Test

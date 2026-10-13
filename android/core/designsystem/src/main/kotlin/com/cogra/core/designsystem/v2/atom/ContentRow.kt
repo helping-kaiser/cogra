@@ -37,7 +37,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -46,18 +45,6 @@ import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.R
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.media.CograAvatar
-
-/** What fills a row's disc, by the master's precedence. */
-sealed interface ContentRowDisc {
-    data class Glyph(val icon: ImageVector) : ContentRowDisc
-
-    data class Picture(val url: Any, val name: String) : ContentRowDisc
-
-    data class Monogram(val name: String) : ContentRowDisc
-
-    /** A deleted account: the disc keeps its space and fills with nothing. */
-    data object Redacted : ContentRowDisc
-}
 
 private val DISC = 40.dp
 
@@ -80,7 +67,12 @@ private fun Disc(disc: ContentRowDisc) {
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh),
         ) {
-            Icon(disc.icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+            Icon(
+                disc.icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp),
+            )
         }
     }
 }
@@ -136,27 +128,7 @@ fun ContentRow(
         ) {
             Box(Modifier.dataNode(part("disc"))) { Disc(disc) }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = shownTitle,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = if (quiet) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier
-                            .weight(1f, fill = false)
-                            .dataNode(part("title")),
-                    )
-                    aside?.let {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            modifier = Modifier.dataNode(part("aside")),
-                        )
-                    }
-                }
+                TitleLine(shownTitle, quiet, aside, part)
                 second?.let { line ->
                     Box(Modifier.dataNode(part("second"))) { line() }
                 }
@@ -171,6 +143,31 @@ fun ContentRow(
             }
         }
         action?.invoke()
+    }
+}
+
+@Composable
+private fun TitleLine(title: String, quiet: Boolean, aside: String?, part: (String) -> DataNode?) {
+    Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelLarge,
+            color = if (quiet) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .dataNode(part("title")),
+        )
+        aside?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                modifier = Modifier.dataNode(part("aside")),
+            )
+        }
     }
 }
 

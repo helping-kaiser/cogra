@@ -119,7 +119,7 @@ fun CommentsSheetRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(postId) { viewModel.start(postId) }
-    LaunchedEffect(postId, landOn) { landOn?.let(viewModel::landOn) }
+    LaunchedEffect(postId, landOn) { landOn?.let(viewModel.landing::landOn) }
     // In an effect, not the composition body: a recomposition that never
     // commits would otherwise fire the refetch anyway. The landing is
     // not consumed here — the place is the other half of the same
@@ -164,7 +164,7 @@ fun CommentsSheetRoute(
         stanceControl = stanceControl,
         saved = rememberSavedWrites(),
         onRequireAccount = onRequireAccount,
-        onLanded = viewModel::onLanded,
+        onLanded = viewModel.landing::done,
     )
     licenseShown?.let { license ->
         LicenseSheet(license = license, onDismiss = { licenseShown = null }, stacked = true)
@@ -244,26 +244,7 @@ fun CommentsSheet(
         }
     }
     val listState = rememberLazyListState()
-    // THE READER COMES BACK WHERE THEY LEFT (jakob 2026-09-15). The
-    // restore waits for the refetched page: scrolling an empty list puts
-    // the reader at the top and the arriving comments do not move them.
-    // It consumes either way once the read is done, so a thread that
-    // came back empty does not leave a place behind to jump to later.
-    LaunchedEffect(restoreTo, state.loading, state.comments.isEmpty()) {
-        val place = restoreTo ?: return@LaunchedEffect
-        if (state.loading) return@LaunchedEffect
-        if (state.comments.isNotEmpty()) listState.scrollToItem(place.index, place.offset)
-        onRestored()
-    }
-    // LANDED ON A COMMENT (Saved.md "tap a comment's row"): the branch is
-    // already unfolded down to it, so the thread scrolls to the top-level
-    // comment it hangs under and the comment stands within that row.
-    LaunchedEffect(state.landingAt) {
-        val top = state.landingAt ?: return@LaunchedEffect
-        val index = state.comments.indexOfFirst { it.id == top }
-        if (index >= 0) listState.scrollToItem(index)
-        onLanded()
-    }
+    ThreadPlacement(state, listState, restoreTo, onRestored, onLanded)
     val depart: (() -> Unit) -> Unit = { go ->
         onDepart(
             CommentsScroll(
@@ -317,6 +298,37 @@ fun CommentsSheet(
             CommentsFoot(signedIn, { depart(onAddComment) }, onSignInOrJoin)
             CograSnackbarHost(snackbar)
         }
+    }
+}
+
+/** Where the thread's list stands when it opens: the reader's old place, or a landing. */
+@Composable
+private fun ThreadPlacement(
+    state: CommentsUiState,
+    listState: LazyListState,
+    restoreTo: CommentsScroll?,
+    onRestored: () -> Unit,
+    onLanded: () -> Unit,
+) {
+    // THE READER COMES BACK WHERE THEY LEFT (jakob 2026-09-15). The
+    // restore waits for the refetched page: scrolling an empty list puts
+    // the reader at the top and the arriving comments do not move them.
+    // It consumes either way once the read is done, so a thread that
+    // came back empty does not leave a place behind to jump to later.
+    LaunchedEffect(restoreTo, state.loading, state.comments.isEmpty()) {
+        val place = restoreTo ?: return@LaunchedEffect
+        if (state.loading) return@LaunchedEffect
+        if (state.comments.isNotEmpty()) listState.scrollToItem(place.index, place.offset)
+        onRestored()
+    }
+    // LANDED ON A COMMENT (Saved.md "tap a comment's row"): the branch is
+    // already unfolded down to it, so the thread scrolls to the top-level
+    // comment it hangs under and the comment stands within that row.
+    LaunchedEffect(state.landingAt) {
+        val top = state.landingAt ?: return@LaunchedEffect
+        val index = state.comments.indexOfFirst { it.id == top }
+        if (index >= 0) listState.scrollToItem(index)
+        onLanded()
     }
 }
 

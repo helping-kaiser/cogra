@@ -659,8 +659,8 @@ private fun CograNavGraphContent(
     // originating root stays lit on a drill-in) — its one door is the
     // reader's own profile.
     val onSaved = backStackEntry?.destination?.hasRoute(Saved::class) == true
-    val onOwnProfileTab = onSaved || onProfile &&
-        backStackEntry?.toRoute<Profile>()?.handle == null
+    val onOwnProfileTab = onSaved ||
+        (onProfile && backStackEntry?.toRoute<Profile>()?.handle == null)
     val onPostDetail = backStackEntry?.destination?.hasRoute(PostDetail::class) == true
     val onChatsComingSoon = backStackEntry?.destination?.hasRoute(ChatsComingSoon::class) == true
     val onReadSurface = onFeedTab || onProfile || onPostDetail || onChatsComingSoon || onSaved
@@ -1204,7 +1204,9 @@ private fun CograNavGraphContent(
                     onBack = { navController.navigateUp() },
                     onOpen = { target ->
                         when (target) {
-                            is SavedTarget.Post -> navController.navigate(PostDetail(target.postId, from = SAVED_ORIGIN))
+                            is SavedTarget.Post -> navController.navigate(
+                                PostDetail(target.postId, from = SAVED_ORIGIN),
+                            )
                             is SavedTarget.Comment -> navController.navigate(
                                 PostDetail(target.postId, from = SAVED_ORIGIN, commentId = target.commentId),
                             )
