@@ -403,6 +403,13 @@ describe("the remote path (§3.6)", () => {
     expect((await w.drafts.load())?.words).toBe("working draft");
   });
 
+  it("the backed-key purge never removes an unbacked key, whoever calls it", async () => {
+    const { seed } = await signedInForget(w, { holdLock: false });
+    await w.identity.purgeBackedKeyMaterial(A);
+    expect(equalBytes((await w.identity.actorSeed())!, seed)).toBe(true);
+    expect(await w.identity.pendingBackupBlob()).not.toBeNull();
+  });
+
   it("a remote end without a lock still purges a backed key, and keeps the draft", async () => {
     await signedInForget(w, { backed: true, holdLock: false });
     expect(await w.engine.endLocalSession(A, clearTokens(w))).toBe("refused");

@@ -35,12 +35,14 @@ export function createRefresher(
   store: TokenStore,
   exec: RefreshExecutor,
   /**
-   * Runs before the sign-out clear, while the dying session's account is
-   * still active — the "don't remember me" purge hook (auth.md
-   * "Sign-out": flagged accounts are purged on a session invalidation
-   * that clears the tokens).
+   * Runs at an invalidation, while the dying session's account is still
+   * active — the "don't remember me" custody hook (auth.md "Sign-out";
+   * sign-out-custody §3.6). It is handed the clear, because a device lock
+   * clears the tokens BEFORE it reads the custody set, so that no tab writes
+   * the account's custody after the read; the refresher clears again after
+   * it either way.
    */
-  onSessionInvalidated?: () => Promise<void>,
+  onSessionInvalidated?: (clearTokens: () => void) => Promise<void>,
 ): Refresher {
   let chain: Promise<unknown> = Promise.resolve();
 
@@ -70,9 +72,10 @@ export function createRefresher(
             case "refused":
               if (hasCode(outcome, "REFRESH_TOKEN_INVALID")) {
                 try {
-                  await onSessionInvalidated?.();
+                  await onSessionInvalidated?.(() => store.clear());
                 } catch {
-                  // A failed purge must never keep a dead session alive.
+                  // A failed custody step must never keep a dead session
+                  // alive; an unfinished lock completes at the next start.
                 }
                 store.clear();
               }
