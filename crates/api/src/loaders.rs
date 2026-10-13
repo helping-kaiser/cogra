@@ -40,7 +40,10 @@ use async_graphql::dataloader::{DataLoader, Loader};
 use postgres_store::auth::ActorIdentity;
 use postgres_store::content::{Comment, Post};
 use postgres_store::media::{GalleryEntry, MediaAttachment};
-use postgres_store::{PgPool, auth as store, content as content_store, media as media_store};
+use postgres_store::{
+    PgPool, auth as store, bookmarks as bookmarks_store, content as content_store,
+    media as media_store,
+};
 use uuid::Uuid;
 
 /// A batch read's failure, shared out to every key that was waiting on
@@ -230,6 +233,33 @@ impl Loader<String> for PayloadStateLoader {
     }
 }
 
+/// When a viewer kept a node, keyed on `(viewer, node)`.
+///
+/// `viewerBookmarkedAt` is a per-node field every menu host reads, so a
+/// feed page of twenty cards asks twenty times. The viewer rides in the
+/// key rather than in the loader because the loaders are registered once
+/// on the schema, not per request — a key without its viewer would let
+/// one reader's batch answer another's. A pair with no row is absent
+/// from the map, which the resolver reads as "not kept".
+pub struct BookmarkLoader(PgPool);
+
+impl Loader<(Uuid, Uuid)> for BookmarkLoader {
+    type Value = chrono::DateTime<chrono::Utc>;
+    type Error = LoadError;
+
+    async fn load(
+        &self,
+        keys: &[(Uuid, Uuid)],
+    ) -> Result<HashMap<(Uuid, Uuid), chrono::DateTime<chrono::Utc>>, LoadError> {
+        Ok(bookmarks_store::bookmarked_at_many(&self.0, keys)
+            .await
+            .map_err(LoadError::from_display)?
+            .into_iter()
+            .map(|(viewer, node, at)| ((viewer, node), at))
+            .collect())
+    }
+}
+
 /// Groups a flat gallery read back into one list per version, preserving
 /// the query's own ordering — which is gallery order.
 ///
@@ -256,6 +286,7 @@ pub struct NodeLoaders {
     pub comment_galleries: DataLoader<CommentGalleryLoader>,
     pub media: DataLoader<MediaByIdLoader>,
     pub payload_states: DataLoader<PayloadStateLoader>,
+    pub bookmarks: DataLoader<BookmarkLoader>,
 }
 
 impl NodeLoaders {
@@ -268,7 +299,8 @@ impl NodeLoaders {
             post_galleries: DataLoader::new(PostGalleryLoader(pool.clone()), tokio::spawn),
             comment_galleries: DataLoader::new(CommentGalleryLoader(pool.clone()), tokio::spawn),
             media: DataLoader::new(MediaByIdLoader(pool.clone()), tokio::spawn),
-            payload_states: DataLoader::new(PayloadStateLoader(pool), tokio::spawn),
+            payload_states: DataLoader::new(PayloadStateLoader(pool.clone()), tokio::spawn),
+            bookmarks: DataLoader::new(BookmarkLoader(pool), tokio::spawn),
         }
     }
 }

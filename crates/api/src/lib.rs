@@ -5,6 +5,7 @@
 //! tools can drive them without a running server.
 
 pub mod auth;
+pub mod bookmarks;
 pub mod bootstrap;
 pub mod breach;
 pub mod content;

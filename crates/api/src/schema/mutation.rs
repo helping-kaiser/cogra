@@ -92,6 +92,18 @@ fn rate_limited() -> async_graphql::Error {
     )
 }
 
+/// The transport-tier refusal for an id that resolves to nothing
+/// (api-spec.md "Errors are tiered"): a client names only ids it was
+/// served, so an unknown one is a client bug, never a state to render.
+fn not_found(message: &str) -> async_graphql::Error {
+    use async_graphql::ErrorExtensions;
+    async_graphql::Error::new(message.to_string()).extend_with(
+        |_, e: &mut async_graphql::ErrorExtensionValues| {
+            e.set("code", "NOT_FOUND");
+        },
+    )
+}
+
 /// The current-address half of an email change. The code ends the body
 /// after the last `: `, where the dev mailer's reader finds bare tokens.
 fn code_mail(to: String, code: &str) -> Mail {
@@ -1454,6 +1466,32 @@ struct DeviceLock {
 }
 
 #[derive(InputObject)]
+struct SetBookmarkInput {
+    node: Uuid,
+    /// When the save took place; null means now. Undo passes the removed
+    /// row's own `bookmarkedAt`, so the row returns to its place
+    /// (SavedUndo). Never later than now: BAD_INPUT at ["bookmarkedAt"].
+    bookmarked_at: Option<DateTime<Utc>>,
+}
+
+#[derive(SimpleObject)]
+struct SetBookmarkPayload {
+    bookmark: Option<crate::schema::types::BookmarkEdge>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
+struct RemoveBookmarkInput {
+    node: Uuid,
+}
+
+#[derive(SimpleObject)]
+struct RemoveBookmarkPayload {
+    ok: Option<bool>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
 struct MarkSeenInput {
     /// The nodes the viewer has seen, in the order they were seen.
     nodes: Vec<Uuid>,
@@ -2699,6 +2737,81 @@ impl Mutation {
         .await?;
         Ok(SetPreferencesPayload {
             preferences: Some(UserPreferences::from_store(stored)),
+            user_errors: vec![],
+        })
+    }
+
+    /// Keep a post, comment or person in the viewer's Saved list. Any
+    /// other kind of node is BAD_INPUT at ["node"]; an id that names
+    /// nothing is NOT_FOUND. Saving a kept node changes nothing and
+    /// returns its edge as it stands (idempotent). Needs a session
+    /// (UNAUTHENTICATED otherwise) and no particular account state — an
+    /// applicant keeps things like a member; this is private viewer
+    /// state, not acting. L2 only: no record, no staged write.
+    async fn set_bookmark(
+        &self,
+        ctx: &Context<'_>,
+        input: SetBookmarkInput,
+    ) -> async_graphql::Result<SetBookmarkPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        let refused = |message: &str, field: &str| SetBookmarkPayload {
+            bookmark: None,
+            user_errors: vec![UserError::at(
+                ErrorCode::BadInput,
+                message,
+                vec![field.to_string()],
+            )],
+        };
+        if let Some(at) = input.bookmarked_at
+            && !crate::bookmarks::restore_time_ok(at, Utc::now())
+        {
+            return Ok(refused(
+                "a save time may not be later than now",
+                "bookmarkedAt",
+            ));
+        }
+        use postgres_store::bookmarks::SaveOutcome;
+        let bookmark = match postgres_store::bookmarks::set_bookmark(
+            pool,
+            v.user_id,
+            input.node,
+            input.bookmarked_at,
+        )
+        .await?
+        {
+            SaveOutcome::Kept(bookmark) => bookmark,
+            SaveOutcome::NotSaveable => {
+                return Ok(refused(
+                    "only a post, a comment or a person can be saved",
+                    "node",
+                ));
+            }
+            SaveOutcome::Unknown => return Err(not_found("no such node")),
+        };
+        let edge = crate::schema::types::hydrate_bookmarks(pool, vec![bookmark])
+            .await?
+            .pop()
+            .ok_or_else(|| not_found("no such node"))?;
+        Ok(SetBookmarkPayload {
+            bookmark: Some(edge),
+            user_errors: vec![],
+        })
+    }
+
+    /// Drop a node from the viewer's Saved list — a genuine delete.
+    /// Dropping a node that is not kept is ok (idempotent). Needs a
+    /// session; no account state.
+    async fn remove_bookmark(
+        &self,
+        ctx: &Context<'_>,
+        input: RemoveBookmarkInput,
+    ) -> async_graphql::Result<RemoveBookmarkPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        postgres_store::bookmarks::remove_bookmark(pool, v.user_id, input.node).await?;
+        Ok(RemoveBookmarkPayload {
+            ok: Some(true),
             user_errors: vec![],
         })
     }
