@@ -190,6 +190,22 @@ interface DevicePreferences {
 }
 
 /**
+ * Everything CoGra keeps on this device (Settings.md "Clearing data";
+ * EraseConfirm.md:21): every account's key and custody material, the drafts
+ * and their sealed copies, the choices kept on this device, the session's
+ * tokens, and the seen list's copy with its sync watermark — one value under
+ * `seen_record:<account>`, so the two go together and the next sign-in
+ * re-seeds the record from the server's view log.
+ */
+interface DeviceData {
+    /**
+     * Erases all of it in ONE atomic edit, so a process death can never
+     * leave a half-erased device. It touches no wire.
+     */
+    suspend fun eraseEverything()
+}
+
+/**
  * Visibility of secure-store data loss — the store-side echo of "never
  * erase silently". Marked when the store file was replaced after
  * corruption or a stored value could not be opened or decoded; the app

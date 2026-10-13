@@ -212,6 +212,7 @@ export function InvitesView() {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-6 pb-12 pt-3">
       <PageHeader
+        inGutter
         title="Invites"
         backHref="/profile"
         backLabel="Back to profile"

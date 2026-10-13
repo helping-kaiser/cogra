@@ -97,6 +97,8 @@ class BackupViewModel @Inject constructor(
 fun BackupRoute(
     onBack: () -> Unit,
     onExportKey: () -> Unit,
+    /** The deletion band under the header, while a confirmed deletion runs its grace. */
+    deletionBand: @Composable () -> Unit = {},
     viewModel: BackupViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -107,6 +109,7 @@ fun BackupRoute(
         onBackupCodeSaved = viewModel::onBackupCodeSaved,
         onExportKey = onExportKey,
         onFaultShown = viewModel::onFaultShown,
+        deletionBand = deletionBand,
     )
 }
 
@@ -119,6 +122,7 @@ fun BackupScreen(
     onExportKey: () -> Unit,
     onFaultShown: () -> Unit,
     keyGate: KeyGate = rememberKeyGate(),
+    deletionBand: @Composable () -> Unit = {},
 ) {
     val snackbar = remember { SnackbarHostState() }
     val faultText = when {
@@ -139,12 +143,16 @@ fun BackupScreen(
     KeyGateWarning(gate)
     Scaffold(
         topBar = {
-            PageHeader(
-                title = stringResource(R.string.settings_backup),
-                onBack = onBack,
-                backContentDescription = stringResource(R.string.back_to_settings),
-                testTag = "settings_backup_header",
-            )
+            Column {
+                PageHeader(
+                    title = stringResource(R.string.settings_backup),
+                    onBack = onBack,
+                    backContentDescription = stringResource(R.string.back_to_settings),
+                    testTag = "settings_backup_header",
+                )
+                // Directly under the pinned header (FeedDeleting.md:5).
+                deletionBand()
+            }
         },
         snackbarHost = { CograSnackbarHost(snackbar, testTag = "settings_backup_snackbar") },
     ) { padding ->

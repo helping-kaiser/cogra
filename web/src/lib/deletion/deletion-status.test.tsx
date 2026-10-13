@@ -3,6 +3,7 @@ import { delay, graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { BorrowedViewBand } from "@/lib/ui/borrowed-view-band";
 import { CograBand } from "@/lib/ui/cogra-band";
 import { PageHeader } from "@/lib/ui/page-header";
 import { startMswServer } from "@/test/msw";
@@ -129,6 +130,117 @@ describe("the deletion band", () => {
     fireEvent.click(await screen.findByTestId("feed.deletionBand.cancel"));
     expect(await screen.findByTestId("deletion-snackbar")).toHaveTextContent("That didn't send. Try again.");
     expect(screen.getByTestId("feed.deletionBand")).toBeInTheDocument();
+  });
+});
+
+describe("the band arbitration (ER-G4)", () => {
+  it("the_deletion_band_wins_over_the_borrowed_view_band_while_the_grace_runs", async () => {
+    server.use(standing(grace(6)));
+    renderUnder(
+      <CograBand deletionBandNode={{ path: "feed.deletionBand" }}>
+        <BorrowedViewBand handle="ada" line="Borrowed from @ada." />
+      </CograBand>,
+    );
+    expect(await screen.findByTestId("feed.deletionBand")).toBeInTheDocument();
+    expect(screen.queryByTestId("borrowed-view")).not.toBeInTheDocument();
+  });
+
+  it("the_borrowed_view_band_stands_when_no_deletion_does", async () => {
+    let asked = false;
+    server.use(
+      graphql.query("AccountDeletion", () => {
+        asked = true;
+        return HttpResponse.json({ data: { me: { __typename: "User", id: "u1", deletionPath: "BY_LINK", accountDeletion: null } } });
+      }),
+    );
+    renderUnder(
+      <CograBand deletionBandNode={{ path: "feed.deletionBand" }}>
+        <BorrowedViewBand handle="ada" line="Borrowed from @ada." />
+      </CograBand>,
+    );
+    await waitFor(() => expect(asked).toBe(true));
+    expect(screen.getByTestId("borrowed-view")).toBeInTheDocument();
+    expect(screen.queryByTestId("feed.deletionBand")).not.toBeInTheDocument();
+  });
+});
+
+describe("the band under a padded host's header", () => {
+  it("bleeds_through_the_gutter_full_width_rather_than_inset_like_a_card", async () => {
+    server.use(standing(grace(6)));
+    renderUnder(
+      <main className="px-6">
+        <PageHeader title="Invites" inGutter />
+        <PageHeader title="Settings" />
+      </main>,
+    );
+    const [padded, flush] = await screen.findAllByTestId("deletion-band");
+    expect(padded).toHaveClass("-mx-6");
+    expect(flush).not.toHaveClass("-mx-6");
+    // One block with its header, so no host gap opens between them.
+    expect(padded.previousElementSibling?.tagName).toBe("HEADER");
+  });
+});
+
+describe("the deadline met with a session on this device (ER-G6)", () => {
+  function sessionRefused() {
+    return graphql.mutation("RefreshSession", () =>
+      HttpResponse.json({
+        data: {
+          refreshSession: {
+            __typename: "RefreshSessionPayload",
+            auth: null,
+            userErrors: [{ __typename: "UserError", message: "gone", code: "REFRESH_TOKEN_INVALID", field: null }],
+          },
+        },
+      }),
+    );
+  }
+
+  it("lands_signed_out_on_the_bare_view_with_its_snackbar_never_the_sign_in", async () => {
+    let reads = 0;
+    server.use(
+      graphql.query("AccountDeletion", () => {
+        reads += 1;
+        // The first read is a grace whose deadline has just passed (the
+        // executor not yet run); the due re-read finds the deletion ran: the
+        // server has ended every session and refuses the account's reads.
+        // A deadline already past keeps the test off wall-clock timers.
+        if (reads === 1) {
+          return HttpResponse.json({
+            data: {
+              me: {
+                __typename: "User",
+                id: "u1",
+                deletionPath: "BY_LINK",
+                accountDeletion: {
+                  __typename: "AccountDeletion",
+                  scheduledFor: new Date(Date.now() - 1_000).toISOString(),
+                  includesContent: false,
+                },
+              },
+            },
+          });
+        }
+        return HttpResponse.json({ data: null, errors: [{ message: "x", extensions: { code: "UNAUTHENTICATED" } }] });
+      }),
+      sessionRefused(),
+    );
+    const { store } = renderUnder(<PageHeader title="Settings" />);
+    await waitFor(() => expect(store.hasSession()).toBe(false), { timeout: 10_000 });
+    expect(reads).toBeGreaterThanOrEqual(2);
+    expect(await screen.findByTestId("deletion-snackbar")).toHaveTextContent("Your account is deleted.");
+    await waitFor(() => expect(replace).toHaveBeenCalledWith(BARE_VIEW));
+    expect(replace).not.toHaveBeenCalledWith("/login");
+  });
+
+  it("a_session_ending_inside_the_grace_is_no_deletion", async () => {
+    server.use(standing(grace(6)));
+    const { store } = renderUnder(<PageHeader title="Settings" />);
+    await screen.findByTestId("deletion-band");
+    act(() => store.clear());
+    await act(async () => {});
+    expect(screen.queryByText("Your account is deleted.")).not.toBeInTheDocument();
+    expect(replace).not.toHaveBeenCalledWith(BARE_VIEW);
   });
 });
 

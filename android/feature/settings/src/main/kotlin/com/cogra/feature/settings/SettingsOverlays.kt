@@ -116,6 +116,87 @@ internal fun SignOutConfirm(
 }
 
 /**
+ * `EraseConfirm` — the think-twice dialog in front of the wipe; the Clearing
+ * data row raises it and nothing is erased before an answer
+ * (EraseConfirm.md:3). Drawn once per backup state, because the safe answer
+ * differs: with no recovery code `Make a recovery code` leads, filled, and
+ * the erase is the quiet answer (`:11`); with one made, the destructive
+ * dialog's own shape — the erase quiet on the left, `Cancel` filled on the
+ * right (`:13`). The erase never takes the error colour (`:15`). Focus lands
+ * on the title and stays inside; the scrim and system Back close it, still
+ * signed in, nothing erased (`:25`, `:27`). Each answer wears its chip's key.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun EraseConfirm(
+    backupMade: Boolean,
+    onMakeRecoveryCode: () -> Unit,
+    onErase: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val titleFocus = remember { FocusRequester() }
+    val chip = if (backupMade) "made" else "none"
+    LaunchedEffect(Unit) { runCatching { titleFocus.requestFocus() } }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.dataNode(Dialog),
+        title = {
+            Text(
+                text = stringResource(R.string.erase_confirm_title),
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier
+                    .semantics { heading() }
+                    .focusRequester(titleFocus)
+                    .focusable()
+                    .dataNode(Dialog / "title"),
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(
+                    if (backupMade) R.string.erase_confirm_body_made else R.string.erase_confirm_body_none,
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.dataNode(Dialog / "body"),
+            )
+        },
+        confirmButton = {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (backupMade) {
+                    EraseAnswer(chip, onErase)
+                    CograButton(
+                        text = stringResource(R.string.erase_confirm_cancel),
+                        onClick = onDismiss,
+                        modifier = Modifier.dataNode((Dialog / "cancel").keyed(chip)),
+                    )
+                } else {
+                    CograButton(
+                        text = stringResource(R.string.sign_out_confirm_recovery),
+                        onClick = onMakeRecoveryCode,
+                        modifier = Modifier.dataNode((Dialog / "recovery").keyed(chip)),
+                    )
+                    EraseAnswer(chip, onErase)
+                }
+            }
+        },
+    )
+}
+
+/** The erase answer, quiet and never in the error colour, keyed by the backup chip (EraseConfirm.md:11, :13, :15). */
+@Composable
+private fun EraseAnswer(chip: String, onErase: () -> Unit) {
+    CograButton(
+        text = stringResource(R.string.erase_confirm_erase),
+        onClick = onErase,
+        kind = ButtonKind.Text,
+        modifier = Modifier.dataNode((Dialog / "erase").keyed(chip)),
+    )
+}
+
+/**
  * `SettingsLicense` — the account's default license, over the page. The
  * axes and readings are `ComposeLicense`'s ([LicenseAxis]); what differs is
  * the note, which says this sets where every new post STARTS and binds

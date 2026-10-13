@@ -9,6 +9,9 @@ import com.cogra.crypto.sha256Tagged
 import com.cogra.crypto.verify
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.Outcome
+import com.cogra.domain.store.ThemeChoice
+import com.cogra.domain.testing.FakeDeviceData
+import com.cogra.domain.testing.FakeDevicePreferences
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.ThrowingAccountRepository
@@ -248,11 +251,42 @@ class KeyCeremonyTest {
     fun signOutClearsTokensEvenWhenRevocationFails() = runTest {
         val tokens = FakeTokenStore().apply { save(AuthTokens("a", "r", "u1")) }
         identity.seed = ActorKey.generate().seed()
-        SignOut(offlineSessions(), identity, tokens).signOut()
+        SignOut(offlineSessions(), identity, tokens, FakeDeviceData()).signOut()
         assertThat(tokens.current()).isNull()
         // Not opted out: the actor stays in its slot.
         assertThat(identity.seed).isNotNull()
         assertThat(identity.custodyPurges).isEqualTo(0)
+    }
+
+    /** EraseConfirm.md:21 — revoked first, everything on the device gone, the session ended. */
+    @Test
+    fun eraseEverythingRevokesWipesTheDeviceAndEndsTheSession() = runTest {
+        val tokens = FakeTokenStore().apply { save(AuthTokens("a", "r", "u1")) }
+        val prefs = FakeDevicePreferences().apply { setTheme(ThemeChoice.DARK) }
+        val device = FakeDeviceData(tokens, identity, prefs)
+        identity.seed = ActorKey.generate().seed()
+        var revokedWithSession = false
+        val sessions = object : ThrowingSessionRepository() {
+            override suspend fun revokeSession(id: String?): Outcome<Unit> {
+                revokedWithSession = id == null && tokens.current() != null
+                return Outcome.Success(Unit)
+            }
+        }
+        SignOut(sessions, identity, tokens, device).eraseEverything()
+        assertThat(revokedWithSession).isTrue()
+        assertThat(device.erases).isEqualTo(1)
+        assertThat(tokens.current()).isNull()
+        assertThat(identity.seed).isNull()
+        assertThat(prefs.theme.value).isEqualTo(ThemeChoice.AUTO)
+    }
+
+    @Test
+    fun eraseEverythingEndsTheSessionEvenOffline() = runTest {
+        val tokens = FakeTokenStore().apply { save(AuthTokens("a", "r", "u1")) }
+        val device = FakeDeviceData()
+        SignOut(offlineSessions(), identity, tokens, device).eraseEverything()
+        assertThat(device.erases).isEqualTo(1)
+        assertThat(tokens.current()).isNull()
     }
 
     @Test
@@ -262,7 +296,7 @@ class KeyCeremonyTest {
         identity.pendingBlob = byteArrayOf(7)
         identity.stancePadTaught = true
         identity.forgetOnSignOut = true
-        SignOut(offlineSessions(), identity, tokens).signOut()
+        SignOut(offlineSessions(), identity, tokens, FakeDeviceData()).signOut()
         assertThat(tokens.current()).isNull()
         assertThat(identity.seed).isNull()
         assertThat(identity.pendingBlob).isNull()

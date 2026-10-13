@@ -87,6 +87,23 @@ class DeletionScreensTest {
     }
 
     @Test
+    fun `a_spent_mail_budget_stands_too_many_tries_above_the_commit`() {
+        // ER-G2, DeleteAccount.md:23.
+        request(DeleteAccountUiState(case = DeleteAccountCase.MEMBER, fault = R.string.rate_limited))
+        node("deleteAccount.commit_fault").performScrollTo()
+            .assertTextEquals("Too many tries. Wait a little, then try again.")
+        button("deleteAccount.commit:member").assertTextEquals("Send the confirmation link")
+    }
+
+    @Test
+    fun `the_applicants_delete_in_flight_reads_deleting_my_account`() {
+        // ER-G12, DeleteAccount.md:37 — past the participle delay, in its own place.
+        request(DeleteAccountUiState(case = DeleteAccountCase.APPLICANT, inFlight = true))
+        compose.mainClock.advanceTimeBy(500)
+        button("deleteAccount.commit:applicant").assertTextEquals("Deleting my account…")
+    }
+
+    @Test
     fun `no_case_is_drawn_before_the_path_is_read`() {
         request(DeleteAccountUiState())
         button("deleteAccount.commit:member").assertDoesNotExist()
@@ -182,5 +199,46 @@ class DeletionScreensTest {
         node("delete_confirmed_signed_out").performScrollTo()
             .assertTextEquals("You're not signed in here, and you don't need to be — the link was the proof.")
         button("deleteAccount.onward").assertTextEquals("Sign in")
+    }
+
+    // -------------------------------------------------- the dead link (ER-G1)
+
+    private fun deadLanding(signedIn: Boolean, onBackToSettings: () -> Unit = {}, onSignIn: () -> Unit = {}) {
+        compose.setContent {
+            DeleteAccountConfirmedScreen(
+                DeleteAccountConfirmedUiState(landing = ConfirmedLanding.Dead, now = NOW),
+                signedIn = signedIn,
+                onToggleSweep = {},
+                onAdd = {},
+                onRetry = {},
+                onGoToFeed = {},
+                onSignIn = onSignIn,
+                onBackToSettings = onBackToSettings,
+            )
+        }
+    }
+
+    @Test
+    fun `a_dead_link_signed_in_says_so_and_goes_back_to_settings`() {
+        var back = 0
+        deadLanding(signedIn = true, onBackToSettings = { back++ })
+        node("deleteAccount.title").assertTextEquals("This link doesn't work anymore")
+        node("deleteAccount.body").assertTextEquals(
+            "It may have been used already, or a newer request replaced it. " +
+                "If you still mean to delete your account, ask again from settings.",
+        )
+        button("deleteAccount.onward").assertTextEquals("Back to settings").performClick()
+        assertThat(back).isEqualTo(1)
+        // No mark, no Resend, no signed-out line (DeleteLinkExpired.md:11).
+        node("delete_confirmed_signed_out").assertDoesNotExist()
+        button("deleteAccount.add").assertDoesNotExist()
+    }
+
+    @Test
+    fun `a_dead_link_signed_out_offers_sign_in`() {
+        var signIn = 0
+        deadLanding(signedIn = false, onSignIn = { signIn++ })
+        button("deleteAccount.onward").assertTextEquals("Sign in").performClick()
+        assertThat(signIn).isEqualTo(1)
     }
 }

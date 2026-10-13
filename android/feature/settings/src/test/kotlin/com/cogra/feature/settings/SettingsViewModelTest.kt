@@ -17,6 +17,7 @@ import com.cogra.domain.identity.SignOut
 import com.cogra.domain.settings.SensitiveContentChoice
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.store.ThemeChoice
+import com.cogra.domain.testing.FakeDeviceData
 import com.cogra.domain.testing.FakeDevicePreferences
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
@@ -48,6 +49,7 @@ class SettingsViewModelTest {
     private val sensitive = SensitiveContentChoice()
     private val deletions = ScriptedAccountDeletionRepository()
     private val deletionState = AccountDeletionState(deletions)
+    private val deviceData = FakeDeviceData(tokens, identity, device)
 
     @Before
     fun setUp() {
@@ -64,7 +66,7 @@ class SettingsViewModelTest {
     private fun viewModel() = SettingsViewModel(
         settings,
         sessions,
-        SignOut(sessions, identity, tokens),
+        SignOut(sessions, identity, tokens, deviceData),
         identity,
         device,
         sensitive,
@@ -483,6 +485,83 @@ class SettingsViewModelTest {
         assertThat(identity.seed).isNotNull()
         assertThat(events).contains(SettingsEvent.FocusSignOut)
         collecting.cancel()
+    }
+
+    // ----------------------------------------------------- clearing data (B6)
+
+    @Test
+    fun `the_erase_row_asks_first_and_nothing_is_erased_before_an_answer`() = runTest(dispatcher) {
+        signedIn()
+        val vm = viewModel()
+        idle()
+        vm.onErase()
+        idle()
+        // EraseConfirm.md:3 — the dialog stands; the reader is still signed in.
+        assertThat(vm.state.value.eraseConfirmOpen).isTrue()
+        assertThat(deviceData.erases).isEqualTo(0)
+        assertThat(tokens.current()).isNotNull()
+        assertThat(identity.seed).isNotNull()
+    }
+
+    @Test
+    fun `the_erase_clears_the_device_and_ends_the_session`() = runTest(dispatcher) {
+        signedIn()
+        device.setTheme(ThemeChoice.DARK)
+        val vm = viewModel()
+        idle()
+        vm.onErase()
+        vm.onEraseEverything()
+        idle()
+        // EraseConfirm.md:21 — key, draft, picks, the device's choices and the
+        // seen record (one store, one edit) go; the session ends.
+        assertThat(vm.state.value.eraseConfirmOpen).isFalse()
+        assertThat(deviceData.erases).isEqualTo(1)
+        assertThat(identity.seed).isNull()
+        assertThat(device.theme.value).isEqualTo(ThemeChoice.AUTO)
+        assertThat(tokens.current()).isNull()
+    }
+
+    @Test
+    fun `dismissing_the_erase_keeps_everything_and_returns_focus_to_the_row`() = runTest(dispatcher) {
+        signedIn()
+        val vm = viewModel()
+        idle()
+        val events = mutableListOf<SettingsEvent>()
+        val collecting = launch { vm.events.toList(events) }
+        vm.onErase()
+        vm.onDismissEraseConfirm()
+        idle()
+        assertThat(vm.state.value.eraseConfirmOpen).isFalse()
+        assertThat(deviceData.erases).isEqualTo(0)
+        assertThat(tokens.current()).isNotNull()
+        assertThat(events).contains(SettingsEvent.FocusErase)
+        collecting.cancel()
+    }
+
+    @Test
+    fun `make_a_recovery_code_from_the_erase_stays_signed_in`() = runTest(dispatcher) {
+        signedIn()
+        val vm = viewModel()
+        idle()
+        vm.onErase()
+        vm.onMakeRecoveryCodeFromErase()
+        idle()
+        assertThat(vm.state.value.eraseConfirmOpen).isFalse()
+        assertThat(deviceData.erases).isEqualTo(0)
+        assertThat(tokens.current()).isNotNull()
+    }
+
+    @Test
+    fun `the_backup_state_keys_the_clearing_words`() = runTest(dispatcher) {
+        signedIn()
+        settings.read = Outcome.Success(account(keyBackupCreatedAt = null))
+        val none = viewModel()
+        idle()
+        assertThat(none.state.value.backupMade).isFalse()
+        settings.read = Outcome.Success(account())
+        val made = viewModel()
+        idle()
+        assertThat(made.state.value.backupMade).isTrue()
     }
 
     // ---------------------------------------------------- delete account

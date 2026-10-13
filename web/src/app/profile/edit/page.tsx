@@ -193,6 +193,7 @@ export default function ProfileEditPage() {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
       <PageHeader
+        inGutter
         title="Edit profile"
         backHref="/profile"
         backLabel="Back to profile"

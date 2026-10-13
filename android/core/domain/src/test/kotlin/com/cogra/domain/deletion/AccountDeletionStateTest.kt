@@ -64,6 +64,33 @@ class AccountDeletionStateTest {
         assertThat(state.accountDeleted.value).isFalse()
     }
 
+    /** ER-G6 (`FeedDeleting.md:23`): a session ending past the deadline is the deletion having run. */
+    @Test
+    fun aSessionEndingPastTheDeadlineIsTheDeletionHavingRun() = runTest {
+        repo.standing = Outcome.Success(DeletionStanding(AccountDeletionPath.BY_LINK, grace))
+        state.refresh()
+        state.onSessionEnded(grace.scheduledFor)
+        assertThat(state.accountDeleted.value).isTrue()
+        assertThat(state.standing.value).isNull()
+    }
+
+    @Test
+    fun aSessionEndingInsideTheGraceIsNoDeletion() = runTest {
+        repo.standing = Outcome.Success(DeletionStanding(AccountDeletionPath.BY_LINK, grace))
+        state.refresh()
+        state.onSessionEnded(grace.scheduledFor.minusSeconds(1))
+        assertThat(state.accountDeleted.value).isFalse()
+        assertThat(state.standing.value).isNull()
+    }
+
+    @Test
+    fun bothBandsReadOneArbitration() = runTest {
+        assertThat(state.standing.value.bandDeletion()).isNull()
+        repo.standing = Outcome.Success(DeletionStanding(AccountDeletionPath.BY_LINK, grace))
+        state.refresh()
+        assertThat(state.standing.value.bandDeletion()).isEqualTo(grace)
+    }
+
     @Test
     fun signingOutForgetsTheStanding() = runTest {
         state.refresh()
