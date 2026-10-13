@@ -9893,6 +9893,56 @@ drafted and wait for his review (copy-voice marks them).
   row on the eight boards that register the page, and `EraseConfirm`
   joining with 143; one key rule joins, nothing removed or changed.
 
+### Round 9, the rulings fold — 2026-10-13
+
+jakob's morning words (seam 165) and the deletion lane's undrawn answer
+(seam 173), drawn as one round. The words he did not write himself are
+drafted and wait for his review (copy-voice marks each).
+
+- **The vouch card's act is the stance face.** `VouchBack` and
+  `VouchBackPad` draw `StanceControl`'s anchor at the end of the card's
+  row, `Got it` leading it, and one line against the face, `Tap the face
+  to vouch back.` (jakob's own) — on the deleted voucher's card too, and
+  with no first-opinion words, which stay the band's. The tap blooms the
+  vouch-back pad, holding a kept pick where there is one; the hold signs
+  the gentle default and the ceremony opens, as from the profile's
+  anchor. The card's reading lines keep their words.
+- **The borrowed view is the vantage's whole read** (*Guest and applicant
+  feeds borrow a vantage point*). The filter sheet speaks it by name
+  under a borrowed view — `@mira's people`, `as far as @mira's eyes
+  reach`, Ranked's `closest to @mira first — the view you're browsing
+  from`, the topics `@mira holds` — and the trigger's extra collapses to
+  the count past its 154px like any other. A guest's wide anchor reads
+  `@genesismod's opinion` beside the hollow face, falling back to
+  `Their opinion` where the name outgrows it: a flagged exception, and
+  on a profile it fires for most handles (backlog item 139).
+- **The sweep.** Already third person under a borrowed view: the trace,
+  its steps, folds and records, and a guest anchor's spoken name. The
+  reader's own, so first person by the law: the seen toggle, the kinds'
+  line, Also show, Reset, the filter's "?", Settings' default sheet, the
+  hidden-account snackbars, an applicant's waiting-opinion snackbars,
+  the vouch card's body, History, Saved, Notifications and the own
+  profile. Explore never borrows — the band never stands there, a guest
+  has no Your topics, and an applicant's lists are their own. The trace's
+  `Why this reached you` stays: the thing did reach the reader.
+- **Done re-queries only for Kinds or the topic.** A Done whose staged
+  changes are all the device's own — the people row and its sign, the
+  order, the seen toggle, the kinds of post, Sensitive, Removed, Still
+  settling — re-derives from what the feed holds and never re-queries;
+  the status message, the trigger's new name and the focus return are
+  unchanged.
+- **The deletion mail's resend answers.** `Sent again — the link is on
+  its way to sol@solferreira.art.`, the email change's resend register.
+- **Smaller trues**: `TagPage`'s guest line wears the borrowed stance
+  ruled 2026-10-06, as `GuestGate` and `FeedBare` already did.
+- **The gate**: edges unchanged at **2036** — the button's edge is the
+  face's now, its one outcome four: the pad, the ceremony, and the
+  hold's two row answers; the registry **92 / 3590 → 92 / 3594** —
+  `feed.vouchCard.stance`, `.stance.anchor` and `.stance.anchor.face`
+  join `VouchBack`, `feed.vouchCard.hint` joins both boards, and
+  `feed.vouchCard.vouch` is removed with the button it named (jakob's
+  ruling, seam 165).
+
 ---
 
 ## 14. The canvases
