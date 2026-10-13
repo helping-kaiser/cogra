@@ -42,6 +42,11 @@ export function mailBody(email: string): string {
   return `We sent a link to ${email}. Opening it confirms the deletion and starts the seven days.`;
 }
 
+/** The Resend, answered, naming the account's address (DeleteAccountMail.md:13). */
+export function resentTo(email: string): string {
+  return `Sent again — the link is on its way to ${email}.`;
+}
+
 /** No answer reached the device (copy-voice *Faults by code*, "No answer at all"). */
 export const NO_ANSWER = "That didn't send. Try again.";
 
