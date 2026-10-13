@@ -93,6 +93,16 @@
                                 2026-10-05), drawn by the reader chip
      About · the support stack  as for a member
 
+   THE DELETION ROW READS `User.deletionPath` (OS-15, seam 140/162; ER-G18):
+   one server-computed value, never a pair and never derived from
+   `application.*` fields. `BY_LINK` (a member, or an applicant whose
+   Registration landed) reads the member's footnote and opens the request;
+   `IMMEDIATE` (an applicant never funded) the applicant's footnote; `LOCKED`
+   (funded, Registration not yet landed) the applicant's footnote under the
+   locked look, its tap answering `You can delete your account once you're
+   in.` The reader chip's `member` value draws `BY_LINK`, `applicant` draws
+   `IMMEDIATE`; the grace stays `accountDeletion`'s (`SettingsDeleting`).
+
    THE KEPT PICKS' ROW IS DRAWN PRESENT, to show where it stands (backlog item
    113, jakob's ruling B3): `3 kept picks waiting`, last in the Key backup
    group, opening `KeptPicksReview` again. It is there only while picks kept

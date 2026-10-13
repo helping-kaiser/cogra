@@ -148,12 +148,14 @@ WHEN tap Sign out GIVEN the don't-remember switch is on and this device holds th
 
 WHEN the sign-out has not answered 200ms after the press -> Sign out reads Signing out… in its own place AND NEVER a spinner appears
 
-ALWAYS the deletion group's footnote reads Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you. GIVEN the reader is a member and no deletion is in its grace
+ALWAYS the deletion group's footnote reads Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you. GIVEN User.deletionPath reads BY_LINK and no deletion is in its grace
 
-ALWAYS the deletion group's footnote reads Nothing is deleted here. The next screen says what goes and what stays. GIVEN the reader is an applicant
+ALWAYS the deletion group's footnote reads Nothing is deleted here. The next screen says what goes and what stays. GIVEN User.deletionPath reads IMMEDIATE or LOCKED
 
-WHEN tap Delete account GIVEN no deletion is in its grace -> the deletion's request screen opens AND NEVER anything is deleted from the row
+ALWAYS the Delete account row's state reads User.deletionPath, the one value the server computes, and never the application's fields
 
-ALWAYS Delete account wears the locked look, visibly inactive at the disabled opacity and still tappable GIVEN the reader is an applicant whose application is approved and whose registration has not landed
+WHEN tap Delete account GIVEN User.deletionPath reads IMMEDIATE or BY_LINK and no deletion is in its grace -> the deletion's request screen opens AND NEVER anything is deleted from the row
 
-WHEN tap Delete account GIVEN the reader is an applicant whose application is approved and whose registration has not landed -> the snackbar reads You can delete your account once you're in. AND NEVER the deletion's request screen opens AND NEVER anything is deleted
+ALWAYS Delete account wears the locked look, visibly inactive at the disabled opacity and still tappable GIVEN User.deletionPath reads LOCKED
+
+WHEN tap Delete account GIVEN User.deletionPath reads LOCKED -> the snackbar reads You can delete your account once you're in. AND NEVER the deletion's request screen opens AND NEVER anything is deleted
