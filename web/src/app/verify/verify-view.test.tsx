@@ -1,8 +1,8 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeFlow } from "@/test/registration";
 import { VerifyView } from "./verify-view";
@@ -14,13 +14,13 @@ vi.mock("next/navigation", () => ({
 
 const server = startMswServer();
 
-const verifyOk = graphql.mutation("VerifyEmail", () =>
+const verifyOk = gqlLink.mutation("VerifyEmail", () =>
   HttpResponse.json({
     data: { verifyEmail: { __typename: "VerifyEmailPayload", ok: true, userErrors: [] } },
   }),
 );
 
-const verifyInvalid = graphql.mutation("VerifyEmail", () =>
+const verifyInvalid = gqlLink.mutation("VerifyEmail", () =>
   HttpResponse.json({
     data: {
       verifyEmail: {
@@ -58,7 +58,7 @@ describe("VerifyView", () => {
   it("covers the conflated failure and offers the resend", async () => {
     server.use(
       verifyInvalid,
-      graphql.mutation("ResendVerificationEmail", () =>
+      gqlLink.mutation("ResendVerificationEmail", () =>
         HttpResponse.json({
           data: {
             resendVerificationEmail: { __typename: "ResendVerificationEmailPayload", ok: true },
@@ -78,7 +78,7 @@ describe("VerifyView", () => {
 
   it("renders a rate-limited verify as a backoff — not an invalid link, not connectivity", async () => {
     server.use(
-      graphql.mutation("VerifyEmail", () =>
+      gqlLink.mutation("VerifyEmail", () =>
         HttpResponse.json({
           errors: [{ message: "too many attempts", extensions: { code: "RATE_LIMITED" } }],
         }),
@@ -101,7 +101,7 @@ describe("VerifyView", () => {
   });
 
   it("offers a retry on a transport fault, which can then succeed", async () => {
-    server.use(graphql.mutation("VerifyEmail", () => HttpResponse.error()));
+    server.use(gqlLink.mutation("VerifyEmail", () => HttpResponse.error()));
     renderWithProviders(<VerifyView />);
     expect(await screen.findByTestId("verify_transport_error")).toBeInTheDocument();
 

@@ -1,5 +1,5 @@
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -11,7 +11,7 @@ import {
   readCachedPost,
   sensitiveInput,
 } from "./content-api";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 
 const server = startMswServer();
 
@@ -52,7 +52,7 @@ function pageInfo(hasNextPage: boolean, endCursor: string | null) {
 describe("fetchPosts", () => {
   it("maps the page and its cursor", async () => {
     server.use(
-      graphql.query("Posts", () =>
+      gqlLink.query("Posts", () =>
         HttpResponse.json({
           data: {
             posts: {
@@ -74,7 +74,7 @@ describe("fetchPosts", () => {
   });
 
   it("fails on a transport fault", async () => {
-    server.use(graphql.query("Posts", () => HttpResponse.error()));
+    server.use(gqlLink.query("Posts", () => HttpResponse.error()));
     expect((await fetchPosts(client())).kind).toBe("failed");
   });
 
@@ -84,7 +84,7 @@ describe("fetchPosts", () => {
   it("asks for pending entries by default and carries the landed-only opt-out", async () => {
     const asked: unknown[] = [];
     server.use(
-      graphql.query("Posts", ({ variables }) => {
+      gqlLink.query("Posts", ({ variables }) => {
         asked.push(variables.includePending);
         return HttpResponse.json({
           data: {
@@ -107,7 +107,7 @@ describe("fetchPosts", () => {
 describe("fetchPostDetail", () => {
   it("maps the thread and serves null for an unknown id", async () => {
     server.use(
-      graphql.query("PostDetail", ({ variables }) =>
+      gqlLink.query("PostDetail", ({ variables }) =>
         HttpResponse.json({
           data: {
             post:
@@ -178,7 +178,7 @@ describe("readCachedPost", () => {
   }
 
   function feedAnswer(...nodes: Record<string, unknown>[]) {
-    return graphql.query("Posts", () =>
+    return gqlLink.query("Posts", () =>
       HttpResponse.json({
         data: {
           posts: {
@@ -192,7 +192,7 @@ describe("readCachedPost", () => {
   }
 
   function detailAnswer(node: Record<string, unknown>) {
-    return graphql.query("PostDetail", () =>
+    return gqlLink.query("PostDetail", () =>
       HttpResponse.json({
         data: {
           post: {
@@ -260,7 +260,7 @@ describe("preparePost", () => {
 
   it("lifts the node and the staged writes", async () => {
     server.use(
-      graphql.mutation("PreparePost", () =>
+      gqlLink.mutation("PreparePost", () =>
         HttpResponse.json({
           data: {
             preparePost: {
@@ -295,7 +295,7 @@ describe("preparePost", () => {
 
   it("refuses with the payload's userErrors", async () => {
     server.use(
-      graphql.mutation("PreparePost", () =>
+      gqlLink.mutation("PreparePost", () =>
         HttpResponse.json({
           data: {
             preparePost: {
@@ -326,7 +326,7 @@ describe("preparePostEdit", () => {
   it("sends explicit nulls for cleared fields", async () => {
     let variables: Record<string, unknown> | null = null;
     server.use(
-      graphql.mutation("PreparePostEdit", ({ variables: v }) => {
+      gqlLink.mutation("PreparePostEdit", ({ variables: v }) => {
         variables = v;
         return HttpResponse.json({
           data: {
@@ -368,7 +368,7 @@ describe("preparePostEdit", () => {
   it("re-states the gallery it was handed, in order", async () => {
     let variables: Record<string, unknown> | null = null;
     server.use(
-      graphql.mutation("PreparePostEdit", ({ variables: v }) => {
+      gqlLink.mutation("PreparePostEdit", ({ variables: v }) => {
         variables = v;
         return HttpResponse.json({
           data: {
@@ -416,7 +416,7 @@ describe("preparePostEdit", () => {
   it("carries a silently-taken cover onto the wire, distinct from a chosen one", async () => {
     let variables: { input: { attachments: unknown } } | null = null;
     server.use(
-      graphql.mutation("PreparePostEdit", ({ variables: v }) => {
+      gqlLink.mutation("PreparePostEdit", ({ variables: v }) => {
         variables = v as typeof variables;
         return HttpResponse.json({
           data: {
@@ -455,7 +455,7 @@ describe("prepareComment", () => {
   it("targets the post and carries the license", async () => {
     let variables: Record<string, unknown> | null = null;
     server.use(
-      graphql.mutation("PrepareComment", ({ variables: v }) => {
+      gqlLink.mutation("PrepareComment", ({ variables: v }) => {
         variables = v;
         return HttpResponse.json({
           data: {
@@ -511,7 +511,7 @@ describe("prepareComment", () => {
   it("carries a comment's pictures in the author's order, the first the cover", async () => {
     let variables: { input: { attachments: unknown } } | null = null;
     server.use(
-      graphql.mutation("PrepareComment", ({ variables: v }) => {
+      gqlLink.mutation("PrepareComment", ({ variables: v }) => {
         variables = v as typeof variables;
         return HttpResponse.json({
           data: {
@@ -564,7 +564,7 @@ describe("prepareComment", () => {
   it("carries drafted tags as structured input", async () => {
     let variables: Record<string, unknown> | null = null;
     server.use(
-      graphql.mutation("PrepareComment", ({ variables: v }) => {
+      gqlLink.mutation("PrepareComment", ({ variables: v }) => {
         variables = v;
         return HttpResponse.json({
           data: {

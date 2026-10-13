@@ -1,9 +1,10 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { delay, graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
+import { delay } from "msw/utils/delay";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { ChangePasswordView } from "./change-password-view";
 
@@ -13,7 +14,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push, replace: vi.fn() }
 const server = startMswServer();
 
 function account() {
-  return graphql.query("SettingsAccount", () =>
+  return gqlLink.query("SettingsAccount", () =>
     HttpResponse.json({
       data: {
         me: {
@@ -36,7 +37,7 @@ function account() {
 }
 
 function answer(body: Record<string, unknown> | "offline" | "rateLimited", wait = 0) {
-  return graphql.mutation("ChangePassword", async () => {
+  return gqlLink.mutation("ChangePassword", async () => {
     if (wait > 0) await delay(wait);
     if (body === "offline") return HttpResponse.error();
     if (body === "rateLimited") {

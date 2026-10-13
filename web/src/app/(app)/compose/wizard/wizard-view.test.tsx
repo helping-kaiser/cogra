@@ -5,13 +5,13 @@
 // of it.
 
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { emptyWizard, type WizardState } from "@/lib/compose/wizard";
 import { createComposeDraftStore, type ComposeDraftStore } from "@/lib/compose/draft-store";
@@ -82,7 +82,7 @@ function installEncoder() {
 }
 
 const preparePost = (node = "post-1") =>
-  graphql.mutation("PreparePost", () =>
+  gqlLink.mutation("PreparePost", () =>
     HttpResponse.json({
       data: {
         preparePost: {
@@ -105,7 +105,7 @@ const preparePost = (node = "post-1") =>
 
 const uploadOk = (ids: string[]) => {
   let next = 0;
-  return graphql.mutation("UploadMedia", () =>
+  return gqlLink.mutation("UploadMedia", () =>
     HttpResponse.json({
       data: {
         uploadMedia: {
@@ -175,7 +175,7 @@ describe("the compose wizard", () => {
   it("publishes a words post without ever showing a crop screen", async () => {
     let variables: { input: { content: string | null; attachments: unknown } } | null = null;
     server.use(
-      graphql.mutation("PreparePost", ({ variables: v }) => {
+      gqlLink.mutation("PreparePost", ({ variables: v }) => {
         variables = v as never;
         return HttpResponse.json({
           data: {
@@ -310,7 +310,7 @@ describe("the compose wizard", () => {
     } | null = null;
     server.use(
       uploadOk(["m-a", "m-b"]),
-      graphql.mutation("PreparePost", ({ variables: v }) => {
+      gqlLink.mutation("PreparePost", ({ variables: v }) => {
         variables = v as never;
         return HttpResponse.json({
           data: {
@@ -384,7 +384,7 @@ describe("the compose wizard", () => {
   it("holds the seal shut while a picture is unresolved, and retries just that one", async () => {
     let attempts = 0;
     server.use(
-      graphql.mutation("UploadMedia", () => {
+      gqlLink.mutation("UploadMedia", () => {
         attempts += 1;
         if (attempts === 1) {
           return HttpResponse.json({
@@ -570,7 +570,7 @@ describe("the compose wizard", () => {
   it("stages the node the cite affordance sent it, and resolves its label", async () => {
     searchParams = new URLSearchParams("reference=p-quoted");
     server.use(
-      graphql.query("ReferenceCandidates", () =>
+      gqlLink.query("ReferenceCandidates", () =>
         HttpResponse.json({
           data: {
             referenceCandidates: [
@@ -607,7 +607,7 @@ describe("the compose wizard", () => {
   it("stages an unresolvable cite target by its id", async () => {
     searchParams = new URLSearchParams("reference=p-quoted");
     server.use(
-      graphql.query("ReferenceCandidates", () =>
+      gqlLink.query("ReferenceCandidates", () =>
         HttpResponse.json({ data: { referenceCandidates: [] } }),
       ),
     );
@@ -626,7 +626,7 @@ describe("the compose wizard", () => {
   it("keeps the staged cite when a held draft is taken up", async () => {
     searchParams = new URLSearchParams("reference=p-quoted");
     server.use(
-      graphql.query("ReferenceCandidates", () =>
+      gqlLink.query("ReferenceCandidates", () =>
         HttpResponse.json({ data: { referenceCandidates: [] } }),
       ),
     );
@@ -1009,7 +1009,7 @@ describe("the compose wizard", () => {
 describe("the license a new post starts from", () => {
   it("new_post_starts_from_the_default", async () => {
     server.use(
-      graphql.query("DefaultLicense", () =>
+      gqlLink.query("DefaultLicense", () =>
         HttpResponse.json({
           data: {
             me: {
@@ -1041,7 +1041,7 @@ describe("the license a new post starts from", () => {
 
   it("a draft taken up keeps the license it was written under", async () => {
     server.use(
-      graphql.query("DefaultLicense", () =>
+      gqlLink.query("DefaultLicense", () =>
         HttpResponse.json({
           data: {
             me: {
@@ -1085,7 +1085,7 @@ describe("the sealed copy of a staged post (FC-G5)", () => {
   });
 
   const stagedWriteIs = (state: string | null) =>
-    graphql.query("StagedWrite", ({ variables }) =>
+    gqlLink.query("StagedWrite", ({ variables }) =>
       HttpResponse.json({
         data: {
           stagedWrite:
@@ -1218,7 +1218,7 @@ describe("the sealed copy of a staged post (FC-G5)", () => {
 
   it("decides nothing when the fate cannot be read, and still opens", async () => {
     await seals.seal(staged, { node: "post-1", writes: ["w1"] });
-    server.use(graphql.query("StagedWrite", () => HttpResponse.error()));
+    server.use(gqlLink.query("StagedWrite", () => HttpResponse.error()));
     mount();
     expect(await screen.findByTestId("wizard-to-words")).toBeInTheDocument();
     expect(screen.queryByTestId("wizard-draft-card")).not.toBeInTheDocument();

@@ -1,11 +1,11 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { TOO_BIG_PICTURE } from "@/lib/compose/pick";
 import { PICTURE_MAX_BYTES } from "@/lib/ui2/media/caps";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
 import ProfileEditPage from "./page";
@@ -35,7 +35,7 @@ function asset(id: string) {
 }
 
 function myProfileHandler({ avatar = null }: { avatar?: unknown } = {}) {
-  return graphql.query("MyProfile", () =>
+  return gqlLink.query("MyProfile", () =>
     HttpResponse.json({
       data: {
         me: {
@@ -54,7 +54,7 @@ function myProfileHandler({ avatar = null }: { avatar?: unknown } = {}) {
 
 /** Captures what the update actually carried, which is the whole question. */
 function capturingUpdate(seen: { input?: Record<string, unknown> }) {
-  return graphql.mutation("PrepareProfileUpdate", ({ variables }) => {
+  return gqlLink.mutation("PrepareProfileUpdate", ({ variables }) => {
     seen.input = (variables as { input: Record<string, unknown> }).input;
     return HttpResponse.json({
       data: {
@@ -78,7 +78,7 @@ function capturingUpdate(seen: { input?: Record<string, unknown> }) {
 
 /** The one asset id a picked avatar is expected to come back as. */
 function uploadHandler(id: string) {
-  return graphql.mutation("UploadMedia", () =>
+  return gqlLink.mutation("UploadMedia", () =>
     HttpResponse.json({
       data: {
         uploadMedia: {
@@ -163,7 +163,7 @@ describe("ProfileEditPage", () => {
     let variables: unknown;
     server.use(
       myProfileHandler(),
-      graphql.mutation("PrepareProfileUpdate", ({ variables: v }) => {
+      gqlLink.mutation("PrepareProfileUpdate", ({ variables: v }) => {
         variables = v;
         return HttpResponse.json({
           data: {
@@ -301,7 +301,7 @@ describe("ProfileEditPage", () => {
   it("surfaces a refused prepare without navigating", async () => {
     server.use(
       myProfileHandler(),
-      graphql.mutation("PrepareProfileUpdate", () =>
+      gqlLink.mutation("PrepareProfileUpdate", () =>
         HttpResponse.json({
           data: {
             prepareProfileUpdate: {
@@ -447,7 +447,7 @@ describe("ProfileEditPage", () => {
       const upload = vi.fn();
       server.use(
         myProfileHandler(),
-        graphql.mutation("UploadMedia", () => {
+        gqlLink.mutation("UploadMedia", () => {
           upload();
           return HttpResponse.json({ data: { uploadMedia: null } });
         }),

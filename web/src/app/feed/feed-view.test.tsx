@@ -1,11 +1,11 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { useLayoutEffect, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
 import {
@@ -54,7 +54,7 @@ function borrowedViewHandler(
     displayName: "Genesis Moderator",
   },
 ) {
-  return graphql.query("BorrowedView", () =>
+  return gqlLink.query("BorrowedView", () =>
     HttpResponse.json({
       data: {
         borrowedView:
@@ -91,7 +91,7 @@ function signedInStore() {
  * does the band — the account state is what picks its wording.
  */
 function meHandler(accountState: "MEMBER" | "APPLICANT" = "MEMBER") {
-  return graphql.query("Me", () =>
+  return gqlLink.query("Me", () =>
     HttpResponse.json({
       data: {
         me: {
@@ -210,12 +210,12 @@ function rankedFeed(
 ) {
   let current: readonly PostNode[] = typeof nodes === "function" ? [] : nodes;
   return [
-    graphql.query("FeedRanking", ({ variables }) => {
+    gqlLink.query("FeedRanking", ({ variables }) => {
       reads.ranks.push(variables.viewer as string);
       if (typeof nodes === "function") current = nodes();
       return HttpResponse.json({ data: rankingOf(current) });
     }),
-    graphql.query("Feed", ({ variables }) => {
+    gqlLink.query("Feed", ({ variables }) => {
       const ids = variables.orderedIds as string[];
       reads.windows.push(ids);
       if (failWindow?.(reads.windows.length)) return HttpResponse.error();
@@ -285,7 +285,7 @@ describe("FeedView", () => {
   it("raises the thread from the comments affordance, over the feed", async () => {
     server.use(
       ...rankedFeed([post("p1", "First", false, [], 2)]),
-      graphql.query("PostComments", () =>
+      gqlLink.query("PostComments", () =>
         HttpResponse.json({
           data: {
             post: {
@@ -322,7 +322,7 @@ describe("FeedView", () => {
   it("keeps the reader's place in the feed through the thread and its composer", async () => {
     server.use(
       ...rankedFeed([post("p1", "First", false, [], 1)]),
-      graphql.query("PostComments", () =>
+      gqlLink.query("PostComments", () =>
         HttpResponse.json({
           data: {
             post: {
@@ -392,7 +392,7 @@ describe("FeedView", () => {
       screen
         .getByTestId(byNode("feed.card.media.frame", `${postId}/1`))
         .querySelector("video") as HTMLVideoElement;
-    const emptyThread = graphql.query("PostComments", () =>
+    const emptyThread = gqlLink.query("PostComments", () =>
       HttpResponse.json({
         data: {
           post: {
@@ -712,7 +712,7 @@ describe("FeedView", () => {
   it("puts the vouch card first in the list, outside the seen tracker", async () => {
     server.use(
       ...rankedFeed([post("p1", "First")]),
-      graphql.query("Me", () =>
+      gqlLink.query("Me", () =>
         HttpResponse.json({
           data: {
             me: {
@@ -773,7 +773,7 @@ describe("FeedView", () => {
     server.use(...rankedFeed([post("p1", "First")], reads));
     server.use(meHandler());
     server.use(
-      graphql.query("BorrowedView", () =>
+      gqlLink.query("BorrowedView", () =>
         HttpResponse.json({
           data: {
             borrowedView: borrowing
@@ -811,7 +811,7 @@ describe("FeedView", () => {
     );
     server.use(meHandler());
     server.use(
-      graphql.query("BorrowedView", () => {
+      gqlLink.query("BorrowedView", () => {
         reads += 1;
         return HttpResponse.json({
           data: {
@@ -847,7 +847,7 @@ describe("FeedView", () => {
     );
     server.use(meHandler());
     server.use(
-      graphql.query("BorrowedView", () =>
+      gqlLink.query("BorrowedView", () =>
         HttpResponse.json({
           data: {
             borrowedView: borrowing
@@ -1345,8 +1345,8 @@ describe("FeedView", () => {
   it("renders the transport error on a fault", async () => {
     const listing = vi.fn();
     server.use(
-      graphql.query("FeedRanking", () => HttpResponse.error()),
-      graphql.query("Posts", () => {
+      gqlLink.query("FeedRanking", () => HttpResponse.error()),
+      gqlLink.query("Posts", () => {
         listing();
         return HttpResponse.error();
       }),
@@ -1381,7 +1381,7 @@ describe("FeedView", () => {
   });
 
   it("holds the banner through a failed retry instead of flashing", async () => {
-    server.use(graphql.query("FeedRanking", () => HttpResponse.error()));
+    server.use(gqlLink.query("FeedRanking", () => HttpResponse.error()));
     renderWithProviders(<FeedView />);
     await screen.findByTestId("feed-transport-error");
     fireEvent.click(screen.getByTestId("feed-retry"));
@@ -1417,7 +1417,7 @@ describe("FeedView's ranked data path", () => {
   });
 
   const marked: unknown[] = [];
-  const markSeenOk = graphql.mutation("MarkSeen", ({ variables }) => {
+  const markSeenOk = gqlLink.mutation("MarkSeen", ({ variables }) => {
     marked.push(variables.nodes);
     return HttpResponse.json({
       data: { markSeen: { __typename: "MarkSeenPayload", ok: true, userErrors: [] } },
@@ -1469,7 +1469,7 @@ describe("FeedView's ranked data path", () => {
     const listing = vi.fn();
     server.use(
       ...rankedFeed([post("p1", "First"), post("p2", "Second")]),
-      graphql.query("Posts", () => {
+      gqlLink.query("Posts", () => {
         listing();
         return HttpResponse.error();
       }),
@@ -1522,7 +1522,7 @@ describe("FeedView's ranked data path", () => {
   it("done_with_only_device_side_changes_never_ranks_and_rederives", async () => {
     const reads = feedReads();
     server.use(
-      graphql.query("FeedRanking", ({ variables }) => {
+      gqlLink.query("FeedRanking", ({ variables }) => {
         reads.ranks.push(variables.viewer as string);
         return HttpResponse.json({
           data: {
@@ -1538,7 +1538,7 @@ describe("FeedView's ranked data path", () => {
           },
         });
       }),
-      graphql.query("Feed", ({ variables }) => {
+      gqlLink.query("Feed", ({ variables }) => {
         reads.windows.push(variables.orderedIds as string[]);
         return HttpResponse.json({
           data: windowOf([post("p1", "First"), post("p2", "Second")], variables.orderedIds as string[]),
@@ -1563,7 +1563,7 @@ describe("FeedView's ranked data path", () => {
     const kinds: unknown[] = [];
     // First in the list, so it answers before the shared handler would.
     server.use(
-      graphql.query("FeedRanking", ({ variables }) => {
+      gqlLink.query("FeedRanking", ({ variables }) => {
         reads.ranks.push(variables.viewer as string);
         kinds.push(variables.kinds);
         return HttpResponse.json({ data: rankingOf([post("p1", "First")]) });
@@ -1590,13 +1590,13 @@ describe("FeedView's ranked data path", () => {
   it("a_failed_refresh_keeps_the_held_snapshot", async () => {
     let ranks = 0;
     server.use(
-      graphql.query("FeedRanking", () => {
+      gqlLink.query("FeedRanking", () => {
         ranks += 1;
         return ranks === 1
           ? HttpResponse.json({ data: rankingOf([post("p1", "First")]) })
           : HttpResponse.error();
       }),
-      graphql.query("Feed", ({ variables }) =>
+      gqlLink.query("Feed", ({ variables }) =>
         HttpResponse.json({ data: windowOf([post("p1", "First")], variables.orderedIds as string[]) }),
       ),
     );
@@ -1707,7 +1707,7 @@ describe("FeedView's seen tracker", () => {
     server.use(
       ...rankedFeed([post("p1", "First", false, [topicClaim("salt")]), post("p2", "Second")]),
       meHandler(),
-      graphql.mutation("MarkSeen", ({ variables }) => {
+      gqlLink.mutation("MarkSeen", ({ variables }) => {
         marked.push(variables.nodes);
         return HttpResponse.json({
           data: { markSeen: { __typename: "MarkSeenPayload", ok: true, userErrors: [] } },

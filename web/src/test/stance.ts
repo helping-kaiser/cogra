@@ -11,7 +11,8 @@
 // every surface test. A topic's identity is its canonical name rather
 // than a UUID (hashtag.md §1), so that one root is keyed on `name`.
 
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
+import { gqlLink } from "./msw";
 import type { RequestHandler } from "msw";
 
 /** A seeded standing: where the fold nets, and how many records it folds. */
@@ -60,7 +61,7 @@ function root(
   /** Which variable names the target — `name` for the topic root. */
   key: "id" | "name" = "id",
 ) {
-  return graphql.query(operation, ({ variables }) => {
+  return gqlLink.query(operation, ({ variables }) => {
     const id = String(variables[key]);
     return HttpResponse.json({
       data: {

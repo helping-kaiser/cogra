@@ -1,11 +1,11 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { writeConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
 import { fakeIdentityStore } from "@/test/identity";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
 import { ComposeForm } from "./compose-form";
@@ -198,7 +198,7 @@ describe("ComposeForm", () => {
   it("backs to the post when editing", async () => {
     searchParams = new URLSearchParams("post=p1");
     server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: { post: null } })),
+      gqlLink.query("PostDetail", () => HttpResponse.json({ data: { post: null } })),
     );
     renderWithProviders(<ComposeForm />, {
       store: signedInStore(),
@@ -216,7 +216,7 @@ describe("ComposeForm", () => {
   it("signs a new post and returns to the feed", async () => {
     let variables: Record<string, unknown> | null = null;
     server.use(
-      graphql.mutation("PreparePost", ({ variables: v }) => {
+      gqlLink.mutation("PreparePost", ({ variables: v }) => {
         variables = v;
         return HttpResponse.json({ data: preparedPayload("preparePost", "node-1") });
       }),
@@ -252,7 +252,7 @@ describe("ComposeForm", () => {
   it("stages the drafted tags with the parameters their sliders hold", async () => {
     let variables: Record<string, unknown> | null = null;
     server.use(
-      graphql.mutation("PreparePost", ({ variables: v }) => {
+      gqlLink.mutation("PreparePost", ({ variables: v }) => {
         variables = v;
         return HttpResponse.json({ data: preparedPayload("preparePost", "node-1") });
       }),
@@ -290,7 +290,7 @@ describe("ComposeForm", () => {
 
   it("surfaces a batched tag refusal on its own chip", async () => {
     server.use(
-      graphql.mutation("PreparePost", () =>
+      gqlLink.mutation("PreparePost", () =>
         HttpResponse.json({
           data: {
             preparePost: {
@@ -356,7 +356,7 @@ describe("ComposeForm", () => {
 
   it("renders the server refusal", async () => {
     server.use(
-      graphql.mutation("PreparePost", () =>
+      gqlLink.mutation("PreparePost", () =>
         HttpResponse.json({
           data: {
             preparePost: {
@@ -391,8 +391,8 @@ describe("ComposeForm", () => {
     searchParams = new URLSearchParams("post=p1");
     let editVariables: Record<string, unknown> | null = null;
     server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
-      graphql.mutation("PreparePostEdit", ({ variables }) => {
+      gqlLink.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
+      gqlLink.mutation("PreparePostEdit", ({ variables }) => {
         editVariables = variables;
         return HttpResponse.json({ data: preparedPayload("preparePostEdit", "p1") });
       }),
@@ -433,12 +433,12 @@ describe("ComposeForm", () => {
     searchParams = new URLSearchParams("post=p1");
     let editVariables: Record<string, unknown> | null = null;
     server.use(
-      graphql.query("PostDetail", () =>
+      gqlLink.query("PostDetail", () =>
         HttpResponse.json({
           data: editablePost([], [], [attachment("m-1", "A jetty"), attachment("m-2")]),
         }),
       ),
-      graphql.mutation("PreparePostEdit", ({ variables }) => {
+      gqlLink.mutation("PreparePostEdit", ({ variables }) => {
         editVariables = variables;
         return HttpResponse.json({ data: preparedPayload("preparePostEdit", "p1") });
       }),
@@ -500,12 +500,12 @@ describe("ComposeForm", () => {
     searchParams = new URLSearchParams("post=p1");
     let editVariables: Record<string, unknown> | null = null;
     server.use(
-      graphql.query("PostDetail", () =>
+      gqlLink.query("PostDetail", () =>
         HttpResponse.json({
           data: editablePost([], [], [attachment("m-1", null, "m-cover", true)]),
         }),
       ),
-      graphql.mutation("PreparePostEdit", ({ variables }) => {
+      gqlLink.mutation("PreparePostEdit", ({ variables }) => {
         editVariables = variables;
         return HttpResponse.json({ data: preparedPayload("preparePostEdit", "p1") });
       }),
@@ -540,7 +540,7 @@ describe("ComposeForm", () => {
   it("carries the Sensitive row on an edit and the license chooser on a creation", async () => {
     searchParams = new URLSearchParams("post=p1");
     server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
+      gqlLink.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
     );
     const { unmount } = renderWithProviders(<ComposeForm />, {
       store: signedInStore(),
@@ -565,7 +565,7 @@ describe("ComposeForm", () => {
   it("reads a marked post's own mark and offers the change", async () => {
     searchParams = new URLSearchParams("post=p1");
     server.use(
-      graphql.query("PostDetail", () =>
+      gqlLink.query("PostDetail", () =>
         HttpResponse.json({
           data: editablePost([], [], [], {
             sensitiveSelfMark: true,
@@ -599,8 +599,8 @@ describe("ComposeForm", () => {
     searchParams = new URLSearchParams("post=p1");
     let editVariables: Record<string, unknown> | null = null;
     server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
-      graphql.mutation("PreparePostEdit", ({ variables }) => {
+      gqlLink.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
+      gqlLink.mutation("PreparePostEdit", ({ variables }) => {
         editVariables = variables;
         return HttpResponse.json({ data: preparedPayload("preparePostEdit", "p1") });
       }),
@@ -648,7 +648,7 @@ describe("ComposeForm", () => {
     searchParams = new URLSearchParams("post=p1");
     let editVariables: Record<string, unknown> | null = null;
     server.use(
-      graphql.query("PostDetail", () =>
+      gqlLink.query("PostDetail", () =>
         HttpResponse.json({
           data: editablePost([], [], [], {
             sensitiveSelfMark: true,
@@ -656,7 +656,7 @@ describe("ComposeForm", () => {
           }),
         }),
       ),
-      graphql.mutation("PreparePostEdit", ({ variables }) => {
+      gqlLink.mutation("PreparePostEdit", ({ variables }) => {
         editVariables = variables;
         return HttpResponse.json({ data: preparedPayload("preparePostEdit", "p1") });
       }),
@@ -679,7 +679,7 @@ describe("ComposeForm", () => {
   it("holds the submit shut on an over-cap reason, and only while marked", async () => {
     searchParams = new URLSearchParams("post=p1");
     server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
+      gqlLink.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
     );
     renderWithProviders(<ComposeForm />, {
       store: signedInStore(),
@@ -707,7 +707,7 @@ describe("ComposeForm", () => {
   it("loads the post's current tags as adjustable, removable chips", async () => {
     searchParams = new URLSearchParams("post=p1");
     server.use(
-      graphql.query("PostDetail", () =>
+      gqlLink.query("PostDetail", () =>
         HttpResponse.json({ data: editablePost([topicClaim("rust", 0.4, 0.8)]) }),
       ),
     );
@@ -730,14 +730,14 @@ describe("ComposeForm", () => {
     const tagInputs: Record<string, unknown>[] = [];
     let editCalled = false;
     server.use(
-      graphql.query("PostDetail", () =>
+      gqlLink.query("PostDetail", () =>
         HttpResponse.json({ data: editablePost([topicClaim("wasm")]) }),
       ),
-      graphql.mutation("PreparePostEdit", () => {
+      gqlLink.mutation("PreparePostEdit", () => {
         editCalled = true;
         return HttpResponse.json({ data: preparedPayload("preparePostEdit", "p1") });
       }),
-      graphql.mutation("PrepareTag", ({ variables }) => {
+      gqlLink.mutation("PrepareTag", ({ variables }) => {
         tagInputs.push(variables.input as Record<string, unknown>);
         return HttpResponse.json({ data: tagPayload(`w-tag-${tagInputs.length}`) });
       }),
@@ -768,12 +768,12 @@ describe("ComposeForm", () => {
     searchParams = new URLSearchParams("post=p1");
     let editCalled = false;
     server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
-      graphql.mutation("PreparePostEdit", () => {
+      gqlLink.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
+      gqlLink.mutation("PreparePostEdit", () => {
         editCalled = true;
         return HttpResponse.json({ data: preparedPayload("preparePostEdit", "p1") });
       }),
-      graphql.mutation("PrepareTag", () => HttpResponse.json({ data: tagPayload("w-tag-1") })),
+      gqlLink.mutation("PrepareTag", () => HttpResponse.json({ data: tagPayload("w-tag-1") })),
     );
     const signer = fakeWriteSigner();
     renderWithProviders(<ComposeForm />, { store: signedInStore(), writeSigner: signer });
@@ -793,11 +793,11 @@ describe("ComposeForm", () => {
   it("routes a refused Tag act onto its chip, signing nothing", async () => {
     searchParams = new URLSearchParams("post=p1");
     server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
-      graphql.mutation("PreparePostEdit", () =>
+      gqlLink.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
+      gqlLink.mutation("PreparePostEdit", () =>
         HttpResponse.json({ data: preparedPayload("preparePostEdit", "p1") }),
       ),
-      graphql.mutation("PrepareTag", () =>
+      gqlLink.mutation("PrepareTag", () =>
         HttpResponse.json({
           data: {
             prepareTag: {
@@ -859,7 +859,7 @@ describe("ComposeForm", () => {
   it("counts an edit as the record only when the content moved", async () => {
     searchParams = new URLSearchParams("post=p1");
     server.use(
-      graphql.query("PostDetail", () =>
+      gqlLink.query("PostDetail", () =>
         HttpResponse.json({ data: editablePost([topicClaim("wasm")]) }),
       ),
     );
@@ -886,7 +886,7 @@ describe("ComposeForm", () => {
   it("asks before a submit that signs more than one action", async () => {
     writeConfirmMultiAction(true);
     server.use(
-      graphql.mutation("PreparePost", () =>
+      gqlLink.mutation("PreparePost", () =>
         HttpResponse.json({ data: preparedPayload("preparePost", "node-1") }),
       ),
     );
@@ -911,7 +911,7 @@ describe("ComposeForm", () => {
   it("does not ask for a single signed action", async () => {
     writeConfirmMultiAction(true);
     server.use(
-      graphql.mutation("PreparePost", () =>
+      gqlLink.mutation("PreparePost", () =>
         HttpResponse.json({ data: preparedPayload("preparePost", "node-1") }),
       ),
     );
@@ -945,7 +945,7 @@ describe("ComposeForm", () => {
   it("remembers a don't-show-again, and stops asking", async () => {
     writeConfirmMultiAction(true);
     server.use(
-      graphql.mutation("PreparePost", () =>
+      gqlLink.mutation("PreparePost", () =>
         HttpResponse.json({ data: preparedPayload("preparePost", "node-1") }),
       ),
     );
@@ -977,7 +977,7 @@ describe("ComposeForm", () => {
 
   it("reports an unfinished signing without navigating", async () => {
     server.use(
-      graphql.mutation("PreparePost", () =>
+      gqlLink.mutation("PreparePost", () =>
         HttpResponse.json({ data: preparedPayload("preparePost", "node-1") }),
       ),
     );
@@ -1022,7 +1022,7 @@ describe("ComposeForm", () => {
     // The write genuinely waits on the reader acting — the copy must
     // say so instead of the generic stays-pending line.
     server.use(
-      graphql.mutation("PreparePost", () =>
+      gqlLink.mutation("PreparePost", () =>
         HttpResponse.json({ data: preparedPayload("preparePost", "node-1") }),
       ),
     );
@@ -1054,7 +1054,7 @@ describe("ComposeForm — references", () => {
   });
 
   function candidatesRespond(id: string, handle: string) {
-    return graphql.query("ReferenceCandidates", () =>
+    return gqlLink.query("ReferenceCandidates", () =>
       HttpResponse.json({
         data: {
           referenceCandidates: [
@@ -1119,7 +1119,7 @@ describe("ComposeForm — references", () => {
   it("sends the drafted references on the minting batch, at their own values", async () => {
     let sent: Record<string, unknown> | undefined;
     server.use(
-      graphql.mutation("PreparePost", ({ variables }) => {
+      gqlLink.mutation("PreparePost", ({ variables }) => {
         sent = variables;
         return HttpResponse.json({ data: preparedPayload("preparePost", "node-1") });
       }),
@@ -1145,7 +1145,7 @@ describe("ComposeForm — references", () => {
 
   it("routes a batched reference's refusal onto that exact chip", async () => {
     server.use(
-      graphql.mutation("PreparePost", () =>
+      gqlLink.mutation("PreparePost", () =>
         HttpResponse.json({
           data: {
             preparePost: {
@@ -1183,7 +1183,7 @@ describe("ComposeForm — references", () => {
     // D19: the balance is checked against the whole bundle, and a batch
     // it cannot carry is refused before any act is staged.
     server.use(
-      graphql.mutation("PreparePost", () =>
+      gqlLink.mutation("PreparePost", () =>
         HttpResponse.json({
           data: {
             preparePost: {
@@ -1220,7 +1220,7 @@ describe("ComposeForm — references", () => {
   it("prefills the chip the Reference affordance sent it", async () => {
     searchParams = new URLSearchParams("reference=p-quoted");
     server.use(
-      graphql.query("ReferenceCandidates", () =>
+      gqlLink.query("ReferenceCandidates", () =>
         HttpResponse.json({
           data: {
             referenceCandidates: [
@@ -1256,7 +1256,7 @@ describe("ComposeForm — references", () => {
   it("stages nothing for an untouched reference section on an edit", async () => {
     searchParams = new URLSearchParams("post=p1");
     server.use(
-      graphql.query("PostDetail", () =>
+      gqlLink.query("PostDetail", () =>
         HttpResponse.json({ data: editablePost([], [referenceClaim("u-ada", "ada")]) }),
       ),
     );
@@ -1278,12 +1278,12 @@ describe("ComposeForm — references", () => {
     searchParams = new URLSearchParams("post=p1");
     let withdrawalInput: Record<string, unknown> | undefined;
     server.use(
-      graphql.query("PostDetail", () =>
+      gqlLink.query("PostDetail", () =>
         HttpResponse.json({
           data: editablePost([], [referenceClaim("u-ada", "ada", 1, 1, 3)]),
         }),
       ),
-      graphql.mutation("PrepareReferenceWithdrawal", ({ variables }) => {
+      gqlLink.mutation("PrepareReferenceWithdrawal", ({ variables }) => {
         withdrawalInput = variables;
         return HttpResponse.json({
           data: {
@@ -1318,8 +1318,8 @@ describe("ComposeForm — references", () => {
     searchParams = new URLSearchParams("post=p1");
     let referenceInput: Record<string, unknown> | undefined;
     server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
-      graphql.mutation("PrepareReference", ({ variables }) => {
+      gqlLink.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
+      gqlLink.mutation("PrepareReference", ({ variables }) => {
         referenceInput = variables;
         return HttpResponse.json({
           data: {

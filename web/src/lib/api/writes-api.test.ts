@@ -1,5 +1,5 @@
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { describe, expect, it } from "vitest";
 
 import { hasCode } from "./outcome";
@@ -11,7 +11,7 @@ import {
   prepareStance,
   submitProposal,
 } from "./writes-api";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 
 const server = startMswServer();
 
@@ -38,7 +38,7 @@ describe("hostPublicKey", () => {
   it("fetches once per client and caches", async () => {
     let calls = 0;
     server.use(
-      graphql.query("HostPublicKey", () => {
+      gqlLink.query("HostPublicKey", () => {
         calls += 1;
         return HttpResponse.json({ data: { hostPublicKey: "aG9zdA==" } });
       }),
@@ -50,11 +50,11 @@ describe("hostPublicKey", () => {
   });
 
   it("does not cache a failure", async () => {
-    server.use(graphql.query("HostPublicKey", () => HttpResponse.error()));
+    server.use(gqlLink.query("HostPublicKey", () => HttpResponse.error()));
     const c = client();
     expect((await hostPublicKey(c)).kind).toBe("failed");
     server.use(
-      graphql.query("HostPublicKey", () => HttpResponse.json({ data: { hostPublicKey: "aA==" } })),
+      gqlLink.query("HostPublicKey", () => HttpResponse.json({ data: { hostPublicKey: "aA==" } })),
     );
     expect((await hostPublicKey(c)).kind).toBe("success");
   });
@@ -63,7 +63,7 @@ describe("hostPublicKey", () => {
 describe("submitProposal", () => {
   it("unwraps the single staged write", async () => {
     server.use(
-      graphql.mutation("SubmitProposals", () =>
+      gqlLink.mutation("SubmitProposals", () =>
         HttpResponse.json({
           data: {
             submitProposals: {
@@ -82,7 +82,7 @@ describe("submitProposal", () => {
 
   it("treats a wrong-arity payload as a contract break", async () => {
     server.use(
-      graphql.mutation("SubmitProposals", () =>
+      gqlLink.mutation("SubmitProposals", () =>
         HttpResponse.json({
           data: {
             submitProposals: {
@@ -99,7 +99,7 @@ describe("submitProposal", () => {
 
   it("surfaces a signature refusal", async () => {
     server.use(
-      graphql.mutation("SubmitProposals", () =>
+      gqlLink.mutation("SubmitProposals", () =>
         HttpResponse.json({
           data: {
             submitProposals: {
@@ -120,7 +120,7 @@ describe("submitProposal", () => {
 describe("approveAct", () => {
   it("unwraps the single staged write", async () => {
     server.use(
-      graphql.mutation("ApproveActs", () =>
+      gqlLink.mutation("ApproveActs", () =>
         HttpResponse.json({
           data: {
             approveActs: {
@@ -139,7 +139,7 @@ describe("approveAct", () => {
 
   it("surfaces an expiry refusal", async () => {
     server.use(
-      graphql.mutation("ApproveActs", () =>
+      gqlLink.mutation("ApproveActs", () =>
         HttpResponse.json({
           data: {
             approveActs: {
@@ -165,7 +165,7 @@ describe("approveAct", () => {
 describe("prepareStance", () => {
   it("adapts the prepared writes for the signer", async () => {
     server.use(
-      graphql.mutation("PrepareStance", ({ variables }) => {
+      gqlLink.mutation("PrepareStance", ({ variables }) => {
         expect(variables).toEqual({ input: { target: "u0", pDirected: 0.1, pInterest: 0.1 } });
         return HttpResponse.json({
           data: {
@@ -202,7 +202,7 @@ describe("prepareStance", () => {
 
   it("surfaces a write-rule refusal", async () => {
     server.use(
-      graphql.mutation("PrepareStance", () =>
+      gqlLink.mutation("PrepareStance", () =>
         HttpResponse.json({
           data: {
             prepareStance: {
@@ -229,7 +229,7 @@ describe("prepareStance", () => {
   // nobody has tagged yet has no id to look up.
   it("sends topicName instead of target for a topic selector", async () => {
     server.use(
-      graphql.mutation("PrepareStance", ({ variables }) => {
+      gqlLink.mutation("PrepareStance", ({ variables }) => {
         expect(variables).toEqual({
           input: { topicName: "rust", pDirected: 0.1, pInterest: 0.1 },
         });
@@ -260,7 +260,7 @@ describe("prepareSeverance", () => {
   // The unfollow gesture (D9): the same selector the follow write takes.
   it("sends topicName instead of target for a topic selector", async () => {
     server.use(
-      graphql.mutation("PrepareSeverance", ({ variables }) => {
+      gqlLink.mutation("PrepareSeverance", ({ variables }) => {
         expect(variables).toEqual({ input: { topicName: "rust" } });
         return HttpResponse.json({
           data: {
@@ -286,7 +286,7 @@ describe("prepareSeverance", () => {
 
   it("sends target for an ordinary UUID selector", async () => {
     server.use(
-      graphql.mutation("PrepareSeverance", ({ variables }) => {
+      gqlLink.mutation("PrepareSeverance", ({ variables }) => {
         expect(variables).toEqual({ input: { target: "post-1" } });
         return HttpResponse.json({
           data: {
@@ -307,7 +307,7 @@ describe("prepareSeverance", () => {
 describe("fetchStagedWrite", () => {
   it("returns the view when found", async () => {
     server.use(
-      graphql.query("StagedWrite", () =>
+      gqlLink.query("StagedWrite", () =>
         HttpResponse.json({ data: { stagedWrite: stagedWrite("sw-1", "SEALING") } }),
       ),
     );
@@ -318,7 +318,7 @@ describe("fetchStagedWrite", () => {
 
   it("returns success(null) for a vanished staging", async () => {
     server.use(
-      graphql.query("StagedWrite", () => HttpResponse.json({ data: { stagedWrite: null } })),
+      gqlLink.query("StagedWrite", () => HttpResponse.json({ data: { stagedWrite: null } })),
     );
     expect(await fetchStagedWrite(client(), "sw-1")).toEqual({ kind: "success", value: null });
   });

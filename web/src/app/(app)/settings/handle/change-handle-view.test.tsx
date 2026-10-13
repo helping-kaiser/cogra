@@ -1,9 +1,10 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { delay, graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
+import { delay } from "msw/utils/delay";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { ChangeHandleView } from "./change-handle-view";
 
@@ -13,7 +14,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push, replace: vi.fn() }
 const server = startMswServer();
 
 function account() {
-  return graphql.query("SettingsAccount", () =>
+  return gqlLink.query("SettingsAccount", () =>
     HttpResponse.json({
       data: {
         me: {
@@ -36,7 +37,7 @@ function account() {
 }
 
 function answer(body: Record<string, unknown> | "offline", wait = 0) {
-  return graphql.mutation("ChangeHandle", async () => {
+  return gqlLink.mutation("ChangeHandle", async () => {
     if (wait > 0) await delay(wait);
     if (body === "offline") return HttpResponse.error();
     return HttpResponse.json({ data: { changeHandle: { __typename: "ChangeHandlePayload", ...body } } });
@@ -132,7 +133,7 @@ describe("ChangeHandle", () => {
   it("change_it_locks_the_dialog_until_it_answers and keep_it_scrim_back_escape_are_locked_in_flight", async () => {
     let calls = 0;
     server.use(
-      graphql.mutation("ChangeHandle", async () => {
+      gqlLink.mutation("ChangeHandle", async () => {
         calls += 1;
         await delay(300);
         return HttpResponse.json({ data: { changeHandle: { __typename: "ChangeHandlePayload", ...CHANGED } } });

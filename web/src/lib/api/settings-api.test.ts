@@ -1,5 +1,5 @@
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { describe, expect, it } from "vitest";
 
 import { hasCode } from "./outcome";
@@ -17,7 +17,7 @@ import {
   revokeSession,
   setDefaultLicense,
 } from "./settings-api";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 
 const server = startMswServer();
 
@@ -44,7 +44,7 @@ function userError(code: string, field: string[] | null = null) {
 describe("fetchSettingsAccount", () => {
   it("returns the viewer's account in one read", async () => {
     server.use(
-      graphql.query("SettingsAccount", () =>
+      gqlLink.query("SettingsAccount", () =>
         HttpResponse.json({
           data: {
             me: {
@@ -83,7 +83,7 @@ describe("fetchSettingsAccount", () => {
   });
 
   it("treats a null viewer as unauthenticated", async () => {
-    server.use(graphql.query("SettingsAccount", () => HttpResponse.json({ data: { me: null } })));
+    server.use(gqlLink.query("SettingsAccount", () => HttpResponse.json({ data: { me: null } })));
     expect(hasCode(await fetchSettingsAccount(client()), "UNAUTHENTICATED")).toBe(true);
   });
 });
@@ -91,7 +91,7 @@ describe("fetchSettingsAccount", () => {
 describe("revokeSession", () => {
   it("omits the id to revoke the current session", async () => {
     server.use(
-      graphql.mutation("RevokeSession", ({ variables }) => {
+      gqlLink.mutation("RevokeSession", ({ variables }) => {
         expect(variables).toEqual({ input: {} });
         return HttpResponse.json({
           data: {
@@ -109,7 +109,7 @@ describe("revokeSession", () => {
 
   it("names the session to revoke another", async () => {
     server.use(
-      graphql.mutation("RevokeSession", ({ variables }) => {
+      gqlLink.mutation("RevokeSession", ({ variables }) => {
         expect(variables).toEqual({ input: { session: "s2" } });
         return HttpResponse.json({
           data: {
@@ -129,7 +129,7 @@ describe("revokeSession", () => {
 describe("revokeOtherSessions", () => {
   it("returns the revoked count", async () => {
     server.use(
-      graphql.mutation("RevokeOtherSessions", () =>
+      gqlLink.mutation("RevokeOtherSessions", () =>
         HttpResponse.json({
           data: {
             revokeOtherSessions: {
@@ -148,7 +148,7 @@ describe("revokeOtherSessions", () => {
 describe("changePassword", () => {
   it("maps a wrong current password to its refusal", async () => {
     server.use(
-      graphql.mutation("ChangePassword", () =>
+      gqlLink.mutation("ChangePassword", () =>
         HttpResponse.json({
           data: {
             changePassword: {
@@ -165,7 +165,7 @@ describe("changePassword", () => {
 
   it("lifts the re-authentication budget out of the transport tier", async () => {
     server.use(
-      graphql.mutation("ChangePassword", () =>
+      gqlLink.mutation("ChangePassword", () =>
         HttpResponse.json({
           data: null,
           errors: [{ message: "rate limited", extensions: { code: "RATE_LIMITED" } }],
@@ -177,7 +177,7 @@ describe("changePassword", () => {
 
   it("returns true on success", async () => {
     server.use(
-      graphql.mutation("ChangePassword", () =>
+      gqlLink.mutation("ChangePassword", () =>
         HttpResponse.json({
           data: { changePassword: { __typename: "ChangePasswordPayload", ok: true, userErrors: [] } },
         }),
@@ -193,7 +193,7 @@ describe("changePassword", () => {
 describe("changeHandle", () => {
   it("returns the new handle", async () => {
     server.use(
-      graphql.mutation("ChangeHandle", () =>
+      gqlLink.mutation("ChangeHandle", () =>
         HttpResponse.json({
           data: {
             changeHandle: {
@@ -210,7 +210,7 @@ describe("changeHandle", () => {
 
   it("surfaces a taken handle", async () => {
     server.use(
-      graphql.mutation("ChangeHandle", () =>
+      gqlLink.mutation("ChangeHandle", () =>
         HttpResponse.json({
           data: {
             changeHandle: {
@@ -229,7 +229,7 @@ describe("changeHandle", () => {
 describe("the email change", () => {
   it("requestEmailChange returns the opened change", async () => {
     server.use(
-      graphql.mutation("RequestEmailChange", () =>
+      gqlLink.mutation("RequestEmailChange", () =>
         HttpResponse.json({
           data: {
             requestEmailChange: {
@@ -247,7 +247,7 @@ describe("the email change", () => {
 
   it("requestEmailChange surfaces a wrong current password", async () => {
     server.use(
-      graphql.mutation("RequestEmailChange", () =>
+      gqlLink.mutation("RequestEmailChange", () =>
         HttpResponse.json({
           data: {
             requestEmailChange: {
@@ -266,7 +266,7 @@ describe("the email change", () => {
 
   it("confirmEmailChange trims the code and reads where the change stands", async () => {
     server.use(
-      graphql.mutation("ConfirmEmailChange", ({ variables }) => {
+      gqlLink.mutation("ConfirmEmailChange", ({ variables }) => {
         expect(variables).toEqual({ input: { code: "123456" } });
         return HttpResponse.json({
           data: {
@@ -294,7 +294,7 @@ describe("the email change", () => {
 
   it("confirmEmailChange surfaces a disabled code", async () => {
     server.use(
-      graphql.mutation("ConfirmEmailChange", () =>
+      gqlLink.mutation("ConfirmEmailChange", () =>
         HttpResponse.json({
           data: {
             confirmEmailChange: {
@@ -313,7 +313,7 @@ describe("the email change", () => {
 
   it("resendEmailChange returns the change and refuses with nothing pending", async () => {
     server.use(
-      graphql.mutation("ResendEmailChange", () =>
+      gqlLink.mutation("ResendEmailChange", () =>
         HttpResponse.json({
           data: {
             resendEmailChange: {
@@ -330,7 +330,7 @@ describe("the email change", () => {
 
   it("cancelEmailChange reads the address the account keeps", async () => {
     server.use(
-      graphql.mutation("CancelEmailChange", () =>
+      gqlLink.mutation("CancelEmailChange", () =>
         HttpResponse.json({
           data: {
             cancelEmailChange: {
@@ -350,7 +350,7 @@ describe("the email change", () => {
 
   it("emailChangeLinkCheck reads null for a token that names no change", async () => {
     server.use(
-      graphql.query("EmailChangeLinkCheck", ({ variables }) => {
+      gqlLink.query("EmailChangeLinkCheck", ({ variables }) => {
         expect(variables).toEqual({ token: "tok" });
         return HttpResponse.json({ data: { emailChangeLinkCheck: null } });
       }),
@@ -363,7 +363,7 @@ describe("the default license", () => {
   it("setDefaultLicense sends the pair and null restores public domain", async () => {
     const sent: unknown[] = [];
     server.use(
-      graphql.mutation("SetPreferences", ({ variables }) => {
+      gqlLink.mutation("SetPreferences", ({ variables }) => {
         sent.push(variables);
         return HttpResponse.json({
           data: {
@@ -386,7 +386,7 @@ describe("the default license", () => {
 
   it("fetchDefaultLicense reads null as unset", async () => {
     server.use(
-      graphql.query("DefaultLicense", () =>
+      gqlLink.query("DefaultLicense", () =>
         HttpResponse.json({
           data: {
             me: {

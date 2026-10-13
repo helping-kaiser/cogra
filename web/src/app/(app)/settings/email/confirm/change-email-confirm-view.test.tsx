@@ -1,10 +1,11 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import { delay, graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
+import { delay } from "msw/utils/delay";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { setsPageVisibility } from "@/test/media-env";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { ChangeEmailConfirmView, resendMessage } from "./change-email-confirm-view";
 
@@ -47,11 +48,11 @@ function meWith(change: Record<string, unknown> | null) {
 }
 
 function account(change: Record<string, unknown> | null = pending()) {
-  return graphql.query("SettingsAccount", () => HttpResponse.json({ data: { me: meWith(change) } }));
+  return gqlLink.query("SettingsAccount", () => HttpResponse.json({ data: { me: meWith(change) } }));
 }
 
 function confirmAnswer(body: Record<string, unknown> | "offline", wait = 0) {
-  return graphql.mutation("ConfirmEmailChange", async () => {
+  return gqlLink.mutation("ConfirmEmailChange", async () => {
     if (wait > 0) await delay(wait);
     if (body === "offline") return HttpResponse.error();
     return HttpResponse.json({
@@ -175,7 +176,7 @@ describe("ChangeEmailConfirm", () => {
   it("disabled_code_line_stands_until_a_fresh_code_is_sent", async () => {
     server.use(
       refused("EMAIL_CHANGE_CODE_DISABLED", ["code"]),
-      graphql.mutation("ResendEmailChange", () =>
+      gqlLink.mutation("ResendEmailChange", () =>
         HttpResponse.json({
           data: {
             resendEmailChange: {
@@ -216,7 +217,7 @@ describe("ChangeEmailConfirm", () => {
   it("taken_fault_line_and_retry_applies_when_freed", async () => {
     let tries = 0;
     server.use(
-      graphql.mutation("ConfirmEmailChange", () => {
+      gqlLink.mutation("ConfirmEmailChange", () => {
         tries += 1;
         return HttpResponse.json({
           data: {
@@ -269,7 +270,7 @@ describe("ChangeEmailConfirm", () => {
 
   it("confirm_ip_rate_limited_line", async () => {
     server.use(
-      graphql.mutation("ConfirmEmailChange", () =>
+      gqlLink.mutation("ConfirmEmailChange", () =>
         HttpResponse.json({ data: null, errors: [{ message: "x", extensions: { code: "RATE_LIMITED" } }] }),
       ),
     );
@@ -284,7 +285,7 @@ describe("ChangeEmailConfirm", () => {
 
   it("resend_both_waiting_snackbar", async () => {
     server.use(
-      graphql.mutation("ResendEmailChange", () =>
+      gqlLink.mutation("ResendEmailChange", () =>
         HttpResponse.json({
           data: {
             resendEmailChange: { __typename: "ResendEmailChangePayload", pendingEmailChange: pending(), userErrors: [] },
@@ -309,7 +310,7 @@ describe("ChangeEmailConfirm", () => {
 
   it("resend_budget_spent_line_and_no_snackbar", async () => {
     server.use(
-      graphql.mutation("ResendEmailChange", () =>
+      gqlLink.mutation("ResendEmailChange", () =>
         HttpResponse.json({ data: null, errors: [{ message: "x", extensions: { code: "RATE_LIMITED" } }] }),
       ),
     );
@@ -324,7 +325,7 @@ describe("ChangeEmailConfirm", () => {
   });
 
   it("resend_offline_opens_network_error", async () => {
-    server.use(graphql.mutation("ResendEmailChange", () => HttpResponse.error()));
+    server.use(gqlLink.mutation("ResendEmailChange", () => HttpResponse.error()));
     rendered();
     fireEvent.click(await screen.findByTestId("changeEmail.pair.resend"));
     expect(await screen.findByTestId("change-email-snackbar")).toHaveTextContent("That didn't send. Try again.");
@@ -332,7 +333,7 @@ describe("ChangeEmailConfirm", () => {
 
   it("a resend with nothing pending reroutes by the settings row", async () => {
     server.use(
-      graphql.mutation("ResendEmailChange", () =>
+      gqlLink.mutation("ResendEmailChange", () =>
         HttpResponse.json({
           data: {
             resendEmailChange: {
@@ -351,7 +352,7 @@ describe("ChangeEmailConfirm", () => {
 
   it("cancel_returns_with_change_canceled_snackbar", async () => {
     server.use(
-      graphql.mutation("CancelEmailChange", () =>
+      gqlLink.mutation("CancelEmailChange", () =>
         HttpResponse.json({
           data: {
             cancelEmailChange: {
@@ -370,7 +371,7 @@ describe("ChangeEmailConfirm", () => {
   });
 
   it("cancel_offline_keeps_the_change", async () => {
-    server.use(graphql.mutation("CancelEmailChange", () => HttpResponse.error()));
+    server.use(gqlLink.mutation("CancelEmailChange", () => HttpResponse.error()));
     rendered();
     fireEvent.click(await screen.findByTestId("changeEmail.cancel"));
     expect(await screen.findByTestId("change-email-snackbar")).toHaveTextContent("That didn't send. Try again.");
@@ -427,7 +428,7 @@ describe("ChangeEmailConfirm", () => {
     it("reads nothing while hidden, and once more on the return", async () => {
       let reads = 0;
       server.use(
-        graphql.query("SettingsAccount", () => {
+        gqlLink.query("SettingsAccount", () => {
           reads += 1;
           return HttpResponse.json({ data: { me: meWith(pending()) } });
         }),

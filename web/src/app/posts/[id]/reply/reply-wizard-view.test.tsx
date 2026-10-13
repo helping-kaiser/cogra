@@ -4,13 +4,13 @@
 // price, a pad that stages nothing until Set, and a leave that discards.
 
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import type { ReplyTarget } from "@/lib/compose/reply-wizard";
 import { raisedLayersForTests } from "@/lib/ui2/covering-layer";
@@ -74,7 +74,7 @@ function installEncoder() {
 }
 
 const prepareOk = (node = "comment-9", writes = 1) =>
-  graphql.mutation("PrepareComment", () =>
+  gqlLink.mutation("PrepareComment", () =>
     HttpResponse.json({
       data: {
         prepareComment: {
@@ -94,7 +94,7 @@ const prepareOk = (node = "comment-9", writes = 1) =>
   );
 
 const uploadOk = (id = "m1") =>
-  graphql.mutation("UploadMedia", () =>
+  gqlLink.mutation("UploadMedia", () =>
     HttpResponse.json({
       data: {
         uploadMedia: {
@@ -416,7 +416,7 @@ describe("the reply wizard", () => {
     it("sends the words, the target and the stance the seal shows", async () => {
       let variables: { input: Record<string, unknown> } | null = null;
       server.use(
-        graphql.mutation("PrepareComment", ({ variables: v }) => {
+        gqlLink.mutation("PrepareComment", ({ variables: v }) => {
           variables = v as never;
           return HttpResponse.json({
             data: {
@@ -473,7 +473,7 @@ describe("the reply wizard", () => {
       let variables: { input: Record<string, unknown> } | null = null;
       server.use(
         uploadOk("m1"),
-        graphql.mutation("PrepareComment", ({ variables: v }) => {
+        gqlLink.mutation("PrepareComment", ({ variables: v }) => {
           variables = v as never;
           return HttpResponse.json({
             data: {
@@ -518,7 +518,7 @@ describe("the reply wizard", () => {
     it("holds the seal while a picture is still on its way, and says so", async () => {
       // No upload handler that ever resolves: the gate is what is under test.
       server.use(
-        graphql.mutation("UploadMedia", async () => {
+        gqlLink.mutation("UploadMedia", async () => {
           await new Promise(() => {});
           return HttpResponse.json({});
         }),
@@ -534,7 +534,7 @@ describe("the reply wizard", () => {
 
     it("routes a refused topic onto its own chip and reopens the sheet", async () => {
       server.use(
-        graphql.mutation("PrepareComment", () =>
+        gqlLink.mutation("PrepareComment", () =>
           HttpResponse.json({
             data: {
               prepareComment: {
@@ -564,7 +564,7 @@ describe("the reply wizard", () => {
     });
 
     it("surfaces a submit that never reached the server", async () => {
-      server.use(graphql.mutation("PrepareComment", () => HttpResponse.error()));
+      server.use(gqlLink.mutation("PrepareComment", () => HttpResponse.error()));
       draw();
       await toSeal();
       fireEvent.click(screen.getByTestId("reply-sign"));

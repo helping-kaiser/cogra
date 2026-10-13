@@ -4,7 +4,7 @@ import "fake-indexeddb/auto";
 import { IDBFactory } from "fake-indexeddb";
 
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import type { KeyCeremony } from "@/lib/identity/key-ceremony";
@@ -12,7 +12,7 @@ import { createIdentityStore, type IdentityStore } from "@/lib/identity/store";
 import { ActorKey } from "@/lib/crypto/actor-key";
 import { randomBytes, toBase64 } from "@/lib/crypto/bytes";
 import type { AuthGuard } from "@/lib/session/guard";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { createRegistrationSigner, type RegistrationSigner } from "./registration-signer";
 import type { WriteResult, WriteSigner } from "./write-signer";
 
@@ -78,7 +78,7 @@ function fakeWriteSigner(result: WriteResult): WriteSigner & { calls: number } {
 }
 
 function statusHandler(me: unknown) {
-  return graphql.query("ApplicationStatus", () => HttpResponse.json({ data: { me } }));
+  return gqlLink.query("ApplicationStatus", () => HttpResponse.json({ data: { me } }));
 }
 
 function application(overrides: Record<string, unknown> = {}) {
@@ -152,7 +152,7 @@ describe("registration signer", () => {
   });
 
   it("maps a transport fault to failed", async () => {
-    server.use(graphql.query("ApplicationStatus", () => HttpResponse.error()));
+    server.use(gqlLink.query("ApplicationStatus", () => HttpResponse.error()));
     expect((await signer({}).advance()).kind).toBe("failed");
   });
 

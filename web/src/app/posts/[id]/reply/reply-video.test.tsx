@@ -5,14 +5,14 @@
 // cap are left real, since those are the rules this composer is meant to apply.
 
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { captureFrameZero } from "@/lib/ui2/media/video";
 import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { ReplyWizard } from "./reply-wizard-view";
 
@@ -64,7 +64,7 @@ vi.mock("@/lib/ui2/media/compress-video", () => ({
 const server = startMswServer();
 
 const uploadOk = (id = "m1") =>
-  graphql.mutation("UploadMedia", () =>
+  gqlLink.mutation("UploadMedia", () =>
     HttpResponse.json({
       data: {
         uploadMedia: {
@@ -393,7 +393,7 @@ describe("a comment's video", () => {
     it("uploads the clip's own frame 0 as its cover when nothing is chosen", async () => {
       let calls = 0;
       server.use(
-        graphql.mutation("UploadMedia", () => {
+        gqlLink.mutation("UploadMedia", () => {
           calls += 1;
           return HttpResponse.json({
             data: {
@@ -438,7 +438,7 @@ describe("a comment's video", () => {
       vi.mocked(captureFrameZero).mockResolvedValueOnce(null);
       let calls = 0;
       server.use(
-        graphql.mutation("UploadMedia", () => {
+        gqlLink.mutation("UploadMedia", () => {
           calls += 1;
           return HttpResponse.json({
             data: {

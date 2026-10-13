@@ -1,10 +1,11 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { delay, graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
+import { delay } from "msw/utils/delay";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AccountDeletionProvider } from "@/lib/deletion/deletion-status";
 import { createTokenStore } from "@/lib/session/token-store";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 
 import { DeleteAccountMailView } from "./delete-account-mail-view";
@@ -21,7 +22,7 @@ vi.mock("next/navigation", () => ({
 const server = startMswServer();
 
 function account() {
-  return graphql.query("SettingsAccount", () =>
+  return gqlLink.query("SettingsAccount", () =>
     HttpResponse.json({
       data: {
         me: {
@@ -44,7 +45,7 @@ function account() {
 }
 
 function standing() {
-  return graphql.query("AccountDeletion", () =>
+  return gqlLink.query("AccountDeletion", () =>
     HttpResponse.json({ data: { me: { __typename: "User", id: "u1", deletionPath: "BY_LINK", accountDeletion: null } } }),
   );
 }
@@ -88,7 +89,7 @@ describe("DeleteAccountMail", () => {
     search = new URLSearchParams("content=1");
     let input: unknown = null;
     server.use(
-      graphql.mutation("RequestAccountDeletion", ({ variables }) => {
+      gqlLink.mutation("RequestAccountDeletion", ({ variables }) => {
         input = variables.input;
         return HttpResponse.json({
           data: { requestAccountDeletion: { __typename: "AccountDeletionPayload", accountDeletion: null, userErrors: [] } },
@@ -108,7 +109,7 @@ describe("DeleteAccountMail", () => {
 
   it("a_spent_mail_budget_says_too_many_tries_above_resend_and_sends_nothing", async () => {
     server.use(
-      graphql.mutation("RequestAccountDeletion", () =>
+      gqlLink.mutation("RequestAccountDeletion", () =>
         HttpResponse.json({ data: null, errors: [{ message: "x", extensions: { code: "RATE_LIMITED" } }] }),
       ),
     );
@@ -125,7 +126,7 @@ describe("DeleteAccountMail", () => {
 
   it("resending_reads_late_after_200ms", async () => {
     server.use(
-      graphql.mutation("RequestAccountDeletion", async () => {
+      gqlLink.mutation("RequestAccountDeletion", async () => {
         await delay(600);
         return HttpResponse.json({
           data: { requestAccountDeletion: { __typename: "AccountDeletionPayload", accountDeletion: null, userErrors: [] } },
@@ -140,7 +141,7 @@ describe("DeleteAccountMail", () => {
   });
 
   it("resend_offline_says_the_network_error", async () => {
-    server.use(graphql.mutation("RequestAccountDeletion", () => HttpResponse.error()));
+    server.use(gqlLink.mutation("RequestAccountDeletion", () => HttpResponse.error()));
     renderScreen();
     fireEvent.click(await screen.findByTestId("deleteAccount.resend"));
     expect(await screen.findByTestId("delete-account-mail-snackbar")).toHaveTextContent("That didn't send. Try again.");

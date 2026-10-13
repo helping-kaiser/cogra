@@ -1,5 +1,5 @@
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { describe, expect, it } from "vitest";
 
 import { hasCode } from "./outcome";
@@ -11,7 +11,7 @@ import {
   resendVerificationEmail,
   verifyEmail,
 } from "./onboarding-api";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 
 const server = startMswServer();
 
@@ -48,7 +48,7 @@ function stagedNode(id: string, family: string, state: string) {
 describe("checkInviteLink", () => {
   it("returns the check for a known link", async () => {
     server.use(
-      graphql.query("InviteLinkCheck", () =>
+      gqlLink.query("InviteLinkCheck", () =>
         HttpResponse.json({
           data: {
             inviteLinkCheck: {
@@ -68,14 +68,14 @@ describe("checkInviteLink", () => {
 
   it("returns success(null) when the id references no link", async () => {
     server.use(
-      graphql.query("InviteLinkCheck", () => HttpResponse.json({ data: { inviteLinkCheck: null } })),
+      gqlLink.query("InviteLinkCheck", () => HttpResponse.json({ data: { inviteLinkCheck: null } })),
     );
     const outcome = await checkInviteLink(client(), "id-1");
     expect(outcome).toEqual({ kind: "success", value: null });
   });
 
   it("maps a transport fault to failed", async () => {
-    server.use(graphql.query("InviteLinkCheck", () => HttpResponse.error()));
+    server.use(gqlLink.query("InviteLinkCheck", () => HttpResponse.error()));
     expect((await checkInviteLink(client(), "id-1")).kind).toBe("failed");
   });
 });
@@ -91,7 +91,7 @@ describe("register", () => {
 
   it("returns the session pair", async () => {
     server.use(
-      graphql.mutation("Register", () =>
+      gqlLink.mutation("Register", () =>
         HttpResponse.json({
           data: {
             register: {
@@ -118,7 +118,7 @@ describe("register", () => {
 
   it("surfaces a form refusal", async () => {
     server.use(
-      graphql.mutation("Register", () =>
+      gqlLink.mutation("Register", () =>
         HttpResponse.json({
           data: {
             register: {
@@ -146,7 +146,7 @@ describe("register", () => {
 describe("verifyEmail", () => {
   it("succeeds only on ok", async () => {
     server.use(
-      graphql.mutation("VerifyEmail", () =>
+      gqlLink.mutation("VerifyEmail", () =>
         HttpResponse.json({
           data: { verifyEmail: { __typename: "VerifyEmailPayload", ok: true, userErrors: [] } },
         }),
@@ -157,7 +157,7 @@ describe("verifyEmail", () => {
 
   it("surfaces the invalid-token refusal", async () => {
     server.use(
-      graphql.mutation("VerifyEmail", () =>
+      gqlLink.mutation("VerifyEmail", () =>
         HttpResponse.json({
           data: {
             verifyEmail: {
@@ -183,7 +183,7 @@ describe("verifyEmail", () => {
 describe("resendVerificationEmail", () => {
   it("is a silent verb — ok is the whole payload", async () => {
     server.use(
-      graphql.mutation("ResendVerificationEmail", () =>
+      gqlLink.mutation("ResendVerificationEmail", () =>
         HttpResponse.json({
           data: {
             resendVerificationEmail: { __typename: "ResendVerificationEmailPayload", ok: true },
@@ -201,7 +201,7 @@ describe("resendVerificationEmail", () => {
 describe("attachActorKey", () => {
   it("succeeds when the user comes back", async () => {
     server.use(
-      graphql.mutation("AttachActorKey", () =>
+      gqlLink.mutation("AttachActorKey", () =>
         HttpResponse.json({
           data: {
             attachActorKey: {
@@ -221,7 +221,7 @@ describe("attachActorKey", () => {
 
   it("surfaces the bound-address refusal", async () => {
     server.use(
-      graphql.mutation("AttachActorKey", () =>
+      gqlLink.mutation("AttachActorKey", () =>
         HttpResponse.json({
           data: {
             attachActorKey: {
@@ -241,7 +241,7 @@ describe("attachActorKey", () => {
 
 describe("fetchApplicationStatus", () => {
   function statusResponse(me: unknown) {
-    return graphql.query("ApplicationStatus", () => HttpResponse.json({ data: { me } }));
+    return gqlLink.query("ApplicationStatus", () => HttpResponse.json({ data: { me } }));
   }
 
   it("maps a null viewer to the shared UNAUTHENTICATED refusal", async () => {

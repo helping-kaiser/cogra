@@ -2,11 +2,11 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { act, fireEvent, screen } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { CEREMONY_TIMELINE, CEREMONY_TOKENS, VouchedInView } from "./vouched-in-view";
 
@@ -16,7 +16,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 startMswServer(
-  graphql.query("Me", () =>
+  gqlLink.query("Me", () =>
     HttpResponse.json({
       data: {
         me: {

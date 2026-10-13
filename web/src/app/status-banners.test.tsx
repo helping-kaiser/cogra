@@ -1,10 +1,10 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createSecurityNotices } from "@/lib/session/security-notices";
 import { createTokenStore } from "@/lib/session/token-store";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeFlow } from "@/test/registration";
 import { StatusBanners } from "./status-banners";
@@ -12,7 +12,7 @@ import { StatusBanners } from "./status-banners";
 const server = startMswServer();
 
 function meHandler(accountState: "APPLICANT" | "MEMBER", handle = "ada") {
-  return graphql.query("Me", () =>
+  return gqlLink.query("Me", () =>
     HttpResponse.json({
       data: {
         me: {
@@ -87,7 +87,7 @@ describe("StatusBanners", () => {
   });
 
   it("surfaces a transport fault on the viewer read", async () => {
-    server.use(graphql.query("Me", () => HttpResponse.error()));
+    server.use(gqlLink.query("Me", () => HttpResponse.error()));
     renderWithProviders(<StatusBanners />, { store: signedInStore() });
     expect(await screen.findByTestId("home_transport_error")).toBeInTheDocument();
   });

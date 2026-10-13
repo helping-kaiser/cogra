@@ -1,6 +1,6 @@
 import { gql, InMemoryCache } from "@apollo/client";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PostsDocument, type PostsQuery } from "@/__generated__/graphql";
@@ -11,7 +11,7 @@ import { writeConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
 import { forgetReveals } from "@/lib/ui2/media/reveal";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
@@ -48,10 +48,10 @@ const server = startMswServer(
   // The detail card asks what cites the post on every open. Nothing cites it
   // by default — which is the state that draws no line at all — so a test that
   // cares says so with its own handler.
-  graphql.query("CitedByCount", () =>
+  gqlLink.query("CitedByCount", () =>
     HttpResponse.json({ data: { records: { __typename: "RecordConnection", totalCount: 0 } } }),
   ),
-  graphql.query("CommentSelfMark", ({ variables }) =>
+  gqlLink.query("CommentSelfMark", ({ variables }) =>
     HttpResponse.json({
       data: {
         comment: {
@@ -253,8 +253,8 @@ function commentsOf(data: PostPayload) {
 /** Both reads from one payload, for a test that builds its own fixture. */
 function threadFrom(build: () => PostPayload) {
   return [
-    graphql.query("PostDetail", () => HttpResponse.json({ data: build() })),
-    graphql.query("PostComments", () => HttpResponse.json({ data: commentsOf(build()) })),
+    gqlLink.query("PostDetail", () => HttpResponse.json({ data: build() })),
+    gqlLink.query("PostComments", () => HttpResponse.json({ data: commentsOf(build()) })),
   ];
 }
 
@@ -269,8 +269,8 @@ function threadFrom(build: () => PostPayload) {
 function thread(...args: Parameters<typeof detail>) {
   const data = detail(...args);
   return [
-    graphql.query("PostDetail", () => HttpResponse.json({ data })),
-    graphql.query("PostComments", () => HttpResponse.json({ data: commentsOf(data) })),
+    gqlLink.query("PostDetail", () => HttpResponse.json({ data })),
+    gqlLink.query("PostComments", () => HttpResponse.json({ data: commentsOf(data) })),
   ];
 }
 
@@ -330,7 +330,7 @@ describe("PostView", () => {
   it("carries a stance control on the post and on every comment", async () => {
     server.use(
       ...threadFrom(() => detail("u1", [{ id: "c1", body: "First!", replyCount: 1 }])),
-      graphql.query("CommentReplies", () =>
+      gqlLink.query("CommentReplies", () =>
         HttpResponse.json({
           data: {
             comment: {
@@ -590,7 +590,7 @@ describe("PostView", () => {
   it("opens the cited-by sheet from a comment's menu, stacked over the thread", async () => {
     server.use(
       ...thread("u1", [{ id: "c1", body: "First!" }]),
-      graphql.query("CitedBy", () =>
+      gqlLink.query("CitedBy", () =>
         HttpResponse.json({
           data: {
             records: {
@@ -620,7 +620,7 @@ describe("PostView", () => {
   it("draws the post's cited-by line only above zero", async () => {
     server.use(
       ...thread("u1", []),
-      graphql.query("CitedByCount", () =>
+      gqlLink.query("CitedByCount", () =>
         HttpResponse.json({
           data: { records: { __typename: "RecordConnection", totalCount: 4 } },
         }),
@@ -698,10 +698,10 @@ describe("PostView", () => {
       endCursor: "cur1",
     });
     server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: page })),
+      gqlLink.query("PostDetail", () => HttpResponse.json({ data: page })),
       // The thread pages on its OWN read, so the ask that fails is the
       // second one of those — the post underneath is never re-read for it.
-      graphql.query("PostComments", () => {
+      gqlLink.query("PostComments", () => {
         calls += 1;
         return calls === 1 ? HttpResponse.json({ data: commentsOf(page) }) : HttpResponse.error();
       }),
@@ -726,8 +726,8 @@ describe("PostView", () => {
     });
     const second = detail("u1", [{ id: "c2", body: "Second!" }]);
     server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: first })),
-      graphql.query("PostComments", () => {
+      gqlLink.query("PostDetail", () => HttpResponse.json({ data: first })),
+      gqlLink.query("PostComments", () => {
         calls += 1;
         if (calls === 2) return HttpResponse.error();
         return HttpResponse.json({ data: commentsOf(calls === 1 ? first : second) });
@@ -746,7 +746,7 @@ describe("PostView", () => {
   it("offers a retry on the nothing-loaded transport error and heals from it", async () => {
     let calls = 0;
     server.use(
-      graphql.query("PostDetail", () => {
+      gqlLink.query("PostDetail", () => {
         calls += 1;
         return calls === 1
           ? HttpResponse.error()
@@ -789,7 +789,7 @@ describe("PostView", () => {
     let variables: unknown;
     server.use(
       ...threadFrom(() => detail("author-1", [{ id: "c1", body: "old words", authorId: "acct-1" }])),
-      graphql.mutation("PrepareCommentEdit", ({ variables: v }) => {
+      gqlLink.mutation("PrepareCommentEdit", ({ variables: v }) => {
         variables = v;
         return HttpResponse.json({
           data: {
@@ -843,7 +843,7 @@ describe("PostView", () => {
   it("collapses a branch behind its count and unfolds it on request", async () => {
     server.use(
       ...threadFrom(() => detail("author-1", [{ id: "c1", body: "top", replyCount: 2 }])),
-      graphql.query("CommentReplies", () =>
+      gqlLink.query("CommentReplies", () =>
         HttpResponse.json({
           data: {
             comment: {
@@ -885,7 +885,7 @@ describe("PostView", () => {
   it("flattens a reply-to-a-reply to the same indent as its parent", async () => {
     server.use(
       ...threadFrom(() => detail("author-1", [{ id: "c1", body: "top", replyCount: 1 }])),
-      graphql.query("CommentReplies", ({ variables }) => {
+      gqlLink.query("CommentReplies", ({ variables }) => {
         const parentId = variables.id as string;
         if (parentId === "c1") {
           return HttpResponse.json({
@@ -979,7 +979,7 @@ describe("PostView", () => {
       c1: { pDirected: -0.55, pInterest: 0.25, recordCount: 1 },
     };
     const stanceRoot = (operation: string, field: string, typename: string) =>
-      graphql.query(operation, ({ variables, request }) => {
+      gqlLink.query(operation, ({ variables, request }) => {
         const id = String(variables.id);
         const authorized = request.headers.get("authorization") !== null;
         if (!authorized) anonymous.push(id);
@@ -1000,7 +1000,7 @@ describe("PostView", () => {
 
     server.use(
       ...thread("u1", [{ id: "c1", body: "First!" }]),
-      graphql.mutation("RefreshSession", () =>
+      gqlLink.mutation("RefreshSession", () =>
         HttpResponse.json({
           data: {
             refreshSession: {
@@ -1311,17 +1311,17 @@ describe("PostView", () => {
       // unfolding it is the return's own second act.
       const after = detail("author-1", [{ id: "c1", body: "First!", replyCount: 1 }]);
       server.use(
-        graphql.query("PostDetail", () => HttpResponse.json({ data: before })),
-        graphql.query("PostComments", () => {
+        gqlLink.query("PostDetail", () => HttpResponse.json({ data: before })),
+        gqlLink.query("PostComments", () => {
           reads += 1;
           return HttpResponse.json({ data: commentsOf(reads === 1 ? before : after) });
         }),
-        graphql.query("CommentReplies", () =>
+        gqlLink.query("CommentReplies", () =>
           HttpResponse.json({
             data: branchOf("c1", [{ id: "r1", body: "Mine, settling", pending: true }]),
           }),
         ),
-        graphql.mutation("PrepareComment", () =>
+        gqlLink.mutation("PrepareComment", () =>
           HttpResponse.json({
             data: {
               prepareComment: {
@@ -1377,12 +1377,12 @@ describe("PostView", () => {
       let branches = 0;
       const thread1 = detail("author-1", [{ id: "c1", body: "First!", replyCount: 1 }]);
       server.use(
-        graphql.query("PostDetail", () => HttpResponse.json({ data: thread1 })),
-        graphql.query("PostComments", () => {
+        gqlLink.query("PostDetail", () => HttpResponse.json({ data: thread1 })),
+        gqlLink.query("PostComments", () => {
           reads += 1;
           return HttpResponse.json({ data: commentsOf(thread1) });
         }),
-        graphql.query("CommentReplies", () => {
+        gqlLink.query("CommentReplies", () => {
           branches += 1;
           return HttpResponse.json({
             data: branchOf("c1", [
@@ -1395,7 +1395,7 @@ describe("PostView", () => {
             ]),
           });
         }),
-        graphql.mutation("PrepareCommentEdit", () =>
+        gqlLink.mutation("PrepareCommentEdit", () =>
           HttpResponse.json({
             data: {
               prepareCommentEdit: {
@@ -1601,7 +1601,7 @@ describe("PostView", () => {
       server.use(
         ...threadFrom(() => ownComment([])),
         // The reader sees a veiled comment — but that veil is the moderator's.
-        graphql.query("CommentSelfMark", () =>
+        gqlLink.query("CommentSelfMark", () =>
           HttpResponse.json({
             data: {
               comment: {
@@ -1613,7 +1613,7 @@ describe("PostView", () => {
             },
           }),
         ),
-        graphql.mutation("PrepareCommentEdit", ({ variables }) => {
+        gqlLink.mutation("PrepareCommentEdit", ({ variables }) => {
           sent = (variables.input as { sensitive?: boolean }) ?? null;
           return HttpResponse.json({ data: editPayload() });
         }),
@@ -1641,7 +1641,7 @@ describe("PostView", () => {
       let sent: { sensitive?: boolean; sensitiveReason?: string | null } | null = null;
       server.use(
         ...threadFrom(() => ownComment([])),
-        graphql.mutation("PrepareCommentEdit", ({ variables }) => {
+        gqlLink.mutation("PrepareCommentEdit", ({ variables }) => {
           sent = (variables.input as typeof sent) ?? null;
           return HttpResponse.json({ data: editPayload() });
         }),
@@ -1677,7 +1677,7 @@ describe("PostView", () => {
       let sent: { sensitiveReason?: string | null } | null = null;
       server.use(
         ...threadFrom(() => ownComment([])),
-        graphql.query("CommentSelfMark", () =>
+        gqlLink.query("CommentSelfMark", () =>
           HttpResponse.json({
             data: {
               comment: {
@@ -1689,7 +1689,7 @@ describe("PostView", () => {
             },
           }),
         ),
-        graphql.mutation("PrepareCommentEdit", ({ variables }) => {
+        gqlLink.mutation("PrepareCommentEdit", ({ variables }) => {
           sent = (variables.input as typeof sent) ?? null;
           return HttpResponse.json({ data: editPayload() });
         }),
@@ -1770,11 +1770,11 @@ describe("PostView", () => {
       let editCalled = false;
       server.use(
         ...threadFrom(() => ownComment([topicClaim("wasm", 0.1, 1)])),
-        graphql.mutation("PrepareCommentEdit", () => {
+        gqlLink.mutation("PrepareCommentEdit", () => {
           editCalled = true;
           return HttpResponse.json({ data: editPayload() });
         }),
-        graphql.mutation("PrepareTag", ({ variables }) => {
+        gqlLink.mutation("PrepareTag", ({ variables }) => {
           tagInputs.push(variables.input as Record<string, unknown>);
           return HttpResponse.json({ data: tagPayload(`w-tag-${tagInputs.length}`) });
         }),
@@ -1808,11 +1808,11 @@ describe("PostView", () => {
       let editCalled = false;
       server.use(
         ...threadFrom(() => ownComment([])),
-        graphql.mutation("PrepareCommentEdit", () => {
+        gqlLink.mutation("PrepareCommentEdit", () => {
           editCalled = true;
           return HttpResponse.json({ data: editPayload() });
         }),
-        graphql.mutation("PrepareTag", () => HttpResponse.json({ data: tagPayload("w-tag-1") })),
+        gqlLink.mutation("PrepareTag", () => HttpResponse.json({ data: tagPayload("w-tag-1") })),
       );
       const signer = fakeWriteSigner();
       renderWithProviders(<PostView postId="p1" />, {
@@ -1834,7 +1834,7 @@ describe("PostView", () => {
       const tagInputs: Record<string, unknown>[] = [];
       server.use(
         ...threadFrom(() => ownComment([topicClaim("rust", 0.4, 0.8)])),
-        graphql.mutation("PrepareTag", ({ variables }) => {
+        gqlLink.mutation("PrepareTag", ({ variables }) => {
           tagInputs.push(variables.input as Record<string, unknown>);
           return HttpResponse.json({ data: tagPayload("w-tag-1") });
         }),
@@ -1863,8 +1863,8 @@ describe("PostView", () => {
     it("signs nothing when a Tag act is refused", async () => {
       server.use(
         ...threadFrom(() => ownComment([])),
-        graphql.mutation("PrepareCommentEdit", () => HttpResponse.json({ data: editPayload() })),
-        graphql.mutation("PrepareTag", () =>
+        gqlLink.mutation("PrepareCommentEdit", () => HttpResponse.json({ data: editPayload() })),
+        gqlLink.mutation("PrepareTag", () =>
           HttpResponse.json({
             data: {
               prepareTag: {
@@ -1933,8 +1933,8 @@ describe("PostView", () => {
       writeConfirmMultiAction(true);
       server.use(
         ...threadFrom(() => ownComment([])),
-        graphql.mutation("PrepareCommentEdit", () => HttpResponse.json({ data: editPayload() })),
-        graphql.mutation("PrepareTag", () => HttpResponse.json({ data: tagPayload("w-tag-1") })),
+        gqlLink.mutation("PrepareCommentEdit", () => HttpResponse.json({ data: editPayload() })),
+        gqlLink.mutation("PrepareTag", () => HttpResponse.json({ data: tagPayload("w-tag-1") })),
       );
       const signer = fakeWriteSigner();
       renderWithProviders(<PostView postId="p1" />, {
@@ -1991,7 +1991,7 @@ describe("PostView", () => {
     it("asks the server again without blanking the post already on screen", async () => {
       let reads = 0;
       server.use(
-        graphql.query("PostDetail", () => {
+        gqlLink.query("PostDetail", () => {
           reads += 1;
           return HttpResponse.json({ data: detail("u1", []) });
         }),
@@ -2011,7 +2011,7 @@ describe("PostView", () => {
     it("says it is asking, in its own loading line, without the nothing-loaded page", async () => {
       let reads = 0;
       server.use(
-        graphql.query("PostDetail", () => {
+        gqlLink.query("PostDetail", () => {
           reads += 1;
           return HttpResponse.json({ data: detail("u1", []) });
         }),
@@ -2029,7 +2029,7 @@ describe("PostView", () => {
     it("takes a short tug for what it is — a scroll, not an ask", async () => {
       let reads = 0;
       server.use(
-        graphql.query("PostDetail", () => {
+        gqlLink.query("PostDetail", () => {
           reads += 1;
           return HttpResponse.json({ data: detail("u1", []) });
         }),
@@ -2045,7 +2045,7 @@ describe("PostView", () => {
     it("ignores a pull that starts anywhere but the top", async () => {
       let reads = 0;
       server.use(
-        graphql.query("PostDetail", () => {
+        gqlLink.query("PostDetail", () => {
           reads += 1;
           return HttpResponse.json({ data: detail("u1", []) });
         }),
@@ -2155,7 +2155,7 @@ describe("PostView — references", () => {
               references: [referenceClaim(userTarget("u-ada", "ada"), 1, 1, false, 2)],
             },
           ])),
-      graphql.mutation("PrepareReferenceWithdrawal", ({ variables }) => {
+      gqlLink.mutation("PrepareReferenceWithdrawal", ({ variables }) => {
         withdrawalInput = variables;
         return HttpResponse.json({
           data: {
@@ -2303,7 +2303,7 @@ describe("PostView — references", () => {
         let counted = false;
         server.use(
           ...withBody({ content: null, attachments: [clip("m1")] }),
-          graphql.query("CitedByCount", () => {
+          gqlLink.query("CitedByCount", () => {
             counted = true;
             return HttpResponse.json({
               data: { records: { __typename: "RecordConnection", totalCount: 0 } },
@@ -2590,7 +2590,7 @@ describe("PostView — opened from the feed", () => {
     return {
       release,
       asked: () => asked,
-      handler: graphql.query("PostDetail", async () => {
+      handler: gqlLink.query("PostDetail", async () => {
         asked += 1;
         await held;
         return answer();
@@ -2919,7 +2919,7 @@ describe("PostView — opened from the feed", () => {
     const second = edited(data, "Edited twice", "2026-08-12T13:00:00Z");
     let reads = 0;
     server.use(
-      graphql.query("PostDetail", () => {
+      gqlLink.query("PostDetail", () => {
         reads += 1;
         return HttpResponse.json({ data: reads === 1 ? first : second });
       }),
@@ -2954,7 +2954,7 @@ describe("PostView — opened from the feed", () => {
     });
     let reads = 0;
     server.use(
-      graphql.query("PostDetail", async () => {
+      gqlLink.query("PostDetail", async () => {
         reads += 1;
         if (reads === 1) {
           await opening;

@@ -1,12 +1,12 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { LogInMutationVariables } from "@/__generated__/graphql";
 import { createSecurityNotices } from "@/lib/session/security-notices";
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { LoginForm } from "./login-form";
 
@@ -24,7 +24,7 @@ const loginSuccessWithNotice = (
   reuseDetectedAt: string | null,
   capture?: (variables: LogInMutationVariables) => void,
 ) =>
-  graphql.mutation("LogIn", ({ variables }) => {
+  gqlLink.mutation("LogIn", ({ variables }) => {
     capture?.(variables as LogInMutationVariables);
     return HttpResponse.json({
       data: {
@@ -43,7 +43,7 @@ const loginSuccessWithNotice = (
     });
   });
 
-const loginRefused = graphql.mutation("LogIn", () =>
+const loginRefused = gqlLink.mutation("LogIn", () =>
   HttpResponse.json({
     data: {
       logIn: {
@@ -164,7 +164,7 @@ describe("LoginForm", () => {
   });
 
   it("keeps transport failures in their own slot", async () => {
-    server.use(graphql.mutation("LogIn", () => HttpResponse.error()));
+    server.use(gqlLink.mutation("LogIn", () => HttpResponse.error()));
     renderWithProviders(<LoginForm />);
     fillAndSubmit();
     expect(await screen.findByTestId("login_transport_error")).toBeInTheDocument();
@@ -175,7 +175,7 @@ describe("LoginForm", () => {
     // The backend rate-limits logIn on the transport tier; the outcome
     // layer synthesizes it into a refusal so this copy is reachable.
     server.use(
-      graphql.mutation("LogIn", () =>
+      gqlLink.mutation("LogIn", () =>
         HttpResponse.json({
           errors: [{ message: "too many attempts", extensions: { code: "RATE_LIMITED" } }],
         }),
