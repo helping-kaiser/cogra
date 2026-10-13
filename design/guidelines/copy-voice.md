@@ -1641,7 +1641,7 @@ and both take it.
 **Group headings** — short noun phrases, sentence case, naming what a
 reader came for rather than what the system calls it: `Theme` ·
 `Giving an opinion` · `Writing` · `Reading` · `Sensitive content` ·
-`Key backup` · `Sessions` · `Credentials`. The sign-out group carries no heading; it is the end of
+`Key backup` · `Clearing data` · `Sessions` · `Credentials`. The sign-out group carries no heading; it is the end of
 the page, not a subject. `Writing` is the settled title — Android said
 Writing, web said Signing, and the setting is about what a submit does,
 not about the key.
@@ -1716,6 +1716,51 @@ this app. Your recovery code is the only way back.`, and with no code
 yet `Until you make a recovery code, it can't be brought back.` in the
 second sentence's place (*the app's lines blessed (jakob
 2026-10-07)*).
+
+**Clearing data** (jakob 2026-10-13, seams 164 and 166) says what
+clearing the stored data erases, and what comes back, under a heading
+one string serves on both platforms. The key leads and the account is
+named, because a reader who misses it loses the account for good
+(jakob: "Even more emphasis on KEY"). In the browser: `Your key lives
+only in this browser. Clear CoGra's data here and the key is erased
+with it — without your recovery code, your account is gone for good.
+Your draft, any kept picks and the choices kept on this device go too,
+and you're signed out. What you've seen comes back when you sign in.`
+— in the app: `Your key lives only in this app. Clear the app's data,
+or uninstall it without keeping the data, and the key is erased with
+it — without your recovery code, your account is gone for good. Your
+draft, any kept picks and the choices kept on this device go too, and
+you're signed out. What you've seen comes back when you sign in.` With
+no code yet the first two sentences read `Your key lives only in this
+browser, and it has no recovery code yet. Clear CoGra's data here and
+the key is erased with it — your account is gone for good.` (`…in this
+app, and it has no recovery code yet. Clear the app's data, or
+uninstall it without keeping the data, and the key is erased with it —
+your account is gone for good.`). The seen list is a copy of the
+server's and returns on sign-in, so the words never call it lost;
+`the choices kept on this device` echoes Theme's and Reading's own
+phrase. (*New 2026-10-13, drafted — wording jakob's at review.*)
+
+**The wipe** is the group's one row, `Erase everything from this
+browser` — `Erase everything from this app` in the app — an action row
+as quiet as `Sign out` (jakob 2026-10-13: "the wipe everything from this
+device… with warnings"). It raises `EraseConfirm`: the title repeats
+the row as a question, `Erase everything from this browser?` (`…from
+this app?`). With no code the body reads `This browser holds the only
+copy of your key, and it has no recovery code. Erase everything and
+your account is gone for good — no one, including CoGra, can bring it
+back. Your draft, any kept picks and the choices kept on this device go
+too, and you're signed out.` (`This app holds…` in the app), and the
+answers are `Make a recovery code`, filled and leading, and `Erase
+everything and sign out`. With a code made the body reads `Your key is
+erased with everything else, and only your recovery code can bring it
+back — without the code, your account is gone for good. Your draft, any
+kept picks and the choices kept on this device go too, and you're
+signed out. What you've seen comes back when you sign in.`, and the
+answers are `Erase everything and sign out` and `Cancel`, the safe one
+filled. `Erase everything and sign out` is `Erase them and sign out`'s
+construction for the whole device. (*New 2026-10-13, drafted — wording
+jakob's at review.*)
 
 **Sessions** keeps `Revoke` and `Sign out everywhere else`, and says the
 delay before it happens rather than only after:
@@ -2858,11 +2903,16 @@ it be, because the fact a reader needs before tapping is that the tap
 deletes nothing. An applicant's deletion is confirmed in the app and
 nothing is mailed, so their footnote stops at `Nothing is deleted here.
 The next screen says what goes and what stays.` (`Settings`' reader chip;
-**blessed**, jakob 2026-10-05). An applicant whose application is
-approved but whose registration has not landed meets the row in the
+**blessed**, jakob 2026-10-05). Which footnote stands, and whether the
+row is open, is read from `User.deletionPath` and never from the
+application: `BY_LINK` takes the mailed-link footnote, `IMMEDIATE` and
+`LOCKED` the applicant's. An applicant whose address is funded but
+whose Registration has not landed (`LOCKED`) meets the row in the
 applicant locked look, and its tap answers `You can delete your account
-once you're in.`, `You can vouch once you're in.`'s construction (*new
-2026-10-06, blessed (jakob 2026-10-06)*).
+once your registration lands.` — the moment deletion opens, which can
+come before the vouch lets them in, so `You can vouch once you're in.`'s
+construction does not fit here (*new 2026-10-13, drafted — wording
+jakob's at review; his direction 2026-10-13*).
 
 **The request screen says what goes before what stays, and says both.**
 Heading `Delete account`; then `This takes your name off CoGra. What you

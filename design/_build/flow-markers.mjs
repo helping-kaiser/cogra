@@ -1513,6 +1513,9 @@ Object.assign(FLOW_MARKERS, {
     // The sensitive-content switch (jakob 2026-10-09), its own group after
     // People, numbered by the same identity rule — the next free number.
     { n: 27, find: ">Always unveil sensitive content</span>", tag: "button" },
+    // The wipe (jakob 2026-10-13), the Clearing data group's one row,
+    // numbered by the same identity rule — the next free number.
+    { n: 28, find: ">Erase everything from this browser</span>", tag: "button" },
   ],
   // The release chronicle: the way out, and one door per release — the same
   // control drawn three times, so one number.
@@ -2883,6 +2886,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: ">Make a recovery code</button>", tag: "button" },
     { n: 2, find: ">Sign out, keep them locked</button>", tag: "button" },
     { n: 3, find: ">Erase them and sign out</button>", tag: "button" },
+    { n: 4, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  // scanExempt like every dialog board: the settings page beneath is wired on
+  // `Settings`. The erase is drawn once per backup chip value — one control
+  // in two states, so one number.
+  EraseConfirm: [
+    { n: 1, find: ">Make a recovery code</button>", tag: "button" },
+    { n: 2, find: ">Erase everything and sign out</button>", tag: "button", all: true },
+    { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   // scanExempt like every dialog board: the backup screen beneath is wired on
