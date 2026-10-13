@@ -232,6 +232,21 @@ describe("the stance control at rest", () => {
     expect(affordance.className).toContain("grayscale");
   });
 
+  it("wears full ink on an empty face when the host asks for it (the vouch card)", async () => {
+    // stance-control.md, jakob 2026-10-13: `fullInkEmpty` lifts the muting
+    // from the empty resting face only; the face itself is unchanged.
+    const data = createStubStanceData({});
+    renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} fullInkEmpty />, {
+      store: signedInStore(),
+      stanceData: data,
+    });
+    await settle();
+    const face = screen.getByTestId(`${PREFIX}-resting-face`);
+    expect(face).toHaveTextContent("🫥");
+    expect(face.className).not.toContain("opacity-40");
+    expect(face.className).not.toContain("grayscale");
+  });
+
   it("drops the muting the moment there is a standing to show", async () => {
     mount({ seed: { "post-1": { records: [{ pDirected: 0.55, pInterest: 0.2 }] } } });
     await settle();

@@ -177,6 +177,7 @@ export function StanceControl({
   node,
   variant,
   padOnly,
+  fullInkEmpty = false,
 }: {
   target: StanceTargetRef;
   /**
@@ -210,6 +211,15 @@ export function StanceControl({
    * nothing taken closes back onto that host (VouchBackPad.md:45).
    */
   padOnly?: { readonly onClose: () => void };
+  /**
+   * THE VOUCH CARD'S EMPTY FACE WEARS FULL INK (stance-control.md, jakob
+   * 2026-10-13; the master's `fullInkEmpty`). The muted, translucent
+   * resting face all but vanishes on the card's tertiary-container ground,
+   * so the card's hollow 🫥 stands at full opacity in its own colours.
+   * Only the empty resting face is affected; off by default, so every
+   * other host keeps the muted face.
+   */
+  fullInkEmpty?: boolean;
 }) {
   const data = useStanceData();
   const phase = useAuthPhase();
@@ -818,7 +828,7 @@ export function StanceControl({
             aria-hidden="true"
             {...testAttributes(part(node, "anchor.face"), `${testIdPrefix}-resting-face`)}
             className={
-              restingFace === null
+              restingFace === null && !fullInkEmpty
                 ? "flex-none text-title-large opacity-40 grayscale"
                 : "flex-none text-title-large"
             }

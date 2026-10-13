@@ -156,6 +156,7 @@ export function VouchCard({
           target={{ id: voucher.id, kind: "profile", label: `@${voucher.handle}` }}
           testIdPrefix="vouch-back"
           node={part(NODE, "stance")}
+          fullInkEmpty
           variant={vouchBackVariant(
             () => router.push(VOUCHED_IN_PATH),
             part(NODE, "stance.pad"),

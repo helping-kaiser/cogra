@@ -717,6 +717,7 @@ private fun CograNavGraphContent(
                         targetLabel = "@${voucher.handle}",
                         node = VOUCH_CARD / "stance",
                         variant = vouchBackVariant(VOUCH_CARD / "stance" / "pad"),
+                        fullInkEmpty = true,
                         onTaken = {
                             openCeremony(voucher.handle, voucher.displayName, voucher.avatar?.url)
                         },

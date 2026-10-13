@@ -50,6 +50,7 @@ class VouchCardTest {
                         testTagPrefix = "vouch_back",
                         targetLabel = "@mira",
                         node = VOUCH_CARD / "stance",
+                        fullInkEmpty = true,
                     )
                 },
             )
