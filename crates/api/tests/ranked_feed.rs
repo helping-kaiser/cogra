@@ -1693,13 +1693,14 @@ async fn a_malformed_pod_permutation_surfaces_as_internal_and_is_logged(pool: Pg
     }
 }
 
-/// Marks ride when the session's own actor is the viewer: the pod's marks
-/// reach the reader on landed and settling rows alike.
+/// Marks ride for every reader as the vantage's: with the session's own
+/// actor as the viewer, the pod's marks reach the reader on landed and
+/// settling rows alike.
 ///
-/// The pod's people marks ride when the session's reader is the viewer.
-/// ´claim:relay:marks-ride-for-the-viewer´
+/// The pod's people marks ride as the vantage's, for every reader.
+/// ´claim:relay:marks-ride-for-every-reader-as-the-vantages´
 #[sqlx::test(migrations = "../../migrations")]
-async fn marks_ride_when_the_session_reader_is_the_viewer(pool: PgPool) {
+async fn marks_ride_for_every_reader_as_the_vantages(pool: PgPool) {
     let (rig, pod) = pod_rig(pool, Mode::Hold).await;
     fixture(&rig.pool).await;
     let (me, token) = reader(&rig, "reader").await;
@@ -1739,13 +1740,14 @@ async fn marks_ride_when_the_session_reader_is_the_viewer(pool: PgPool) {
 }
 
 /// A borrowed view: the session's reader ranks another actor's view. The
-/// pod can only compute the viewer's people, never the reader's, so every
-/// mark is nulled — an id comparison, not a fold read (§5.4).
+/// marks are the vantage's, passed through as the pod emitted them — never
+/// nulled; a null mark means only that the vantage holds no opinion of the
+/// author.
 ///
-/// A reader ranking someone else's view reads no marks.
-/// ´claim:relay:a-borrowed-view-carries-no-marks´
+/// A reader ranking someone else's view reads the vantage's marks.
+/// ´claim:relay:a-borrowed-view-carries-the-vantages-marks´
 #[sqlx::test(migrations = "../../migrations")]
-async fn a_borrowing_readers_marks_are_null(pool: PgPool) {
+async fn a_borrowing_readers_marks_are_the_vantages(pool: PgPool) {
     let (rig, pod) = pod_rig(pool, Mode::Hold).await;
     let f = fixture(&rig.pool).await;
     let (_me, token) = reader(&rig, "reader").await;
@@ -1756,8 +1758,8 @@ async fn a_borrowing_readers_marks_are_null(pool: PgPool) {
         &[(settling, Some("AGAINST"), 0, 0)],
     )));
     let answer = rank(&rig, Some(&token), json!({ "viewer": f.viewer })).await;
-    assert_eq!(answer["entries"][0]["mark"], Value::Null);
-    assert_eq!(answer["settling"][0]["mark"], Value::Null);
+    assert_eq!(answer["entries"][0]["mark"], "FOR");
+    assert_eq!(answer["settling"][0]["mark"], "AGAINST");
     assert_eq!(
         ids_of(&answer["entries"]),
         vec![t1],
@@ -1765,13 +1767,13 @@ async fn a_borrowing_readers_marks_are_null(pool: PgPool) {
     );
 }
 
-/// Without a session there is no reader to hold an opinion: every mark is
-/// null, and the ranking itself is served, never refused.
+/// Without a session the ranking is still the vantage's: the pod's marks
+/// pass through, and the ranking itself is served, never refused.
 ///
-/// A session-less ranking is served with no marks.
-/// ´claim:relay:a-session-less-ranking-has-no-marks´
+/// A session-less ranking is served with the vantage's marks.
+/// ´claim:relay:a-session-less-ranking-carries-the-vantages-marks´
 #[sqlx::test(migrations = "../../migrations")]
-async fn a_session_less_ranking_carries_no_marks(pool: PgPool) {
+async fn a_session_less_rankings_marks_are_the_vantages(pool: PgPool) {
     let t1 = Uuid::new_v4();
     let (rig, _pod) = pod_rig(
         pool,
@@ -1780,7 +1782,7 @@ async fn a_session_less_ranking_carries_no_marks(pool: PgPool) {
     .await;
     let f = fixture(&rig.pool).await;
     let answer = rank(&rig, None, json!({ "viewer": f.viewer })).await;
-    assert_eq!(answer["entries"][0]["mark"], Value::Null);
+    assert_eq!(answer["entries"][0]["mark"], "FOR");
     assert_eq!(ids_of(&answer["entries"]), vec![t1]);
 }
 
