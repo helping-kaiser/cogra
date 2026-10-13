@@ -1,11 +1,27 @@
 // THE SESSION'S SEEN QUEUE — module memory the seen tracker writes into
-// (`seen-tracker.ts` says what counts as seen and when it is sent). Kept apart
+// (`seen-tracker.ts` says what counts as seen and when it is sent). Every first
+// seeing it takes is also written through to the device's durable record
+// (`seen-record.ts`), which the ranked feed's seen cut reads. Kept apart
 // from the hook, with no React, Apollo or session import, so the test setup
 // can reset it without pulling the app's runtime graph in ahead of each test
 // file's own mocks.
 
 import type { ErrorCode } from "@/__generated__/graphql";
 import type { Outcome } from "@/lib/api/outcome";
+import { seenRecord } from "./seen-record";
+
+/** Where a first seeing is recorded on the device, besides the queue. */
+export type RecordSeeing = (account: string, id: string) => void;
+
+/**
+ * Write-through to the device's durable record (`seen-record.ts`, PR-51): the
+ * ranked feed's seen cut reads it, so a seeing counts there the moment it is
+ * queued, not once the server has taken it. A write that fails costs the
+ * durability of one id, never the session.
+ */
+const writeThrough: RecordSeeing = (account, id) => {
+  void seenRecord.add(account, [id]).catch(() => undefined);
+};
 
 /**
  * The most ids one call carries — the page budget, pinned to
@@ -66,6 +82,8 @@ export class SeenQueue {
   // nothing queues them again this session.
   private gone: string[] = [];
 
+  constructor(private readonly record: RecordSeeing = writeThrough) {}
+
   /** Keys the queue to `account`; a different account starts empty. */
   belongTo(account: string | null): void {
     if (account === this.account) return;
@@ -88,6 +106,7 @@ export class SeenQueue {
     if (this.account === null || this.reported.has(id)) return false;
     this.reported.add(id);
     this.pending.push(id);
+    this.record(this.account, id);
     return true;
   }
 

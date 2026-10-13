@@ -14,6 +14,7 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.UserError
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.RecordingViewHistoryRepository
+import com.cogra.domain.testing.testSeenRecord
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,7 +41,7 @@ class SeenTrackerTest {
      * alone; nothing in it waits on time, so `runCurrent` runs all of it.
      */
     private fun TestScope.tracker(repo: ViewHistoryRepository = history): SeenTracker =
-        SeenTracker(repo, session, backgroundScope).also { runCurrent() }
+        SeenTracker(repo, session, backgroundScope, testSeenRecord(session, backgroundScope)).also { runCurrent() }
 
     private fun ids(range: IntRange): List<String> = range.map { "n$it" }
 

@@ -1,0 +1,56 @@
+# The ranked feed (api-spec.md `feedRanking`, `feed`; ranked-feed packet
+# §4.1, §4.4): one ranking per feed-open, refresh or ranker-argument Done,
+# then windows of it hydrated on demand.
+#
+# THE RANKING carries every row field the device derive reads and nothing
+# else (§4.13's tight row shapes): the id and kind to hydrate and place, the
+# score the card and the off-feed lookup read, the people mark the Your
+# people cut reads, and the two orders' indices. The request carries only
+# what changes the ranker's work — `kinds` and `topic`; order, people, seen
+# and Still settling are applied on the device (§4.12).
+query FeedRanking($viewer: UUID!, $kinds: [NodeKind!], $topic: UUID) {
+  feedRanking(viewer: $viewer, filter: { kinds: $kinds, topic: $topic }) {
+    asOfEpoch
+    entries {
+      targetId
+      kind
+      score
+      mark
+      newestIndex
+    }
+    settling {
+      targetId
+      kind
+      mark
+      rankedPosition
+      newestPosition
+    }
+  }
+}
+
+# A WINDOW of the derived list, hydrated in the order handed (CD-2): at most
+# a page of ids per call, so it is priced like the listing it replaces. The
+# node is the `FeedItem` UNION, so every selection is inline (see
+# `fragments.graphql`); a Post row is the feed card's own `FeedPost`, the
+# other kinds are named by id until their cards are built.
+query Feed($orderedIds: [UUID!]!, $first: Int!, $includePending: Boolean! = true) {
+  feed(orderedIds: $orderedIds, first: $first) {
+    edges {
+      node {
+        __typename
+        ... on Post {
+          ...FeedPost
+        }
+        ... on Comment {
+          id
+        }
+        ... on User {
+          id
+        }
+        ... on Hashtag {
+          id
+        }
+      }
+    }
+  }
+}
