@@ -228,13 +228,15 @@ fun FeedRoute(
         viewerId = viewerId,
         onEditPost = onEditPost,
         onCitePost = onCitePost,
-        stanceControl = { target, tag, node ->
-            StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node)
-        },
+        stanceControl = nodeStanceControl,
         saved = rememberSavedWrites(),
         onRequireAccount = onRequireAccount,
     )
 }
+
+/** The stance control a route hands its cards: the live control on the node, wearing its registered path. */
+internal val nodeStanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit =
+    { target, tag, node -> StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node) }
 
 /** One callback after another — the pull tells the shell, then refreshes. */
 private fun then(first: () -> Unit, second: () -> Unit): () -> Unit = {
