@@ -9,9 +9,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
+import type { DeviceLockEngine } from "@/lib/identity/device-lock";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { restoreActor, type RestoreResult } from "@/lib/identity/restorer";
-import { useAuthGuard } from "@/lib/session/runtime";
+import { useActiveAccountId } from "@/lib/session/provider";
+import { useAuthGuard, useDeviceLock } from "@/lib/session/runtime";
 import { useRegistrationFlow } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
 
@@ -34,12 +36,17 @@ function restoreMessage(result: RestoreResult): string | null {
 
 export function RestoreForm({
   store = identityStore,
+  deviceLock,
 }: {
   /** Test injection. */
   store?: IdentityStore;
+  deviceLock?: DeviceLockEngine;
 } = {}) {
   const client = useApolloClient();
   const guard = useAuthGuard();
+  const clientLock = useDeviceLock();
+  const lock = deviceLock ?? clientLock;
+  const account = useActiveAccountId();
   const flow = useRegistrationFlow();
   const router = useRouter();
 
@@ -62,6 +69,17 @@ export function RestoreForm({
       // (auth.md "Sign-out") — always written, so an unchecked restore
       // clears an earlier flag.
       await store.setEphemeral(dontRemember);
+      // The opt-in's lock (sign-out-custody §3.4): obtained when ticked,
+      // discarded when not. Best effort here — a restore is already signed
+      // in, and a lock that did not arrive is retried at the next start.
+      if (account !== null) {
+        try {
+          if (dontRemember) await lock.ensureHeld(account);
+          else await lock.discard(account);
+        } catch {
+          // retried at the next start
+        }
+      }
     }
     setInProgress(false);
     setResult(outcome);

@@ -5,8 +5,12 @@ import com.cogra.crypto.RecoveryCode
 import com.cogra.crypto.sealKeyBackup
 import com.cogra.domain.Outcome
 import com.cogra.domain.identity.ActorRestorer
+import com.cogra.domain.identity.DeviceLock
 import com.cogra.domain.identity.RestoreResult
+import com.cogra.domain.testing.FakeDeviceLockRepository
 import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeLockCustodyStore
+import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.Dispatchers
@@ -42,7 +46,11 @@ class RestoreViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = RestoreViewModel(ActorRestorer(identity, account))
+    private val tokens = FakeTokenStore()
+
+    private val deviceLock = DeviceLock(FakeLockCustodyStore(), tokens, FakeDeviceLockRepository())
+
+    private fun viewModel() = RestoreViewModel(ActorRestorer(identity, account, tokens, deviceLock))
 
     @Test
     fun aRestoredCodeLandsTheSeedWithoutAnOptIn() = runTest(dispatcher) {

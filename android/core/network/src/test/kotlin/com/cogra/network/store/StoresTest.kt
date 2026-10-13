@@ -18,11 +18,12 @@ import com.cogra.domain.compose.SealedDraft
 import com.cogra.domain.compose.StagedFate
 import com.cogra.domain.history.SeenWatermark
 import com.cogra.domain.history.StoredSeenRecord
-import com.cogra.domain.identity.EndLocalSession
+import com.cogra.domain.identity.DeviceLock
 import com.cogra.domain.identity.SignOut
 import com.cogra.domain.store.SessionRead
 import com.cogra.domain.store.ThemeChoice
 import com.cogra.domain.testing.FakeDeviceData
+import com.cogra.domain.testing.FakeDeviceLockRepository
 import com.cogra.domain.testing.ThrowingSessionRepository
 import com.google.common.truth.Truth.assertThat
 import java.io.File
@@ -197,26 +198,6 @@ class StoresTest {
         assertThat(stores.identity.actorSeed()).isNull()
     }
 
-    @Test
-    fun purgeClearsOnlyTheActiveAccountsSlot() = runTest {
-        val stores = Stores(store())
-        val seedA = ActorKey.generate().seed()
-        stores.signIn("account-a")
-        stores.identity.saveActorSeed(seedA)
-
-        stores.signIn("account-b")
-        stores.identity.saveActorSeed(ActorKey.generate().seed())
-        stores.identity.savePendingBackupBlob(byteArrayOf(9))
-        stores.identity.setForgetOnSignOut(true)
-        stores.identity.purge()
-        assertThat(stores.identity.actorSeed()).isNull()
-        assertThat(stores.identity.pendingBackupBlob()).isNull()
-        assertThat(stores.identity.forgetOnSignOut()).isFalse()
-
-        stores.signIn("account-a")
-        assertThat(stores.identity.actorSeed()).isEqualTo(seedA)
-    }
-
     // ------------------------------------------------ custody (packet §9)
 
     /** Counts the transactions a store commits — `edit` is `updateData`. */
@@ -257,6 +238,15 @@ class StoresTest {
         override suspend fun revokeSession(id: String?): Outcome<Unit> = Outcome.Failed(IOException("offline"))
     }
 
+    /** The explicit sign-out over the real stores, its device lock over the real custody store. */
+    private fun Stores.signOut(encrypted: EncryptedStore) = SignOut(
+        offlineSessions(),
+        identity,
+        tokens,
+        FakeDeviceData(),
+        DeviceLock(LockCustodyStoreImpl(encrypted), tokens, FakeDeviceLockRepository()),
+    )
+
     /**
      * jakob's ruling 2026-10-13: a don't-remember sign-out clears THAT
      * account's seen record — ids and watermark, the one value — and no other
@@ -270,7 +260,7 @@ class StoresTest {
         val seen = SeenRecordStoreImpl(encrypted)
         assertThat(seen.load("account-a")).isEqualTo(seenOf("account-a"))
 
-        SignOut(offlineSessions(), stores.identity, stores.tokens, FakeDeviceData()).signOut()
+        stores.signOut(encrypted).signOut()
 
         assertThat(seen.load("account-a")).isNull()
         assertThat(encrypted.get("seen_record:account-a")).isNull()
@@ -284,7 +274,7 @@ class StoresTest {
         val stores = seedCustody(encrypted, "account-a")
         stores.identity.setForgetOnSignOut(false)
 
-        SignOut(offlineSessions(), stores.identity, stores.tokens, FakeDeviceData()).signOut()
+        stores.signOut(encrypted).signOut()
 
         assertThat(SeenRecordStoreImpl(encrypted).load("account-a")).isEqualTo(seenOf("account-a"))
     }
@@ -302,13 +292,8 @@ class StoresTest {
         // a process death can no longer leave the account half-cleared.
         assertThat(counting.edits).isEqualTo(1)
         assertThat(encrypted.names("acct:account-a:")).isEmpty()
-
-        // The remote path's purge is one edit too.
-        val again = seedCustody(encrypted, "account-a")
-        counting.edits = 0
-        again.identity.purge()
-        assertThat(counting.edits).isEqualTo(1)
-        assertThat(encrypted.names("acct:account-a:")).isEmpty()
+        // The lock's own edit is pinned in `LockCustodyStoreTest`
+        // (`purge_and_lock_are_one_datastore_edit`).
     }
 
     @Test
@@ -407,7 +392,7 @@ class StoresTest {
     }
 
     @Test
-    fun `sealed_copies_go_with_the_explicit_sign_out_and_stay_through_the_remote_end`() = runTest {
+    fun `sealed_copies_go_with_the_explicit_sign_out`() = runTest {
         val file = File(tmp.newFolder(), "test.preferences_pb")
         val counting = CountingDataStore(PreferenceDataStoreFactory.create(scope = scope) { file })
         val encrypted = EncryptedStore(counting, FakeCipher())
@@ -416,9 +401,6 @@ class StoresTest {
         val stores = seedCustody(encrypted, "account-a")
         val seals = SealedDraftStoreImpl(encrypted, stores.tokens)
         seals.seal(stagedPost, "node-a", listOf("wa"))
-
-        // The remote end leaves the draft, so it leaves the copies.
-        stores.identity.purge()
         assertThat(seals.sealed()).hasSize(1)
 
         counting.edits = 0
@@ -428,28 +410,6 @@ class StoresTest {
 
         other.signIn("account-b")
         assertThat(SealedDraftStoreImpl(encrypted, other.tokens).sealed()).hasSize(1)
-    }
-
-    /**
-     * THE CUSTODY BOUNDARY, pinned (custody packet §1.2): a session ended
-     * from elsewhere keeps today's purge of a forget account's slot and
-     * does NOT newly purge its draft. Only the explicit sign-out does —
-     * moving this line is the custody packet's call, never a side effect.
-     */
-    @Test
-    fun `the_remote_end_keeps_its_purge_and_leaves_the_draft`() = runTest {
-        val encrypted = store()
-        val stores = seedCustody(encrypted, "account-a")
-
-        EndLocalSession(stores.identity, stores.tokens).end()
-        assertThat(stores.tokens.current()).isNull()
-        assertThat(encrypted.names("acct:account-a:")).isEmpty()
-        // The draft is still on the device, under its own record.
-        assertThat(encrypted.get("compose_draft:account-a")).isNotNull()
-
-        stores.signIn("account-a")
-        assertThat(ComposeDraftStoreImpl(encrypted, stores.tokens).draft()?.body).isEqualTo("half a thought")
-        assertThat(stores.identity.actorSeed()).isNull()
     }
 
     /** Settings.md "Theme" / "Show exact values": the device's, never the account's. */

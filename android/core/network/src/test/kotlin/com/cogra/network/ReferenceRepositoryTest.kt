@@ -10,7 +10,7 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.ReferenceContentKind
 import com.cogra.domain.ReferenceTargetView
 import com.cogra.domain.identity.EndLocalSession
-import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.auth.SessionRefresher
@@ -53,7 +53,7 @@ class ReferenceRepositoryTest {
             tokenStore,
             SessionRefresher(
                 tokenStore,
-                EndLocalSession(FakeIdentityStore(), tokenStore),
+                EndLocalSession(FakeLockCustodyStore(), tokenStore),
                 Provider { client },
             ),
         ),

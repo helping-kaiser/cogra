@@ -13,13 +13,16 @@ import com.cogra.domain.deletion.AccountDeletionState
 import com.cogra.domain.deletion.DeletionStanding
 import com.cogra.domain.identity.BackupManager
 import com.cogra.domain.testing.ScriptedAccountDeletionRepository
+import com.cogra.domain.identity.DeviceLock
 import com.cogra.domain.identity.SignOut
 import com.cogra.domain.settings.SensitiveContentChoice
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.store.ThemeChoice
 import com.cogra.domain.testing.FakeDeviceData
+import com.cogra.domain.testing.FakeDeviceLockRepository
 import com.cogra.domain.testing.FakeDevicePreferences
 import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.google.common.truth.Truth.assertThat
@@ -50,6 +53,9 @@ class SettingsViewModelTest {
     private val deletions = ScriptedAccountDeletionRepository()
     private val deletionState = AccountDeletionState(deletions)
     private val deviceData = FakeDeviceData(tokens, identity, device)
+    private val custody = FakeLockCustodyStore()
+    private val locks = FakeDeviceLockRepository().apply { sessionAccount = "u1" }
+    private val deviceLock = DeviceLock(custody, tokens, locks)
 
     @Before
     fun setUp() {
@@ -66,11 +72,12 @@ class SettingsViewModelTest {
     private fun viewModel() = SettingsViewModel(
         settings,
         sessions,
-        SignOut(sessions, identity, tokens, deviceData),
+        SignOut(sessions, identity, tokens, deviceData, deviceLock),
         identity,
         device,
         sensitive,
         deletionState,
+        deviceLock,
     ).also {
         it.clock = { NOW }
         it.refresh()
@@ -195,6 +202,35 @@ class SettingsViewModelTest {
         assertThat(identity.forgetOnSignOut).isTrue()
         assertThat(tokens.current()).isNotNull()
         assertThat(vm.state.value.signOutConfirmOpen).isFalse()
+    }
+
+    @Test
+    fun `forget_switch_on_obtains_a_lock_and_off_discards_it`() = runTest(dispatcher) {
+        signedIn()
+        val vm = viewModel()
+        idle()
+        vm.onForgetOnSignOut()
+        idle()
+        val id = custody.lockId("u1")
+        assertThat(id).isNotNull()
+        assertThat(locks.rows).containsKey(id)
+        vm.onForgetOnSignOut()
+        idle()
+        assertThat(custody.lockId("u1")).isNull()
+        assertThat(locks.rows).doesNotContainKey(id)
+    }
+
+    @Test
+    fun `the forget switch flips even when its lock gets no answer`() = runTest(dispatcher) {
+        signedIn()
+        locks.online = false
+        val vm = viewModel()
+        idle()
+        vm.onForgetOnSignOut()
+        idle()
+        assertThat(vm.state.value.forgetOnSignOut).isTrue()
+        assertThat(identity.forgetOnSignOut).isTrue()
+        assertThat(custody.heldLock("u1")).isNull()
     }
 
     // --------------------------------------------------- default license

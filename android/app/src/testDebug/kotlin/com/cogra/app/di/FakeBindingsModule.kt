@@ -60,6 +60,7 @@ import com.cogra.domain.history.SeenRecordStore
 import com.cogra.domain.history.ViewHistoryRepository
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.ContentRepository
+import com.cogra.domain.repo.DeviceLockRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.SessionRepository
@@ -73,12 +74,15 @@ import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.store.IdentityStore
+import com.cogra.domain.store.LockCustodyStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.testing.ThrowingSettingsRepository
 import com.cogra.domain.topics.TagClaim
+import com.cogra.domain.testing.FakeDeviceLockRepository
 import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.RecordingViewHistoryRepository
@@ -500,6 +504,20 @@ object FakeBindingsModule {
 
     @Provides
     fun identityStore(fake: FakeIdentityStore): IdentityStore = fake
+
+    @Provides
+    @Singleton
+    fun fakeLockCustodyStore(): FakeLockCustodyStore = FakeLockCustodyStore()
+
+    @Provides
+    fun lockCustodyStore(fake: FakeLockCustodyStore): LockCustodyStore = fake
+
+    @Provides
+    @Singleton
+    fun fakeDeviceLockRepository(): FakeDeviceLockRepository = FakeDeviceLockRepository()
+
+    @Provides
+    fun deviceLockRepository(fake: FakeDeviceLockRepository): DeviceLockRepository = fake
 
     @Provides
     @Singleton

@@ -19,6 +19,18 @@ import { TransportError } from "@/lib/ui/transport-error";
 import { ApplicantStatus } from "./applicant-status";
 import { MemberStatus } from "./member-status";
 
+/**
+ * PR-62's one-time notice: the sign-in found this account's custody locked on
+ * this browser, the server could no longer open the lock, and the locked copy
+ * was deleted.
+ *
+ * PLACEHOLDER WORDS — ruled "words are design's" (seam 179 item 3; vehicle
+ * ruled at seam 109 item 82) and not yet drawn. Held in this one constant so
+ * the drawn sentence replaces it in one place.
+ */
+export const LOCK_LOST_NOTICE =
+  "Your key was locked on this browser, but the lock can no longer be opened, so the locked copy is gone. If you made a recovery code, you can restore your key with it.";
+
 function noticeDate(detectedAt: string): string {
   return new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
@@ -47,6 +59,7 @@ export function StatusBanners({
     notices.reuseDetectedAt,
     () => null,
   );
+  const lockLost = useSyncExternalStore(notices.subscribe, notices.lockLost, () => false);
 
   const refresh = useCallback(() => {
     let cancelled = false;
@@ -105,6 +118,23 @@ export function StatusBanners({
             type="button"
             data-testid="security_notice_dismiss"
             onClick={notices.dismiss}
+            className="self-start rounded-full px-3 py-1.5 text-label-large text-on-error-container"
+          >
+            Got it
+          </button>
+        </div>
+      )}
+      {lockLost && (
+        <div
+          role="alert"
+          data-testid="lock_lost_notice"
+          className="flex flex-col gap-2 rounded-medium bg-error-container p-4 text-body-medium text-on-error-container"
+        >
+          <p>{LOCK_LOST_NOTICE}</p>
+          <button
+            type="button"
+            data-testid="lock_lost_notice_dismiss"
+            onClick={notices.dismissLockLost}
             className="self-start rounded-full px-3 py-1.5 text-label-large text-on-error-container"
           >
             Got it

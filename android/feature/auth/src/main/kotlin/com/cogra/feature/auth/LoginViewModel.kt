@@ -34,9 +34,17 @@ class LoginViewModel @Inject constructor(private val logIn: LogIn) : ViewModel()
     private val _state = MutableStateFlow(LoginUiState())
     val state: StateFlow<LoginUiState> = _state.asStateFlow()
 
-    fun onEmailChange(value: String) = _state.update { it.copy(email = value, error = null, transportFailed = false) }
+    // A changed credential drops a session held for the old one: the retry
+    // press reuses a held session only for the sign-in it was made for.
+    fun onEmailChange(value: String) {
+        if (value != _state.value.email) logIn.forgetHeldSession()
+        _state.update { it.copy(email = value, error = null, transportFailed = false) }
+    }
 
-    fun onPasswordChange(value: String) = _state.update { it.copy(password = value, error = null, transportFailed = false) }
+    fun onPasswordChange(value: String) {
+        if (value != _state.value.password) logIn.forgetHeldSession()
+        _state.update { it.copy(password = value, error = null, transportFailed = false) }
+    }
 
     fun onForgetOnSignOutChange(value: Boolean) = _state.update { it.copy(forgetOnSignOut = value) }
 
