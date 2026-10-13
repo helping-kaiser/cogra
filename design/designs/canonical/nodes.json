@@ -1562,6 +1562,7 @@
         "settings.dialog": [],
         "settings.dialog.body": [],
         "settings.dialog.cancel": [
+          "none",
           "made"
         ],
         "settings.dialog.erase": [
