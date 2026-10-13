@@ -71,6 +71,7 @@ import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.release.AnnouncedReleaseStore
 import com.cogra.domain.release.ReleaseRegistry
 import com.cogra.domain.report.ReportRepository
+import com.cogra.domain.notifications.NotificationsRepository
 import com.cogra.domain.saved.SavedRepository
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StancePair
@@ -91,6 +92,7 @@ import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.InMemoryAnnouncedReleaseStore
 import com.cogra.domain.testing.RecordingReportRepository
+import com.cogra.domain.testing.RecordingNotificationsRepository
 import com.cogra.domain.testing.RecordingSavedRepository
 import com.cogra.domain.testing.ScriptedReleaseRegistry
 import com.cogra.domain.testing.RecordingViewHistoryRepository
@@ -677,6 +679,15 @@ object FakeBindingsModule {
 
     @Provides
     fun savedRepository(fake: RecordingSavedRepository): SavedRepository = fake
+
+    // The notification list reads empty and the bell quiet unless a test
+    // scripts them.
+    @Provides
+    @Singleton
+    fun recordingNotificationsRepository(): RecordingNotificationsRepository = RecordingNotificationsRepository()
+
+    @Provides
+    fun notificationsRepository(fake: RecordingNotificationsRepository): NotificationsRepository = fake
 
     // The seen record's sync reads an empty server list by default, and
     // the record itself rests in memory for the test process.
