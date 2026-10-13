@@ -408,6 +408,22 @@ async fn network_parameters_read_every_key(pool: PgPool) {
     assert_eq!(floor["value"], "0.0");
 }
 
+/// RC-G4 (PR-65): the genesis composition names genesis recency alone; the
+/// two statistics keys stay defined and governable, unseeded.
+///
+/// Genesis seeds the tie-breaker composition with recency alone.
+/// ´claim:params:genesis-seeds-recency-alone´
+#[sqlx::test(migrations = "../../migrations")]
+async fn genesis_seeds_the_ruled_tie_breaker_order(pool: PgPool) {
+    let rig = rig(pool);
+    bootstrap(&rig.standin, &rig.pool, genesis_input())
+        .await
+        .expect("genesis");
+    let read = parameters(&rig, json!(["tie_breaker_composition"])).await;
+    assert_eq!(read.len(), 1);
+    assert_eq!(read[0]["value"], "[\"recency\"]");
+}
+
 /// Named keys read exactly those parameters.
 ///
 /// The named keys read exactly those parameters.

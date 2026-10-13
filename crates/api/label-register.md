@@ -445,6 +445,7 @@ label.
 | `test:integration:following-a-topic-writes-an-affinity`                                       | following_a_topic_writes_an_affinity                                       |
 | `test:integration:fresh-bootstrap-creates-both-halves`                                        | fresh_bootstrap_creates_both_halves                                        |
 | `test:integration:fresh-fundings-trip-the-vouchers-funding-budget`                            | fresh_fundings_trip_the_vouchers_funding_budget                            |
+| `test:integration:genesis-seeds-the-ruled-tie-breaker-order`                                  | genesis_seeds_the_ruled_tie_breaker_order                                  |
 | `test:integration:graphql-health-reports-store-and-mirror`                                    | graphql_health_reports_store_and_mirror                                    |
 | `test:integration:graphql-refuses-a-body-past-the-route-limit`                                | graphql_refuses_a_body_past_the_route_limit                                |
 | `test:integration:graphql-serves-the-host-seal-key`                                           | graphql_serves_the_host_seal_key                                           |
