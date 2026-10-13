@@ -4,8 +4,13 @@
 // (design/designs/canonical/screens/Settings.jsx; `SettingsBody` in
 // `_shared.jsx`; behavior/Settings.md). Theme · Giving an opinion · Writing ·
 // Reading · People · Key backup · Sessions · Credentials · About · the
-// sign-out group · the delete-account group, whose row waits on the erasure
-// packet's request screen.
+// sign-out group · the delete-account group.
+//
+// THE DELETION ROW KEYS ON THE SERVER'S `deletionPath` (OS-15), never on
+// `application.*`: LOCKED wears the locked look and answers with a snackbar
+// (Settings.md:157-159); BY_LINK and IMMEDIATE open the request screen; and a
+// confirmed deletion in its grace turns the row into its countdown, opening the
+// grace page, drops the footnote and brings the band (SettingsDeleting.md).
 //
 // No bottom bar (the shell hides it off read surfaces), no leading icons, and
 // the header pinned — not the collapsing top the inline forms used to ride.
@@ -30,12 +35,15 @@ import {
   type SettingsAccount,
 } from "@/lib/api/settings-api";
 import { composeDraftStore, type ComposeDraftStore } from "@/lib/compose/draft-store";
+import { LOCKED_ROW, settingsRowStatus } from "@/lib/deletion/deletion-copy";
+import { useAccountDeletion } from "@/lib/deletion/deletion-status";
 import { sealedDraftStore, type SealedDraftStore } from "@/lib/compose/sealed-draft";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDeviceState } from "@/lib/identity/use-key-on-device";
 import { licenseName, PUBLIC_DOMAIN, type License } from "@/lib/license";
 import { useTokenStore } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
+import { eraseEverything } from "@/lib/settings/erase-everything";
 import {
   applyTheme,
   exactValuesPreference,
@@ -60,6 +68,7 @@ import { SegmentedFilter } from "@/lib/ui2/segmented-filter";
 import { SettingsGroup, SettingsRow } from "@/lib/ui2/settings-row";
 import { useSlowAnswer } from "@/lib/ui2/waiting-commit";
 
+import { EraseConfirm } from "./erase-confirm";
 import { SettingsLicenseSheet } from "./settings-license-sheet";
 import {
   EMAIL_ROUTES,
@@ -103,7 +112,11 @@ const THEME_OPTIONS = [
   { value: "auto", label: "Auto" },
 ] as const;
 
-/** The deletion group's footnote — the member's, and the applicant's without the mailed link. */
+/**
+ * The deletion group's footnote — the mailed path's, and the immediate one's
+ * without the link (Settings.md:151, :153). Keyed on the path: BY_LINK is the
+ * member's words, IMMEDIATE and LOCKED (both applicants) the applicant's.
+ */
 const DELETE_FOOTNOTE_MEMBER =
   "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.";
 const DELETE_FOOTNOTE_APPLICANT = "Nothing is deleted here. The next screen says what goes and what stays.";
@@ -115,15 +128,34 @@ const NO_ANSWER = "That didn't send. Try again.";
 const UNVEIL_OFF_STATUS = "Off, the veil stays until you tap it.";
 const UNVEIL_ON_STATUS = "On, sensitive content stands unveiled wherever you read.";
 
+/**
+ * The Clearing data group's footnote, by backup state (Settings.md:139, :141):
+ * the key first and the account gone for good, then what else goes, and the
+ * seen list's return last — it is a copy of the server's.
+ */
+const CLEARING_FOOTNOTE_MADE =
+  "Your key lives only in this browser. Clear CoGra's data here and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in.";
+const CLEARING_FOOTNOTE_NONE =
+  "Your key lives only in this browser, and it has no recovery code yet. Clear CoGra's data here and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in.";
+
+/** A full load of the sign-in, so nothing this tab held in memory outlives the erase. */
+function hardNavigate(url: string) {
+  window.location.replace(url);
+}
+
 export function SettingsView({
   store = identityStore,
   drafts = composeDraftStore,
   seals = sealedDraftStore,
+  erase = eraseEverything,
+  leave = hardNavigate,
 }: {
   /** Test injection. */
   store?: IdentityStore;
   drafts?: Pick<ComposeDraftStore, "clear">;
   seals?: Pick<SealedDraftStore, "forget">;
+  erase?: () => Promise<void>;
+  leave?: (url: string) => void;
 } = {}) {
   const client = useApolloClient();
   const guard = useAuthGuard();
@@ -131,6 +163,8 @@ export function SettingsView({
   const router = useRouter();
   const notice = settingsNoticeOf(useSearchParams().get("done"));
   const keyOnDevice = useKeyOnDeviceState(store);
+  const deletionStatus = useAccountDeletion();
+  const refreshDeletion = deletionStatus.refresh;
 
   const [account, setAccount] = useState<SettingsAccount | null>(null);
   const [readFailed, setReadFailed] = useState(false);
@@ -140,6 +174,7 @@ export function SettingsView({
   const [elsewhereBusy, setElsewhereBusy] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [eraseOpen, setEraseOpen] = useState(false);
   const [licenseOpen, setLicenseOpen] = useState(false);
   /** A default-license save that did not go through, kept for its Retry. */
   const [licenseFailed, setLicenseFailed] = useState<License | null>(null);
@@ -152,6 +187,7 @@ export function SettingsView({
 
   const sessionRows = useRef(new Map<string, HTMLElement | null>());
   const signOutRow = useRef<HTMLButtonElement | null>(null);
+  const eraseRow = useRef<HTMLButtonElement | null>(null);
   const licenseRow = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
@@ -168,6 +204,12 @@ export function SettingsView({
     });
     void store.isEphemeral().then(setForget, () => setForget(false));
   }, [client, guard, store]);
+
+  // The deletion row reads what stands NOW: a link opened in a mail client
+  // on another device confirms without this tab hearing of it.
+  useEffect(() => {
+    void refreshDeletion();
+  }, [refreshDeletion]);
 
   // The subpage's return snackbar, said once — when the fresh read can name
   // it (adjusted during render, React's "adjusting state when a prop
@@ -342,6 +384,26 @@ export function SettingsView({
     }
   };
 
+  /**
+   * The dialog's erase (EraseConfirm.md:21): this browser's key, draft, kept
+   * picks, the choices kept here and the seen list's copy go for good, the
+   * session ends, and the sign-in opens with no account offered — no
+   * snackbar. The session is revoked first, best effort, while a token still
+   * exists to name it.
+   */
+  const onEraseEverything = async () => {
+    setEraseOpen(false);
+    setSigningOut(true);
+    await guard.run(() => revokeSession(client, null));
+    try {
+      await erase();
+    } catch {
+      // the session ends regardless
+    }
+    tokens.clear();
+    leave("/login");
+  };
+
   const signOutSlow = useSlowAnswer(signingOut);
 
   // ---------------------------------------------------------------- the page
@@ -349,6 +411,14 @@ export function SettingsView({
   const beforeCeremony = account !== null && account.actorPubkey == null;
   const backupMade = account?.keyBackupCreatedAt != null;
   const pending = account?.pendingEmailChange ?? null;
+  const deletionPath = deletionStatus.standing?.path ?? null;
+  const grace = deletionStatus.standing?.deletion ?? null;
+
+  const onDeleteRow = () => {
+    if (grace !== null) router.push("/settings/delete/pending");
+    else if (deletionPath === "LOCKED") setSnackbar(LOCKED_ROW);
+    else if (deletionPath !== null) router.push("/settings/delete");
+  };
 
   return (
     <main className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col">
@@ -358,6 +428,7 @@ export function SettingsView({
           backHref="/profile"
           backLabel="Back to your profile"
           node={node("header")}
+          deletionBand={node("deletionBand")}
         />
       </div>
       <div className="flex flex-col gap-6 px-6 pb-8 pt-6">
@@ -507,6 +578,24 @@ export function SettingsView({
           />
         </SettingsGroup>
 
+        {/* After Key backup, because the loss it warns of is the key's
+            (Settings.md:139-145). An unread backup state takes the no-code
+            words: the stronger warning is the safe one. The row is quiet like
+            Sign out — the weight lives in the dialog it raises. */}
+        <SettingsGroup
+          label="Clearing data"
+          footnote={backupMade ? CLEARING_FOOTNOTE_MADE : CLEARING_FOOTNOTE_NONE}
+          node={node("clearing")}
+        >
+          <SettingsRow
+            action
+            label="Erase everything from this browser"
+            onOpen={() => setEraseOpen(true)}
+            rowRef={eraseRow}
+            node={node("clearing.erase")}
+          />
+        </SettingsGroup>
+
         <SettingsGroup
           label="Sessions"
           footnote="A device you sign out can stay signed in for up to 15 minutes."
@@ -608,19 +697,28 @@ export function SettingsView({
         </SettingsGroup>
 
         {/* The page's last row, in a group of its own after leaving, drawn
-            quiet: a navigating row with a chevron. The footnote is the
-            applicant's when the reader is one (Settings.md :139-141).
-            DRIFT (the erasure-deletion packet): the deletion's request
-            screen, its grace status and the applicant's locked look are not
-            built, so the row opens nothing yet. */}
+            quiet: a navigating row with a chevron. During a confirmed
+            deletion's grace it reads the countdown and the footnote goes —
+            the footnote describes a request not yet made
+            (SettingsDeleting.md:5-9). */}
         <SettingsGroup
           ariaLabel="Delete account"
           footnote={
-            account?.accountState === "APPLICANT" ? DELETE_FOOTNOTE_APPLICANT : DELETE_FOOTNOTE_MEMBER
+            grace !== null
+              ? undefined
+              : deletionPath === "IMMEDIATE" || deletionPath === "LOCKED"
+                ? DELETE_FOOTNOTE_APPLICANT
+                : DELETE_FOOTNOTE_MEMBER
           }
           node={node("ending")}
         >
-          <SettingsRow label="Delete account" onOpen={() => {}} node={node("ending.delete")} />
+          <SettingsRow
+            label="Delete account"
+            status={grace === null ? undefined : settingsRowStatus(grace, deletionStatus.now)}
+            locked={grace === null && deletionPath === "LOCKED"}
+            onOpen={onDeleteRow}
+            node={node("ending.delete")}
+          />
         </SettingsGroup>
       </div>
 
@@ -652,6 +750,21 @@ export function SettingsView({
           onDismiss={() => {
             setConfirmOpen(false);
             signOutRow.current?.focus();
+          }}
+        />
+      )}
+
+      {eraseOpen && (
+        <EraseConfirm
+          backupMade={backupMade}
+          onMakeCode={() => {
+            setEraseOpen(false);
+            router.push("/settings/backup");
+          }}
+          onErase={() => void onEraseEverything()}
+          onDismiss={() => {
+            setEraseOpen(false);
+            eraseRow.current?.focus();
           }}
         />
       )}

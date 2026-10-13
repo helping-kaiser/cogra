@@ -2,6 +2,7 @@ import { act, fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { delay, graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { AccountDeletionProvider } from "@/lib/deletion/deletion-status";
 import { createTokenStore } from "@/lib/session/token-store";
 import { accountFilterLevel, setAccountFilterLevel } from "@/lib/settings/sensitive-content";
 import { fakeIdentityStore } from "@/test/identity";
@@ -15,7 +16,15 @@ let search = new URLSearchParams();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push, replace }),
   useSearchParams: () => search,
+  usePathname: () => "/settings",
 }));
+
+/** The account's deletion standing, as the server reads it (OS-15). */
+function deletionHandler(deletionPath: string, accountDeletion: unknown = null) {
+  return graphql.query("AccountDeletion", () =>
+    HttpResponse.json({ data: { me: { __typename: "User", id: "u1", deletionPath, accountDeletion } } }),
+  );
+}
 
 const server = startMswServer();
 
@@ -89,12 +98,16 @@ function renderSettings({
   const identity = fakeIdentityStore({ keyOnDevice, seed, ephemeral });
   const drafts = { clear: vi.fn(async () => {}) };
   const seals = { forget: vi.fn(async () => {}) };
+  const erase = vi.fn(async () => {});
+  const leave = vi.fn();
   const tokens = signedInStore();
   const rendered = renderWithProviders(
-    <SettingsView store={identity} drafts={drafts} seals={seals} />,
+    <AccountDeletionProvider>
+      <SettingsView store={identity} drafts={drafts} seals={seals} erase={erase} leave={leave} />
+    </AccountDeletionProvider>,
     { store: tokens },
   );
-  return { ...rendered, identity, drafts, seals, tokens };
+  return { ...rendered, identity, drafts, seals, tokens, erase, leave };
 }
 
 /** The node a registered path names (`data-node.ts`). */
@@ -111,7 +124,7 @@ beforeEach(() => {
   push.mockReset();
   replace.mockReset();
   search = new URLSearchParams();
-  server.use(accountHandler());
+  server.use(accountHandler(), deletionHandler("BY_LINK"));
 });
 
 describe("the settings page", () => {
@@ -149,18 +162,94 @@ describe("the settings page", () => {
     expect(screen.getByTestId("settings.ending.footnote")).toHaveTextContent(
       "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.",
     );
-    // DRIFT (erasure-deletion packet): the request screen is not built, so
-    // the press opens nothing.
-    fireEvent.click(row);
-    expect(push).not.toHaveBeenCalled();
+    // The mailed path's row opens the request screen (DeleteAccount.md:3).
+    await waitFor(() => {
+      fireEvent.click(row);
+      expect(push).toHaveBeenCalledWith("/settings/delete");
+    });
   });
 
   it("an_applicants_delete_footnote_drops_the_mailed_link", async () => {
-    server.use(accountHandler({ accountState: "APPLICANT" }));
+    // Keyed on the server's path, never on the account state (OS-15).
+    server.use(deletionHandler("IMMEDIATE"));
+    renderSettings();
+    await waitFor(() =>
+      expect(screen.getByTestId("settings.ending.footnote")).toHaveTextContent(
+        /^Nothing is deleted here\. The next screen says what goes and what stays\.$/,
+      ),
+    );
+    fireEvent.click(screen.getByTestId("settings.ending.delete"));
+    expect(push).toHaveBeenCalledWith("/settings/delete");
+  });
+
+  it("a_locked_row_wears_the_locked_look_and_answers_with_a_snackbar", async () => {
+    server.use(deletionHandler("LOCKED"));
+    renderSettings();
+    const row = screen.getByTestId("settings.ending.delete");
+    await waitFor(() => expect(row).toHaveAttribute("aria-disabled", "true"));
+    expect(row.className).toContain("opacity-[var(--state-disabled)]");
+    // Still tappable: the tap is how it says why (Settings.md:175).
+    fireEvent.click(row);
+    expect(await screen.findByTestId("settings-snackbar")).toHaveTextContent(
+      "You can delete your account once your registration lands.",
+    );
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("the_lock_is_the_servers_never_the_account_states", async () => {
+    // An applicant the server reads BY_LINK (item 69's registered applicant)
+    // walks the mailed path; nothing here re-derives a lock.
+    server.use(accountHandler({ accountState: "APPLICANT" }), deletionHandler("BY_LINK"));
     renderSettings();
     await screen.findByTestId("settings.credentials.password.status");
-    expect(screen.getByTestId("settings.ending.footnote")).toHaveTextContent(
-      /^Nothing is deleted here\. The next screen says what goes and what stays\.$/,
+    await waitFor(() => {
+      fireEvent.click(screen.getByTestId("settings.ending.delete"));
+      expect(push).toHaveBeenCalledWith("/settings/delete");
+    });
+    expect(screen.getByTestId("settings.ending.delete")).not.toHaveAttribute("aria-disabled");
+  });
+
+  it("during_the_grace_the_row_counts_down_the_footnote_goes_and_the_band_rides", async () => {
+    server.use(
+      deletionHandler("BY_LINK", {
+        __typename: "AccountDeletion",
+        scheduledFor: new Date(Date.now() + 6 * 86_400_000).toISOString(),
+        includesContent: false,
+      }),
+    );
+    renderSettings();
+    expect(await screen.findByTestId("settings.ending.delete.status")).toHaveTextContent("Deletion in 6 days");
+    expect(screen.queryByTestId("settings.ending.footnote")).not.toBeInTheDocument();
+    expect(screen.getByTestId("settings.deletionBand.line")).toHaveTextContent("Your account is deleted in 6 days.");
+    fireEvent.click(screen.getByTestId("settings.ending.delete"));
+    // The grace page, never the request screen (SettingsDeleting.md:13).
+    expect(push).toHaveBeenCalledWith("/settings/delete/pending");
+  });
+
+  it("the_bands_cancel_restores_the_row_and_its_footnote", async () => {
+    server.use(
+      deletionHandler("BY_LINK", {
+        __typename: "AccountDeletion",
+        scheduledFor: new Date(Date.now() + 6 * 86_400_000).toISOString(),
+        includesContent: false,
+      }),
+      okMutation("CancelAccountDeletion", "AccountDeletionPayload", { accountDeletion: null }),
+    );
+    renderSettings();
+    fireEvent.click(await screen.findByTestId("settings.deletionBand.cancel"));
+    expect(await screen.findByTestId("deletion-snackbar")).toHaveTextContent(
+      "Canceled — your account stays, and nothing was deleted.",
+    );
+    expect(screen.queryByTestId("settings.deletionBand")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("settings.ending.delete.status")).not.toBeInTheDocument();
+    expect(screen.getByTestId("settings.ending.footnote")).toBeInTheDocument();
+  });
+
+  it("the_grace_pages_cancel_returns_with_the_canceled_snackbar", async () => {
+    search = new URLSearchParams("done=deletionCanceled");
+    renderSettings();
+    expect(await screen.findByTestId("settings-snackbar")).toHaveTextContent(
+      "Canceled — your account stays, and nothing was deleted.",
     );
   });
 
@@ -175,7 +264,8 @@ describe("the settings page", () => {
   it("header_stays_pinned_while_scrolling", async () => {
     renderSettings();
     const header = await screen.findByTestId("settings.header");
-    expect(header.parentElement).toHaveClass("sticky", "top-0");
+    // The header and its band are one block inside the pinned bar.
+    expect(header.closest(".sticky")).toHaveClass("sticky", "top-0");
   });
 
   it("carries no restore card and no collapsing top", async () => {
@@ -806,5 +896,131 @@ describe("signing out", () => {
     );
     // The delayed sign-out lands inside this test, never the next one's.
     await waitFor(() => expect(tokens.accessToken()).toBeNull());
+  });
+});
+
+describe("clearing data (B6)", () => {
+  const MADE_FOOTNOTE =
+    "Your key lives only in this browser. Clear CoGra's data here and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in.";
+  const NONE_FOOTNOTE =
+    "Your key lives only in this browser, and it has no recovery code yet. Clear CoGra's data here and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in.";
+
+  it("the_footnote_opens_on_the_key_with_a_code_made", async () => {
+    server.use(accountHandler());
+    renderSettings();
+    await screen.findByTestId("settings.backup.recovery.status");
+    expect(screen.getByTestId("settings.clearing.label")).toHaveTextContent("Clearing data");
+    expect(screen.getByTestId("settings.clearing.footnote")).toHaveTextContent(MADE_FOOTNOTE);
+    expect(screen.getByTestId("settings.clearing.erase")).toHaveTextContent("Erase everything from this browser");
+  });
+
+  it("the_footnote_drops_its_condition_with_no_code", async () => {
+    server.use(accountHandler({ keyBackupCreatedAt: null }));
+    renderSettings();
+    await screen.findByTestId("settings.backup.recovery.status");
+    expect(screen.getByTestId("settings.clearing.footnote")).toHaveTextContent(NONE_FOOTNOTE);
+  });
+
+  it("the_row_asks_first_and_nothing_is_erased_before_an_answer", async () => {
+    server.use(accountHandler({ keyBackupCreatedAt: null }));
+    const { identity, tokens, erase, leave } = renderSettings();
+    await screen.findByTestId("settings.backup.recovery.status");
+    fireEvent.click(screen.getByTestId("settings.clearing.erase"));
+    const dialog = await screen.findByTestId("settings.dialog");
+    expect(within(dialog).getByTestId("settings.dialog.title")).toHaveTextContent(
+      "Erase everything from this browser?",
+    );
+    expect(within(dialog).getByTestId("settings.dialog.body")).toHaveTextContent(
+      /^This browser holds the only copy of your key, and it has no recovery code\./,
+    );
+    // No code: Make a recovery code leads, the erase is the quiet answer, no Cancel.
+    expect(byNode("settings.dialog.recovery", "none")).toHaveTextContent("Make a recovery code");
+    expect(byNode("settings.dialog.erase", "none")).toHaveTextContent("Erase everything and sign out");
+    expect(within(dialog).queryByTestId("settings.dialog.cancel")).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(within(dialog).getByTestId("settings.dialog.title"));
+    expect(erase).not.toHaveBeenCalled();
+    expect(leave).not.toHaveBeenCalled();
+    expect(tokens.accessToken()).toBe("access-1");
+    expect(await identity.actorKey()).not.toBeNull();
+  });
+
+  it("with_a_code_made_the_erase_is_quiet_and_cancel_is_filled", async () => {
+    server.use(accountHandler());
+    renderSettings();
+    await screen.findByTestId("settings.backup.recovery.status");
+    fireEvent.click(screen.getByTestId("settings.clearing.erase"));
+    const dialog = await screen.findByTestId("settings.dialog");
+    expect(within(dialog).getByTestId("settings.dialog.body")).toHaveTextContent(
+      /^Your key is erased with everything else, and only your recovery code can bring it back/,
+    );
+    expect(within(dialog).getByTestId("settings.dialog.body")).toHaveTextContent(
+      "What you've seen comes back when you sign in.",
+    );
+    expect(byNode("settings.dialog.erase", "made")).toHaveTextContent("Erase everything and sign out");
+    expect(byNode("settings.dialog.cancel", "made")).toHaveTextContent("Cancel");
+    expect(within(dialog).queryByTestId("settings.dialog.recovery")).not.toBeInTheDocument();
+  });
+
+  it("the_erase_clears_this_browser_ends_the_session_and_lands_on_sign_in_without_a_snackbar", async () => {
+    let revoked = false;
+    server.use(
+      accountHandler(),
+      graphql.mutation("RevokeSession", () => {
+        revoked = true;
+        return HttpResponse.json({
+          data: {
+            revokeSession: {
+              __typename: "RevokeSessionPayload",
+              session: { __typename: "Session", id: "s1" },
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const { tokens, erase, leave } = renderSettings();
+    await screen.findByTestId("settings.backup.recovery.status");
+    fireEvent.click(screen.getByTestId("settings.clearing.erase"));
+    fireEvent.click(byNode("settings.dialog.erase", "made"));
+    await waitFor(() => expect(leave).toHaveBeenCalledWith("/login"));
+    // Revoked while a token still named the session, then wiped, then ended.
+    expect(revoked).toBe(true);
+    expect(erase).toHaveBeenCalledTimes(1);
+    expect(tokens.accessToken()).toBeNull();
+    expect(screen.queryByTestId("settings-snackbar")).not.toBeInTheDocument();
+  });
+
+  it("cancel_the_scrim_and_back_close_still_signed_in", async () => {
+    server.use(accountHandler());
+    const { tokens, erase } = renderSettings();
+    await screen.findByTestId("settings.backup.recovery.status");
+    fireEvent.click(screen.getByTestId("settings.clearing.erase"));
+    fireEvent.click(byNode("settings.dialog.cancel", "made"));
+    await waitFor(() => expect(screen.queryByTestId("settings.dialog")).not.toBeInTheDocument());
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByTestId("settings.clearing.erase")));
+
+    fireEvent.click(screen.getByTestId("settings.clearing.erase"));
+    fireEvent.click(await screen.findByTestId("settings.dialog"));
+    await waitFor(() => expect(screen.queryByTestId("settings.dialog")).not.toBeInTheDocument());
+
+    fireEvent.click(screen.getByTestId("settings.clearing.erase"));
+    const again = await screen.findByTestId("settings.dialog");
+    act(() => {
+      again.dispatchEvent(new Event("cancel", { cancelable: true }));
+    });
+    await waitFor(() => expect(screen.queryByTestId("settings.dialog")).not.toBeInTheDocument());
+    expect(erase).not.toHaveBeenCalled();
+    expect(tokens.accessToken()).toBe("access-1");
+  });
+
+  it("make_a_recovery_code_opens_the_code_and_stays_signed_in", async () => {
+    server.use(accountHandler({ keyBackupCreatedAt: null }));
+    const { tokens, erase } = renderSettings();
+    await screen.findByTestId("settings.backup.recovery.status");
+    fireEvent.click(screen.getByTestId("settings.clearing.erase"));
+    fireEvent.click(byNode("settings.dialog.recovery", "none"));
+    expect(push).toHaveBeenCalledWith("/settings/backup");
+    expect(erase).not.toHaveBeenCalled();
+    expect(tokens.accessToken()).toBe("access-1");
   });
 });

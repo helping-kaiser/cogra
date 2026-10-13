@@ -1,10 +1,19 @@
 "use client";
 
-// The chronological listing (roadmap "Slice 2"): every post,
-// newest-first in the graph's own landing order — deliberately not the
-// ranked feed. Reading needs no session (web.md "Routes"), so the
-// surface lives outside the (app) gate; only the write affordance
-// swaps on the auth phase.
+// The ranked feed (roadmap slice 3; ranked-feed packet §4.12): one ranking
+// of the reader's view — or the view they borrow — computed by the server's
+// ranker and held here whole; the list on screen is DERIVED from it on this
+// device (`lib/feed/ranked-feed.ts`) and hydrated a window at a time. It
+// replaced the chronological `posts` listing, which stood in as the feed's
+// order until the ranker shipped (§4.9). Reading needs no session (web.md
+// "Routes"), so the surface lives outside the (app) gate; only the write
+// affordance swaps on the auth phase.
+//
+// WHEN IT RANKS (CD-1, PR-55): at its first open in a page load — a cold
+// start always ranks — and when the reader pulls or retries. A return from the
+// background never does: nothing here listens for it. A sheet Done ranks only
+// when it changed the ranker's arguments; every other Done re-derives the held
+// answer locally (`feed-done.ts`).
 //
 // IT REMEMBERS WHERE THE READER WAS — the pages they had loaded and the place
 // they had reached — in `feed-memory.ts`, which says why an external store and
@@ -17,12 +26,17 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
 import { fetchBorrowedView, fetchMe, type BorrowedVantage } from "@/lib/api/auth-api";
-import { fetchPosts, type PostView } from "@/lib/api/content-api";
+import type { PostView } from "@/lib/api/content-api";
+import { fetchFeedRanking, fetchFeedWindow } from "@/lib/api/feed-api";
+import { failed, success } from "@/lib/api/outcome";
 import { appendDeduped } from "@/lib/api/pagination";
+import { onFeedDone } from "@/lib/feed/feed-done";
+import { RankedFeed, type FeedIo, type FeedWindow } from "@/lib/feed/ranked-feed";
+import { seenRecord } from "@/lib/history/seen-record";
 import { SEEN_ATTRIBUTE, useSeenTracker } from "@/lib/history/seen-tracker";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
-import { useAuthPhase } from "@/lib/session/provider";
+import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useRegistrationProgress } from "@/lib/signing/provider";
 import { onStanceSigned } from "@/lib/stance/signed-events";
@@ -161,15 +175,63 @@ export function FeedView({
   const progress = useRegistrationProgress();
   const noKeyYet = progress?.kind === "awaitingApproval" && !progress.keyAttached;
   const client = useApolloClient();
+  const guard = useAuthGuard();
   const phase = useAuthPhase();
+  const account = useActiveAccountId();
+  // THE READER — whose seen record cuts the feed, never whose view it ranks
+  // (§4.3): a borrowed view ranks the lender, and the reader's own seeing is
+  // still what is cut from it. Signed out, there is no reader and no record.
+  const reader = phase === "signedIn" ? account : null;
   const router = useRouter();
   const outcome = composeOutcomeOf(useSearchParams().get("compose"));
   const host = useScrollHost();
   // Read ONCE, at mount, through a lazy state initializer — the one thing
   // that may be read during render and never changes under it. What the feed
-  // left behind last time it was on screen; seeding the state below from it is
-  // what makes the pages come back on the FIRST render, before any paint.
-  const [remembered] = useState(recallFeed);
+  // left behind last time it was on screen for this reader; seeding the state
+  // below from it is what makes the pages come back on the FIRST render,
+  // before any paint.
+  const [remembered] = useState(() => recallFeed(reader));
+  // The held ranking. It outlives this mount through the memory, and a
+  // different reader gets a feed of their own (`feed-memory.ts`).
+  const feedRef = useRef<RankedFeed | null>(remembered?.feed ?? null);
+  const feedFor = useCallback((who: string | null): RankedFeed => {
+    if (feedRef.current === null || feedRef.current.reader !== who) {
+      feedRef.current = new RankedFeed(who);
+    }
+    return feedRef.current;
+  }, []);
+  // Whether this mount is still on screen. A ranking runs several reads in a
+  // row; once the feed has left, the rest of them are not asked at all.
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
+  // The reads the held ranking is handed per call (`ranked-feed.ts`).
+  const io = useMemo<FeedIo>(() => {
+    const gone = () => Promise.resolve(failed(new Error("the feed left the screen")));
+    return {
+      // CD-5: the borrowed vantage when there is one — a guest's, an
+      // applicant's, a member's before their first opinion — else the
+      // reader's own actor. Asked at every ranking, so the hand-over reads
+      // the own view from the next refresh (blessing 57).
+      resolveViewer: async () => {
+        if (!alive.current) return gone();
+        const borrowed = await guard.run(() => fetchBorrowedView(client));
+        if (borrowed.kind !== "success") return borrowed;
+        return success(borrowed.value?.id ?? reader);
+      },
+      rank: (viewer, args) => (alive.current ? fetchFeedRanking(client, viewer, args) : gone()),
+      hydrate: (ids) => (alive.current ? fetchFeedWindow(client, ids) : gone()),
+      seen: async () => {
+        await seenRecord.use(reader);
+        return seenRecord;
+      },
+      wanted: () => alive.current,
+    };
+  }, [client, guard, reader]);
   const [rememberedPlace] = useState(() => remembered?.place ?? null);
   const [posts, setPosts] = useState<readonly PostView[]>(remembered?.posts ?? []);
   const [endCursor, setEndCursor] = useState<string | null>(remembered?.endCursor ?? null);
@@ -215,50 +277,97 @@ export function FeedView({
   // for each one (see `restill` below).
   const [listEra, setListEra] = useState(0);
 
-  const refresh = useCallback((restill = false) => {
-    let cancelled = false;
-    void fetchPosts(client).then((outcome) => {
-      if (cancelled) return;
-      setLoading(false);
-      if (outcome.kind === "success") {
-        setTransportFault(null);
-        if (restill) {
-          // "WHEN the list holding feed.card refreshes -> feed.card.media.frame
-          // wears its clip's stored still again" (FeedCover.md:13; RULINGS
-          // "pull-to-refresh RESETS the reached-frame memory"). The session
-          // forgets the clips of the list as it stood and as it arrives, and
-          // the list's players are built anew — a played `<video>` keeps its
-          // frame for as long as it lives — on a stage that decides from
-          // empty, as a fresh list's does (the packet §3.2 rule 6).
-          clipMemory.forgetList(clipIdsOf([...postsNow.current, ...outcome.value.items]));
-          setListEra((era) => era + 1);
-        }
-        setPosts(outcome.value.items);
-        setEndCursor(outcome.value.endCursor);
-        setHasNextPage(outcome.value.hasNextPage);
-      } else {
-        setTransportFault("refresh");
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [client]);
+  // WHICH ASK IS CURRENT. A ranking, a pull and a Done can overlap; only the
+  // newest one's answer reaches the screen, and nothing lands after unmount.
+  const ask = useRef(0);
 
-  // A remembered feed is not re-fetched on arrival. A refresh takes no cursor,
-  // so it would answer with page one and throw away every page after it —
-  // which is the loss this whole file exists to stop. New posts arrive when the
-  // reader asks: the pull below, a Retry, or a reload.
+  /** Puts the derived list's first window on screen. */
+  const showFirst = useCallback((first: FeedWindow) => {
+    setPosts(first.items);
+    setEndCursor(first.hasMore ? String(first.next) : null);
+    setHasNextPage(first.hasMore);
+  }, []);
+
+  const refresh = useCallback(
+    (restill = false) => {
+      const mine = ++ask.current;
+      const feed = feedFor(reader);
+      void (async () => {
+        const ranked = await feed.refresh(io);
+        const first = ranked.kind === "success" ? await feed.window(0, io) : ranked;
+        if (!alive.current || mine !== ask.current) return;
+        setLoading(false);
+        if (first.kind === "success") {
+          setTransportFault(null);
+          if (restill) {
+            // "WHEN the list holding feed.card refreshes -> feed.card.media.frame
+            // wears its clip's stored still again" (FeedCover.md:13; RULINGS
+            // "pull-to-refresh RESETS the reached-frame memory"). The session
+            // forgets the clips of the list as it stood and as it arrives, and
+            // the list's players are built anew — a played `<video>` keeps its
+            // frame for as long as it lives — on a stage that decides from
+            // empty, as a fresh list's does (the packet §3.2 rule 6).
+            clipMemory.forgetList(clipIdsOf([...postsNow.current, ...first.value.items]));
+            setListEra((era) => era + 1);
+          }
+          showFirst(first.value);
+        } else {
+          // A failed ranking keeps the held snapshot on screen (§4.5): the
+          // fault rides above it, and nothing silently stands in for it.
+          setTransportFault("refresh");
+        }
+      })();
+    },
+    [feedFor, io, reader, showFirst],
+  );
+
+  // THE FIRST OPEN RANKS — once per reader per page load. A feed remembered
+  // for this reader is not ranked again on arrival: a navigation back finds
+  // the list it left, and so does a return from the background, which nothing
+  // here listens for (PR-55). New rows arrive when the reader asks: the pull
+  // below, a Retry, or a reload — which is a cold start, and always ranks.
+  // Nothing is asked while the session resolves: whose view and whose record
+  // are both the reader's to say.
+  const openedFor = useRef<string | null | undefined>(
+    remembered !== null ? remembered.feed.reader : undefined,
+  );
   useEffect(() => {
-    if (remembered !== null) return;
-    return refresh();
-  }, [refresh, remembered]);
+    if (phase === "resolving" || openedFor.current === reader) return;
+    openedFor.current = reader;
+    refresh();
+  }, [phase, reader, refresh]);
+
+  // A SHEET DONE (CD-1): the held ranking decides whether it ranks again or
+  // re-derives locally, and the derived list's first window replaces the one
+  // on screen. A re-derive asks the ranker nothing.
+  useEffect(
+    () =>
+      onFeedDone((staged) => {
+        const feed = feedRef.current;
+        if (feed === null) return;
+        const mine = ++ask.current;
+        void (async () => {
+          const done = await feed.done(staged, io);
+          if (done.kind === "success" && done.value === "nothing") return;
+          const first = done.kind === "success" ? await feed.window(0, io) : done;
+          if (!alive.current || mine !== ask.current) return;
+          if (first.kind === "success") {
+            setTransportFault(null);
+            showFirst(first.value);
+          } else {
+            setTransportFault("refresh");
+          }
+        })();
+      }),
+    [io, showFirst],
+  );
 
   // The pages, kept for the next mount. Written from an effect rather than
   // from each fetch so no path can set state and forget to record it.
   useEffect(() => {
-    if (loading) return;
-    rememberFeed({ posts, endCursor, hasNextPage });
+    const feed = feedRef.current;
+    if (loading || feed === null) return;
+    rememberFeed({ feed, posts, endCursor, hasNextPage });
   }, [loading, posts, endCursor, hasNextPage]);
 
   // The place, held against everything that lands late — `scroll-pin.ts` says
@@ -282,20 +391,29 @@ export function FeedView({
   }, [releasePin, refresh]);
   usePullToRefresh({ host, onPull, enabled: !commentsOpen });
 
+  // The next window of the derived list — a hydration, never a ranking: the
+  // order was fixed when the list was derived, and nothing in it moves while
+  // the reader scrolls (W-6).
   const loadMore = useCallback(async () => {
-    if (loadingMore || !hasNextPage) return;
+    const feed = feedRef.current;
+    if (loadingMore || !hasNextPage || endCursor === null || feed === null) return;
+    const mine = ask.current;
     setLoadingMore(true);
-    const outcome = await fetchPosts(client, endCursor);
+    const outcome = await feed.window(Number(endCursor), io);
+    if (!alive.current) return;
     setLoadingMore(false);
+    // A refresh or a Done that landed meanwhile replaced the list this page
+    // was cut from.
+    if (mine !== ask.current) return;
     if (outcome.kind === "success") {
       setTransportFault(null);
       setPosts((current) => appendDeduped(current, outcome.value.items));
-      setEndCursor(outcome.value.endCursor);
-      setHasNextPage(outcome.value.hasNextPage);
+      setEndCursor(outcome.value.hasMore ? String(outcome.value.next) : null);
+      setHasNextPage(outcome.value.hasMore);
     } else {
       setTransportFault("append");
     }
-  }, [client, endCursor, hasNextPage, loadingMore]);
+  }, [endCursor, hasNextPage, io, loadingMore]);
 
   // THE NEXT PAGE ARRIVES BECAUSE THE READER KEPT GOING (design readme §13, the
   // audit states): no Show more, no page numbers — nothing drawn at rest. The
@@ -331,6 +449,7 @@ export function FeedView({
             tab they are on from the bar, and the band's other half works. */}
         <CograBand
           node={{ path: "feed.band" }}
+          deletionBandNode={{ path: "feed.deletionBand" }}
           // The chats affordance (jakob 2026-09-01). A signed-out tap
           // opens the guest gate, the edge the canvas draws
           // (`graph.json` "FeedBare" → `GuestGate`); a signed-in tap

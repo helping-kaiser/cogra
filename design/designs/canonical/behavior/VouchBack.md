@@ -8,6 +8,16 @@ ALWAYS feed.vouchCard reads Vouch back to open the way from your side — your o
 
 ALWAYS feed.vouchCard reads Vouch back to open the way from your side — your opinion toward a deleted account, and your feed grows from it. Vouching opens the opinion control, set to a gentle default. GIVEN the member who vouched the account in deleted their account
 
+ALWAYS feed.vouchCard's act is feed.vouchCard.stance.anchor, the stance control's own face, at the end of its row of controls, with Got it leading the row
+
+ALWAYS feed.vouchCard.hint stands beside feed.vouchCard.stance.anchor and reads Tap the face to vouch back.
+
+ALWAYS feed.vouchCard.hint reads Tap the face to vouch back. GIVEN the member who vouched the account in deleted their account
+
+ALWAYS feed.vouchCard.stance.anchor.face is the hollow face, the account holding no opinion of the member who vouched it in
+
+ALWAYS feed.vouchCard.stance.anchor.face wears full ink on the card, never the muted resting treatment, the hollow glyph alone saying no opinion yet
+
 ALWAYS feed.vouchCard and its band claim no order between the vouch-back and any other opinion
 
 ALWAYS the band reads Browsing from @mira's view — your first opinion starts your own. GIVEN the member has signed no opinion yet
@@ -28,9 +38,11 @@ WHEN the account lands, its registration and the approving vouch both confirmed 
 
 ALWAYS acts staged during the application sign at the landing, one automatic batch, and never at the registration
 
-WHEN tap Vouch back GIVEN no vouch-back is kept -> the vouch-back pad blooms at the gentle default +0.10 / +0.10
+WHEN tap feed.vouchCard.stance.anchor GIVEN no vouch-back is kept -> the vouch-back pad blooms at the gentle default +0.10 / +0.10
 
-WHEN tap Vouch back GIVEN a vouch-back is kept on this device -> the vouch-back pad blooms holding the kept pick
+WHEN tap feed.vouchCard.stance.anchor GIVEN a vouch-back is kept on this device -> the vouch-back pad blooms holding the kept pick
+
+WHEN press and hold feed.vouchCard.stance.anchor -> the gentle default +0.10 / +0.10 signs as the vouch-back AND the ceremony opens, as it does from the pad AND NEVER the pad blooms
 
 ALWAYS feed.vouchCard reads as it does with nothing kept GIVEN a vouch-back is kept on this device
 

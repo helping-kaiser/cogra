@@ -1,12 +1,16 @@
 package com.cogra.feature.home
 
 import com.cogra.crypto.ActorKey
+import com.cogra.domain.AccountDeletionPath
 import com.cogra.domain.AccountState
 import com.cogra.domain.ActorRef
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserError
 import com.cogra.domain.UserProfile
+import com.cogra.domain.deletion.AccountDeletion
+import com.cogra.domain.deletion.AccountDeletionState
+import com.cogra.domain.deletion.DeletionStanding
 import com.cogra.domain.identity.KeyCeremony
 import com.cogra.domain.signing.RegistrationFlow
 import com.cogra.domain.signing.RegistrationSigner
@@ -14,6 +18,7 @@ import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.stance.StanceSignals
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.ScriptedAccountDeletionRepository
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingOnboardingRepository
 import com.cogra.domain.testing.ThrowingWriteRepository
@@ -31,6 +36,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.time.Instant
 
 private class ScriptedVantage : ThrowingAccountRepository() {
     var answer: Outcome<ActorRef?> = Outcome.Success(ActorRef("a1", "genesis_mod"))
@@ -83,8 +89,41 @@ class BorrowedViewViewModelTest {
         FakeTokenStore(),
     )
 
+    private val deletions = ScriptedAccountDeletionRepository()
+    private val deletionState = AccountDeletionState(deletions)
+
     private fun viewModel(signedIn: Boolean) =
-        BorrowedViewViewModel(account, registrationFlow(), signals).apply { onSession(signedIn) }
+        BorrowedViewViewModel(account, registrationFlow(), signals, deletionState).apply { onSession(signedIn) }
+
+    /**
+     * ER-G4 (`FeedDeleting.md:13`): while the account's confirmed deletion
+     * runs its grace, the deletion band stands and this one does not — and
+     * a cancel brings it back, the vantage never having been forgotten.
+     */
+    @Test
+    fun theDeletionBandWinsTheTopWhileTheGraceRuns() = runTest(dispatcher) {
+        account.answer = Outcome.Success(ActorRef("a1", "mira"))
+        val grace = AccountDeletion(Instant.parse("2030-01-01T00:00:00Z"), includesContent = false)
+        deletions.standing = Outcome.Success(DeletionStanding(AccountDeletionPath.BY_LINK, grace))
+        val viewModel = viewModel(signedIn = true)
+        deletionState.refresh()
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.yieldsToDeletion).isTrue()
+        assertThat(viewModel.state.value.vantage?.handle).isEqualTo("mira")
+
+        deletionState.cancel()
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.yieldsToDeletion).isFalse()
+    }
+
+    @Test
+    fun noDeletionLeavesTheBorrowedBandStanding() = runTest(dispatcher) {
+        account.answer = Outcome.Success(ActorRef("a1", "mira"))
+        val viewModel = viewModel(signedIn = true)
+        deletionState.refresh()
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.yieldsToDeletion).isFalse()
+    }
 
     /**
      * A signed-out reader's wording is settled by the session alone, so

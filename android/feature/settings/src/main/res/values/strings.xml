@@ -115,6 +115,72 @@
     <string name="settings_ending_delete">Delete account</string>
     <string name="settings_ending_footnote_member">Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.</string>
     <string name="settings_ending_footnote_applicant">Nothing is deleted here. The next screen says what goes and what stays.</string>
+    <!-- SettingsDeleting.md :5 — the band's own forward ladder. -->
+    <string name="settings_ending_deleting">Deletion in %1$s</string>
+    <!-- Settings.md :175 (reworded in design round 8); copy-voice "Deleting the account". -->
+    <string name="settings_ending_locked">You can delete your account once your registration lands.</string>
+    <!-- DeleteAccountCanceled.md :5 — never with Undo. -->
+    <string name="deletion_canceled">Canceled — your account stays, and nothing was deleted.</string>
+
+    <!-- DeleteAccount (DeleteAccount.jsx; copy-voice "Deleting the account"). -->
+    <string name="delete_account_title">Delete account</string>
+    <string name="delete_account_member_body">This takes your name off CoGra. What you signed stays on the graph, because it is other people\'s record as much as yours — what goes is everything that says it was you.</string>
+    <string name="delete_account_applicant_body">Nothing has landed yet — deleting removes your application and your account right away.</string>
+    <string name="delete_account_goes">What goes</string>
+    <string name="delete_account_goes_profile">Your profile — display name, bio and picture.</string>
+    <string name="delete_account_goes_link">The link between you and this account. Nothing left here points back to you.</string>
+    <string name="delete_account_goes_sessions">Your sessions, and what this account kept for you alone: saved items, hidden accounts, what you have read.</string>
+    <string name="delete_account_stays">What stays</string>
+    <string name="delete_account_stays_signed">Everything you signed, and everything others signed about you. Your posts still route and still credit their author; what is removed leaves a mark saying so.</string>
+    <string name="delete_account_sweep">Also remove what I posted</string>
+    <string name="delete_account_sweep_hint">The words and pictures go out of your posts and comments, each leaving its mark. Leave this off and they stay as you wrote them.</string>
+    <string name="delete_account_send">Send the confirmation link</string>
+    <string name="delete_account_sending">Sending the confirmation link…</string>
+    <string name="delete_account_note">Nothing is deleted until you open that link. After that it runs in seven days, and you can cancel from any device until it does.</string>
+    <string name="delete_account_delete">Delete my account</string>
+    <!-- DeleteAccount.md :37 (ER-G12). -->
+    <string name="delete_account_deleting">Deleting my account…</string>
+
+    <!-- DeleteAccountMail (DeleteAccountMail.jsx). -->
+    <string name="delete_mail_title">Check your mail</string>
+    <string name="delete_mail_body">We sent a link to %1$s. Opening it confirms the deletion and starts the seven days.</string>
+    <string name="delete_mail_note">Until you open it nothing is scheduled and nothing has changed. Closing this screen changes nothing either — the link is the whole of it.</string>
+    <string name="delete_mail_resend">Resend the link</string>
+    <string name="delete_mail_resending">Resending the link…</string>
+    <!-- DeleteAccountMail.md :13, naming the account's address. -->
+    <string name="delete_mail_resent">Sent again — the link is on its way to %1$s.</string>
+
+    <!-- DeleteAccountPending (DeleteAccountPending.jsx). -->
+    <string name="delete_pending_body">Your account is deleted in %1$s, on %2$s. Until then nothing has changed, and canceling keeps everything as it is.</string>
+    <string name="delete_pending_cancel">Cancel</string>
+    <string name="delete_pending_canceling">Canceling…</string>
+
+    <!-- DeleteAccountConfirmed (DeleteAccountConfirmed.jsx, .md :13-41). -->
+    <string name="delete_confirmed_title">Your account is deleted in %1$s</string>
+    <string name="delete_confirmed_title_content">Your account and everything you posted are deleted in %1$s</string>
+    <string name="delete_confirmed_body">That\'s %1$s. Until then nothing changes, and you can cancel from any device.</string>
+    <string name="delete_confirmed_add">Add it to the deletion</string>
+    <string name="delete_confirmed_adding">Adding it to the deletion…</string>
+    <string name="delete_confirmed_added">Added — what you posted goes too.</string>
+    <string name="delete_confirmed_feed">Go to the feed</string>
+    <string name="delete_confirmed_signed_out">You\'re not signed in here, and you don\'t need to be — the link was the proof.</string>
+
+    <!-- DeleteLinkExpired (DeleteLinkExpired.jsx, .md; ER-G1). The way on is back_to_settings or linked_sign_in. -->
+    <string name="delete_dead_title">This link doesn\'t work anymore</string>
+    <string name="delete_dead_body">It may have been used already, or a newer request replaced it. If you still mean to delete your account, ask again from settings.</string>
+
+    <!-- The Clearing data group: Settings.md :139-145, SettingsBody's `clearing` (android's words). -->
+    <string name="settings_clearing">Clearing data</string>
+    <string name="settings_clearing_footnote_made">Your key lives only in this app. Clear the app\'s data, or uninstall it without keeping the data, and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you\'re signed out. What you\'ve seen comes back when you sign in.</string>
+    <string name="settings_clearing_footnote_none">Your key lives only in this app, and it has no recovery code yet. Clear the app\'s data, or uninstall it without keeping the data, and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you\'re signed out. What you\'ve seen comes back when you sign in.</string>
+    <string name="settings_clearing_erase">Erase everything from this app</string>
+
+    <!-- EraseConfirm (EraseConfirm.md, android's words). -->
+    <string name="erase_confirm_title">Erase everything from this app?</string>
+    <string name="erase_confirm_body_none">This app holds the only copy of your key, and it has no recovery code. Erase everything and your account is gone for good — no one, including CoGra, can bring it back. Your draft, any kept picks and the choices kept on this device go too, and you\'re signed out.</string>
+    <string name="erase_confirm_body_made">Your key is erased with everything else, and only your recovery code can bring it back — without the code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you\'re signed out. What you\'ve seen comes back when you sign in.</string>
+    <string name="erase_confirm_erase">Erase everything and sign out</string>
+    <string name="erase_confirm_cancel">Cancel</string>
 
     <!-- SignOutConfirm -->
     <string name="sign_out_confirm_title">Sign out without a backup?</string>

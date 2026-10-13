@@ -3,11 +3,15 @@ package com.cogra.feature.settings
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cogra.domain.AccountDeletionPath
 import com.cogra.domain.AccountState
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
 import com.cogra.domain.SessionInfo
+import com.cogra.domain.deletion.AccountDeletion
+import com.cogra.domain.deletion.AccountDeletionState
+import com.cogra.domain.deletion.DeletionStanding
 import com.cogra.domain.identity.SignOut
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.settings.PendingEmailChange
@@ -58,6 +62,8 @@ data class SettingsUiState(
     val revokingOthers: Boolean = false,
     val signingOut: Boolean = false,
     val signOutConfirmOpen: Boolean = false,
+    /** `EraseConfirm` stands over the page; nothing is erased before an answer. */
+    val eraseConfirmOpen: Boolean = false,
     /** The default license sheet's staged pair; null when the sheet is closed. */
     val licenseSheet: LicenseChoice? = null,
     /** The optimistic default while its save is in flight (K4.1). */
@@ -66,7 +72,25 @@ data class SettingsUiState(
     val licenseFailed: LicenseChoice? = null,
     /** The account's `Always unveil sensitive content` — the account's, never this phone's. */
     val alwaysUnveil: Boolean = false,
+    /**
+     * Where the account stands on deletion: the server's path (OS-15) and
+     * the confirmed deletion in its grace. Null until the read answers.
+     */
+    val deletion: DeletionStanding? = null,
+    /** The band's Cancel is in flight. */
+    val cancelingDeletion: Boolean = false,
 ) {
+    /** The confirmed deletion in its grace, if one is: the band stands and the row counts down. */
+    val graceDeletion: AccountDeletion?
+        get() = deletion?.deletion
+
+    /**
+     * The row's locked look — exactly when neither deletion verb answers from
+     * here (`deletionPath == LOCKED`; an unknown path is the weaker claim).
+     */
+    val deletionLocked: Boolean
+        get() = deletion?.path == AccountDeletionPath.LOCKED || deletion?.path == AccountDeletionPath.UNKNOWN
+
     /** This device first, then the rest in the read's order — keyed 1..n by position. */
     val sessions: List<SessionInfo>
         get() = account?.sessions.orEmpty().sortedByDescending { it.isCurrent }
@@ -78,6 +102,10 @@ data class SettingsUiState(
     /** A change with a side still owed; one past its window is no change at all. */
     val pendingEmailChange: PendingEmailChange?
         get() = account?.pendingEmailChange?.takeIf { it.expiresAt.isAfter(now) }
+
+    /** A recovery code is known to exist; an unread account reads as none, the safe reading. */
+    val backupMade: Boolean
+        get() = account?.keyBackupCreatedAt != null
 
     /** The applicant before the key ceremony: no actor key is bound yet. */
     val beforeKeyCeremony: Boolean
@@ -101,6 +129,21 @@ sealed interface SettingsEvent {
 
     /** The dialog closed without signing out: focus returns to the Sign out row. */
     data object FocusSignOut : SettingsEvent
+
+    /** The erase dialog closed with nothing erased: focus returns to its row (EraseConfirm.md:23). */
+    data object FocusErase : SettingsEvent
+
+    /** The Delete account row opens [door]. */
+    data class OpenDeletion(val door: DeletionDoor) : SettingsEvent
+}
+
+/** Which screen the Delete account row opens. */
+enum class DeletionDoor {
+    /** No deletion in its grace: the request screen (`DeleteAccount.md:3`). */
+    REQUEST,
+
+    /** A confirmed deletion in its grace: the grace page (`SettingsDeleting.md:13`). */
+    PENDING,
 }
 
 @HiltViewModel
@@ -111,6 +154,7 @@ class SettingsViewModel @Inject constructor(
     private val identity: IdentityStore,
     private val device: DevicePreferences,
     private val sensitive: SensitiveContentChoice,
+    private val deletionState: AccountDeletionState,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsUiState())
@@ -140,10 +184,18 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             sensitive.alwaysUnveil.collect { on -> _state.update { it.copy(alwaysUnveil = on) } }
         }
+        // The account's deletion, as every surface reads it: a cancel pressed
+        // on the band anywhere takes it away here too.
+        viewModelScope.launch {
+            deletionState.standing.collect { standing ->
+                _state.update { it.copy(deletion = standing, now = clock()) }
+            }
+        }
     }
 
     /** Re-reads the account — on every arrival, so a subpage's change shows on return. */
     fun refresh() {
+        viewModelScope.launch { deletionState.refresh() }
         viewModelScope.launch {
             val keyHere = identity.actorSeed() != null
             val forget = identity.forgetOnSignOut()
@@ -328,6 +380,45 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    // ---------------------------------------------------- delete account
+
+    /**
+     * The Delete account row (Settings.md :36-40, SettingsDeleting.md :13):
+     * locked, it answers with the snackbar and opens nothing; in the grace it
+     * opens the grace page; otherwise the request screen. Nothing is ever
+     * deleted from the row. The path is the server's — never the application.
+     */
+    fun onDeleteAccount() {
+        val s = _state.value
+        viewModelScope.launch {
+            when {
+                s.deletionLocked -> _events.send(SettingsEvent.Snackbar(R.string.settings_ending_locked))
+                s.graceDeletion != null -> _events.send(SettingsEvent.OpenDeletion(DeletionDoor.PENDING))
+                else -> _events.send(SettingsEvent.OpenDeletion(DeletionDoor.REQUEST))
+            }
+        }
+    }
+
+    /**
+     * The band's Cancel (SettingsDeleting.md :15, :17): called off with no
+     * dialog; the band goes, the row reads `Delete account` again, the
+     * footnote returns, and the canceled snackbar — never with Undo. With no
+     * answer the network error answers and the deletion still stands.
+     */
+    fun onCancelDeletion() {
+        if (_state.value.cancelingDeletion) return
+        _state.update { it.copy(cancelingDeletion = true) }
+        viewModelScope.launch {
+            val outcome = deletionState.cancel()
+            _state.update { it.copy(cancelingDeletion = false) }
+            _events.send(
+                SettingsEvent.Snackbar(
+                    if (outcome is Outcome.Success) R.string.deletion_canceled else checkNotNull(faultOf(outcome)),
+                ),
+            )
+        }
+    }
+
     // ---------------------------------------------------------- sign out
 
     /**
@@ -370,6 +461,30 @@ class SettingsViewModel @Inject constructor(
 
     /** Make a recovery code: the dialog closes; the caller opens the backup, still signed in. */
     fun onMakeRecoveryCode() = _state.update { it.copy(signOutConfirmOpen = false) }
+
+    // ------------------------------------------------------- clearing data
+
+    /** `Erase everything from this app`: the dialog asks; nothing is erased yet (EraseConfirm.md:3). */
+    fun onErase() = _state.update { it.copy(eraseConfirmOpen = true) }
+
+    /**
+     * The dialog's erase (`:21`): the session revoked, everything on this
+     * phone erased in one edit, the session ended — the shell lands on
+     * sign-in with no account offered, and no snackbar answers.
+     */
+    fun onEraseEverything() {
+        _state.update { it.copy(eraseConfirmOpen = false, signingOut = true) }
+        viewModelScope.launch { signOut.eraseEverything() }
+    }
+
+    /** Cancel, the scrim or Back: still signed in, nothing erased, focus back on the row (`:23`-`:27`). */
+    fun onDismissEraseConfirm() {
+        _state.update { it.copy(eraseConfirmOpen = false) }
+        viewModelScope.launch { _events.send(SettingsEvent.FocusErase) }
+    }
+
+    /** Make a recovery code: the dialog closes; the caller opens the backup, still signed in (`:19`). */
+    fun onMakeRecoveryCodeFromErase() = _state.update { it.copy(eraseConfirmOpen = false) }
 
     private suspend fun endSession() {
         _state.update { it.copy(signingOut = true) }

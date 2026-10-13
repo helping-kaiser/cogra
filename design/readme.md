@@ -657,7 +657,10 @@ every refetch runs the whole personalized ranking with the current
 arguments and hands back the reordered list of ids — potentially
 thousands or millions, not twenty. Five taps must never mean five
 rankings, so the filter's chips stage, `Done` commits, and the feed
-re-queries once per visit. It stands until readers show otherwise: if
+re-queries at most once per visit — only when Kinds or the topic
+changed, the ranker's two arguments; every other axis is the device's
+own, re-derived from what the feed already holds (jakob 2026-10-13).
+It stands until readers show otherwise: if
 feedback says people expect collapsing the sheet to submit, the law is
 revisited (jakob 2026-10-01).
 
@@ -923,7 +926,7 @@ paper over:
   kind or counts them, and once the exceptions stop fitting the band's
   154px they collapse to a count ("3 kinds · 4 changes"), because a pill
   that overflows has told the reader nothing
-  and "far from the default" is the fact that matters there. It stages, and `Done` commits — one re-query per visit (§4, *Sheets*) — and
+  and "far from the default" is the fact that matters there. It stages, and `Done` commits — at most one re-query per visit, and only for Kinds or the topic (§4, *Sheets*) — and
   switching every kind off is allowed: the feed says what is off rather
   than the chip refusing the tap. No glyph on the trigger: there is no
   filter icon in the inlined set, and an icon could not say "newest".
@@ -1507,6 +1510,22 @@ may serve any actor's view of the shared record to any reader. So:
   than any single rung: a reader should be shown the nearest real
   perspective the arrival carries, and genesis is what is left when the
   arrival carries none.
+- **The reader looks through the vantage's eyes** (jakob 2026-10-13,
+  the vantage law). Under a borrowed view the reader gets the vantage
+  account's whole read: its rank, the people it holds an opinion of —
+  the people narrowing and every row's mark — and the topics it holds.
+  What stays the reader's is theirs alone: the seen list, the hidden
+  accounts, the kept picks and the choices kept on the device, the
+  feed's filter and the Settings default among them; and, by *Only a
+  nobody borrows stances* (stance-control), every face a signed-in
+  reader can act on. Every first-person readout of the vantage's read
+  speaks its name, the band's way — `@mira's people`, `as far as
+  @mira's eyes reach` — and a control whose words outgrow it falls back
+  on its own overflow law, the trigger's collapse to a count among
+  them. A control with no overflow law that a long handle breaks falls
+  back to *their*, as a flagged exception for jakob. The law holds for
+  any vantage: the guest's and the applicant's today, a vantage the
+  reader chooses later.
 
 To port to the product docs as an open-questions resolution.
 
@@ -3534,8 +3553,7 @@ it a home. Ruled by jakob the same day (backlog item 20).
   bottom bar and the back arrow goes where the gear was. The board draws
   the whole scroll: the ruling this round records is an order, and an
   order cut off at 844px is an order nobody can review. (Later rounds
-  add People, About and Delete account — eleven groups; `SettingsBody`
-  draws the current order.)
+  add groups; `SettingsBody` draws the current order.)
 - **`SettingsGroup` and `SettingsRow` are the anatomy**, minted here
   because eight groups improvising eight layouts is the page the ruling
   asked us to leave behind. A quiet heading above, a filled card of
@@ -9361,7 +9379,7 @@ jakob's rulings on the implementation side's contract-recon gaps (seam
   with the registration, so the band never stands.
 - **An approved applicant cannot delete during the landing**: the row
   wears the locked look and answers `You can delete your account once
-  you're in.`
+  your registration lands.`
 - **The release is named CoGra v1.0.0** across the design prose.
 
 ### The night rulings executed — 2026-10-06
@@ -9815,6 +9833,115 @@ boards already draw; nothing on any board moved.
 - **The gate**: screens and edges unchanged; the registry **75 / 2928 →
   91 / 3401**, sixteen boards and 473 paths added, nothing removed or
   changed.
+
+### Round 8, the settings round — 2026-10-13
+
+jakob's settings-round GO (seam 165): the deletion row re-keyed to the
+server's read, the deleted account's row drawn in Hidden accounts, and a
+new group saying what clearing the stored data erases. The new words are
+drafted and wait for his review (copy-voice marks them).
+
+- **The deletion row reads `User.deletionPath`** (OS-15; ER-G18), one
+  value the server computes, never the application's fields — a lapsed
+  vouch clears the approval while the address stays funded, so a row
+  read from the application would unlock where the server refuses.
+  `BY_LINK` takes the mailed-link footnote and opens the request,
+  `IMMEDIATE` the applicant's footnote, and `LOCKED` (funded,
+  Registration not yet landed) the applicant's footnote under the
+  locked look. `DeleteAccount`'s two bodies key the same way: `BY_LINK`
+  draws the member's body, which is true of an applicant whose
+  Registration landed too, and `IMMEDIATE` the applicant's. The reader
+  chips keep their `member` and `applicant` values.
+- **A deleted account's row is drawn in Hidden accounts** (ruling 56):
+  `ContentRow`'s `redacted` row, last because it was hidden longest
+  ago, with the hiding's moment and `Unhide`. It has no handle, so it
+  is its own node, `redactedAccount`, keyed by the actor's id — the
+  `account` rule names the handle and is never reworded.
+- **Clearing data** stands after Key backup. Its footnote leads with the
+  key and names the account (jakob: "Even more emphasis on KEY. if they
+  miss it their account is gone for good"): the key lives only here,
+  clearing erases it, and without the recovery code the account is gone
+  for good. The draft, any kept picks and the choices kept on the device
+  follow, and the seen list last — it comes back on sign-in (PR-52), so
+  the words never call it lost. On Android the system's own "Clear data"
+  becomes "Manage space" and opens settings at this group
+  (`manageSpaceActivity`), and the uninstall dialog offers to keep the
+  data (`hasFragileUserData`).
+- **The wipe is the group's one row** (jakob: "Settings needs the wipe
+  everything from this device yes. ofcourse with warnings and stuff"):
+  `Erase everything from this browser` (`…from this app`), an action row
+  as quiet as `Sign out`. It raises `EraseConfirm`, a think-twice dialog
+  drawn once per backup state: with no code, `Make a recovery code` leads
+  filled and the erase is the quiet answer; with a code, the destructive
+  dialog's own shape, the erase quiet on the left and `Cancel` filled on
+  the right. The erase clears the key, the draft, the kept picks, the
+  choices kept on the device and the seen cache, ends the session and
+  lands on the sign-in screen with no account offered. So "Manage space"
+  ends at a real erase, behind the warning.
+- **The locked deletion row answers `You can delete your account once
+  your registration lands.`** — deletion opens at the registration
+  (`BY_LINK`), which can come before the vouch lets the applicant in.
+- **The whole-page frames fit their page again.** `Settings`,
+  `SettingsDeleting` and `SettingsEmailPending` had been cutting off
+  the page's end since later rounds lengthened it (the Sensitive
+  content group among them); each frame now holds its whole scroll, and
+  the profile canvas's rows below `Settings` moved down to make room.
+- **The gate**: one board joins (`EraseConfirm`), edges **2031 → 2036**
+  (`Settings`' row and `EraseConfirm`'s four answers); the registry
+  **91 / 3401 → 92 / 3590** — six `redactedAccount` paths on
+  `SettingsHidden`, `settings.clearing` with its label, footnote and
+  row on the eight boards that register the page, and `EraseConfirm`
+  joining with 143; one key rule joins, nothing removed or changed.
+
+### Round 9, the rulings fold — 2026-10-13
+
+jakob's morning words (seam 165) and the deletion lane's undrawn answer
+(seam 173), drawn as one round. The words he did not write himself are
+drafted and wait for his review (copy-voice marks each).
+
+- **The vouch card's act is the stance face.** `VouchBack` and
+  `VouchBackPad` draw `StanceControl`'s anchor at the end of the card's
+  row, `Got it` leading it, and one line against the face, `Tap the face
+  to vouch back.` (jakob's own) — on the deleted voucher's card too, and
+  with no first-opinion words, which stay the band's. The tap blooms the
+  vouch-back pad, holding a kept pick where there is one; the hold signs
+  the gentle default and the ceremony opens, as from the profile's
+  anchor. The card's reading lines keep their words.
+- **The borrowed view is the vantage's whole read** (*Guest and applicant
+  feeds borrow a vantage point*). The filter sheet speaks it by name
+  under a borrowed view — `@mira's people`, `as far as @mira's eyes
+  reach`, Ranked's `closest to @mira first — the view you're browsing
+  from`, the topics `@mira holds` — and the trigger's extra collapses to
+  the count past its 154px like any other. A guest's wide anchor reads
+  `@genesismod's opinion` beside the hollow face, falling back to
+  `Their opinion` where the name outgrows it: a flagged exception, and
+  on a profile it fires for most handles (backlog item 139).
+- **The sweep.** Already third person under a borrowed view: the trace,
+  its steps, folds and records, and a guest anchor's spoken name. The
+  reader's own, so first person by the law: the seen toggle, the kinds'
+  line, Also show, Reset, the filter's "?", Settings' default sheet, the
+  hidden-account snackbars, an applicant's waiting-opinion snackbars,
+  the vouch card's body, History, Saved, Notifications and the own
+  profile. Explore never borrows — the band never stands there, a guest
+  has no Your topics, and an applicant's lists are their own. The trace's
+  `Why this reached you` stays: the thing did reach the reader.
+- **Done re-queries only for Kinds or the topic.** A Done whose staged
+  changes are all the device's own — the people row and its sign, the
+  order, the seen toggle, the kinds of post, Sensitive, Removed, Still
+  settling — re-derives from what the feed holds and never re-queries;
+  the status message, the trigger's new name and the focus return are
+  unchanged.
+- **The deletion mail's resend answers.** `Sent again — the link is on
+  its way to sol@solferreira.art.`, the email change's resend register.
+- **Smaller trues**: `TagPage`'s guest line wears the borrowed stance
+  ruled 2026-10-06, as `GuestGate` and `FeedBare` already did.
+- **The gate**: edges unchanged at **2036** — the button's edge is the
+  face's now, its one outcome four: the pad, the ceremony, and the
+  hold's two row answers; the registry **92 / 3590 → 92 / 3594** —
+  `feed.vouchCard.stance`, `.stance.anchor` and `.stance.anchor.face`
+  join `VouchBack`, `feed.vouchCard.hint` joins both boards, and
+  `feed.vouchCard.vouch` is removed with the button it named (jakob's
+  ruling, seam 165).
 
 ---
 

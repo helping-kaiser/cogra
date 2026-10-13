@@ -26,12 +26,22 @@
 
    REGISTERED under the `settings` prefix (design ⇄ impl seam 059/061, the Hide
    packet): the page is `Settings`', and the sheet is `hiddenSheet`, its rows
-   `account`s keyed by the hidden person's handle. */
+   `account`s keyed by the hidden person's handle.
+
+   A DELETED ACCOUNT STAYS HIDDEN, AND ITS ROW IS DRAWN (jakob 2026-10-07,
+   HA-3 / ruling 56; the settings round, 2026-10-13). Hiding acts on an actor,
+   and a redacted actor still ranks, so its row stays until it is unhidden:
+   `ContentRow`'s `redacted` — the reserved disc, `Deleted account` in the
+   system's voice, no aside — with the hiding's moment and `Unhide` like any
+   other row. It has no handle to key by, so it is its own node,
+   `redactedAccount`, keyed by the actor's id (ruling 56(c)): `account`'s key
+   rule names the handle, and a registered rule is never reworded. It stands
+   last because it was hidden longest ago, and the page beneath counts it. */
 export const NODE = "settings";
 export function Screen() {
   return (
     <>
-      <SettingsBody />
+      <SettingsBody hidden="4" />
 
       <BottomSheet open ariaLabel="Hidden accounts" maxHeight="88%" node="hiddenSheet">
         <SheetTitle node="title">Hidden accounts</SheetTitle>
@@ -83,6 +93,20 @@ export function Screen() {
             }
             node="account"
             nodeKey="tobias"
+          />
+          <ContentRow
+            variant="chronicle"
+            inert
+            chevron={false}
+            redacted
+            second="Hidden 21.07.2026"
+            trailing={
+              <InlineAction onClick={() => {}} node="unhide">
+                Unhide
+              </InlineAction>
+            }
+            node="redactedAccount"
+            nodeKey="3f2b8c1e-7d4a-4e9b-a1c6-5e8f0d2b9a74"
           />
         </div>
       </BottomSheet>

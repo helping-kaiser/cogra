@@ -94,7 +94,7 @@ export function TopicView({ name }: { name: string }) {
   useSeenTracker({ root: host, list: listRef, ids: seenIds });
 
   const header = (
-    <PageHeader backHref="/feed" backScroll={false} backLabel="Back to feed" backTestId="topic-back" />
+    <PageHeader backHref="/feed" backScroll={false} backLabel="Back to feed" backTestId="topic-back" inGutter />
   );
 
   if (loading) {

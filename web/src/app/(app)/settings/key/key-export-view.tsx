@@ -111,6 +111,7 @@ export function KeyExportView({
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-6 pb-12 pt-3">
       <PageHeader
+        inGutter
         title="Your key"
         backHref="/settings"
         backLabel="Back to settings"

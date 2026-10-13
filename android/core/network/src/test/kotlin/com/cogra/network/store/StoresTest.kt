@@ -81,6 +81,30 @@ class StoresTest {
     private suspend fun Stores.signIn(account: String) =
         tokens.save(AuthTokens("a-$account", "r-$account", account))
 
+    /**
+     * Erase everything from this app (EraseConfirm.md:21): every account's
+     * slot, the device's choices, the tokens, and the seen record with its
+     * watermark — one value under `seen_record:<account>` (PR-52) — in one edit.
+     */
+    @Test
+    fun eraseEverythingEmptiesTheWholeStore() = runTest {
+        val store = store()
+        val stores = Stores(store)
+        stores.signIn("u1")
+        stores.identity.saveActorSeed(ActorKey.generate().seed())
+        stores.signIn("u2")
+        stores.identity.saveActorSeed(ActorKey.generate().seed())
+        DevicePreferencesImpl(store).setTheme(ThemeChoice.DARK)
+        store.put("seen_record:u2", "{\"ids\":[\"n1\"],\"watermark\":null}".encodeToByteArray())
+        assertThat(store.names("")).isNotEmpty()
+
+        DeviceDataImpl(store).eraseEverything()
+
+        assertThat(store.names("")).isEmpty()
+        assertThat(stores.tokens.current()).isNull()
+        assertThat(DevicePreferencesImpl(store).theme.first()).isEqualTo(ThemeChoice.AUTO)
+    }
+
     @Test
     fun tokensOverwriteAndClear() = runTest {
         val tokens = TokenStoreImpl(store())

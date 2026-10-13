@@ -1,6 +1,6 @@
 # DeleteAccountMail · `spec:design:behavior-delete-account-mail`
 
-WHEN press Send the confirmation link GIVEN the reader is a member -> the request is recorded with its content-sweep choice AND a confirmation link is mailed to the account's address AND the mail screen opens AND NEVER anything is scheduled AND NEVER anything is deleted
+WHEN press Send the confirmation link GIVEN User.deletionPath reads BY_LINK -> the request is recorded with its content-sweep choice AND a confirmation link is mailed to the account's address AND the mail screen opens AND NEVER anything is scheduled AND NEVER anything is deleted
 
 ALWAYS the mail screen names the address the link went to
 
@@ -10,9 +10,9 @@ ALWAYS the mail screen claims no expiry for the link
 
 ALWAYS no deletion band stands GIVEN the deletion is requested and not yet confirmed
 
-WHEN tap Resend the link -> a fresh message goes to the same address, carrying the request's recorded content-sweep choice AND NEVER anything is scheduled
+WHEN tap Resend the link -> a fresh message goes to the same address, carrying the request's recorded content-sweep choice AND the snackbar reads Sent again — the link is on its way to, then the account's address, as Sent again — the link is on its way to sol@solferreira.art. AND NEVER anything is scheduled AND NEVER a dialog asks
 
-WHEN tap Resend the link GIVEN the deletion's mail budget is spent -> the line Too many tries. Wait a little, then try again. stands above Resend the link AND Resend the link stays AND NEVER a message is sent
+WHEN tap Resend the link GIVEN the deletion's mail budget is spent -> the line Too many tries. Wait a little, then try again. stands above Resend the link AND Resend the link stays AND NEVER a message is sent AND NEVER the snackbar reads Sent again
 
 ALWAYS the settings Delete account row carries no status GIVEN a deletion is requested and not yet confirmed
 
