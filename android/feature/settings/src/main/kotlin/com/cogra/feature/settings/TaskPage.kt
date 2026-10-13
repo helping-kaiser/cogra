@@ -36,6 +36,9 @@ import com.cogra.domain.has
  * and note. THE PAGE SCROLLS with its commit in flow — readme §4's "two
  * placements": task pages put the commit after the last field (K6, the
  * executed law over the K13 digest's pinned CTA).
+ *
+ * The deletion band, while the account's confirmed deletion runs its grace,
+ * sits directly under the pinned header, full-bleed (`FeedDeleting.md:3-5`).
  */
 @Composable
 internal fun TaskPage(
@@ -45,16 +48,20 @@ internal fun TaskPage(
     title: String,
     lead: String,
     snackbar: SnackbarHostState = remember { SnackbarHostState() },
+    deletionBand: @Composable () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Scaffold(
         modifier = Modifier.dataNodeSurface(),
         topBar = {
-            PageHeader(
-                onBack = onBack,
-                backContentDescription = backLabel,
-                node = node / "header",
-            )
+            Column {
+                PageHeader(
+                    onBack = onBack,
+                    backContentDescription = backLabel,
+                    node = node / "header",
+                )
+                deletionBand()
+            }
         },
         snackbarHost = { CograSnackbarHost(snackbar, testTag = "${node.path}_snackbar") },
     ) { padding ->

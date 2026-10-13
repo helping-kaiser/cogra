@@ -274,6 +274,7 @@ export function PostView({
   const header = (menu: readonly MenuItem[] | null) => (
     <div className="sticky top-0 z-10 -mx-6 bg-surface px-6" data-testid="post-header-bar">
       <PageHeader
+        inGutter
         backHref="/feed"
         // The feed restores the place the reader left it in; scrolling it to
         // the top would land on top of that restore.

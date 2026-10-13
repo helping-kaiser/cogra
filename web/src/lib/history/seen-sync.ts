@@ -41,6 +41,16 @@ export function claimSync(account: string): boolean {
   return true;
 }
 
+/**
+ * A don't-remember sign-out's drop of `account`'s record and watermark. The
+ * claim goes with them: the sign-in that follows in this same page load must
+ * re-seed from the server's view log, not wait for a reload.
+ */
+export async function forgetSeen(record: SeenRecord, account: string): Promise<void> {
+  claimed.delete(account);
+  await record.forget(account);
+}
+
 /** Forget every claim — module state, reset per test. */
 export function resetSeenSyncForTests(): void {
   claimed = new Set();

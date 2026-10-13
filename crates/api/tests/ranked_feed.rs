@@ -1137,6 +1137,20 @@ async fn settling_content(
     p: (f64, f64),
     secs: i64,
 ) -> Uuid {
+    settling_content_as(pool, Uuid::new_v4(), handle, seq, parent, p, secs).await
+}
+
+/// `settling_content` with the node's id chosen, for fixtures that order by
+/// id bytes.
+async fn settling_content_as(
+    pool: &PgPool,
+    id: Uuid,
+    handle: &str,
+    seq: u64,
+    parent: Option<Uuid>,
+    p: (f64, f64),
+    secs: i64,
+) -> Uuid {
     let author = actor_id(pool, handle).await;
     let family = if parent.is_some() {
         Family::Review
@@ -1145,7 +1159,6 @@ async fn settling_content(
     };
     let act = act(handle, seq, family);
     let node = NodeId::Mint(act.clone()).to_string();
-    let id = Uuid::new_v4();
     let mut tx = pool.begin().await.expect("tx");
     match parent {
         None => content::insert_post(
@@ -1807,6 +1820,34 @@ async fn a_settling_candidates_author_rides_in_the_slices_prof_form(pool: PgPool
         node_ids(&full_slice(&rig, f.viewer).await).contains(&author),
         "{author} is the slice's own node"
     );
+}
+
+/// Equal settling keys (same author, same stance parameters) have nothing
+/// but the provisional tie-break to order them (PR-66): the relay sends the
+/// candidates newest `authoredAt` first, then by node id bytes. The fixture
+/// pins both halves: the oldest candidate has the lowest id, so an id-only
+/// order would lead with it, and three candidates share one instant, so
+/// only the id bytes order them.
+///
+/// Equal settling keys break by newest authoring instant, then by id bytes.
+/// ´claim:relay:equal-settling-keys-break-by-authored-at-then-id´
+#[sqlx::test(migrations = "../../migrations")]
+async fn equal_settling_keys_break_by_authored_at_then_id(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    let f = fixture(&rig.pool).await;
+    let id = |byte: u8| Uuid::from_bytes([byte; 16]);
+    let (oldest, high, low, mid) = (id(0x01), id(0xff), id(0x02), id(0x03));
+    let same = (0.5, 0.5);
+    settling_content_as(&rig.pool, oldest, "a", 20, None, same, 3).await;
+    settling_content_as(&rig.pool, high, "a", 21, None, same, 9).await;
+    settling_content_as(&rig.pool, low, "a", 22, None, same, 9).await;
+    settling_content_as(&rig.pool, mid, "a", 23, None, same, 9).await;
+    rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    let sent: Vec<Uuid> = sent_candidates(&pod)
+        .iter()
+        .map(|c| c["ref"].as_str().expect("ref").parse().expect("uuid"))
+        .collect();
+    assert_eq!(sent, vec![low, mid, high, oldest]);
 }
 
 /// The pod's parameters for the relay: kinds and the topic, the network

@@ -96,9 +96,31 @@ describe("DeleteAccountMail", () => {
       }),
     );
     renderScreen();
-    fireEvent.click(await screen.findByTestId("deleteAccount.resend"));
+    await screen.findByTestId("deleteAccount.body");
+    fireEvent.click(screen.getByTestId("deleteAccount.resend"));
     await waitFor(() => expect(input).toEqual({ includeContent: true }));
     expect(push).not.toHaveBeenCalled();
+    // DeleteAccountMail.md:13 — the snackbar names the account's address.
+    expect(await screen.findByTestId("delete-account-mail-snackbar")).toHaveTextContent(
+      "Sent again — the link is on its way to sol@solferreira.art.",
+    );
+  });
+
+  it("a_spent_mail_budget_says_too_many_tries_above_resend_and_sends_nothing", async () => {
+    server.use(
+      graphql.mutation("RequestAccountDeletion", () =>
+        HttpResponse.json({ data: null, errors: [{ message: "x", extensions: { code: "RATE_LIMITED" } }] }),
+      ),
+    );
+    renderScreen();
+    await screen.findByTestId("deleteAccount.body");
+    fireEvent.click(screen.getByTestId("deleteAccount.resend"));
+    // DeleteAccountMail.md:15 — the line above Resend, which stays; never the Sent-again snackbar.
+    expect(await screen.findByTestId("commit-fault")).toHaveTextContent(
+      "Too many tries. Wait a little, then try again.",
+    );
+    expect(screen.getByTestId("deleteAccount.resend")).toHaveTextContent("Resend the link");
+    expect(screen.queryByText(/Sent again/)).not.toBeInTheDocument();
   });
 
   it("resending_reads_late_after_200ms", async () => {

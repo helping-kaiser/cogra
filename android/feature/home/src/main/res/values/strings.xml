@@ -11,7 +11,7 @@
     <string name="vouch_card_title">@%1$s vouched you in</string>
     <string name="vouch_card_body">Vouch back to open the way from your side — your opinion toward @%1$s, and your feed grows from it. Vouching opens the opinion control, set to a gentle default.</string>
     <string name="vouch_card_got_it">Got it</string>
-    <string name="vouch_card_vouch_back">Vouch back</string>
+    <string name="vouch_card_hint">Tap the face to vouch back.</string>
     <string name="vouch_card_put_away_failed">That didn\'t go through.</string>
     <string name="vouch_card_retry">Retry</string>
     <!-- The deletion band's Cancel (FeedDeleting.md :19-21; copy-voice

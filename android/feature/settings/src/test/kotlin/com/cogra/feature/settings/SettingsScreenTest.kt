@@ -75,8 +75,8 @@ class SettingsScreenTest {
     fun `groups_stand_in_the_ruled_order`() {
         render()
         val order = listOf(
-            "theme", "stance", "writing", "reading", "people", "sensitive", "backup", "sessions", "credentials",
-            "about", "leaving", "ending",
+            "theme", "stance", "writing", "reading", "people", "sensitive", "backup", "clearing", "sessions",
+            "credentials", "about", "leaving", "ending",
         ).map { top("settings.$it") }
         assertThat(order).isInStrictOrder()
     }
@@ -508,6 +508,87 @@ class SettingsScreenTest {
         node("settings.dialog.recovery").performClick()
         node("settings.dialog.erase").performClick()
         assertThat(recovery).isEqualTo(1)
+        assertThat(erase).isEqualTo(1)
+    }
+
+    // ------------------------------------------------- clearing data (B6)
+
+    @Test
+    fun `the_clearing_footnote_opens_on_the_key_with_a_code_made`() {
+        render()
+        node("settings.clearing.footnote").performScrollTo().assertTextEquals(
+            "Your key lives only in this app. Clear the app's data, or uninstall it without keeping the data, " +
+                "and the key is erased with it — without your recovery code, your account is gone for good. " +
+                "Your draft, any kept picks and the choices kept on this device go too, and you're signed out. " +
+                "What you've seen comes back when you sign in.",
+        )
+        node("settings.clearing.label").assertTextEquals("Clearing data")
+        node("settings.clearing.erase.label").assertTextEquals("Erase everything from this app")
+    }
+
+    @Test
+    fun `the_clearing_footnote_drops_its_condition_with_no_code`() {
+        render(SettingsUiState(account = account(keyBackupCreatedAt = null), now = NOW))
+        node("settings.clearing.footnote").performScrollTo().assertTextEquals(
+            "Your key lives only in this app, and it has no recovery code yet. Clear the app's data, or " +
+                "uninstall it without keeping the data, and the key is erased with it — your account is gone " +
+                "for good. Your draft, any kept picks and the choices kept on this device go too, and you're " +
+                "signed out. What you've seen comes back when you sign in.",
+        )
+    }
+
+    @Test
+    fun `the_erase_row_raises_the_dialog_and_nothing_else`() {
+        var asked = 0
+        render(actions = SettingsActions(onErase = { asked++ }))
+        node("settings.clearing.erase").performScrollTo().performClick()
+        assertThat(asked).isEqualTo(1)
+    }
+
+    @Test
+    fun `with_no_code_the_erase_dialog_leads_with_the_code`() {
+        var recovery = 0
+        var erase = 0
+        render(
+            SettingsUiState(account = account(keyBackupCreatedAt = null), now = NOW, eraseConfirmOpen = true),
+            actions = SettingsActions(
+                onMakeRecoveryCodeFromErase = { recovery++ },
+                onEraseEverything = { erase++ },
+            ),
+        )
+        node("settings.dialog.title").assertTextEquals("Erase everything from this app?")
+        node("settings.dialog.title").assertIsFocused()
+        node("settings.dialog.body").assertTextEquals(
+            "This app holds the only copy of your key, and it has no recovery code. Erase everything and your " +
+                "account is gone for good — no one, including CoGra, can bring it back. Your draft, any kept " +
+                "picks and the choices kept on this device go too, and you're signed out.",
+        )
+        assertThat(compose.onAllNodesWithTag("settings.dialog.cancel:none").fetchSemanticsNodes()).isEmpty()
+        compose.onNodeWithTag("settings.dialog.recovery:none").assertTextEquals("Make a recovery code").performClick()
+        compose.onNodeWithTag("settings.dialog.erase:none").assertTextEquals("Erase everything and sign out")
+            .performClick()
+        assertThat(recovery).isEqualTo(1)
+        assertThat(erase).isEqualTo(1)
+    }
+
+    @Test
+    fun `with_a_code_made_the_erase_is_quiet_and_cancel_is_filled`() {
+        var erase = 0
+        var cancel = 0
+        render(
+            SettingsUiState(account = account(), now = NOW, eraseConfirmOpen = true),
+            actions = SettingsActions(onEraseEverything = { erase++ }, onDismissEraseConfirm = { cancel++ }),
+        )
+        node("settings.dialog.body").assertTextEquals(
+            "Your key is erased with everything else, and only your recovery code can bring it back — without " +
+                "the code, your account is gone for good. Your draft, any kept picks and the choices kept on " +
+                "this device go too, and you're signed out. What you've seen comes back when you sign in.",
+        )
+        assertThat(compose.onAllNodesWithTag("settings.dialog.recovery:made").fetchSemanticsNodes()).isEmpty()
+        compose.onNodeWithTag("settings.dialog.cancel:made").assertTextEquals("Cancel").performClick()
+        compose.onNodeWithTag("settings.dialog.erase:made").assertTextEquals("Erase everything and sign out")
+            .performClick()
+        assertThat(cancel).isEqualTo(1)
         assertThat(erase).isEqualTo(1)
     }
 

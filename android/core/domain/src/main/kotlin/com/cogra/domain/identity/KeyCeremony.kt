@@ -21,6 +21,7 @@ import com.cogra.domain.map
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
+import com.cogra.domain.store.DeviceData
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.TokenStore
 import java.util.Base64
@@ -233,10 +234,27 @@ class SignOut @Inject constructor(
     private val sessions: SessionRepository,
     private val identity: IdentityStore,
     private val tokens: TokenStore,
+    private val device: DeviceData,
 ) {
     suspend fun signOut() {
         sessions.revokeSession(null)
         if (identity.forgetOnSignOut()) identity.purgeCustodySet()
+        tokens.clear()
+    }
+
+    /**
+     * Erase everything from this app (EraseConfirm.md:21), the answer the
+     * dialog asked for: the session is revoked first — best effort, while a
+     * token still names it — then everything on this device goes in one
+     * edit ([DeviceData]), every account's custody set, the device's
+     * choices and the seen record with its watermark among it, so the shell
+     * lands on sign-in with nothing remembered. It touches no other wire.
+     */
+    suspend fun eraseEverything() {
+        sessions.revokeSession(null)
+        device.eraseEverything()
+        // Already gone with the rest; said again so a wipe that failed
+        // still ends the session.
         tokens.clear()
     }
 }

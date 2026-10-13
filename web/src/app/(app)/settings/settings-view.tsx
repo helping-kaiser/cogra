@@ -39,10 +39,13 @@ import { LOCKED_ROW, settingsRowStatus } from "@/lib/deletion/deletion-copy";
 import { useAccountDeletion } from "@/lib/deletion/deletion-status";
 import { sealedDraftStore, type SealedDraftStore } from "@/lib/compose/sealed-draft";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
+import { seenRecord } from "@/lib/history/seen-record";
+import { forgetSeen } from "@/lib/history/seen-sync";
 import { useKeyOnDeviceState } from "@/lib/identity/use-key-on-device";
 import { licenseName, PUBLIC_DOMAIN, type License } from "@/lib/license";
 import { useTokenStore } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
+import { eraseEverything } from "@/lib/settings/erase-everything";
 import {
   applyTheme,
   exactValuesPreference,
@@ -67,6 +70,7 @@ import { SegmentedFilter } from "@/lib/ui2/segmented-filter";
 import { SettingsGroup, SettingsRow } from "@/lib/ui2/settings-row";
 import { useSlowAnswer } from "@/lib/ui2/waiting-commit";
 
+import { EraseConfirm } from "./erase-confirm";
 import { SettingsLicenseSheet } from "./settings-license-sheet";
 import {
   EMAIL_ROUTES,
@@ -126,15 +130,37 @@ const NO_ANSWER = "That didn't send. Try again.";
 const UNVEIL_OFF_STATUS = "Off, the veil stays until you tap it.";
 const UNVEIL_ON_STATUS = "On, sensitive content stands unveiled wherever you read.";
 
+/**
+ * The Clearing data group's footnote, by backup state (Settings.md:139, :141):
+ * the key first and the account gone for good, then what else goes, and the
+ * seen list's return last — it is a copy of the server's.
+ */
+const CLEARING_FOOTNOTE_MADE =
+  "Your key lives only in this browser. Clear CoGra's data here and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in.";
+const CLEARING_FOOTNOTE_NONE =
+  "Your key lives only in this browser, and it has no recovery code yet. Clear CoGra's data here and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in.";
+
+/** A full load of the sign-in, so nothing this tab held in memory outlives the erase. */
+function hardNavigate(url: string) {
+  window.location.replace(url);
+}
+
 export function SettingsView({
   store = identityStore,
   drafts = composeDraftStore,
   seals = sealedDraftStore,
+  forgetSeenRecord = (account: string) => forgetSeen(seenRecord, account),
+  erase = eraseEverything,
+  leave = hardNavigate,
 }: {
   /** Test injection. */
   store?: IdentityStore;
   drafts?: Pick<ComposeDraftStore, "clear">;
   seals?: Pick<SealedDraftStore, "forget">;
+  /** Drops one account's seen record and watermark from this browser. */
+  forgetSeenRecord?: (account: string) => Promise<void>;
+  erase?: () => Promise<void>;
+  leave?: (url: string) => void;
 } = {}) {
   const client = useApolloClient();
   const guard = useAuthGuard();
@@ -153,6 +179,7 @@ export function SettingsView({
   const [elsewhereBusy, setElsewhereBusy] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [eraseOpen, setEraseOpen] = useState(false);
   const [licenseOpen, setLicenseOpen] = useState(false);
   /** A default-license save that did not go through, kept for its Retry. */
   const [licenseFailed, setLicenseFailed] = useState<License | null>(null);
@@ -165,6 +192,7 @@ export function SettingsView({
 
   const sessionRows = useRef(new Map<string, HTMLElement | null>());
   const signOutRow = useRef<HTMLButtonElement | null>(null);
+  const eraseRow = useRef<HTMLButtonElement | null>(null);
   const licenseRow = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
@@ -303,6 +331,9 @@ export function SettingsView({
    * exit. Kept picks join the set when they exist (sign-out-custody §3.2).
    */
   const purgeCustody = async () => {
+    // Named before the key goes: the record to drop is this account's, read
+    // while it is still the active one.
+    const accountId = tokens.activeAccountId();
     try {
       await store.purgeIfEphemeral();
     } catch {
@@ -319,6 +350,16 @@ export function SettingsView({
       await seals.forget();
     } catch {
       // sign-out proceeds regardless
+    }
+    // What this account has seen on this browser — the ids and the sync
+    // watermark — is dropped with it and no other account's; the server's
+    // view log survives and a later sign-in re-seeds from it.
+    if (accountId !== null) {
+      try {
+        await forgetSeenRecord(accountId);
+      } catch {
+        // sign-out proceeds regardless
+      }
     }
   };
 
@@ -359,6 +400,26 @@ export function SettingsView({
     } catch {
       setForget(!next);
     }
+  };
+
+  /**
+   * The dialog's erase (EraseConfirm.md:21): this browser's key, draft, kept
+   * picks, the choices kept here and the seen list's copy go for good, the
+   * session ends, and the sign-in opens with no account offered — no
+   * snackbar. The session is revoked first, best effort, while a token still
+   * exists to name it.
+   */
+  const onEraseEverything = async () => {
+    setEraseOpen(false);
+    setSigningOut(true);
+    await guard.run(() => revokeSession(client, null));
+    try {
+      await erase();
+    } catch {
+      // the session ends regardless
+    }
+    tokens.clear();
+    leave("/login");
   };
 
   const signOutSlow = useSlowAnswer(signingOut);
@@ -535,6 +596,24 @@ export function SettingsView({
           />
         </SettingsGroup>
 
+        {/* After Key backup, because the loss it warns of is the key's
+            (Settings.md:139-145). An unread backup state takes the no-code
+            words: the stronger warning is the safe one. The row is quiet like
+            Sign out — the weight lives in the dialog it raises. */}
+        <SettingsGroup
+          label="Clearing data"
+          footnote={backupMade ? CLEARING_FOOTNOTE_MADE : CLEARING_FOOTNOTE_NONE}
+          node={node("clearing")}
+        >
+          <SettingsRow
+            action
+            label="Erase everything from this browser"
+            onOpen={() => setEraseOpen(true)}
+            rowRef={eraseRow}
+            node={node("clearing.erase")}
+          />
+        </SettingsGroup>
+
         <SettingsGroup
           label="Sessions"
           footnote="A device you sign out can stay signed in for up to 15 minutes."
@@ -689,6 +768,21 @@ export function SettingsView({
           onDismiss={() => {
             setConfirmOpen(false);
             signOutRow.current?.focus();
+          }}
+        />
+      )}
+
+      {eraseOpen && (
+        <EraseConfirm
+          backupMade={backupMade}
+          onMakeCode={() => {
+            setEraseOpen(false);
+            router.push("/settings/backup");
+          }}
+          onErase={() => void onEraseEverything()}
+          onDismiss={() => {
+            setEraseOpen(false);
+            eraseRow.current?.focus();
           }}
         />
       )}

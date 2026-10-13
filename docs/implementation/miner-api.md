@@ -171,8 +171,9 @@ type TieBreakers {
   netStance: Float!
   "Gross volume: Σ_a f(Δt_a) · (|p̄_d| + |p̄_i|)."
   grossVolume: Float!
-  "Epoch age of the newest terminal record — the final fallback."
-  newestTerminalEpochAge: Int!
+  "Epoch age of the target's genesis authorship record, for display;
+   an update record never refreshes it. Null for an authorless Type."
+  genesisEpochAge: Int
 }
 
 "One extracted path from the viewer to the target. Persons appear as

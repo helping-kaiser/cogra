@@ -22,6 +22,7 @@ export function DeletionBand({
   busy = false,
   node,
   testId = "deletion-band",
+  className,
 }: {
   line: string;
   onCancel: () => void;
@@ -29,11 +30,13 @@ export function DeletionBand({
   /** The registered band (`feed.deletionBand`, `settings.deletionBand`); its parts are `line` and `cancel`. */
   node?: DataNode;
   testId?: string;
+  /** Placement only — the bleed through a padded host's gutter. */
+  className?: string;
 }) {
   return (
     <div
       {...testAttributes(node, testId)}
-      className="flex items-center gap-2 border-b border-outline-variant bg-surface-container px-6 py-2"
+      className={`flex items-center gap-2 border-b border-outline-variant bg-surface-container px-6 py-2${className === undefined ? "" : ` ${className}`}`}
     >
       <span
         {...testAttributes(part(node, "line"), `${testId}-line`)}

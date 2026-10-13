@@ -132,9 +132,22 @@ class DeletionViewModelsTest {
     }
 
     @Test
-    fun `a_refused_send_says_it_did_not_go_through_and_rereads_the_path`() = runTest(dispatcher) {
+    fun `a_spent_mail_budget_says_too_many_tries_above_the_commit`() = runTest(dispatcher) {
+        // ER-G2, DeleteAccount.md:23: the line above, the commitment staying.
         path(AccountDeletionPath.BY_LINK)
         deletions.request = rateLimited
+        val vm = request()
+        idle()
+        vm.onSend()
+        idle()
+        assertThat(vm.state.value.fault).isEqualTo(R.string.rate_limited)
+        assertThat(vm.state.value.case).isEqualTo(DeleteAccountCase.MEMBER)
+    }
+
+    @Test
+    fun `a_refused_send_says_it_did_not_go_through_and_rereads_the_path`() = runTest(dispatcher) {
+        path(AccountDeletionPath.BY_LINK)
+        deletions.request = Outcome.Refused(listOf(UserError(ErrorCode.FORBIDDEN, "no")))
         val vm = request()
         idle()
         val reads = deletions.standingReads
@@ -220,6 +233,36 @@ class DeletionViewModelsTest {
         idle()
         assertThat(deletions.requests).containsExactly(true)
         assertThat(vm.state.value.fault).isNull()
+    }
+
+    @Test
+    fun `an_answered_resend_names_the_address_for_its_snackbar`() = runTest(dispatcher) {
+        // DeleteAccountMail.md:13.
+        val vm = DeleteAccountMailViewModel(deletions, settings)
+        val sent = mutableListOf<String>()
+        val collecting = launch { vm.resent.toList(sent) }
+        vm.refresh()
+        idle()
+        vm.onResend(includeContent = false)
+        idle()
+        assertThat(sent).containsExactly("sol@solferreira.art")
+        collecting.cancel()
+    }
+
+    @Test
+    fun `a_spent_mail_budget_says_too_many_tries_above_resend_and_never_sent_again`() = runTest(dispatcher) {
+        // ER-G2, DeleteAccountMail.md:15.
+        deletions.request = rateLimited
+        val vm = DeleteAccountMailViewModel(deletions, settings)
+        val sent = mutableListOf<String>()
+        val collecting = launch { vm.resent.toList(sent) }
+        vm.refresh()
+        idle()
+        vm.onResend(includeContent = false)
+        idle()
+        assertThat(vm.state.value.fault).isEqualTo(R.string.rate_limited)
+        assertThat(sent).isEmpty()
+        collecting.cancel()
     }
 
     @Test
@@ -353,14 +396,24 @@ class DeletionViewModelsTest {
     }
 
     @Test
-    fun `no_answer_offers_the_retry_and_a_refused_link_is_refused`() = runTest(dispatcher) {
+    fun `no_answer_offers_the_retry_and_a_dead_link_lands_on_the_dead_landing`() = runTest(dispatcher) {
         deletions.confirm = Outcome.Failed(IOException("offline"))
         val vm = landing()
         vm.start("t", signedIn = false)
         idle()
         assertThat(vm.state.value.landing).isEqualTo(ConfirmedLanding.Unreachable)
+        // ER-G1: one landing for every dead link (DeleteLinkExpired.md:5).
         deletions.confirm = Outcome.Refused(listOf(UserError(ErrorCode.DELETION_TOKEN_INVALID, "dead")))
         vm.onRetry()
+        idle()
+        assertThat(vm.state.value.landing).isEqualTo(ConfirmedLanding.Dead)
+    }
+
+    @Test
+    fun `another_refusal_is_refused_not_dead`() = runTest(dispatcher) {
+        deletions.confirm = rateLimited
+        val vm = landing()
+        vm.start("t", signedIn = false)
         idle()
         assertThat(vm.state.value.landing).isEqualTo(ConfirmedLanding.Refused)
     }

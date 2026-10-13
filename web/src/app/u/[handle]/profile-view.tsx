@@ -194,6 +194,7 @@ export function ProfileScreen({
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
       <CollapsingTop>
         <PageHeader
+          inGutter
           title={profile ? `@${profile.handle}` : "Profile"}
           backHref={handle === null ? undefined : "/feed"}
           backScroll={false}

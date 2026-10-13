@@ -42,6 +42,11 @@ export function mailBody(email: string): string {
   return `We sent a link to ${email}. Opening it confirms the deletion and starts the seven days.`;
 }
 
+/** The Resend, answered, naming the account's address (DeleteAccountMail.md:13). */
+export function resentTo(email: string): string {
+  return `Sent again — the link is on its way to ${email}.`;
+}
+
 /** No answer reached the device (copy-voice *Faults by code*, "No answer at all"). */
 export const NO_ANSWER = "That didn't send. Try again.";
 
@@ -51,8 +56,8 @@ export const CANCELED = "Canceled — your account stays, and nothing was delete
 /** The applicant's landing on the bare view (DeleteAccount.md:29). */
 export const DELETED = "Your account is deleted.";
 
-/** The locked row's answer (Settings.md:159). */
-export const LOCKED_ROW = "You can delete your account once you're in.";
+/** The locked row's answer (Settings.md:175, reworded in design round 8). */
+export const LOCKED_ROW = "You can delete your account once your registration lands.";
 
 /** The sweep, offered at the request and again at the landing (`DeleteAccount.jsx:133-136`). */
 export const SWEEP_LABEL = "Also remove what I posted";

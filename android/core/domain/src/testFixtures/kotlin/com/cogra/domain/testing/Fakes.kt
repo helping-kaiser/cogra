@@ -86,6 +86,7 @@ import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.stance.StanceTarget
+import com.cogra.domain.store.DeviceData
 import com.cogra.domain.store.DevicePreferences
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.StorageHealth
@@ -213,6 +214,26 @@ class FakeDevicePreferences : DevicePreferences {
 
     override suspend fun setShowExactValues(value: Boolean) {
         showExactValues.value = value
+    }
+}
+
+/**
+ * The device's whole store, as the fakes hold it: an erase empties every
+ * fake it is handed, the way the one encrypted store's single edit does.
+ */
+class FakeDeviceData(
+    private val tokens: FakeTokenStore? = null,
+    private val identity: FakeIdentityStore? = null,
+    private val preferences: FakeDevicePreferences? = null,
+) : DeviceData {
+    var erases = 0
+
+    override suspend fun eraseEverything() {
+        erases += 1
+        tokens?.clear()
+        identity?.purgeCustodySet()
+        preferences?.theme?.value = ThemeChoice.AUTO
+        preferences?.showExactValues?.value = false
     }
 }
 

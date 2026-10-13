@@ -78,6 +78,8 @@ fun ComposeWizardRoute(
      * writer should learn before they have filled in four stages.
      */
     keyBanner: @Composable () -> Unit = {},
+    /** The deletion band, while the account's confirmed deletion is in its grace (`FeedDeleting.md:3`). */
+    deletionBand: @Composable () -> Unit = {},
     viewModel: ComposeWizardViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -199,6 +201,7 @@ fun ComposeWizardRoute(
         onReferenceRelevanceChange = viewModel::onReferenceRelevanceChange,
         onReferenceSupportChange = viewModel::onReferenceSupportChange,
         keyBanner = keyBanner,
+        deletionBand = deletionBand,
     )
 }
 
@@ -272,6 +275,7 @@ internal fun ComposeWizardScreen(
     onReferenceSupportChange: (String, Double) -> Unit,
     keyBanner: @Composable () -> Unit = {},
     modifier: Modifier = Modifier,
+    deletionBand: @Composable () -> Unit = {},
 ) {
     // Back is the header's arrow and the system gesture alike, and both
     // step back one stage (jakob 2026-08-31). Leaving happens from the
@@ -307,6 +311,9 @@ internal fun ComposeWizardScreen(
                 // stages' header keeps its wizard tags.
                 node = (COMPOSE_DETAILS / "header").takeIf { state.step == WizardStep.Details },
             )
+
+            // Directly under the header (FeedDeleting.md:5).
+            deletionBand()
 
             keyBanner()
 

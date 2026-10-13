@@ -28,11 +28,21 @@
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
 
+    <!--
+        Clearing data (Settings.md; the settings-surface spec, seam 166):
+        manageSpaceActivity turns the system storage screen's "Clear storage"
+        into "Manage space", which opens settings at the Clearing data group —
+        the key's warning stands in the destructive path itself.
+        hasFragileUserData makes the uninstall dialog offer to keep the app's
+        data, so an uninstall need not erase the only copy of a key.
+    -->
     <application
         android:name=".CograApp"
         android:allowBackup="false"
+        android:hasFragileUserData="true"
         android:icon="@mipmap/ic_launcher"
         android:label="CoGra"
+        android:manageSpaceActivity="com.cogra.app.ManageSpaceActivity"
         android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="true"
         android:theme="@style/Theme.CoGra">
@@ -63,6 +73,15 @@
                 <data android:pathPrefix="/delete-account" />
             </intent-filter>
         </activity>
+
+        <!-- The "Manage space" relay. Not exported: only the system's own
+             storage screen (a system-uid caller) starts it. -->
+        <activity
+            android:name=".ManageSpaceActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
     </application>
 
 </manifest>

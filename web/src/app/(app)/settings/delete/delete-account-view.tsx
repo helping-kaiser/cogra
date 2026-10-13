@@ -23,7 +23,7 @@ import { useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import { deleteApplicantAccount, requestAccountDeletion } from "@/lib/api/deletion-api";
-import type { Outcome } from "@/lib/api/outcome";
+import { hasCode, type Outcome } from "@/lib/api/outcome";
 import { DeletionCommit as Commit } from "@/lib/deletion/deletion-commit";
 import { NO_ANSWER, SWEEP_HINT, SWEEP_LABEL } from "@/lib/deletion/deletion-copy";
 import { useAccountDeletion } from "@/lib/deletion/deletion-status";
@@ -33,7 +33,7 @@ import { Checkbox } from "@/lib/ui2/checkbox";
 import { QuietNote } from "@/lib/ui2/quiet-note";
 import { useSlowAnswer } from "@/lib/ui2/waiting-commit";
 
-import { NOT_THROUGH, TaskPage } from "../task-page";
+import { NOT_THROUGH, RATE_LIMITED_LINE, TaskPage } from "../task-page";
 
 const NODE: DataNode = { path: "deleteAccount" };
 const node = (tail: string) => part(NODE, tail);
@@ -47,9 +47,14 @@ export function mailRoute(includeContent: boolean): string {
   return `/settings/delete/mail?content=${includeContent ? "1" : "0"}`;
 }
 
-/** The whole-act line a press that did not land says above its commit (copy-voice *Faults by code*). */
+/**
+ * The whole-act line a press that did not land says above its commit
+ * (copy-voice *Faults by code*). A spent deletion mail budget is its own
+ * drawn line, the commit staying and nothing mailed (DeleteAccount.md:23).
+ */
 function faultOf(outcome: Outcome<unknown>): string {
-  return outcome.kind === "failed" ? NO_ANSWER : NOT_THROUGH;
+  if (outcome.kind === "failed") return NO_ANSWER;
+  return hasCode(outcome, "RATE_LIMITED") ? RATE_LIMITED_LINE : NOT_THROUGH;
 }
 
 export function DeleteAccountView() {
@@ -170,6 +175,7 @@ export function DeleteAccountView() {
       {path === "IMMEDIATE" && (
         <Commit
           label="Delete my account"
+          busyLabel={slow ? "Deleting my account…" : undefined}
           busy={busy}
           fault={fault}
           onCommit={() => void onDelete()}

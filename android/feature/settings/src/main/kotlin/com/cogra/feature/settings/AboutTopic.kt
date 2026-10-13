@@ -151,17 +151,24 @@ private val OpenTopicsSaver = listSaver<SnapshotStateList<String>, String>(
  * carries no "?" and no bottom bar.
  */
 @Composable
-fun AboutScreen(onBack: () -> Unit) {
+fun AboutScreen(
+    onBack: () -> Unit,
+    /** The deletion band under the header, while a confirmed deletion runs its grace. */
+    deletionBand: @Composable () -> Unit = {},
+) {
     val open = rememberSaveable(saver = OpenTopicsSaver) { mutableStateListOf<String>() }
     Scaffold(
         modifier = Modifier.dataNodeSurface(),
         topBar = {
-            PageHeader(
-                title = stringResource(R.string.about_title),
-                onBack = onBack,
-                backContentDescription = stringResource(R.string.back_to_settings),
-                node = Page / "header",
-            )
+            Column {
+                PageHeader(
+                    title = stringResource(R.string.about_title),
+                    onBack = onBack,
+                    backContentDescription = stringResource(R.string.back_to_settings),
+                    node = Page / "header",
+                )
+                deletionBand()
+            }
         },
     ) { padding ->
         Column(

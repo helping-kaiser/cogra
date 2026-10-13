@@ -39,6 +39,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.CollapsingTop
+import com.cogra.core.designsystem.CollapsingTopBand
 import com.cogra.core.designsystem.KeyGate
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
@@ -50,10 +52,12 @@ import com.cogra.domain.identity.SecretKind
 @Composable
 fun KeyExportRoute(
     onBack: () -> Unit,
+    /** The deletion band under the header, while a confirmed deletion runs its grace. */
+    deletionBand: @Composable () -> Unit = {},
     viewModel: KeyExportViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    KeyExportScreen(state = state, onReveal = viewModel::onReveal, onBack = onBack)
+    KeyExportScreen(state = state, onReveal = viewModel::onReveal, onBack = onBack, deletionBand = deletionBand)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,6 +67,7 @@ fun KeyExportScreen(
     onReveal: () -> Unit,
     onBack: () -> Unit,
     keyGate: KeyGate = rememberKeyGate(),
+    deletionBand: @Composable () -> Unit = {},
 ) {
     SecureWindow()
     val gate = rememberKeyGateRunner(keyGate)
@@ -71,29 +76,7 @@ fun KeyExportScreen(
     val collapsingTop = rememberCollapsingTop()
     Scaffold(
         modifier = Modifier.collapsingTop(collapsingTop),
-        topBar = {
-            TopAppBar(
-                colors = surfaceTopAppBarColors(),
-                scrollBehavior = collapsingTop.scrollBehavior,
-                title = {
-                    Text(
-                        text = stringResource(R.string.key_export_title),
-                        modifier = Modifier.semantics { heading() },
-                    )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier.testTag("key_export_back"),
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
-                        )
-                    }
-                },
-            )
-        },
+        topBar = { KeyExportTopBar(collapsingTop, onBack, deletionBand) },
     ) { padding ->
         Column(
             modifier = Modifier
@@ -119,6 +102,36 @@ fun KeyExportScreen(
                 }
             }
         }
+    }
+}
+
+/** The page's header, with the deletion band directly under it, collapsing with it (`FeedDeleting.md:5`). */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun KeyExportTopBar(collapsingTop: CollapsingTop, onBack: () -> Unit, deletionBand: @Composable () -> Unit) {
+    Column {
+        TopAppBar(
+            colors = surfaceTopAppBarColors(),
+            scrollBehavior = collapsingTop.scrollBehavior,
+            title = {
+                Text(
+                    text = stringResource(R.string.key_export_title),
+                    modifier = Modifier.semantics { heading() },
+                )
+            },
+            navigationIcon = {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.testTag("key_export_back"),
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.back),
+                    )
+                }
+            },
+        )
+        CollapsingTopBand(collapsingTop) { deletionBand() }
     }
 }
 

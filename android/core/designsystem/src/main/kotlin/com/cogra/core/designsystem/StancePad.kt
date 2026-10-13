@@ -256,6 +256,15 @@ private const val RESTING_FACE = "🫥"
  */
 private const val RESTING_FACE_ALPHA = 0.4f
 
+/**
+ * The empty resting face's opacity: muted ([RESTING_FACE_ALPHA]) everywhere,
+ * full ink where the host asks for it (the vouch card). The web twin also
+ * greys the glyph; this face has never been desaturated, so only the
+ * opacity differs.
+ */
+internal fun restingFaceAlpha(fullInkEmpty: Boolean): Float =
+    if (fullInkEmpty) 1f else RESTING_FACE_ALPHA
+
 /** How close to the viewport's edge an overlay is allowed to sit. */
 private val PAD_MARGIN = 12.dp
 
@@ -364,6 +373,15 @@ fun StanceControl(
      * whose open state the holder already carries.
      */
     padOnly: Boolean = false,
+    /**
+     * THE VOUCH CARD'S EMPTY FACE WEARS FULL INK (stance-control.md, jakob
+     * 2026-10-13; the master's `fullInkEmpty`). The muted, translucent
+     * resting face all but vanishes on the card's tertiary-container
+     * ground, so the card's hollow face stands at full opacity. Only the
+     * empty resting face is affected; off by default, so every other host
+     * keeps the muted face.
+     */
+    fullInkEmpty: Boolean = false,
 ) {
     val marginPx = with(LocalDensity.current) { PAD_MARGIN.roundToPx() }
     val bottomPx = with(LocalDensity.current) { PAD_BOTTOM.roundToPx() }
@@ -513,7 +531,7 @@ fun StanceControl(
                     }
                     .testTag(anchor?.tag ?: "${testTagPrefix}_stance"),
             ) {
-                StanceRestingFace(state.standing, testTagPrefix, anchor)
+                StanceRestingFace(state.standing, testTagPrefix, anchor, fullInkEmpty)
                 pad()
             }
         }
@@ -983,14 +1001,19 @@ private fun StancePadHelp(onBack: () -> Unit, testTagPrefix: String, lines: List
  * emoji's own name.
  */
 @Composable
-private fun StanceRestingFace(standing: StancePoint?, testTagPrefix: String, anchor: DataNode?) {
+private fun StanceRestingFace(
+    standing: StancePoint?,
+    testTagPrefix: String,
+    anchor: DataNode?,
+    fullInkEmpty: Boolean,
+) {
     if (standing == null) {
         Text(
             text = RESTING_FACE,
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 12.dp)
-                .alpha(RESTING_FACE_ALPHA)
+                .alpha(restingFaceAlpha(fullInkEmpty))
                 .testTag(anchor?.div("face")?.tag ?: "${testTagPrefix}_stance_empty_face"),
         )
         return

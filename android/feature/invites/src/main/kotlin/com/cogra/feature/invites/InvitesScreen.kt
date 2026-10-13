@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.CograSnackbarHost
+import com.cogra.core.designsystem.CollapsingTopBand
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.StanceSlider
 import com.cogra.core.designsystem.collapsingTop
@@ -59,6 +60,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun InvitesRoute(
     onBack: () -> Unit,
+    /** The deletion band, while the account's confirmed deletion is in its grace (`FeedDeleting.md:3`). */
+    deletionBand: @Composable () -> Unit = {},
     viewModel: InvitesViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -79,6 +82,7 @@ fun InvitesRoute(
             }
             context.startActivity(Intent.createChooser(send, null))
         },
+        deletionBand = deletionBand,
     )
 }
 
@@ -94,6 +98,7 @@ fun InvitesScreen(
     onVouchSignedShown: () -> Unit,
     onSigningFailedShown: () -> Unit,
     onShare: (InviteLinkInfo) -> Unit,
+    deletionBand: @Composable () -> Unit = {},
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -121,27 +126,31 @@ fun InvitesScreen(
     Scaffold(
         modifier = Modifier.collapsingTop(collapsingTop),
         topBar = {
-            TopAppBar(
-                colors = surfaceTopAppBarColors(),
-                scrollBehavior = collapsingTop.scrollBehavior,
-                title = {
-                    Text(
-                        text = stringResource(R.string.invites_title),
-                        modifier = Modifier.semantics { heading() },
-                    )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier.testTag("invites_back"),
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
+            Column {
+                TopAppBar(
+                    colors = surfaceTopAppBarColors(),
+                    scrollBehavior = collapsingTop.scrollBehavior,
+                    title = {
+                        Text(
+                            text = stringResource(R.string.invites_title),
+                            modifier = Modifier.semantics { heading() },
                         )
-                    }
-                },
-            )
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = onBack,
+                            modifier = Modifier.testTag("invites_back"),
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.back),
+                            )
+                        }
+                    },
+                )
+                // Directly under the header, collapsing with it (FeedDeleting.md:5).
+                CollapsingTopBand(collapsingTop) { deletionBand() }
+            }
         },
         snackbarHost = {
             CograSnackbarHost(snackbarHostState, testTag = "invites_snackbar")
@@ -341,4 +350,3 @@ private fun ApplicationRow(
         }
     }
 }
-

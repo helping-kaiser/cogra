@@ -270,6 +270,8 @@ private val Page = DataNode("changeEmail")
 fun ChangeEmailConfirmRoute(
     onBack: () -> Unit,
     onExit: (notice: String?) -> Unit,
+    /** The deletion band under the header, while a confirmed deletion runs its grace. */
+    deletionBand: @Composable () -> Unit = {},
     viewModel: ChangeEmailConfirmViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -295,6 +297,7 @@ fun ChangeEmailConfirmRoute(
                 },
             )
         },
+        deletionBand = deletionBand,
     )
 }
 
@@ -308,6 +311,7 @@ fun ChangeEmailConfirmScreen(
     onCancel: () -> Unit,
     events: Flow<ConfirmEmailEvent> = emptyFlow(),
     onExit: (ConfirmEmailExit) -> Unit = {},
+    deletionBand: @Composable () -> Unit = {},
 ) {
     val snackbar = remember { SnackbarHostState() }
     val context = LocalContext.current
@@ -331,6 +335,7 @@ fun ChangeEmailConfirmScreen(
         title = stringResource(R.string.confirm_email_title),
         lead = stringResource(R.string.confirm_email_lead),
         snackbar = snackbar,
+        deletionBand = deletionBand,
     ) {
         Spacer(Modifier.height(24.dp))
         if (pending != null) SidesPair(email, pending, onResend)
