@@ -762,12 +762,19 @@ pub async fn stage_application(
 /// even though it sits in the same column: it was mailed to the new
 /// address, so it must not verify the old one — whatever state its
 /// change is in (`apply_email_change` is its only way in).
+///
+/// The proof is one of the two approvability proofs, so the verification
+/// writes APPLICATION_APPROVABLE in its own transaction when it completes
+/// the pair (`notifications::write_approvable`). The update holds the
+/// credentials row — the account lock — so a key attached at the same
+/// moment serializes with it and exactly one of the two sees both proofs.
 pub async fn verify_account_email(
     pool: &PgPool,
     verification_token_hash: &[u8],
     dead_before: DateTime<Utc>,
 ) -> Result<Option<Uuid>, sqlx::Error> {
-    sqlx::query_scalar!(
+    let mut tx = pool.begin().await?;
+    let verified = sqlx::query_scalar!(
         "UPDATE user_credentials
          SET email_verified_at = NOW()
          WHERE email_verification_token_hash = $1
@@ -779,8 +786,13 @@ pub async fn verify_account_email(
         verification_token_hash,
         dead_before,
     )
-    .fetch_optional(pool)
-    .await
+    .fetch_optional(&mut *tx)
+    .await?;
+    if let Some(account) = verified {
+        crate::notifications::write_approvable(&mut tx, account).await?;
+    }
+    tx.commit().await?;
+    Ok(verified)
 }
 
 /// The live, unverified account holding an email — the resend target.
@@ -845,6 +857,11 @@ pub enum AttachOutcome {
 /// funding row. A funding row that outlived a deleted account names only
 /// its address, so a fresh account may attach that key — and is then
 /// bound by it, and never funded again.
+///
+/// The first attach is the other approvability proof: when it completes
+/// the pair it writes APPLICATION_APPROVABLE in the same transaction
+/// (`notifications::write_approvable`). A replacement never does — the
+/// account was already as approvable as it gets.
 pub async fn attach_actor_key(
     pool: &PgPool,
     account_id: Uuid,
@@ -853,6 +870,13 @@ pub async fn attach_actor_key(
 ) -> Result<AttachOutcome, sqlx::Error> {
     let mut tx = pool.begin().await?;
     lock_account(&mut tx, account_id).await?;
+    let first_key = sqlx::query_scalar!(
+        r#"SELECT actor_pubkey IS NULL AS "first!" FROM actors WHERE id = $1"#,
+        account_id,
+    )
+    .fetch_optional(&mut *tx)
+    .await?
+    .unwrap_or(false);
     let updated = sqlx::query!(
         "UPDATE actors a
          SET actor_pubkey = $2, realization_address = $3
@@ -882,6 +906,9 @@ pub async fn attach_actor_key(
         Err(e) => return Err(e),
     };
     if outcome == AttachOutcome::Attached {
+        if first_key {
+            crate::notifications::write_approvable(&mut tx, account_id).await?;
+        }
         tx.commit().await?;
     }
     Ok(outcome)
@@ -931,13 +958,15 @@ pub async fn approve_application(pool: &PgPool, id: Uuid) -> Result<Option<Uuid>
 /// [`approve_application`]'s. False when the row is not waiting in that
 /// queue — unknown, foreign, approved, already rejected, or left the
 /// queue when its account landed through another path alike; the caller
-/// reads the row to name which.
+/// reads the row to name which. A close tells its applicant
+/// (APPLICATION_REJECTED, written in the same transaction).
 pub async fn reject_application(
     pool: &PgPool,
     id: Uuid,
     approver: Uuid,
 ) -> Result<bool, sqlx::Error> {
-    Ok(sqlx::query!(
+    let mut tx = pool.begin().await?;
+    let closed = sqlx::query_scalar!(
         "UPDATE auth_applications ap
          SET rejected_at = NOW()
          WHERE ap.id = $1 AND ap.approver_id = $2
@@ -945,14 +974,18 @@ pub async fn reject_application(
            AND ap.rejected_at IS NULL
            AND ap.landed_at IS NULL
            AND NOT EXISTS (SELECT 1 FROM auth_applications o
-                           WHERE o.account_id = ap.account_id AND o.landed_at IS NOT NULL)",
+                           WHERE o.account_id = ap.account_id AND o.landed_at IS NOT NULL)
+         RETURNING ap.id",
         id,
         approver,
     )
-    .execute(pool)
-    .await?
-    .rows_affected()
-        == 1)
+    .fetch_optional(&mut *tx)
+    .await?;
+    if let Some(closed) = closed {
+        crate::notifications::write_rejected(&mut tx, &[closed]).await?;
+    }
+    tx.commit().await?;
+    Ok(closed.is_some())
 }
 
 /// Closes every application still waiting through one of `approver`'s
@@ -963,7 +996,7 @@ pub async fn reject_application(
 /// that moves under the sweep never defeats it, and a revoked link still
 /// sweeps — revocation stops new staging only. Each closed row is an
 /// ordinary rejection, under the same waiting predicate
-/// [`reject_application`] gates on.
+/// [`reject_application`] gates on, and tells its own applicant.
 pub async fn reject_link_applications(
     pool: &PgPool,
     invite_link_id: Uuid,
@@ -981,23 +1014,25 @@ pub async fn reject_link_applications(
     if !owned {
         return Ok(None);
     }
-    Ok(Some(
-        sqlx::query!(
-            "UPDATE auth_applications ap
-             SET rejected_at = NOW()
-             WHERE ap.invite_link_id = $1 AND ap.approver_id = $2
-               AND ap.approved_at IS NULL
-               AND ap.rejected_at IS NULL
-               AND ap.landed_at IS NULL
-               AND NOT EXISTS (SELECT 1 FROM auth_applications o
-                               WHERE o.account_id = ap.account_id AND o.landed_at IS NOT NULL)",
-            invite_link_id,
-            approver,
-        )
-        .execute(pool)
-        .await?
-        .rows_affected(),
-    ))
+    let mut tx = pool.begin().await?;
+    let closed = sqlx::query_scalar!(
+        "UPDATE auth_applications ap
+         SET rejected_at = NOW()
+         WHERE ap.invite_link_id = $1 AND ap.approver_id = $2
+           AND ap.approved_at IS NULL
+           AND ap.rejected_at IS NULL
+           AND ap.landed_at IS NULL
+           AND NOT EXISTS (SELECT 1 FROM auth_applications o
+                           WHERE o.account_id = ap.account_id AND o.landed_at IS NOT NULL)
+         RETURNING ap.id",
+        invite_link_id,
+        approver,
+    )
+    .fetch_all(&mut *tx)
+    .await?;
+    crate::notifications::write_rejected(&mut tx, &closed).await?;
+    tx.commit().await?;
+    Ok(Some(closed.len() as u64))
 }
 
 /// Locks the account for the caller's transaction — the serialization
@@ -1344,7 +1379,9 @@ pub enum Landing {
 /// winning vouch]` and moves to `awaiting_pre_sign` for the device to sign
 /// without a prompt, its GC window starting now. Nothing outside this
 /// transaction can ever release them, so the batch is released exactly
-/// once, by the landing that completes the ceremony.
+/// once, by the landing that completes the ceremony. The same
+/// transaction tells the winning vouch's approver (INVITE_LANDED) — that
+/// approver only (EC-R3).
 /// Every other path leaves its queue by the read-side filter (seam 099
 /// ruling 67), so nothing more is written for them. Later vouch-Opinions
 /// that confirm are booked landed as ordinary Opinions. Idempotent and
@@ -1393,6 +1430,14 @@ pub async fn evaluate_landing(
         .await?;
         if let (Some(registration), Some(edge)) = (registration, first_edge) {
             land_through(&mut tx, account_id, edge.application_id, Some(edge.id)).await?;
+            crate::notifications::write_landed(
+                &mut tx,
+                edge.application_id,
+                edge.voucher_id,
+                account_id,
+                &registration,
+            )
+            .await?;
             let released = sqlx::query!(
                 "UPDATE staged_writes
                  SET state = 'awaiting_pre_sign',
@@ -2567,7 +2612,9 @@ pub enum EmailChangeApply {
 /// the new address's link is the verification link — the account is
 /// verified in the same step. A carve-out change on an account already
 /// past its unverified bound (`dead_before`) does not apply: that
-/// account can no longer verify, as `verify_account_email` holds.
+/// account can no longer verify, as `verify_account_email` holds. The
+/// carve-out's verification is an approvability proof, so completing the
+/// pair writes APPLICATION_APPROVABLE here as `verify_account_email` does.
 pub async fn apply_email_change(
     pool: &PgPool,
     id: Uuid,
@@ -2599,6 +2646,14 @@ pub async fn apply_email_change(
     if !code_side || row.new_verified_at.is_none() {
         return Ok(EmailChangeApply::NotReady);
     }
+    let was_unverified = sqlx::query_scalar!(
+        r#"SELECT email_verified_at IS NULL AS "unverified!"
+           FROM user_credentials WHERE actor_id = $1 FOR UPDATE"#,
+        row.user_id,
+    )
+    .fetch_optional(&mut *tx)
+    .await?
+    .unwrap_or(false);
     let moved = sqlx::query!(
         "UPDATE user_credentials
          SET email = $2,
@@ -2629,6 +2684,9 @@ pub async fn apply_email_change(
     )
     .execute(&mut *tx)
     .await?;
+    if was_unverified {
+        crate::notifications::write_approvable(&mut tx, row.user_id).await?;
+    }
     tx.commit().await?;
     Ok(EmailChangeApply::Applied)
 }

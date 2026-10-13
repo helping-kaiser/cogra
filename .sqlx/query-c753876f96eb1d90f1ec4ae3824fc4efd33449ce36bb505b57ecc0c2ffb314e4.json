@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_notifications\n             (user_id, kind, actor_id, subject_id, application_id, dedup_key)\n         SELECT ap.account_id, 'application_approved', v.voucher_id, v.voucher_id, ap.id,\n                'approved:' || v.act_id\n         FROM staged_writes s\n         JOIN auth_application_vouches v ON v.act_id = s.act_id\n         JOIN auth_applications ap ON ap.id = v.application_id\n         WHERE s.id = $1 AND ap.account_id <> v.voucher_id\n         ON CONFLICT (user_id, dedup_key) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c753876f96eb1d90f1ec4ae3824fc4efd33449ce36bb505b57ecc0c2ffb314e4"
+}

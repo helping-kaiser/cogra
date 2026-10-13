@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_notifications\n             (user_id, kind, actor_id, subject_id, record_id, application_id, dedup_key)\n         VALUES ($1, 'invite_landed', $2, $2, $3, $4, 'landed:' || $4::uuid)\n         ON CONFLICT (user_id, dedup_key) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "980dece677b1262481085303b83a5a843f80d0d61fa5b2efdee748944ab26e3b"
+}

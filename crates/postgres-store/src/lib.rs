@@ -12,6 +12,7 @@ pub mod hashtag;
 pub mod history;
 pub mod media;
 pub mod mirror;
+pub mod notifications;
 pub mod params;
 pub mod profile;
 pub mod rate_limit;

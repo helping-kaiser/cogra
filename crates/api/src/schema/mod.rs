@@ -11,6 +11,7 @@
 pub mod app_versions;
 pub mod feed;
 mod mutation;
+pub mod notifications;
 mod query;
 pub mod types;
 

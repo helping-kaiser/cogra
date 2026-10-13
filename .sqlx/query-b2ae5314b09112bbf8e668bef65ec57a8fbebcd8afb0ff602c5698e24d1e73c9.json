@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_notification_state (user_id, seen_at) VALUES ($1, $2)\n         ON CONFLICT (user_id) DO UPDATE\n             SET seen_at = GREATEST(user_notification_state.seen_at, EXCLUDED.seen_at)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b2ae5314b09112bbf8e668bef65ec57a8fbebcd8afb0ff602c5698e24d1e73c9"
+}

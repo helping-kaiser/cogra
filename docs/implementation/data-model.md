@@ -1163,8 +1163,10 @@ three properties:
 Instances below: the seen-list (`user_view_log`), the hidden-actors
 list (`user_hidden_actors`, frontend-side "don't show me Bob's
 content" — see [feed-ranking.md §9.1](../primitive/feed-ranking.md#91-filtering-vs-ranking)),
-the chat-read pointer (`chat_read_state`), and bookmarks
-(`user_bookmarks`).
+the chat-read pointer (`chat_read_state`), bookmarks
+(`user_bookmarks`), and the notification list with its seen pointer
+(`user_notifications`, `user_notification_state` —
+[notifications.md](notifications.md)).
 
 ```sql
 -- View log: per-viewer record of which nodes and topics have been
@@ -1228,6 +1230,43 @@ CREATE TABLE user_bookmarks (
 );
 CREATE INDEX user_bookmarks_recency_idx
     ON user_bookmarks (user_id, bookmarked_at DESC);
+
+-- Notification rows: per-viewer pointers at acts other actors made
+-- that reached the viewer's content, profile or application
+-- (notifications.md). Rebuildable from the record mirror and the
+-- application registry, never authoritative, kept without a bound.
+-- dedup_key makes every writer idempotent — one row per (viewer,
+-- act). created_at is when the act reached the viewer: the ingestion
+-- pass that observed its landing, or the account transition's
+-- commit, so the seen pointer compares like with like.
+CREATE TABLE user_notifications (
+    id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id        UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
+    kind           TEXT        NOT NULL CHECK (kind IN (
+                       'comment', 'reply', 'mention', 'citation', 'profile_opinion',
+                       'application_approvable', 'invite_landed',
+                       'application_approved', 'application_rejected')),
+    actor_id       UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
+    subject_id     UUID,        -- bare node ids, any class (user_bookmarks' rule)
+    context_id     UUID,
+    record_id      TEXT,        -- L1 id, verbatim; no FK: the mirror resets
+    application_id UUID        REFERENCES auth_applications(id) ON DELETE CASCADE,
+    dedup_key      TEXT        NOT NULL,
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    read_at        TIMESTAMPTZ,
+    CHECK (user_id <> actor_id)
+);
+CREATE UNIQUE INDEX user_notifications_one_per_act_idx
+    ON user_notifications (user_id, dedup_key);
+CREATE INDEX user_notifications_recency_idx
+    ON user_notifications (user_id, created_at DESC, id DESC);
+
+-- The seen pointer behind the bell: one row per viewer, moving
+-- forward only. A row is unseen while its created_at is past seen_at.
+CREATE TABLE user_notification_state (
+    user_id  UUID        PRIMARY KEY REFERENCES actors(id) ON DELETE CASCADE,
+    seen_at  TIMESTAMPTZ NOT NULL
+);
 ```
 
 ---
@@ -1814,6 +1853,7 @@ Every user-scoped table (`auth_refresh_tokens`,
 `auth_account_deletions`, `auth_key_backups`,
 `auth_key_backup_challenges`, `auth_device_locks`, `user_view_log`,
 `user_hidden_actors`, `chat_read_state`, `user_bookmarks`,
+`user_notifications`, `user_notification_state`,
 `user_preferences`) carries
 `user_id REFERENCES actors(id) ON DELETE CASCADE`. That these
 rows exist only for user-kind actors is a service-layer fact
@@ -1837,6 +1877,11 @@ single command that takes the user's private state with them.
 Every other actor-reference column (`author_id` everywhere,
 `auth_invite_links.inviter_id`, `user_hidden_actors.hidden_id`)
 is likewise a real FK to `actors(id)` — see the next note.
+`user_notifications.actor_id` cascades too: an applicant row is the
+actor of its approver's APPLICATION_APPROVABLE row, and a
+non-cascading FK would wedge the two whole-account deletes above. A
+member is erased in place, so rows naming it stand and read the
+deleted form.
 
 ### author_id — one foreign key, still a cache
 
