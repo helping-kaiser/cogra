@@ -71,13 +71,18 @@ import com.cogra.core.designsystem.v2.media.ScrollStageRow
 import com.cogra.core.designsystem.v2.media.SurfaceCover
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.core.designsystem.RowLine
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
+import com.cogra.domain.saved.SavedWrites
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.R
 import com.cogra.feature.content.reply.ReplyTarget
+import com.cogra.feature.saved.LocalSavedHost
+import com.cogra.feature.saved.rememberSavedHost
+import com.cogra.feature.saved.rememberSavedWrites
 import com.cogra.feature.stance.StanceControlRoute
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -223,6 +228,8 @@ fun FeedRoute(
         stanceControl = { target, tag, node ->
             StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node)
         },
+        saved = rememberSavedWrites(),
+        onRequireAccount = onRequireAccount,
     )
 }
 
@@ -292,6 +299,13 @@ fun FeedScreen(
      * through a view model this screen keeps out of its own signature.
      */
     reportSheet: ReportSheetSlot = { _, _, _ -> },
+    /**
+     * The app's one Saved overlay (`SavedWrites`), which the cards' menus
+     * save through; null stands their Save rows inert.
+     */
+    saved: SavedWrites? = null,
+    /** The guest gate a signed-out reader's Save opens; null when signed in. */
+    onRequireAccount: (() -> Unit)? = null,
 ) {
     // EVERY LAYER RAISED OVER THE FEED SAYS IT IS UP (Feed.md:31-37): the
     // card's menu, the terms and the report's confirm each stop the playing
@@ -357,7 +371,10 @@ fun FeedScreen(
         suspended = commentsFor != null,
     )
     val band = FEED / "band"
-    CompositionLocalProvider(LocalCoveringLayers provides layers) {
+    // THE CARDS' MENUS SAVE THROUGH THE ONE OVERLAY, their aftermath on the
+    // feed's own snackbar (`saveMenuRow`).
+    val savedHost = rememberSavedHost(saved, snackbar, FEED / "snackbar", onRequireAccount)
+    CompositionLocalProvider(LocalCoveringLayers provides layers, LocalSavedHost provides savedHost) {
         Scaffold(
             modifier = Modifier.dataNodeSurface(),
             topBar = {
@@ -805,6 +822,9 @@ private fun PostCard(
             ) {
                 stanceControl(post.id, "feed_post_${post.id}", card / "actionRow" / "stance")
             }
+            // THE ROW LINE under the face (RowSigning.md): a save or unsave
+            // of this post that did not go through.
+            LocalSavedHost.current?.comfortLine(post.id)?.let { RowLine(it, "feed_post_${post.id}_row_line") }
         }
     }
 }
@@ -884,6 +904,7 @@ private fun CardMenuHeader(
                 testTagPrefix = "feed_${post.id}_menu",
                 onReport = onReport,
                 rowNode = { row -> (menuSheet / row.nodeName).takeIf { row in FEED_MENU_ROWS } },
+                saveRow = LocalSavedHost.current?.menuRow(post.id, post.viewerBookmarkedAt, "feed_${post.id}_menu_save"),
             )
         },
         menuContentDescription = stringResource(R.string.content_menu_post),

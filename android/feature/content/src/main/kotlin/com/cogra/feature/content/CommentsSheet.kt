@@ -22,6 +22,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PendingMarker
+import com.cogra.core.designsystem.RowLine
 import com.cogra.core.designsystem.v2.atom.CograSheetHost
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
 import com.cogra.core.designsystem.v2.atom.LoadingState
@@ -51,7 +53,11 @@ import com.cogra.domain.CommentView
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
+import com.cogra.domain.saved.SavedWrites
 import com.cogra.feature.content.R
+import com.cogra.feature.saved.LocalSavedHost
+import com.cogra.feature.saved.rememberSavedHost
+import com.cogra.feature.saved.rememberSavedWrites
 
 /**
  * THE COMMENTS SHEET, WIRED TO ITS OWN THREAD — the one comments surface
@@ -105,10 +111,15 @@ fun CommentsSheetRoute(
      */
     refreshToken: Int = 0,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { _, _ -> },
+    /** A comment to land on: the thread pages and unfolds until it stands, then scrolls to it. */
+    landOn: String? = null,
+    /** The guest gate a signed-out reader's Save opens; null when signed in. */
+    onRequireAccount: (() -> Unit)? = null,
     viewModel: CommentsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(postId) { viewModel.start(postId) }
+    LaunchedEffect(postId, landOn) { landOn?.let(viewModel::landOn) }
     // In an effect, not the composition body: a recomposition that never
     // commits would otherwise fire the refetch anyway. The landing is
     // not consumed here — the place is the other half of the same
@@ -151,6 +162,9 @@ fun CommentsSheetRoute(
         onLicense = { licenseShown = it },
         onSignInOrJoin = onSignInOrJoin,
         stanceControl = stanceControl,
+        saved = rememberSavedWrites(),
+        onRequireAccount = onRequireAccount,
+        onLanded = viewModel::onLanded,
     )
     licenseShown?.let { license ->
         LicenseSheet(license = license, onDismiss = { licenseShown = null }, stacked = true)
@@ -210,11 +224,18 @@ fun CommentsSheet(
     onRestored: () -> Unit = {},
     /** The stance control the post and every comment carry (design.md §6). */
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { _, _ -> },
+    /** The app's one Saved overlay, which the comments' menus save through; null stands their Save rows inert. */
+    saved: SavedWrites? = null,
+    /** The guest gate a signed-out reader's Save opens; null when signed in. */
+    onRequireAccount: (() -> Unit)? = null,
+    /** The list scrolled to a landing ([CommentsUiState.landingAt]). */
+    onLanded: () -> Unit = {},
 ) {
     // The sheet's own host. A ModalBottomSheet is its own window, so a
     // host on the surface behind would render the confirmation for a
     // comment that landed in THIS thread behind the thread it landed in.
     val snackbar = remember { SnackbarHostState() }
+    val savedHost = rememberSavedHost(saved, snackbar, null, onRequireAccount)
     val signedCopy = stringResource(R.string.content_post_saved)
     LaunchedEffect(state.commentSigned) {
         if (state.commentSigned) {
@@ -233,6 +254,15 @@ fun CommentsSheet(
         if (state.loading) return@LaunchedEffect
         if (state.comments.isNotEmpty()) listState.scrollToItem(place.index, place.offset)
         onRestored()
+    }
+    // LANDED ON A COMMENT (Saved.md "tap a comment's row"): the branch is
+    // already unfolded down to it, so the thread scrolls to the top-level
+    // comment it hangs under and the comment stands within that row.
+    LaunchedEffect(state.landingAt) {
+        val top = state.landingAt ?: return@LaunchedEffect
+        val index = state.comments.indexOfFirst { it.id == top }
+        if (index >= 0) listState.scrollToItem(index)
+        onLanded()
     }
     val depart: (() -> Unit) -> Unit = { go ->
         onDepart(
@@ -263,23 +293,27 @@ fun CommentsSheet(
             // sheet stays exactly at its ceiling. The keyboard pads from
             // inside the same height ([CograSheetSurface]), for the same
             // reason.
-            CommentsList(
-                state = state,
-                listState = listState,
-                viewerId = viewerId,
-                signedIn = signedIn,
-                modifier = Modifier.weight(1f),
-                onLoadMoreComments = onLoadMoreComments,
-                onReplyTo = { c -> depart { onReplyTo(c) } },
-                onEditComment = { c -> depart { onEditComment(c) } },
-                onLoadMoreReplies = onLoadMoreReplies,
-                onReveal = onReveal,
-                onOpenActor = onOpenActor,
-                onOpenTopic = onOpenTopic,
-                onReference = onReference,
-                onLicense = onLicense,
-                stanceControl = stanceControl,
-            )
+            // THE COMMENTS' MENUS SAVE THROUGH THE ONE OVERLAY, their aftermath
+            // on this sheet's own snackbar — the page's is beneath the sheet.
+            CompositionLocalProvider(LocalSavedHost provides savedHost) {
+                CommentsList(
+                    state = state,
+                    listState = listState,
+                    viewerId = viewerId,
+                    signedIn = signedIn,
+                    modifier = Modifier.weight(1f),
+                    onLoadMoreComments = onLoadMoreComments,
+                    onReplyTo = { c -> depart { onReplyTo(c) } },
+                    onEditComment = { c -> depart { onEditComment(c) } },
+                    onLoadMoreReplies = onLoadMoreReplies,
+                    onReveal = onReveal,
+                    onOpenActor = onOpenActor,
+                    onOpenTopic = onOpenTopic,
+                    onReference = onReference,
+                    onLicense = onLicense,
+                    stanceControl = stanceControl,
+                )
+            }
             CommentsFoot(signedIn, { depart(onAddComment) }, onSignInOrJoin)
             CograSnackbarHost(snackbar)
         }
@@ -466,7 +500,13 @@ private fun commentMenuRows(
     onCite: () -> Unit,
     onLicense: () -> Unit,
 ): List<MenuRow> = buildList {
-    add(MenuRow(stringResource(R.string.content_menu_save), "comment_menu_save_${comment.id}") {})
+    // SAVE IS THE ONE BEHAVIOUR EVERY MENU SHARES (`saveMenuRow`); the comment
+    // menus gain the `Saved.` snackbar too (design digest item 54).
+    val save = stringResource(R.string.content_menu_save)
+    add(
+        LocalSavedHost.current?.menuRow(comment.id, comment.viewerBookmarkedAt, "comment_menu_save_${comment.id}")
+            ?: MenuRow(save, "comment_menu_save_${comment.id}") {},
+    )
     add(
         MenuRow(
             stringResource(R.string.content_menu_cite),
@@ -630,6 +670,9 @@ private fun CommentCard(
                 onEditComment = onEditComment,
                 stanceControl = stanceControl,
             )
+            // THE ROW LINE under the face (RowSigning.md): a save or unsave
+            // of this comment that did not go through.
+            LocalSavedHost.current?.comfortLine(comment.id)?.let { RowLine(it, "comment_${comment.id}_row_line") }
         }
     }
 }

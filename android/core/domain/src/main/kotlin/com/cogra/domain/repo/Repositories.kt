@@ -356,6 +356,13 @@ interface ContentRepository {
         includePending: Boolean = true,
     ): Outcome<Page<CommentView>>
 
+    /**
+     * One step up a comment's chain — the comment it answers, or null when it
+     * answers the post itself. What landing on a comment walks (Saved.md "tap a
+     * comment's row"): a reply sits behind its parent's collapsed count.
+     */
+    suspend fun commentParent(commentId: String): Outcome<String?> = Outcome.Success(null)
+
     companion object {
         /**
          * api-spec.md `PrepareCommentInput`: at most four per comment

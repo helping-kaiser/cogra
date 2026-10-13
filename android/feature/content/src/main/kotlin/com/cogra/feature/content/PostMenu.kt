@@ -25,8 +25,8 @@ import com.cogra.domain.LicenseChoice
  * ROWS WHOSE DESTINATION IS NOT BUILT YET STAND ANYWAY and do nothing
  * (jakob 2026-09-14, the introduced-but-inert law): a menu that grew a
  * row per slice would be a different menu every release, and the row
- * order is ruled. `Save` waits on saved-surface's `setBookmark`, the hide
- * row on hidden-actors' `hideActor`; `Remove` waits on slice 8's erasure.
+ * order is ruled. The hide row waits on hidden-actors' `hideActor`;
+ * `Remove` waits on slice 8's erasure.
  *
  * @param onShare THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK
  *   (design/readme.md, jakob 2026-09-17, sharpened 2026-09-22 — PR #794):
@@ -57,6 +57,12 @@ internal fun postMenuRows(
     testTagPrefix: String,
     onReport: (() -> Unit)? = null,
     rowNode: (PostMenuRow) -> DataNode? = { null },
+    /**
+     * The first row's words and act — `Save` or `Unsave` as the post is kept
+     * (`saveMenuRow`, the one save behaviour every menu shares). Null stands
+     * the row inert, for a host rendered outside the app's graph.
+     */
+    saveRow: MenuRow? = null,
 ): List<MenuRow> {
     fun tag(row: PostMenuRow, legacy: String): String = rowNode(row)?.tag ?: "${testTagPrefix}_$legacy"
     val save = stringResource(R.string.content_menu_save)
@@ -83,7 +89,7 @@ internal fun postMenuRows(
         if (!own && onShare != null) {
             add(MenuRow(share, "${testTagPrefix}_share", onShare))
         }
-        add(MenuRow(save, tag(PostMenuRow.Save, "save")) {})
+        add(MenuRow(saveRow?.label ?: save, tag(PostMenuRow.Save, "save"), saveRow?.onSelect ?: {}))
         // CITE STANDS SECOND ON BOTH MENUS (`_shared.jsx:414-420`, backlog
         // item 100): self-citation is a real authorial act, so the thumb
         // finds one row in one place on every menu that has it.

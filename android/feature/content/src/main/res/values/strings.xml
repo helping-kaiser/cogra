@@ -223,6 +223,8 @@
     <string name="content_detail_newer_version">Edited since you opened it — tap for the newest version.</string>
     <string name="content_retry">Retry</string>
     <string name="content_back">Back</string>
+    <!-- A Saved row's post reads its origin (the origin-naming table). -->
+    <string name="content_back_saved">Back to Saved</string>
     <string name="content_comment_edited">Edited</string>
     <string name="content_comment_reply">Reply</string>
     <string name="content_comment_edit_save">Save</string>
