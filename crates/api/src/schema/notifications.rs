@@ -67,10 +67,8 @@ impl NotificationKind {
     }
 }
 
-/// Something another actor did that reached the viewer's content, profile
-/// or application — one row per act (notifications.md). A pointer, never a
-/// copy: every displayed fact resolves through the nodes, record and
-/// application below.
+/// One notification row with its subject and context already resolved by
+/// the page's batch.
 pub struct NotificationType {
     row: store::Notification,
     kind: Kind,
@@ -98,6 +96,10 @@ impl ContentOrProfile {
     }
 }
 
+/// Something another actor did that reached the viewer's content, profile
+/// or application — one row per act (notifications.md). A pointer, never a
+/// copy: every displayed fact resolves through the nodes, record and
+/// application below.
 #[Object(name = "Notification")]
 impl NotificationType {
     async fn id(&self) -> Uuid {

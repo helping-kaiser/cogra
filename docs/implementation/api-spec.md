@@ -1069,6 +1069,17 @@ type User implements Node & Actor {
    comfort that does not lift the viewer's own records' effect on
    anyone else's feed (feed-ranking.md §8)."
   hiddenActors(first: Int, after: String, last: Int, before: String): HiddenActorConnection
+  "Acts other actors made that reached this user's content, profile or
+   application — newest first, one row per act (notifications.md). A
+   hidden actor's rows stay out while the actor is hidden. Keyset on
+   `(createdAt, id)`: a row arriving while the reader scrolls sorts
+   above the open page, so forward paging never shifts. Field-level:
+   viewer-only; null otherwise."
+  notifications(first: Int, after: String, last: Int, before: String): NotificationConnection
+  "Whether a row has arrived since the viewer last opened the list —
+   the band's dot. A boolean, never a count; a hidden actor's rows
+   never light it. False for any viewer but the account's own."
+  hasUnreadNotifications: Boolean!
   "Active authentication sessions, one per refresh token."
   sessions: [Session!]
   "When the password was last set — at registration, a reset or a
@@ -1759,6 +1770,86 @@ type HiddenActorEdge {
   cursor: String!
   node: Actor!
   hiddenAt: DateTime!
+}
+
+"Something another actor did that reached the viewer's content,
+ profile or application — one row per act (notifications.md). A
+ pointer, never a copy: every displayed fact resolves through the
+ nodes, record and application below."
+type Notification {
+  id: UUID!
+  kind: NotificationKind!
+  "Who acted. For APPLICATION_APPROVABLE this is the applicant
+   account — an actor row with a handle and nothing on the graph yet,
+   named only to the approver of the path that staged it."
+  actor: Actor!
+  "What opening the row lands on: the new comment or reply, the
+   citing post or comment, the acting actor's profile. Null for
+   APPLICATION_APPROVABLE and APPLICATION_REJECTED, whose destinations
+   are the invites screen and the viewer's own application state, and
+   whenever the node no longer resolves."
+  subject: Node
+  "The viewer's own node the act reached: the post commented on, the
+   comment replied to, the cited post or comment, the viewer's own
+   profile for a mention. Null for PROFILE_OPINION and the four
+   application kinds."
+  context: Node
+  "The landed L1 record behind the act — the row's traceable source,
+   and where an opinion row reads its pair. INVITE_LANDED's record is
+   the admission Registration. Null for APPLICATION_APPROVABLE,
+   APPLICATION_APPROVED and APPLICATION_REJECTED, which are moments in
+   an application's life with no record of their own."
+  record: Record
+  "The application the act concerns — the waiting application for
+   APPLICATION_APPROVABLE, the viewer's own path for
+   APPLICATION_APPROVED and APPLICATION_REJECTED, the landed path for
+   INVITE_LANDED; null for the five content kinds. Resolves while the
+   row exists; an application later closed or landed reads in its
+   current state."
+  application: Application
+  "When the act reached the viewer — the moment its landing was
+   observed, or the moment the account transition committed."
+  createdAt: DateTime!
+  "When the viewer opened this row; null while unread."
+  readAt: DateTime
+}
+
+"The nine addressed acts. A kind is the act plus what it reached,
+ which is what a reader needs to know before opening."
+enum NotificationKind {
+  "A comment on the viewer's post."
+  COMMENT
+  "A reply to the viewer's comment."
+  REPLY
+  "A citation whose target is the viewer's profile."
+  MENTION
+  "A citation whose target is the viewer's post or comment."
+  CITATION
+  "An opinion whose target is the viewer's profile — a first one or a
+   revision; a withdrawal reports nothing."
+  PROFILE_OPINION
+  "An application waiting in the viewer's queue became approvable —
+   email verified and key attached."
+  APPLICATION_APPROVABLE
+  "An account the viewer vouched for landed — the vouch that
+   completed its entry was the viewer's."
+  INVITE_LANDED
+  "A member vouched for the viewer's application — their signed
+   approval."
+  APPLICATION_APPROVED
+  "The approver closed the viewer's application without approving
+   it — that queue entry only; the account and its ask link remain."
+  APPLICATION_REJECTED
+}
+
+type NotificationConnection {
+  edges: [NotificationEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+type NotificationEdge {
+  cursor: String!
+  node: Notification!
 }
 
 type InviteLinkConnection {
@@ -2880,7 +2971,11 @@ These bind every mutation below.
   state to render. The code says which proof is missing —
   `EMAIL_NOT_VERIFIED` while the address is unproven, `FORBIDDEN`
   otherwise — so a client that reaches the refusal anyway can name
-  the one thing the person can do about it.
+  the one thing the person can do about it. The private-viewer-state
+  verbs are not acting: `markSeen`, `markNotificationsSeen` and
+  `markNotificationRead` need a session and no particular account
+  state, so an applicant's read state — an unverified one's included
+  — moves like a member's.
 - **Errors follow the tiered model** (governing principles). A
   `userErrors: [UserError!]!` field is **implied on every payload type
   below and omitted from its body**, exactly as the interface fields
@@ -5340,6 +5435,19 @@ input MarkChatReadInput {
 }
 type MarkChatReadPayload { chat: Chat! }
 
+input MarkNotificationsSeenInput {
+  "The createdAt of the newest row the opened list holds — everything
+   at or before it becomes seen. A row that arrived after the list was
+   read stays unseen and lights the bell at the next root load. A
+   moment after now is BAD_INPUT."
+  through: DateTime!
+}
+"Whether anything is still unseen — a row that arrived after
+ `through`."
+type MarkNotificationsSeenPayload { hasUnreadNotifications: Boolean! }
+input MarkNotificationReadInput { notification: UUID! }
+type MarkNotificationReadPayload { notification: Notification! }
+
 "A preference write. An absent field is left as it is; an explicit
  null restores its default."
 input SetPreferencesInput {
@@ -5384,6 +5492,16 @@ extend type Mutation {
   markSeen(input: MarkSeenInput!): MarkSeenPayload!
   "Advance the viewer's last-read pointer in a Chat."
   markChatRead(input: MarkChatReadInput!): MarkChatReadPayload!
+  "Clear the bell's dot (Notifications opening): the seen pointer
+   moves to `through`, never backwards, and row read state is
+   untouched. Idempotent; needs a session (UNAUTHENTICATED otherwise)
+   and no account state. A `through` after now is BAD_INPUT."
+  markNotificationsSeen(input: MarkNotificationsSeenInput!): MarkNotificationsSeenPayload!
+  "Mark one row read — the emphasis it keeps until opened. Idempotent:
+   a read row keeps its first readAt. An id that is not one of the
+   viewer's rows is NOT_FOUND (unknown and foreign read alike). Needs
+   a session and no account state."
+  markNotificationRead(input: MarkNotificationReadInput!): MarkNotificationReadPayload!
   setPreferences(input: SetPreferencesInput!): SetPreferencesPayload!
 }
 ```
