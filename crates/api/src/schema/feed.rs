@@ -25,7 +25,6 @@ use common::l1::identifier::NodeId;
 use postgres_store::{PgPool, auth as store, hashtag, mirror, params, settling, slice};
 use uuid::Uuid;
 
-use crate::auth::Viewer;
 use crate::ranker_pod::{
     FriendAuthorReorder, PodError, PodKind, PodMark, PodRanking, RankParams, RankVariables,
     RankerClient, SettlingCandidate,
@@ -576,10 +575,10 @@ pub enum PeopleMark {
 /// never cuts, sorts, weighs, merges or weaves: the pod emits the order,
 /// both permutations, the woven places and the people marks, and the
 /// reader's device applies them. What the relay does to the answer is
-/// translation (the pod's id-level kinds and `ref`s into the public types),
-/// one id comparison (marks ride only when the session's reader is the
-/// viewer), and an index-set check that refuses a malformed permutation
-/// rather than handing the device an undefined composition.
+/// translation (the pod's id-level kinds and `ref`s into the public types;
+/// the people marks pass through as the vantage's, for every reader) and an
+/// index-set check that refuses a malformed permutation rather than handing
+/// the device an undefined composition.
 ///
 /// No pooled connection is held across the pod call: the pod calls back
 /// into this api for the slice, so a held connection per relay request
@@ -659,9 +658,7 @@ pub async fn feed_ranking(
         }
     };
 
-    let reader_is_viewer =
-        matches!(ctx.data_opt::<Option<Viewer>>(), Some(Some(reader)) if reader.user_id == viewer);
-    map_answer(answer, pinned, &staged_kinds, reader_is_viewer)
+    map_answer(answer, pinned, &staged_kinds)
         .map(Some)
         .map_err(|malformed| {
             tracing::error!(%viewer, %malformed, "pod answer malformed");
@@ -736,12 +733,13 @@ async fn settling_candidates(
 /// The pod's answer in the public shapes, field for field. Composes
 /// nothing: entries keep the pod's array order, and the permutations and
 /// places pass through as the pod emitted them, once their index sets are
-/// checked. An `Err` names what is malformed.
+/// checked. The people marks are the vantage's for every reader; a null
+/// mark means the vantage holds no opinion of the author. An `Err` names
+/// what is malformed.
 fn map_answer(
     answer: PodRanking,
     pinned: i64,
     staged_kinds: &HashMap<Uuid, NodeKind>,
-    reader_is_viewer: bool,
 ) -> Result<FeedRanking, String> {
     if answer.as_of_epoch != pinned {
         return Err(format!(
@@ -757,7 +755,7 @@ fn map_answer(
             Some(PodMark::SIGNLESS) => Some(PeopleMark::Signless),
             Some(PodMark::Other(other)) => return Err(format!("unknown people mark {other}")),
         };
-        Ok(mark.filter(|_| reader_is_viewer))
+        Ok(mark)
     };
 
     let landed = answer.entries.len();
