@@ -834,6 +834,51 @@ describe("PostView", () => {
     await waitFor(() => expect(log.sets).toEqual([{ node: "c1", at: null }]));
   });
 
+  // LANDING ON A COMMENT (jakob 2026-10-01; Saved.md "tap a comment's row"):
+  // the thread opens over the post, the reply's branch unfolds, and the reply
+  // takes focus.
+  it("a_saved_reply_opens_its_thread_landed_on_it", async () => {
+    server.use(
+      ...thread("u1", [{ id: "c1", body: "Top", replyCount: 1 }]),
+      graphql.query("CommentParent", ({ variables }) =>
+        HttpResponse.json({
+          data: {
+            comment: {
+              __typename: "Comment",
+              id: variables.id,
+              target:
+                variables.id === "r1"
+                  ? { __typename: "Comment", id: "c1" }
+                  : { __typename: "Post", id: "p1" },
+            },
+          },
+        }),
+      ),
+      graphql.query("CommentReplies", () =>
+        HttpResponse.json({
+          data: {
+            comment: {
+              __typename: "Comment",
+              id: "c1",
+              replies: {
+                __typename: "CommentConnection",
+                edges: [{ __typename: "CommentEdge", node: commentNode({ id: "r1", body: "nested" }) }],
+                pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+              },
+            },
+          },
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" landOn="r1" from="saved" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    const reply = await screen.findByTestId("post-comment-r1");
+    await waitFor(() => expect(document.activeElement).toBe(reply));
+    expect((screen.getByTestId("comments-sheet") as HTMLDialogElement).open).toBe(true);
+  });
+
   // A SAVED ROW'S DESTINATION NAMES ITS ORIGIN (the origin-naming table).
   it("opened_from_saved_the_back_arrow_reads_back_to_saved", async () => {
     server.use(...thread("someone-else", []));

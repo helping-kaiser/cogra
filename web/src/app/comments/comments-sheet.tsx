@@ -587,7 +587,7 @@ export function CommentsSheet({
     const scroller = bodyRef.current;
     const target = scroller?.querySelector<HTMLElement>(`[${ANCHOR_ATTRIBUTE}="${landingAt}"]`);
     if (!target) return;
-    target.scrollIntoView({ block: "center" });
+    target.scrollIntoView?.({ block: "center" });
     target.setAttribute("tabindex", "-1");
     target.focus({ preventScroll: true });
     setLandingAt(null);
