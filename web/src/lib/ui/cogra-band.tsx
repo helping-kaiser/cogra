@@ -17,8 +17,14 @@
 // wires one (`graph.json`, the `chats` edge) — today that is the feed, reaching
 // the coming-soon destination (backlog item 68, ruled 2026-09-14).
 
+//
+// THE DELETION BAND RIDES HERE ON A ROOT (FeedDeleting.md:5): first in the
+// block below the 48px line, so it collapses and returns with the band
+// instead of scrolling out of the reader's life.
+
 import type { ReactNode } from "react";
 
+import { DeletionBandSlot } from "@/lib/deletion/deletion-status";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
 
@@ -28,7 +34,10 @@ export function CograBand({
   chatsLabel = "Chats",
   children,
   node,
+  deletionBandNode,
 }: {
+  /** The registered deletion band on a registered root (`feed.deletionBand`). */
+  deletionBandNode?: DataNode;
   trailing?: ReactNode;
   /** Omitted until the chat surface exists. */
   onChats?: () => void;
@@ -67,6 +76,7 @@ export function CograBand({
           {trailing}
         </div>
       </div>
+      <DeletionBandSlot node={deletionBandNode} />
       {children}
     </div>
   );
