@@ -1,0 +1,11 @@
+# What a container build from the repository root never needs: build
+# output, the clients, the design tree, and the working notes. The Rust
+# images (crates/*/Containerfile) read the workspace manifests, crates/,
+# the checked-in GraphQL contracts and the toolchain pin.
+target/
+android/
+web/
+design/
+tmp_dev/
+tmp_research_files/
+.git/

@@ -175,6 +175,8 @@ fun FeedRoute(
      * Report row raises it instead of the confirm (ReportConfirm.md:21).
      */
     onRequireAccount: (() -> Unit)? = null,
+    /** The bar's Feed slot re-tapped over this root, counted ([FeedReselectEffect]). */
+    reselectSignal: Int = 0,
     viewModel: FeedViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -206,6 +208,7 @@ fun FeedRoute(
             )
         },
         reportSheet = reportDoor(onRequireAccount, testTag = FEED_REPORT_SHEET),
+        reselectSignal = reselectSignal,
         onShare = { postId -> context.sharePost(viewModel.shareUrl(postId)) },
         state = state,
         expiredLabel = expiredLabel,
@@ -335,6 +338,8 @@ fun FeedScreen(
     onRequireAccount: (() -> Unit)? = null,
     /** The reader's hidden set, which the cards' menus hide through; null stands their Hide rows inert. */
     hidden: HiddenSet? = null,
+    /** The bar's Feed slot re-tapped over this root, counted ([FeedReselectEffect]). */
+    reselectSignal: Int = 0,
 ) {
     // EVERY LAYER RAISED OVER THE FEED SAYS IT IS UP (Feed.md:31-37): the
     // card's menu, the terms and the report's confirm each stop the playing
@@ -368,6 +373,9 @@ fun FeedScreen(
     // / snapshotFlow), so the watch costs nothing while the reader is
     // nowhere near the end and needs no manual scroll listener.
     val listState = rememberLazyListState()
+    // The re-tap rungs of the ladder (Feed.md:85-91): up when scrolled, a
+    // refresh at the top.
+    FeedReselectEffect(signal = reselectSignal, listState = listState, onRefresh = onRefresh)
     // THE CLIPS AHEAD ARE READ BEFORE THE READER GETS THERE: the stage
     // preloads the opening of the clips around the reader, nearest first
     // (`VideoPreload`). The feed knows which posts carry one and where the
@@ -598,6 +606,13 @@ fun FeedScreen(
                             }
                         }
                     }
+                    // THE WAY BACK UP (FeedScrolled.md), over the list and
+                    // directly under the band — never part of the band.
+                    FeedBackToTop(
+                        bandShown = collapsingTop.showTop,
+                        listState = listState,
+                        modifier = Modifier.align(Alignment.TopCenter),
+                    )
                 }
             }
         }

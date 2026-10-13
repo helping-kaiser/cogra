@@ -48,6 +48,7 @@ import { licenseName, PUBLIC_DOMAIN, type License } from "@/lib/license";
 import { useHostSnack } from "@/lib/saved/save-row";
 import { useTokenStore } from "@/lib/session/provider";
 import { useAuthGuard, useDeviceLock } from "@/lib/session/runtime";
+import { RUNNING_VERSION } from "@/lib/release/running-version";
 import { eraseEverything } from "@/lib/settings/erase-everything";
 import {
   applyTheme,
@@ -94,8 +95,6 @@ const node = (tail: string): DataNode => part(NODE, tail);
 /** The contact door's address — a placeholder until CoGra is on a server. */
 export const CONTACT_ADDRESS = "hello@cogra.local";
 
-/** The version running here — `web/package.json`, inlined by the build (`next.config.ts`). */
-export const RUNNING_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "";
 
 /** The registry's spelling of each stance input's row. */
 const STANCE_ROWS: readonly { mode: StanceInputMode; key: string; label: string; status: string }[] = [
@@ -756,16 +755,21 @@ export function SettingsView({
         </SettingsGroup>
 
         <SettingsGroup label="About" node={node("about")}>
-          {/* DRIFT (the intro, What's new, Report a problem packets; Privacy
-              and Terms await their documents): rows whose destination is not
-              built yet open nothing. */}
+          {/* DRIFT (the intro, Report a problem packets; Privacy and Terms
+              await their documents): rows whose destination is not built yet
+              open nothing. */}
           <SettingsRow label="Watch the intro again" onOpen={() => {}} node={node("about.intro")} />
           <SettingsRow
             label="About CoGra"
             onOpen={() => router.push("/about?from=settings")}
             node={node("about.aboutCogra")}
           />
-          <SettingsRow label="What's new" value={RUNNING_VERSION} onOpen={() => {}} node={node("about.whatsNew")} />
+          <SettingsRow
+            label="What's new"
+            value={RUNNING_VERSION}
+            onOpen={() => router.push("/settings/whats-new")}
+            node={node("about.whatsNew")}
+          />
           <SettingsRow label="Report a problem" onOpen={() => {}} node={node("about.report")} />
           <SettingsRow
             label="Contact"

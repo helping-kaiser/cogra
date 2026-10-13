@@ -141,12 +141,14 @@ exclude_trees = [
 generated_files = [
   "crates/cogra-linter/docs/attestation-register.md",  # E_hat_A, see [kinds.register]
   "schema.graphql",             # exported, CI-diffed (CLAUDE.md)
+  "ranker-schema.graphql",      # the pod's, exported and CI-diffed the same way
   "Cargo.lock",
   "web/package-lock.json",
   "design/tokens/scheme.json",
   "client-crypto-vectors.json",
   "client-constants.json",
   "stance-fold-vectors.json",
+  "crates/ranker/tests/vectors/ranker-vectors.json",
   "android/gradle/libs.versions.toml",
   # The per-owner label registers of the rust-test profile, one per
   # owner with covered assets, materialized by the generator on
@@ -157,6 +159,8 @@ generated_files = [
   "crates/common/label-register.md",
   "crates/l1-standin/label-register.md",
   "crates/postgres-store/label-register.md",
+  "crates/ranker/label-register.md",
+  "crates/ranker-server/label-register.md",
   # The per-owner claim matrices, one per ACTIVATED owner, materialized
   # on 2026-08-31 by the pilot wave; see [claims] matrix. The list grows
   # by one file in the commit that closes each further owner's wave.
@@ -166,6 +170,8 @@ generated_files = [
   "crates/common/claim-matrix.md",
   "crates/l1-standin/claim-matrix.md",
   "crates/postgres-store/claim-matrix.md",
+  "crates/ranker/claim-matrix.md",
+  "crates/ranker-server/claim-matrix.md",
 ]
 
 # Vendored trees: sources kept in-repo that the carrier does not scan.
@@ -367,6 +373,8 @@ note   = "the residual owner: root prose (README, CONTRIBUTING, CLAUDE.md), Make
 #   crates/postgres-store    -> POSTGRESSTORE
 #   crates/cogra-linter      -> LINTER
 #   crates/cogra-interchange -> INTERCHANGE
+#   crates/ranker            -> RANKER
+#   crates/ranker-server     -> RANKERSERVER
 #   android                  -> ANDROID
 #   web                      -> WEB
 # None collides with a hand-registered prefix above.
@@ -441,7 +449,7 @@ path  = "crates/cogra-linter/docs/architecture.md"
 owner = "doc.linter-architecture"
 note  = "the linter package's design document is its own owner, keeping the ARCH prefix its 16 live citations already use. It is a corpus-generic document like the four disciplines beside it, not the linter crate's internal prose"
 
-# --- 6..13: package owners (prefixes by R-PKG') ------------------
+# --- 6..15: package owners (prefixes by R-PKG') ------------------
 
 [[partition.rule]]
 order = 6
@@ -477,6 +485,18 @@ owner = "pkg.postgres-store"
 
 [[partition.rule]]
 order = 12
+path  = "crates/ranker/"
+owner = "pkg.ranker"
+note  = "the pure feed-ranking library (ranker-core RK-0). Written under the comment ban of ARCH dec:linter:rust-comment-ban from its first line, so it joins every discipline with no sweep to wait for"
+
+[[partition.rule]]
+order = 13
+path  = "crates/ranker-server/"
+owner = "pkg.ranker-server"
+note  = "the server's ranker pod (ranker-core RK-2), the pure crate behind its own GraphQL schema. Its own owner, not the ranker's: the pod is a deployment wrapper with a wire contract, the crate the one formula every runner links. Written under the comment ban from its first line"
+
+[[partition.rule]]
+order = 14
 path  = "android/"
 owner = "pkg.android"
 note  = """
@@ -486,7 +506,7 @@ ONE owner for the whole Gradle build, though android/ has 15 modules
 The Kotlin frontend has landed and the whole tree is scanned — the
 218 .kt sources and, since the script production, the 19 .kts build
 files, which live here and nowhere else, so no Gradle script ever
-falls to the repo-root residual owner of rule 20 —
+falls to the repo-root residual owner of rule 22 —
 but the modules carry NO labels: zero occurrences across the tree. A
 15-way split would still buy 15 prefixes and 15 rules over an empty
 occurrence set. The revisit is a conjunction and only half of it has
@@ -496,43 +516,43 @@ boundary begins to decide anything here. Jakob's ruling when it does.
 """
 
 [[partition.rule]]
-order = 13
+order = 15
 path  = "web/"
 owner = "pkg.web"
 
-# --- 14..17: doc-tree residual owners ---------------------------
+# --- 16..19: doc-tree residual owners ---------------------------
 
 [[partition.rule]]
-order = 14
+order = 16
 path  = "docs/primitive/"
 owner = "tree.docs-primitive"
 note  = "covers nothing label-bearing: layer1-interface.md, the one label-shaped file in the tree, is outside the carrier ([carrier] vendored_files)"
 
 [[partition.rule]]
-order = 15
+order = 17
 path  = "docs/instances/"
 owner = "tree.docs-instances"
 
 [[partition.rule]]
-order = 16
+order = 18
 path  = "docs/implementation/"
 owner = "tree.docs-implementation"
 
 [[partition.rule]]
-order = 17
+order = 19
 path  = "docs/"
 owner = "tree.docs-root"
 
-# --- 18..19: working notes (one owner, two roots) ---------------
+# --- 20..21: working notes (one owner, two roots) ---------------
 
 [[partition.rule]]
-order    = 18
+order    = 20
 path     = "tmp_dev/"
 owner    = "tree.working-notes"
 optional = true
 
 [[partition.rule]]
-order    = 19
+order    = 21
 path     = "tmp_research_files/"
 owner    = "tree.working-notes"
 optional = true
@@ -559,10 +579,10 @@ therefore says three things — an absent root is legal, the root is
 walked, and a link there is crossed — and all three are meant.
 """
 
-# --- 20: the residual rule that makes Omega total ---------------
+# --- 22: the residual rule that makes Omega total ---------------
 
 [[partition.rule]]
-order = 20
+order = 22
 path  = ""
 owner = "tree.repo-root"
 note  = "empty prefix matches everything not matched above: README.md, CONTRIBUTING.md, CLAUDE.md, Makefile, Cargo.toml, rust-toolchain.toml, scripts/, migrations/, docker/, and anything new. Totality is structural, not a check that can fail"
@@ -975,6 +995,8 @@ to rename around the collision.
     "pkg.common",             # joined 2026-08-31, the fourth wave
     "pkg.l1-standin",         # joined 2026-08-31, the second wave
     "pkg.postgres-store",     # joined 2026-08-31, the third wave
+    "pkg.ranker",             # joined 2026-10-13, with its first tests
+    "pkg.ranker-server",      # joined 2026-10-13, with its first tests
   ]
   note = """
 PILOT WAVE, 2026-08-31: pkg.cogra-linter alone. Its tests are the
@@ -1324,9 +1346,9 @@ reason     = "no frontend exists; ARCH dec:linter:ast-frontends forbids analysin
 # ADDED 2026-09-24: comment-bearing formats, declared for want of a
 # frontend — a frontend is what would move one to a language row.
 [[scanned-regions.none]]
-languages  = ["html", "css", "xml", "cddl", "proguard", "batch", "toml", "make", "shell", "gitattributes", "gitignore", "editorconfig", "dotenv"]
+languages  = ["html", "css", "xml", "cddl", "proguard", "batch", "toml", "make", "shell", "gitattributes", "gitignore", "editorconfig", "dotenv", "containerfile", "containerignore"]
 extensions = [".html", ".css", ".xml", ".cddl", ".pro", ".bat", ".lock"]
-names      = ["Makefile", "gradlew", ".gitattributes", ".gitignore", ".editorconfig", ".env.example"]
+names      = ["Makefile", "gradlew", ".gitattributes", ".gitignore", ".editorconfig", ".env.example", "Containerfile", ".containerignore"]
 reason     = "comment-bearing formats with no frontend; ARCH dec:linter:ast-frontends forbids analysing them as raw text. Files stay in the carrier and stay owned, carrying no occurrences"
 
 # ADDED 2026-09-24: formats with no comment form at all.
@@ -1824,6 +1846,8 @@ failing = [
   "crates/l1-standin/",
   "crates/common/",
   "crates/api/",
+  "crates/ranker/",
+  "crates/ranker-server/",
   "docs/",
   "web/",
   "android/",
@@ -1878,6 +1902,12 @@ failing = [
 #   label-shaped; that document is outside the carrier ([carrier]
 #   vendored_files), so they became plain-prose section citations. The
 #   prefix is the crate's, not one tree's, because the ban is.
+# crates/ranker/ — the whole crate, written under the ban from its first
+#   line (ranker-core RK-0), so it joins with no sweep to wait for. Like
+#   common's, its doc comments name the L1 document by section, never by
+#   its label anchors.
+# crates/ranker-server/ — the whole crate, the ranker pod (ranker-core
+#   RK-2), likewise written under the ban from its first line.
 # docs/ — the four doc-tree owners at once, since one prefix covers
 #   what four would and the partition's own rules decide ownership
 #   below it. R20 left the trees carrying no occurrence: every
@@ -2079,7 +2109,7 @@ names      = [
 surface    = "query"
 built_by   = "UNTRIAGED: unbuilt surface the spec declares ahead of the schema; the owning feature packet is not yet named"
 names      = [
-  "appVersions", "campaign", "chat", "chatMessage", "chatSearch",
+  "campaign", "chat", "chatMessage", "chatSearch",
   "collective", "honorEntries", "item", "proposal",
 ]
 

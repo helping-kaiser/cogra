@@ -1,0 +1,161 @@
+# The notification list (api-spec.md `User.notifications`,
+# `User.hasUnreadNotifications`, `markNotificationsSeen`,
+# `markNotificationRead`; notifications.md). The document is web's twin
+# (web/src/lib/graphql/notifications.graphql).
+
+# The bell's dot, read on a fresh root load and never live (FeedUnread):
+# a boolean, never a count. A root whose own load query has no `me` (the
+# Wallet coming-soon root) reads this alone.
+query NotificationBell {
+  me {
+    id
+    hasUnreadNotifications
+  }
+}
+
+# The list, newest first, one page of the default size at a time. `kind`
+# picks the drawn sentence, `actor` names who acted, `subject` is where
+# the tap lands and carries the second line's words, `record` carries an
+# opinion row's pair, and `application` is the queue entry an
+# application row concerns, in its current state. A comment's own thread
+# post is walked two levels up, for `in <the thread's post title>`.
+query Notifications($after: String) {
+  me {
+    id
+    notifications(first: 20, after: $after) {
+      edges {
+        cursor
+        node {
+          id
+          kind
+          createdAt
+          readAt
+          actor {
+            id
+            handle
+            displayName {
+              value
+              status
+            }
+            ... on User {
+              avatar {
+                url
+                status
+              }
+            }
+          }
+          subject {
+            __typename
+            ... on Post {
+              id
+              title {
+                value
+                status
+              }
+              content {
+                value
+                status
+              }
+              attachments {
+                mimeType
+              }
+            }
+            ... on Comment {
+              id
+              content {
+                value
+                status
+              }
+              attachments {
+                mimeType
+              }
+              target {
+                __typename
+                ... on Post {
+                  id
+                  title {
+                    value
+                    status
+                  }
+                  content {
+                    value
+                    status
+                  }
+                }
+                ... on Comment {
+                  id
+                  target {
+                    __typename
+                    ... on Post {
+                      id
+                      title {
+                        value
+                        status
+                      }
+                      content {
+                        value
+                        status
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            ... on User {
+              id
+              handle
+            }
+          }
+          context {
+            __typename
+            ... on Post {
+              id
+            }
+            ... on Comment {
+              id
+            }
+            ... on User {
+              id
+            }
+          }
+          record {
+            id
+            pDirected
+            pInterest
+          }
+          application {
+            id
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# Clears the bell's dot when the list opens: everything at or before the
+# newest row the opened list holds becomes seen.
+mutation MarkNotificationsSeen($through: DateTime!) {
+  markNotificationsSeen(input: { through: $through }) {
+    hasUnreadNotifications
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+# Clears one row's unread dot when it is tapped.
+mutation MarkNotificationRead($notification: UUID!) {
+  markNotificationRead(input: { notification: $notification }) {
+    notification {
+      id
+      readAt
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}

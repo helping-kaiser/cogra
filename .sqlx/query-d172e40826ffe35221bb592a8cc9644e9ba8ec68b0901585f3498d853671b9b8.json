@@ -1,0 +1,56 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT component, version, notes, patch_notes_url, released_by, released_at\n               FROM versions\n               WHERE ($1::text IS NULL OR component = $1)\n                 AND ($2::timestamptz IS NULL\n                      OR (released_at, component, version) < ($2, $3::text, $4::text))\n               ORDER BY released_at DESC, component DESC, version DESC\n               LIMIT $5",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "component",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "version",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "notes",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 3,
+        "name": "patch_notes_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "released_by",
+        "type_info": "UuidArray"
+      },
+      {
+        "ordinal": 5,
+        "name": "released_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "d172e40826ffe35221bb592a8cc9644e9ba8ec68b0901585f3498d853671b9b8"
+}

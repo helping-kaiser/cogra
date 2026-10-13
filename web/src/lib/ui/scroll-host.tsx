@@ -19,6 +19,8 @@
 
 import { createContext, useContext, type RefObject } from "react";
 
+import { prefersStillness } from "./motion";
+
 const ScrollHostContext = createContext<RefObject<HTMLElement | null> | null>(null);
 
 export const ScrollHostProvider = ScrollHostContext.Provider;
@@ -43,6 +45,18 @@ export function scrollHostTo(host: RefObject<HTMLElement | null> | null, offset:
   const scroller = scrollElementOf(host);
   if (scroller === null) window.scrollTo(0, offset);
   else scroller.scrollTop = offset;
+}
+
+/**
+ * Take the host to its top, animated — the way back up a long list
+ * (FeedScrolled.md:11-13) — or at once for a reader who asked for stillness.
+ */
+export function scrollHostToTopAnimated(host: RefObject<HTMLElement | null> | null): void {
+  const options: ScrollToOptions = { top: 0, behavior: prefersStillness() ? "auto" : "smooth" };
+  const scroller = scrollElementOf(host);
+  if (scroller === null) window.scrollTo(options);
+  else if (typeof scroller.scrollTo === "function") scroller.scrollTo(options);
+  else scroller.scrollTop = 0;
 }
 
 /** Move the host by a delta, whichever host it is. */

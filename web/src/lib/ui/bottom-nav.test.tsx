@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
 import { ALL_SLOTS, BottomNav, SHIPPED_SLOTS } from "./bottom-nav";
 
@@ -79,5 +79,22 @@ describe("BottomNav", () => {
   it("gives the compose action a name, since it is a glyph", () => {
     render(<BottomNav active="feed" signedIn />);
     expect(screen.getByTestId("nav-compose")).toHaveAttribute("aria-label", "New post");
+  });
+
+  // Feed.md:81-91 — over the feed's own root the Feed slot is a re-tap the
+  // feed answers, not a navigation to where the reader already is.
+  it("the_feed_slot_over_the_feeds_root_is_a_re_tap_the_feed_answers", () => {
+    const onReselectFeed = vi.fn();
+    render(<BottomNav active="feed" signedIn onReselectFeed={onReselectFeed} />);
+    const tap = new MouseEvent("click", { bubbles: true, cancelable: true });
+    fireEvent(screen.getByTestId("nav-feed"), tap);
+    expect(onReselectFeed).toHaveBeenCalledTimes(1);
+    expect(tap.defaultPrevented).toBe(true);
+  });
+
+  // Feed.md:85 — from anywhere else the slot stays the way to the feed.
+  it("the_feed_slot_elsewhere_is_the_plain_way_to_the_feed", () => {
+    render(<BottomNav active={null} signedIn />);
+    expect(screen.getByTestId("nav-feed")).toHaveAttribute("href", "/feed");
   });
 });

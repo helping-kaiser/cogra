@@ -31,6 +31,7 @@ import { fetchFeedRanking, fetchFeedWindow } from "@/lib/api/feed-api";
 import { failed, success } from "@/lib/api/outcome";
 import { appendDeduped } from "@/lib/api/pagination";
 import { onFeedDone } from "@/lib/feed/feed-done";
+import { onFeedReselect } from "@/lib/feed/feed-reselect";
 import { RankedFeed, type FeedIo, type FeedWindow } from "@/lib/feed/ranked-feed";
 import { seenRecord } from "@/lib/history/seen-record";
 import { SEEN_ATTRIBUTE, useSeenTracker } from "@/lib/history/seen-tracker";
@@ -54,10 +55,11 @@ import { JoinPrompt } from "@/lib/ui/join-prompt";
 import { PostCard } from "@/lib/ui/post-card";
 import { tailIndexOf, useApproachingTail } from "@/lib/ui/infinite-list";
 import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
-import { useScrollHost } from "@/lib/ui/scroll-host";
+import { scrollHostToTopAnimated, scrollOffsetOf, useScrollHost } from "@/lib/ui/scroll-host";
 import { ANCHOR_ATTRIBUTE, usePinnedPlace } from "@/lib/ui/scroll-pin";
 import { LINK_COPIED } from "@/lib/ui/share";
 import { useHiddenSet } from "@/lib/hidden/provider";
+import { useNewerVersionAnnouncement } from "@/lib/release/newer-version-announcer";
 import { useHostSnack } from "@/lib/saved/save-row";
 import { Snackbar } from "@/lib/ui/snackbar";
 import type { DataNode } from "@/lib/ui/data-node";
@@ -278,6 +280,10 @@ export function FeedView({
   // THE FEED'S ONE SNACKBAR (`feed.snackbar`): a copied link, and the
   // aftermath of what the card menus did.
   const { snack, notify, dismiss: dismissSnack } = useHostSnack();
+  // A NEWER VERSION, SAID ONCE (FeedNewerVersion.md): on the feed's arrival
+  // in a cold open, the same one snackbar — queued behind whatever it is
+  // already saying, as Material shows one at a time.
+  const newer = useNewerVersionAnnouncement(!loading, snack === null);
   // THE ONE MENU SHEET THE CARDS SHARE (ruling 84, FeedPostMenu.md:3): a
   // card's ⋮ raises it over the feed, which stands unchanged beneath. The post
   // outlives the flag so the sheet does not blank out through its exit.
@@ -451,6 +457,22 @@ export function FeedView({
   }, [releasePin, refresh]);
   usePullToRefresh({ host, onPull, enabled: !commentsOpen });
 
+  // THE WAY BACK UP (FeedScrolled.md:11-13): the list goes to the top,
+  // animated, and NEVER refreshes — the pill's tap and the bar's re-tap from a
+  // scrolled root alike. Going up is a move, so the place stops being held.
+  const goToTop = useCallback(() => {
+    releasePin();
+    scrollHostToTopAnimated(host);
+  }, [host, releasePin]);
+
+  // THE BAR'S RE-TAP OVER THE ROOT (Feed.md:81-91): scrolled, it is the way up;
+  // already at the top, it is the feed's other refresh route, the one a pull
+  // takes there.
+  useEffect(
+    () => onFeedReselect(() => (scrollOffsetOf(host) > 0 ? goToTop() : onPull())),
+    [goToTop, host, onPull],
+  );
+
   // The next window of the derived list — a hydration, never a ranking: the
   // order was fixed when the list was derived, and nothing in it moves while
   // the reader scrolls (W-6).
@@ -521,6 +543,7 @@ export function FeedView({
         // from the same lazy-state source the restore itself reads, so this
         // and the actual landing offset can never disagree.
         initiallyHidden={rememberedPlace !== null && rememberedPlace.offset > 0}
+        onBackToTop={goToTop}
       >
         {/* A tab root wears the mark, not a page title: the reader knows which
             tab they are on from the bar, and the band's other half works. */}
@@ -699,10 +722,10 @@ export function FeedView({
         <Snackbar
           testId="feed-snackbar"
           node={{ path: "feed.snackbar" }}
-          message={snack?.message ?? null}
-          action={snack?.action}
-          token={snack?.token}
-          onDismiss={dismissSnack}
+          message={newer.message ?? snack?.message ?? null}
+          action={newer.message !== null ? newer.action : snack?.action}
+          token={newer.message !== null ? undefined : snack?.token}
+          onDismiss={newer.message !== null ? newer.dismiss : dismissSnack}
         />
       </div>
       {/* THE CARDS' MENU, OVER THE FEED (FeedPostMenu.md). What its rows raise

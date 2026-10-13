@@ -24,6 +24,7 @@ export function InlineAction({
   testId,
   buttonRef,
   describedBy,
+  ariaLabel,
 }: {
   children: ReactNode;
   onClick?: () => void;
@@ -36,11 +37,14 @@ export function InlineAction({
   buttonRef?: Ref<HTMLButtonElement>;
   /** The element that names what the word acts on — a row's title (`Unhide`). */
   describedBy?: string;
+  /** The spoken name, when the word alone names the verb and not its object (`Update to version 0.1.3`). */
+  ariaLabel?: string;
 }) {
   return (
     <button
       ref={buttonRef}
       type="button"
+      aria-label={ariaLabel}
       disabled={disabled}
       onClick={busy ? undefined : onClick}
       aria-busy={busy || undefined}
