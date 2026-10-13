@@ -46,6 +46,28 @@ export function dateline(iso: string): string {
 }
 
 /**
+ * THE FORWARD LADDER (copy-voice.md *Ages*, ruled 2026-09-14; rounding jakob
+ * 2026-10-07): how far off a future moment is, spelled out — `6 days`,
+ * `1 day`, then `5 hours` on the last day. Days round to the NEAREST whole day
+ * while 24 hours or more remain, so a deletion confirmed this moment reads
+ * `7 days`; under a day the hours count, rounded UP, so the last hour reads
+ * `1 hour` and never `0 hours`. The caller supplies the `in`.
+ */
+export function forwardLadder(iso: string, now: number = Date.now()): string {
+  const then = Date.parse(iso);
+  if (Number.isNaN(then)) return "";
+  const left = Math.max(0, then - now);
+  const hourMs = MINUTE_MS * HOUR_MINUTES;
+  const dayMs = hourMs * DAY_HOURS;
+  if (left >= dayMs) {
+    const days = Math.round(left / dayMs);
+    return days === 1 ? "1 day" : `${days} days`;
+  }
+  const hours = Math.max(1, Math.ceil(left / hourMs));
+  return hours === 1 ? "1 hour" : `${hours} hours`;
+}
+
+/**
  * THE ONE AGES VOCABULARY (copy-voice.md *Ages*, ruled 2026-09-09): the
  * minutes/hours/days ladder up to 30 days — `now`, `35m`, `2h`, `3d` — and
  * the date past it. Settings' `Last used 2d` and `Changed 21d` speak it.

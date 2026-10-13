@@ -4,6 +4,10 @@
 
 package com.cogra.feature.settings
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -18,14 +22,18 @@ import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
+import com.cogra.domain.AccountDeletionPath
 import com.cogra.domain.AccountState
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.deletion.AccountDeletion
+import com.cogra.domain.deletion.DeletionStanding
 import com.cogra.domain.stance.StanceInputMode
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -113,26 +121,113 @@ class SettingsScreenTest {
         assertThat(flips).isEqualTo(1)
     }
 
+    private fun deleting(path: AccountDeletionPath, deletion: AccountDeletion? = null) = SettingsUiState(
+        account = account(),
+        actorKeyHere = true,
+        now = NOW,
+        deletion = DeletionStanding(path, deletion),
+    )
+
     @Test
     fun `delete_account_is_the_last_row_quiet_with_the_members_footnote`() {
-        render()
+        var taps = 0
+        render(deleting(AccountDeletionPath.BY_LINK), actions = SettingsActions(onDeleteAccount = { taps++ }))
         node("settings.ending.delete").performScrollTo().assertHasClickAction()
         node("settings.ending.delete.label").assertTextEquals("Delete account")
         node("settings.ending.delete.chevron").assertExists()
+        node("settings.ending.delete.status").assertDoesNotExist()
         node("settings.ending.footnote").assertTextEquals(
             "Nothing is deleted here. The next screen says what goes and what stays, " +
                 "and the deletion is confirmed by a link we email you.",
         )
-        // DRIFT (erasure-deletion packet): the request screen is not built,
-        // so the press opens nothing and nothing is deleted.
         node("settings.ending.delete").performClick()
+        assertThat(taps).isEqualTo(1)
+        node("settings.deletionBand").assertDoesNotExist()
     }
 
     @Test
-    fun `an_applicants_delete_footnote_drops_the_mailed_link`() {
-        render(SettingsUiState(account = account(state = AccountState.APPLICANT, actorPubkey = null), now = NOW))
+    fun `the_immediate_paths_footnote_drops_the_mailed_link`() {
+        render(deleting(AccountDeletionPath.IMMEDIATE))
         node("settings.ending.footnote").performScrollTo()
             .assertTextEquals("Nothing is deleted here. The next screen says what goes and what stays.")
+    }
+
+    @Test
+    fun `the_footnote_keys_on_the_path_never_the_account_state`() {
+        // An applicant whose registration landed reads BY_LINK: the mailed
+        // path, and the member's footnote with it (OS-15).
+        render(deleting(AccountDeletionPath.BY_LINK).copy(account = account(state = AccountState.APPLICANT)))
+        node("settings.ending.footnote").performScrollTo().assertTextEquals(
+            "Nothing is deleted here. The next screen says what goes and what stays, " +
+                "and the deletion is confirmed by a link we email you.",
+        )
+    }
+
+    @Test
+    fun `no_footnote_stands_before_the_path_is_read`() {
+        render()
+        node("settings.ending.delete").performScrollTo()
+        node("settings.ending.footnote").assertDoesNotExist()
+    }
+
+    @Test
+    fun `a_locked_path_wears_the_disabled_look_and_still_answers_the_tap`() {
+        var taps = 0
+        render(deleting(AccountDeletionPath.LOCKED), actions = SettingsActions(onDeleteAccount = { taps++ }))
+        node("settings.ending.delete").performScrollTo().assertHasClickAction().performClick()
+        assertThat(taps).isEqualTo(1)
+        node("settings.ending.delete.label").assertTextEquals("Delete account")
+    }
+
+    @Test
+    fun `in_the_grace_the_band_stands_the_row_counts_down_and_the_footnote_goes`() {
+        var cancels = 0
+        render(
+            deleting(
+                AccountDeletionPath.BY_LINK,
+                AccountDeletion(NOW.plusSeconds(6 * 86_400), includesContent = false),
+            ),
+            actions = SettingsActions(onCancelDeletion = { cancels++ }),
+        )
+        node("settings.deletionBand.line").assertTextEquals("Your account is deleted in 6 days.")
+        node("settings.ending.delete").performScrollTo()
+        node("settings.ending.delete.status").assertTextEquals("Deletion in 6 days")
+        node("settings.ending.footnote").assertDoesNotExist()
+        node("settings.deletionBand.cancel").performClick()
+        assertThat(cancels).isEqualTo(1)
+    }
+
+    @Test
+    fun `a_subpages_notice_outlives_its_own_consumption`() {
+        // Consuming the notice flips it to null; the snackbar must still stand.
+        val said = "Canceled — your account stays, and nothing was deleted."
+        // The clock is driven by hand: half a second is many frames past the
+        // consumption, and well inside the snackbar's own duration.
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            var notice by remember { mutableStateOf<String?>(said) }
+            SettingsScreen(
+                state = SettingsUiState(account = account(), actorKeyHere = true, now = NOW),
+                versionName = "0.1.0",
+                actions = SettingsActions(),
+                doors = SettingsDoors(),
+                notice = notice,
+                onNoticeShown = { notice = null },
+            )
+        }
+        compose.mainClock.advanceTimeBy(500)
+        compose.onNode(hasText(said)).assertExists()
+    }
+
+    @Test
+    fun `the_row_opens_the_door_the_page_is_told`() {
+        var opened: DeletionDoor? = null
+        val events = MutableSharedFlow<SettingsEvent>(extraBufferCapacity = 1)
+        render(doors = SettingsDoors(onOpenDeletion = { opened = it }), events = events)
+        compose.waitForIdle()
+        events.tryEmit(SettingsEvent.OpenDeletion(DeletionDoor.PENDING))
+        compose.waitForIdle()
+        assertThat(opened).isEqualTo(DeletionDoor.PENDING)
     }
 
     @Test

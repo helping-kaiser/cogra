@@ -143,6 +143,24 @@ fun CollapsingTopBanner(
     }
 }
 
+/**
+ * A full-bleed band riding the collapsing top — the deletion band
+ * (`DeletionBand.prompt.md`), which draws its own fill edge to edge and so
+ * takes neither the banner strip's side inset nor its gap. It leaves and
+ * returns with the bar, the same way the banner strip does; a [content]
+ * that draws nothing takes no room.
+ */
+@Composable
+fun CollapsingTopBand(top: CollapsingTop, content: @Composable () -> Unit) {
+    AnimatedVisibility(
+        visible = top.showTop,
+        enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
+        exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
+    ) {
+        content()
+    }
+}
+
 /** Reveal after this fraction of the window height, scrolled upward. */
 private const val REVEAL_FRACTION = 3f
 

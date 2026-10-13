@@ -3,6 +3,7 @@ import { Figtree } from "next/font/google";
 import "./globals.css";
 
 import { ApolloWrapper } from "@/lib/apollo-wrapper";
+import { AccountDeletionProvider } from "@/lib/deletion/deletion-status";
 import { AccountPreferencesSync } from "@/lib/settings/account-preferences-sync";
 import { THEME_BOOT_SCRIPT } from "@/lib/settings/theme-boot";
 import { SessionProvider } from "@/lib/session/provider";
@@ -60,11 +61,13 @@ export default function RootLayout({
           <ApolloWrapper>
             <AuthRuntimeProvider>
               <AccountPreferencesSync />
-              <RegistrationProvider>
-                <StanceDataProvider>
-                  <AppShell>{children}</AppShell>
-                </StanceDataProvider>
-              </RegistrationProvider>
+              <AccountDeletionProvider>
+                <RegistrationProvider>
+                  <StanceDataProvider>
+                    <AppShell>{children}</AppShell>
+                  </StanceDataProvider>
+                </RegistrationProvider>
+              </AccountDeletionProvider>
             </AuthRuntimeProvider>
           </ApolloWrapper>
         </SessionProvider>
