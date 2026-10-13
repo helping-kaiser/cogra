@@ -59,7 +59,7 @@ export function Screen() {
               </Button>
               <span style={{ flex: 1 }} />
               <VouchBackHint node="hint" />
-              <StanceControl node="stance" targetLabel="@mira" helpLabel="Your vouch back" help={YOUR_VOUCH_BACK_HELP} />
+              <StanceControl node="stance" targetLabel="@mira" helpLabel="Your vouch back" help={YOUR_VOUCH_BACK_HELP} fullInkEmpty />
             </>
           }
           node="vouchCard"

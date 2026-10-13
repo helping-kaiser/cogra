@@ -115,6 +115,15 @@ measured); a name that outgrows the anchor falls back to `Their
 opinion`. That fallback is a flagged exception at jakob's review: on a
 profile, *their* can read as the profile owner's.
 
+**The vouch card's empty face wears full ink** (jakob 2026-10-13). The
+resting treatment — the muted, translucent 🫥 — stacks three layers of
+quiet, and on the vouch card's tertiary-container ground it all but
+vanishes. On that card alone the hollow glyph stands at full opacity in
+its own colors; the glyph's emptiness carries "no opinion yet" by
+itself. The per-surface restyle follows the stream's precedent (*over
+media*, where the unset state is a line face for the same reason);
+everywhere else the muted resting face stands.
+
 **Only a nobody borrows stances** (jakob 2026-10-06). An applicant and
 a fresh member borrow a *walk*, never the faces: an applicant's feed
 grows from their inviter's vantage, and the vouch-back window browses

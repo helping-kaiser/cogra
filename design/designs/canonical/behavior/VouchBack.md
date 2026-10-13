@@ -16,6 +16,8 @@ ALWAYS feed.vouchCard.hint reads Tap the face to vouch back. GIVEN the member wh
 
 ALWAYS feed.vouchCard.stance.anchor.face is the hollow face, the account holding no opinion of the member who vouched it in
 
+ALWAYS feed.vouchCard.stance.anchor.face wears full ink on the card, never the muted resting treatment, the hollow glyph alone saying no opinion yet
+
 ALWAYS feed.vouchCard and its band claim no order between the vouch-back and any other opinion
 
 ALWAYS the band reads Browsing from @mira's view — your first opinion starts your own. GIVEN the member has signed no opinion yet
