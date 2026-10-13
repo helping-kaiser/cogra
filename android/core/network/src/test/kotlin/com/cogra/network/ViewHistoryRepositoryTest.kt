@@ -8,6 +8,8 @@ import com.apollographql.apollo.ApolloClient
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.has
+import com.cogra.domain.history.SeenEntry
+import com.cogra.domain.history.SeenPage
 import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
@@ -21,6 +23,7 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.time.Instant
 import javax.inject.Provider
 
 class ViewHistoryRepositoryTest {
@@ -89,5 +92,45 @@ class ViewHistoryRepositoryTest {
 
         assertThat(outcome).isInstanceOf(Outcome.Refused::class.java)
         assertThat((outcome as Outcome.Refused).has(ErrorCode.BAD_INPUT)).isTrue()
+    }
+
+    // THE SEEN RECORD'S SYNC READ (PR-52): ids and first seenings of every
+    // kind History serves, with whose list it is.
+
+    @Test
+    fun aSeenPageCarriesTheReaderTheIdsAndTheCursor() = runTest {
+        enqueue(
+            """{"data":{"me":{"__typename":"User","id":"u1","viewHistory":{"__typename":"ViewHistoryConnection",
+               "edges":[
+                 {"__typename":"ViewHistoryEdge","firstSeenAt":"2026-10-13T09:00:00+00:00",
+                  "node":{"__typename":"Post","id":"p1"}},
+                 {"__typename":"ViewHistoryEdge","firstSeenAt":"2026-10-13T08:00:00+00:00",
+                  "node":{"__typename":"Hashtag","id":"t1"}}],
+               "pageInfo":{"__typename":"PageInfo","hasNextPage":true,"endCursor":"c2"}}}}}""",
+        )
+
+        val page = (repo().seenPage(100, after = "c1") as Outcome.Success).value
+
+        assertThat(page).isEqualTo(
+            SeenPage(
+                reader = "u1",
+                entries = listOf(
+                    SeenEntry("p1", Instant.parse("2026-10-13T09:00:00Z")),
+                    SeenEntry("t1", Instant.parse("2026-10-13T08:00:00Z")),
+                ),
+                endCursor = "c2",
+                hasNextPage = true,
+            ),
+        )
+        val body = server.takeRequest().body.readUtf8()
+        assertThat(body).contains("\"first\":100")
+        assertThat(body).contains("\"after\":\"c1\"")
+    }
+
+    @Test
+    fun aSeenPageWithNoReaderIsNull() = runTest {
+        enqueue("""{"data":{"me":null}}""")
+
+        assertThat(repo().seenPage(100, after = null)).isEqualTo(Outcome.Success(null))
     }
 }
