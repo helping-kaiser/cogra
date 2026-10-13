@@ -3011,8 +3011,8 @@ These bind every mutation below.
   otherwise — so a client that reaches the refusal anyway can name
   the one thing the person can do about it. The private-viewer-state
   verbs are not acting: `markSeen`, `markNotificationsSeen`,
-  `markNotificationRead`, `setBookmark` and `removeBookmark` need a
-  session and no particular account state. They write the viewer's own
+  `markNotificationRead`, `setBookmark`, `removeBookmark`, `hideActor`
+  and `unhideActor` need a session and no particular account state. They write the viewer's own
   L2 rows and act on nothing, so an applicant's private state — an
   unverified one's included — moves like a member's.
 - **Errors follow the tiered model** (governing principles). A
