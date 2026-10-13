@@ -3239,7 +3239,10 @@ function ReportProblemBody({ words }) {
    logged-in surface and sits under an inner page's header.
 
    `deleteFootnote` is the deletion group's footnote — the member's by
-   default; `Settings` passes its reader chip's hole.
+   default; `Settings` passes its reader chip's hole. `recoveryStatus`,
+   `backupFootnote` and `clearingFootnote` are the three readings `backup`
+   decides, and default to its; `EraseConfirm` passes its backup chip's holes,
+   so the page under its dialog agrees with the dialog.
 
    The element names are the `settings` prefix's (design ⇄ impl seam 059/061):
    `Settings` and `SettingsHidden` register them, and every other board this
@@ -3250,7 +3253,7 @@ function ReportProblemBody({ words }) {
 const SETTINGS_DELETE_FOOTNOTE =
   "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.";
 
-function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE, hidden = "3" } = {}) {
+function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE, hidden = "3", recoveryStatus, backupFootnote, clearingFootnote } = {}) {
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" node="header" />
@@ -3385,15 +3388,16 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
         <SettingsGroup
           label="Key backup"
           footnote={
-            backup === "none"
+            backupFootnote ??
+            (backup === "none"
               ? "Your key signs everything you publish and lives only in this browser. Until you make a recovery code, it can't be brought back."
-              : "Your key signs everything you publish and lives only in this browser. Your recovery code is the only way back."
+              : "Your key signs everything you publish and lives only in this browser. Your recovery code is the only way back.")
           }
           node="backup"
         >
           <SettingsRow
             label="Recovery code"
-            status={backup === "none" ? "Not made yet" : "Last created 12.08.2026"}
+            status={recoveryStatus ?? (backup === "none" ? "Not made yet" : "Last created 12.08.2026")}
             onOpen={() => {}}
             node="recovery"
           />
@@ -3425,21 +3429,30 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
             and the seen list last: it is a copy of the server's and returns
             on the next sign-in (PR-52), so the words never claim it is lost.
 
-            A HEADING AND A FOOTNOTE, NO ROWS. Nothing here is a setting or a
-            door — it is the fact a reader needs once, which is what a
-            footnote is for, under a heading that one string serves on both
-            platforms. It stands after Key backup because the loss it warns
-            of is the key's. */}
+            THE WIPE IS THE GROUP'S ONE ROW (jakob 2026-10-13: "Settings
+            needs the wipe everything from this device yes. ofcourse with
+            warnings and stuff"). `Erase everything from this browser` — in
+            the app `…from this app` — is an action row, quiet like `Sign
+            out`: the weight of an irreversible act lives in the think-twice
+            dialog it raises (`EraseConfirm`), never in a red row. It is also
+            what "Manage space" opens onto, so the system's own door ends at a
+            real erase, behind the warning.
+
+            The heading is one string for both platforms, and the group
+            stands after Key backup because the loss it warns of is the
+            key's. */}
         <SettingsGroup
-          bare
           label="Clearing data"
           footnote={
-            backup === "none"
+            clearingFootnote ??
+            (backup === "none"
               ? "Your key lives only in this browser, and it has no recovery code yet. Clear CoGra's data here and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in."
-              : "Your key lives only in this browser. Clear CoGra's data here and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in."
+              : "Your key lives only in this browser. Clear CoGra's data here and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in.")
           }
           node="clearing"
-        />
+        >
+          <SettingsRow action label="Erase everything from this browser" onOpen={() => {}} node="erase" />
+        </SettingsGroup>
 
         <SettingsGroup
           label="Sessions"

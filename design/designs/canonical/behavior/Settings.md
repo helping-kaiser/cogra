@@ -142,7 +142,9 @@ ALWAYS settings.clearing.footnote reads Your key lives only in this browser, and
 
 ALWAYS settings.clearing.footnote opens on the key and says the account is gone for good before it names anything else that goes
 
-ALWAYS settings.clearing carries settings.clearing.label and settings.clearing.footnote and no row, and nothing in it is tappable
+ALWAYS settings.clearing carries one row, settings.clearing.erase, reading Erase everything from this browser on the web and Erase everything from this app on android, quiet like Sign out and in no error colour
+
+WHEN tap settings.clearing.erase -> the dialog Erase everything from this browser? opens over settings AND NEVER anything is erased before an answer
 
 WHEN tap Manage space on the phone's own storage screen for CoGra on android -> settings opens with settings.clearing in view AND NEVER anything is cleared
 

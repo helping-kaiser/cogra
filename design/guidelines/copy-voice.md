@@ -1741,6 +1741,27 @@ server's and returns on sign-in, so the words never call it lost;
 `the choices kept on this device` echoes Theme's and Reading's own
 phrase. (*New 2026-10-13, drafted — wording jakob's at review.*)
 
+**The wipe** is the group's one row, `Erase everything from this
+browser` — `Erase everything from this app` in the app — an action row
+as quiet as `Sign out` (jakob 2026-10-13: "the wipe everything from this
+device… with warnings"). It raises `EraseConfirm`: the title repeats
+the row as a question, `Erase everything from this browser?` (`…from
+this app?`). With no code the body reads `This browser holds the only
+copy of your key, and it has no recovery code. Erase everything and
+your account is gone for good — no one, including CoGra, can bring it
+back. Your draft, any kept picks and the choices kept on this device go
+too, and you're signed out.` (`This app holds…` in the app), and the
+answers are `Make a recovery code`, filled and leading, and `Erase
+everything and sign out`. With a code made the body reads `Your key is
+erased with everything else, and only your recovery code can bring it
+back — without the code, your account is gone for good. Your draft, any
+kept picks and the choices kept on this device go too, and you're
+signed out. What you've seen comes back when you sign in.`, and the
+answers are `Erase everything and sign out` and `Cancel`, the safe one
+filled. `Erase everything and sign out` is `Erase them and sign out`'s
+construction for the whole device. (*New 2026-10-13, drafted — wording
+jakob's at review.*)
+
 **Sessions** keeps `Revoke` and `Sign out everywhere else`, and says the
 delay before it happens rather than only after:
 `A device you sign out can stay signed in for up to 15 minutes.` The
