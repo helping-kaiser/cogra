@@ -8,7 +8,9 @@ ALWAYS feed.deletionBand reads Your account is deleted in 6 days. with Cancel, c
 
 ALWAYS feed.deletionBand reads Your account and everything you posted are deleted in 6 days. with Cancel, counting the days left GIVEN the content sweep was opted into
 
-ALWAYS feed.deletionBand and the borrowed view's band never stand together
+ALWAYS feed.deletionBand counts the days left to the nearest whole day while 24 hours or more remain, then the hours left, rounded up
+
+ALWAYS feed.deletionBand stands and the borrowed view's band does not GIVEN the account's confirmed deletion is in its grace period and the reader borrows a view
 
 ALWAYS the feed under feed.deletionBand is unchanged, with the reader's own posts in it GIVEN the account's confirmed deletion is in its grace period
 
@@ -17,3 +19,5 @@ ALWAYS nothing is redacted and nothing is withdrawn GIVEN the account's confirme
 WHEN tap Cancel on feed.deletionBand -> the request is abandoned AND feed.deletionBand goes AND the snackbar reads Canceled — your account stays, and nothing was deleted. AND NEVER the snackbar offers Undo AND NEVER a confirmation screen opens
 
 WHEN tap Cancel on feed.deletionBand GIVEN the reader is offline -> the network error answers
+
+WHEN the deletion runs at its deadline GIVEN a session is on this device -> the reader lands signed out on the bare view AND the snackbar reads Your account is deleted. AND NEVER the sign-in screen opens

@@ -53,3 +53,9 @@ fragment ApplicationFields on Application {
   landedAt
   createdAt
 }
+
+# A confirmed deletion in its grace: the deadline and the sweep choice.
+fragment AccountDeletionFields on AccountDeletion {
+  scheduledFor
+  includesContent
+}

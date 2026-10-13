@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
@@ -49,6 +50,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -58,8 +60,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
+import com.cogra.core.designsystem.EdgeSighting
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PendingMarker
+import com.cogra.core.designsystem.SeenCardsEffect
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.TaggedContentKind
 import com.cogra.domain.TaggedContentView
@@ -71,6 +75,8 @@ fun TopicRoute(
     onOpenActor: (String) -> Unit,
     onBack: () -> Unit,
     stanceControl: (@Composable () -> Unit)? = null,
+    /** The deletion band, while the account's confirmed deletion is in its grace (`FeedDeleting.md:3`). */
+    deletionBand: @Composable () -> Unit = {},
     viewModel: TopicViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -83,6 +89,10 @@ fun TopicRoute(
         onOpenActor = onOpenActor,
         onBack = onBack,
         stanceControl = stanceControl,
+        onCardsSeen = viewModel::onCardsSeen,
+        onCardEdgesSeen = viewModel::onCardEdgesSeen,
+        onSeenCheckpoint = viewModel::onSeenCheckpoint,
+        deletionBand = deletionBand,
     )
 }
 
@@ -101,21 +111,49 @@ fun TopicScreen(
      * differ, and guessing puts the wrong action on the tap for a frame.
      */
     stanceControl: (@Composable () -> Unit)? = null,
+    /** Content cards that stood fully in the viewport (`SeenCardsEffect`). */
+    onCardsSeen: (List<String>) -> Unit = {},
+    /** Tall cards with an edge on screen this frame (History.md:13). */
+    onCardEdgesSeen: (List<EdgeSighting>) -> Unit = {},
+    /** The reading paused: the scroll rested, or the reader left. */
+    onSeenCheckpoint: () -> Unit = {},
+    deletionBand: @Composable () -> Unit = {},
 ) {
+    // SEEN, AT THE LIST: a post or comment card fully in the viewport joins
+    // the reader's History, as itself (History.md). The page's own title is
+    // a page rendering, not a card, and is never reported (H1 leaves pages
+    // out); neither is a kind this build does not render.
+    val listState = rememberLazyListState()
+    val cardIds = remember(state.content) {
+        state.content
+            .filter { it.kind == TaggedContentKind.POST || it.kind == TaggedContentKind.COMMENT }
+            .associate { it.listKey() to it.id }
+    }
+    SeenCardsEffect(
+        listState = listState,
+        nodeIdOf = { key -> cardIds[key] },
+        onSeen = onCardsSeen,
+        onEdgesSeen = onCardEdgesSeen,
+        onCheckpoint = onSeenCheckpoint,
+    )
     Scaffold(
         topBar = {
-            TopAppBar(
-                colors = surfaceTopAppBarColors(),
-                title = { Text("#$name", modifier = Modifier.testTag("topic_title")) },
-                navigationIcon = {
-                    IconButton(onClick = onBack, modifier = Modifier.testTag("topic_back")) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.topics_back),
-                        )
-                    }
-                },
-            )
+            Column {
+                TopAppBar(
+                    colors = surfaceTopAppBarColors(),
+                    title = { Text("#$name", modifier = Modifier.testTag("topic_title")) },
+                    navigationIcon = {
+                        IconButton(onClick = onBack, modifier = Modifier.testTag("topic_back")) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.topics_back),
+                            )
+                        }
+                    },
+                )
+                // Directly under the header (FeedDeleting.md:5).
+                deletionBand()
+            }
         },
     ) { padding ->
         Box(
@@ -163,6 +201,7 @@ fun TopicScreen(
                         }
                     }
                     LazyColumn(
+                        state = listState,
                         modifier = Modifier
                             .fillMaxSize()
                             .testTag("topic_list"),
@@ -177,7 +216,7 @@ fun TopicScreen(
                                 )
                             }
                         }
-                        items(state.content, key = { "${it.kind}:${it.id}" }) { entry ->
+                        items(state.content, key = { it.listKey() }) { entry ->
                             TaggedContentCard(entry, onOpenPost = onOpenPost, onOpenActor = onOpenActor)
                         }
                         if (state.contentLoading) {
@@ -196,6 +235,9 @@ fun TopicScreen(
         }
     }
 }
+
+/** The row's list key, kind and id together; the seen map reads it back. */
+private fun TaggedContentView.listKey(): String = "$kind:$id"
 
 @Composable
 private fun TaggedContentCard(

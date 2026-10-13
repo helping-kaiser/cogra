@@ -36,4 +36,6 @@ WHEN tap the scrim -> the sheet closes AND the staged filter is dropped AND the 
 
 WHEN swipe the sheet down, press system Back or press Escape -> the sheet closes AND the staged filter is dropped AND the results are what they were AND NEVER anything staged applies
 
-ALWAYS a result counts as seen once it was fully in the viewport, the first time only, and the seeing joins the reader's History and never becomes a graph record
+ALWAYS a result counts as seen only once it is opened, never by standing in the viewport, and the opened thing then counts by History's own rules and never becomes a graph record
+
+ALWAYS the search filter carries no Show what you've already seen GIVEN the reader is a guest

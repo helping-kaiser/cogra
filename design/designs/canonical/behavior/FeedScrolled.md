@@ -11,3 +11,5 @@ ALWAYS the Back to top pill takes no layout space and leaves the band's collapse
 WHEN tap Back to top -> the list goes to the top, animated AND NEVER the feed refreshes
 
 WHEN tap the bar's Feed slot GIVEN the feed's root is scrolled -> the list goes to the top, animated AND NEVER the feed refreshes
+
+ALWAYS the collapsing band stands GIVEN the feed rests at its hard top, however little upward scroll brought it there

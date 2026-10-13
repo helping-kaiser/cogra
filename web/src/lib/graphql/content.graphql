@@ -53,25 +53,35 @@ mutation PrepareCommentEdit($input: PrepareCommentEditInput!) {
   }
 }
 
+# A post as the FEED CARD draws it — and, for the same reason, what the detail
+# page paints from the cache before its own read lands (`readCachedPost`).
+#
+# One definition for both is the point: the cache read asks for exactly what
+# the feed wrote, so a field the feed gains is a field the read asks for, and
+# the two can never drift into a read that always misses.
+fragment FeedPost on Post {
+  ...PostFields
+  # THE CARD'S COMMENT AFFORDANCE (design/components/content/PostCard.jsx
+  # :317-349): "read the replies" is a different intent from "read the
+  # post", so the count is on the card rather than behind its tap. Asked
+  # for the same way the thread read asks for a branch — `first: 0` for
+  # no edges at all, and `totalCount` alone, the one aggregate the budget
+  # charges nothing for — so a feed of twenty cards still costs twenty
+  # posts. It stays outside `PostFields` because the detail read selects
+  # the same connection with a page of edges, and one response key cannot
+  # carry two argument sets.
+  comments(first: 0, includePending: $includePending) {
+    totalCount
+  }
+}
+
 # `includePending` carries the schema's own default: a listing serves
 # pending entries unless the reader asks for the settled graph.
 query Posts($first: Int!, $after: String, $includePending: Boolean! = true) {
   posts(first: $first, after: $after, includePending: $includePending) {
     edges {
       node {
-        ...PostFields
-        # THE CARD'S COMMENT AFFORDANCE (design/components/content/PostCard.jsx
-        # :317-349): "read the replies" is a different intent from "read the
-        # post", so the count is on the card rather than behind its tap. Asked
-        # for the same way the thread read asks for a branch — `first: 0` for
-        # no edges at all, and `totalCount` alone, the one aggregate the budget
-        # charges nothing for — so a feed of twenty cards still costs twenty
-        # posts. It stays outside `PostFields` because the detail read selects
-        # the same connection with a page of edges, and one response key cannot
-        # carry two argument sets.
-        comments(first: 0, includePending: $includePending) {
-          totalCount
-        }
+        ...FeedPost
       }
     }
     pageInfo {

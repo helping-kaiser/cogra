@@ -2,10 +2,11 @@
 //!
 //! Rate limiting: the auth endpoints' per-IP and per-key fixed windows
 //! plus the login and re-authentication backoffs (auth.md "Rate
-//! limiting"), the email-change
-//! mail budget, the media upload budget, and the per-account signing
+//! limiting"), the email-change and
+//! account-deletion mail budgets, the media upload budget, and the per-account signing
 //! budget spent at prepare (api-spec.md "Conventions") with the voucher's
-//! admission funding budget priced beside it.
+//! admission funding budget priced beside it, the device-lock issue
+//! budget, and the seen-list's `markSeen` budget.
 //!
 //! The state is Postgres-held (`postgres_store::rate_limit`), so limits
 //! survive restarts and hold across instances. Auth keys that name an
@@ -42,7 +43,10 @@ pub mod scope {
     pub const REAUTH_ACCOUNT: &str = "reauth_account";
     pub const EMAIL_CHANGE_REQUEST_ACCOUNT: &str = "email_change_request_account";
     pub const EMAIL_CHANGE_RESEND_ACCOUNT: &str = "email_change_resend_account";
+    pub const DELETION_REQUEST_ACCOUNT: &str = "deletion_request_account";
+    pub const DEVICE_LOCK_ACCOUNT: &str = "device_lock_account";
     pub const UPLOAD_ACCOUNT: &str = "upload_account";
+    pub const MARK_SEEN_ACCOUNT: &str = "mark_seen_account";
     pub const SIGN_POST: &str = "sign_post";
     pub const SIGN_COMMENT: &str = "sign_comment";
     pub const SIGN_EDIT: &str = "sign_edit";
@@ -221,7 +225,7 @@ pub struct RateLimitConfig {
     /// Verification resends per submitted email — trips silently.
     pub resend_email: Window,
     /// Token confirmations (verifyEmail, confirmPasswordReset,
-    /// confirmEmailChange) per IP.
+    /// confirmEmailChange, confirmAccountDeletion) per IP.
     pub confirm_ip: Window,
     /// Consecutive wrong current passwords per account before the
     /// re-authentication backoff bites — every verb that re-proves the
@@ -238,13 +242,32 @@ pub struct RateLimitConfig {
     pub email_change_request_account: Window,
     /// Email-change resends per account, the same budget's other verb.
     pub email_change_resend_account: Window,
+    /// Account-deletion requests per account — a mail budget, Resend
+    /// included (it is the same verb). The caller is authenticated, so it
+    /// answers visibly (auth.md "Rate limiting").
+    pub deletion_request_account: Window,
     /// Wrong codes against one email-change code before it is disabled
     /// until a resend mints a fresh one (auth.md "Email change").
     pub email_change_code_tries: i32,
+    /// Device-lock issues per account (auth.md "Device lock"). Issuing
+    /// writes a row, so a stolen session could otherwise grow storage
+    /// without bound; the caller is authenticated, so it answers visibly.
+    pub device_lock_issue_account: Window,
+    /// Live device locks one account may hold at once: the same storage
+    /// bound, held whatever the issue window says. Refusing at the cap
+    /// destroys nothing and hurts only the account it bounds.
+    pub device_lock_live_cap: i32,
     /// Media uploads per account. Uploading is not an act, so θ prices
     /// nothing about it and an insolvent actor can still fill the store —
     /// this is the only cost control media has.
     pub upload_account: Window,
+    /// `markSeen` calls per account. The seen-list never compacts and has
+    /// no remove verb, so a script could otherwise grow an account's rows
+    /// as fast as it can call; the primary key bounds the damage per
+    /// node, this bounds the rate. Seeing has no surface, so a trip shows
+    /// nothing: the client keeps the batch for its next checkpoint. The
+    /// default, 600 an hour, is one full flush every 6 s of reading.
+    pub mark_seen_account: Window,
     /// The per-account signing budget, spent at prepare.
     pub signing: SigningBudget,
 }
@@ -294,9 +317,22 @@ impl Default for RateLimitConfig {
                 limit: 5,
                 window_secs: 3600.0,
             },
+            deletion_request_account: Window {
+                limit: 5,
+                window_secs: 3600.0,
+            },
             email_change_code_tries: 5,
+            device_lock_issue_account: Window {
+                limit: 10,
+                window_secs: 3600.0,
+            },
+            device_lock_live_cap: 32,
             upload_account: Window {
                 limit: 60,
+                window_secs: 3600.0,
+            },
+            mark_seen_account: Window {
+                limit: 600,
                 window_secs: 3600.0,
             },
             signing: SigningBudget::default(),
@@ -327,12 +363,28 @@ impl RateLimitConfig {
                 &mut cfg.email_change_resend_account.limit,
             ),
             (
+                "RATE_LIMIT_DELETION_REQUEST_PER_ACCOUNT",
+                &mut cfg.deletion_request_account.limit,
+            ),
+            (
                 "RATE_LIMIT_EMAIL_CHANGE_CODE_TRIES",
                 &mut cfg.email_change_code_tries,
             ),
             (
+                "RATE_LIMIT_DEVICE_LOCK_ISSUE_PER_ACCOUNT",
+                &mut cfg.device_lock_issue_account.limit,
+            ),
+            (
+                "RATE_LIMIT_DEVICE_LOCK_LIVE_CAP",
+                &mut cfg.device_lock_live_cap,
+            ),
+            (
                 "RATE_LIMIT_UPLOAD_PER_ACCOUNT",
                 &mut cfg.upload_account.limit,
+            ),
+            (
+                "RATE_LIMIT_MARK_SEEN_PER_ACCOUNT",
+                &mut cfg.mark_seen_account.limit,
             ),
             ("RATE_LIMIT_SIGN_POST", &mut cfg.signing.post.limit),
             ("RATE_LIMIT_SIGN_COMMENT", &mut cfg.signing.comment.limit),
@@ -377,8 +429,12 @@ impl RateLimitConfig {
             reauth_backoff_cap_secs: 0.0,
             email_change_request_account: generous,
             email_change_resend_account: generous,
+            deletion_request_account: generous,
             email_change_code_tries: 5,
+            device_lock_issue_account: generous,
+            device_lock_live_cap: i32::MAX,
             upload_account: generous,
+            mark_seen_account: generous,
             signing: SigningBudget::UNLIMITED,
         }
     }
@@ -470,6 +526,40 @@ pub async fn spend_mail_budget(
             n: 1,
             limit: window.limit,
         }],
+    )
+    .await
+}
+
+/// Spends one unit of the account's device-lock issue budget, answering
+/// whether it fit. A refusal spends nothing, as with the mail budget: a
+/// refused issue stores nothing, so it is not an attempt worth counting.
+pub async fn spend_device_lock_issue(
+    pool: &PgPool,
+    cfg: &RateLimitConfig,
+    account: Uuid,
+) -> Result<bool, sqlx::Error> {
+    spend_mail_budget(
+        pool,
+        scope::DEVICE_LOCK_ACCOUNT,
+        account,
+        cfg.device_lock_issue_account,
+    )
+    .await
+}
+
+/// Spends one unit of the account's `markSeen` budget, answering whether
+/// it fit. A refusal spends nothing: a refused batch writes nothing and
+/// comes back whole at the client's next checkpoint.
+pub async fn spend_mark_seen(
+    pool: &PgPool,
+    cfg: &RateLimitConfig,
+    account: Uuid,
+) -> Result<bool, sqlx::Error> {
+    spend_mail_budget(
+        pool,
+        scope::MARK_SEEN_ACCOUNT,
+        account,
+        cfg.mark_seen_account,
     )
     .await
 }

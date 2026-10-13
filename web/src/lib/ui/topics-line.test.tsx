@@ -50,6 +50,19 @@ describe("TopicsLine", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  // A node's newer version brings its own tags (PostDetail.md:13): the fit is
+  // re-read for the set the line now holds, including a line that first
+  // mounted with nothing to state.
+  it("re-fits its chips when the line is handed other topics", () => {
+    const { rerender } = render(<TopicsLine topics={[]} references={0} testIdPrefix="post" />);
+    rerender(<TopicsLine topics={[topic("rust")]} references={0} testIdPrefix="post" />);
+    expect(screen.getByTestId("post-topic-rust")).toBeInTheDocument();
+    rerender(<TopicsLine topics={[topic("rust"), topic("wasm")]} references={1} testIdPrefix="post" />);
+    expect(screen.getByTestId("post-topic-rust")).toBeInTheDocument();
+    expect(screen.getByTestId("post-topic-wasm")).toBeInTheDocument();
+    expect(screen.getByTestId("post-topics-counts")).toHaveTextContent("· 1 reference");
+  });
+
   it("shows two chips whole and counts the rest", () => {
     render(
       <TopicsLine

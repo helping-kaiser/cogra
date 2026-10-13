@@ -19,13 +19,16 @@
    THE ASK LINK LIVES HERE FOR GOOD (jakob 2026-10-02). The waiting card on the
    feed carries it until `Got it` puts that card away; this card is never put
    away, so the profile is the link's permanent home — `ApplicantWaiting`'s
-   block, its label and caption verbatim, `bare` inside the card. Settings
-   carries no ask link.
+   block and label, `bare` inside the card. Its caption adds what the open
+   application means now that anyone holding the ask can vouch (jakob
+   2026-10-07, item 58), spoken in the second person because this is the
+   reader's own page — "more personal is better" (jakob 2026-10-09, item 91);
+   the third-person form stays wherever another reader meets the fact.
+   Settings carries no ask link.
 
    TURNED DOWN, THE CARD SAYS SO (jakob 2026-10-05, D9; the `application`
-   chip). Once @mira closes the application, `Waiting on @mira`, the
-   caption's open answer and the chronicle's `with your application` are all
-   false, and the profile is still the ask link's home. So the card takes
+   chip). Once @mira closes the application, `Waiting on @mira` and the
+   chronicle's `with your application` are false, and the profile is still the ask link's home. So the card takes
    `ApplicantRejected`'s blessed words and its olive (the card now asks for
    the reader's action), the ask link takes that card's label and caption,
    and the chronicle's line says what the staged acts wait for: `These wait
@@ -53,7 +56,7 @@ export function Screen() {
               address={ASK_LINK}
               onCopy={() => {}}
               copyLabel="Copy your ask link"
-              caption="It does not expire. While @mira's answer is open, it can't start a second application."
+              caption="It does not expire. Anyone who holds your ask can let you in — the first vouch lands it."
               node="link"
             />
           </TaskCard>

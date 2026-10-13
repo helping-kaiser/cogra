@@ -7,14 +7,18 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
@@ -331,6 +335,12 @@ fun QuietNote(text: String, modifier: Modifier = Modifier) {
     )
 }
 
+/** The segmented filter's drawn height (`SegmentedFilter.jsx`, 32px border-box). */
+private val SegmentHeight = 32.dp
+
+/** The segment's vertical padding: (32 − labelLarge's 20 line) / 2 at the default font size. */
+private val SegmentPaddingVertical = 6.dp
+
 /** One option of a [SegmentedFilter]. */
 data class SegmentedOption<T>(val value: T, val label: String, val nodeName: String)
 
@@ -359,7 +369,14 @@ fun <T> SegmentedFilter(
     Row(
         modifier = modifier
             .then(if (block) Modifier.fillMaxWidth() else Modifier)
-            .height(32.dp)
+            // Drawn at 32dp: at the default font size the label's 20sp line
+            // plus the segment's padding is exactly that. Under a larger font
+            // size the pill grows with its words instead of clipping them —
+            // sp text in a fixed dp box is what Android's font-scaling
+            // guidance warns against (developer.android.com, Android 14
+            // "Non-linear font scaling to 200%").
+            .height(IntrinsicSize.Min)
+            .heightIn(min = SegmentHeight)
             .clip(CircleShape)
             .border(1.dp, colors.outline, CircleShape)
             .dataNode(node)
@@ -370,7 +387,8 @@ fun <T> SegmentedFilter(
             if (index > 0) {
                 Box(
                     Modifier
-                        .size(width = 1.dp, height = 32.dp)
+                        .width(1.dp)
+                        .fillMaxHeight()
                         .background(colors.outline),
                 )
             }
@@ -378,11 +396,11 @@ fun <T> SegmentedFilter(
             Box(
                 modifier = Modifier
                     .then(if (block) Modifier.weight(1f) else Modifier)
-                    .height(32.dp)
+                    .fillMaxHeight()
                     .then(if (isSelected) Modifier.background(colors.secondaryContainer) else Modifier)
                     .selectable(selected = isSelected, role = Role.RadioButton, onClick = { onSelect(option.value) })
                     .dataNode(node?.div(option.nodeName))
-                    .padding(horizontal = Space.x4),
+                    .padding(horizontal = Space.x4, vertical = SegmentPaddingVertical),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(

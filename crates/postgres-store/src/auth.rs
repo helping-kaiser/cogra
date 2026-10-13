@@ -1,8 +1,8 @@
 //! ´mod:module:auth´
 //!
 //! Authentication and onboarding state: invite links, accounts and their
-//! applications, credentials, refresh-token sessions, and key backups
-//! (auth.md; data-model.md "Authentication state").
+//! applications, credentials, refresh-token sessions, key backups, and
+//! device locks (auth.md; data-model.md "Authentication state").
 //!
 //! Auth gates the service, never the graph — nothing here is authoritative
 //! about any record.
@@ -21,9 +21,9 @@ pub mod constraints {
     //! `unique_violation`: the error's `column_name` field is populated
     //! for a not-null violation and left empty for this one (PostgreSQL
     //! "Error and Notice Message Fields"). So the name is the only handle
-    //! a refusal has, and two of these four are names PostgreSQL chose
+    //! a refusal has, and two of these are names PostgreSQL chose
     //! implicitly for an inline `UNIQUE` — nothing in a migration writes
-    //! them down. The other two are standalone unique indexes and have no
+    //! them down. The others are standalone unique indexes and have no
     //! constraint row at all; the error carries the index's name just the
     //! same. A rename would silently turn a clean refusal into a 500,
     //! which is what `tests/schema.rs` pins.
@@ -32,14 +32,19 @@ pub mod constraints {
     pub const ACTORS_PUBKEY: &str = "actors_actor_pubkey_key";
     pub const ACTORS_ADDRESS: &str = "actors_realization_address_key";
     pub const CREDENTIALS_EMAIL: &str = "user_credentials_email_key";
+    /// One open application per account and approver — the
+    /// WAITING_ON_VIEWER refusal of a second stage.
+    pub const APPLICATIONS_ONE_OPEN_PER_APPROVER: &str =
+        "auth_applications_one_open_per_approver_idx";
 
     /// Every name a refusal in this module depends on — what the schema
     /// test walks.
-    pub const ALL: [&str; 4] = [
+    pub const ALL: [&str; 5] = [
         ACTORS_HANDLE,
         ACTORS_PUBKEY,
         ACTORS_ADDRESS,
         CREDENTIALS_EMAIL,
+        APPLICATIONS_ONE_OPEN_PER_APPROVER,
     ];
 }
 
@@ -89,15 +94,20 @@ fn decode_account_state(s: &str) -> Result<AccountState, sqlx::Error> {
 }
 
 /// One application attempt (data-model.md `auth_applications`): the
-/// invite-link provenance and approval/landing bookkeeping of an account
-/// in the applicant state. The joined proof fields (`handle`,
-/// `email_verified`, `key_attached`) come off the account rows — they are
-/// what approvability reads.
+/// staging provenance and approval/landing bookkeeping of an account in
+/// the applicant state — one path, in one member's queue. The joined
+/// proof fields (`handle`, `email_verified`, `key_attached`) come off the
+/// account rows — they are what approvability reads.
 #[derive(Debug, Clone)]
 pub struct Application {
     pub id: Uuid,
     pub account_id: Uuid,
-    pub invite_link_id: Uuid,
+    /// Whose queue the row sits in: the invite link's issuer, or the
+    /// member who took the account up from its ask link.
+    pub approver_id: Uuid,
+    /// Exactly one of the two provenance ids is set.
+    pub invite_link_id: Option<Uuid>,
+    pub ask_link_id: Option<Uuid>,
     pub handle: String,
     pub email_verified: bool,
     pub key_attached: bool,
@@ -315,8 +325,9 @@ pub enum RegisterOutcome {
 /// Registers an account through an invite link, in one transaction
 /// (auth.md §Application step 2): the actor row (no key yet), the
 /// credentials in the applicant state, the first profile version
-/// (display name = handle until the owner edits), and the application
-/// row against the link. A dead account — never verified and past
+/// (display name = handle until the owner edits), the account's ask link
+/// (auth.md "The ask link"), and the application row against the link,
+/// in its issuer's queue. A dead account — never verified and past
 /// `dead_before` — holding the handle or email is deleted first, so the
 /// experience never depends on the reaper's schedule.
 ///
@@ -338,12 +349,15 @@ pub async fn register_account(
     dead_before: DateTime<Utc>,
 ) -> Result<RegisterOutcome, sqlx::Error> {
     let mut tx = pool.begin().await?;
-    sqlx::query_scalar!(
-        "SELECT id FROM auth_invite_links WHERE id = $1 FOR UPDATE",
+    let Some(issuer) = sqlx::query_scalar!(
+        "SELECT inviter_id FROM auth_invite_links WHERE id = $1 FOR UPDATE",
         invite_link_id,
     )
     .fetch_optional(&mut *tx)
-    .await?;
+    .await?
+    else {
+        return Ok(RegisterOutcome::InviteUnusable);
+    };
     if !invite_link_usable(&mut *tx, invite_link_id).await? {
         return Ok(RegisterOutcome::InviteUnusable);
     }
@@ -395,10 +409,17 @@ pub async fn register_account(
     .execute(&mut *tx)
     .await?;
     sqlx::query!(
-        "INSERT INTO auth_applications (id, account_id, invite_link_id)
-         VALUES ($1, $2, $3)",
+        "INSERT INTO auth_ask_links (account_id) VALUES ($1)",
+        account_id,
+    )
+    .execute(&mut *tx)
+    .await?;
+    sqlx::query!(
+        "INSERT INTO auth_applications (id, account_id, approver_id, invite_link_id)
+         VALUES ($1, $2, $3, $4)",
         application_id,
         account_id,
+        issuer,
         invite_link_id,
     )
     .execute(&mut *tx)
@@ -423,14 +444,19 @@ fn refused_unique(
     }
 }
 
-/// Deletes accounts whole — profile versions, credentials, and the actor
-/// row, whose FK cascades take sessions, applications, backups, and the
-/// other user-scoped rows. Only ever called for never-verified accounts,
-/// which cannot have touched L1 (auth.md "Reaper").
+/// Deletes accounts whole — staged writes, profile versions, credentials,
+/// and the actor row, whose FK cascades take sessions, applications,
+/// backups, and the other user-scoped rows. Staged writes go first: their
+/// actor FK does not cascade. Only ever called for accounts that cannot
+/// have touched L1 — the reaper's never-verified ones (auth.md "Reaper")
+/// and an unfunded applicant deleting itself.
 async fn delete_account_rows(conn: &mut PgConnection, ids: &[Uuid]) -> Result<(), sqlx::Error> {
     if ids.is_empty() {
         return Ok(());
     }
+    sqlx::query!("DELETE FROM staged_writes WHERE actor_id = ANY($1)", ids)
+        .execute(&mut *conn)
+        .await?;
     sqlx::query!(
         "DELETE FROM actor_profile_versions WHERE actor_id = ANY($1)",
         ids,
@@ -453,7 +479,9 @@ macro_rules! application_from_row {
         Application {
             id: $r.id,
             account_id: $r.account_id,
+            approver_id: $r.approver_id,
             invite_link_id: $r.invite_link_id,
+            ask_link_id: $r.ask_link_id,
             handle: $r.handle,
             email_verified: $r.email_verified,
             key_attached: $r.key_attached,
@@ -467,7 +495,8 @@ macro_rules! application_from_row {
 
 pub async fn application(pool: &PgPool, id: Uuid) -> Result<Option<Application>, sqlx::Error> {
     Ok(sqlx::query!(
-        r#"SELECT ap.id, ap.account_id, ap.invite_link_id, a.handle,
+        r#"SELECT ap.id, ap.account_id, ap.approver_id, ap.invite_link_id, ap.ask_link_id,
+                  a.handle,
                   (c.email_verified_at IS NOT NULL) AS "email_verified!",
                   (a.actor_pubkey IS NOT NULL) AS "key_attached!",
                   ap.approved_at, ap.rejected_at, ap.landed_at, ap.created_at
@@ -497,7 +526,8 @@ pub async fn current_application_for(
     account_id: Uuid,
 ) -> Result<Option<Application>, sqlx::Error> {
     Ok(sqlx::query!(
-        r#"SELECT ap.id, ap.account_id, ap.invite_link_id, a.handle,
+        r#"SELECT ap.id, ap.account_id, ap.approver_id, ap.invite_link_id, ap.ask_link_id,
+                  a.handle,
                   (c.email_verified_at IS NOT NULL) AS "email_verified!",
                   (a.actor_pubkey IS NOT NULL) AS "key_attached!",
                   ap.approved_at, ap.rejected_at, ap.landed_at, ap.created_at
@@ -528,7 +558,8 @@ pub async fn applications_for_link(
     invite_link_id: Uuid,
 ) -> Result<Vec<Application>, sqlx::Error> {
     Ok(sqlx::query!(
-        r#"SELECT ap.id, ap.account_id, ap.invite_link_id, a.handle,
+        r#"SELECT ap.id, ap.account_id, ap.approver_id, ap.invite_link_id, ap.ask_link_id,
+                  a.handle,
                   (c.email_verified_at IS NOT NULL) AS "email_verified!",
                   (a.actor_pubkey IS NOT NULL) AS "key_attached!",
                   ap.approved_at, ap.rejected_at, ap.landed_at, ap.created_at
@@ -547,6 +578,180 @@ pub async fn applications_for_link(
     .into_iter()
     .map(|r| application_from_row!(r))
     .collect())
+}
+
+/// One approver's approval queue across both ends of the funnel
+/// (api-spec `approvalQueue`): the applications waiting on their vouch,
+/// staged through their invite links or taken up from ask links, oldest
+/// first. Waiting only — neither approved nor rejected. A row whose
+/// account landed through another path has left the queue (seam 099
+/// ruling 67): it is filtered here, at the read, and nothing marks it.
+pub async fn approval_queue(
+    pool: &PgPool,
+    approver: Uuid,
+) -> Result<Vec<Application>, sqlx::Error> {
+    Ok(sqlx::query!(
+        r#"SELECT ap.id, ap.account_id, ap.approver_id, ap.invite_link_id, ap.ask_link_id,
+                  a.handle,
+                  (c.email_verified_at IS NOT NULL) AS "email_verified!",
+                  (a.actor_pubkey IS NOT NULL) AS "key_attached!",
+                  ap.approved_at, ap.rejected_at, ap.landed_at, ap.created_at
+           FROM auth_applications ap
+           JOIN actors a ON a.id = ap.account_id
+           JOIN user_credentials c ON c.actor_id = ap.account_id
+           WHERE ap.approver_id = $1
+             AND ap.approved_at IS NULL
+             AND ap.rejected_at IS NULL
+             AND ap.landed_at IS NULL
+             AND NOT EXISTS (SELECT 1 FROM auth_applications o
+                             WHERE o.account_id = ap.account_id
+                               AND o.landed_at IS NOT NULL)
+           ORDER BY ap.created_at ASC, ap.id ASC"#,
+        approver,
+    )
+    .fetch_all(pool)
+    .await?
+    .into_iter()
+    .map(|r| application_from_row!(r))
+    .collect())
+}
+
+/// The account's own ask link (auth.md "The ask link"); None for an
+/// account that never applied — the genesis cast.
+pub async fn ask_link_of(pool: &PgPool, account_id: Uuid) -> Result<Option<Uuid>, sqlx::Error> {
+    sqlx::query_scalar!(
+        "SELECT id FROM auth_ask_links WHERE account_id = $1",
+        account_id,
+    )
+    .fetch_optional(pool)
+    .await
+}
+
+/// What an ask link answers before anything is written (api-spec
+/// `askLinkCheck`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AskLinkState {
+    /// The asking account's handle.
+    pub handle: String,
+    /// The account is a member: the ceremony landed, the link retired.
+    pub landed: bool,
+    /// An application of the account is open in the viewer's own queue —
+    /// waiting, or approved with the viewer's vouch in flight. Always
+    /// false without a viewer.
+    pub open_with_viewer: bool,
+}
+
+/// Reads an ask link for `viewer` (or anonymously); None when the id
+/// names no link. The two flags are exactly [`stage_application`]'s
+/// refusals, so the check gates the staging call it precedes.
+pub async fn ask_link_state(
+    pool: &PgPool,
+    id: Uuid,
+    viewer: Option<Uuid>,
+) -> Result<Option<AskLinkState>, sqlx::Error> {
+    Ok(sqlx::query!(
+        r#"SELECT a.handle,
+                  (c.account_state = 'member') AS "landed!",
+                  EXISTS (SELECT 1 FROM auth_applications ap
+                          WHERE ap.account_id = k.account_id
+                            AND ap.approver_id = $2
+                            AND ap.rejected_at IS NULL
+                            AND ap.landed_at IS NULL) AS "open_with_viewer!"
+           FROM auth_ask_links k
+           JOIN actors a ON a.id = k.account_id
+           JOIN user_credentials c ON c.actor_id = k.account_id
+           WHERE k.id = $1"#,
+        id,
+        viewer,
+    )
+    .fetch_optional(pool)
+    .await?
+    .map(|r| AskLinkState {
+        handle: r.handle,
+        landed: r.landed,
+        open_with_viewer: r.open_with_viewer,
+    }))
+}
+
+/// The outcome of taking up an ask link.
+#[derive(Debug, Clone)]
+pub enum StageOutcome {
+    /// The account now waits in the approver's queue on this row.
+    Staged(Application),
+    /// The id names no ask link (or its account is gone).
+    Unknown,
+    /// The account is a member: landing retired the link.
+    Landed,
+    /// An application of the account is already open in the approver's
+    /// queue — waiting, or approved with their vouch in flight.
+    OpenWithApprover,
+}
+
+/// Takes up an ask link (auth.md "The ask link"): stages its account as a
+/// waiting application in `approver`'s queue — a queue entry and nothing
+/// else; approval is the ordinary act. No approvability is required, and
+/// a live application in another member's queue never refuses (EC-R3:
+/// several members may be asked at once).
+///
+/// Runs under the account lock ([`lock_account`]), so a stage and a
+/// landing serialize: a stage never writes a waiting row beside a landing
+/// that already happened. The one-open-per-approver rule is the partial
+/// unique index, so two stages by the same member race to exactly one
+/// row and the loser reads [`StageOutcome::OpenWithApprover`].
+pub async fn stage_application(
+    pool: &PgPool,
+    application_id: Uuid,
+    ask_link: Uuid,
+    approver: Uuid,
+) -> Result<StageOutcome, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let Some(account_id) = sqlx::query_scalar!(
+        "SELECT account_id FROM auth_ask_links WHERE id = $1",
+        ask_link,
+    )
+    .fetch_optional(&mut *tx)
+    .await?
+    else {
+        return Ok(StageOutcome::Unknown);
+    };
+    if !lock_account(&mut tx, account_id).await? {
+        return Ok(StageOutcome::Unknown);
+    }
+    let member = sqlx::query_scalar!(
+        r#"SELECT account_state = 'member' AS "member!"
+           FROM user_credentials WHERE actor_id = $1"#,
+        account_id,
+    )
+    .fetch_one(&mut *tx)
+    .await?;
+    if member {
+        return Ok(StageOutcome::Landed);
+    }
+    let inserted = sqlx::query!(
+        "INSERT INTO auth_applications (id, account_id, approver_id, ask_link_id)
+         VALUES ($1, $2, $3, $4)",
+        application_id,
+        account_id,
+        approver,
+        ask_link,
+    )
+    .execute(&mut *tx)
+    .await;
+    match inserted {
+        Ok(_) => {}
+        Err(sqlx::Error::Database(e))
+            if e.is_unique_violation()
+                && e.constraint() == Some(constraints::APPLICATIONS_ONE_OPEN_PER_APPROVER) =>
+        {
+            return Ok(StageOutcome::OpenWithApprover);
+        }
+        Err(e) => return Err(e),
+    }
+    tx.commit().await?;
+    application(pool, application_id)
+        .await?
+        .map(StageOutcome::Staged)
+        .ok_or_else(|| sqlx::Error::RowNotFound)
 }
 
 /// Marks the email channel proven (auth.md §Application step 4).
@@ -720,8 +925,8 @@ pub async fn approve_application(pool: &PgPool, id: Uuid) -> Result<Option<Uuid>
 
 /// Closes one application in `approver`'s queue (auth.md "Rejection"):
 /// sets `rejected_at` and nothing else — the row, the account and its
-/// key all stay. The queue is the invite link's issuer's, so ownership
-/// reads through the link. The waiting predicate is the concurrency gate
+/// key all stay. The row is in the queue of its approver, whichever end
+/// of the funnel staged it. The waiting predicate is the concurrency gate
 /// against a concurrent approval or a second rejection, mirroring
 /// [`approve_application`]'s. False when the row is not waiting in that
 /// queue — unknown, foreign, approved, already rejected, or left the
@@ -735,8 +940,7 @@ pub async fn reject_application(
     Ok(sqlx::query!(
         "UPDATE auth_applications ap
          SET rejected_at = NOW()
-         FROM auth_invite_links l
-         WHERE ap.id = $1 AND l.id = ap.invite_link_id AND l.inviter_id = $2
+         WHERE ap.id = $1 AND ap.approver_id = $2
            AND ap.approved_at IS NULL
            AND ap.rejected_at IS NULL
            AND ap.landed_at IS NULL
@@ -781,13 +985,14 @@ pub async fn reject_link_applications(
         sqlx::query!(
             "UPDATE auth_applications ap
              SET rejected_at = NOW()
-             WHERE ap.invite_link_id = $1
+             WHERE ap.invite_link_id = $1 AND ap.approver_id = $2
                AND ap.approved_at IS NULL
                AND ap.rejected_at IS NULL
                AND ap.landed_at IS NULL
                AND NOT EXISTS (SELECT 1 FROM auth_applications o
                                WHERE o.account_id = ap.account_id AND o.landed_at IS NOT NULL)",
             invite_link_id,
+            approver,
         )
         .execute(pool)
         .await?
@@ -1295,9 +1500,10 @@ pub async fn land_path_directly(pool: &PgPool, application_id: Uuid) -> Result<b
 /// and member-until-first-Opinion. None for accounts without an
 /// application trace (genesis actors).
 ///
-/// The registration path is the account's first application row:
-/// `register` writes it with the account, and every later path is staged
-/// after.
+/// The registration path is the account's first application row through
+/// an invite link: `register` writes it with the account, and every later
+/// path is staged after — from the account's ask link, never through a
+/// link, so a newer ask-link path never moves the lender.
 pub async fn link_issuer_of(
     pool: &PgPool,
     account_id: Uuid,
@@ -1319,7 +1525,7 @@ pub async fn link_issuer_of(
 /// The member whose vouch-Opinion admitted the account — the first edge
 /// by the mirror's causal key, the same fact the landing predicate decided
 /// on, so a rebuild names the same member. None before landing. An account
-/// landed before vouches were recorded names its landed path's issuer.
+/// landed before vouches were recorded names its landed path's approver.
 /// Feeds `invitedBy` and the reciprocation question: the vouch-back
 /// target is whoever actually vouched.
 pub async fn admitting_voucher_of(
@@ -1339,9 +1545,8 @@ pub async fn admitting_voucher_of(
                 WHERE ap.account_id = $1
                 ORDER BY m.act_time, m.position, m.record_id
                 LIMIT 1),
-               (SELECT l.inviter_id
+               (SELECT ap.approver_id
                 FROM auth_applications ap
-                JOIN auth_invite_links l ON l.id = ap.invite_link_id
                 WHERE ap.account_id = $1 AND ap.landed_at IS NOT NULL))
              AND EXISTS (SELECT 1 FROM auth_applications ap
                          WHERE ap.account_id = $1 AND ap.landed_at IS NOT NULL)"#,
@@ -1507,36 +1712,41 @@ pub struct SweptSecrets {
     pub refresh_tokens: u64,
     pub password_resets: u64,
     pub email_changes: u64,
+    pub account_deletions: u64,
 }
 
 impl SweptSecrets {
     pub fn total(&self) -> u64 {
-        self.refresh_tokens + self.password_resets + self.email_changes
+        self.refresh_tokens + self.password_resets + self.email_changes + self.account_deletions
     }
 }
 
 /// Deletes spent bearer-secret rows past their retention bound.
 ///
-/// Three tables here store a token hash and keep the row after the token
+/// Four tables here store a token hash and keep the row after the token
 /// stops being usable: a refresh token past expiry or revocation, a reset
 /// link past use or expiry, an email change once it ended — applied,
-/// canceled, or run out. None of them is evidence of anything once the
-/// window closes, and a hash that no longer answers any question is only
-/// a hash left lying around, so the row goes.
+/// canceled, or run out — and an account deletion that ended without
+/// executing — cancelled, superseded, or never opened. None of them is
+/// evidence of anything once the window closes, and a hash that no
+/// longer answers any question is only a hash left lying around, so the
+/// row goes. An executed deletion stays: the erasure engine reads it.
 ///
 /// The two windows are different because the tables are. A refresh
 /// token's revoked row is what reuse detection recognises a replayed
 /// token by (auth.md "Refresh rotation"), so it is kept long enough for
 /// that answer to still be worth giving — 30 days. A reset link proves
-/// nothing once consumed, and an ended email change only tells a late
-/// link what ended it, so both go on the short window; after it, a
+/// nothing once consumed, an ended email change only tells a late link
+/// what ended it, and an ended deletion's link answers exactly what an
+/// unknown one does, so all three go on the short window; after it, a
 /// stale change link reads as unknown.
 ///
 /// `auth_invite_links` and `auth_applications` are deliberately not
 /// swept: neither declares a secret column, and both are the provenance
 /// record of how an account came to exist — who invited whom, which
-/// application landed. That is an audit trail, and an audit trail with a
-/// reaper is not one.
+/// application landed. They go only with the account itself, when a
+/// pre-member account is deleted whole (the reaper, or an applicant
+/// deleting itself), and never by age.
 pub async fn sweep_spent_secrets(
     pool: &PgPool,
     refresh_grace_secs: f64,
@@ -1571,11 +1781,24 @@ pub async fn sweep_spent_secrets(
     .execute(&mut *tx)
     .await?
     .rows_affected();
+    let account_deletions = sqlx::query!(
+        "DELETE FROM auth_account_deletions
+         WHERE executed_at IS NULL
+           AND (cancelled_at < now() - make_interval(secs => $1)
+                OR superseded_at < now() - make_interval(secs => $1)
+                OR (confirmed_at IS NULL
+                    AND token_expires_at < now() - make_interval(secs => $1)))",
+        single_use_grace_secs,
+    )
+    .execute(&mut *tx)
+    .await?
+    .rows_affected();
     tx.commit().await?;
     Ok(SweptSecrets {
         refresh_tokens,
         password_resets,
         email_changes,
+        account_deletions,
     })
 }
 
@@ -2410,6 +2633,324 @@ pub async fn apply_email_change(
     Ok(EmailChangeApply::Applied)
 }
 
+/// A standing account-deletion request (data-model.md
+/// `auth_account_deletions`; auth.md "Self-service deletion"): requested,
+/// and confirmed once its link was opened — only then with a deadline.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AccountDeletion {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    /// The content-level opt-in. Monotone: once true it stays true.
+    pub include_content: bool,
+    pub requested_at: DateTime<Utc>,
+    /// The unopened link's end; meaningless once confirmed.
+    pub token_expires_at: DateTime<Utc>,
+    pub confirmed_at: Option<DateTime<Utc>>,
+    /// The grace period's deadline, fixed at confirmation.
+    pub scheduled_for: Option<DateTime<Utc>>,
+}
+
+/// What a deletion request did.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DeletionRequest {
+    /// A new request stands, with its own link; any unconfirmed one before
+    /// it was superseded.
+    Opened,
+    /// A confirmed deletion was already in its grace, and the request
+    /// changed nothing: it is not superseded, its deadline does not move,
+    /// and no link is minted.
+    InGrace(AccountDeletion),
+    /// The account's path is not [`DeletionPath::ByLink`] — re-read under
+    /// the account lock, so an approval that funded the address after the
+    /// caller's own read is seen here.
+    WrongPath(DeletionPath),
+}
+
+/// Opens an account-deletion request with a fresh link, superseding an
+/// unconfirmed one still standing (auth.md: at most one request stands).
+/// None when the account is gone.
+///
+/// A confirmed deletion in its grace is never superseded — that would
+/// silently un-confirm it — and answers [`DeletionRequest::InGrace`]
+/// instead. The account's credentials row is locked first, so two
+/// requests serialize, and the standing row is then locked: a confirm
+/// racing this request either lands first and is seen here, or finds its
+/// row superseded. Under that same lock the account's
+/// [`deletion_path`] is re-derived and must still be `ByLink`.
+pub async fn open_account_deletion(
+    pool: &PgPool,
+    id: Uuid,
+    user_id: Uuid,
+    deletion_token_hash: &[u8],
+    include_content: bool,
+    token_expires_at: DateTime<Utc>,
+) -> Result<Option<DeletionRequest>, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    if !lock_account(&mut tx, user_id).await? {
+        return Ok(None);
+    }
+    match deletion_path(&mut tx, user_id).await? {
+        None => return Ok(None),
+        Some(DeletionPath::ByLink) => {}
+        Some(path) => return Ok(Some(DeletionRequest::WrongPath(path))),
+    }
+    let standing = sqlx::query_as!(
+        AccountDeletion,
+        "SELECT id, user_id, include_content, requested_at, token_expires_at,
+                confirmed_at, scheduled_for
+         FROM auth_account_deletions
+         WHERE user_id = $1
+           AND cancelled_at IS NULL AND superseded_at IS NULL AND executed_at IS NULL
+         FOR UPDATE",
+        user_id,
+    )
+    .fetch_optional(&mut *tx)
+    .await?;
+    if let Some(standing) = standing {
+        if standing.confirmed_at.is_some() {
+            return Ok(Some(DeletionRequest::InGrace(standing)));
+        }
+        sqlx::query!(
+            "UPDATE auth_account_deletions SET superseded_at = NOW() WHERE id = $1",
+            standing.id,
+        )
+        .execute(&mut *tx)
+        .await?;
+    }
+    sqlx::query!(
+        "INSERT INTO auth_account_deletions
+             (id, user_id, deletion_token_hash, include_content, token_expires_at)
+         VALUES ($1, $2, $3, $4, $5)",
+        id,
+        user_id,
+        deletion_token_hash,
+        include_content,
+        token_expires_at,
+    )
+    .execute(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    Ok(Some(DeletionRequest::Opened))
+}
+
+/// Confirms a deletion by its link — or re-opens a confirmed one inside
+/// its grace. The first confirmation fixes the deadline `grace_secs` from
+/// now; a re-open never moves it. `include_content` true upgrades the
+/// request to the content sweep, false never downgrades it.
+///
+/// None for every dead link alike — unknown, superseded, cancelled,
+/// executed, or unopened past its lifetime: they all answer the one code
+/// (api-spec.md `DELETION_TOKEN_INVALID`). One statement, so the guard and
+/// the write see the same row: a cancel or a supersede committed first
+/// leaves nothing to confirm.
+pub async fn confirm_account_deletion(
+    pool: &PgPool,
+    deletion_token_hash: &[u8],
+    include_content: bool,
+    grace_secs: f64,
+) -> Result<Option<AccountDeletion>, sqlx::Error> {
+    sqlx::query_as!(
+        AccountDeletion,
+        "UPDATE auth_account_deletions
+         SET confirmed_at = COALESCE(confirmed_at, NOW()),
+             scheduled_for = COALESCE(scheduled_for, NOW() + make_interval(secs => $2)),
+             include_content = include_content OR $3
+         WHERE deletion_token_hash = $1
+           AND cancelled_at IS NULL AND superseded_at IS NULL AND executed_at IS NULL
+           AND (confirmed_at IS NOT NULL OR token_expires_at > NOW())
+         RETURNING id, user_id, include_content, requested_at, token_expires_at,
+                   confirmed_at, scheduled_for",
+        deletion_token_hash,
+        grace_secs,
+        include_content,
+    )
+    .fetch_optional(pool)
+    .await
+}
+
+/// Ends the account's standing deletion, requested or confirmed — its link
+/// dies with it. True when one stood. The executor (erasure.md §6) claims
+/// its rows under a lock, so a cancel and an execution serialize: a cancel
+/// that waits on an executing row finds it executed and ends nothing.
+pub async fn cancel_account_deletion(pool: &PgPool, user_id: Uuid) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query!(
+        "UPDATE auth_account_deletions SET cancelled_at = NOW()
+         WHERE user_id = $1
+           AND cancelled_at IS NULL AND superseded_at IS NULL AND executed_at IS NULL",
+        user_id,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected()
+        > 0)
+}
+
+/// The account's confirmed deletion in its grace, if any — a requested,
+/// unconfirmed one has no status.
+pub async fn confirmed_account_deletion(
+    pool: &PgPool,
+    user_id: Uuid,
+) -> Result<Option<AccountDeletion>, sqlx::Error> {
+    sqlx::query_as!(
+        AccountDeletion,
+        "SELECT id, user_id, include_content, requested_at, token_expires_at,
+                confirmed_at, scheduled_for
+         FROM auth_account_deletions
+         WHERE user_id = $1 AND confirmed_at IS NOT NULL
+           AND cancelled_at IS NULL AND superseded_at IS NULL AND executed_at IS NULL",
+        user_id,
+    )
+    .fetch_optional(pool)
+    .await
+}
+
+/// How the account is deleted from here — the one derivation behind
+/// `User.deletionPath` and both deletion verbs (ruling OS-15). Computed
+/// once, server-side, so no client re-derives it and a verb cannot
+/// disagree with the read.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DeletionPath {
+    /// `deleteApplicantAccount` answers: an applicant whose address was
+    /// never funded; nothing of it reached L1.
+    Immediate,
+    /// `requestAccountDeletion` answers: a member, or an applicant whose
+    /// Registration is in the mirror — it has a node, so only the husk
+    /// path may remove it (design item 69).
+    ByLink,
+    /// Neither verb answers: funded, Registration not yet in the mirror,
+    /// not a member.
+    Locked,
+}
+
+/// Derives the account's [`DeletionPath`], top-down; None when the
+/// account is gone. A verb runs it inside its own transaction under
+/// [`lock_account`], so an approval that funds the address cannot slip in
+/// between the read and the write.
+///
+/// 1. A member is `ByLink`.
+/// 2. An applicant whose Registration is registered is `ByLink`: a
+///    `registration` record by its address is in `mirror_records`, the
+///    landing predicate's own first fact ([`evaluate_landing`]).
+/// 3. An applicant whose address is funded is `Locked`.
+/// 4. Any other applicant is `Immediate`.
+///
+/// `approvedAt` is never an input: a lapsed vouch clears it, but the
+/// funding row stays, so a lapsed, funded applicant never reads
+/// `Immediate`.
+///
+/// "Funded" is a funding row in ANY state — requested, settled or failed
+/// (ER-G17 option (a), ruled with OS-15): an account whose burn may still
+/// settle onto its address is never hard-deleted. This supersedes the
+/// earlier `failed_at IS NULL` reading; the two differ only for a failed
+/// row, which nothing writes today, since the stand-in settles at once.
+///
+/// The reserved Guest state has neither verb, so it reads `Locked`.
+pub async fn deletion_path(
+    conn: &mut PgConnection,
+    account_id: Uuid,
+) -> Result<Option<DeletionPath>, sqlx::Error> {
+    let Some(account) = sqlx::query!(
+        "SELECT c.account_state, a.realization_address
+         FROM user_credentials c JOIN actors a ON a.id = c.actor_id
+         WHERE c.actor_id = $1",
+        account_id,
+    )
+    .fetch_optional(&mut *conn)
+    .await?
+    else {
+        return Ok(None);
+    };
+    match decode_account_state(&account.account_state)? {
+        AccountState::Member => return Ok(Some(DeletionPath::ByLink)),
+        AccountState::Guest => return Ok(Some(DeletionPath::Locked)),
+        AccountState::Applicant => {}
+    }
+    let registered = sqlx::query_scalar!(
+        r#"SELECT EXISTS(
+               SELECT 1 FROM mirror_records WHERE author = $1 AND family = $2
+           ) AS "exists!""#,
+        account.realization_address,
+        common::l1::census::Family::Registration.as_str(),
+    )
+    .fetch_one(&mut *conn)
+    .await?;
+    if registered {
+        return Ok(Some(DeletionPath::ByLink));
+    }
+    let funded = sqlx::query_scalar!(
+        r#"SELECT EXISTS(
+               SELECT 1 FROM auth_admission_fundings
+               WHERE account_id = $1 OR address = $2
+           ) AS "exists!""#,
+        account_id,
+        account.realization_address,
+    )
+    .fetch_one(&mut *conn)
+    .await?;
+    Ok(Some(if funded {
+        DeletionPath::Locked
+    } else {
+        DeletionPath::Immediate
+    }))
+}
+
+/// What an applicant's deletion did.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ApplicantDeletion {
+    /// The account is gone, whole.
+    Deleted,
+    /// No such account — already deleted.
+    Gone,
+    /// The account's path is not [`DeletionPath::Immediate`]: a member, or
+    /// an applicant whose Registration landed, takes the mailed path
+    /// ([`DeletionPath::ByLink`]); a funded one waits for its Registration
+    /// ([`DeletionPath::Locked`], design item 69).
+    WrongPath(DeletionPath),
+}
+
+/// Deletes an applicant account at once and whole (auth.md
+/// "Self-service deletion"): its staged writes — the acts carried with the
+/// application among them — then profile versions, credentials and the
+/// actor row, whose cascades take sessions, applications, the ask link,
+/// key backups and challenges, device locks and every other user-scoped
+/// row. Nothing of it reached L1: an unfunded applicant has signed nothing
+/// that was relayed.
+///
+/// It answers only on [`DeletionPath::Immediate`], read by
+/// [`deletion_path`] under the account lock approval takes
+/// ([`lock_account`]), then the actor row's, which every staged write's
+/// actor FK contends for — in that order, approval's own, so the two
+/// never deadlock. An approval that funds the account either commits
+/// first and is refused here, or waits and finds the account gone.
+///
+/// Email and handle are freed with the account. The account's single-use
+/// invite slot is NOT meant to be: a single-use invite is consumed for
+/// good at account creation (jakob, round-3 ruling). Today
+/// [`invite_link_usable`] reads a vanished application row as a free
+/// slot, so this delete — like the reaper's — frees it as a side effect.
+/// Nothing here frees it on purpose; the link's own used-at stamp, read
+/// by that predicate, fixes both paths at once.
+pub async fn delete_applicant_account(
+    pool: &PgPool,
+    account_id: Uuid,
+) -> Result<ApplicantDeletion, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    if !lock_account(&mut tx, account_id).await? {
+        return Ok(ApplicantDeletion::Gone);
+    }
+    sqlx::query!("SELECT id FROM actors WHERE id = $1 FOR UPDATE", account_id)
+        .fetch_optional(&mut *tx)
+        .await?;
+    match deletion_path(&mut tx, account_id).await? {
+        None => return Ok(ApplicantDeletion::Gone),
+        Some(DeletionPath::Immediate) => {}
+        Some(path) => return Ok(ApplicantDeletion::WrongPath(path)),
+    }
+    delete_account_rows(&mut tx, &[account_id]).await?;
+    tx.commit().await?;
+    Ok(ApplicantDeletion::Deleted)
+}
+
 /// Renames the account in the one actor namespace. False on a uniqueness
 /// collision (surfaced as HANDLE_TAKEN).
 pub async fn change_handle(
@@ -2534,6 +3075,90 @@ pub async fn key_backup_created_at(
     )
     .fetch_one(pool)
     .await
+}
+
+/// What issuing a device lock came to.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum IssueLockOutcome {
+    Issued,
+    /// The account already holds its cap of live locks; nothing stored.
+    AtCap,
+    /// The account is gone.
+    NoAccount,
+}
+
+/// Stores a fresh device lock (data-model.md `auth_device_locks`) under
+/// the account's live-lock cap. The count and the insert run under the
+/// account's credentials-row lock, so two issues racing at one below the
+/// cap cannot both pass it.
+pub async fn issue_device_lock(
+    pool: &PgPool,
+    user_id: Uuid,
+    id: Uuid,
+    secret: &[u8],
+    cap: i64,
+) -> Result<IssueLockOutcome, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    if !lock_account(&mut tx, user_id).await? {
+        return Ok(IssueLockOutcome::NoAccount);
+    }
+    let live = sqlx::query_scalar!(
+        r#"SELECT COUNT(*) AS "live!" FROM auth_device_locks WHERE user_id = $1"#,
+        user_id,
+    )
+    .fetch_one(&mut *tx)
+    .await?;
+    if live >= cap {
+        return Ok(IssueLockOutcome::AtCap);
+    }
+    sqlx::query!(
+        "INSERT INTO auth_device_locks (id, user_id, secret) VALUES ($1, $2, $3)",
+        id,
+        user_id,
+        secret,
+    )
+    .execute(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    Ok(IssueLockOutcome::Issued)
+}
+
+/// The secret of one of the account's locks, stamping the release; None
+/// for an unknown id or another account's. A release never spends the
+/// row — a lost response must not destroy the only way back into the
+/// device's custody.
+pub async fn release_device_lock(
+    pool: &PgPool,
+    user_id: Uuid,
+    id: Uuid,
+) -> Result<Option<Vec<u8>>, sqlx::Error> {
+    sqlx::query_scalar!(
+        "UPDATE auth_device_locks SET released_at = NOW()
+          WHERE id = $1 AND user_id = $2
+          RETURNING secret",
+        id,
+        user_id,
+    )
+    .fetch_optional(pool)
+    .await
+}
+
+/// Deletes one of the account's locks; whether one went. Another
+/// account's lock is never reached, whatever id is named.
+pub async fn discard_device_lock(
+    pool: &PgPool,
+    user_id: Uuid,
+    id: Uuid,
+) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query!(
+        "DELETE FROM auth_device_locks WHERE id = $1 AND user_id = $2",
+        id,
+        user_id,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected()
+        == 1)
 }
 
 /// The account's cross-device preferences (data-model.md

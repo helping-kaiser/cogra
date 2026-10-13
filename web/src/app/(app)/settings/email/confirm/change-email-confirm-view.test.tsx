@@ -1,8 +1,9 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { delay, graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { setsPageVisibility } from "@/test/media-env";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { ChangeEmailConfirmView, resendMessage } from "./change-email-confirm-view";
@@ -28,27 +29,25 @@ function pending(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function meWith(change: Record<string, unknown> | null) {
+  return {
+    __typename: "User",
+    id: "u1",
+    handle: "sol",
+    email: OLD,
+    emailVerified: true,
+    accountState: "MEMBER",
+    actorPubkey: "pk",
+    passwordChangedAt: null,
+    keyBackupCreatedAt: null,
+    pendingEmailChange: change,
+    preferences: null,
+    sessions: [],
+  };
+}
+
 function account(change: Record<string, unknown> | null = pending()) {
-  return graphql.query("SettingsAccount", () =>
-    HttpResponse.json({
-      data: {
-        me: {
-          __typename: "User",
-          id: "u1",
-          handle: "sol",
-          email: OLD,
-          emailVerified: true,
-          accountState: "MEMBER",
-          actorPubkey: "pk",
-          passwordChangedAt: null,
-          keyBackupCreatedAt: null,
-          pendingEmailChange: change,
-          preferences: null,
-          sessions: [],
-        },
-      },
-    }),
-  );
+  return graphql.query("SettingsAccount", () => HttpResponse.json({ data: { me: meWith(change) } }));
 }
 
 function confirmAnswer(body: Record<string, unknown> | "offline", wait = 0) {
@@ -118,6 +117,19 @@ describe("ChangeEmailConfirm", () => {
     expect(screen.getByTestId("changeEmail.pair.resend")).toBeInTheDocument();
   });
 
+  it("code_confirmed_reads_the_interim_line_with_the_new_address (seam 115.3)", async () => {
+    server.use(account(pending({ codeConfirmed: true })));
+    rendered();
+    const line = await screen.findByTestId("changeEmail.codeDone");
+    expect(line.textContent).toBe(`Done on this side — now open the link at ${NEW}`);
+  });
+
+  it("the interim line is absent while the code is still owed", async () => {
+    rendered();
+    await screen.findByTestId("changeEmail.code.input");
+    expect(screen.queryByTestId("changeEmail.codeDone")).not.toBeInTheDocument();
+  });
+
   it("right_code_with_link_done_moves_the_address_with_snackbar", async () => {
     server.use(
       account(pending({ linkConfirmed: true })),
@@ -145,6 +157,9 @@ describe("ChangeEmailConfirm", () => {
       expect(screen.getByTestId("changeEmail.pair.codeSide")).toHaveTextContent(`${OLD} — confirmed`),
     );
     expect(screen.queryByTestId("changeEmail.code.input")).not.toBeInTheDocument();
+    expect(screen.getByTestId("changeEmail.codeDone").textContent).toBe(
+      `Done on this side — now open the link at ${NEW}`,
+    );
     expect(push).not.toHaveBeenCalled();
   });
 
@@ -371,5 +386,77 @@ describe("ChangeEmailConfirm", () => {
     server.use(account(null));
     rendered();
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/settings"));
+  });
+
+  // THE PAGE RE-READS ON EVERY RETURN (jakob's hand test 2026-10-09): the
+  // link's side lands in another tab or app, so coming back is when the
+  // change may have moved. A return is the page going hidden, then visible.
+  describe("coming back", () => {
+    const awayAndBack = () => {
+      act(() => setsPageVisibility("hidden"));
+      act(() => setsPageVisibility("visible"));
+    };
+
+    it("reads each side as it stands when the reader returns", async () => {
+      rendered();
+      expect(await screen.findByTestId("changeEmail.pair.linkSide")).toHaveTextContent(`${NEW} — still waiting`);
+      server.use(account(pending({ linkConfirmed: true })));
+      awayAndBack();
+      await waitFor(() =>
+        expect(screen.getByTestId("changeEmail.pair.linkSide")).toHaveTextContent(`${NEW} — confirmed`),
+      );
+      // The code is still owed here, so its field stays.
+      expect(screen.getByTestId("changeEmail.code.input")).toBeInTheDocument();
+    });
+
+    it("routes to settings when the change finished while the reader was away", async () => {
+      server.use(account(pending({ codeConfirmed: true })));
+      rendered();
+      await screen.findByTestId("changeEmail.pair.codeSide");
+      // Applied (or ran out, or called off): nothing pending any more.
+      server.use(account(null));
+      awayAndBack();
+      await waitFor(() => expect(replace).toHaveBeenCalledWith("/settings"));
+      // A return that finds the change applied is silent (seam 132): no
+      // `?done=` notice for settings, no snackbar here — the Email row speaks.
+      expect(replace).toHaveBeenCalledTimes(1);
+      expect(push).not.toHaveBeenCalled();
+      expect(screen.getByTestId("change-email-snackbar-region")).toBeEmptyDOMElement();
+    });
+
+    it("reads nothing while hidden, and once more on the return", async () => {
+      let reads = 0;
+      server.use(
+        graphql.query("SettingsAccount", () => {
+          reads += 1;
+          return HttpResponse.json({ data: { me: meWith(pending()) } });
+        }),
+      );
+      rendered();
+      await screen.findByTestId("changeEmail.pair.linkSide");
+      expect(reads).toBe(1);
+      act(() => setsPageVisibility("hidden"));
+      await delay(20);
+      expect(reads).toBe(1);
+      act(() => setsPageVisibility("visible"));
+      await waitFor(() => expect(reads).toBe(2));
+    });
+
+    it("leaves a confirm in flight to answer for itself", async () => {
+      server.use(
+        account(pending({ linkConfirmed: true })),
+        confirmAnswer({ user: { __typename: "User", id: "u1", email: NEW, pendingEmailChange: null }, userErrors: [] }, 150),
+      );
+      rendered();
+      await screen.findByTestId("changeEmail.code.input");
+      typeCode("123456");
+      press();
+      // The change has applied server-side by now; a return mid-confirm must
+      // not route to settings ahead of the confirm's own `Email changed`.
+      server.use(account(null));
+      awayAndBack();
+      await waitFor(() => expect(push).toHaveBeenCalledWith("/settings?done=email"));
+      expect(replace).not.toHaveBeenCalled();
+    });
   });
 });

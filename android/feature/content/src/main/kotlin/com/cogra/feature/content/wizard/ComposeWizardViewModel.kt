@@ -7,9 +7,12 @@ import com.cogra.domain.ErrorCode
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserError
+import com.cogra.domain.WriteState
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.compose.DraftShape
+import com.cogra.domain.compose.SealedDraftStore
+import com.cogra.domain.compose.fateOf
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.MediaProcessor
@@ -18,6 +21,7 @@ import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
+import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.settings.SettingsRepository
 import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
@@ -32,6 +36,7 @@ import com.cogra.feature.content.candidateRows
 import com.cogra.feature.content.referenceFieldIndex
 import com.cogra.feature.content.tagFieldIndex
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.io.IOException
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -71,7 +76,9 @@ class ComposeWizardViewModel @Inject constructor(
     private val video: VideoProcessor,
     private val deviceMedia: DeviceMediaSource,
     private val drafts: ComposeDraftStore,
+    private val seals: SealedDraftStore,
     private val signer: WriteSigner,
+    private val stagedWrites: WriteRepository,
     private val settings: SettingsRepository,
 ) : ViewModel() {
 
@@ -159,6 +166,7 @@ class ComposeWizardViewModel @Inject constructor(
         if (started) return
         started = true
         viewModelScope.launch {
+            settleSealed()
             val held = drafts.draft()?.takeIf { !it.isEmpty }
             if (held != null) {
                 _state.update { it.copy(draftOffer = held) }
@@ -172,6 +180,24 @@ class ComposeWizardViewModel @Inject constructor(
         viewModelScope.launch { _state.collect { rememberDraft() } }
         prefillReference(referenceTargetId)
         seedLicense()
+    }
+
+    /**
+     * THE SEALED COPIES SETTLE FIRST (FC-G5). A post whose signing was
+     * taken has its draft held out of the composer until the write lands
+     * or expires; an expired one comes back as the kept draft, so the read
+     * after this offers it — which is what makes `Open the draft` lead with
+     * it (`ComposeExpired`). A copy whose write is still open stays sealed
+     * and is never offered. It costs one read per waiting write, nothing
+     * when none waits, and a store that cannot be read never holds the
+     * composer shut.
+     */
+    private suspend fun settleSealed() {
+        try {
+            seals.settle { id -> fateOf(stagedWrites.stagedWrite(id)) }
+        } catch (_: IOException) {
+            // Nothing is decided on a read that failed; the copies wait.
+        }
     }
 
     /** Reads the account's default license and starts the seal there, unless the author already chose. */
@@ -782,7 +808,7 @@ class ComposeWizardViewModel @Inject constructor(
                     // should be gone").
                     armed = false
                     draftSaveJob?.cancel()
-                    drafts.clear()
+                    retireDraft(current.toDraft(), prepared.node, prepared.writes.map { it.id }, results)
                     _state.update {
                         it.copy(submitting = false, outcome = WizardOutcome.Landed(prepared.node))
                     }
@@ -829,6 +855,35 @@ class ComposeWizardViewModel @Inject constructor(
     }
 
     fun onOutcomeConsumed() = _state.update { it.copy(outcome = null) }
+
+    /**
+     * TAKEN IS NOT LANDED (FC-G5). A write still relaying can be collected
+     * unlanded epochs from now, and `ComposeExpired` promises the draft is
+     * kept then. So the draft is SEALED — out of the composer, never
+     * offered while the write is alive — in the same edit that drops it. A
+     * batch already landed needs no copy, and its draft simply goes.
+     */
+    private suspend fun retireDraft(
+        draft: ComposeDraft,
+        node: String,
+        writes: List<String>,
+        results: List<WriteResult>,
+    ) {
+        val relaying = results.any { it is WriteResult.Done && it.state != WriteState.LANDED }
+        if (relaying) {
+            try {
+                seals.seal(draft, node, writes)
+            } catch (_: IOException) {
+                // The seal did not take, so neither did the clear (one
+                // edit). The draft is written current and LEFT: offered
+                // while its post settles is the lesser fault next to gone
+                // when it expires.
+                drafts.save(draft)
+                return
+            }
+        }
+        drafts.clear()
+    }
 
     private suspend fun keepDraft() {
         val draft = _state.value.toDraft()

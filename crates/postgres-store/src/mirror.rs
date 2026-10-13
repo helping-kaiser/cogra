@@ -296,6 +296,8 @@ pub struct RecordLeg {
     pub target: String,
     pub p_d: f64,
     pub p_i: f64,
+    /// τ_e, the host-cached edge-projection maturity, frozen at landing.
+    pub tau: f64,
     /// True when ingestion had no census spec for this leg's role and
     /// wrote fallback domain, mask and tier. The parameters are the
     /// record's own; the family-fixed metadata beside them is invented.
@@ -462,15 +464,15 @@ pub async fn record_full(
 /// One mirror row as the chronicle read selects it, before its legs are
 /// attached. Named rather than anonymous because the two direction
 /// branches must agree on one row type.
-struct RecordRow {
-    record_id: String,
-    family: String,
-    author: String,
-    epoch: i64,
-    act_time: i64,
-    position: i64,
-    payload_marked: bool,
-    payload_witness: Vec<u8>,
+pub(crate) struct RecordRow {
+    pub(crate) record_id: String,
+    pub(crate) family: String,
+    pub(crate) author: String,
+    pub(crate) epoch: i64,
+    pub(crate) act_time: i64,
+    pub(crate) position: i64,
+    pub(crate) payload_marked: bool,
+    pub(crate) payload_witness: Vec<u8>,
 }
 
 /// The chronicle read (api-spec `records`): filterable along the
@@ -702,6 +704,15 @@ pub async fn records(
         .fetch_all(pool)
         .await?
     };
+    with_legs(pool, rows).await
+}
+
+/// Attaches every page row's legs in one round trip, keeping the page's
+/// order.
+pub(crate) async fn with_legs(
+    pool: &PgPool,
+    rows: Vec<RecordRow>,
+) -> Result<Vec<RecordFull>, MirrorError> {
     let ids: Vec<String> = rows.iter().map(|r| r.record_id.clone()).collect();
     let mut legs = legs_for(pool, &ids).await?;
     Ok(rows
@@ -838,18 +849,24 @@ pub async fn count_records(pool: &PgPool, filter: &RecordFilter) -> Result<i64, 
     Ok(total)
 }
 
-struct LegOwned {
-    record_id: String,
-    leg: RecordLeg,
+pub(crate) struct LegOwned {
+    pub(crate) record_id: String,
+    pub(crate) leg: RecordLeg,
 }
 
-async fn legs_for(pool: &PgPool, record_ids: &[String]) -> Result<Vec<LegOwned>, MirrorError> {
+/// Every leg of the given records, in a stable order per record: the
+/// role names sort the A leg before the T leg, and a binary act has one.
+pub(crate) async fn legs_for(
+    pool: &PgPool,
+    record_ids: &[String],
+) -> Result<Vec<LegOwned>, MirrorError> {
     if record_ids.is_empty() {
         return Ok(vec![]);
     }
     Ok(sqlx::query!(
-        "SELECT record_id, leg, source, target, p_d, p_i, census_unknown
-         FROM mirror_record_legs WHERE record_id = ANY($1)",
+        "SELECT record_id, leg, source, target, p_d, p_i, tau, census_unknown
+         FROM mirror_record_legs WHERE record_id = ANY($1)
+         ORDER BY record_id, leg",
         record_ids,
     )
     .fetch_all(pool)
@@ -863,6 +880,7 @@ async fn legs_for(pool: &PgPool, record_ids: &[String]) -> Result<Vec<LegOwned>,
             target: l.target,
             p_d: l.p_d,
             p_i: l.p_i,
+            tau: l.tau,
             census_unknown: l.census_unknown,
         },
     })

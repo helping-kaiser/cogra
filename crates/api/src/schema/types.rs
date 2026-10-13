@@ -295,8 +295,9 @@ pub enum ErrorCode {
     NotFound,
     /// Malformed input; `field` names the offender.
     BadInput,
-    /// An auth or upload endpoint's per-IP / per-account budget — never a
-    /// signing act. The login backoff serves no retry-after figure.
+    /// An auth or upload endpoint's per-IP / per-account budget, or a
+    /// private-viewer-state budget (markSeen) — never a signing act. The
+    /// login backoff serves no retry-after figure.
     RateLimited,
     /// Collapsed server fault; detail is logged, not surfaced.
     Internal,
@@ -304,6 +305,9 @@ pub enum ErrorCode {
     InvalidCredentials,
     /// Invite link invalid, expired, revoked, or consumed.
     InviteUnusable,
+    /// Ask link unknown, or its applicant is landed or already waiting in
+    /// your own queue.
+    AskLinkUnusable,
     /// The handle is already held in the one actor namespace.
     HandleTaken,
     /// Under the length floor or in the breach corpus.
@@ -328,6 +332,9 @@ pub enum ErrorCode {
     EmailChangeAlreadyApplied,
     /// The password-reset token is invalid, expired, or already used.
     ResetTokenInvalid,
+    /// The account-deletion link is unknown, superseded, cancelled,
+    /// expired, or spent.
+    DeletionTokenInvalid,
     /// Refresh token invalid, expired, or reuse-detected.
     RefreshTokenInvalid,
     /// The prepare pre-check: W1 solvency, W2 stamps, or the signing
@@ -413,6 +420,9 @@ impl UserError {
         match e {
             OnboardingError::InviteUnusable => {
                 UserError::new(ErrorCode::InviteUnusable, e.to_string())
+            }
+            OnboardingError::AskLinkUnusable => {
+                UserError::new(ErrorCode::AskLinkUnusable, e.to_string())
             }
             OnboardingError::HandleTaken => UserError {
                 message: e.to_string(),
@@ -753,6 +763,77 @@ impl Record {
     /// verify against it.
     async fn payload_witness(&self) -> String {
         B64.encode(&self.0.payload_witness)
+    }
+
+    /// The authoring actor's raw L1 address — always present. `author`
+    /// resolves it to an account where one fronts it.
+    async fn author_id(&self) -> String {
+        self.0.author.clone()
+    }
+
+    /// Every leg of the act as Layer 1 published it. A binary family has
+    /// one; a hyper-edge has two (the actor's A leg into the middle node,
+    /// the terminal T leg out of it). `pDirected`/`pInterest` above
+    /// repeat the actor's leg.
+    async fn legs(&self) -> Vec<RecordLegType> {
+        self.0.legs.iter().cloned().map(RecordLegType).collect()
+    }
+}
+
+/// A leg's role in its record (layer1-interface.md §9): the one leg of a
+/// binary family, or the actor (A) or terminal (T) leg of a hyper-edge.
+#[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
+#[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
+pub enum RecordLegRole {
+    Binary,
+    A,
+    T,
+}
+
+/// One edge projection of an accepted record.
+pub struct RecordLegType(pub mirror::RecordLeg);
+
+#[Object(name = "RecordLeg")]
+impl RecordLegType {
+    async fn role(&self) -> RecordLegRole {
+        match self.0.leg.as_str() {
+            "a" => RecordLegRole::A,
+            "t" => RecordLegRole::T,
+            _ => RecordLegRole::Binary,
+        }
+    }
+
+    /// Raw L1 identifier of the leg's source end.
+    async fn source_id(&self) -> &str {
+        &self.0.source
+    }
+
+    /// Raw L1 identifier of the leg's target end.
+    async fn target_id(&self) -> &str {
+        &self.0.target
+    }
+
+    /// The leg's rendering of the act's authored directed parameter.
+    async fn p_directed(&self) -> Dimension {
+        Dimension(self.0.p_d)
+    }
+
+    /// The leg's rendering of the act's authored interest parameter.
+    async fn p_interest(&self) -> Dimension {
+        Dimension(self.0.p_i)
+    }
+
+    /// τ_e — the host-cached edge-projection maturity: a non-normative L1
+    /// by-product a distrusting consumer recomputes from the published
+    /// ordered history (layer1-interface.md §8.3).
+    async fn maturity(&self) -> f64 {
+        self.0.tau
+    }
+
+    /// True when ingestion had no census row for this leg and wrote
+    /// fallback metadata. Every fold skips a marked leg.
+    async fn census_unknown(&self) -> bool {
+        self.0.census_unknown
     }
 }
 
@@ -1305,6 +1386,95 @@ impl User {
         ))
     }
 
+    /// The seen-list (feed-ranking.md §9.4): every node the viewer has
+    /// seen, once each, newest first by first seeing — the list the
+    /// ranked feed filters by, and History's feed. Re-seeing never moves
+    /// an entry. `kinds` narrows (null or empty = every kind History
+    /// serves: POST, COMMENT, USER, HASHTAG; a kind outside the served
+    /// set is BAD_INPUT, and later slices widen the set). A hidden
+    /// actor's posts and comments stay out while the actor is hidden,
+    /// and their own profile stays; a removed thing keeps its place and
+    /// reads its removal mark; a thing whose node no longer resolves — a
+    /// pending write that never landed — is skipped. Paging is keyset on
+    /// `(firstSeenAt, node id)`, so a thing first seen while the reader
+    /// scrolls sorts above the open page and never shifts the next one.
+    /// Field-level: viewer-only.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    async fn view_history(
+        &self,
+        ctx: &Context<'_>,
+        kinds: Option<Vec<NodeKind>>,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<Option<ViewHistoryConnection>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        validate_page_args(first, last, after.as_deref(), before.as_deref())
+            .map_err(|e| super::query::bad_input(e.message))?;
+        let kinds = history_kinds(kinds.as_deref())?;
+        let backward = last.is_some() || before.is_some();
+        let cursor = match if backward { &before } else { &after } {
+            Some(raw) => Some(
+                crate::history::decode_cursor(raw)
+                    .ok_or_else(|| super::query::bad_input("invalid cursor"))?,
+            ),
+            None => None,
+        };
+        let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
+        let mut entries = postgres_store::history::view_history(
+            pool,
+            self.identity.id,
+            &kinds,
+            cursor,
+            backward,
+            limit + 1,
+        )
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let has_more = entries.len() as i64 > limit;
+        if has_more {
+            if backward {
+                entries.remove(0);
+            } else {
+                entries.pop();
+            }
+        }
+        let (has_previous, has_next) = if backward {
+            (has_more, cursor.is_some())
+        } else {
+            (cursor.is_some(), has_more)
+        };
+        let mut connection = ViewHistoryConnection::with_additional_fields(
+            has_previous,
+            has_next,
+            ViewHistoryConnectionFields {
+                viewer: self.identity.id,
+                kinds,
+            },
+        );
+        connection
+            .edges
+            .extend(
+                hydrate_history(pool, entries)
+                    .await?
+                    .into_iter()
+                    .map(|(entry, item)| {
+                        Edge::with_additional_fields(
+                            crate::history::encode_cursor(entry.cursor()),
+                            item,
+                            ViewHistoryEdgeFields {
+                                first_seen_at: entry.first_seen_at,
+                            },
+                        )
+                    }),
+            );
+        Ok(Some(connection))
+    }
+
     /// Acts mid-handshake — awaiting a signature, the host seal, or
     /// confirmation — across devices. Field-level: viewer-only.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
@@ -1423,6 +1593,41 @@ impl User {
         Ok(store::landed_vouch_state(pool, self.identity.id)
             .await?
             .is_some_and(|state| state.vouch_back_dismissed))
+    }
+
+    /// The account's confirmed deletion in its grace period — the
+    /// Settings band and the pending screen read it. Viewer-only; null
+    /// when none is confirmed (a requested-not-confirmed deletion has no
+    /// status) and once cancelled.
+    async fn account_deletion(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<AccountDeletion>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::confirmed_account_deletion(pool, self.identity.id)
+            .await?
+            .and_then(AccountDeletion::from_store))
+    }
+
+    /// How the viewer's own account is deleted from here — the one
+    /// deletion verb that will answer, or LOCKED while neither will.
+    /// Viewer-only: null on anyone else's account.
+    async fn deletion_path(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<AccountDeletionPath>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(
+            store::deletion_path(&mut *pool.acquire().await?, self.identity.id)
+                .await?
+                .map(AccountDeletionPath::from_store),
+        )
     }
 
     /// The account's service state — gates acting through CoGra (auth.md
@@ -1550,6 +1755,45 @@ impl User {
         Ok(Some(Application(application)))
     }
 
+    /// The account's own ask link — the standing capability that lets any
+    /// member it is handed take up the application (auth.md "The ask
+    /// link"). Holding the id is holding the link, so this resolves only
+    /// for the account itself; null for accounts that never applied.
+    async fn ask_link(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Uuid>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::ask_link_of(pool, self.identity.id).await?)
+    }
+
+    /// Applications waiting on this account's vouch — the approval queue
+    /// itself, spanning both ends of the funnel: applicants staged through
+    /// its invite links, and applicants it took up from an ask link
+    /// (auth.md). Waiting applications only — neither approved nor
+    /// rejected — oldest first. An application whose applicant has landed
+    /// through another member's vouch leaves the queue at that landing: the
+    /// row is filtered out on read, nothing is written, and approving it is
+    /// BAD_INPUT. Field-level: resolves only for the approving account.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    async fn approval_queue(
+        &self,
+        ctx: &Context<'_>,
+        after: Option<String>,
+        before: Option<String>,
+        first: Option<i32>,
+        last: Option<i32>,
+    ) -> async_graphql::Result<Option<KeysetConnection<Application>>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        let rows = store::approval_queue(pool, self.identity.id).await?;
+        Ok(Some(
+            offset_connection(rows, after, before, first, last, Application).await?,
+        ))
+    }
+
     /// The account's invite links — service-side staging state, not
     /// graph structure. Field-level: each link's id is the link
     /// capability, so this resolves only for the issuing actor.
@@ -1601,11 +1845,63 @@ impl PendingEmailChange {
     }
 }
 
+/// A confirmed deletion in its grace period — what the Settings band and
+/// the pending screen read (`User.accountDeletion`). scheduledFor is the
+/// grace-period deadline, fixed at confirmation.
+#[derive(SimpleObject, Debug, Clone)]
+pub struct AccountDeletion {
+    pub scheduled_for: DateTime<Utc>,
+    pub includes_content: bool,
+}
+
+impl AccountDeletion {
+    /// None for a request not yet confirmed: it has no deadline, and no
+    /// status to read.
+    pub fn from_store(deletion: store::AccountDeletion) -> Option<Self> {
+        Some(Self {
+            scheduled_for: deletion.scheduled_for?,
+            includes_content: deletion.include_content,
+        })
+    }
+}
+
+/// How the viewer's own account is deleted from here (`User.deletionPath`,
+/// ruling OS-15): the one deletion verb that will answer, or LOCKED while
+/// neither will. Computed on the server by `store::deletion_path`; clients
+/// never re-derive it from `application.*`.
+#[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
+#[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
+pub enum AccountDeletionPath {
+    /// deleteApplicantAccount — removed at once (an applicant whose
+    /// address was never funded).
+    Immediate,
+    /// requestAccountDeletion, then the mailed link and the seven-day
+    /// grace (a member, or an applicant whose Registration landed: item
+    /// 69's husk path).
+    ByLink,
+    /// Neither verb opens: funded, Registration not yet in the mirror,
+    /// not a member.
+    Locked,
+}
+
+impl AccountDeletionPath {
+    pub fn from_store(path: store::DeletionPath) -> Self {
+        match path {
+            store::DeletionPath::Immediate => Self::Immediate,
+            store::DeletionPath::ByLink => Self::ByLink,
+            store::DeletionPath::Locked => Self::Locked,
+        }
+    }
+}
+
 /// A User's cross-device preferences.
 #[derive(SimpleObject)]
 pub struct UserPreferences {
     /// Sensitive-content filter aggressiveness: 0 (show everything) to
     /// 10 (strictest); null when unset, so the frontend default applies.
+    /// MVP reads it as one threshold: 0 unveils sensitive content wherever
+    /// the account reads (Settings' Always unveil sensitive content); null
+    /// or 1–10 keeps the veil. The 0–10 gradient is post-MVP.
     pub content_filtering_severity_level: Option<i32>,
     /// The license the composer starts a new post from; null when unset,
     /// so the composer starts at public domain (0/0). It seeds the
@@ -1651,7 +1947,8 @@ pub struct EmailChangeLinkCheck {
 /// have landed; a taken address still reads PENDING — the collision is
 /// answered only by the signed-in confirm, EMAIL_IN_USE). APPLIED: the
 /// change moved the address. CANCELED: called off, or superseded by a
-/// newer request. EXPIRED: its window closed before both sides landed.
+/// newer request, while live. EXPIRED: its window closed before both
+/// sides landed.
 #[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
 #[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
 pub enum EmailChangeLinkState {
@@ -1683,6 +1980,67 @@ pub struct InviteLinkCheck {
     /// The issuing actor's handle.
     pub inviter_handle: String,
     pub expires_at: DateTime<Utc>,
+}
+
+/// The anonymous pre-stage view of an ask link (the `askLinkCheck`
+/// query) — who is asking, and whether they can be taken up right now.
+/// Holding the id is holding the link.
+#[derive(SimpleObject)]
+pub struct AskLinkCheck {
+    /// Whether the link can stage its applicant for this caller now — the
+    /// account is still an applicant and, for an authenticated caller, has
+    /// no application already waiting in the caller's own queue, or
+    /// approved there with the caller's vouch still in flight (auth.md
+    /// "The ask link"). A live application in another member's queue
+    /// never blocks it. An ask link itself never expires.
+    pub usable: bool,
+    /// The asking account's handle. The profile door for LANDED resolves
+    /// by it.
+    pub applicant_handle: String,
+    /// Why the link cannot stage right now; null when usable. The asker
+    /// reading their own link needs no value — the client compares
+    /// against its own User.askLink.
+    pub reason: Option<AskLinkUnusableReason>,
+}
+
+impl AskLinkCheck {
+    /// The check's answer from the link's state — one predicate with
+    /// `stageApplicant`'s refusals, so the check gates the call exactly.
+    ///
+    /// DRIFT(EC-R3): `VouchAskUnusable.md:17` is drawn but unreachable —
+    /// no WAITING_ELSEWHERE value exists; retired by design item 58.
+    ///
+    /// DRIFT(#126 lapse): `VouchAsk.md:17` draws WAITING_ON_VIEWER as a row
+    /// standing in Invites; a row approved with the caller's vouch still
+    /// in flight reads it too, but stands in no queue — undrawn.
+    pub fn from_store(state: store::AskLinkState) -> Self {
+        let reason = if state.landed {
+            Some(AskLinkUnusableReason::Landed)
+        } else if state.open_with_viewer {
+            Some(AskLinkUnusableReason::WaitingOnViewer)
+        } else {
+            None
+        };
+        Self {
+            usable: reason.is_none(),
+            applicant_handle: state.handle,
+            reason,
+        }
+    }
+}
+
+/// Why an ask link stages nobody for this caller right now (auth.md "The
+/// ask link"). LANDED: the account is a member — the profile door
+/// replaces the ask. WAITING_ON_VIEWER: an application of the account
+/// already waits in the authenticated caller's own queue, or sits there
+/// approved with the caller's vouch still in flight — the client opens
+/// that row. WAITING_ON_VIEWER is viewer-relative; an anonymous call never
+/// reads it.
+#[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
+#[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
+pub enum AskLinkUnusableReason {
+    Landed,
+    WaitingOnViewer,
 }
 
 /// An invite link: pure service-side staging UX. Nothing binds at issue
@@ -1784,15 +2142,15 @@ impl Application {
         self.0.key_attached
     }
 
-    /// The member whose queue this application sits in — the issuer of
-    /// the invite link it came through: whose vouch it waits on, or whose
-    /// vouch is in play. Visible wherever the application is.
+    /// The member whose queue this application sits in — whose vouch it
+    /// waits on, or whose vouch is in play: the invite link's issuer for
+    /// the registration application, the member who took it up for an
+    /// ask-link staging (auth.md "The ask link"). An account may have
+    /// several open applications, each with its own approver. Visible
+    /// wherever the application is.
     async fn approver(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Actor>> {
         let pool = ctx.data::<PgPool>()?;
-        let Some(link) = store::invite_link(pool, self.0.invite_link_id).await? else {
-            return Ok(None);
-        };
-        Ok(store::actor_identity(pool, link.inviter_id)
+        Ok(store::actor_identity(pool, self.0.approver_id)
             .await?
             .map(|identity| {
                 Actor::User(User {
@@ -1800,6 +2158,23 @@ impl Application {
                     viewer_session: None,
                 })
             }))
+    }
+
+    /// The invite link it came through; null when a member took it up
+    /// through the account's ask link. Field-level: resolves only for the
+    /// link's issuer — its id is the link capability.
+    async fn invite_link(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<InviteLink>> {
+        let Some(link_id) = self.0.invite_link_id else {
+            return Ok(None);
+        };
+        let Some(Some(viewer)) = ctx.data_opt::<Option<Viewer>>() else {
+            return Ok(None);
+        };
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::invite_link(pool, link_id)
+            .await?
+            .filter(|link| link.inviter_id == viewer.user_id)
+            .map(InviteLink))
     }
 
     /// Since when this path has a live vouch — its approver's decision,
@@ -3055,7 +3430,7 @@ fn node_moderation_status(marks: SensitiveMarks) -> ModerationStatus {
 /// The requesting viewer's address, when they have one. Pending rows
 /// are only ever *their own* acts: a staged write is not on the graph,
 /// so nobody else may see it.
-async fn viewer_address(ctx: &Context<'_>) -> async_graphql::Result<Option<String>> {
+pub(crate) async fn viewer_address(ctx: &Context<'_>) -> async_graphql::Result<Option<String>> {
     let Some(Some(viewer)) = ctx.data_opt::<Option<Viewer>>() else {
         return Ok(None);
     };
@@ -3364,6 +3739,229 @@ pub enum CommentTarget {
     Comment(CommentType),
 }
 
+/// What search returns: the kinds it serves. Later slices add members as
+/// their kinds join (Collective, Chat, ChatMessage, Item, Offer).
+///
+/// A union rather than the `Node` interface because a `Hashtag` is
+/// deliberately not a `Node` — it has nothing to date and nothing to land
+/// — and search serves topics (GraphQL spec §3.8, *Unions*).
+#[derive(async_graphql::Union)]
+pub enum SearchResult {
+    Post(PostType),
+    Comment(CommentType),
+    User(User),
+    Hashtag(HashtagType),
+}
+
+/// What the seen-list holds: the kinds History serves; later slices add
+/// members as their kinds join. A union, not `Node`: a Hashtag is not a
+/// Node, and History serves topics (GraphQL spec §3.8, *Unions*).
+#[derive(async_graphql::Union)]
+pub enum ViewHistoryItem {
+    Post(PostType),
+    Comment(CommentType),
+    User(User),
+    Hashtag(HashtagType),
+}
+
+/// Names the seen-list connection `ViewHistoryConnection`, as the
+/// contract does.
+pub struct ViewHistoryConnectionName;
+
+impl async_graphql::connection::ConnectionNameType for ViewHistoryConnectionName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "ViewHistoryConnection".to_string()
+    }
+}
+
+/// Names the seen-list edge `ViewHistoryEdge`.
+pub struct ViewHistoryEdgeName;
+
+impl async_graphql::connection::EdgeNameType for ViewHistoryEdgeName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "ViewHistoryEdge".to_string()
+    }
+}
+
+/// `ViewHistoryEdge`'s own field: when the viewer first saw the thing.
+#[derive(SimpleObject)]
+pub struct ViewHistoryEdgeFields {
+    /// When the viewer first saw this thing — the list's order, newest
+    /// first. Re-seeing never moves it.
+    pub first_seen_at: DateTime<Utc>,
+}
+
+/// A page of the viewer's seen-list.
+pub type ViewHistoryConnection = Connection<
+    String,
+    ViewHistoryItem,
+    ViewHistoryConnectionFields,
+    ViewHistoryEdgeFields,
+    ViewHistoryConnectionName,
+    ViewHistoryEdgeName,
+    async_graphql::connection::DisableNodesField,
+>;
+
+/// `ViewHistoryConnection`'s connection-level fields: the viewer and the
+/// kinds that served the edges, so the count runs under exactly that
+/// predicate and only when asked.
+pub struct ViewHistoryConnectionFields {
+    viewer: Uuid,
+    kinds: Vec<String>,
+}
+
+#[Object]
+impl ViewHistoryConnectionFields {
+    /// How many things the viewer's seen-list serves under these kinds,
+    /// across every page. Priced at zero like every connection count;
+    /// saturates at [`i32::MAX`].
+    #[graphql(complexity = 0)]
+    async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
+        let pool = ctx.data::<PgPool>()?;
+        let total = postgres_store::history::count_view_history(pool, self.viewer, &self.kinds)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
+    }
+}
+
+/// The kinds a `viewHistory(kinds:)` argument serves: null or empty
+/// narrows nothing; a kind History does not serve is BAD_INPUT.
+fn history_kinds(kinds: Option<&[NodeKind]>) -> async_graphql::Result<Vec<String>> {
+    use crate::history::HistoryKind;
+    let served = |kind: NodeKind| match kind {
+        NodeKind::Post => Some(HistoryKind::Post),
+        NodeKind::Comment => Some(HistoryKind::Comment),
+        NodeKind::User => Some(HistoryKind::User),
+        NodeKind::Hashtag => Some(HistoryKind::Hashtag),
+        _ => None,
+    };
+    let kinds: Vec<HistoryKind> = match kinds {
+        None | Some([]) => HistoryKind::ALL.to_vec(),
+        Some(kinds) => kinds
+            .iter()
+            .map(|kind| {
+                served(*kind).ok_or_else(|| {
+                    super::query::bad_input("History serves POST, COMMENT, USER and HASHTAG only")
+                })
+            })
+            .collect::<async_graphql::Result<_>>()?,
+    };
+    Ok(kinds.iter().map(|k| k.as_store().to_string()).collect())
+}
+
+/// The seen-list entries, typed, in list order. An entry whose thing
+/// vanished between the read and the load is dropped rather than served
+/// empty.
+async fn hydrate_history(
+    pool: &PgPool,
+    entries: Vec<postgres_store::history::SeenEntry>,
+) -> async_graphql::Result<Vec<(postgres_store::history::SeenEntry, ViewHistoryItem)>> {
+    let ids_of = |kinds: &[&str]| -> Vec<Uuid> {
+        entries
+            .iter()
+            .filter(|e| kinds.contains(&e.kind.as_str()))
+            .map(|e| e.content_id)
+            .collect()
+    };
+    let content = crate::nodes::resolve_content_many(pool, &ids_of(&["post", "comment"]))
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+    let mut users: std::collections::HashMap<Uuid, store::ActorIdentity> =
+        store::actor_identities_by_ids(pool, &ids_of(&["user"]))
+            .await?
+            .into_iter()
+            .map(|identity| (identity.id, identity))
+            .collect();
+    Ok(entries
+        .into_iter()
+        .filter_map(|entry| {
+            let item = match entry.kind.as_str() {
+                "post" => match content.get(&entry.content_id) {
+                    Some(crate::nodes::ContentNode::Post(post)) => {
+                        ViewHistoryItem::Post(PostType(post.clone()))
+                    }
+                    _ => return None,
+                },
+                "comment" => match content.get(&entry.content_id) {
+                    Some(crate::nodes::ContentNode::Comment(comment)) => {
+                        ViewHistoryItem::Comment(CommentType(comment.clone()))
+                    }
+                    _ => return None,
+                },
+                "user" => ViewHistoryItem::User(User {
+                    identity: users.remove(&entry.content_id)?,
+                    viewer_session: None,
+                }),
+                "hashtag" => ViewHistoryItem::Hashtag(HashtagType {
+                    name: entry.name.clone()?,
+                }),
+                _ => return None,
+            };
+            Some((entry, item))
+        })
+        .collect())
+}
+
+/// Names the search connection `SearchConnection`, as the contract does,
+/// rather than after its node type (`SearchResultConnection`).
+pub struct SearchConnectionName;
+
+impl async_graphql::connection::ConnectionNameType for SearchConnectionName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "SearchConnection".to_string()
+    }
+}
+
+/// Names the search edge `SearchEdge` (see [`SearchConnectionName`]).
+pub struct SearchEdgeName;
+
+impl async_graphql::connection::EdgeNameType for SearchEdgeName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "SearchEdge".to_string()
+    }
+}
+
+/// A page of search results.
+pub type SearchConnection = Connection<
+    String,
+    SearchResult,
+    SearchConnectionFields,
+    async_graphql::connection::EmptyFields,
+    SearchConnectionName,
+    SearchEdgeName,
+    async_graphql::connection::DisableNodesField,
+>;
+
+/// `SearchConnection`'s connection-level fields. It holds the match
+/// request that served the edges, so the count is resolved under exactly
+/// that predicate and only when asked. `None` is a request that matched
+/// nothing without asking the store — a blank query, a scope naming no
+/// one, a kind filter naming no served kind — whose count is zero
+/// without a query.
+pub struct SearchConnectionFields {
+    pub(crate) request: Option<postgres_store::search::SearchRequest>,
+}
+
+#[Object]
+impl SearchConnectionFields {
+    /// How many nodes the query matches in total, across every page,
+    /// independent of the cursor. Priced at zero like every connection
+    /// count; saturates at [`i32::MAX`].
+    #[graphql(complexity = 0)]
+    async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
+        let Some(request) = &self.request else {
+            return Ok(Some(0));
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let total = request
+            .count(pool)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
+    }
+}
+
 async fn author_user(ctx: &Context<'_>, author_id: Uuid) -> async_graphql::Result<Option<User>> {
     Ok(ctx
         .data::<DataLoader<ActorByIdLoader>>()?
@@ -3447,6 +4045,9 @@ pub type RecordConnection = KeysetConnectionWith<Record, RecordConnectionFields>
 /// report the whole chronicle.
 pub struct RecordConnectionFields {
     filter: Option<mirror::RecordFilter>,
+    /// Set when the page is a ranking slice's records rather than a
+    /// chronicle filter's: the slice's reached set and its pin.
+    slice: Option<(std::sync::Arc<Vec<String>>, i64)>,
 }
 
 #[Object]
@@ -3462,10 +4063,16 @@ impl RecordConnectionFields {
     /// GraphQL's `Int` is 32-bit, and saturating beats failing the read.
     #[graphql(complexity = 0)]
     async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
+        let pool = ctx.data::<PgPool>()?;
+        if let Some((reach, as_of_epoch)) = &self.slice {
+            let total = postgres_store::slice::count_records(pool, reach, *as_of_epoch)
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            return Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)));
+        }
         let Some(filter) = &self.filter else {
             return Ok(Some(0));
         };
-        let pool = ctx.data::<PgPool>()?;
         let total = mirror::count_records(pool, filter)
             .await
             .map_err(|e| async_graphql::Error::new(e.to_string()))?;
@@ -3485,7 +4092,29 @@ pub(crate) fn record_connection(
         page,
         record_cursor,
         Record,
-        RecordConnectionFields { filter },
+        RecordConnectionFields {
+            filter,
+            slice: None,
+        },
+    )
+}
+
+/// A page of a ranking slice's records, counted over the same slice.
+pub(crate) fn slice_record_connection(
+    rows: Vec<mirror::RecordFull>,
+    page: &KeysetPage,
+    reach: std::sync::Arc<Vec<String>>,
+    as_of_epoch: i64,
+) -> RecordConnection {
+    keyset_connection_with(
+        rows,
+        page,
+        record_cursor,
+        Record,
+        RecordConnectionFields {
+            filter: None,
+            slice: Some((reach, as_of_epoch)),
+        },
     )
 }
 

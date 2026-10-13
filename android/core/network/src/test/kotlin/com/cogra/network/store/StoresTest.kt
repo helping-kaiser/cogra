@@ -11,7 +11,10 @@ import com.cogra.crypto.ActorKey
 import com.cogra.crypto.decodeProposal
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.compose.ComposeDraft
+import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
+import com.cogra.domain.compose.SealedDraft
+import com.cogra.domain.compose.StagedFate
 import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.store.SessionRead
 import com.cogra.domain.store.ThemeChoice
@@ -77,6 +80,30 @@ class StoresTest {
 
     private suspend fun Stores.signIn(account: String) =
         tokens.save(AuthTokens("a-$account", "r-$account", account))
+
+    /**
+     * Erase everything from this app (EraseConfirm.md:21): every account's
+     * slot, the device's choices, the tokens, and the seen record with its
+     * watermark — one value under `seen_record:<account>` (PR-52) — in one edit.
+     */
+    @Test
+    fun eraseEverythingEmptiesTheWholeStore() = runTest {
+        val store = store()
+        val stores = Stores(store)
+        stores.signIn("u1")
+        stores.identity.saveActorSeed(ActorKey.generate().seed())
+        stores.signIn("u2")
+        stores.identity.saveActorSeed(ActorKey.generate().seed())
+        DevicePreferencesImpl(store).setTheme(ThemeChoice.DARK)
+        store.put("seen_record:u2", "{\"ids\":[\"n1\"],\"watermark\":null}".encodeToByteArray())
+        assertThat(store.names("")).isNotEmpty()
+
+        DeviceDataImpl(store).eraseEverything()
+
+        assertThat(store.names("")).isEmpty()
+        assertThat(stores.tokens.current()).isNull()
+        assertThat(DevicePreferencesImpl(store).theme.first()).isEqualTo(ThemeChoice.AUTO)
+    }
 
     @Test
     fun tokensOverwriteAndClear() = runTest {
@@ -251,6 +278,105 @@ class StoresTest {
         other.signIn("account-b")
         assertThat(ComposeDraftStoreImpl(encrypted, other.tokens).draft()).isNotNull()
         assertThat(other.identity.actorSeed()).isNotNull()
+    }
+
+    // -- The sealed copy of a staged post (FC-G5) --
+
+    private val stagedPost = ComposeDraft(
+        bodyKind = DraftBodyKind.Media,
+        title = "Salt maps",
+        description = "Three weekends at low tide.",
+        assets = listOf(DraftAsset("content://media/1", "a gull on the groyne")),
+    )
+
+    @Test
+    fun `a_staged_post_keeps_a_sealed_copy_until_it_lands`() = runTest {
+        val encrypted = store()
+        val stores = Stores(encrypted).apply { signIn("account-a") }
+        val drafts = ComposeDraftStoreImpl(encrypted, stores.tokens)
+        val seals = SealedDraftStoreImpl(encrypted, stores.tokens)
+        drafts.save(stagedPost)
+
+        seals.seal(stagedPost, "node-1", listOf("w1", "w2"))
+        // Out of the composer, in the same edit, and whole.
+        assertThat(drafts.draft()).isNull()
+        assertThat(seals.sealed().single()).isEqualTo(SealedDraft("node-1", listOf("w1", "w2"), stagedPost))
+
+        // Still relaying, or only partly landed: nothing moves.
+        seals.settle { StagedFate.Alive }
+        seals.settle { if (it == "w1") StagedFate.Landed else StagedFate.Unknown }
+        assertThat(seals.sealed()).hasSize(1)
+        assertThat(drafts.draft()).isNull()
+    }
+
+    @Test
+    fun `a_landed_post_purges_its_sealed_copy`() = runTest {
+        val encrypted = store()
+        val stores = Stores(encrypted).apply { signIn("account-a") }
+        val seals = SealedDraftStoreImpl(encrypted, stores.tokens)
+        seals.seal(stagedPost, "node-1", listOf("w1", "w2"))
+
+        seals.settle { StagedFate.Landed }
+        assertThat(seals.sealed()).isEmpty()
+        assertThat(ComposeDraftStoreImpl(encrypted, stores.tokens).draft()).isNull()
+    }
+
+    @Test
+    fun `an_expired_post_restores_its_draft`() = runTest {
+        val encrypted = store()
+        val stores = Stores(encrypted).apply { signIn("account-a") }
+        val drafts = ComposeDraftStoreImpl(encrypted, stores.tokens)
+        val seals = SealedDraftStoreImpl(encrypted, stores.tokens)
+        seals.seal(stagedPost, "node-1", listOf("w1", "w2"))
+
+        seals.settle { if (it == "w2") StagedFate.Expired else StagedFate.Alive }
+        // Words, description and the picked media's references, all back.
+        assertThat(drafts.draft()).isEqualTo(stagedPost)
+        assertThat(seals.sealed()).isEmpty()
+    }
+
+    @Test
+    fun `an_expiry_never_overwrites_a_draft_started_since`() = runTest {
+        val encrypted = store()
+        val stores = Stores(encrypted).apply { signIn("account-a") }
+        val drafts = ComposeDraftStoreImpl(encrypted, stores.tokens)
+        val seals = SealedDraftStoreImpl(encrypted, stores.tokens)
+        seals.seal(stagedPost, "node-1", listOf("w1"))
+        val newer = ComposeDraft(DraftBodyKind.Words, body = "a newer draft")
+        drafts.save(newer)
+
+        seals.settle { StagedFate.Expired }
+        assertThat(drafts.draft()).isEqualTo(newer)
+        assertThat(seals.sealed()).hasSize(1)
+
+        // The slot frees; the next settle hands the copy back.
+        drafts.clear()
+        seals.settle { StagedFate.Expired }
+        assertThat(drafts.draft()).isEqualTo(stagedPost)
+    }
+
+    @Test
+    fun `sealed_copies_go_with_the_explicit_sign_out_and_stay_through_the_remote_end`() = runTest {
+        val file = File(tmp.newFolder(), "test.preferences_pb")
+        val counting = CountingDataStore(PreferenceDataStoreFactory.create(scope = scope) { file })
+        val encrypted = EncryptedStore(counting, FakeCipher())
+        val other = seedCustody(encrypted, "account-b")
+        SealedDraftStoreImpl(encrypted, other.tokens).seal(stagedPost, "node-b", listOf("wb"))
+        val stores = seedCustody(encrypted, "account-a")
+        val seals = SealedDraftStoreImpl(encrypted, stores.tokens)
+        seals.seal(stagedPost, "node-a", listOf("wa"))
+
+        // The remote end leaves the draft, so it leaves the copies.
+        stores.identity.purge()
+        assertThat(seals.sealed()).hasSize(1)
+
+        counting.edits = 0
+        stores.identity.purgeCustodySet()
+        assertThat(counting.edits).isEqualTo(1)
+        assertThat(seals.sealed()).isEmpty()
+
+        other.signIn("account-b")
+        assertThat(SealedDraftStoreImpl(encrypted, other.tokens).sealed()).hasSize(1)
     }
 
     /**

@@ -1074,6 +1074,72 @@ measured against the traffic that produced it rather than guessed
 at now, and the gallery-follows-the-version rule arrives with the
 code that can honor it.
 
+### Search index
+
+The one search matcher's projection
+([api-spec.md "Search"](api-spec.md#search)): one row per indexed
+field of a node's **current** value — a user actor's `handle` and
+`displayName`, a post's `title`, a registered topic's `name`. The
+version tables above are append-only with many rows per node, so an
+index over them would match superseded titles; this table carries
+only what a read serves now. It is a cache over display content and
+the registry, rebuildable from them at any time.
+
+An untitled post has no row, and neither has a redacted value — a
+node whose current version carries a non-null `redaction_reason`
+(the explicit skip api-spec.md "Moderation" names).
+
+**The database maintains the table, by trigger.** Every source of an
+indexed value — `actors`, `actor_profile_versions`, `posts`,
+`post_versions`, `hashtags` — carries a row-level `AFTER INSERT OR
+UPDATE OR DELETE` trigger that re-derives the affected node's rows in
+the writing transaction, and a statement-level `AFTER TRUNCATE`
+trigger that rebuilds the kind it feeds. One derivation per kind
+decides "current", "untitled" and "redacted"; no store function writes
+the table. The duty sits in the database because a writer that forgot it
+would leave redacted or removed content findable — a silent privacy
+leak — and a trigger cannot be forgotten, whoever writes the source.
+A transaction-scoped advisory lock per node serializes concurrent
+re-derivations, so a redaction racing a rename cannot leave the
+renamed rows behind.
+
+This is the repo's only sanctioned trigger pattern, reserved for
+erasure-propagation guarantees: a derived copy of content that must
+vanish when its source is redacted or removed. Everything else keeps
+its logic in the store's functions.
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+CREATE TABLE search_index (
+    node_id    UUID        NOT NULL,
+    field      TEXT        NOT NULL,   -- handle | display_name | title | name
+    kind       TEXT        NOT NULL,   -- user | post | hashtag
+    value      TEXT        NOT NULL,
+    folded     TEXT        GENERATED ALWAYS AS (lower(value)) STORED,
+    words      TSVECTOR    GENERATED ALWAYS AS (
+                   CASE WHEN field = 'title'
+                        THEN to_tsvector('simple'::regconfig, value)
+                   END
+               ) STORED,
+    author_id  UUID,                   -- posts: the @-scope join
+    created_at TIMESTAMPTZ NOT NULL,   -- the node's createdAt; a topic's registry age
+    PRIMARY KEY (node_id, field)
+);
+-- Name-class fields: case-insensitive substring (which takes in the
+-- prefix) through the trigram operator class's LIKE support.
+CREATE INDEX search_index_names_trgm
+    ON search_index USING gin (folded gin_trgm_ops)
+    WHERE field <> 'title';
+-- Titles: word-level full text, no stemming, last word as a prefix.
+CREATE INDEX search_index_titles_fts
+    ON search_index USING gin (words)
+    WHERE field = 'title';
+CREATE INDEX search_index_author_recency
+    ON search_index (author_id, created_at DESC)
+    WHERE author_id IS NOT NULL;
+```
+
 ### Personal frontend state
 
 A category of per-viewer tables whose role is to feed the viewing user's
@@ -1092,27 +1158,33 @@ three properties:
   rule that governs edges, node properties, and Postgres-side
   display content (see [layers.md](../primitive/layers.md)). These
   tables can be compacted, pruned, or replaced without leaving a
-  visible trace.
+  visible trace — except the seen-list, which never compacts (below).
 
 Instances below: the seen-list (`user_view_log`), the hidden-actors
 list (`user_hidden_actors`, frontend-side "don't show me Bob's
-content" — see [feed-ranking.md §5.1](../primitive/feed-ranking.md#91-filtering-vs-ranking)),
+content" — see [feed-ranking.md §9.1](../primitive/feed-ranking.md#91-filtering-vs-ranking)),
 the chat-read pointer (`chat_read_state`), and bookmarks
 (`user_bookmarks`).
 
 ```sql
--- View log: per-viewer record of which content nodes have been seen.
--- Used by the feed-ranking computation as an exclusion set
--- (see feed-ranking.md §8). History's `kinds` filter routes through
--- an indexed `kind` column; the slice-2.6 builder finalizes it.
+-- View log: per-viewer record of which nodes and topics have been
+-- seen, once each — History's feed, and the feed-ranking
+-- computation's exclusion set (see feed-ranking.md §9.4). `kind` is
+-- read from the L2 registries at write time; History's `kinds`
+-- filter and its keyset on (first_seen_at, content_id) route through
+-- the two indexes.
 CREATE TABLE user_view_log (
     user_id        UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
     content_id     UUID        NOT NULL,
     first_seen_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    kind           TEXT        NOT NULL
+                               CHECK (kind IN ('post', 'comment', 'user', 'hashtag')),
     PRIMARY KEY (user_id, content_id)
 );
 CREATE INDEX user_view_log_recency_idx
-    ON user_view_log (user_id, first_seen_at);
+    ON user_view_log (user_id, first_seen_at DESC, content_id DESC);
+CREATE INDEX user_view_log_kind_recency_idx
+    ON user_view_log (user_id, kind, first_seen_at DESC, content_id DESC);
 ```
 
 The seen-list is append-only and never compacts
@@ -1121,7 +1193,7 @@ The seen-list is append-only and never compacts
 ```sql
 -- Hidden actors: per-viewer list of actors the viewing user
 -- doesn't want in their feed. Applied as a post-rank exclusion
--- filter on the viewing user's side (see feed-ranking.md §5.1; §9
+-- filter on the viewing user's side (see feed-ranking.md §9.1; §9
 -- for where the filter computes).
 CREATE TABLE user_hidden_actors (
     viewer_id   UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
@@ -1146,8 +1218,8 @@ CREATE TABLE chat_read_state (
 -- User bookmarks: per-viewer "save this for later" list. Private
 -- state, never visible to other actors and never an input to the
 -- ranking math (see graph-model.md §3 — bookmarking is a frontend
--- event, not a stance). content_id can be any node UUID; a
--- discriminator is intentionally not stored, mirroring user_view_log.
+-- event, not a stance). content_id can be any node UUID; no
+-- discriminator is stored.
 CREATE TABLE user_bookmarks (
     user_id       UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
     content_id    UUID        NOT NULL,
@@ -1303,8 +1375,10 @@ CREATE TABLE auth_ask_links (
 -- expiry bounds only registration through it. A rejected
 -- application (rejected_at) stops being approvable but deletes
 -- nothing; a member taking up the account's ask link stages a new
--- row (stageApplicant, api-spec.md). At most one live application
--- per account is enforced at that mutation, not by constraint.
+-- row (stageApplicant, api-spec.md). At most one open application
+-- per account and approver — waiting, or approved with its vouch
+-- in flight — enforced by a partial unique index; a lapse that
+-- returns a path to waiting keeps it open, so it never collides.
 -- Never-verified accounts are deleted whole by the reaper,
 -- applications included (auth.md "Expiry").
 CREATE TABLE auth_applications (
@@ -1312,7 +1386,7 @@ CREATE TABLE auth_applications (
     account_id      UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
     approver_id     UUID        NOT NULL REFERENCES actors(id),
     invite_link_id  UUID        REFERENCES auth_invite_links(id),
-    ask_link_id     UUID        REFERENCES auth_ask_links(id),
+    ask_link_id     UUID        REFERENCES auth_ask_links(id) ON DELETE CASCADE,
     approved_at     TIMESTAMPTZ,
     -- The approver's own close, of this row or of the link's whole
     -- waiting queue (auth.md "Rejection") — set instead of
@@ -1344,6 +1418,9 @@ CREATE INDEX auth_applications_link_idx
     ON auth_applications (invite_link_id, approved_at);
 CREATE INDEX auth_applications_account_idx
     ON auth_applications (account_id);
+CREATE UNIQUE INDEX auth_applications_one_open_per_approver_idx
+    ON auth_applications (account_id, approver_id)
+    WHERE rejected_at IS NULL AND landed_at IS NULL;
 CREATE UNIQUE INDEX auth_applications_one_landed_idx
     ON auth_applications (account_id) WHERE landed_at IS NOT NULL;
 
@@ -1426,6 +1503,25 @@ CREATE TABLE auth_key_backup_challenges (
     expires_at TIMESTAMPTZ NOT NULL
 );
 
+-- Device locks (auth.md "Device lock"): the server half of a
+-- signed-out device's locked custody, one row per (account, device
+-- slot), named by a random id the device holds. Stored as given — it
+-- must be released, so it cannot be hashed; a row alone opens nothing
+-- without the device's ciphertext. Released behind the current
+-- password, never spent by a release, never touched by session
+-- revocation; account deletion deletes the rows (crypto-erasure of
+-- any slot still locked). released_at is diagnostic only (the last
+-- release) and decides nothing. Issues are budgeted, and the live
+-- rows per account capped, at the API (auth.md "Rate limiting").
+CREATE TABLE auth_device_locks (
+    id          UUID        PRIMARY KEY,
+    user_id     UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
+    secret      BYTEA       NOT NULL CHECK (octet_length(secret) = 32),
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    released_at TIMESTAMPTZ
+);
+CREATE INDEX auth_device_locks_user_idx ON auth_device_locks (user_id);
+
 -- System-actor key custody: the backend-custodied signing seeds of
 -- the system actors (substrate.md §8 — custody by design), seeded
 -- at genesis (network.md §2). The Genesis Moderator's seed sits
@@ -1500,31 +1596,38 @@ CREATE UNIQUE INDEX auth_email_changes_one_live_idx
 -- Account deletions: the grace-period state per
 -- erasure.md §5 — requested, then confirmed by opening the mailed
 -- link, cancellable from any logged-in session until the deadline,
--- executed by the worker after it. A requested-not-confirmed row
--- has no deadline: the table carries a confirmed state distinct
--- from requested, and the deadline exists only in it. A second
--- request supersedes the first (at most one standing request per
--- user). An unopened link expires 7 days after the request (the
--- token-expiry mark, as auth_email_changes carries); a confirmed
--- row's token stays valid through the grace for re-opening.
--- include_content records the content-level opt-in (settable at
--- request, confirmation, or a re-open inside the grace; never
--- cleared). The columns below are the foundation shape, which does
--- not yet represent the confirmed state, the supersede, or the link
--- expiry; the erasure slice reshapes them.
+-- executed by the worker after it. A requested row has no deadline:
+-- confirmed_at and scheduled_for are set together, at the first
+-- confirmation. A second request supersedes an unconfirmed one
+-- (superseded_at); a confirmed one is never superseded, so at most
+-- one request stands per user. token_expires_at ends an unopened
+-- link 7 days after the request; a confirmed row's token stays valid
+-- through the grace for re-opening. include_content records the
+-- content-level opt-in (settable at request, confirmation, or a
+-- re-open inside the grace; never cleared). A row ends once —
+-- cancelled, superseded, executed, or unopened past its link — and
+-- every end answers the same DELETION_TOKEN_INVALID; the spent-secret
+-- sweep drops the unexecuted ended rows after retention.
 CREATE TABLE auth_account_deletions (
     id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id             UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
     deletion_token_hash BYTEA       NOT NULL UNIQUE,
     include_content     BOOLEAN     NOT NULL DEFAULT FALSE,
     requested_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    scheduled_for       TIMESTAMPTZ NOT NULL,
+    token_expires_at    TIMESTAMPTZ NOT NULL,
+    confirmed_at        TIMESTAMPTZ,
+    scheduled_for       TIMESTAMPTZ,
+    superseded_at       TIMESTAMPTZ,
     cancelled_at        TIMESTAMPTZ,
-    executed_at         TIMESTAMPTZ
+    executed_at         TIMESTAMPTZ,
+    CHECK ((confirmed_at IS NULL) = (scheduled_for IS NULL))
 );
+CREATE UNIQUE INDEX auth_account_deletions_one_standing_idx
+    ON auth_account_deletions (user_id)
+    WHERE cancelled_at IS NULL AND superseded_at IS NULL AND executed_at IS NULL;
 CREATE INDEX auth_account_deletions_due_idx
     ON auth_account_deletions (scheduled_for)
-    WHERE cancelled_at IS NULL AND executed_at IS NULL;
+    WHERE confirmed_at IS NOT NULL AND cancelled_at IS NULL AND executed_at IS NULL;
 
 -- Auth-endpoint throttle state (auth.md "Rate limiting"): one row per
 -- (scope, key). Counted limits use window_start + count as a fixed
@@ -1698,7 +1801,7 @@ that is still there.
 Every user-scoped table (`auth_refresh_tokens`,
 `auth_password_resets`, `auth_email_changes`,
 `auth_account_deletions`, `auth_key_backups`,
-`auth_key_backup_challenges`, `user_view_log`,
+`auth_key_backup_challenges`, `auth_device_locks`, `user_view_log`,
 `user_hidden_actors`, `chat_read_state`, `user_bookmarks`,
 `user_preferences`) carries
 `user_id REFERENCES actors(id) ON DELETE CASCADE`. That these
@@ -1707,7 +1810,15 @@ rows exist only for user-kind actors is a service-layer fact
 does **not** remove the `actors` row or its credentials — PII
 is redacted in place per
 [erasure.md §2](../instances/erasure.md#2-account-deletion-two-redaction-levels)
-— so `ON DELETE CASCADE` does not fire in any normal flow. The FK
+— so `ON DELETE CASCADE` does not fire on account deletion, which
+deletes the user-scoped rows it means to delete explicitly. Two
+flows delete an `actors` row, both for accounts with nothing on L1:
+the reaper's sweep of never-verified accounts
+([auth.md "Reaper"](auth.md#approval-and-landing)) and an unfunded
+applicant deleting itself
+([auth.md "Self-service deletion"](auth.md#self-service-deletion-handoff-out)).
+There the cascade is the whole-account delete they intend; the
+non-cascading `staged_writes.actor_id` is deleted first. The FK
 exists to prevent orphans from buggy code paths and to give an
 operator running an explicit `DELETE` (e.g. emergency cleanup) a
 single command that takes the user's private state with them.

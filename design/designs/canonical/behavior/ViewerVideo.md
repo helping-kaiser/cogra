@@ -1,8 +1,10 @@
 # ViewerVideo · `spec:design:behavior-viewer-video`
 
-ALWAYS the viewer is the whole screen on black with nothing behind it
+ALWAYS the viewer is the whole screen below the system status bar, on black with nothing behind it
 
-WHEN the viewer opens on the post's pinned clip -> the clip stands at the position the pinned clip reached AND NEVER it starts over
+ALWAYS the system status bar stays the system's, its strip never painted black or any colour by the viewer
+
+WHEN the viewer opens on the post's clip -> the clip stands at the position the detail's clip reached AND NEVER it starts over
 
 ALWAYS the clip stands whole at its own ratio, never cut
 

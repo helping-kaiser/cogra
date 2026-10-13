@@ -20,6 +20,8 @@ ALWAYS every row carries the claim above it, its exact pair painting only in gee
 
 ALWAYS the tag page shows no count of people or of uses
 
+ALWAYS a card's score on the tag page is the figure the latest fetch of its thing found — the reader's own last feed fetch, or its trace's fetch since — a dash only where that fetch found none
+
 ALWAYS at most one clip plays on the tag page, by the feed's stage law
 
 WHEN scroll settles at the tag page's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in the tag page's order
@@ -34,7 +36,9 @@ ALWAYS the back arrow reads Back to Explore from Explore at rest, Back to the se
 
 ALWAYS the back arrow reads Back to Explore and leads to Explore GIVEN the page was entered with no history behind it
 
-WHEN a guest reaches the tag page -> the page shows what is tagged AND every stance face wears the no-opinion face AND the scores come from the genesis vantage
+WHEN a guest reaches the tag page -> the page shows what is tagged AND every stance face wears the borrowed view's own stance, read-only, and the hollow face wherever the borrowed view holds none AND the scores come from the genesis vantage
+
+ALWAYS the topic's wide anchor's words beside the hollow face name the borrowed view, as @genesismod's opinion, and read Their opinion where the name outgrows the anchor GIVEN the reader is a guest and the borrowed view holds no opinion on the topic
 
 WHEN a guest taps a stance face on the tag page -> the guest gate opens over the tag page
 

@@ -4,6 +4,8 @@ ALWAYS a removed comment keeps its author, its time and its place in the thread'
 
 ALWAYS a removed comment reads Removed by its author where its words were, over The comment's place in the thread, and every response, remain.
 
+ALWAYS a comment that went with its author's account deletion, its content sweep chosen, reads Removed by its author where its words were
+
 ALWAYS a removed comment carries no overflow menu
 
 ALWAYS a removed comment keeps its author chip, its opinion and its Reply

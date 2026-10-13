@@ -4,8 +4,13 @@
 // (design/designs/canonical/screens/Settings.jsx; `SettingsBody` in
 // `_shared.jsx`; behavior/Settings.md). Theme · Giving an opinion · Writing ·
 // Reading · People · Key backup · Sessions · Credentials · About · the
-// sign-out group. The delete-account group is the erasure packet's, and its
-// slot stays at the end of the page.
+// sign-out group · the delete-account group.
+//
+// THE DELETION ROW KEYS ON THE SERVER'S `deletionPath` (OS-15), never on
+// `application.*`: LOCKED wears the locked look and answers with a snackbar
+// (Settings.md:157-159); BY_LINK and IMMEDIATE open the request screen; and a
+// confirmed deletion in its grace turns the row into its countdown, opening the
+// grace page, drops the footnote and brings the band (SettingsDeleting.md).
 //
 // No bottom bar (the shell hides it off read surfaces), no leading icons, and
 // the header pinned — not the collapsing top the inline forms used to ride.
@@ -24,22 +29,33 @@ import {
   fetchSettingsAccount,
   revokeOtherSessions,
   revokeSession,
+  setAlwaysUnveil,
   setDefaultLicense,
   type SessionView,
   type SettingsAccount,
 } from "@/lib/api/settings-api";
 import { composeDraftStore, type ComposeDraftStore } from "@/lib/compose/draft-store";
+import { LOCKED_ROW, settingsRowStatus } from "@/lib/deletion/deletion-copy";
+import { useAccountDeletion } from "@/lib/deletion/deletion-status";
+import { sealedDraftStore, type SealedDraftStore } from "@/lib/compose/sealed-draft";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDeviceState } from "@/lib/identity/use-key-on-device";
 import { licenseName, PUBLIC_DOMAIN, type License } from "@/lib/license";
 import { useTokenStore } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
+import { eraseEverything } from "@/lib/settings/erase-everything";
 import {
   applyTheme,
   exactValuesPreference,
   themePreference,
   type ThemeChoice,
 } from "@/lib/settings/device-preference";
+import {
+  accountFilterLevel,
+  setAccountFilterLevel,
+  UNVEIL_LEVEL,
+  useAlwaysUnveil,
+} from "@/lib/settings/sensitive-content";
 import { useConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
 import { useStanceInputMode, type StanceInputMode } from "@/lib/stance/input-mode";
 import { instance, part, type DataNode } from "@/lib/ui/data-node";
@@ -52,6 +68,7 @@ import { SegmentedFilter } from "@/lib/ui2/segmented-filter";
 import { SettingsGroup, SettingsRow } from "@/lib/ui2/settings-row";
 import { useSlowAnswer } from "@/lib/ui2/waiting-commit";
 
+import { EraseConfirm } from "./erase-confirm";
 import { SettingsLicenseSheet } from "./settings-license-sheet";
 import {
   EMAIL_ROUTES,
@@ -95,16 +112,50 @@ const THEME_OPTIONS = [
   { value: "auto", label: "Auto" },
 ] as const;
 
+/**
+ * The deletion group's footnote — the mailed path's, and the immediate one's
+ * without the link (Settings.md:151, :153). Keyed on the path: BY_LINK is the
+ * member's words, IMMEDIATE and LOCKED (both applicants) the applicant's.
+ */
+const DELETE_FOOTNOTE_MEMBER =
+  "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.";
+const DELETE_FOOTNOTE_APPLICANT = "Nothing is deleted here. The next screen says what goes and what stays.";
+
 /** What a row-level act that got no answer says (copy-voice *Faults by code*). */
 const NO_ANSWER = "That didn't send. Try again.";
+
+/** The unveil switch's second line, by state (`_shared.jsx`, #141; the On words ruled in seam 132). */
+const UNVEIL_OFF_STATUS = "Off, the veil stays until you tap it.";
+const UNVEIL_ON_STATUS = "On, sensitive content stands unveiled wherever you read.";
+
+/**
+ * The Clearing data group's footnote, by backup state (Settings.md:139, :141):
+ * the key first and the account gone for good, then what else goes, and the
+ * seen list's return last — it is a copy of the server's.
+ */
+const CLEARING_FOOTNOTE_MADE =
+  "Your key lives only in this browser. Clear CoGra's data here and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in.";
+const CLEARING_FOOTNOTE_NONE =
+  "Your key lives only in this browser, and it has no recovery code yet. Clear CoGra's data here and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in.";
+
+/** A full load of the sign-in, so nothing this tab held in memory outlives the erase. */
+function hardNavigate(url: string) {
+  window.location.replace(url);
+}
 
 export function SettingsView({
   store = identityStore,
   drafts = composeDraftStore,
+  seals = sealedDraftStore,
+  erase = eraseEverything,
+  leave = hardNavigate,
 }: {
   /** Test injection. */
   store?: IdentityStore;
   drafts?: Pick<ComposeDraftStore, "clear">;
+  seals?: Pick<SealedDraftStore, "forget">;
+  erase?: () => Promise<void>;
+  leave?: (url: string) => void;
 } = {}) {
   const client = useApolloClient();
   const guard = useAuthGuard();
@@ -112,6 +163,8 @@ export function SettingsView({
   const router = useRouter();
   const notice = settingsNoticeOf(useSearchParams().get("done"));
   const keyOnDevice = useKeyOnDeviceState(store);
+  const deletionStatus = useAccountDeletion();
+  const refreshDeletion = deletionStatus.refresh;
 
   const [account, setAccount] = useState<SettingsAccount | null>(null);
   const [readFailed, setReadFailed] = useState(false);
@@ -121,6 +174,7 @@ export function SettingsView({
   const [elsewhereBusy, setElsewhereBusy] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [eraseOpen, setEraseOpen] = useState(false);
   const [licenseOpen, setLicenseOpen] = useState(false);
   /** A default-license save that did not go through, kept for its Retry. */
   const [licenseFailed, setLicenseFailed] = useState<License | null>(null);
@@ -129,9 +183,11 @@ export function SettingsView({
   const [exactValues, setExactValues] = exactValuesPreference.use();
   const [stanceMode, setStanceMode] = useStanceInputMode();
   const [confirmMulti, setConfirmMulti] = useConfirmMultiAction();
+  const alwaysUnveil = useAlwaysUnveil();
 
   const sessionRows = useRef(new Map<string, HTMLElement | null>());
   const signOutRow = useRef<HTMLButtonElement | null>(null);
+  const eraseRow = useRef<HTMLButtonElement | null>(null);
   const licenseRow = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
@@ -139,12 +195,21 @@ export function SettingsView({
       if (outcome.kind === "success") {
         setAccount(outcome.value);
         setReadFailed(false);
+        // The account's own answer, so a choice made on another device
+        // reads here (Settings.md: it follows the account).
+        setAccountFilterLevel(outcome.value.preferences?.contentFilteringSeverityLevel ?? null);
       } else {
         setReadFailed(true);
       }
     });
     void store.isEphemeral().then(setForget, () => setForget(false));
   }, [client, guard, store]);
+
+  // The deletion row reads what stands NOW: a link opened in a mail client
+  // on another device confirms without this tab hearing of it.
+  useEffect(() => {
+    void refreshDeletion();
+  }, [refreshDeletion]);
 
   // The subpage's return snackbar, said once — when the fresh read can name
   // it (adjusted during render, React's "adjusting state when a prop
@@ -215,7 +280,10 @@ export function SettingsView({
     // the new default at once, and a failure reverts it and says so.
     setAccount({
       ...account,
-      preferences: { ...account.preferences, defaultLicense: { ...license } },
+      preferences: {
+        contentFilteringSeverityLevel: account.preferences?.contentFilteringSeverityLevel ?? null,
+        defaultLicense: { ...license },
+      },
     });
     setLicenseFailed(null);
     const outcome = await guard.run(() => setDefaultLicense(client, license));
@@ -223,6 +291,30 @@ export function SettingsView({
       setAccount(before);
       setLicenseFailed(license);
     }
+  };
+
+  // ------------------------------------------------------- sensitive content
+
+  /** Only the latest flip's failure may put the switch back. */
+  const unveilSave = useRef(0);
+
+  const onUnveil = async () => {
+    const before = accountFilterLevel();
+    const on = !alwaysUnveil;
+    // Saved optimistically (R8; seam 044 K4.1): the switch flips at once,
+    // every veil in this tab answers it, and no dialog asks.
+    setAccountFilterLevel(on ? UNVEIL_LEVEL : null);
+    const save = ++unveilSave.current;
+    const outcome = await guard.run(() => setAlwaysUnveil(client, on));
+    if (save !== unveilSave.current) return;
+    if (outcome.kind === "success") {
+      setAccountFilterLevel(outcome.value);
+      return;
+    }
+    // Both values are valid, so the only failure is no answer: the switch
+    // goes back and the shared no-answer line says so (digest item 95).
+    setAccountFilterLevel(before);
+    setSnackbar(NO_ANSWER);
   };
 
   // ---------------------------------------------------------------- sign out
@@ -241,6 +333,13 @@ export function SettingsView({
     }
     try {
       await drafts.clear();
+    } catch {
+      // sign-out proceeds regardless
+    }
+    // A post's sealed copy is the draft it was written from, held until the
+    // write lands or expires — so it goes with the draft (Settings.md:145).
+    try {
+      await seals.forget();
     } catch {
       // sign-out proceeds regardless
     }
@@ -285,6 +384,26 @@ export function SettingsView({
     }
   };
 
+  /**
+   * The dialog's erase (EraseConfirm.md:21): this browser's key, draft, kept
+   * picks, the choices kept here and the seen list's copy go for good, the
+   * session ends, and the sign-in opens with no account offered — no
+   * snackbar. The session is revoked first, best effort, while a token still
+   * exists to name it.
+   */
+  const onEraseEverything = async () => {
+    setEraseOpen(false);
+    setSigningOut(true);
+    await guard.run(() => revokeSession(client, null));
+    try {
+      await erase();
+    } catch {
+      // the session ends regardless
+    }
+    tokens.clear();
+    leave("/login");
+  };
+
   const signOutSlow = useSlowAnswer(signingOut);
 
   // ---------------------------------------------------------------- the page
@@ -292,6 +411,14 @@ export function SettingsView({
   const beforeCeremony = account !== null && account.actorPubkey == null;
   const backupMade = account?.keyBackupCreatedAt != null;
   const pending = account?.pendingEmailChange ?? null;
+  const deletionPath = deletionStatus.standing?.path ?? null;
+  const grace = deletionStatus.standing?.deletion ?? null;
+
+  const onDeleteRow = () => {
+    if (grace !== null) router.push("/settings/delete/pending");
+    else if (deletionPath === "LOCKED") setSnackbar(LOCKED_ROW);
+    else if (deletionPath !== null) router.push("/settings/delete");
+  };
 
   return (
     <main className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col">
@@ -301,6 +428,7 @@ export function SettingsView({
           backHref="/profile"
           backLabel="Back to your profile"
           node={node("header")}
+          deletionBand={node("deletionBand")}
         />
       </div>
       <div className="flex flex-col gap-6 px-6 pb-8 pt-6">
@@ -404,6 +532,23 @@ export function SettingsView({
           <SettingsRow label="Hidden accounts" value="None" inert node={node("people.hidden")} />
         </SettingsGroup>
 
+        {/* THE VEIL IS THE ACCOUNT'S CHOICE, NOT THIS DEVICE'S (#141): its own
+            group, because Reading's footnote promises "this device" and this
+            does not. One switch, off by default, never a sheet. */}
+        <SettingsGroup
+          label="Sensitive content"
+          footnote="This choice follows your account to every device."
+          node={node("sensitive")}
+        >
+          <SettingsRow
+            checked={alwaysUnveil}
+            label="Always unveil sensitive content"
+            status={alwaysUnveil ? UNVEIL_ON_STATUS : UNVEIL_OFF_STATUS}
+            onOpen={() => void onUnveil()}
+            node={node("sensitive.unveil")}
+          />
+        </SettingsGroup>
+
         <SettingsGroup
           label="Key backup"
           footnote={
@@ -430,6 +575,24 @@ export function SettingsView({
             status={beforeCeremony ? "Not made yet" : undefined}
             onOpen={() => router.push(beforeCeremony ? "/key" : "/settings/key")}
             node={node("backup.key")}
+          />
+        </SettingsGroup>
+
+        {/* After Key backup, because the loss it warns of is the key's
+            (Settings.md:139-145). An unread backup state takes the no-code
+            words: the stronger warning is the safe one. The row is quiet like
+            Sign out — the weight lives in the dialog it raises. */}
+        <SettingsGroup
+          label="Clearing data"
+          footnote={backupMade ? CLEARING_FOOTNOTE_MADE : CLEARING_FOOTNOTE_NONE}
+          node={node("clearing")}
+        >
+          <SettingsRow
+            action
+            label="Erase everything from this browser"
+            onOpen={() => setEraseOpen(true)}
+            rowRef={eraseRow}
+            node={node("clearing.erase")}
           />
         </SettingsGroup>
 
@@ -532,6 +695,31 @@ export function SettingsView({
             node={node("leaving.leave")}
           />
         </SettingsGroup>
+
+        {/* The page's last row, in a group of its own after leaving, drawn
+            quiet: a navigating row with a chevron. During a confirmed
+            deletion's grace it reads the countdown and the footnote goes —
+            the footnote describes a request not yet made
+            (SettingsDeleting.md:5-9). */}
+        <SettingsGroup
+          ariaLabel="Delete account"
+          footnote={
+            grace !== null
+              ? undefined
+              : deletionPath === "IMMEDIATE" || deletionPath === "LOCKED"
+                ? DELETE_FOOTNOTE_APPLICANT
+                : DELETE_FOOTNOTE_MEMBER
+          }
+          node={node("ending")}
+        >
+          <SettingsRow
+            label="Delete account"
+            status={grace === null ? undefined : settingsRowStatus(grace, deletionStatus.now)}
+            locked={grace === null && deletionPath === "LOCKED"}
+            onOpen={onDeleteRow}
+            node={node("ending.delete")}
+          />
+        </SettingsGroup>
       </div>
 
       {licenseOpen && (
@@ -562,6 +750,21 @@ export function SettingsView({
           onDismiss={() => {
             setConfirmOpen(false);
             signOutRow.current?.focus();
+          }}
+        />
+      )}
+
+      {eraseOpen && (
+        <EraseConfirm
+          backupMade={backupMade}
+          onMakeCode={() => {
+            setEraseOpen(false);
+            router.push("/settings/backup");
+          }}
+          onErase={() => void onEraseEverything()}
+          onDismiss={() => {
+            setEraseOpen(false);
+            eraseRow.current?.focus();
           }}
         />
       )}

@@ -61,7 +61,7 @@ export function Screen() {
         <ChatExploreRow name="Tide tables" preview="Kel Moreau: Spring tides this weekend, lowest on Sunday." join="invite" />
       </ChatsColumn>
       <NewChatFab />
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>
   );
 }

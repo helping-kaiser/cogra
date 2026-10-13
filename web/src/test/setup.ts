@@ -2,8 +2,14 @@ import "@testing-library/jest-dom/vitest";
 // jsdom ships no IndexedDB; the identity store needs one wherever the
 // registration runtime mounts.
 import "fake-indexeddb/auto";
+import { IDBFactory } from "fake-indexeddb";
 import { cleanup } from "@testing-library/react";
-import { afterEach } from "vitest";
+import { afterEach, beforeEach } from "vitest";
+
+import { resetSeenRecordForTests } from "@/lib/history/seen-record";
+import { resetSeenSyncForTests } from "@/lib/history/seen-sync";
+import { resetClipMemoryForTests } from "@/lib/ui2/media/clip-memory";
+import { resetElementPoolForTests } from "@/lib/ui2/media/video-stage";
 
 import { installMediaEnvironment, resetMediaEnvironmentForTests } from "./media-env";
 
@@ -14,6 +20,24 @@ afterEach(cleanup);
 // the page's visibility, the autoplay policy — is put back after it.
 installMediaEnvironment();
 afterEach(resetMediaEnvironmentForTests);
+
+// The reading session's clip memory is module state: a clip one test played
+// would otherwise reach the next test's frame without its still. Cleared
+// BEFORE each test rather than after, because the unmounting `cleanup` above
+// is itself a writer — players record where they stood on the way out.
+beforeEach(resetClipMemoryForTests);
+// The same for the clips' parked elements (`video-stage.ts`): the players the
+// unmounting `cleanup` takes down park theirs on the way out.
+beforeEach(resetElementPoolForTests);
+// The device's seen record is module state over its own IndexedDB store: a
+// card one test saw would otherwise be cut from the next test's ranked feed.
+// Each test gets a fresh record over a fresh store, and a page load that has
+// synced no account yet.
+beforeEach(() => {
+  const store = new IDBFactory();
+  resetSeenRecordForTests(() => store);
+  resetSeenSyncForTests();
+});
 
 // jsdom implements no Pointer Events (jsdom#2527), which the stance pad
 // is built on — they are the platform's own unification of mouse, touch,

@@ -145,13 +145,15 @@ export function TopicsLine({ topics = [], references = 0, onOpen, onOpenReferenc
   const tag = node && "tag";
   const countsNode = node && "counts";
 
+  /* THE DETAIL'S LINE ANSWERS AT 48 (jakob 2026-10-07, readme §10): drawn at
+     34dp, it grows its target, never its ink, through `cg-hit`. */
   if (onOpen) {
     return (
       <button
         type="button"
         onClick={onOpen}
         aria-label="Tags and references"
-        className="cg-state cg-focus"
+        className="cg-state cg-focus cg-hit"
         style={{
           ...LINE,
           width: "100%",

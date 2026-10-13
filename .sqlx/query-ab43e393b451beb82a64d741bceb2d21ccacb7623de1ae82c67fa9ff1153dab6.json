@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT r.record_id, r.family, r.author, r.epoch, r.act_time,\n                      r.position, r.payload_marked, r.payload_witness\n               FROM mirror_records r\n               WHERE r.epoch <= $2\n                 AND EXISTS (\n                     SELECT 1 FROM mirror_record_legs l\n                     WHERE l.record_id = r.record_id\n                       AND l.source = ANY($1)\n                       AND l.source NOT LIKE 'name:%'\n                       AND l.family <> ALL($3::text[]))\n                 AND ($4::bigint IS NULL\n                      OR (r.epoch, r.act_time, r.position) < ($4, $5, $6))\n               ORDER BY r.epoch DESC, r.act_time DESC, r.position DESC\n               LIMIT $7",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "record_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "family",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "author",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "epoch",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "act_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "position",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "payload_marked",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "payload_witness",
+        "type_info": "Bytea"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Int8",
+        "TextArray",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "ab43e393b451beb82a64d741bceb2d21ccacb7623de1ae82c67fa9ff1153dab6"
+}

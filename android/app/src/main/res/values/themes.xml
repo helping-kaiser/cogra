@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- A bare no-action-bar base; all real theming is done in Compose
      (CograTheme). Uses a framework parent so the app needs no XML theming
-     dependency. -->
+     dependency.
+
+     The window's own background is the device's, light or dark by the
+     SYSTEM's theme (this file and values-night/): it shows only before the
+     first Compose frame. Bar colour and icon appearance are NOT set here —
+     enableEdgeToEdge() and SystemBarAppearance own them, and theme XML that
+     sets them fights the API (ui/SystemBars.kt). -->
 <resources>
-    <style name="Theme.CoGra" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.CoGra" parent="android:Theme.DeviceDefault.Light.NoActionBar" />
 </resources>

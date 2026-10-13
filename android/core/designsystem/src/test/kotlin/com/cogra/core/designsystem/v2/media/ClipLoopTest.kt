@@ -20,7 +20,7 @@ import org.robolectric.RobolectricTestRunner
 /**
  * THE CLIP-LOOP RULING (jakob 2026-09-14, via the design loop).
  *
- * A clip under the real transport — the detail's pinned clip, the fullscreen
+ * A clip under the real transport — the detail clip, the fullscreen
  * viewer — STOPS at its end and the transport stands at its Play glyph; a feed
  * or comment clip keeps looping. Reels are the vertical scroller's grammar and
  * videos the player's, and this is the line between them.

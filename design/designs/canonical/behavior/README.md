@@ -200,9 +200,10 @@ And it checks nodes, against `nodes.json`:
   `FeedCommentShapes`, a comment card's clip; then the Saved and Hide
   packets' boards — `Saved`, `SavedEmpty`, `SavedUndo`, the three
   profiles and their three menus, `FeedHidden`, `ReaderPostMenu`,
-  `Settings` and `SettingsHidden`; then the History and Search packets'
+  `Settings` and `SettingsHidden`, and the hide's three other landings,
+  `PostDetailHidden`, `ProfileOtherHidden` and `SettingsUnhidden`; then the History and Search packets'
   boards — `History`, `HistoryEmpty`, `HistoryFilter`, `HistoryNone` and
-  the five `Explore` boards; then the invites and deletion packets' boards —
+  the `Explore` boards, `ExplorePerson` among them; then the invites and deletion packets' boards —
   `Invites`, `RejectConfirm`, `RejectAllConfirm`, the four `VouchAsk`
   boards, `ApplicantRejected`, `ProfileApplicant`, the five `DeleteAccount`
   boards, `FeedDeleting` and `SettingsDeleting`; then the settings packet's
@@ -212,7 +213,9 @@ And it checks nodes, against `nodes.json`:
   the home-vouch and Saved packets' boards — `VouchBack`, `VouchBackPad`,
   `VouchedIn`, `CommentMenu`, `CommentMenuOwn` and `RemoveMenu`; then the
   release-registry packet's boards — `WhatsNew`, `WhatsNewBehind` and
-  `FeedNewerVersion` — so far), plain words
+  `FeedNewerVersion`; then the fabric-2 round's boards — `ReportConfirm`,
+  `FeedPostMenu`, `HistoryHidden`, `TagPageHidden` and `DeleteLinkExpired` —
+  so far), plain words
   that spell one of its nodes fail: "the media row" on `ComposeDetails` is
   written `composeDetails.mediaRow`. The check knows a node by the words of a
   compound name — `mediaRow`, `filterTrigger`, `actionRow`. A one-word

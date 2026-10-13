@@ -11,8 +11,12 @@
 export interface ExplainableNumberProps {
   /** Spoken name. With `glyph` set it lives only in the accessibility tree. */
   label: string;
-  /** Already formatted, signed, never capped or normalised. */
-  value: string;
+  /**
+   * Already formatted, signed, never capped or normalised. `—` is the figure
+   * that is not computed. Omitted, the glyph stands bare — a figure still
+   * settling, which has nothing to show — and still opens.
+   */
+  value?: string;
   unit?: string;
   /** An `Icon` name. A glyph rather than a word keeps the affordance row on one line. */
   glyph?: string;

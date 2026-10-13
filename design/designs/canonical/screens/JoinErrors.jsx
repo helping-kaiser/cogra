@@ -45,10 +45,12 @@ export function Screen() {
         </div>
 
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8 }}>
+          <JoinTermsLine />
           <Button style={{ width: "100%" }}>Create account</Button>
           <Button variant="text" style={{ width: "100%" }}>
             Already have an account? Sign in
           </Button>
+          <JoinPrivacyNotice />
         </div>
       </div>
     </>

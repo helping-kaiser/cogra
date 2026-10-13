@@ -7,6 +7,7 @@ import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.identity.Register
 import com.cogra.domain.registrationFormValid
+import com.cogra.domain.sanitizedEmail
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -60,7 +61,7 @@ class ApplyViewModel @Inject constructor(
             val outcome = register.register(
                 inviteLink = inviteId,
                 handle = current.handle.trim(),
-                email = current.email.trim(),
+                email = sanitizedEmail(current.email),
                 password = current.password,
                 deviceLabel = Build.MODEL,
             )

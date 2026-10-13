@@ -16,6 +16,8 @@ WHEN tap See it on GitHub -> that release's public page opens outside the app, i
 
 ALWAYS no newer-version line stands GIVEN the version running here is the newest release
 
+ALWAYS no dateline carries installed and no newer-version line stands GIVEN the version running here is not in the release registry
+
 ALWAYS What's new carries no bottom bar and keeps its back arrow
 
 WHEN press the header back arrow -> settings returns at its About group

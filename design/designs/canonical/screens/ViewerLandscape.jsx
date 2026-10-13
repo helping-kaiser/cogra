@@ -1,6 +1,7 @@
 /* THE VIEWER, ROTATED (readme §13, the reel round). The one board in this canvas
    that is not a portrait phone, because the state it draws is the phone turned:
-   the viewer follows the device, and the clip takes the screen's whole height.
+   the viewer follows the device, and the clip takes the screen's whole height
+   below the system status bar, whose strip it never paints (seam 117).
 
    A CLIP WHOSE SHAPE IS NOT THE DEVICE'S IS STILL NOT CUT. This 16:9 clip fills
    the height and leaves ground at the sides — the viewer's one promise is that

@@ -32,6 +32,7 @@ import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
+import com.cogra.domain.stance.StanceSignals
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.stance.localLanding
 import com.cogra.domain.store.IdentityStore
@@ -43,7 +44,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** Where one control's pad is (mirrors the design system's own mode). */
-enum class PadMode { CLOSED, DRAGGING, STICKY }
+enum class PadMode { CLOSED, STICKY }
 
 /** One target's control, as the screen renders it. */
 data class TargetStance(
@@ -83,6 +84,12 @@ data class TargetStance(
      * [StanceViewModel.onConfirmationShown] (design.md §8.3).
      */
     val confirmation: StancePair? = null,
+    /**
+     * A signing on this target was just taken — by Set or by the hold. A
+     * one-shot for a host that routes on it (the vouch-back's ceremony,
+     * VouchBackPad.md:33); consumed by [StanceViewModel.onTakenShown].
+     */
+    val taken: Boolean = false,
 )
 
 /**
@@ -108,8 +115,12 @@ data class SeveranceState(
 
 data class StanceUiState(
     val targets: Map<StanceTarget, TargetStance> = emptyMap(),
-    /** The control whose first tap opened the teaching mark, if any. */
-    val coachTarget: StanceTarget? = null,
+    /**
+     * The control whose open pad is the account's first-ever pad open,
+     * and so carries the two coaching lines (stance-control.md "Teaching
+     * it"). Cleared the moment that pad closes: the lines close with it.
+     */
+    val coachingTarget: StanceTarget? = null,
     /** The reader's chosen input surface, the same on every control (design.md §8.6). */
     val inputMode: StanceInputMode = StanceInputMode.Default,
 )
@@ -119,6 +130,8 @@ class StanceViewModel @Inject constructor(
     private val stances: StanceRepository,
     private val signer: WriteSigner,
     private val identity: IdentityStore,
+    /** Every signing taken here is announced, for the borrowed-view band. */
+    private val signals: StanceSignals,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StanceUiState())
@@ -128,10 +141,10 @@ class StanceViewModel @Inject constructor(
     private val reading = mutableSetOf<StanceTarget>()
 
     /**
-     * Whether the held gesture has been taught on this device; null until
-     * the store answers. The first tap waits on it rather than acting
-     * blind — a tap that stages a priced act must not be the teaching
-     * moment's casualty (design.md §8.7).
+     * Whether the account's first-ever pad open has happened on this
+     * device; null until the store answers. That open carries the two
+     * coaching lines, and no later one does (stance-control.md "Teaching
+     * it").
      */
     private var taught: Boolean? = null
 
@@ -170,42 +183,44 @@ class StanceViewModel @Inject constructor(
     }
 
     /**
-     * The plain tap. The FIRST tap ever teaches and stages nothing; every
-     * tap after that commits the modest positive default (design.md §8.3,
-     * §8.7).
+     * The press-and-hold: commits the modest positive default outright,
+     * without opening anything (design/guidelines/stance-control.md "The
+     * gesture" — the shortcut that signs takes a held finger).
      */
-    fun onTapDefault(target: StanceTarget) {
-        when (taught) {
-            // The store has not answered yet: wait for it rather than
-            // spending the teaching tap on a guess.
-            null -> viewModelScope.launch {
-                taught = identity.stancePadTaught()
-                onTapDefault(target)
-            }
-            false -> teach(target)
-            true -> commit(target, StancePair.TapDefault)
-        }
-    }
+    fun onHoldDefault(target: StanceTarget) = commit(target, StancePair.TapDefault)
 
+    /**
+     * The tap: blooms the pad parked open, and stages nothing. It opens
+     * AT the default, +0.10 / +0.10, so Set on a pick never moved signs
+     * exactly what the hold would (stance-control.md "The gesture",
+     * jakob 2026-10-05).
+     *
+     * The account's first-ever open carries the coaching lines. The flag
+     * is written HERE, at the open, rather than on close: its meaning is
+     * "the teaching open has happened", and a flag written later would
+     * let a restart teach twice.
+     */
     fun onOpenPad(target: StanceTarget) {
-        // A hold IS the lesson. It closes an open mark, and it spends the
-        // teaching tap for a reader who found the gesture without being
-        // told — either way they have met it, and teaching them later
-        // would cost them a tap for nothing (design.md §8.7).
-        dismissCoachMark()
-        if (taught == false) {
-            taught = true
-            viewModelScope.launch { identity.markStancePadTaught() }
-        }
-        // The pad opens at the origin, untilted — the low default belongs
-        // to the tap, not to the considered gesture (design.md §8.3).
         update(target) {
             it.copy(
-                pad = PadMode.DRAGGING,
-                pick = StancePair.Origin,
-                landing = it.landingFor(StancePair.Origin),
+                pad = PadMode.STICKY,
+                pick = StancePair.TapDefault,
+                landing = it.landingFor(StancePair.TapDefault),
                 failed = false,
             )
+        }
+        when (taught) {
+            true -> Unit
+            false -> teach(target)
+            // The store has not answered yet: the pad opens at once, and
+            // the coaching joins it when the answer arrives — but only if
+            // that same pad is still the one standing open.
+            null -> viewModelScope.launch {
+                taught = identity.stancePadTaught()
+                if (taught == false && _state.value.targets[target]?.pad == PadMode.STICKY) {
+                    teach(target)
+                }
+            }
         }
     }
 
@@ -218,9 +233,6 @@ class StanceViewModel @Inject constructor(
     fun onPick(target: StanceTarget, pick: StancePair) {
         update(target) { it.copy(pick = pick, landing = it.landingFor(pick)) }
     }
-
-    /** A hold released without drifting parks the pad open (design.md §8.5, §8.6). */
-    fun onHold(target: StanceTarget) = update(target) { it.copy(pad = PadMode.STICKY) }
 
     /**
      * Shuts the pad and stages nothing. Called on the way out of a
@@ -273,6 +285,7 @@ class StanceViewModel @Inject constructor(
                 return@launch failSeverance(target)
             }
             if (results.all { it is WriteResult.Done }) {
+                signals.announceSigned()
                 update(target) { it.copy(severance = null, pad = PadMode.CLOSED, pick = StancePair.Origin) }
                 readStanding(target)
             } else {
@@ -281,24 +294,11 @@ class StanceViewModel @Inject constructor(
         }
     }
 
-    /** The mark stays until dismissed or until a hold lands (design.md §8.7). */
-    fun onCoachMarkDismissed() = dismissCoachMark()
-
-    /**
-     * Opens the teaching mark and spends the teaching tap. The flag is
-     * written HERE rather than on dismissal: its meaning is "the tap that
-     * teaches has been spent", and a flag written later would let a
-     * restart swallow a second priced tap in silence.
-     */
+    /** Puts the coaching lines on [target]'s open pad and spends them. */
     private fun teach(target: StanceTarget) {
         taught = true
-        _state.update { it.copy(coachTarget = target) }
+        _state.update { it.copy(coachingTarget = target) }
         viewModelScope.launch { identity.markStancePadTaught() }
-    }
-
-    private fun dismissCoachMark() {
-        if (_state.value.coachTarget == null) return
-        _state.update { it.copy(coachTarget = null) }
     }
 
     private fun openSeverance(target: StanceTarget, fromPick: Boolean) {
@@ -314,6 +314,9 @@ class StanceViewModel @Inject constructor(
 
     /** Consumes the one-shot confirmation once the screen has shown it. */
     fun onConfirmationShown(target: StanceTarget) = update(target) { it.copy(confirmation = null) }
+
+    /** Consumes the one-shot [TargetStance.taken] once the host has routed on it. */
+    fun onTakenShown(target: StanceTarget) = update(target) { it.copy(taken = false) }
 
     private fun commit(target: StanceTarget, pick: StancePair) {
         val entry = _state.value.targets[target]
@@ -336,9 +339,11 @@ class StanceViewModel @Inject constructor(
                 return@launch fail(target, needsKey = true)
             }
             if (results.all { it is WriteResult.Done }) {
+                signals.announceSigned()
                 update(target) {
                     it.copy(
                         busy = false,
+                        taken = true,
                         pad = PadMode.CLOSED,
                         pick = StancePair.Origin,
                         landing = null,
@@ -408,7 +413,7 @@ class StanceViewModel @Inject constructor(
         }
     }
 
-    // The pad is left where it was: a tap that failed must not conjure a
+    // The pad is left where it was: a hold that failed must not conjure a
     // pad the reader never asked for, and an open pad keeps its place.
     // A pending standing does not survive it — the write did not keep
     // the promise the pending answer made, so the fold is asked again.
@@ -424,8 +429,14 @@ class StanceViewModel @Inject constructor(
 
     private fun update(target: StanceTarget, block: (TargetStance) -> TargetStance) {
         _state.update { state ->
-            val entry = state.targets[target] ?: TargetStance()
-            state.copy(targets = state.targets + (target to block(entry)))
+            val entry = block(state.targets[target] ?: TargetStance())
+            // The coaching lines close with the pad that carried them, and
+            // never show again (stance-control.md "Teaching it").
+            val closed = state.coachingTarget == target && entry.pad == PadMode.CLOSED
+            state.copy(
+                targets = state.targets + (target to entry),
+                coachingTarget = if (closed) null else state.coachingTarget,
+            )
         }
     }
 }

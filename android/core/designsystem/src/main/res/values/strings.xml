@@ -9,13 +9,31 @@
     <string name="recovery_code_mismatch">That doesn\'t match the code above.</string>
     <string name="pending_settling">Still settling</string>
 
-    <!-- The borrowed-view band (design.md §13, 2026-08-27). The band names
-         the vantage point a guest or applicant feed is ranked from; the
-         three readings differ only in what the reader can do about it. -->
+    <!-- The borrowed-view band (design/readme.md §13, "Guest and applicant
+         feeds borrow a vantage point — 2026-08-27"). The band names the
+         vantage point a borrowed feed is ranked from; the readings differ
+         only in what the reader can do about it. -->
     <string name="borrowed_view_join">Browsing from @%1$s\'s view — join to build your own.</string>
     <string name="borrowed_view_applicant">Browsing from @%1$s\'s view while your application lands.</string>
-    <string name="borrowed_view_vouch_back">Browsing from @%1$s\'s view — vouch back to start your own.</string>
+    <!-- The landed member, no opinion signed yet: it asks for nothing (VouchBack.md:13, :17). -->
+    <string name="borrowed_view_member">Browsing from @%1$s\'s view — your first opinion starts your own.</string>
     <string name="borrowed_view_sign_in_or_join">Sign in or join</string>
+
+    <!-- The deletion band (design/components/navigation/DeletionBand.*;
+         copy-voice "Deleting the account", "The band is one sentence and one
+         word"). The count is copy-voice's forward ladder, spelled out — the
+         nearest whole day while a day or more remains, then the hours. -->
+    <string name="deletion_band_account">Your account is deleted in %1$s.</string>
+    <string name="deletion_band_content">Your account and everything you posted are deleted in %1$s.</string>
+    <string name="deletion_band_cancel">Cancel</string>
+    <plurals name="forward_days">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <plurals name="forward_hours">
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
+    </plurals>
 
     <!-- The read shell's band (design.md §6). -->
     <string name="cogra_band_chats">Chats</string>
@@ -94,7 +112,10 @@
     <string name="tag_anchor_all_of_it">all of it, full stop</string>
 
     <string name="stance_target">Stance</string>
-    <string name="stance_target_action">Tap for a light yes, or press and hold to pick exactly</string>
+    <string name="stance_target_action">Tap to pick exactly, or press and hold for a light yes</string>
+    <!-- The press-and-hold shortcut's accessibility action: a long press
+         signs the low default (stance-control.md "The gesture"). -->
+    <string name="stance_target_hold">Light yes</string>
     <!-- A target that already carries a standing says so first. -->
     <string name="stance_target_with_standing">%1$s: %2$s. %3$s</string>
     <!-- WHAT IT STANCES TOWARD, FIRST (`TagPage`, the topic round). A
@@ -163,6 +184,11 @@
     <string name="stance_set">Set this stance</string>
     <string name="stance_cancel">Cancel</string>
     <string name="stance_failed">That didn\'t go through. Try again.</string>
+    <!-- A variant pad's own fault line and its commit's two waiting words
+         (PadFailed; VouchBackPad.md:31, :37). -->
+    <string name="stance_pad_failed">That didn\'t send. Try again.</string>
+    <string name="stance_setting">Setting…</string>
+    <string name="stance_retry">Retry</string>
     <string name="stance_failed_no_key">This device can\'t sign yet. Restore your key first.</string>
 
     <!-- Severance: the one gesture that nets a bundle back to nothing
@@ -205,12 +231,16 @@
          the caller appends a reading to. -->
     <string name="stance_disconnect_standing_raw">Everything you\'ve said about %1$s adds up to %2$s, and disconnecting clears all of it.</string>
 
-    <string name="stance_coach">Press and hold to pick exactly where you stand.</string>
-    <string name="stance_coach_dismiss">Got it</string>
+    <!-- The first-ever pad open's two coaching lines, verbatim from
+         copy-voice.md "The first-ever pad teaches in two coaching lines,
+         and nothing else teaches it" (`VouchBackPad`). The face is drawn;
+         the spoken twin says the face and the pair. -->
+    <string name="stance_coaching_shortcut">Later, tap the small face under a post to open this — press and hold it instead and a gentle 🙂 is signed on the spot.</string>
+    <string name="stance_coaching_shortcut_spoken">Later, tap the small face under a post to open this — press and hold it instead and a gentle Nice, For or against +0.10, How much reaches you +0.10 is signed on the spot.</string>
+    <string name="stance_coaching_set">Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.</string>
 
-    <!-- The `?` on the pad (design.md §8.3): the explanation on demand,
-         for anyone who met the control after the one-time coach mark was
-         spent. It says what the two axes are and what actually signs,
+    <!-- The `?` on the pad (design.md §8.3): the explanation on demand.
+         It says what the two axes are and what actually signs,
          because nothing here should be learned by accident. -->
     <string name="stance_explain">How stances work</string>
     <!--

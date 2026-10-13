@@ -4,6 +4,10 @@
 
 package com.cogra.feature.settings
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -18,14 +22,18 @@ import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
+import com.cogra.domain.AccountDeletionPath
 import com.cogra.domain.AccountState
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.deletion.AccountDeletion
+import com.cogra.domain.deletion.DeletionStanding
 import com.cogra.domain.stance.StanceInputMode
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -67,11 +75,159 @@ class SettingsScreenTest {
     fun `groups_stand_in_the_ruled_order`() {
         render()
         val order = listOf(
-            "theme", "stance", "writing", "reading", "people", "backup", "sessions", "credentials", "about", "leaving",
+            "theme", "stance", "writing", "reading", "people", "sensitive", "backup", "clearing", "sessions",
+            "credentials", "about", "leaving", "ending",
         ).map { top("settings.$it") }
         assertThat(order).isInStrictOrder()
-        // The `ending` group is the erasure-deletion packet's: no row here.
-        assertThat(compose.onAllNodesWithTag("settings.ending").fetchSemanticsNodes()).isEmpty()
+    }
+
+    // ------------------------------------------------- sensitive content (B5)
+
+    @Test
+    fun `sensitive_group_stands_after_people`() {
+        render()
+        node("settings.sensitive").performScrollTo()
+        node("settings.sensitive.label").assertTextEquals("Sensitive content")
+        node("settings.sensitive.footnote").assertTextEquals("This choice follows your account to every device.")
+        assertThat(top("settings.people")).isLessThan(top("settings.sensitive"))
+        assertThat(top("settings.sensitive")).isLessThan(top("settings.backup"))
+        // One switch, never a sheet or a pair of rows.
+        assertThat(
+            compose.onAllNodes(
+                hasAnyAncestor(hasTestTag("settings.sensitive")) and
+                    SemanticsMatcher.keyIsDefined(SemanticsProperties.ToggleableState),
+            ).fetchSemanticsNodes(),
+        ).hasSize(1)
+    }
+
+    @Test
+    fun `unveil_switch_reads_off_by_default`() {
+        render()
+        node("settings.sensitive.unveil").performScrollTo().assertIsOff()
+        node("settings.sensitive.unveil.label").assertTextEquals("Always unveil sensitive content")
+        node("settings.sensitive.unveil.status").assertTextEquals("Off, the veil stays until you tap it.")
+    }
+
+    @Test
+    fun `the unveil switch reads on and swaps in the On line`() {
+        var flips = 0
+        render(
+            state = SettingsUiState(account = account(), actorKeyHere = true, now = NOW, alwaysUnveil = true),
+            actions = SettingsActions(onAlwaysUnveil = { flips++ }),
+        )
+        node("settings.sensitive.unveil").performScrollTo().assertIsOn().performClick()
+        node("settings.sensitive.unveil.status")
+            .assertTextEquals("On, sensitive content stands unveiled wherever you read.")
+        assertThat(flips).isEqualTo(1)
+    }
+
+    private fun deleting(path: AccountDeletionPath, deletion: AccountDeletion? = null) = SettingsUiState(
+        account = account(),
+        actorKeyHere = true,
+        now = NOW,
+        deletion = DeletionStanding(path, deletion),
+    )
+
+    @Test
+    fun `delete_account_is_the_last_row_quiet_with_the_members_footnote`() {
+        var taps = 0
+        render(deleting(AccountDeletionPath.BY_LINK), actions = SettingsActions(onDeleteAccount = { taps++ }))
+        node("settings.ending.delete").performScrollTo().assertHasClickAction()
+        node("settings.ending.delete.label").assertTextEquals("Delete account")
+        node("settings.ending.delete.chevron").assertExists()
+        node("settings.ending.delete.status").assertDoesNotExist()
+        node("settings.ending.footnote").assertTextEquals(
+            "Nothing is deleted here. The next screen says what goes and what stays, " +
+                "and the deletion is confirmed by a link we email you.",
+        )
+        node("settings.ending.delete").performClick()
+        assertThat(taps).isEqualTo(1)
+        node("settings.deletionBand").assertDoesNotExist()
+    }
+
+    @Test
+    fun `the_immediate_paths_footnote_drops_the_mailed_link`() {
+        render(deleting(AccountDeletionPath.IMMEDIATE))
+        node("settings.ending.footnote").performScrollTo()
+            .assertTextEquals("Nothing is deleted here. The next screen says what goes and what stays.")
+    }
+
+    @Test
+    fun `the_footnote_keys_on_the_path_never_the_account_state`() {
+        // An applicant whose registration landed reads BY_LINK: the mailed
+        // path, and the member's footnote with it (OS-15).
+        render(deleting(AccountDeletionPath.BY_LINK).copy(account = account(state = AccountState.APPLICANT)))
+        node("settings.ending.footnote").performScrollTo().assertTextEquals(
+            "Nothing is deleted here. The next screen says what goes and what stays, " +
+                "and the deletion is confirmed by a link we email you.",
+        )
+    }
+
+    @Test
+    fun `no_footnote_stands_before_the_path_is_read`() {
+        render()
+        node("settings.ending.delete").performScrollTo()
+        node("settings.ending.footnote").assertDoesNotExist()
+    }
+
+    @Test
+    fun `a_locked_path_wears_the_disabled_look_and_still_answers_the_tap`() {
+        var taps = 0
+        render(deleting(AccountDeletionPath.LOCKED), actions = SettingsActions(onDeleteAccount = { taps++ }))
+        node("settings.ending.delete").performScrollTo().assertHasClickAction().performClick()
+        assertThat(taps).isEqualTo(1)
+        node("settings.ending.delete.label").assertTextEquals("Delete account")
+    }
+
+    @Test
+    fun `in_the_grace_the_band_stands_the_row_counts_down_and_the_footnote_goes`() {
+        var cancels = 0
+        render(
+            deleting(
+                AccountDeletionPath.BY_LINK,
+                AccountDeletion(NOW.plusSeconds(6 * 86_400), includesContent = false),
+            ),
+            actions = SettingsActions(onCancelDeletion = { cancels++ }),
+        )
+        node("settings.deletionBand.line").assertTextEquals("Your account is deleted in 6 days.")
+        node("settings.ending.delete").performScrollTo()
+        node("settings.ending.delete.status").assertTextEquals("Deletion in 6 days")
+        node("settings.ending.footnote").assertDoesNotExist()
+        node("settings.deletionBand.cancel").performClick()
+        assertThat(cancels).isEqualTo(1)
+    }
+
+    @Test
+    fun `a_subpages_notice_outlives_its_own_consumption`() {
+        // Consuming the notice flips it to null; the snackbar must still stand.
+        val said = "Canceled — your account stays, and nothing was deleted."
+        // The clock is driven by hand: half a second is many frames past the
+        // consumption, and well inside the snackbar's own duration.
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            var notice by remember { mutableStateOf<String?>(said) }
+            SettingsScreen(
+                state = SettingsUiState(account = account(), actorKeyHere = true, now = NOW),
+                versionName = "0.1.0",
+                actions = SettingsActions(),
+                doors = SettingsDoors(),
+                notice = notice,
+                onNoticeShown = { notice = null },
+            )
+        }
+        compose.mainClock.advanceTimeBy(500)
+        compose.onNode(hasText(said)).assertExists()
+    }
+
+    @Test
+    fun `the_row_opens_the_door_the_page_is_told`() {
+        var opened: DeletionDoor? = null
+        val events = MutableSharedFlow<SettingsEvent>(extraBufferCapacity = 1)
+        render(doors = SettingsDoors(onOpenDeletion = { opened = it }), events = events)
+        compose.waitForIdle()
+        events.tryEmit(SettingsEvent.OpenDeletion(DeletionDoor.PENDING))
+        compose.waitForIdle()
+        assertThat(opened).isEqualTo(DeletionDoor.PENDING)
     }
 
     @Test
@@ -333,7 +489,7 @@ class SettingsScreenTest {
         node("settings.dialog.title").assertTextEquals("Sign out without a backup?")
         node("settings.dialog.body").assertTextEquals(
             "This app holds the only copy of your key. Signing out leaves your key, your draft and any opinions " +
-                "you kept pending here, locked until you sign in to this app again. Erase them instead, and no " +
+                "you kept pending here, locked until you sign in again. Erase them instead, and no " +
                 "one — including CoGra — can bring them back.",
         )
         node("settings.dialog.title").assertIsFocused()
@@ -352,6 +508,87 @@ class SettingsScreenTest {
         node("settings.dialog.recovery").performClick()
         node("settings.dialog.erase").performClick()
         assertThat(recovery).isEqualTo(1)
+        assertThat(erase).isEqualTo(1)
+    }
+
+    // ------------------------------------------------- clearing data (B6)
+
+    @Test
+    fun `the_clearing_footnote_opens_on_the_key_with_a_code_made`() {
+        render()
+        node("settings.clearing.footnote").performScrollTo().assertTextEquals(
+            "Your key lives only in this app. Clear the app's data, or uninstall it without keeping the data, " +
+                "and the key is erased with it — without your recovery code, your account is gone for good. " +
+                "Your draft, any kept picks and the choices kept on this device go too, and you're signed out. " +
+                "What you've seen comes back when you sign in.",
+        )
+        node("settings.clearing.label").assertTextEquals("Clearing data")
+        node("settings.clearing.erase.label").assertTextEquals("Erase everything from this app")
+    }
+
+    @Test
+    fun `the_clearing_footnote_drops_its_condition_with_no_code`() {
+        render(SettingsUiState(account = account(keyBackupCreatedAt = null), now = NOW))
+        node("settings.clearing.footnote").performScrollTo().assertTextEquals(
+            "Your key lives only in this app, and it has no recovery code yet. Clear the app's data, or " +
+                "uninstall it without keeping the data, and the key is erased with it — your account is gone " +
+                "for good. Your draft, any kept picks and the choices kept on this device go too, and you're " +
+                "signed out. What you've seen comes back when you sign in.",
+        )
+    }
+
+    @Test
+    fun `the_erase_row_raises_the_dialog_and_nothing_else`() {
+        var asked = 0
+        render(actions = SettingsActions(onErase = { asked++ }))
+        node("settings.clearing.erase").performScrollTo().performClick()
+        assertThat(asked).isEqualTo(1)
+    }
+
+    @Test
+    fun `with_no_code_the_erase_dialog_leads_with_the_code`() {
+        var recovery = 0
+        var erase = 0
+        render(
+            SettingsUiState(account = account(keyBackupCreatedAt = null), now = NOW, eraseConfirmOpen = true),
+            actions = SettingsActions(
+                onMakeRecoveryCodeFromErase = { recovery++ },
+                onEraseEverything = { erase++ },
+            ),
+        )
+        node("settings.dialog.title").assertTextEquals("Erase everything from this app?")
+        node("settings.dialog.title").assertIsFocused()
+        node("settings.dialog.body").assertTextEquals(
+            "This app holds the only copy of your key, and it has no recovery code. Erase everything and your " +
+                "account is gone for good — no one, including CoGra, can bring it back. Your draft, any kept " +
+                "picks and the choices kept on this device go too, and you're signed out.",
+        )
+        assertThat(compose.onAllNodesWithTag("settings.dialog.cancel:none").fetchSemanticsNodes()).isEmpty()
+        compose.onNodeWithTag("settings.dialog.recovery:none").assertTextEquals("Make a recovery code").performClick()
+        compose.onNodeWithTag("settings.dialog.erase:none").assertTextEquals("Erase everything and sign out")
+            .performClick()
+        assertThat(recovery).isEqualTo(1)
+        assertThat(erase).isEqualTo(1)
+    }
+
+    @Test
+    fun `with_a_code_made_the_erase_is_quiet_and_cancel_is_filled`() {
+        var erase = 0
+        var cancel = 0
+        render(
+            SettingsUiState(account = account(), now = NOW, eraseConfirmOpen = true),
+            actions = SettingsActions(onEraseEverything = { erase++ }, onDismissEraseConfirm = { cancel++ }),
+        )
+        node("settings.dialog.body").assertTextEquals(
+            "Your key is erased with everything else, and only your recovery code can bring it back — without " +
+                "the code, your account is gone for good. Your draft, any kept picks and the choices kept on " +
+                "this device go too, and you're signed out. What you've seen comes back when you sign in.",
+        )
+        assertThat(compose.onAllNodesWithTag("settings.dialog.recovery:made").fetchSemanticsNodes()).isEmpty()
+        compose.onNodeWithTag("settings.dialog.cancel:made").assertTextEquals("Cancel").performClick()
+        compose.onNodeWithTag("settings.dialog.erase:made").assertTextEquals("Erase everything and sign out")
+            .performClick()
+        assertThat(cancel).isEqualTo(1)
         assertThat(erase).isEqualTo(1)
     }
 

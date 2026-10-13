@@ -1,4 +1,5 @@
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, waitFor } from "@testing-library/react";
+import { useLayoutEffect } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
@@ -181,6 +182,51 @@ describe("holding the reader's place", () => {
     expect(scroller.scrollTop).toBe(0);
     growAbove(180);
     expect(scroller.scrollTop).toBe(0);
+  });
+
+  // The scroller is the shell's, so the surface drawn next moves it in its own
+  // first commit — before a passive cleanup of the leaving surface would have
+  // run. Whatever it does to the scroller is not the reader's place here.
+  describe("on the way out", () => {
+    /** The next surface: it clears this one's items and takes the scroller to its top. */
+    function NextSurface() {
+      useLayoutEffect(() => {
+        scroller.replaceChildren();
+        scroller.scrollTop = 0;
+        fireEvent.scroll(scroller);
+      }, []);
+      return null;
+    }
+    function Swap({ leaving, record }: { leaving: boolean; record: (place: ScrollPlace) => void }) {
+      return leaving ? <NextSurface /> : <Pinned place={null} record={record} />;
+    }
+    const twoFrames = () =>
+      act(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
+
+    it("hears nothing the next surface does to the scroller in the commit that swaps them", async () => {
+      const places: ScrollPlace[] = [];
+      const record = (next: ScrollPlace) => places.push(next);
+      const view = render(<Swap leaving={false} record={record} />);
+      scroller.scrollTop = 1240;
+      fireEvent.scroll(scroller);
+      await waitFor(() => expect(places.at(-1)?.offset).toBe(1240));
+
+      view.rerender(<Swap leaving record={record} />);
+      await twoFrames();
+      expect(places.at(-1)).toEqual({ offset: 1240, anchorId: "b", anchorTop: -120 });
+    });
+
+    it("drops a measurement still waiting on its frame — it would measure the next page", async () => {
+      const places: ScrollPlace[] = [];
+      const record = (next: ScrollPlace) => places.push(next);
+      const view = render(<Swap leaving={false} record={record} />);
+      scroller.scrollTop = 1240;
+      fireEvent.scroll(scroller);
+      // Gone before the frame that would have measured it.
+      view.rerender(<Swap leaving record={record} />);
+      await twoFrames();
+      expect(places).toEqual([]);
+    });
   });
 
   it("stands on the offset alone when the anchor is no longer in the list", () => {

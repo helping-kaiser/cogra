@@ -330,8 +330,16 @@ class AccountRepositoryImpl @Inject constructor(private val client: ApolloClient
                     displayName = me.displayName.value,
                     accountState = me.accountState?.toDomain() ?: AccountState.UNKNOWN,
                     hasReciprocated = me.hasReciprocated,
-                    invitedBy = me.invitedBy?.let { ActorRef(it.id, it.handle) },
+                    invitedBy = me.invitedBy?.let {
+                        ActorRef(
+                            it.id,
+                            it.handle,
+                            it.displayName.value,
+                            it.onUser?.avatar?.mediaFields?.toDomain(),
+                        )
+                    },
                     vouchBackDismissed = me.vouchBackDismissed,
+                    contentFilteringSeverityLevel = me.preferences?.contentFilteringSeverityLevel,
                 ),
             )
         }
@@ -342,7 +350,9 @@ class AccountRepositoryImpl @Inject constructor(private val client: ApolloClient
     // than silently demote them to the anonymous answer.
     override suspend fun borrowedView(): Outcome<ActorRef?> = guard.run {
         client.query(BorrowedViewQuery()).fetch().map { data ->
-            data.borrowedView?.let { ActorRef(it.id, it.handle, it.displayName.value) }
+            data.borrowedView?.let {
+                ActorRef(it.id, it.handle, it.displayName.value, it.onUser?.avatar?.mediaFields?.toDomain())
+            }
         }
     }
 

@@ -47,7 +47,7 @@ export function Screen() {
 
       <SettingsGroup
         label="People"
-        footnote="Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking."
+        footnote="Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking. Your opinions on them still count in your friends' feeds until you walk them back."
       >
         <SettingsRow label="Hidden accounts" value="3" onOpen={() => {}} />
       </SettingsGroup>

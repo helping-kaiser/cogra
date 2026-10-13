@@ -48,6 +48,10 @@ ALWAYS the header's arrow and Already have an account? Sign in refuse a press, n
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 
+ALWAYS the line By creating your account you accept the Terms. stands directly above Create account, with Terms a door
+
+ALWAYS the notice How CoGra handles your data: the Privacy Policy. stands at the form's foot, its own line with Privacy Policy a door, and never inside the accept sentence
+
 ALWAYS Create account stands disabled with Waiting for a handle, your email and a password right above it GIVEN Handle, Email or Password is empty
 
 WHEN all three fields hold a character -> Create account wakes AND the line Waiting for a handle, your email and a password goes

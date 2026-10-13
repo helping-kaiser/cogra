@@ -33,7 +33,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.cogra.core.designsystem.DataNode
@@ -104,20 +106,38 @@ class ChangeEmailConfirmViewModel @Inject constructor(
     private val _events = Channel<ConfirmEmailEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
-    init {
+    /** The page has left for settings; nothing reads or routes after that. */
+    private var exited = false
+
+    private suspend fun exit(to: ConfirmEmailExit) {
+        if (exited) return
+        exited = true
+        _events.send(ConfirmEmailEvent.Exit(to))
+    }
+
+    /**
+     * Re-reads the change — on every arrival, the route's ON_RESUME. The link's
+     * side lands in another app (the mail app, a browser), so coming back is
+     * exactly when it may have moved: the page then opens on the side still
+     * owed, each side as it stands, and a change that applied, ran out or was
+     * called off meanwhile routes back to settings, whose Email row reads it
+     * (`ChangeEmailConfirm.md` "the reader comes back"; `Settings.md` Email
+     * row). A confirm or a cancel in flight answers for itself instead.
+     */
+    fun refresh() {
+        val s = _state.value
+        if (exited || s.inFlight || s.canceling) return
         reread()
     }
 
-    /** Reopen lands on the owed side, each side as it stands; nothing pending routes back. */
     private fun reread() {
         viewModelScope.launch {
             when (val read = settings.settingsAccount()) {
                 is Outcome.Success -> {
+                    if (exited) return@launch
                     val account = read.value
                     _state.update { it.copy(email = account?.email, pending = account?.pendingEmailChange) }
-                    if (account != null && account.pendingEmailChange == null) {
-                        _events.send(ConfirmEmailEvent.Exit(ConfirmEmailExit.Ended))
-                    }
+                    if (account != null && account.pendingEmailChange == null) exit(ConfirmEmailExit.Ended)
                 }
                 else -> Unit
             }
@@ -146,9 +166,10 @@ class ChangeEmailConfirmViewModel @Inject constructor(
                     val after = outcome.value
                     if (after.pending == null) {
                         _state.update { it.copy(inFlight = false) }
-                        _events.send(ConfirmEmailEvent.Exit(ConfirmEmailExit.Applied(after.email.orEmpty())))
+                        exit(ConfirmEmailExit.Applied(after.email.orEmpty()))
                     } else {
-                        // The code's side landed, the link's still owed: the page stays.
+                        // The code's side landed, the link's still owed: the page stays,
+                        // and its interim line says the link at the new address is what is left.
                         _state.update {
                             it.copy(inFlight = false, pending = after.pending, email = after.email, code = "")
                         }
@@ -228,7 +249,7 @@ class ChangeEmailConfirmViewModel @Inject constructor(
                 is Outcome.Success -> {
                     _state.update { it.copy(canceling = false) }
                     val email = outcome.value.email ?: _state.value.email.orEmpty()
-                    _events.send(ConfirmEmailEvent.Exit(ConfirmEmailExit.Canceled(email)))
+                    exit(ConfirmEmailExit.Canceled(email))
                 }
                 is Outcome.Failed -> {
                     _state.update { it.copy(canceling = false) }
@@ -249,9 +270,15 @@ private val Page = DataNode("changeEmail")
 fun ChangeEmailConfirmRoute(
     onBack: () -> Unit,
     onExit: (notice: String?) -> Unit,
+    /** The deletion band under the header, while a confirmed deletion runs its grace. */
+    deletionBand: @Composable () -> Unit = {},
     viewModel: ChangeEmailConfirmViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    // Every arrival re-reads — the first, and each return from the mail app or
+    // the browser where the link's side lands (Compose's lifecycle effects,
+    // developer.android.com/topic/libraries/architecture/compose#lifecycle-effects).
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refresh() }
     val context = LocalContext.current
     ChangeEmailConfirmScreen(
         state = state,
@@ -270,6 +297,7 @@ fun ChangeEmailConfirmRoute(
                 },
             )
         },
+        deletionBand = deletionBand,
     )
 }
 
@@ -283,6 +311,7 @@ fun ChangeEmailConfirmScreen(
     onCancel: () -> Unit,
     events: Flow<ConfirmEmailEvent> = emptyFlow(),
     onExit: (ConfirmEmailExit) -> Unit = {},
+    deletionBand: @Composable () -> Unit = {},
 ) {
     val snackbar = remember { SnackbarHostState() }
     val context = LocalContext.current
@@ -306,9 +335,17 @@ fun ChangeEmailConfirmScreen(
         title = stringResource(R.string.confirm_email_title),
         lead = stringResource(R.string.confirm_email_lead),
         snackbar = snackbar,
+        deletionBand = deletionBand,
     ) {
         Spacer(Modifier.height(24.dp))
         if (pending != null) SidesPair(email, pending, onResend)
+        if (pending != null && pending.requiresCode && pending.codeConfirmed) {
+            Spacer(Modifier.height(24.dp))
+            QuietNote(
+                text = stringResource(R.string.confirm_email_code_done, pending.newEmail),
+                modifier = Modifier.dataNode(Page / "codeDone"),
+            )
+        }
         CodeAndCommit(state, email, onCode, onConfirm)
         Spacer(Modifier.height(24.dp))
         QuietNote(

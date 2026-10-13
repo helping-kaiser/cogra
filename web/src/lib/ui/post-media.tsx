@@ -26,6 +26,7 @@ import { parseAspectRatio, tileRatio } from "@/lib/ui2/media/aspect";
 import { BodyVeil } from "@/lib/ui2/media/body-veil";
 import { MediaGallery, type GalleryItem, type PlayerSurface } from "@/lib/ui2/media/media-gallery";
 import { RemovedPlaceholder, type RemovalReason } from "@/lib/ui2/media/removed-placeholder";
+import { useAlwaysUnveil } from "@/lib/settings/sensitive-content";
 import { rememberReveal, sensitiveSignature, useRevealed } from "@/lib/ui2/media/reveal";
 
 type Attachment = {
@@ -128,6 +129,10 @@ export function galleryItems(node: Bearer): readonly GalleryItem[] {
     const ratio = parseAspectRatio(attachment.options.aspectRatio);
     return {
       src: attachment.url,
+      // The clip's identity in the session's clip memory: the record's own
+      // attachment id, so one clip shown on a card, in the detail and in the
+      // viewer is one clip (`clip-memory.ts`).
+      mediaId: attachment.id,
       // A picture the author left undescribed is DECORATIVE to a screen reader,
       // not "image": an empty alt is the documented way to say "skip this", and
       // inventing a description would be worse than saying nothing.
@@ -231,6 +236,13 @@ export function PostMedia({
  * answered on the detail page and a change to the node's mark takes it back
  * (see `reveal.ts`). A caller that names no node keeps the old lone-body
  * behaviour, which is what the design-system gallery wants.
+ *
+ * THE ACCOUNT'S CHOICE COMES FIRST. This is the one place every body veil
+ * passes through — the feed's card, the detail and its pinned clip, the
+ * comments sheet — so the veil's predicate is answered here: veiled = the
+ * node is sensitive AND the account does not always unveil (settings packet
+ * §3.1a; `settings/sensitive-content.ts`). An account that chose `Always
+ * unveil sensitive content` reads the body as if it bore no mark.
  */
 export function BodyRegion({
   children,
@@ -249,8 +261,9 @@ export function BodyRegion({
   /** Its sensitive state, so an old reveal does not cover a new mark. */
   signature?: string;
 }) {
+  const alwaysUnveil = useAlwaysUnveil();
   const body = <div className="flex flex-col gap-2">{children}</div>;
-  if (!veiled) return body;
+  if (!veiled || alwaysUnveil) return body;
   return (
     <SharedVeil nodeId={nodeId} signature={signature} reason={reason} testId={testId}>
       {body}

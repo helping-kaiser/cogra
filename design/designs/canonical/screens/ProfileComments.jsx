@@ -51,7 +51,7 @@ export function Screen() {
           />
         </div>
       </div>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>
   );
 }

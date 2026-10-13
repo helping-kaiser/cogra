@@ -61,7 +61,11 @@ honest runners produce identical output from the same slice.
 The ranker never writes to the graph and holds no authority the backend
 lacks: the slice it reads is the same public subgraph any client could
 fetch, and the ordering it returns is advisory — the viewer's device
-holds final authority over filters and presentation.
+holds final authority over filters and presentation. The server's own
+ranker container is told the viewer and the candidate narrowing (kinds,
+topic), never the reader's filters: it returns each row's people mark
+and both order permutations, and the device applies the reader's scope,
+order, seen and Still-settling choices.
 
 ## Inputs
 
@@ -76,7 +80,7 @@ public state the slice comes from.
 
 | Parameter | Role |
 |---|---|
-| `seenList` | Content ids to exclude from the candidate set before ranking ([feed-ranking.md §9.4](../primitive/feed-ranking.md#94-the-already-seen-filter)). |
+| `seenList` | Content ids to exclude from the candidate set before ranking ([feed-ranking.md §9.4](../primitive/feed-ranking.md#94-the-already-seen-filter)); the server's relay never sends it. |
 | `kinds` | Which rankable node kinds are in scope (default: Posts only — [§9.3](../primitive/feed-ranking.md#93-what-is-rankable)). |
 | `gamma` | `γ` — per-hop attenuation in `(0, 1]`; default `Network.gamma`. |
 | `dustFloor` | `χ` — bounds the slice node-set and stops extraction; default `Network.dustFloor`. |
@@ -91,7 +95,8 @@ These are the `rank` operation's `params`, typed below:
  governed non-tunable parameters (k, f-shape, tie-breakers) are read
  from published network state, never from the request."
 input RankParams {
-  "Content ids to exclude before ranking (the seen-list)."
+  "Content ids to exclude before ranking (the seen-list); the server's
+   relay never sends it."
   seenList: [UUID!]
   "Rankable node kinds in scope; default Posts only."
   kinds: [NodeKind!]
@@ -166,8 +171,9 @@ type TieBreakers {
   netStance: Float!
   "Gross volume: Σ_a f(Δt_a) · (|p̄_d| + |p̄_i|)."
   grossVolume: Float!
-  "Epoch age of the newest terminal record — the final fallback."
-  newestTerminalEpochAge: Int!
+  "Epoch age of the target's genesis authorship record, for display;
+   an update record never refreshes it. Null for an authorless Type."
+  genesisEpochAge: Int
 }
 
 "One extracted path from the viewer to the target. Persons appear as
@@ -439,8 +445,11 @@ on-device call uses directly.
 
 ### Push model — no standing credential
 
-The viewer's private inputs — the seen-list and the rank params — ride
-inside each request. The miner holds no credential and no standing
+The viewer's inputs — the rank params, and for a delegated miner that is
+handed one, the seen-list — ride inside each request. The server's own
+ranker container is handed none: the reader's device cuts seen content
+from the ranked answer
+([feed-ranking.md §9.4](../primitive/feed-ranking.md#94-the-already-seen-filter)). The miner holds no credential and no standing
 state, and never authenticates to the backend: to the backend, a miner
 is indistinguishable from any anonymous reader, and
 [auth.md](auth.md) manages no delegation tokens. Revocation is
@@ -455,6 +464,9 @@ credential-free, and a client that wants to avoid it can keep the
 seen-list locally — the math is the same regardless of where the JSON
 came from. Standing delegation — a scoped credential or miner-held
 seen-list — is parked as [open-questions.md Q25](../open-questions.md).
+The server's own ranker container receives no seen-list: the backend
+relay forwards none, and the device cuts locally — the observably
+identical post-rank placement.
 
 ### Result integrity — advisory, spot-checkable, not attested
 

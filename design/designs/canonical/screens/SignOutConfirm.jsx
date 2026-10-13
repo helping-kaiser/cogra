@@ -59,7 +59,7 @@ export function Screen() {
         node="dialog"
         onScrimPress={() => {}}
         title="Sign out without a backup?"
-        body="This browser holds the only copy of your key. Signing out leaves your key, your draft and any opinions you kept pending here, locked until you sign in on this browser again. Erase them instead, and no one — including CoGra — can bring them back."
+        body="This browser holds the only copy of your key. Signing out leaves your key, your draft and any opinions you kept pending here, locked until you sign in again. Erase them instead, and no one — including CoGra — can bring them back."
         actions={
           <>
             <Button node="recovery">Make a recovery code</Button>

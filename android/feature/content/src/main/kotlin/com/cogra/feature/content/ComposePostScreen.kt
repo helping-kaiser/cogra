@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.annotation.StringRes
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.CollapsingTopBand
 import com.cogra.core.designsystem.CollapsingTopBanner
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.ErrorLine
@@ -82,6 +83,8 @@ fun ComposePostRoute(
     onSaved: () -> Unit,
     onBack: () -> Unit,
     keyBanner: @Composable () -> Unit = {},
+    /** The deletion band, while the account's confirmed deletion is in its grace (`FeedDeleting.md:3`). */
+    deletionBand: @Composable () -> Unit = {},
     viewModel: ComposePostViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -125,6 +128,7 @@ fun ComposePostRoute(
         onDismissConfirm = viewModel::onDismissConfirm,
         onBack = onBack,
         keyBanner = keyBanner,
+        deletionBand = deletionBand,
     )
 }
 
@@ -162,6 +166,7 @@ fun ComposePostScreen(
     onDismissConfirm: () -> Unit,
     onBack: () -> Unit,
     keyBanner: @Composable () -> Unit = {},
+    deletionBand: @Composable () -> Unit = {},
 ) {
     val editing = state.editingId != null
     val collapsingTop = rememberCollapsingTop()
@@ -178,8 +183,11 @@ fun ComposePostScreen(
                     title = {
                         Text(
                             stringResource(
-                                if (editing) R.string.content_compose_edit_title
-                                else R.string.content_compose_title,
+                                if (editing) {
+                                    R.string.content_compose_edit_title
+                                } else {
+                                    R.string.content_compose_title
+                                },
                             ),
                         )
                     },
@@ -192,6 +200,8 @@ fun ComposePostScreen(
                         }
                     },
                 )
+                // Directly under the header, collapsing with it (FeedDeleting.md:5).
+                CollapsingTopBand(collapsingTop) { deletionBand() }
                 // The key banner rides the collapsing top here too — a
                 // keyless writer learns before drafting, not at submit
                 // (design.md §6).

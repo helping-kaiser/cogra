@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT a.handle,\n                  (c.account_state = 'member') AS \"landed!\",\n                  EXISTS (SELECT 1 FROM auth_applications ap\n                          WHERE ap.account_id = k.account_id\n                            AND ap.approver_id = $2\n                            AND ap.rejected_at IS NULL\n                            AND ap.landed_at IS NULL) AS \"open_with_viewer!\"\n           FROM auth_ask_links k\n           JOIN actors a ON a.id = k.account_id\n           JOIN user_credentials c ON c.actor_id = k.account_id\n           WHERE k.id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "handle",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "landed!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 2,
+        "name": "open_with_viewer!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "cb3f09f41a66baeed02e9d65cc75b84d3597eb5139baec3ae6eac73933dba74c"
+}

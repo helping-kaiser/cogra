@@ -18,9 +18,9 @@
    applicant can copy it at any time, so the canvas no longer keeps it for a
    rejection. It is `ApplicantRejected`'s block — the same copy control and
    mono line, `bare` inside the card that explains it — with a label and
-   caption true for a live application: while @mira's answer is open the link
-   stages nobody new (auth.md, one live application at a time), so the card
-   says so rather than inviting a second ask that cannot start.
+   caption true for a live application. Any member who holds the ask can
+   vouch, and the first vouch lands it (jakob 2026-10-07, item 58), so the
+   caption says only that the link does not expire.
 
    THE FEED FILTER RIDES THE BAND, as on every feed view, guests and
    applicants included (readme §13, the feed's filter on screen).
@@ -31,32 +31,44 @@
    whether or not this one was put away — `ApplicantLanding`,
    `ApplicantRejected` — because a reader who dismissed a wait has not
    dismissed what ended it. The wait itself has no clock: a verified
-   application waits on its vouch for as long as it takes. */
+   application waits on its vouch for as long as it takes.
+
+   REGISTERED under the feed's own prefix (round 7), named as
+   `ApplicantRejected` names the same shell: the card is `application`, its ask
+   link `link`, and `Got it` is `dismiss`, as on the vouch-back card. */
+export const NODE = "feed";
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />}>
-        <BorrowedViewBand handle="mira" displayName="Mira Voss" avatarSrc="inviter.jpg" line="Browsing from @mira's view while your application lands." />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band">
+        <BorrowedViewBand
+          handle="mira"
+          displayName="Mira Voss"
+          avatarSrc="inviter.jpg"
+          line="Browsing from @mira's view while your application lands."
+          node="borrowedViewBand"
+        />
       </CograBand>
       <FeedList>
-        <TaskCard title="All set — waiting on @mira" body="Their approval brings you in. Nothing else is needed from you.">
+        <TaskCard title="All set — waiting on @mira" body="Their approval brings you in. Nothing else is needed from you." node="application">
           <PayoutAddress
             bare
             label="Your ask link"
             address={ASK_LINK}
             onCopy={() => {}}
             copyLabel="Copy your ask link"
-            caption="It does not expire. While @mira's answer is open, it can't start a second application."
+            caption="It does not expire."
+            node="link"
           />
-          <Button variant="outline" selfStart>
+          <Button variant="outline" selfStart node="dismiss">
             Got it
           </Button>
         </TaskCard>
-        <PostCard {...ADA_POST} signedIn={false} />
-        <PostCard {...TOBIAS_POST} signedIn={false} />
+        <PostCard {...ADA_POST} signedIn={false} node="card" />
+        <PostCard {...TOBIAS_POST} signedIn={false} node="card" />
       </FeedList>
-      <Snackbar message="Your post waits with your application — it arrives with you." />
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <Snackbar message="Your post waits with your application — it arrives with you." node="snackbar" />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

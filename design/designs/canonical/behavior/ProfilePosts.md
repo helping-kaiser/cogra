@@ -32,6 +32,8 @@ WHEN a guest taps Message -> the guest gate opens
 
 WHEN a guest taps the profile's stance anchor -> the guest gate opens
 
+ALWAYS a card's Feed score in the posts view is the figure the latest fetch of its post found — the reader's own last feed fetch, or its trace's fetch since — a dash only where that fetch found none
+
 WHEN tap a card's Feed score GIVEN the profile is another's -> the score's trace opens AND its back arrow reads Back to the profile
 
 WHEN tap a card's Feed score GIVEN the profile is the reader's own -> the score's trace opens AND its back arrow reads Back to your profile
@@ -46,10 +48,10 @@ WHEN tap a card's media GIVEN it is not a portrait clip and the profile is the r
 
 WHEN tap the back arrow -> the reader returns to where they came from, in the state they left it AND the arrow's label names that origin
 
-ALWAYS the back arrow reads Back to feed from the feed in any of its states, Back to the post from a post's author chip, opinions or references, Back to the comments from the comments sheet, Back to the stream from the stream, Back to Notifications from Notifications, Back to Saved from Saved, Back to History from History, Back to the opinions from a profile's opinions list and Back to with the tag's name from a tag's page
+ALWAYS the back arrow reads Back to feed from the feed in any of its states, Back to the post from a post's author chip, opinions or references, Back to the comments from the comments sheet, Back to the stream from the stream, Back to Notifications from Notifications, Back to Saved from Saved, Back to History from History, Back to the opinions from a profile's opinions list, Back to the search from Explore mid-query and Back to with the tag's name from a tag's page
 
 ALWAYS the back arrow reads Back to feed and leads to the feed GIVEN the profile was entered with no history behind it
 
 WHEN pull down GIVEN the posts view stands all the way at its top -> the profile refreshes AND the platform's own refresh indicator shows
 
-ALWAYS the bottom bar rides with no slot lit
+ALWAYS the bottom bar keeps lit the slot of the root the profile was opened from, Feed from the feed

@@ -73,7 +73,7 @@ export function Screen() {
           onOpen={() => {}}
         />
       </ChronicleList>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active="profile" slots={ALL_SLOTS} inline />
     </>
   );
 }

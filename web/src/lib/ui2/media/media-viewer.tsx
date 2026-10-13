@@ -32,7 +32,7 @@
 // in the accessible name rather than on the frame.
 //
 // A VIDEO TAKES THE FULL TRANSPORT (`:39-41`) — the ladder's third rung, the
-// same component the detail's pinned clip wears, with the same stop-at-end
+// same component the detail clip wears, with the same stop-at-end
 // grammar. Rotating the device fills the screen with it, which is the device's
 // own gesture, so there is no rotate control to draw.
 //
@@ -46,10 +46,19 @@
 // it, and it returns to what opened it on close
 // (https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/). The X is what takes
 // focus first — the way out is the first thing a keyboard reader lands on.
+//
+// IT IS A COVERING LAYER (the stage-law packet §3.2 rule 13): a dialog over
+// the page, so a stage beneath it holds nobody while it is up (Feed.md:31/33,
+// PostDetailVideo.md:41), from the moment it mounts until it unmounts — the
+// viewer has no open flag, so mounted IS open, and its unmounting is the
+// cover's end. What it draws stands ON its layer (`CoveringLayerProvider`),
+// so the viewer's own clip is never suspended by the cover the viewer raises
+// and never joins a stage beneath it (`stage-host.tsx`).
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Icon } from "@/lib/ui/icons";
+import { CoveringLayerProvider, useCoversSurface } from "../covering-layer";
 import type { GalleryItem } from "./media-gallery";
 import { PagerDots } from "./pager-dots";
 import { isVideoAsset } from "./media-tile";
@@ -71,7 +80,10 @@ const AXIS_BIAS = 1.4;
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 4;
 
-export type ViewerItem = Pick<GalleryItem, "src" | "altText" | "poster" | "durationMs"> & {
+export type ViewerItem = Pick<
+  GalleryItem,
+  "src" | "altText" | "poster" | "durationMs" | "mediaId"
+> & {
   mimeType: string;
 };
 
@@ -87,6 +99,7 @@ export function MediaViewer({
   testId?: string;
 }) {
   const [current, setCurrent] = useState(index);
+  const layer = useCoversSurface(true, "suspend");
   const surfaceRef = useRef<HTMLDivElement | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
   // What had focus when the viewer opened. The dialog pattern returns focus
@@ -174,7 +187,12 @@ export function MediaViewer({
       ref={surfaceRef}
       role="dialog"
       aria-modal="true"
-      aria-label="Media"
+      // THE SPOKEN NAME SAYS WHAT IS SHOWN: "the viewer's spoken name reads
+      // Video" (ViewerVideo.md:37), and over pictures it "reads Picture N of
+      // M and follows the paging, and the dot row is not spoken"
+      // (ViewerPicture.md:11) — the dot row below is hidden from assistive
+      // technology for that reason.
+      aria-label={video ? "Video" : `Picture ${Math.min(current, count - 1) + 1} of ${count}`}
       data-testid={testId}
       // THE BACKDROP CLOSES IT (`MediaViewer.jsx:136`, graph.json ViewerPicture
       // via 3). The stage below stops the press, so only a tap on the ground
@@ -187,19 +205,22 @@ export function MediaViewer({
           drawn is bounded by the screen whatever shape the frame is. The
           click-stop keeps a tap ON the media from closing what was just
           opened. */}
-      <ViewerStage
-        key={current}
-        item={item}
-        video={video}
-        onClose={onClose}
-        onStep={move}
-        testId={testId}
-      />
+      <CoveringLayerProvider layer={layer}>
+        <ViewerStage
+          key={current}
+          item={item}
+          video={video}
+          onClose={onClose}
+          onStep={move}
+          testId={testId}
+        />
+      </CoveringLayerProvider>
 
       {/* THE DOT ROW, windowed at seven and in the viewer's tone (item 67),
           held clear of the gesture zone the transport's bar also respects. */}
       {count > 1 && (
         <div
+          aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 z-[3] flex justify-center"
           style={{ bottom: `calc(${GESTURE_ZONE}px + env(safe-area-inset-bottom))` }}
         >
@@ -364,19 +385,26 @@ function ViewerStage({
     >
       {video ? (
         <div className="absolute inset-0">
-          {/* THE LADDER'S THIRD RUNG. The same transport the detail's pinned
-              clip wears, over a clip that stops at its end rather than looping
+          {/* THE LADDER'S THIRD RUNG. The same transport the detail clip
+              wears, over a clip that stops at its end rather than looping
               — the reader opened this one on purpose, twice over.
 
-              IT CLAIMS THE STAGE, WHICH IS THE HANDOVER. One clip plays at a
-              time (FE-28), so the viewer arriving pauses the pinned clip it was
-              opened from rather than playing a second copy of it over the
-              first. Each `<video>` here owns its own decode — `video-stage.ts`
-              arbitrates playback ownership and deliberately does not pool
-              players the way Android's `VideoStage` does — so the clip starts
-              at the top rather than where the detail had it. */}
+              IT CARRIES THE CLIP ON, NEVER STARTS IT OVER. Opened on the
+              detail clip, it is one clip shown bigger: "the clip
+              stands at the position the detail's clip reached AND NEVER it
+              starts over" (ViewerVideo.md:5), in the detail clip's play state
+              (the ruled GAP-8 carry), while the detail clip stops and never
+              plays behind it (PostDetailVideo.md:57). The detail clip's live
+              element moves in here (`video-stage.ts`, the element pool) and
+              plays on, so nothing is left behind to play; the session's clip
+              memory carries the play state the detail clip remembered as it
+              opened the viewer (`video-player.tsx`'s `carry`). On close it
+              remembers on its way out, and the detail clip takes the element
+              back. */}
           <VideoPlayer
             src={item.src ?? ""}
+            mediaId={item.mediaId}
+            carry
             poster={item.poster}
             altText={item.altText}
             durationMs={item.durationMs}

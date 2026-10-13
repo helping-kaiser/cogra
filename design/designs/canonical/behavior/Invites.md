@@ -22,6 +22,8 @@ ALWAYS an application's second line reads Ready for your approval GIVEN the read
 
 ALWAYS every application's row carries its own close, the close glyph alone, spoken with the handle it closes, as Close @imke's application
 
+ALWAYS an application's row names the asker Deleted account, and its close's spoken name and every snackbar naming the asker say a deleted account in the handle's place, as Close a deleted account's application GIVEN the asker's account was deleted
+
 ALWAYS a live link's card holds the link whole, never truncated, labelled Single use · not used yet or Many uses, captioned with when it expires, with its copy control and Revoke
 
 ALWAYS a link that no longer works never stands under Live links

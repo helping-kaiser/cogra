@@ -15,9 +15,20 @@
 // spec (design/readme.md §13, the audit answers). `headline-small`'s home is a
 // dialog heading.
 
+//
+// THE DELETION BAND RIDES DIRECTLY UNDER IT (FeedDeleting.md:5,
+// DeletionBand.prompt.md): while the account's confirmed deletion runs its
+// grace, every inner surface carries the band in the header's own block, so
+// no surface can be without it. The one page that is the deletion's own
+// (DeleteAccountPending.md:9) passes `deletionBand={false}`. The header and
+// the band are one block, so a host's flex gap never opens between them, and
+// a host that pads by the screen gutter says so (`inGutter`): the band bleeds
+// through it, full-width under the header rather than inset like a card.
+
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { DeletionBandSlot } from "@/lib/deletion/deletion-status";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
 
@@ -29,7 +40,16 @@ export function PageHeader({
   backScroll,
   action,
   node,
+  deletionBand,
+  inGutter = false,
 }: {
+  /** The host pads this header by the 24px screen gutter (`px-6`); the band bleeds through it. */
+  inGutter?: boolean;
+  /**
+   * The deletion band under the header: its registered node on a registered
+   * screen (`settings.deletionBand`), `false` on the page that steps it aside.
+   */
+  deletionBand?: DataNode | false;
   /**
    * The registered header node on a registered screen (`postDetail.header`):
    * the band is the node, its arrow the `back` part and its title the `title`
@@ -55,28 +75,31 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <header className="flex min-h-12 items-center justify-between gap-3 px-3" {...testAttributes(node)}>
-      <div className="flex min-w-0 items-center gap-2">
-        {backHref !== undefined && (
-          <Link
-            href={backHref}
-            scroll={backScroll}
-            aria-label={backLabel}
-            {...testAttributes(part(node, "back"), backTestId)}
-            className="cg-state cg-focus grid size-12 flex-none place-items-center rounded-full text-on-surface-variant"
-          >
-            <Icon name="arrow_back" />
-          </Link>
-        )}
-        {title !== undefined && (
-          // A page title is a name and never wraps — a two-line header steals
-          // the content's first row.
-          <h1 className="truncate whitespace-nowrap text-title-large" {...testAttributes(part(node, "title"))}>
-            {title}
-          </h1>
-        )}
-      </div>
-      {action}
-    </header>
+    <div>
+      <header className="flex min-h-12 items-center justify-between gap-3 px-3" {...testAttributes(node)}>
+        <div className="flex min-w-0 items-center gap-2">
+          {backHref !== undefined && (
+            <Link
+              href={backHref}
+              scroll={backScroll}
+              aria-label={backLabel}
+              {...testAttributes(part(node, "back"), backTestId)}
+              className="cg-state cg-focus grid size-12 flex-none place-items-center rounded-full text-on-surface-variant"
+            >
+              <Icon name="arrow_back" />
+            </Link>
+          )}
+          {title !== undefined && (
+            // A page title is a name and never wraps — a two-line header steals
+            // the content's first row.
+            <h1 className="truncate whitespace-nowrap text-title-large" {...testAttributes(part(node, "title"))}>
+              {title}
+            </h1>
+          )}
+        </div>
+        {action}
+      </header>
+      {deletionBand !== false && <DeletionBandSlot node={deletionBand} bleed={inGutter} />}
+    </div>
   );
 }

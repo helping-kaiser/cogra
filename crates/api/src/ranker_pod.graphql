@@ -1,0 +1,22 @@
+# The ranking relay's one operation against the ranker pod
+# (ranker-schema.graphql; ranked-feed-api §4.2 step 4). It selects exactly
+# what the relay maps into the public answer: the pod's `tieBreakers` stay
+# in the pod's answer type for spot-checks and are never fetched here.
+query Rank($viewer: UUID!, $params: RankParams!, $asOfEpoch: Int) {
+  rank(viewer: $viewer, params: $params, asOfEpoch: $asOfEpoch) {
+    asOfEpoch
+    entries {
+      targetId
+      targetKind
+      score
+      mark
+      newestIndex
+    }
+    settling {
+      ref
+      mark
+      rankedPosition
+      newestPosition
+    }
+  }
+}

@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -36,7 +37,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -99,7 +99,9 @@ object VideoSound {
  *   wherever autoplay does not run.
  * @param autoplay whether this surface is allowed to start itself —
  *   the caller's own visibility answer, so a list can decide that only
- *   one card at a time plays.
+ *   one card at a time plays. Null asserts nothing: the caller drives the
+ *   player itself through [stageToken] — the detail clip, which is a stage
+ *   of its own kind ([DetailPlayback]).
  * @param durationMs the running time, drawn only where [controls] asks
  *   for it. Null hides it everywhere.
  * @param controls which controls this surface wears.
@@ -118,7 +120,7 @@ object VideoSound {
 fun VideoPlayer(
     url: String,
     posterUrl: Any?,
-    autoplay: Boolean,
+    autoplay: Boolean?,
     modifier: Modifier = Modifier,
     durationMs: Int? = null,
     controls: VideoControls = VideoControls.SoundOnly,
@@ -148,6 +150,12 @@ fun VideoPlayer(
      * screen (jakob 2026-09-15, hand test).
      */
     chromeInsets: PaddingValues = PaddingValues(0.dp),
+    /**
+     * The token this surface holds [VideoStage] by, where its caller has to
+     * claim the stage for it too — the detail clip taking its clip back after
+     * a sheet's own clip held the player ([DetailPlayback]). Null mints one.
+     */
+    stageToken: Any? = null,
     testTag: String? = null,
 ) {
     val muted by VideoSound.muted.collectAsState()
@@ -165,7 +173,7 @@ fun VideoPlayer(
     // feed card and on the post detail is the same instance, so opening
     // the detail continues from where the feed had it instead of
     // starting a second decoder at zero. See [VideoStage].
-    val token = remember(url) { Any() }
+    val token = rememberStageToken(url, stageToken)
     val traced = remember(url) { VideoTrace.clip(url) }
 
     // Read from the stage rather than held: a second clip taking the
@@ -234,7 +242,7 @@ fun VideoPlayer(
     // with what the reader last said, however it got here. Only the
     // surface actually showing the clip drives it — a screen on its way
     // out must not pause what its replacement just started.
-    LaunchedEffect(autoplay, player) { player?.playWhenReady = autoplay }
+    AssertsAutoplay(autoplay, player)
     LaunchedEffect(muted, player) { player?.volume = if (muted) 0f else 1f }
 
     // A FEED CLIP LOOPS AND A CLIP UNDER THE REAL TRANSPORT STOPS (jakob
@@ -242,7 +250,7 @@ fun VideoPlayer(
     // reel-vs-video split: a clip in a card or a stream is a MOMENT, read with
     // the scroller's grammar, and stopping it would leave a card gone still and
     // dead under a reader still looking at it. A clip the reader opened on
-    // purpose — the detail's pinned clip, the viewer — is a PROGRAMME, read
+    // purpose — the detail clip, the viewer — is a PROGRAMME, read
     // with a player's grammar, and a programme that silently restarted would be
     // a player that never admits it finished.
     //
@@ -391,7 +399,7 @@ fun VideoPlayer(
  * surface entering last is the one that ends up showing.
  *
  * **An unowned stage is a claim waiting to be made** (jakob 2026-09-15, hand
- * test: returning from the fullscreen viewer left the detail's pinned clip a
+ * test: returning from the fullscreen viewer left the detail clip a
  * black box with no transport at all). The viewer claims the stage on the way
  * in and SURRENDERS on the way out, which leaves the clip on stage with nobody
  * showing it. The surface underneath never stopped being composed, so nothing
@@ -429,6 +437,24 @@ private fun borrowFromStage(url: String, token: Any, traced: String): ExoPlayer?
     }
 
     return VideoStage.playerFor(token, url)
+}
+
+/** The token a surface holds the stage by: its caller's, where it hands one down, or its own. */
+@Composable
+private fun rememberStageToken(url: String, given: Any?): Any {
+    val own = remember(url) { Any() }
+    return given ?: own
+}
+
+/**
+ * Applies [autoplay] to the [player] this surface binds, whenever either
+ * changes — or nothing, where the caller drives the player itself (null).
+ */
+@Composable
+private fun AssertsAutoplay(autoplay: Boolean?, player: ExoPlayer?) {
+    LaunchedEffect(autoplay, player) {
+        if (autoplay != null) player?.playWhenReady = autoplay
+    }
 }
 
 /**

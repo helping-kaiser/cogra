@@ -20,6 +20,12 @@ export interface FeedFilterValue {
    * would widen the read rather than narrow it.
    */
   topic?: string | null;
+  /** Whose things reach the feed: "everyone" (default) or "yourPeople" — the
+   *  people the viewer holds an opinion of, a scope over the same rank. */
+  people?: string;
+  /** Which of the viewer's people, read only under "yourPeople": "for",
+   *  "against" or "either" (default) — the sign of the opinion held. */
+  peopleSign?: string;
 }
 
 /**
@@ -52,6 +58,8 @@ export interface FeedFilterProps {
   topics?: readonly string[];
   /** Opens the full "Your topics" list — everything held, including against. */
   onOpenTopics?: () => void;
+  /** Passed through to the sheet — see `FeedFilterSheetProps.peopleRows`. */
+  peopleRows?: JSX.Element;
   /** The data-node name its placer gives the filter's trigger (design ⇄ impl seam 002; renders as attributes only). */
   node?: string;
 }
@@ -80,11 +88,31 @@ export interface FeedFilterSheetProps {
   topics?: readonly string[];
   /** Opens the full "Your topics" list. */
   onOpenTopics?: () => void;
-  /** The data-node name its placer gives this sheet (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: the corner `help` (when no `lead` is given), the sections `kinds`, `forms`, `order` and `also`, and each chip `<value>Chip` (`postsChip`, `textChip`, `settlingChip`). A `lead` and a `foot` are the placer's and named by it. The feed's own `FeedFilter` passes none. */
+  /** What the People section holds, for a static board that draws it once
+   *  per state under its own chip (`FeedPeopleRows` per copy). Omitted, the
+   *  section draws the staged value. */
+  peopleRows?: JSX.Element;
+  /** The data-node name its placer gives this sheet (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: the corner `help` (when no `lead` is given), the sections `kinds`, `forms`, `order`, `also` and `people`, each chip `<value>Chip` (`postsChip`, `textChip`, `settlingChip`), the people rows `everyone` and `yourPeople`, and the sign row `sign` with its words `for`, `against`, `either`. A `lead` and a `foot` are the placer's and named by it. The feed's own `FeedFilter` passes none. */
   node?: string;
 }
 
 export declare function FeedFilterSheet(props: FeedFilterSheetProps): JSX.Element;
+
+/** The People section's body: the `Everyone` / `Your people` rows, and —
+ *  only while `Your people` is chosen — the one-line sign row `For · Against
+ *  · Either` under it, the chosen word in primary ink. Never a pill. */
+export interface FeedPeopleRowsProps {
+  /** "everyone" (default) or "yourPeople". */
+  people?: string;
+  /** "for", "against" or "either" (default). Kept while hidden. */
+  sign?: string;
+  onPeople?: (people: string) => void;
+  onSign?: (sign: string) => void;
+  /** The sheet's data-node name; given one, the rows and the sign row are named (see `FeedFilterSheetProps.node`). */
+  node?: string;
+}
+
+export declare function FeedPeopleRows(props: FeedPeopleRowsProps): JSX.Element;
 
 /** The trigger's words, within a pill's budget: one kind by name or a count of
  *  them, then either the exceptions spelled out ("newest", "showing seen") or a
@@ -137,4 +165,6 @@ export declare const FEED_KINDS: readonly { value: string; label: string }[];
 export declare const FEED_FORMS: readonly { value: string; label: string }[];
 export declare const FEED_ORDER: readonly { value: string; label: string }[];
 export declare const FEED_ALSO: readonly { value: string; label: string }[];
+export declare const FEED_PEOPLE: readonly { value: string; label: string }[];
+export declare const FEED_PEOPLE_SIGN: readonly { value: string; label: string }[];
 export declare const FEED_FILTER_DEFAULT: FeedFilterValue;

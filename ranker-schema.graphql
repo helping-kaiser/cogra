@@ -1,0 +1,181 @@
+# ranker-schema.graphql — PROVISIONAL
+#
+# The server ranker pod's own GraphQL schema (ranker-core.md §4-§5;
+# miner-api.md "Wire form"), as the api's ranking relay calls it. The api
+# never links the ranker: it calls this schema over HTTP at RANKER_URL, with
+# a client generated from this file (crates/api/src/ranker_pod.rs).
+#
+# PROVISIONAL, by ruling OS-20 (i): written by ranked-feed-api's RF-2 so the
+# relay can be built and tested against a stub pod before the pod exists.
+# ranker-core's RK-2 INHERITS this file: the pod's exported schema replaces
+# it, and RK-2 fixes the names. Until then every name here is the
+# ranked-feed-api packet's recommendation (§4.10, M4, M8', M9, OC-1, OC-8;
+# RC-G1 ruled (c), the id-level wire).
+#
+# It carries only what the relay sends and reads today:
+# - `rank` alone. `rankSearch` arrives with the trace read (RF-7) and
+#   ranked search (RF-4).
+# - no `paths` drill-down on FeedEntry (the trace read's, RF-7).
+# - no `RankParams.seenList` (OC-8): the in-house relay never sends one;
+#   the reader's device cuts what it has seen.
+
+schema {
+  query: Query
+}
+
+type Query {
+  """
+  Rank `viewer`'s feed over their slice, which the pod fetches itself
+  from the api (`feedSlice(viewer, dustFloor, gamma, asOfEpoch)`).
+  `asOfEpoch` pins the slice (null: the newest ingested epoch); a ranking
+  re-run at the same epoch over the same candidates is identical. Faults
+  are transport errors with `extensions.code`: NOT_FOUND when the slice is
+  null (no rankable actor), BAD_INPUT for an out-of-range parameter or an
+  unknown family, INTERNAL otherwise.
+  """
+  rank(viewer: UUID!, params: RankParams!, asOfEpoch: Int): FeedRanking!
+}
+
+"""
+The viewer's ranking parameters. Only arguments that change what the
+ranker computes ride here; the reader's own cuts (seen, people, order,
+Still settling) are applied on the reader's device.
+"""
+input RankParams {
+  "Rankable kinds in scope. Null means Posts only."
+  kinds: [NodeKind!]
+  """
+  A topic (Hashtag id): only content reaching the viewer over Tag
+  records toward it is a candidate (hashtag.md §5). Null: no narrowing.
+  """
+  topic: UUID
+  "γ per-hop attenuation in (0, 1]; null: the network default."
+  gamma: Float
+  "χ dust floor; null: the network default."
+  dustFloor: Float
+  "f(Δt) half-life in epochs; null: the network default."
+  recencyHalfLifeEpochs: Int
+  "Friend-fresh reorder config (feed-ranking.md §9.2)."
+  friendAuthorReorder: FriendAuthorReorder
+  """
+  Content still settling, each with its own authorship edge. The pod weaves
+  each candidate whose author a live path reaches at its key's place, and
+  leaves the rest unplaced.
+  """
+  settling: [SettlingCandidate!]
+}
+
+input FriendAuthorReorder {
+  enabled: Boolean!
+  "Epoch-age threshold on the author's Publish record."
+  freshnessThresholdEpochs: Int
+  placement: FriendAuthorPlacement
+}
+
+enum FriendAuthorPlacement {
+  INTERLEAVED
+  ABOVE
+}
+
+"A settling node's authorship edge, as staged (PR-36)."
+input SettlingCandidate {
+  """
+  Opaque correlation: CoGra's id for the node. The pod echoes it and reads
+  nothing else from it.
+  """
+  ref: UUID!
+  """
+  The author's person node, in the slice's own key form
+  (`SliceNode.graphId`): `prof:<atom>`. The pod joins it against the
+  slice's nodes without translation.
+  """
+  author: String!
+  "The authorship record's census family; it fixes domain, mask and tier."
+  family: String!
+  "The staged record's own authored parameters."
+  pDirected: Float!
+  pInterest: Float!
+  """
+  The authoring instant: the in-gap tie-break under Ranked and the order
+  under Newest. Never compared with a causal key.
+  """
+  authoredAt: DateTime!
+}
+
+"One ranking."
+type FeedRanking {
+  "The epoch the ranked slice reads as of."
+  asOfEpoch: Int!
+  """
+  The landed targets, scored, in RANKED order, best first. A target no
+  live path reaches is absent, not zero-scored.
+  """
+  entries: [FeedEntry!]!
+  "The placed settling candidates; an unplaced candidate is absent."
+  settling: [SettlingPlace!]!
+}
+
+"One ranked target, at the id level (RC-G1 (c)); the relay hydrates."
+type FeedEntry {
+  targetId: UUID!
+  targetKind: NodeKind!
+  "S(u, target) — the signed greedy disjoint-sum (feed-ranking.md §6.1)."
+  score: Float!
+  "The tie-breaker cascade's inputs (feed-ranking.md §7)."
+  tieBreakers: TieBreakers!
+  """
+  The viewer's held opinion of the person behind the row, at the pin
+  (OS-18 S1). Null when none is held, and for a Tags row.
+  """
+  mark: PeopleMark
+  """
+  This entry's 0-based index among `entries` in NEWEST order (genesis
+  causal key, newest first). A permutation of 0..|entries|-1.
+  """
+  newestIndex: Int!
+}
+
+"The tie-breaker cascade's inputs (feed-ranking.md §7)."
+type TieBreakers {
+  netStance: Float!
+  grossVolume: Float!
+  "Epoch age of the target's genesis record; null for an authorless Type."
+  genesisEpochAge: Int
+}
+
+"One woven settling candidate."
+type SettlingPlace {
+  ref: UUID!
+  "As FeedEntry.mark, by the candidate's author."
+  mark: PeopleMark
+  "0-based index in the woven RANKED list (entries and places together)."
+  rankedPosition: Int!
+  "0-based index in the woven NEWEST list."
+  newestPosition: Int!
+}
+
+"How the viewer holds the person behind a row (OS-18 S1)."
+enum PeopleMark {
+  FOR
+  AGAINST
+  SIGNLESS
+}
+
+"The api's node kinds (schema.graphql NodeKind), verbatim."
+enum NodeKind {
+  USER
+  COLLECTIVE
+  POST
+  COMMENT
+  CHAT
+  CHAT_MESSAGE
+  ITEM
+  HASHTAG
+  PROPOSAL
+  CAMPAIGN
+  OFFER
+}
+
+scalar UUID
+
+scalar DateTime

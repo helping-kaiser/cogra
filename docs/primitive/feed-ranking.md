@@ -498,13 +498,19 @@ Sort by `S(u,c)` descending.
   means no score and no row — absence, not a bucket.
 
 **Tie-breakers.** On strict `S` equality (common only in sparse
-graphs and integer-stance habits), global statistics over the
-folded bundles toward `t` break the tie, in governed composition
-(§12): net stance `Σ_a f(Δt_a) · (p̄_d + p̄_i)`, then gross volume
-`Σ_a f(Δt_a) · (|p̄_d| + |p̄_i|)`, summed per stance-author `a`;
-the final fallback is recency — newest content first, by the
-target's **genesis** authorship record's age. An update record
-never refreshes it: "newest" means newest content, not
+graphs and integer-stance habits), the governed composition (§12)
+breaks the tie: an ordered list of named keys, never weights. The
+keys are net stance `Σ_a f(Δt_a) · (p̄_d + p̄_i)` and gross volume
+`Σ_a f(Δt_a) · (|p̄_d| + |p̄_i|)` — global statistics over the
+folded bundles toward `t`, summed per stance-author `a` — and
+genesis recency. The genesis seed names recency only; the
+statistics keys stay defined and governable but unseeded. Genesis
+recency is newest content first: the target's **genesis**
+authorship record read by its authoritative causal key (Lamport
+time, then host position;
+``def:graph:authoritative-act-order``), which is total over
+accepted acts, so no tie outlasts it. An update record never
+refreshes it: "newest" means newest content, not
 most-recently-edited.
 Global statistics enter here and only here, never the primary
 rank.
@@ -720,11 +726,14 @@ path can carry a score. Scope is a read-side filter:
 
 ### 9.4 The already-seen filter
 
-Per-viewer set of seen node keys, excluded from the candidate set
-**before** ranking (most candidates of an active user are already
-seen; excluding first avoids wasted extraction). New stance
-activity on a seen node does not resurface it — a new comment is
-its own node, ranked on its own merits.
+Per-viewer set of seen node keys that the reader's view excludes.
+The reference frontend ranks seen and unseen content alike and cuts
+seen content on the device: a reader's seen fraction of reachable
+content is small, so excluding first saves little. A calculator
+that is handed the list may still exclude it before ranking, with
+identical results. New stance activity on a seen node does not
+resurface it — a new comment is its own node, ranked on its own
+merits.
 
 The list belongs to the viewer, not the backend: backend storage
 (the central frontend's default,
@@ -826,4 +835,4 @@ change one viewer's sort, never the published computation.
 | `χ` | Dust floor — compute cutoff on path product (§6.3) | yes (finer only) |
 | half-life | `f(Δt)` decay, in epochs (§5.3) | yes (incl. off) |
 | `f(Δt)` shape | Functional form of the recency factor; the exponential is the genesis default (§5.3) | no |
-| tie-breaker composition | Order and weights of §7's cascade | no |
+| tie-breaker composition | Order of §7's named keys | no |

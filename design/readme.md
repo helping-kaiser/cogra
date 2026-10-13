@@ -465,8 +465,8 @@ inventing one:
 | The pad's bloom | the dialog's entrance at the pad's parked spot — 200ms fade and 8px rise — with the wash at the scrim's 200ms; closing is the reverse |
 | The scrim | 200ms linear, with the surface it belongs to |
 | The media handover, feed to detail and back | a shared element: the media frame persists in place while the chrome fades around it (M3's container transform), 300ms. A post with no media takes the forward motion |
-| The reel's squish, through the score's door | the clip, still playing, moves to the top of the screen and the post rises beneath it — a shared element, 300ms, never a new page |
-| The collapsing top | a 200ms `translateY(-110%)` exit — it hides only once half its own slot has scrolled past, and returns only after about a third of a screen of accumulated upward scroll |
+| The reel's squish, through the score's door | the clip, still playing, moves to the head of the post's detail and the post rises beneath it — a shared element, 300ms, never a page sliding in |
+| The collapsing top | a 200ms `translateY(-110%)` exit — it hides only once half its own slot has scrolled past, and returns after about a third of a screen of accumulated upward scroll, or at once when the surface reaches its hard top |
 | In place — `More`, `View n replies`, a row leaving and the rows closing up, the veil's reveal, the face after `Set`, the snackbar coming and going | height and opacity at `--duration-short-4`, `--ease-standard`; nothing travels in from elsewhere |
 | `Back to top` | the platform's smooth scroll to the top |
 | The hold's ring | fills over the 500ms hold, linear — a reading of the time left, not a flourish |
@@ -657,7 +657,10 @@ every refetch runs the whole personalized ranking with the current
 arguments and hands back the reordered list of ids — potentially
 thousands or millions, not twenty. Five taps must never mean five
 rankings, so the filter's chips stage, `Done` commits, and the feed
-re-queries once per visit. It stands until readers show otherwise: if
+re-queries at most once per visit — only when Kinds or the topic
+changed, the ranker's two arguments; every other axis is the device's
+own, re-derived from what the feed already holds (jakob 2026-10-13).
+It stands until readers show otherwise: if
 feedback says people expect collapsing the sheet to submit, the law is
 revisited (jakob 2026-10-01).
 
@@ -691,9 +694,17 @@ never a body, a description or a bio. Matching is titles only (jakob
 2026-10-06): an untitled post's stand-in (copy-voice, *The feed
 cards*) is never matched. `@handle <text>`
 scopes the query to one person's work, their comments found through the
-titles of what they answer; `#tag <text>` scopes it inside a tag.
+titles of what they answer, a reply through its thread's root post, and
+the tags they tagged with; `#tag <text>` scopes it to the things that
+carry the tag. A bare `@x` or `#x` is a lookup in progress: it proposes
+people or tags by prefix and never lists anyone's contents — the text
+after it is what makes it a content search (jakob 2026-10-07). A result
+becomes seen only by being opened, never by standing in the viewport.
 Explore searches the graph, in its ranked tiers (§13, *The search
-rulings*); History searches the reader's seen-list, newest first by
+rulings*) — under Newest, the reader's choice or what the search serves
+before the ranker exists, the tiers stay and each runs newest first, with
+no seam, every row's age on its edge and a tag row bare (§13, *The five
+ordered draws*); History searches the reader's seen-list, newest first by
 first seeing. A query that finds nothing says so in the list's place and
 offers the way back (`ExploreNone`, `HistoryNone`).
 
@@ -811,7 +822,7 @@ is a different thing from a piece the apps have not reached yet.
 | `components/states/` | `EmptyState`, `LoadingState`, `ComingSoonCard` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending`, `NoticePanel`, `NoticeLine`, `RedactedContent`, `SensitiveVeil`, `SensitiveScope` |
 | `components/stance/` | `StanceControl`, `StancePad`, `StanceReadout`, `OwnStanceReadout`, `StanceValue`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `HelpLine`, `SeveranceConfirm` |
-| `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `PagerDots`, `MediaViewer`, `VideoTransport`, `Timeline`, `SeekLine`, `PinnedClip`, `ReelRail`, `ReelRailItem`, `ReelCaption` |
+| `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `PagerDots`, `MediaViewer`, `VideoTransport`, `Timeline`, `SeekLine`, `DetailClip`, `ReelRail`, `ReelRailItem`, `ReelRailScore`, `ReelPlate`, `ReelCaption` |
 | `components/proposed/` | `ExplainableNumber` — **not shipped**, see §7.1 |
 
 The pair a component is documented by is its **module file's**: every
@@ -915,7 +926,7 @@ paper over:
   kind or counts them, and once the exceptions stop fitting the band's
   154px they collapse to a count ("3 kinds · 4 changes"), because a pill
   that overflows has told the reader nothing
-  and "far from the default" is the fact that matters there. It stages, and `Done` commits — one re-query per visit (§4, *Sheets*) — and
+  and "far from the default" is the fact that matters there. It stages, and `Done` commits — at most one re-query per visit, and only for Kinds or the topic (§4, *Sheets*) — and
   switching every kind off is allowed: the feed says what is off rather
   than the chip refusing the tap. No glyph on the trigger: there is no
   filter icon in the inlined set, and an icon could not say "newest".
@@ -1098,7 +1109,9 @@ header — `ActorChip`, the age and the ⋮ — keeps its geometry; platforms
 mount an invisible 48dp touch target centered on it, the back target's
 precedent. Where that target overlaps the card's one open-the-post
 surface, and the dead padding above the header, the header target wins
-inside its strip.
+inside its strip. The detail's tags line follows the same precedent
+(jakob 2026-10-07): drawn at 34dp across the card's content width, it
+answers through an invisible 48dp target centered on it.
 
 **Focus has four rules** (WCAG 2.4.3; the WAI-ARIA dialog pattern), for
 every sheet, pad and dialog — each modal (§4, *Sheets*):
@@ -1497,6 +1510,22 @@ may serve any actor's view of the shared record to any reader. So:
   than any single rung: a reader should be shown the nearest real
   perspective the arrival carries, and genesis is what is left when the
   arrival carries none.
+- **The reader looks through the vantage's eyes** (jakob 2026-10-13,
+  the vantage law). Under a borrowed view the reader gets the vantage
+  account's whole read: its rank, the people it holds an opinion of —
+  the people narrowing and every row's mark — and the topics it holds.
+  What stays the reader's is theirs alone: the seen list, the hidden
+  accounts, the kept picks and the choices kept on the device, the
+  feed's filter and the Settings default among them; and, by *Only a
+  nobody borrows stances* (stance-control), every face a signed-in
+  reader can act on. Every first-person readout of the vantage's read
+  speaks its name, the band's way — `@mira's people`, `as far as
+  @mira's eyes reach` — and a control whose words outgrow it falls back
+  on its own overflow law, the trigger's collapse to a count among
+  them. A control with no overflow law that a long handle breaks falls
+  back to *their*, as a flagged exception for jakob. The law holds for
+  any vantage: the guest's and the applicant's today, a vantage the
+  reader chooses later.
 
 To port to the product docs as an open-questions resolution.
 
@@ -1719,8 +1748,8 @@ as Q46 in docs/open-questions.md):
 - **Order**: full match, then partial match, each tier ordered by
   the viewer's ranker — never newest by default. What the ranker
   cannot score falls to newest behind a **visible seam**; past the
-  seam a row's rank gives way to its age (relative to one year, an
-  absolute date after).
+  seam a row's rank gives way to its age, in copy-voice's one ladder
+  (*Ages*).
 - **Controls**: an order swap (Ranked / Newest) and a "show already
   seen" toggle — default off since the feed-filter session
   (2026-08-28, flipping this session's first call): what you've
@@ -2651,20 +2680,22 @@ item 33, jakob's rulings the same day).
   rides above the bottom bar rather than under it.
 - **The stream carries portrait clips only** — clips taller than they
   are wide. Square and landscape clips keep the ordinary grammar, a
-  tap to their post. **It is the default feed narrowed to them**: the
-  same graph, the same ranking, a mechanical filter, and **no second
-  algorithm**. Nothing labels it, because a header saying "your feed"
+  tap to their post. **It is the list it was opened from narrowed to
+  them**, in that list's order — the feed, History's rows, a profile's
+  posts (jakob 2026-10-12): the same graph, the same order, a mechanical
+  filter, and **no second algorithm**. Nothing labels it, because a header saying "your feed"
   is the reassurance only a product that ranks two ways needs. What
   says it instead is the **score on the rail** — the reader's own
   reach into this post, the same number the card wore.
 - **A portrait clip's tap opens the stream; any other media's tap
-  opens the post.** From the pinned-clip detail, tapping the clip
+  opens the post.** From the clip detail, tapping the clip
   expands back into the stream with the reader's place held.
 - **The detail door on a reel is the score element** — the exact
   element a feed card wears, so the way in is a thing the reader has
-  already met. Tapping it **squishes the clip to the top of the
-  screen**, still playing, and the post rises beneath it: a state
-  change, never a page portal. On a card the same element opens the
+  already met. Tapping it **squishes the clip to the head of the post's
+  detail**, still playing, and the post rises beneath it: a shared-element
+  morph, never a page sliding in. The detail it lands on is the ordinary
+  one, its clip scrolling with the page (*The clip detail rulings*). On a card the same element opens the
   score drill-down (item 13) — one element, two surfaces, two
   destinations.
 - **The rail, top to bottom: author · stance · comments · share ·
@@ -2723,7 +2754,9 @@ item 33, jakob's rulings the same day).
   the post, media in the post opens the frame — or the transport's own
   fullscreen toggle, which is the same door. It is **the whole surface
   on black with nothing behind it**: a viewer you can still read a card
-  through is not full screen. Nothing is cut there —
+  through is not full screen. The black ends below the system status bar,
+  which is never the app's to paint — the stream's black and washes stop
+  there too. Nothing is cut there —
   it is the surface every crop in the product is measured against — a
   picture pinch-zooms and **the gallery's swipe and its dots** carry
   over, dots only, no arrows (the pager ruling holds here too: arrows
@@ -2742,7 +2775,7 @@ item 33, jakob's rulings the same day).
   wide screen — a tap on it closes the viewer too (jakob 2026-10-02).
 - **The round is masters, not markup.** Everything it drew that a second
   surface could want is in the system: the media family moved into
-  **`components/media/`** and gained `PinnedClip` (the clip above the
+  **`components/media/`** and gained `DetailClip` (the clip above the
   card, and what the squish morph leaves behind), `ReelRail` /
   `ReelRailItem` and `ReelCaption` (the stream's chrome), beside
   `MediaViewer`, `VideoTransport` / `SeekLine`, `MediaDisc` and the
@@ -2753,7 +2786,7 @@ item 33, jakob's rulings the same day).
   are props on the real controls, so the stream acts through the same
   pad and the same score element the feed does.
 - **The post detail exists at last, both bodies** — the gallery post's,
-  and the video post's with the clip pinned above the card, which is
+  and the video post's with the clip above the card, which is
   why the author chip leads the card there rather than the screen. The
   comments sheet's board is the first of these with the sheet raised:
   one anatomy, drawn once. The standalone detail the search results,
@@ -3520,8 +3553,7 @@ it a home. Ruled by jakob the same day (backlog item 20).
   bottom bar and the back arrow goes where the gear was. The board draws
   the whole scroll: the ruling this round records is an order, and an
   order cut off at 844px is an order nobody can review. (Later rounds
-  add People, About and Delete account — eleven groups; `SettingsBody`
-  draws the current order.)
+  add groups; `SettingsBody` draws the current order.)
 - **`SettingsGroup` and `SettingsRow` are the anatomy**, minted here
   because eight groups improvising eight layouts is the page the ruling
   asked us to leave behind. A quiet heading above, a filled card of
@@ -3942,8 +3974,8 @@ four-rung ladder.
 - **The pull-down lives on every full-screen scrolling root** (ruled
   2026-09-10): the feed in all its views, the profile pages and the
   chronicle, the opinions page, Invites (jakob 2026-10-05), History
-  (jakob 2026-10-05), search results, the wallet's history, the tag
-  page — and
+  (jakob 2026-10-05), Saved (jakob 2026-10-07), search results, the
+  wallet's history, the tag page — and
   **never inside a bottom sheet**, where pulling down already means
   dismiss and one gesture may not mean two things. The re-tap refresh
   stays the feed's alone; the pull-down is the gesture every root
@@ -4902,7 +4934,7 @@ are reading about.
   growth-dashboard framing `ExplainableNumber` already refuses.
 - **The arithmetic closes on the drawn surface.** Four paths at 6.80,
   4.20, 2.60 and 1.10, and the more-paths row carrying the remaining
-  0.50: 15.20, the score the reader tapped. That is why the quiet row
+  0.50: 15.20, the trace's score. That is why the quiet row
   states what the folded paths add rather than only how many there are —
   a row saying "2 more paths" alone would leave a hole in the one place
   the product promises there is none. At the floor the same discipline
@@ -4947,12 +4979,13 @@ are reading about.
   and the way down is `FactRow`'s own action slot. `PathTrace` is the one
   genuinely new drawing, and it exists because no master's leading slot
   holds a chain.
-- **The aged-out state is content, not a tap.** The score opens the same
-  board in the state the dust floor leaves a post whose every path's last
-  opinion has decayed past it — `TagPageEmpty`'s arrangement exactly. It
-  is not `EmptyState`: that master says "nothing here yet" and offers the
-  action that fills it, and here something *was* here and nothing is
-  owed.
+- **The moved-on state is content, not a tap.** The score opens the same
+  board in the state its fetch leaves it when that fetch finds no paths —
+  the cover, the dash, the quiet line — `TagPageEmpty`'s arrangement
+  exactly (the trigger and the dash ruled 2026-10-12, *The slice-3
+  round*). It is not `EmptyState`: that master says "nothing here yet"
+  and offers the action that fills it, and here something *was* here and
+  nothing is owed.
 
 **The opinions list is the profile's own page, mirrored onto content**
 and ungated — everyone can check every post and comment, the way
@@ -5114,8 +5147,8 @@ pass: one board, one law, and two sweeps.
   `Unsave` control moved into the shared screen helpers on the way —
   it is drawn on two boards now, and a control spelled twice drifts.
 - **A hide row cannot say a name that is gone.** On a deleted author's
-  post or comment the reader's menu reads `Hide this account`;
-  everywhere else it spells the handle. The ROW stays either way —
+  post the reader's menu reads `Hide this account`; everywhere else it
+  spells the handle. The ROW stays either way —
   hiding is a read-side comfort about an ACTOR, and a redacted actor
   still ranks into the reader's feed — so only the wording gives way.
   `ActorChip` composes it (`HIDE_ACTOR_LABEL`, beside
@@ -5599,7 +5632,7 @@ viewer lane).
   stop belongs to the reel-vs-video split, not to playback plumbing: a
   looping detail clip would blur the one line the two medias keep
   sharp.
-- **The pinned clip's chrome tap stays platform-native.** Web opens the
+- **The detail clip's chrome tap stays platform-native.** Web opens the
   viewer only while the transport chrome is up — a tap with the chrome
   hidden reveals it first, else the transport would be unreachable
   under auto-hide; Android, which never hides the transport there,
@@ -7189,20 +7222,20 @@ search:
   @-scoped query's indirect hits — so no board moves; api-spec gains
   the scoped-join paragraph.
 
-### The pinned clip's veil face — 2026-09-24
+### The detail clip's veil face — 2026-09-24
 
 The implementation session's veil build found the gap: the video
-detail pins its clip *above* the card, outside the card's veil, so
+detail sets its clip *above* the card, outside the card's veil, so
 a sensitive video post's detail autoplayed unblurred with full
 transport. jakob's ruling, drawn as `PostDetailVideoSensitive`:
 
-- **The pinned clip veils in place.** The body veils as one and
+- **The detail clip veils in place.** The body veils as one and
   revealing moves nothing, so the veil sits where the clip always
   sits — the veil state never demotes the clip back into the card.
 - **The transport goes with it.** Nothing plays beneath a veil
   (backlog item 103), so the face is the whole surface and its only
   affordance is the reveal.
-- **One scope, one tap.** The pinned clip and the card share one
+- **One scope, one tap.** The detail clip and the card share one
   `SensitiveScope`; the reveal is per post, so either veil face
   reveals both and the screen becomes `PostDetailVideo`. A nested
   `SensitiveScope` now defers to the ambient one — the fix that
@@ -8291,6 +8324,7 @@ the rest as recommended. Both laws stand in §4.
   | Saved | `Back to Saved` |
   | History (jakob 2026-10-05) | `Back to History` |
   | a profile's opinions list | `Back to the opinions` |
+  | Explore, mid-query (jakob 2026-10-07) | `Back to the search` |
   | a tag's page | `Back to #<thattag>` |
   | nowhere — a link | `Back to feed` |
 
@@ -8438,7 +8472,7 @@ as the board's own; the back edge in `graph.json` carries the table.
   profile` from another's posts, `Back to your profile` from the
   reader's own, `Back to History` from History (jakob 2026-10-05).
 - **The stream** (`Reel`, `ReelSensitive`): `Back to feed` from the feed
-  it narrowed (drawn), `Back to the post` from a post's pinned clip,
+  it narrowed (drawn), `Back to the post` from a post's clip detail,
   `Back to the profile` from another's posts, `Back to your profile`
   from the reader's own, `Back to History` from History (jakob
   2026-10-05).
@@ -9345,7 +9379,7 @@ jakob's rulings on the implementation side's contract-recon gaps (seam
   with the registration, so the band never stands.
 - **An approved applicant cannot delete during the landing**: the row
   wears the locked look and answers `You can delete your account once
-  you're in.`
+  your registration lands.`
 - **The release is named CoGra v1.0.0** across the design prose.
 
 ### The night rulings executed — 2026-10-06
@@ -9399,6 +9433,515 @@ either comes into this readme or dies from the pointer.
 - **Tracking is one value** (§4, *Type*): each platform expresses it
   in its native unit and rounds on its own grid — a capability
   expression, never a per-client choice.
+
+### The packet-wave rulings executed — 2026-10-07
+
+jakob's rulings on the packet wave's gaps (seams 077–095), written as
+lines; quoted wordings are his.
+
+- **The custom mute action is android's** (`FeedCover`); on the web the
+  sound disc is a native focusable button whose label names the sound's
+  state, nothing on the frame hidden from assistive technology.
+- **The detail's tags line answers at 48dp** through an invisible target
+  over its drawn 34dp (§10).
+- **Reaching the hard top always reveals the collapsing band**
+  (`FeedScrolled`; §4, *Motion*).
+- **History is everything seen, never only what was opened.** Seen is
+  the top-layer content in full viewport: the post itself, never its
+  author's avatar or handle, its citations or its tags; reading comments
+  adds no commenter's profile; opening a profile adds the profile, its
+  posts only once scrolled into. A card taller than the viewport is seen
+  once both its edges have been on screen, not necessarily at once. The
+  empty state and the menu's door say seen; the originless tag card
+  shows no why-line; a hidden account's own profile card stays.
+- **The deletion's loose ends.** A spent deletion-mail budget says B7's
+  line above the commitment and sends nothing; content swept with the
+  account wears `Removed by its author`; while a confirmed deletion's
+  grace runs, the deletion band wins over the borrowed band; the count
+  rounds to the nearest whole day while 24 hours or more remain, then
+  counts hours; the member's device at the deadline lands signed out on
+  the bare view with `Your account is deleted.`, never on
+  `SignInExpired`; a sentence naming a deleted actor says `a deleted
+  account`; the applicant's commit reads `Deleting my account…` in
+  flight; and the deleted account reaches the wire as nulls with
+  REDACTED status beside `User.removal`.
+- **Search, settled** (§4, *Search*). The scope operators reach what
+  carries the tag and what the person made or tagged with; a bare scope
+  only proposes; results are seen only when opened. Searching is a state
+  of Explore's root — a trailing ×, Back to rest first, the query and
+  scroll kept on return. Recents keep ten, newest first, deduplicated
+  case-insensitively, per account and cleared at sign-out, with no
+  per-row ×; the action key only dismisses the keyboard. Stale rows stay
+  readable until the 200ms ladder; a failed refine keeps them under
+  `Couldn't load more`. A guest searches with the bare band, no Your
+  topics, Newest with ages and no seen toggle; an applicant as a member.
+  A sensitive result wears the text tile; a full match is equality; a
+  still-settling result shows nothing extra; the mixed unscoped state
+  says the search-scope line after the last row.
+- **Settings' loose ends.** `ApplicantEmail` opened from Settings returns
+  there, on back and on success with the same snackbar; an unverified
+  applicant's pending change keeps the row's `Change pending` and the
+  tap opens their own address change. Once the code's side is
+  confirmed, `ChangeEmailConfirm` drops its field and commitment. The
+  address-taken landing goes `Back to settings` for a member and takes
+  `VerifyExpired`'s way on for an applicant, whose body never promises
+  that confirming again applies it. `ChangePassword`'s re-auth budget
+  says B7's line above its commitment. The app's three settings lines
+  say `this app`.
+- **The vouch-back's edges.** The pad's Cancel closes back where it
+  bloomed, the profile included. A kept vouch-back leaves the card as it
+  is and `Vouch back` reopens the pad holding the pick; one kept from the
+  profile brings a put-away card back on the keeping device only, and
+  `Got it` drops a kept pick as Cancel does. A failed `Got it` brings the
+  card back with `That didn't go through.` and `Retry`. The feed's head
+  reads the security notice, the key card, then the vouch card.
+- **Saved's edges.** A failed unsave or Undo leaves the row standing
+  with `That didn't go through.` and `Retry` in its second line, the
+  Unsave glyph kept; on a profile the line takes the actions row.
+  `Unsave` on any menu closes the sheet with `Removed from Saved.` and
+  `Undo`; a comment's `Save` answers `Saved.`. Rows outlive what
+  happened to their things: a removed one reads `Removed by its author`,
+  a deleted account `Deleted account` on the reserved disc, a sensitive
+  one gives its second line to the reason, and a hidden account's things
+  stay. A titleless row takes its first line, or B11's media form; a
+  reply's `on` names the thread's post; the aside drops where the title
+  already names the handle. Slugs stay unique by fixture discipline, no
+  suffix rule.
+- **Hidden accounts' edges.** A failed Undo or unhide brings back the
+  row the gesture was made from, carrying the line until Retry or the
+  next fresh load — in place in the sheet, or on the settings row if the
+  sheet closed; inside a `ContentRow` the line takes the second line and
+  `Retry` the trailing slot. A deleted account's row is `ContentRow`'s
+  new `redacted`: the reserved disc and `Deleted account`, no aside; its
+  unhide says `This account is unhidden — its posts can reach your feed
+  again.`
+- **The release registry's edges.** A running version missing from the
+  registry is not behind: no `installed`, no newer-version line, no
+  snackbar. The newer-version snackbar speaks to members, applicants and
+  guests, and a version read that answers after the feed has arrived on
+  a cold open announces when it arrives.
+- **No unlit bar remains.** Every drill-in board lights its originating
+  root, as `BottomNav` rules: History and Saved light Profile; the other
+  person's profile, its tabs and states, Notifications, the score's
+  drill-down and the chats pages light Feed, where the canvas opens them.
+- **The blessing bundle, written.** The borrowed band leaves at once on
+  the first signed opinion and the feed reads the own view from its next
+  refresh; the band stands on the Feed root only. Saved takes the
+  pull-down, a reverted unsave clears its snackbar, the reader's own
+  unsaves elsewhere apply in place on return, and a failed next page
+  says `Couldn't load more` with `Retry`. The People footnote carries
+  feed-ranking §8.2's hint. `Unhide` keeps its visible name, described
+  by its row.
+
+- **Any member who holds the ask can let an applicant in, and the first
+  vouch lands it.** The waiting card's caption reads `It does not
+  expire.`; the profile's adds `Anyone who holds their ask can let them
+  in — the first vouch lands it.`; the intro's applicant line reads `A
+  friend who's already in has to let you in. Ask around once you have
+  verified your email.` `VouchAskUnusable` keeps its landed case alone.
+- **The account lands** when its registration and the approving vouch
+  have both confirmed; the landing card's flip is that moment.
+
+### The five ordered draws — 2026-10-07
+
+jakob's packet-wave rulings ordered five states drawn rather than
+backlogged (the day's digest, items 23, 24, 38, 60 and 65). Each is drawn
+in an existing board's construction; the words they mint are drafted and
+wait for jakob's review (copy-voice marks each).
+
+- **The dead change link, signed out** (item 38; the settings packet's
+  G9). `ChangeEmailLinkedSignedOut` gains the `landing` chip: `pending` is
+  the live link, `dead` the one landing for every link whose change ran
+  out, was canceled or already applied, and for a link the app does not
+  know — `This link doesn't work anymore`, a body naming no address, and
+  `Sign in` holding no link.
+- **Search under Newest** (item 24; the search packet's SG-5).
+  `ExploreSearch` gains the `order` chip: `ranked` is the board as it
+  stood, `newest` the same four results by time — no seam, full matches
+  still first, each row's age on its value edge in the one ladder, the tag
+  row bare. Newest is also the order before the ranker exists, so the
+  interim reads exactly this; when the split ships is the implementation's
+  sequencing.
+- **The Profiles row** (item 23; SG-4). `ExplorePerson`: an unscoped
+  query, `salt`, reaching `Sal Torres` through the handle — the picker's
+  own person row (`ReferencePicker`), avatar, display name over `@handle`,
+  the rank on its edge. It is a board of its own because a scoped query
+  never returns a person (jakob 2026-10-07), so `ExploreSearch`'s `@sol
+  salt` cannot hold one. Another person's row opens their profile under
+  `Back to the search`, now in the profile's noun table; the reader's own
+  opens their own.
+- **The hide's three other landings** (item 65; the hidden-actors
+  packet's registration ask). `FeedHidden`'s shape — the surface the tap
+  was made on, unchanged, with the snackbar over it — drawn where the
+  feed's board could not stand in: `PostDetailHidden` (the post being
+  read, `ReaderPostMenu`'s detail case), `ProfileOtherHidden` (the
+  person's profile, `ProfileMenu`'s; a deleted account's page answers in
+  the same shape with its nameless line) and `SettingsUnhidden` (the
+  Hidden accounts sheet a moment after `Unhide`, the row gone and the
+  rows behind it moved up, the snackbar raised above the sheet at the
+  screen's foot). Their snackbars register under each surface's own
+  prefix.
+- **The approval that fell through** (item 60; seam 090.4).
+  `ApplicantFellThrough`: `ApplicantWaiting`'s shell with the card flipped
+  once more, the way `ApplicantLanding` and `ApplicantRejected` are — the
+  landing card goes back to waiting when its approval lapses before the
+  reader is in and no other is live. It wears the waiting card's dress and
+  `Got it`, names no member (which open application the account shows next
+  is not the card's to say), and carries `ApplicantRejected`'s ask-link
+  block, since anyone already in can now vouch. It registers with the
+  applicant boards' own round.
+
+### The fabric-2 draws — 2026-10-09
+
+jakob's fabric-2 rulings (the day's digest, items 75–98) ordered this
+round's draws and lines. Each draw lands in an existing construction; the
+words it mints are drafted and wait for jakob's review (copy-voice marks
+each).
+
+- **The Report row** (item 75). `Report` joins the sheet tail of every
+  other-person menu — the reader's post menu on both widths, the
+  comment's, another's profile's and the deleted account's — and no own
+  menu. It opens one confirm sheet, `ReportConfirm`, drawn over the post
+  detail and a master for every other host: the heading names the thing,
+  one body line says what happens without naming the mechanism (the MVP
+  commit sends a mail; report machinery waits for proposals/moderation),
+  `Report`/`Cancel`, the snackbar `Reported.` It never connects to
+  Report-a-problem. Registered under each hosting menu's own prefix, the
+  sheet as `postDetail.reportSheet`.
+- **The feed-hosted menu** (item 84; the shape ruled 2026-10-07, item 53).
+  `FeedPostMenu`: the Feed with the reader's post menu open — the same
+  sheet `ReaderPostMenu` masters, on its second host, the rows the one
+  atom both boards read. The drawn state registers `feed.menuSheet.*`,
+  mirroring `postDetail.menuSheet`'s; paths never pre-register undrawn.
+  The plain feed's ⋮ edge now lands on it; the other feed-flavored
+  boards' ⋮ edges still name the detail's master and wait for a ruled
+  sweep.
+- **The aftermath extension** (item 83). The hide's snackbar landing,
+  drawn on the two surfaces #122 left: `HistoryHidden` — History's top
+  viewport as it stood, every card in place (the open list is frozen; the
+  standing stay-out law takes hold at the next open or pull, the person's
+  own profile card staying, ruling 11) — and `TagPageHidden` — the tag's
+  page standing and STAYING standing, since the hidden list is the feed's
+  (ruling 49's rule, met on a search subpage). Both snackbars are the
+  feed's word for word and register under their surface's own prefix
+  (`history.snackbar`, `tagPage.snackbar`). With them, item 48's unsave
+  aftermath lines on the menu hosts take their registered
+  `<host>.snackbar.action` paths.
+- **The People section** (item 77). The feed filter sheet gains the
+  friends-only scope as one exclusive pair of ROWS — the license sheets'
+  radio-row anatomy, never a segmented pill (jakob) — `Everyone`, the
+  default, and `Your people`: a scope filter over the neutral rank
+  (feed-ranking.md §10's Friends feed), the people the reader holds an
+  opinion of. It stands with the scope narrowers at the body's tail, the
+  topic section staying last; the trigger's deviation word is
+  `your people`, riding beside the topic's. Drawn on the one master, so
+  `FeedSheet` and `SettingsReading` carry it together; the paths register
+  under `settings.feedSheet.people` (the feed's own sheet stays
+  unregistered until its drawn state does).
+- **The dead-link family grows two members** (items 98 and ER-G1). The
+  signed-in unknown-token /email-change state joins `ChangeEmailLinked`'s
+  landing chip as `unknown` — the dead-link heading, a body naming no
+  address, `Back to settings` — one family with ruling 38's signed-out
+  landing. And the deletion link's dead landing is drawn,
+  `DeleteLinkExpired`: `ResetExpired`'s construction with no Resend (the
+  ask-again lives in settings, with its own content-sweep choice), a body
+  claiming no expiry because the deletion mail claims none, and the way on
+  session-dependent per the G9/38 family — `Back to settings` with a
+  session, `Sign in` without, the `session` chip swapping the one label.
+
+### The clip detail rulings — 2026-10-09
+
+jakob's rulings 100 and 101, raised by the implementation loop's stage
+build: a clip taller than the viewport could never reach the 70% gate,
+and two spots on the transport's bar could not grow to 48dp.
+
+- **The detail's clip is content, and scrolls with the page.** Comments
+  live in their sheet (§4, *Sheets*), so nothing stands below the post on
+  its detail but the post itself; a clip held on screen would take the
+  room the post is read in. `DetailClip` heads the detail's column,
+  flush on the card. The detail's header pins (§4, *Spacing and
+  layout*).
+- **Opening the detail starts the clip.** The open is the deliberate
+  act, so no share of the screen gates it on the detail; the device's
+  suppression — reduced motion, data saver — holds it back. The 70% gate
+  and the stage law govern every other scroll surface.
+- **Scroll never stops it.** Scrolled out of view the clip plays on,
+  and scrolling it back into view never starts a paused one: scroll
+  governs starts, never stops (ruling 96's spirit), and on the detail
+  the open is the only start. There is no mini-player: the reader
+  scrolls back up to it.
+- **No target on the transport's bar falls below 48dp.** Sound and
+  fullscreen stand 20px apart, their 28px boxes' centres 48px apart, so
+  their targets meet without overlapping. The timeline's target hangs
+  down from its track's top through the bar's lower half and the
+  gesture-zone inset to the frame's bottom edge (`Timeline hitBelow`),
+  so the clip's own tap above it stays whole. The ink does not move.
+
+### The slice-3 round — 2026-10-12
+
+jakob ruled the fourteen items the slice-3 packets (feed-card rework, the
+stream, the score readout) and the implementation loop raised, delegating
+the smaller set to the packets' written recommendations. The words each
+draw mints are drafted and wait for jakob's review (copy-voice marks
+each).
+
+- **The quiet note carries its weight.** `QuietNote` sets label-small's
+  500, which both clients already render; every board re-renders.
+- **The email change's half-way state is drawn.** `ChangeEmailConfirm`'s
+  `confirmed` chip draws the code's side landed: no field, no `Confirm
+  the code`, and one line under the pair, `Done on this side — now open
+  the link at` the new address. `Email changed to …` answers the confirm
+  press only; a return that finds the change applied says it with the
+  Email row alone.
+- **A detail holds what was opened.** When a fresh read finds the post
+  changed, one line stands in the page's flow between the header and the
+  post (`PostDetail`'s `read` chip), and its tap swaps the newest version
+  in place. A change to the post's tags or citations raises the same line
+  in the same words: on the graph those are acts of their own, but the
+  reader is owed the newer state either way, and one rule needs no
+  taxonomy. A redaction never waits behind it.
+- **The status bar is the system's.** The viewer's black and the stream's
+  black and washes end below it and never paint its strip — the one
+  amendment to the viewer's black-to-the-edges. Boards stay the
+  inset-zero case (*The viewer-grammar close*).
+- **The stream is the list it was opened from**, narrowed to its portrait
+  clips in that list's order — the feed, History, a profile's posts. It
+  pages vertically both ways from the tapped clip, never wraps and never
+  moves on by itself; the last clip carries `That's the last clip here.`
+  at its caption's head, and a load that does not come keeps the clip
+  playing with `Couldn't load more` and `Retry` there instead.
+- **The stream's other faces** ride `Reel`'s `state` chip. Under
+  suppressed autoplay the clip stands paused on its cover with the card's
+  play disc in the sound disc's corner. The rail's score is always the
+  door: the figure, the dash, or — still settling — the bare glyph with
+  `Still settling` under it, under Ranked and Newest alike. A hold that
+  did not sign, or that the write rule refused, says so beside the face —
+  the row the card would carry it on does not exist over a clip. Every
+  such line stands on the stream's plate (`ReelPlate`), the wash's black
+  at 60 %, and never fades on a timer.
+- **No target on the stream falls below 48dp.** The seek line keeps its
+  3px ink on the bottom bar and its target rises 48px from the track
+  (`Timeline hitAbove`, the transport's `hitBelow` mirrored); the caption
+  moves up to stand 66px above the bar, so `More`'s own target meets the
+  seek line's without overlapping (rulings 92 and 101).
+- **The score is the latest fetch of its thing.** A card's and the
+  rail's figure is what the reader's last feed fetch computed, until the
+  score's tap — the only fetch of one thing's standing, made live —
+  finds otherwise; nothing is checked in the background. Whatever the
+  trace's fetch finds, the card and the rail take on: the new figure, or,
+  where it finds no paths, the dash under `The paths that carried it here
+  have moved on.`, the door standing. Never the figure they wore before,
+  the feed never re-orders on it, and the next feed fetch replaces it.
+  Off the feed — History, a profile's posts, a tag page, a post's detail
+  and the stream over them — a slot looks its thing up in that same last
+  feed fetch, the dash standing only where the fetch computed none. The
+  vocabulary is one: a figure is what a fetch computed,
+  the bare slot is settling's, the dash is no computed figure, and zero
+  is severance's alone. A thing still settling opens the same trace on
+  its dash with `Still settling — its paths count once it lands.`
+- **The trace speaks a borrowed view in the third person.** Under a
+  guest's or an applicant's borrowed view the paths start at the account
+  the view is borrowed from, so the trace names it, the band's way:
+  `Every path here starts with an opinion @mira gave.` (`FeedEntry`'s
+  `view` chip), its face leading every path.
+- **A step is one record, said per family**, a two-legged record naming
+  what it passed through, the trace showing only people and the reached
+  thing's mark; and a step whose
+  records add up past an opinion's limit says it carries the limit, the
+  unclipped sum in the exact values.
+- **Smaller lines**: each did-not-land family names itself, with
+  `Dismiss` alone; a tag card reaches the reader through the first person
+  on each strongest path; a refused report answers with the shared
+  `That didn't send. Try again.`; the Settings switch's On line is `On,
+  sensitive content stands unveiled wherever you read.`
+- **The gate**: edges **2025 → 2029** (`Reel`'s play disc and two
+  `Retry`s, `PostDetail`'s line), 4 gaps, flows 225 resolved; the
+  registry **75 / 2922 → 75 / 2924** — `changeEmail.interim` and
+  `postDetail.newerVersion` added, nothing removed or changed.
+
+### The feed chooser round — 2026-10-12
+
+jakob's item 7 (the either-sign chooser, option a) and seam 137 (the
+settling weave), drawn as one feed round. The words jakob did not write
+himself are drafted and wait for his review (copy-voice marks each).
+
+- **Your people is every opinion held, and the sign narrows it.** The
+  Your-people line reads `Only the people you hold an opinion of — the
+  same rank, narrowed to them.`: every one-step connection, whichever
+  way the opinion points. Under it, only while it is chosen, one line
+  of three words, `For · Against · Either`, mid-dot separated, the
+  chosen word in primary ink and at the label's weight; `Either` is
+  the default. Never a pill and never a second line — the sheet already
+  scrolls. Choosing `Everyone` hides the row and keeps its word. Off
+  `Either`, the trigger's extra reads `your people, for` or `your
+  people, against`. `FeedPeopleRows` draws the section on the one
+  master, so `FeedSheet` and `SettingsReading` carry it together.
+- **The hosts draw it under a `people` chip.** Both boards draw the
+  default, so each carries a `people` chip — `everyone`, `your-people`
+  — drawing the section once per value (`PeopleCopies`).
+- **Settling content is woven in.** Under Ranked, content not yet
+  landed stands among the landed rows, ranked by the reader's reach to
+  its author through the one edge it was born with, wearing its pending
+  mark with its score slot bare and a door (SR-G2(b)). `Still settling`
+  stays on by default; off, the feed keeps to what has landed and the
+  trigger reads `settled only`. No board draws a settling row in a
+  feed, so no board redraws.
+- **The gate**: edges **2029 → 2031** (the sign row on both hosts);
+  the registry **75 / 2924 → 75 / 2928** — `settings.feedSheet.people.sign`
+  and its `for`, `against`, `either` added; the eight people-row paths
+  keyed by the `people` chip's values; nothing removed.
+
+### Round 7's registration — 2026-10-12
+
+The formal ledger (design ⇄ impl seam 131.3): sixteen boards join the
+registry and two dots become component tails. Registration names what the
+boards already draw; nothing on any board moved.
+
+- **The dots are tails first.** `ContentRow`'s unread mark and
+  `BandIcon`'s bell dot each take the `dot` segment, the name
+  `ProfileHeader`'s invites dot already carries for the same mark, so
+  `feed.band.bell.dot` and `notifications.list.notification.dot`
+  register with their hosts.
+- **The notifications set.** `Notifications` and `NotificationsEmpty`
+  register under `notifications`. A row is `notification`, keyed by its
+  place in the list, newest first: two rows can share an actor, so the
+  place is the stable key, as the chronicle's acts are keyed.
+  `FeedUnread` registers under `feed`, named as `Feed` is.
+- **The entry boards.** `ApplicantWaiting`, `ApplicantLanding` and
+  `ApplicantFeed` register under `feed`, named as `ApplicantRejected`
+  names the shell, and `ApplicantFellThrough` with them: the card is
+  `application`, `Got it` is `dismiss`, the key-absent door `restore`; `ApplicantFeed`'s two cards are `verifyCard`
+  and `keyCard`, its sidecar's own words. `ApprovePad` registers under
+  `invites`, its pad under `invites.application.stance.pad` with
+  `VouchAskPad`'s names. `KeyCeremony` takes `keyCeremony` and
+  `OnboardingVouch` `onboarding`: the intro frame names its own parts,
+  the board the stage's labelled pieces, and the mesh stays unnamed, as a
+  scrim does.
+- **The Feed-score trace.** All six boards register under one prefix,
+  `feedEntry`, as the account screens share theirs; `FactRow`,
+  `QuotedRow` and `StanceValue` take node tails for it. `FeedEntry`'s
+  `view` chip draws the path list once per value, each row keeping its
+  own key.
+- **Five key rules join** (jakob 2026-10-12): `notification`, `path`
+  (place, strongest first), `step` (place along the path), `record` (the
+  key the row prints) and `block` (`FeedEntryKinds`' kind).
+- **Not in this round.** The redacted row (item 56(c)) waits for the
+  settings round (jakob 2026-10-12): no board draws a deleted account's
+  row in Hidden accounts yet, so its actor-id key has nothing to register
+  on. `Reel` and `ReelSensitive`
+  register in lockstep with their rework's build.
+- **The gate**: screens and edges unchanged; the registry **75 / 2928 →
+  91 / 3401**, sixteen boards and 473 paths added, nothing removed or
+  changed.
+
+### Round 8, the settings round — 2026-10-13
+
+jakob's settings-round GO (seam 165): the deletion row re-keyed to the
+server's read, the deleted account's row drawn in Hidden accounts, and a
+new group saying what clearing the stored data erases. The new words are
+drafted and wait for his review (copy-voice marks them).
+
+- **The deletion row reads `User.deletionPath`** (OS-15; ER-G18), one
+  value the server computes, never the application's fields — a lapsed
+  vouch clears the approval while the address stays funded, so a row
+  read from the application would unlock where the server refuses.
+  `BY_LINK` takes the mailed-link footnote and opens the request,
+  `IMMEDIATE` the applicant's footnote, and `LOCKED` (funded,
+  Registration not yet landed) the applicant's footnote under the
+  locked look. `DeleteAccount`'s two bodies key the same way: `BY_LINK`
+  draws the member's body, which is true of an applicant whose
+  Registration landed too, and `IMMEDIATE` the applicant's. The reader
+  chips keep their `member` and `applicant` values.
+- **A deleted account's row is drawn in Hidden accounts** (ruling 56):
+  `ContentRow`'s `redacted` row, last because it was hidden longest
+  ago, with the hiding's moment and `Unhide`. It has no handle, so it
+  is its own node, `redactedAccount`, keyed by the actor's id — the
+  `account` rule names the handle and is never reworded.
+- **Clearing data** stands after Key backup. Its footnote leads with the
+  key and names the account (jakob: "Even more emphasis on KEY. if they
+  miss it their account is gone for good"): the key lives only here,
+  clearing erases it, and without the recovery code the account is gone
+  for good. The draft, any kept picks and the choices kept on the device
+  follow, and the seen list last — it comes back on sign-in (PR-52), so
+  the words never call it lost. On Android the system's own "Clear data"
+  becomes "Manage space" and opens settings at this group
+  (`manageSpaceActivity`), and the uninstall dialog offers to keep the
+  data (`hasFragileUserData`).
+- **The wipe is the group's one row** (jakob: "Settings needs the wipe
+  everything from this device yes. ofcourse with warnings and stuff"):
+  `Erase everything from this browser` (`…from this app`), an action row
+  as quiet as `Sign out`. It raises `EraseConfirm`, a think-twice dialog
+  drawn once per backup state: with no code, `Make a recovery code` leads
+  filled and the erase is the quiet answer; with a code, the destructive
+  dialog's own shape, the erase quiet on the left and `Cancel` filled on
+  the right. The erase clears the key, the draft, the kept picks, the
+  choices kept on the device and the seen cache, ends the session and
+  lands on the sign-in screen with no account offered. So "Manage space"
+  ends at a real erase, behind the warning.
+- **The locked deletion row answers `You can delete your account once
+  your registration lands.`** — deletion opens at the registration
+  (`BY_LINK`), which can come before the vouch lets the applicant in.
+- **The whole-page frames fit their page again.** `Settings`,
+  `SettingsDeleting` and `SettingsEmailPending` had been cutting off
+  the page's end since later rounds lengthened it (the Sensitive
+  content group among them); each frame now holds its whole scroll, and
+  the profile canvas's rows below `Settings` moved down to make room.
+- **The gate**: one board joins (`EraseConfirm`), edges **2031 → 2036**
+  (`Settings`' row and `EraseConfirm`'s four answers); the registry
+  **91 / 3401 → 92 / 3590** — six `redactedAccount` paths on
+  `SettingsHidden`, `settings.clearing` with its label, footnote and
+  row on the eight boards that register the page, and `EraseConfirm`
+  joining with 143; one key rule joins, nothing removed or changed.
+
+### Round 9, the rulings fold — 2026-10-13
+
+jakob's morning words (seam 165) and the deletion lane's undrawn answer
+(seam 173), drawn as one round. The words he did not write himself are
+drafted and wait for his review (copy-voice marks each).
+
+- **The vouch card's act is the stance face.** `VouchBack` and
+  `VouchBackPad` draw `StanceControl`'s anchor at the end of the card's
+  row, `Got it` leading it, and one line against the face, `Tap the face
+  to vouch back.` (jakob's own) — on the deleted voucher's card too, and
+  with no first-opinion words, which stay the band's. The tap blooms the
+  vouch-back pad, holding a kept pick where there is one; the hold signs
+  the gentle default and the ceremony opens, as from the profile's
+  anchor. The card's reading lines keep their words.
+- **The borrowed view is the vantage's whole read** (*Guest and applicant
+  feeds borrow a vantage point*). The filter sheet speaks it by name
+  under a borrowed view — `@mira's people`, `as far as @mira's eyes
+  reach`, Ranked's `closest to @mira first — the view you're browsing
+  from`, the topics `@mira holds` — and the trigger's extra collapses to
+  the count past its 154px like any other. A guest's wide anchor reads
+  `@genesismod's opinion` beside the hollow face, falling back to
+  `Their opinion` where the name outgrows it: a flagged exception, and
+  on a profile it fires for most handles (backlog item 139).
+- **The sweep.** Already third person under a borrowed view: the trace,
+  its steps, folds and records, and a guest anchor's spoken name. The
+  reader's own, so first person by the law: the seen toggle, the kinds'
+  line, Also show, Reset, the filter's "?", Settings' default sheet, the
+  hidden-account snackbars, an applicant's waiting-opinion snackbars,
+  the vouch card's body, History, Saved, Notifications and the own
+  profile. Explore never borrows — the band never stands there, a guest
+  has no Your topics, and an applicant's lists are their own. The trace's
+  `Why this reached you` stays: the thing did reach the reader.
+- **Done re-queries only for Kinds or the topic.** A Done whose staged
+  changes are all the device's own — the people row and its sign, the
+  order, the seen toggle, the kinds of post, Sensitive, Removed, Still
+  settling — re-derives from what the feed holds and never re-queries;
+  the status message, the trigger's new name and the focus return are
+  unchanged.
+- **The deletion mail's resend answers.** `Sent again — the link is on
+  its way to sol@solferreira.art.`, the email change's resend register.
+- **Smaller trues**: `TagPage`'s guest line wears the borrowed stance
+  ruled 2026-10-06, as `GuestGate` and `FeedBare` already did.
+- **The gate**: edges unchanged at **2036** — the button's edge is the
+  face's now, its one outcome four: the pad, the ceremony, and the
+  hold's two row answers; the registry **92 / 3590 → 92 / 3594** —
+  `feed.vouchCard.stance`, `.stance.anchor` and `.stance.anchor.face`
+  join `VouchBack`, `feed.vouchCard.hint` joins both boards, and
+  `feed.vouchCard.vouch` is removed with the button it named (jakob's
+  ruling, seam 165).
 
 ---
 

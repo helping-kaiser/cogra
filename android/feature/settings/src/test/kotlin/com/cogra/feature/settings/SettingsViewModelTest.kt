@@ -7,10 +7,17 @@ import com.cogra.domain.AccountState
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
+import com.cogra.domain.AccountDeletionPath
+import com.cogra.domain.deletion.AccountDeletion
+import com.cogra.domain.deletion.AccountDeletionState
+import com.cogra.domain.deletion.DeletionStanding
 import com.cogra.domain.identity.BackupManager
+import com.cogra.domain.testing.ScriptedAccountDeletionRepository
 import com.cogra.domain.identity.SignOut
+import com.cogra.domain.settings.SensitiveContentChoice
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.store.ThemeChoice
+import com.cogra.domain.testing.FakeDeviceData
 import com.cogra.domain.testing.FakeDevicePreferences
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
@@ -39,6 +46,10 @@ class SettingsViewModelTest {
     private val device = FakeDevicePreferences()
     private val settings = ScriptedSettings()
     private val sessions = ScriptedSessions()
+    private val sensitive = SensitiveContentChoice()
+    private val deletions = ScriptedAccountDeletionRepository()
+    private val deletionState = AccountDeletionState(deletions)
+    private val deviceData = FakeDeviceData(tokens, identity, device)
 
     @Before
     fun setUp() {
@@ -55,9 +66,11 @@ class SettingsViewModelTest {
     private fun viewModel() = SettingsViewModel(
         settings,
         sessions,
-        SignOut(sessions, identity, tokens),
+        SignOut(sessions, identity, tokens, deviceData),
         identity,
         device,
+        sensitive,
+        deletionState,
     ).also {
         it.clock = { NOW }
         it.refresh()
@@ -97,6 +110,69 @@ class SettingsViewModelTest {
         idle()
         assertThat(identity.confirmMultiAction.value).isFalse()
         assertThat(vm.state.value.signOutConfirmOpen).isFalse()
+    }
+
+    // ------------------------------------------------- sensitive content
+
+    @Test
+    fun `unveil_switch_reads_off_by_default`() = runTest(dispatcher) {
+        val vm = viewModel()
+        idle()
+        assertThat(vm.state.value.alwaysUnveil).isFalse()
+    }
+
+    @Test
+    fun `unveil_switch_flips_without_a_dialog_and_saves_to_the_account`() = runTest(dispatcher) {
+        val vm = viewModel()
+        idle()
+        vm.onAlwaysUnveil()
+        // Optimistic: every veil answers before the save does.
+        assertThat(sensitive.alwaysUnveil.value).isTrue()
+        idle()
+        assertThat(vm.state.value.alwaysUnveil).isTrue()
+        assertThat(settings.unveilSaves).containsExactly(true)
+        assertThat(sensitive.level.value).isEqualTo(0)
+        assertThat(vm.state.value.signOutConfirmOpen).isFalse()
+
+        vm.onAlwaysUnveil()
+        idle()
+        // Off saves the explicit null that restores the veil.
+        assertThat(settings.unveilSaves).containsExactly(true, false).inOrder()
+        assertThat(sensitive.level.value).isNull()
+        assertThat(vm.state.value.alwaysUnveil).isFalse()
+    }
+
+    @Test
+    fun `a_choice_made_on_another_device_reads_here`() = runTest(dispatcher) {
+        settings.read = Outcome.Success(account(contentFilteringSeverityLevel = 0))
+        val vm = viewModel()
+        idle()
+        assertThat(vm.state.value.alwaysUnveil).isTrue()
+        assertThat(sensitive.alwaysUnveil.value).isTrue()
+    }
+
+    @Test
+    fun `a level other than 0 reads off — the gradient is post-MVP`() = runTest(dispatcher) {
+        settings.read = Outcome.Success(account(contentFilteringSeverityLevel = 4))
+        val vm = viewModel()
+        idle()
+        assertThat(vm.state.value.alwaysUnveil).isFalse()
+    }
+
+    @Test
+    fun `unveil_save_without_an_answer_reverts_with_the_no_answer_snackbar`() = runTest(dispatcher) {
+        settings.saveUnveil = Outcome.Failed(IOException("offline"))
+        val vm = viewModel()
+        idle()
+        val events = mutableListOf<SettingsEvent>()
+        val collecting = launch { vm.events.toList(events) }
+        vm.onAlwaysUnveil()
+        assertThat(sensitive.alwaysUnveil.value).isTrue()
+        idle()
+        assertThat(vm.state.value.alwaysUnveil).isFalse()
+        assertThat(sensitive.level.value).isNull()
+        assertThat(events).containsExactly(SettingsEvent.Snackbar(R.string.network_error))
+        collecting.cancel()
     }
 
     @Test
@@ -408,6 +484,164 @@ class SettingsViewModelTest {
         assertThat(tokens.current()).isNotNull()
         assertThat(identity.seed).isNotNull()
         assertThat(events).contains(SettingsEvent.FocusSignOut)
+        collecting.cancel()
+    }
+
+    // ----------------------------------------------------- clearing data (B6)
+
+    @Test
+    fun `the_erase_row_asks_first_and_nothing_is_erased_before_an_answer`() = runTest(dispatcher) {
+        signedIn()
+        val vm = viewModel()
+        idle()
+        vm.onErase()
+        idle()
+        // EraseConfirm.md:3 — the dialog stands; the reader is still signed in.
+        assertThat(vm.state.value.eraseConfirmOpen).isTrue()
+        assertThat(deviceData.erases).isEqualTo(0)
+        assertThat(tokens.current()).isNotNull()
+        assertThat(identity.seed).isNotNull()
+    }
+
+    @Test
+    fun `the_erase_clears_the_device_and_ends_the_session`() = runTest(dispatcher) {
+        signedIn()
+        device.setTheme(ThemeChoice.DARK)
+        val vm = viewModel()
+        idle()
+        vm.onErase()
+        vm.onEraseEverything()
+        idle()
+        // EraseConfirm.md:21 — key, draft, picks, the device's choices and the
+        // seen record (one store, one edit) go; the session ends.
+        assertThat(vm.state.value.eraseConfirmOpen).isFalse()
+        assertThat(deviceData.erases).isEqualTo(1)
+        assertThat(identity.seed).isNull()
+        assertThat(device.theme.value).isEqualTo(ThemeChoice.AUTO)
+        assertThat(tokens.current()).isNull()
+    }
+
+    @Test
+    fun `dismissing_the_erase_keeps_everything_and_returns_focus_to_the_row`() = runTest(dispatcher) {
+        signedIn()
+        val vm = viewModel()
+        idle()
+        val events = mutableListOf<SettingsEvent>()
+        val collecting = launch { vm.events.toList(events) }
+        vm.onErase()
+        vm.onDismissEraseConfirm()
+        idle()
+        assertThat(vm.state.value.eraseConfirmOpen).isFalse()
+        assertThat(deviceData.erases).isEqualTo(0)
+        assertThat(tokens.current()).isNotNull()
+        assertThat(events).contains(SettingsEvent.FocusErase)
+        collecting.cancel()
+    }
+
+    @Test
+    fun `make_a_recovery_code_from_the_erase_stays_signed_in`() = runTest(dispatcher) {
+        signedIn()
+        val vm = viewModel()
+        idle()
+        vm.onErase()
+        vm.onMakeRecoveryCodeFromErase()
+        idle()
+        assertThat(vm.state.value.eraseConfirmOpen).isFalse()
+        assertThat(deviceData.erases).isEqualTo(0)
+        assertThat(tokens.current()).isNotNull()
+    }
+
+    @Test
+    fun `the_backup_state_keys_the_clearing_words`() = runTest(dispatcher) {
+        signedIn()
+        settings.read = Outcome.Success(account(keyBackupCreatedAt = null))
+        val none = viewModel()
+        idle()
+        assertThat(none.state.value.backupMade).isFalse()
+        settings.read = Outcome.Success(account())
+        val made = viewModel()
+        idle()
+        assertThat(made.state.value.backupMade).isTrue()
+    }
+
+    // ---------------------------------------------------- delete account
+
+    private val grace = AccountDeletion(NOW.plusSeconds(6 * 86_400), includesContent = false)
+
+    private fun kotlinx.coroutines.test.TestScope.rowOpens(
+        standing: DeletionStanding,
+    ): List<SettingsEvent> {
+        deletions.standing = Outcome.Success(standing)
+        val vm = viewModel()
+        idle()
+        val events = mutableListOf<SettingsEvent>()
+        val collecting = launch { vm.events.toList(events) }
+        vm.onDeleteAccount()
+        idle()
+        collecting.cancel()
+        return events
+    }
+
+    @Test
+    fun `the_row_reads_the_servers_path_and_the_grace`() = runTest(dispatcher) {
+        deletions.standing = Outcome.Success(DeletionStanding(AccountDeletionPath.BY_LINK, grace))
+        val vm = viewModel()
+        idle()
+        assertThat(vm.state.value.deletion).isEqualTo(DeletionStanding(AccountDeletionPath.BY_LINK, grace))
+        assertThat(vm.state.value.graceDeletion).isEqualTo(grace)
+        assertThat(vm.state.value.deletionLocked).isFalse()
+    }
+
+    @Test
+    fun `the_row_opens_the_request_screen_on_either_open_path`() = runTest(dispatcher) {
+        assertThat(rowOpens(DeletionStanding(AccountDeletionPath.BY_LINK, null)))
+            .containsExactly(SettingsEvent.OpenDeletion(DeletionDoor.REQUEST))
+        assertThat(rowOpens(DeletionStanding(AccountDeletionPath.IMMEDIATE, null)))
+            .containsExactly(SettingsEvent.OpenDeletion(DeletionDoor.REQUEST))
+    }
+
+    @Test
+    fun `in_the_grace_the_row_opens_the_grace_page`() = runTest(dispatcher) {
+        assertThat(rowOpens(DeletionStanding(AccountDeletionPath.BY_LINK, grace)))
+            .containsExactly(SettingsEvent.OpenDeletion(DeletionDoor.PENDING))
+    }
+
+    @Test
+    fun `a_locked_row_answers_with_the_snackbar_and_opens_nothing`() = runTest(dispatcher) {
+        assertThat(rowOpens(DeletionStanding(AccountDeletionPath.LOCKED, null)))
+            .containsExactly(SettingsEvent.Snackbar(R.string.settings_ending_locked))
+        // A path this build cannot name is the weaker claim: locked.
+        assertThat(rowOpens(DeletionStanding(AccountDeletionPath.UNKNOWN, null)))
+            .containsExactly(SettingsEvent.Snackbar(R.string.settings_ending_locked))
+    }
+
+    @Test
+    fun `the_bands_cancel_takes_the_deletion_away_and_says_so`() = runTest(dispatcher) {
+        deletions.standing = Outcome.Success(DeletionStanding(AccountDeletionPath.BY_LINK, grace))
+        val vm = viewModel()
+        idle()
+        val events = mutableListOf<SettingsEvent>()
+        val collecting = launch { vm.events.toList(events) }
+        vm.onCancelDeletion()
+        idle()
+        assertThat(deletions.cancels).isEqualTo(1)
+        assertThat(vm.state.value.graceDeletion).isNull()
+        assertThat(events).containsExactly(SettingsEvent.Snackbar(R.string.deletion_canceled))
+        collecting.cancel()
+    }
+
+    @Test
+    fun `a_cancel_with_no_answer_keeps_the_band_and_says_the_network_error`() = runTest(dispatcher) {
+        deletions.standing = Outcome.Success(DeletionStanding(AccountDeletionPath.BY_LINK, grace))
+        deletions.cancel = Outcome.Failed(IOException("offline"))
+        val vm = viewModel()
+        idle()
+        val events = mutableListOf<SettingsEvent>()
+        val collecting = launch { vm.events.toList(events) }
+        vm.onCancelDeletion()
+        idle()
+        assertThat(vm.state.value.graceDeletion).isEqualTo(grace)
+        assertThat(events).containsExactly(SettingsEvent.Snackbar(R.string.network_error))
         collecting.cancel()
     }
 

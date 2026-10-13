@@ -47,16 +47,19 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.CograSnackbarHost
+import com.cogra.core.designsystem.CollapsingTopBand
 import com.cogra.core.designsystem.CollapsingTopBanner
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.media.CograAvatar
 import com.cogra.crypto.Family
+import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordLink
 import com.cogra.domain.RecordRow
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.stance.StanceControlRoute
+import com.cogra.feature.stance.vouchBackVariant
 import kotlinx.coroutines.launch
 
 @Composable
@@ -72,7 +75,15 @@ fun ProfileRoute(
     onOpenPost: (String) -> Unit,
     onBack: (() -> Unit)?,
     keyBanner: @Composable () -> Unit = {},
+    /** The deletion band, while the account's confirmed deletion is in its grace (`FeedDeleting.md:3`). */
+    deletionBand: @Composable () -> Unit = {},
     banners: @Composable () -> Unit = {},
+    /**
+     * A signing on the member who vouched the reader in was taken — by Set
+     * or by the hold — so the ceremony opens (ProfileOther.md:37). Gets the
+     * profile it was signed on.
+     */
+    onVouchedBack: (ProfileView) -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -107,8 +118,25 @@ fun ProfileRoute(
         onOpenPost = onOpenPost,
         onBack = onBack,
         keyBanner = keyBanner,
+        deletionBand = deletionBand,
         banners = banners,
-        stanceControl = { target, tag -> StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag) },
+        stanceControl = { target, tag ->
+            val profile = state.profile
+            if (state.vouchesBack && profile != null) {
+                // THE VOUCH-BACK STAYS OPEN FROM HERE (VouchBack.md:51): the
+                // tap opens the vouch-back pad, Cancel closes back onto this
+                // profile (VouchBackPad.md:47), and a taken signing opens the
+                // ceremony instead of the control's own confirmation.
+                StanceControlRoute(
+                    target = StanceTarget.Node(target),
+                    testTagPrefix = tag,
+                    variant = vouchBackVariant(),
+                    onTaken = { onVouchedBack(profile) },
+                )
+            } else {
+                StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag)
+            }
+        },
     )
 }
 
@@ -127,6 +155,7 @@ fun ProfileScreen(
     onOpenPost: (String) -> Unit,
     onBack: (() -> Unit)?,
     keyBanner: @Composable () -> Unit = {},
+    deletionBand: @Composable () -> Unit = {},
     banners: @Composable () -> Unit = {},
     /** The header's stance control on someone else's profile (design.md §6). */
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { _, _ -> },
@@ -199,6 +228,8 @@ fun ProfileScreen(
                     colors = surfaceTopAppBarColors(),
                     scrollBehavior = collapsingTop.scrollBehavior,
                 )
+                // Directly under the header, collapsing with it (FeedDeleting.md:5).
+                CollapsingTopBand(collapsingTop) { deletionBand() }
                 CollapsingTopBanner(collapsingTop) { keyBanner() }
             }
         },

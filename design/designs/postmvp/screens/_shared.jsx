@@ -726,7 +726,7 @@ function ProfileStancesExcerpt({ onOpenHistory }) {
         <StanceRow name="Mira Voss" handle="mira" src="inviter.jpg" pDirected={0.4} pInterest={0.5} onOpen={() => {}} onOpenHistory={onOpenHistory} />
         <StanceRow name="Juno Baptiste" handle="juno" pDirected={-0.2} pInterest={0.1} onOpen={() => {}} onOpenHistory={onOpenHistory} />
       </div>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>
   );
 }
@@ -1498,7 +1498,7 @@ function ChatsHomeBody() {
         <ChatsHomeRows />
       </ChatsColumn>
       <NewChatFab />
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>
   );
 }

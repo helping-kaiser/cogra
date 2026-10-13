@@ -1,6 +1,6 @@
 # HistoryEmpty · `spec:design:behavior-history-empty`
 
-ALWAYS History reads Nothing here yet. Everything you read shows up here on its own, newest first. GIVEN the reader has seen nothing yet
+ALWAYS History reads Nothing here yet. Everything you see shows up here on its own, newest first. GIVEN the reader has seen nothing yet
 
 ALWAYS the empty History offers no action button and wears no error colour
 

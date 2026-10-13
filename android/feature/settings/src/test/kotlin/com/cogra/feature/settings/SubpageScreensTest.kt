@@ -203,6 +203,18 @@ class SubpageScreensTest {
     }
 
     @Test
+    fun `code_confirmed_reads_the_interim_line_with_the_new_address`() {
+        confirm(ConfirmEmailUiState(email = "sol@solferreira.art", pending = pending(codeConfirmed = true)))
+        node("changeEmail.codeDone").assertTextEquals("Done on this side — now open the link at sol@ferreira.studio")
+    }
+
+    @Test
+    fun `the interim line is absent while the code is still owed`() {
+        confirm(ConfirmEmailUiState(email = "sol@solferreira.art", pending = pending()))
+        absent("changeEmail.codeDone")
+    }
+
+    @Test
     fun `code_field_is_numeric_one_time_code`() {
         confirm(ConfirmEmailUiState(email = "sol@solferreira.art", pending = pending()))
         val code = node("changeEmail.code.input").fetchSemanticsNode()
@@ -211,8 +223,11 @@ class SubpageScreensTest {
 
     // ------------------------------------------------- ChangeEmailLinked
 
+    /** Each Sign in tapped, by whether it held the link. */
+    private val signIns = mutableListOf<Boolean>()
+
     private fun landing(landing: LinkedLanding) = compose.setContent {
-        ChangeEmailLinkedScreen(landing, onEnterTheCode = {}, onBackToSettings = {}, onSignIn = {})
+        ChangeEmailLinkedScreen(landing, onEnterTheCode = {}, onBackToSettings = {}, onSignIn = { signIns += it })
     }
 
     @Test
@@ -241,14 +256,39 @@ class SubpageScreensTest {
             "This link confirms sol@ferreira.studio as your new address. It counts once you're signed in.",
         )
         button("changeEmail.onward").assertTextEquals("Sign in")
+        button("changeEmail.onward").performClick()
+        // A live link's Sign in holds it.
+        assertThat(signIns).containsExactly(true)
     }
 
     @Test
-    fun theDeadSignedOutLandingNamesNoAddress() {
+    fun `signed_out_dead_or_unknown_link_reads_the_drawn_dead_landing`() {
         landing(LinkedLanding.Dead(signedIn = false))
+        absent("changeEmail.mark")
         node("changeEmail.title").assertTextEquals("This link doesn't work anymore")
-        absent("changeEmail.body")
+        node("changeEmail.body").assertTextEquals(
+            "The change it belonged to may have run out, been canceled or already happened — " +
+                "this link can't move your email anymore.",
+        )
         button("changeEmail.onward").assertTextEquals("Sign in")
+    }
+
+    @Test
+    fun `signed_out_dead_link_sign_in_never_holds_the_link`() {
+        landing(LinkedLanding.Dead(signedIn = false))
+        button("changeEmail.onward").performClick()
+        assertThat(signIns).containsExactly(false)
+    }
+
+    @Test
+    fun `signed_in_unknown_link_reads_the_drawn_unknown_landing`() {
+        landing(LinkedLanding.Dead(signedIn = true))
+        node("changeEmail.mark").assertExists()
+        node("changeEmail.title").assertTextEquals("This link doesn't work anymore")
+        node("changeEmail.body").assertTextEquals(
+            "It isn't a link CoGra knows — it may be mistyped, or from a change long gone. Your email stays as it is.",
+        )
+        button("changeEmail.onward").assertTextEquals("Back to settings")
     }
 
     // -------------------------------------------------------------- About

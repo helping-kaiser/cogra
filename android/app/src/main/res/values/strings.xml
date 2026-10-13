@@ -17,4 +17,7 @@
     <string name="join_prompt_body">Posting and profiles need an account.</string>
     <string name="join_prompt_signin">Sign in or join</string>
     <string name="join_prompt_dismiss">Keep browsing</string>
+    <!-- DeleteAccount.md :29 — the applicant's landing, signed out on the
+         bare view (copy-voice "Deleting the account", blessed). -->
+    <string name="account_deleted">Your account is deleted.</string>
 </resources>

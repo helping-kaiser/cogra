@@ -11,9 +11,10 @@
 // (`Query.referenceCandidates`): a handle bare or `@`-sigilled, or a
 // UUID for whatever node it addresses. This is a PREVIEW, not a
 // validator — it tells the reader what a query will be read as and gates
-// the lookup on one that resolves nothing. The server's exact-match
-// resolution stays the authority, and an unresolvable query answers with
-// an empty list rather than an error.
+// the lookup on one that resolves nothing. The server's matcher (names
+// and titles, slice 2.7) stays the authority, so plain text the preview
+// reads as "handle" may also find titles; an unresolvable query answers
+// with an empty list rather than an error.
 
 import type { ReferenceTargetKind, ReferenceTargetView } from "./draft";
 

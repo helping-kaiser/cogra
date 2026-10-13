@@ -197,6 +197,21 @@ describe("the pager", () => {
     expect(screen.getByTestId("media-viewer-dots-dot-0")).toHaveAttribute("data-active", "true");
   });
 
+  it("is spoken as Picture N of M, following the paging, and the dot row is not spoken (ViewerPicture.md:11)", () => {
+    open({ items: PICTURES.slice(0, 4), index: 1 });
+    expect(screen.getByRole("dialog", { name: "Picture 2 of 4" })).toBeInTheDocument();
+    act(() => {
+      fireEvent.keyDown(window, { key: "ArrowRight" });
+    });
+    expect(screen.getByRole("dialog", { name: "Picture 3 of 4" })).toBeInTheDocument();
+    expect(screen.getByTestId("media-viewer-dots").closest('[aria-hidden="true"]')).not.toBeNull();
+  });
+
+  it("is spoken as Video over a clip (ViewerVideo.md:37)", () => {
+    open({ items: [CLIP] });
+    expect(screen.getByRole("dialog", { name: "Video" })).toBeInTheDocument();
+  });
+
   it("marks no position for a lone picture", () => {
     open({ items: [PICTURES[0]] });
     expect(screen.queryByTestId("media-viewer-dots")).toBeNull();

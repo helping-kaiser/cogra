@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT record_id, leg, source, target, p_d, p_i, tau, census_unknown\n         FROM mirror_record_legs WHERE record_id = ANY($1)\n         ORDER BY record_id, leg",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "record_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "leg",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "source",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "target",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "p_d",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 5,
+        "name": "p_i",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 6,
+        "name": "tau",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 7,
+        "name": "census_unknown",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "72ac483b54712354d4400c561f1f9df5bed6294fa9e3a193a228d6091b19b24d"
+}

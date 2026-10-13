@@ -10,7 +10,9 @@ ALWAYS the rows left keep their own Unsave and open as they did
 
 WHEN tap Undo -> the row that went comes back AND Saved stands as it was before the unsave
 
-WHEN tap Undo GIVEN the undo does not go through -> the list stays without the row AND the target's row says That didn't go through. with Retry
+WHEN tap Undo GIVEN the undo does not go through -> the row that came back stays AND saved.list.entry.second reads That didn't go through. with Retry
+
+WHEN tap Retry on the returned row's failure line -> the restore is asked again
 
 WHEN tap another row's Unsave GIVEN the snackbar stands -> that row leaves the list too AND the rows behind it move up AND the snackbar renews
 

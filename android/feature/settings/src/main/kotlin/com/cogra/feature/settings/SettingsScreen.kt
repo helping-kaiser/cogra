@@ -5,6 +5,7 @@
 
 package com.cogra.feature.settings
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,10 +18,17 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
@@ -32,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.dataNodeSurface
+import com.cogra.core.designsystem.v2.atom.DeletionBand
 import com.cogra.core.designsystem.v2.atom.InlineAction
 import com.cogra.core.designsystem.v2.atom.PageHeader
 import com.cogra.core.designsystem.v2.atom.SegmentedFilter
@@ -41,8 +50,10 @@ import com.cogra.core.designsystem.v2.atom.SettingsRow
 import com.cogra.core.designsystem.v2.atom.SettingsRowKind
 import com.cogra.core.designsystem.v2.atom.rememberParticiple
 import com.cogra.core.designsystem.v2.compose.licenseName
+import com.cogra.domain.AccountDeletionPath
 import com.cogra.domain.ageLadder
 import com.cogra.domain.dateLine
+import com.cogra.domain.forwardLadder
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.store.ThemeChoice
 import kotlinx.coroutines.launch
@@ -63,6 +74,8 @@ data class SettingsDoors(
     val onOpenAbout: () -> Unit = {},
     /** The reader's own mail, addressed to the contact address — never the report. */
     val onContact: () -> Unit = {},
+    /** The Delete account row's two doors: the request screen, or the grace page. */
+    val onOpenDeletion: (DeletionDoor) -> Unit = {},
 )
 
 @Composable
@@ -72,6 +85,9 @@ fun SettingsRoute(
     /** A subpage's answer to say over the page once ("Password changed — …"). */
     notice: String? = null,
     onNoticeShown: () -> Unit = {},
+    /** Opened by the system's "Manage space": Clearing data in view, nothing cleared. */
+    clearingInView: Boolean = false,
+    onClearingShown: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -85,6 +101,8 @@ fun SettingsRoute(
         events = viewModel.events,
         notice = notice,
         onNoticeShown = onNoticeShown,
+        clearingInView = clearingInView,
+        onClearingShown = onClearingShown,
         actions = SettingsActions(
             onTheme = viewModel::onTheme,
             onStanceInputMode = viewModel::onStanceInputMode,
@@ -95,6 +113,7 @@ fun SettingsRoute(
             onDismissLicense = viewModel::onDismissLicense,
             onRetryLicense = viewModel::onRetryLicense,
             onShowExactValues = viewModel::onShowExactValues,
+            onAlwaysUnveil = viewModel::onAlwaysUnveil,
             onRevokeSession = viewModel::onRevokeSession,
             onRevokeOthers = viewModel::onRevokeOthers,
             onForgetOnSignOut = viewModel::onForgetOnSignOut,
@@ -105,6 +124,15 @@ fun SettingsRoute(
                 viewModel.onMakeRecoveryCode()
                 doors.onOpenBackup()
             },
+            onErase = viewModel::onErase,
+            onEraseEverything = viewModel::onEraseEverything,
+            onDismissEraseConfirm = viewModel::onDismissEraseConfirm,
+            onMakeRecoveryCodeFromErase = {
+                viewModel.onMakeRecoveryCodeFromErase()
+                doors.onOpenBackup()
+            },
+            onDeleteAccount = viewModel::onDeleteAccount,
+            onCancelDeletion = viewModel::onCancelDeletion,
         ),
         doors = doors.copy(
             onContact = {
@@ -128,6 +156,7 @@ data class SettingsActions(
     val onDismissLicense: () -> Unit = {},
     val onRetryLicense: () -> Unit = {},
     val onShowExactValues: () -> Unit = {},
+    val onAlwaysUnveil: () -> Unit = {},
     val onRevokeSession: (String) -> Unit = {},
     val onRevokeOthers: () -> Unit = {},
     val onForgetOnSignOut: () -> Unit = {},
@@ -135,6 +164,14 @@ data class SettingsActions(
     val onEraseAndSignOut: () -> Unit = {},
     val onDismissSignOutConfirm: () -> Unit = {},
     val onMakeRecoveryCode: () -> Unit = {},
+    /** The Clearing data row: raises `EraseConfirm`, erases nothing. */
+    val onErase: () -> Unit = {},
+    val onEraseEverything: () -> Unit = {},
+    val onDismissEraseConfirm: () -> Unit = {},
+    val onMakeRecoveryCodeFromErase: () -> Unit = {},
+    val onDeleteAccount: () -> Unit = {},
+    /** The deletion band's Cancel, under the header. */
+    val onCancelDeletion: () -> Unit = {},
 )
 
 @Composable
@@ -146,32 +183,37 @@ fun SettingsScreen(
     events: kotlinx.coroutines.flow.Flow<SettingsEvent> = kotlinx.coroutines.flow.emptyFlow(),
     notice: String? = null,
     onNoticeShown: () -> Unit = {},
+    clearingInView: Boolean = false,
+    onClearingShown: () -> Unit = {},
 ) {
     val snackbar = remember { SnackbarHostState() }
     // Plain, not snapshot state: the requesters are handles, never read to draw.
     val sessionFocus = remember { HashMap<String, FocusRequester>() }
     val signOutFocus = remember { FocusRequester() }
+    val eraseFocus = remember { FocusRequester() }
     val licenseFocus = remember { FocusRequester() }
-    SettingsEffects(events, snackbar, sessionFocus, signOutFocus, notice, onNoticeShown)
+    SettingsEffects(
+        events,
+        snackbar,
+        sessionFocus,
+        signOutFocus,
+        eraseFocus,
+        notice,
+        onNoticeShown,
+        doors.onOpenDeletion,
+    )
 
     Scaffold(
         modifier = Modifier.dataNodeSurface(),
-        // The header is pinned: it stands outside the scrolling body.
-        topBar = {
-            PageHeader(
-                title = stringResource(R.string.settings_title),
-                onBack = doors.onBack,
-                backContentDescription = stringResource(R.string.settings_back),
-                node = Page / "header",
-            )
-        },
+        topBar = { SettingsTop(state, actions, doors) },
         snackbarHost = { CograSnackbarHost(snackbar, testTag = "settings_snackbar") },
     ) { padding ->
+        val scroll = rememberScrollState()
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scroll)
                 .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
@@ -180,23 +222,18 @@ fun SettingsScreen(
             WritingGroup(state, actions, licenseFocus)
             ReadingGroup(state, actions)
             PeopleGroup()
+            SensitiveGroup(state, actions)
             BackupGroup(state, doors)
+            ClearingGroup(state, actions, eraseFocus, ClearingInView(clearingInView, scroll, onClearingShown))
             SessionsGroup(state, actions, sessionFocus)
             CredentialsGroup(state, doors)
             AboutGroup(versionName, doors)
             LeavingGroup(state, actions, signOutFocus)
-            // The `ending` group (Delete account) is the erasure-deletion
-            // packet's; its slot is here, after the sign-out group.
+            EndingGroup(state, actions)
         }
     }
 
-    if (state.signOutConfirmOpen) {
-        SignOutConfirm(
-            onMakeRecoveryCode = actions.onMakeRecoveryCode,
-            onErase = actions.onEraseAndSignOut,
-            onDismiss = actions.onDismissSignOutConfirm,
-        )
-    }
+    SettingsDialogs(state, actions)
     state.licenseSheet?.let { staged ->
         SettingsLicenseSheet(
             staged = staged,
@@ -210,6 +247,51 @@ fun SettingsScreen(
     }
 }
 
+/** The two think-twice dialogs over the page: the sign-out ask and the erase (`SettingsOverlays.kt`). */
+@Composable
+private fun SettingsDialogs(state: SettingsUiState, actions: SettingsActions) {
+    if (state.signOutConfirmOpen) {
+        SignOutConfirm(
+            onMakeRecoveryCode = actions.onMakeRecoveryCode,
+            onErase = actions.onEraseAndSignOut,
+            onDismiss = actions.onDismissSignOutConfirm,
+        )
+    }
+    if (state.eraseConfirmOpen) {
+        EraseConfirm(
+            backupMade = state.backupMade,
+            onMakeRecoveryCode = actions.onMakeRecoveryCodeFromErase,
+            onErase = actions.onEraseEverything,
+            onDismiss = actions.onDismissEraseConfirm,
+        )
+    }
+}
+
+/**
+ * The header is pinned: it stands outside the scrolling body — and so does
+ * the deletion band directly under it (SettingsDeleting.md:3), which no
+ * surface may scroll away.
+ */
+@Composable
+private fun SettingsTop(state: SettingsUiState, actions: SettingsActions, doors: SettingsDoors) {
+    Column {
+        PageHeader(
+            title = stringResource(R.string.settings_title),
+            onBack = doors.onBack,
+            backContentDescription = stringResource(R.string.settings_back),
+            node = Page / "header",
+        )
+        state.graceDeletion?.let { deletion ->
+            DeletionBand(
+                count = forwardLadder(deletion.scheduledFor, state.now).words(),
+                content = deletion.includesContent,
+                onCancel = actions.onCancelDeletion,
+                node = Page / "deletionBand",
+            )
+        }
+    }
+}
+
 /** The page's one-shots: snackbars, focus after a revoke or a closed dialog, and a subpage's notice. */
 @Composable
 private fun SettingsEffects(
@@ -217,13 +299,17 @@ private fun SettingsEffects(
     snackbar: SnackbarHostState,
     sessionFocus: Map<String, FocusRequester>,
     signOutFocus: FocusRequester,
+    eraseFocus: FocusRequester,
     notice: String?,
     onNoticeShown: () -> Unit,
+    onOpenDeletion: (DeletionDoor) -> Unit,
 ) {
     val context = LocalContext.current
+    val openDeletion by rememberUpdatedState(onOpenDeletion)
     LaunchedEffect(events) {
         events.collect { event ->
             when (event) {
+                is SettingsEvent.OpenDeletion -> openDeletion(event.door)
                 is SettingsEvent.Snackbar -> {
                     val arg = event.arg ?: event.argRes?.let { context.getString(it) }
                     val text = if (arg == null) context.getString(event.text) else context.getString(event.text, arg)
@@ -233,14 +319,19 @@ private fun SettingsEffects(
                 }
                 is SettingsEvent.FocusSession -> runCatching { sessionFocus[event.id]?.requestFocus() }
                 SettingsEvent.FocusSignOut -> runCatching { signOutFocus.requestFocus() }
+                SettingsEvent.FocusErase -> runCatching { eraseFocus.requestFocus() }
             }
         }
     }
-    // A subpage's answer, said once, then consumed.
+    // A subpage's answer, said once, then consumed. The snackbar runs on a
+    // scope of its own: consuming flips the notice to null, which restarts
+    // this effect — had the snackbar lived here, that restart would cancel it
+    // the frame it appeared.
+    val noticeScope = rememberCoroutineScope()
     LaunchedEffect(notice) {
         if (notice != null) {
             onNoticeShown()
-            snackbar.showSnackbar(notice)
+            noticeScope.launch { snackbar.showSnackbar(notice) }
         }
     }
 }
@@ -416,6 +507,39 @@ private fun PeopleGroup() {
     )
 }
 
+/**
+ * THE VEIL IS THE ACCOUNT'S CHOICE, NOT THIS PHONE'S (#141): a group of its
+ * own, because Reading's footnote promises "this device" and this does not.
+ * One switch, off by default, never a sheet — live in the app, since Play
+ * has no web-only rule.
+ */
+@Composable
+private fun SensitiveGroup(state: SettingsUiState, actions: SettingsActions) {
+    val group = Page / "sensitive"
+    SettingsGroup(
+        label = stringResource(R.string.settings_sensitive),
+        footnote = stringResource(R.string.settings_sensitive_footnote),
+        node = group,
+        rows = listOf(
+            {
+                SettingsRow(
+                    label = stringResource(R.string.settings_sensitive_unveil),
+                    status = stringResource(
+                        if (state.alwaysUnveil) {
+                            R.string.settings_sensitive_unveil_on
+                        } else {
+                            R.string.settings_sensitive_unveil_off
+                        },
+                    ),
+                    kind = SettingsRowKind.Switch(checked = state.alwaysUnveil),
+                    onClick = actions.onAlwaysUnveil,
+                    node = group / "unveil",
+                )
+            },
+        ),
+    )
+}
+
 @Composable
 private fun BackupGroup(state: SettingsUiState, doors: SettingsDoors) {
     val group = Page / "backup"
@@ -451,6 +575,60 @@ private fun BackupGroup(state: SettingsUiState, doors: SettingsDoors) {
                 )
             },
             // No kept-picks row: kept picks are not built (Restore-and-kept-picks packet).
+        ),
+    )
+}
+
+/** The "Manage space" ask: whether the group is to be brought into view, and the page's scroll to do it with. */
+private class ClearingInView(val asked: Boolean, val scroll: ScrollState, val onShown: () -> Unit)
+
+/**
+ * Clearing data (Settings.md :139-145), after Key backup because the loss
+ * it warns of is the key's. The footnote opens on the key and says the
+ * account is gone for good before anything else — with no recovery code the
+ * sentence drops its condition — and the seen list's return comes last, a
+ * copy of the server's. An unread backup state takes the no-code words: the
+ * stronger warning is the safe one. The one row is quiet like Sign out, no
+ * error colour; the weight lives in the dialog it raises.
+ */
+@Composable
+private fun ClearingGroup(
+    state: SettingsUiState,
+    actions: SettingsActions,
+    eraseFocus: FocusRequester,
+    inView: ClearingInView,
+) {
+    val group = Page / "clearing"
+    // The system's "Manage space" opens settings with this group in view: the
+    // page jumps to where the group was placed — once, and without an
+    // animation, so nothing keeps the page in motion behind the reader.
+    var top by remember { mutableIntStateOf(-1) }
+    LaunchedEffect(inView.asked, top) {
+        if (inView.asked && top >= 0) {
+            inView.scroll.scrollTo(top)
+            inView.onShown()
+        }
+    }
+    SettingsGroup(
+        modifier = Modifier.onPlaced { top = it.positionInParent().y.toInt() },
+        label = stringResource(R.string.settings_clearing),
+        footnote = stringResource(
+            when {
+                state.backupMade -> R.string.settings_clearing_footnote_made
+                else -> R.string.settings_clearing_footnote_none
+            },
+        ),
+        node = group,
+        rows = listOf(
+            {
+                SettingsRow(
+                    label = stringResource(R.string.settings_clearing_erase),
+                    kind = SettingsRowKind.Action,
+                    onClick = actions.onErase,
+                    node = group / "erase",
+                    modifier = Modifier.focusRequester(eraseFocus),
+                )
+            },
         ),
     )
 }
@@ -640,3 +818,57 @@ private fun LeavingGroup(state: SettingsUiState, actions: SettingsActions, signO
         ),
     )
 }
+
+/**
+ * The page's last row, in a group of its own after leaving — drawn quiet, a
+ * navigating row with a chevron (`SettingsBody`'s `ending`).
+ *
+ * EVERY STATE KEYS ON THE SERVER'S DELETION PATH (OS-15), never on the
+ * application: the member's footnote where the mailed link answers
+ * (BY_LINK), the applicant's where the delete is immediate (IMMEDIATE), and
+ * the locked look — visibly inactive at the disabled opacity and still
+ * tappable — where neither verb answers yet (LOCKED; Settings.md :38-40).
+ * In the grace the row counts down to the deadline and the footnote goes,
+ * since it describes a request not yet made (SettingsDeleting.md :5-9). No
+ * footnote is drawn before the path is read: the two readings differ.
+ */
+@Composable
+private fun EndingGroup(state: SettingsUiState, actions: SettingsActions) {
+    val group = Page / "ending"
+    val grace = state.graceDeletion
+    val footnote = when {
+        grace != null -> null
+        state.deletion?.path == AccountDeletionPath.BY_LINK -> R.string.settings_ending_footnote_member
+        state.deletion != null -> R.string.settings_ending_footnote_applicant
+        else -> null
+    }
+    SettingsGroup(
+        ariaLabel = stringResource(R.string.settings_ending),
+        footnote = footnote?.let { stringResource(it) },
+        node = group,
+        rows = listOf(
+            {
+                SettingsRow(
+                    label = stringResource(R.string.settings_ending_delete),
+                    status = grace?.let {
+                        stringResource(
+                            R.string.settings_ending_deleting,
+                            forwardLadder(it.scheduledFor, state.now).words(),
+                        )
+                    },
+                    kind = SettingsRowKind.Opens,
+                    onClick = actions.onDeleteAccount,
+                    node = group / "delete",
+                    modifier = if (state.deletionLocked && grace == null) {
+                        Modifier.alpha(DISABLED_ALPHA)
+                    } else {
+                        Modifier
+                    },
+                )
+            },
+        ),
+    )
+}
+
+/** The locked look's opacity — Material's disabled content alpha, the system's `disabled opacity`. */
+private const val DISABLED_ALPHA = 0.38f

@@ -339,6 +339,21 @@ describe("the sound disc's accessibility (N2)", () => {
   });
 });
 
+// Ruling 92 (seam 109): "48dp targets grow invisibly where space allows". The
+// disc's plate is 36px and stands 8px in from the frame's corner, so its press
+// area grows to the 48px minimum (`cg-hit`) without moving the ink — the same
+// trade the transport's controls make (`video-transport.test.tsx`).
+describe("the disc's target (ruling 92)", () => {
+  it("both discs grow their press area to the touch-target minimum", () => {
+    suppressesAutoplay({});
+    render(<VideoPlayer src={CLIP} />);
+    expect(screen.getByTestId("video-player-sound").className).toContain("cg-hit");
+
+    act(() => suppressesAutoplay({ reducedMotion: true }));
+    expect(screen.getByTestId("video-player-play").className).toContain("cg-hit");
+  });
+});
+
 // The sensitive veil takes its clip out of the rotation (design/readme.md,
 // backlog item 103): "ALWAYS a veiled clip has no playback and no sound-disc
 // presence" (Feed.md:43). "The unveil is an eligibility change, not a
@@ -716,8 +731,8 @@ describe("looping", () => {
   });
 
   it("stops under the real transport", () => {
-    render(<VideoPlayer src={CLIP} surface="transport" testId="pinned" />);
-    expect(screen.getByTestId("pinned")).toHaveProperty("loop", false);
+    render(<VideoPlayer src={CLIP} surface="transport" testId="transported" />);
+    expect(screen.getByTestId("transported")).toHaveProperty("loop", false);
   });
 
   // THE END IS ITS OWN REST (jakob 2026-09-15, hand test). "Play" is the offer
@@ -725,35 +740,35 @@ describe("looping", () => {
   // clip over, and the control says so rather than leaving one word to mean
   // both.
   it("stands the transport at Replay when the clip runs out", () => {
-    render(<VideoPlayer src={CLIP} surface="transport" testId="pinned" />);
-    const video = screen.getByTestId("pinned") as HTMLVideoElement;
+    render(<VideoPlayer src={CLIP} surface="transport" testId="transported" />);
+    const video = screen.getByTestId("transported") as HTMLVideoElement;
     act(() => intersect(true));
-    expect(screen.getByTestId("pinned-transport-play")).toHaveAttribute("aria-label", "Pause");
+    expect(screen.getByTestId("transported-transport-play")).toHaveAttribute("aria-label", "Pause");
 
     act(() => {
       video.dispatchEvent(new Event("ended"));
     });
-    expect(screen.getByTestId("pinned-transport-play")).toHaveAttribute("aria-label", "Replay");
+    expect(screen.getByTestId("transported-transport-play")).toHaveAttribute("aria-label", "Replay");
 
     // And it is Play again the moment the clip is running, so the word never
     // outlives the state it describes.
     act(() => {
       video.dispatchEvent(new Event("play"));
     });
-    expect(screen.getByTestId("pinned-transport-play")).toHaveAttribute("aria-label", "Pause");
+    expect(screen.getByTestId("transported-transport-play")).toHaveAttribute("aria-label", "Pause");
   });
 
   it("replays from the start when Play is pressed on a clip that ended", () => {
-    render(<VideoPlayer src={CLIP} surface="transport" testId="pinned" />);
-    const video = screen.getByTestId("pinned") as HTMLVideoElement;
+    render(<VideoPlayer src={CLIP} surface="transport" testId="transported" />);
+    const video = screen.getByTestId("transported") as HTMLVideoElement;
     // The stub element reports `ended` off its own clock, so the clip is put
     // at its end the way a finished clip sits there.
     Object.defineProperty(video, "ended", { value: true, configurable: true });
     video.currentTime = 30;
 
-    act(() => screen.getByTestId("pinned-transport-play").click());
+    act(() => screen.getByTestId("transported-transport-play").click());
     expect(video.currentTime).toBe(0);
-    expect(screen.getByTestId("pinned-transport-elapsed").textContent).toBe("0:00");
+    expect(screen.getByTestId("transported-transport-elapsed").textContent).toBe("0:00");
   });
 });
 

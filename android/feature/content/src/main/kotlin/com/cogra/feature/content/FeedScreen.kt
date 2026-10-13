@@ -43,10 +43,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
+import com.cogra.core.designsystem.CollapsingTopBand
 import com.cogra.core.designsystem.CollapsingTopBanner
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.EdgeSighting
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PendingMarker
+import com.cogra.core.designsystem.SeenCardsEffect
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.dataNodeSurface
@@ -98,9 +101,22 @@ fun FeedRoute(
     keyBanner: @Composable () -> Unit = {},
     /** The borrowed-view band, for the reader whose feed is not their own. */
     borrowedViewBand: @Composable () -> Unit = {},
+    /** The deletion band, while the account's confirmed deletion is in its grace (`FeedDeleting`). */
+    deletionBand: @Composable () -> Unit = {},
     refreshSignal: Boolean = false,
     onRefreshSignalConsumed: () -> Unit = {},
     banners: @Composable () -> Unit = {},
+    /**
+     * The vouch card (`VouchBack`): the list's first card, above the posts,
+     * after the head's notices (ruling 45). The feed's own slot — the own
+     * profile carries the banner stack but never this card.
+     */
+    vouchCard: @Composable () -> Unit = {},
+    /**
+     * The reader pulled for newer posts: the shell's readers that ride the
+     * feed (the borrowed-view band, the vouch card) read again with it.
+     */
+    onPulled: () -> Unit = {},
     /**
      * A post the wizard staged whose acts were collected before they
      * landed: the label names it, and null means there is nothing to
@@ -149,9 +165,7 @@ fun FeedRoute(
                     val target = request.comment?.asReplyTarget() ?: post?.asReplyTarget()
                     target?.let(onReply)
                 },
-                onEditComment = { commentId ->
-                    onEditComment(commentId, post?.title?.value.orEmpty())
-                },
+                onEditComment = { commentId -> onEditComment(commentId, post?.title?.value.orEmpty()) },
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
                 onReference = onCitePost,
@@ -169,8 +183,11 @@ fun FeedRoute(
         expiredLabel = expiredLabel,
         onExpiredDismissed = onExpiredDismissed,
         onOpenDraft = onOpenDraft,
-        onRefresh = viewModel::refresh,
+        onRefresh = then(onPulled, viewModel::refresh),
         onLoadMore = viewModel::loadMore,
+        onCardsSeen = viewModel::onCardsSeen,
+        onCardEdgesSeen = viewModel::onCardEdgesSeen,
+        onSeenCheckpoint = viewModel::onSeenCheckpoint,
         onReveal = viewModel::onReveal,
         onOpenPost = onOpenPost,
         onOpenActor = onOpenActor,
@@ -178,7 +195,9 @@ fun FeedRoute(
         onChats = onChats,
         keyBanner = keyBanner,
         borrowedViewBand = borrowedViewBand,
+        deletionBand = deletionBand,
         banners = banners,
+        vouchCard = vouchCard,
         viewerId = viewerId,
         onEditPost = onEditPost,
         onCitePost = onCitePost,
@@ -186,6 +205,12 @@ fun FeedRoute(
             StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node)
         },
     )
+}
+
+/** One callback after another — the pull tells the shell, then refreshes. */
+private fun then(first: () -> Unit, second: () -> Unit): () -> Unit = {
+    first()
+    second()
 }
 
 /**
@@ -205,12 +230,20 @@ fun FeedScreen(
     onOpenPost: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
+    /** Post cards that stood fully in the viewport (`SeenCardsEffect`). */
+    onCardsSeen: (List<String>) -> Unit = {},
+    /** Tall cards with an edge on screen this frame (History.md:13). */
+    onCardEdgesSeen: (List<EdgeSighting>) -> Unit = {},
+    /** The reading paused: the scroll rested, or the reader left. */
+    onSeenCheckpoint: () -> Unit = {},
     /** Hands a post to the platform's own share sheet. */
     onShare: (String) -> Unit = {},
     onChats: (() -> Unit)? = null,
     keyBanner: @Composable () -> Unit = {},
     borrowedViewBand: @Composable () -> Unit = {},
+    deletionBand: @Composable () -> Unit = {},
     banners: @Composable () -> Unit = {},
+    vouchCard: @Composable () -> Unit = {},
     expiredLabel: String? = null,
     onExpiredDismissed: () -> Unit = {},
     onOpenDraft: () -> Unit = {},
@@ -268,6 +301,18 @@ fun FeedScreen(
     // the moment it left.
     val collapsingTop = rememberCollapsingTop()
     WatchFeedTail(listState = listState, state = state, onLoadMore = onLoadMore)
+    // SEEN, AT THE LIST: a post card fully in the viewport joins the
+    // reader's History, as itself (History.md). Only the post rows map to
+    // an id; the banner and expiry rows are not cards.
+    val postIds = remember(state.posts) { state.posts.mapTo(HashSet()) { it.id } }
+    SeenCardsEffect(
+        listState = listState,
+        nodeIdOf = { key -> (key as? String)?.takeIf { it in postIds } },
+        onSeen = onCardsSeen,
+        onEdgesSeen = onCardEdgesSeen,
+        onCheckpoint = onSeenCheckpoint,
+        suspended = commentsFor != null,
+    )
     val band = FEED / "band"
     Scaffold(
         modifier = Modifier.dataNodeSurface(),
@@ -286,6 +331,10 @@ fun FeedScreen(
                     colors = surfaceTopAppBarColors(),
                     scrollBehavior = collapsingTop.scrollBehavior,
                 )
+                // The deletion band rides the root's band, directly under it,
+                // collapsing and returning with it (FeedDeleting.md:5) — full
+                // bleed, its own fill, so outside the banner strip's inset.
+                CollapsingTopBand(collapsingTop) { deletionBand() }
                 CollapsingTopBanner(collapsingTop) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         borrowedViewBand()
@@ -325,6 +374,7 @@ fun FeedScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         Box(Modifier.padding(horizontal = 16.dp)) { banners() }
+                        vouchCard()
                         ErrorLine(R.string.content_error_transport, "feed_transport_error")
                         TextButton(onClick = onRefresh, modifier = Modifier.testTag("feed_retry")) {
                             Text(stringResource(R.string.content_retry))
@@ -339,6 +389,7 @@ fun FeedScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         Box(Modifier.padding(horizontal = 16.dp)) { banners() }
+                        vouchCard()
                         Text(
                             stringResource(R.string.content_feed_empty),
                             modifier = Modifier.testTag("feed_empty"),
@@ -393,6 +444,9 @@ fun FeedScreen(
                                 verticalArrangement = Arrangement.spacedBy(Space.x2),
                             ) {
                                 item(key = "feed_banners") { Gutter { banners() } }
+                                // The vouch card is a feed card, full-width,
+                                // the list's first above the posts (`VouchBack.jsx`).
+                                item(key = "feed_vouch_card") { vouchCard() }
                                 // "Your post didn't land." The canonical
                                 // `ComposeExpired` board puts this here, at
                                 // the top of the feed the author returns

@@ -27,12 +27,18 @@
    each row keeps its own quiet mark until it is opened. So the newest three
    wear `unread` and the older six do not, and there is no mark-all — a
    control whose only job is to make a list stop asking is a control for a list
-   that asks too much. */
+   that asks too much.
+
+   REGISTERED under the `notifications` prefix (round 7): the list is `list`,
+   each row a `notification` keyed by its place in the list, newest first —
+   two rows can share an actor, so the place is the row's one stable key, as
+   the chronicle's acts are keyed. A row's quiet mark is `ContentRow`'s `dot`. */
+export const NODE = "notifications";
 export function Screen() {
   return (
     <>
-      <PageHeader title="Notifications" backHref="#" backLabel="Back to feed" />
-      <ChronicleList>
+      <PageHeader title="Notifications" backHref="#" backLabel="Back to feed" node="header" />
+      <ChronicleList node="list">
         <ContentRow
           variant="chronicle"
           chevron={false}
@@ -42,6 +48,8 @@ export function Screen() {
           second="The third headland light is real — I have a print from 2019 that almost catches it."
           trailing="35m"
           onOpen={() => {}}
+          node="notification"
+          nodeKey="1"
         />
         <ContentRow
           variant="chronicle"
@@ -52,6 +60,8 @@ export function Screen() {
           second="Crust held all the way past the slipway today."
           trailing="2h"
           onOpen={() => {}}
+          node="notification"
+          nodeKey="2"
         />
         <ContentRow
           variant="chronicle"
@@ -61,6 +71,8 @@ export function Screen() {
           title="@sol gave an opinion on you"
           trailing="6h"
           onOpen={() => {}}
+          node="notification"
+          nodeKey="3"
         />
         <ContentRow
           variant="chronicle"
@@ -70,6 +82,8 @@ export function Screen() {
           second="in Salt maps of the coast road"
           trailing="1d"
           onOpen={() => {}}
+          node="notification"
+          nodeKey="4"
         />
         {/* THE EIGHTH KIND (the invites round, 2026-09-15): an application of
             yours became approvable. It belongs to the set by the set's own
@@ -95,6 +109,8 @@ export function Screen() {
           title="@rafa is ready for your approval"
           trailing="2d"
           onOpen={() => {}}
+          node="notification"
+          nodeKey="5"
         />
         <ContentRow
           variant="chronicle"
@@ -104,6 +120,8 @@ export function Screen() {
           second="in Sunday at the tide market"
           trailing="3d"
           onOpen={() => {}}
+          node="notification"
+          nodeKey="6"
         />
         <ContentRow
           variant="chronicle"
@@ -112,6 +130,8 @@ export function Screen() {
           title="@juno landed through your invite"
           trailing="9d"
           onOpen={() => {}}
+          node="notification"
+          nodeKey="7"
         />
         <ContentRow
           variant="chronicle"
@@ -120,6 +140,8 @@ export function Screen() {
           title="@mira approved your application"
           trailing="12d"
           onOpen={() => {}}
+          node="notification"
+          nodeKey="8"
         />
         {/* THE NINTH KIND (the invites round's extension, 2026-09-15): a
             member closed an application of yours. It is the eighth's twin and
@@ -144,9 +166,11 @@ export function Screen() {
           title="@kel closed your application"
           trailing="14d"
           onOpen={() => {}}
+          node="notification"
+          nodeKey="9"
         />
       </ChronicleList>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

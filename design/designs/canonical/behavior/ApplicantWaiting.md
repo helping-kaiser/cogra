@@ -8,7 +8,7 @@ ALWAYS the band reads Browsing from @mira's view while your application lands. n
 
 ALWAYS the waiting card shows no clock and no figure counting down
 
-ALWAYS the ask link stands whole on the waiting card with its caption It does not expire. While @mira's answer is open, it can't start a second application.
+ALWAYS the ask link stands whole on the waiting card with its caption It does not expire.
 
 WHEN tap Copy your ask link -> the ask link lands on the clipboard AND the snackbar reads Link copied
 

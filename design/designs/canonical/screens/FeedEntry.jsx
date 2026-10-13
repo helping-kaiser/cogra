@@ -24,20 +24,60 @@
    EVERY PATH STARTS WITH AN OPINION THE READER GAVE (§1, the inbound-inert
    rule): nothing anyone points at you moves anything toward you. That is the
    note under the cover, and it is the sentence the whole feature exists to make
-   checkable. */
+   checkable.
+
+   UNDER A BORROWED VIEW IT IS SAID IN THE THIRD PERSON (jakob 2026-10-12,
+   SR-G3; the `view` chip's `borrowed`). A guest or an applicant reads a feed
+   walked from someone else's opinions, so "an opinion you gave" would be false
+   for them: the note names the account the view is borrowed from, in the
+   band's own grammar (`Browsing from @mira's view`), and every path leads with
+   that account's face.
+
+   REGISTERED under the `feedEntry` prefix (round 7), the four levels' one
+   prefix: the held thing is `origin`, the note `note`, `Strongest first`
+   `pathsLabel`, each path row `path` keyed by its place, strongest first, and
+   the quiet row `morePaths` with its `label` and `value`. The `view` chip
+   draws the path list once per value, so the two lists are one list in two
+   states — each row keeping its own key (a chip copy of a keyed instance). */
+export const NODE = "feedEntry";
+export const PROPS = { view: { editor: "enum", options: ["own", "borrowed"], default: "own" } };
+export const VALS = `traceNote: this.props.view === "borrowed" ? "Every path here starts with an opinion @mira gave." : "Every path here starts with an opinion you gave.", ownPaths: this.props.view === "borrowed" ? "none" : "contents", borrowedPaths: this.props.view === "borrowed" ? "contents" : "none"`;
 export function Screen() {
   return (
     <>
-      <PageHeader title="Why this reached you" backHref="#" backLabel="Back to feed" />
+      <PageHeader title="Why this reached you" backHref="#" backLabel="Back to feed" node="header" />
       <ScoreColumn>
         <ScoreOrigin />
-        <QuietNote>Every path here starts with an opinion you gave.</QuietNote>
+        <QuietNote node="note">{"{{traceNote}}"}</QuietNote>
 
-        <SectionLabel>Strongest first</SectionLabel>
+        <SectionLabel node="pathsLabel">Strongest first</SectionLabel>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {SCORE_PATHS.map((path) => (
-            <PathRow key={path.through} people={path.people} through={path.through} value={path.value} onOpen={() => {}} />
-          ))}
+          <div style={{ display: "{{ownPaths}}" }} data-node-chip="view" data-node-key="own">
+            {SCORE_PATHS.map((path, index) => (
+              <PathRow
+                key={path.through}
+                people={path.people}
+                through={path.through}
+                value={path.value}
+                onOpen={() => {}}
+                node="path"
+                nodeKey={String(index + 1)}
+              />
+            ))}
+          </div>
+          <div style={{ display: "{{borrowedPaths}}" }} data-node-chip="view" data-node-key="borrowed">
+            {SCORE_PATHS_BORROWED.map((path, index) => (
+              <PathRow
+                key={path.through}
+                people={path.people}
+                through={path.through}
+                value={path.value}
+                onOpen={() => {}}
+                node="path"
+                nodeKey={String(index + 1)}
+              />
+            ))}
+          </div>
 
           {/* The quiet row. It is a text control and not a card: the four above
               it are destinations and this one is a state change on this screen,
@@ -63,15 +103,22 @@ export function Screen() {
               textAlign: "left",
               boxSizing: "border-box",
             }}
+            data-node="morePaths"
           >
-            <span aria-hidden="true" style={{ flex: 1 }}>{SCORE_MORE_PATHS.count} more paths</span>
-            <span aria-hidden="true" style={{ flex: "none", color: "var(--on-surface)", fontSize: "var(--text-body-small)", fontWeight: 500 }}>
+            <span aria-hidden="true" style={{ flex: 1 }} data-node="label">
+              {SCORE_MORE_PATHS.count} more paths
+            </span>
+            <span
+              aria-hidden="true"
+              style={{ flex: "none", color: "var(--on-surface)", fontSize: "var(--text-body-small)", fontWeight: 500 }}
+              data-node="value"
+            >
               {SCORE_MORE_PATHS.value}
             </span>
           </button>
         </div>
       </ScoreColumn>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

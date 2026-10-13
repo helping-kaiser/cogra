@@ -35,7 +35,14 @@ axum = { version = "0.8" }
 # exactly that case ("if you need to use third party extractors and want
 # to make sure a limit is also applied there then `RequestBodyLimit`
 # should be used").
-tower-http = { version = "0.7", default-features = false, features = ["limit"] }
+#
+# `compression-gzip` is the ranked feed's wire obligation (ranked-feed-api
+# §4.13): the api answers `/graphql` compressed itself, so every deployment
+# — dev included, where no edge proxy exists — sends the feed answer
+# compressed to any client that accepts it. gzip only: it is what OkHttp's
+# transparent decompression (Android's Apollo engine) and every browser
+# speak.
+tower-http = { version = "0.7", default-features = false, features = ["limit", "compression-gzip"] }
 # The limited body's error type, so the handler can tell "over the
 # ceiling" from "the connection broke" and answer 413 rather than 500 —
 # the same downcast axum's own `Bytes` extractor performs.
@@ -91,6 +98,14 @@ base64 = { version = "0.23" }
 axum-client-ip = { version = "1" }
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 sha1 = { version = "0.10" }
+
+# The ranking relay's client to the server ranker pod (ranked-feed-api
+# §4.2 step 4): typed code generated at compile time from the pod's
+# checked-in `ranker-schema.graphql`, so a pod schema change that breaks
+# the relay's document fails the api's build — the same one-artifact,
+# generated-client discipline the apps keep toward `schema.graphql`. The
+# derive alone: requests ride the workspace's reqwest.
+graphql_client = { version = "0.16" }
 
 # Media carriage. `object_store` speaks the S3 object protocol behind one
 # small trait, which is the boundary the standalone media service needs —

@@ -22,7 +22,7 @@ ALWAYS the figures are one tap target, spoken as each figure's number and words 
 
 ALWAYS the wide anchor's accessible name says this account and never a handle
 
-ALWAYS profile.bottomBar rides with no slot lit
+ALWAYS profile.bottomBar keeps lit the slot of the root the profile was opened from, profile.bottomBar.feedSlot from the feed
 
 ALWAYS the page is reached by structure that still points at the account, an author chip or a name in a chronicle, and never by a shared handle link
 

@@ -46,7 +46,11 @@ const EMPHASIS = {
   },
 };
 
-export function FactRow({ label, value, action, onAction, emphasis = "seal", last = false }) {
+/* NAMED BY ITS PLACER (design ⇄ impl seam 002): given `node`, the row names its
+   `label`, a value it wraps `value`, and a worded action `action`. A value the
+   row hands through unwrapped — a stance readout in the seal — and an action
+   given as a node are named by whoever placed them. */
+export function FactRow({ label, value, action, onAction, emphasis = "seal", last = false, node }) {
   const shape = EMPHASIS[emphasis] ?? EMPHASIS.seal;
   const type = {
     fontSize: "var(--text-body-medium)",
@@ -54,7 +58,9 @@ export function FactRow({ label, value, action, onAction, emphasis = "seal", las
   };
   const wrapped =
     value != null && (typeof value === "string" || shape.wrapNodes) ? (
-      <span style={{ ...type, ...shape.value }}>{value}</span>
+      <span style={{ ...type, ...shape.value }} data-node={node && "value"}>
+        {value}
+      </span>
     ) : (
       value
     );
@@ -67,10 +73,19 @@ export function FactRow({ label, value, action, onAction, emphasis = "seal", las
         minHeight: "44px",
         ...shape.border(last),
       }}
+      data-node={node}
     >
-      <span style={{ flex: 1, ...type, ...shape.label }}>{label}</span>
+      <span style={{ flex: 1, ...type, ...shape.label }} data-node={node && "label"}>
+        {label}
+      </span>
       {wrapped}
-      {typeof action === "string" ? <InlineAction onClick={onAction}>{action}</InlineAction> : action}
+      {typeof action === "string" ? (
+        <InlineAction onClick={onAction} node={node && "action"}>
+          {action}
+        </InlineAction>
+      ) : (
+        action
+      )}
     </div>
   );
 }

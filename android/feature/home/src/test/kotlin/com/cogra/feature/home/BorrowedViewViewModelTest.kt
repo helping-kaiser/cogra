@@ -1,18 +1,24 @@
 package com.cogra.feature.home
 
 import com.cogra.crypto.ActorKey
+import com.cogra.domain.AccountDeletionPath
 import com.cogra.domain.AccountState
 import com.cogra.domain.ActorRef
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserError
 import com.cogra.domain.UserProfile
+import com.cogra.domain.deletion.AccountDeletion
+import com.cogra.domain.deletion.AccountDeletionState
+import com.cogra.domain.deletion.DeletionStanding
 import com.cogra.domain.identity.KeyCeremony
 import com.cogra.domain.signing.RegistrationFlow
 import com.cogra.domain.signing.RegistrationSigner
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.stance.StanceSignals
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.ScriptedAccountDeletionRepository
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingOnboardingRepository
 import com.cogra.domain.testing.ThrowingWriteRepository
@@ -30,6 +36,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.time.Instant
 
 private class ScriptedVantage : ThrowingAccountRepository() {
     var answer: Outcome<ActorRef?> = Outcome.Success(ActorRef("a1", "genesis_mod"))
@@ -56,6 +63,7 @@ class BorrowedViewViewModelTest {
     private val account = ScriptedVantage()
     private val identity = FakeIdentityStore().apply { seed = ActorKey.generate().seed() }
     private val onboarding = ThrowingOnboardingRepository()
+    private val signals = StanceSignals()
     private val loopScope = CoroutineScope(dispatcher + SupervisorJob())
 
     @Before
@@ -81,8 +89,41 @@ class BorrowedViewViewModelTest {
         FakeTokenStore(),
     )
 
+    private val deletions = ScriptedAccountDeletionRepository()
+    private val deletionState = AccountDeletionState(deletions)
+
     private fun viewModel(signedIn: Boolean) =
-        BorrowedViewViewModel(account, registrationFlow()).apply { onSession(signedIn) }
+        BorrowedViewViewModel(account, registrationFlow(), signals, deletionState).apply { onSession(signedIn) }
+
+    /**
+     * ER-G4 (`FeedDeleting.md:13`): while the account's confirmed deletion
+     * runs its grace, the deletion band stands and this one does not — and
+     * a cancel brings it back, the vantage never having been forgotten.
+     */
+    @Test
+    fun theDeletionBandWinsTheTopWhileTheGraceRuns() = runTest(dispatcher) {
+        account.answer = Outcome.Success(ActorRef("a1", "mira"))
+        val grace = AccountDeletion(Instant.parse("2030-01-01T00:00:00Z"), includesContent = false)
+        deletions.standing = Outcome.Success(DeletionStanding(AccountDeletionPath.BY_LINK, grace))
+        val viewModel = viewModel(signedIn = true)
+        deletionState.refresh()
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.yieldsToDeletion).isTrue()
+        assertThat(viewModel.state.value.vantage?.handle).isEqualTo("mira")
+
+        deletionState.cancel()
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.yieldsToDeletion).isFalse()
+    }
+
+    @Test
+    fun noDeletionLeavesTheBorrowedBandStanding() = runTest(dispatcher) {
+        account.answer = Outcome.Success(ActorRef("a1", "mira"))
+        val viewModel = viewModel(signedIn = true)
+        deletionState.refresh()
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.yieldsToDeletion).isFalse()
+    }
 
     /**
      * A signed-out reader's wording is settled by the session alone, so
@@ -100,15 +141,65 @@ class BorrowedViewViewModelTest {
         assertThat(viewModel.state.value.reading).isEqualTo(BorrowedViewReading.JOIN)
     }
 
-    /** The landed member's line is the vouch-back ask, and it is theirs. */
+    /** The landed member's line: their first opinion starts their own (VouchBack.md:13). */
     @Test
-    fun aLandedMemberStillBorrowingIsGivenTheVouchBackReading() = runTest(dispatcher) {
+    fun aLandedMemberStillBorrowingIsGivenTheMemberReading() = runTest(dispatcher) {
         account.answer = Outcome.Success(ActorRef("a1", "mira"))
         val viewModel = viewModel(signedIn = true)
         advanceUntilIdle()
 
         assertThat(viewModel.state.value.vantage?.handle).isEqualTo("mira")
-        assertThat(viewModel.state.value.reading).isEqualTo(BorrowedViewReading.VOUCH_BACK)
+        assertThat(viewModel.state.value.reading).isEqualTo(BorrowedViewReading.MEMBER)
+    }
+
+    /**
+     * A signing taken anywhere re-reads the vantage, and the server's null
+     * takes the band away at once (VouchBack.md:21) — the web's
+     * `an opinion signed anywhere takes the band away`.
+     */
+    @Test
+    fun anOpinionSignedAnywhereTakesTheBandAway() = runTest(dispatcher) {
+        account.answer = Outcome.Success(ActorRef("a1", "mira"))
+        val viewModel = viewModel(signedIn = true)
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.vantage?.handle).isEqualTo("mira")
+
+        account.answer = Outcome.Success(null)
+        signals.announceSigned()
+        advanceUntilIdle()
+
+        assertThat(viewModel.state.value.vantage).isNull()
+        assertThat(account.reads).isEqualTo(2)
+    }
+
+    /** An Affinity never ends it (:25): the re-read still names the vantage. */
+    @Test
+    fun anAffinityLeavesTheBandStanding() = runTest(dispatcher) {
+        account.answer = Outcome.Success(ActorRef("a1", "mira"))
+        val viewModel = viewModel(signedIn = true)
+        advanceUntilIdle()
+
+        signals.announceSigned()
+        advanceUntilIdle()
+
+        assertThat(account.reads).isEqualTo(2)
+        assertThat(viewModel.state.value.vantage?.handle).isEqualTo("mira")
+    }
+
+    /** An expired first opinion brings it back (:23), read on the feed's next pull. */
+    @Test
+    fun anExpiredFirstOpinionBringsTheBandBack() = runTest(dispatcher) {
+        account.answer = Outcome.Success(null)
+        val viewModel = viewModel(signedIn = true)
+        advanceUntilIdle()
+        assertThat(viewModel.state.value.vantage).isNull()
+
+        account.answer = Outcome.Success(ActorRef("a1", "mira"))
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        assertThat(viewModel.state.value.vantage?.handle).isEqualTo("mira")
+        assertThat(viewModel.state.value.reading).isEqualTo(BorrowedViewReading.MEMBER)
     }
 
     @Test

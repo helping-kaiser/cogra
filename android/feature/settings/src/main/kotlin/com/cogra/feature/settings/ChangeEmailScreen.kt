@@ -31,6 +31,7 @@ import com.cogra.core.designsystem.v2.atom.QuietNote
 import com.cogra.core.designsystem.v2.atom.WaitingCommit
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
+import com.cogra.domain.sanitizedEmail
 import com.cogra.domain.settings.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -105,7 +106,7 @@ class ChangeEmailViewModel @Inject constructor(
         }
         _state.update { it.copy(malformed = false, wrongPassword = false, fault = null, inFlight = true) }
         viewModelScope.launch {
-            val outcome = settings.requestEmailChange(s.newEmail.trim(), s.password)
+            val outcome = settings.requestEmailChange(sanitizedEmail(s.newEmail), s.password)
             _state.update {
                 when {
                     outcome is Outcome.Success -> it.copy(inFlight = false, sentTo = outcome.value.newEmail)
@@ -134,6 +135,8 @@ fun ChangeEmailRoute(
     applicant: Boolean,
     onBack: () -> Unit,
     onRequested: (notice: String?) -> Unit,
+    /** The deletion band under the header, while a confirmed deletion runs its grace. */
+    deletionBand: @Composable () -> Unit = {},
     viewModel: ChangeEmailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -148,6 +151,7 @@ fun ChangeEmailRoute(
         onNewEmail = viewModel::onNewEmail,
         onPassword = viewModel::onPassword,
         onCommit = viewModel::onCommit,
+        deletionBand = deletionBand,
     )
 }
 
@@ -159,6 +163,7 @@ fun ChangeEmailScreen(
     onNewEmail: (String) -> Unit,
     onPassword: (String) -> Unit,
     onCommit: () -> Unit,
+    deletionBand: @Composable () -> Unit = {},
 ) {
     val address = state.address.orEmpty()
 
@@ -176,6 +181,7 @@ fun ChangeEmailScreen(
         } else {
             stringResource(R.string.change_email_lead)
         },
+        deletionBand = deletionBand,
     ) {
         Spacer(Modifier.height(32.dp))
         CograTextField(
@@ -216,12 +222,16 @@ fun ChangeEmailScreen(
             faultTestTag = "change_email_fault",
             node = keyed(Page / "commit"),
         )
-        if (!applicant) {
-            Spacer(Modifier.height(24.dp))
-            QuietNote(
-                text = stringResource(R.string.change_email_note, address),
-                modifier = Modifier.dataNode(Page / "note"),
-            )
-        }
+        if (!applicant) ChangeEmailNote(address)
     }
+}
+
+/** The member's closing note: where the code goes, last on the page. */
+@Composable
+private fun ChangeEmailNote(address: String) {
+    Spacer(Modifier.height(24.dp))
+    QuietNote(
+        text = stringResource(R.string.change_email_note, address),
+        modifier = Modifier.dataNode(Page / "note"),
+    )
 }

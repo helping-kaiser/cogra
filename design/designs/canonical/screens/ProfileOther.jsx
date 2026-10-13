@@ -3,8 +3,8 @@
    then the stance on the person stretched to the row — the one action, worn
    wide the way a profile's primary action always is. The overflow (mention,
    share) rides the top bar next to the title, the detail-surface idiom; the
-   bar still rides below (a read drill-in, Q37) with no slot lit — this is
-   Ada's page, not one of the viewer's tabs.
+   bar still rides below (a read drill-in, Q37), its originating root lit
+   (jakob 2026-10-06) — Feed here, where the author chip was tapped.
 
    The body is a `_shared.jsx` helper: the menu's own board draws this same page
    with the sheet raised over it.

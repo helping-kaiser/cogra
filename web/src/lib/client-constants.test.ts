@@ -158,9 +158,9 @@ describe("paging", () => {
 });
 
 describe("the stance pad", () => {
-  // Both axes, because the tap is one policy and not two: a default
-  // that moved on one axis only would tilt every plain tap.
-  it("commits the contract's low default on a plain tap", () => {
+  // Both axes, because the default is one policy and not two: a default
+  // that moved on one axis only would tilt every hold and every pad open.
+  it("commits the contract's low default on a press-and-hold", () => {
     expect(TAP_DEFAULT.pDirected).toBe(constants.stance.tapDefault);
     expect(TAP_DEFAULT.pInterest).toBe(constants.stance.tapDefault);
   });

@@ -24,21 +24,26 @@
    of the opinions drawn along it — the per-step weight is damped and tier-bound
    (§3.1) and only the terminal step decays — so a figure on every row would
    invite an arithmetic that does not hold. Each step states what carries it and
-   when; the path states what it adds. */
+   when; the path states what it adds.
+
+   REGISTERED under the `feedEntry` prefix (round 7): the held thing `origin`,
+   the path's `trace`, its two facts `adds` and `newest`, `The steps`
+   `stepsLabel`, and each step a `step` keyed by its place along the path. */
+export const NODE = "feedEntry";
 export function Screen() {
   return (
     <>
-      <PageHeader title="One path" backHref="#" backLabel="Back to the paths" />
+      <PageHeader title="One path" backHref="#" backLabel="Back to the paths" node="header" />
       <ScoreColumn>
         <ScoreOrigin />
 
         <div style={{ display: "flex", justifyContent: "center", padding: "4px 0" }}>
-          <PathTrace people={SCORE_PATHS[0].people} size={32} />
+          <PathTrace people={SCORE_PATHS[0].people} size={32} node="trace" />
         </div>
 
         <PathSummary adds="+6.80" newest="2h" />
 
-        <SectionLabel>The steps</SectionLabel>
+        <SectionLabel node="stepsLabel">The steps</SectionLabel>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <ContentRow
             variant="chronicle"
@@ -47,6 +52,8 @@ export function Screen() {
             second="2 opinions behind it"
             trailing="8d"
             onOpen={() => {}}
+            node="step"
+            nodeKey="1"
           />
           <ContentRow
             variant="chronicle"
@@ -55,10 +62,12 @@ export function Screen() {
             second="Her own opinion rides the post"
             trailing="2h"
             onOpen={() => {}}
+            node="step"
+            nodeKey="2"
           />
         </div>
       </ScoreColumn>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

@@ -33,7 +33,7 @@ export function Screen() {
     <>
       <PageHeader title="Edit history" backHref="#" backLabel="Back to the profile" />
       <ProfileChronicle own />
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active="profile" slots={ALL_SLOTS} inline />
     </>
   );
 }

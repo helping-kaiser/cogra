@@ -4,9 +4,11 @@
 //
 // "WHEN feed.card.media.frame's clip stops being the playing clip -> it
 // freezes on the frame it reached AND NEVER the stored still returns within
-// the reading session, its card's remounts included" (FeedCover.md:9). A
-// remount builds a new `<video>`, so the frame it reached cannot live on the
-// element: it lives here, KEYED PER CLIP — "position is keyed per clip within
+// the reading session, its card's remounts included" (FeedCover.md:9). The
+// clip's live element is carried into its next presentation where the pool
+// still has it (`video-stage.ts`), but a presentation it has nothing for builds
+// a new `<video>`, so the frame it reached cannot live on the element alone: it
+// lives here, KEYED PER CLIP — "position is keyed per clip within
 // the session" (the ruled GAP-8 sub-question) — which is also what carries a
 // clip's place card → detail → viewer and back (PostDetailVideo.md:43–51,
 // ViewerVideo.md:5).
@@ -17,7 +19,27 @@
 // `mute.ts` gives for the one global mute. A list that refreshes forgets its
 // own clips (FeedCover.md:13, `forgetList`).
 //
-// Unused until the continuity PR wires it.
+// WHO WRITES, AND WHEN (`video-player.tsx`): a player writes the moment its
+// clip plays, where its clip stands when it unmounts, and when it hands its
+// clip to a layer presenting the same clip bigger (the fullscreen viewer).
+// Those cover every moment a second presentation of the clip can come to read
+// it — the web draws one route at a time, and the viewer is the one layer that
+// presents a clip the page already shows.
+//
+// A FORGOTTEN CLIP STAYS FORGOTTEN BY THE PLAYERS THAT MET IT BEFORE. A
+// refresh forgets the list's clips and then remounts the list; the players
+// it unmounts write where they stood on their way out, AFTER the forgetting.
+// So each forgetting opens a new era, a writer says which era it was born in,
+// and a write from a player born before its clip was forgotten is dropped.
+//
+// AND THE PICTURE OF THAT FRAME, FOR THE HANDOVER (`handover-still.tsx`). A new
+// `<video>` cannot show the reached frame until it has decoded its way there
+// from the keyframe before it — up to the encoder's keyframe interval of
+// frames — so the goodbye also keeps a picture of the frame, and the next
+// presentation shows it while its element prepares. A picture is only ever
+// handed out for EXACTLY the moment the memory says the clip stands at: a
+// later write that moves the clip without a picture retires it, so the still
+// can never show a frame the clip is not at.
 
 /** What the session remembers of one clip. */
 export type ClipMemory = {
@@ -31,24 +53,90 @@ export type ClipMemory = {
 
 const memory = new Map<string, ClipMemory>();
 
+/** How many forgettings the session has seen — the era a writer is born in. */
+let era = 0;
+/** The era each forgotten clip was forgotten in. */
+const forgottenIn = new Map<string, number>();
+
 /** The session's memory of a clip, or undefined for one it has not met. */
 export function read(mediaId: string): ClipMemory | undefined {
   return memory.get(mediaId);
 }
 
+/** The era now: a player reads it once, at mount, and writes with it. */
+export function currentEra(): number {
+  return era;
+}
+
 /**
- * Remember where a clip stands — on every pause or freeze, and on unmount.
+ * Whether something born in era `since` still speaks for the clip — false
+ * once the clip was forgotten after it. The rule every write is heard under,
+ * and the one a carried element is taken under (`video-stage.ts`): an element
+ * built before its clip was forgotten stands at a frame the refresh took back.
+ */
+export function heardSince(mediaId: string, since: number): boolean {
+  return (forgottenIn.get(mediaId) ?? -1) <= since;
+}
+
+/**
+ * Remember where a clip stands.
  *
  * Having played is never forgotten by a write: a clip that has played keeps
  * its reached frame for the rest of the session, so `everPlayed` only ever
  * turns on here. Only {@link forgetList} turns it off.
+ *
+ * `since` is the era the writer was born in (default: now). A writer born
+ * before its clip was forgotten is writing about a frame the refresh already
+ * took back, and is not heard.
  */
-export function write(mediaId: string, entry: ClipMemory): void {
+export function write(mediaId: string, entry: ClipMemory, since: number = era): void {
+  if (!heardSince(mediaId, since)) return;
   const before = memory.get(mediaId);
   memory.set(mediaId, {
     ...entry,
     everPlayed: entry.everPlayed || (before?.everPlayed ?? false),
   });
+}
+
+/** A picture of the frame a clip stood at, taken as its presentation left. */
+export type ClipFrame = {
+  /** The moment pictured, in seconds — the `time` of the write it was kept with. */
+  readonly time: number;
+  /** The frame, drawn. Only ever displayed, never read back: it may be cross-origin. */
+  readonly picture: HTMLCanvasElement;
+};
+
+/**
+ * How many pictures the session holds. A picture is only for the presentation
+ * that comes next, so the few most recent goodbyes are all a handover reads —
+ * and each one is a decoded frame's worth of memory.
+ */
+export const FRAMES_KEPT = 3;
+
+const frames = new Map<string, ClipFrame>();
+
+/**
+ * Keep a picture of where a clip stands, beside the write that remembers it
+ * there. Heard under the same era rule as {@link write}.
+ */
+export function keepFrame(mediaId: string, frame: ClipFrame, since: number = era): void {
+  if (!heardSince(mediaId, since)) return;
+  // Re-inserted, so the Map's insertion order is the order of recency.
+  frames.delete(mediaId);
+  frames.set(mediaId, frame);
+  for (const oldest of frames.keys()) {
+    if (frames.size <= FRAMES_KEPT) break;
+    frames.delete(oldest);
+  }
+}
+
+/**
+ * The picture of the frame the clip stands at now — or undefined when there is
+ * none, or the one kept pictures a moment the clip has since moved from.
+ */
+export function frameOf(mediaId: string): ClipFrame | undefined {
+  const frame = frames.get(mediaId);
+  return frame !== undefined && memory.get(mediaId)?.time === frame.time ? frame : undefined;
 }
 
 /**
@@ -57,10 +145,18 @@ export function write(mediaId: string, entry: ClipMemory): void {
  * memory"). Per clip, so the same clip elsewhere is re-stilled too.
  */
 export function forgetList(mediaIds: Iterable<string>): void {
-  for (const id of mediaIds) memory.delete(id);
+  era += 1;
+  for (const id of mediaIds) {
+    memory.delete(id);
+    frames.delete(id);
+    forgottenIn.set(id, era);
+  }
 }
 
 /** Test seam: nothing in the app clears the whole session's memory. */
 export function resetClipMemoryForTests(): void {
   memory.clear();
+  frames.clear();
+  forgottenIn.clear();
+  era = 0;
 }

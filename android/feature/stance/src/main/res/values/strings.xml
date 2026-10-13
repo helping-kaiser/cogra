@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The vouch-back pad (VouchBackPad.md:9, :13, :21; copy-voice.md, the
+         applicant remainder). The web's twin is `lib/vouch/vouch-back.ts`. -->
+    <string name="vouch_back_title">Your vouch back</string>
+    <string name="vouch_back_note">Your vouch back. The pad is how you shape what reaches you — for or against, and how much.</string>
+    <string name="vouch_back_help_1">Vouching back signs your opinion of the person who vouched you in, and your feed grows from it.</string>
+    <string name="vouch_back_help_2">The pad is how you shape what reaches you — for or against, and how much. Nothing is signed until Set.</string>
+</resources>

@@ -1,0 +1,630 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { graphql, HttpResponse } from "msw";
+import { useRef, useState } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import type { ErrorCode } from "@/__generated__/graphql";
+import type { Outcome } from "@/lib/api/outcome";
+import { createTokenStore } from "@/lib/session/token-store";
+import {
+  intersectEach,
+  isObserved,
+  setsPageVisibility,
+  whenObserved,
+} from "@/test/media-env";
+import { startMswServer } from "@/test/msw";
+import { renderWithProviders } from "@/test/providers";
+import { resetSeenQueueForTests, seenAnswerOf } from "./seen-queue";
+import {
+  edgesOnScreen,
+  SCROLL_IDLE_MS,
+  SEEN_ATTRIBUTE,
+  SEEN_BATCH_MAX,
+  SeenQueue,
+  type SeenAnswer,
+  type SendSeen,
+  useSeenOnOpen,
+  useSeenTracker,
+} from "./seen-tracker";
+
+// What the server was sent, call by call; what it answers is per test.
+let sent: string[][] = [];
+let refuseNext = 0;
+// The id the server refuses as BAD_INPUT, whatever batch it rides in.
+let poisonId = "";
+const server = startMswServer(
+  graphql.mutation("MarkSeen", ({ variables }) => {
+    sent.push(variables.nodes as string[]);
+    if ((variables.nodes as string[]).includes(poisonId)) {
+      return HttpResponse.json({
+        data: {
+          markSeen: {
+            __typename: "MarkSeenPayload",
+            ok: null,
+            userErrors: [
+              { __typename: "UserError", code: "BAD_INPUT", message: "no such node", field: ["nodes"] },
+            ],
+          },
+        },
+      });
+    }
+    if (refuseNext > 0) {
+      refuseNext -= 1;
+      return HttpResponse.json({
+        data: null,
+        errors: [{ message: "rate limited; retry later", extensions: { code: "RATE_LIMITED" } }],
+      });
+    }
+    return HttpResponse.json({
+      data: { markSeen: { __typename: "MarkSeenPayload", ok: true, userErrors: [] } },
+    });
+  }),
+);
+
+// The queue is module memory: each test starts from a session that has seen
+// nothing.
+beforeEach(resetSeenQueueForTests);
+
+function reset() {
+  sent = [];
+  refuseNext = 0;
+  poisonId = "";
+  server.resetHandlers();
+}
+
+function signedIn() {
+  const store = createTokenStore();
+  store.save({ accessToken: "access-1", refreshToken: "refresh-1", accountId: "acct-1" });
+  return store;
+}
+
+/** A list the way a surface hosts it: the tracker at the list, ids on the items. */
+function List({ ids, suspended = false }: { ids: readonly string[]; suspended?: boolean }) {
+  const list = useRef<HTMLUListElement>(null);
+  useSeenTracker({ root: null, list, ids, suspended });
+  return (
+    <ul ref={list}>
+      {ids.map((id) => (
+        <li key={id} data-testid={`card-${id}`} {...{ [SEEN_ATTRIBUTE]: id }}>
+          {id}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** The window's height: the box a list with no scroller is measured in. */
+const VIEW = window.innerHeight;
+
+/** Puts `card` at `top` in viewport coordinates, `height` tall. */
+function placeAt(card: HTMLElement, top: number, height: number) {
+  card.getBoundingClientRect = () =>
+    ({ top, bottom: top + height, height, left: 0, right: 0, width: 0, x: 0, y: top }) as DOMRect;
+}
+
+async function cards(...ids: string[]): Promise<HTMLElement[]> {
+  const found = await Promise.all(ids.map((id) => screen.findByTestId(`card-${id}`)));
+  await whenObserved(...found);
+  return found;
+}
+
+describe("the seen queue", () => {
+  it("carries the page budget the server refuses past", () => {
+    const constants = JSON.parse(
+      readFileSync(join(process.cwd(), "..", "client-constants.json"), "utf-8"),
+    ) as { paging: { maxPageSize: number } };
+    expect(SEEN_BATCH_MAX).toBe(constants.paging.maxPageSize);
+  });
+
+  it("a flush carries at most a page of ids, in seen order", async () => {
+    const queue = new SeenQueue();
+    queue.belongTo("acct-1");
+    const ids = Array.from({ length: 250 }, (_, n) => `n${n}`);
+    for (const id of ids) queue.see(id);
+    const batches: string[][] = [];
+    await queue.flush(async (batch) => {
+      batches.push([...batch]);
+      return "taken";
+    });
+    expect(batches.map((b) => b.length)).toEqual([100, 100, 50]);
+    expect(batches.flat()).toEqual(ids);
+    expect(queue.queued).toEqual([]);
+  });
+
+  it("a tripped batch is retried, not lost", async () => {
+    const queue = new SeenQueue();
+    queue.belongTo("acct-1");
+    queue.see("a");
+    queue.see("b");
+    // However many checkpoints come and go, a transient answer drops nothing.
+    for (let n = 0; n < 5; n += 1) await queue.flush(async () => "retry");
+    expect(queue.dropped).toEqual([]);
+    await queue.flush(async () => "retry");
+    expect(queue.queued).toEqual(["a", "b"]);
+    await queue.flush(async () => {
+      throw new Error("offline");
+    });
+    expect(queue.queued).toEqual(["a", "b"]);
+    queue.see("c");
+    const batches: string[][] = [];
+    await queue.flush(async (batch) => {
+      batches.push([...batch]);
+      return "taken";
+    });
+    expect(batches).toEqual([["a", "b", "c"]]);
+  });
+
+  describe("a batch the server refuses for good", () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    const ids = Array.from({ length: 100 }, (_, n) => `n${n}`);
+
+    /** A server that refuses any batch holding a poison id, and takes the rest. */
+    function poisoned(...poison: string[]) {
+      const calls: string[][] = [];
+      const send: SendSeen = async (batch) => {
+        calls.push([...batch]);
+        return batch.some((id) => poison.includes(id)) ? "refused" : "taken";
+      };
+      return { calls, send };
+    }
+
+    function queueOf(list: readonly string[]) {
+      const queue = new SeenQueue();
+      queue.belongTo("acct-1");
+      for (const id of list) queue.see(id);
+      return queue;
+    }
+
+    it("halves down to the poison id alone and drops only it, its batch-mates delivered", async () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const queue = queueOf(ids);
+      const { calls, send } = poisoned("n37");
+      await queue.flush(send);
+      expect(queue.queued).toEqual([]);
+      expect(queue.dropped).toEqual(["n37"]);
+      expect(calls[0]).toHaveLength(100);
+      expect(calls[1]).toHaveLength(50);
+      const delivered = calls.filter((b) => !b.includes("n37")).flat();
+      expect(delivered.filter((id) => id !== "n37").sort()).toEqual(
+        ids.filter((id) => id !== "n37").sort(),
+      );
+      // Bounded: about twice the depth of the halving, not one call per id.
+      expect(calls.length).toBeLessThanOrEqual(2 * Math.ceil(Math.log2(100)) + 2);
+      // The writer is told which id went, and why.
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(String(warn.mock.calls[0]?.[0])).toContain("n37");
+    });
+
+    it("an id refused alone is dropped at once", async () => {
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      const queue = queueOf(["solo"]);
+      const { calls, send } = poisoned("solo");
+      await queue.flush(send);
+      expect(calls).toEqual([["solo"]]);
+      expect(queue.queued).toEqual([]);
+      expect(queue.dropped).toEqual(["solo"]);
+    });
+
+    it("a dropped id is never queued or sent again this session", async () => {
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      const queue = queueOf(["a", "bad", "b"]);
+      const { calls, send } = poisoned("bad");
+      await queue.flush(send);
+      expect(queue.see("bad")).toBe(false);
+      expect(queue.seeEdge("bad", "top")).toBe(false);
+      expect(queue.hasSeen("bad")).toBe(true);
+      const before = calls.length;
+      await queue.flush(send);
+      expect(calls).toHaveLength(before);
+      expect(queue.queued).toEqual([]);
+    });
+
+    it("a transient answer mid-halving keeps the rest queued, and the halving carries on", async () => {
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      const queue = queueOf(["a", "b", "bad", "c"]);
+      const calls: string[][] = [];
+      let busy = true;
+      const send: SendSeen = async (batch) => {
+        calls.push([...batch]);
+        if (batch.includes("bad") && batch.length > 1) return "refused";
+        if (busy && calls.length === 2) return "retry";
+        return batch.includes("bad") ? "refused" : "taken";
+      };
+      await queue.flush(send);
+      // The page was refused and halved; then the half could not be sent.
+      expect(calls).toEqual([["a", "b", "bad", "c"], ["a", "b"]]);
+      expect(queue.queued).toEqual(["a", "b", "bad", "c"]);
+      expect(queue.dropped).toEqual([]);
+      busy = false;
+      await queue.flush(send);
+      // It resumes at the half, not at the whole page.
+      expect(calls[2]).toEqual(["a", "b"]);
+      expect(queue.queued).toEqual([]);
+      expect(queue.dropped).toEqual(["bad"]);
+    });
+
+    it("a change of account forgets the halving and the dropped ids", async () => {
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      const queue = queueOf(["a", "bad"]);
+      let first = true;
+      await queue.flush(async (batch) => {
+        if (first) {
+          first = false;
+          return "refused";
+        }
+        return batch.includes("bad") ? "retry" : "taken";
+      });
+      queue.belongTo("acct-2");
+      expect(queue.dropped).toEqual([]);
+      queue.see("x");
+      queue.see("y");
+      const calls: string[][] = [];
+      await queue.flush(async (batch) => {
+        calls.push([...batch]);
+        return "taken";
+      });
+      expect(calls).toEqual([["x", "y"]]);
+    });
+  });
+
+  describe("an outcome as a seen answer", () => {
+    const refusedWith = (code: ErrorCode): Outcome<true> => ({
+      kind: "refused",
+      errors: [{ code, message: "no", field: null }],
+    });
+
+    it("only BAD_INPUT is final; everything else is worth another try", () => {
+      expect(seenAnswerOf({ kind: "success", value: true })).toBe("taken");
+      expect(seenAnswerOf(refusedWith("BAD_INPUT"))).toBe("refused");
+      for (const code of ["RATE_LIMITED", "UNAUTHENTICATED", "INTERNAL", "FORBIDDEN"] as const) {
+        expect(seenAnswerOf(refusedWith(code))).toBe("retry");
+      }
+      expect(seenAnswerOf({ kind: "failed", cause: new Error("offline") })).toBe("retry");
+    });
+  });
+
+  it("nothing is tracked without a session, and another account starts empty", async () => {
+    const queue = new SeenQueue();
+    expect(queue.see("a")).toBe(false);
+    queue.belongTo("acct-1");
+    expect(queue.see("a")).toBe(true);
+    expect(queue.see("a")).toBe(false);
+    queue.belongTo("acct-2");
+    expect(queue.queued).toEqual([]);
+    expect(queue.see("a")).toBe(true);
+  });
+
+  it("a batch in flight across an account change never touches the next account's queue", async () => {
+    const queue = new SeenQueue();
+    queue.belongTo("acct-1");
+    queue.see("a");
+    let release: (answer: SeenAnswer) => void = () => {};
+    const flight = queue.flush(() => new Promise((resolve) => (release = resolve)));
+    queue.belongTo("acct-2");
+    queue.see("b");
+    release("taken");
+    await flight;
+    expect(queue.queued).toEqual(["b"]);
+  });
+});
+
+describe("the seen tracker on a list", () => {
+  it("a card wholly in the viewport is seen; a partly visible one is not", async () => {
+    reset();
+    const { unmount } = renderWithProviders(<List ids={["a", "b", "c"]} />, { store: signedIn() });
+    const [a, b, c] = await cards("a", "b", "c");
+    // `isIntersecting` is true for a sliver; the gate reads the ratio.
+    intersectEach([
+      { target: a, ratio: 1 },
+      { target: b, ratio: 0.99, isIntersecting: true },
+      { target: c, ratio: 0 },
+    ]);
+    unmount();
+    await waitFor(() => expect(sent).toEqual([["a"]]));
+  });
+
+  it("a tall card covering the whole screen shows neither edge, so it is not seen yet", async () => {
+    reset();
+    const { unmount } = renderWithProviders(<List ids={["tall"]} />, { store: signedIn() });
+    const [tall] = await cards("tall");
+    // A card taller than the scroller tops out below ratio 1 however it is
+    // scrolled, so the whole-card gate never takes it; and while it covers the
+    // screen neither of its edges is on it, so the edge rule (History.md:13)
+    // has nothing to record either.
+    placeAt(tall, -100, VIEW * 2);
+    intersectEach([{ target: tall, ratio: 0.38, isIntersecting: true }]);
+    unmount();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(sent).toEqual([]);
+  });
+
+  it("a seen card is queued once per session, and a remounted list stops watching it", async () => {
+    reset();
+    const store = signedIn();
+    const first = renderWithProviders(<List ids={["a", "b"]} />, { store });
+    const [a] = await cards("a", "b");
+    intersectEach([{ target: a, ratio: 1 }]);
+    intersectEach([{ target: a, ratio: 1 }]);
+    first.unmount();
+    await waitFor(() => expect(sent).toEqual([["a"]]));
+
+    renderWithProviders(<List ids={["a", "b"]} />, { store });
+    const b = await screen.findByTestId("card-b");
+    await whenObserved(b);
+    expect(isObserved(screen.getByTestId("card-a"))).toBe(false);
+  });
+
+  it("a batch flushes once the scroller comes to rest", async () => {
+    reset();
+    renderWithProviders(<List ids={["a", "b"]} />, { store: signedIn() });
+    const [a, b] = await cards("a", "b");
+    intersectEach([
+      { target: b, ratio: 1 },
+      { target: a, ratio: 1 },
+    ]);
+    window.dispatchEvent(new Event("scroll"));
+    expect(sent).toEqual([]);
+    await waitFor(() => expect(sent).toEqual([["b", "a"]]), { timeout: SCROLL_IDLE_MS * 4 });
+  });
+
+  it("a batch flushes when the page is hidden", async () => {
+    reset();
+    renderWithProviders(<List ids={["a"]} />, { store: signedIn() });
+    const [a] = await cards("a");
+    intersectEach([{ target: a, ratio: 1 }]);
+    setsPageVisibility("hidden");
+    await waitFor(() => expect(sent).toEqual([["a"]]));
+  });
+
+  it("a tripped batch is retried at the next checkpoint, nothing dropped", async () => {
+    reset();
+    refuseNext = 1;
+    renderWithProviders(<List ids={["a", "b"]} />, { store: signedIn() });
+    const [a, b] = await cards("a", "b");
+    intersectEach([{ target: a, ratio: 1 }]);
+    setsPageVisibility("hidden");
+    await waitFor(() => expect(sent).toEqual([["a"]]));
+    setsPageVisibility("visible");
+    intersectEach([{ target: b, ratio: 1 }]);
+    setsPageVisibility("hidden");
+    await waitFor(() => expect(sent).toEqual([["a"], ["a", "b"]]));
+  });
+
+  it("a batch the server refuses as BAD_INPUT is split until the one bad card is dropped", async () => {
+    reset();
+    poisonId = "b";
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    renderWithProviders(<List ids={["a", "b", "c"]} />, { store: signedIn() });
+    const [a, b, c] = await cards("a", "b", "c");
+    intersectEach([
+      { target: a, ratio: 1 },
+      { target: b, ratio: 1 },
+      { target: c, ratio: 1 },
+    ]);
+    setsPageVisibility("hidden");
+    await waitFor(() =>
+      expect(sent).toEqual([["a", "b", "c"], ["a", "b"], ["a"], ["b"], ["c"]]),
+    );
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(String(warn.mock.calls[0]?.[0])).toContain("b");
+    // The bad card is never sent again: another checkpoint has nothing to send.
+    setsPageVisibility("visible");
+    setsPageVisibility("hidden");
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(sent).toHaveLength(5);
+    warn.mockRestore();
+  });
+
+  it("nothing is tracked without a session", async () => {
+    reset();
+    const store = createTokenStore();
+    store.clear();
+    const { unmount } = renderWithProviders(<List ids={["a"]} />, { store });
+    const a = await screen.findByTestId("card-a");
+    expect(isObserved(a)).toBe(false);
+    intersectEach([{ target: a, ratio: 1 }]);
+    setsPageVisibility("hidden");
+    unmount();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(sent).toEqual([]);
+  });
+});
+
+/** A list under a sheet the test can drop. */
+function Sheeted() {
+  const [raised, setRaised] = useState(true);
+  return (
+    <>
+      <button type="button" data-testid="drop-sheet" onClick={() => setRaised(false)} />
+      <List ids={["a"]} suspended={raised} />
+    </>
+  );
+}
+
+describe("the seen tracker under a sheet", () => {
+  it("reports nothing while a sheet covers the list, and re-reads the cards once it drops", async () => {
+    reset();
+    const store = signedIn();
+    const { unmount } = renderWithProviders(<Sheeted />, { store });
+    const a = await screen.findByTestId("card-a");
+    expect(isObserved(a)).toBe(false);
+    fireEvent.click(screen.getByTestId("drop-sheet"));
+    await whenObserved(a);
+    intersectEach([{ target: a, ratio: 1 }]);
+    unmount();
+    await waitFor(() => expect(sent).toEqual([["a"]]));
+  });
+});
+
+describe("the tall-card rule (History.md:13)", () => {
+  it("an edge is on screen by its own pixel row, and only a card taller than the view has edges", () => {
+    const view = { top: 0, bottom: 1000 };
+    // A card that fits is the whole-card rule's alone, wherever it stands.
+    expect(edgesOnScreen({ top: -100, bottom: 400 }, view)).toEqual([]);
+    expect(edgesOnScreen({ top: 0, bottom: 1000 }, view)).toEqual([]);
+    // Taller by one pixel: its top row at the view's first row is on screen,
+    // at the view's bottom line it is not.
+    expect(edgesOnScreen({ top: 0, bottom: 1001 }, view)).toEqual(["top"]);
+    expect(edgesOnScreen({ top: 999, bottom: 2000 }, view)).toEqual(["top"]);
+    expect(edgesOnScreen({ top: 1000, bottom: 2001 }, view)).toEqual([]);
+    // Its bottom row ending on the view's last row is on screen, ending on
+    // the view's top line it is not.
+    expect(edgesOnScreen({ top: -1, bottom: 1000 }, view)).toEqual(["bottom"]);
+    expect(edgesOnScreen({ top: -1999, bottom: 1 }, view)).toEqual(["bottom"]);
+    expect(edgesOnScreen({ top: -2000, bottom: 0 }, view)).toEqual([]);
+    // Covering the view, it shows neither.
+    expect(edgesOnScreen({ top: -10, bottom: 1010 }, view)).toEqual([]);
+  });
+
+  it("the queue holds a card's first edge and queues it when the other arrives", () => {
+    const queue = new SeenQueue();
+    queue.belongTo("acct-1");
+    expect(queue.seeEdge("tall", "top")).toBe(false);
+    expect(queue.seeEdge("tall", "top")).toBe(false);
+    expect(queue.queued).toEqual([]);
+    expect(queue.seeEdge("tall", "bottom")).toBe(true);
+    expect(queue.queued).toEqual(["tall"]);
+    // Seen once: no edge queues it again.
+    expect(queue.seeEdge("tall", "top")).toBe(false);
+    expect(queue.seeEdge("tall", "bottom")).toBe(false);
+    expect(queue.queued).toEqual(["tall"]);
+    // Either order: bottom first, scrolling up into a card.
+    queue.seeEdge("up", "bottom");
+    expect(queue.seeEdge("up", "top")).toBe(true);
+  });
+
+  it("the session boundary forgets a remembered edge, and no session records none", () => {
+    const queue = new SeenQueue();
+    expect(queue.seeEdge("tall", "top")).toBe(false);
+    queue.belongTo("acct-1");
+    // The signed-out top never counted.
+    expect(queue.seeEdge("tall", "bottom")).toBe(false);
+    queue.belongTo("acct-2");
+    // acct-1's bottom edge does not ride into acct-2's session.
+    expect(queue.seeEdge("tall", "top")).toBe(false);
+    expect(queue.queued).toEqual([]);
+    queue.belongTo(null);
+    queue.belongTo("acct-2");
+    expect(queue.seeEdge("tall", "bottom")).toBe(false);
+    expect(queue.queued).toEqual([]);
+  });
+
+  it("a tall card is seen once its top and its bottom were on screen in separate frames", async () => {
+    reset();
+    const { unmount } = renderWithProviders(<List ids={["tall"]} />, { store: signedIn() });
+    const [tall] = await cards("tall");
+    // The card scrolls in from below: its top row is on screen.
+    placeAt(tall, VIEW - 50, VIEW * 2);
+    intersectEach([{ target: tall, ratio: 0.03, isIntersecting: true }]);
+    // It covers the screen: no observer threshold is crossed, nothing reads.
+    placeAt(tall, -VIEW / 2, VIEW * 2);
+    window.dispatchEvent(new Event("scroll"));
+    // Its bottom arrives between two threshold crossings: the scroll reads it.
+    placeAt(tall, 50 - VIEW * 2, VIEW * 2);
+    window.dispatchEvent(new Event("scroll"));
+    unmount();
+    await waitFor(() => expect(sent).toEqual([["tall"]]));
+  });
+
+  it("a tall card whose bottom edge never reached the screen is never seen", async () => {
+    reset();
+    const { unmount } = renderWithProviders(<List ids={["tall"]} />, { store: signedIn() });
+    const [tall] = await cards("tall");
+    placeAt(tall, VIEW - 50, VIEW * 2);
+    intersectEach([{ target: tall, ratio: 0.03, isIntersecting: true }]);
+    placeAt(tall, 10, VIEW * 2);
+    window.dispatchEvent(new Event("scroll"));
+    placeAt(tall, -VIEW / 2, VIEW * 2);
+    window.dispatchEvent(new Event("scroll"));
+    // Back up and away again: the top, twice more, is still one edge.
+    placeAt(tall, VIEW / 2, VIEW * 2);
+    window.dispatchEvent(new Event("scroll"));
+    intersectEach([{ target: tall, ratio: 0, isIntersecting: false }]);
+    unmount();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(sent).toEqual([]);
+  });
+
+  it("a card that fits is never seen by halves: two edges seen apart are not a whole view", async () => {
+    reset();
+    const { unmount } = renderWithProviders(<List ids={["short"]} />, { store: signedIn() });
+    const [short] = await cards("short");
+    // Its top half at the bottom of the screen, then its bottom half at the top.
+    placeAt(short, VIEW - 100, 300);
+    intersectEach([{ target: short, ratio: 0.33, isIntersecting: true }]);
+    placeAt(short, -200, 300);
+    window.dispatchEvent(new Event("scroll"));
+    intersectEach([{ target: short, ratio: 0.33, isIntersecting: true }]);
+    unmount();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(sent).toEqual([]);
+  });
+
+  it("a tall card's edges are not read while a sheet covers the list", async () => {
+    reset();
+    const store = signedIn();
+    const { unmount } = renderWithProviders(<List ids={["tall"]} suspended />, { store });
+    const tall = await screen.findByTestId("card-tall");
+    expect(isObserved(tall)).toBe(false);
+    placeAt(tall, VIEW - 50, VIEW * 2);
+    window.dispatchEvent(new Event("scroll"));
+    placeAt(tall, 50 - VIEW * 2, VIEW * 2);
+    window.dispatchEvent(new Event("scroll"));
+    unmount();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(sent).toEqual([]);
+  });
+});
+
+/** A page that opens a thing: the profile screen's shape. */
+function Opened({ id }: { id: string | null }) {
+  useSeenOnOpen(id);
+  return <p data-testid="opened">{id}</p>;
+}
+
+describe("a page that opens a profile (History.md:11)", () => {
+  it("adds the profile the moment it opens, once per session", async () => {
+    reset();
+    const store = signedIn();
+    const first = renderWithProviders(<Opened id="u2" />, { store });
+    await waitFor(() => expect(sent).toEqual([["u2"]]));
+    first.unmount();
+    renderWithProviders(<Opened id="u2" />, { store });
+    await screen.findByTestId("opened");
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(sent).toEqual([["u2"]]);
+  });
+
+  it("adds nothing before the page knows what it shows", async () => {
+    reset();
+    renderWithProviders(<Opened id={null} />, { store: signedIn() });
+    await screen.findByTestId("opened");
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(sent).toEqual([]);
+  });
+
+  it("adds nothing without a session", async () => {
+    reset();
+    const store = createTokenStore();
+    store.clear();
+    renderWithProviders(<Opened id="u2" />, { store });
+    await screen.findByTestId("opened");
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(sent).toEqual([]);
+  });
+
+  it("a refused add stays queued for the next checkpoint", async () => {
+    reset();
+    refuseNext = 1;
+    const store = signedIn();
+    const first = renderWithProviders(<Opened id="u2" />, { store });
+    await waitFor(() => expect(sent).toEqual([["u2"]]));
+    first.unmount();
+    renderWithProviders(<Opened id="u3" />, { store });
+    await waitFor(() => expect(sent).toEqual([["u2"], ["u2", "u3"]]));
+  });
+});

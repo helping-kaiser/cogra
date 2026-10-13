@@ -78,9 +78,13 @@ over file values.
 | `RATE_LIMIT_CONFIRM_PER_IP` | `30` | Token confirmations per IP per 15 min |
 | `RATE_LIMIT_EMAIL_CHANGE_REQUEST_PER_ACCOUNT` | `5` | Email-change requests per account per hour — the mail budget, refused visibly as `RATE_LIMITED` |
 | `RATE_LIMIT_EMAIL_CHANGE_RESEND_PER_ACCOUNT` | `5` | Email-change resends per account per hour, refused the same way |
+| `RATE_LIMIT_DELETION_REQUEST_PER_ACCOUNT` | `5` | Account-deletion requests (Resend included) per account per hour — the mail budget, refused visibly as `RATE_LIMITED` ([auth.md "Rate limiting"](auth.md#rate-limiting)) |
 | `RATE_LIMIT_EMAIL_CHANGE_CODE_TRIES` | `5` | Wrong codes before an email-change code is disabled until a resend ([auth.md "Email change"](auth.md#email-change)) |
+| `RATE_LIMIT_DEVICE_LOCK_ISSUE_PER_ACCOUNT` | `10` | Device-lock issues per account per hour, refused visibly as `RATE_LIMITED` ([auth.md "Device lock"](auth.md#device-lock)) |
+| `RATE_LIMIT_DEVICE_LOCK_LIVE_CAP` | `32` | Live device locks one account may hold at once, refused the same way |
 | `RATE_LIMIT_GC_INTERVAL_SECS` | `3600` | Sweep interval of the idle throttle-row GC; the login backoff's shape (threshold 5, 1 s doubling, 15 min cap) and the re-authentication backoff's (threshold 10, same doubling and cap) change in code, not env |
 | `RATE_LIMIT_UPLOAD_PER_ACCOUNT` | `60` | Media uploads per account per hour — uploading is not an act, so this is the only cost control media has |
+| `RATE_LIMIT_MARK_SEEN_PER_ACCOUNT` | `600` | `markSeen` calls per account per hour — the seen-list never compacts, so this bounds how fast a script can grow it; refused as `RATE_LIMITED` ([api-spec.md "Private viewer state"](api-spec.md#private-viewer-state)) |
 | `RATE_LIMIT_SIGN_POST` | `10` | The signing budget ([api-spec.md "Conventions"](api-spec.md#conventions)), refused as `WRITE_RULE_FAILED`: Post genesis acts per account per hour |
 | `RATE_LIMIT_SIGN_COMMENT` | `60` | Comment genesis acts per account per hour |
 | `RATE_LIMIT_SIGN_EDIT` | `30` | Edit records (Post, Comment, profile) per account per hour |
@@ -111,6 +115,9 @@ over file values.
 | `MEDIA_INGEST_WORKERS` | `1` | Ingest workers in this process. Each runs one ffmpeg at a time and ffmpeg spreads an encode over every core, so more only help once uploads queue behind each other |
 | `MEDIA_STALE_UPLOADS_EXPIRY` | `24h` | The store-side backstop, for the uploads a crash orphans before their session row exists (compose-only). MinIO implements it as a server setting, not as an S3 `AbortIncompleteMultipartUpload` lifecycle rule — it rejects such a rule — and the expiry matches the TTL above: the same abandoned upload, seen from both sides. Another store needs the lifecycle rule instead |
 | `MEDIA_STALE_UPLOADS_CLEANUP_INTERVAL` | `6h` | How often the store looks for them (compose-only) |
+| `RANKER_URL` | `http://localhost:8090/graphql` | The server ranker pod `feedRanking` relays to ([miner-api.md](miner-api.md)); ranking never runs in the API process |
+| `RANKER_TIMEOUT_MS` | `10000` | The bound on one relay call, the wait for an in-flight slot included; a slower pod answers `INTERNAL`. Provisional until the first warm round trip is measured |
+| `RANKER_MAX_IN_FLIGHT` | `8` | Concurrent pod calls at most; a call that gets no slot within the timeout answers `INTERNAL`. Provisional |
 | `BREACH_CHECK` | `hibp` | The password breach corpus ([auth.md "Password requirements"](auth.md#password-requirements)): `hibp` (live range API) or `off` (offline dev — no lookup) |
 | `CLIENT_IP_SOURCE` | `ConnectInfo` | Client-IP derivation ([auth.md "Rate limiting"](auth.md#rate-limiting)): `ConnectInfo` (socket peer) by default; `RightmostXForwardedFor` only behind a reverse proxy that is the sole ingress |
 | `GENESIS_HANDLE` | `genesis` | The Genesis Moderator's handle (`make bootstrap`) |

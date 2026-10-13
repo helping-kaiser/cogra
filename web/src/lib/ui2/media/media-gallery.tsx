@@ -39,7 +39,7 @@ import type { PlayerSurface } from "./video-player";
  */
 export type GalleryItem = Pick<
   MediaTileProps,
-  "src" | "altText" | "sourceRatio" | "label" | "poster" | "durationMs"
+  "src" | "altText" | "sourceRatio" | "label" | "poster" | "durationMs" | "mediaId"
 > & { mimeType: string };
 
 export type { PlayerSurface } from "./video-player";

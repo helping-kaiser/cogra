@@ -1,0 +1,56 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH hits AS (\n                   SELECT s.node_id, s.kind, s.created_at,\n                          MIN(CASE WHEN s.folded = lower($1) THEN 0 ELSE 1 END) AS tier,\n                          MIN(s.value) FILTER (WHERE s.kind = 'hashtag') AS name\n                   FROM search_index s\n                   WHERE s.kind = ANY($4)\n                     AND ((s.field <> 'title' AND s.folded LIKE '%' || lower($2) || '%')\n                       OR (s.field = 'title' AND s.words @@ to_tsquery('simple', $3)))\n                     AND ($5::uuid IS NULL OR NOT EXISTS (\n                         SELECT 1 FROM user_view_log l\n                         WHERE l.user_id = $5 AND l.content_id = s.node_id))\n                     AND (NOT $6 OR s.kind <> 'user' OR EXISTS (\n                         SELECT 1 FROM actors a\n                         WHERE a.id = s.node_id AND a.realization_address IS NOT NULL))\n                     AND (NOT $11 OR (s.field IN ('handle', 'name')\n                                      AND s.folded LIKE lower($2) || '%'))\n                   GROUP BY s.node_id, s.kind, s.created_at\n               )\n               SELECT node_id AS \"node_id!\", kind AS \"kind!\",\n                      tier AS \"tier!\", created_at AS \"created_at!\", name\n               FROM hits\n               WHERE $7::int IS NULL\n                  OR tier < $7\n                  OR (tier = $7 AND (created_at, node_id) > ($8::timestamptz, $9::uuid))\n               ORDER BY tier DESC, created_at ASC, node_id ASC\n               LIMIT $10",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "node_id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "kind!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "tier!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "created_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "TextArray",
+        "Uuid",
+        "Bool",
+        "Int4",
+        "Timestamptz",
+        "Uuid",
+        "Int8",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      false,
+      null
+    ]
+  },
+  "hash": "9f4cccc9b4b78af801b2dce3d71af313f0c1ce24b61137eb782c8f96877733fc"
+}

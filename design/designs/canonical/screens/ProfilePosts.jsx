@@ -42,7 +42,7 @@ export function Screen() {
           <PostCard {...ADA_SECOND_POST} />
         </FeedList>
       </div>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>
   );
 }

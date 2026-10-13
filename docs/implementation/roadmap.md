@@ -186,6 +186,11 @@ event-driven and is not an MVP dependency.
   What's new, WhatsNewBehind, and FeedNewerVersion, the cold-open
   snackbar when a newer release exists. How a release row is written
   is chosen at implementation.
+- **The invite lifecycle** — invite links, the approval queue
+  across both ends of the funnel, rejection, and the ask link
+  (`stageApplicant`, `askLinkCheck`; [auth.md](auth.md) "The ask
+  link"), the backend the Invites, VouchAsk and applicant-card
+  boards read (ruled 2026-10-06).
 - **The conformance workstreams W3–W8** of the 2026-09-08 UI audit,
   plus the settings-surface conformance and the audit's open
   decision tables — touched surfaces ship 100% conform to the
@@ -597,11 +602,11 @@ from the media path and carrying their own doc write-back:
   this product refuses — and the no-AI-in-ranking rule has no
   exception for a surface that is fun. Nothing labels the stream: the
   **Post Score on the rail** is what says whose feed it is, and it is
-  also the door to the post — the clip pins to the top of the screen,
-  still playing, and the body rises beneath it. The rail is author ·
-  stance · comments · share · score; the stream carries sound and a
-  drag-to-seek line, never the full transport; guest and key-absent
-  gate exactly as the feed does.
+  also the door to the post — the clip shrinks to the head of the
+  post's detail, still playing, and the body rises beneath it. The
+  rail is author · stance · comments · share · score; the stream
+  carries sound and a drag-to-seek line, never the full transport;
+  guest and key-absent gate exactly as the feed does.
 - **Unhide topic follow** — the follow/unfollow control, backend-
   accepted since 2.3 (`prepareStance` toward the Hashtag) but
   hidden from the client until the topic feed exists to receive it.

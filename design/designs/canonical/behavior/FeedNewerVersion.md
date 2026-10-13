@@ -2,6 +2,12 @@
 
 WHEN the feed arrives after a cold app open GIVEN a release newer than the running one exists and this device has not announced it -> the snackbar reads A newer version of CoGra is out. with Update now AND this device marks that release announced
 
+WHEN the release read answers after the feed arrived on a cold app open GIVEN a release newer than the running one exists and this device has not announced it -> the snackbar reads A newer version of CoGra is out. with Update now as the read arrives AND this device marks that release announced
+
+ALWAYS the newer-version snackbar announces to members, applicants and guests alike
+
+ALWAYS no newer-version snackbar appears GIVEN the version running here is not in the release registry
+
 WHEN the app comes back to the foreground -> NEVER the newer-version snackbar appears
 
 WHEN the feed arrives GIVEN this device already announced the newest release -> NEVER the newer-version snackbar appears

@@ -2,6 +2,8 @@
 
 ALWAYS the mark Removed by its author stands in the post's words and pictures' place
 
+ALWAYS the mark reads Removed by its author GIVEN the post went with its author's account deletion, its content sweep chosen
+
 ALWAYS the mark's second line reads The words and pictures are gone. The post's place in the thread, and every response, remain.
 
 ALWAYS the author's mark never reads like Removed under the platform's rules

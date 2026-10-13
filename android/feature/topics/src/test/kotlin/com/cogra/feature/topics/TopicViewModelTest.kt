@@ -4,12 +4,17 @@ import com.cogra.domain.HashtagView
 import com.cogra.domain.Outcome
 import com.cogra.domain.TaggedContentKind
 import com.cogra.domain.TaggedContentView
+import com.cogra.domain.history.SeenTracker
+import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.ThrowingTopicRepository
 import com.cogra.domain.testing.testHashtag
+import com.cogra.domain.testing.testSeenRecord
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -37,7 +42,14 @@ class TopicViewModelTest {
         ): Outcome<List<TaggedContentView>> = contentOutcome
     }
 
-    private fun viewModel() = TopicViewModel(topics)
+    // Signed out: the tracker holds nothing and sends nothing, which no
+    // test here is about.
+    private val seenTracker = FakeTokenStore().let { signedOut ->
+        val scope = TestScope(dispatcher)
+        SeenTracker(RecordingViewHistoryRepository(), signedOut, scope, testSeenRecord(signedOut, scope))
+    }
+
+    private fun viewModel() = TopicViewModel(topics, seenTracker)
 
     @Before
     fun setUp() {

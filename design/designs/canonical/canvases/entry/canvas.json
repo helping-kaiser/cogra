@@ -479,6 +479,15 @@
       "page": "patterns"
     },
     {
+      "file": "ApplicantFellThrough.dc.html",
+      "title": "Applicant · fell through, waiting again",
+      "x": 3840,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "WalletComingSoon.dc.html",
       "title": "Wallet · not here yet",
       "x": 0,
@@ -501,7 +510,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 6118,
+      "h": 6325,
       "page": "entry",
       "title": "Entry · flow map"
     },

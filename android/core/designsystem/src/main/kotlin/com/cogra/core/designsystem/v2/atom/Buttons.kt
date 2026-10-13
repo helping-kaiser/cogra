@@ -31,7 +31,18 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  * own pair turned over (`onTertiaryContainer` as the fill, `tertiaryContainer`
  * as the label). Use it only inside such a panel (Button.jsx:10-17).
  */
-enum class ButtonKind { Filled, Outlined, Text, Inverse }
+enum class ButtonKind {
+    Filled,
+    Outlined,
+    Text,
+    Inverse,
+
+    /**
+     * The TEXT button on the same tonal panel: no fill, the panel's own
+     * ink (`VouchBack.jsx`'s `Got it`, `color: var(--on-tertiary-container)`).
+     */
+    InverseText,
+}
 
 /**
  * A pill's two sizes (design/readme.md §13).
@@ -80,6 +91,10 @@ fun CograButton(
         Text(text = text, style = MaterialTheme.typography.labelLarge)
     }
 
+    // The text button's ink: `primary` on the page, the panel's own on a tonal panel.
+    val textInk = MaterialTheme.colorScheme.let {
+        if (kind == ButtonKind.InverseText) it.onTertiaryContainer else it.primary
+    }
     when (kind) {
         ButtonKind.Filled -> Button(
             onClick = onClick,
@@ -103,14 +118,12 @@ fun CograButton(
             contentPadding = padding,
         ) { label() }
 
-        ButtonKind.Text -> TextButton(
+        ButtonKind.Text, ButtonKind.InverseText -> TextButton(
             onClick = onClick,
             modifier = shared,
             enabled = enabled,
             shape = CircleShape,
-            colors = ButtonDefaults.textButtonColors(
-                contentColor = MaterialTheme.colorScheme.primary,
-            ),
+            colors = ButtonDefaults.textButtonColors(contentColor = textInk),
             contentPadding = padding,
         ) { label() }
 

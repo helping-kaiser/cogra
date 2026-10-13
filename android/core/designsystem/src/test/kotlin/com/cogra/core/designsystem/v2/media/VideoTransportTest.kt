@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -18,11 +19,13 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.google.common.truth.Truth.assertThat
@@ -159,14 +162,79 @@ class VideoTransportTest {
     }
 
     @Test
-    fun theBarIsHeldClearOfTheGestureZone() {
+    fun theBarsInkIsHeldClearOfTheGestureZone() {
         compose.setContent { Transport() }
 
         val frame = compose.onNodeWithTag(TRANSPORT_TAG).getUnclippedBoundsInRoot()
-        val timeline = compose.onNodeWithTag(TIMELINE_TAG).getUnclippedBoundsInRoot()
-        // NOTHING TOUCHES THE BOTTOM EDGE: the system gesture strip lives
-        // there, so a control on it is a swipe that closes the app.
-        assertThat((frame.bottom - timeline.bottom).value).isAtLeast(GESTURE_ZONE.value)
+        val ink = compose.onNodeWithTag(TIMELINE_INK_TAG, useUnmergedTree = true).getUnclippedBoundsInRoot()
+        // NOTHING DRAWN TOUCHES THE BOTTOM EDGE: the system gesture strip
+        // lives there, so a control drawn on it reads as a swipe that closes
+        // the app. The timeline's TARGET reaches into the strip (ruling 101,
+        // below); its ink never does.
+        assertThat((frame.bottom - ink.bottom).value).isAtLeast(GESTURE_ZONE.value)
+    }
+
+    /**
+     * NO TARGET ON THE BAR FALLS BELOW 48dp (jakob's ruling 101 —
+     * design/readme.md §13, "The clip detail rulings"): sound and fullscreen
+     * stand 20dp apart, their 28dp discs' centres 48dp apart, so their 48dp
+     * targets meet and never overlap. The transport is SHARED, so the viewer
+     * carries it too (see `MediaViewerTest`).
+     */
+    @Test
+    fun soundAndFullscreenTargetsMeetWithoutOverlap() {
+        compose.setContent { Transport(onFullscreen = {}) }
+
+        val sound = compose.onNodeWithTag("video_mute").getUnclippedBoundsInRoot()
+        val fullscreen = compose.onNodeWithTag("video_fullscreen").getUnclippedBoundsInRoot()
+        val soundCentre = (sound.left + sound.right).value / 2
+        val fullscreenCentre = (fullscreen.left + fullscreen.right).value / 2
+        // Centres 48 apart: 28dp discs 20dp apart.
+        assertThat(fullscreenCentre - soundCentre).isWithin(TOLERANCE).of(BAR_TARGET.value)
+        // The drawn discs stay 28 and stand the board's 20 apart; each wears
+        // a 48 target centred on it, so the two targets meet edge on edge.
+        assertThat((sound.right - sound.left).value).isWithin(TOLERANCE).of(28f)
+        assertThat((fullscreen.left - sound.right).value).isWithin(TOLERANCE).of(PAIR_GAP.value)
+        assertThat(PAIR_GAP.value).isEqualTo(20f)
+    }
+
+    /**
+     * The timeline's 48dp target hangs DOWN from its top through the bar's
+     * lower half and the gesture-zone inset to the frame's bottom edge, so the
+     * clip's own tap above it stays whole; the ink does not move (ruling 101,
+     * `VideoControls.jsx:109-113`).
+     */
+    @Test
+    fun theTimelineTargetGrowsDownAndTheClipTapStaysWhole() {
+        compose.setContent { Transport() }
+
+        val frame = compose.onNodeWithTag(TRANSPORT_TAG).getUnclippedBoundsInRoot()
+        val bar = compose.onNodeWithTag(BAR_TAG).getUnclippedBoundsInRoot()
+        val target = compose.onNodeWithTag(TIMELINE_TARGET_TAG).getUnclippedBoundsInRoot()
+        val ink = compose.onNodeWithTag(TIMELINE_INK_TAG, useUnmergedTree = true).getUnclippedBoundsInRoot()
+        // 48 tall, reaching the frame's bottom edge.
+        assertThat((target.bottom - target.top).value).isWithin(TOLERANCE).of(BAR_TARGET.value)
+        assertThat(target.bottom.value).isWithin(TOLERANCE).of(frame.bottom.value)
+        // Nothing of it above the bar's row: from the 16dp timeline's top
+        // down, so the clip's tap above the bar stays the clip's.
+        assertThat(target.top.value).isAtLeast(bar.top.value)
+        // The ink stands in the middle of the 48dp row, where it was drawn.
+        val rowMiddle = bar.top.value + BAR_TARGET.value / 2
+        assertThat((ink.top + ink.bottom).value / 2).isWithin(TOLERANCE).of(rowMiddle)
+    }
+
+    /** A press on the grown target, below the ink, is a press on the slider. */
+    @Test
+    fun aPressBelowTheTimelinesInkSeeks() {
+        var seeked: Float? = null
+        compose.setContent { Transport(onSeek = { seeked = it }) }
+
+        compose.onNodeWithTag(TIMELINE_TARGET_TAG).performTouchInput {
+            click(Offset(width / 2f, height - 2f))
+        }
+
+        assertThat(seeked).isNotNull()
+        assertThat(seeked!!).isWithin(SEEK_TOLERANCE).of(0.5f)
     }
 
     /**
@@ -183,9 +251,13 @@ class VideoTransportTest {
         compose.setContent { Transport(chromeInsets = PaddingValues(bottom = NAV_BAR)) }
 
         val frame = compose.onNodeWithTag(TRANSPORT_TAG).getUnclippedBoundsInRoot()
-        val timeline = compose.onNodeWithTag(TIMELINE_TAG).getUnclippedBoundsInRoot()
-        assertThat((frame.bottom - timeline.bottom).value)
+        val ink = compose.onNodeWithTag(TIMELINE_INK_TAG, useUnmergedTree = true).getUnclippedBoundsInRoot()
+        assertThat((frame.bottom - ink.bottom).value)
             .isAtLeast(GESTURE_ZONE.value + NAV_BAR.value)
+        // The timeline's grown target reaches the board's strip (ruling 101)
+        // and stops at the device's bar: the device's strip is never a target.
+        val target = compose.onNodeWithTag(TIMELINE_TARGET_TAG).getUnclippedBoundsInRoot()
+        assertThat((frame.bottom - target.bottom).value).isAtLeast(NAV_BAR.value - TOLERANCE)
     }
 
     @Test
@@ -208,10 +280,12 @@ class VideoTransportTest {
         onSeek: (Float) -> Unit = {},
         onSkip: (Long) -> Unit = {},
         chromeInsets: PaddingValues = PaddingValues(0.dp),
+        onFullscreen: (() -> Unit)? = null,
     ) {
         Cogra2PreviewTheme {
             VideoTransport(
                 playing = playing,
+                onFullscreen = onFullscreen,
                 ended = ended,
                 chromeInsets = chromeInsets,
                 elapsedMs = elapsedMs,
@@ -233,5 +307,8 @@ class VideoTransportTest {
         /** A phone's navigation bar, as a test can state it. */
         val NAV_BAR = 48.dp
         const val TOLERANCE = 1f
+
+        /** A tap's landing on a slider is a pixel or two off the arithmetic centre. */
+        const val SEEK_TOLERANCE = 0.05f
     }
 }

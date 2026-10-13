@@ -14,7 +14,7 @@ import { fetchMe } from "@/lib/api/auth-api";
 import { checkInviteLink, register, type InviteCheck } from "@/lib/api/onboarding-api";
 import { extractInviteId } from "@/lib/onboarding/invite-input";
 import {
-  emailPlausible,
+  emailValid,
   handleValid,
   HANDLE_MAX_CHARS,
   HANDLE_MIN_CHARS,
@@ -189,7 +189,7 @@ function ApplyForm({ inviteId }: { inviteId: string }) {
   const [errorField, setErrorField] = useState<string | null>(null);
   const [transportFailed, setTransportFailed] = useState(false);
 
-  const formValid = handleValid(handle) && emailPlausible(email) && passwordValid(password);
+  const formValid = handleValid(handle) && emailValid(email) && passwordValid(password);
   const canSubmit = formValid && !inProgress;
 
   const clearErrors = () => {

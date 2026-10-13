@@ -10,11 +10,9 @@
 //! settlement delay above zero — the window a real settling realization
 //! opens and the default stand-in closes.
 //!
-//! Paths beyond the registration path: PS-7's `stageApplicant` does not
-//! exist yet, so the second path of an account is inserted as an
-//! `auth_applications` row through a second inviter's link — the honest
-//! stub `tests/borrowed_view.rs` uses for a state the API surface cannot
-//! yet produce. When `stageApplicant` lands these tests switch to it.
+//! Paths beyond the registration path are staged the way they come to
+//! exist: a second member takes the account up from its ask link
+//! (`stageApplicant`).
 
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -243,21 +241,17 @@ impl Rig {
         account
     }
 
-    /// A second path of `account` in `inviter`'s queue — the honest stub
-    /// for PS-7's `stageApplicant` (module docs).
+    /// A second path of `account` in `inviter`'s queue: `inviter` takes
+    /// the account up from its ask link (module docs).
     async fn second_path(&self, account: Uuid, inviter: Uuid) -> Uuid {
-        let link = self.link(inviter).await;
-        let id = Uuid::new_v4();
-        sqlx::query(
-            "INSERT INTO auth_applications (id, account_id, invite_link_id) VALUES ($1, $2, $3)",
-        )
-        .bind(id)
-        .bind(account)
-        .bind(link)
-        .execute(&self.pool)
-        .await
-        .expect("second path");
-        id
+        let ask_link = store::ask_link_of(&self.pool, account)
+            .await
+            .expect("ask link read")
+            .expect("an applicant has an ask link");
+        onboarding::stage_applicant(&self.pool, inviter, ask_link)
+            .await
+            .expect("second path")
+            .id
     }
 
     async fn registration_path(&self, account: Uuid) -> Uuid {
@@ -492,8 +486,8 @@ fn funding_budget(limit: i32) -> SigningBudget {
 /// account is funded once — one guard row, one burn on the realization —
 /// and one admission Registration is staged, which both vouching Opinions
 /// depend on; each decision records its own vouch. The second path is the
-/// rig's stub for PS-7's `stageApplicant` (module docs): it covers the
-/// decisions and everything after them, not how the path came to exist. Before the account lock, each path's own row lock let both
+/// second member's take-up of the account's ask link. Before the account
+/// lock, each path's own row lock let both
 /// decisions find no Registration and no burn, and both funded and staged.
 ///
 /// Two paths vouched at once fund the account once and stage one Registration that both vouches depend on.

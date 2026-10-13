@@ -1,7 +1,9 @@
+import { gql, InMemoryCache } from "@apollo/client";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { PostsDocument, type PostsQuery } from "@/__generated__/graphql";
 import { COMMENT_BODY_MAX_CHARS } from "@/lib/compose/reply-wizard";
 import { SENSITIVE_REASON_MAX_CHARS } from "@/lib/compose/wizard";
 import { createTokenStore } from "@/lib/session/token-store";
@@ -13,6 +15,7 @@ import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
+import { whenObserved } from "@/test/media-env";
 import { stanceBundle, stanceHandlers } from "@/test/stance";
 import { PostView } from "./post-view";
 import { byNode } from "@/test/data-node";
@@ -215,6 +218,10 @@ function detail(
       license: { __typename: "License", attribution: 0, provenance: 0 },
       topics: postTopics,
       references: postReferences,
+      // The detail read selects the author's own mark beside the card's
+      // fields; an answer without it is one the cache cannot store whole.
+      sensitiveSelfMark: false,
+      sensitiveReason: null,
       comments: {
         __typename: "CommentConnection",
         // The card's affordance counts the WHOLE thread, not this page.
@@ -2234,43 +2241,111 @@ describe("PostView — references", () => {
       thread("u1", [], undefined, false, [], [], body);
 
     // A VIDEO POST'S DETAIL IS ITS OWN BOARD (`screens/PostDetailVideo.jsx`):
-    // the clip is PINNED ABOVE THE CARD, not inside it, and it wears the full
-    // transport. A post of pictures keeps the gallery in its body.
+    // the clip STANDS ABOVE THE CARD, not inside it, flush on it and in the
+    // page's flow (ruling 100), and it wears the full transport. A post of
+    // pictures keeps the gallery in its body.
     describe("a video post", () => {
-      it("pins the clip above the card and leaves the card without it", async () => {
+      it("stands the clip above the card, flush on it as one block, and leaves the card without it (PostDetailVideo.md:3)", async () => {
         server.use(...withBody({ content: null, attachments: [clip("m1")] }));
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
-        const pinned = await screen.findByTestId("post-pinned-clip");
+        const above = await screen.findByTestId("post-detail-clip");
         const card = screen.getByTestId(byNode("postDetail.card"));
-        expect(card).not.toContainElement(pinned);
+        expect(card).not.toContainElement(above);
         // ABOVE it, which is the whole of why the author chip leads the card
         // rather than the screen.
-        expect(pinned.compareDocumentPosition(card)).toBe(
+        expect(above.compareDocumentPosition(card)).toBe(
           Node.DOCUMENT_POSITION_FOLLOWING,
         );
+        // FLUSH ON IT: the clip and the card share one block, so the page's
+        // stack gap never falls between them (`DetailClip.prompt.md:15`).
+        const block = card.parentElement!;
+        expect(block).toContainElement(above);
+        expect(block.className).not.toMatch(/\bgap-/);
+        // IN THE PAGE'S FLOW: nothing holds it on screen (PostDetailVideo.md:5).
+        expect(above.className).not.toMatch(/\b(sticky|fixed)\b/);
+        expect(block.className).not.toMatch(/\b(sticky|fixed)\b/);
         expect(screen.queryByTestId(byNode("postDetail.card.media"))).not.toBeInTheDocument();
         // The title still leads the card: it titles the thing.
         expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
       });
 
-      it("gives the pinned clip the transport, not the disc", async () => {
+      it("gives the detail clip the transport, not the disc", async () => {
         server.use(...withBody({ content: null, attachments: [clip("m1")] }));
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
-        await screen.findByTestId("post-pinned-clip");
-        expect(screen.getByTestId("post-pinned-clip-media-transport")).toBeInTheDocument();
-        expect(screen.queryByTestId("post-pinned-clip-media-sound")).toBeNull();
-        // An unmarked post pins no veil over its clip.
-        expect(screen.queryByTestId("post-pinned-clip-veil")).toBeNull();
+        await screen.findByTestId("post-detail-clip");
+        expect(screen.getByTestId("post-detail-clip-media-transport")).toBeInTheDocument();
+        expect(screen.queryByTestId("post-detail-clip-media-sound")).toBeNull();
+        // An unmarked post raises no veil over its clip.
+        expect(screen.queryByTestId("post-detail-clip-veil")).toBeNull();
       });
 
-      // THE PINNED CLIP'S VEIL FACE (jakob 2026-09-24): a sensitive video
+      // THE DETAIL'S HEADER PINS (design/readme.md §4, "Browse collapses, task
+      // pins"; restated by the clip detail rulings): the clip and the card
+      // scroll under a bar that rides the page's edge.
+      it("pins the detail's header above the clip that scrolls under it", async () => {
+        server.use(...withBody({ content: null, attachments: [clip("m1")] }));
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+        const above = await screen.findByTestId("post-detail-clip");
+        const bar = screen.getByTestId("post-header-bar");
+        expect(bar.className).toMatch(/\bsticky\b/);
+        expect(bar.className).toMatch(/\btop-0\b/);
+        expect(bar).toContainElement(screen.getByTestId(byNode("postDetail.header")));
+        expect(bar.compareDocumentPosition(above)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+      });
+
+      // ONE CLIP SHOWN BIGGER (PostDetailVideo.md:57–61, ViewerVideo.md:5):
+      // the page hands its detail clip to the viewer and takes it back.
+      it("hands the detail clip to the viewer at its frame, and takes it back at the viewer's", async () => {
+        // The page's count read lands inside this test, never after it.
+        let counted = false;
+        server.use(
+          ...withBody({ content: null, attachments: [clip("m1")] }),
+          graphql.query("CitedByCount", () => {
+            counted = true;
+            return HttpResponse.json({
+              data: { records: { __typename: "RecordConnection", totalCount: 0 } },
+            });
+          }),
+        );
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+        await screen.findByTestId("post-detail-clip");
+        await waitFor(() => expect(counted).toBe(true));
+        const element = screen.getByTestId("post-detail-clip-media") as HTMLVideoElement;
+        // The open started it: no share of the screen was ever reported
+        // (PostDetailVideo.md:7). Its registration is the open, so waiting
+        // for the stage to watch it is waiting for the open.
+        await whenObserved(element);
+        expect(element.paused).toBe(false);
+        element.currentTime = 6;
+
+        fireEvent.click(screen.getByTestId("post-detail-clip-media-transport-fullscreen"));
+        const viewer = screen.getByTestId("post-media-viewer-video") as HTMLVideoElement;
+        // The clip's one element moves into the viewer, so nothing of the
+        // detail clip plays behind it (PostDetailVideo.md:57); the viewer
+        // stands where it stood, playing (ViewerVideo.md:5, N1).
+        expect(viewer).toBe(element);
+        expect(screen.queryByTestId("post-detail-clip-media")).toBeNull();
+        expect(viewer.currentTime).toBe(6);
+        expect(viewer.paused).toBe(false);
+
+        viewer.currentTime = 15;
+        fireEvent.click(screen.getByTestId("post-media-viewer-close"));
+        // Plays on from the viewer's position (PostDetailVideo.md:59).
+        expect(screen.queryByTestId("post-media-viewer")).toBeNull();
+        expect(element.currentTime).toBe(15);
+        expect(element.paused).toBe(false);
+      });
+
+      // THE DETAIL CLIP'S VEIL FACE (jakob 2026-09-24): a sensitive video
       // post's clip veils IN PLACE — never demoted into the card — and ONE
       // scope spans the clip and the card body, sharing the post's own
       // reveal (`reveal.ts`) the way the card's own `BodyRegion` already
       // does.
-      it("veils the pinned clip in place, mounted but wearing no transport or sound disc", async () => {
+      it("veils the detail clip in place, mounted but wearing no transport or sound disc", async () => {
         server.use(
           ...withBody({
             description: "One rubbing includes a dead seabird.",
@@ -2280,19 +2355,19 @@ describe("PostView — references", () => {
         );
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
-        await screen.findByTestId("post-pinned-clip-veil");
+        await screen.findByTestId("post-detail-clip-veil");
         // Still mounted under the veil, the same contract `BodyVeil` keeps
         // for every other veiled body — revealing must move nothing.
-        expect(screen.getByTestId("post-pinned-clip")).toBeInTheDocument();
+        expect(screen.getByTestId("post-detail-clip")).toBeInTheDocument();
         // Nothing plays beneath a veil (backlog item 103): no transport bar
         // to operate and no sound disc for a clip that cannot claim playback.
-        expect(screen.queryByTestId("post-pinned-clip-media-transport")).toBeNull();
-        expect(screen.queryByTestId("post-pinned-clip-media-sound")).toBeNull();
+        expect(screen.queryByTestId("post-detail-clip-media-transport")).toBeNull();
+        expect(screen.queryByTestId("post-detail-clip-media-sound")).toBeNull();
         // The card's own body veils too — the same post, one sensitive state.
         expect(screen.getByTestId("post-veil")).toBeInTheDocument();
       });
 
-      it("answers one reveal for the pinned clip and the card together", async () => {
+      it("answers one reveal for the detail clip and the card together", async () => {
         server.use(
           ...withBody({
             description: "One rubbing includes a dead seabird.",
@@ -2302,17 +2377,17 @@ describe("PostView — references", () => {
         );
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
-        const veil = await screen.findByTestId("post-pinned-clip-veil");
+        const veil = await screen.findByTestId("post-detail-clip-veil");
         fireEvent.click(within(veil).getByRole("button"));
 
         // The one tap on the clip's own face lifted the card's veil too.
-        expect(screen.queryByTestId("post-pinned-clip-veil")).toBeNull();
+        expect(screen.queryByTestId("post-detail-clip-veil")).toBeNull();
         expect(screen.queryByTestId("post-veil")).toBeNull();
         expect(screen.getByTestId(byNode("postDetail.card.description"))).toHaveTextContent(
           "One rubbing includes a dead seabird.",
         );
         // Revealed, the clip stands with its ladder's second rung back.
-        expect(screen.getByTestId("post-pinned-clip-media-transport")).toBeInTheDocument();
+        expect(screen.getByTestId("post-detail-clip-media-transport")).toBeInTheDocument();
       });
 
       it("leaves a post of pictures exactly where it was", async () => {
@@ -2320,12 +2395,12 @@ describe("PostView — references", () => {
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
         expect(await screen.findByTestId(byNode("postDetail.card.media"))).toBeInTheDocument();
-        expect(screen.queryByTestId("post-pinned-clip")).toBeNull();
+        expect(screen.queryByTestId("post-detail-clip")).toBeNull();
       });
 
       // REDACTION IS RECORD-GRANULAR: a removed clip removes the payload, so
-      // the card is the skeleton and there is nothing left to pin above it.
-      it("pins nothing when the clip was removed", async () => {
+      // the card is the skeleton and there is no clip left to stand above it.
+      it("raises no clip when the clip was removed", async () => {
         server.use(
           ...withBody({
             content: null,
@@ -2335,7 +2410,7 @@ describe("PostView — references", () => {
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
         expect(await screen.findByTestId("post-removed")).toBeInTheDocument();
-        expect(screen.queryByTestId("post-pinned-clip")).toBeNull();
+        expect(screen.queryByTestId("post-detail-clip")).toBeNull();
       });
     });
 
@@ -2464,5 +2539,568 @@ describe("PostView — references", () => {
       // otherwise fit whole inside the square with bars at the sides.
       expect(within(frame).getByAltText("a salt flat")).toHaveStyle({ objectFit: "cover" });
     });
+  });
+});
+
+// OPENED FROM THE FEED (jakob 2026-10-09): the post the reader just tapped is
+// already in the cache, so the page paints it at once and the detail read lands
+// over it. A post the cache does not hold whole loads exactly as before.
+describe("PostView — opened from the feed", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    forgetReveals();
+  });
+
+  /** The card the feed drew: the detail fixture's post with the feed's count. */
+  function feedNode(data: PostPayload, totalCount: number) {
+    return {
+      ...data.post,
+      comments: { __typename: "CommentConnection", totalCount },
+    };
+  }
+
+  /** A cache holding what the feed's own read wrote. */
+  function feedCache(...nodes: Record<string, unknown>[]) {
+    const cache = new InMemoryCache();
+    cache.writeQuery({
+      query: PostsDocument,
+      variables: { first: 20, after: null, includePending: true },
+      data: {
+        posts: {
+          __typename: "PostConnection",
+          edges: nodes.map((node) => ({ __typename: "PostEdge", node })),
+          pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+        },
+      } as unknown as PostsQuery,
+    });
+    return cache;
+  }
+
+  /**
+   * The detail read, held until the test lets it land — so the page can be
+   * measured BEFORE its read answers. Every test releases it and waits for it
+   * to land inside its own body: nothing is left in flight for the next.
+   */
+  function heldDetail(answer: () => Response) {
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let asked = 0;
+    return {
+      release,
+      asked: () => asked,
+      handler: graphql.query("PostDetail", async () => {
+        asked += 1;
+        await held;
+        return answer();
+      }),
+    };
+  }
+
+  /** Another version of the post: an edit, which stamps a new `updatedAt`. */
+  function edited(data: PostPayload, title: string, at = "2026-08-12T12:00:00Z"): PostPayload {
+    return { post: { ...data.post, title: moderated(title), updatedAt: at } };
+  }
+
+  it("paints the post the feed holds at once, with no loading page", async () => {
+    const data = detail("u1", [{ id: "c1", body: "First!" }]);
+    // The same version, its thread grown — so the answer's landing can be seen.
+    const answer = detail("u1", [
+      { id: "c1", body: "First!" },
+      { id: "c2", body: "Two" },
+    ]);
+    const read = heldDetail(() => HttpResponse.json({ data: answer }));
+    server.use(read.handler);
+    renderWithProviders(<PostView postId="p1" />, {
+      writeSigner: fakeWriteSigner(),
+      cache: feedCache(feedNode(data, 1)),
+    });
+
+    // The FIRST render is the card — no read has answered yet.
+    expect(screen.queryByTestId("post-loading")).not.toBeInTheDocument();
+    expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
+    expect(screen.getByTestId(byNode("postDetail.card.actionRow.comments"))).toHaveAccessibleName(
+      "1 comment",
+    );
+    // The detail read still goes out behind the paint …
+    await waitFor(() => expect(read.asked()).toBe(1));
+    // … and the paint wears no refresh line while it does.
+    expect(screen.queryByTestId("post-refreshing")).not.toBeInTheDocument();
+
+    read.release();
+    await waitFor(() =>
+      expect(screen.getByTestId(byNode("postDetail.card.actionRow.comments"))).toHaveAccessibleName(
+        "2 comments",
+      ),
+    );
+    expect(screen.queryByTestId("post-loading")).not.toBeInTheDocument();
+  });
+
+  // CASE (a): the fresh read IS the version that was opened — same edit stamp,
+  // same tags, same citations — so it is taken in silently, and what it moves
+  // is the live count around the post, never the post.
+  it("takes a fresh read of the same version silently, with no line", async () => {
+    const fresh = detail("u1", [{ id: "c1", body: "First!" }, { id: "c2", body: "Two" }]);
+    const read = heldDetail(() => HttpResponse.json({ data: fresh }));
+    server.use(read.handler);
+    const stale = detail("u1", [{ id: "c1", body: "First!" }]);
+    renderWithProviders(<PostView postId="p1" />, {
+      writeSigner: fakeWriteSigner(),
+      cache: feedCache(feedNode(stale, 1)),
+    });
+
+    read.release();
+    // The count the card states is the detail read's own whole-thread count now.
+    await waitFor(() =>
+      expect(screen.getByTestId(byNode("postDetail.card.actionRow.comments"))).toHaveAccessibleName(
+        "2 comments",
+      ),
+    );
+    expect(screen.queryByTestId(byNode("postDetail.newerVersion"))).not.toBeInTheDocument();
+  });
+
+  it("still loads a post the cache does not hold", async () => {
+    const data = detail("u1", []);
+    const read = heldDetail(() => HttpResponse.json({ data }));
+    server.use(read.handler);
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+    expect(screen.getByTestId("post-loading")).toBeInTheDocument();
+    expect(screen.queryByTestId(byNode("postDetail.card"))).not.toBeInTheDocument();
+    read.release();
+    expect(await screen.findByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
+    expect(screen.queryByTestId("post-loading")).not.toBeInTheDocument();
+  });
+
+  // ALL OR NOTHING: a post the cache knows only in part — here only as a
+  // citation's target, which carries its title and body and nothing else —
+  // loads like an uncached one. Never a card with holes, never a crash.
+  it("loads, rather than half-drawing, a post the cache holds only in part", async () => {
+    const cache = new InMemoryCache();
+    cache.writeFragment({
+      id: "Post:p1",
+      fragment: gql`
+        fragment CitedPost on Post {
+          id
+          title {
+            value
+          }
+          content {
+            value
+          }
+        }
+      `,
+      data: {
+        __typename: "Post",
+        id: "p1",
+        title: { __typename: "ModeratedText", value: "The title" },
+        content: { __typename: "ModeratedText", value: "The body" },
+      },
+    });
+    const data = detail("u1", []);
+    const read = heldDetail(() => HttpResponse.json({ data }));
+    server.use(read.handler);
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner(), cache });
+
+    expect(screen.getByTestId("post-loading")).toBeInTheDocument();
+    expect(screen.queryByTestId(byNode("postDetail.card"))).not.toBeInTheDocument();
+    read.release();
+    expect(await screen.findByTestId(byNode("postDetail.card.body"))).toHaveTextContent("The body");
+  });
+
+  // Over a card the reader can already see, a failed read is a failed refresh
+  // (HT-10's shared rule): the card stays and the banner says so — never the
+  // nothing-loaded page.
+  it("keeps the cached card when its read fails, and says the refresh failed", async () => {
+    const data = detail("u1", []);
+    const read = heldDetail(() => HttpResponse.error());
+    server.use(read.handler);
+    renderWithProviders(<PostView postId="p1" />, {
+      writeSigner: fakeWriteSigner(),
+      cache: feedCache(feedNode(data, 0)),
+    });
+
+    read.release();
+    expect(await screen.findByTestId("post-thread-transport-error")).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
+    expect(screen.queryByTestId("post-transport-error")).not.toBeInTheDocument();
+  });
+
+  it("turns the cached card to not-found when the post no longer resolves", async () => {
+    const data = detail("u1", []);
+    const read = heldDetail(() => HttpResponse.json({ data: { post: null } }));
+    server.use(read.handler);
+    renderWithProviders(<PostView postId="p1" />, {
+      writeSigner: fakeWriteSigner(),
+      cache: feedCache(feedNode(data, 0)),
+    });
+
+    expect(screen.getByTestId(byNode("postDetail.card.title"))).toBeInTheDocument();
+    read.release();
+    expect(await screen.findByTestId("post-not-found")).toBeInTheDocument();
+    expect(screen.queryByTestId(byNode("postDetail.card"))).not.toBeInTheDocument();
+  });
+
+  // THE DETAIL CLIP MOUNTS WITH THE PAINT — which is what lets the handover
+  // still (#137) begin at once rather than one read later — and the fresh
+  // answer landing over it keeps the same element: nothing remounts.
+  it("mounts a cached video post's clip on the first render and keeps it through the fresh answer", async () => {
+    const clip = {
+      __typename: "MediaAttachment",
+      id: "m1",
+      url: "https://media.test/m1.mp4",
+      altText: null,
+      status: "NORMAL",
+      mimeType: "video/mp4",
+      options: { __typename: "MediaOptions", aspectRatio: "9:16", durationMs: 41_000 },
+      coverMedia: null,
+      coverTaken: false,
+    };
+    const data = detail("u1", [], undefined, false, [], [], { content: null, attachments: [clip] });
+    const read = heldDetail(() => HttpResponse.json({ data }));
+    server.use(read.handler);
+    renderWithProviders(<PostView postId="p1" />, {
+      writeSigner: fakeWriteSigner(),
+      // The feed drew it before its thread grew, so the answer's landing shows.
+      cache: feedCache(feedNode(data, 3)),
+    });
+
+    const media = screen.getByTestId("post-detail-clip-media");
+    read.release();
+    await waitFor(() =>
+      expect(screen.getByTestId(byNode("postDetail.card.actionRow.comments"))).toHaveAccessibleName(
+        "0 comments",
+      ),
+    );
+    expect(screen.getByTestId("post-detail-clip-media")).toBe(media);
+  });
+
+  // ---- FC-7b · THE DETAIL HOLDS WHAT WAS OPENED (PostDetail.md:5-13) ---------
+
+  const LINE = "Edited since you opened it — tap for the newest version.";
+  const line = () => screen.queryByTestId(byNode("postDetail.newerVersion"));
+
+  /** The reader's own pull, from the top (the "pulling down at the top" suite's gesture). */
+  function pullDown(scroller: HTMLElement) {
+    const touch = (type: string, clientY: number) => {
+      const event = new Event(type, { bubbles: true });
+      Object.defineProperty(event, "touches", { value: [{ clientY }] });
+      Object.defineProperty(event, "changedTouches", { value: [{ clientY }] });
+      return event;
+    };
+    fireEvent(scroller, touch("touchstart", 100));
+    fireEvent(scroller, touch("touchmove", 100 + PULL_THRESHOLD));
+    fireEvent(scroller, touch("touchend", 100 + PULL_THRESHOLD));
+  }
+
+  /** Opens the detail on the feed's card and lets the fresh read land. */
+  async function openOnto(painted: PostPayload, fresh: PostPayload, count = 0) {
+    const read = heldDetail(() => HttpResponse.json({ data: fresh }));
+    server.use(read.handler);
+    const view = renderWithProviders(<PostView postId="p1" />, {
+      writeSigner: fakeWriteSigner(),
+      cache: feedCache(feedNode(painted, count)),
+    });
+    read.release();
+    await waitFor(() => expect(read.asked()).toBe(1));
+    return view;
+  }
+
+  it("an edit found on refresh holds the snapshot and offers the new version", async () => {
+    const data = detail("u1", []);
+    await openOnto(data, edited(data, "Edited title"));
+
+    expect(await screen.findByTestId(byNode("postDetail.newerVersion"))).toBeInTheDocument();
+    // AND NEVER postDetail.card changes (PostDetail.md:7).
+    expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
+    expect(screen.getByTestId(byNode("postDetail.card.title"))).not.toHaveTextContent("Edited title");
+  });
+
+  it("the newer version line reads Edited since you opened it", async () => {
+    const data = detail("u1", []);
+    await openOnto(data, edited(data, "Edited title"));
+
+    const shown = await screen.findByTestId(byNode("postDetail.newerVersion"));
+    expect(shown).toHaveTextContent(LINE, { normalizeWhitespace: false });
+    // An offer the reader acts on, announced politely — news, not a fault.
+    expect(shown.tagName).toBe("BUTTON");
+    expect(shown.closest('[role="status"]')).toHaveAttribute("aria-live", "polite");
+  });
+
+  it("a tag or citation change raises the same line in the same words", async () => {
+    const data = detail("u1", [], undefined, false, [topicClaim("rust")]);
+    // No new edit stamp: a tag is an act of its own on L1, and it still counts.
+    const retagged = detail("u1", [], undefined, false, [topicClaim("rust"), topicClaim("wasm")]);
+    const { unmount } = await openOnto(data, retagged);
+
+    expect(await screen.findByTestId(byNode("postDetail.newerVersion"))).toHaveTextContent(LINE);
+    expect(screen.queryByTestId(byNode("postDetail.card.tagsLine.tag", "p1/wasm"))).not.toBeInTheDocument();
+    unmount();
+
+    const cited = detail("u1", [], undefined, false, [], [referenceClaim(userTarget("u-ada", "ada"))]);
+    await openOnto(detail("u1", []), cited);
+    expect(await screen.findByTestId(byNode("postDetail.newerVersion"))).toHaveTextContent(LINE);
+    // The opened post cited nothing, so its card still draws no line at all.
+    expect(screen.queryByTestId(byNode("postDetail.card.tagsLine.counts"))).not.toBeInTheDocument();
+  });
+
+  it("the newer version line stands in flow and is never pinned", async () => {
+    const data = detail("u1", []);
+    await openOnto(data, edited(data, "Edited title"));
+
+    const shown = await screen.findByTestId(byNode("postDetail.newerVersion"));
+    // Not in the header that pins, and nothing between it and the page pins.
+    expect(screen.getByTestId("post-header-bar")).not.toContainElement(shown);
+    for (let at: HTMLElement | null = shown; at !== null; at = at.parentElement) {
+      expect(at.className).not.toMatch(/\b(sticky|fixed)\b/);
+    }
+    // Between the header and the post, in the card's own edge-to-edge block:
+    // full width, and the row itself is the 48px target.
+    const card = screen.getByTestId(byNode("postDetail.card"));
+    expect(shown.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(shown.closest(".-mx-6")).toContainElement(card);
+    expect(shown).toHaveClass("w-full");
+    expect(shown.style.minHeight).toBe("var(--touch-target-min)");
+  });
+
+  it("tapping the line swaps the newest post tags and citations in place", async () => {
+    const data = detail("u1", [], undefined, false, [topicClaim("rust")]);
+    const newest = edited(
+      detail("u1", [], undefined, false, [topicClaim("rust"), topicClaim("wasm")], [
+        referenceClaim(userTarget("u-ada", "ada")),
+      ]),
+      "Edited title",
+    );
+    await openOnto(data, newest);
+    const card = screen.getByTestId(byNode("postDetail.card"));
+
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.newerVersion")));
+
+    expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("Edited title");
+    expect(screen.getByTestId(byNode("postDetail.card.tagsLine.tag", "p1/wasm"))).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("postDetail.card.tagsLine.counts"))).toHaveTextContent("1 reference");
+    // In place: the same card, swapped, and the line gone.
+    expect(screen.getByTestId(byNode("postDetail.card"))).toBe(card);
+    expect(line()).not.toBeInTheDocument();
+  });
+
+  // THE THREAD IS NOT HELD: the freeze governs the post, and the thread is the
+  // sheet's own read — so the count that raises it is the freshest read's.
+  it("counts the thread from the freshest read while the post itself is held", async () => {
+    const data = detail("u1", []);
+    const fresh = edited(detail("u1", [{ id: "c1", body: "First!" }]), "Edited title");
+    await openOnto(data, fresh);
+
+    await screen.findByTestId(byNode("postDetail.newerVersion"));
+    expect(screen.getByTestId(byNode("postDetail.card.actionRow.comments"))).toHaveAccessibleName(
+      "1 comment",
+    );
+    expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
+  });
+
+  // CASE (c): with nothing painted there is no opened version to hold.
+  it("paints an edited post it never held, with no line", async () => {
+    const data = detail("u1", []);
+    const read = heldDetail(() => HttpResponse.json({ data: edited(data, "Edited title") }));
+    server.use(read.handler);
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+    read.release();
+    expect(await screen.findByTestId(byNode("postDetail.card.title"))).toHaveTextContent("Edited title");
+    expect(line()).not.toBeInTheDocument();
+  });
+
+  // THE PULL IS THE READER ASKING FOR THE NEWEST (PostDetail.md:5, "until the
+  // reader asks for the newest"): it lands over the opened version, line or no.
+  it("lands the reader's own pull over the held version and takes the line down", async () => {
+    const data = detail("u1", []);
+    const first = edited(data, "Edited title");
+    const second = edited(data, "Edited twice", "2026-08-12T13:00:00Z");
+    let reads = 0;
+    server.use(
+      graphql.query("PostDetail", () => {
+        reads += 1;
+        return HttpResponse.json({ data: reads === 1 ? first : second });
+      }),
+    );
+    const scroller = document.createElement("div");
+    document.body.append(scroller);
+    renderWithProviders(
+      <ScrollHostProvider value={{ current: scroller }}>
+        <PostView postId="p1" />
+      </ScrollHostProvider>,
+      { writeSigner: fakeWriteSigner(), cache: feedCache(feedNode(data, 0)) },
+    );
+    await screen.findByTestId(byNode("postDetail.newerVersion"));
+
+    pullDown(scroller);
+
+    await waitFor(() =>
+      expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("Edited twice"),
+    );
+    expect(line()).not.toBeInTheDocument();
+    scroller.remove();
+  });
+
+  // A PULL WHILE THE OPENING READ IS OUT is the same operation with the same
+  // variables, which Apollo deduplicates in flight: one answer settles both,
+  // so no older answer can land second and raise a line for an older version.
+  it("settles a pull made during the opening read on that one answer, with no line", async () => {
+    const data = detail("u1", []);
+    let releaseOpening!: () => void;
+    const opening = new Promise<void>((resolve) => {
+      releaseOpening = resolve;
+    });
+    let reads = 0;
+    server.use(
+      graphql.query("PostDetail", async () => {
+        reads += 1;
+        if (reads === 1) {
+          await opening;
+          return HttpResponse.json({ data: edited(data, "Edited once") });
+        }
+        return HttpResponse.json({ data: edited(data, "Edited twice", "2026-08-12T13:00:00Z") });
+      }),
+    );
+    const scroller = document.createElement("div");
+    document.body.append(scroller);
+    renderWithProviders(
+      <ScrollHostProvider value={{ current: scroller }}>
+        <PostView postId="p1" />
+      </ScrollHostProvider>,
+      { writeSigner: fakeWriteSigner(), cache: feedCache(feedNode(data, 0)) },
+    );
+    await waitFor(() => expect(reads).toBe(1));
+
+    pullDown(scroller);
+    releaseOpening();
+    // The pull is the reader asking, so the one answer lands over the opened
+    // version — and nothing older is left in flight to land behind it.
+    await waitFor(() =>
+      expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("Edited once"),
+    );
+    expect(reads).toBe(1);
+    expect(line()).not.toBeInTheDocument();
+    scroller.remove();
+  });
+
+  // ---- FC-7c · A REDACTION PATCHES THROUGH (PostDetail.md:15; seam 120.2) ----
+
+  /** The record removed whole: every field and the gallery REDACTED. */
+  function removed(data: PostPayload): PostPayload {
+    const gone = { __typename: "ModeratedText", value: null, status: "REDACTED" };
+    return {
+      post: {
+        ...data.post,
+        title: gone,
+        description: gone,
+        content: gone,
+        attachmentsStatus: "REDACTED",
+        updatedAt: "2026-08-12T12:00:00Z",
+      },
+    };
+  }
+
+  it("a redaction patches through the painted snapshot at once", async () => {
+    const data = detail("u1", []);
+    await openOnto(data, removed(data));
+
+    expect(await screen.findByTestId("post-removed")).toBeInTheDocument();
+    expect(screen.queryByTestId(byNode("postDetail.card.title"))).not.toBeInTheDocument();
+    expect(line()).not.toBeInTheDocument();
+  });
+
+  it("a redaction never waits behind the newer version line", async () => {
+    // ONE PART removed — a single picture of the gallery — in the same read
+    // as an edit, which on its own would wait behind the line.
+    const picture = (id: string, status = "NORMAL") => ({
+      __typename: "MediaAttachment",
+      id,
+      url: `https://media.test/${id}.webp`,
+      altText: null,
+      status,
+      mimeType: "image/webp",
+      options: { __typename: "MediaOptions", aspectRatio: "1:1", durationMs: null },
+      coverMedia: null,
+      coverTaken: false,
+    });
+    const data = detail("u1", [], undefined, false, [], [], {
+      content: null,
+      attachments: [picture("m1"), picture("m2")],
+    });
+    const fresh = edited(
+      detail("u1", [], undefined, false, [], [], {
+        content: null,
+        attachments: [picture("m1"), picture("m2", "REDACTED")],
+      }),
+      "Edited title",
+    );
+    await openOnto(data, fresh);
+
+    expect(await screen.findByTestId("post-removed")).toBeInTheDocument();
+    expect(line()).not.toBeInTheDocument();
+  });
+
+  // ---- THE CARRIED ELEMENT ACROSS THE HOLD (#146, #150) ----------------------
+
+  function videoPost() {
+    const clip = {
+      __typename: "MediaAttachment",
+      id: "m1",
+      url: "https://media.test/m1.mp4",
+      altText: null,
+      status: "NORMAL",
+      mimeType: "video/mp4",
+      options: { __typename: "MediaOptions", aspectRatio: "9:16", durationMs: 41_000 },
+      coverMedia: null,
+      coverTaken: false,
+    };
+    return { clip, data: detail("u1", [], undefined, false, [], [], { content: null, attachments: [clip] }) };
+  }
+
+  // The line arrives ABOVE the clip, and swapping in a version whose clip is
+  // the same clip keeps the one element: neither remounts the detail clip.
+  it("keeps the detail clip's element through the line and through the swap", async () => {
+    const { data } = videoPost();
+    await openOnto(data, edited(data, "Edited title"));
+    const media = screen.getByTestId("post-detail-clip-media");
+    const element = media.querySelector("video");
+
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.newerVersion")));
+
+    expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("Edited title");
+    expect(screen.getByTestId("post-detail-clip-media")).toBe(media);
+    expect(screen.getByTestId("post-detail-clip-media").querySelector("video")).toBe(element);
+  });
+
+  // A removed clip patches through like any removal, and the detail clip
+  // leaves: its element goes out of the page with it (`video-stage.ts`'s
+  // release), never left playing above the skeleton.
+  it("lets the detail clip go when a redaction removes it", async () => {
+    const { clip, data } = videoPost();
+    const read = heldDetail(() =>
+      HttpResponse.json({
+        data: edited(
+          detail("u1", [], undefined, false, [], [], {
+            content: null,
+            attachments: [{ ...clip, status: "REDACTED" }],
+          }),
+          "Edited title",
+        ),
+      }),
+    );
+    server.use(read.handler);
+    renderWithProviders(<PostView postId="p1" />, {
+      writeSigner: fakeWriteSigner(),
+      cache: feedCache(feedNode(data, 0)),
+    });
+    const element = screen.getByTestId("post-detail-clip-media").querySelector("video");
+
+    read.release();
+    expect(await screen.findByTestId("post-removed")).toBeInTheDocument();
+    expect(screen.queryByTestId("post-detail-clip")).toBeNull();
+    expect(element?.isConnected ?? false).toBe(false);
+    expect(line()).not.toBeInTheDocument();
   });
 });

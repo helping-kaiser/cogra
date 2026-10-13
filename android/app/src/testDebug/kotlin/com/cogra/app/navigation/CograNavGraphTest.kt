@@ -944,6 +944,32 @@ class CograNavGraphTest {
         assertThat(settings.confirmedTokens).containsExactly("held-token")
     }
 
+    /** ChangeEmailLinkedSignedOut.md: a dead link's Sign in NEVER holds the link. */
+    @Test
+    fun `signed_out_dead_link_sign_in_never_holds_the_link`() {
+        settings.linkCheck = com.cogra.domain.Outcome.Success(
+            com.cogra.domain.settings.EmailChangeLinkCheck(
+                "sol@ferreira.studio",
+                com.cogra.domain.settings.EmailChangeLinkState.EXPIRED,
+            ),
+        )
+        render()
+        waitForTag("login_email")
+        navController.handleDeepLink(joinIntent("/email-change?token=dead-token"))
+        waitForTag("changeEmail.onward")
+
+        compose.onNodeWithTag("changeEmail.onward").performClick()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<Login>() == true
+        }
+        account.profile = member()
+        signIn()
+        // Signed in, the reader lands home — never back on the dead link.
+        waitFor(barSlot("profile"))
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ChangeEmailLinked>()).isFalse()
+        assertThat(settings.confirmedTokens).isEmpty()
+    }
+
     @Test
     fun settingsReachesTheKeyExportScreen() {
         signIn()
@@ -1138,7 +1164,7 @@ class CograNavGraphTest {
     // these drive the real graph, the real scaffold and the real
     // ViewModels.
 
-    /** A signed-in reader on a feed with one post, past the coach mark. */
+    /** A signed-in reader on a feed with one post, past the first open's coaching. */
     private fun feedWithAPost() {
         signIn()
         identity.seed = actor.seed()
@@ -1161,20 +1187,23 @@ class CograNavGraphTest {
         // The confirmation was silent on the device while six component
         // tests said otherwise: the shell published one host and drew
         // another, and nothing composed both until here.
-        feedWithAPost()
-
-        stanceTarget().performClick()
-
-        waitForTag("shell_snackbar")
-    }
-
-    @Test
-    fun holdingAStanceTargetOpensThePadAndNeverThePost() {
-        // The reported leak: hold, let go, and the post detail opened
-        // underneath the pad that should have parked.
+        // The hold is the gesture that signs (stance-control.md "The
+        // gesture"), and its lift must not open the post either.
         feedWithAPost()
 
         stanceTarget().performTouchInput { longClick() }
+
+        waitForTag("shell_snackbar")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+    }
+
+    @Test
+    fun tappingAStanceTargetOpensThePadAndNeverThePost() {
+        // The reported leak's shape: touch the face, let go, and the post
+        // detail opened underneath the pad that should have parked.
+        feedWithAPost()
+
+        stanceTarget().performClick()
         waitForTag("feed_post_p1_stance_pad")
 
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
@@ -1187,7 +1216,7 @@ class CograNavGraphTest {
         // the way back. Leaving the screen dismisses it and stages
         // nothing (design.md §8.3).
         feedWithAPost()
-        stanceTarget().performTouchInput { longClick() }
+        stanceTarget().performClick()
         waitForTag("feed_post_p1_stance_pad")
 
         compose.onNodeWithTag("feed.card:p1").performClick()

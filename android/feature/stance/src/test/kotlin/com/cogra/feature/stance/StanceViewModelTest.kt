@@ -10,6 +10,7 @@ import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
+import com.cogra.domain.stance.StanceSignals
 import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.stance.localLanding
@@ -20,7 +21,9 @@ import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -37,6 +40,7 @@ class StanceViewModelTest {
     private val actor = ActorKey.generate()
     private val identity = FakeIdentityStore().apply { seed = actor.seed() }
     private val writes = SealingWriteRepository(actor)
+    private val signals = StanceSignals()
 
     /** Records exactly what the control asked for; nothing is derived. */
     private val stances = object : ThrowingStanceRepository() {
@@ -125,7 +129,7 @@ class StanceViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = StanceViewModel(stances, WriteSigner(writes, identity), identity)
+    private fun viewModel() = StanceViewModel(stances, WriteSigner(writes, identity), identity, signals)
 
     private fun entry(vm: StanceViewModel) = vm.state.value.targets.getValue(TARGET)
 
@@ -218,17 +222,66 @@ class StanceViewModelTest {
         assertThat(stances.standingCalls).isEqualTo(2)
     }
 
-    // -- Writing: the raw-edge rule (design.md §8.1) --
+    // -- Announcing: the borrowed-view band hears every signing (VouchBack.md:21) --
 
     @Test
-    fun aPlainTapStagesTheModestPositiveVerbatim() = runTest(dispatcher) {
-        // Past the teaching tap: from here on, taps act (design.md §8.7).
-        identity.stancePadTaught = true
+    fun aTakenSigningIsAnnouncedAndMarkedTaken() = runTest(dispatcher) {
+        val heard = mutableListOf<Unit>()
+        val listening = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            signals.signed.collect {
+                heard +=
+                    it
+            }
+        }
         val vm = viewModel()
         vm.observe(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
-        vm.onTapDefault(TARGET)
+        vm.onHoldDefault(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(heard).hasSize(1)
+        // The one-shot a host routes on (the vouch-back's ceremony).
+        assertThat(entry(vm).taken).isTrue()
+        vm.onTakenShown(TARGET)
+        assertThat(entry(vm).taken).isFalse()
+        listening.cancel()
+    }
+
+    @Test
+    fun aSigningThatDidNotGoThroughIsNeitherAnnouncedNorTaken() = runTest(dispatcher) {
+        val heard = mutableListOf<Unit>()
+        val listening = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            signals.signed.collect {
+                heard +=
+                    it
+            }
+        }
+        stances.prepareOutcome = Outcome.Failed(IllegalStateException("offline"))
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onHoldDefault(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(heard).isEmpty()
+        assertThat(entry(vm).taken).isFalse()
+        assertThat(entry(vm).failed).isTrue()
+        listening.cancel()
+    }
+
+    // -- Writing: the raw-edge rule (design.md §8.1) --
+
+    @Test
+    fun aHoldStagesTheModestPositiveVerbatim() = runTest(dispatcher) {
+        // stance-control.md "The gesture": press and hold 500ms commits
+        // (+0.1, +0.1), and nothing gates it.
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onHoldDefault(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(stances.staged).containsExactly(StancePair(0.1, 0.1))
@@ -282,7 +335,7 @@ class StanceViewModelTest {
         vm.observe(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
-        vm.onTapDefault(TARGET)
+        vm.onHoldDefault(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(entry(vm).failed).isTrue()
@@ -298,17 +351,17 @@ class StanceViewModelTest {
         vm.observe(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
-        vm.onTapDefault(TARGET)
+        vm.onHoldDefault(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(entry(vm).failed).isTrue()
         assertThat(entry(vm).needsKey).isTrue()
     }
 
-    // -- A tap answers immediately (design.md §8.3) --
+    // -- The hold answers immediately (design.md §8.3) --
 
     @Test
-    fun aTapMovesTheTargetBeforeTheRecordLands() = runTest(dispatcher) {
+    fun aHoldMovesTheTargetBeforeTheRecordLands() = runTest(dispatcher) {
         // Silence reads as failure and invites the same priced act again.
         identity.stancePadTaught = true
         stances.net = StancePair(0.5, 0.5)
@@ -319,7 +372,7 @@ class StanceViewModelTest {
         vm.observe(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
-        vm.onTapDefault(TARGET)
+        vm.onHoldDefault(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
         // The write is still open, and the target already answers — with
@@ -352,7 +405,7 @@ class StanceViewModelTest {
         vm.observe(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
-        vm.onTapDefault(TARGET)
+        vm.onHoldDefault(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(stances.staged).containsExactly(StancePair.TapDefault)
@@ -386,7 +439,7 @@ class StanceViewModelTest {
         vm.observe(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
-        vm.onTapDefault(TARGET)
+        vm.onHoldDefault(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(entry(vm).confirmation).isEqualTo(StancePair(0.3, 0.2))
@@ -406,7 +459,7 @@ class StanceViewModelTest {
         vm.observe(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
-        vm.onTapDefault(TARGET)
+        vm.onHoldDefault(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(entry(vm).confirmation).isNull()
@@ -420,15 +473,33 @@ class StanceViewModelTest {
     // -- The pad's own states (design.md §8.3) --
 
     @Test
-    fun thePadOpensAtTheOriginNotAtTheTapDefault() = runTest(dispatcher) {
+    fun theTapParksThePadOpenAtTheDefaultAndStagesNothing() = runTest(dispatcher) {
+        // stance-control.md "The gesture" (jakob 2026-10-05): the pad
+        // opens at +0.10 / +0.10, so Set on a pick never moved signs
+        // exactly what the hold would.
         val vm = viewModel()
         vm.observe(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
         vm.onOpenPad(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(entry(vm).pick).isEqualTo(StancePair.Origin)
-        assertThat(entry(vm).pad).isEqualTo(PadMode.DRAGGING)
+        assertThat(entry(vm).pick).isEqualTo(StancePair.TapDefault)
+        assertThat(entry(vm).pad).isEqualTo(PadMode.STICKY)
+        assertThat(stances.staged).isEmpty()
+    }
+
+    @Test
+    fun setOnAnUnmovedPickSignsExactlyWhatTheHoldWould() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onOpenPad(TARGET)
+        vm.onCommit(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(stances.staged).containsExactly(StancePair.TapDefault)
     }
 
     @Test
@@ -455,9 +526,9 @@ class StanceViewModelTest {
     }
 
     @Test
-    fun anOpenedPadAlreadyKnowsWhereItsOriginPickLands() = runTest(dispatcher) {
+    fun anOpenedPadAlreadyKnowsWhereItsDefaultPickLands() = runTest(dispatcher) {
         // Nothing to wait for at the moment of blooming either: the pad
-        // opens at the origin and the landing for it is already known.
+        // opens at the default and the landing for it is already known.
         stances.net = StancePair(0.4, 0.2)
         stances.records = 2
         val vm = viewModel()
@@ -466,7 +537,9 @@ class StanceViewModelTest {
 
         vm.onOpenPad(TARGET)
 
-        assertThat(entry(vm).landing?.net).isEqualTo(StancePair(0.4, 0.2))
+        val landing = entry(vm).landing?.net
+        assertThat(landing?.pDirected).isWithin(1e-9).of(0.5)
+        assertThat(landing?.pInterest).isWithin(1e-9).of(0.3)
         assertThat(stances.projected).isEmpty()
     }
 
@@ -506,7 +579,6 @@ class StanceViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         vm.onOpenPad(TARGET)
         vm.onPick(TARGET, StancePair(0.6, 0.6))
-        vm.onHold(TARGET)
         assertThat(entry(vm).pad).isEqualTo(PadMode.STICKY)
 
         vm.onDismissPad(TARGET)
@@ -518,14 +590,17 @@ class StanceViewModelTest {
     }
 
     @Test
-    fun aHoldThatNeverDriftedParksThePad() = runTest(dispatcher) {
+    fun aHoldOpensNoPad() = runTest(dispatcher) {
+        // The shortcut signs without opening anything.
         val vm = viewModel()
         vm.observe(TARGET)
-        vm.onOpenPad(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
 
-        vm.onHold(TARGET)
+        vm.onHoldDefault(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(entry(vm).pad).isEqualTo(PadMode.STICKY)
+        assertThat(entry(vm).pad).isEqualTo(PadMode.CLOSED)
+        assertThat(stances.staged).containsExactly(StancePair.TapDefault)
     }
 
     @Test
@@ -665,125 +740,144 @@ class StanceViewModelTest {
         assertThat(vm.state.value.inputMode).isEqualTo(StanceInputMode.SLIDERS)
     }
 
-    // -- Teaching the held gesture (design.md §8.7) --
+    // -- Teaching it: the pad is the teacher (stance-control.md) --
 
     @Test
-    fun noControlCarriesTheMarkUntilOneIsTapped() = runTest(dispatcher) {
-        // The mark belongs to the tap that opened it, not to whichever
-        // card happened to render first.
+    fun noControlCarriesTheCoachingUntilAPadOpens() = runTest(dispatcher) {
+        // The lines belong to the open that carries them, not to
+        // whichever card happened to render first.
         val vm = viewModel()
 
         vm.observe(TARGET)
         vm.observe(StanceTarget.Node("post-2"))
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.coachTarget).isNull()
+        assertThat(vm.state.value.coachingTarget).isNull()
     }
 
     @Test
-    fun theFirstTapEverTeachesAndStagesNothing() = runTest(dispatcher) {
+    fun theFirstOpenEverCarriesTheCoachingAndStagesNothing() = runTest(dispatcher) {
         val vm = viewModel()
         vm.observe(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
-        vm.onTapDefault(TARGET)
+        vm.onOpenPad(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.coachTarget).isEqualTo(TARGET)
+        assertThat(vm.state.value.coachingTarget).isEqualTo(TARGET)
         assertThat(stances.staged).isEmpty()
-        // Spent at once, so a restart cannot swallow a second tap.
+        // Spent at the open, so a restart cannot teach twice.
         assertThat(identity.stancePadTaught).isTrue()
     }
 
     @Test
-    fun theTapAfterTheTeachingOneActs() = runTest(dispatcher) {
+    fun theOpenAfterTheTeachingOneCarriesNoCoaching() = runTest(dispatcher) {
         val vm = viewModel()
         vm.observe(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onTapDefault(TARGET)
+        vm.onOpenPad(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onDismissPad(TARGET)
+
+        vm.onOpenPad(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
-        vm.onTapDefault(TARGET)
-        dispatcher.scheduler.advanceUntilIdle()
-
-        assertThat(stances.staged).containsExactly(StancePair.TapDefault)
+        assertThat(vm.state.value.coachingTarget).isNull()
+        assertThat(entry(vm).pad).isEqualTo(PadMode.STICKY)
     }
 
     @Test
-    fun aTapBeforeTheStoreHasAnsweredStillTeachesRatherThanStaging() = runTest(dispatcher) {
+    fun anOpenBeforeTheStoreHasAnsweredStillTeaches() = runTest(dispatcher) {
         // The very first tap on a freshly opened screen: the flag read is
-        // still in flight, and the tap waits for it.
+        // still in flight. The pad opens at once; the lines join it.
         val vm = viewModel()
 
-        vm.onTapDefault(TARGET)
+        vm.onOpenPad(TARGET)
+        assertThat(entry(vm).pad).isEqualTo(PadMode.STICKY)
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.coachTarget).isEqualTo(TARGET)
+        assertThat(vm.state.value.coachingTarget).isEqualTo(TARGET)
         assertThat(stances.staged).isEmpty()
     }
 
     @Test
-    fun aTapOnADeviceAlreadyTaughtActsAtOnce() = runTest(dispatcher) {
+    fun aLateAnswerDoesNotTeachAPadAlreadyClosed() = runTest(dispatcher) {
+        // The lines close with the pad: an answer that arrives after it
+        // shut has no open to ride, and spends nothing.
+        val vm = viewModel()
+
+        vm.onOpenPad(TARGET)
+        vm.onDismissPad(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.coachingTarget).isNull()
+        assertThat(identity.stancePadTaught).isFalse()
+    }
+
+    @Test
+    fun anOpenOnADeviceAlreadyTaughtCarriesNoCoaching() = runTest(dispatcher) {
         identity.stancePadTaught = true
         val vm = viewModel()
         vm.observe(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
-        vm.onTapDefault(TARGET)
+        vm.onOpenPad(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.coachTarget).isNull()
-        assertThat(stances.staged).containsExactly(StancePair.TapDefault)
+        assertThat(vm.state.value.coachingTarget).isNull()
+        assertThat(stances.staged).isEmpty()
     }
 
     @Test
-    fun theMarkStaysUntilItIsDismissed() = runTest(dispatcher) {
+    fun theCoachingStaysForAsLongAsItsPadDoes() = runTest(dispatcher) {
         val vm = viewModel()
         vm.observe(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onTapDefault(TARGET)
+        vm.onOpenPad(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
         // Reading, picking, scrolling: none of it closes the lesson.
         vm.onPick(TARGET, StancePair(0.4, 0.2))
         vm.observe(StanceTarget.Node("post-2"))
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.coachTarget).isEqualTo(TARGET)
+        assertThat(vm.state.value.coachingTarget).isEqualTo(TARGET)
 
-        vm.onCoachMarkDismissed()
-        assertThat(vm.state.value.coachTarget).isNull()
-    }
-
-    @Test
-    fun findingTheHoldUntaughtSpendsTheTeachingTapToo() = runTest(dispatcher) {
-        // Someone who discovers the gesture on their own has met it; a
-        // coach mark on their next tap would cost them a tap for nothing.
-        val vm = viewModel()
-        vm.observe(TARGET)
-        dispatcher.scheduler.advanceUntilIdle()
-
-        vm.onOpenPad(TARGET)
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(identity.stancePadTaught).isTrue()
-
+        // Closing the pad does.
         vm.onDismissPad(TARGET)
-        vm.onTapDefault(TARGET)
-        dispatcher.scheduler.advanceUntilIdle()
-
-        assertThat(vm.state.value.coachTarget).isNull()
-        assertThat(stances.staged).containsExactly(StancePair.TapDefault)
+        assertThat(vm.state.value.coachingTarget).isNull()
     }
 
     @Test
-    fun aSuccessfulHoldClosesTheMark() = runTest(dispatcher) {
+    fun aHoldNeverSpendsTheTeaching() = runTest(dispatcher) {
+        // A hold opens nothing, so there is nothing for the lines to ride:
+        // the account's first open is still to come.
         val vm = viewModel()
         vm.observe(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onTapDefault(TARGET)
+
+        vm.onHoldDefault(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
+        assertThat(identity.stancePadTaught).isFalse()
+        assertThat(stances.staged).containsExactly(StancePair.TapDefault)
 
         vm.onOpenPad(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.coachTarget).isNull()
+        assertThat(vm.state.value.coachingTarget).isEqualTo(TARGET)
+    }
+
+    @Test
+    fun aSetThatSignsClosesTheCoachingWithItsPad() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onOpenPad(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onCommit(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(entry(vm).pad).isEqualTo(PadMode.CLOSED)
+        assertThat(vm.state.value.coachingTarget).isNull()
     }
 }

@@ -12,9 +12,25 @@ query Me {
     accountState
     hasReciprocated
     vouchBackDismissed
+    # The member who vouched the account in — the vouch card, the
+    # vouch-back pad and the ceremony all name them, and wear their face.
     invitedBy {
       id
       handle
+      displayName {
+        value
+      }
+      ... on User {
+        avatar {
+          ...MediaFields
+        }
+      }
+    }
+    # The sensitive-content choice is the ACCOUNT's (Settings' Always
+    # unveil sensitive content): 0 unveils wherever the account reads,
+    # null or 1–10 keeps the veil — read here, never kept on the device.
+    preferences {
+      contentFilteringSeverityLevel
     }
   }
 }
@@ -42,6 +58,13 @@ query BorrowedView {
     handle
     displayName {
       value
+    }
+    # The band wears the vantage's face (VouchBack board); `Actor` has
+    # no avatar of its own, so it is read off the User the vantage is.
+    ... on User {
+      avatar {
+        ...MediaFields
+      }
     }
   }
 }
@@ -125,6 +148,7 @@ query SettingsAccount {
       ...PendingEmailChangeFields
     }
     preferences {
+      contentFilteringSeverityLevel
       defaultLicense {
         attribution
         provenance
@@ -158,6 +182,7 @@ query DefaultLicense {
 mutation SetPreferences($input: SetPreferencesInput!) {
   setPreferences(input: $input) {
     preferences {
+      contentFilteringSeverityLevel
       defaultLicense {
         attribution
         provenance
@@ -293,6 +318,71 @@ mutation ApproveApplicants($input: ApproveApplicantsInput!) {
     writes {
       ...PreparedWriteFields
     }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+# Account deletion (auth.md "Self-service deletion"). The member path
+# mails a link and schedules nothing; `accountDeletion` is non-null only
+# once a deletion is confirmed — and on a request made while one already
+# is, which changes nothing. A spent deletion mail budget is a
+# transport-tier RATE_LIMITED. `deletionPath` is the server's read of which
+# deletion verb answers (IMMEDIATE, BY_LINK or LOCKED); clients never
+# re-derive it from `application.*`.
+query AccountDeletion {
+  me {
+    id
+    accountDeletion {
+      ...AccountDeletionFields
+    }
+    deletionPath
+  }
+}
+
+mutation RequestAccountDeletion($input: RequestAccountDeletionInput!) {
+  requestAccountDeletion(input: $input) {
+    accountDeletion {
+      ...AccountDeletionFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+# Session-free: the link's token is the capability. Every dead link is
+# one DELETION_TOKEN_INVALID; includeContent true adds the content
+# sweep, and nothing takes it back.
+mutation ConfirmAccountDeletion($input: ConfirmAccountDeletionInput!) {
+  confirmAccountDeletion(input: $input) {
+    accountDeletion {
+      ...AccountDeletionFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+# Idempotent: with nothing standing it answers null and no error.
+mutation CancelAccountDeletion {
+  cancelAccountDeletion {
+    accountDeletion {
+      ...AccountDeletionFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+# The unfunded applicant's immediate delete; the session dies with the
+# account. FORBIDDEN for a member and for a funded applicant.
+mutation DeleteApplicantAccount {
+  deleteApplicantAccount {
+    ok
     userErrors {
       ...UserErrorFields
     }

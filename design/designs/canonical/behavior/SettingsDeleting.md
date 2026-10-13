@@ -4,6 +4,8 @@ ALWAYS settings.deletionBand stands under the settings header GIVEN the account'
 
 ALWAYS the Delete account row reads Deletion in and the days left, counting down GIVEN the account's confirmed deletion is in its grace period
 
+ALWAYS the days left round to the nearest whole day while 24 hours or more remain, then the row counts the hours left, rounded up
+
 ALWAYS the delete-account group carries no footnote GIVEN the account's confirmed deletion is in its grace period
 
 ALWAYS every other row of settings stands and answers as it does outside the grace period

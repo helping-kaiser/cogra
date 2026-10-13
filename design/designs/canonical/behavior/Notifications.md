@@ -24,7 +24,7 @@ ALWAYS Notifications offers no mark-all control
 
 ALWAYS the header collapses on the way down and returns on the way up
 
-ALWAYS the bottom bar rides with no slot lit
+ALWAYS notifications.bottomBar keeps lit the slot of the root the bell was tapped on, notifications.bottomBar.feedSlot from the feed
 
 WHEN Notifications opens -> the bell's dot clears AND every row not yet opened keeps its own dot
 

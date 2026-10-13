@@ -53,7 +53,7 @@ export function Screen() {
         <ComingSoonCard thing="Chats" line="Your conversations will be here." />
         <div style={{ flex: 1 }} />
       </div>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>
   );
 }

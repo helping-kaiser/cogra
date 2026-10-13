@@ -47,6 +47,71 @@ import { ExplainableNumber } from "../proposed/ExplainableNumber.jsx";
 
 const RAIL_SHADOW = "drop-shadow(0 1px 6px rgba(0,0,0,0.75))";
 
+/* THE STREAM'S PLATE (jakob 2026-10-12, the slice-3 round: RL-G4, RL-G8,
+   RL-G13). A line the stream owes the reader — a hold that did not sign, the
+   load that did not come, the last clip — has no row to stand on over a clip,
+   so it stands on the wash's own black, a pill at 60 %, the one surface a word
+   can be read on over any frame. It is a line and not a snackbar: it stands
+   until it is answered and never fades on a timer (the row line's law). The
+   words keep their own registers — the failure ink, the quiet secondary, the
+   bare `Retry` — the plate only gives them ground. */
+export function ReelPlate({ children, role = "status" }) {
+  return (
+    <p
+      role={role}
+      style={{
+        margin: 0,
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "var(--space-2)",
+        padding: "4px 10px",
+        borderRadius: "var(--radius-full)",
+        background: "rgba(0,0,0,0.6)",
+        color: "#fff",
+        fontSize: "var(--text-label-medium)",
+        lineHeight: "var(--text-label-medium--line-height)",
+        fontWeight: "var(--text-label-medium--font-weight)",
+        whiteSpace: "nowrap",
+        textShadow: "none",
+      }}
+    >
+      {children}
+    </p>
+  );
+}
+
+/* THE RAIL'S SCORE DOOR, in its three faces (jakob 2026-10-12: RL-G7 and the
+   moved-on vocabulary). The figure the latest fetch of the post found — the
+   reader's own last feed fetch, or the trace's since — the same the card
+   wears. Still settling, the glyph stands BARE with the
+   pending mark under it, and the door stays: the score is the stream's only
+   way into the post, and a settling clip has a post like any other. A dash
+   where that fetch found no paths — no computed figure — and the door
+   stays then too. The bare slot is settling's alone; zero is severance's. */
+export function ReelRailScore({ score, settling = false, onOpen }) {
+  const door = (
+    <ExplainableNumber glyph="graph" label="Feed score" value={settling ? undefined : score} onOpenDetail={onOpen ?? (() => {})} overMedia />
+  );
+  if (!settling) return door;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+      {door}
+      <span
+        style={{
+          maxWidth: 56,
+          textAlign: "center",
+          fontSize: "var(--text-label-small)",
+          lineHeight: "var(--text-label-small--line-height)",
+          fontWeight: "var(--text-label-small--font-weight)",
+          color: "#fff",
+        }}
+      >
+        Still settling
+      </span>
+    </div>
+  );
+}
+
 export function ReelRailItem({ label, glyph, count, onClick }) {
   return (
     <button
@@ -81,6 +146,9 @@ export function ReelRailItem({ label, glyph, count, onClick }) {
 export function ReelRail({
   author,
   score,
+  settling = false,
+  scoreSlot,
+  stanceLine,
   comments,
   bottom = 168,
   onOpenProfile,
@@ -112,7 +180,16 @@ export function ReelRail({
           <MonogramAvatar name={author.displayName} size={44} src={author.src} />
         </a>
       )}
-      <StanceControl targetLabel="this post" overMedia />
+      {/* The face's row line has no row to stand under here, so it stands
+          beside the face, on the stream's plate, reading leftward. */}
+      <div style={{ position: "relative" }}>
+        <StanceControl targetLabel="this post" overMedia />
+        {stanceLine && (
+          <div style={{ position: "absolute", right: "calc(100% + 8px)", top: "50%", transform: "translateY(-50%)" }}>
+            {stanceLine}
+          </div>
+        )}
+      </div>
       {comments !== undefined && (
         <ReelRailItem
           label={comments === 1 ? "1 comment" : `${comments} comments`}
@@ -122,9 +199,7 @@ export function ReelRail({
         />
       )}
       <ReelRailItem label="Share this post" glyph="share" onClick={onShare} />
-      {score !== undefined && (
-        <ExplainableNumber glyph="graph" label="Feed score" value={score} onOpenDetail={onOpenScore ?? (() => {})} overMedia />
-      )}
+      {scoreSlot ?? ((score !== undefined || settling) && <ReelRailScore score={score} settling={settling} onOpen={onOpenScore} />)}
     </div>
   );
 }

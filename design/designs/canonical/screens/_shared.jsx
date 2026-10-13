@@ -49,6 +49,7 @@ const {
   Checkbox,
   FeedFilter,
   FeedFilterSheet,
+  FeedPeopleRows,
   FilterTrigger,
   FilterFoot,
   FilterSection,
@@ -94,8 +95,10 @@ const {
   ExplainableNumber,
   MediaViewer,
   ReelRail,
+  ReelRailScore,
+  ReelPlate,
   ReelCaption,
-  PinnedClip,
+  DetailClip,
   LICENSE_MENU_LABEL,
   LicenseTerms,
   ATTRIBUTION_TIERS,
@@ -298,6 +301,54 @@ function ApkLine() {
         On Android? Download the app (APK)
       </span>
     </div>
+  );
+}
+
+/* THE REGISTRATION'S TWO LEGAL LINES (jakob 2026-10-09, ruling 76; §305(2)
+   BGB needs a conspicuous reference and readable terms, not a checkbox).
+   The accept sentence stands DIRECTLY ABOVE the commit — the one place a
+   reader's eye crosses on the way to `Create account` — with `Terms` as a
+   door, and no checkbox anywhere: ticking a box is ceremony the law does not
+   ask for and the form does not need. The sentence is blessed verbatim.
+
+   THE PRIVACY POLICY IS A NOTICE, NEVER PART OF THE ACCEPTANCE (the same
+   ruling; GDPR's information duty is owed, not agreed to). It stands as its
+   own linked line at the form's foot, apart from the accept sentence, so
+   nothing reads as if a reader consented to data handling by registering.
+
+   Both live here because `Join` and `JoinErrors` draw one form, and a legal
+   line spelled twice is a legal line that drifts. */
+function JoinTermsLine() {
+  return (
+    <p
+      style={{
+        margin: 0,
+        textAlign: "center",
+        fontSize: "var(--text-body-small)",
+        lineHeight: "var(--text-body-small--line-height)",
+        letterSpacing: "var(--text-body-small--letter-spacing)",
+        color: "var(--text-secondary)",
+      }}
+    >
+      By creating your account you accept the <a href="#">Terms</a>.
+    </p>
+  );
+}
+
+function JoinPrivacyNotice() {
+  return (
+    <p
+      style={{
+        margin: 0,
+        textAlign: "center",
+        fontSize: "var(--text-body-small)",
+        lineHeight: "var(--text-body-small--line-height)",
+        letterSpacing: "var(--text-body-small--letter-spacing)",
+        color: "var(--text-secondary)",
+      }}
+    >
+      How CoGra handles your data: the <a href="#">Privacy Policy</a>.
+    </p>
   );
 }
 
@@ -532,6 +583,17 @@ const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {}, node: "lice
    where the post's menu has always put it: the rarest act, and the one that
    takes the content away. */
 const REMOVE_ROW = { label: "Remove", onSelect: () => {}, node: "remove" };
+/* THE REPORT ROW, AT THE SHEET TAIL OF EVERY OTHER-PERSON MENU (jakob
+   2026-10-09, ruling 75). Minimal and via mail for MVP: the row opens a
+   confirm sheet naming the thing (`ReportConfirm`), the commit sends the
+   report out, and no report machinery exists until proposals/moderation
+   land. It sits LAST — below even the license — because it is the one row
+   a reader reaches for about someone else's conduct, not about using the
+   thing, and the tail is where the rows that take or send something have
+   always lived. It NEVER connects to Report-a-problem: reporting content
+   must not read as reporting the app (jakob). Own menus carry no Report —
+   a reader has nothing to report themselves for. */
+const REPORT_ROW = { label: "Report", onSelect: () => {}, node: "report" };
 const OWN_POST_MENU = [
   SAVE_ROW,
   CITE_ROW,
@@ -540,7 +602,7 @@ const OWN_POST_MENU = [
   REMOVE_ROW,
   LICENSE_ROW,
 ];
-const READER_POST_MENU = [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {}, node: "hide" }, LICENSE_ROW];
+const READER_POST_MENU = [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {}, node: "hide" }, LICENSE_ROW, REPORT_ROW];
 /* THE COMMENT'S MENU IS WHERE ITS OPINIONS LIVE (backlog item 55; jakob ruled
    both doors, and this is the comment's). A post's door is a count row on its
    detail surface; a comment has no detail surface of its own — it lives inside a
@@ -573,7 +635,7 @@ const OPINIONS_ROW = { label: "Opinions on this", onSelect: () => {}, node: "opi
    about people. */
 const CITED_BY_ROW = { label: "Cited by", onSelect: () => {}, node: "citedBy" };
 
-const COMMENT_MENU = [...CARD_MENU, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW];
+const COMMENT_MENU = [...CARD_MENU, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW, REPORT_ROW];
 /* YOUR OWN COMMENT'S MENU (the comment-removal round, 2026-10-01): the reader's
    menu with `Remove` joined as the last of the acts — after Save and Cite,
    before the two readings, the license closing it. That is `OWN_POST_MENU`'s
@@ -663,6 +725,7 @@ const PROFILE_MENU = [
   { label: "Mention in a new post", onSelect: () => {}, node: "mention" },
   { label: "Share this profile", onSelect: () => {}, node: "share" },
   { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {}, node: "hide" },
+  REPORT_ROW,
 ];
 
 /* A DELETED ACCOUNT'S MENU (jakob 2026-09-12): the three rows that work on a
@@ -677,6 +740,7 @@ const PROFILE_DELETED_MENU = [
   SAVE_ROW,
   { label: "Share this profile", onSelect: () => {}, node: "share" },
   { label: HIDE_ACTOR_LABEL(null, true), onSelect: () => {}, node: "hide" },
+  REPORT_ROW,
 ];
 
 /* Your own profile's menu (the private-viewer-state round): the two private
@@ -914,6 +978,53 @@ const Unsave = ({ name, node }) => (
 );
 
 /* The post-detail column: the read surface a card opens into. */
+/* THE EDITED-WHILE-YOU-READ LINE (jakob 2026-10-09, seam 120; drawn
+   2026-10-12, the slice-3 round). A detail HOLDS the post as it was opened —
+   nothing changes under a reader mid-sentence — and when a fresh read finds
+   the post changed, this one line says so between the header and the post.
+   The tap swaps the newest version in place and the line goes. A change to
+   the post's tags or citations raises the same line in the same words: on the
+   graph those are acts of their own, not edits of the post, but a reader
+   reading it is owed the newer state either way, and one rule needs no
+   taxonomy. A redaction is never held behind it — it patches through at once.
+
+   IT IS IN THE PAGE'S FLOW, never pinned: it scrolls away with the header's
+   content beneath it, full width, its 48dp target the row itself. One line of
+   `label-medium` in `primary`, because it is an offer and a fact at once —
+   the words say what happened, the colour says it can be acted on. Announced
+   politely: it is news, not a fault. */
+function EditedSinceLine({ node, display }) {
+  return (
+    <div role="status" aria-live="polite" style={{ display }}>
+      <button
+        type="button"
+        className="cg-state cg-focus"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          width: "100%",
+          minHeight: "var(--touch-target-min)",
+          border: 0,
+          background: "none",
+          padding: "0 16px",
+          cursor: "pointer",
+          fontFamily: "var(--font-sans)",
+          fontSize: "var(--text-label-medium)",
+          lineHeight: "var(--text-label-medium--line-height)",
+          letterSpacing: "var(--text-label-medium--letter-spacing)",
+          fontWeight: "var(--text-label-medium--font-weight)",
+          color: "var(--primary)",
+          textAlign: "left",
+          boxSizing: "border-box",
+        }}
+        data-node={node}
+      >
+        Edited since you opened it — tap for the newest version.
+      </button>
+    </div>
+  );
+}
+
 function DetailColumn({ children }) {
   return (
     <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 12, padding: "0 0 8px 0" }}>
@@ -1048,7 +1159,7 @@ function ProfileOtherBody({ bundle } = {}) {
           <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated their profile" trailing="7d" inert node="act" nodeKey="5" />
         </ChronicleList>
       </div>
-      <BottomNav active={null} slots={ALL_SLOTS} inline node="bottomBar" />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }
@@ -1087,7 +1198,7 @@ function ProfileDeletedBody() {
           <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="21d" second="Low sun on the salt crust, and nobody else out there." onOpen={() => {}} node="act" nodeKey="4" />
         </ChronicleList>
       </div>
-      <BottomNav active={null} slots={ALL_SLOTS} inline node="bottomBar" />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }
@@ -2595,7 +2706,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
 
 /* ── The stream's fixtures (readme §13, the reel round) ───────────────────
    The clip and the post it belongs to. Everything the stream is BUILT from is a
-   master — `ReelRail`, `ReelCaption`, `SeekLine`, `MediaDisc`, `PinnedClip` —
+   master — `ReelRail`, `ReelCaption`, `SeekLine`, `MediaDisc`, `DetailClip` —
    because the stream is the ordinary feed in a different frame, not a second
    product; what stays here is the mock material those masters are handed. */
 
@@ -3128,7 +3239,10 @@ function ReportProblemBody({ words }) {
    logged-in surface and sits under an inner page's header.
 
    `deleteFootnote` is the deletion group's footnote — the member's by
-   default; `Settings` passes its reader chip's hole.
+   default; `Settings` passes its reader chip's hole. `recoveryStatus`,
+   `backupFootnote` and `clearingFootnote` are the three readings `backup`
+   decides, and default to its; `EraseConfirm` passes its backup chip's holes,
+   so the page under its dialog agrees with the dialog.
 
    The element names are the `settings` prefix's (design ⇄ impl seam 059/061):
    `Settings` and `SettingsHidden` register them, and every other board this
@@ -3139,7 +3253,7 @@ function ReportProblemBody({ words }) {
 const SETTINGS_DELETE_FOOTNOTE =
   "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.";
 
-function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE } = {}) {
+function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE, hidden = "3", recoveryStatus, backupFootnote, clearingFootnote } = {}) {
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" node="header" />
@@ -3242,24 +3356,48 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
             sheet is a tap spent on nothing. */}
         <SettingsGroup
           label="People"
-          footnote="Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking."
+          footnote="Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking. Your opinions on them still count in your friends' feeds until you walk them back."
           node="people"
         >
-          <SettingsRow label="Hidden accounts" value="3" onOpen={() => {}} node="hidden" />
+          <SettingsRow label="Hidden accounts" value={hidden} onOpen={() => {}} node="hidden" />
+        </SettingsGroup>
+
+        {/* THE VEIL IS AN ACCOUNT PREFERENCE, NOT THIS DEVICE'S (jakob
+            2026-10-09): a value set on the web must reach every app — the
+            iOS guideline for sensitive user content allows the unveil only
+            when it is turned on via the website, so the choice travels with
+            the account; Android carries the switch itself (Play has no
+            web-only rule). One switch, off by default — never a sheet
+            (jakob's shape). It stands in a group of its own for the same
+            reason hiding does: the Reading footnote's this-device promise
+            is not true of it. */}
+        <SettingsGroup
+          label="Sensitive content"
+          footnote="This choice follows your account to every device."
+          node="sensitive"
+        >
+          <SettingsRow
+            checked={false}
+            label="Always unveil sensitive content"
+            status="Off, the veil stays until you tap it."
+            onOpen={() => {}}
+            node="unveil"
+          />
         </SettingsGroup>
 
         <SettingsGroup
           label="Key backup"
           footnote={
-            backup === "none"
+            backupFootnote ??
+            (backup === "none"
               ? "Your key signs everything you publish and lives only in this browser. Until you make a recovery code, it can't be brought back."
-              : "Your key signs everything you publish and lives only in this browser. Your recovery code is the only way back."
+              : "Your key signs everything you publish and lives only in this browser. Your recovery code is the only way back.")
           }
           node="backup"
         >
           <SettingsRow
             label="Recovery code"
-            status={backup === "none" ? "Not made yet" : "Last created 12.08.2026"}
+            status={recoveryStatus ?? (backup === "none" ? "Not made yet" : "Last created 12.08.2026")}
             onOpen={() => {}}
             node="recovery"
           />
@@ -3267,6 +3405,53 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
           {keptPicks > 0 && (
             <SettingsRow label={`${keptPicks} kept ${keptPicks === 1 ? "pick" : "picks"} waiting`} onOpen={() => {}} node="kept" />
           )}
+        </SettingsGroup>
+
+        {/* WHAT CLEARING THIS DATA ERASES (jakob 2026-10-13, seams 164 and
+            166; the settings round). A reader can clear the app's data from
+            the phone's own storage screen, or uninstall, and the key goes
+            with it — the one loss nothing on the server can undo. An app
+            cannot write into Android's App-info page, so the warning lives
+            here, and the system's own door is routed to it: the manifest's
+            `android:manageSpaceActivity` turns App-info's "Clear data" into
+            "Manage space", which opens settings at this group, and
+            `android:hasFragileUserData="true"` makes the uninstall dialog
+            offer to keep the data. The section reads device state only; no
+            server field rides it.
+
+            THE KEY LEADS, AND THE ACCOUNT IS NAMED (jakob 2026-10-13: "Even
+            more emphasis on KEY. if they miss it their account is gone for
+            good"). The footnote opens on where the key lives and says, in its
+            second sentence, that clearing erases it and that without the
+            recovery code the account is gone for good — before anything else
+            is listed. With no code yet that sentence drops its condition. The
+            draft, the kept picks and the choices kept on this device follow,
+            and the seen list last: it is a copy of the server's and returns
+            on the next sign-in (PR-52), so the words never claim it is lost.
+
+            THE WIPE IS THE GROUP'S ONE ROW (jakob 2026-10-13: "Settings
+            needs the wipe everything from this device yes. ofcourse with
+            warnings and stuff"). `Erase everything from this browser` — in
+            the app `…from this app` — is an action row, quiet like `Sign
+            out`: the weight of an irreversible act lives in the think-twice
+            dialog it raises (`EraseConfirm`), never in a red row. It is also
+            what "Manage space" opens onto, so the system's own door ends at a
+            real erase, behind the warning.
+
+            The heading is one string for both platforms, and the group
+            stands after Key backup because the loss it warns of is the
+            key's. */}
+        <SettingsGroup
+          label="Clearing data"
+          footnote={
+            clearingFootnote ??
+            (backup === "none"
+              ? "Your key lives only in this browser, and it has no recovery code yet. Clear CoGra's data here and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in."
+              : "Your key lives only in this browser. Clear CoGra's data here and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in.")
+          }
+          node="clearing"
+        >
+          <SettingsRow action label="Erase everything from this browser" onOpen={() => {}} node="erase" />
         </SettingsGroup>
 
         <SettingsGroup
@@ -3578,7 +3763,16 @@ function SettingsBackupBody({ app = false, value = "", error }) {
    along it (feed-ranking.md §3.1, §5.1: the per-step weight is damped and
    tier-bound, and the last step alone decays) — so a surface that put a number
    on every step would invite an arithmetic that does not hold. The path states
-   what it adds; the steps state what carries them and when. */
+   what it adds; the steps state what carries them and when.
+
+   THE PARTS' NAMES ARE THE `feedEntry` PREFIX'S (round 7), all four levels
+   under one, as the account screens share theirs: the held thing is `origin`
+   (its `flag` and `value`, the `quote` with its `disc`, `title`, `snippet`), a
+   path row `path` keyed by its place strongest first (`trace`, `through`,
+   `value`, `chevron`), the fact rows by what they state (`adds`, `newest`,
+   `carries`, `behind`), a record `record` keyed by the key it prints (`what`,
+   `when`, `pair`, `key`). Every board these parts stand on that is not
+   registered renders them stripped. */
 
 /* The cast this flow adds to the canvas's four — the people at the far end of
    the weaker paths, and the holders on the opinions sheet. They live beside the
@@ -3610,6 +3804,17 @@ const SCORE_PATHS = [
   { through: "@kel and @wren", people: [SCORE_VIEWER, KEL, WREN], value: "+1.10" },
 ];
 const SCORE_MORE_PATHS = { count: 2, value: "+0.50" };
+
+/* THE SAME SET UNDER A BORROWED VIEW (jakob 2026-10-12, SR-G3): a guest on
+   @mira's invite link, or an applicant she let in, reads the walk from HER
+   opinions, so every path leads with her face — and the one that ran through
+   her runs through @sol instead, since a path never revisits its start. */
+const SCORE_PATHS_BORROWED = [
+  { through: "@ada", people: [MIRA_FACED, ADA_FACED], value: "+6.80" },
+  { through: "@tobias", people: [MIRA_FACED, TOBIAS], value: "+4.20" },
+  { through: "@sol", people: [MIRA_FACED, SOL], value: "+2.60" },
+  { through: "@kel and @wren", people: [MIRA_FACED, KEL, WREN], value: "+1.10" },
+];
 
 /* ScoreOrigin — THE THING THE SCORE BELONGS TO, carried on all four levels so
    a reader four taps deep never loses what they are reading about.
@@ -3651,13 +3856,15 @@ const SCORE_ORIGINS = {
   post: { title: "The long way home — @ada", snippet: "Took the coast road instead of the tunnel. Four hours longer, worth every minute.", name: ADA.displayName, src: "comment-camera.jpg" },
   comment: { title: "@tobias", snippet: TOBIAS_COMMENT, name: TOBIAS.displayName },
   person: { title: MIRA.displayName, snippet: "@" + MIRA.handle, name: MIRA.displayName, src: "inviter.jpg" },
-  topic: { title: "#saltmaps", mark: <NodeMark kind="topic" onCard /> },
+  topic: { title: "#saltmaps", mark: <NodeMark kind="topic" onCard node="disc" /> },
 };
-const signedScore = (score) => (/^[−-]/.test(score) || /^0(\.0+)?$/.test(score) ? score : "+" + score);
+/* Only a positive figure takes the `+`: a negative carries its own sign, a
+   zero wears none, and the dash — no computed figure — is not a number at all. */
+const signedScore = (score) => (/^\d/.test(score) && !/^0(\.0+)?$/.test(score) ? "+" + score : score);
 
 function ScoreOrigin({ kind = "post", score = "15.20" }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 0 }} data-node="origin">
       <span
         style={{
           display: "inline-flex",
@@ -3671,12 +3878,15 @@ function ScoreOrigin({ kind = "post", score = "15.20" }) {
           lineHeight: "var(--text-body-small--line-height)",
           color: "var(--text-secondary)",
         }}
+        data-node="flag"
       >
         <Icon name="graph" size={16} />
         <span style={SR_ONLY}>Feed score</span>
-        <span style={{ color: "var(--on-surface)", fontWeight: 500 }}>{signedScore(score)}</span>
+        <span style={{ color: "var(--on-surface)", fontWeight: 500 }} data-node="value">
+          {signedScore(score)}
+        </span>
       </span>
-      <QuotedRow attach {...SCORE_ORIGINS[kind]} />
+      <QuotedRow attach {...SCORE_ORIGINS[kind]} node="quote" />
     </div>
   );
 }
@@ -3712,11 +3922,14 @@ const TRACE_ENDS = {
   topic: { kind: "topic" },
 };
 
-function PathTrace({ people, size = 24, kind = "post", onCard = false }) {
+function PathTrace({ people, size = 24, kind = "post", onCard = false, node }) {
   const between = people.length === 2 ? `@${people[1].handle}` : "several steps";
-  const spoken = `You, then ${between}, then what reached you`;
+  // A borrowed view's paths start at the account it borrows, and say so in the
+  // third person (jakob 2026-10-12, SR-G3): "You" is the reader's own view only.
+  const lead = people[0] === SCORE_VIEWER ? "You" : `@${people[0].handle}`;
+  const spoken = `${lead}, then ${between}, then what reached you`;
   return (
-    <span style={{ display: "inline-flex", alignItems: "center" }}>
+    <span style={{ display: "inline-flex", alignItems: "center" }} data-node={node}>
       {people.map((person, index) => (
         <React.Fragment key={person.handle}>
           {index > 0 && (
@@ -3737,12 +3950,14 @@ function PathTrace({ people, size = 24, kind = "post", onCard = false }) {
    40px disc, and a path is a chain. Everything else about the row is the
    master's — the card ground, the medium corner, the 12px padding, the chevron
    that says this opens another surface. */
-function PathRow({ people, through, value, onOpen, kind = "post" }) {
+function PathRow({ people, through, value, onOpen, kind = "post", node, nodeKey }) {
   return (
     <button
       type="button"
       onClick={onOpen}
       className="cg-state cg-focus"
+      data-node={node}
+      data-node-key={node && nodeKey}
       style={{
         display: "flex",
         alignItems: "center",
@@ -3760,7 +3975,7 @@ function PathRow({ people, through, value, onOpen, kind = "post" }) {
       }}
     >
       <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
-        <PathTrace people={people} kind={kind} onCard />
+        <PathTrace people={people} kind={kind} onCard node={node && "trace"} />
         <span
           style={{
             fontSize: "var(--text-label-small)",
@@ -3770,12 +3985,19 @@ function PathRow({ people, through, value, onOpen, kind = "post" }) {
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
           }}
+          data-node={node && "through"}
         >
           Through {through}
         </span>
       </span>
-      <span style={{ flex: "none", fontSize: "var(--text-body-small)", fontWeight: 500 }}>{value}</span>
-      <span style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }} aria-hidden="true">
+      <span style={{ flex: "none", fontSize: "var(--text-body-small)", fontWeight: 500 }} data-node={node && "value"}>
+        {value}
+      </span>
+      <span
+        style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }}
+        aria-hidden="true"
+        data-node={node && "chevron"}
+      >
         <Icon name="chevron_right" size={18} />
       </span>
     </button>
@@ -3797,8 +4019,8 @@ function PathRow({ people, through, value, onOpen, kind = "post" }) {
 function PathSummary({ adds, newest }) {
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      <FactRow label="What it adds" value={adds} />
-      <FactRow label="Newest opinion on it" value={newest} last />
+      <FactRow label="What it adds" value={adds} node="adds" />
+      <FactRow label="Newest opinion on it" value={newest} last node="newest" />
     </div>
   );
 }
@@ -3810,9 +4032,13 @@ function PathSummary({ adds, newest }) {
 function StepSummary({ pair, behind, newest, onOpenRecords }) {
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      <FactRow label="What carries it" value={<StanceValue pDirected={pair.pDirected} pInterest={pair.pInterest} />} />
-      <FactRow label="Behind it" value={behind} action="Show them" onAction={onOpenRecords} />
-      <FactRow label="Newest of them" value={newest} last />
+      <FactRow
+        label="What carries it"
+        value={<StanceValue pDirected={pair.pDirected} pInterest={pair.pInterest} node="value" />}
+        node="carries"
+      />
+      <FactRow label="Behind it" value={behind} action="Show them" onAction={onOpenRecords} node="behind" />
+      <FactRow label="Newest of them" value={newest} last node="newest" />
     </div>
   );
 }
@@ -3849,20 +4075,31 @@ function ActionLog({ records }) {
             padding: "var(--space-3)",
             boxSizing: "border-box",
           }}
+          data-node="record"
+          data-node-key={record.key}
         >
           <span style={{ display: "flex", alignItems: "baseline", gap: "var(--space-2)" }}>
-            <span style={{ flex: 1, minWidth: 0, fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <span
+              style={{ flex: 1, minWidth: 0, fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+              data-node="what"
+            >
               {record.what}
             </span>
-            <span style={{ flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
+            <span
+              style={{ flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}
+              data-node="when"
+            >
               {record.when}
             </span>
           </span>
           <span style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
             <span style={{ flex: "none" }}>
-              <StanceValue pDirected={record.pair.pDirected} pInterest={record.pair.pInterest} />
+              <StanceValue pDirected={record.pair.pDirected} pInterest={record.pair.pInterest} node="pair" />
             </span>
-            <span style={{ flex: 1, minWidth: 0, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <span
+              style={{ flex: 1, minWidth: 0, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+              data-node="key"
+            >
               {record.key}
             </span>
           </span>
@@ -4405,6 +4642,28 @@ const HELD_TOPICS = [
    the filter and Your topics can never disagree about who is missing and why. */
 const FEED_TOPICS = HELD_TOPICS.filter((topic) => topic.pair.pDirected > 0).map((topic) => topic.name);
 
+/* THE PEOPLE SECTION IN BOTH ITS STATES, for the two boards that host the
+   filter sheet (`FeedSheet`, `SettingsReading`). The sign row stands only
+   while `Your people` is chosen, and both boards draw the default, so each
+   carries a `people` chip that draws the section once per value, one shown
+   at a time: `everyone` (the default) and `your-people`, the sign row at its
+   default `Either`. Both boards export `PEOPLE_CHIP` as their PROPS and
+   `PEOPLE_VALS` as their VALS. */
+const PEOPLE_CHIP = { people: { editor: "enum", options: ["everyone", "your-people"], default: "everyone" } };
+const PEOPLE_VALS = `everyoneShown: this.props.people === "your-people" ? "none" : "contents", yourPeopleShown: this.props.people === "your-people" ? "contents" : "none"`;
+function PeopleCopies({ node }) {
+  return (
+    <>
+      <div style={{ display: "{{everyoneShown}}" }} data-node-chip="people" data-node-key="everyone">
+        <FeedPeopleRows people="everyone" node={node} />
+      </div>
+      <div style={{ display: "{{yourPeopleShown}}" }} data-node-chip="people" data-node-key="your-people">
+        <FeedPeopleRows people="yourPeople" node={node} />
+      </div>
+    </>
+  );
+}
+
 /* THE INBOUND LIST ITSELF, NEWEST FIRST — a ruled departure from the opinions
    sheet's strongest-first, and deliberate (jakob, 2026-09-14). The opinions
    list is a standing: a set of positions that hold, where the strongest is the
@@ -4568,6 +4827,31 @@ function VouchBackCard({ body, actions, node }) {
       </p>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>{actions}</div>
     </Card>
+  );
+}
+
+/* THE LINE BESIDE THE VOUCH CARD'S FACE (jakob 2026-10-13, seam 165). The
+   card's act is the stance anchor, and a face alone does not say it is the
+   act — so one line, in the card's own ink at the band line's size, sits
+   right against it and teaches the tap. Written once because both boards of
+   the card draw it, `VouchBack` with the face live and `VouchBackPad` under
+   the wash, and it never claims first-ness: the band's line owns that. */
+function VouchBackHint({ node }) {
+  return (
+    <p
+      style={{
+        margin: 0,
+        minWidth: 0,
+        textAlign: "end",
+        fontSize: "var(--text-body-small)",
+        lineHeight: "var(--text-body-small--line-height)",
+        letterSpacing: "var(--text-body-small--letter-spacing)",
+        color: "var(--on-tertiary-container)",
+      }}
+      data-node={node}
+    >
+      Tap the face to vouch back.
+    </p>
   );
 }
 
@@ -4804,12 +5088,13 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
             action={
               approving ? (
                 <StanceControl
+                  node="stance"
                   targetLabel="@rafa"
                   helpLabel="How vouching works"
                   help={HOW_VOUCHING_WORKS_HELP}
                   defaultOpen
                   defaultPick={{ pDirected: 0.1, pInterest: 0.1 }}
-                  padNote={<ApprovePadNote handle="@rafa" />}
+                  padNote={<ApprovePadNote handle="@rafa" node="note" />}
                 />
               ) : (
                 <CloseApplication handle="@rafa" node="close" />
@@ -4946,12 +5231,17 @@ function NewInviteSheet() {
    Back walks the cards back, card 1 leaving the way Skip does. The seen flag
    sets on the first show (B6), so an interrupted intro never returns by
    itself; Settings' `Watch the intro again` re-opens it, and from there Skip
-   and `Start reading` land back on Settings (V4). */
+   and `Start reading` land back on Settings (V4).
+
+   The frame's names are the `onboarding` prefix's (round 7): `skip`, `title`,
+   `body`, `dots`, `next`, and `stage` for the illustration, whose labelled
+   pieces its board names; every board this frame stands on that is not
+   registered renders them stripped. */
 const INTRO_STEPS = 5;
 
 function IntroDots({ step }) {
   return (
-    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, padding: "20px 0 16px" }}>
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, padding: "20px 0 16px" }} data-node="dots">
       <span style={SR_ONLY}>{`Step ${step} of ${INTRO_STEPS}`}</span>
       {Array.from({ length: INTRO_STEPS }, (_, index) => (
         <span
@@ -4973,7 +5263,9 @@ function IntroFrame({ step, headline, lines, note = null, cta = "Next", children
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ flex: "none", display: "flex", justifyContent: "flex-end", padding: "8px 12px 0" }}>
-        <Button variant="text">Skip</Button>
+        <Button variant="text" node="skip">
+          Skip
+        </Button>
       </div>
       <div style={{ flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px" }}>
         {children}
@@ -4986,6 +5278,7 @@ function IntroFrame({ step, headline, lines, note = null, cta = "Next", children
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           {headline}
         </h1>
@@ -4999,13 +5292,16 @@ function IntroFrame({ step, headline, lines, note = null, cta = "Next", children
               letterSpacing: "var(--text-body-medium--letter-spacing)",
               color: "var(--text-secondary)",
             }}
+            data-node="body"
           >
             {line}
           </p>
         ))}
         {note}
         <IntroDots step={step} />
-        <Button style={{ width: "100%" }}>{cta}</Button>
+        <Button style={{ width: "100%" }} node="next">
+          {cta}
+        </Button>
       </div>
     </div>
   );
@@ -5017,7 +5313,9 @@ function IntroFrame({ step, headline, lines, note = null, cta = "Next", children
    a different text size. */
 function IntroStage({ width = 342, height = 300, children }) {
   return (
-    <div style={{ position: "relative", width, height, flex: "none" }}>{children}</div>
+    <div style={{ position: "relative", width, height, flex: "none" }} data-node="stage">
+      {children}
+    </div>
   );
 }
 
@@ -5037,9 +5335,10 @@ function IntroLines({ width = 342, height = 300, children }) {
 
 /* A node's caption — the word under a face, `label-small` and quiet, so the
    drawing says who each dot is without a legend beside it. */
-function IntroCaption({ children, x, y, width = 88 }) {
+function IntroCaption({ children, x, y, width = 88, node }) {
   return (
     <span
+      data-node={node}
       style={{
         position: "absolute",
         left: x - width / 2,
@@ -5058,10 +5357,10 @@ function IntroCaption({ children, x, y, width = 88 }) {
 }
 
 /* A face on the stage, centred on (x, y) — the real avatar, placed. */
-function IntroFace({ x, y, size = 44, name, src }) {
+function IntroFace({ x, y, size = 44, name, src, node }) {
   return (
     <span style={{ position: "absolute", left: x - size / 2, top: y - size / 2, display: "block" }}>
-      <MonogramAvatar name={name} size={size} src={src} />
+      <MonogramAvatar name={name} size={size} src={src} node={node} />
     </span>
   );
 }

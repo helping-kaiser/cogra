@@ -27,17 +27,35 @@ val HANDLE_CHARSET = Regex("^[a-z0-9_]+$")
 /** Client mirror of the server's password length floor. */
 const val MIN_PASSWORD_LENGTH = 12
 
-/**
- * Whether the registration form may be submitted.
- *
- * The email test is deliberately the weak one: an address is valid if
- * the mail server accepts it, and a client-side pattern that is
- * stricter than that refuses addresses that work. The verification mail
- * is the real check, so this only catches the empty field and the
- * missing `@`.
- */
+/** Whether the registration form may be submitted. */
 fun registrationFormValid(handle: String, email: String, password: String): Boolean =
-    handleValid(handle) && email.contains('@') && password.length >= MIN_PASSWORD_LENGTH
+    handleValid(handle) && emailValid(email) && password.length >= MIN_PASSWORD_LENGTH
+
+/**
+ * Whether [email] is a valid email address by the WHATWG HTML standard —
+ * the same check a browser's `<input type="email">` makes, ported so both
+ * clients refuse exactly the same addresses (ruling 94). The value is
+ * first sanitized the way that input sanitizes it (newlines stripped,
+ * then leading and trailing ASCII whitespace), then matched against the
+ * standard's own regular expression (html.spec.whatwg.org, "Valid email
+ * address"). The server keeps its own lenient floor (one `@`, a dotted
+ * domain) and answers BAD_INPUT past it; the
+ * verification mail stays the real proof that the address exists.
+ */
+fun emailValid(email: String): Boolean = WHATWG_EMAIL.matches(sanitizedEmail(email))
+
+/** The value an email input holds after the standard's sanitization. */
+fun sanitizedEmail(email: String): String =
+    email.filterNot { it == '\n' || it == '\r' }.trim { it in ASCII_WHITESPACE }
+
+/** The standard's ASCII whitespace: tab, line feed, form feed, carriage return, space. */
+private const val ASCII_WHITESPACE = "\t\n\u000C\r "
+
+/** The WHATWG "valid email address" regular expression, verbatim. */
+private val WHATWG_EMAIL = Regex(
+    "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?" +
+        "(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$",
+)
 
 /**
  * Length within the contract's bounds, and nothing outside its charset.

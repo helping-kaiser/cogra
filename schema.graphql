@@ -11,6 +11,51 @@ type AbortMediaUploadPayload {
 }
 
 """
+A confirmed deletion in its grace period — what the Settings band and
+the pending screen read (`User.accountDeletion`). scheduledFor is the
+grace-period deadline, fixed at confirmation.
+"""
+type AccountDeletion {
+	scheduledFor: DateTime!
+	includesContent: Boolean!
+}
+
+"""
+How the viewer's own account is deleted from here (`User.deletionPath`,
+ruling OS-15): the one deletion verb that will answer, or LOCKED while
+neither will. Computed on the server by `store::deletion_path`; clients
+never re-derive it from `application.*`.
+"""
+enum AccountDeletionPath {
+	"""
+	deleteApplicantAccount — removed at once (an applicant whose
+	address was never funded).
+	"""
+	IMMEDIATE
+	"""
+	requestAccountDeletion, then the mailed link and the seven-day
+	grace (a member, or an applicant whose Registration landed: item
+	69's husk path).
+	"""
+	BY_LINK
+	"""
+	Neither verb opens: funded, Registration not yet in the mirror,
+	not a member.
+	"""
+	LOCKED
+}
+
+"""
+The result of request, confirm and cancel. accountDeletion is the
+confirmed deletion; null after a request (nothing is confirmed until
+the link is opened) and after a cancel.
+"""
+type AccountDeletionPayload {
+	accountDeletion: AccountDeletion
+	userErrors: [UserError!]!
+}
+
+"""
 A user account's service state (auth.md "Account states"): it gates
 acting through CoGra, never reading, and is distinct from the
 mutual-pair membership of invitations.md §2. GUEST is reserved — no
@@ -53,11 +98,20 @@ type Application {
 	"""
 	keyAttached: Boolean!
 	"""
-	The member whose queue this application sits in — the issuer of
-	the invite link it came through: whose vouch it waits on, or whose
-	vouch is in play. Visible wherever the application is.
+	The member whose queue this application sits in — whose vouch it
+	waits on, or whose vouch is in play: the invite link's issuer for
+	the registration application, the member who took it up for an
+	ask-link staging (auth.md "The ask link"). An account may have
+	several open applications, each with its own approver. Visible
+	wherever the application is.
 	"""
 	approver: Actor
+	"""
+	The invite link it came through; null when a member took it up
+	through the account's ask link. Field-level: resolves only for the
+	link's issuer — its id is the link capability.
+	"""
+	inviteLink: InviteLink
 	"""
 	Since when this path has a live vouch — its approver's decision,
 	whose Opinion has not landed or lapsed; null while waiting,
@@ -140,6 +194,48 @@ type ApproveActsPayload {
 
 input ApproveApplicantsInput {
 	approvals: [ApplicationApprovalInput!]!
+}
+
+"""
+The anonymous pre-stage view of an ask link (the `askLinkCheck`
+query) — who is asking, and whether they can be taken up right now.
+Holding the id is holding the link.
+"""
+type AskLinkCheck {
+	"""
+	Whether the link can stage its applicant for this caller now — the
+	account is still an applicant and, for an authenticated caller, has
+	no application already waiting in the caller's own queue, or
+	approved there with the caller's vouch still in flight (auth.md
+	"The ask link"). A live application in another member's queue
+	never blocks it. An ask link itself never expires.
+	"""
+	usable: Boolean!
+	"""
+	The asking account's handle. The profile door for LANDED resolves
+	by it.
+	"""
+	applicantHandle: String!
+	"""
+	Why the link cannot stage right now; null when usable. The asker
+	reading their own link needs no value — the client compares
+	against its own User.askLink.
+	"""
+	reason: AskLinkUnusableReason
+}
+
+"""
+Why an ask link stages nobody for this caller right now (auth.md "The
+ask link"). LANDED: the account is a member — the profile door
+replaces the ask. WAITING_ON_VIEWER: an application of the account
+already waits in the authenticated caller's own queue, or sits there
+approved with the caller's vouch still in flight — the client opens
+that row. WAITING_ON_VIEWER is viewer-relative; an anonymous call never
+reads it.
+"""
+enum AskLinkUnusableReason {
+	LANDED
+	WAITING_ON_VIEWER
 }
 
 """
@@ -268,6 +364,16 @@ pending.
 type CancelEmailChangePayload {
 	user: User
 	userErrors: [UserError!]!
+}
+
+"""
+A record's place in the authoritative order: its landing epoch and
+causal key (𝕋^act, pos).
+"""
+type CausalKey {
+	landingEpoch: Int!
+	actTime: Int!
+	position: Int!
 }
 
 input ChangeHandleInput {
@@ -429,6 +535,17 @@ input CompleteMediaUploadInput {
 	uploadId: UUID!
 }
 
+input ConfirmAccountDeletionInput {
+	deletionToken: String!
+	"""
+	Opt into content-level redaction at or after confirmation. The
+	election is opt-in only: true upgrades an identity-only request,
+	including on a re-call inside the grace; null and false never
+	downgrade and leave the standing choice unchanged.
+	"""
+	includeContent: Boolean
+}
+
 input ConfirmEmailChangeInput {
 	"""
 	Either side's proof: the code mailed to the current (original)
@@ -489,7 +606,38 @@ The input/output is a string in RFC3339 format.
 """
 scalar DateTime
 
+type DeleteApplicantAccountPayload {
+	ok: Boolean
+	userErrors: [UserError!]!
+}
+
+"""
+The server half of a device lock (auth.md "Device lock"): a 32-byte
+secret that encrypts one device's custody for this account while it is
+signed out. Viewer-only; never on a refusal.
+"""
+type DeviceLock {
+	"""
+	The lock's name, held by the device; unguessable, so it doubles as
+	the capability to discard it.
+	"""
+	id: UUID!
+	"""
+	The secret (base64).
+	"""
+	secret: String!
+}
+
 scalar Dimension
+
+input DiscardDeviceLockInput {
+	lock: UUID!
+}
+
+type DiscardDeviceLockPayload {
+	ok: Boolean
+	userErrors: [UserError!]!
+}
 
 type DismissVouchBackPayload {
 	user: User
@@ -518,7 +666,8 @@ PENDING: the change is live in its window (either side may already
 have landed; a taken address still reads PENDING — the collision is
 answered only by the signed-in confirm, EMAIL_IN_USE). APPLIED: the
 change moved the address. CANCELED: called off, or superseded by a
-newer request. EXPIRED: its window closed before both sides landed.
+newer request, while live. EXPIRED: its window closed before both
+sides landed.
 """
 enum EmailChangeLinkState {
 	PENDING
@@ -554,8 +703,9 @@ enum ErrorCode {
 	"""
 	BAD_INPUT
 	"""
-	An auth or upload endpoint's per-IP / per-account budget — never a
-	signing act. The login backoff serves no retry-after figure.
+	An auth or upload endpoint's per-IP / per-account budget, or a
+	private-viewer-state budget (markSeen) — never a signing act. The
+	login backoff serves no retry-after figure.
 	"""
 	RATE_LIMITED
 	"""
@@ -570,6 +720,11 @@ enum ErrorCode {
 	Invite link invalid, expired, revoked, or consumed.
 	"""
 	INVITE_UNUSABLE
+	"""
+	Ask link unknown, or its applicant is landed or already waiting in
+	your own queue.
+	"""
+	ASK_LINK_UNUSABLE
 	"""
 	The handle is already held in the one actor namespace.
 	"""
@@ -617,6 +772,11 @@ enum ErrorCode {
 	"""
 	RESET_TOKEN_INVALID
 	"""
+	The account-deletion link is unknown, superseded, cancelled,
+	expired, or spent.
+	"""
+	DELETION_TOKEN_INVALID
+	"""
 	Refresh token invalid, expired, or reuse-detected.
 	"""
 	REFRESH_TOKEN_INVALID
@@ -637,6 +797,120 @@ enum ErrorCode {
 	The key-backup upload challenge is unknown, expired, or spent.
 	"""
 	CHALLENGE_EXPIRED
+}
+
+type FeedConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [FeedEdge!]!
+}
+
+"""
+An edge in a connection.
+"""
+type FeedEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: FeedItem!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
+"""
+One landed target.
+"""
+type FeedEntry {
+	targetId: UUID!
+	kind: NodeKind!
+	"""
+	S(u, target) — the signed greedy disjoint-sum (feed-ranking.md
+	§6.1).
+	"""
+	score: Float!
+	"""
+	The vantage's held opinion of the person behind the row, read at
+	`asOfEpoch`. Null when the vantage holds none, or for a Tags row.
+	"""
+	mark: PeopleMark
+	"""
+	This entry's 0-based index among `entries` in NEWEST order. The
+	indices are a permutation of 0..|entries|-1.
+	"""
+	newestIndex: Int!
+}
+
+"""
+What a feed row can be: the kinds V1.0 ranks. Later slices add members
+as their kinds join. A union, not `Node`: a Hashtag is not a Node, and
+the feed serves topics (GraphQL spec §3.8, *Unions*).
+"""
+union FeedItem = Post | Comment | User | Hashtag
+
+"""
+What narrows the ranker's candidates. Only arguments that change what
+the ranker must compute ride here; every other sheet axis is a device
+cut (feed-ranking.md §9.1; miner-api.md:63-64).
+"""
+input FeedRankFilter {
+	"""
+	Rankable kinds in scope. Null means Posts only (feed-ranking.md
+	§9.3). An empty list ranks nothing.
+	"""
+	kinds: [NodeKind!]
+	"""
+	A topic (Hashtag id). Only content reaching the viewer over Tag
+	records toward it is a candidate (FeedTopic; hashtag.md §5).
+	"""
+	topic: UUID
+}
+
+"""
+One ranking snapshot.
+"""
+type FeedRanking {
+	"""
+	The epoch the ranked slice reads as of (FeedSlice.asOfEpoch).
+	"""
+	asOfEpoch: Int!
+	"""
+	The landed targets, scored, in RANKED order, best first. A target
+	no live path reaches is absent, not zero-scored (feed-ranking.md
+	§7). This is the pinned snapshot: a call pinned at `asOfEpoch`
+	reproduces it.
+	"""
+	entries: [FeedEntry!]!
+	"""
+	Content still settling, with its place in both woven orders.
+	Carries no score by construction. Read live on every call, never
+	part of the pinned snapshot.
+	"""
+	settling: [SettlingEntry!]!
+}
+
+type FeedSlice {
+	"""
+	The newest epoch whose certificate the slice includes — the base
+	of every recency age (feed-ranking.md §5.3). Passing it back as
+	`feedSlice(asOfEpoch:)` re-reads the same slice.
+	"""
+	asOfEpoch: Int!
+	"""
+	The slice's nodes, ascending by L1 identifier.
+	"""
+	nodes(first: Int, after: String, last: Int, before: String): SliceNodeConnection!
+	"""
+	The accepted records among the slice's nodes, newest first in
+	landing order: every record owning a leg the walk traversed.
+	"""
+	records(first: Int, after: String, last: Int, before: String): RecordConnection!
 }
 
 """
@@ -789,6 +1063,11 @@ type InviteLinkEdge {
 	cursor: String!
 }
 
+type IssueDeviceLockPayload {
+	lock: DeviceLock
+	userErrors: [UserError!]!
+}
+
 type KeyBackupChallengePayload {
 	"""
 	The challenge to sign (base64); null with a refusal.
@@ -885,6 +1164,22 @@ type LogInPayload {
 	null otherwise and on every refusal.
 	"""
 	reuseDetectedAt: DateTime
+	userErrors: [UserError!]!
+}
+
+input MarkSeenInput {
+	"""
+	The nodes the viewer has seen, in the order they were seen.
+	"""
+	nodes: [UUID!]!
+}
+
+"""
+`ok` is null exactly when a userError refused the batch, which then
+wrote nothing.
+"""
+type MarkSeenPayload {
+	ok: Boolean
 	userErrors: [UserError!]!
 }
 
@@ -1139,6 +1434,22 @@ type Mutation {
 	"""
 	resendVerificationEmail(input: ResendVerificationEmailInput!): ResendVerificationEmailPayload!
 	"""
+	Take up an ask link: stage its applicant as an application in the
+	caller's own approval queue — the ask direction's answer to
+	register, and a deliberate call rather than a side effect of
+	opening the link (auth.md "The ask link"). The account already
+	exists, so this writes only the queue entry; approving it is the
+	ordinary approveApplicants act, with the stance values chosen
+	there, and the entry waits with no timer. ASK_LINK_UNUSABLE when
+	the id is unknown, the applicant has already landed, or an
+	application of theirs already waits in the caller's own queue — or
+	sits there approved, the caller's vouch still in flight; a live
+	application in another member's queue never refuses (several
+	members may be asked at once). The client names the case by
+	re-reading askLinkCheck, whose reason carries it.
+	"""
+	stageApplicant(input: StageApplicantInput!): StageApplicantPayload!
+	"""
 	Approve staged applicants — the inviter's deliberate, priced act:
 	per applicant or in batch, each carrying the stance values the
 	inviter picks for it. Requests the address's funding burn — at most
@@ -1302,6 +1613,23 @@ type Mutation {
 	"""
 	setPreferences(input: SetPreferencesInput!): SetPreferencesPayload!
 	"""
+	Record that the viewer has seen nodes — first seeing only: a node
+	already on the list is left as it is (re-seeing never counts,
+	never moves it). Posts, comments, profiles and topics are
+	seeable. L2 only; nothing here becomes a graph record.
+	
+	At most 100 ids per call (the page budget); more is BAD_INPUT at
+	`["nodes"]`. Ids that name nothing seeable are skipped, never an
+	error: a pending write the reader saw may be discarded before it
+	lands, and a batch must not fail for it. The ids arrive in the
+	order they were seen, and a batch keeps that order. Needs a
+	session (UNAUTHENTICATED otherwise) and no particular account
+	state — an applicant's seeing counts like a member's; this is
+	private viewer state, not acting. A per-account budget bounds the
+	rate: over it is RATE_LIMITED, and the batch writes nothing.
+	"""
+	markSeen(input: MarkSeenInput!): MarkSeenPayload!
+	"""
 	Issues the challenge an upload must spend (auth.md "Key
 	recovery"). The server picks it: a client-chosen nonce would let
 	a captured upload be replayed verbatim, which is the whole attack
@@ -1328,6 +1656,80 @@ type Mutation {
 	attempt for no security gain.
 	"""
 	uploadKeyBackup(input: UploadKeyBackupInput!): UploadKeyBackupPayload!
+	"""
+	Mints a device lock for the signed-in account (auth.md "Device
+	lock"): a fresh 32-byte secret the device locks this account's
+	custody under while it is signed out. Issuing writes a row, so it
+	spends the account's issue budget and is held under the account's
+	live-lock cap; either refusal is a visible RATE_LIMITED, since the
+	caller is authenticated, and stores nothing.
+	"""
+	issueDeviceLock: IssueDeviceLockPayload!
+	"""
+	Releases one of the viewer's locks behind the account's current
+	password (auth.md "Device lock"). The order is the login's: the
+	re-authentication budget answers first, then the password, and only
+	a proven password reaches the lock — so without the password, which
+	locks exist cannot be probed. A wrong password is
+	INVALID_CREDENTIALS and spends the budget changePassword shares;
+	another account's or an unknown lock is NOT_FOUND. Idempotent: a
+	release never spends the lock, so a lost response costs nothing.
+	"""
+	releaseDeviceLock(input: ReleaseDeviceLockInput!): ReleaseDeviceLockPayload!
+	"""
+	Deletes one of the viewer's locks (auth.md "Device lock").
+	Idempotent and silent: an unknown id, or another account's, answers
+	exactly like a deleted one and touches nothing.
+	"""
+	discardDeviceLock(input: DiscardDeviceLockInput!): DiscardDeviceLockPayload!
+	"""
+	Begins account deletion (auth.md "Self-service deletion";
+	erasure.md §5): records the content-sweep choice and mails the
+	confirmation link to the verified address; nothing is scheduled
+	until the link is opened. A second request supersedes the first —
+	the earlier link dies, the new one carries its own choice — and
+	is what the mail screen's Resend sends.
+	
+	Answers only on `User.deletionPath == BY_LINK`: a member, or an
+	applicant whose Registration landed. Any other account is FORBIDDEN,
+	checked before anything is spent and again under the account lock.
+	While a confirmed deletion is in its grace the request changes
+	nothing — it returns that deletion, mails nothing, spends nothing,
+	and never moves the deadline: superseding it would silently
+	un-confirm it. Otherwise each request spends the account's
+	deletion mail budget, and a spent one answers
+	RATE_LIMITED with nothing recorded, mailed or superseded.
+	"""
+	requestAccountDeletion(input: RequestAccountDeletionInput!): AccountDeletionPayload!
+	"""
+	Opens the mailed link: confirms the deletion and fixes its deadline
+	at now plus the grace period. Token-bearing, no session — the link
+	is the capability. A re-call with the same token inside the grace
+	never moves the deadline, and can add the content sweep. Every dead
+	link — unknown, superseded, cancelled, executed, or unopened past
+	its lifetime — is one DELETION_TOKEN_INVALID at deletionToken.
+	Spends the per-IP confirmation budget every token verb shares.
+	"""
+	confirmAccountDeletion(input: ConfirmAccountDeletionInput!): AccountDeletionPayload!
+	"""
+	Ends the account's standing deletion, requested or confirmed, from
+	any signed-in device until the deadline executes it; its link dies
+	with it. Idempotent: with nothing standing — two devices cancelling
+	at once, or an applicant — it answers the same null and no error.
+	"""
+	cancelAccountDeletion: AccountDeletionPayload!
+	"""
+	Deletes an applicant account at once — DeleteAccount's applicant
+	case: account, credentials, application, staged acts (those carried
+	with the application included), key backup and device locks go
+	immediately, every session with them, and no mail is sent. Nothing
+	of it reached L1. Answers only on `User.deletionPath == IMMEDIATE`,
+	re-checked under the account lock: FORBIDDEN for a member, who takes
+	the mailed path, and for an applicant whose address approval funded
+	— the burn is spent and the Registration staged, so nothing may
+	vanish under it; once it lands, the mailed path applies.
+	"""
+	deleteApplicantAccount: DeleteApplicantAccountPayload!
 	"""
 	Issues an invite link — pure service-side staging UX; its id is
 	the shareable capability. Nothing binds at issue and the link
@@ -1503,6 +1905,28 @@ type Mutation {
 }
 
 """
+One governed network parameter, from the operational carrier — the
+cache of the charter's replayable parameter schedule. The schedule on
+L1 is binding; the carrier is rebuildable from it.
+"""
+type NetworkParameter {
+	"""
+	The catalog key (network.md), e.g. "gamma", "dust_floor",
+	"reserve_share".
+	"""
+	key: String!
+	"""
+	The current value, serialized per the parameter's kind.
+	"""
+	value: String!
+	"""
+	The epoch of the finalization payload this value came from (the
+	genesis charter payload for never-amended parameters).
+	"""
+	asOfEpoch: Int!
+}
+
+"""
 Every graph-backed thing with an identity and a lifecycle
 (api-spec.md "Identity and actor interfaces"). Coverage grows with
 the slices; slice 2 carries the content nodes.
@@ -1611,6 +2035,17 @@ type PendingEmailChange {
 	"""
 	linkConfirmed: Boolean!
 	expiresAt: DateTime!
+}
+
+"""
+How the viewer holds the person behind a row (OS-18 S1): the sign of
+the folded p̄_d of the viewer's own Opinion → Profile bundle toward
+them. SIGNLESS is a held bundle with p̄_d = 0 and p̄_i ≠ 0.
+"""
+enum PeopleMark {
+	FOR
+	AGAINST
+	SIGNLESS
 }
 
 type Post implements Node {
@@ -2143,6 +2578,14 @@ type Query {
 	"""
 	inviteLinkCheck(id: UUID!): InviteLinkCheck
 	"""
+	Anonymous pre-stage check of an ask link, so a member following
+	one sees who is asking before anything is written, and the app can
+	gate the staging call. Null when the id references no link. It
+	reads and never writes; with a viewer, `usable` and `reason` answer
+	for that viewer's own queue (WAITING_ON_VIEWER).
+	"""
+	askLinkCheck(id: UUID!): AskLinkCheck
+	"""
 	Anonymous pre-sign-in check of an email change's new-address
 	link, so a device with no session can say what the link is for
 	before anything applies. It reads and never writes: no side is
@@ -2274,12 +2717,11 @@ type Query {
 	"""
 	Candidate targets for the reference picker.
 	
-	**Exact-match resolution only.** Real search — prefix matching,
-	ranking, snippets — arrives with slice 2.7 *behind this same
-	field*, so a client binds to it once and does not change when the
-	implementation is replaced. Two shapes resolve today: a handle,
-	bare or `@`-sigilled, names a person; a UUID names whatever node
-	it addresses.
+	Candidates come from the one search matcher (see Search) — names
+	and titles, exact tier first, then newest — narrowed to what
+	`prepareReference` accepts: never a topic, never a keyless
+	account. A UUID still names whatever node it addresses, and a
+	leading `@` narrows to people.
 	
 	An empty or unresolvable query yields an empty list, never an
 	error. A finder runs on every keystroke, so most of what it is
@@ -2298,6 +2740,24 @@ type Query {
 	"""
 	referenceCandidates(query: String!, limit: Int): [ReferenceCandidate!]!
 	"""
+	Global search across nodes; returns a `SearchResult` per edge.
+	Recall is lexical over the indexed name-class fields and post
+	titles — an untitled post is never matched by its words; order is
+	exact-match tier first, then newest first — viewer-independent,
+	the backend never graph-ranks (feed-ranking.md §11). A ranker may
+	re-order fetched results by the viewer's feed metric. Served kinds
+	grow with the slices: USER, POST, HASHTAG unscoped; COMMENT is
+	always a valid kind but is served only under a scope operator
+	(`@handle`, `#tag`) — unscoped, it contributes no rows, never an
+	error. COLLECTIVE, CHAT, CHAT_MESSAGE, ITEM and OFFER join with
+	their slices and read empty until then. An empty `kinds` list
+	means the same as null (no narrowing). `includeSeen: false` drops
+	nodes on the viewer's seen-list (`User.viewHistory`); it needs a
+	session and is ignored without one. Full semantics in the Search
+	section.
+	"""
+	search(query: String!, kinds: [NodeKind!], includeSeen: Boolean = true, first: Int, after: String, last: Int, before: String): SearchConnection!
+	"""
 	The chronological listing (roadmap "Slice 2"): every post,
 	newest-first — pending entries, then landed entries in landing
 	order, the record set's own order, never wall clock
@@ -2305,6 +2765,51 @@ type Query {
 	landed on L1. Deliberately not the ranked feed.
 	"""
 	posts(after: String, before: String, first: Int, last: Int, includePending: Boolean! = true): PostConnection!
+	"""
+	The governed network parameters, from the operational carrier —
+	all of them, or the named keys. The catalog is network.md's; the
+	charter schedule on L1 is binding. Unknown keys are omitted; an
+	empty `keys` list reads empty.
+	"""
+	networkParameters(keys: [String!]): [NetworkParameter!]!
+	"""
+	Any actor's weight-bounded relevant subgraph — the raw material a
+	ranker orders into a feed: the viewer's own device, the server's
+	ranker container, or a delegated miner. Parameterized by the
+	`viewer` whose feed is ranked: computing any actor's view for any
+	reader is the public-graph default. Pruned by `dustFloor` (χ) and
+	`gamma` — defaults are the governed network parameters — not
+	hop-bounded: membership is best-possible path product ∏(γ·w̃) ≥ χ,
+	so both travel (miner-api.md "The slice path"). `asOfEpoch` pins
+	the slice to an earlier epoch (null: the newest ingested); every
+	page read at one `asOfEpoch` is the same slice. Null if the id
+	resolves to no rankable actor. Serving the slice is the backend's
+	whole part in ranking.
+	"""
+	feedSlice(viewer: UUID!, dustFloor: Float, gamma: Float, asOfEpoch: Int): FeedSlice
+	"""
+	The ranked feed of `viewer`'s view, computed by the server's
+	standalone ranker container and relayed (miner-api.md). Ranking
+	never runs in the backend process: the backend serves the slice,
+	relays this request, and hydrates the result through `feed`. The
+	result is a snapshot. The client keeps it as the frozen order
+	(feed-ranking.md §9.5) and derives its views from it: order,
+	people, seen and Still settling are applied on the device, never
+	asked of the server. `asOfEpoch` reports the epoch its scored
+	entries were ranked at, and a call pinned there reproduces them;
+	the `asOfEpoch` argument pins the slice to an earlier epoch (null
+	ranks as of the newest ingested epoch). Null if `viewer` resolves
+	to no rankable actor.
+	"""
+	feedRanking(viewer: UUID!, asOfEpoch: Int, filter: FeedRankFilter): FeedRanking
+	"""
+	Hydrate a window of a ranking snapshot: the nodes behind the given
+	ids, in the given order. At most 100 ids per call (the page
+	budget). An id that resolves to nothing hydratable (a pending write
+	that expired) is skipped, never an error. The backend serves the
+	order it is handed.
+	"""
+	feed(orderedIds: [UUID!]!, first: Int, after: String, last: Int, before: String): FeedConnection!
 }
 
 type Record {
@@ -2372,6 +2877,18 @@ type Record {
 	verify against it.
 	"""
 	payloadWitness: String!
+	"""
+	The authoring actor's raw L1 address — always present. `author`
+	resolves it to an account where one fronts it.
+	"""
+	authorId: String!
+	"""
+	Every leg of the act as Layer 1 published it. A binary family has
+	one; a hyper-edge has two (the actor's A leg into the middle node,
+	the terminal T leg out of it). `pDirected`/`pInterest` above
+	repeat the actor's leg.
+	"""
+	legs: [RecordLeg!]!
 }
 
 type RecordConnection {
@@ -2437,6 +2954,47 @@ enum RecordFamily {
 }
 
 scalar RecordId
+
+type RecordLeg {
+	role: RecordLegRole!
+	"""
+	Raw L1 identifier of the leg's source end.
+	"""
+	sourceId: String!
+	"""
+	Raw L1 identifier of the leg's target end.
+	"""
+	targetId: String!
+	"""
+	The leg's rendering of the act's authored directed parameter.
+	"""
+	pDirected: Dimension!
+	"""
+	The leg's rendering of the act's authored interest parameter.
+	"""
+	pInterest: Dimension!
+	"""
+	τ_e — the host-cached edge-projection maturity: a non-normative L1
+	by-product a distrusting consumer recomputes from the published
+	ordered history (layer1-interface.md §8.3).
+	"""
+	maturity: Float!
+	"""
+	True when ingestion had no census row for this leg and wrote
+	fallback metadata. Every fold skips a marked leg.
+	"""
+	censusUnknown: Boolean!
+}
+
+"""
+A leg's role in its record (layer1-interface.md §9): the one leg of a
+binary family, or the actor (A) or terminal (T) leg of a hyper-edge.
+"""
+enum RecordLegRole {
+	BINARY
+	A
+	T
+}
 
 """
 One thing the reference finder offers as a citation target.
@@ -2660,6 +3218,23 @@ type RejectLinkApplicationsPayload {
 	userErrors: [UserError!]!
 }
 
+input ReleaseDeviceLockInput {
+	lock: UUID!
+	"""
+	The account's current password, re-verified against the stored
+	hash.
+	"""
+	password: String!
+}
+
+type ReleaseDeviceLockPayload {
+	"""
+	The lock's secret (base64); null with a refusal.
+	"""
+	secret: String
+	userErrors: [UserError!]!
+}
+
 """
 Reply order within one branch of a thread (comment.md §2).
 
@@ -2677,6 +3252,14 @@ enum ReplyOrder {
 	The same sequence read the other way: pending replies lead.
 	"""
 	NEWEST_FIRST
+}
+
+input RequestAccountDeletionInput {
+	"""
+	Opt into content-level redaction; identity-only when absent or
+	false.
+	"""
+	includeContent: Boolean
 }
 
 input RequestEmailChangeInput {
@@ -2754,6 +3337,47 @@ type RevokeSessionsPayload {
 	userErrors: [UserError!]!
 }
 
+type SearchConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [SearchEdge!]!
+	"""
+	How many nodes the query matches in total, across every page,
+	independent of the cursor. Priced at zero like every connection
+	count; saturates at [`i32::MAX`].
+	"""
+	totalCount: Int
+}
+
+"""
+An edge in a connection.
+"""
+type SearchEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: SearchResult!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
+"""
+What search returns: the kinds it serves. Later slices add members as
+their kinds join (Collective, Chat, ChatMessage, Item, Offer).
+
+A union rather than the `Node` interface because a `Hashtag` is
+deliberately not a `Node` — it has nothing to date and nothing to land
+— and search serves topics (GraphQL spec §3.8, *Unions*).
+"""
+union SearchResult = Post | Comment | User | Hashtag
+
 type Session {
 	id: UUID!
 	"""
@@ -2780,6 +3404,9 @@ absent field is left as it is; an explicit null restores its default.
 input SetPreferencesInput {
 	"""
 	0 (show everything) to 10 (strictest); null restores the default.
+	MVP reads it as one threshold: 0 unveils sensitive content wherever
+	the account reads (Settings' Always unveil sensitive content); null
+	or 1–10 keeps the veil. The 0–10 gradient is post-MVP.
 	"""
 	contentFilteringSeverityLevel: Int
 	"""
@@ -2800,6 +3427,27 @@ type SetPreferencesPayload {
 }
 
 """
+One settling row.
+"""
+type SettlingEntry {
+	targetId: UUID!
+	kind: NodeKind!
+	"""
+	As FeedEntry.mark: the viewer's held opinion of the row's author.
+	"""
+	mark: PeopleMark
+	"""
+	The row's 0-based index in the woven RANKED list (`entries` and
+	`settling` together).
+	"""
+	rankedPosition: Int!
+	"""
+	The row's 0-based index in the woven NEWEST list.
+	"""
+	newestPosition: Int!
+}
+
+"""
 The sign of an authored parameter, for filtering records by
 valence or by the inert (0) state. POSITIVE: > 0. NEGATIVE: < 0.
 ZERO: exactly 0.
@@ -2808,6 +3456,78 @@ enum Sign {
 	POSITIVE
 	NEGATIVE
 	ZERO
+}
+
+"""
+One node of a slice, keyed by its L1 identifier — the identifier every
+record leg names. Persons appear under their profile identifier: a leg
+naming `addr:a` names the same person as `prof:a`.
+"""
+type SliceNode {
+	"""
+	The node's raw L1 identifier (an `addr`/`prof`, `name`, or `mint`).
+	"""
+	graphId: String!
+	"""
+	CoGra's L2 id, when CoGra carries a row for the node. Null for a
+	node CoGra has no row for. Such a node still transits, and is never
+	a ranking candidate.
+	"""
+	id: UUID
+	"""
+	The node's kind, when CoGra carries a row for it. Null exactly
+	when `id` is.
+	"""
+	kind: NodeKind
+	"""
+	The node's genesis authorship record (a mint's own minting record,
+	a person's Registration) — the recency fallback's key
+	(feed-ranking.md §7), never refreshed by an update. Null for an
+	authorless node (a Type).
+	"""
+	genesis: CausalKey
+}
+
+type SliceNodeConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [SliceNodeEdge!]!
+	"""
+	How many nodes the slice holds, across every page, independent of
+	the cursor.
+	"""
+	totalCount: Int
+}
+
+"""
+An edge in a connection.
+"""
+type SliceNodeEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: SliceNode!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
+input StageApplicantInput {
+	askLink: UUID!
+}
+
+"""
+The staged application, waiting in the caller's queue.
+"""
+type StageApplicantPayload {
+	application: Application
+	userErrors: [UserError!]!
 }
 
 type StagedWrite {
@@ -3187,6 +3907,22 @@ type User implements Node & Actor {
 	"""
 	sessions: [Session!]
 	"""
+	The seen-list (feed-ranking.md §9.4): every node the viewer has
+	seen, once each, newest first by first seeing — the list the
+	ranked feed filters by, and History's feed. Re-seeing never moves
+	an entry. `kinds` narrows (null or empty = every kind History
+	serves: POST, COMMENT, USER, HASHTAG; a kind outside the served
+	set is BAD_INPUT, and later slices widen the set). A hidden
+	actor's posts and comments stay out while the actor is hidden,
+	and their own profile stays; a removed thing keeps its place and
+	reads its removal mark; a thing whose node no longer resolves — a
+	pending write that never landed — is skipped. Paging is keyset on
+	`(firstSeenAt, node id)`, so a thing first seen while the reader
+	scrolls sorts above the open page and never shifts the next one.
+	Field-level: viewer-only.
+	"""
+	viewHistory(kinds: [NodeKind!], first: Int, after: String, last: Int, before: String): ViewHistoryConnection
+	"""
 	Acts mid-handshake — awaiting a signature, the host seal, or
 	confirmation — across devices. Field-level: viewer-only.
 	"""
@@ -3245,6 +3981,19 @@ type User implements Node & Actor {
 	"""
 	vouchBackDismissed: Boolean!
 	"""
+	The account's confirmed deletion in its grace period — the
+	Settings band and the pending screen read it. Viewer-only; null
+	when none is confirmed (a requested-not-confirmed deletion has no
+	status) and once cancelled.
+	"""
+	accountDeletion: AccountDeletion
+	"""
+	How the viewer's own account is deleted from here — the one
+	deletion verb that will answer, or LOCKED while neither will.
+	Viewer-only: null on anyone else's account.
+	"""
+	deletionPath: AccountDeletionPath
+	"""
 	The account's service state — gates acting through CoGra (auth.md
 	"Account states"). Field-level: viewer-only.
 	"""
@@ -3292,6 +4041,24 @@ type User implements Node & Actor {
 	"""
 	application: Application
 	"""
+	The account's own ask link — the standing capability that lets any
+	member it is handed take up the application (auth.md "The ask
+	link"). Holding the id is holding the link, so this resolves only
+	for the account itself; null for accounts that never applied.
+	"""
+	askLink: UUID
+	"""
+	Applications waiting on this account's vouch — the approval queue
+	itself, spanning both ends of the funnel: applicants staged through
+	its invite links, and applicants it took up from an ask link
+	(auth.md). Waiting applications only — neither approved nor
+	rejected — oldest first. An application whose applicant has landed
+	through another member's vouch leaves the queue at that landing: the
+	row is filtered out on read, nothing is written, and approving it is
+	BAD_INPUT. Field-level: resolves only for the approving account.
+	"""
+	approvalQueue(after: String, before: String, first: Int, last: Int): ApplicationConnection
+	"""
 	The account's invite links — service-side staging state, not
 	graph structure. Field-level: each link's id is the link
 	capability, so this resolves only for the issuing actor.
@@ -3324,6 +4091,9 @@ type UserPreferences {
 	"""
 	Sensitive-content filter aggressiveness: 0 (show everything) to
 	10 (strictest); null when unset, so the frontend default applies.
+	MVP reads it as one threshold: 0 unveils sensitive content wherever
+	the account reads (Settings' Always unveil sensitive content); null
+	or 1–10 keeps the veil. The 0–10 gradient is post-MVP.
 	"""
 	contentFilteringSeverityLevel: Int
 	"""
@@ -3354,6 +4124,49 @@ type VerifyEmailPayload {
 	ok: Boolean!
 	userErrors: [UserError!]!
 }
+
+type ViewHistoryConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [ViewHistoryEdge!]!
+	"""
+	How many things the viewer's seen-list serves under these kinds,
+	across every page. Priced at zero like every connection count;
+	saturates at [`i32::MAX`].
+	"""
+	totalCount: Int
+}
+
+"""
+An edge in a connection.
+"""
+type ViewHistoryEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: ViewHistoryItem!
+	"""
+	When the viewer first saw this thing — the list's order, newest
+	first. Re-seeing never moves it.
+	"""
+	firstSeenAt: DateTime!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
+"""
+What the seen-list holds: the kinds History serves; later slices add
+members as their kinds join. A union, not `Node`: a Hashtag is not a
+Node, and History serves topics (GraphQL spec §3.8, *Unions*).
+"""
+union ViewHistoryItem = Post | Comment | User | Hashtag
 
 """
 Directs the executor to include this field or fragment only when the `if` argument is true.

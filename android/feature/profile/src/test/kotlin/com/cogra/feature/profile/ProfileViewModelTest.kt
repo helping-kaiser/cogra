@@ -2,19 +2,26 @@ package com.cogra.feature.profile
 
 import com.cogra.crypto.Family
 import com.cogra.domain.AccountState
+import com.cogra.domain.ActorRef
+import com.cogra.domain.AuthTokens
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
 import com.cogra.domain.UserProfile
+import com.cogra.domain.history.SeenTracker
+import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingProfileRepository
 import com.cogra.domain.testing.testModeratedField
 import com.cogra.domain.testing.testProfile
+import com.cogra.domain.testing.testSeenRecord
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -61,7 +68,13 @@ class ProfileViewModelTest {
     private val profiles = ScriptedProfiles()
     private val account = ScriptedAccount()
 
-    private fun viewModel() = ProfileViewModel(profiles, account)
+    private val history = RecordingViewHistoryRepository()
+    private val session = FakeTokenStore().apply { tokens.value = AuthTokens("a", "r", "u1") }
+    private val seenTracker = TestScope(dispatcher).let { scope ->
+        SeenTracker(history, session, scope, testSeenRecord(session, scope))
+    }
+
+    private fun viewModel() = ProfileViewModel(profiles, account, seenTracker)
 
     @Before
     fun setDispatcher() = Dispatchers.setMain(dispatcher)
@@ -132,6 +145,41 @@ class ProfileViewModelTest {
         // what it had — which is where a single refetch left it anyway.
         assertThat(vm.state.value.profile?.handle).isEqualTo("jakob")
         assertThat(profiles.rowRequests.size).isEqualTo(readsBefore)
+    }
+
+    /**
+     * ProfileOther.md:35 — the member who vouched the reader in, the pair
+     * incomplete: the anchor opens the vouch-back, the card put away or
+     * not (VouchBack.md:51). Anyone else, or a completed pair, is plain.
+     */
+    @Test
+    fun theVouchersProfileOpensTheVouchBackWhileThePairIsIncomplete() = runTest(dispatcher) {
+        profiles.byHandle["mira"] = Outcome.Success(testProfile(id = "u2", handle = "mira"))
+        profiles.byHandle["sol"] = Outcome.Success(testProfile(id = "u3", handle = "sol"))
+        account.profile = UserProfile(
+            "u1",
+            "noa",
+            null,
+            AccountState.MEMBER,
+            false,
+            ActorRef("u2", "mira"),
+            vouchBackDismissed = true,
+        )
+        val vm = viewModel()
+        vm.start("mira")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.vouchesBack).isTrue()
+
+        val other = viewModel()
+        other.start("sol")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(other.state.value.vouchesBack).isFalse()
+
+        account.profile = account.profile?.copy(hasReciprocated = true)
+        val done = viewModel()
+        done.start("mira")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(done.state.value.vouchesBack).isFalse()
     }
 
     @Test
@@ -217,5 +265,51 @@ class ProfileViewModelTest {
 
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.refreshing).isFalse()
+    }
+
+    // OPENING A PROFILE (History.md:11): another's profile joins the reader's
+    // History the moment it is read, as the profile alone; the reader's own
+    // does not, and with no session nothing does.
+
+    @Test
+    fun openingAnotherProfileAddsTheProfileToHistory() = runTest(dispatcher) {
+        profiles.byHandle["ada"] = Outcome.Success(testProfile(id = "u2", handle = "ada"))
+        val vm = viewModel()
+        vm.start("ada")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.own).isFalse()
+        assertThat(history.calls).containsExactly(listOf("u2"))
+
+        // A refresh reads it again; it is already in History.
+        vm.refresh()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(history.calls).containsExactly(listOf("u2"))
+    }
+
+    @Test
+    fun openingTheOwnProfileAddsNothingToHistory() = runTest(dispatcher) {
+        profiles.byHandle["jakob"] = Outcome.Success(testProfile(id = "u1", handle = "jakob"))
+        val tab = viewModel()
+        tab.start(null)
+        val byHandle = viewModel()
+        byHandle.start("jakob")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(byHandle.state.value.own).isTrue()
+        assertThat(history.calls).isEmpty()
+    }
+
+    @Test
+    fun openingAProfileWithNoSessionAddsNothingToHistory() = runTest(dispatcher) {
+        session.tokens.value = null
+        account.profile = null
+        profiles.byHandle["ada"] = Outcome.Success(testProfile(id = "u2", handle = "ada"))
+        val vm = viewModel()
+        vm.start("ada")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.profile?.id).isEqualTo("u2")
+        assertThat(history.calls).isEmpty()
     }
 }

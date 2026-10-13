@@ -60,10 +60,17 @@ export interface ContentRowProps {
   action?: React.ReactNode;
   /** Where the row goes. */
   onOpen?: () => void;
-  /** The data-node name its placer gives this row (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `disc`, `title`, `aside`, `second`, `trailing`, `pending` (the Still settling marker), `chevron`. An `action` is named by its own placer. */
+  /** The data-node name its placer gives this row (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `disc`, `title`, `aside`, `second`, `trailing`, `pending` (the Still settling marker), `dot` (the unread mark), `chevron`. An `action` is named by its own placer. */
   node?: string;
   /** The row's content key when it is a repeated instance — the placer's rule. */
   nodeKey?: string;
+  /**
+   * A deleted account's row: the disc is `MonogramAvatar`'s reserved disc,
+   * the title reads `REDACTED_ACTOR_NAME` in `text-secondary`, and the aside
+   * drops, whatever `image`, `name`, `title` or `titleAside` say — the handle
+   * is gone, and printing anything in its place would invent one.
+   */
+  redacted?: boolean;
 }
 
 export declare function ContentRow(props: ContentRowProps): JSX.Element;

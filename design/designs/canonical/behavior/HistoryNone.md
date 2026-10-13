@@ -20,4 +20,4 @@ WHEN tap the back arrow -> the reader's own profile comes back, in the state it 
 
 ALWAYS the back arrow reads Back to your profile
 
-ALWAYS history.bottomBar rides with no slot lit
+ALWAYS history.bottomBar keeps lit the slot of the root History was opened from, history.bottomBar.profileSlot

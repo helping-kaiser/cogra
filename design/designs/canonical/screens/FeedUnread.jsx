@@ -10,16 +10,20 @@
 
    ONE MECHANISM, NOT A SECOND BAND. `CograBand`'s `unread` draws it and names
    it: the bell's accessible name changes with the dot, because a marker a
-   listener cannot hear is not a marker. Nothing else on the board moves. */
+   listener cannot hear is not a marker. Nothing else on the board moves.
+
+   REGISTERED under the feed's own prefix (round 7), named as `Feed` names
+   it; the lit dot is the bell's own `dot`. */
+export const NODE = "feed";
 export function Screen() {
   return (
     <>
-      <CograBand unread trailing={<FeedFilter />} />
+      <CograBand unread trailing={<FeedFilter node="filterTrigger" />} node="band" />
       <FeedList>
-        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} />
-        <PostCard {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
+        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />
+        <PostCard {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} node="card" />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

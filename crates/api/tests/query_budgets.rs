@@ -149,6 +149,60 @@ async fn an_unpriced_connection_charges_the_default_page(pool: PgPool) {
     assert_eq!(first_error(&response), "Query is too complex.");
 }
 
+/// `search` is public and keystroke-driven with no read budget of its
+/// own, so the query budget is its bound: it prices as a connection — the
+/// requested page times the per-edge selection, a union member's fields
+/// included — and its `totalCount` rides free. The flip point pins both:
+/// `edges { node { ... on Post { id } } }` is three per edge.
+///
+/// (´claim:budgets:a-connection-prices-the-requested-or-default-page´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn search_prices_as_a_connection(pool: PgPool) {
+    let query = "{ search(query: \"\", first: 100) {
+        totalCount edges { node { ... on Post { id } } }
+    } }";
+    let cost = connection_cost(Some(100), None, 3);
+    let budgets = |complexity| QueryBudgets {
+        depth: 15,
+        complexity,
+        introspection_enabled: false,
+    };
+    let under = schema(pool.clone(), budgets(cost - 1));
+    assert_eq!(
+        first_error(&execute(&under, query).await),
+        "Query is too complex."
+    );
+    let exact = schema(pool, budgets(cost));
+    let response = execute(&exact, query).await;
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+}
+
+/// The seen-list prices as a connection too: the requested page times the
+/// per-edge selection — `edges { firstSeenAt node { ... on Post { id } } }`
+/// is four per edge — plus one for `me`, with `totalCount` riding free.
+///
+/// (´claim:budgets:a-connection-prices-the-requested-or-default-page´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn view_history_prices_as_a_connection(pool: PgPool) {
+    let query = "{ me { viewHistory(first: 100) {
+        totalCount edges { firstSeenAt node { ... on Post { id } } }
+    } } }";
+    let cost = 1 + connection_cost(Some(100), None, 4);
+    let budgets = |complexity| QueryBudgets {
+        depth: 15,
+        complexity,
+        introspection_enabled: false,
+    };
+    let under = schema(pool.clone(), budgets(cost - 1));
+    assert_eq!(
+        first_error(&execute(&under, query).await),
+        "Query is too complex."
+    );
+    let exact = schema(pool, budgets(cost));
+    let response = execute(&exact, query).await;
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+}
+
 /// `totalCount` is one aggregate per connection, not one per edge, but
 /// async-graphql hands a connection field a single `child_complexity` —
 /// a flat sum over the whole selection set, drawing no line between the
@@ -317,6 +371,71 @@ async fn explicit_pages_at_the_cap_still_work() {
         .expect("last only");
     assert_eq!(connection.edges.len(), 2);
     assert_eq!(connection.edges[0].node, "3");
+}
+
+/// `feed` hydrates a ranker's window and prices as a connection: the
+/// requested page times `edges { node { ... on Post { id } } }`, three per
+/// edge.
+///
+/// (´claim:budgets:a-connection-prices-the-requested-or-default-page´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn feed_prices_as_a_connection(pool: PgPool) {
+    let query = "{ feed(orderedIds: [], first: 100) {
+        edges { node { ... on Post { id } } }
+    } }";
+    let cost = connection_cost(Some(100), None, 3);
+    let budgets = |complexity| QueryBudgets {
+        depth: 15,
+        complexity,
+        introspection_enabled: false,
+    };
+    let under = schema(pool.clone(), budgets(cost - 1));
+    assert_eq!(
+        first_error(&execute(&under, query).await),
+        "Query is too complex."
+    );
+    let exact = schema(pool, budgets(cost));
+    let response = execute(&exact, query).await;
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+}
+
+/// The ranker pages the slice at the house cap with every leg selected.
+/// A record has at most two legs, so `legs` is a bounded list and the
+/// whole page — nodes and records at 100 — fits the release budget.
+///
+/// The ranker's slice page at the cap, legs included, fits the release budget.
+/// ´claim:budgets:the-slice-page-fits-the-release-budget´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_full_slice_page_with_legs_fits_the_release_budget(pool: PgPool) {
+    let query = "{ feedSlice(viewer: \"00000000-0000-0000-0000-000000000000\") {
+        asOfEpoch
+        nodes(first: 100) { totalCount pageInfo { hasNextPage endCursor }
+            edges { cursor node { graphId id kind genesis { landingEpoch actTime position } } } }
+        records(first: 100) { totalCount pageInfo { hasNextPage endCursor }
+            edges { cursor node { id family authorId landingEpoch actTime position
+                legs { role sourceId targetId pDirected pInterest maturity censusUnknown } } } }
+    } }";
+    let response = execute(&schema(pool, QueryBudgets::release()), query).await;
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+}
+
+/// The client's whole `feedRanking` selection (ranked-feed-api §12) fits
+/// the release budget. Its lists are a ranking snapshot, not connections:
+/// each field prices once however many rows come back, so the snapshot's
+/// length is never a validation question.
+///
+/// The client's feedRanking selection fits the release budget.
+/// ´claim:budgets:the-feed-ranking-selection-fits´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_feed_ranking_selection_fits_the_release_budget(pool: PgPool) {
+    let query = "{ feedRanking(viewer: \"00000000-0000-0000-0000-000000000000\",
+                              filter: { kinds: [POST], topic: null }) {
+        asOfEpoch
+        entries { targetId kind score mark newestIndex }
+        settling { targetId kind mark rankedPosition newestPosition }
+    } }";
+    let response = execute(&schema(pool, QueryBudgets::release()), query).await;
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
 }
 
 /// Pricing follows the slice math: `first` wins when both are present,

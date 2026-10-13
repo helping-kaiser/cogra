@@ -25,8 +25,14 @@ export function renderWithProviders(
     flow,
     writeSigner,
     stanceData,
+    cache = new InMemoryCache(),
   }: {
     store?: TokenStore;
+    /**
+     * The client's cache, for a test that needs what an earlier surface (the
+     * feed) left in it before the first render. Fresh by default.
+     */
+    cache?: InMemoryCache;
     ceremony?: KeyCeremony;
     flow?: RegistrationFlow;
     writeSigner?: WriteSigner;
@@ -39,7 +45,7 @@ export function renderWithProviders(
   const client = createGuardedClient(
     store,
     "http://localhost/graphql",
-    (link) => new ApolloClient({ cache: new InMemoryCache(), link }),
+    (link) => new ApolloClient({ cache, link }),
   );
   const result = render(
     <SessionProvider store={store}>

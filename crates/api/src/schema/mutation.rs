@@ -17,7 +17,7 @@ use async_graphql::{Context, InputObject, Object, SimpleObject, Upload};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use chrono::{DateTime, Duration, Utc};
-use common::l1::{crypto, key_backup, wire};
+use common::l1::{crypto, device_lock, key_backup, wire};
 use postgres_store::auth::RevokedReason;
 use postgres_store::staged::PreSignedParts;
 use postgres_store::{PgPool, auth as store, staged};
@@ -26,8 +26,9 @@ use rand::rngs::OsRng;
 use uuid::Uuid;
 
 use super::types::{
-    Application, AuthSession, Dimension, ErrorCode, InviteLink, MediaAttachmentType,
-    PendingEmailChange, PreparedWrite, Session, StagedWriteType, User, UserError, UserPreferences,
+    AccountDeletion, Application, AuthSession, Dimension, ErrorCode, InviteLink,
+    MediaAttachmentType, PendingEmailChange, PreparedWrite, Session, StagedWriteType, User,
+    UserError, UserPreferences,
 };
 use crate::auth::{self, AuthConfig, RefreshError, Viewer};
 use crate::breach::BreachCorpus;
@@ -49,6 +50,12 @@ use crate::stance::{self, StanceError};
 const EMAIL_CHANGE_TTL_HOURS: i64 = 24;
 /// Password-reset tokens stay live this long (auth.md default).
 const PASSWORD_RESET_TTL_MINUTES: i64 = 15;
+/// An unopened account-deletion link dies this long after its request
+/// (auth.md "Self-service deletion", in the email-change family).
+const DELETION_LINK_TTL_DAYS: i64 = 7;
+/// The grace period a confirmed deletion waits out before it executes
+/// (erasure.md §5).
+const DELETION_GRACE_DAYS: i64 = 7;
 /// Key-backup blob cap (auth.md "Blob format (v1)"): the v1 container is
 /// tens of bytes, so 4 KiB leaves format headroom while denying a
 /// hostile client unbounded rows.
@@ -116,6 +123,44 @@ fn link_mail(to: String, requires_code: bool, web_origin: &str, token: &str) -> 
             "{line} (valid {EMAIL_CHANGE_TTL_HOURS} h): {web_origin}/{path}?token={token}\nOr paste the token in the app: {token}"
         ),
     }
+}
+
+/// The account-deletion confirmation, to the verified address on file
+/// (auth.md "Self-service deletion"). The link is the capability; the bare
+/// token rides beside the URL, the fallback native apps accept as a paste
+/// (auth.md "Link URLs").
+fn deletion_mail(to: String, web_origin: &str, token: &str) -> Mail {
+    Mail {
+        to,
+        subject: "Confirm the deletion of your CoGra account".into(),
+        body: format!(
+            "Confirm the deletion of your account (link valid {DELETION_LINK_TTL_DAYS} days): {web_origin}/delete-account?token={token}\nOr paste the token in the app: {token}\n\nOpening the link starts a {DELETION_GRACE_DAYS}-day grace period; until it ends, you can cancel from any device."
+        ),
+    }
+}
+
+/// The transport-tier refusal of a deletion verb the account's state does
+/// not take — a client bug, the client already choosing the verb by the
+/// state (api-spec "Authentication").
+fn wrong_deletion_path(message: &'static str) -> async_graphql::Error {
+    use async_graphql::ErrorExtensions;
+    async_graphql::Error::new(message).extend_with(
+        |_, e: &mut async_graphql::ErrorExtensionValues| {
+            e.set("code", "FORBIDDEN");
+        },
+    )
+}
+
+/// The refusal of a deletion verb the account's [`store::DeletionPath`]
+/// does not name — one message per path the verb is not.
+fn path_refusal(path: store::DeletionPath) -> async_graphql::Error {
+    wrong_deletion_path(match path {
+        store::DeletionPath::Immediate => "an applicant deletes through deleteApplicantAccount",
+        store::DeletionPath::ByLink => "this account deletes through requestAccountDeletion",
+        store::DeletionPath::Locked => {
+            "approval funded this account; it can be deleted once it lands"
+        }
+    })
 }
 
 /// Re-proves the current password inside a live session, spending the
@@ -487,6 +532,18 @@ struct ApplicationApprovalInput {
 #[derive(InputObject)]
 struct ApproveApplicantsInput {
     approvals: Vec<ApplicationApprovalInput>,
+}
+
+#[derive(InputObject)]
+struct StageApplicantInput {
+    ask_link: Uuid,
+}
+
+/// The staged application, waiting in the caller's queue.
+#[derive(SimpleObject)]
+struct StageApplicantPayload {
+    application: Option<Application>,
+    user_errors: Vec<UserError>,
 }
 
 #[derive(InputObject)]
@@ -1322,6 +1379,9 @@ struct DismissVouchBackPayload {
 #[derive(InputObject)]
 struct SetPreferencesInput {
     /// 0 (show everything) to 10 (strictest); null restores the default.
+    /// MVP reads it as one threshold: 0 unveils sensitive content wherever
+    /// the account reads (Settings' Always unveil sensitive content); null
+    /// or 1–10 keeps the veil. The 0–10 gradient is post-MVP.
     content_filtering_severity_level: async_graphql::MaybeUndefined<i32>,
     /// The license new posts start from; null restores public domain
     /// (0/0). Both axes take the same three readings the composer
@@ -1378,6 +1438,105 @@ struct KeyBackupChallengePayload {
     /// The challenge to sign (base64); null with a refusal.
     challenge: Option<String>,
     expires_at: Option<DateTime<Utc>>,
+    user_errors: Vec<UserError>,
+}
+
+/// The server half of a device lock (auth.md "Device lock"): a 32-byte
+/// secret that encrypts one device's custody for this account while it is
+/// signed out. Viewer-only; never on a refusal.
+#[derive(SimpleObject)]
+struct DeviceLock {
+    /// The lock's name, held by the device; unguessable, so it doubles as
+    /// the capability to discard it.
+    id: Uuid,
+    /// The secret (base64).
+    secret: String,
+}
+
+#[derive(InputObject)]
+struct MarkSeenInput {
+    /// The nodes the viewer has seen, in the order they were seen.
+    nodes: Vec<Uuid>,
+}
+
+/// `ok` is null exactly when a userError refused the batch, which then
+/// wrote nothing.
+#[derive(SimpleObject)]
+struct MarkSeenPayload {
+    ok: Option<bool>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(SimpleObject)]
+struct IssueDeviceLockPayload {
+    lock: Option<DeviceLock>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
+struct ReleaseDeviceLockInput {
+    lock: Uuid,
+    /// The account's current password, re-verified against the stored
+    /// hash.
+    password: String,
+}
+
+#[derive(SimpleObject)]
+struct ReleaseDeviceLockPayload {
+    /// The lock's secret (base64); null with a refusal.
+    secret: Option<String>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
+struct DiscardDeviceLockInput {
+    lock: Uuid,
+}
+
+#[derive(SimpleObject)]
+struct DiscardDeviceLockPayload {
+    ok: Option<bool>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
+struct RequestAccountDeletionInput {
+    /// Opt into content-level redaction; identity-only when absent or
+    /// false.
+    include_content: Option<bool>,
+}
+
+#[derive(InputObject)]
+struct ConfirmAccountDeletionInput {
+    deletion_token: String,
+    /// Opt into content-level redaction at or after confirmation. The
+    /// election is opt-in only: true upgrades an identity-only request,
+    /// including on a re-call inside the grace; null and false never
+    /// downgrade and leave the standing choice unchanged.
+    include_content: Option<bool>,
+}
+
+/// The result of request, confirm and cancel. accountDeletion is the
+/// confirmed deletion; null after a request (nothing is confirmed until
+/// the link is opened) and after a cancel.
+#[derive(SimpleObject)]
+struct AccountDeletionPayload {
+    account_deletion: Option<AccountDeletion>,
+    user_errors: Vec<UserError>,
+}
+
+impl AccountDeletionPayload {
+    fn standing(deletion: Option<store::AccountDeletion>) -> Self {
+        Self {
+            account_deletion: deletion.and_then(AccountDeletion::from_store),
+            user_errors: vec![],
+        }
+    }
+}
+
+#[derive(SimpleObject)]
+struct DeleteApplicantAccountPayload {
+    ok: Option<bool>,
     user_errors: Vec<UserError>,
 }
 
@@ -1646,6 +1805,38 @@ impl Mutation {
             tracing::error!(error = %e, "resend failed silently by design");
         }
         Ok(ResendVerificationEmailPayload { ok: true })
+    }
+
+    /// Take up an ask link: stage its applicant as an application in the
+    /// caller's own approval queue — the ask direction's answer to
+    /// register, and a deliberate call rather than a side effect of
+    /// opening the link (auth.md "The ask link"). The account already
+    /// exists, so this writes only the queue entry; approving it is the
+    /// ordinary approveApplicants act, with the stance values chosen
+    /// there, and the entry waits with no timer. ASK_LINK_UNUSABLE when
+    /// the id is unknown, the applicant has already landed, or an
+    /// application of theirs already waits in the caller's own queue — or
+    /// sits there approved, the caller's vouch still in flight; a live
+    /// application in another member's queue never refuses (several
+    /// members may be asked at once). The client names the case by
+    /// re-reading askLinkCheck, whose reason carries it.
+    async fn stage_applicant(
+        &self,
+        ctx: &Context<'_>,
+        input: StageApplicantInput,
+    ) -> async_graphql::Result<StageApplicantPayload> {
+        let v = member_viewer(ctx).await?;
+        let pool = ctx.data::<PgPool>()?;
+        match onboarding::stage_applicant(pool, v.user_id, input.ask_link).await {
+            Ok(application) => Ok(StageApplicantPayload {
+                application: Some(Application(application)),
+                user_errors: vec![],
+            }),
+            Err(e) => Ok(StageApplicantPayload {
+                application: None,
+                user_errors: vec![UserError::from_onboarding(&e, "")],
+            }),
+        }
     }
 
     /// Approve staged applicants — the inviter's deliberate, priced act:
@@ -2498,6 +2689,51 @@ impl Mutation {
         })
     }
 
+    /// Record that the viewer has seen nodes — first seeing only: a node
+    /// already on the list is left as it is (re-seeing never counts,
+    /// never moves it). Posts, comments, profiles and topics are
+    /// seeable. L2 only; nothing here becomes a graph record.
+    ///
+    /// At most 100 ids per call (the page budget); more is BAD_INPUT at
+    /// `["nodes"]`. Ids that name nothing seeable are skipped, never an
+    /// error: a pending write the reader saw may be discarded before it
+    /// lands, and a batch must not fail for it. The ids arrive in the
+    /// order they were seen, and a batch keeps that order. Needs a
+    /// session (UNAUTHENTICATED otherwise) and no particular account
+    /// state — an applicant's seeing counts like a member's; this is
+    /// private viewer state, not acting. A per-account budget bounds the
+    /// rate: over it is RATE_LIMITED, and the batch writes nothing.
+    async fn mark_seen(
+        &self,
+        ctx: &Context<'_>,
+        input: MarkSeenInput,
+    ) -> async_graphql::Result<MarkSeenPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        if input.nodes.len() > crate::history::MAX_MARK_SEEN {
+            return Ok(MarkSeenPayload {
+                ok: None,
+                user_errors: vec![UserError::at(
+                    ErrorCode::BadInput,
+                    format!("at most {} nodes per call", crate::history::MAX_MARK_SEEN),
+                    vec!["nodes".to_string()],
+                )],
+            });
+        }
+        let ids = crate::history::first_seeings(&input.nodes);
+        if !ids.is_empty() {
+            if !ratelimit::spend_mark_seen(pool, limits, v.user_id).await? {
+                return Err(rate_limited());
+            }
+            postgres_store::history::mark_seen(pool, v.user_id, &ids).await?;
+        }
+        Ok(MarkSeenPayload {
+            ok: Some(true),
+            user_errors: vec![],
+        })
+    }
+
     /// Issues the challenge an upload must spend (auth.md "Key
     /// recovery"). The server picks it: a client-chosen nonce would let
     /// a captured upload be replayed verbatim, which is the whole attack
@@ -2613,6 +2849,252 @@ impl Mutation {
             ok: Some(true),
             user_errors: vec![],
         })
+    }
+
+    /// Mints a device lock for the signed-in account (auth.md "Device
+    /// lock"): a fresh 32-byte secret the device locks this account's
+    /// custody under while it is signed out. Issuing writes a row, so it
+    /// spends the account's issue budget and is held under the account's
+    /// live-lock cap; either refusal is a visible RATE_LIMITED, since the
+    /// caller is authenticated, and stores nothing.
+    async fn issue_device_lock(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<IssueDeviceLockPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        if !ratelimit::spend_device_lock_issue(pool, limits, v.user_id).await? {
+            return Err(rate_limited());
+        }
+        let id = Uuid::new_v4();
+        let secret = device_lock::generate_secret();
+        match store::issue_device_lock(
+            pool,
+            v.user_id,
+            id,
+            &secret,
+            i64::from(limits.device_lock_live_cap),
+        )
+        .await?
+        {
+            store::IssueLockOutcome::Issued => Ok(IssueDeviceLockPayload {
+                lock: Some(DeviceLock {
+                    id,
+                    secret: B64.encode(secret),
+                }),
+                user_errors: vec![],
+            }),
+            store::IssueLockOutcome::AtCap => Err(rate_limited()),
+            store::IssueLockOutcome::NoAccount => Err(unauthenticated()),
+        }
+    }
+
+    /// Releases one of the viewer's locks behind the account's current
+    /// password (auth.md "Device lock"). The order is the login's: the
+    /// re-authentication budget answers first, then the password, and only
+    /// a proven password reaches the lock — so without the password, which
+    /// locks exist cannot be probed. A wrong password is
+    /// INVALID_CREDENTIALS and spends the budget changePassword shares;
+    /// another account's or an unknown lock is NOT_FOUND. Idempotent: a
+    /// release never spends the lock, so a lost response costs nothing.
+    async fn release_device_lock(
+        &self,
+        ctx: &Context<'_>,
+        input: ReleaseDeviceLockInput,
+    ) -> async_graphql::Result<ReleaseDeviceLockPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        let Some(credentials) = store::credentials_by_actor(pool, v.user_id).await? else {
+            return Err(unauthenticated());
+        };
+        let refuse = |error: UserError| ReleaseDeviceLockPayload {
+            secret: None,
+            user_errors: vec![error],
+        };
+        if !reauthenticate(pool, limits, v.user_id, &credentials, &input.password).await? {
+            return Ok(refuse(UserError::at(
+                ErrorCode::InvalidCredentials,
+                "password did not match",
+                vec!["password".to_string()],
+            )));
+        }
+        let Some(secret) = store::release_device_lock(pool, v.user_id, input.lock).await? else {
+            return Ok(refuse(UserError::at(
+                ErrorCode::NotFound,
+                "no such device lock",
+                vec!["lock".to_string()],
+            )));
+        };
+        Ok(ReleaseDeviceLockPayload {
+            secret: Some(B64.encode(secret)),
+            user_errors: vec![],
+        })
+    }
+
+    /// Deletes one of the viewer's locks (auth.md "Device lock").
+    /// Idempotent and silent: an unknown id, or another account's, answers
+    /// exactly like a deleted one and touches nothing.
+    async fn discard_device_lock(
+        &self,
+        ctx: &Context<'_>,
+        input: DiscardDeviceLockInput,
+    ) -> async_graphql::Result<DiscardDeviceLockPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        store::discard_device_lock(pool, v.user_id, input.lock).await?;
+        Ok(DiscardDeviceLockPayload {
+            ok: Some(true),
+            user_errors: vec![],
+        })
+    }
+
+    /// Begins account deletion (auth.md "Self-service deletion";
+    /// erasure.md §5): records the content-sweep choice and mails the
+    /// confirmation link to the verified address; nothing is scheduled
+    /// until the link is opened. A second request supersedes the first —
+    /// the earlier link dies, the new one carries its own choice — and
+    /// is what the mail screen's Resend sends.
+    ///
+    /// Answers only on `User.deletionPath == BY_LINK`: a member, or an
+    /// applicant whose Registration landed. Any other account is FORBIDDEN,
+    /// checked before anything is spent and again under the account lock.
+    /// While a confirmed deletion is in its grace the request changes
+    /// nothing — it returns that deletion, mails nothing, spends nothing,
+    /// and never moves the deadline: superseding it would silently
+    /// un-confirm it. Otherwise each request spends the account's
+    /// deletion mail budget, and a spent one answers
+    /// RATE_LIMITED with nothing recorded, mailed or superseded.
+    async fn request_account_deletion(
+        &self,
+        ctx: &Context<'_>,
+        input: RequestAccountDeletionInput,
+    ) -> async_graphql::Result<AccountDeletionPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        let mailer = ctx.data::<Arc<dyn Mailer>>()?;
+        let web_origin = ctx.data::<WebOrigin>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        let Some(credentials) = store::credentials_by_actor(pool, v.user_id).await? else {
+            return Err(unauthenticated());
+        };
+        match store::deletion_path(&mut *pool.acquire().await?, v.user_id).await? {
+            None => return Err(unauthenticated()),
+            Some(store::DeletionPath::ByLink) => {}
+            Some(path) => return Err(path_refusal(path)),
+        }
+        if let Some(standing) = store::confirmed_account_deletion(pool, v.user_id).await? {
+            return Ok(AccountDeletionPayload::standing(Some(standing)));
+        }
+        if !ratelimit::spend_mail_budget(
+            pool,
+            scope::DELETION_REQUEST_ACCOUNT,
+            v.user_id,
+            limits.deletion_request_account,
+        )
+        .await?
+        {
+            return Err(rate_limited());
+        }
+        let link = auth::new_secret();
+        match store::open_account_deletion(
+            pool,
+            Uuid::new_v4(),
+            v.user_id,
+            &link.hash,
+            input.include_content.unwrap_or(false),
+            Utc::now() + Duration::days(DELETION_LINK_TTL_DAYS),
+        )
+        .await?
+        {
+            None => Err(unauthenticated()),
+            Some(store::DeletionRequest::InGrace(standing)) => {
+                Ok(AccountDeletionPayload::standing(Some(standing)))
+            }
+            Some(store::DeletionRequest::WrongPath(path)) => Err(path_refusal(path)),
+            Some(store::DeletionRequest::Opened) => {
+                mailer
+                    .send(deletion_mail(credentials.email, &web_origin.0, &link.token))
+                    .await;
+                Ok(AccountDeletionPayload::standing(None))
+            }
+        }
+    }
+
+    /// Opens the mailed link: confirms the deletion and fixes its deadline
+    /// at now plus the grace period. Token-bearing, no session — the link
+    /// is the capability. A re-call with the same token inside the grace
+    /// never moves the deadline, and can add the content sweep. Every dead
+    /// link — unknown, superseded, cancelled, executed, or unopened past
+    /// its lifetime — is one DELETION_TOKEN_INVALID at deletionToken.
+    /// Spends the per-IP confirmation budget every token verb shares.
+    async fn confirm_account_deletion(
+        &self,
+        ctx: &Context<'_>,
+        input: ConfirmAccountDeletionInput,
+    ) -> async_graphql::Result<AccountDeletionPayload> {
+        let pool = ctx.data::<PgPool>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        guard_window(ctx, scope::CONFIRM_IP, &request_ip(ctx)?, limits.confirm_ip).await?;
+        let grace_secs = Duration::days(DELETION_GRACE_DAYS).num_seconds() as f64;
+        match store::confirm_account_deletion(
+            pool,
+            &auth::hash_of(&input.deletion_token),
+            input.include_content.unwrap_or(false),
+            grace_secs,
+        )
+        .await?
+        {
+            Some(confirmed) => Ok(AccountDeletionPayload::standing(Some(confirmed))),
+            None => Ok(AccountDeletionPayload {
+                account_deletion: None,
+                user_errors: vec![UserError::at(
+                    ErrorCode::DeletionTokenInvalid,
+                    "deletion link unknown, superseded, cancelled, expired, or spent",
+                    vec!["deletionToken".to_string()],
+                )],
+            }),
+        }
+    }
+
+    /// Ends the account's standing deletion, requested or confirmed, from
+    /// any signed-in device until the deadline executes it; its link dies
+    /// with it. Idempotent: with nothing standing — two devices cancelling
+    /// at once, or an applicant — it answers the same null and no error.
+    async fn cancel_account_deletion(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<AccountDeletionPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        store::cancel_account_deletion(pool, v.user_id).await?;
+        Ok(AccountDeletionPayload::standing(None))
+    }
+
+    /// Deletes an applicant account at once — DeleteAccount's applicant
+    /// case: account, credentials, application, staged acts (those carried
+    /// with the application included), key backup and device locks go
+    /// immediately, every session with them, and no mail is sent. Nothing
+    /// of it reached L1. Answers only on `User.deletionPath == IMMEDIATE`,
+    /// re-checked under the account lock: FORBIDDEN for a member, who takes
+    /// the mailed path, and for an applicant whose address approval funded
+    /// — the burn is spent and the Registration staged, so nothing may
+    /// vanish under it; once it lands, the mailed path applies.
+    async fn delete_applicant_account(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<DeleteApplicantAccountPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        match store::delete_applicant_account(pool, v.user_id).await? {
+            store::ApplicantDeletion::Deleted => Ok(DeleteApplicantAccountPayload {
+                ok: Some(true),
+                user_errors: vec![],
+            }),
+            store::ApplicantDeletion::Gone => Err(unauthenticated()),
+            store::ApplicantDeletion::WrongPath(path) => Err(path_refusal(path)),
+        }
     }
 
     /// Issues an invite link — pure service-side staging UX; its id is

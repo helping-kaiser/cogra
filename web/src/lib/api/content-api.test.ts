@@ -8,6 +8,7 @@ import {
   prepareComment,
   preparePost,
   preparePostEdit,
+  readCachedPost,
   sensitiveInput,
 } from "./content-api";
 import { startMswServer } from "@/test/msw";
@@ -156,6 +157,101 @@ describe("fetchPostDetail", () => {
     expect(missing.kind).toBe("success");
     if (missing.kind !== "success") return;
     expect(missing.value).toBeNull();
+  });
+});
+
+describe("readCachedPost", () => {
+  /** A post carrying every field the feed card selects (`FeedPost`), whole. */
+  function wholePost(id: string, title: string) {
+    return post(id, {
+      title: moderated(title),
+      attachments: [],
+      attachmentsStatus: "NORMAL",
+      author: {
+        __typename: "User",
+        id: "u1",
+        handle: "alice",
+        displayName: { __typename: "ModeratedText", value: "Alice" },
+        avatar: null,
+      },
+    });
+  }
+
+  function feedAnswer(...nodes: Record<string, unknown>[]) {
+    return graphql.query("Posts", () =>
+      HttpResponse.json({
+        data: {
+          posts: {
+            __typename: "PostConnection",
+            edges: nodes.map((node) => ({ __typename: "PostEdge", node })),
+            pageInfo: pageInfo(false, null),
+          },
+        },
+      }),
+    );
+  }
+
+  function detailAnswer(node: Record<string, unknown>) {
+    return graphql.query("PostDetail", () =>
+      HttpResponse.json({
+        data: {
+          post: {
+            ...node,
+            sensitiveSelfMark: false,
+            sensitiveReason: null,
+            comments: {
+              __typename: "CommentConnection",
+              totalCount: 0,
+              edges: [],
+              pageInfo: pageInfo(false, null),
+            },
+          },
+        },
+      }),
+    );
+  }
+
+  const feedCount = { comments: { __typename: "CommentConnection", totalCount: 3 } };
+
+  it("reads the card the feed wrote, comment count included", async () => {
+    server.use(feedAnswer({ ...wholePost("p1", "Hello"), ...feedCount }));
+    const c = client();
+    await fetchPosts(c);
+    const cached = readCachedPost(c, "p1");
+    expect(cached?.title.value).toBe("Hello");
+    expect(cached?.author?.displayName.value).toBe("Alice");
+    expect(cached?.comments.totalCount).toBe(3);
+  });
+
+  it("reads null for a post the cache never saw", () => {
+    expect(readCachedPost(client(), "p1")).toBeNull();
+  });
+
+  // ALL OR NOTHING: the detail's own answer carries every card field but the
+  // feed's `first: 0` count, so the entity it leaves is one field short of a
+  // card — which reads as null, never as a card with a hole in it.
+  it("reads null rather than a partial card", async () => {
+    server.use(detailAnswer(wholePost("p1", "Hello")));
+    const c = client();
+    expect((await fetchPostDetail(c, "p1")).kind).toBe("success");
+    expect(c.cache.identify({ __typename: "Post", id: "p1" })).toBe("Post:p1");
+    expect(readCachedPost(c, "p1")).toBeNull();
+  });
+
+  // The detail read normalizes into the SAME entity the feed wrote, so its
+  // fresh answer is what the next cached paint reads — the feed's own count
+  // standing beside it.
+  it("carries the detail read's fresh answer into the same entity", async () => {
+    server.use(
+      feedAnswer({ ...wholePost("p1", "Hello"), ...feedCount }),
+      detailAnswer(wholePost("p1", "Hello, edited")),
+    );
+    const c = client();
+    await fetchPosts(c);
+    await fetchPostDetail(c, "p1");
+    const cached = readCachedPost(c, "p1");
+    expect(cached?.title.value).toBe("Hello, edited");
+    expect(cached?.comments.totalCount).toBe(3);
   });
 });
 

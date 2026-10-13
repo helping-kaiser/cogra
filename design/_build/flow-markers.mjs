@@ -111,10 +111,22 @@ export const FLOW_MARKERS = {
     { n: 17, find: ">Restore the key</button>", tag: "button" },
     { n: 19, find: 'what your feed shows"', tag: "button" },
   ],
+  // The approval that fell through (ruling 60): ApplicantWaiting's shell and
+  // ApplicantWaiting's numbers, the card's dismissal at its 17 and its copy
+  // control at its 20 — the waiting card's two controls, in this card's words.
+  ApplicantFellThrough: [
+    ...post({ author: 1, menu: 2, media: 3, more: 4, topic: 5, refs: 6, stance: 7, score: 8, comments: 9 }),
+    secondComments(9),
+    ...nav(10),
+    { n: 17, find: ">Got it</button>", tag: "button" },
+    { n: 19, find: 'what your feed shows"', tag: "button" },
+    { n: 20, find: 'aria-label="Copy your ask link"', tag: "button" },
+  ],
   VouchBack: [
     filter,
     { n: 2, find: ">Got it</button>", tag: "button" },
-    { n: 3, find: ">Vouch back</button>", tag: "button" },
+    { n: 3, find: 'aria-label="Give your opinion on @mira"', tag: "button" },
+    { n: 3, find: ">Choose your opinion on @mira</button>", tag: "button" },
     ...post({ author: 4, menu: 5, media: 6, more: 7, topic: 8, refs: 9, stance: 10, score: 11, comments: 12 }),
     ...nav(13),
   ],
@@ -207,13 +219,24 @@ Object.assign(FLOW_MARKERS, {
   ],
   /* V1.0's rows only (readme §13, the V1.0 scope cut): posts, a comment, a
      tag. The rows number in reading order, the bar follows them, and the tag
-     row keeps the last number, where the tag round appended it. */
+     row keeps the last number, where the tag round appended it. The `order`
+     chip draws the rows once per order (ruling 24), and each copy of a row
+     keeps that row's number. */
   ExploreSearch: [
-    { n: 11, find: ">saltmaps<", tag: "button" },
+    { n: 11, find: ">saltmaps<", tag: "button", all: true },
     ...searchShell("@sol salt", 6),
+    { n: 4, find: "Salt maps of the coast road", tag: "button", all: true },
+    { n: 4, find: "First try at a rubbing", tag: "button", all: true },
+    { n: 5, find: "The wax-stick ones read like weather charts", tag: "button", all: true },
+  ],
+  /* The Profiles row (ruling 23): `ExploreSearch`'s numbering, the person's
+     row taking the comment row's 5 — the one row each board has that the
+     other has not. */
+  ExplorePerson: [
+    { n: 11, find: ">saltmaps<", tag: "button" },
+    ...searchShell("salt", 6),
     { n: 4, find: "Salt maps of the coast road", tag: "button" },
-    { n: 4, find: "First try at a rubbing", tag: "button" },
-    { n: 5, find: "The wax-stick ones read like weather charts", tag: "button" },
+    { n: 5, find: ">Sal Torres<", tag: "button" },
   ],
   ExploreFilter: [
     { n: 1, find: 'aria-label="How the filter works"', tag: "button" },
@@ -249,6 +272,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 7, find: ">All your topics</button>", tag: "button" },
     { n: 8, find: ">Done</button>", tag: "button" },
+    // The People rows (ruling 77): one choice, two rows, one number — on
+    // both of the `people` chip's copies.
+    { n: 9, find: 'data-people="everyone"', tag: "label", all: true },
+    { n: 9, find: 'data-people="yourPeople"', tag: "label", all: true },
+    // The sign row under Your people (item 7): one choice, three words, the
+    // next free number. Drawn on the chip's `your-people` copy.
+    { n: 10, find: 'data-sign="', tag: "label", all: true },
   ],
   /* The feed narrowed to one topic. Neither card carries a reference, so the
      numbering closes over the slot `FeedNarrowed` keeps for one. */
@@ -544,6 +574,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Hide @ada</button>", tag: "button" },
     { n: 4, find: ">License terms</button>", tag: "button" },
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+    // Report arrived at the sheet tail (ruling 75) and takes the next free
+    // number — the badge is an identity, not a position.
+    { n: 6, find: ">Report</button>", tag: "button" },
   ],
   // The same sheet on a phone too narrow for four actions: share has moved in
   // from the action row and leads, so every number below it shifts by one.
@@ -554,6 +587,24 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Hide @ada</button>", tag: "button" },
     { n: 5, find: ">License terms</button>", tag: "button" },
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 7, find: ">Report</button>", tag: "button" },
+  ],
+  // The feed's own menu state (ruling 84): the same sheet on its second host,
+  // scanExempt like the detail's, numbered as ReaderPostMenu numbers it.
+  FeedPostMenu: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+    { n: 3, find: ">Hide @ada</button>", tag: "button" },
+    { n: 4, find: ">License terms</button>", tag: "button" },
+    { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 6, find: ">Report</button>", tag: "button" },
+  ],
+  // The report confirm (ruling 75): scanExempt like every menu board, so the
+  // sheet's own pair and its scrim are all that carries numbers.
+  ReportConfirm: [
+    { n: 1, find: ">Report</button>", tag: "button" },
+    { n: 2, find: ">Cancel</button>", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   // TWO WASHES on this board — the thread's, and the menu's stacked over the
   // thread it dims — and both take the same number: the edge is "tap outside",
@@ -565,6 +616,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'class="cg-scrim-in"', tag: "div", all: true },
     { n: 5, find: ">Opinions on this</button>", tag: "button" },
     { n: 6, find: ">Cited by</button>", tag: "button" },
+    { n: 7, find: ">Report</button>", tag: "button" },
   ],
   // Your own comment's menu (the comment-removal round): CommentMenu's rows
   // keep their numbers — the badge is an identity, not a position — and
@@ -584,6 +636,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Share this profile</button>", tag: "button" },
     { n: 4, find: ">Hide @ada</button>", tag: "button" },
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 6, find: ">Report</button>", tag: "button" },
   ],
   // A deleted account's menu: the master's rows minus Mention, which stages a
   // Reference at a person and has no handle left to spell.
@@ -592,6 +645,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Share this profile</button>", tag: "button" },
     { n: 3, find: ">Hide this account</button>", tag: "button" },
     { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 5, find: ">Report</button>", tag: "button" },
   ],
   // Your own profile's menu (the private-viewer-state round): the two private
   // lists and the share row, over the page they belong to.
@@ -1121,11 +1175,20 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Choose your opinion on this post</button>", tag: "button" },
     { n: 5, find: 'aria-label="2 comments"', tag: "button" },
     { n: 6, find: 'aria-label="Share this post"', tag: "button" },
-    { n: 7, find: ">Feed score</span>", tag: "button" },
+    // The score door is drawn once per face the `state` chip shows (the
+    // figure, settling's bare glyph, the dash): one door, one number.
+    { n: 7, find: ">Feed score</span>", tag: "button", all: true },
     { n: 8, find: ">More</button>", tag: "button" },
     { n: 9, find: 'alt="A man standing at the edge', tag: "img" },
     { n: 10, find: 'aria-label="Seek"', tag: "div" },
     ...nav(11),
+    // The slice-3 round's faces (jakob 2026-10-12): the card's play disc under
+    // suppressed autoplay, the face's row line's Retry beside it (the rail
+    // comes before the caption, so the first bare Retry is the face's), and
+    // the load-more fault's Retry at the caption's head.
+    { n: 16, find: 'aria-label="Play this video"', tag: "button" },
+    { n: 17, find: ">Retry</button>", tag: "button" },
+    { n: 18, find: 'aria-label="Retry loading more"', tag: "button" },
   ],
   ReelSensitive: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "button" },
@@ -1154,6 +1217,27 @@ Object.assign(FLOW_MARKERS, {
     ...nav(10),
     { n: 15, find: 'opinions on this post</span>', tag: "button" },
     { n: 16, find: '<span>Cited by ', tag: "button" },
+    // The edited-while-you-read line (the `read` chip's `changed`, 2026-10-12).
+    { n: 17, find: ">Edited since you opened it", tag: "button" },
+  ],
+  // The detail a moment after Hide @ada (ruling 65): `PostDetail`'s numbers,
+  // to the number, on the post the menu's board draws — which carries no
+  // Cited-by line, so 16 stays unused — and the snackbar's Undo as the next
+  // free number.
+  PostDetailHidden: [
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
+    { n: 2, find: 'aria-label="More on this post"', tag: "button" },
+    { n: 3, find: '<a href="/u/', tag: "a" },
+    { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 5, find: 'aria-label="Tags and references"', tag: "button" },
+    { n: 6, find: 'aria-label="Give your opinion on this post"', tag: "button" },
+    { n: 6, find: ">Choose your opinion on this post</button>", tag: "button" },
+    { n: 7, find: ">Feed score</span>", tag: "button" },
+    { n: 8, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 9, find: 'aria-label="Share this post"', tag: "button" },
+    ...nav(10),
+    { n: 15, find: 'opinions on this post</span>', tag: "button" },
+    { n: 17, find: ">Undo</button>", tag: "button" },
   ],
   PostDetailVideo: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
@@ -1272,6 +1356,24 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: "The glovebox camera earns its keep", tag: "button" },
     { n: 7, find: "Took the coast road instead of the tunnel", tag: "button" },
     ...nav(8),
+  ],
+  // The page a moment after Hide @ada (ruling 65): `ProfileOther`'s numbers,
+  // to the number, and the snackbar's Undo as the next free one.
+  ProfileOtherHidden: [
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
+    { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
+    { n: 3, find: ', opinions on and by @ada"', tag: "button" },
+    { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
+    { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
+    { n: 5, find: ">Message</button>", tag: "button" },
+    { n: 6, find: 'aria-label="Posts"', tag: "button" },
+    { n: 6, find: 'aria-label="Comments"', tag: "button" },
+    { n: 6, find: 'aria-label="Everything"', tag: "button" },
+    { n: 7, find: "The long way home — the light does something", tag: "button" },
+    { n: 7, find: "The glovebox camera earns its keep", tag: "button" },
+    { n: 7, find: "Took the coast road instead of the tunnel", tag: "button" },
+    ...nav(8),
+    { n: 13, find: ">Undo</button>", tag: "button" },
   ],
   ProfileOtherHeld: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
@@ -1409,6 +1511,12 @@ Object.assign(FLOW_MARKERS, {
     // The kept picks' row (backlog item 113), inside the Key backup group and
     // numbered by the same identity rule — the next free number.
     { n: 26, find: " kept picks waiting</span>", tag: "button" },
+    // The sensitive-content switch (jakob 2026-10-09), its own group after
+    // People, numbered by the same identity rule — the next free number.
+    { n: 27, find: ">Always unveil sensitive content</span>", tag: "button" },
+    // The wipe (jakob 2026-10-13), the Clearing data group's one row,
+    // numbered by the same identity rule — the next free number.
+    { n: 28, find: ">Erase everything from this browser</span>", tag: "button" },
   ],
   // The release chronicle: the way out, and one door per release — the same
   // control drawn three times, so one number.
@@ -1442,6 +1550,13 @@ Object.assign(FLOW_MARKERS, {
   SettingsHidden: [
     { n: 1, find: ">Unhide</button>", tag: "button", all: true },
     { n: 2, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // The same sheet a moment after an unhide (ruling 65): its numbers, and the
+  // snackbar's Undo raised over it as the next free one.
+  SettingsUnhidden: [
+    { n: 1, find: ">Unhide</button>", tag: "button", all: true },
+    { n: 2, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 3, find: ">Undo</button>", tag: "button" },
   ],
   // Saved and History: the back arrow, the rows (one control, one number, drawn
   // once per row) and the bar.
@@ -1505,6 +1620,34 @@ Object.assign(FLOW_MARKERS, {
     { n: 21, find: ">Choose your opinion on #saltmaps</button>", tag: "button" },
     { n: 22, find: 'aria-label="Tag a new post with it"', tag: "button" },
     ...nav(23),
+  ],
+  /* History a moment after a hide (item 83): the top viewport of the same
+     page — the header trio, the day divider, the comment card and the post
+     whose ⋮ the hide was made from — so each element keeps History's own
+     number; the snackbar's Undo takes the next free one after the subset. */
+  HistoryHidden: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">Search your history<", tag: "div" },
+    { n: 3, find: 'what your history shows"', tag: "button" },
+    { n: 4, find: 'aria-label="On “', tag: "button" },
+    { n: 5, find: '<a href="/u/', tag: "a", all: true },
+    { n: 6, find: 'aria-label="More on this comment"', tag: "button" },
+    { n: 7, find: ">That stretch after the second bend", tag: "a" },
+    { n: 8, find: '<a href="/t/', tag: "a", all: true },
+    { n: 9, find: 'aria-label="Give your opinion on this comment"', tag: "button" },
+    { n: 9, find: ">Choose your opinion on this comment</button>", tag: "button" },
+    { n: 9, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
+    { n: 9, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
+    { n: 10, find: 'aria-label="Reply to @tobias"', tag: "button" },
+    { n: 11, find: 'aria-label="Share ', tag: "button", all: true },
+    { n: 12, find: ">Feed score</span>", tag: "button", all: true },
+    { n: 13, find: 'aria-label="More on this post"', tag: "button", all: true },
+    { n: 14, find: ">More</button>", tag: "button" },
+    { n: 15, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 16, find: ">· 1 reference<", tag: "button" },
+    { n: 17, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 18, find: ">Undo</button>", tag: "button" },
+    ...nav(19),
   ],
   HistoryEmpty: [{ n: 1, find: 'aria-label="Back to your profile"', tag: "a" }, ...nav(2)],
   /* History narrowed to nothing (the final brief, 2026-10-05). The `cause`
@@ -1577,6 +1720,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Reset</button>", tag: "button" },
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 7, find: ">Done</button>", tag: "button" },
+    // The People rows (ruling 77): one choice, two rows, one number — on
+    // both of the `people` chip's copies.
+    { n: 8, find: 'data-people="everyone"', tag: "label", all: true },
+    { n: 8, find: 'data-people="yourPeople"', tag: "label", all: true },
+    // The sign row under Your people (item 7): one choice, three words, the
+    // next free number. Drawn on the chip's `your-people` copy.
+    { n: 9, find: 'data-sign="', tag: "label", all: true },
   ],
   // Two password fields, one reveal affordance: the toggle is the same control
   // drawn twice, so it carries one number on both — the rule the repeated
@@ -1632,6 +1782,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'aria-label="Show password"', tag: "button" },
     { n: 6, find: ">Create account</button>", tag: "button" },
     { n: 7, find: ">Already have an account? Sign in</button>", tag: "button" },
+    // The two legal doors (jakob 2026-10-09, ruling 76): the accept
+    // sentence's Terms above the commit, the privacy notice at the foot.
+    { n: 9, find: ">Terms</a>", tag: "a" },
+    { n: 10, find: ">Privacy Policy</a>", tag: "a" },
   ],
   SignIn: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
@@ -1685,6 +1839,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'aria-label="Show password"', tag: "button" },
     { n: 6, find: ">Create account</button>", tag: "button" },
     { n: 7, find: ">Already have an account? Sign in</button>", tag: "button" },
+    // The two legal doors, as on Join (jakob 2026-10-09, ruling 76).
+    { n: 8, find: ">Terms</a>", tag: "a" },
+    { n: 9, find: ">Privacy Policy</a>", tag: "a" },
   ],
   SignInError: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
@@ -1835,6 +1992,9 @@ Object.assign(FLOW_MARKERS, {
   // reads by the side chip, so it is found by its hole.
   ChangeEmailLinked: [{ n: 1, find: ">{{linkedWay}}</button>", tag: "button" }],
   ChangeEmailLinkedSignedOut: [{ n: 1, find: ">Sign in</button>", tag: "button" }],
+  // The deletion link's dead landing (ER-G1): one way on, its label the
+  // session chip's hole.
+  DeleteLinkExpired: [{ n: 1, find: ">{{deadWay}}</button>", tag: "button" }],
   SettingsEmailPending: [{ n: 1, find: ">Email</span>", tag: "button" }],
   // The deletion's confirmation landing, its grace on settings, and the
   // screen the row then opens.
@@ -2346,7 +2506,7 @@ Object.assign(FLOW_MARKERS, {
    surface's gap (guest boards: the guest gate's). */
 const BAND_CHATS = {
   Main: 18, FeedBare: 18, ApplicantFeed: 18, ApplicantWaiting: 15,
-  ApplicantRejected: 15, ApplicantLanding: 15,
+  ApplicantRejected: 15, ApplicantLanding: 15, ApplicantFellThrough: 15,
   VouchBack: 18, KeyElsewhere: 17, ComposeExpired: 18, Explore: 8,
   Feed: 16, FeedUnread: 16, FeedScrolled: 16, FeedDeleting: 16, DeleteAccountCanceled: 16,
   FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedHidden: 15, FeedTopic: 15,
@@ -2365,7 +2525,7 @@ for (const [board, n] of Object.entries(BAND_CHATS)) {
    name and carries its marker in its own list above. */
 const BAND_BELL = {
   ApplicantFeed: 20, ApplicantWaiting: 18, VouchBack: 20, KeyElsewhere: 19,
-  ApplicantRejected: 18, ApplicantLanding: 18,
+  ApplicantRejected: 18, ApplicantLanding: 18, ApplicantFellThrough: 18,
   ComposeExpired: 20, Explore: 9,
   Feed: 18, FeedScrolled: 18, FeedDeleting: 18, DeleteAccountCanceled: 18,
   FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17, FeedHidden: 17, FeedTopic: 17,
@@ -2383,7 +2543,7 @@ for (const [board, n] of Object.entries(BAND_BELL)) {
    the platform's own sheet. */
 const CARD_SHARE = {
   Main: 19, FeedBare: 19, ApplicantFeed: 19, ApplicantWaiting: 16, VouchBack: 19,
-  ApplicantRejected: 16, ApplicantLanding: 16,
+  ApplicantRejected: 16, ApplicantLanding: 16, ApplicantFellThrough: 16,
   KeyElsewhere: 18, Feed: 17, FeedUnread: 17, FeedDeleting: 17, DeleteAccountCanceled: 17,
   FeedNarrowed: 17, FeedScrolled: 17, FeedFar: 17, FeedGallery: 16, FeedHidden: 16, FeedTopic: 16,
   FeedCover: 18, ComposeExpired: 19, ComposeLanded: 14, Removed: 11, ProfilePosts: 21, FeedWordsSensitive: 17,
@@ -2437,6 +2597,12 @@ const tagPageBody = ({ topicStance }) => [
 
 Object.assign(FLOW_MARKERS, {
   TagPage: tagPageBody({ topicStance: 'aria-label="Give your opinion on #saltmaps"' }),
+  /* The page a moment after a hide (item 83): the same body, so the same
+     markers; the snackbar's Undo takes the next free number. */
+  TagPageHidden: [
+    ...tagPageBody({ topicStance: 'aria-label="Give your opinion on #saltmaps"' }),
+    { n: 16, find: ">Undo</button>", tag: "button" },
+  ],
   /* The same page with the topic held \u2014 the same markers, one find apart: an
      anchor with a bundle behind it says so in its own accessible name. */
   TagPageHeld: tagPageBody({ topicStance: 'aria-label="Your opinion on #saltmaps' }),
@@ -2721,6 +2887,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: ">Make a recovery code</button>", tag: "button" },
     { n: 2, find: ">Sign out, keep them locked</button>", tag: "button" },
     { n: 3, find: ">Erase them and sign out</button>", tag: "button" },
+    { n: 4, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  // scanExempt like every dialog board: the settings page beneath is wired on
+  // `Settings`. The erase is drawn once per backup chip value — one control
+  // in two states, so one number.
+  EraseConfirm: [
+    { n: 1, find: ">Make a recovery code</button>", tag: "button" },
+    { n: 2, find: ">Erase everything and sign out</button>", tag: "button", all: true },
+    { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   // scanExempt like every dialog board: the backup screen beneath is wired on

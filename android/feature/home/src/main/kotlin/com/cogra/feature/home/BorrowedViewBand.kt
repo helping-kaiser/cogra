@@ -12,13 +12,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
+import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.v2.atom.BorrowedViewBand
 import com.cogra.domain.AccountState
 import com.cogra.domain.ActorRef
 import com.cogra.domain.Outcome
+import com.cogra.domain.deletion.AccountDeletionState
+import com.cogra.domain.deletion.bandDeletion
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.signing.RegistrationFlow
 import com.cogra.domain.signing.RegistrationProgress
+import com.cogra.domain.stance.StanceSignals
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,8 +45,8 @@ enum class BorrowedViewReading {
     /** Mid-application: nothing to do but wait, so it explains. */
     APPLICANT,
 
-    /** Landed, not yet pointed back: the act that ends it is named. */
-    VOUCH_BACK,
+    /** Landed, no opinion signed yet: it asks for nothing (VouchBack.md:13, :17). */
+    MEMBER,
 }
 
 data class BorrowedViewUiState(
@@ -50,6 +54,11 @@ data class BorrowedViewUiState(
     /** Whose view this reader browses from; null once their own exists. */
     val vantage: ActorRef? = null,
     val reading: BorrowedViewReading = BorrowedViewReading.JOIN,
+    /**
+     * The deletion band stands, so this one does not (ER-G4;
+     * `FeedDeleting.md:13`) — read off [bandDeletion], the one arbitration.
+     */
+    val yieldsToDeletion: Boolean = false,
 )
 
 /**
@@ -59,8 +68,9 @@ data class BorrowedViewUiState(
  * the band is not.
  *
  * WHETHER a band shows is the server's call — `borrowedView` answers null
- * the moment the reader's own view exists — and this asks the account
- * state only to pick the wording. Keeping the rule on one side is what
+ * the moment the reader's own view exists, their first signed opinion
+ * toward anyone (VouchBack.md:21) — and this asks the account state only
+ * to pick the wording. Keeping the rule on one side is what
  * stopped the applicant band from existing on one platform and not the
  * other, so the account read is deliberately downstream of the vantage:
  * no vantage, no second question.
@@ -68,11 +78,19 @@ data class BorrowedViewUiState(
  * A transport failure leaves the vantage null and the band away. The band
  * is an honesty label over a feed the reader is already reading, so a
  * failed read must not put a name on screen that nothing answered for.
+ *
+ * SO IT RE-READS WHEN A STANCE IS SIGNED, on any surface ([StanceSignals]):
+ * the band leaves at once and the feed reads the own view from its next
+ * refresh, never a reload at the signing (:21, ruling 57). It re-reads with
+ * the feed's own pull too, which is where a first opinion that expired with
+ * nothing landed brings it back (:23).
  */
 @HiltViewModel
 class BorrowedViewViewModel @Inject constructor(
     private val account: AccountRepository,
     registration: RegistrationFlow,
+    signals: StanceSignals,
+    deletion: AccountDeletionState,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(BorrowedViewUiState())
@@ -81,14 +99,25 @@ class BorrowedViewViewModel @Inject constructor(
     private var signedIn = false
 
     init {
-        // Landing does not end the borrowing — the vouch-back does — but it
-        // does change the reading, and it can happen while this feed is on
-        // screen. The flow reports it, so the line changes with the landing
-        // instead of on the next app open.
+        // The deletion band wins the top while a grace runs (ER-G4); the
+        // vantage is still read, so the band returns the moment a cancel
+        // takes the deletion band away.
+        viewModelScope.launch {
+            deletion.standing.collect { standing ->
+                _state.update { it.copy(yieldsToDeletion = standing.bandDeletion() != null) }
+            }
+        }
+        // Landing does not end the borrowing — the first signed opinion
+        // does — but it does change the reading, and it can happen while
+        // this feed is on screen. The flow reports it, so the line changes
+        // with the landing instead of on the next app open.
         viewModelScope.launch {
             registration.progress.collect { progress ->
                 if (progress is RegistrationProgress.Member) refresh()
             }
+        }
+        viewModelScope.launch {
+            signals.signed.collect { refresh() }
         }
     }
 
@@ -109,7 +138,7 @@ class BorrowedViewViewModel @Inject constructor(
                 null
             }
             _state.update {
-                BorrowedViewUiState(
+                it.copy(
                     loading = false,
                     vantage = vantage,
                     reading = readingFor(signedIn, accountState),
@@ -122,12 +151,12 @@ class BorrowedViewViewModel @Inject constructor(
 /**
  * An unknown account state reads as the applicant's line rather than the
  * member's: it is the weaker claim of the two — it says the application is
- * under way, where the vouch-back line asks for an act the reader may not
- * be able to perform yet.
+ * under way, where the member's line says the reader's own view is theirs
+ * to start.
  */
 internal fun readingFor(signedIn: Boolean, accountState: AccountState?): BorrowedViewReading = when {
     !signedIn -> BorrowedViewReading.JOIN
-    accountState == AccountState.MEMBER -> BorrowedViewReading.VOUCH_BACK
+    accountState == AccountState.MEMBER -> BorrowedViewReading.MEMBER
     else -> BorrowedViewReading.APPLICANT
 }
 
@@ -136,18 +165,21 @@ private fun <T> Outcome<T>.valueOrNull(): T? = (this as? Outcome.Success)?.value
 /**
  * The band as a read surface's collapsing top wears it.
  *
- * The action rides the guest's reading alone. The other two name an act
- * the reader performs elsewhere — the application runs itself, and the
- * vouch-back has its own card in the banner stack below — and one act
- * offered by two controls on one screen is the ambiguity §2.4 refuses.
+ * The action rides the guest's reading alone. The applicant's application
+ * runs itself, and the member's band asks for nothing (VouchBack.md:17) —
+ * the vouch card below is where the vouch-back is offered.
+ *
+ * [refreshSignal] is the feed's own pull, counted: each new value re-reads.
  */
 @Composable
 fun BorrowedViewBandRoute(
     signedIn: Boolean,
     onSignInOrJoin: () -> Unit,
+    refreshSignal: Int = 0,
     viewModel: BorrowedViewViewModel = hiltViewModel(),
 ) {
     LaunchedEffect(signedIn) { viewModel.onSession(signedIn) }
+    LaunchedEffect(refreshSignal) { if (refreshSignal > 0) viewModel.refresh() }
     val state by viewModel.state.collectAsStateWithLifecycle()
     BorrowedViewBanner(state, onSignInOrJoin)
 }
@@ -157,9 +189,10 @@ fun BorrowedViewBanner(
     state: BorrowedViewUiState,
     onSignInOrJoin: () -> Unit,
 ) {
-    if (state.loading) return
+    if (state.loading || state.yieldsToDeletion) return
     val vantage = state.vantage ?: return
     val guest = state.reading == BorrowedViewReading.JOIN
+    val member = state.reading == BorrowedViewReading.MEMBER
     BorrowedViewBand(
         handle = vantage.handle,
         displayName = vantage.displayName,
@@ -170,7 +203,7 @@ fun BorrowedViewBanner(
             when (state.reading) {
                 BorrowedViewReading.JOIN -> DesignSystemR.string.borrowed_view_join
                 BorrowedViewReading.APPLICANT -> DesignSystemR.string.borrowed_view_applicant
-                BorrowedViewReading.VOUCH_BACK -> DesignSystemR.string.borrowed_view_vouch_back
+                BorrowedViewReading.MEMBER -> DesignSystemR.string.borrowed_view_member
             },
             vantage.handle,
         ),
@@ -181,5 +214,8 @@ fun BorrowedViewBanner(
         },
         onAction = if (guest) onSignInOrJoin else null,
         testTag = "home_borrowed_view",
+        // The member's band is the one a registered board draws (VouchBack);
+        // the guest's and the applicant's keep their own tags.
+        node = if (member) DataNode("feed") / "borrowedViewBand" else null,
     )
 }

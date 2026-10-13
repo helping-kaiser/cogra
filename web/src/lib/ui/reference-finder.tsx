@@ -6,7 +6,7 @@
 // once to a stable lookup, which slice 2.7 replaces underneath without
 // touching this component.
 //
-// Exact-match resolution only today. An empty or unresolvable query
+// The lookup rides the one search matcher. An empty or unresolvable query
 // answers with an empty list rather than an error, because a finder runs
 // on every keystroke and most of what it is asked is a prefix of
 // something still being typed — so a miss is silent, never an error line.

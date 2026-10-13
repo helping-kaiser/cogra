@@ -269,9 +269,12 @@ class IdentityStoreImpl @Inject constructor(
         // The explicit sign-out's set: the slot AND the account's draft
         // (custody packet F2 — the draft lives under its own prefix, so a
         // walk of the slot alone left it behind), together in one edit.
+        // A staged post's sealed copy is the draft it was written from,
+        // held until the write lands or expires (FC-G5) — it goes too.
         val slot = scoped(account, "")
         val draft = composeDraftKey(account)
-        store.removeAll { it.startsWith(slot) || it == draft }
+        val sealed = composeSealedPrefix(account)
+        store.removeAll { it.startsWith(slot) || it == draft || it.startsWith(sealed) }
     }
 
     private companion object {
