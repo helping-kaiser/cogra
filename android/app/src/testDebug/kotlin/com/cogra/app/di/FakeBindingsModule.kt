@@ -30,7 +30,9 @@ import com.cogra.domain.settings.EmailChangeLinkCheck
 import com.cogra.domain.settings.PendingEmailChange
 import com.cogra.domain.settings.SettingsAccount
 import com.cogra.domain.settings.SettingsRepository
+import com.cogra.domain.store.DeviceData
 import com.cogra.domain.store.DevicePreferences
+import com.cogra.domain.testing.FakeDeviceData
 import com.cogra.domain.testing.FakeDevicePreferences
 import com.cogra.domain.testing.ThrowingMediaRepository
 import com.cogra.domain.ActorRef
@@ -611,6 +613,17 @@ object FakeBindingsModule {
 
     @Provides
     fun devicePreferences(fake: FakeDevicePreferences): DevicePreferences = fake
+
+    @Provides
+    @Singleton
+    fun fakeDeviceData(
+        tokens: FakeTokenStore,
+        identity: FakeIdentityStore,
+        preferences: FakeDevicePreferences,
+    ): FakeDeviceData = FakeDeviceData(tokens, identity, preferences)
+
+    @Provides
+    fun deviceData(fake: FakeDeviceData): DeviceData = fake
 
     // Seeing answers success: the navigation tests render the feed signed
     // in, and the seen tracker writes behind every screenful.

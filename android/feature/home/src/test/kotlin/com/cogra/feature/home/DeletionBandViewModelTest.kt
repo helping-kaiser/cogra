@@ -108,6 +108,23 @@ class DeletionBandViewModelTest {
     }
 
     @Test
+    fun `at_the_deadline_the_standing_is_read_again_and_not_before`() = runTest(dispatcher) {
+        // ER-G6: the server's answer at the deadline decides whether it ran.
+        val soon = AccountDeletion(now.plusSeconds(3_600), includesContent = false)
+        deletions.standing = Outcome.Success(DeletionStanding(AccountDeletionPath.BY_LINK, soon))
+        val vm = viewModel()
+        vm.onSession(signedIn = true)
+        dispatcher.scheduler.runCurrent()
+        val reads = deletions.standingReads
+        dispatcher.scheduler.advanceTimeBy(3_599_000)
+        dispatcher.scheduler.runCurrent()
+        assertThat(deletions.standingReads).isEqualTo(reads)
+        dispatcher.scheduler.advanceTimeBy(2_000)
+        dispatcher.scheduler.runCurrent()
+        assertThat(deletions.standingReads).isEqualTo(reads + 1)
+    }
+
+    @Test
     fun `a_cancel_pressed_elsewhere_takes_this_band_away_too`() = runTest(dispatcher) {
         val vm = viewModel()
         vm.onSession(signedIn = true)

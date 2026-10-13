@@ -12,6 +12,8 @@
 
 package com.cogra.feature.settings
 
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -45,6 +47,7 @@ import com.cogra.core.designsystem.dataNodeSurface
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.QuietNote
+import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.dateLine
 import com.cogra.domain.deletion.AccountDeletion
@@ -72,11 +75,13 @@ sealed interface ConfirmedLanding {
     data object Unreachable : ConfirmedLanding
 
     /**
-     * The link was refused — a dead link is one `DELETION_TOKEN_INVALID`
-     * whatever the cause. Its own landing waits on a design ruling (ER-G1),
-     * so the landing says only that it did not go through, and offers the
-     * way on.
+     * A dead link — one `DELETION_TOKEN_INVALID` whatever the cause (used,
+     * replaced, canceled, unknown): DeleteLinkExpired, the one landing that
+     * never says which happened (ER-G1).
      */
+    data object Dead : ConfirmedLanding
+
+    /** Any other refusal: it did not go through, and the way on. */
     data object Refused : ConfirmedLanding
 }
 
@@ -181,7 +186,10 @@ class DeleteAccountConfirmedViewModel @Inject constructor(
         // A confirm answers the deletion it confirmed; none is a server fault.
         is Outcome.Success -> outcome.value?.let { ConfirmedLanding.Confirmed(it) } ?: ConfirmedLanding.Unreachable
         is Outcome.Failed -> ConfirmedLanding.Unreachable
-        is Outcome.Refused -> ConfirmedLanding.Refused
+        is Outcome.Refused -> when {
+            outcome.refusedWith(ErrorCode.DELETION_TOKEN_INVALID) -> ConfirmedLanding.Dead
+            else -> ConfirmedLanding.Refused
+        }
     }
 }
 
@@ -191,6 +199,8 @@ fun DeleteAccountConfirmedRoute(
     signedIn: Boolean,
     onGoToFeed: () -> Unit,
     onSignIn: () -> Unit,
+    /** The dead link's way on with a session (DeleteLinkExpired.md:17). */
+    onBackToSettings: () -> Unit,
     viewModel: DeleteAccountConfirmedViewModel = hiltViewModel(),
 ) {
     LaunchedEffect(token, signedIn) { viewModel.start(token, signedIn) }
@@ -212,6 +222,7 @@ fun DeleteAccountConfirmedRoute(
         onRetry = viewModel::onRetry,
         onGoToFeed = onGoToFeed,
         onSignIn = onSignIn,
+        onBackToSettings = onBackToSettings,
         snackbar = snackbar,
     )
 }
@@ -232,9 +243,14 @@ fun DeleteAccountConfirmedScreen(
     onRetry: () -> Unit,
     onGoToFeed: () -> Unit,
     onSignIn: () -> Unit,
+    onBackToSettings: () -> Unit = {},
     snackbar: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     if (state.landing == ConfirmedLanding.Loading) return
+    if (state.landing == ConfirmedLanding.Dead) {
+        DeadLinkLanding(signedIn = signedIn, onBackToSettings = onBackToSettings, onSignIn = onSignIn)
+        return
+    }
     val page = DeleteAccountPage
     Scaffold(
         modifier = Modifier.dataNodeSurface(),
@@ -259,7 +275,7 @@ fun DeleteAccountConfirmedScreen(
                     )
                 }
                 ConfirmedLanding.Refused -> Lead(stringResource(R.string.settings_save_failed))
-                ConfirmedLanding.Loading -> Unit
+                ConfirmedLanding.Loading, ConfirmedLanding.Dead -> Unit
             }
             if (!signedIn) {
                 Spacer(Modifier.height(24.dp))
@@ -278,6 +294,48 @@ fun DeleteAccountConfirmedScreen(
                     .dataNode(page / "onward"),
             )
         }
+    }
+}
+
+/**
+ * DeleteLinkExpired (`DeleteLinkExpired.jsx`, `.md`; ER-G1): the dead-link
+ * family's heading, a body that never says which happened, names no address
+ * and claims no expiry, and one way on — `Back to settings` with a session,
+ * where the deletion's state reads as it stands, `Sign in` without, holding
+ * no link. No header, no arrow, no mark, no Resend: nothing is scheduled and
+ * nothing deleted. System Back leaves to wherever the mail link was opened
+ * from, never to a CoGra screen in its place (`:23`) — the task goes to the
+ * back, so the mail app the link came from is what shows.
+ */
+@Composable
+private fun DeadLinkLanding(signedIn: Boolean, onBackToSettings: () -> Unit, onSignIn: () -> Unit) {
+    val activity = LocalActivity.current
+    BackHandler { activity?.moveTaskToBack(true) }
+    val page = DeleteAccountPage
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .dataNodeSurface()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp, vertical = 32.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.delete_dead_title),
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier
+                .semantics { heading() }
+                .dataNode(page / "title"),
+        )
+        Lead(stringResource(R.string.delete_dead_body))
+        Spacer(Modifier.height(24.dp))
+        CograButton(
+            text = stringResource(if (signedIn) R.string.back_to_settings else R.string.linked_sign_in),
+            onClick = if (signedIn) onBackToSettings else onSignIn,
+            kind = ButtonKind.Text,
+            modifier = Modifier
+                .fillMaxWidth()
+                .dataNode(page / "onward"),
+        )
     }
 }
 

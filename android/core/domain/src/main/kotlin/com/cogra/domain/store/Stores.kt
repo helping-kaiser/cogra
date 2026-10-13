@@ -155,8 +155,9 @@ interface IdentityStore {
     /**
      * The explicit sign-out's purge (Settings.md "Sign out" with the
      * don't-remember switch on): the account's whole custody set — its
-     * slot AND its compose draft — in ONE atomic edit, so a process death
-     * can never leave a half-cleared account behind.
+     * slot, its compose draft and its seen record (ids and sync watermark;
+     * the server's view log is untouched) — in ONE atomic edit, so a
+     * process death can never leave a half-cleared account behind.
      */
     suspend fun purgeCustodySet()
 }
@@ -187,6 +188,22 @@ interface DevicePreferences {
     val showExactValues: Flow<Boolean>
 
     suspend fun setShowExactValues(value: Boolean)
+}
+
+/**
+ * Everything CoGra keeps on this device (Settings.md "Clearing data";
+ * EraseConfirm.md:21): every account's key and custody material, the drafts
+ * and their sealed copies, the choices kept on this device, the session's
+ * tokens, and the seen list's copy with its sync watermark — one value under
+ * `seen_record:<account>`, so the two go together and the next sign-in
+ * re-seeds the record from the server's view log.
+ */
+interface DeviceData {
+    /**
+     * Erases all of it in ONE atomic edit, so a process death can never
+     * leave a half-erased device. It touches no wire.
+     */
+    suspend fun eraseEverything()
 }
 
 /**

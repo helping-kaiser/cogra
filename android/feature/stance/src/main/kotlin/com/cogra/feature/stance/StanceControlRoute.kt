@@ -74,6 +74,8 @@ fun StanceControlRoute(
      * also answer: the ceremony replaces it (VouchBackPad.md:33).
      */
     onTaken: (() -> Unit)? = null,
+    /** The vouch card's empty face wears full ink; see [StanceControl]. */
+    fullInkEmpty: Boolean = false,
     viewModel: StanceViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -148,6 +150,7 @@ fun StanceControlRoute(
         node = node,
         variant = variant,
         padOnly = padOnly,
+        fullInkEmpty = fullInkEmpty,
     )
 }
 

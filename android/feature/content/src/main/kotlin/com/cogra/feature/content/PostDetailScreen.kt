@@ -119,6 +119,8 @@ fun PostDetailRoute(
     onCommentsReturnConsumed: () -> Unit = {},
     /** The reader's place, on the way out to a composer. */
     onCommentsDepart: (CommentsScroll) -> Unit = {},
+    /** The deletion band, while the account's confirmed deletion is in its grace (`FeedDeleting.md:3`). */
+    deletionBand: @Composable () -> Unit = {},
     viewModel: PostDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -146,6 +148,7 @@ fun PostDetailRoute(
     PostDetailScreen(
         state = state,
         viewerId = viewerId,
+        deletionBand = deletionBand,
         onRefresh = {
             threadToken++
             viewModel.refresh()
@@ -248,6 +251,7 @@ fun PostDetailScreen(
      * exactly what the feed supplies.
      */
     commentsSheet: @Composable (onDismiss: () -> Unit) -> Unit = {},
+    deletionBand: @Composable () -> Unit = {},
 ) {
     val snackbar = remember { SnackbarHostState() }
     // THE LICENSE IS NEVER A STATE OF THE CARD (`ReaderPostMenu.jsx:27-29`):
@@ -293,40 +297,44 @@ fun PostDetailScreen(
                 // here). A bar that leaves with the scroll takes the post's
                 // whole set of acts off screen mid-read, which is not a cost
                 // the collapse was ever meant to buy.
-                TopAppBar(
-                    // The 48dp band every board draws (`spacing.css`
-                    // `--top-bar-height`, `PageHeader.jsx`); M3's small bar
-                    // defaults to 64dp, which is a rung the design does not
-                    // have. `expandedHeight` is the documented way to set it.
-                    expandedHeight = Layout.TopBarHeight,
-                    colors = surfaceTopAppBarColors(),
-                    modifier = Modifier.dataNode(header),
-                    // No title in the band: the post's title is the card's
-                    // heading, above its media (`_shared.jsx:287-289` — the
-                    // detail header takes no title prop).
-                    title = {},
-                    navigationIcon = {
-                        IconButton(onClick = onBack, modifier = Modifier.dataNode(header / "back")) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.content_back),
+                Column {
+                    TopAppBar(
+                        // The 48dp band every board draws (`spacing.css`
+                        // `--top-bar-height`, `PageHeader.jsx`); M3's small bar
+                        // defaults to 64dp, which is a rung the design does not
+                        // have. `expandedHeight` is the documented way to set it.
+                        expandedHeight = Layout.TopBarHeight,
+                        colors = surfaceTopAppBarColors(),
+                        modifier = Modifier.dataNode(header),
+                        // No title in the band: the post's title is the card's
+                        // heading, above its media (`_shared.jsx:287-289` — the
+                        // detail header takes no title prop).
+                        title = {},
+                        navigationIcon = {
+                            IconButton(onClick = onBack, modifier = Modifier.dataNode(header / "back")) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = stringResource(R.string.content_back),
+                                )
+                            }
+                        },
+                        actions = {
+                            DetailMenu(
+                                post = state.post,
+                                viewerId = viewerId,
+                                onEdit = onEdit,
+                                onCite = onReference,
+                                onRemove = { removeOpen = true },
+                                // Over the page — never stacked.
+                                onLicense = { license -> licenseShown = license },
+                                onShare = share,
+                                node = header / "menu",
                             )
-                        }
-                    },
-                    actions = {
-                        DetailMenu(
-                            post = state.post,
-                            viewerId = viewerId,
-                            onEdit = onEdit,
-                            onCite = onReference,
-                            onRemove = { removeOpen = true },
-                            // Over the page — never stacked.
-                            onLicense = { license -> licenseShown = license },
-                            onShare = share,
-                            node = header / "menu",
-                        )
-                    },
-                )
+                        },
+                    )
+                    // Directly under the pinned bar, pinned with it (FeedDeleting.md:5).
+                    deletionBand()
+                }
             },
         ) { padding ->
             // PULL-TO-REFRESH BELONGS TO THE TOP OF THE THREAD: a reader

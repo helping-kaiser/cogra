@@ -16,9 +16,13 @@
 // words, committed with `Add it to the deletion`; it is never offered the
 // other way. No back arrow — a mail link has no previous screen of ours.
 //
-// A LINK THAT NO LONGER WORKS (DELETION_TOKEN_INVALID) has its own landing in
-// the dead-link family, gated on the erasure packet's ER-G1: nothing is drawn
-// for it here until that rules.
+// A LINK THAT NO LONGER WORKS (DELETION_TOKEN_INVALID, or no token at all)
+// opens the dead-link family's one landing (DeleteLinkExpired.md; ER-G1): the
+// family's heading, a body that never says which happened, names no address
+// and claims no expiry, and one way on — `Back to settings` with a session,
+// where the deletion's state reads as it stands, or `Sign in` without, which
+// holds no link. No mark, no arrow, no Resend: nothing is scheduled and
+// nothing is deleted.
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -60,8 +64,13 @@ type Landing =
   | { kind: "confirmed"; deletion: AccountDeletion }
   | { kind: "rateLimited" }
   | { kind: "unreachable" }
-  /** ER-G1, gated: the dead link's landing is not drawn yet. */
+  /** Used, replaced, canceled or never known: DeleteLinkExpired. */
   | { kind: "dead" };
+
+/** DeleteLinkExpired's words (`DeleteLinkExpired.jsx:46`, `:58-59`; copy-voice "The dead deletion link"). */
+const DEAD_TITLE = "This link doesn't work anymore";
+const DEAD_BODY =
+  "It may have been used already, or a newer request replaced it. If you still mean to delete your account, ask again from settings.";
 
 function landingOf(outcome: Outcome<AccountDeletion>): Landing {
   if (outcome.kind === "success") return { kind: "confirmed", deletion: outcome.value };
@@ -179,6 +188,28 @@ export function DeleteAccountConfirmedView() {
               </Link>
             )}
           </div>
+        </>
+      )}
+
+      {landing.kind === "dead" && (
+        <>
+          <h1 className="m-0 text-headline-small" {...testAttributes(node("title"))}>
+            {DEAD_TITLE}
+          </h1>
+          <p className="m-0 mt-2 text-body-medium text-on-surface-variant" {...testAttributes(node("body"))}>
+            {DEAD_BODY}
+          </p>
+          {phase !== "resolving" && (
+            <div className="mt-6 flex flex-col gap-2">
+              <Link
+                href={signedIn ? "/settings" : "/login"}
+                className={`${buttonClassName({ variant: "text" })} w-full`}
+                {...testAttributes(node("onward"))}
+              >
+                {signedIn ? "Back to settings" : "Sign in"}
+              </Link>
+            </div>
+          )}
         </>
       )}
 

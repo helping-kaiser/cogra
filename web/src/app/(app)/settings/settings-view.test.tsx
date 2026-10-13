@@ -98,14 +98,24 @@ function renderSettings({
   const identity = fakeIdentityStore({ keyOnDevice, seed, ephemeral });
   const drafts = { clear: vi.fn(async () => {}) };
   const seals = { forget: vi.fn(async () => {}) };
+  const forgetSeenRecord = vi.fn<(account: string) => Promise<void>>(async () => {});
+  const erase = vi.fn(async () => {});
+  const leave = vi.fn();
   const tokens = signedInStore();
   const rendered = renderWithProviders(
     <AccountDeletionProvider>
-      <SettingsView store={identity} drafts={drafts} seals={seals} />
+      <SettingsView
+        store={identity}
+        drafts={drafts}
+        seals={seals}
+        forgetSeenRecord={forgetSeenRecord}
+        erase={erase}
+        leave={leave}
+      />
     </AccountDeletionProvider>,
     { store: tokens },
   );
-  return { ...rendered, identity, drafts, seals, tokens };
+  return { ...rendered, identity, drafts, seals, forgetSeenRecord, tokens, erase, leave };
 }
 
 /** The node a registered path names (`data-node.ts`). */
@@ -186,10 +196,10 @@ describe("the settings page", () => {
     const row = screen.getByTestId("settings.ending.delete");
     await waitFor(() => expect(row).toHaveAttribute("aria-disabled", "true"));
     expect(row.className).toContain("opacity-[var(--state-disabled)]");
-    // Still tappable: the tap is how it says why (Settings.md:157-159).
+    // Still tappable: the tap is how it says why (Settings.md:175).
     fireEvent.click(row);
     expect(await screen.findByTestId("settings-snackbar")).toHaveTextContent(
-      "You can delete your account once you're in.",
+      "You can delete your account once your registration lands.",
     );
     expect(push).not.toHaveBeenCalled();
   });
@@ -262,7 +272,8 @@ describe("the settings page", () => {
   it("header_stays_pinned_while_scrolling", async () => {
     renderSettings();
     const header = await screen.findByTestId("settings.header");
-    expect(header.parentElement).toHaveClass("sticky", "top-0");
+    // The header and its band are one block inside the pinned bar.
+    expect(header.closest(".sticky")).toHaveClass("sticky", "top-0");
   });
 
   it("carries no restore card and no collapsing top", async () => {
@@ -763,7 +774,7 @@ describe("signing out", () => {
 
   it("sign_out_remembered_keeps_the_key_and_offers_the_account — and keeps the draft (F4)", async () => {
     server.use(okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }));
-    const { identity, drafts, seals, tokens } = renderSettings();
+    const { identity, drafts, seals, forgetSeenRecord, tokens } = renderSettings();
     await screen.findByTestId("settings.credentials.password.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     await waitFor(() => expect(tokens.accessToken()).toBeNull());
@@ -771,11 +782,13 @@ describe("signing out", () => {
     // A remembered sign-out clears nothing — the draft and its sealed copies included.
     expect(drafts.clear).not.toHaveBeenCalled();
     expect(seals.forget).not.toHaveBeenCalled();
+    // a_remembered_sign_out_keeps_the_record
+    expect(forgetSeenRecord).not.toHaveBeenCalled();
   });
 
   it("sign_out_forgotten_with_a_backup_clears_without_asking", async () => {
     server.use(okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }));
-    const { identity, drafts, seals, tokens } = renderSettings({ ephemeral: true });
+    const { identity, drafts, seals, forgetSeenRecord, tokens } = renderSettings({ ephemeral: true });
     await screen.findByTestId("settings.credentials.password.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     await waitFor(() => expect(tokens.accessToken()).toBeNull());
@@ -784,11 +797,14 @@ describe("signing out", () => {
     expect(drafts.clear).toHaveBeenCalled();
     // A staged post's sealed copy is the draft it came from (Settings.md:145).
     expect(seals.forget).toHaveBeenCalled();
+    // a_dont_remember_sign_out_clears_the_accounts_seen_record: this account's, by id, once.
+    expect(forgetSeenRecord).toHaveBeenCalledTimes(1);
+    expect(forgetSeenRecord).toHaveBeenCalledWith("acct-1");
   });
 
   it("sign_out_forgotten_with_the_only_key_asks_first", async () => {
     server.use(accountHandler({ keyBackupCreatedAt: null }));
-    const { identity, drafts, seals, tokens } = renderSettings({ ephemeral: true });
+    const { identity, drafts, seals, forgetSeenRecord, tokens } = renderSettings({ ephemeral: true });
     await screen.findByTestId("settings.backup.recovery.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     const dialog = await screen.findByTestId("settings.dialog");
@@ -797,6 +813,7 @@ describe("signing out", () => {
     expect(await identity.actorKey()).not.toBeNull();
     expect(drafts.clear).not.toHaveBeenCalled();
     expect(seals.forget).not.toHaveBeenCalled();
+    expect(forgetSeenRecord).not.toHaveBeenCalled();
     // dialog_names_key_draft_and_kept_picks
     expect(within(dialog).getByTestId("settings.dialog.title")).toHaveTextContent("Sign out without a backup?");
     expect(within(dialog).getByTestId("settings.dialog.body")).toHaveTextContent(
@@ -837,7 +854,7 @@ describe("signing out", () => {
       accountHandler({ keyBackupCreatedAt: null }),
       okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }),
     );
-    const { identity, drafts, seals, tokens } = renderSettings({ ephemeral: true });
+    const { identity, drafts, seals, forgetSeenRecord, tokens } = renderSettings({ ephemeral: true });
     await screen.findByTestId("settings.backup.recovery.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     fireEvent.click(await screen.findByTestId("settings.dialog.erase"));
@@ -845,6 +862,7 @@ describe("signing out", () => {
     expect(await identity.actorKey()).toBeNull();
     expect(drafts.clear).toHaveBeenCalled();
     expect(seals.forget).toHaveBeenCalled();
+    expect(forgetSeenRecord).toHaveBeenCalledWith("acct-1");
   });
 
   it("scrim_and_back_close_still_signed_in_focus_on_sign_out", async () => {
@@ -893,5 +911,131 @@ describe("signing out", () => {
     );
     // The delayed sign-out lands inside this test, never the next one's.
     await waitFor(() => expect(tokens.accessToken()).toBeNull());
+  });
+});
+
+describe("clearing data (B6)", () => {
+  const MADE_FOOTNOTE =
+    "Your key lives only in this browser. Clear CoGra's data here and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in.";
+  const NONE_FOOTNOTE =
+    "Your key lives only in this browser, and it has no recovery code yet. Clear CoGra's data here and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in.";
+
+  it("the_footnote_opens_on_the_key_with_a_code_made", async () => {
+    server.use(accountHandler());
+    renderSettings();
+    await screen.findByTestId("settings.backup.recovery.status");
+    expect(screen.getByTestId("settings.clearing.label")).toHaveTextContent("Clearing data");
+    expect(screen.getByTestId("settings.clearing.footnote")).toHaveTextContent(MADE_FOOTNOTE);
+    expect(screen.getByTestId("settings.clearing.erase")).toHaveTextContent("Erase everything from this browser");
+  });
+
+  it("the_footnote_drops_its_condition_with_no_code", async () => {
+    server.use(accountHandler({ keyBackupCreatedAt: null }));
+    renderSettings();
+    await screen.findByTestId("settings.backup.recovery.status");
+    expect(screen.getByTestId("settings.clearing.footnote")).toHaveTextContent(NONE_FOOTNOTE);
+  });
+
+  it("the_row_asks_first_and_nothing_is_erased_before_an_answer", async () => {
+    server.use(accountHandler({ keyBackupCreatedAt: null }));
+    const { identity, tokens, erase, leave } = renderSettings();
+    await screen.findByTestId("settings.backup.recovery.status");
+    fireEvent.click(screen.getByTestId("settings.clearing.erase"));
+    const dialog = await screen.findByTestId("settings.dialog");
+    expect(within(dialog).getByTestId("settings.dialog.title")).toHaveTextContent(
+      "Erase everything from this browser?",
+    );
+    expect(within(dialog).getByTestId("settings.dialog.body")).toHaveTextContent(
+      /^This browser holds the only copy of your key, and it has no recovery code\./,
+    );
+    // No code: Make a recovery code leads, the erase is the quiet answer, no Cancel.
+    expect(byNode("settings.dialog.recovery", "none")).toHaveTextContent("Make a recovery code");
+    expect(byNode("settings.dialog.erase", "none")).toHaveTextContent("Erase everything and sign out");
+    expect(within(dialog).queryByTestId("settings.dialog.cancel")).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(within(dialog).getByTestId("settings.dialog.title"));
+    expect(erase).not.toHaveBeenCalled();
+    expect(leave).not.toHaveBeenCalled();
+    expect(tokens.accessToken()).toBe("access-1");
+    expect(await identity.actorKey()).not.toBeNull();
+  });
+
+  it("with_a_code_made_the_erase_is_quiet_and_cancel_is_filled", async () => {
+    server.use(accountHandler());
+    renderSettings();
+    await screen.findByTestId("settings.backup.recovery.status");
+    fireEvent.click(screen.getByTestId("settings.clearing.erase"));
+    const dialog = await screen.findByTestId("settings.dialog");
+    expect(within(dialog).getByTestId("settings.dialog.body")).toHaveTextContent(
+      /^Your key is erased with everything else, and only your recovery code can bring it back/,
+    );
+    expect(within(dialog).getByTestId("settings.dialog.body")).toHaveTextContent(
+      "What you've seen comes back when you sign in.",
+    );
+    expect(byNode("settings.dialog.erase", "made")).toHaveTextContent("Erase everything and sign out");
+    expect(byNode("settings.dialog.cancel", "made")).toHaveTextContent("Cancel");
+    expect(within(dialog).queryByTestId("settings.dialog.recovery")).not.toBeInTheDocument();
+  });
+
+  it("the_erase_clears_this_browser_ends_the_session_and_lands_on_sign_in_without_a_snackbar", async () => {
+    let revoked = false;
+    server.use(
+      accountHandler(),
+      graphql.mutation("RevokeSession", () => {
+        revoked = true;
+        return HttpResponse.json({
+          data: {
+            revokeSession: {
+              __typename: "RevokeSessionPayload",
+              session: { __typename: "Session", id: "s1" },
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const { tokens, erase, leave } = renderSettings();
+    await screen.findByTestId("settings.backup.recovery.status");
+    fireEvent.click(screen.getByTestId("settings.clearing.erase"));
+    fireEvent.click(byNode("settings.dialog.erase", "made"));
+    await waitFor(() => expect(leave).toHaveBeenCalledWith("/login"));
+    // Revoked while a token still named the session, then wiped, then ended.
+    expect(revoked).toBe(true);
+    expect(erase).toHaveBeenCalledTimes(1);
+    expect(tokens.accessToken()).toBeNull();
+    expect(screen.queryByTestId("settings-snackbar")).not.toBeInTheDocument();
+  });
+
+  it("cancel_the_scrim_and_back_close_still_signed_in", async () => {
+    server.use(accountHandler());
+    const { tokens, erase } = renderSettings();
+    await screen.findByTestId("settings.backup.recovery.status");
+    fireEvent.click(screen.getByTestId("settings.clearing.erase"));
+    fireEvent.click(byNode("settings.dialog.cancel", "made"));
+    await waitFor(() => expect(screen.queryByTestId("settings.dialog")).not.toBeInTheDocument());
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByTestId("settings.clearing.erase")));
+
+    fireEvent.click(screen.getByTestId("settings.clearing.erase"));
+    fireEvent.click(await screen.findByTestId("settings.dialog"));
+    await waitFor(() => expect(screen.queryByTestId("settings.dialog")).not.toBeInTheDocument());
+
+    fireEvent.click(screen.getByTestId("settings.clearing.erase"));
+    const again = await screen.findByTestId("settings.dialog");
+    act(() => {
+      again.dispatchEvent(new Event("cancel", { cancelable: true }));
+    });
+    await waitFor(() => expect(screen.queryByTestId("settings.dialog")).not.toBeInTheDocument());
+    expect(erase).not.toHaveBeenCalled();
+    expect(tokens.accessToken()).toBe("access-1");
+  });
+
+  it("make_a_recovery_code_opens_the_code_and_stays_signed_in", async () => {
+    server.use(accountHandler({ keyBackupCreatedAt: null }));
+    const { tokens, erase } = renderSettings();
+    await screen.findByTestId("settings.backup.recovery.status");
+    fireEvent.click(screen.getByTestId("settings.clearing.erase"));
+    fireEvent.click(byNode("settings.dialog.recovery", "none"));
+    expect(push).toHaveBeenCalledWith("/settings/backup");
+    expect(erase).not.toHaveBeenCalled();
+    expect(tokens.accessToken()).toBe("access-1");
   });
 });

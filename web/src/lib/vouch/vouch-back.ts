@@ -1,5 +1,5 @@
 // THE VOUCH-BACK's words and its pad variant, written once for every place
-// it opens from: the feed's vouch card (VouchBack.md:31) and the profile of the
+// it opens from: the feed's vouch card (VouchBack.md:39) and the profile of the
 // member who vouched the account in (ProfileOther.md:35). Android's twin is
 // `feature/home`'s `VouchBack.kt`; the strings are the boards' verbatim
 // (copy-voice.md, the applicant remainder and the ceremony).
@@ -33,7 +33,12 @@ export const vouchCardBody = (handle: string) =>
   `Vouch back to open the way from your side — your opinion toward @${handle}, and your feed grows from it. Vouching opens the opinion control, set to a gentle default.`;
 
 export const GOT_IT = "Got it";
-export const VOUCH_BACK = "Vouch back";
+/**
+ * The line beside the card's face (`feed.vouchCard.hint`, VouchBack.md:13, :15).
+ * One string for both forms of the card, and it claims nothing about
+ * first-ness — the band's line owns that.
+ */
+export const VOUCH_CARD_HINT = "Tap the face to vouch back.";
 /** A put-away that did not go through says so in the card's row (VouchBack.md:39). */
 export const PUT_AWAY_FAILED = "That didn't go through.";
 export const RETRY = "Retry";

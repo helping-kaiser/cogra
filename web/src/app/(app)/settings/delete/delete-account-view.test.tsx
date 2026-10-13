@@ -112,6 +112,22 @@ describe("DeleteAccount, the member's case (BY_LINK)", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
+  it("a_spent_mail_budget_says_too_many_tries_above_the_commit_and_mails_nothing", async () => {
+    server.use(
+      graphql.mutation("RequestAccountDeletion", () =>
+        HttpResponse.json({ data: null, errors: [{ message: "x", extensions: { code: "RATE_LIMITED" } }] }),
+      ),
+    );
+    renderScreen();
+    fireEvent.click(await screen.findByTestId(byNode("deleteAccount.commit", "member")));
+    // DeleteAccount.md:23 — the line above, the commitment staying.
+    expect(await screen.findByTestId("commit-fault")).toHaveTextContent(
+      "Too many tries. Wait a little, then try again.",
+    );
+    expect(screen.getByTestId(byNode("deleteAccount.commit", "member"))).toHaveTextContent("Send the confirmation link");
+    expect(push).not.toHaveBeenCalled();
+  });
+
   it("sending_reads_late_after_200ms_and_never_spins", async () => {
     server.use(
       graphql.mutation("RequestAccountDeletion", async () => {
@@ -168,6 +184,22 @@ describe("DeleteAccount, the applicant's case (IMMEDIATE)", () => {
     expect(store.hasSession()).toBe(false);
     expect(screen.getByTestId("deletion-snackbar")).toHaveTextContent("Your account is deleted.");
     expect(push).not.toHaveBeenCalledWith(expect.stringContaining("/settings/delete/mail"));
+  });
+
+  it("deleting_reads_late_after_200ms_and_never_spins", async () => {
+    server.use(
+      graphql.mutation("DeleteApplicantAccount", async () => {
+        await delay(600);
+        return HttpResponse.json({ data: null, errors: [{ message: "x", extensions: { code: "FORBIDDEN" } }] });
+      }),
+    );
+    renderScreen();
+    const commit = await screen.findByTestId(byNode("deleteAccount.commit", "applicant"));
+    fireEvent.click(commit);
+    expect(commit).toHaveTextContent("Delete my account");
+    // DeleteAccount.md:37 — the applicant's own present participle, in its place.
+    await waitFor(() => expect(commit).toHaveTextContent("Deleting my account…"), { timeout: 500 });
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
   });
 
   it("delete_with_no_answer_says_so_and_deletes_nothing", async () => {

@@ -137,6 +137,43 @@ class SeenRecordTest {
         assertThat(store.records.getValue("u2").ids).containsExactly("q1")
     }
 
+    /**
+     * A don't-remember sign-out purges the record from the store, THEN the
+     * session ends: the record held in memory must not be written back
+     * by that ending, or the purge is undone.
+     */
+    @Test
+    fun `a record the device purged is not written back when the session ends`() = runTest {
+        signIn("u1")
+        val record = open()
+        record.add("u1", listOf("p1"))
+        runCurrent()
+        assertThat(store.records).containsKey("u1")
+
+        store.records.remove("u1")
+        signOut()
+        runCurrent()
+
+        assertThat(store.records).doesNotContainKey("u1")
+        assertThat(record.seenIds()).isEmpty()
+    }
+
+    @Test
+    fun `a sign out that purged nothing keeps the record for the next sign in`() = runTest {
+        signIn("u1")
+        val record = open()
+        record.add("u1", listOf("p1"))
+        runCurrent()
+
+        signOut()
+        runCurrent()
+        assertThat(store.records.getValue("u1").ids).containsExactly("p1")
+
+        signIn("u1")
+        runCurrent()
+        assertThat(record.seenIds()).containsExactly("p1")
+    }
+
     @Test
     fun `a session less reader has no record and cuts nothing`() = runTest {
         signOut()

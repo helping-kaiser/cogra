@@ -8,17 +8,20 @@
 //
 // `Resend the link` re-calls the request with the choice the request screen
 // recorded (`?content=`, client memory of its checkbox — the erasure packet's
-// reading); the new request supersedes the earlier one. No band stands here:
-// nothing is confirmed. Back and closing change nothing.
+// reading); the new request supersedes the earlier one, and the snackbar names
+// the address it went to (`:13`). A spent mail budget says the drawn line above
+// the Resend instead, which stays and sends nothing (`:15`). No band stands
+// here: nothing is confirmed. Back and closing change nothing.
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import { requestAccountDeletion } from "@/lib/api/deletion-api";
+import { hasCode } from "@/lib/api/outcome";
 import { fetchSettingsAccount } from "@/lib/api/settings-api";
 import { DeletionCommit } from "@/lib/deletion/deletion-commit";
-import { mailBody, NO_ANSWER } from "@/lib/deletion/deletion-copy";
+import { mailBody, NO_ANSWER, resentTo } from "@/lib/deletion/deletion-copy";
 import { useAccountDeletion } from "@/lib/deletion/deletion-status";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { part, type DataNode } from "@/lib/ui/data-node";
@@ -27,7 +30,7 @@ import { TransportError } from "@/lib/ui/transport-error";
 import { QuietNote } from "@/lib/ui2/quiet-note";
 import { useSlowAnswer } from "@/lib/ui2/waiting-commit";
 
-import { NOT_THROUGH, TaskPage } from "../../task-page";
+import { NOT_THROUGH, RATE_LIMITED_LINE, TaskPage } from "../../task-page";
 
 const NODE: DataNode = { path: "deleteAccount" };
 const node = (tail: string) => part(NODE, tail);
@@ -42,6 +45,7 @@ export function DeleteAccountMailView() {
   const [email, setEmail] = useState<string | null>(null);
   const [readFailed, setReadFailed] = useState(false);
   const [resending, setResending] = useState(false);
+  const [fault, setFault] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState<string | null>(null);
   const slow = useSlowAnswer(resending);
   const dismiss = useCallback(() => setSnackbar(null), []);
@@ -56,6 +60,7 @@ export function DeleteAccountMailView() {
   const onResend = async () => {
     if (resending) return;
     setResending(true);
+    setFault(null);
     const outcome = await guard.run(() => requestAccountDeletion(client, includeContent));
     setResending(false);
     if (outcome.kind === "success") {
@@ -63,7 +68,15 @@ export function DeleteAccountMailView() {
         // Confirmed meanwhile: the request changed nothing, and the grace page is where it stands.
         status.setDeletion(outcome.value);
         router.replace("/settings/delete/pending");
+        return;
       }
+      // The snackbar names the address; with none read, nothing is claimed about where it went.
+      if (email !== null) setSnackbar(resentTo(email));
+      return;
+    }
+    // The spent budget's line stands above the Resend, which stays (DeleteAccountMail.md:15).
+    if (hasCode(outcome, "RATE_LIMITED")) {
+      setFault(RATE_LIMITED_LINE);
       return;
     }
     // Offline, the network error answers (DeleteAccountMail.md:25).
@@ -89,7 +102,7 @@ export function DeleteAccountMailView() {
         label="Resend the link"
         busyLabel={slow ? "Resending the link…" : undefined}
         busy={resending}
-        fault={null}
+        fault={fault}
         onCommit={() => void onResend()}
         node={node("resend")}
         variant="outline"

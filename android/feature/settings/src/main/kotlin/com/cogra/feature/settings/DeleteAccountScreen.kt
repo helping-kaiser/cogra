@@ -34,6 +34,7 @@ import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.QuietNote
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.AccountDeletionPath
+import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.deletion.AccountDeletionRepository
 import com.cogra.domain.deletion.AccountDeletionState
@@ -174,15 +175,17 @@ class DeleteAccountViewModel @Inject constructor(
 
 /**
  * The line above the commitment. No answer is the drawn `That didn't send.
- * Try again.`; a refusal the boards draw no line for — the spent mail budget
- * included, whose own line waits on its design ruling — reads the house
- * `That didn't go through.`
+ * Try again.`; a spent deletion mail budget is its own drawn line, the
+ * commitment staying and nothing mailed (ER-G2; `DeleteAccount.md:23`,
+ * `DeleteAccountMail.md:15`); a refusal the boards draw no line for reads
+ * the house `That didn't go through.`
  */
 @StringRes
-internal fun faultOf(outcome: Outcome<*>): Int? = when (outcome) {
-    is Outcome.Success -> null
-    is Outcome.Failed -> R.string.network_error
-    is Outcome.Refused -> R.string.settings_save_failed
+internal fun faultOf(outcome: Outcome<*>): Int? = when {
+    outcome is Outcome.Success -> null
+    outcome is Outcome.Failed -> R.string.network_error
+    outcome.refusedWith(ErrorCode.RATE_LIMITED) -> R.string.rate_limited
+    else -> R.string.settings_save_failed
 }
 
 @Composable
@@ -249,6 +252,7 @@ fun DeleteAccountScreen(
                     label = stringResource(R.string.delete_account_delete),
                     onCommit = onDeleteNow,
                     inFlight = state.inFlight,
+                    inFlightLabel = stringResource(R.string.delete_account_deleting),
                     fault = state.fault?.let { stringResource(it) },
                     node = (page / "commit").keyed("applicant"),
                 )

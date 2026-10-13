@@ -77,7 +77,13 @@ class SeenRecord @Inject constructor(
         data object None : Slot
 
         /** The loaded account's record. Its contents are guarded by [lock]. */
-        class Held(val account: String, val ids: MutableSet<String>, var watermark: SeenWatermark?) : Slot {
+        class Held(
+            val account: String,
+            val ids: MutableSet<String>,
+            var watermark: SeenWatermark?,
+            /** Whether the store has held this account's record since the load. Guarded by [lock]. */
+            var onDisk: Boolean,
+        ) : Slot {
             fun snapshot() = account to StoredSeenRecord(ids.toSet(), watermark)
         }
     }
@@ -186,12 +192,18 @@ class SeenRecord @Inject constructor(
 
     private suspend fun switchTo(account: String?) {
         // The outgoing record is written whole before it is let go.
-        val outgoing = synchronized(lock) {
+        val (held, outgoing) = synchronized(lock) {
             val current = slot.value as? Slot.Held
             slot.value = Slot.Loading
-            current?.snapshot()
+            current to current?.snapshot()
         }
-        writes.withLock { outgoing?.let { (who, record) -> store.save(who, record) } }
+        writes.withLock {
+            // A record the device purged while it was held (a don't-remember
+            // sign-out, an erase) is not written back by the session ending.
+            if (held != null && outgoing != null && !purgedWhileHeld(held)) {
+                store.save(outgoing.first, outgoing.second)
+            }
+        }
         if (account == null) {
             synchronized(lock) {
                 early.clear()
@@ -205,16 +217,22 @@ class SeenRecord @Inject constructor(
             ids.addAllExcept(stored?.ids.orEmpty(), account)
             ids.addAllExcept(early.remove(account).orEmpty(), account)
             early.clear()
-            slot.value = Slot.Held(account, ids, stored?.watermark)
+            slot.value = Slot.Held(account, ids, stored?.watermark, onDisk = stored != null)
         }
         dirty.trySend(Unit)
         // App open or sign-in: the lazy sync, off the feed path.
         scope.launch { sync() }
     }
 
+    /** Whether the store held [held]'s record once and no longer does. */
+    private suspend fun purgedWhileHeld(held: Slot.Held): Boolean =
+        synchronized(lock) { held.onDisk } && store.load(held.account) == null
+
     private suspend fun persist() = writes.withLock {
-        val snapshot = synchronized(lock) { (slot.value as? Slot.Held)?.snapshot() } ?: return@withLock
-        store.save(snapshot.first, snapshot.second)
+        val held = synchronized(lock) { slot.value as? Slot.Held } ?: return@withLock
+        val (who, record) = synchronized(lock) { held.snapshot() }
+        store.save(who, record)
+        synchronized(lock) { held.onDisk = true }
     }
 }
 

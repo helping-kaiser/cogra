@@ -24,14 +24,18 @@ import com.cogra.domain.ForwardUnit
 import com.cogra.domain.Outcome
 import com.cogra.domain.deletion.AccountDeletion
 import com.cogra.domain.deletion.AccountDeletionState
+import com.cogra.domain.deletion.bandDeletion
 import com.cogra.domain.forwardLadder
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Duration
 import java.time.Instant
 import javax.inject.Inject
 
@@ -71,10 +75,15 @@ class DeletionBandViewModel @Inject constructor(
 
     private var signedIn = false
 
+    /** The re-read waiting for the standing deadline. */
+    private var atDeadline: Job? = null
+
     init {
         viewModelScope.launch {
             deletion.standing.collect { standing ->
-                _state.update { it.copy(deletion = standing?.deletion.takeIf { signedIn }, now = clock()) }
+                val band = standing.bandDeletion().takeIf { signedIn }
+                _state.update { it.copy(deletion = band, now = clock()) }
+                awaitDeadline(band)
             }
         }
     }
@@ -83,11 +92,31 @@ class DeletionBandViewModel @Inject constructor(
     fun onSession(signedIn: Boolean) {
         this.signedIn = signedIn
         if (signedIn) {
-            _state.update { it.copy(deletion = deletion.standing.value?.deletion, now = clock()) }
+            val band = deletion.standing.value.bandDeletion()
+            _state.update { it.copy(deletion = band, now = clock()) }
+            awaitDeadline(band)
             refresh()
         } else {
+            atDeadline?.cancel()
             deletion.clear()
             _state.update { it.copy(deletion = null) }
+        }
+    }
+
+    /**
+     * At the deadline the standing is read again, so the server's answer
+     * decides whether the deletion ran (ER-G6): a session the execution
+     * ended is refused, the session ends, and the shell lands the reader on
+     * the bare view ([AccountDeletionState.onSessionEnded]).
+     */
+    private fun awaitDeadline(band: AccountDeletion?) {
+        atDeadline?.cancel()
+        if (band == null) return
+        atDeadline = viewModelScope.launch {
+            val wait = Duration.between(clock(), band.scheduledFor).toMillis()
+            if (wait > 0) delay(wait)
+            _state.update { it.copy(now = clock()) }
+            deletion.refresh()
         }
     }
 
