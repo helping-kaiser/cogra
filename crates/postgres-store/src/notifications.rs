@@ -133,8 +133,10 @@ pub struct NotificationCursor {
 /// Addressees resolve through the L2 registries: a post's or comment's
 /// author through its `l1_node_id`, a profile's account through its
 /// realization address. Only user accounts are addressees; a record never
-/// addresses its own author. Payload-marked records and legs with no
-/// census spec are acts of another kind and never report here.
+/// addresses its own author. A stance record carrying a payload is read
+/// individually, never through its author's bundle (api-spec.md
+/// `Record.payloadMarked`), so it is an act of another kind and reports
+/// nothing here; neither does a leg with no census spec.
 ///
 /// Rows of one epoch take the pass's statement time, offset by each
 /// record's place in the authoritative order, so the list reads an
@@ -142,11 +144,11 @@ pub struct NotificationCursor {
 pub async fn write_for_epoch(conn: &mut PgConnection, epoch: i64) -> Result<u64, sqlx::Error> {
     Ok(sqlx::query!(
         r#"WITH recs AS (
-               SELECT r.record_id, r.family, r.author, a.id AS actor_id,
+               SELECT r.record_id, r.family, r.author, r.payload_marked, a.id AS actor_id,
                       ROW_NUMBER() OVER (ORDER BY r.act_time, r.position) AS ord
                FROM mirror_records r
                JOIN actors a ON a.realization_address = r.author
-               WHERE r.epoch = $1 AND NOT r.payload_marked
+               WHERE r.epoch = $1
            ),
            minting_reviews AS (
                SELECT recs.record_id, recs.actor_id, recs.ord,
@@ -170,6 +172,7 @@ pub async fn write_for_epoch(conn: &mut PgConnection, epoch: i64) -> Result<u64,
                JOIN mirror_record_legs la ON la.record_id = recs.record_id AND la.leg = 'a'
                JOIN mirror_record_legs lt ON lt.record_id = recs.record_id AND lt.leg = 't'
                WHERE recs.family = 'reference'
+                 AND NOT recs.payload_marked
                  AND NOT la.census_unknown AND NOT lt.census_unknown
                  AND NOT (la.p_d = 0 AND la.p_i = 0)
                  AND EXISTS (
@@ -187,6 +190,7 @@ pub async fn write_for_epoch(conn: &mut PgConnection, epoch: i64) -> Result<u64,
                FROM recs
                JOIN mirror_record_legs lb ON lb.record_id = recs.record_id AND lb.leg = 'binary'
                WHERE recs.family = 'opinion'
+                 AND NOT recs.payload_marked
                  AND lb.target LIKE 'prof:%'
                  AND NOT lb.census_unknown
                  AND NOT (lb.p_d = 0 AND lb.p_i = 0)
