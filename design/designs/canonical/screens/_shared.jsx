@@ -4830,6 +4830,31 @@ function VouchBackCard({ body, actions, node }) {
   );
 }
 
+/* THE LINE BESIDE THE VOUCH CARD'S FACE (jakob 2026-10-13, seam 165). The
+   card's act is the stance anchor, and a face alone does not say it is the
+   act — so one line, in the card's own ink at the band line's size, sits
+   right against it and teaches the tap. Written once because both boards of
+   the card draw it, `VouchBack` with the face live and `VouchBackPad` under
+   the wash, and it never claims first-ness: the band's line owns that. */
+function VouchBackHint({ node }) {
+  return (
+    <p
+      style={{
+        margin: 0,
+        minWidth: 0,
+        textAlign: "end",
+        fontSize: "var(--text-body-small)",
+        lineHeight: "var(--text-body-small--line-height)",
+        letterSpacing: "var(--text-body-small--letter-spacing)",
+        color: "var(--on-tertiary-container)",
+      }}
+      data-node={node}
+    >
+      Tap the face to vouch back.
+    </p>
+  );
+}
+
 /* ONE LINE OF A PAD'S NOTE. `VouchBackPad` drew it first and drew it alone;
    the approval pad on the other side of the same handshake draws the identical
    line, so it is written once here rather than twice on two boards that must

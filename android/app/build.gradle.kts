@@ -38,6 +38,21 @@ val webOrigin: String = configured("cogra.webOrigin", "https://cogra.example")
 val webHost: String =
     webOrigin.substringAfter("://").substringBefore("/").substringBefore(":")
 
+// The debug build's identity: today's date and the checkout's short commit, so
+// two installs of the app are told apart in App info and the installer. Both
+// come through Gradle's `providers.exec`, so the configuration cache re-reads
+// them rather than freezing a stale stamp; `safe.directory` is passed on the
+// command line because the checkout is owned by the host. A tree with no git
+// answer stamps "nogit" rather than failing the build.
+val debugStamp: String = run {
+    val date = providers.exec { commandLine("date", "+%Y%m%d") }.standardOutput.asText.get().trim()
+    val commit = providers.exec {
+        commandLine("git", "-c", "safe.directory=*", "rev-parse", "--short=8", "HEAD")
+        isIgnoreExitValue = true
+    }.standardOutput.asText.get().trim().ifEmpty { "nogit" }
+    "-debug-$date-$commit"
+}
+
 // The dev machine's mkcert root CA, staged as a gitignored raw resource by
 // `scripts/stamp-net.sh` so a guest's debug app trusts the https web origin it
 // talks GraphQL to (development.md "Reaching the web dev server from the
@@ -69,6 +84,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            versionNameSuffix = debugStamp
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -107,6 +125,18 @@ tasks.withType<Test>().configureEach {
     inputs.file(file("../../design/tokens/scheme.json"))
         .withPropertyName("designScheme")
         .withPathSensitivity(PathSensitivity.NONE)
+    // SystemBarOwnershipTest reads every module's production sources to pin
+    // the single owner of the system-bar appearance; declared for the same
+    // reason as the token files above.
+    inputs.files(
+        fileTree("..") {
+            include("*/src/main/**/*.kt", "*/*/src/main/**/*.kt")
+            include("*/src/main/res/**/*.xml", "*/*/src/main/res/**/*.xml")
+            exclude("**/build/**")
+        },
+    )
+        .withPropertyName("systemBarSources")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
 }
 
 dependencies {

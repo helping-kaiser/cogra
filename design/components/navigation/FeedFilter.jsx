@@ -42,7 +42,9 @@ import { HelpDot } from "../core/HelpDot.jsx";
    2026-10-01). Chips, the order, the seen toggle and the foot's `Reset` change
    the sheet and nothing else: the feed behind it is visual only and does not
    move.
-   `Done` commits the staged filter and the feed re-queries ONCE; the scrim, a
+   `Done` commits the staged filter: a change to Kinds or the topic re-queries
+   the feed ONCE, and every other axis is the device's own, re-derived from
+   what the feed already holds (jakob 2026-10-13); the scrim, a
    swipe down, system Back and Escape discard it, and the feed is what it was. The reason is
    the ranker's: once it ships, every refetch runs the whole personalized
    ranking, so five taps must never mean five rankings.

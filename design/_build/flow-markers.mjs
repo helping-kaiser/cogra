@@ -125,7 +125,8 @@ export const FLOW_MARKERS = {
   VouchBack: [
     filter,
     { n: 2, find: ">Got it</button>", tag: "button" },
-    { n: 3, find: ">Vouch back</button>", tag: "button" },
+    { n: 3, find: 'aria-label="Give your opinion on @mira"', tag: "button" },
+    { n: 3, find: ">Choose your opinion on @mira</button>", tag: "button" },
     ...post({ author: 4, menu: 5, media: 6, more: 7, topic: 8, refs: 9, stance: 10, score: 11, comments: 12 }),
     ...nav(13),
   ],
