@@ -2768,8 +2768,6 @@ impl Mutation {
             reported_at: None,
             user_errors: vec![UserError::at(code, message, vec!["target".to_string()])],
         };
-        // What the id names is read off the registries, never taken from
-        // the client; a refused target spends no budget and mails nothing.
         let Some(target) = postgres_store::report::target(pool, input.target).await? else {
             return Ok(refuse(
                 ErrorCode::NotFound,
@@ -2786,8 +2784,6 @@ impl Mutation {
             return Err(rate_limited());
         }
         let reported_at = Utc::now();
-        // Best-effort like every mail (mailer.rs): the report is answered
-        // as sent whatever the transport did with it.
         mailer
             .send(crate::report::report_mail(
                 v.user_id,

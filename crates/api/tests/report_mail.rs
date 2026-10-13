@@ -200,10 +200,13 @@ async fn reporting_an_unknown_node_is_not_found_and_mails_nothing(pool: PgPool) 
     }
     assert_eq!(rig.mailer.count(), 0);
 
-    // The refusals spent nothing: the one report the budget holds still goes.
     let sol = person(&rig.pool, "sol").await;
     let target = post(&rig.pool, sol).await;
-    assert_eq!(report(&rig, &token, target).await["userErrors"], json!([]));
+    assert_eq!(
+        report(&rig, &token, target).await["userErrors"],
+        json!([]),
+        "the refusals spent nothing: the one report the budget holds still goes"
+    );
 }
 
 /// A reader's own post is BAD_INPUT at `["target"]` and mails nothing — the
