@@ -73,6 +73,8 @@ describe("icons", () => {
       "check",
       // A Saved row's own Unsave (Saved.jsx; Icon.jsx `bookmark`).
       "bookmark",
+      // The band's bell (CograBand.jsx; Icon.jsx `notifications`).
+      "notifications",
     ];
     expect([...shippedNames()].sort()).toEqual([...needed].sort());
   });
