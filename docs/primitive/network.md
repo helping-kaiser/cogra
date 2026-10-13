@@ -213,8 +213,8 @@ computation. All bucket: baseline.
   epochs.
 - **`recency_shape`** — functional form of `f(Δt)`; the
   exponential is the genesis default.
-- **`tie_breaker_composition`** — order and weights of the
-  tie-breaker cascade.
+- **`tie_breaker_composition`** — the ordered list of named
+  tie-breaker keys.
 
 ### Economics
 
