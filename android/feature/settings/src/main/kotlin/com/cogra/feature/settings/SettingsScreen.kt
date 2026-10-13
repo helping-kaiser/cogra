@@ -5,14 +5,12 @@
 
 package com.cogra.feature.settings
 
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
@@ -20,13 +18,17 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
@@ -206,11 +208,12 @@ fun SettingsScreen(
         topBar = { SettingsTop(state, actions, doors) },
         snackbarHost = { CograSnackbarHost(snackbar, testTag = "settings_snackbar") },
     ) { padding ->
+        val scroll = rememberScrollState()
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scroll)
                 .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
@@ -221,7 +224,7 @@ fun SettingsScreen(
             PeopleGroup()
             SensitiveGroup(state, actions)
             BackupGroup(state, doors)
-            ClearingGroup(state, actions, eraseFocus, clearingInView, onClearingShown)
+            ClearingGroup(state, actions, eraseFocus, ClearingInView(clearingInView, scroll, onClearingShown))
             SessionsGroup(state, actions, sessionFocus)
             CredentialsGroup(state, doors)
             AboutGroup(versionName, doors)
@@ -230,6 +233,23 @@ fun SettingsScreen(
         }
     }
 
+    SettingsDialogs(state, actions)
+    state.licenseSheet?.let { staged ->
+        SettingsLicenseSheet(
+            staged = staged,
+            onStage = actions.onStageLicense,
+            onDone = {
+                actions.onLicenseDone()
+                runCatching { licenseFocus.requestFocus() }
+            },
+            onDismiss = actions.onDismissLicense,
+        )
+    }
+}
+
+/** The two think-twice dialogs over the page: the sign-out ask and the erase (`SettingsOverlays.kt`). */
+@Composable
+private fun SettingsDialogs(state: SettingsUiState, actions: SettingsActions) {
     if (state.signOutConfirmOpen) {
         SignOutConfirm(
             onMakeRecoveryCode = actions.onMakeRecoveryCode,
@@ -243,17 +263,6 @@ fun SettingsScreen(
             onMakeRecoveryCode = actions.onMakeRecoveryCodeFromErase,
             onErase = actions.onEraseEverything,
             onDismiss = actions.onDismissEraseConfirm,
-        )
-    }
-    state.licenseSheet?.let { staged ->
-        SettingsLicenseSheet(
-            staged = staged,
-            onStage = actions.onStageLicense,
-            onDone = {
-                actions.onLicenseDone()
-                runCatching { licenseFocus.requestFocus() }
-            },
-            onDismiss = actions.onDismissLicense,
         )
     }
 }
@@ -570,6 +579,9 @@ private fun BackupGroup(state: SettingsUiState, doors: SettingsDoors) {
     )
 }
 
+/** The "Manage space" ask: whether the group is to be brought into view, and the page's scroll to do it with. */
+private class ClearingInView(val asked: Boolean, val scroll: ScrollState, val onShown: () -> Unit)
+
 /**
  * Clearing data (Settings.md :139-145), after Key backup because the loss
  * it warns of is the key's. The footnote opens on the key and says the
@@ -579,29 +591,32 @@ private fun BackupGroup(state: SettingsUiState, doors: SettingsDoors) {
  * stronger warning is the safe one. The one row is quiet like Sign out, no
  * error colour; the weight lives in the dialog it raises.
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ClearingGroup(
     state: SettingsUiState,
     actions: SettingsActions,
     eraseFocus: FocusRequester,
-    inView: Boolean,
-    onShown: () -> Unit,
+    inView: ClearingInView,
 ) {
     val group = Page / "clearing"
-    // The system's "Manage space" opens settings with this group in view.
-    val inViewRequester = remember { BringIntoViewRequester() }
-    LaunchedEffect(inView) {
-        if (inView) {
-            inViewRequester.bringIntoView()
-            onShown()
+    // The system's "Manage space" opens settings with this group in view: the
+    // page jumps to where the group was placed — once, and without an
+    // animation, so nothing keeps the page in motion behind the reader.
+    var top by remember { mutableIntStateOf(-1) }
+    LaunchedEffect(inView.asked, top) {
+        if (inView.asked && top >= 0) {
+            inView.scroll.scrollTo(top)
+            inView.onShown()
         }
     }
     SettingsGroup(
-        modifier = Modifier.bringIntoViewRequester(inViewRequester),
+        modifier = Modifier.onPlaced { top = it.positionInParent().y.toInt() },
         label = stringResource(R.string.settings_clearing),
         footnote = stringResource(
-            if (state.backupMade) R.string.settings_clearing_footnote_made else R.string.settings_clearing_footnote_none,
+            when {
+                state.backupMade -> R.string.settings_clearing_footnote_made
+                else -> R.string.settings_clearing_footnote_none
+            },
         ),
         node = group,
         rows = listOf(

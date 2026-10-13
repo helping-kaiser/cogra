@@ -111,11 +111,19 @@ class ClearingNavGraphTest {
     @Test
     fun `manage_space_opens_settings_at_clearing_data_and_clears_nothing`() {
         signIn()
+        // The relay's launch intent, cold. The scenario knows its activity by
+        // the intent it started it with, so that one is put back before the
+        // rule closes the scenario — or the close waits forever.
+        val launched = compose.activity.intent
         compose.runOnUiThread { compose.activity.intent = Intent(ACTION_MANAGE_SPACE) }
-        render()
-        waitForRoute<Settings>()
-        waitForTag("settings.clearing")
-        assertThat(deviceData.erases).isEqualTo(0)
-        assertThat(runBlocking { tokens.current() }).isNotNull()
+        try {
+            render()
+            waitForRoute<Settings>()
+            waitForTag("settings.clearing")
+            assertThat(deviceData.erases).isEqualTo(0)
+            assertThat(runBlocking { tokens.current() }).isNotNull()
+        } finally {
+            compose.runOnUiThread { compose.activity.intent = launched }
+        }
     }
 }

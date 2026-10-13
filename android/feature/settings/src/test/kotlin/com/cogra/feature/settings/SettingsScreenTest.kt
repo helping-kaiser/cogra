@@ -564,8 +564,9 @@ class SettingsScreenTest {
                 "picks and the choices kept on this device go too, and you're signed out.",
         )
         assertThat(compose.onAllNodesWithTag("settings.dialog.cancel:none").fetchSemanticsNodes()).isEmpty()
-        node("settings.dialog.recovery:none").assertTextEquals("Make a recovery code").performClick()
-        node("settings.dialog.erase:none").assertTextEquals("Erase everything and sign out").performClick()
+        compose.onNodeWithTag("settings.dialog.recovery:none").assertTextEquals("Make a recovery code").performClick()
+        compose.onNodeWithTag("settings.dialog.erase:none").assertTextEquals("Erase everything and sign out")
+            .performClick()
         assertThat(recovery).isEqualTo(1)
         assertThat(erase).isEqualTo(1)
     }
@@ -584,8 +585,9 @@ class SettingsScreenTest {
                 "this device go too, and you're signed out. What you've seen comes back when you sign in.",
         )
         assertThat(compose.onAllNodesWithTag("settings.dialog.recovery:made").fetchSemanticsNodes()).isEmpty()
-        node("settings.dialog.cancel:made").assertTextEquals("Cancel").performClick()
-        node("settings.dialog.erase:made").performClick()
+        compose.onNodeWithTag("settings.dialog.cancel:made").assertTextEquals("Cancel").performClick()
+        compose.onNodeWithTag("settings.dialog.erase:made").assertTextEquals("Erase everything and sign out")
+            .performClick()
         assertThat(cancel).isEqualTo(1)
         assertThat(erase).isEqualTo(1)
     }
