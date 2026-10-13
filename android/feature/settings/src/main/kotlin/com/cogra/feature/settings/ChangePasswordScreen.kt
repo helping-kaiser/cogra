@@ -124,12 +124,14 @@ private val Page = DataNode("changePassword")
 fun ChangePasswordRoute(
     onBack: () -> Unit,
     onDone: (notice: String) -> Unit,
+    /** The deletion band under the header, while a confirmed deletion runs its grace. */
+    deletionBand: @Composable () -> Unit = {},
     viewModel: ChangePasswordViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val notice = stringResource(R.string.change_password_done)
     LaunchedEffect(state.done) { if (state.done) onDone(notice) }
-    ChangePasswordScreen(state, onBack, viewModel::onCurrent, viewModel::onNew, viewModel::onCommit)
+    ChangePasswordScreen(state, onBack, viewModel::onCurrent, viewModel::onNew, viewModel::onCommit, deletionBand)
 }
 
 @Composable
@@ -139,6 +141,7 @@ fun ChangePasswordScreen(
     onCurrent: (String) -> Unit,
     onNew: (String) -> Unit,
     onCommit: () -> Unit,
+    deletionBand: @Composable () -> Unit = {},
 ) {
     TaskPage(
         node = Page,
@@ -146,6 +149,7 @@ fun ChangePasswordScreen(
         onBack = onBack,
         title = stringResource(R.string.change_password_title),
         lead = stringResource(R.string.change_password_lead),
+        deletionBand = deletionBand,
     ) {
         Spacer(Modifier.height(32.dp))
         CograPasswordField(

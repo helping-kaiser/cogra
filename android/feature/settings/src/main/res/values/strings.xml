@@ -138,6 +138,8 @@
     <string name="delete_account_sending">Sending the confirmation link…</string>
     <string name="delete_account_note">Nothing is deleted until you open that link. After that it runs in seven days, and you can cancel from any device until it does.</string>
     <string name="delete_account_delete">Delete my account</string>
+    <!-- DeleteAccount.md :37 (ER-G12). -->
+    <string name="delete_account_deleting">Deleting my account…</string>
 
     <!-- DeleteAccountMail (DeleteAccountMail.jsx). -->
     <string name="delete_mail_title">Check your mail</string>
@@ -145,6 +147,8 @@
     <string name="delete_mail_note">Until you open it nothing is scheduled and nothing has changed. Closing this screen changes nothing either — the link is the whole of it.</string>
     <string name="delete_mail_resend">Resend the link</string>
     <string name="delete_mail_resending">Resending the link…</string>
+    <!-- DeleteAccountMail.md :13, naming the account's address. -->
+    <string name="delete_mail_resent">Sent again — the link is on its way to %1$s.</string>
 
     <!-- DeleteAccountPending (DeleteAccountPending.jsx). -->
     <string name="delete_pending_body">Your account is deleted in %1$s, on %2$s. Until then nothing has changed, and canceling keeps everything as it is.</string>
@@ -161,6 +165,9 @@
     <string name="delete_confirmed_feed">Go to the feed</string>
     <string name="delete_confirmed_signed_out">You\'re not signed in here, and you don\'t need to be — the link was the proof.</string>
 
+    <!-- DeleteLinkExpired (DeleteLinkExpired.jsx, .md; ER-G1). The way on is back_to_settings or linked_sign_in. -->
+    <string name="delete_dead_title">This link doesn\'t work anymore</string>
+    <string name="delete_dead_body">It may have been used already, or a newer request replaced it. If you still mean to delete your account, ask again from settings.</string>
     <!-- SignOutConfirm -->
     <string name="sign_out_confirm_title">Sign out without a backup?</string>
     <string name="sign_out_confirm_body">This app holds the only copy of your key. Signing out leaves your key, your draft and any opinions you kept pending here, locked until you sign in again. Erase them instead, and no one — including CoGra — can bring them back.</string>

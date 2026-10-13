@@ -146,6 +146,8 @@ private val Page = DataNode("changeHandle")
 fun ChangeHandleRoute(
     onBack: () -> Unit,
     onDone: (notice: String) -> Unit,
+    /** The deletion band under the header, while a confirmed deletion runs its grace. */
+    deletionBand: @Composable () -> Unit = {},
     viewModel: ChangeHandleViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -158,6 +160,7 @@ fun ChangeHandleRoute(
         onCommit = viewModel::onCommit,
         onChangeIt = viewModel::onChangeIt,
         onKeep = viewModel::onKeep,
+        deletionBand = deletionBand,
     )
 }
 
@@ -169,6 +172,7 @@ fun ChangeHandleScreen(
     onCommit: () -> Unit,
     onChangeIt: () -> Unit,
     onKeep: () -> Unit,
+    deletionBand: @Composable () -> Unit = {},
 ) {
     val commitFocus = remember { FocusRequester() }
     TaskPage(
@@ -177,6 +181,7 @@ fun ChangeHandleScreen(
         onBack = onBack,
         title = stringResource(R.string.change_handle_title),
         lead = stringResource(R.string.change_handle_lead, state.current),
+        deletionBand = deletionBand,
     ) {
         Spacer(Modifier.height(32.dp))
         CograTextField(

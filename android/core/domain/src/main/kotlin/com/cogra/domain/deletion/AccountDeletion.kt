@@ -34,6 +34,15 @@ data class DeletionStanding(
     val deletion: AccountDeletion?,
 )
 
+/**
+ * THE ONE BAND ARBITRATION (ER-G4; `FeedDeleting.md:13`, `FeedDeleting.jsx:16-18`,
+ * jakob 2026-10-07): the deletion band stands on exactly this deletion, and
+ * while it stands the borrowed view's band does not — it carries an act and a
+ * deadline, and the borrowed band asks for nothing. Both bands read this one
+ * answer, so no surface arbitrates on its own.
+ */
+fun DeletionStanding?.bandDeletion(): AccountDeletion? = this?.deletion
+
 /** The deletion's calls. Every one is the viewer's own but [confirm], whose token is the capability. */
 interface AccountDeletionRepository {
     /** Null when the session is gone. */
@@ -111,6 +120,22 @@ class AccountDeletionState @Inject constructor(
     /** Forgets the account's standing — the session ended. */
     fun clear() {
         _standing.value = null
+    }
+
+    /**
+     * The session ended. THE DEADLINE, MET WITH A SESSION ON THIS DEVICE
+     * (`FeedDeleting.md:23`; ER-G6), lands like the applicant's deletion —
+     * signed out on the bare view under `Your account is deleted.`, never on
+     * sign-in: the execution ends every session, so a session that ends once
+     * the standing deadline has passed is read as the deletion having run.
+     * This is the client half alone — the refusal does not yet name its
+     * cause (the contract half rides B2) — so a session ending here after the
+     * deadline for any other reason lands the same way. Either way the
+     * standing goes with the session.
+     */
+    fun onSessionEnded(now: Instant) {
+        val deadline = _standing.value?.deletion?.scheduledFor
+        if (deadline != null && !now.isBefore(deadline)) markAccountDeleted() else clear()
     }
 
     /** The applicant's account is gone: the landing says so once. */

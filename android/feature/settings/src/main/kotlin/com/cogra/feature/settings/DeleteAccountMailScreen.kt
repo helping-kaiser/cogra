@@ -10,8 +10,12 @@ package com.cogra.feature.settings
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -28,8 +32,10 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.deletion.AccountDeletionRepository
 import com.cogra.domain.settings.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -50,6 +56,11 @@ class DeleteAccountMailViewModel @Inject constructor(
     private val _state = MutableStateFlow(DeleteAccountMailUiState())
     val state = _state.asStateFlow()
 
+    private val _resent = Channel<String>(Channel.BUFFERED)
+
+    /** The Resend answered: the address the fresh link went to, for its snackbar (`:13`). */
+    val resent = _resent.receiveAsFlow()
+
     /** Reads the address the link went to — the account's own, verified. */
     fun refresh() {
         if (_state.value.email != null) return
@@ -62,7 +73,9 @@ class DeleteAccountMailViewModel @Inject constructor(
     /**
      * `Resend the link`: the same request again, with the choice the request
      * screen recorded — it supersedes the earlier one, so its link dies and
-     * never two stand (`DeleteAccountMail.md:13`, `:21`).
+     * never two stand (`DeleteAccountMail.md:13`, `:21`). Answered, the
+     * snackbar names the address; a spent budget says its line above the
+     * Resend instead and sends nothing (`:15`).
      */
     fun onResend(includeContent: Boolean) {
         if (_state.value.inFlight) return
@@ -70,6 +83,9 @@ class DeleteAccountMailViewModel @Inject constructor(
         viewModelScope.launch {
             val outcome = deletions.request(includeContent)
             _state.update { it.copy(inFlight = false, fault = faultOf(outcome)) }
+            // With no address read, nothing is claimed about where it went.
+            val email = _state.value.email
+            if (outcome is Outcome.Success && email != null) _resent.send(email)
         }
     }
 }
@@ -78,14 +94,24 @@ class DeleteAccountMailViewModel @Inject constructor(
 fun DeleteAccountMailRoute(
     includeContent: Boolean,
     onBack: () -> Unit,
+    /** The deletion band, should a confirm elsewhere start the grace while this is open. */
+    deletionBand: @Composable () -> Unit = {},
     viewModel: DeleteAccountMailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refresh() }
+    val snackbar = remember { SnackbarHostState() }
+    val resentLine = stringResource(R.string.delete_mail_resent)
+    val currentResentLine by rememberUpdatedState(resentLine)
+    LaunchedEffect(viewModel) {
+        viewModel.resent.collect { email -> snackbar.showSnackbar(currentResentLine.format(email)) }
+    }
     DeleteAccountMailScreen(
         state = state,
         onBack = onBack,
         onResend = { viewModel.onResend(includeContent) },
+        snackbar = snackbar,
+        deletionBand = deletionBand,
     )
 }
 
@@ -100,6 +126,8 @@ fun DeleteAccountMailScreen(
     state: DeleteAccountMailUiState,
     onBack: () -> Unit,
     onResend: () -> Unit,
+    snackbar: SnackbarHostState = remember { SnackbarHostState() },
+    deletionBand: @Composable () -> Unit = {},
 ) {
     val page = DeleteAccountPage
     TaskPage(
@@ -108,6 +136,8 @@ fun DeleteAccountMailScreen(
         onBack = onBack,
         title = stringResource(R.string.delete_mail_title),
         lead = state.email?.let { stringResource(R.string.delete_mail_body, it) }.orEmpty(),
+        snackbar = snackbar,
+        deletionBand = deletionBand,
     ) {
         Spacer(Modifier.height(24.dp))
         QuietNote(

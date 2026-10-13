@@ -109,6 +109,7 @@ import com.cogra.feature.stance.StanceControlRoute
 import com.cogra.feature.stance.vouchBackVariant
 import com.cogra.feature.topics.TopicRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.Instant
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -514,7 +515,9 @@ private fun CograNavGraphContent(
         if (phase == AuthPhase.LOADING) return@LaunchedEffect
         // A session that ended takes its account's deletion standing with it:
         // no band from one account may stand over the next one's surfaces.
-        if (phase == AuthPhase.SIGNED_OUT) authState.deletion.clear()
+        // One that ended past the standing deadline is the deletion having
+        // run, and lands like the applicant's (FeedDeleting.md:23; ER-G6).
+        if (phase == AuthPhase.SIGNED_OUT) authState.deletion.onSessionEnded(Instant.now())
         val from = navigatedPhase
         navigatedPhase = phase
         // A cold start that opened an email-change or deletion link signed in
@@ -953,6 +956,7 @@ private fun CograNavGraphContent(
                         onLeave = { navController.navigateUp() },
                         onRestoreKey = { navController.navigate(Restore) },
                         keyBanner = keyBanner,
+                        deletionBand = deletionBand(node = null),
                     )
                     return@composable
                 }
@@ -967,6 +971,7 @@ private fun CograNavGraphContent(
                     },
                     onBack = { navController.navigateUp() },
                     keyBanner = keyBanner,
+                    deletionBand = deletionBand(node = null),
                 )
             }
             composable<PostDetail> { entry ->
@@ -1016,6 +1021,7 @@ private fun CograNavGraphContent(
                             intArrayOf(scroll.index, scroll.offset),
                         )
                     },
+                    deletionBand = deletionBand(node = null),
                 )
             }
             composable<ReplyWizard> { entry ->
@@ -1100,6 +1106,7 @@ private fun CograNavGraphContent(
                             )
                         }
                     },
+                    deletionBand = deletionBand(node = null),
                 )
             }
             composable<Profile> { entry ->
@@ -1155,7 +1162,7 @@ private fun CograNavGraphContent(
                 )
             }
             composable<Invites> {
-                InvitesRoute(onBack = { navController.navigateUp() })
+                InvitesRoute(onBack = { navController.navigateUp() }, deletionBand = deletionBand(node = null))
             }
             composable<Settings> { entry ->
                 val (notice, consumeNotice) = entry.navResult(settingsNoticeKey)
@@ -1216,6 +1223,7 @@ private fun CograNavGraphContent(
                 DeleteAccountMailRoute(
                     includeContent = entry.toRoute<DeleteAccountMail>().includeContent,
                     onBack = { navController.navigateUp() },
+                    deletionBand = deletionBand(node = null),
                 )
             }
             composable<DeleteAccountPending> {
@@ -1246,10 +1254,18 @@ private fun CograNavGraphContent(
                             navController.navigate(Feed) { popUpTo(0) { inclusive = true } }
                         },
                         // The deletion stays confirmed; the sign-in is ordinary (:41).
+                        // A dead link's sign-in holds no link (DeleteLinkExpired.md:19).
                         onSignIn = {
                             navController.popBackStack()
                             if (navController.currentBackStackEntry?.destination?.hasRoute(Login::class) != true) {
                                 navController.navigate(Login)
+                            }
+                        },
+                        // A dead link with a session: settings, where the
+                        // deletion's state reads as it stands (DeleteLinkExpired.md:17).
+                        onBackToSettings = {
+                            navController.navigate(Settings) {
+                                popUpTo<DeleteAccountConfirmed> { inclusive = true }
                             }
                         },
                     )
@@ -1259,6 +1275,7 @@ private fun CograNavGraphContent(
                 BackupRoute(
                     onBack = { navController.navigateUp() },
                     onExportKey = { navController.navigate(KeyExport) },
+                    deletionBand = deletionBand(node = null),
                 )
             }
             composable<ChangePassword> {
@@ -1268,6 +1285,7 @@ private fun CograNavGraphContent(
                         navController.report(settingsNoticeKey, notice)
                         navController.popBackStack()
                     },
+                    deletionBand = deletionBand(node = null),
                 )
             }
             composable<ChangeHandle> {
@@ -1280,6 +1298,7 @@ private fun CograNavGraphContent(
                         navController.report(settingsNoticeKey, notice)
                         navController.popBackStack()
                     },
+                    deletionBand = deletionBand(node = null),
                 )
             }
             composable<ChangeEmail> { entry ->
@@ -1300,6 +1319,7 @@ private fun CograNavGraphContent(
                             }
                         }
                     },
+                    deletionBand = deletionBand(node = null),
                 )
             }
             composable<ChangeEmailConfirm> {
@@ -1310,6 +1330,7 @@ private fun CograNavGraphContent(
                         if (!back) navController.navigate(Settings)
                         notice?.let { navController.reportToCurrent(settingsNoticeKey, it) }
                     },
+                    deletionBand = deletionBand(node = null),
                 )
             }
             composable<ChangeEmailLinked>(
@@ -1350,11 +1371,11 @@ private fun CograNavGraphContent(
                 }
             }
             composable<About> {
-                AboutScreen(onBack = { navController.navigateUp() })
+                AboutScreen(onBack = { navController.navigateUp() }, deletionBand = deletionBand(node = null))
             }
             composable<KeyExport> {
                 // Arriving reveals nothing; the screen's own gate does.
-                KeyExportRoute(onBack = { navController.navigateUp() })
+                KeyExportRoute(onBack = { navController.navigateUp() }, deletionBand = deletionBand(node = null))
             }
             composable<ChatsComingSoon> {
                 ChatsComingSoonRoute(onBack = { navController.navigateUp() })

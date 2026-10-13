@@ -75,6 +75,8 @@ fun TopicRoute(
     onOpenActor: (String) -> Unit,
     onBack: () -> Unit,
     stanceControl: (@Composable () -> Unit)? = null,
+    /** The deletion band, while the account's confirmed deletion is in its grace (`FeedDeleting.md:3`). */
+    deletionBand: @Composable () -> Unit = {},
     viewModel: TopicViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -90,6 +92,7 @@ fun TopicRoute(
         onCardsSeen = viewModel::onCardsSeen,
         onCardEdgesSeen = viewModel::onCardEdgesSeen,
         onSeenCheckpoint = viewModel::onSeenCheckpoint,
+        deletionBand = deletionBand,
     )
 }
 
@@ -114,6 +117,7 @@ fun TopicScreen(
     onCardEdgesSeen: (List<EdgeSighting>) -> Unit = {},
     /** The reading paused: the scroll rested, or the reader left. */
     onSeenCheckpoint: () -> Unit = {},
+    deletionBand: @Composable () -> Unit = {},
 ) {
     // SEEN, AT THE LIST: a post or comment card fully in the viewport joins
     // the reader's History, as itself (History.md). The page's own title is
@@ -134,18 +138,22 @@ fun TopicScreen(
     )
     Scaffold(
         topBar = {
-            TopAppBar(
-                colors = surfaceTopAppBarColors(),
-                title = { Text("#$name", modifier = Modifier.testTag("topic_title")) },
-                navigationIcon = {
-                    IconButton(onClick = onBack, modifier = Modifier.testTag("topic_back")) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.topics_back),
-                        )
-                    }
-                },
-            )
+            Column {
+                TopAppBar(
+                    colors = surfaceTopAppBarColors(),
+                    title = { Text("#$name", modifier = Modifier.testTag("topic_title")) },
+                    navigationIcon = {
+                        IconButton(onClick = onBack, modifier = Modifier.testTag("topic_back")) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.topics_back),
+                            )
+                        }
+                    },
+                )
+                // Directly under the header (FeedDeleting.md:5).
+                deletionBand()
+            }
         },
     ) { padding ->
         Box(

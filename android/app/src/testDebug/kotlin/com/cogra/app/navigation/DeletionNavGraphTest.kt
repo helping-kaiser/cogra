@@ -27,7 +27,9 @@ import com.cogra.crypto.ActorKey
 import com.cogra.domain.AccountDeletionPath
 import com.cogra.domain.AccountState
 import com.cogra.domain.AuthTokens
+import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
+import com.cogra.domain.UserError
 import com.cogra.domain.UserProfile
 import com.cogra.domain.deletion.AccountDeletion
 import com.cogra.domain.deletion.DeletionStanding
@@ -197,6 +199,66 @@ class DeletionNavGraphTest {
                 .fetchSemanticsNodes().isEmpty()
         }
         assertThat(deletions.cancels).isEqualTo(1)
+    }
+
+    @Test
+    fun `a_dead_link_signed_in_lands_on_the_dead_landing_and_goes_back_to_settings`() {
+        signInAs(AccountState.MEMBER)
+        deletions.confirm = Outcome.Refused(
+            listOf(UserError(ErrorCode.DELETION_TOKEN_INVALID, "dead", listOf("deletionToken"))),
+        )
+        render()
+        waitForRoute<Feed>()
+        navController.handleDeepLink(
+            Intent(Intent.ACTION_VIEW, Uri.parse("${BuildConfig.WEB_ORIGIN}/delete-account?token=spent")),
+        )
+        waitForRoute<DeleteAccountConfirmed>()
+        // DeleteLinkExpired.md:5-13 — one landing, never saying which happened.
+        compose.waitUntilAtLeastOneExists(hasText("This link doesn't work anymore"), timeoutMillis = 30_000)
+        compose.onNodeWithTag("deleteAccount.onward", useUnmergedTree = true).performScrollTo().performClick()
+        waitForRoute<Settings>()
+    }
+
+    @Test
+    fun `the_band_rides_the_inner_surfaces_too`() {
+        signInAs(AccountState.MEMBER)
+        deletions.standing = Outcome.Success(DeletionStanding(AccountDeletionPath.BY_LINK, grace))
+        render()
+        waitForRoute<Feed>()
+        waitForTag("feed.deletionBand.line")
+        for (route in listOf(Invites, ChangePassword, About, SettingsBackup)) {
+            open(route)
+            waitForTag("home_deletion_band")
+            compose.runOnUiThread { navController.popBackStack() }
+            compose.waitForIdle()
+        }
+    }
+
+    @Test
+    fun `the_deadline_met_with_a_session_here_lands_on_the_bare_feed_never_sign_in`() {
+        signInAs(AccountState.MEMBER)
+        val passed = AccountDeletion(Instant.now().minusSeconds(1), includesContent = false)
+        deletions.standing = Outcome.Success(DeletionStanding(AccountDeletionPath.BY_LINK, passed))
+        render()
+        waitForRoute<Feed>()
+        waitForTag("feed.deletionBand")
+
+        // The execution ended every session: this device's ends too.
+        runBlocking { tokens.clear() }
+        compose.waitUntilAtLeastOneExists(hasText("Your account is deleted."), timeoutMillis = 30_000)
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Login>()).isFalse()
+    }
+
+    @Test
+    fun `a_session_ending_inside_the_grace_signs_in_again_as_ever`() {
+        signInAs(AccountState.MEMBER)
+        deletions.standing = Outcome.Success(DeletionStanding(AccountDeletionPath.BY_LINK, grace))
+        render()
+        waitForRoute<Feed>()
+        waitForTag("feed.deletionBand")
+        runBlocking { tokens.clear() }
+        waitForRoute<Login>()
     }
 
     @Test

@@ -17,6 +17,8 @@ import com.cogra.core.designsystem.v2.atom.BorrowedViewBand
 import com.cogra.domain.AccountState
 import com.cogra.domain.ActorRef
 import com.cogra.domain.Outcome
+import com.cogra.domain.deletion.AccountDeletionState
+import com.cogra.domain.deletion.bandDeletion
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.signing.RegistrationFlow
 import com.cogra.domain.signing.RegistrationProgress
@@ -52,6 +54,11 @@ data class BorrowedViewUiState(
     /** Whose view this reader browses from; null once their own exists. */
     val vantage: ActorRef? = null,
     val reading: BorrowedViewReading = BorrowedViewReading.JOIN,
+    /**
+     * The deletion band stands, so this one does not (ER-G4;
+     * `FeedDeleting.md:13`) — read off [bandDeletion], the one arbitration.
+     */
+    val yieldsToDeletion: Boolean = false,
 )
 
 /**
@@ -83,6 +90,7 @@ class BorrowedViewViewModel @Inject constructor(
     private val account: AccountRepository,
     registration: RegistrationFlow,
     signals: StanceSignals,
+    deletion: AccountDeletionState,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(BorrowedViewUiState())
@@ -91,6 +99,14 @@ class BorrowedViewViewModel @Inject constructor(
     private var signedIn = false
 
     init {
+        // The deletion band wins the top while a grace runs (ER-G4); the
+        // vantage is still read, so the band returns the moment a cancel
+        // takes the deletion band away.
+        viewModelScope.launch {
+            deletion.standing.collect { standing ->
+                _state.update { it.copy(yieldsToDeletion = standing.bandDeletion() != null) }
+            }
+        }
         // Landing does not end the borrowing — the first signed opinion
         // does — but it does change the reading, and it can happen while
         // this feed is on screen. The flow reports it, so the line changes
@@ -122,7 +138,7 @@ class BorrowedViewViewModel @Inject constructor(
                 null
             }
             _state.update {
-                BorrowedViewUiState(
+                it.copy(
                     loading = false,
                     vantage = vantage,
                     reading = readingFor(signedIn, accountState),
@@ -173,7 +189,7 @@ fun BorrowedViewBanner(
     state: BorrowedViewUiState,
     onSignInOrJoin: () -> Unit,
 ) {
-    if (state.loading) return
+    if (state.loading || state.yieldsToDeletion) return
     val vantage = state.vantage ?: return
     val guest = state.reading == BorrowedViewReading.JOIN
     val member = state.reading == BorrowedViewReading.MEMBER
