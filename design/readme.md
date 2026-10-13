@@ -3534,8 +3534,7 @@ it a home. Ruled by jakob the same day (backlog item 20).
   bottom bar and the back arrow goes where the gear was. The board draws
   the whole scroll: the ruling this round records is an order, and an
   order cut off at 844px is an order nobody can review. (Later rounds
-  add People, About and Delete account — eleven groups; `SettingsBody`
-  draws the current order.)
+  add groups; `SettingsBody` draws the current order.)
 - **`SettingsGroup` and `SettingsRow` are the anatomy**, minted here
   because eight groups improvising eight layouts is the page the ruling
   asked us to leave behind. A quiet heading above, a filled card of
@@ -9814,6 +9813,48 @@ boards already draw; nothing on any board moved.
   register in lockstep with their rework's build.
 - **The gate**: screens and edges unchanged; the registry **75 / 2928 →
   91 / 3401**, sixteen boards and 473 paths added, nothing removed or
+  changed.
+
+### Round 8, the settings round — 2026-10-13
+
+jakob's settings-round GO (seam 165): the deletion row re-keyed to the
+server's read, the deleted account's row drawn in Hidden accounts, and a
+new group saying what clearing the stored data erases. The new words are
+drafted and wait for his review (copy-voice marks them).
+
+- **The deletion row reads `User.deletionPath`** (OS-15; ER-G18), one
+  value the server computes, never the application's fields — a lapsed
+  vouch clears the approval while the address stays funded, so a row
+  read from the application would unlock where the server refuses.
+  `BY_LINK` takes the mailed-link footnote and opens the request,
+  `IMMEDIATE` the applicant's footnote, and `LOCKED` (funded,
+  Registration not yet landed) the applicant's footnote under the
+  locked look. `DeleteAccount`'s two bodies key the same way: `BY_LINK`
+  draws the member's body, which is true of an applicant whose
+  Registration landed too, and `IMMEDIATE` the applicant's. The reader
+  chips keep their `member` and `applicant` values.
+- **A deleted account's row is drawn in Hidden accounts** (ruling 56):
+  `ContentRow`'s `redacted` row, last because it was hidden longest
+  ago, with the hiding's moment and `Unhide`. It has no handle, so it
+  is its own node, `redactedAccount`, keyed by the actor's id — the
+  `account` rule names the handle and is never reworded.
+- **Clearing data** stands after Key backup: a heading and a footnote,
+  no rows. Clearing the stored data erases the key, the draft, any kept
+  picks and the choices kept on the device, and signs the reader out;
+  the seen list comes back on sign-in (PR-52), so the words never call
+  it lost. On Android the system's own "Clear data" becomes "Manage
+  space" and opens settings at this group (`manageSpaceActivity`), and
+  the uninstall dialog offers to keep the data (`hasFragileUserData`).
+- **The whole-page frames fit their page again.** `Settings`,
+  `SettingsDeleting` and `SettingsEmailPending` had been cutting off
+  the page's end since later rounds lengthened it (the Sensitive
+  content group among them); each frame
+  now holds its whole scroll, and the profile canvas's rows below
+  `Settings` moved down to make room.
+- **The gate**: screens and edges unchanged; the registry **91 / 3401 →
+  91 / 3431** — six `redactedAccount` paths on `SettingsHidden`, and
+  `settings.clearing` with its label and footnote on the eight boards
+  that register the page; one key rule joins, nothing removed or
   changed.
 
 ---
