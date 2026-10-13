@@ -26,8 +26,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarData
 import androidx.compose.material3.SnackbarDefaults
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarVisuals
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -62,11 +64,35 @@ fun CograSnackbarHost(
     SnackbarHost(hostState, modifier) { data -> CograSnackbar(data, testTag) }
 }
 
+/**
+ * A snackbar a registered screen raises: its words, its one action, and the
+ * node it wears (`feed.snackbar`, `postDetail.snackbar`) — the surface wears
+ * the node, the words its `message` and the action its `action`, wherever
+ * the host that draws it happens to live.
+ *
+ * Always the short duration, action or not: the master clears itself after
+ * 4000ms either way (`design/components/core/Snackbar.jsx`), and an `Undo`
+ * that stood until dismissed would be a dialog nobody asked for.
+ */
+data class NodeSnackbarVisuals(
+    override val message: String,
+    val node: DataNode?,
+    override val actionLabel: String? = null,
+) : SnackbarVisuals {
+    override val withDismissAction: Boolean get() = false
+    override val duration: SnackbarDuration get() = SnackbarDuration.Short
+}
+
 @Composable
 fun CograSnackbar(data: SnackbarData, testTag: String? = null) {
+    val node = (data.visuals as? NodeSnackbarVisuals)?.node
+    val tagged = when {
+        node != null -> Modifier.dataNode(node)
+        testTag != null -> Modifier.testTag(testTag)
+        else -> Modifier
+    }
     Surface(
-        modifier = (if (testTag != null) Modifier.testTag(testTag) else Modifier)
-            .padding(12.dp),
+        modifier = tagged.padding(12.dp),
         shape = SnackbarDefaults.shape,
         color = SnackbarDefaults.color,
         contentColor = SnackbarDefaults.contentColor,
@@ -81,13 +107,17 @@ fun CograSnackbar(data: SnackbarData, testTag: String? = null) {
             Text(
                 text = data.visuals.message,
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f, fill = false),
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .dataNode(node?.div("message")),
             )
             data.visuals.actionLabel?.let { label ->
                 TextButton(
                     onClick = { data.performAction() },
                     modifier = Modifier.testTag(
-                        testTag?.let { "${it}_action" } ?: "snackbar_action",
+                        node?.div("action")?.tag
+                            ?: testTag?.let { "${it}_action" }
+                            ?: "snackbar_action",
                     ),
                 ) {
                     Text(label, color = SnackbarDefaults.actionContentColor)

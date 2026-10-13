@@ -42,7 +42,7 @@ import type { License } from "@/lib/license";
 import { useActiveAccountId } from "@/lib/session/provider";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
 import { RemovedPlaceholder } from "@/lib/ui2/media/removed-placeholder";
-import { OverflowMenu } from "@/lib/ui2/overflow-menu";
+import { OverflowMenu, OverflowTrigger } from "@/lib/ui2/overflow-menu";
 import { postMenuItems } from "@/lib/ui2/post-menu";
 import { RefsSheet } from "@/lib/ui2/refs-sheet";
 import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
@@ -164,9 +164,20 @@ export function PostCard({
   onOpenCitedBy,
   mediaAbove = false,
   onOpenMedia,
+  onOpenMenu,
+  menuOpen = false,
   node,
 }: {
   post: PostView;
+  /**
+   * THE SURFACE HOSTS THE MENU (ruling 84; `PostMenuHost`): the card draws its
+   * ⋮ and the tap asks the host to raise the one sheet it keeps for every
+   * card, instead of the card keeping a sheet of its own. Absent, the card is
+   * its own menu's host.
+   */
+  onOpenMenu?: () => void;
+  /** The host's sheet is up for this card — what the hosted ⋮ says it is. */
+  menuOpen?: boolean;
   /**
    * The registered card node on a registered screen (`feed.card`,
    * `postDetail.card`), keyed by the post's id. The card's drawn parts then
@@ -367,7 +378,16 @@ export function PostCard({
               rides this card: the same card is the feed's, the topic page's
               and the detail's, and each of them carries the rows that raise
               them. */}
-          {!detail && !redacted && (
+          {!detail && !redacted && onOpenMenu !== undefined && (
+            <OverflowTrigger
+              ariaLabel="More on this post"
+              testId={`${testId}-menu`}
+              node={part(node, "menu")}
+              expanded={menuOpen}
+              onOpen={onOpenMenu}
+            />
+          )}
+          {!detail && !redacted && onOpenMenu === undefined && (
             <OverflowMenu
               items={menuItems}
               ariaLabel="More on this post"

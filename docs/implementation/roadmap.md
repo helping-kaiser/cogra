@@ -626,8 +626,8 @@ from the media path and carrying their own doc write-back:
   wired on both clients; designed as the filter sheet's
   `Still settling` chip, on by default — `FeedSheet`,
   [design/readme.md §13](../../design/readme.md#13-decided-in-design-sessions)),
-  the license qualifiers on the feed card
-  (already fetched), the author's did-not-land notice
+  the post's license terms, reached from the feed card's menu as a
+  sheet over the feed (never a state of the card), the author's did-not-land notice
   ([design/readme.md §9](../../design/readme.md#9-honesty-surfaces); rides `stagedWrite`/`EXPIRED`), and
   the composer's unchanged-snapshot guard (disable save when the
   edit is byte-identical; the protocol keeps accepting priced

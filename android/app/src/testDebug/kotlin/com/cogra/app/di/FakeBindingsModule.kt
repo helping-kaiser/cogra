@@ -68,6 +68,7 @@ import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
 import com.cogra.domain.repo.WriteRepository
+import com.cogra.domain.report.ReportRepository
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
@@ -85,6 +86,7 @@ import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.RecordingReportRepository
 import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.FakeSeenRecordStore
 import com.cogra.domain.testing.ScriptedSeenHistory
@@ -651,6 +653,15 @@ object FakeBindingsModule {
 
     @Provides
     fun viewHistoryRepository(fake: RecordingViewHistoryRepository): ViewHistoryRepository = fake
+
+    // A report answers sent: the navigation tests that reach a menu's
+    // Report row read the confirm's aftermath, not the mail.
+    @Provides
+    @Singleton
+    fun recordingReportRepository(): RecordingReportRepository = RecordingReportRepository()
+
+    @Provides
+    fun reportRepository(fake: RecordingReportRepository): ReportRepository = fake
 
     // The seen record's sync reads an empty server list by default, and
     // the record itself rests in memory for the test process.
