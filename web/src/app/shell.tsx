@@ -26,6 +26,7 @@
 import { usePathname } from "next/navigation";
 import { useRef } from "react";
 
+import { announceFeedReselect } from "@/lib/feed/feed-reselect";
 import { useAuthPhase } from "@/lib/session/provider";
 import { BottomNav } from "@/lib/ui/bottom-nav";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
@@ -65,6 +66,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             active={active}
             signedIn={signedIn}
             node={screen === null ? undefined : { path: `${screen}.bottomBar` }}
+            // Over the feed's own root the Feed slot is a re-tap the feed
+            // answers; from anywhere deeper it is the way back to the root,
+            // which comes back at the scroll it was left (Feed.md:85).
+            onReselectFeed={pathname === "/feed" ? announceFeedReselect : undefined}
           />
         )}
       </ScrollHostProvider>

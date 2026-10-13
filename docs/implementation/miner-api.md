@@ -82,9 +82,9 @@ public state the slice comes from.
 |---|---|
 | `seenList` | Content ids to exclude from the candidate set before ranking ([feed-ranking.md §9.4](../primitive/feed-ranking.md#94-the-already-seen-filter)); the server's relay never sends it. |
 | `kinds` | Which rankable node kinds are in scope (default: Posts only — [§9.3](../primitive/feed-ranking.md#93-what-is-rankable)). |
-| `gamma` | `γ` — per-hop attenuation in `(0, 1]`; default `Network.gamma`. |
-| `dustFloor` | `χ` — bounds the slice node-set and stops extraction; default `Network.dustFloor`. |
-| `recencyHalfLifeEpochs` | `f(Δt)` half-life in epochs; default `Network.recencyHalfLifeEpochs`; `0` disables recency (`f ≡ 1`). |
+| `gamma` | `γ` — per-hop attenuation in `(0, 1]`; default the network's `gamma` parameter. |
+| `dustFloor` | `χ` — bounds the slice node-set and stops extraction; default the network's `dust_floor` parameter. |
+| `recencyHalfLifeEpochs` | `f(Δt)` half-life in epochs; default the network's `recency_half_life_epochs` parameter; `0` disables recency (`f ≡ 1`). |
 | `friendAuthorReorder` | Friend-fresh reorder config — a reordering layer over the ranked output, never a boost multiplier ([§9.2](../primitive/feed-ranking.md#92-friend-fresh-reordering)); null uses the frontend default (the reference frontend ships it on). |
 
 These are the `rank` operation's `params`, typed below:
@@ -100,11 +100,11 @@ input RankParams {
   seenList: [UUID!]
   "Rankable node kinds in scope; default Posts only."
   kinds: [NodeKind!]
-  "γ per-hop attenuation in (0, 1]; default Network.gamma."
+  "γ per-hop attenuation in (0, 1]; default the network's gamma parameter."
   gamma: Float
-  "χ dust floor; default Network.dustFloor."
+  "χ dust floor; default the network's dust_floor parameter."
   dustFloor: Float
-  "f(Δt) half-life in epochs; default Network.recencyHalfLifeEpochs;
+  "f(Δt) half-life in epochs; default the network's recency_half_life_epochs parameter;
    0 disables recency (f ≡ 1)."
   recencyHalfLifeEpochs: Int
   "Friend-fresh reorder config; null uses the frontend default
@@ -362,7 +362,7 @@ type SuspectBridge {
 ```
 
 The traversal is bounded the same way ranking is — `dustFloor` (null
-falls back to `Network.dustFloor`) bounds the analyzed subgraph, and
+falls back to the network's `dust_floor` parameter) bounds the analyzed subgraph, and
 the alternative-paths check is a bounded probe, not a full re-ranking.
 
 ### `redemptionCheck` — the polled outbound watch (§8.7)
@@ -410,13 +410,17 @@ every deployment.
 ### Wire form — GraphQL everywhere, in-process on-device
 
 A remote runner serves a small GraphQL schema: the operations in this
-doc and the types above, verbatim. `FeedSlice`, `RankParams`, and
-`FeedEntry` travel as written — the ranker already speaks the
-backend's type vocabulary, and a second wire encoding (JSON-RPC,
-protobuf) would be a parallel serialization of the same types, kept in
-lockstep by hand. The ranker container serves the same operations in
-its own schema; on the viewer's device the contract is an in-process
-call over the same types, no wire at all.
+doc and the types above, at the id level. A runner holds no
+credential and no database, so it cannot resolve the backend's `Node`
+and `Record`: a `FeedEntry` carries its target's UUID and kind, a
+`RankPath` its nodes' raw L1 identifiers, and a `RankHop` its records'
+L1 ids with the folded and member parameters — everything a
+spot-check re-derives from — and the backend's relay hydrates. A
+second wire encoding (JSON-RPC, protobuf) would be a parallel
+serialization of the same types, kept in lockstep by hand. The ranker
+container exports its schema as the checked-in `ranker-schema.graphql`;
+on the viewer's device the contract is an in-process call over the
+same types, no wire at all.
 
 ### The slice path — the miner re-fetches
 

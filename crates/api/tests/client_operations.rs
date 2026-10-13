@@ -3,8 +3,10 @@
 //!
 //! The budgets in `schema::QueryBudgets` are only meaningful against the
 //! traffic they have to admit, and that traffic is checked in: the
-//! Apollo Kotlin documents under `android/core/network/src/main/graphql`
-//! and the codegen documents under `web/src/lib/graphql`. This suite
+//! Apollo Kotlin documents under `android/core/network/src/main/graphql`,
+//! the codegen documents under `web/src/lib/graphql`, and the ranker
+//! pod's reads under `crates/ranker-server/graphql` — the pod is the
+//! third generated consumer of the same contract. This suite
 //! anchors them the way `schema_drift` anchors the SDL — a client
 //! document that outgrows a posture fails here, by name, instead of
 //! reaching a device as "can't reach server".
@@ -288,11 +290,47 @@ async fn budget_errors(schema: &ApiSchema, name: &str, document: &str) -> Vec<St
         .collect()
 }
 
+/// Every consumer generated from the contract, with where its documents
+/// live.
+const CORPORA: [(&str, &str); 3] = [
+    ("android", "android/core/network/src/main/graphql"),
+    ("web", "web/src/lib/graphql"),
+    ("ranker-pod", "crates/ranker-server/graphql"),
+];
+
+/// The ranker pod pages the slice at the api's page cap, not at the
+/// clients' page size, so its documents are measured at the size they
+/// are actually sent with as well.
+///
+/// The release budgets admit the ranker pod's slice pages at the page cap it sends them with.
+/// ´claim:budgets:the-pods-full-pages-fit´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_release_budgets_admit_the_ranker_pods_full_pages(pool: PgPool) {
+    let schema = schema(pool, QueryBudgets::release());
+    for (name, document) in client_operations("crates/ranker-server/graphql") {
+        let request = async_graphql::Request::new(document)
+            .operation_name(&name)
+            .variables(async_graphql::Variables::from_json(serde_json::json!({
+                "first": api::schema::types::MAX_PAGE_SIZE,
+            })))
+            .data(Option::<api::auth::Viewer>::None);
+        let rejected: Vec<String> = schema
+            .execute(request)
+            .await
+            .errors
+            .iter()
+            .map(|e| e.message.clone())
+            .filter(|message| message == TOO_COMPLEX || message == TOO_DEEP)
+            .collect();
+        assert!(
+            rejected.is_empty(),
+            "the release budgets reject the pod's {name} at the page cap: {rejected:?}"
+        );
+    }
+}
+
 async fn assert_corpus_fits(schema: &ApiSchema, posture: &str) {
-    for (client, relative) in [
-        ("android", "android/core/network/src/main/graphql"),
-        ("web", "web/src/lib/graphql"),
-    ] {
+    for (client, relative) in CORPORA {
         for (name, document) in client_operations(relative) {
             let rejected = budget_errors(schema, &name, &document).await;
             assert!(
@@ -388,10 +426,7 @@ fn depth_probe(depth: usize) -> QueryBudgets {
 async fn the_budget_ceilings_keep_their_stated_headroom(pool: PgPool) {
     let mut heaviest = (String::new(), 0usize);
     let mut deepest = (String::new(), 0usize);
-    for (client, relative) in [
-        ("android", "android/core/network/src/main/graphql"),
-        ("web", "web/src/lib/graphql"),
-    ] {
+    for (client, relative) in CORPORA {
         for (name, document) in client_operations(relative) {
             let complexity = measured(&pool, &name, &document, complexity_probe).await;
             let depth = measured(&pool, &name, &document, depth_probe).await;

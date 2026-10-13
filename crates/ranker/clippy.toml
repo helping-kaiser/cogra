@@ -1,0 +1,35 @@
+# The ranker's determinism rules, enforced where clippy can see them
+# (ranker-core §3.0). Crate-local: clippy reads the clippy.toml of the crate
+# it lints, so these bind the ranker and nothing else in the workspace.
+
+# D-a. No platform math. std documents every one of these as of unspecified
+# precision — it "varies by platform, Rust version, and can even differ within
+# the same execution" (doc.rust-lang.org/std/primitive.f64.html) — so a ranking
+# spot-checked on another runner would not reproduce bit for bit. Each has a
+# libm twin, the pure-Rust port of musl's. `sqrt` is IEEE-exact and stays std.
+disallowed-methods = [
+  { path = "f64::ln",     reason = "D-a: platform precision — use libm::log" },
+  { path = "f64::log",    reason = "D-a: platform precision — use libm::log" },
+  { path = "f64::log2",   reason = "D-a: platform precision — use libm::log2" },
+  { path = "f64::log10",  reason = "D-a: platform precision — use libm::log10" },
+  { path = "f64::ln_1p",  reason = "D-a: platform precision — use libm::log1p" },
+  { path = "f64::exp",    reason = "D-a: platform precision — use libm::exp" },
+  { path = "f64::exp2",   reason = "D-a: platform precision — use libm::exp2" },
+  { path = "f64::exp_m1", reason = "D-a: platform precision — use libm::expm1" },
+  { path = "f64::powf",   reason = "D-a: platform precision — use libm::pow" },
+  { path = "f64::powi",   reason = "D-a: unspecified rounding sequence — use libm::pow" },
+  { path = "f64::tanh",   reason = "D-a: platform precision — use libm::tanh" },
+  { path = "f64::sinh",   reason = "D-a: platform precision — use libm::sinh" },
+  { path = "f64::cosh",   reason = "D-a: platform precision — use libm::cosh" },
+  { path = "f64::atanh",  reason = "D-a: platform precision — use libm::atanh" },
+  { path = "f64::hypot",  reason = "D-a: platform precision — use libm::hypot" },
+  { path = "f64::cbrt",   reason = "D-a: platform precision — use libm::cbrt" },
+]
+
+# D-b. No hash-order iteration: std's hashed collections iterate in an order
+# seeded per process, so anything summed or emitted from one would differ run
+# to run. BTreeMap, BTreeSet and sorted Vecs iterate in key order.
+disallowed-types = [
+  { path = "std::collections::HashMap", reason = "D-b: hash-order iteration — use BTreeMap" },
+  { path = "std::collections::HashSet", reason = "D-b: hash-order iteration — use BTreeSet" },
+]

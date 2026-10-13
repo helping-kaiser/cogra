@@ -1,0 +1,67 @@
+# The ranker pod's reads of the api (ranker-core §4.2): the viewer's slice,
+# paged to its end at one pinned epoch, and the governed ranking
+# parameters. Typed codegen from the checked-in schema.graphql, so an api
+# contract change that breaks the pod fails the pod's build, and priced in
+# the api's client-operation budget suite like the apps' documents.
+
+query SliceNodes($viewer: UUID!, $dustFloor: Float, $gamma: Float, $asOfEpoch: Int, $first: Int, $after: String) {
+  feedSlice(viewer: $viewer, dustFloor: $dustFloor, gamma: $gamma, asOfEpoch: $asOfEpoch) {
+    asOfEpoch
+    nodes(first: $first, after: $after) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      edges {
+        node {
+          graphId
+          id
+          kind
+          genesis {
+            landingEpoch
+            actTime
+            position
+          }
+        }
+      }
+    }
+  }
+}
+
+query SliceRecords($viewer: UUID!, $dustFloor: Float, $gamma: Float, $asOfEpoch: Int, $first: Int, $after: String) {
+  feedSlice(viewer: $viewer, dustFloor: $dustFloor, gamma: $gamma, asOfEpoch: $asOfEpoch) {
+    asOfEpoch
+    records(first: $first, after: $after) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      edges {
+        node {
+          id
+          family
+          authorId
+          landingEpoch
+          actTime
+          position
+          legs {
+            role
+            sourceId
+            targetId
+            pDirected
+            pInterest
+            maturity
+            censusUnknown
+          }
+        }
+      }
+    }
+  }
+}
+
+query RankingParameters($keys: [String!]) {
+  networkParameters(keys: $keys) {
+    key
+    value
+  }
+}

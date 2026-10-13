@@ -27,7 +27,7 @@ WEB_APK_DIR       = web/public/downloads
 # guest APK trusts it so it can talk https to this machine's web origin.
 ANDROID_DEV_CA = android/app/src/devCa/res/raw/cogra_dev_ca.pem
 
-.PHONY: help init up down reset-db migrate wait-db wait-media api api-release bootstrap release-publish run ci ci-all lint lint-corpus regenerate fmt test build logs dev docs-link-check schema vectors constants fold-vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-format android-test android-build web-dev web-prod web-apk guest-apk web-ci design-ci fuzz-interchange fuzz-linter
+.PHONY: help init up down reset-db migrate wait-db wait-media api ranker api-release bootstrap release-publish run ci ci-all lint lint-corpus regenerate fmt test build logs dev docs-link-check schema ranker-schema vectors constants fold-vectors ranker-vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-format android-test android-build web-dev web-prod web-apk guest-apk web-ci design-ci fuzz-interchange fuzz-linter
 
 help: ## Show available commands
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -92,6 +92,9 @@ wait-media: ## Block until the media object store has its bucket
 api: ## Start the API server
 	$(CARGO) run -p api
 
+ranker: ## Start the ranker pod beside the API (API_URL, RANKER_BIND; ranker-core §4.4)
+	$(CARGO) run -p ranker-server --bin cogra-ranker
+
 api-release: ## Start the API server (optimized build; realistic auth/crypto latency)
 	$(CARGO) run --release -p api
 
@@ -106,6 +109,9 @@ SCHEMA_TARGET_DIR ?= target/schema
 schema: ## Regenerate schema.graphql (the frontend contract) from the Rust schema
 	CARGO_TARGET_DIR=$(SCHEMA_TARGET_DIR) $(CARGO) run -p api --bin export-schema > schema.graphql
 
+ranker-schema: ## Regenerate ranker-schema.graphql (the pod's contract the api's relay generates from) from ranker-server
+	CARGO_TARGET_DIR=$(SCHEMA_TARGET_DIR) $(CARGO) run -p ranker-server --bin export-ranker-schema > ranker-schema.graphql
+
 vectors: ## Regenerate client-crypto-vectors.json (the client crypto contract) from common
 	UPDATE_CLIENT_VECTORS=1 $(CARGO) test -p common --test client_vectors
 
@@ -114,6 +120,9 @@ constants: ## Regenerate client-constants.json (the caps, page size, registratio
 
 fold-vectors: ## Regenerate stance-fold-vectors.json (the local stance fold both clients re-implement) from common
 	UPDATE_STANCE_FOLD_VECTORS=1 $(CARGO) test -p common --test stance_fold_vectors
+
+ranker-vectors: ## Regenerate crates/ranker/tests/vectors/ranker-vectors.json (the ranker's bit-exact golden vectors) from ranker
+	UPDATE_RANKER_VECTORS=1 $(CARGO) test -p ranker --test vectors
 
 tokens: ## Regenerate design/tokens/scheme.json (the M3 scheme design/tokens/colors.css transcribes) from design.md §2.2
 	cd web && UPDATE_DESIGN_TOKENS=1 npx vitest run src/lib/ui/design-tokens.test.ts
