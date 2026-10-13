@@ -72,6 +72,8 @@ data class SettingsDoors(
     val onChangeHandle: () -> Unit = {},
     val onOpenEmail: (EmailDoor) -> Unit = {},
     val onOpenAbout: () -> Unit = {},
+    /** The release chronicle (WhatsNew.md). */
+    val onOpenWhatsNew: () -> Unit = {},
     /** The reader's own mail, addressed to the contact address — never the report. */
     val onContact: () -> Unit = {},
     /** The Delete account row's two doors: the request screen, or the grace page. */
@@ -769,8 +771,7 @@ private fun AboutGroup(versionName: String, doors: SettingsDoors) {
             // DRIFT (the intro packet): the intro has no Android surface yet.
             row(R.string.settings_about_intro, "intro") {},
             row(R.string.settings_about_cogra, "aboutCogra", onClick = doors.onOpenAbout),
-            // DRIFT (the what's-new packet): the release chronicle is not built.
-            row(R.string.settings_about_whats_new, "whatsNew", value = versionName) {},
+            row(R.string.settings_about_whats_new, "whatsNew", value = versionName, onClick = doors.onOpenWhatsNew),
             // DRIFT (the report-a-problem packet): the report is not built.
             row(R.string.settings_about_report, "report") {},
             row(

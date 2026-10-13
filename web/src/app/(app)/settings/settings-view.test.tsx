@@ -3,6 +3,7 @@ import { delay, graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AccountDeletionProvider } from "@/lib/deletion/deletion-status";
+import { RUNNING_VERSION } from "@/lib/release/running-version";
 import { createTokenStore } from "@/lib/session/token-store";
 import { accountFilterLevel, setAccountFilterLevel } from "@/lib/settings/sensitive-content";
 import { fakeIdentityStore } from "@/test/identity";
@@ -522,6 +523,15 @@ describe("the settings page", () => {
     expect(screen.getByTestId("settings.about.whatsNew.value")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("settings.about.aboutCogra"));
     expect(push).toHaveBeenCalledWith("/about?from=settings");
+  });
+
+  it("whats_new_opens_the_release_chronicle_and_reads_the_running_version", async () => {
+    renderSettings();
+    const value = await screen.findByTestId("settings.about.whatsNew.value");
+    // The one source the chronicle's `installed` reads too (WhatsNew.md:7).
+    expect(value).toHaveTextContent(RUNNING_VERSION);
+    fireEvent.click(screen.getByTestId("settings.about.whatsNew"));
+    expect(push).toHaveBeenCalledWith("/settings/whats-new");
   });
 
   it("says a subpage's return in its snackbar, once", async () => {

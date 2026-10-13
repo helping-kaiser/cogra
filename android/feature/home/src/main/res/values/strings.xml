@@ -56,4 +56,8 @@
     <string name="error_generic">Something went wrong. Try again.</string>
     <string name="error_transport">Can\'t reach the server. Check your connection and try again.</string>
     <string name="error_rate_limited">Too many attempts — wait a moment and try again.</string>
+
+    <!-- The once-per-release snackbar (FeedNewerVersion.md; copy-voice, the settings page). -->
+    <string name="newer_version_snackbar">A newer version of CoGra is out.</string>
+    <string name="newer_version_update_now">Update now</string>
 </resources>

@@ -58,6 +58,7 @@ import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
 import { scrollHostToTopAnimated, scrollOffsetOf, useScrollHost } from "@/lib/ui/scroll-host";
 import { ANCHOR_ATTRIBUTE, usePinnedPlace } from "@/lib/ui/scroll-pin";
 import { LINK_COPIED } from "@/lib/ui/share";
+import { useNewerVersionAnnouncement } from "@/lib/release/newer-version-announcer";
 import { Snackbar } from "@/lib/ui/snackbar";
 import type { DataNode } from "@/lib/ui/data-node";
 import * as clipMemory from "@/lib/ui2/media/clip-memory";
@@ -266,6 +267,10 @@ export function FeedView({
   // Stable, so the snackbar's own timer is not restarted by every render of
   // the feed underneath it.
   const dismissSnack = useCallback(() => setSnack(null), []);
+  // A NEWER VERSION, SAID ONCE (FeedNewerVersion.md): on the feed's arrival
+  // in a cold open, the same one snackbar — queued behind whatever it is
+  // already saying, as Material shows one at a time.
+  const newer = useNewerVersionAnnouncement(!loading, snack === null);
   // THE ONE MENU SHEET THE CARDS SHARE (ruling 84, FeedPostMenu.md:3): a
   // card's ⋮ raises it over the feed, which stands unchanged beneath. The post
   // outlives the flag so the sheet does not blank out through its exit.
@@ -667,8 +672,9 @@ export function FeedView({
         <Snackbar
           testId="feed-snackbar"
           node={{ path: "feed.snackbar" }}
-          message={snack}
-          onDismiss={dismissSnack}
+          message={newer.message ?? snack}
+          action={newer.action}
+          onDismiss={newer.message !== null ? newer.dismiss : dismissSnack}
         />
       </div>
       {/* THE CARDS' MENU, OVER THE FEED (FeedPostMenu.md). What its rows raise
