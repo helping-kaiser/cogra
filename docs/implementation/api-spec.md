@@ -1077,8 +1077,10 @@ type User implements Node & Actor {
     first: Int, after: String, last: Int, before: String
   ): ViewHistoryConnection
   "Actors this user has hidden from their own feed — a read-side
-   comfort that does not lift the viewer's own records' effect on
-   anyone else's feed (feed-ranking.md §8)."
+   comfort applied post-rank on the viewer's side (feed-ranking.md
+   §8.2, §9.1); it does not lift the viewer's own records' effect on
+   anyone else's feed. Most recently hidden first; keyset on
+   `(hiddenAt, actor id)`. Field-level: viewer-only."
   hiddenActors(first: Int, after: String, last: Int, before: String): HiddenActorConnection
   "Active authentication sessions, one per refresh token."
   sessions: [Session!]
@@ -5359,10 +5361,18 @@ type SetBookmarkPayload { bookmark: BookmarkEdge }
 input RemoveBookmarkInput { node: UUID! }
 type RemoveBookmarkPayload { ok: Boolean }
 
-input HideActorInput { actor: UUID! }
-type HideActorPayload { hidden: HiddenActorEdge! }
+input HideActorInput {
+  actor: UUID!
+  "Restores an earlier hiding's moment — the Undo of an unhide puts
+   the row back where it stood. Null means now; a moment after now is
+   BAD_INPUT (a few seconds of client clock skew are allowed)."
+  hiddenAt: DateTime
+}
+"Every refusal is transport-tier, so `userErrors` stays empty and
+ `hidden` is set on success."
+type HideActorPayload { hidden: HiddenActorEdge }
 input UnhideActorInput { actor: UUID! }
-type UnhideActorPayload { ok: Boolean! }
+type UnhideActorPayload { ok: Boolean }
 
 input MarkSeenInput {
   "The nodes the viewer has seen, in the order they were seen."
@@ -5415,7 +5425,17 @@ extend type Mutation {
    Dropping a node that is not kept is ok (idempotent). Needs a
    session; no account state."
   removeBookmark(input: RemoveBookmarkInput!): RemoveBookmarkPayload!
+  "Hide an actor from the viewer's own feed. Idempotent: an actor
+   already hidden keeps its edge and its moment. Any actor may be
+   hidden, a deleted account included; the viewer's own id is
+   BAD_INPUT, an id naming no actor NOT_FOUND — both at the transport,
+   client bugs no surface renders. Needs a session and no particular
+   account state — an applicant hides like a member; this is private
+   viewer state, not acting. Nothing reaches the graph or the hidden
+   actor."
   hideActor(input: HideActorInput!): HideActorPayload!
+  "Unhide an actor — a genuine delete. Idempotent: an actor not
+   hidden answers ok. Needs a session; no account state."
   unhideActor(input: UnhideActorInput!): UnhideActorPayload!
   "Record that the viewer has seen nodes — first seeing only: a node
    already on the list is left as it is (re-seeing never counts, never
@@ -5437,7 +5457,8 @@ extend type Mutation {
 }
 ```
 
-Bookmarks and hidden-actors have explicit `remove*` verbs because
+Bookmarks and hidden-actors have explicit removal verbs
+(`removeBookmark`, `unhideActor`) because
 the "no destructive operation" rule is a *graph* invariant —
 private operational state carries no append-only history and no
 public visibility, so a remove is a genuine delete of a row, not a
