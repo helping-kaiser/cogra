@@ -9360,7 +9360,7 @@ jakob's rulings on the implementation side's contract-recon gaps (seam
   with the registration, so the band never stands.
 - **An approved applicant cannot delete during the landing**: the row
   wears the locked look and answers `You can delete your account once
-  you're in.`
+  your registration lands.`
 - **The release is named CoGra v1.0.0** across the design prose.
 
 ### The night rulings executed — 2026-10-06

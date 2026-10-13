@@ -168,4 +168,4 @@ WHEN tap Delete account GIVEN User.deletionPath reads IMMEDIATE or BY_LINK and n
 
 ALWAYS Delete account wears the locked look, visibly inactive at the disabled opacity and still tappable GIVEN User.deletionPath reads LOCKED
 
-WHEN tap Delete account GIVEN User.deletionPath reads LOCKED -> the snackbar reads You can delete your account once you're in. AND NEVER the deletion's request screen opens AND NEVER anything is deleted
+WHEN tap Delete account GIVEN User.deletionPath reads LOCKED -> the snackbar reads You can delete your account once your registration lands. AND NEVER the deletion's request screen opens AND NEVER anything is deleted

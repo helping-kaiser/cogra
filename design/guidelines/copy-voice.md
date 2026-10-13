@@ -2882,8 +2882,10 @@ application: `BY_LINK` takes the mailed-link footnote, `IMMEDIATE` and
 `LOCKED` the applicant's. An applicant whose address is funded but
 whose Registration has not landed (`LOCKED`) meets the row in the
 applicant locked look, and its tap answers `You can delete your account
-once you're in.`, `You can vouch once you're in.`'s construction (*new
-2026-10-06, blessed (jakob 2026-10-06)*).
+once your registration lands.` — the moment deletion opens, which can
+come before the vouch lets them in, so `You can vouch once you're in.`'s
+construction does not fit here (*new 2026-10-13, drafted — wording
+jakob's at review; his direction 2026-10-13*).
 
 **The request screen says what goes before what stays, and says both.**
 Heading `Delete account`; then `This takes your name off CoGra. What you
