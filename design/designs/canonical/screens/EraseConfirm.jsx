@@ -71,6 +71,7 @@ export function Screen() {
             <div style={{ display: "{{noneShown}}" }} data-node-chip="backup" data-node-key="none">
               <Button node="recovery">Make a recovery code</Button>
               <Button variant="text" node="erase">Erase everything and sign out</Button>
+              <Button variant="text" node="cancel">Cancel</Button>
             </div>
             <div style={{ display: "{{madeShown}}" }} data-node-chip="backup" data-node-key="made">
               <Button variant="text" node="erase">Erase everything and sign out</Button>
