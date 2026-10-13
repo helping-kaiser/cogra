@@ -11,6 +11,7 @@ import { writeConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
 import { forgetReveals } from "@/lib/ui2/media/reveal";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
+import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeIdentityStore } from "@/test/identity";
@@ -718,20 +719,20 @@ describe("PostView", () => {
     expect(await screen.findByTestId(byNode("postDetail.card.citedBy"))).toHaveTextContent("Cited by 4");
   });
 
-  // THE INTRODUCED-BUT-INERT LAW (jakob 2026-09-14): a row whose destination is
-  // not built yet stands and does nothing, rather than the menu growing a row
-  // per slice. Hide waits on the hidden-actors packet.
-  it("renders the rows whose destinations are not built yet, and they do nothing", async () => {
-    server.use(
-      ...thread("someone-else", []),
-    );
+  // ReaderPostMenu.md:15 — hiding from the detail keeps the reader on the post;
+  // the person leaves the feed, never this page.
+  it("hide_from_the_detail_keeps_the_reader_on_the_post", async () => {
+    const log = hiddenLog();
+    server.use(...thread("someone-else", []), ...hiddenHandlers(log));
     renderWithProviders(<PostView postId="p1" />, {
       store: storeFor("acct-1"),
       writeSigner: fakeWriteSigner(),
     });
     fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
     fireEvent.click(screen.getByTestId("postDetail.menuSheet.hide"));
+    expect(await screen.findByText(/is hidden — their posts stay out of your feed\.$/)).toBeInTheDocument();
     expect(screen.getByTestId(byNode("postDetail.card.body"))).toBeInTheDocument();
+    await waitFor(() => expect(log.hides).toEqual([{ actor: "someone-else", at: null }]));
   });
 
   /** The detail's post, kept by the reader at `keptAt` (or not kept). */
