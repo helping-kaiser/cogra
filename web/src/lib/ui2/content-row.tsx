@@ -7,7 +7,8 @@
 // chronicle, notifications, the wallet, Hidden accounts later) cannot drift.
 //
 // THE DISC LEADS, BY PRECEDENCE, not by choice: a deleted account's reserved
-// disc, else a picture, else a monogram for a name, else the kind's glyph.
+// disc, else a picture, else a monogram for a name, else a stance face, else
+// the kind's glyph.
 //
 // THE SECOND LINE IS ONE LINE, ellipsized, in every variant: a row in a list is
 // scanned, not read.
@@ -24,8 +25,10 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { bundleReadout } from "@/lib/stance/anchors";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon, type GlyphName } from "@/lib/ui/icons";
+import { formatStancePair } from "@/lib/ui/stance-format";
 import { MonogramAvatar } from "./monogram-avatar";
 
 /** The word a deleted account's row reads, in the system's voice (`ActorChip.jsx`). */
@@ -40,6 +43,8 @@ export type ContentRowVariant = "chronicle";
 export type ContentRowDisc =
   | { readonly kind: "picture"; readonly src: string; readonly name: string }
   | { readonly kind: "monogram"; readonly name: string }
+  /** A stance's face where a picture would go, no digits (the chronicle's opinion row). */
+  | { readonly kind: "face"; readonly pDirected: number; readonly pInterest: number }
   | { readonly kind: "glyph"; readonly glyph: GlyphName }
   | { readonly kind: "redacted" };
 
@@ -53,6 +58,21 @@ function Disc({ disc }: { disc: ContentRowDisc }) {
       return <MonogramAvatar name={disc.name} src={disc.src} size={40} />;
     case "monogram":
       return <MonogramAvatar name={disc.name} size={40} />;
+    case "face": {
+      // `StanceValue` with `showPair={false}` (StanceReadout.jsx): the face on
+      // screen, the label and the exact pair spoken.
+      const pair = { pDirected: disc.pDirected, pInterest: disc.pInterest };
+      const readout = bundleReadout(pair, "Severed");
+      return (
+        <span
+          role="img"
+          aria-label={`${readout.label}, ${formatStancePair(pair)}`}
+          className="grid size-10 place-items-center rounded-full bg-surface-container-high text-title-medium"
+        >
+          <span aria-hidden="true">{readout.emoji}</span>
+        </span>
+      );
+    }
     case "glyph":
       return (
         <span className="grid size-10 place-items-center rounded-full bg-surface-container-high text-on-surface-variant">
@@ -74,9 +94,22 @@ export function ContentRow({
   onOpen,
   node,
   testId,
+  unread = false,
+  sentence = false,
 }: {
   variant?: ContentRowVariant;
   title: string;
+  /**
+   * Not yet opened: the bell's own dot at row scale, under the trailing edge,
+   * spoken `New` (ContentRow.jsx `unread`).
+   */
+  unread?: boolean;
+  /**
+   * The title is a sentence that already names a deleted actor in prose (`A
+   * deleted account commented on your post`, design digest item 18), so the
+   * redacted disc keeps it rather than replacing it with the bare name.
+   */
+  sentence?: boolean;
   /** A word riding the title's baseline — Saved's `@handle`. */
   titleAside?: string;
   /** The title in the system's voice (`Removed by its author`), `text-secondary`. */
@@ -98,9 +131,9 @@ export function ContentRow({
   // and `Deleted account` in the system's voice, the aside dropped — anything
   // in the handle's place would invent one.
   const redacted = disc.kind === "redacted";
-  const title = redacted ? REDACTED_ACTOR_NAME : titleGiven;
+  const title = redacted && !sentence ? REDACTED_ACTOR_NAME : titleGiven;
   const aside = redacted ? undefined : asideGiven;
-  const quiet = redacted || titleQuiet;
+  const quiet = (redacted && !sentence) || titleQuiet;
   const heading = (
     <span
       className={`${ELLIPSIS} text-label-large ${quiet ? "text-on-surface-variant" : "text-on-surface"}`}
@@ -137,12 +170,26 @@ export function ContentRow({
           </span>
         )}
       </span>
-      {trailing !== undefined && (
-        <span
-          className="flex-none text-label-small text-on-surface-variant"
-          {...testAttributes(part(node, "trailing"), `${testId}-trailing`)}
-        >
-          {trailing}
+      {(trailing !== undefined || unread) && (
+        <span className="flex flex-none flex-col items-end gap-0.5">
+          {trailing !== undefined && (
+            <span
+              className="text-label-small text-on-surface-variant"
+              {...testAttributes(part(node, "trailing"), `${testId}-trailing`)}
+            >
+              {trailing}
+            </span>
+          )}
+          {/* The shell's unread mark at row scale: a dot, never a weight
+              change, so a list of unread rows stays a list. */}
+          {unread && (
+            <span
+              role="img"
+              aria-label="New"
+              className="size-2 rounded-full bg-primary"
+              {...testAttributes(part(node, "dot"), `${testId}-dot`)}
+            />
+          )}
         </span>
       )}
     </>
