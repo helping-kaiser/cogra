@@ -50,6 +50,8 @@ import {
 } from "@/lib/ui/borrowed-view-band";
 import { Button } from "@/lib/ui/button";
 import { CograBand } from "@/lib/ui/cogra-band";
+import { useBellLit, useFreshRootBell } from "@/lib/notifications/bell";
+import { notificationsHref } from "@/lib/notifications/origin";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
 import { PostCard } from "@/lib/ui/post-card";
@@ -307,6 +309,11 @@ export function FeedView({
   // Which refreshed list is on screen: the stage and its clips are built anew
   // for each one (see `restill` below).
   const [listEra, setListEra] = useState(0);
+  // THE BELL LIGHTS ON A FRESH LOAD OF THIS ROOT (FeedUnread.md:3, :5): an
+  // arrival with nothing remembered, or a pull. A remembered feed coming back
+  // by back or the bar is a return, and never lights it (:9).
+  useFreshRootBell(reader, remembered === null || listEra > 0, listEra);
+  const bellIsLit = useBellLit(reader);
 
   // WHICH ASK IS CURRENT. A ranking, a pull and a Done can overlap; only the
   // newest one's answer reaches the screen, and nothing lands after unmount.
@@ -510,6 +517,13 @@ export function FeedView({
               : phase === "signedIn"
                 ? () => router.push("/chats")
                 : undefined
+          }
+          // The bell (FeedUnread.md): a signed-in reader's, an applicant's
+          // included; a guest has no list and no bell (FeedBare.md:9).
+          bell={
+            phase === "signedIn"
+              ? { lit: bellIsLit, onOpen: () => router.push(notificationsHref("feed")) }
+              : undefined
           }
         >
           {/* The band carries its own gutter — it is a bare line under the

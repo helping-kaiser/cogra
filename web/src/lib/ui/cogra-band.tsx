@@ -28,10 +28,25 @@ import { DeletionBandSlot } from "@/lib/deletion/deletion-status";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
 
+/**
+ * The bell (CograBand.jsx `bell`/`unread`; FeedUnread.md): right-most on every
+ * signed-in root band, a dot and never a count, and its accessible name says
+ * when the dot is lit. A guest has no list, so a guest's band passes none.
+ */
+export type BandBell = {
+  readonly lit: boolean;
+  readonly onOpen: () => void;
+};
+
+/** FeedUnread.md:13, :15. */
+export const BELL_LABEL = "Notifications";
+export const BELL_LABEL_LIT = "Notifications — something new";
+
 export function CograBand({
   trailing,
   onChats,
   chatsLabel = "Chats",
+  bell,
   children,
   node,
   deletionBandNode,
@@ -42,6 +57,8 @@ export function CograBand({
   /** Omitted until the chat surface exists. */
   onChats?: () => void;
   chatsLabel?: string;
+  /** Omitted for a guest, and while the phase resolves. */
+  bell?: BandBell;
   children?: ReactNode;
   /**
    * The registered band node on a registered screen (`feed.band`): the 48px
@@ -61,7 +78,11 @@ export function CograBand({
         <span className="text-title-large font-semibold" {...testAttributes(part(node, "wordmark"))}>
           cogra
         </span>
+        {/* THE CLUSTER READS the screen's own control, then chats, then the
+            bell (Profile.md:3; ChatsComingSoon.md:3): the bell keeps the
+            band's right edge on every root. */}
         <div className="ml-auto flex min-w-0 items-center">
+          {trailing}
           {onChats !== undefined && (
             <button
               type="button"
@@ -73,11 +94,40 @@ export function CograBand({
               <Icon name="forum" size={22} />
             </button>
           )}
-          {trailing}
+          {bell !== undefined && <BellButton bell={bell} node={part(node, "bell")} />}
         </div>
       </div>
       <DeletionBandSlot node={deletionBandNode} />
       {children}
     </div>
+  );
+}
+
+/**
+ * The bell itself (`BandIcon` with `dot`): the dot is `--primary` at 8px,
+ * ringed in the surface, and it is the button's name that says so — the
+ * drawing is hidden from assistive tech. Exported for headers that are not a
+ * band yet but are a root's (the own profile's).
+ */
+export function BellButton({ bell, node }: { bell: BandBell; node?: DataNode }) {
+  return (
+    <button
+      type="button"
+      {...testAttributes(node, "band-bell")}
+      aria-label={bell.lit ? BELL_LABEL_LIT : BELL_LABEL}
+      onClick={bell.onOpen}
+      className="cg-state cg-focus grid size-12 flex-none place-items-center rounded-full text-on-surface-variant"
+    >
+      <span className="relative grid place-items-center">
+        <Icon name="notifications" size={22} />
+        {bell.lit && (
+          <span
+            aria-hidden
+            {...testAttributes(part(node, "dot"), "band-bell-dot")}
+            className="absolute -right-0.5 -top-px box-content size-2 rounded-full border-2 border-surface bg-primary"
+          />
+        )}
+      </span>
+    </button>
   );
 }

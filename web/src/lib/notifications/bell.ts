@@ -58,6 +58,24 @@ export function clearBell(): void {
 /** Test seam: forget every reader's dot. */
 export function resetBell(): void {
   set({ account: null, lit: false });
+  arrived.clear();
+}
+
+/**
+ * The roots this page load has already shown `account`. A root that keeps no
+ * memory of its own (the profile) re-mounts on every return, so its FIRST
+ * arrival per load is its fresh load, and every later one is a return by back
+ * or the bar — which never lights the dot (FeedUnread.md:9).
+ */
+const arrived = new Set<string>();
+
+/** Whether this is `account`'s first arrival on `root` in this page load; records it. */
+export function firstArrival(account: string | null, root: string): boolean {
+  if (account === null) return false;
+  const key = `${account}:${root}`;
+  if (arrived.has(key)) return false;
+  arrived.add(key);
+  return true;
 }
 
 /** The dot as the shell holds it for `account`, re-rendering when it changes. */
