@@ -82,13 +82,23 @@ wiped the moment a blob is uploaded; from then on custody is the
 non-extractable key alone.
 
 Every IndexedDB identity record — key pair, retained seed,
-pending backup blob, per-write handshake material, UX flags — is
+pending backup blob, per-write handshake material, UX flags, the
+draft and its sealed copies, kept picks, the device lock — is
 keyed by the account it belongs to, never held in a
 device-global slot
 ([auth.md "Multi-account device custody"](auth.md#multi-account-device-custody));
 sign-out keeps each account's material in its own slot, and the
 repair-attach re-attaches only from the signed-in account's slot
 after verifying it against the account's attached key.
+
+A "don't remember" account holds its
+[device lock](auth.md#device-lock) as a non-extractable HKDF base
+key while signed in. Locking drops the `CryptoKey` and the seed
+both — a non-extractable key is still usable by any same-origin
+script, so keeping it would leave the key usable while locked —
+and writes the locked set, the draft's ciphertext included, into
+the identity database in one transaction; the unlock re-imports
+the key from the seed before the sign-in commits its tokens.
 
 That wipe shapes the settings backup surface. While the seed is
 retained (backup declined earlier), enabling is one step: seal,
