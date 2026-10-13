@@ -804,6 +804,31 @@ impl Query {
         )
         .await
     }
+
+    /// Releases from the application registry, newest first; `component`
+    /// narrows to one platform component. Answers "what's the current
+    /// version?" and "where are version X's patch notes?". Readable
+    /// anonymously; served in `released_at` order.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    async fn app_versions(
+        &self,
+        ctx: &Context<'_>,
+        component: Option<crate::registry::AppComponent>,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<super::app_versions::AppVersionConnection> {
+        super::app_versions::app_versions(
+            ctx.data::<PgPool>()?,
+            component,
+            first,
+            after,
+            last,
+            before,
+        )
+        .await
+    }
 }
 
 /// The shared id-or-handle resolution behind `user` and `actor`:
