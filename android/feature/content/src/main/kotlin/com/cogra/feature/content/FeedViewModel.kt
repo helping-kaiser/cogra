@@ -21,12 +21,12 @@ import com.cogra.domain.feed.derive
 import com.cogra.domain.history.SeenRecord
 import com.cogra.domain.history.SeenTracker
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * One window per hydration: the first screenful arrives fast, well under
@@ -167,7 +167,7 @@ class FeedViewModel @Inject constructor(
         composing?.cancel()
         composing = viewModelScope.launch {
             val filter = _state.value.filter
-            when (val ranked = rank(filter)) {
+            when (val ranked = feed.rank(viewer, filter)) {
                 is Outcome.Success -> {
                     hydrated.clear()
                     install(ranked.value)
@@ -204,25 +204,6 @@ class FeedViewModel @Inject constructor(
         composing = viewModelScope.launch { install(held) }
     }
 
-    /** The ranking for [filter]'s pod-side axes; the empty answer where nothing would rank. */
-    private suspend fun rank(filter: FeedFilter): Outcome<FeedRanking> {
-        // Every kind off: the empty state, and the client never asks
-        // (FeedNothing.md:3-5).
-        if (filter.kinds.isEmpty()) return Outcome.Success(FeedRanking.EMPTY)
-        return when (val who = viewer.resolve()) {
-            is Outcome.Success -> {
-                val id = who.value ?: return Outcome.Success(FeedRanking.EMPTY)
-                when (val answer = feed.ranking(id, filter.rankArgs)) {
-                    is Outcome.Success -> Outcome.Success(answer.value ?: FeedRanking.EMPTY)
-                    is Outcome.Refused -> answer
-                    is Outcome.Failed -> answer
-                }
-            }
-            is Outcome.Refused -> who
-            is Outcome.Failed -> who
-        }
-    }
-
     /**
      * THE DERIVE (§4.12) over [ranking], by the filter in force and the
      * seen record as it stands now, then the first window. The new list
@@ -231,7 +212,7 @@ class FeedViewModel @Inject constructor(
     private suspend fun install(ranking: FeedRanking) {
         val filter = _state.value.filter
         val rows = ranking.derive(filter, seenRecord.seenIds())
-        when (val first = window(rows, from = 0)) {
+        when (val first = feed.hydrate(rows, from = 0, hydrated)) {
             is Outcome.Success -> {
                 val (posts, next) = first.value
                 cursor = next
@@ -261,7 +242,7 @@ class FeedViewModel @Inject constructor(
         val rows = s.rows
         val from = cursor
         viewModelScope.launch {
-            val outcome = window(rows, from)
+            val outcome = feed.hydrate(rows, from, hydrated)
             // A derive that replaced the list meanwhile owns the cards now.
             if (_state.value.rows !== rows) {
                 _state.update { it.copy(loadingMore = false) }
@@ -285,32 +266,59 @@ class FeedViewModel @Inject constructor(
             }
         }
     }
+}
 
-    /**
-     * Hydrates [rows] from [from] a window at a time, until a window yields
-     * a card or the list ends (the fill rule, §5.1): a window of expired or
-     * not-yet-rendered rows loads the next rather than leaving the reader
-     * at a dead end. Rows hydrated since the last fetch are not read again.
-     * Returns the cards, in the list's order, and where the next window starts.
-     */
-    private suspend fun window(rows: List<FeedRow>, from: Int): Outcome<Pair<List<PostView>, Int>> {
-        var at = from
-        val cards = mutableListOf<PostView>()
-        while (at < rows.size && cards.isEmpty()) {
-            val ids = rows.subList(at, minOf(at + FEED_PAGE_SIZE, rows.size)).map { it.targetId }
-            val unread = ids.filterNot { it in hydrated }
-            if (unread.isNotEmpty()) {
-                when (val read = feed.window(unread)) {
-                    is Outcome.Success -> read.value.forEach { hydrated[it.id] = it }
-                    is Outcome.Refused -> return read
-                    is Outcome.Failed -> return read
-                }
+/**
+ * The ranking for [filter]'s pod-side axes, of the view [viewer] resolves
+ * to; the empty answer where nothing would rank.
+ */
+private suspend fun FeedRepository.rank(viewer: FeedViewer, filter: FeedFilter): Outcome<FeedRanking> {
+    // Every kind off: the empty state, and the client never asks
+    // (FeedNothing.md:3-5).
+    if (filter.kinds.isEmpty()) return Outcome.Success(FeedRanking.EMPTY)
+    return when (val who = viewer.resolve()) {
+        is Outcome.Success -> {
+            val id = who.value ?: return Outcome.Success(FeedRanking.EMPTY)
+            when (val answer = ranking(id, filter.rankArgs)) {
+                is Outcome.Success -> Outcome.Success(answer.value ?: FeedRanking.EMPTY)
+                is Outcome.Refused -> answer
+                is Outcome.Failed -> answer
             }
-            cards += ids.mapNotNull { hydrated[it] }
-            at += ids.size
         }
-        return Outcome.Success(cards to at)
+        is Outcome.Refused -> who
+        is Outcome.Failed -> who
     }
+}
+
+/**
+ * Hydrates [rows] from [from] a window at a time, until a window yields a
+ * card or the list ends (the fill rule, §5.1): a window of expired or
+ * not-yet-rendered rows loads the next rather than leaving the reader at a
+ * dead end. Rows already in [hydrated] — read since the last fetch — are
+ * not read again; what is read joins it. Returns the cards, in the list's
+ * order, and where the next window starts.
+ */
+private suspend fun FeedRepository.hydrate(
+    rows: List<FeedRow>,
+    from: Int,
+    hydrated: MutableMap<String, PostView>,
+): Outcome<Pair<List<PostView>, Int>> {
+    var at = from
+    val cards = mutableListOf<PostView>()
+    while (at < rows.size && cards.isEmpty()) {
+        val ids = rows.subList(at, minOf(at + FEED_PAGE_SIZE, rows.size)).map { it.targetId }
+        val unread = ids.filterNot { it in hydrated }
+        if (unread.isNotEmpty()) {
+            when (val read = window(unread)) {
+                is Outcome.Success -> read.value.forEach { hydrated[it.id] = it }
+                is Outcome.Refused -> return read
+                is Outcome.Failed -> return read
+            }
+        }
+        cards += ids.mapNotNull { hydrated[it] }
+        at += ids.size
+    }
+    return Outcome.Success(cards to at)
 }
 
 /** The held card keeps its place; only its own state moves. */

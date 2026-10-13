@@ -3,9 +3,6 @@ package com.cogra.domain.history
 import com.cogra.domain.Outcome
 import com.cogra.domain.di.ApplicationScope
 import com.cogra.domain.store.TokenStore
-import java.time.Instant
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
@@ -16,6 +13,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.time.Instant
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * How far the record has pulled the server's seen-list: its newest entry
@@ -147,25 +147,31 @@ class SeenRecord @Inject constructor(
         val (account, mark) = synchronized(lock) {
             (slot.value as? Slot.Held)?.let { it.account to it.watermark }
         } ?: return@withLock
+        val newest = pull(account, mark) ?: return@withLock
+        val moved = synchronized(lock) {
+            (slot.value as? Slot.Held)?.takeIf { it.account == account }?.let { it.watermark = newest }
+        }
+        if (moved != null) dirty.trySend(Unit)
+    }
+
+    /**
+     * Pages [account]'s seen-list down to [mark], writing each page through.
+     * Returns the list's head once it got all the way, or null when it was
+     * cut short — a fault, no reader, another reader's list, the account
+     * gone — or the list is empty: the watermark stays where it was.
+     */
+    private suspend fun pull(account: String, mark: SeenWatermark?): SeenWatermark? {
         var after: String? = null
         var head: SeenWatermark? = null
         while (true) {
             val page = (source.seenPage(SYNC_PAGE_SIZE, after) as? Outcome.Success)?.value
-            // A fault, no reader, or another reader's list: stop, the
-            // watermark where it was.
-            if (page == null || page.reader != account) return@withLock
+            if (page == null || page.reader != account) return null
             if (head == null) head = page.entries.firstOrNull()?.let { SeenWatermark(it.nodeId, it.firstSeenAt) }
             val fresh = page.entries.takeWhile { mark == null || !it.reaches(mark) }
-            if (!addSynced(account, fresh.map { it.nodeId })) return@withLock
-            if (fresh.size < page.entries.size || !page.hasNextPage || page.endCursor == null) break
+            if (!addSynced(account, fresh.map { it.nodeId })) return null
+            if (fresh.size < page.entries.size || !page.hasNextPage || page.endCursor == null) return head
             after = page.endCursor
         }
-        val moved = head?.let { newest ->
-            synchronized(lock) {
-                (slot.value as? Slot.Held)?.takeIf { it.account == account }?.let { it.watermark = newest }
-            }
-        }
-        if (moved != null) dirty.trySend(Unit)
     }
 
     /** The sync's write; false when the account changed under it. */

@@ -10,7 +10,6 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.has
 import com.cogra.domain.history.SeenEntry
 import com.cogra.domain.history.SeenPage
-import java.time.Instant
 import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
@@ -24,6 +23,7 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.time.Instant
 import javax.inject.Provider
 
 class ViewHistoryRepositoryTest {

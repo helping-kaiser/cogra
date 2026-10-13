@@ -10,8 +10,8 @@ import com.cogra.domain.testing.entry
 import com.cogra.domain.testing.rankingOf
 import com.cogra.domain.testing.settling
 import com.google.common.truth.Truth.assertThat
-import kotlin.random.Random
 import org.junit.Test
+import kotlin.random.Random
 
 class FeedDeriveTest {
 
@@ -187,8 +187,9 @@ class FeedDeriveTest {
             for (filter in everyDeviceFilter()) {
                 val composedThenCut = answer.derive(filter, seen)
                 val kept = (ranked + newest).filter { filter.keeps(it, seen) }.map { it.targetId }.toSet()
-                val cutThenComposed = reemit(ranked.filter { it.targetId in kept }, newest.filter { it.targetId in kept })
-                    .woven(filter.order)
+                val keptRanked = ranked.filter { it.targetId in kept }
+                val keptNewest = newest.filter { it.targetId in kept }
+                val cutThenComposed = reemit(keptRanked, keptNewest).woven(filter.order)
                 assertThat(composedThenCut).containsExactlyElementsIn(cutThenComposed).inOrder()
             }
         }
@@ -242,7 +243,8 @@ class FeedDeriveTest {
         return FeedRanking(
             asOfEpoch = 1,
             entries = landedRanked.map { row ->
-                RankedEntry(row.targetId, row.kind, checkNotNull(row.score), row.mark, landedNewest.indexOf(row.targetId))
+                val newestIndex = landedNewest.indexOf(row.targetId)
+                RankedEntry(row.targetId, row.kind, checkNotNull(row.score), row.mark, newestIndex)
             },
             settling = ranked.withIndex().filter { it.value.settling }.map { (at, row) ->
                 SettlingRow(row.targetId, row.kind, row.mark, at, newest.indexOfFirst { it.targetId == row.targetId })

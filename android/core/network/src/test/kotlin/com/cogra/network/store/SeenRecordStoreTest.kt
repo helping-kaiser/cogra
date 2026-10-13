@@ -9,8 +9,6 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import com.cogra.domain.history.SeenWatermark
 import com.cogra.domain.history.StoredSeenRecord
 import com.google.common.truth.Truth.assertThat
-import java.io.File
-import java.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -20,6 +18,8 @@ import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
+import java.time.Instant
 
 /** Invertible and visibly not a no-op, as StoresTest's. */
 private class FlipCipher : StoreCipher {

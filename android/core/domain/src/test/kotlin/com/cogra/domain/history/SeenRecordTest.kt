@@ -13,13 +13,13 @@ import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.ScriptedSeenHistory
 import com.google.common.truth.Truth.assertThat
-import java.io.IOException
-import java.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import java.io.IOException
+import java.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SeenRecordTest {

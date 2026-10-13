@@ -12,12 +12,12 @@ package com.cogra.network.store
 import com.cogra.domain.history.SeenRecordStore
 import com.cogra.domain.history.SeenWatermark
 import com.cogra.domain.history.StoredSeenRecord
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
 import java.time.Instant
 import java.time.format.DateTimeParseException
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.Json
 
 @kotlinx.serialization.Serializable
 private data class StoredMark(val nodeId: String, val firstSeenAt: String)

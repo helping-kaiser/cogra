@@ -8,8 +8,8 @@ import com.cogra.domain.history.SeenRecord
 import com.cogra.domain.history.SeenRecordStore
 import com.cogra.domain.history.StoredSeenRecord
 import com.cogra.domain.store.TokenStore
-import java.time.Instant
 import kotlinx.coroutines.CoroutineScope
+import java.time.Instant
 
 /** A seen record over in-memory fakes, for tests that only need one to exist. */
 fun testSeenRecord(
