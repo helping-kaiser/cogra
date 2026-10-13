@@ -98,16 +98,24 @@ function renderSettings({
   const identity = fakeIdentityStore({ keyOnDevice, seed, ephemeral });
   const drafts = { clear: vi.fn(async () => {}) };
   const seals = { forget: vi.fn(async () => {}) };
+  const forgetSeenRecord = vi.fn<(account: string) => Promise<void>>(async () => {});
   const erase = vi.fn(async () => {});
   const leave = vi.fn();
   const tokens = signedInStore();
   const rendered = renderWithProviders(
     <AccountDeletionProvider>
-      <SettingsView store={identity} drafts={drafts} seals={seals} erase={erase} leave={leave} />
+      <SettingsView
+        store={identity}
+        drafts={drafts}
+        seals={seals}
+        forgetSeenRecord={forgetSeenRecord}
+        erase={erase}
+        leave={leave}
+      />
     </AccountDeletionProvider>,
     { store: tokens },
   );
-  return { ...rendered, identity, drafts, seals, tokens, erase, leave };
+  return { ...rendered, identity, drafts, seals, forgetSeenRecord, tokens, erase, leave };
 }
 
 /** The node a registered path names (`data-node.ts`). */
@@ -766,7 +774,7 @@ describe("signing out", () => {
 
   it("sign_out_remembered_keeps_the_key_and_offers_the_account — and keeps the draft (F4)", async () => {
     server.use(okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }));
-    const { identity, drafts, seals, tokens } = renderSettings();
+    const { identity, drafts, seals, forgetSeenRecord, tokens } = renderSettings();
     await screen.findByTestId("settings.credentials.password.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     await waitFor(() => expect(tokens.accessToken()).toBeNull());
@@ -774,11 +782,13 @@ describe("signing out", () => {
     // A remembered sign-out clears nothing — the draft and its sealed copies included.
     expect(drafts.clear).not.toHaveBeenCalled();
     expect(seals.forget).not.toHaveBeenCalled();
+    // a_remembered_sign_out_keeps_the_record
+    expect(forgetSeenRecord).not.toHaveBeenCalled();
   });
 
   it("sign_out_forgotten_with_a_backup_clears_without_asking", async () => {
     server.use(okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }));
-    const { identity, drafts, seals, tokens } = renderSettings({ ephemeral: true });
+    const { identity, drafts, seals, forgetSeenRecord, tokens } = renderSettings({ ephemeral: true });
     await screen.findByTestId("settings.credentials.password.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     await waitFor(() => expect(tokens.accessToken()).toBeNull());
@@ -787,11 +797,14 @@ describe("signing out", () => {
     expect(drafts.clear).toHaveBeenCalled();
     // A staged post's sealed copy is the draft it came from (Settings.md:145).
     expect(seals.forget).toHaveBeenCalled();
+    // a_dont_remember_sign_out_clears_the_accounts_seen_record: this account's, by id, once.
+    expect(forgetSeenRecord).toHaveBeenCalledTimes(1);
+    expect(forgetSeenRecord).toHaveBeenCalledWith("acct-1");
   });
 
   it("sign_out_forgotten_with_the_only_key_asks_first", async () => {
     server.use(accountHandler({ keyBackupCreatedAt: null }));
-    const { identity, drafts, seals, tokens } = renderSettings({ ephemeral: true });
+    const { identity, drafts, seals, forgetSeenRecord, tokens } = renderSettings({ ephemeral: true });
     await screen.findByTestId("settings.backup.recovery.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     const dialog = await screen.findByTestId("settings.dialog");
@@ -800,6 +813,7 @@ describe("signing out", () => {
     expect(await identity.actorKey()).not.toBeNull();
     expect(drafts.clear).not.toHaveBeenCalled();
     expect(seals.forget).not.toHaveBeenCalled();
+    expect(forgetSeenRecord).not.toHaveBeenCalled();
     // dialog_names_key_draft_and_kept_picks
     expect(within(dialog).getByTestId("settings.dialog.title")).toHaveTextContent("Sign out without a backup?");
     expect(within(dialog).getByTestId("settings.dialog.body")).toHaveTextContent(
@@ -840,7 +854,7 @@ describe("signing out", () => {
       accountHandler({ keyBackupCreatedAt: null }),
       okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }),
     );
-    const { identity, drafts, seals, tokens } = renderSettings({ ephemeral: true });
+    const { identity, drafts, seals, forgetSeenRecord, tokens } = renderSettings({ ephemeral: true });
     await screen.findByTestId("settings.backup.recovery.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     fireEvent.click(await screen.findByTestId("settings.dialog.erase"));
@@ -848,6 +862,7 @@ describe("signing out", () => {
     expect(await identity.actorKey()).toBeNull();
     expect(drafts.clear).toHaveBeenCalled();
     expect(seals.forget).toHaveBeenCalled();
+    expect(forgetSeenRecord).toHaveBeenCalledWith("acct-1");
   });
 
   it("scrim_and_back_close_still_signed_in_focus_on_sign_out", async () => {

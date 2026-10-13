@@ -39,6 +39,8 @@ import { LOCKED_ROW, settingsRowStatus } from "@/lib/deletion/deletion-copy";
 import { useAccountDeletion } from "@/lib/deletion/deletion-status";
 import { sealedDraftStore, type SealedDraftStore } from "@/lib/compose/sealed-draft";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
+import { seenRecord } from "@/lib/history/seen-record";
+import { forgetSeen } from "@/lib/history/seen-sync";
 import { useKeyOnDeviceState } from "@/lib/identity/use-key-on-device";
 import { licenseName, PUBLIC_DOMAIN, type License } from "@/lib/license";
 import { useTokenStore } from "@/lib/session/provider";
@@ -147,6 +149,7 @@ export function SettingsView({
   store = identityStore,
   drafts = composeDraftStore,
   seals = sealedDraftStore,
+  forgetSeenRecord = (account: string) => forgetSeen(seenRecord, account),
   erase = eraseEverything,
   leave = hardNavigate,
 }: {
@@ -154,6 +157,8 @@ export function SettingsView({
   store?: IdentityStore;
   drafts?: Pick<ComposeDraftStore, "clear">;
   seals?: Pick<SealedDraftStore, "forget">;
+  /** Drops one account's seen record and watermark from this browser. */
+  forgetSeenRecord?: (account: string) => Promise<void>;
   erase?: () => Promise<void>;
   leave?: (url: string) => void;
 } = {}) {
@@ -326,6 +331,9 @@ export function SettingsView({
    * exit. Kept picks join the set when they exist (sign-out-custody §3.2).
    */
   const purgeCustody = async () => {
+    // Named before the key goes: the record to drop is this account's, read
+    // while it is still the active one.
+    const accountId = tokens.activeAccountId();
     try {
       await store.purgeIfEphemeral();
     } catch {
@@ -342,6 +350,16 @@ export function SettingsView({
       await seals.forget();
     } catch {
       // sign-out proceeds regardless
+    }
+    // What this account has seen on this browser — the ids and the sync
+    // watermark — is dropped with it and no other account's; the server's
+    // view log survives and a later sign-in re-seeds from it.
+    if (accountId !== null) {
+      try {
+        await forgetSeenRecord(accountId);
+      } catch {
+        // sign-out proceeds regardless
+      }
     }
   };
 

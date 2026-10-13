@@ -158,6 +158,25 @@ export class SeenRecord {
     });
   }
 
+  /**
+   * Drops `account`'s record from this browser: its ids and its watermark, in
+   * one transaction, and no other account's (the don't-remember sign-out).
+   * Memory goes too when it is the account held, and a load still under way
+   * is cut off so it cannot refill the set. The server's view log is not
+   * touched — a later sign-in re-seeds from it, from the top.
+   */
+  async forget(account: string): Promise<void> {
+    if (account === this.owner) {
+      this.ids = new Set();
+      this.era += 1;
+    }
+    await transact(this.idb(), "readwrite", (store) => {
+      store.delete(accountRange(account));
+      store.delete(`${WATERMARK_PREFIX}${account}`);
+      return () => undefined;
+    });
+  }
+
   /** The newest `firstSeenAt` the sync has taken in for `account`, or null. */
   async watermark(account: string): Promise<string | null> {
     try {
