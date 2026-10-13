@@ -50,8 +50,9 @@ pub struct SettlingCandidate {
 /// low-confidence #4). A staged Tag's relevance is its `p_d` (see
 /// `topics`).
 ///
-/// The rows come back in node id order: a stable request, not an order
-/// the ranker reads anything from.
+/// The rows come back newest `authoredAt` first, then node id bytes: the
+/// provisional order equal settling keys break in (PR-66). The authoritative
+/// causal key takes over when the record lands.
 pub async fn candidates(
     pool: &PgPool,
     kinds: &[String],
@@ -101,7 +102,7 @@ pub async fn candidates(
                  ) newest
                  WHERE newest.relevance <> 0
              ))
-           ORDER BY n.id"#,
+           ORDER BY s.pre_signed_at DESC, n.id"#,
         kinds,
         topic,
     )
