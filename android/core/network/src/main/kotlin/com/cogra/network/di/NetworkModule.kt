@@ -28,6 +28,7 @@ import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.report.ReportRepository
+import com.cogra.domain.hidden.HiddenRepository
 import com.cogra.domain.saved.SavedRepository
 import com.cogra.domain.settings.SettingsRepository
 import com.cogra.domain.store.DeviceData
@@ -51,6 +52,7 @@ import com.cogra.network.repo.SettingsRepositoryImpl
 import com.cogra.network.repo.StanceRepositoryImpl
 import com.cogra.network.repo.ReferenceRepositoryImpl
 import com.cogra.network.repo.ReportRepositoryImpl
+import com.cogra.network.repo.HiddenRepositoryImpl
 import com.cogra.network.repo.SavedRepositoryImpl
 import com.cogra.network.repo.TopicRepositoryImpl
 import com.cogra.network.repo.ViewHistoryRepositoryImpl
@@ -203,6 +205,9 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun savedRepository(impl: SavedRepositoryImpl): SavedRepository
+
+    @Binds
+    abstract fun hiddenRepository(impl: HiddenRepositoryImpl): HiddenRepository
 
     @Binds
     abstract fun seenRecordStore(impl: SeenRecordStoreImpl): SeenRecordStore
