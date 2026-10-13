@@ -451,7 +451,7 @@ class FeedViewModelTest {
     @Test
     fun theFeedHydratesByWindowsOfAtMost100() = runTest(dispatcher) {
         val ids = (1..45).map { "p$it" }
-        feed.answer = Outcome.Success(rankingOf(*ids.toTypedArray()))
+        feed.answer = Outcome.Success(rankingOf(ids))
         val vm = viewModel()
         settle()
         assertThat(vm.ids()).isEqualTo(ids.take(FEED_PAGE_SIZE))
@@ -474,7 +474,7 @@ class FeedViewModelTest {
         val unrenderable = object : ScriptedFeedRepository() {
             override fun defaultPost(id: String): PostView? = if (id.startsWith("t")) null else testPost(id)
         }
-        unrenderable.answer = Outcome.Success(rankingOf(*(topics + "p1").toTypedArray()))
+        unrenderable.answer = Outcome.Success(rankingOf(topics + "p1"))
         val vm = FeedViewModel(
             unrenderable,
             FeedViewer(account, session),
@@ -494,7 +494,7 @@ class FeedViewModelTest {
     @Test
     fun everyWindowTheFeedShowsIsHeldForTheDetailToOpenFrom() = runTest(dispatcher) {
         val ids = (1..21).map { "p$it" }
-        feed.answer = Outcome.Success(rankingOf(*ids.toTypedArray()))
+        feed.answer = Outcome.Success(rankingOf(ids))
         val vm = viewModel()
         settle()
         assertThat(seen.lastSeen("p1")?.id).isEqualTo("p1")
@@ -557,7 +557,7 @@ class FeedViewModelTest {
     @Test
     fun aFailedWindowFaultsAtTheAppendSlot() = runTest(dispatcher) {
         val ids = (1..25).map { "p$it" }
-        feed.answer = Outcome.Success(rankingOf(*ids.toTypedArray()))
+        feed.answer = Outcome.Success(rankingOf(ids))
         val vm = viewModel()
         settle()
 

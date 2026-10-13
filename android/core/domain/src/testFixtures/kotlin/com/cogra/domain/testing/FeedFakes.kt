@@ -65,7 +65,10 @@ fun settling(
 ): SettlingRow = SettlingRow(id, kind, mark, ranked, newest)
 
 /** An answer of landed entries only, whose NEWEST order is their ranked order reversed. */
-fun rankingOf(vararg ids: String, asOfEpoch: Int = 7): FeedRanking = FeedRanking(
+fun rankingOf(vararg ids: String, asOfEpoch: Int = 7): FeedRanking = rankingOf(ids.asList(), asOfEpoch)
+
+/** As the vararg form, for an answer built from a list. */
+fun rankingOf(ids: List<String>, asOfEpoch: Int = 7): FeedRanking = FeedRanking(
     asOfEpoch = asOfEpoch,
     entries = ids.mapIndexed { i, id -> entry(id, newestIndex = ids.size - 1 - i) },
     settling = emptyList(),
