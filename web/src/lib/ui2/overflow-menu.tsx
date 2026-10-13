@@ -29,16 +29,104 @@ export type MenuItem = {
   onSelect: () => void;
   /** Distinguishes the row in tests; the label is still what a reader reads. */
   testId: string;
+  /** The registered row of a registered sheet (`feed.menuSheet.save`); it then names the row instead of `testId`. */
+  node?: DataNode;
 };
 
 /**
- * The ⋮ and the sheet it opens.
+ * The ⋮ alone — for a surface that hosts the one sheet its cards' menus share
+ * (the feed's `feed.menuSheet`), where each card carries a trigger and the
+ * surface carries the sheet.
  *
  * The trigger is `more_vert` in the card's header beside the timestamp — never
  * in the affordance row, which is for the things a reader actually reaches for.
  * It draws a 24px glyph inside the full 48px target, pulled back by -12px so it
  * keeps the 24px line it rides on, which is what a card header and a page
  * header's action are.
+ */
+export function OverflowTrigger({
+  ariaLabel,
+  testId,
+  node,
+  expanded,
+  onOpen,
+}: {
+  ariaLabel: string;
+  testId: string;
+  /** The registered node the trigger is; it then names the trigger instead of `testId`. */
+  node?: DataNode;
+  expanded: boolean;
+  onOpen: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      aria-expanded={expanded}
+      aria-haspopup="menu"
+      {...testAttributes(node, testId)}
+      onClick={onOpen}
+      className="cg-state cg-focus -m-3 flex size-12 flex-none items-center justify-center rounded-full text-on-surface-variant"
+    >
+      <Icon name="more_vert" size={24} />
+    </button>
+  );
+}
+
+/**
+ * The sheet a ⋮ opens: the rows and nothing else. Every row drops the sheet as
+ * it acts — the sheet is the door, not the destination, so a dialog or sheet
+ * the row opens is not opening behind a menu the reader has finished with.
+ */
+export function MenuSheet({
+  open,
+  onClose,
+  items,
+  ariaLabel,
+  testId,
+  node,
+  stacked = false,
+}: {
+  open: boolean;
+  onClose: () => void;
+  items: readonly MenuItem[];
+  ariaLabel: string;
+  testId: string;
+  /** The registered sheet (`feed.menuSheet`, `postDetail.menuSheet`); it then names the sheet instead of `testId`. */
+  node?: DataNode;
+  stacked?: boolean;
+}) {
+  return (
+    <BottomSheet
+      open={open}
+      onClose={onClose}
+      title={ariaLabel}
+      titleHidden
+      testId={testId}
+      node={node}
+      stacked={stacked}
+    >
+      <div className="flex flex-col">
+        {items.map((item) => (
+          <SheetItem
+            key={item.label}
+            testId={item.testId}
+            node={item.node}
+            onSelect={() => {
+              onClose();
+              item.onSelect();
+            }}
+          >
+            {item.label}
+          </SheetItem>
+        ))}
+      </div>
+    </BottomSheet>
+  );
+}
+
+/**
+ * The ⋮ and the sheet it opens, for a menu that is its own host.
  */
 export function OverflowMenu({
   items,
@@ -47,6 +135,7 @@ export function OverflowMenu({
   trailing,
   stacked = false,
   node,
+  sheetNode,
 }: {
   items: readonly MenuItem[];
   /** What the trigger and the sheet are both called, e.g. "More on this post". */
@@ -55,6 +144,8 @@ export function OverflowMenu({
   testId: string;
   /** The registered node the TRIGGER is; it then names the trigger instead of `testId`. */
   node?: DataNode;
+  /** The registered node the SHEET is (`postDetail.menuSheet`). */
+  sheetNode?: DataNode;
   /** The dialogs and sheets the rows open, mounted beside the menu. */
   trailing?: ReactNode;
   /**
@@ -74,43 +165,22 @@ export function OverflowMenu({
 
   return (
     <>
-      <button
-        type="button"
-        aria-label={ariaLabel}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        {...testAttributes(node, testId)}
-        onClick={() => setOpen(true)}
-        className="cg-state cg-focus -m-3 flex size-12 flex-none items-center justify-center rounded-full text-on-surface-variant"
-      >
-        <Icon name="more_vert" size={24} />
-      </button>
-      <BottomSheet
+      <OverflowTrigger
+        ariaLabel={ariaLabel}
+        testId={testId}
+        node={node}
+        expanded={open}
+        onOpen={() => setOpen(true)}
+      />
+      <MenuSheet
         open={open}
         onClose={() => setOpen(false)}
-        title={ariaLabel}
-        titleHidden
+        items={items}
+        ariaLabel={ariaLabel}
         testId={`${testId}-sheet`}
+        node={sheetNode}
         stacked={stacked}
-      >
-        <div className="flex flex-col">
-          {items.map((item) => (
-            <SheetItem
-              key={item.label}
-              testId={item.testId}
-              onSelect={() => {
-                // The sheet is the door, not the destination: it drops as the
-                // row acts, so a dialog or sheet the row opens is not opening
-                // behind a menu the reader has finished with.
-                setOpen(false);
-                item.onSelect();
-              }}
-            >
-              {item.label}
-            </SheetItem>
-          ))}
-        </div>
-      </BottomSheet>
+      />
       {trailing}
     </>
   );

@@ -3,6 +3,7 @@ import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { LogInMutationVariables } from "@/__generated__/graphql";
+import type { DeviceLockEngine } from "@/lib/identity/device-lock";
 import { createSecurityNotices } from "@/lib/session/security-notices";
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
@@ -63,6 +64,31 @@ const loginRefused = graphql.mutation("LogIn", () =>
   }),
 );
 
+/**
+ * The device lock's sign-in leg, scripted per press: each entry answers one
+ * press in turn (the last repeats). The engine itself is covered by
+ * `device-lock.test.ts`; here only what the form does with its answer.
+ */
+function fakeLeg(
+  answers: { ready: boolean; lockLost: boolean }[] = [{ ready: true, lockLost: false }],
+  during?: () => void,
+): DeviceLockEngine {
+  let press = 0;
+  const unused = () => Promise.reject(new Error("not part of the sign-in leg"));
+  return {
+    signIn: vi.fn(async () => {
+      during?.();
+      return answers[Math.min(press++, answers.length - 1)]!;
+    }),
+    ensureHeld: unused,
+    discard: unused,
+    lock: unused,
+    endLocalSession: unused,
+    unlock: unused,
+    recover: unused,
+  };
+}
+
 function fillAndSubmit(email = "user@example.com", password = "correct horse battery") {
   fireEvent.change(screen.getByTestId("login_email"), { target: { value: email } });
   fireEvent.change(screen.getByTestId("login_password"), { target: { value: password } });
@@ -120,7 +146,7 @@ describe("LoginForm", () => {
     server.use(loginSuccess());
     const identity = fakeIdentityStore();
     const setEphemeral = vi.spyOn(identity, "setEphemeral");
-    renderWithProviders(<LoginForm identity={identity} />);
+    renderWithProviders(<LoginForm identity={identity} deviceLock={fakeLeg()} />);
     // The checkbox is reachable by its label (web.md § Accessibility).
     fireEvent.click(screen.getByLabelText(/don't remember this account/i));
     fillAndSubmit();
@@ -187,6 +213,89 @@ describe("LoginForm", () => {
       "Too many attempts — wait a moment and try again.",
     );
     expect(screen.queryByTestId("login_transport_error")).not.toBeInTheDocument();
+  });
+
+  describe("the device lock's leg (sign-out-custody §3.5)", () => {
+    it("sign_in_with_current_credentials_unlocks_before_the_shell_renders", async () => {
+      server.use(loginSuccess());
+      const store = createTokenStore();
+      const sessionDuringLeg: boolean[] = [];
+      const leg = fakeLeg(undefined, () => sessionDuringLeg.push(store.hasSession()));
+      renderWithProviders(<LoginForm deviceLock={leg} />, { store });
+      fillAndSubmit();
+      await waitFor(() => expect(store.hasSession()).toBe(true));
+      // The leg ran with the fresh session in hand and NOT committed.
+      expect(sessionDuringLeg).toEqual([false]);
+      expect(leg.signIn).toHaveBeenCalledWith("acct-1", "correct horse battery", "access-1", false);
+    });
+
+    it("sign_in_unlock_without_an_answer_reads_didnt_send_and_retries_without_a_second_login", async () => {
+      let logins = 0;
+      server.use(loginSuccess(() => (logins += 1)));
+      const leg = fakeLeg([
+        { ready: false, lockLost: false },
+        { ready: true, lockLost: false },
+      ]);
+      const { store } = renderWithProviders(<LoginForm deviceLock={leg} />);
+      fillAndSubmit();
+      expect(await screen.findByTestId("login_transport_error")).toHaveTextContent(
+        "That didn't send. Try again.",
+      );
+      expect(store.hasSession()).toBe(false);
+      // The fields kept what was typed; Sign in is the retry.
+      expect(screen.getByTestId("login_email")).toHaveValue("user@example.com");
+      fireEvent.click(screen.getByTestId("login_submit"));
+      await waitFor(() => expect(store.hasSession()).toBe(true));
+      expect(logins).toBe(1);
+      expect(leg.signIn).toHaveBeenCalledTimes(2);
+    });
+
+    it("a_forget_on_sign_in_refuses_to_complete_until_the_lock_is_held", async () => {
+      // PR-61: a ticked box whose lock did not arrive leaves the reader signed out.
+      server.use(loginSuccess());
+      const identity = fakeIdentityStore();
+      const setEphemeral = vi.spyOn(identity, "setEphemeral");
+      const leg = fakeLeg([{ ready: false, lockLost: false }]);
+      const { store } = renderWithProviders(<LoginForm identity={identity} deviceLock={leg} />);
+      fireEvent.click(screen.getByLabelText(/don't remember this account/i));
+      fillAndSubmit();
+      await screen.findByTestId("login_transport_error");
+      expect(leg.signIn).toHaveBeenCalledWith("acct-1", "correct horse battery", "access-1", true);
+      expect(store.hasSession()).toBe(false);
+      expect(setEphemeral).not.toHaveBeenCalled();
+    });
+
+    it("a changed credential drops the held session and logs in again", async () => {
+      let logins = 0;
+      server.use(loginSuccess(() => (logins += 1)));
+      const leg = fakeLeg([
+        { ready: false, lockLost: false },
+        { ready: true, lockLost: false },
+      ]);
+      renderWithProviders(<LoginForm deviceLock={leg} />);
+      fillAndSubmit();
+      await screen.findByTestId("login_transport_error");
+      fillAndSubmit("user@example.com", "another password");
+      await waitFor(() => expect(logins).toBe(2));
+    });
+
+    it("a_dead_lock_completes_the_sign_in_and_posts_its_notice_once", async () => {
+      // PR-62: the leg reports the dead lock on its first press; the notice
+      // posts at the commit, even when that commit is a later press.
+      server.use(loginSuccess());
+      const notices = createSecurityNotices();
+      const leg = fakeLeg([
+        { ready: false, lockLost: true },
+        { ready: true, lockLost: false },
+      ]);
+      const { store } = renderWithProviders(<LoginForm notices={notices} deviceLock={leg} />);
+      fillAndSubmit();
+      await screen.findByTestId("login_transport_error");
+      expect(notices.lockLost()).toBe(false);
+      fireEvent.click(screen.getByTestId("login_submit"));
+      await waitFor(() => expect(store.hasSession()).toBe(true));
+      expect(notices.lockLost()).toBe(true);
+    });
   });
 
   it("offers the Android app as a download from the served APK path", () => {

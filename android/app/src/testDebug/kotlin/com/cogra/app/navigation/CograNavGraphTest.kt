@@ -375,7 +375,7 @@ class CograNavGraphTest {
         // affordance row.
         waitForTag("postDetail.header.menu")
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_cite").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.cite").performClick()
         compose.waitForIdle()
 
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ComposePost>())

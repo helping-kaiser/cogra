@@ -64,12 +64,26 @@ export type SessionReadiness = () => Promise<void>;
 /** Marks the refresh mutation, the one operation the readiness gate lets by. */
 export const SKIP_SESSION_READINESS = "cograSkipSessionReadiness";
 
+/**
+ * An access token the operation carries INSTEAD of the tab's — the device
+ * lock's calls made around a session the store does not hold: the sign-in's
+ * release, which runs before the fresh pair is committed, and the lock's
+ * revoke, which runs after the pair was cleared (sign-out-custody §3.5). Such
+ * a call also skips the readiness gate, since the session it rides is not the
+ * tab's to settle.
+ */
+export const EXPLICIT_ACCESS_TOKEN = "cograExplicitAccessToken";
+
 export function authorizedLink(
   store: TokenStore,
   uri: string,
   ready: SessionReadiness,
 ): ApolloLink {
   const authLink = new SetContextLink(async (prevContext) => {
+    const explicit: unknown = prevContext[EXPLICIT_ACCESS_TOKEN];
+    if (typeof explicit === "string") {
+      return { headers: { ...prevContext.headers, authorization: `Bearer ${explicit}` } };
+    }
     if (prevContext[SKIP_SESSION_READINESS] !== true) await ready();
     const accessToken = store.accessToken();
     if (accessToken === null) return {};

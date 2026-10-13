@@ -254,14 +254,11 @@ class IdentityStoreImpl @Inject constructor(
         if (value) store.put(name, byteArrayOf(1)) else store.remove(name)
     }
 
-    override suspend fun purge() {
+    override suspend fun setKeyBacked(value: Boolean) {
         val account = account() ?: return
-        // The whole slot goes: every key of this account, no other's —
-        // one edit, never a loop of them (custody packet F3). The draft
-        // stays: this is the remote path's purge, and the custody packet
-        // owns what that path does with it.
-        val slot = scoped(account, "")
-        store.removeAll { it.startsWith(slot) }
+        // Read by the device lock by name (`LockCustodyStoreImpl.BACKED`).
+        val name = scoped(account, LockCustodyStoreImpl.BACKED)
+        if (value) store.put(name, byteArrayOf(1)) else store.remove(name)
     }
 
     override suspend fun purgeCustodySet() {

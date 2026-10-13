@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -24,6 +25,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.dataNode
+import com.cogra.core.designsystem.v2.media.CoverKind
+import com.cogra.core.designsystem.v2.media.CoversSurface
 import com.cogra.core.designsystem.v2.token.Space
 
 /**
@@ -53,6 +58,13 @@ import com.cogra.core.designsystem.v2.token.Space
  * (`CommentMenu.jsx`, design/readme.md:2364): the comment's menu, over the
  * comments thread's own sheet. The post's menu and a feed card's stay
  * unstacked — both open over the plain page.
+ *
+ * [sheetNode] is the registered sheet on a registered screen
+ * (`feed.menuSheet`, `postDetail.menuSheet`): the sheet then wears it, and
+ * its grip the `dragHandle` part, in place of the `_sheet` tag.
+ *
+ * THE OPEN SHEET COVERS THE SURFACE BENEATH (Feed.md:31-33): it says so to
+ * the page's covering layers, and the stage under it stops until it drops.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,9 +74,11 @@ fun CograOverflowMenu(
     testTag: String,
     modifier: Modifier = Modifier,
     stacked: Boolean = false,
+    sheetNode: DataNode? = null,
 ) {
     if (items.isEmpty()) return
     var open by remember { mutableStateOf(false) }
+    CoversSurface(open = open, kind = CoverKind.Suspend)
 
     IconButton(
         onClick = { open = true },
@@ -87,7 +101,10 @@ fun CograOverflowMenu(
                 MaterialTheme.colorScheme,
                 MaterialTheme.colorScheme.surfaceContainerHigh,
             ),
-            modifier = Modifier.testTag("${testTag}_sheet"),
+            modifier = Modifier.testTag(sheetNode?.tag ?: "${testTag}_sheet"),
+            dragHandle = {
+                BottomSheetDefaults.DragHandle(modifier = Modifier.dataNode(sheetNode?.div("dragHandle")))
+            },
         ) {
             // NO TITLE. The rows are the sheet, and the name the trigger
             // already carries reaches a screen reader through the trigger's

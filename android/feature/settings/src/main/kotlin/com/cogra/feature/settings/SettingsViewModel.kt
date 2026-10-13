@@ -12,6 +12,7 @@ import com.cogra.domain.SessionInfo
 import com.cogra.domain.deletion.AccountDeletion
 import com.cogra.domain.deletion.AccountDeletionState
 import com.cogra.domain.deletion.DeletionStanding
+import com.cogra.domain.identity.DeviceLock
 import com.cogra.domain.identity.SignOut
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.settings.PendingEmailChange
@@ -155,6 +156,7 @@ class SettingsViewModel @Inject constructor(
     private val device: DevicePreferences,
     private val sensitive: SensitiveContentChoice,
     private val deletionState: AccountDeletionState,
+    private val deviceLock: DeviceLock,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsUiState())
@@ -240,7 +242,12 @@ class SettingsViewModel @Inject constructor(
     fun onForgetOnSignOut() {
         val next = !_state.value.forgetOnSignOut
         _state.update { it.copy(forgetOnSignOut = next) }
-        viewModelScope.launch { identity.setForgetOnSignOut(next) }
+        viewModelScope.launch {
+            identity.setForgetOnSignOut(next)
+            // The lock follows behind the flipped switch (sign-out-custody
+            // §3.4): obtained when on, discarded when off, never waited on.
+            deviceLock.followForgetSwitch(next)
+        }
     }
 
     // --------------------------------------------------- default license

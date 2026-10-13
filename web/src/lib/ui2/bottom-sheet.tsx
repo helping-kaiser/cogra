@@ -364,16 +364,19 @@ export function SheetItem({
   testId,
   onSelect,
   selected = false,
+  node,
 }: {
   children: ReactNode;
   testId: string;
   onSelect: () => void;
   selected?: boolean;
+  /** The registered row (`feed.menuSheet.save`); it then names the row instead of `testId`. */
+  node?: DataNode;
 }) {
   return (
     <button
       type="button"
-      data-testid={testId}
+      {...testAttributes(node, testId)}
       onClick={onSelect}
       aria-pressed={selected || undefined}
       className={`cg-state cg-focus flex min-h-12 w-full items-center gap-3 rounded-small px-2 text-left text-label-large ${

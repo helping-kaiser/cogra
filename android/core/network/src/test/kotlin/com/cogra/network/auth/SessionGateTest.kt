@@ -11,7 +11,7 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.store.SessionRead
 import com.cogra.domain.store.TokenStore
-import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.network.repo.SessionRepositoryImpl
 import com.cogra.network.store.EncryptedStore
@@ -87,7 +87,7 @@ class SessionGateTest {
 
     private lateinit var server: MockWebServer
     private lateinit var client: ApolloClient
-    private val identity = FakeIdentityStore()
+    private val custody = FakeLockCustodyStore()
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     @Before
@@ -107,7 +107,7 @@ class SessionGateTest {
     private fun wire(tokens: TokenStore): SessionRepositoryImpl {
         val refresher = SessionRefresher(
             tokens,
-            EndLocalSession(identity, tokens),
+            EndLocalSession(custody, tokens),
             Provider { client },
         )
         val gate = SessionGate(tokens, Provider { refresher })
