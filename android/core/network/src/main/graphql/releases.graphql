@@ -1,0 +1,21 @@
+# The release registry (api-spec.md `appVersions`): this client's own
+# component, newest first, read by What's new and the cold-open announcer.
+# The list is one row per release, so a page is the documented maximum and
+# the reader follows `endCursor` while `hasNextPage`.
+query AppVersions($component: AppComponent!, $after: String) {
+  appVersions(component: $component, first: 100, after: $after) {
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    edges {
+      node {
+        component
+        version
+        notes
+        patchNotesUrl
+        releasedAt
+      }
+    }
+  }
+}
