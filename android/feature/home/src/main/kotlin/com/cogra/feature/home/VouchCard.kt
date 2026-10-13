@@ -14,9 +14,13 @@
 // go through brings the card back with `That didn't go through.` and `Retry`
 // in its row (:39, ruling 44).
 //
-// `Vouch back` IS THE OPENING GESTURE: the host draws the vouch-back pad over
-// the shell (`vouchBackPad`), Cancel closes back onto this card with nothing
-// staged (VouchBackPad.md:45), and a taken signing opens the ceremony (:33).
+// THE CARD'S ACT IS THE FACE (seam 157/165, VouchBack.md:11): the stance
+// control's own anchor, never a button of its own. The host wears it
+// (`stance`), because the stance holder lives in `feature:stance`: a tap
+// blooms the vouch-back pad (:39), a hold signs the gentle default (:43), a
+// taken signing opens the ceremony (VouchBackPad.md:33), and Cancel closes
+// back onto this card with nothing staged (:45). One line beside it,
+// `feed.vouchCard.hint`, teaches the tap and claims nothing about first-ness.
 
 package com.cogra.feature.home
 
@@ -31,9 +35,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -60,44 +62,41 @@ val VOUCH_CARD: DataNode = DataNode("feed") / "vouchCard"
  * The card as the feed's list wears it, bound to the shell's
  * [HomeViewModel] (the same holder the banner stack reads).
  *
- * [vouchBackPad] draws the vouch-back pad for the voucher while it is
- * open, and calls its `onClose` once it closes with nothing taken; it is a
- * slot because the pad's holder lives in `feature:stance`.
- * [refreshSignal] is the feed's own pull, counted: each new value re-reads,
+ * [stance] draws the stance control's face toward the voucher, opening the
+ * vouch-back pad; it is a slot because the stance holder lives in
+ * `feature:stance`. [refreshSignal] is the feed's own pull, counted: each new value re-reads,
  * which is where an expired vouch-back brings the card back (:57).
  */
 @Composable
 fun VouchCardRoute(
-    vouchBackPad: @Composable (voucher: ActorRef, onClose: () -> Unit) -> Unit,
+    stance: @Composable (voucher: ActorRef) -> Unit,
     refreshSignal: Int = 0,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(refreshSignal) { if (refreshSignal > 0) viewModel.refresh() }
-    var padOpen by remember { mutableStateOf(false) }
     val voucher = state.vouchVoucher
     if (state.loading || voucher == null || !state.vouchCardStands) return
     VouchCard(
         voucher = voucher,
         putAwayFailed = state.vouchPutAway == VouchPutAway.FAILED,
         onPutAway = viewModel::onPutAway,
-        onVouchBack = { padOpen = true },
+        stance = { stance(voucher) },
     )
-    if (padOpen) vouchBackPad(voucher) { padOpen = false }
 }
 
 /**
  * The olive card (`VouchBackCard`): `tertiaryContainer` ground and its own
  * ink, the voucher's 64dp face beside the title, the drawn body, and the
- * row of `Got it` (a text button in the panel's ink) and `Vouch back` (the
- * inverse fill).
+ * row of `Got it` (a text button in the panel's ink), the one line, and the
+ * stance face in the trailing seat ([stance]).
  */
 @Composable
 fun VouchCard(
     voucher: ActorRef,
     putAwayFailed: Boolean,
     onPutAway: () -> Unit,
-    onVouchBack: () -> Unit,
+    stance: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val ink = MaterialTheme.colorScheme.onTertiaryContainer
@@ -133,18 +132,18 @@ fun VouchCard(
             color = ink,
             modifier = Modifier.dataNode(VOUCH_CARD / "body"),
         )
-        VouchCardActions(putAwayFailed, onPutAway, onVouchBack)
+        VouchCardActions(putAwayFailed, onPutAway, stance)
     }
 }
 
-/** The card's row: `Got it` — or, failed, the line and `Retry` — then `Vouch back`. */
+/** The card's row: `Got it` — or, failed, the line and `Retry` — then the hint and the face. */
 @Composable
-private fun VouchCardActions(putAwayFailed: Boolean, onPutAway: () -> Unit, onVouchBack: () -> Unit) {
+private fun VouchCardActions(putAwayFailed: Boolean, onPutAway: () -> Unit, stance: @Composable () -> Unit) {
     val ink = MaterialTheme.colorScheme.onTertiaryContainer
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.x2, Alignment.End),
+        horizontalArrangement = Arrangement.spacedBy(Space.x2),
     ) {
         if (putAwayFailed) {
             // The row's own line, then Retry in Got it's slot.
@@ -171,11 +170,17 @@ private fun VouchCardActions(putAwayFailed: Boolean, onPutAway: () -> Unit, onVo
                 testTag = (VOUCH_CARD / "dismiss").tag,
             )
         }
-        CograButton(
-            text = stringResource(R.string.vouch_card_vouch_back),
-            onClick = onVouchBack,
-            kind = ButtonKind.Inverse,
-            testTag = (VOUCH_CARD / "vouch").tag,
+        // The line sits right against the face, which keeps the trailing seat
+        // (VouchBack.md:11, :13).
+        Text(
+            text = stringResource(R.string.vouch_card_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = ink,
+            textAlign = TextAlign.End,
+            modifier = Modifier
+                .weight(1f)
+                .dataNode(VOUCH_CARD / "hint"),
         )
+        stance()
     }
 }

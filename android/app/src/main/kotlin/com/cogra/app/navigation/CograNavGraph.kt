@@ -703,20 +703,20 @@ private fun CograNavGraphContent(
             launchSingleTop = true
         }
     }
-    // The vouch card, the feed's own first card (`VouchBack`): `Vouch back`
-    // blooms the vouch-back pad over the shell, and a taken signing opens
-    // the ceremony (VouchBackPad.md:33).
+    // The vouch card, the feed's own first card (`VouchBack`): its act is the
+    // stance face toward the voucher — the tap blooms the vouch-back pad over
+    // the shell, the hold signs the gentle default, and a taken signing either
+    // way opens the ceremony (VouchBack.md:11, VouchBackPad.md:33).
     val vouchCard: @Composable () -> Unit = {
         if (signedIn == true) {
             VouchCardRoute(
-                vouchBackPad = { voucher, onClose ->
+                stance = { voucher ->
                     StanceControlRoute(
                         target = StanceTarget.Node(voucher.id),
                         testTagPrefix = "vouch_back",
+                        targetLabel = "@${voucher.handle}",
                         node = VOUCH_CARD / "stance",
                         variant = vouchBackVariant(VOUCH_CARD / "stance" / "pad"),
-                        padOnly = true,
-                        onPadClosed = onClose,
                         onTaken = {
                             openCeremony(voucher.handle, voucher.displayName, voucher.avatar?.url)
                         },

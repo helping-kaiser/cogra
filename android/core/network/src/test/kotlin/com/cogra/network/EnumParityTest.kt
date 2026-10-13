@@ -20,6 +20,7 @@ import com.cogra.domain.AccountState
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.MediaAssetState
 import com.cogra.domain.WriteState
+import com.cogra.domain.feed.PeopleMark
 import com.cogra.network.graphql.type.MediaAttachmentState
 import com.cogra.network.graphql.type.RecordFamily
 import com.cogra.network.graphql.type.StagedWriteState
@@ -29,6 +30,7 @@ import org.junit.Test
 private typealias GeneratedAccountState = com.cogra.network.graphql.type.AccountState
 private typealias GeneratedAccountDeletionPath = com.cogra.network.graphql.type.AccountDeletionPath
 private typealias GeneratedErrorCode = com.cogra.network.graphql.type.ErrorCode
+private typealias GeneratedPeopleMark = com.cogra.network.graphql.type.PeopleMark
 
 class EnumParityTest {
 
@@ -64,6 +66,13 @@ class EnumParityTest {
             "Family",
             RecordFamily.knownValues().map { it.rawValue },
             Family.entries.filter { it != Family.UNKNOWN }.map { it.name },
+        )
+        // Joined by `when` in FeedRepositoryImpl, where an unknown mark reads
+        // as none: a mark the schema grows would silently admit nowhere.
+        assertParity(
+            "PeopleMark",
+            GeneratedPeopleMark.knownValues().map { it.rawValue },
+            PeopleMark.entries.map { it.name },
         )
         assertParity(
             "MediaAssetState",

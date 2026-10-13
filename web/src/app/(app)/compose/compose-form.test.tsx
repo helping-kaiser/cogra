@@ -908,7 +908,7 @@ describe("ComposeForm", () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith("/feed"));
   });
 
-  it("does not ask for a single signed action", () => {
+  it("does not ask for a single signed action", async () => {
     writeConfirmMultiAction(true);
     server.use(
       graphql.mutation("PreparePost", () =>
@@ -922,6 +922,10 @@ describe("ComposeForm", () => {
     fireEvent.change(screen.getByTestId("compose-body"), { target: { value: "b" } });
     fireEvent.click(screen.getByTestId("compose-submit"));
     expect(screen.queryByTestId("compose-multi-action-confirm")).not.toBeInTheDocument();
+    // The submit goes straight through. Waiting for it to finish keeps its
+    // navigation inside this test: left running, it lands in whichever test
+    // comes next and reads as that test's push.
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/feed"));
   });
 
   it("cancelling the confirmation signs nothing", () => {

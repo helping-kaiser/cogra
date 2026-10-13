@@ -8,7 +8,7 @@ ALWAYS settings.dialog.body reads Your key is erased with everything else, and o
 
 ALWAYS settings.dialog.body names the key and the account gone for good before anything else that goes
 
-ALWAYS settings.dialog.recovery reads Make a recovery code, filled and leading, and settings.dialog.erase reads Erase everything and sign out as the quiet answer GIVEN no recovery code exists
+ALWAYS settings.dialog.recovery reads Make a recovery code, filled and leading, settings.dialog.erase reads Erase everything and sign out, quiet, and settings.dialog.cancel reads Cancel, quiet and last GIVEN no recovery code exists
 
 ALWAYS settings.dialog.erase reads Erase everything and sign out, quiet on the left, and settings.dialog.cancel reads Cancel, filled on the right GIVEN a recovery code exists
 
