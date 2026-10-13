@@ -85,5 +85,6 @@ describe("noticeMessage", () => {
     expect(noticeMessage("email", account)).toBe("Email changed to sol@ferreira.studio.");
     expect(noticeMessage("canceled", account)).toBe("Change canceled — your email stays sol@ferreira.studio.");
     expect(noticeMessage("applicantSent", account)).toBe("Sent — the link is on its way to noor@fieldnotes.org.");
+    expect(noticeMessage("deletionCanceled", account)).toBe("Canceled — your account stays, and nothing was deleted.");
   });
 });

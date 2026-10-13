@@ -2,6 +2,7 @@ import { act, fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { delay, graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { AccountDeletionProvider } from "@/lib/deletion/deletion-status";
 import { createTokenStore } from "@/lib/session/token-store";
 import { accountFilterLevel, setAccountFilterLevel } from "@/lib/settings/sensitive-content";
 import { fakeIdentityStore } from "@/test/identity";
@@ -15,7 +16,15 @@ let search = new URLSearchParams();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push, replace }),
   useSearchParams: () => search,
+  usePathname: () => "/settings",
 }));
+
+/** The account's deletion standing, as the server reads it (OS-15). */
+function deletionHandler(deletionPath: string, accountDeletion: unknown = null) {
+  return graphql.query("AccountDeletion", () =>
+    HttpResponse.json({ data: { me: { __typename: "User", id: "u1", deletionPath, accountDeletion } } }),
+  );
+}
 
 const server = startMswServer();
 
@@ -91,7 +100,9 @@ function renderSettings({
   const seals = { forget: vi.fn(async () => {}) };
   const tokens = signedInStore();
   const rendered = renderWithProviders(
-    <SettingsView store={identity} drafts={drafts} seals={seals} />,
+    <AccountDeletionProvider>
+      <SettingsView store={identity} drafts={drafts} seals={seals} />
+    </AccountDeletionProvider>,
     { store: tokens },
   );
   return { ...rendered, identity, drafts, seals, tokens };
@@ -111,7 +122,7 @@ beforeEach(() => {
   push.mockReset();
   replace.mockReset();
   search = new URLSearchParams();
-  server.use(accountHandler());
+  server.use(accountHandler(), deletionHandler("BY_LINK"));
 });
 
 describe("the settings page", () => {
@@ -149,18 +160,94 @@ describe("the settings page", () => {
     expect(screen.getByTestId("settings.ending.footnote")).toHaveTextContent(
       "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.",
     );
-    // DRIFT (erasure-deletion packet): the request screen is not built, so
-    // the press opens nothing.
-    fireEvent.click(row);
-    expect(push).not.toHaveBeenCalled();
+    // The mailed path's row opens the request screen (DeleteAccount.md:3).
+    await waitFor(() => {
+      fireEvent.click(row);
+      expect(push).toHaveBeenCalledWith("/settings/delete");
+    });
   });
 
   it("an_applicants_delete_footnote_drops_the_mailed_link", async () => {
-    server.use(accountHandler({ accountState: "APPLICANT" }));
+    // Keyed on the server's path, never on the account state (OS-15).
+    server.use(deletionHandler("IMMEDIATE"));
+    renderSettings();
+    await waitFor(() =>
+      expect(screen.getByTestId("settings.ending.footnote")).toHaveTextContent(
+        /^Nothing is deleted here\. The next screen says what goes and what stays\.$/,
+      ),
+    );
+    fireEvent.click(screen.getByTestId("settings.ending.delete"));
+    expect(push).toHaveBeenCalledWith("/settings/delete");
+  });
+
+  it("a_locked_row_wears_the_locked_look_and_answers_with_a_snackbar", async () => {
+    server.use(deletionHandler("LOCKED"));
+    renderSettings();
+    const row = screen.getByTestId("settings.ending.delete");
+    await waitFor(() => expect(row).toHaveAttribute("aria-disabled", "true"));
+    expect(row.className).toContain("opacity-[var(--state-disabled)]");
+    // Still tappable: the tap is how it says why (Settings.md:157-159).
+    fireEvent.click(row);
+    expect(await screen.findByTestId("settings-snackbar")).toHaveTextContent(
+      "You can delete your account once you're in.",
+    );
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("the_lock_is_the_servers_never_the_account_states", async () => {
+    // An applicant the server reads BY_LINK (item 69's registered applicant)
+    // walks the mailed path; nothing here re-derives a lock.
+    server.use(accountHandler({ accountState: "APPLICANT" }), deletionHandler("BY_LINK"));
     renderSettings();
     await screen.findByTestId("settings.credentials.password.status");
-    expect(screen.getByTestId("settings.ending.footnote")).toHaveTextContent(
-      /^Nothing is deleted here\. The next screen says what goes and what stays\.$/,
+    await waitFor(() => {
+      fireEvent.click(screen.getByTestId("settings.ending.delete"));
+      expect(push).toHaveBeenCalledWith("/settings/delete");
+    });
+    expect(screen.getByTestId("settings.ending.delete")).not.toHaveAttribute("aria-disabled");
+  });
+
+  it("during_the_grace_the_row_counts_down_the_footnote_goes_and_the_band_rides", async () => {
+    server.use(
+      deletionHandler("BY_LINK", {
+        __typename: "AccountDeletion",
+        scheduledFor: new Date(Date.now() + 6 * 86_400_000).toISOString(),
+        includesContent: false,
+      }),
+    );
+    renderSettings();
+    expect(await screen.findByTestId("settings.ending.delete.status")).toHaveTextContent("Deletion in 6 days");
+    expect(screen.queryByTestId("settings.ending.footnote")).not.toBeInTheDocument();
+    expect(screen.getByTestId("settings.deletionBand.line")).toHaveTextContent("Your account is deleted in 6 days.");
+    fireEvent.click(screen.getByTestId("settings.ending.delete"));
+    // The grace page, never the request screen (SettingsDeleting.md:13).
+    expect(push).toHaveBeenCalledWith("/settings/delete/pending");
+  });
+
+  it("the_bands_cancel_restores_the_row_and_its_footnote", async () => {
+    server.use(
+      deletionHandler("BY_LINK", {
+        __typename: "AccountDeletion",
+        scheduledFor: new Date(Date.now() + 6 * 86_400_000).toISOString(),
+        includesContent: false,
+      }),
+      okMutation("CancelAccountDeletion", "AccountDeletionPayload", { accountDeletion: null }),
+    );
+    renderSettings();
+    fireEvent.click(await screen.findByTestId("settings.deletionBand.cancel"));
+    expect(await screen.findByTestId("deletion-snackbar")).toHaveTextContent(
+      "Canceled — your account stays, and nothing was deleted.",
+    );
+    expect(screen.queryByTestId("settings.deletionBand")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("settings.ending.delete.status")).not.toBeInTheDocument();
+    expect(screen.getByTestId("settings.ending.footnote")).toBeInTheDocument();
+  });
+
+  it("the_grace_pages_cancel_returns_with_the_canceled_snackbar", async () => {
+    search = new URLSearchParams("done=deletionCanceled");
+    renderSettings();
+    expect(await screen.findByTestId("settings-snackbar")).toHaveTextContent(
+      "Canceled — your account stays, and nothing was deleted.",
     );
   });
 
