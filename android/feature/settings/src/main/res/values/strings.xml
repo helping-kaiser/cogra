@@ -315,4 +315,15 @@
     <string name="key_export_actor_key">Your actor key</string>
     <string name="key_export_pem">PEM (PKCS#8)</string>
     <string name="key_export_hex">Raw hex — Ed25519 private key</string>
+
+    <!-- What's new (WhatsNew.md, WhatsNewBehind.md; copy-voice, the settings page, About). -->
+    <string name="whats_new_title">What\'s new</string>
+    <string name="whats_new_back">Back to settings</string>
+    <string name="whats_new_newer_line">A newer version exists.</string>
+    <string name="whats_new_update_now">Update now</string>
+    <string name="whats_new_update_description">Update to version %1$s</string>
+    <string name="whats_new_door">See it on GitHub</string>
+    <string name="whats_new_door_description">See version %1$s on GitHub</string>
+    <string name="whats_new_footnote">Newest first.</string>
+    <string name="whats_new_transport">Can\'t reach the server. Check your connection and try again.</string>
 </resources>

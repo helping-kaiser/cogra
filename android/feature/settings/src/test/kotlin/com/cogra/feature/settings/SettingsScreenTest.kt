@@ -447,6 +447,14 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun whatsNewOpensTheReleaseChronicle() {
+        var whatsNew = 0
+        render(doors = SettingsDoors(onOpenWhatsNew = { whatsNew++ }))
+        node("settings.about.whatsNew").performScrollTo().performClick()
+        assertThat(whatsNew).isEqualTo(1)
+    }
+
+    @Test
     fun `contact_opens_mail_not_the_report`() {
         var contact = 0
         render(doors = SettingsDoors(onContact = { contact++ }))
