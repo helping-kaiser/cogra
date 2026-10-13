@@ -1,3 +1,5 @@
+// @vitest-environment node
+
 // The device lock against the Rust reference's golden vectors
 // (`client-crypto-vectors.json` `deviceLock`) — read from the file, never
 // copied (web/CLAUDE.md "Crypto").
