@@ -16,6 +16,7 @@ pub mod params;
 pub mod profile;
 pub mod rate_limit;
 pub mod references;
+pub mod registry;
 pub mod report;
 pub mod search;
 pub mod settling;
