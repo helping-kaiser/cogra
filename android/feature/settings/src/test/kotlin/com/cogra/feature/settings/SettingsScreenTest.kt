@@ -4,6 +4,10 @@
 
 package com.cogra.feature.settings
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -18,6 +22,7 @@ import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
@@ -116,8 +121,12 @@ class SettingsScreenTest {
         assertThat(flips).isEqualTo(1)
     }
 
-    private fun deleting(path: AccountDeletionPath, deletion: AccountDeletion? = null) =
-        SettingsUiState(account = account(), actorKeyHere = true, now = NOW, deletion = DeletionStanding(path, deletion))
+    private fun deleting(path: AccountDeletionPath, deletion: AccountDeletion? = null) = SettingsUiState(
+        account = account(),
+        actorKeyHere = true,
+        now = NOW,
+        deletion = DeletionStanding(path, deletion),
+    )
 
     @Test
     fun `delete_account_is_the_last_row_quiet_with_the_members_footnote`() {
@@ -186,6 +195,28 @@ class SettingsScreenTest {
         node("settings.ending.footnote").assertDoesNotExist()
         node("settings.deletionBand.cancel").performClick()
         assertThat(cancels).isEqualTo(1)
+    }
+
+    @Test
+    fun `a_subpages_notice_outlives_its_own_consumption`() {
+        // Consuming the notice flips it to null; the snackbar must still stand.
+        val said = "Canceled — your account stays, and nothing was deleted."
+        // The clock is driven by hand: half a second is many frames past the
+        // consumption, and well inside the snackbar's own duration.
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            var notice by remember { mutableStateOf<String?>(said) }
+            SettingsScreen(
+                state = SettingsUiState(account = account(), actorKeyHere = true, now = NOW),
+                versionName = "0.1.0",
+                actions = SettingsActions(),
+                doors = SettingsDoors(),
+                notice = notice,
+                onNoticeShown = { notice = null },
+            )
+        }
+        compose.mainClock.advanceTimeBy(500)
+        compose.onNode(hasText(said)).assertExists()
     }
 
     @Test

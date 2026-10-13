@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -265,11 +266,15 @@ private fun SettingsEffects(
             }
         }
     }
-    // A subpage's answer, said once, then consumed.
+    // A subpage's answer, said once, then consumed. The snackbar runs on a
+    // scope of its own: consuming flips the notice to null, which restarts
+    // this effect — had the snackbar lived here, that restart would cancel it
+    // the frame it appeared.
+    val noticeScope = rememberCoroutineScope()
     LaunchedEffect(notice) {
         if (notice != null) {
             onNoticeShown()
-            snackbar.showSnackbar(notice)
+            noticeScope.launch { snackbar.showSnackbar(notice) }
         }
     }
 }
