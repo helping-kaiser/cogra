@@ -291,6 +291,13 @@ class FakeLockCustodyStore : LockCustodyStore {
         if (account in locked) custodyOf(account).keys.removeAll { it.startsWith(draftPrefix) }
     }
 
+    /** Accounts whose seen record was dropped. */
+    val seenForgotten = mutableListOf<String>()
+
+    override suspend fun forgetSeenRecord(account: String) {
+        seenForgotten += account
+    }
+
     override suspend fun lockSlots(): Set<String> = locked.keys + pending
 
     companion object {

@@ -18,6 +18,8 @@ import { discardDeviceLock, issueDeviceLock, releaseDeviceLock } from "@/lib/api
 import type { Outcome } from "@/lib/api/outcome";
 import { authorizedLink } from "@/lib/apollo-link";
 import { composeDraftStore } from "@/lib/compose/draft-store";
+import { seenRecord } from "@/lib/history/seen-record";
+import { forgetSeen } from "@/lib/history/seen-sync";
 import { createDeviceLockEngine, type DeviceLockEngine } from "@/lib/identity/device-lock";
 import { identityStore } from "@/lib/identity/store";
 import { createGuard, type AuthGuard } from "./guard";
@@ -52,6 +54,7 @@ export function createGuardedClient<T extends ApolloClient>(
     identity: identityStore,
     drafts: composeDraftStore,
     idb: () => indexedDB,
+    forgetSeen: (account) => forgetSeen(seenRecord, account),
     api: {
       issue: (token) => guarded(token, () => issueDeviceLock(client, token)),
       release: (lock, password, token) =>

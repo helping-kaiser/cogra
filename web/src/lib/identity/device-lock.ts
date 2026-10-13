@@ -81,6 +81,12 @@ export type DeviceLockDeps = {
   api: DeviceLockApi;
   /** Cross-tab mutual exclusion; the default is the Web Locks API where present. */
   exclusive?: <T>(account: string, fn: () => Promise<T>) => Promise<T>;
+  /**
+   * Drops one account's seen record and watermark (PR-69). The record is
+   * NEVER part of the lock set — it is a cache of the server's view log,
+   * which re-seeds it — so a forget-on session end clears it instead.
+   */
+  forgetSeen?: (account: string) => Promise<void>;
 };
 
 /** What a session ended elsewhere did to the account's custody. */
@@ -270,17 +276,27 @@ export function createDeviceLockEngine(deps: DeviceLockDeps): DeviceLockEngine {
           return "kept";
         }
         const held = await identity.heldLock(account);
+        let end: LocalSessionEnd;
         if (held !== null) {
           await lockHeld(account, held, clearTokens);
-          return "locked";
+          end = "locked";
+        } else {
+          // PR-61's residual: no lock to lock with. A backed key is purged
+          // as it always was (it survives in its backup); everything else —
+          // an unbacked key, the draft — stays, unreachable to the app until
+          // this account signs in here again.
+          clearTokens();
+          await identity.purgeBackedKeyMaterial(account);
+          end = "refused";
         }
-        // PR-61's residual: no lock to lock with. A backed key is purged as
-        // it always was (it survives in its backup); everything else —
-        // an unbacked key, the draft — stays, unreachable to the app until
-        // this account signs in here again.
-        clearTokens();
-        await identity.purgeBackedKeyMaterial(account);
-        return "refused";
+        // The seen record is never locked: a forget-on end drops it either
+        // way, as the explicit don't-remember sign-out does (PR-69).
+        try {
+          await deps.forgetSeen?.(account);
+        } catch {
+          // a cache; the custody step above is what must not fail
+        }
+        return end;
       });
     },
 

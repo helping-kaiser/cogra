@@ -89,6 +89,15 @@ interface LockCustodyStore {
      */
     suspend fun removeLeftoverDraft(account: String)
 
+    /**
+     * Drops the account's seen record — ids and sync watermark, the one value —
+     * and no other account's (PR-69). The record is NEVER part of the lock
+     * set: it is a cache of the server's view log, which survives and
+     * re-seeds it at the next sign-in, so a forget-on session end clears it
+     * rather than locking it.
+     */
+    suspend fun forgetSeenRecord(account: String)
+
     /** Every account whose slot is locked or holds an unfinished lock. */
     suspend fun lockSlots(): Set<String>
 }

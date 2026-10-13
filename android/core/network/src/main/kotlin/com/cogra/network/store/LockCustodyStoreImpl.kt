@@ -176,6 +176,10 @@ class LockCustodyStoreImpl @Inject constructor(private val store: EncryptedStore
         }
     }
 
+    override suspend fun forgetSeenRecord(account: String) {
+        store.remove(seenRecordKey(account))
+    }
+
     override suspend fun lockSlots(): Set<String> {
         val locked = store.names(LOCKED_PREFIX).map { it.removePrefix(LOCKED_PREFIX).substringBefore(':') }
         val pending = store.names(ACCT_PREFIX)

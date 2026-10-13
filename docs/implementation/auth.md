@@ -1115,6 +1115,10 @@ blob's posture.
   elsewhere — the switch flipped offline, an issue that never
   landed — keeps its material, refused by the app until the
   account signs in there again, and never destroyed.
+- **The seen record is never locked.** It is a cache of the
+  server's view log, so a flagged account's session ending —
+  locked or not — drops that account's record and watermark, as
+  the sign-out does; the next sign-in re-seeds it.
 - **A lock the server can no longer open completes the sign-in.**
   When the release answers that the lock is gone, the sign-in
   completes, the dead ciphertext is deleted, and the account is

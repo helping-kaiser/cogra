@@ -91,6 +91,8 @@ type World = {
   engine: DeviceLockEngine;
   server: ReturnType<typeof fakeServer>;
   active: { account: string | null };
+  /** Accounts whose seen record the engine dropped. */
+  seenForgotten: string[];
 };
 
 function world(): World {
@@ -101,14 +103,18 @@ function world(): World {
   const drafts = createComposeDraftStore({ activeAccountId: resolve, idb: () => idb });
   const seals = createSealedDraftStore({ activeAccountId: resolve, idb: () => idb });
   const server = fakeServer();
+  const seenForgotten: string[] = [];
   const engine = createDeviceLockEngine({
     identity,
     drafts,
     idb: () => idb,
     api: server.api(resolve),
     exclusive: (_account, fn) => fn(),
+    forgetSeen: async (account) => {
+      seenForgotten.push(account);
+    },
   });
-  return { idb, identity, drafts, seals, engine, server, active };
+  return { idb, identity, drafts, seals, engine, server, active, seenForgotten };
 }
 
 function sampleProposal(): Proposal {
@@ -401,6 +407,25 @@ describe("the remote path (§3.6)", () => {
     expect(await hasDraftCustody(w.idb, A)).toBe(true);
     expect((await signInAgain(w, A, true)).ready).toBe(true);
     expect((await w.drafts.load())?.words).toBe("working draft");
+  });
+
+  it("a_forget_on_remote_end_clears_that_accounts_seen_record_and_never_locks_it", async () => {
+    // PR-69 beside the lock: the seen record is a cache of the server's view
+    // log, dropped for this account alone, and the lock set never carries it.
+    await signedInForget(w);
+    expect(await w.engine.endLocalSession(A, clearTokens(w))).toBe("locked");
+    expect(w.seenForgotten).toEqual([A]);
+    const kinds = (await w.identity.lockedSet(A))!.map((r) => r.kind);
+    expect(kinds.every((k) => k !== "seen")).toBe(true);
+  });
+
+  it("the residual remote end clears the seen record too, and a remembered end keeps it", async () => {
+    await signedInForget(w, { holdLock: false });
+    expect(await w.engine.endLocalSession(A, clearTokens(w))).toBe("refused");
+    expect(w.seenForgotten).toEqual([A]);
+    w.active.account = B;
+    expect(await w.engine.endLocalSession(B, clearTokens(w))).toBe("kept");
+    expect(w.seenForgotten).toEqual([A]);
   });
 
   it("the backed-key purge never removes an unbacked key, whoever calls it", async () => {

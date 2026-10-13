@@ -225,6 +225,8 @@ class ActorRestorer @Inject constructor(
  * - a "don't remember" account that never obtained its lock (PR-61's
  *   residual): the material is KEPT, refused by the app until the next
  *   sign-in — NEVER destroyed. A backed key is still purged.
+ * Either "don't remember" branch also drops the account's seen record: a
+ * cache of the server's view log, never part of the lock set (PR-69).
  *
  * The account is read before anything clears, because every step names it.
  */
@@ -238,13 +240,18 @@ class EndLocalSession @Inject constructor(
             tokens.clear()
             return LocalSessionEnd.KEPT
         }
-        if (custody.heldLock(account) != null) {
+        val end = if (custody.heldLock(account) != null) {
             lockHeld(custody, tokens, account)
-            return LocalSessionEnd.LOCKED
+            LocalSessionEnd.LOCKED
+        } else {
+            tokens.clear()
+            custody.purgeBackedKeyMaterial(account)
+            LocalSessionEnd.REFUSED
         }
-        tokens.clear()
-        custody.purgeBackedKeyMaterial(account)
-        return LocalSessionEnd.REFUSED
+        // The seen record is never locked: a forget-on end drops it either
+        // way, as the explicit don't-remember sign-out does (PR-69).
+        custody.forgetSeenRecord(account)
+        return end
     }
 }
 

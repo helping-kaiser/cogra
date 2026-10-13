@@ -21,6 +21,8 @@ import com.cogra.crypto.StructuralBody
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftBodyKind
+import com.cogra.domain.history.SeenWatermark
+import com.cogra.domain.history.StoredSeenRecord
 import com.cogra.domain.identity.DeviceLock
 import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.identity.LocalSessionEnd
@@ -38,6 +40,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.time.Instant
 
 private const val A = "11111111-1111-4111-8111-111111111111"
 private const val B = "22222222-2222-4222-8222-222222222222"
@@ -419,6 +422,39 @@ class LockCustodyStoreTest {
         assertThat(w.endLocal.end()).isEqualTo(LocalSessionEnd.REFUSED)
         assertThat(w.encrypted.get("acct:$A:actor_seed")).isNull()
         assertThat(w.encrypted.get("compose_draft:$A")).isNotNull()
+    }
+
+    @Test
+    fun `a_forget_on_remote_end_clears_that_accounts_seen_record_and_never_locks_it`() = runTest {
+        // PR-69 beside the lock: the seen record is a cache of the server's
+        // view log, so a forget-on end drops it — this account's alone — and
+        // the lock set never carries it.
+        val w = World()
+        val seen = SeenRecordStoreImpl(w.encrypted)
+        val record = StoredSeenRecord(setOf("n1"), SeenWatermark("w1", Instant.parse("2026-10-13T08:00:00Z")))
+        seen.save(B, record)
+        w.forgetAccount(A)
+        seen.save(A, record)
+        assertThat(w.endLocal.end()).isEqualTo(LocalSessionEnd.LOCKED)
+        assertThat(seen.load(A)).isNull()
+        assertThat(w.encrypted.names("locked:$A:").none { it.contains("seen_record") }).isTrue()
+        assertThat(seen.load(B)).isEqualTo(record)
+    }
+
+    @Test
+    fun `the residual remote end clears the seen record too, and a remembered end keeps it`() = runTest {
+        val w = World()
+        val seen = SeenRecordStoreImpl(w.encrypted)
+        val record = StoredSeenRecord(setOf("n1"), null)
+        w.forgetAccount(A, holdLock = false)
+        seen.save(A, record)
+        assertThat(w.endLocal.end()).isEqualTo(LocalSessionEnd.REFUSED)
+        assertThat(seen.load(A)).isNull()
+
+        w.signIn(B)
+        seen.save(B, record)
+        assertThat(w.endLocal.end()).isEqualTo(LocalSessionEnd.KEPT)
+        assertThat(seen.load(B)).isEqualTo(record)
     }
 
     @Test
