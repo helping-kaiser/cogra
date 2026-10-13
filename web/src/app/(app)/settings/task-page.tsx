@@ -19,25 +19,31 @@ export function TaskPage({
   title,
   lead,
   children,
+  deletionBand,
 }: {
-  /** The screen's registered prefix — `changePassword`, `changeHandle`, `changeEmail`. */
+  /** The screen's registered prefix — `changePassword`, `changeHandle`, `changeEmail`, `deleteAccount`. */
   node: DataNode;
   backHref: string;
   backLabel: string;
   title: string;
-  lead: ReactNode;
+  /** Omitted while the words it needs are still being read. */
+  lead?: ReactNode;
   children: ReactNode;
+  /** `false` on the one page the deletion band steps aside on (DeleteAccountPending.md:9). */
+  deletionBand?: false;
 }) {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
-      <PageHeader backHref={backHref} backLabel={backLabel} node={part(node, "header")} />
+      <PageHeader backHref={backHref} backLabel={backLabel} node={part(node, "header")} deletionBand={deletionBand} />
       <div className="flex flex-col px-6 pb-8 pt-2">
         <h1 className="m-0 text-headline-small" {...testAttributes(part(node, "title"))}>
           {title}
         </h1>
-        <p className="m-0 mt-2 text-body-medium text-on-surface-variant" {...testAttributes(part(node, "body"))}>
-          {lead}
-        </p>
+        {lead !== undefined && (
+          <p className="m-0 mt-2 text-body-medium text-on-surface-variant" {...testAttributes(part(node, "body"))}>
+            {lead}
+          </p>
+        )}
         {children}
       </div>
     </main>
