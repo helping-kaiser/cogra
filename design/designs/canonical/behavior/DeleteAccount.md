@@ -28,6 +28,8 @@ WHEN the board opens GIVEN User.deletionPath reads IMMEDIATE -> the body reads N
 
 WHEN Delete my account is pressed GIVEN User.deletionPath reads IMMEDIATE -> the account and its application are deleted at once AND the reader lands signed out on the bare view AND the snackbar reads Your account is deleted. AND NEVER a confirmation link is mailed AND NEVER the seven-day grace runs AND NEVER the deletion band stands AND NEVER DeleteAccountConfirmed opens
 
+ALWAYS the key, the draft and any picks kept pending stay on this device after an immediate deletion, exactly as Sign out, keep them locked leaves them AND NEVER the deletion erases anything from this device
+
 WHEN press Delete my account GIVEN User.deletionPath reads IMMEDIATE and no answer reaches the device -> the line That didn't send. Try again. stands above Delete my account AND Delete my account stays, the retry AND NEVER the account is deleted
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
