@@ -6,6 +6,7 @@ members = [
     "crates/common",
     "crates/cogra-interchange",
     "crates/cogra-linter",
+    "crates/ranker",
 ]
 resolver = "2"
 
@@ -149,6 +150,14 @@ h264-reader = { version = "0.9" }
 # `TempDir` removes them however the job ends. Already in the tree through
 # async-graphql's upload spooling.
 tempfile = { version = "3" }
+
+# Every transcendental the ranker evaluates (ranker-core D-a). std documents
+# `ln`, `exp`, `powf` and `tanh` as of unspecified precision that "varies by
+# platform, Rust version, and can even differ within the same execution";
+# libm is the pure-Rust port of musl's, so a ranking spot-checked on another
+# machine reproduces bit for bit. Already in the tree through the workspace's
+# float formatting dependencies.
+libm = { version = "0.2" }
 
 # The key-backup blob reference (auth.md "Blob format (v1)") — used only
 # by common's golden-vector export. Pinned to the 0.10-generation
