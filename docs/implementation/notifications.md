@@ -57,9 +57,9 @@ target is the viewer's own content, profile, or application.
 | **Mention** | a **Reference** whose target is the viewer's Profile — the target's node class is what makes the citation a mention ([api-spec.md](api-spec.md)) | the citing artifact's author | the citing post or comment |
 | **Citation** | a **Reference** whose target is a Post or Comment the viewer authored | the citing author | the citing post or comment |
 | **Opinion on your profile** | an **Opinion** whose target is the viewer's Profile — the gesture that makes one person follow another | the opinion's author | that actor's profile |
-| **Application approvable** | an applicant staged through one of the viewer's invite links completed the second of their two proofs, so the application is now the viewer's to act on ([auth.md "Application"](auth.md#application-the-applicant-state)) | the applicant | the invites screen, on the waiting application |
-| **Invite landed** | a **Registration** landing an account that applied through one of the viewer's invite links ([invitations.md](../primitive/invitations.md)) | the account that landed | the new member's profile |
-| **Application approved** | the inviter's priced approval of the viewer's own application ([auth.md "Approval and landing"](auth.md#approval-and-landing)) | the inviter | the inviter's profile — who vouched, and where the reciprocation the landing prompts is made |
+| **Application approvable** | an application waiting in the viewer's queue — staged through one of their invite links or taken up from an ask link — completed the second of its two proofs, so it is now the viewer's to act on ([auth.md "Application"](auth.md#application-the-applicant-state)) | the applicant | the invites screen, on the waiting application |
+| **Invite landed** | an account landed on the viewer's vouch — the vouch that completed its entry was the viewer's ([invitations.md](../primitive/invitations.md)) | the account that landed | the new member's profile |
+| **Application approved** | a member's signed approval of the viewer's application — their vouch ([auth.md "Approval and landing"](auth.md#approval-and-landing)) | the approving member | the approver's profile — who vouched, and where the reciprocation the landing prompts is made |
 | **Application rejected** | the actor whose queue it sat in closed the viewer's application without approving it ([auth.md "Rejection"](auth.md#application-the-applicant-state)) | that actor | the viewer's own application state, where the ways back in are offered |
 
 The approvable kind fires at approvability, not at staging: that
@@ -86,9 +86,10 @@ set rather than a list of features:
 
 **Applicants are addressees too.** An account in the applicant
 state can receive its application's own outcome — approval or
-rejection — and the opinion its inviter authors toward its new
-Profile, so the list and its
-affordance exist from the moment an account exists. A reader with
+rejection — and opinions on its Profile. The voucher's own Opinion
+is an ordinary opinion: its landing reports as one, beside the
+approval. The list and its affordance exist from the moment an
+account exists. A reader with
 no account has nothing that can be addressed and no list.
 
 ### What does not notify
@@ -120,6 +121,12 @@ no account has nothing that can be addressed and no list.
   public read path, which means a redacted subject shows its
   redaction marker like anywhere else
   ([layers.md §5](../primitive/layers.md#5-deletion-policy)).
+- **A revision is an act; a withdrawal is not.** An opinion on the
+  viewer's profile or a citation of their content re-signed with a
+  new pair reports again — someone who wants to know when a stance
+  toward them is created wants to know when it changes. A record
+  that nets its author's bundle back to `(0,0)` is addressed to no
+  one and reports nothing.
 - **A withdrawn gesture leaves its notification standing.** A
   stance netted back to `(0,0)` is a later record, not an erasure
   of the earlier one; the row reports the moment it reported and
@@ -179,28 +186,43 @@ rather than a data-loss event.
 **Rows are written at ingestion.** When a record lands in the
 mirror, the ingestion path resolves its addressee — the author of
 the Review's target, the Reference's target owner, the Profile's
-owner, the landed application's approver — and writes one row per
-addressee. Writing at ingestion rather than computing the list per
-read is what lets read state be per row: a row needs an identity
-to carry `readAt`.
+owner — and writes one row per addressee, in the same transaction
+that appends the epoch: a crash between epochs skips no row, and a
+replay or a rebuild writes none twice. Writing at ingestion rather
+than computing the list per read is what lets read state be per
+row: a row needs an identity to carry `readAt`.
 
-**The account-state kinds are written at their transition.**
-`APPLICATION_APPROVABLE`, `APPLICATION_APPROVED` and
-`APPLICATION_REJECTED` have no record to ingest: the first is
-written when the second approvability proof completes, the second
-when the approver's approval commits, the third when the approver
-closes the entry — on its own or as one of a link's whole waiting
-queue, which is that many closes and that many addressees. Each
-transition happens once per application row and writes one
-notification, so none of them repeats and none has anything to
-collapse.
+**The account-state kinds are written at their transition**, in
+the transition's own transaction. `APPLICATION_APPROVABLE` is
+written when the second approvability proof completes, one row per
+path then waiting, to that path's approver — a member who stages an
+already-approvable account staged it knowingly and gets none.
+`APPLICATION_APPROVED` is written when the voucher's signed
+approval is taken (the relay accepts the vouch Opinion), never at
+the decision alone. `INVITE_LANDED` is written when the landing
+commits, to the approver whose vouch completed it — that approver
+only. `APPLICATION_REJECTED` is written when the approver closes
+the entry — on its own or as one of a link's whole waiting queue,
+which is that many closes and that many addressees. Each
+approvability, rejection and landing happens once per path; an
+approval is written per vouch, so a path re-vouched after a lapse
+reports each vouch.
 
 **One act, one row.** A record that reaches the viewer two ways —
 a comment on your post that also mentions you — writes the row for
 the more specific kind, the comment, and not the mention. Two rows
 for one act would make the list report the schema instead of the
-event. A record that reaches two different viewers writes one row
-each, as two events.
+event. The act is the authoring gesture, not the record: a
+Reference carried by a post or comment belongs to the act that
+created it, and within one act the order is comment or reply, then
+citation, then mention — a post that mentions you and cites your
+post reports the citation. A record that reaches two different
+viewers writes one row each, as two events.
+
+**A hidden actor's rows stay out.** While the viewer hides an
+account, its rows leave the list and never light the bell. The
+filter runs at read time, so the rows are still written and an
+unhide brings them back in place.
 
 **A record never notifies its own author.** The addressee
 resolution drops the row when the addressee is the acting actor —
@@ -209,10 +231,12 @@ and self-opinion are ordinary acts.
 
 ### Read state has two levels
 
-- **Seen** clears the dot. Opening the list marks everything
-  currently in it as seen; the bell goes quiet. One per-viewer
-  pointer carries it, in the shape `chat_read_state` already uses
-  for conversations.
+- **Seen** clears the dot. Opening the list marks everything it
+  holds as seen — the pointer moves to the newest row the opened
+  list holds, so a row that arrived after the read still lights the
+  bell at the next root load. One per-viewer pointer carries it, in
+  the shape `chat_read_state` already uses for conversations, and
+  it only moves forward.
 - **Read** clears one row's emphasis. A row keeps a quiet unread
   emphasis after the dot has gone and loses it when the viewer
   opens that row. `readAt` on the row carries it.
@@ -256,108 +280,18 @@ arrives, adopting it is a maintenance change and never a loss.
 
 ## The contract
 
-The slice's target shape, stated here and moved into
-[api-spec.md](api-spec.md) when the slice builds it. It follows
-the spec's own rules: private data is a field on the ordinary
-`User` type resolving only for its owner, never a parallel
-`me`-prefixed namespace, and the list is a Relay cursor
-connection like every other list.
+The read and write surface lives in
+[api-spec.md](api-spec.md): `User.notifications`, a Relay cursor
+connection of `Notification` rows; `User.hasUnreadNotifications`,
+the bell's dot; and the two read-state verbs `markNotificationsSeen`
+and `markNotificationRead`. It follows the spec's own rules: private
+data is a field on the ordinary `User` type resolving only for its
+owner, never a parallel `me`-prefixed namespace.
 
-```graphql
-"Something another actor did that reached the viewer's content,
- profile, or application. A pointer, never a copy: every displayed
- fact resolves through the record and nodes below."
-type Notification {
-  id: UUID!
-  kind: NotificationKind!
-  "Who acted. For APPLICATION_APPROVABLE this is the applicant
-   account — an actor row with a handle and nothing on the graph
-   yet, named only to the inviter whose link staged it."
-  actor: Actor!
-  "What opening the row lands on — the comment, the citing post,
-   the acting actor's profile. Null for APPLICATION_APPROVABLE and
-   APPLICATION_REJECTED, whose destinations are the invites screen
-   and the viewer's own application state rather than a node."
-  subject: Node
-  "The viewer's own node the act reached: the post commented on,
-   the comment replied to, the profile mentioned. Null for the
-   four invite-flow kinds, which reach the account rather than a
-   node."
-  context: Node
-  "The landed L1 record behind the act — the row's traceable
-   source, and where a stance row reads its pair. Null for the
-   three account-state kinds — APPLICATION_APPROVABLE,
-   APPLICATION_APPROVED and APPLICATION_REJECTED — which are
-   moments in an application's life with no record of their own."
-  record: Record
-  "When the act landed."
-  createdAt: DateTime!
-  "When the viewer opened this row; null while unread."
-  readAt: DateTime
-}
-
-"The nine addressed acts. A kind is the act plus what it
- reached, which is what a reader needs to know before opening."
-enum NotificationKind {
-  "A comment on the viewer's post."
-  COMMENT
-  "A reply to the viewer's comment."
-  REPLY
-  "A citation whose target is the viewer's profile."
-  MENTION
-  "A citation whose target is the viewer's post or comment."
-  CITATION
-  "An opinion whose target is the viewer's profile."
-  PROFILE_OPINION
-  "An application waiting in the viewer's queue — staged through
-   their invite link or taken up from an ask link — became
-   approvable: email verified and key attached, so the viewer can
-   now act on it."
-  APPLICATION_APPROVABLE
-  "An account applied through the viewer's invite link and landed."
-  INVITE_LANDED
-  "A member approved the viewer's application — the approver of
-   that queue entry."
-  APPLICATION_APPROVED
-  "The approver closed the viewer's application without approving
-   it — that queue entry only; the account and its ask link
-   remain."
-  APPLICATION_REJECTED
-}
-
-type NotificationConnection {
-  edges: [NotificationEdge!]!
-  pageInfo: PageInfo!
-  totalCount: Int
-}
-type NotificationEdge {
-  cursor: String!
-  node: Notification!
-}
-
-extend type User {
-  "Acts addressed to this user, newest first. Resolves only for
-   the authenticated owner; null otherwise."
-  notifications(first: Int, after: String, last: Int, before: String): NotificationConnection
-  "Whether anything has arrived since the viewer last opened the
-   list — the band's dot. A boolean, never a count: the product
-   does not ask readers to clear a number."
-  hasUnreadNotifications: Boolean!
-}
-
-"Clear the dot: everything currently in the list becomes seen.
- Row read state is untouched."
-type MarkNotificationsSeenPayload { hasUnreadNotifications: Boolean! }
-
-input MarkNotificationReadInput { notification: UUID! }
-type MarkNotificationReadPayload { notification: Notification! }
-
-extend type Mutation {
-  markNotificationsSeen: MarkNotificationsSeenPayload!
-  "Mark one row read — the emphasis it keeps until opened."
-  markNotificationRead(input: MarkNotificationReadInput!): MarkNotificationReadPayload!
-}
-```
+A row carries its `kind`, the `actor` who acted, the `subject` it
+opens on, the `context` — the viewer's own node the act reached —
+the `record` behind it, and, for the four application kinds, the
+`application` it concerns, read in its current state.
 
 `subject` is nullable for the same reason `Record.target` is: a
 node the viewer can no longer reach — redacted to the reduced
@@ -369,44 +303,16 @@ approval, so each row opens by kind — the first on the invites
 screen where the act can be answered, the second on the viewer's
 own application state.
 
-The storage shape the resolvers read, for
-[data-model.md](data-model.md):
+`markNotificationsSeen` takes `through`, the `createdAt` of the
+newest row the opened list holds, rather than marking everything up
+to now: a row arriving between the read and the mark was never
+shown, so it must stay unseen.
 
-```sql
--- Per-viewer notification rows. Operational state: derived from
--- the record mirror and the application registry, prunable, never
--- authoritative (see "Personal frontend state").
-CREATE TABLE user_notifications (
-    id          UUID        PRIMARY KEY,
-    user_id     UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
-    kind        TEXT        NOT NULL,
-    actor_id    UUID        NOT NULL REFERENCES actors(id),
-    -- The node the row opens on, and the viewer's own node the act
-    -- reached. Both are bare UUIDs, as user_bookmarks is: the row
-    -- points at any node class and stores no discriminator.
-    subject_id  UUID,
-    context_id  UUID,
-    -- L1's own identifier for the causing record; null for the
-    -- account-state kinds.
-    record_id   TEXT,
-    created_at  TIMESTAMPTZ NOT NULL,
-    read_at     TIMESTAMPTZ
-);
-CREATE INDEX user_notifications_recency_idx
-    ON user_notifications (user_id, created_at DESC);
-
--- The seen pointer behind the bell's dot — one row per viewer,
--- UPSERTed when the list opens. Unread = a notification with
--- created_at > seen_at.
-CREATE TABLE user_notification_state (
-    user_id  UUID        PRIMARY KEY REFERENCES actors(id) ON DELETE CASCADE,
-    seen_at  TIMESTAMPTZ NOT NULL
-);
-```
-
-`created_at` is the record's landing time, not the row's insert
-time, so the list orders by when things happened rather than by
-when ingestion caught up.
+The rows live in `user_notifications` and the pointer in
+`user_notification_state` ([data-model.md](data-model.md#personal-frontend-state)).
+A row's `created_at` is when the act reached the viewer — when
+ingestion observed its landing, or when the account transition
+committed — so the seen pointer compares like with like.
 
 ---
 

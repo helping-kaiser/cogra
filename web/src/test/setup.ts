@@ -8,6 +8,7 @@ import { afterEach, beforeEach } from "vitest";
 
 import { resetSeenRecordForTests } from "@/lib/history/seen-record";
 import { resetSeenSyncForTests } from "@/lib/history/seen-sync";
+import { resetAnnouncerForTests } from "@/lib/release/newer-version-announcer";
 import { resetClipMemoryForTests } from "@/lib/ui2/media/clip-memory";
 import { resetElementPoolForTests } from "@/lib/ui2/media/video-stage";
 
@@ -38,6 +39,9 @@ beforeEach(() => {
   resetSeenRecordForTests(() => store);
   resetSeenSyncForTests();
 });
+// The newer-version announcer's one read and one decision are per page load:
+// each test is a fresh load.
+beforeEach(resetAnnouncerForTests);
 
 // jsdom implements no Pointer Events (jsdom#2527), which the stance pad
 // is built on — they are the platform's own unification of mouse, touch,

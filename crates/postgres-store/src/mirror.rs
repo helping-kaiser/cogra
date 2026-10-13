@@ -33,7 +33,10 @@ pub async fn last_ingested_epoch(pool: &PgPool) -> Result<i64, MirrorError> {
 
 /// Appends one published epoch and advances the cursor, atomically. The
 /// cursor is re-read under the transaction so concurrent ingestors cannot
-/// double-append.
+/// double-append. The notification rows the epoch's records address are
+/// written in the same transaction (`notifications::write_for_epoch`), so
+/// they commit with the epoch: a crash between epochs skips none, and a
+/// replay writes none twice.
 ///
 /// A leg's domain, mask, and tier are family-fixed and come from the
 /// census, never from the package (`common::l1::census`). A leg the census
@@ -203,6 +206,7 @@ pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), M
     )
     .execute(&mut *tx)
     .await?;
+    crate::notifications::write_for_epoch(&mut tx, package.epoch).await?;
     sqlx::query!(
         "UPDATE mirror_epoch_cursor SET last_epoch = $1 WHERE singleton",
         package.epoch,

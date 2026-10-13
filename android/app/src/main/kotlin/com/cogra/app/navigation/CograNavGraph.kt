@@ -30,6 +30,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.core.util.Consumer
@@ -80,6 +81,7 @@ import com.cogra.feature.content.reply.ReplyWizardRoute
 import com.cogra.feature.home.BorrowedViewBandRoute
 import com.cogra.feature.home.DeletionBandRoute
 import com.cogra.feature.home.KeyRestoreBannerRoute
+import com.cogra.feature.home.NewerVersionAnnouncement
 import com.cogra.feature.home.StatusBannersRoute
 import com.cogra.feature.home.VOUCH_CARD
 import com.cogra.feature.home.VouchCardRoute
@@ -109,6 +111,7 @@ import com.cogra.feature.settings.EmailDoor
 import com.cogra.feature.settings.KeyExportRoute
 import com.cogra.feature.settings.SettingsDoors
 import com.cogra.feature.settings.SettingsRoute
+import com.cogra.feature.settings.WhatsNewRoute
 import com.cogra.feature.stance.StanceControlRoute
 import com.cogra.feature.stance.vouchBackVariant
 import com.cogra.feature.topics.TopicRoute
@@ -218,6 +221,10 @@ data object Settings
 
 @Serializable
 data object KeyExport
+
+/** The release chronicle behind Settings' `What's new` row (WhatsNew.md). */
+@Serializable
+data object WhatsNew
 
 /** The interim recovery-code route (DRIFT: the SettingsBackup* boards are the backup-replacement packet's). */
 @Serializable
@@ -693,6 +700,9 @@ private fun CograNavGraphContent(
     // The feed's own pulls, counted: the readers that ride the feed (the
     // band, the vouch card) read again with each one.
     var feedPulls by rememberSaveable { mutableIntStateOf(0) }
+    // The bar's Feed slot re-tapped over the feed's own root, counted: the
+    // feed answers each one it has not answered yet.
+    var feedReselects by rememberSaveable { mutableIntStateOf(0) }
     val borrowedViewBand: @Composable () -> Unit = {
         signedIn?.let { signed ->
             BorrowedViewBandRoute(
@@ -775,7 +785,16 @@ private fun CograNavGraphContent(
                     },
                     feedSelected = onFeedTab,
                     profileSelected = onOwnProfileTab,
-                    onFeed = { toTab(Feed) },
+                    // Over the feed's own root the slot is a re-tap the feed
+                    // answers (Feed.md:85-91); from anywhere else it is the
+                    // way back to the root, at the scroll it was left.
+                    onFeed = {
+                        if (onFeedTab) {
+                            feedReselects += 1
+                        } else {
+                            toTab(Feed)
+                        }
+                    },
                     onCompose = {
                         if (signedIn == true) {
                             navController.navigate(ComposePost())
@@ -889,6 +908,7 @@ private fun CograNavGraphContent(
                 val accountId by authState.accountId.collectAsStateWithLifecycle()
                 FeedRoute(
                     signedIn = signedIn,
+                    reselectSignal = feedReselects,
                     // A guest's Report asks them to join instead of raising
                     // the confirm (ReportConfirm.md:21).
                     onRequireAccount = { joinPrompt = true }.takeIf { signedIn == false },
@@ -957,6 +977,11 @@ private fun CograNavGraphContent(
                     vouchCard = vouchCard,
                     onPulled = { feedPulls += 1 },
                 )
+                // A newer version, said once per release on a cold open's
+                // feed — to members, applicants and guests alike
+                // (FeedNewerVersion.md).
+                val context = LocalContext.current
+                NewerVersionAnnouncement(onUpdateNow = { openStoreListing(context) })
             }
             composable<VouchedIn> { entry ->
                 val route = entry.toRoute<VouchedIn>()
@@ -1268,6 +1293,7 @@ private fun CograNavGraphContent(
                             )
                         },
                         onOpenAbout = { navController.navigate(About) },
+                        onOpenWhatsNew = { navController.navigate(WhatsNew) },
                         onOpenDeletion = { door ->
                             navController.navigate(
                                 when (door) {
@@ -1453,6 +1479,15 @@ private fun CograNavGraphContent(
             composable<KeyExport> {
                 // Arriving reveals nothing; the screen's own gate does.
                 KeyExportRoute(onBack = { navController.navigateUp() }, deletionBand = deletionBand(node = null))
+            }
+            composable<WhatsNew> {
+                // Back pops to Settings, which keeps its own scroll — the
+                // About group the row stood in (WhatsNew.md:23).
+                val context = LocalContext.current
+                WhatsNewRoute(
+                    onBack = { navController.navigateUp() },
+                    onUpdateNow = { openStoreListing(context) },
+                )
             }
             composable<ChatsComingSoon> {
                 ChatsComingSoonRoute(onBack = { navController.navigateUp() })

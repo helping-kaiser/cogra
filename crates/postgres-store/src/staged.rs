@@ -461,8 +461,11 @@ async fn missed_transition(pool: &PgPool, id: Uuid, expected: &str) -> StagedErr
 }
 
 /// Guarded state transition: `from` → `to`, failing with the actual state
-/// when the row is elsewhere in the handshake.
+/// when the row is elsewhere in the handshake. Runs on the caller's
+/// connection, so a transition can share a transaction with what it
+/// causes; the failure's state is read through `pool`.
 async fn transition(
+    conn: &mut sqlx::PgConnection,
     pool: &PgPool,
     id: Uuid,
     from: &[StagedState],
@@ -476,7 +479,7 @@ async fn transition(
         to.as_str(),
         &from_strs as &[&str],
     )
-    .execute(pool)
+    .execute(conn)
     .await?
     .rows_affected();
     if updated == 1 {
@@ -572,14 +575,24 @@ pub async fn revert_to_pre_sign(pool: &PgPool, id: Uuid) -> Result<(), StagedErr
 
 /// Marks the approval relayed: `awaiting_approval` → `relaying`. Accepts a
 /// retry from `relaying` (the substrate's approve is idempotent).
+///
+/// A relayed vouch Opinion is the moment the voucher's signing is taken,
+/// so the same transaction tells the applicant (APPLICATION_APPROVED,
+/// `notifications::write_approved`); any other write writes no row, and a
+/// retry writes nothing twice.
 pub async fn record_relaying(pool: &PgPool, id: Uuid) -> Result<(), StagedError> {
+    let mut tx = pool.begin().await?;
     transition(
+        &mut tx,
         pool,
         id,
         &[StagedState::AwaitingApproval, StagedState::Relaying],
         StagedState::Relaying,
     )
-    .await
+    .await?;
+    crate::notifications::write_approved(&mut tx, id).await?;
+    tx.commit().await?;
+    Ok(())
 }
 
 /// Holds an approval witness instead of relaying it: the write moves to

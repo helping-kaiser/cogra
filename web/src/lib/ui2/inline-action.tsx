@@ -23,6 +23,7 @@ export function InlineAction({
   node,
   testId,
   buttonRef,
+  ariaLabel,
 }: {
   children: ReactNode;
   onClick?: () => void;
@@ -33,11 +34,14 @@ export function InlineAction({
   node?: DataNode;
   testId?: string;
   buttonRef?: Ref<HTMLButtonElement>;
+  /** The spoken name, when the word alone names the verb and not its object (`Update to version 0.1.3`). */
+  ariaLabel?: string;
 }) {
   return (
     <button
       ref={buttonRef}
       type="button"
+      aria-label={ariaLabel}
       disabled={disabled}
       onClick={busy ? undefined : onClick}
       aria-busy={busy || undefined}

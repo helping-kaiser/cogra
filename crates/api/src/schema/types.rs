@@ -1568,6 +1568,40 @@ impl User {
         Ok(Some(connection))
     }
 
+    /// Acts other actors made that reached this user's content, profile or
+    /// application — newest first, one row per act (notifications.md). A
+    /// hidden actor's rows stay out while the actor is hidden. Keyset on
+    /// `(createdAt, id)`: a row arriving while the reader scrolls sorts
+    /// above the open page, so forward paging never shifts. Field-level:
+    /// viewer-only; null otherwise.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    async fn notifications(
+        &self,
+        ctx: &Context<'_>,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<Option<super::notifications::NotificationConnection>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        Ok(Some(
+            super::notifications::page(ctx, self.identity.id, first, after, last, before).await?,
+        ))
+    }
+
+    /// Whether a row has arrived since the viewer last opened the list —
+    /// the band's dot. A boolean, never a count; a hidden actor's rows
+    /// never light it. False for any viewer but the account's own.
+    async fn has_unread_notifications(&self, ctx: &Context<'_>) -> async_graphql::Result<bool> {
+        if !self.is_viewer(ctx) {
+            return Ok(false);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(postgres_store::notifications::has_unread(pool, self.identity.id).await?)
+    }
+
     /// Acts mid-handshake — awaiting a signature, the host seal, or
     /// confirmation — across devices. Field-level: viewer-only.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
