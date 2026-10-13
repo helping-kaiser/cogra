@@ -272,6 +272,9 @@ pub(crate) fn rank_nodes(
     candidates: &[usize],
     cal: &Calibration,
 ) -> Result<Vec<FeedEntry>, RankError> {
+    if candidates.is_empty() {
+        return Ok(Vec::new());
+    }
     let tree = dijkstra(
         g,
         &Residual {
