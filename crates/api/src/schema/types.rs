@@ -1466,7 +1466,7 @@ impl User {
         );
         connection
             .edges
-            .extend(hydrate_bookmarks(pool, kept).await?.into_iter());
+            .extend(hydrate_bookmarks(pool, kept).await?);
         Ok(Some(connection))
     }
 
@@ -4111,7 +4111,9 @@ pub(crate) async fn hydrate_bookmarks(
         .filter_map(|bookmark| {
             let node = match bookmark.kind.as_str() {
                 "post" => match content.get(&bookmark.content_id) {
-                    Some(crate::nodes::ContentNode::Post(post)) => Node::Post(PostType(post.clone())),
+                    Some(crate::nodes::ContentNode::Post(post)) => {
+                        Node::Post(PostType(post.clone()))
+                    }
                     _ => return None,
                 },
                 "comment" => match content.get(&bookmark.content_id) {

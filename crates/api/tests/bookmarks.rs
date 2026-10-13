@@ -164,9 +164,7 @@ async fn reader(rig: &WireRig, handle: &str) -> (Uuid, String) {
 }
 
 async fn save(rig: &WireRig, token: &str, node: Uuid) -> Value {
-    rig.gql(Some(token), SET, json!({ "node": node }))
-        .await["setBookmark"]
-        .clone()
+    rig.gql(Some(token), SET, json!({ "node": node })).await["setBookmark"].clone()
 }
 
 async fn save_at(rig: &WireRig, token: &str, node: Uuid, when: &Value) -> Value {
@@ -176,9 +174,7 @@ async fn save_at(rig: &WireRig, token: &str, node: Uuid, when: &Value) -> Value 
 }
 
 async fn unsave(rig: &WireRig, token: &str, node: Uuid) -> Value {
-    rig.gql(Some(token), REMOVE, json!({ "node": node }))
-        .await["removeBookmark"]
-        .clone()
+    rig.gql(Some(token), REMOVE, json!({ "node": node })).await["removeBookmark"].clone()
 }
 
 async fn saved(rig: &WireRig, token: &str, variables: Value) -> Value {
@@ -439,10 +435,7 @@ async fn an_unverified_account_saves(pool: PgPool) {
     let sol = person(&rig.pool, "sol").await;
     let response = rig.gql_raw(Some(&token), SET, json!({ "node": sol })).await;
     assert!(response["errors"].is_null(), "{response}");
-    assert_eq!(
-        ids(&saved(&rig, &token, json!({})).await),
-        vec![sol]
-    );
+    assert_eq!(ids(&saved(&rig, &token, json!({})).await), vec![sol]);
 }
 
 /// A repeated save answers the same edge and changes nothing — what
@@ -509,7 +502,10 @@ async fn undo_puts_the_row_back_where_it_was(pool: PgPool) {
 
     let after = saved(&rig, &token, json!({})).await;
     assert_eq!(ids(&after), vec![c, b, a]);
-    assert_eq!(after["edges"][1]["bookmarkedAt"], removed_edge["bookmarkedAt"]);
+    assert_eq!(
+        after["edges"][1]["bookmarkedAt"],
+        removed_edge["bookmarkedAt"]
+    );
 }
 
 /// Paging is keyset on (bookmarkedAt, node id): a save made while the
