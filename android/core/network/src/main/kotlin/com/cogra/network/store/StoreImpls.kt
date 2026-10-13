@@ -268,10 +268,14 @@ class IdentityStoreImpl @Inject constructor(
         // walk of the slot alone left it behind), together in one edit.
         // A staged post's sealed copy is the draft it was written from,
         // held until the write lands or expires (FC-G5) — it goes too.
+        // So does the account's seen record, ids and watermark in the one
+        // value: the server's view log survives, and a later remembered
+        // sign-in re-seeds from it.
         val slot = scoped(account, "")
         val draft = composeDraftKey(account)
         val sealed = composeSealedPrefix(account)
-        store.removeAll { it.startsWith(slot) || it == draft || it.startsWith(sealed) }
+        val seen = seenRecordKey(account)
+        store.removeAll { it.startsWith(slot) || it == draft || it.startsWith(sealed) || it == seen }
     }
 
     private companion object {

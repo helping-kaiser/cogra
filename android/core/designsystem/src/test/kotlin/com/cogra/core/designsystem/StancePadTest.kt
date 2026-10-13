@@ -78,12 +78,14 @@ class StancePadTest {
         axes: StanceAxes = StanceAxes.Opinion,
         targetLabel: String? = null,
         zeroWords: StanceZeroWords = StanceZeroWords.Severed,
+        fullInkEmpty: Boolean = false,
     ) {
         compose.setContent {
             // Centred, so a drag has room on every side of the target.
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 StanceControl(
                     state = state,
+                    fullInkEmpty = fullInkEmpty,
                     onHoldDefault = { holdSigned++ },
                     onOpenPad = { opened++ },
                     onPick = { picks += it },
@@ -129,6 +131,20 @@ class StancePadTest {
         compose.onNodeWithText("Stance", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithTag("${TAG}_stance_standing_face", useUnmergedTree = true)
             .assertDoesNotExist()
+    }
+
+    // stance-control.md "The vouch card's empty face wears full ink" (jakob
+    // 2026-10-13). The opacity is a graphics layer no semantics node exposes
+    // (and captureToImage never completes under Robolectric here), so the
+    // treatment is pinned at its single source and the flag at the control.
+    @Test
+    fun theEmptyFaceIsMutedByDefaultAndWearsFullInkOnlyWhenAskedFor() {
+        assertThat(restingFaceAlpha(fullInkEmpty = false)).isEqualTo(0.4f)
+        assertThat(restingFaceAlpha(fullInkEmpty = true)).isEqualTo(1f)
+
+        show(StanceControlState(standing = null), fullInkEmpty = true)
+
+        compose.onNodeWithTag("${TAG}_stance_empty_face", useUnmergedTree = true).assertExists()
     }
 
     @Test

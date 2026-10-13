@@ -1024,8 +1024,9 @@ at login, at restore and in Settings, for a shared or public
 device; default off. An account flagged with it keeps nothing
 usable on the device once its session ends. With a recovery
 backup, its device material — key, pending backup blob, handshake
-material, draft, kept picks and device-local flags — is purged at
-sign-out. Without one, the device holds the only copy of the key,
+material, draft, kept picks, seen record (ids and sync watermark;
+the server's view log is untouched) and device-local flags — is
+purged at sign-out. Without one, the device holds the only copy of the key,
 so the material is never destroyed silently: explicit sign-out
 asks first — make a recovery code, lock it, or erase it — and a
 session ended from anywhere else locks it ("Device lock" below).
