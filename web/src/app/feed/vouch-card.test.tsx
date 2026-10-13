@@ -8,7 +8,7 @@ import { createStubStanceData } from "@/lib/stance/stub-stance-data";
 import type { StanceData } from "@/lib/stance/stance-data";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
-import { SETTING_AFTER_MS } from "@/lib/ui/stance-control";
+import { LONG_PRESS_MS, SETTING_AFTER_MS } from "@/lib/ui/stance-control";
 import { VouchCard } from "./vouch-card";
 
 const push = vi.fn();
@@ -144,12 +144,42 @@ describe("VouchCard", () => {
       "Vouch back to open the way from your side — your opinion toward @mira, and your feed grows from it. Vouching opens the opinion control, set to a gentle default.",
     );
     expect(screen.getByTestId("feed.vouchCard.dismiss")).toHaveTextContent("Got it");
-    expect(screen.getByTestId("feed.vouchCard.vouch")).toHaveTextContent("Vouch back");
-    // The olive register, its inverse fill on Vouch back.
+    // The olive register.
     expect(screen.getByTestId("feed.vouchCard").className).toContain("bg-tertiary-container");
-    expect(screen.getByTestId("feed.vouchCard.vouch").className).toContain(
-      "bg-on-tertiary-container",
+  });
+
+  // VouchBack.md:11, :13, :17 — the card's act is the stance face, not a
+  // button: Got it leads the row, the one line stands beside the face, and
+  // the face keeps the trailing seat. The old button is gone (seam 178).
+  it("the card's act is the stance face with one coaching line beside it", async () => {
+    server.use(meHandler(() => me()));
+    renderCard();
+    const hint = await screen.findByTestId("feed.vouchCard.hint");
+    expect(hint).toHaveTextContent("Tap the face to vouch back.");
+    const anchor = screen.getByTestId("feed.vouchCard.stance.anchor");
+    // The hollow face: the account holds no opinion of the voucher.
+    expect(screen.getByTestId("feed.vouchCard.stance.anchor.face").className).toContain(
+      "opacity-40",
     );
+    const dismiss = screen.getByTestId("feed.vouchCard.dismiss");
+    const order = (a: Element, b: Element) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(order(dismiss, hint)).toBe(true);
+    expect(order(hint, anchor)).toBe(true);
+    // Nothing of the old button stands: not its node, not its words.
+    expect(screen.queryByTestId("feed.vouchCard.vouch")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("feed-vouch-card-vouch")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Vouch back" })).not.toBeInTheDocument();
+  });
+
+  // VouchBack.md:13 — the line claims nothing about first-ness; that is the
+  // band's line (:23).
+  it("the coaching line claims no first-opinion language", async () => {
+    server.use(meHandler(() => me()));
+    renderCard();
+    const hint = await screen.findByTestId("feed.vouchCard.hint");
+    expect(hint.textContent).toBe("Tap the face to vouch back.");
+    expect(hint.textContent ?? "").not.toMatch(/first|opinion/i);
   });
 
   // VouchBack.md:37 — a read-side comfort: away at once, silently.
@@ -247,12 +277,45 @@ describe("VouchCard", () => {
     async function openPad(stanceData: StanceData = createStubStanceData()) {
       server.use(meHandler(() => me()));
       renderCard({ stanceData });
-      fireEvent.click(await screen.findByTestId("feed.vouchCard.vouch"));
+      fireEvent.click(await screen.findByTestId("feed.vouchCard.stance.anchor"));
       return screen.findByTestId("feed.vouchCard.stance.pad");
     }
 
-    // VouchBack.md:31 — Set on a pick never moved signs the gentle default.
-    it("vouch back blooms the pad at the gentle default", async () => {
+    // VouchBack.md:39 — a tap on the face blooms the pad and signs nothing.
+    it("a tap on the face blooms the pad and signs nothing", async () => {
+      const data = createStubStanceData();
+      const pad = await openPad(data);
+      expect(pad).toBeInTheDocument();
+      expect(data.sent).toHaveLength(0);
+      expect(push).not.toHaveBeenCalled();
+    });
+
+    // VouchBack.md:43 — a hold signs the gentle default as the vouch-back and
+    // the ceremony opens, never the pad.
+    it("a hold on the face signs the gentle default and opens the ceremony", async () => {
+      const data = createStubStanceData();
+      server.use(meHandler(() => me()));
+      renderCard({ stanceData: data });
+      const anchor = await screen.findByTestId("feed.vouchCard.stance.anchor");
+      fireEvent.pointerDown(anchor, { pointerId: 1, clientX: 0, clientY: 0 });
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, LONG_PRESS_MS + 50));
+      });
+      await act(async () => {
+        fireEvent.pointerUp(anchor, { pointerId: 1 });
+        fireEvent.click(anchor);
+      });
+      await waitFor(() => expect(data.sent).toHaveLength(1));
+      expect(data.sent[0]).toEqual({
+        target: "mira-id",
+        pick: { pDirected: 0.1, pInterest: 0.1 },
+      });
+      await waitFor(() => expect(push).toHaveBeenCalledWith("/vouched-in"));
+      expect(screen.queryByTestId("feed.vouchCard.stance.pad")).not.toBeInTheDocument();
+    });
+
+    // VouchBack.md:39 — Set on a pick never moved signs the gentle default.
+    it("the face's pad signs the gentle default", async () => {
       const data = createStubStanceData();
       await openPad(data);
       fireEvent.click(screen.getByTestId("feed.vouchCard.stance.pad.set"));
@@ -309,7 +372,7 @@ describe("VouchCard", () => {
         "Your vouch back. The pad is how you shape what reaches you — for or against, and how much.";
       expect(screen.getByTestId("feed.vouchCard.stance.pad.note")).toHaveTextContent(opener);
       fireEvent.click(screen.getByTestId("feed.vouchCard.stance.pad.cancel"));
-      fireEvent.click(screen.getByTestId("feed.vouchCard.vouch"));
+      fireEvent.click(screen.getByTestId("feed.vouchCard.stance.anchor"));
       expect(await screen.findByTestId("feed.vouchCard.stance.pad.note")).toHaveTextContent(
         opener,
       );

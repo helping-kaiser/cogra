@@ -4,6 +4,7 @@ import "./globals.css";
 
 import { ApolloWrapper } from "@/lib/apollo-wrapper";
 import { AccountDeletionProvider } from "@/lib/deletion/deletion-status";
+import { SeenRecordSync } from "@/lib/history/seen-record-sync";
 import { AccountPreferencesSync } from "@/lib/settings/account-preferences-sync";
 import { THEME_BOOT_SCRIPT } from "@/lib/settings/theme-boot";
 import { SessionProvider } from "@/lib/session/provider";
@@ -61,6 +62,7 @@ export default function RootLayout({
           <ApolloWrapper>
             <AuthRuntimeProvider>
               <AccountPreferencesSync />
+              <SeenRecordSync />
               <AccountDeletionProvider>
                 <RegistrationProvider>
                   <StanceDataProvider>

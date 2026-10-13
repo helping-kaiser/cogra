@@ -16,6 +16,7 @@ import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingProfileRepository
 import com.cogra.domain.testing.testModeratedField
 import com.cogra.domain.testing.testProfile
+import com.cogra.domain.testing.testSeenRecord
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -69,7 +70,9 @@ class ProfileViewModelTest {
 
     private val history = RecordingViewHistoryRepository()
     private val session = FakeTokenStore().apply { tokens.value = AuthTokens("a", "r", "u1") }
-    private val seenTracker = SeenTracker(history, session, TestScope(dispatcher))
+    private val seenTracker = TestScope(dispatcher).let { scope ->
+        SeenTracker(history, session, scope, testSeenRecord(session, scope))
+    }
 
     private fun viewModel() = ProfileViewModel(profiles, account, seenTracker)
 
