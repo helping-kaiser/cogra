@@ -313,6 +313,24 @@ carry, `ExploreFilter`, `HistoryFilter`):
   *drafted — jakob's at review*; *the section word and the Also-show
   pointer drafted — their wording jakob's at review*).
 
+**Under a borrowed view the sheet speaks the vantage's name** (the
+vantage law, jakob 2026-10-13, readme §13): what the sheet reads from
+the vantage's graph is the vantage's, so its first person becomes the
+vantage account's handle, the band's way. The row `@mira's people` over
+`Only the people @mira holds an opinion of — the same rank, narrowed to
+them.`; `Everyone` over `The whole feed, as far as @mira's eyes reach.`;
+the sign row's spoken name `Which of @mira's people`; the trigger's
+extra `@mira's people`, `@mira's people, for`, `@mira's people,
+against`, which past the pill's 154px collapses to the count like any
+extra — so for most handles it reads `Posts · 1 change`; `Order` over
+`Ranked puts what's closest to @mira first — the view you're browsing
+from. Newest ignores it and lists by time.`; and `One topic` over
+`Topics @mira holds and is for. A topic @mira holds against stays a
+record — it just never narrows a feed.` The reader's own axes keep the
+first person: the kinds' line, `Show what you've already seen`, `Also
+show`, `Reset` and the "?". (*new 2026-10-13, drafted — jakob's at
+review*, save `@mira's people`, the ruling's own example.)
+
 ## Platform nouns
 
 The key lives on a device, and the device is named as the reader sees
