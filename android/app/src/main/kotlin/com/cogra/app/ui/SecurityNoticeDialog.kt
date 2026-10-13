@@ -41,10 +41,15 @@ class SecurityNoticeViewModel @Inject constructor(
 ) : ViewModel() {
     val reuseDetectedAt: StateFlow<Instant?> = notices.reuseDetectedAt
 
+    /** PR-62: a dead device lock's ciphertext was deleted at sign-in — said once. */
+    val lockLost: StateFlow<Boolean> = notices.lockLost
+
     val storageLost: StateFlow<Boolean> = storageHealth.storageLost
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     fun dismiss() = notices.dismiss()
+
+    fun dismissLockLost() = notices.dismissLockLost()
 
     fun acknowledgeStorageLoss() {
         viewModelScope.launch { storageHealth.acknowledge() }
@@ -56,12 +61,39 @@ fun SecurityNoticeHost() {
     val viewModel: SecurityNoticeViewModel = hiltViewModel()
     val detectedAt by viewModel.reuseDetectedAt.collectAsStateWithLifecycle()
     val storageLost by viewModel.storageLost.collectAsStateWithLifecycle()
+    val lockLost by viewModel.lockLost.collectAsStateWithLifecycle()
     detectedAt?.let {
         SecurityNoticeDialog(detectedAt = it, onDismiss = viewModel::dismiss)
+    }
+    if (lockLost) {
+        LockLostDialog(onDismiss = viewModel::dismissLockLost)
     }
     if (storageLost) {
         StorageLossDialog(onAcknowledge = viewModel::acknowledgeStorageLoss)
     }
+}
+
+/**
+ * PR-62's one-time notice in the reuse notice's vehicle (seam 109 item 82):
+ * the sign-in completed, and the locked copy the server could no longer open
+ * was deleted — said, never silent.
+ */
+@Composable
+fun LockLostDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.security_notice_title)) },
+        text = { Text(stringResource(R.string.lock_lost_notice_body)) },
+        confirmButton = {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.testTag("lock_lost_notice_dismiss"),
+            ) {
+                Text(stringResource(R.string.security_notice_confirm))
+            }
+        },
+        modifier = Modifier.testTag("lock_lost_notice"),
+    )
 }
 
 @Composable
