@@ -657,7 +657,10 @@ every refetch runs the whole personalized ranking with the current
 arguments and hands back the reordered list of ids — potentially
 thousands or millions, not twenty. Five taps must never mean five
 rankings, so the filter's chips stage, `Done` commits, and the feed
-re-queries once per visit. It stands until readers show otherwise: if
+re-queries at most once per visit — only when Kinds or the topic
+changed, the ranker's two arguments; every other axis is the device's
+own, re-derived from what the feed already holds (jakob 2026-10-13).
+It stands until readers show otherwise: if
 feedback says people expect collapsing the sheet to submit, the law is
 revisited (jakob 2026-10-01).
 
@@ -923,7 +926,7 @@ paper over:
   kind or counts them, and once the exceptions stop fitting the band's
   154px they collapse to a count ("3 kinds · 4 changes"), because a pill
   that overflows has told the reader nothing
-  and "far from the default" is the fact that matters there. It stages, and `Done` commits — one re-query per visit (§4, *Sheets*) — and
+  and "far from the default" is the fact that matters there. It stages, and `Done` commits — at most one re-query per visit, and only for Kinds or the topic (§4, *Sheets*) — and
   switching every kind off is allowed: the feed says what is off rather
   than the chip refusing the tap. No glyph on the trigger: there is no
   filter icon in the inlined set, and an icon could not say "newest".
