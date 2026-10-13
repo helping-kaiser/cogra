@@ -254,6 +254,13 @@ jobs:
         run: cargo test -p api --test client_constants
       - name: Check stance-fold-vectors.json drift
         run: cargo test -p common --test stance_fold_vectors
+      - name: Check ranker-vectors.json drift
+        run: cargo test -p ranker --test vectors
+      # The pod's contract, which the api's relay generates its client from.
+      - name: Check ranker-schema.graphql drift
+        run: |
+          cargo run -p ranker-server --bin export-ranker-schema > ranker-schema.graphql
+          git diff --exit-code ranker-schema.graphql
 
   # The client query-cost guards, on the change class they were written for.
   #

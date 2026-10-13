@@ -84,9 +84,16 @@ export function BottomNav({
   signedIn,
   slots = SHIPPED_SLOTS,
   node,
+  onReselectFeed,
 }: {
   active: NavSlot | null;
   signedIn: boolean;
+  /**
+   * THE FEED SLOT TAPPED OVER THE FEED'S OWN ROOT (Feed.md:81-91): the tap
+   * stays on the page and the feed answers it — to the top, or a refresh
+   * there. Absent anywhere else, where the slot is the plain way to the feed.
+   */
+  onReselectFeed?: () => void;
   /** Defaults to the shipped three; pass more as their surfaces land. */
   slots?: readonly NavSlot[];
   /**
@@ -161,6 +168,14 @@ export function BottomNav({
             // element would land on top of the restore (Next `link.md`,
             // "scroll"). The tabs that remember nothing yet keep the default.
             scroll={slot === "feed" ? false : undefined}
+            onClick={
+              slot === "feed" && onReselectFeed !== undefined
+                ? (event) => {
+                    event.preventDefault();
+                    onReselectFeed();
+                  }
+                : undefined
+            }
             {...ids}
             aria-label={slot === "compose" ? LABELS.compose : undefined}
             aria-current={selected ? "page" : undefined}

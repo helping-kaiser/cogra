@@ -81,7 +81,8 @@ Crates:
 | `common` | Shared domain types, error types, the L1 seam data model (`common::l1`) |
 | `cogra-interchange` | First-party CBOR + CDDL library implementing the interchange conventions — deterministic data language, envelope, namespace labels, versions, theories, acceptance |
 | `cogra-linter` | the corpus linter (`cogra-lint`) — walks Markdown prose and platform source, mechanically discharges the four discipline documents' checkable obligations |
-| `ranker` | planned, not yet in `crates/` — pure feed-ranking math; one implementation for backend, miner container, and on-device (UniFFI) |
+| `ranker` | pure feed-ranking math, no I/O; one implementation for the ranker container, miner, and on-device (UniFFI) — never linked into `api` |
+| `ranker-server` | the ranker container (`cogra-ranker`): `ranker` behind its own GraphQL schema (`ranker-schema.graphql`), reading the slice back from `api`; no session, database or secret |
 
 Docs are layered:
 

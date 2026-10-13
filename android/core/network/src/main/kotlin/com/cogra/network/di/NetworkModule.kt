@@ -27,6 +27,8 @@ import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
 import com.cogra.domain.repo.WriteRepository
+import com.cogra.domain.release.AnnouncedReleaseStore
+import com.cogra.domain.release.ReleaseRegistry
 import com.cogra.domain.report.ReportRepository
 import com.cogra.domain.saved.SavedRepository
 import com.cogra.domain.settings.SettingsRepository
@@ -50,6 +52,7 @@ import com.cogra.network.repo.SessionRepositoryImpl
 import com.cogra.network.repo.SettingsRepositoryImpl
 import com.cogra.network.repo.StanceRepositoryImpl
 import com.cogra.network.repo.ReferenceRepositoryImpl
+import com.cogra.network.repo.ReleaseRegistryImpl
 import com.cogra.network.repo.ReportRepositoryImpl
 import com.cogra.network.repo.SavedRepositoryImpl
 import com.cogra.network.repo.TopicRepositoryImpl
@@ -60,6 +63,7 @@ import com.cogra.network.repo.WriteRepositoryImpl
 import com.cogra.network.store.ComposeDraftStoreImpl
 import com.cogra.network.store.SealedDraftStoreImpl
 import com.cogra.network.store.DeviceDataImpl
+import com.cogra.network.store.AnnouncedReleaseStoreImpl
 import com.cogra.network.store.DevicePreferencesImpl
 import com.cogra.network.store.EncryptedStore
 import com.cogra.network.store.IdentityStoreImpl
@@ -212,4 +216,10 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun accountDeletionRepository(impl: AccountDeletionRepositoryImpl): AccountDeletionRepository
+
+    @Binds
+    abstract fun releaseRegistry(impl: ReleaseRegistryImpl): ReleaseRegistry
+
+    @Binds
+    abstract fun announcedReleaseStore(impl: AnnouncedReleaseStoreImpl): AnnouncedReleaseStore
 }
