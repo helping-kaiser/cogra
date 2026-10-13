@@ -13,16 +13,33 @@
 // dialogs are written for a fresh mount. So this takes the other mechanism the
 // same guide names for a pre-Cache-Components app: "using an external store".
 //
-// It is module scope on purpose. A reload starts the feed over, which is what
-// a reload should do; a navigation inside the app finds the pages and the
-// offset exactly as they were left, and a five-page read comes back five pages
-// deep.
+// It is module scope on purpose, and that is also the ranked feed's
+// staleness law (ranked-feed packet §21 RF-G11, PR-55):
+//
+// - A COLD START ALWAYS RANKS AGAIN. A reload or a reopened tab is a new page
+//   load, which starts with nothing remembered, so the first feed view asks
+//   for a fresh ranking.
+// - A RETURN FROM THE BACKGROUND NEVER DOES. A hidden tab keeps this memory
+//   exactly as it was, however long it was away, and nothing listens for the
+//   return: the reader comes back to the list they left. Fresh content is the
+//   reader's own ask — the pull, or a Retry.
+// - In between, a navigation inside the app finds the held ranking, the pages
+//   and the offset exactly as they were left, and a five-page read comes back
+//   five pages deep.
+//
+// THE MEMORY IS ONE READER'S. The held ranking is cut by its reader's seen
+// record, so a different reader — a sign-in, a sign-out, an account switch —
+// is a feed that has not been here yet, never someone else's list.
 
 import type { PostView } from "@/lib/api/content-api";
+import type { RankedFeed } from "@/lib/feed/ranked-feed";
 import type { ScrollPlace } from "@/lib/ui/scroll-pin";
 
 export type FeedMemory = {
+  /** The held ranking: its answer, filter, derived list and hydrated rows. */
+  feed: RankedFeed;
   posts: readonly PostView[];
+  /** Where the next window starts in the derived list; null at its end. */
   endCursor: string | null;
   hasNextPage: boolean;
   /** The reader's place, kept current while they scroll. */
@@ -33,14 +50,15 @@ const TOP: ScrollPlace = { offset: 0, anchorId: null, anchorTop: 0 };
 
 let memory: FeedMemory | null = null;
 
-/** What the feed left behind, or null on the first arrival of this load. */
-export function recallFeed(): FeedMemory | null {
-  return memory;
+/** What the feed left behind for `reader`, or null on their first arrival of this load. */
+export function recallFeed(reader: string | null): FeedMemory | null {
+  return memory !== null && memory.feed.reader === reader ? memory : null;
 }
 
 /** Keep the pages. Called whenever a fetch changes what is on screen. */
 export function rememberFeed(pages: Omit<FeedMemory, "place">): void {
-  memory = { ...pages, place: memory?.place ?? TOP };
+  const place = memory !== null && memory.feed === pages.feed ? memory.place : TOP;
+  memory = { ...pages, place };
 }
 
 /** Keep the place. Called as the reader scrolls, so it costs no render. */
@@ -48,7 +66,7 @@ export function rememberFeedPlace(place: ScrollPlace): void {
   if (memory !== null) memory.place = place;
 }
 
-/** Drop it — for a test, and for a deliberate re-read of the feed. */
+/** Drop it — the page load ending (a cold start), for a test. */
 export function forgetFeed(): void {
   memory = null;
 }

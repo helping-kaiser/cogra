@@ -2,6 +2,42 @@
 # tracker's one write. Ids travel in the order they were seen; at most a
 # page of them per call.
 
+# THE SEEN RECORD'S SYNC (PR-52, OS-22): the reader's own seen-list, ids
+# only — history-surface F5's cheap form — newest first, a page of the
+# budget's size at a time. The device pages it at app open and sign-in until
+# it reaches what it already holds; it never rides the feed path. The page
+# size is written as a literal so the client-operation guard prices the call
+# the device actually makes.
+query ViewHistoryIds($after: String) {
+  me {
+    id
+    viewHistory(first: 100, after: $after) {
+      edges {
+        firstSeenAt
+        node {
+          __typename
+          ... on Post {
+            id
+          }
+          ... on Comment {
+            id
+          }
+          ... on User {
+            id
+          }
+          ... on Hashtag {
+            id
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
 mutation MarkSeen($nodes: [UUID!]!) {
   markSeen(input: { nodes: $nodes }) {
     ok
