@@ -156,6 +156,7 @@ pub async fn serve(stub: Stub) -> ApiClient {
 /// Builds fixture slices the way Layer 1 publishes records.
 pub struct Builder {
     pub epoch: i64,
+    pub tau: f64,
     clock: i64,
     seq: BTreeMap<String, u64>,
     nodes: BTreeMap<String, SliceNode>,
@@ -166,6 +167,7 @@ impl Builder {
     pub fn new() -> Builder {
         let mut b = Builder {
             epoch: 1,
+            tau: 0.5,
             clock: 0,
             seq: BTreeMap::new(),
             nodes: BTreeMap::new(),
@@ -232,7 +234,7 @@ impl Builder {
                     target,
                     p_d,
                     p_i,
-                    tau: 0.5,
+                    tau: self.tau,
                     census_unknown: false,
                 })
                 .collect(),
@@ -302,6 +304,7 @@ pub fn wide_slice(people: usize) -> Slice {
         let atom = format!("p{i}");
         b.person(&atom);
         b.epoch = 1 + (i as i64 % 5);
+        b.tau = [1.0 / 3.0, 2.0 / 3.0, 6.0 / 7.0, 0.1][i % 4];
         let sign = if i % 7 == 0 { -0.5 } else { 0.75 };
         b.opinion("v", &format!("prof:{atom}"), sign, 0.5 + (i % 3) as f64 * 0.25);
         b.post(&atom);

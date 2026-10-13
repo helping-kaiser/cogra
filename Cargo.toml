@@ -57,7 +57,12 @@ sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "postgres",
 
 # Serialization
 serde = { version = "1", features = ["derive"] }
-serde_json = { version = "1" }
+# `float_roundtrip`: parse every float to the nearest double, as serde_json
+# documents the feature, instead of its default best-effort parse that can
+# land one ulp off. The ranker pod reads stance parameters and maturities
+# off the api's JSON and the relay passes scores on to devices that
+# spot-check them bit for bit, so a float must survive the wire exactly.
+serde_json = { version = "1", features = ["float_roundtrip"] }
 
 # Error handling
 thiserror = { version = "2" }
