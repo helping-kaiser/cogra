@@ -33,7 +33,7 @@ import {
   type AccountDeletion,
   type DeletionStanding,
 } from "@/lib/api/deletion-api";
-import type { Outcome } from "@/lib/api/outcome";
+import { unauthenticated, type Outcome } from "@/lib/api/outcome";
 import { useActiveAccountId, useAuthPhase, useTokenStore } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import type { DataNode } from "@/lib/ui/data-node";
@@ -91,7 +91,10 @@ export function AccountDeletionProvider({ children }: { children: ReactNode }) {
   // the account it was read for, and reads null for anyone else.
   const standing = phase === "signedIn" && read !== null && read.account === account ? read.standing : null;
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (): Promise<Outcome<DeletionStanding>> => {
+    // A signed-out reader has no account to ask about (a mail link opened
+    // without a session); nothing goes out.
+    if (phase !== "signedIn") return unauthenticated();
     const asked = ++generation.current;
     const reading = account;
     const outcome = await guard.run(() => fetchDeletionStanding(client));
@@ -100,7 +103,7 @@ export function AccountDeletionProvider({ children }: { children: ReactNode }) {
       setNow(Date.now());
     }
     return outcome;
-  }, [account, client, guard]);
+  }, [phase, account, client, guard]);
 
   useEffect(() => {
     if (phase !== "signedIn") return;
