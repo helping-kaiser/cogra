@@ -12,8 +12,8 @@
 //   account, Report — no Mention row and no handle anywhere.
 //
 // BUILT WHOLE, WIRED IN PART (saved-surface SS-1; the introduced-but-inert
-// law, jakob 2026-09-14): History waits on the History surface, Hide on the
-// hidden-actors packet, Mention on the wizard's profile reference, and — on
+// law, jakob 2026-09-14): History waits on the History surface, Mention on
+// the wizard's profile reference, and — on
 // this platform — Report on the report confirm reaching the profile (it lives
 // in the content feature). Those rows stand at full strength and do nothing
 // yet; the hand-test notes name each.
@@ -26,6 +26,7 @@ import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.v2.atom.CograOverflowMenu
 import com.cogra.core.designsystem.v2.atom.MenuRow
 import com.cogra.domain.ProfileView
+import com.cogra.domain.hidden.HiddenPerson
 import com.cogra.feature.saved.SavedHost
 
 private val PROFILE = DataNode("profile")
@@ -50,6 +51,17 @@ internal fun ProfileMenu(
         ?: MenuRow(stringResource(R.string.profile_menu_save), (SHEET / "save").tag, gated(inert))
     val share = stringResource(R.string.profile_menu_share_this)
     val report = MenuRow(stringResource(R.string.profile_menu_report), (SHEET / "report").tag, gated(inert))
+    // HIDING KEEPS THE READER ON THE PROFILE (ProfileMenu.md:23): the person
+    // leaves the feed, the page stays, and its snackbar offers Undo. A deleted
+    // account's row and snackbar name no one (ProfileDeletedMenu.md:19).
+    val person = HiddenPerson(
+        id = profile.id,
+        handle = profile.handle.takeUnless { kind == ProfileMenuKind.DELETED },
+        displayName = profile.displayName.value,
+        avatarUrl = profile.avatar?.url,
+        redacted = kind == ProfileMenuKind.DELETED,
+    )
+    val hideAct = saved?.hideAct(person, profile.id) ?: gated(inert)
     val items = when (kind) {
         ProfileMenuKind.OWN -> listOf(
             MenuRow(stringResource(R.string.profile_menu_saved), (SHEET / "saved").tag, onOpenSaved),
@@ -63,19 +75,14 @@ internal fun ProfileMenu(
             // INERT until the wizard takes a profile as a staged reference.
             MenuRow(stringResource(R.string.profile_menu_mention), (SHEET / "mention").tag, gated(inert)),
             MenuRow(share, (SHEET / "share").tag, onShare),
-            // INERT until the hidden-actors packet wires `hideActor`.
-            MenuRow(
-                stringResource(R.string.profile_menu_hide, "@${profile.handle}"),
-                (SHEET / "hide").tag,
-                gated(inert),
-            ),
+            MenuRow(stringResource(R.string.profile_menu_hide, "@${profile.handle}"), (SHEET / "hide").tag, hideAct),
             report,
         )
 
         ProfileMenuKind.DELETED -> listOf(
             save,
             MenuRow(share, (SHEET / "share").tag, onShare),
-            MenuRow(stringResource(R.string.profile_menu_hide_account), (SHEET / "hide").tag, gated(inert)),
+            MenuRow(stringResource(R.string.profile_menu_hide_account), (SHEET / "hide").tag, hideAct),
             report,
         )
     }

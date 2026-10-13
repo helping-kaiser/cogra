@@ -62,8 +62,10 @@ import com.cogra.crypto.Family
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordLink
 import com.cogra.domain.RecordRow
+import com.cogra.domain.hidden.HiddenSet
 import com.cogra.domain.saved.SavedWrites
 import com.cogra.domain.stance.StanceTarget
+import com.cogra.feature.saved.rememberHiddenSet
 import com.cogra.feature.saved.rememberSavedHost
 import com.cogra.feature.saved.rememberSavedWrites
 import com.cogra.feature.stance.StanceControlRoute
@@ -154,6 +156,7 @@ fun ProfileRoute(
             }
         },
         saved = rememberSavedWrites(),
+        hidden = rememberHiddenSet(),
         onRequireAccount = onRequireAccount,
         onOpenSaved = onOpenSaved,
         onShareProfile = { profileHandle -> context.shareProfile(shareModel.urlFor(profileHandle)) },
@@ -193,11 +196,14 @@ fun ProfileScreen(
     onShareProfile: (String) -> Unit = {},
     /** The back arrow's spoken name, by where the reader came from (`Back to Saved`). */
     backDescription: String? = null,
+    /** The reader's hidden set, which the ⋮'s Hide row hides through; null stands it inert. */
+    hidden: HiddenSet? = null,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     // THE ⋮'S AFTERMATH READS ON THE PAGE'S OWN SNACKBAR (`profile.snackbar`):
-    // `Saved.`, and `Removed from Saved.` with `Undo` on its action.
-    val savedHost = rememberSavedHost(saved, snackbarHostState, DataNode("profile") / "snackbar", onRequireAccount)
+    // `Saved.`, `Removed from Saved.` and a hide's words, each with `Undo`.
+    val savedHost =
+        rememberSavedHost(saved, snackbarHostState, DataNode("profile") / "snackbar", onRequireAccount, hidden)
     val scope = rememberCoroutineScope()
     val savedMessage = stringResource(R.string.profile_saved)
     // Consumed only after the snackbar is done: clearing first would flip

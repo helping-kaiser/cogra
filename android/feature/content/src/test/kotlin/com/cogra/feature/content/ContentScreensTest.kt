@@ -3122,6 +3122,107 @@ class ContentScreensTest {
         )
         compose.onNodeWithTag("compose_confirm_withdrawal").assertDoesNotExist()
     }
+
+    // -- The hide row (hidden-actors packet §5.2, §12.2) --
+
+    private fun hiddenSet(repository: com.cogra.domain.testing.RecordingHiddenRepository) =
+        com.cogra.domain.hidden.HiddenSet(
+            repository,
+            FakeTokenStore().apply { tokens.value = AuthTokens("a", "r", "someone-else") },
+            CoroutineScope(Dispatchers.Unconfined),
+        )
+
+    private val ada = com.cogra.domain.ActorRef("ada-id", "ada")
+
+    private fun twoByAdaOneByBo() = FeedUiState(
+        loading = false,
+        posts = listOf(
+            testPost("p1", author = ada),
+            testPost("p2", author = com.cogra.domain.ActorRef("bo-id", "bo")),
+            testPost("p3", author = ada),
+        ),
+    )
+
+    /** The feed under a hidden set, on a snackbar host the test can read. */
+    private fun renderHiding(
+        repository: com.cogra.domain.testing.RecordingHiddenRepository,
+        host: androidx.compose.material3.SnackbarHostState = androidx.compose.material3.SnackbarHostState(),
+    ) {
+        val store = hiddenSet(repository)
+        compose.setContent {
+            androidx.compose.runtime.CompositionLocalProvider(
+                com.cogra.core.designsystem.LocalSnackbarHostState provides host,
+            ) {
+                FeedScreen(
+                    state = twoByAdaOneByBo(),
+                    onRefresh = {},
+                    onLoadMore = {},
+                    onOpenPost = {},
+                    onOpenActor = {},
+                    onOpenTopic = {},
+                    viewerId = "someone-else",
+                    saved = savedWrites(RecordingSavedRepository()),
+                    hidden = store,
+                    stanceControl = { _, _, _ -> },
+                )
+            }
+        }
+    }
+
+    /** FeedHidden.md:3 — hiding from a card takes the person's rows out; nothing marks the space. */
+    @Test
+    fun hideFromAFeedCardClosesThePersonsRows() {
+        val repository = com.cogra.domain.testing.RecordingHiddenRepository()
+        renderHiding(repository)
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.hide").assertTextEquals("Hide @ada").performClick()
+        compose.waitForIdle()
+
+        // Never asks first: the hide went out at the tap.
+        assertThat(repository.hides).containsExactly("ada-id" to null)
+        compose.onNodeWithTag(feedCard("p1")).assertDoesNotExist()
+        compose.onNodeWithTag(feedCard("p3")).assertDoesNotExist()
+        compose.onNodeWithTag(feedCard("p2")).assertExists()
+    }
+
+    /** FeedHidden.md:11 — the snackbar names the handle, and Undo stands the feed as it was. */
+    @Test
+    fun hideSnackbarNamesTheHandleAndUndoStandsTheFeedAsItWas() {
+        val repository = com.cogra.domain.testing.RecordingHiddenRepository()
+        val host = androidx.compose.material3.SnackbarHostState()
+        renderHiding(repository, host)
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.hide").performClick()
+        compose.waitForIdle()
+        assertThat(host.currentSnackbarData?.visuals?.message)
+            .isEqualTo("@ada is hidden — their posts stay out of your feed.")
+        assertThat(host.currentSnackbarData?.visuals?.actionLabel).isEqualTo("Undo")
+
+        host.currentSnackbarData?.performAction()
+        compose.waitForIdle()
+        assertThat(repository.unhides).containsExactly("ada-id")
+        compose.onNodeWithTag(feedCard("p1")).assertExists()
+        compose.onNodeWithTag(feedCard("p3")).assertExists()
+    }
+
+    /** ReaderPostMenu.md:17, RowSigning.md:21 — a failed hide reverts, and its row says so with Retry. */
+    @Test
+    fun aFailedHideRevertsAndTheRowSaysRetry() {
+        val repository = com.cogra.domain.testing.RecordingHiddenRepository().apply {
+            hideAnswers.addLast(Outcome.Failed(java.io.IOException("down")))
+        }
+        renderHiding(repository)
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.hide").performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithTag(feedCard("p1")).assertExists()
+        compose.onNodeWithTag("feed_post_p1_row_line", useUnmergedTree = true).assertExists()
+        // Retry hides again and signs nothing.
+        compose.onNodeWithText("Retry", useUnmergedTree = true).performClick()
+        compose.waitForIdle()
+        assertThat(repository.hides).hasSize(2)
+    }
 }
 
 /** Well past the 18-line ceiling at any plausible card width. */
