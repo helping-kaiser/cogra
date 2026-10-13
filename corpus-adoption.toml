@@ -2109,7 +2109,7 @@ names      = [
 surface    = "query"
 built_by   = "UNTRIAGED: unbuilt surface the spec declares ahead of the schema; the owning feature packet is not yet named"
 names      = [
-  "appVersions", "campaign", "chat", "chatMessage", "chatSearch",
+  "campaign", "chat", "chatMessage", "chatSearch",
   "collective", "honorEntries", "item", "proposal",
 ]
 

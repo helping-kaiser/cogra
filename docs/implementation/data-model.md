@@ -1658,6 +1658,15 @@ CREATE TABLE auth_rate_limits (
 -- each release adds a row; previous rows stay so past patch-note
 -- links remain resolvable.
 --
+-- Written only by the operator's release CLI (`api --bin release`,
+-- development.md "The release CLI"), and a component's row only once
+-- that component's artifact is live: the web build serving, the
+-- Android build available on its store track. A row is what tells a
+-- running client a newer version exists.
+--
+-- notes holds the release's notes, one entry per line in the order
+-- written; patch_notes_url is the release's public page.
+--
 -- released_by is an optional list of actor UUIDs the release credits
 -- (community contributors beyond what the upstream repo's commit
 -- history captures — e.g. designers, translators, testers). The
@@ -1668,7 +1677,9 @@ CREATE TABLE versions (
     component       TEXT        NOT NULL CHECK (component IN
                                 ('backend', 'ios', 'android', 'web')),
     version         TEXT        NOT NULL,
-    patch_notes_url TEXT,
+    notes           TEXT[]      NOT NULL
+                                CHECK (cardinality(notes) >= 1),
+    patch_notes_url TEXT        NOT NULL,
     released_by     UUID[],
     released_at     TIMESTAMPTZ NOT NULL,
     PRIMARY KEY (component, version)
