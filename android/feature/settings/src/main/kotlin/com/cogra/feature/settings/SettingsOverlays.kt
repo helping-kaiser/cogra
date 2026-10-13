@@ -165,16 +165,8 @@ internal fun EraseConfirm(
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                val erase = @Composable {
-                    CograButton(
-                        text = stringResource(R.string.erase_confirm_erase),
-                        onClick = onErase,
-                        kind = ButtonKind.Text,
-                        modifier = Modifier.dataNode((Dialog / "erase").keyed(chip)),
-                    )
-                }
                 if (backupMade) {
-                    erase()
+                    EraseAnswer(chip, onErase)
                     CograButton(
                         text = stringResource(R.string.erase_confirm_cancel),
                         onClick = onDismiss,
@@ -186,10 +178,21 @@ internal fun EraseConfirm(
                         onClick = onMakeRecoveryCode,
                         modifier = Modifier.dataNode((Dialog / "recovery").keyed(chip)),
                     )
-                    erase()
+                    EraseAnswer(chip, onErase)
                 }
             }
         },
+    )
+}
+
+/** The erase answer, quiet and never in the error colour, keyed by the backup chip (EraseConfirm.md:11, :13, :15). */
+@Composable
+private fun EraseAnswer(chip: String, onErase: () -> Unit) {
+    CograButton(
+        text = stringResource(R.string.erase_confirm_erase),
+        onClick = onErase,
+        kind = ButtonKind.Text,
+        modifier = Modifier.dataNode((Dialog / "erase").keyed(chip)),
     )
 }
 
