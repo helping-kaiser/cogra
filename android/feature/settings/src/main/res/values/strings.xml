@@ -117,8 +117,8 @@
     <string name="settings_ending_footnote_applicant">Nothing is deleted here. The next screen says what goes and what stays.</string>
     <!-- SettingsDeleting.md :5 — the band's own forward ladder. -->
     <string name="settings_ending_deleting">Deletion in %1$s</string>
-    <!-- Settings.md :40; copy-voice "Deleting the account". -->
-    <string name="settings_ending_locked">You can delete your account once you\'re in.</string>
+    <!-- Settings.md :175 (reworded in design round 8); copy-voice "Deleting the account". -->
+    <string name="settings_ending_locked">You can delete your account once your registration lands.</string>
     <!-- DeleteAccountCanceled.md :5 — never with Undo. -->
     <string name="deletion_canceled">Canceled — your account stays, and nothing was deleted.</string>
 

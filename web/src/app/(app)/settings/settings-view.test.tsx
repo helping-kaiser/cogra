@@ -186,10 +186,10 @@ describe("the settings page", () => {
     const row = screen.getByTestId("settings.ending.delete");
     await waitFor(() => expect(row).toHaveAttribute("aria-disabled", "true"));
     expect(row.className).toContain("opacity-[var(--state-disabled)]");
-    // Still tappable: the tap is how it says why (Settings.md:157-159).
+    // Still tappable: the tap is how it says why (Settings.md:175).
     fireEvent.click(row);
     expect(await screen.findByTestId("settings-snackbar")).toHaveTextContent(
-      "You can delete your account once you're in.",
+      "You can delete your account once your registration lands.",
     );
     expect(push).not.toHaveBeenCalled();
   });

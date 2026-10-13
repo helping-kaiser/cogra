@@ -141,7 +141,7 @@ class DeletionNavGraphTest {
         waitForTag("settings.ending.delete")
         compose.onNodeWithTag("settings.ending.delete", useUnmergedTree = true).performScrollTo().performClick()
         compose.waitUntilAtLeastOneExists(
-            hasText("You can delete your account once you're in."),
+            hasText("You can delete your account once your registration lands."),
             timeoutMillis = 30_000,
         )
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Settings>()).isTrue()
