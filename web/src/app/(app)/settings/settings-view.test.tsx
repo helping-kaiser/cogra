@@ -264,7 +264,8 @@ describe("the settings page", () => {
   it("header_stays_pinned_while_scrolling", async () => {
     renderSettings();
     const header = await screen.findByTestId("settings.header");
-    expect(header.parentElement).toHaveClass("sticky", "top-0");
+    // The header and its band are one block inside the pinned bar.
+    expect(header.closest(".sticky")).toHaveClass("sticky", "top-0");
   });
 
   it("carries no restore card and no collapsing top", async () => {
