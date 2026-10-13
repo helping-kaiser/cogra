@@ -58,6 +58,7 @@ import com.cogra.core.designsystem.v2.media.LocalAlwaysUnveil
 import com.cogra.core.designsystem.StanceAxes
 import com.cogra.core.designsystem.StanceZeroWords
 import com.cogra.core.designsystem.v2.token.NavTransitions
+import com.cogra.domain.deletion.AccountDeletionState
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.store.TokenStore
 import com.cogra.feature.auth.LoginRoute
@@ -75,6 +76,7 @@ import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.content.reply.ReplyTargetKind
 import com.cogra.feature.content.reply.ReplyWizardRoute
 import com.cogra.feature.home.BorrowedViewBandRoute
+import com.cogra.feature.home.DeletionBandRoute
 import com.cogra.feature.home.KeyRestoreBannerRoute
 import com.cogra.feature.home.StatusBannersRoute
 import com.cogra.feature.home.VOUCH_CARD
@@ -94,6 +96,11 @@ import com.cogra.feature.settings.ChangeEmailLinkedRoute
 import com.cogra.feature.settings.ChangeEmailRoute
 import com.cogra.feature.settings.ChangeHandleRoute
 import com.cogra.feature.settings.ChangePasswordRoute
+import com.cogra.feature.settings.DeleteAccountConfirmedRoute
+import com.cogra.feature.settings.DeleteAccountMailRoute
+import com.cogra.feature.settings.DeleteAccountPendingRoute
+import com.cogra.feature.settings.DeleteAccountRoute
+import com.cogra.feature.settings.DeletionDoor
 import com.cogra.feature.settings.EmailDoor
 import com.cogra.feature.settings.KeyExportRoute
 import com.cogra.feature.settings.SettingsDoors
@@ -107,6 +114,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 // The destinations (type-safe routes, Navigation 2.8+).
@@ -224,6 +232,25 @@ data class ChangeEmailLinked(val token: String)
 @Serializable
 data object About
 
+/** The deletion's request screen (`DeleteAccount`), opened from the Settings row. */
+@Serializable
+data object DeleteAccount
+
+/**
+ * Where the request lands (`DeleteAccountMail`). [includeContent] is the
+ * request screen's recorded choice, which Resend carries again.
+ */
+@Serializable
+data class DeleteAccountMail(val includeContent: Boolean)
+
+/** The grace page (`DeleteAccountPending`), opened from the row while the deletion is confirmed. */
+@Serializable
+data object DeleteAccountPending
+
+/** The mailed link's landing — the App Link on `/delete-account?token=`. */
+@Serializable
+data class DeleteAccountConfirmed(val token: String)
+
 /**
  * Chats — coming soon (backlog item 68, ruled 2026-09-14). Reachable from
  * every root band's chats affordance; no state of its own, so one route
@@ -242,6 +269,9 @@ data class VouchedIn(val handle: String, val name: String, val avatarUrl: String
 
 /** The new address's link path (auth.md "Link URLs"), claimed beside `/join`. */
 private const val EMAIL_CHANGE_PATH = "/email-change"
+
+/** The account deletion's link path (auth.md "Link URLs"), claimed beside `/join`. */
+private const val DELETE_ACCOUNT_PATH = "/delete-account"
 
 /** The app's coarse auth phase; each value owns a navigation graph root. */
 enum class AuthPhase { LOADING, SIGNED_OUT, SIGNED_IN }
@@ -392,10 +422,15 @@ private inline fun <reified R : Any, T> NavController.reportTo(key: NavResultKey
     entry.savedStateHandle[key.name] = value
 }
 
-/** The activity-scoped auth-state holder: the token store decides. */
+/**
+ * The activity-scoped auth-state holder: the token store decides. It also
+ * hands the shell the account's deletion standing, which the shell forgets
+ * when a session ends and reads for why it ended.
+ */
 @HiltViewModel
 class AuthStateViewModel @Inject constructor(
     tokens: TokenStore,
+    val deletion: AccountDeletionState,
 ) : ViewModel() {
     val phase: StateFlow<AuthPhase> =
         tokens.tokens.map { pair ->
@@ -473,27 +508,41 @@ private fun CograNavGraphContent(
     // it asks for (ChangeEmailLinkedSignedOut.md: "the sign-in screen opens
     // holding the link"); applied and landed once the session exists.
     var heldEmailLink by rememberSaveable { mutableStateOf<String?>(null) }
+    val accountDeletedLine = stringResource(R.string.account_deleted)
     LaunchedEffect(phase, graphReady) {
         if (!graphReady) return@LaunchedEffect
         if (phase == AuthPhase.LOADING) return@LaunchedEffect
+        // A session that ended takes its account's deletion standing with it:
+        // no band from one account may stand over the next one's surfaces.
+        if (phase == AuthPhase.SIGNED_OUT) authState.deletion.clear()
         val from = navigatedPhase
         navigatedPhase = phase
-        // A cold start that opened an email-change link signed in is
-        // already where it should be: the landing is the destination.
-        val onLinkLanding = navController.currentBackStackEntry?.destination
-            ?.hasRoute(ChangeEmailLinked::class) == true
+        // A cold start that opened an email-change or deletion link signed in
+        // is already where it should be: the landing is the destination.
+        val destination = navController.currentBackStackEntry?.destination
+        val onLinkLanding = destination?.hasRoute(ChangeEmailLinked::class) == true ||
+            destination?.hasRoute(DeleteAccountConfirmed::class) == true
+        // An applicant's account deleted from here: the session ended because
+        // the account is gone, so the reader lands signed out on the bare view
+        // under one snackbar, never on sign-in (DeleteAccount.md:29).
+        val accountDeleted = phase == AuthPhase.SIGNED_OUT && authState.deletion.accountDeleted.value
         val root: Any = when {
             from == phase -> return@LaunchedEffect
             phase == AuthPhase.SIGNED_IN && from == AuthPhase.LOADING && onLinkLanding -> return@LaunchedEffect
             phase == AuthPhase.SIGNED_IN -> Feed
+            accountDeleted -> Feed
             from == AuthPhase.LOADING -> return@LaunchedEffect
             else -> Login
         }
         navController.navigate(root) {
             popUpTo(0) { inclusive = true }
         }
+        if (accountDeleted) {
+            authState.deletion.consumeAccountDeleted()
+            launch { shellSnackbar.showSnackbar(accountDeletedLine) }
+        }
         val held = heldEmailLink
-        if (root == Feed && held != null) {
+        if (root == Feed && phase == AuthPhase.SIGNED_IN && held != null) {
             heldEmailLink = null
             navController.navigate(ChangeEmailLinked(held))
         }
@@ -503,13 +552,16 @@ private fun CograNavGraphContent(
     // onNewIntent, which Navigation does not observe by itself — the
     // deep-link docs require forwarding to handleDeepLink. A join link is
     // gated on signed-out — a signed-in session ignores join links, cold
-    // and warm alike; the email change's link answers either way.
+    // and warm alike; the email change's and the deletion's links answer
+    // either way (the deletion's link is the capability, session or none).
     val phaseNow by rememberUpdatedState(phase)
     val activity = LocalActivity.current as? ComponentActivity
     DisposableEffect(activity, navController) {
         val listener = Consumer<Intent> { newIntent ->
-            val emailChange = newIntent.data?.path?.startsWith(EMAIL_CHANGE_PATH) == true
-            if (phaseNow == AuthPhase.SIGNED_OUT || (emailChange && phaseNow == AuthPhase.SIGNED_IN)) {
+            val path = newIntent.data?.path
+            val answersSignedIn = path?.startsWith(EMAIL_CHANGE_PATH) == true ||
+                path?.startsWith(DELETE_ACCOUNT_PATH) == true
+            if (phaseNow == AuthPhase.SIGNED_OUT || (answersSignedIn && phaseNow == AuthPhase.SIGNED_IN)) {
                 navController.handleDeepLink(newIntent)
             }
         }
@@ -601,6 +653,15 @@ private fun CograNavGraphContent(
                 onSignInOrJoin = { navController.navigate(Login) },
                 refreshSignal = feedPulls,
             )
+        }
+    }
+    // The deletion band rides the signed-in reader's surfaces only: a
+    // deletion is an account's, and a signed-out reader has none. It wears
+    // the registered `feed.deletionBand` where the board draws it (the feed)
+    // and its own tag elsewhere.
+    fun deletionBand(node: DataNode?): @Composable () -> Unit = {
+        if (signedIn == true) {
+            DeletionBandRoute(signedIn = true, refreshSignal = feedPulls, node = node)
         }
     }
 
@@ -839,6 +900,7 @@ private fun CograNavGraphContent(
                     onRefreshSignalConsumed = consumeSigned,
                     keyBanner = keyBanner,
                     borrowedViewBand = borrowedViewBand,
+                    deletionBand = deletionBand(DataNode("feed") / "deletionBand"),
                     banners = { statusBanners(actorRestored, consumeRestored) },
                     vouchCard = vouchCard,
                     onPulled = { feedPulls += 1 },
@@ -1060,6 +1122,7 @@ private fun CograNavGraphContent(
                     // Only the reader's own profile carries the shell
                     // banners: another actor's is a drill-in.
                     keyBanner = { if (route.handle == null) keyBanner() },
+                    deletionBand = deletionBand(node = null),
                     banners = {
                         if (route.handle == null) statusBanners(actorRestored, consumeRestored)
                     },
@@ -1120,8 +1183,76 @@ private fun CograNavGraphContent(
                             )
                         },
                         onOpenAbout = { navController.navigate(About) },
+                        onOpenDeletion = { door ->
+                            navController.navigate(
+                                when (door) {
+                                    DeletionDoor.REQUEST -> DeleteAccount
+                                    DeletionDoor.PENDING -> DeleteAccountPending
+                                },
+                            )
+                        },
                     ),
                 )
+            }
+            composable<DeleteAccount> {
+                DeleteAccountRoute(
+                    onBack = { navController.navigateUp() },
+                    // The link is out: the mail screen, the request leaving the
+                    // stack so Back reaches settings (DeleteAccountMail.md:27).
+                    onMailed = { includeContent ->
+                        navController.navigate(DeleteAccountMail(includeContent)) {
+                            popUpTo<Settings> { inclusive = false }
+                        }
+                    },
+                    // Neither verb answers from here: settings says why.
+                    onLocked = { notice ->
+                        navController.report(settingsNoticeKey, notice)
+                        navController.popBackStack()
+                    },
+                )
+            }
+            composable<DeleteAccountMail> { entry ->
+                DeleteAccountMailRoute(
+                    includeContent = entry.toRoute<DeleteAccountMail>().includeContent,
+                    onBack = { navController.navigateUp() },
+                )
+            }
+            composable<DeleteAccountPending> {
+                DeleteAccountPendingRoute(
+                    onBack = { navController.navigateUp() },
+                    // Settings returns, the band gone, with the canceled snackbar.
+                    onCanceled = { notice ->
+                        navController.report(settingsNoticeKey, notice)
+                        navController.popBackStack()
+                    },
+                )
+            }
+            composable<DeleteAccountConfirmed>(
+                deepLinks = listOf(
+                    // The link the deletion mails (auth.md "Link URLs"), on the
+                    // same host rules as /join.
+                    navDeepLink { uriPattern = "${BuildConfig.WEB_ORIGIN}$DELETE_ACCOUNT_PATH?token={token}" },
+                ),
+            ) { entry ->
+                val token = entry.toRoute<DeleteAccountConfirmed>().token
+                // Resolved before anything renders: the two ways on differ.
+                signedIn?.let { signed ->
+                    DeleteAccountConfirmedRoute(
+                        token = token,
+                        signedIn = signed,
+                        // The feed, under the deletion band (DeleteAccountConfirmed.md:39).
+                        onGoToFeed = {
+                            navController.navigate(Feed) { popUpTo(0) { inclusive = true } }
+                        },
+                        // The deletion stays confirmed; the sign-in is ordinary (:41).
+                        onSignIn = {
+                            navController.popBackStack()
+                            if (navController.currentBackStackEntry?.destination?.hasRoute(Login::class) != true) {
+                                navController.navigate(Login)
+                            }
+                        },
+                    )
+                }
             }
             composable<SettingsBackup> {
                 BackupRoute(
