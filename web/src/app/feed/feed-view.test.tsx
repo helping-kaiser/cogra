@@ -1416,11 +1416,13 @@ describe("FeedView's ranked data path", () => {
     forgetFeed();
   });
 
-  const markSeenOk = graphql.mutation("MarkSeen", () =>
-    HttpResponse.json({
+  const marked: unknown[] = [];
+  const markSeenOk = graphql.mutation("MarkSeen", ({ variables }) => {
+    marked.push(variables.nodes);
+    return HttpResponse.json({
       data: { markSeen: { __typename: "MarkSeenPayload", ok: true, userErrors: [] } },
-    }),
-  );
+    });
+  });
 
   /** Cards on screen, in order. */
   function cardIds(): string[] {
@@ -1490,7 +1492,8 @@ describe("FeedView's ranked data path", () => {
       borrowedViewHandler(null),
       markSeenOk,
     );
-    renderWithProviders(<FeedView />, { store: signedInStore() });
+    marked.length = 0;
+    const { unmount } = renderWithProviders(<FeedView />, { store: signedInStore() });
     await screen.findByTestId(byNode("feed.card", "p3"));
     const [first, second] = ["p1", "p2"].map(
       (id) => document.querySelector(`[data-seen-id="${id}"]`) as HTMLElement,
@@ -1510,6 +1513,10 @@ describe("FeedView's ranked data path", () => {
     expect(reads.ranks).toHaveLength(1);
     // p3 was hydrated with the first window: the re-derive asked for nothing.
     expect(reads.windows).toHaveLength(1);
+    // The list leaving sends the seeing — inside this test, while its
+    // handler is still the one answering.
+    unmount();
+    await waitFor(() => expect(marked).toEqual([["p1", "p2"]]));
   });
 
   it("done_with_only_device_side_changes_never_ranks_and_rederives", async () => {
