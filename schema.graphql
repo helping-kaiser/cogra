@@ -357,6 +357,42 @@ type BeginMediaUploadPayload {
 	userErrors: [UserError!]!
 }
 
+type BookmarkConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [BookmarkEdge!]!
+	"""
+	How many things the viewer's Saved list serves, across every page.
+	Priced at zero like every connection count; saturates at
+	[`i32::MAX`].
+	"""
+	totalCount: Int
+}
+
+"""
+An edge in a connection.
+"""
+type BookmarkEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: Node!
+	"""
+	When the viewer saved this thing — the list's order, newest
+	first, and the time an Undo passes back to restore its place.
+	"""
+	bookmarkedAt: DateTime!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
 """
 The account after the cancel — its address unchanged and no change
 pending.
@@ -457,6 +493,12 @@ type Comment implements Node {
 	The node this comment is on — the genesis Review's parent.
 	"""
 	target: CommentTarget
+	"""
+	The post this comment's thread hangs under — the target itself for
+	a top-level comment, the thread's post for a reply at any depth.
+	Null when the chain ends at no post the server holds.
+	"""
+	post: Post
 	moderationStatus: ModerationStatus!
 	"""
 	This comment's direct replies, in `order` — oldest-first by
@@ -486,6 +528,11 @@ type Comment implements Node {
 	only what has landed on L1.
 	"""
 	viewerStance(pick: StancePickInput, includePending: Boolean! = true): StanceBundle
+	"""
+	When the viewer saved this comment; null when not kept, or with no
+	session. What the comment menus' Save / Unsave row reads.
+	"""
+	viewerBookmarkedAt: DateTime
 }
 
 type CommentConnection {
@@ -1613,6 +1660,22 @@ type Mutation {
 	"""
 	setPreferences(input: SetPreferencesInput!): SetPreferencesPayload!
 	"""
+	Keep a post, comment or person in the viewer's Saved list. Any
+	other kind of node is BAD_INPUT at ["node"]; an id that names
+	nothing is NOT_FOUND. Saving a kept node changes nothing and
+	returns its edge as it stands (idempotent). Needs a session
+	(UNAUTHENTICATED otherwise) and no particular account state — an
+	applicant keeps things like a member; this is private viewer
+	state, not acting. L2 only: no record, no staged write.
+	"""
+	setBookmark(input: SetBookmarkInput!): SetBookmarkPayload!
+	"""
+	Drop a node from the viewer's Saved list — a genuine delete.
+	Dropping a node that is not kept is ok (idempotent). Needs a
+	session; no account state.
+	"""
+	removeBookmark(input: RemoveBookmarkInput!): RemoveBookmarkPayload!
+	"""
 	Record that the viewer has seen nodes — first seeing only: a node
 	already on the list is left as it is (re-seeing never counts,
 	never moves it). Posts, comments, profiles and topics are
@@ -2181,6 +2244,11 @@ type Post implements Node {
 	only what has landed on L1.
 	"""
 	viewerStance(pick: StancePickInput, includePending: Boolean! = true): StanceBundle
+	"""
+	When the viewer saved this post; null when not kept, or with no
+	session. What the menus' Save / Unsave row reads.
+	"""
+	viewerBookmarkedAt: DateTime
 }
 
 type PostConnection {
@@ -3245,6 +3313,15 @@ type ReleaseDeviceLockPayload {
 	userErrors: [UserError!]!
 }
 
+input RemoveBookmarkInput {
+	node: UUID!
+}
+
+type RemoveBookmarkPayload {
+	ok: Boolean
+	userErrors: [UserError!]!
+}
+
 """
 Reply order within one branch of a thread (comment.md §2).
 
@@ -3421,6 +3498,21 @@ type Session {
 	Whether this is the session that issued the current request.
 	"""
 	isCurrent: Boolean!
+}
+
+input SetBookmarkInput {
+	node: UUID!
+	"""
+	When the save took place; null means now. Undo passes the removed
+	row's own `bookmarkedAt`, so the row returns to its place
+	(SavedUndo). Never later than now: BAD_INPUT at ["bookmarkedAt"].
+	"""
+	bookmarkedAt: DateTime
+}
+
+type SetBookmarkPayload {
+	bookmark: BookmarkEdge
+	userErrors: [UserError!]!
 }
 
 """
@@ -3932,6 +4024,23 @@ type User implements Node & Actor {
 	otherwise.
 	"""
 	sessions: [Session!]
+	"""
+	Saved-for-later nodes: the posts, comments and people the viewer
+	kept, one mixed list, newest first by `bookmarkedAt`. Paging is
+	keyset on `(bookmarkedAt, node id)`, so a save made elsewhere
+	while the list is open joins at the next read and never shifts a
+	page. Kept things stay in the list whatever becomes of them —
+	removed, redacted, a deleted account, or an actor the viewer hid —
+	and read through their own status; hiding never narrows it. A kept
+	node that no longer resolves — a pending write that never landed —
+	is skipped. Field-level: viewer-only.
+	"""
+	bookmarks(first: Int, after: String, last: Int, before: String): BookmarkConnection
+	"""
+	When the viewer saved this person; null when not kept, or with no
+	session. What the profile menus' Save / Unsave row reads.
+	"""
+	viewerBookmarkedAt: DateTime
 	"""
 	The seen-list (feed-ranking.md §9.4): every node the viewer has
 	seen, once each, newest first by first seeing — the list the

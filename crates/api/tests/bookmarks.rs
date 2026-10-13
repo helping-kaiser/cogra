@@ -590,7 +590,7 @@ async fn an_unsave_mid_scroll_never_skips_the_next_row(pool: PgPool) {
 /// A discarded pending save is skipped.
 /// ´claim:bookmarks:a-discarded-pending-node-is-skipped´
 #[sqlx::test(migrations = "../../migrations")]
-async fn a_discarded_pending_post_is_skipped_not_an_error(pool: PgPool) {
+async fn a_discarded_pending_save_is_skipped_not_an_error(pool: PgPool) {
     let rig = rig(pool);
     let (_, token) = reader(&rig, "reader").await;
     let sol = person(&rig.pool, "sol").await;

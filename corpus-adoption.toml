@@ -2096,8 +2096,8 @@ names      = [
   "prepareGuidelinesChange", "prepareItem", "prepareItemEdit",
   "prepareModeratorRoleChange", "prepareParameterChange",
   "prepareProposal", "prepareRatify", "prepareReport", "prepareRescind",
-  "prepareSettlement", "prepareTip", "prepareWithdraw", "removeBookmark",
-  "removeContent", "setBookmark",
+  "prepareSettlement", "prepareTip", "prepareWithdraw",
+  "removeContent",
   "unhideActor",
 ]
 

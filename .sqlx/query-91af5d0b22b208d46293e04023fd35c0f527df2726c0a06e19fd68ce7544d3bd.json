@@ -1,0 +1,36 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_bookmarks (user_id, content_id, kind, bookmarked_at)\n           SELECT $1, $2, k.kind, COALESCE($3, NOW())\n           FROM (\n               SELECT 'post' AS kind FROM posts WHERE id = $2\n               UNION ALL\n               SELECT 'comment' FROM comments WHERE id = $2\n               UNION ALL\n               SELECT 'user' FROM actors WHERE id = $2 AND kind = 'user'\n               LIMIT 1\n           ) k\n           ON CONFLICT (user_id, content_id) DO NOTHING\n           RETURNING content_id, kind, bookmarked_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "content_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "kind",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "bookmarked_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "91af5d0b22b208d46293e04023fd35c0f527df2726c0a06e19fd68ce7544d3bd"
+}

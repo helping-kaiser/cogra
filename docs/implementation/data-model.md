@@ -1218,16 +1218,20 @@ CREATE TABLE chat_read_state (
 -- User bookmarks: per-viewer "save this for later" list. Private
 -- state, never visible to other actors and never an input to the
 -- ranking math (see graph-model.md §3 — bookmarking is a frontend
--- event, not a stance). content_id can be any node UUID; no
--- discriminator is stored.
+-- event, not a stance). `kind` is read from the L2 registries at
+-- write time — posts, comments and people are saveable — and Saved's
+-- keyset on (bookmarked_at, content_id) routes through the index. An
+-- unsave deletes the row.
 CREATE TABLE user_bookmarks (
     user_id       UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
     content_id    UUID        NOT NULL,
     bookmarked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    kind          TEXT        NOT NULL
+                              CHECK (kind IN ('post', 'comment', 'user')),
     PRIMARY KEY (user_id, content_id)
 );
 CREATE INDEX user_bookmarks_recency_idx
-    ON user_bookmarks (user_id, bookmarked_at DESC);
+    ON user_bookmarks (user_id, bookmarked_at DESC, content_id DESC);
 ```
 
 ---

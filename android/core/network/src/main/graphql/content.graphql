@@ -63,6 +63,8 @@ fragment PostFields on Post {
   references {
     ...ReferenceClaimFields
   }
+  # The post menu's Save / Unsave row: the only place a kept state shows.
+  viewerBookmarkedAt
 }
 
 fragment CommentFields on Comment {
@@ -132,6 +134,8 @@ fragment CommentFields on Comment {
   references {
     ...ReferenceClaimFields
   }
+  # The comment menu's Save / Unsave row.
+  viewerBookmarkedAt
 }
 
 mutation PreparePost($input: PreparePostInput!) {
