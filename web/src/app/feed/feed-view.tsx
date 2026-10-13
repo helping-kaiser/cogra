@@ -57,6 +57,7 @@ import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
 import { useScrollHost } from "@/lib/ui/scroll-host";
 import { ANCHOR_ATTRIBUTE, usePinnedPlace } from "@/lib/ui/scroll-pin";
 import { LINK_COPIED } from "@/lib/ui/share";
+import { useHostSnack } from "@/lib/saved/save-row";
 import { Snackbar } from "@/lib/ui/snackbar";
 import type { DataNode } from "@/lib/ui/data-node";
 import * as clipMemory from "@/lib/ui2/media/clip-memory";
@@ -261,10 +262,7 @@ export function FeedView({
   const [transportFault, setTransportFault] = useState<TransportFault | null>(null);
   // THE FEED'S ONE SNACKBAR (`feed.snackbar`): a copied link, and the
   // aftermath of what the card menus did.
-  const [snack, setSnack] = useState<string | null>(null);
-  // Stable, so the snackbar's own timer is not restarted by every render of
-  // the feed underneath it.
-  const dismissSnack = useCallback(() => setSnack(null), []);
+  const { snack, notify, dismiss: dismissSnack } = useHostSnack();
   // THE ONE MENU SHEET THE CARDS SHARE (ruling 84, FeedPostMenu.md:3): a
   // card's ⋮ raises it over the feed, which stands unchanged beneath. The post
   // outlives the flag so the sheet does not blank out through its exit.
@@ -600,7 +598,7 @@ export function FeedView({
                   setCommentsPost(post);
                   setCommentsOpen(true);
                 }}
-                onLinkCopied={() => setSnack(LINK_COPIED)}
+                onLinkCopied={() => notify(LINK_COPIED)}
                 onOpenMenu={() => {
                   setMenuPost(post);
                   setMenuOpen(true);
@@ -649,7 +647,9 @@ export function FeedView({
         <Snackbar
           testId="feed-snackbar"
           node={{ path: "feed.snackbar" }}
-          message={snack}
+          message={snack?.message ?? null}
+          action={snack?.action}
+          token={snack?.token}
           onDismiss={dismissSnack}
         />
       </div>
@@ -663,7 +663,7 @@ export function FeedView({
         onClose={() => setMenuOpen(false)}
         nodes={{ sheet: { path: "feed.menuSheet" }, row: feedMenuRow }}
         testId="feed-menu"
-        notify={setSnack}
+        notify={notify}
       />
       {/* Conditionally mounted, matching `stance-control.tsx`'s own guest
           gate: `JoinPrompt` always draws its `data-testid`, so a second one
