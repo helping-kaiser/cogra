@@ -1,5 +1,5 @@
-// The system-bar law's root (ui/SystemBars.kt): nothing the app lays out
-// reaches under the status bar, and no screen inside pads the bar again.
+// The system-bar law's root (ui/SystemBars.kt): the app's ground paints under the bar, nothing it lays out
+// collides with it, and no screen inside pads the bar again.
 //
 // HiltTestActivity rather than createComposeRule()'s bare ComponentActivity:
 // testDebug's robolectric.properties runs the whole source set under
@@ -71,12 +71,25 @@ class StatusBarClearanceTest {
     @Test
     fun `no app surface is laid out under the status bar, whatever the picked theme`() {
         show()
-        // A theme picked in Settings repaints the app, never the strip.
+        // A theme picked in Settings repaints the app and the strip with it.
         ThemeChoice.entries.forEach { picked ->
             choice.value = picked
             compose.waitForIdle()
             compose.onNodeWithTag("surface").assertTopPositionInRootIsEqualTo(24.dp)
         }
+    }
+
+    @Test
+    fun `the app ground starts at the window top, under the bar, and content starts below it`() {
+        compose.setContent {
+            CograTheme(choice = ThemeChoice.AUTO) {
+                StatusBarClearance(modifier = Modifier.testTag("ground"), insets = bar) {
+                    Box(Modifier.size(1.dp).testTag("content"))
+                }
+            }
+        }
+        compose.onNodeWithTag("ground").assertTopPositionInRootIsEqualTo(0.dp)
+        compose.onNodeWithTag("content").assertTopPositionInRootIsEqualTo(24.dp)
     }
 
     @Test

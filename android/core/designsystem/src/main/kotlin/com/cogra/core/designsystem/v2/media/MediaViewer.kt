@@ -315,7 +315,7 @@ private fun ViewerStage(
  *   `FLAG_DIM_BEHIND` — which darkens the strip; the dim is cleared
  *   (developer.android.com/reference/android/view/WindowManager.LayoutParams#FLAG_DIM_BEHIND);
  * - it gives the bar ICONS a reading of its own; it takes the app window's
- *   instead, which follows the system theme, so the icons read exactly as they
+ *   instead, which wears the app theme's reading, so the icons read exactly as they
  *   did before the viewer opened. Below Android 15 a window also paints its own
  *   `statusBarColor`, so the strip is made transparent the way
  *   `enableEdgeToEdge()` makes the app's (androidx.activity `EdgeToEdge`); from

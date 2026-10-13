@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The dark-system twin of values/themes.xml: the window's background
-     follows the system's theme, never the app's (ui/SystemBars.kt). -->
+<!-- The dark-system twin of values/themes.xml: the pre-first-frame window
+     background follows the system's theme; the bars are not set here
+     (ui/SystemBars.kt). -->
 <resources>
     <style name="Theme.CoGra" parent="android:Theme.DeviceDefault.NoActionBar" />
 </resources>
