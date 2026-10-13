@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.CograSnackbarHost
+import com.cogra.core.designsystem.CollapsingTopBand
 import com.cogra.core.designsystem.CollapsingTopBanner
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
@@ -74,6 +75,8 @@ fun ProfileRoute(
     onOpenPost: (String) -> Unit,
     onBack: (() -> Unit)?,
     keyBanner: @Composable () -> Unit = {},
+    /** The deletion band, while the account's confirmed deletion is in its grace (`FeedDeleting.md:3`). */
+    deletionBand: @Composable () -> Unit = {},
     banners: @Composable () -> Unit = {},
     /**
      * A signing on the member who vouched the reader in was taken — by Set
@@ -115,6 +118,7 @@ fun ProfileRoute(
         onOpenPost = onOpenPost,
         onBack = onBack,
         keyBanner = keyBanner,
+        deletionBand = deletionBand,
         banners = banners,
         stanceControl = { target, tag ->
             val profile = state.profile
@@ -151,6 +155,7 @@ fun ProfileScreen(
     onOpenPost: (String) -> Unit,
     onBack: (() -> Unit)?,
     keyBanner: @Composable () -> Unit = {},
+    deletionBand: @Composable () -> Unit = {},
     banners: @Composable () -> Unit = {},
     /** The header's stance control on someone else's profile (design.md §6). */
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { _, _ -> },
@@ -223,6 +228,8 @@ fun ProfileScreen(
                     colors = surfaceTopAppBarColors(),
                     scrollBehavior = collapsingTop.scrollBehavior,
                 )
+                // Directly under the header, collapsing with it (FeedDeleting.md:5).
+                CollapsingTopBand(collapsingTop) { deletionBand() }
                 CollapsingTopBanner(collapsingTop) { keyBanner() }
             }
         },
