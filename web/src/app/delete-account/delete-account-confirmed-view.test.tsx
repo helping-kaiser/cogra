@@ -185,29 +185,60 @@ describe("DeleteAccountConfirmed", () => {
     expect(screen.getByTestId("deleteAccount.add")).toHaveTextContent("Add it to the deletion");
   });
 
-  it("a_dead_link_draws_nothing_until_its_landing_is_ruled", async () => {
-    // ER-G1 (gated): the dead-link landing is not this slice's.
+  function deadLink() {
+    return graphql.mutation("ConfirmAccountDeletion", () =>
+      HttpResponse.json({
+        data: {
+          confirmAccountDeletion: {
+            __typename: "AccountDeletionPayload",
+            accountDeletion: null,
+            userErrors: [
+              { __typename: "UserError", message: "dead", code: "DELETION_TOKEN_INVALID", field: ["deletionToken"] },
+            ],
+          },
+        },
+      }),
+    );
+  }
+
+  const DEAD_BODY =
+    "It may have been used already, or a newer request replaced it. If you still mean to delete your account, ask again from settings.";
+
+  it("a_dead_link_signed_out_lands_on_the_one_dead_landing_with_sign_in", async () => {
+    server.use(deadLink());
+    renderLanding();
+    // DeleteLinkExpired.md:5-15 — one landing, never saying which happened.
+    expect(await screen.findByTestId("deleteAccount.title")).toHaveTextContent("This link doesn't work anymore");
+    expect(screen.getByTestId("deleteAccount.body")).toHaveTextContent(DEAD_BODY);
+    const onward = screen.getByTestId("deleteAccount.onward");
+    expect(onward).toHaveTextContent("Sign in");
+    expect(onward).toHaveAttribute("href", "/login");
+    // No mark, no arrow, no Resend, no address (`:9`, `:11`).
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.getByRole("main")).not.toHaveTextContent(/@|expire|Resend/);
+  });
+
+  it("a_dead_link_signed_in_goes_back_to_settings", async () => {
+    server.use(deadLink());
+    renderLanding({ signedIn: true });
+    expect(await screen.findByTestId("deleteAccount.title")).toHaveTextContent("This link doesn't work anymore");
+    const onward = await screen.findByTestId("deleteAccount.onward");
+    expect(onward).toHaveTextContent("Back to settings");
+    expect(onward).toHaveAttribute("href", "/settings");
+  });
+
+  it("a_link_with_no_token_is_the_same_dead_landing_and_confirms_nothing", async () => {
+    search = new URLSearchParams("");
     let answered = false;
     server.use(
       graphql.mutation("ConfirmAccountDeletion", () => {
         answered = true;
-        return HttpResponse.json({
-          data: {
-            confirmAccountDeletion: {
-              __typename: "AccountDeletionPayload",
-              accountDeletion: null,
-              userErrors: [
-                { __typename: "UserError", message: "dead", code: "DELETION_TOKEN_INVALID", field: ["deletionToken"] },
-              ],
-            },
-          },
-        });
+        return HttpResponse.json(confirmed(false));
       }),
     );
     renderLanding();
-    await waitFor(() => expect(answered).toBe(true));
-    expect(screen.queryByTestId("deleteAccount.title")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("deleteAccount.onward")).not.toBeInTheDocument();
+    expect(await screen.findByTestId("deleteAccount.title")).toHaveTextContent("This link doesn't work anymore");
+    expect(answered).toBe(false);
   });
 
   it("no_answer_says_so_and_tries_the_same_link_again", async () => {
