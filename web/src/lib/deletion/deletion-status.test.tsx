@@ -201,8 +201,10 @@ describe("the deadline met with a session on this device (ER-G6)", () => {
     server.use(
       graphql.query("AccountDeletion", () => {
         reads += 1;
-        // The first read is the grace about to end; once it has run, the
-        // server ends every session and refuses the account's reads.
+        // The first read is a grace whose deadline has just passed (the
+        // executor not yet run); the due re-read finds the deletion ran: the
+        // server has ended every session and refuses the account's reads.
+        // A deadline already past keeps the test off wall-clock timers.
         if (reads === 1) {
           return HttpResponse.json({
             data: {
@@ -212,7 +214,7 @@ describe("the deadline met with a session on this device (ER-G6)", () => {
                 deletionPath: "BY_LINK",
                 accountDeletion: {
                   __typename: "AccountDeletion",
-                  scheduledFor: new Date(Date.now() + 300).toISOString(),
+                  scheduledFor: new Date(Date.now() - 1_000).toISOString(),
                   includesContent: false,
                 },
               },
@@ -224,7 +226,8 @@ describe("the deadline met with a session on this device (ER-G6)", () => {
       sessionRefused(),
     );
     const { store } = renderUnder(<PageHeader title="Settings" />);
-    await waitFor(() => expect(store.hasSession()).toBe(false), { timeout: 3000 });
+    await waitFor(() => expect(store.hasSession()).toBe(false), { timeout: 10_000 });
+    expect(reads).toBeGreaterThanOrEqual(2);
     expect(await screen.findByTestId("deletion-snackbar")).toHaveTextContent("Your account is deleted.");
     await waitFor(() => expect(replace).toHaveBeenCalledWith(BARE_VIEW));
     expect(replace).not.toHaveBeenCalledWith("/login");
