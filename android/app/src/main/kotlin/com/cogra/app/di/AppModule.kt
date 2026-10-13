@@ -13,6 +13,7 @@ import com.cogra.domain.di.WebOrigin
 import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.VideoProcessor
+import com.cogra.domain.release.RunningVersion
 import com.cogra.network.di.GraphqlEndpoint
 import dagger.Module
 import dagger.Provides
@@ -35,6 +36,14 @@ object AppModule {
     @Provides
     @WebOrigin
     fun webOrigin(): String = BuildConfig.WEB_ORIGIN
+
+    /**
+     * The version running here — Gradle's `versionName`, the one source the
+     * Settings row, the `installed` dateline and the newer-version announcer
+     * all read (release-registry packet §4.1).
+     */
+    @Provides
+    fun runningVersion(): RunningVersion = RunningVersion(BuildConfig.VERSION_NAME)
 
     /**
      * The app-lifetime scope (the documented external-scope pattern:

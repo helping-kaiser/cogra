@@ -22,6 +22,7 @@ pub mod profile;
 pub mod ranker_pod;
 pub mod ratelimit;
 pub mod references;
+pub mod registry;
 pub mod relay;
 pub mod report;
 pub mod schema;

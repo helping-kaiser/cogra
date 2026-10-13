@@ -2219,7 +2219,9 @@ type HonorEntryEdge {
 The append-only release registry
 ([data-model.md](data-model.md), Application registry) — what the
 current version of each platform component is, and where a given
-version's patch notes live.
+version's patch notes live. Rows are written by the operator's
+release CLI ([development.md](development.md), The release CLI),
+and a component's row only once that component's artifact is live.
 
 ```graphql
 "One release of a platform component, from the append-only
@@ -2228,7 +2230,12 @@ type AppVersion {
   component: AppComponent!
   "Human-readable version string; unique per component."
   version: String!
-  patchNotesUrl: String
+  "The release's notes in plain words, one line per entry, in the
+   order written — what a reader can now do. Written when the release
+   ships; the same words on every component the release ships on."
+  notes: [String!]!
+  "The release's public page: its full notes and its code."
+  patchNotesUrl: String!
   "Actor ids the release credits beyond the upstream repo's commit
    history (designers, translators, testers) — Users and Collectives
    in one list, resolved via `nodes`. Empty when nobody beyond the
@@ -2429,7 +2436,8 @@ type Query {
 
   "Releases from the application registry, newest first; `component`
    narrows to one platform component. Answers \"what's the current
-   version?\" and \"where are version X's patch notes?\"."
+   version?\" and \"where are version X's patch notes?\". Readable
+   anonymously; served in `released_at` order."
   appVersions(
     component: AppComponent
     first: Int, after: String, last: Int, before: String

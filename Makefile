@@ -27,7 +27,7 @@ WEB_APK_DIR       = web/public/downloads
 # guest APK trusts it so it can talk https to this machine's web origin.
 ANDROID_DEV_CA = android/app/src/devCa/res/raw/cogra_dev_ca.pem
 
-.PHONY: help init up down reset-db migrate wait-db wait-media api ranker api-release bootstrap run ci ci-all lint lint-corpus regenerate fmt test build logs dev docs-link-check schema ranker-schema vectors constants fold-vectors ranker-vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-format android-test android-build web-dev web-prod web-apk guest-apk web-ci design-ci fuzz-interchange fuzz-linter
+.PHONY: help init up down reset-db migrate wait-db wait-media api ranker api-release bootstrap release-publish run ci ci-all lint lint-corpus regenerate fmt test build logs dev docs-link-check schema ranker-schema vectors constants fold-vectors ranker-vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-format android-test android-build web-dev web-prod web-apk guest-apk web-ci design-ci fuzz-interchange fuzz-linter
 
 help: ## Show available commands
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -136,6 +136,12 @@ sqlx-check: ## Verify .sqlx/ matches the queries against the live schema (needs 
 bootstrap: up ## One-time instance setup: seed genesis and land the L1 genesis records
 	$(MAKE) wait-db
 	$(CARGO) run -p api --bin bootstrap
+
+# A component's row is published only once its artifact is live
+# (development.md "The release CLI"); ARGS carries the CLI's flags.
+release-publish: up ## Publish a release into the registry: make release-publish ARGS="--component web --version 0.1.1 --notes-file notes.txt"
+	$(MAKE) wait-db
+	$(CARGO) run -p api --bin release -- publish $(ARGS)
 
 dev: up ## Start DBs, run migrations, then start the API
 	$(MAKE) wait-db

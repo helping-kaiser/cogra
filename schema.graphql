@@ -81,6 +81,78 @@ interface Actor {
 	displayName: ModeratedText!
 }
 
+"""
+A platform component with releases in the application registry.
+"""
+enum AppComponent {
+	BACKEND
+	IOS
+	ANDROID
+	WEB
+}
+
+"""
+One release of a platform component, from the append-only
+application registry — operational metadata, never ranked.
+"""
+type AppVersion {
+	component: AppComponent!
+	"""
+	Human-readable version string; unique per component.
+	"""
+	version: String!
+	"""
+	The release's notes in plain words, one line per entry, in the
+	order written — what a reader can now do. Written when the release
+	ships; the same words on every component the release ships on.
+	"""
+	notes: [String!]!
+	"""
+	The release's public page: its full notes and its code.
+	"""
+	patchNotesUrl: String!
+	"""
+	Actor ids the release credits beyond the upstream repo's commit
+	history (designers, translators, testers) — Users and Collectives
+	in one list, resolved via `nodes`. Empty when nobody beyond the
+	commit history is credited. Display-only, never an input to
+	ranking or economics.
+	"""
+	releasedBy: [UUID!]!
+	releasedAt: DateTime!
+}
+
+type AppVersionConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [AppVersionEdge!]!
+	"""
+	How many releases the registry holds under this narrowing, across
+	every page. Priced at zero like every connection count; saturates
+	at [`i32::MAX`].
+	"""
+	totalCount: Int
+}
+
+"""
+An edge in a connection.
+"""
+type AppVersionEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: AppVersion!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
 type Application {
 	id: UUID!
 	"""
@@ -3014,6 +3086,13 @@ type Query {
 	order it is handed.
 	"""
 	feed(orderedIds: [UUID!]!, first: Int, after: String, last: Int, before: String): FeedConnection!
+	"""
+	Releases from the application registry, newest first; `component`
+	narrows to one platform component. Answers "what's the current
+	version?" and "where are version X's patch notes?". Readable
+	anonymously; served in `released_at` order.
+	"""
+	appVersions(component: AppComponent, first: Int, after: String, last: Int, before: String): AppVersionConnection!
 }
 
 type Record {

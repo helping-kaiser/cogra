@@ -26,6 +26,10 @@ path = "src/bin/bootstrap.rs"
 name = "l1-dev"
 path = "src/bin/l1-dev.rs"
 
+[[bin]]
+name = "release"
+path = "src/bin/release.rs"
+
 [dependencies]
 common           = { path = "../common" }
 l1-standin       = { path = "../l1-standin" }
