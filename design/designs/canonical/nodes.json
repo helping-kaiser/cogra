@@ -5612,6 +5612,7 @@
       "prefix": "settings",
       "keys": {
         "settings.hiddenSheet.list.account": "the hidden account's handle, without @ (the hidden-accounts sheet)",
+        "settings.hiddenSheet.list.redactedAccount": "the deleted account's actor id, the lowercase UUID the wire carries (the hidden-accounts sheet, where a deleted account has no handle left to key by)",
         "settings.sessions.session": "the session's position in the list, this device first, counted from 1 (Settings' sessions)"
       },
       "nodes": {
@@ -5710,6 +5711,24 @@
           "juno",
           "ada",
           "tobias"
+        ],
+        "settings.hiddenSheet.list.redactedAccount": [
+          "3f2b8c1e-7d4a-4e9b-a1c6-5e8f0d2b9a74"
+        ],
+        "settings.hiddenSheet.list.redactedAccount.disc": [
+          "3f2b8c1e-7d4a-4e9b-a1c6-5e8f0d2b9a74"
+        ],
+        "settings.hiddenSheet.list.redactedAccount.second": [
+          "3f2b8c1e-7d4a-4e9b-a1c6-5e8f0d2b9a74"
+        ],
+        "settings.hiddenSheet.list.redactedAccount.title": [
+          "3f2b8c1e-7d4a-4e9b-a1c6-5e8f0d2b9a74"
+        ],
+        "settings.hiddenSheet.list.redactedAccount.trailing": [
+          "3f2b8c1e-7d4a-4e9b-a1c6-5e8f0d2b9a74"
+        ],
+        "settings.hiddenSheet.list.redactedAccount.trailing.unhide": [
+          "3f2b8c1e-7d4a-4e9b-a1c6-5e8f0d2b9a74"
         ],
         "settings.hiddenSheet.title": [],
         "settings.leaving": [],

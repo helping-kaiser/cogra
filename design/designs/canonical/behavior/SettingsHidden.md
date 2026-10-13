@@ -10,6 +10,10 @@ ALWAYS the sheet holds one row per hidden account, each with the person's name, 
 
 ALWAYS a deleted account's row wears the reserved disc and reads Deleted account in the system's voice, with no handle and no settings.hiddenSheet.list.account.aside
 
+ALWAYS a deleted account's row is settings.hiddenSheet.list.redactedAccount, keyed by the account's id, and carries Hidden with the age or date of the hiding and settings.hiddenSheet.list.redactedAccount.trailing.unhide like any other row
+
+ALWAYS a failure on a deleted account's row takes settings.hiddenSheet.list.redactedAccount.second and settings.hiddenSheet.list.redactedAccount.trailing, as settings.hiddenSheet.list.account.second and settings.hiddenSheet.list.account.trailing take it on any other row
+
 ALWAYS the rows stand most recently hidden first
 
 ALWAYS a hidden account's row is inert apart from its Unhide
