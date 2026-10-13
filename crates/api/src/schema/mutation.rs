@@ -103,18 +103,6 @@ fn rate_limited() -> async_graphql::Error {
     )
 }
 
-/// The transport-tier refusal for an id that resolves to nothing
-/// (api-spec.md "Errors are tiered"): a client names only ids it was
-/// served, so an unknown one is a client bug, never a state to render.
-fn not_found(message: &str) -> async_graphql::Error {
-    use async_graphql::ErrorExtensions;
-    async_graphql::Error::new(message.to_string()).extend_with(
-        |_, e: &mut async_graphql::ErrorExtensionValues| {
-            e.set("code", "NOT_FOUND");
-        },
-    )
-}
-
 /// The current-address half of an email change. The code ends the body
 /// after the last `: `, where the dev mailer's reader finds bare tokens.
 fn code_mail(to: String, code: &str) -> Mail {
