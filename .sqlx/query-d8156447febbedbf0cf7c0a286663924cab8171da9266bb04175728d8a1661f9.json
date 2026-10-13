@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT b.user_id, b.content_id, b.bookmarked_at\n           FROM user_bookmarks b\n           JOIN unnest($1::uuid[], $2::uuid[]) AS k(user_id, content_id)\n             ON b.user_id = k.user_id AND b.content_id = k.content_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "content_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "bookmarked_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray",
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "d8156447febbedbf0cf7c0a286663924cab8171da9266bb04175728d8a1661f9"
+}

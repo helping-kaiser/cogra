@@ -218,6 +218,8 @@ function detail(
       license: { __typename: "License", attribution: 0, provenance: 0 },
       topics: postTopics,
       references: postReferences,
+      // Not kept: the menu's first row reads Save.
+      viewerBookmarkedAt: null,
       // The detail read selects the author's own mark beside the card's
       // fields; an answer without it is one the cache cannot store whole.
       sensitiveSelfMark: false,

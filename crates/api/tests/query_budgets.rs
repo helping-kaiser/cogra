@@ -203,6 +203,34 @@ async fn view_history_prices_as_a_connection(pool: PgPool) {
     assert!(response.errors.is_empty(), "{:?}", response.errors);
 }
 
+/// The Saved list prices as a connection: the requested page times the
+/// per-edge selection — `edges { bookmarkedAt node { ... on Post { id
+/// viewerBookmarkedAt } } }` is five per edge, the batched
+/// `viewerBookmarkedAt` costing one like any scalar — plus one for `me`,
+/// with `totalCount` riding free.
+///
+/// (´claim:budgets:a-connection-prices-the-requested-or-default-page´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn bookmarks_price_as_a_connection(pool: PgPool) {
+    let query = "{ me { bookmarks(first: 100) {
+        totalCount edges { bookmarkedAt node { ... on Post { id viewerBookmarkedAt } } }
+    } } }";
+    let cost = 1 + connection_cost(Some(100), None, 5);
+    let budgets = |complexity| QueryBudgets {
+        depth: 15,
+        complexity,
+        introspection_enabled: false,
+    };
+    let under = schema(pool.clone(), budgets(cost - 1));
+    assert_eq!(
+        first_error(&execute(&under, query).await),
+        "Query is too complex."
+    );
+    let exact = schema(pool, budgets(cost));
+    let response = execute(&exact, query).await;
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+}
+
 /// `totalCount` is one aggregate per connection, not one per edge, but
 /// async-graphql hands a connection field a single `child_complexity` —
 /// a flat sum over the whole selection set, drawing no line between the

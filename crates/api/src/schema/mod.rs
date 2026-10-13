@@ -141,6 +141,8 @@ pub fn build_with(ctx: ApiContext, budgets: QueryBudgets) -> ApiSchema {
         .data(loaders.comment_galleries)
         .data(loaders.media)
         .data(loaders.payload_states)
+        .data(loaders.bookmarks)
+        .data(loaders.thread_posts)
         .data(ctx.pool)
         .data(ctx.boundary)
         .data(ctx.auth)

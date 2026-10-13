@@ -30,6 +30,8 @@ fragment ProfileFields on User {
   avatar {
     ...MediaFields
   }
+  # The profile menu's Save / Unsave row; null on the viewer's own.
+  viewerBookmarkedAt
 }
 
 query UserByHandle($handle: String!) {

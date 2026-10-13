@@ -6,6 +6,7 @@
 //! behind the seam.
 
 pub mod auth;
+pub mod bookmarks;
 pub mod content;
 pub mod genesis;
 pub mod hashtag;

@@ -279,6 +279,22 @@ pub(crate) async fn viewer_stance(
     }
 }
 
+/// Resolves the `viewerBookmarkedAt` field shared by every saveable node:
+/// when the viewer kept it, null when not kept or with no session.
+/// Batched through [`crate::loaders::BookmarkLoader`], so a page of cards
+/// costs one read.
+pub(crate) async fn viewer_bookmarked_at(
+    ctx: &Context<'_>,
+    node: Uuid,
+) -> async_graphql::Result<Option<DateTime<Utc>>> {
+    let Some(Some(viewer)) = ctx.data_opt::<Option<Viewer>>() else {
+        return Ok(None);
+    };
+    let loader =
+        ctx.data::<async_graphql::dataloader::DataLoader<crate::loaders::BookmarkLoader>>()?;
+    Ok(loader.load_one((viewer.user_id, node)).await?)
+}
+
 /// One shared error vocabulary across both tiers: transport faults ride
 /// the GraphQL errors array; expected outcomes ride `userErrors`.
 #[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
@@ -1384,6 +1400,83 @@ impl User {
                 })
                 .collect(),
         ))
+    }
+
+    /// Saved-for-later nodes: the posts, comments and people the viewer
+    /// kept, one mixed list, newest first by `bookmarkedAt`. Paging is
+    /// keyset on `(bookmarkedAt, node id)`, so a save made elsewhere
+    /// while the list is open joins at the next read and never shifts a
+    /// page. Kept things stay in the list whatever becomes of them —
+    /// removed, redacted, a deleted account, or an actor the viewer hid —
+    /// and read through their own status; hiding never narrows it. A kept
+    /// node that no longer resolves — a pending write that never landed —
+    /// is skipped. Field-level: viewer-only.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    async fn bookmarks(
+        &self,
+        ctx: &Context<'_>,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<Option<BookmarkConnection>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        validate_page_args(first, last, after.as_deref(), before.as_deref())
+            .map_err(|e| super::query::bad_input(e.message))?;
+        let backward = last.is_some() || before.is_some();
+        let cursor = match if backward { &before } else { &after } {
+            Some(raw) => Some(
+                crate::bookmarks::decode_cursor(raw)
+                    .ok_or_else(|| super::query::bad_input("invalid cursor"))?,
+            ),
+            None => None,
+        };
+        let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
+        let mut kept = postgres_store::bookmarks::bookmarks(
+            pool,
+            self.identity.id,
+            cursor,
+            backward,
+            limit + 1,
+        )
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let has_more = kept.len() as i64 > limit;
+        if has_more {
+            if backward {
+                kept.remove(0);
+            } else {
+                kept.pop();
+            }
+        }
+        let (has_previous, has_next) = if backward {
+            (has_more, cursor.is_some())
+        } else {
+            (cursor.is_some(), has_more)
+        };
+        let mut connection = BookmarkConnection::with_additional_fields(
+            has_previous,
+            has_next,
+            BookmarkConnectionFields {
+                viewer: self.identity.id,
+            },
+        );
+        connection
+            .edges
+            .extend(hydrate_bookmarks(pool, kept).await?);
+        Ok(Some(connection))
+    }
+
+    /// When the viewer saved this person; null when not kept, or with no
+    /// session. What the profile menus' Save / Unsave row reads.
+    async fn viewer_bookmarked_at(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<DateTime<Utc>>> {
+        viewer_bookmarked_at(ctx, self.identity.id).await
     }
 
     /// The seen-list (feed-ranking.md §9.4): every node the viewer has
@@ -2766,6 +2859,15 @@ impl PostType {
     ) -> async_graphql::Result<Option<StanceBundle>> {
         viewer_stance(ctx, self.0.id, pick, include_pending).await
     }
+
+    /// When the viewer saved this post; null when not kept, or with no
+    /// session. What the menus' Save / Unsave row reads.
+    async fn viewer_bookmarked_at(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<DateTime<Utc>>> {
+        viewer_bookmarked_at(ctx, self.0.id).await
+    }
 }
 
 /// The universal threading primitive: an L1 Comment node minted by the
@@ -2955,6 +3057,14 @@ impl CommentType {
         })
     }
 
+    /// The post this comment's thread hangs under — the target itself for
+    /// a top-level comment, the thread's post for a reply at any depth.
+    /// Null when the chain ends at no post the server holds.
+    async fn post(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<PostType>> {
+        let loader = ctx.data::<DataLoader<crate::loaders::ThreadPostLoader>>()?;
+        Ok(loader.load_one(self.0.id).await?.map(PostType))
+    }
+
     async fn moderation_status(&self) -> ModerationStatus {
         node_moderation_status(SensitiveMarks::of(self.0.sensitive))
     }
@@ -3023,6 +3133,15 @@ impl CommentType {
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<Option<StanceBundle>> {
         viewer_stance(ctx, self.0.id, pick, include_pending).await
+    }
+
+    /// When the viewer saved this comment; null when not kept, or with no
+    /// session. What the comment menus' Save / Unsave row reads.
+    async fn viewer_bookmarked_at(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<DateTime<Utc>>> {
+        viewer_bookmarked_at(ctx, self.0.id).await
     }
 }
 
@@ -3933,6 +4052,123 @@ async fn hydrate_history(
                 _ => return None,
             };
             Some((entry, item))
+        })
+        .collect())
+}
+
+/// Names the Saved connection `BookmarkConnection`, as the contract does,
+/// rather than after its node type (`NodeConnection`).
+pub struct BookmarkConnectionName;
+
+impl async_graphql::connection::ConnectionNameType for BookmarkConnectionName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "BookmarkConnection".to_string()
+    }
+}
+
+/// Names the Saved edge `BookmarkEdge`.
+pub struct BookmarkEdgeName;
+
+impl async_graphql::connection::EdgeNameType for BookmarkEdgeName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "BookmarkEdge".to_string()
+    }
+}
+
+/// `BookmarkEdge`'s own field: when the viewer kept the thing.
+#[derive(SimpleObject)]
+pub struct BookmarkEdgeFields {
+    /// When the viewer saved this thing — the list's order, newest
+    /// first, and the time an Undo passes back to restore its place.
+    pub bookmarked_at: DateTime<Utc>,
+}
+
+/// One kept thing on the Saved list.
+pub type BookmarkEdge = Edge<String, Node, BookmarkEdgeFields, BookmarkEdgeName>;
+
+/// A page of the viewer's Saved list.
+pub type BookmarkConnection = Connection<
+    String,
+    Node,
+    BookmarkConnectionFields,
+    BookmarkEdgeFields,
+    BookmarkConnectionName,
+    BookmarkEdgeName,
+    async_graphql::connection::DisableNodesField,
+>;
+
+/// `BookmarkConnection`'s connection-level fields: the viewer whose list
+/// served the edges, so the count runs only when asked.
+pub struct BookmarkConnectionFields {
+    viewer: Uuid,
+}
+
+#[Object]
+impl BookmarkConnectionFields {
+    /// How many things the viewer's Saved list serves, across every page.
+    /// Priced at zero like every connection count; saturates at
+    /// [`i32::MAX`].
+    #[graphql(complexity = 0)]
+    async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
+        let pool = ctx.data::<PgPool>()?;
+        let total = postgres_store::bookmarks::count_bookmarks(pool, self.viewer)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
+    }
+}
+
+/// Kept things as edges, typed, in list order: one batched read per
+/// kind. A thing that vanished between the read and the load is dropped
+/// rather than served empty.
+pub(crate) async fn hydrate_bookmarks(
+    pool: &PgPool,
+    kept: Vec<postgres_store::bookmarks::Bookmark>,
+) -> async_graphql::Result<Vec<BookmarkEdge>> {
+    let ids_of = |kinds: &[&str]| -> Vec<Uuid> {
+        kept.iter()
+            .filter(|b| kinds.contains(&b.kind.as_str()))
+            .map(|b| b.content_id)
+            .collect()
+    };
+    let content = crate::nodes::resolve_content_many(pool, &ids_of(&["post", "comment"]))
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+    let mut users: std::collections::HashMap<Uuid, store::ActorIdentity> =
+        store::actor_identities_by_ids(pool, &ids_of(&["user"]))
+            .await?
+            .into_iter()
+            .map(|identity| (identity.id, identity))
+            .collect();
+    Ok(kept
+        .into_iter()
+        .filter_map(|bookmark| {
+            let node = match bookmark.kind.as_str() {
+                "post" => match content.get(&bookmark.content_id) {
+                    Some(crate::nodes::ContentNode::Post(post)) => {
+                        Node::Post(PostType(post.clone()))
+                    }
+                    _ => return None,
+                },
+                "comment" => match content.get(&bookmark.content_id) {
+                    Some(crate::nodes::ContentNode::Comment(comment)) => {
+                        Node::Comment(CommentType(comment.clone()))
+                    }
+                    _ => return None,
+                },
+                "user" => Node::Profile(User {
+                    identity: users.remove(&bookmark.content_id)?,
+                    viewer_session: None,
+                }),
+                _ => return None,
+            };
+            Some(Edge::with_additional_fields(
+                crate::bookmarks::encode_cursor(bookmark.cursor()),
+                node,
+                BookmarkEdgeFields {
+                    bookmarked_at: bookmark.bookmarked_at,
+                },
+            ))
         })
         .collect())
 }
