@@ -316,7 +316,7 @@ impl Adoption {
     ///
     /// assert_eq!(adoption.profiles.profiles.len(), 2);
     /// assert_eq!(adoption.profiles.effective_count, 2);
-    /// assert_eq!(adoption.partition.rules.len(), 20);
+    /// assert_eq!(adoption.partition.rules.len(), 21);
     /// ```
     ///
     /// # Errors
