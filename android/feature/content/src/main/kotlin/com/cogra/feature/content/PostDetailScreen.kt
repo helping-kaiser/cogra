@@ -36,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -55,6 +56,7 @@ import com.cogra.core.designsystem.ActorChip
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.NodeSnackbarVisuals
 import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.dataNodeSurface
@@ -80,6 +82,7 @@ import com.cogra.feature.content.R
 import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.content.reply.ReplyTargetKind
 import com.cogra.feature.stance.StanceControlRoute
+import kotlinx.coroutines.launch
 
 @Composable
 fun PostDetailRoute(
@@ -121,6 +124,11 @@ fun PostDetailRoute(
     onCommentsDepart: (CommentsScroll) -> Unit = {},
     /** The deletion band, while the account's confirmed deletion is in its grace (`FeedDeleting.md:3`). */
     deletionBand: @Composable () -> Unit = {},
+    /**
+     * The guest gate: non-null means the reader is signed out, and the menu's
+     * Report row raises it instead of the confirm (ReportConfirm.md:21).
+     */
+    onRequireAccount: (() -> Unit)? = null,
     viewModel: PostDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -162,6 +170,7 @@ fun PostDetailRoute(
         onReference = onReference,
         onShare = { id -> context.sharePost(viewModel.shareUrl(id)) },
         onBack = onBack,
+        reportSheet = reportDoor(onRequireAccount, "detail_report_sheet", POST_DETAIL / "reportSheet"),
         stanceControl = { target, tag, node ->
             StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node)
         },
@@ -175,9 +184,7 @@ fun PostDetailRoute(
                     val target = request.comment?.asReplyTarget() ?: state.post?.asReplyTarget()
                     target?.let(onReply)
                 },
-                onEditComment = { commentId ->
-                    onEditComment(commentId, state.post?.title?.value.orEmpty())
-                },
+                onEditComment = { commentId -> onEditComment(commentId, state.post?.title?.value.orEmpty()) },
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
                 onReference = onReference,
@@ -252,8 +259,22 @@ fun PostDetailScreen(
      */
     commentsSheet: @Composable (onDismiss: () -> Unit) -> Unit = {},
     deletionBand: @Composable () -> Unit = {},
+    /**
+     * THE REPORT'S CONFIRM, `postDetail.reportSheet` (ReportConfirm.md) — or
+     * a guest's join prompt ([reportDoor]) — over this page, handed the
+     * page's own snackbar for its aftermath.
+     */
+    reportSheet: ReportSheetSlot = { _, _, _ -> },
 ) {
     val snackbar = remember { SnackbarHostState() }
+    // THE PAGE'S SNACKBAR (`postDetail.snackbar`): the scope is the screen's,
+    // so a confirmation outlives the sheet that raised it.
+    val scope = rememberCoroutineScope()
+    val notify: (String) -> Unit = { text ->
+        scope.launch { snackbar.showSnackbar(NodeSnackbarVisuals(text, POST_DETAIL / "snackbar")) }
+    }
+    // Which post's report confirm is up — the post the page is reading.
+    var reportFor by remember { mutableStateOf<String?>(null) }
     // THE LICENSE IS NEVER A STATE OF THE CARD (`ReaderPostMenu.jsx:27-29`):
     // one sheet for the screen, raised by the menu row that asked for it.
     // This screen's only such row is the post's own, in the top bar; a
@@ -328,6 +349,7 @@ fun PostDetailScreen(
                                 // Over the page — never stacked.
                                 onLicense = { license -> licenseShown = license },
                                 onShare = share,
+                                onReport = { id -> reportFor = id },
                                 node = header / "menu",
                             )
                         },
@@ -476,6 +498,11 @@ fun PostDetailScreen(
                 onRemove = { removeOpen = false },
             )
         }
+        // The confirm rises where the menu stood, over this page; it says it
+        // is up itself, so the detail clip stops beneath it.
+        reportFor?.let { id ->
+            reportSheet(id, { reportFor = null }, notify)
+        }
     }
 }
 
@@ -499,6 +526,7 @@ private fun DetailMenu(
     onRemove: () -> Unit,
     onLicense: (LicenseChoice) -> Unit,
     onShare: (String) -> Unit,
+    onReport: (String) -> Unit,
     node: DataNode,
 ) {
     if (post == null) return
@@ -514,6 +542,7 @@ private fun DetailMenu(
     } else {
         null
     }
+    val menuSheet = POST_DETAIL / "menuSheet"
     CograOverflowMenu(
         items = postMenuRows(
             own = own,
@@ -525,9 +554,15 @@ private fun DetailMenu(
             onLicense = { onLicense(post.license) },
             onShare = shareRow,
             testTagPrefix = "detail_menu",
+            onReport = { onReport(post.id) },
+            // Both of the detail's menus are registered whole — the reader's
+            // (ReaderPostMenu) and the author's (RemoveMenu) — so every row
+            // wears its `postDetail.menuSheet` path.
+            rowNode = { row -> menuSheet / row.nodeName },
         ),
         contentDescription = stringResource(R.string.content_menu_post),
         testTag = node.tag,
+        sheetNode = menuSheet,
     )
 }
 

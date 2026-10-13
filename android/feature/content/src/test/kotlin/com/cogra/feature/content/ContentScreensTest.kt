@@ -25,6 +25,7 @@ import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.isRoot
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -477,10 +478,10 @@ class ContentScreensTest {
             viewerId = "someone-else",
         )
         compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
-        compose.onNodeWithTag("feed_p1_menu_save").assertExists()
-        compose.onNodeWithTag("feed_p1_menu_cite").assertExists()
-        compose.onNodeWithTag("feed_p1_menu_hide").assertExists()
-        compose.onNodeWithTag("feed_p1_menu_license").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.save").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.cite").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.hide").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.license").assertExists()
         compose.onNodeWithTag("feed_p1_menu_edit").assertDoesNotExist()
         compose.onNodeWithTag("feed_p1_menu_remove").assertDoesNotExist()
     }
@@ -499,19 +500,19 @@ class ContentScreensTest {
             onEditPost = { editing = it },
         )
         compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
-        compose.onNodeWithTag("feed_p1_menu_save").assertExists()
-        compose.onNodeWithTag("feed_p1_menu_cite").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.save").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.cite").assertExists()
         compose.onNodeWithTag("feed_p1_menu_sensitive").assertExists()
         compose.onNodeWithTag("feed_p1_menu_remove").assertExists()
-        compose.onNodeWithTag("feed_p1_menu_license").assertExists()
-        compose.onNodeWithTag("feed_p1_menu_hide").assertDoesNotExist()
+        compose.onNodeWithTag("feed.menuSheet.license").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.hide").assertDoesNotExist()
 
-        val save = compose.onNodeWithTag("feed_p1_menu_save").getUnclippedBoundsInRoot().top
-        val cite = compose.onNodeWithTag("feed_p1_menu_cite").getUnclippedBoundsInRoot().top
+        val save = compose.onNodeWithTag("feed.menuSheet.save").getUnclippedBoundsInRoot().top
+        val cite = compose.onNodeWithTag("feed.menuSheet.cite").getUnclippedBoundsInRoot().top
         val edit = compose.onNodeWithTag("feed_p1_menu_edit").getUnclippedBoundsInRoot().top
         val sensitive = compose.onNodeWithTag("feed_p1_menu_sensitive").getUnclippedBoundsInRoot().top
         val remove = compose.onNodeWithTag("feed_p1_menu_remove").getUnclippedBoundsInRoot().top
-        val license = compose.onNodeWithTag("feed_p1_menu_license").getUnclippedBoundsInRoot().top
+        val license = compose.onNodeWithTag("feed.menuSheet.license").getUnclippedBoundsInRoot().top
         assertThat(save.value).isLessThan(cite.value)
         assertThat(cite.value).isLessThan(edit.value)
         assertThat(edit.value).isLessThan(sensitive.value)
@@ -533,7 +534,7 @@ class ContentScreensTest {
             viewerId = null,
         )
         compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
-        compose.onNodeWithTag("feed_p1_menu_cite").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.cite").assertExists()
         compose.onNodeWithTag("feed_p1_menu_edit").assertDoesNotExist()
     }
 
@@ -547,7 +548,7 @@ class ContentScreensTest {
             onCitePost = { cited = it },
         )
         compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
-        compose.onNodeWithTag("feed_p1_menu_cite").performClick()
+        compose.onNodeWithTag("feed.menuSheet.cite").performClick()
         assertThat(cited).isEqualTo("p1")
     }
 
@@ -564,23 +565,25 @@ class ContentScreensTest {
             viewerId = "someone-else",
         )
         compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
-        compose.onNodeWithTag("feed_p1_menu_license").performClick()
+        compose.onNodeWithTag("feed.menuSheet.license").performClick()
         compose.onNodeWithTag("license_sheet_terms").assertExists()
     }
 
     /**
-     * EVERY CARD'S ROWS ARE ITS OWN. A feed is a list of cards, so the tags
-     * are per post — two cards' rows are never one tag.
+     * ONE SHEET OVER THE FEED (FeedPostMenu.md:3). Every card's rows wear the
+     * one registered `feed.menuSheet`, so only the card the reader asked from
+     * ever has its sheet standing — two cards' rows are never on screen as one.
      */
     @Test
-    fun eachCardsRowsAreScopedToThatCard() {
+    fun onlyTheAskingCardsSheetStandsOverTheFeed() {
         renderFeed(
             FeedUiState(loading = false, posts = listOf(testPost("p1"), testPost("p2"))),
             viewerId = "someone-else",
         )
+        compose.onAllNodesWithTag("feed.menuSheet").assertCountEquals(0)
         compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
-        compose.onNodeWithTag("feed_p1_menu_cite").assertExists()
-        compose.onNodeWithTag("feed_p2_menu_cite").assertDoesNotExist()
+        compose.onAllNodesWithTag("feed.menuSheet").assertCountEquals(1)
+        compose.onAllNodesWithTag("feed.menuSheet.cite").assertCountEquals(1)
     }
 
     /** A REMOVED POST HAS NO MENU AT ALL (`Removed.jsx:5-6`). */
@@ -1373,7 +1376,7 @@ class ContentScreensTest {
         compose.onNodeWithTag("comment_license_terms_c1").assertDoesNotExist()
 
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_license").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.license").performClick()
         compose.onNodeWithTag("license_sheet_terms").assertExists()
     }
 
@@ -1389,7 +1392,7 @@ class ContentScreensTest {
             ),
         )
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_license").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.license").performClick()
 
         compose.onNodeWithText("Credit").assertExists()
         compose.onNodeWithText("Required for every use").assertExists()
@@ -1411,7 +1414,7 @@ class ContentScreensTest {
             ),
         )
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_license").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.license").performClick()
         compose.onNodeWithTag("license_sheet_terms_public_domain").assertExists()
         // The rows below still spell what it means.
         compose.onNodeWithText("Not required").assertExists()
@@ -1426,12 +1429,12 @@ class ContentScreensTest {
             viewerId = "someone-else",
         )
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_save").assertExists()
-        compose.onNodeWithTag("detail_menu_cite").assertExists()
-        compose.onNodeWithTag("detail_menu_hide").assertExists()
-        compose.onNodeWithTag("detail_menu_license").assertExists()
-        compose.onNodeWithTag("detail_menu_edit").assertDoesNotExist()
-        compose.onNodeWithTag("detail_menu_remove").assertDoesNotExist()
+        compose.onNodeWithTag("postDetail.menuSheet.save").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.cite").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.hide").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.license").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.edit").assertDoesNotExist()
+        compose.onNodeWithTag("postDetail.menuSheet.remove").assertDoesNotExist()
     }
 
     /**
@@ -1448,27 +1451,27 @@ class ContentScreensTest {
             onEdit = { editing = it },
         )
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_save").assertExists()
-        compose.onNodeWithTag("detail_menu_cite").assertExists()
-        compose.onNodeWithTag("detail_menu_sensitive").assertExists()
-        compose.onNodeWithTag("detail_menu_remove").assertExists()
-        compose.onNodeWithTag("detail_menu_license").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.save").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.cite").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.markSensitive").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.remove").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.license").assertExists()
         // A reader's rows are not on an author's menu.
-        compose.onNodeWithTag("detail_menu_hide").assertDoesNotExist()
+        compose.onNodeWithTag("postDetail.menuSheet.hide").assertDoesNotExist()
 
-        val save = compose.onNodeWithTag("detail_menu_save").getUnclippedBoundsInRoot().top
-        val cite = compose.onNodeWithTag("detail_menu_cite").getUnclippedBoundsInRoot().top
-        val edit = compose.onNodeWithTag("detail_menu_edit").getUnclippedBoundsInRoot().top
-        val sensitive = compose.onNodeWithTag("detail_menu_sensitive").getUnclippedBoundsInRoot().top
-        val remove = compose.onNodeWithTag("detail_menu_remove").getUnclippedBoundsInRoot().top
-        val license = compose.onNodeWithTag("detail_menu_license").getUnclippedBoundsInRoot().top
+        val save = compose.onNodeWithTag("postDetail.menuSheet.save").getUnclippedBoundsInRoot().top
+        val cite = compose.onNodeWithTag("postDetail.menuSheet.cite").getUnclippedBoundsInRoot().top
+        val edit = compose.onNodeWithTag("postDetail.menuSheet.edit").getUnclippedBoundsInRoot().top
+        val sensitive = compose.onNodeWithTag("postDetail.menuSheet.markSensitive").getUnclippedBoundsInRoot().top
+        val remove = compose.onNodeWithTag("postDetail.menuSheet.remove").getUnclippedBoundsInRoot().top
+        val license = compose.onNodeWithTag("postDetail.menuSheet.license").getUnclippedBoundsInRoot().top
         assertThat(save.value).isLessThan(cite.value)
         assertThat(cite.value).isLessThan(edit.value)
         assertThat(edit.value).isLessThan(sensitive.value)
         assertThat(sensitive.value).isLessThan(remove.value)
         assertThat(remove.value).isLessThan(license.value)
 
-        compose.onNodeWithTag("detail_menu_edit").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.edit").performClick()
         assertThat(editing).isEqualTo("p1")
     }
 
@@ -1484,7 +1487,7 @@ class ContentScreensTest {
             onEdit = { editing = it },
         )
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_sensitive").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.markSensitive").performClick()
         assertThat(editing).isEqualTo("p1")
     }
 
@@ -1565,12 +1568,12 @@ class ContentScreensTest {
             viewerId = "someone-else",
         )
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_save").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.save").performClick()
         // The screen is where it was: the row acted on nothing.
         compose.onNode(isDetailCard()).assertExists()
 
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_hide").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.hide").performClick()
         compose.onNode(isDetailCard()).assertExists()
     }
 
@@ -1647,7 +1650,7 @@ class ContentScreensTest {
             viewerId = "author-1",
         )
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_remove").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.remove").performClick()
         compose.onNodeWithTag("post_remove_confirm").assertExists()
 
         compose.onNodeWithTag("post_remove_confirm_remove").performClick()
@@ -2921,7 +2924,7 @@ class ContentScreensTest {
             onReference = { referenced += it },
         )
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_cite").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.cite").performClick()
         assertThat(referenced).containsExactly("p1")
     }
 

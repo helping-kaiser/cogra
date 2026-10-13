@@ -870,6 +870,9 @@ private fun CograNavGraphContent(
                 val accountId by authState.accountId.collectAsStateWithLifecycle()
                 FeedRoute(
                     signedIn = signedIn,
+                    // A guest's Report asks them to join instead of raising
+                    // the confirm (ReportConfirm.md:21).
+                    onRequireAccount = { joinPrompt = true }.takeIf { signedIn == false },
                     onReply = { target -> navController.openReplyWizard(target) },
                     onEditComment = { commentId, parentTitle ->
                         navController.navigate(EditComment(commentId, parentTitle))
@@ -1010,6 +1013,7 @@ private fun CograNavGraphContent(
                     postId = entry.toRoute<PostDetail>().postId,
                     viewerId = accountId,
                     signedIn = signedIn,
+                    onRequireAccount = { joinPrompt = true }.takeIf { signedIn == false },
                     onEdit = { id -> navController.navigate(ComposePost(id)) },
                     // `ReplyEntry` 5 and 7 — the composer, pinned to
                     // whatever the thread said it answers.

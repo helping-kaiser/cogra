@@ -188,6 +188,15 @@
     <string name="content_menu_remove">Remove</string>
     <string name="content_menu_opinions">Opinions on this</string>
     <string name="content_menu_license">License terms</string>
+    <string name="content_menu_report">Report</string>
+    <!-- Report — the confirm sheet (ReportConfirm.jsx; ruling 75). Report is the filled commit, Cancel the quiet way out. -->
+    <string name="content_report_title_post">Report this post?</string>
+    <string name="content_report_body">It goes to the people who run CoGra for a look.</string>
+    <string name="content_report_report">Report</string>
+    <string name="content_report_cancel">Cancel</string>
+    <string name="content_report_sent">Reported.</string>
+    <!-- A refused or unanswered report (ReportConfirm.md:13-15; item 95's shared no-answer line). -->
+    <string name="content_report_not_sent">That didn\'t send. Try again.</string>
     <!-- Remove — the think-twice dialog (RemoveConfirm.jsx). The SAFE action is the filled one. -->
     <string name="content_remove_title">Remove this post?</string>
     <string name="content_remove_body">The words and pictures leave every reader\'s view, along with every earlier version\'s. A visible mark stays in their place — \"Removed by its author\" — and the post\'s spot in threads stays with it.</string>

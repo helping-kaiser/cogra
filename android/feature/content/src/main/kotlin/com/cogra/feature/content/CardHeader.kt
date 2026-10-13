@@ -57,6 +57,8 @@ internal fun ContentCardHeader(
      * parts in place of the [testTagPrefix] tags.
      */
     node: DataNode? = null,
+    /** The registered sheet the ⋮ raises (`feed.menuSheet`), when its board registers one. */
+    menuSheetNode: DataNode? = null,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -89,6 +91,7 @@ internal fun ContentCardHeader(
             contentDescription = menuContentDescription,
             testTag = node?.div("menu")?.tag ?: "${testTagPrefix}_menu",
             stacked = stacked,
+            sheetNode = menuSheetNode,
         )
     }
 }
