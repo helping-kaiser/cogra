@@ -18,8 +18,7 @@
 // navigations (`feed-memory.ts`) and hands it the reads it needs per call, so
 // nothing here outlives the client it was built with.
 
-import type { Outcome } from "@/lib/api/outcome";
-import { success } from "@/lib/api/outcome";
+import { failed, success, type Outcome } from "@/lib/api/outcome";
 import type { FeedItemView, FeedPostView } from "@/lib/api/feed-api";
 import { derive, type FeedRow, type HeldAnswer, type HeldEntry, type SeenLookup } from "./derive";
 import {
@@ -50,6 +49,12 @@ export type FeedIo = {
   hydrate(ids: readonly string[]): Promise<Outcome<readonly FeedItemView[]>>;
   /** The READER's seen record, loaded, as it stands now (CD-10). */
   seen(): Promise<SeenLookup>;
+  /**
+   * Whether the asker still wants the answer. A ranking that lands after its
+   * screen left is not adopted, so the held answer never runs ahead of the
+   * pages remembered beside it. Absent means always.
+   */
+  wanted?(): boolean;
 };
 
 /** A hydrated stretch of the derived list. */
@@ -128,6 +133,7 @@ export class RankedFeed {
       }
     }
     const seen = await io.seen();
+    if (io.wanted?.() === false) return failed(new Error("the ranking landed after its screen left"));
     this.held = answer;
     this.hydrated = new Map();
     this.rows = answer === null ? [] : derive(answer, deviceCutsOf(this.applied), seen);

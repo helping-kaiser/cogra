@@ -1057,7 +1057,9 @@ describe("FeedView", () => {
       expect(screen.getByTestId(byNode("feed.card", "p21"))).toBeInTheDocument();
       // And nothing was re-fetched — a fresh ranking would have answered
       // with page one and dropped page two.
-      await waitFor(() => expect(reads.windows).toHaveLength(2));
+      await waitFor(() =>
+        expect(reads.windows.map((ids) => `${ids[0]}:${ids.length}`)).toEqual(["p1:20", "p21:5"]),
+      );
       expect(reads.ranks).toHaveLength(1);
     });
 

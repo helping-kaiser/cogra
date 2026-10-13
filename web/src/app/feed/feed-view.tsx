@@ -28,7 +28,7 @@ import { useApolloClient } from "@apollo/client/react";
 import { fetchBorrowedView, fetchMe, type BorrowedVantage } from "@/lib/api/auth-api";
 import type { PostView } from "@/lib/api/content-api";
 import { fetchFeedRanking, fetchFeedWindow } from "@/lib/api/feed-api";
-import { success } from "@/lib/api/outcome";
+import { failed, success } from "@/lib/api/outcome";
 import { appendDeduped } from "@/lib/api/pagination";
 import { onFeedDone } from "@/lib/feed/feed-done";
 import { RankedFeed, type FeedIo, type FeedWindow } from "@/lib/feed/ranked-feed";
@@ -200,27 +200,38 @@ export function FeedView({
     }
     return feedRef.current;
   }, []);
+  // Whether this mount is still on screen. A ranking runs several reads in a
+  // row; once the feed has left, the rest of them are not asked at all.
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
   // The reads the held ranking is handed per call (`ranked-feed.ts`).
-  const io = useMemo<FeedIo>(
-    () => ({
+  const io = useMemo<FeedIo>(() => {
+    const gone = () => Promise.resolve(failed(new Error("the feed left the screen")));
+    return {
       // CD-5: the borrowed vantage when there is one — a guest's, an
       // applicant's, a member's before their first opinion — else the
       // reader's own actor. Asked at every ranking, so the hand-over reads
       // the own view from the next refresh (blessing 57).
       resolveViewer: async () => {
+        if (!alive.current) return gone();
         const borrowed = await guard.run(() => fetchBorrowedView(client));
         if (borrowed.kind !== "success") return borrowed;
         return success(borrowed.value?.id ?? reader);
       },
-      rank: (viewer, args) => fetchFeedRanking(client, viewer, args),
-      hydrate: (ids) => fetchFeedWindow(client, ids),
+      rank: (viewer, args) => (alive.current ? fetchFeedRanking(client, viewer, args) : gone()),
+      hydrate: (ids) => (alive.current ? fetchFeedWindow(client, ids) : gone()),
       seen: async () => {
         await seenRecord.use(reader);
         return seenRecord;
       },
-    }),
-    [client, guard, reader],
-  );
+      wanted: () => alive.current,
+    };
+  }, [client, guard, reader]);
   const [rememberedPlace] = useState(() => remembered?.place ?? null);
   const [posts, setPosts] = useState<readonly PostView[]>(remembered?.posts ?? []);
   const [endCursor, setEndCursor] = useState<string | null>(remembered?.endCursor ?? null);
@@ -269,13 +280,6 @@ export function FeedView({
   // WHICH ASK IS CURRENT. A ranking, a pull and a Done can overlap; only the
   // newest one's answer reaches the screen, and nothing lands after unmount.
   const ask = useRef(0);
-  const alive = useRef(true);
-  useEffect(() => {
-    alive.current = true;
-    return () => {
-      alive.current = false;
-    };
-  }, []);
 
   /** Puts the derived list's first window on screen. */
   const showFirst = useCallback((first: FeedWindow) => {

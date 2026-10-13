@@ -176,6 +176,16 @@ describe("the held ranking", () => {
     expect(fake.ranks).toHaveLength(1);
   });
 
+  it("never adopts a ranking that landed after its screen left", async () => {
+    const fake = io([answerOf(["a"]), answerOf(["b"])]);
+    const feed = new RankedFeed("reader-1");
+    await feed.refresh(fake.reads);
+    const late = await feed.refresh({ ...fake.reads, wanted: () => false });
+    expect(late.kind).toBe("failed");
+    expect(feed.lookup("a")).toBeDefined();
+    expect(feed.derived.map((row) => row.targetId)).toEqual(["a"]);
+  });
+
   it("ranks nothing for a viewer that resolves to no one", async () => {
     const fake = io([answerOf(["a"])]);
     const feed = new RankedFeed(null);
