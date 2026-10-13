@@ -26,6 +26,9 @@ class DeletionScreensTest {
 
     private fun node(tag: String) = compose.onNodeWithTag(tag, useUnmergedTree = true)
 
+    /** A button reads its label from the child it merges, so it is asserted on the merged tree. */
+    private fun button(tag: String) = compose.onNodeWithTag(tag)
+
     private fun request(state: DeleteAccountUiState, onSend: () -> Unit = {}, onDeleteNow: () -> Unit = {}) {
         compose.setContent {
             DeleteAccountScreen(state, onBack = {}, onToggleSweep = {}, onSend = onSend, onDeleteNow = onDeleteNow)
@@ -47,11 +50,11 @@ class DeletionScreensTest {
         node("deleteAccount.stays.label").assertTextEquals("What stays")
         node("deleteAccount.sweep").assertIsOff()
         node("deleteAccount.sweep.label").assertTextEquals("Also remove what I posted")
-        node("deleteAccount.commit:member").performScrollTo().assertTextEquals("Send the confirmation link")
+        button("deleteAccount.commit:member").performScrollTo().assertTextEquals("Send the confirmation link")
             .performClick()
         assertThat(sent).isEqualTo(1)
         node("deleteAccount.note").assertExists()
-        node("deleteAccount.commit:applicant").assertDoesNotExist()
+        button("deleteAccount.commit:applicant").assertDoesNotExist()
     }
 
     @Test
@@ -63,8 +66,9 @@ class DeletionScreensTest {
     @Test
     fun `a_send_with_no_answer_stands_its_line_above_the_commit`() {
         request(DeleteAccountUiState(case = DeleteAccountCase.MEMBER, fault = R.string.network_error))
-        node("deleteAccount.commit:member_fault").performScrollTo().assertTextEquals("That didn't send. Try again.")
-        node("deleteAccount.commit:member").assertTextEquals("Send the confirmation link")
+        node("deleteAccount.commit_fault").performScrollTo()
+            .assertTextEquals("That didn't send. Try again.")
+        button("deleteAccount.commit:member").assertTextEquals("Send the confirmation link")
     }
 
     @Test
@@ -73,20 +77,20 @@ class DeletionScreensTest {
         request(DeleteAccountUiState(case = DeleteAccountCase.APPLICANT), onDeleteNow = { deleted++ })
         node("deleteAccount.body")
             .assertTextEquals("Nothing has landed yet — deleting removes your application and your account right away.")
-        node("deleteAccount.commit:applicant").assertTextEquals("Delete my account").performClick()
+        button("deleteAccount.commit:applicant").assertTextEquals("Delete my account").performClick()
         assertThat(deleted).isEqualTo(1)
         node("deleteAccount.goes").assertDoesNotExist()
         node("deleteAccount.stays").assertDoesNotExist()
         node("deleteAccount.sweep").assertDoesNotExist()
         node("deleteAccount.note").assertDoesNotExist()
-        node("deleteAccount.commit:member").assertDoesNotExist()
+        button("deleteAccount.commit:member").assertDoesNotExist()
     }
 
     @Test
     fun `no_case_is_drawn_before_the_path_is_read`() {
         request(DeleteAccountUiState())
-        node("deleteAccount.commit:member").assertDoesNotExist()
-        node("deleteAccount.commit:applicant").assertDoesNotExist()
+        button("deleteAccount.commit:member").assertDoesNotExist()
+        button("deleteAccount.commit:applicant").assertDoesNotExist()
     }
 
     // ----------------------------------------------------------- the mail
@@ -106,7 +110,7 @@ class DeletionScreensTest {
             "We sent a link to sol@solferreira.art. Opening it confirms the deletion and starts the seven days.",
         )
         node("deleteAccount.note").assertExists()
-        node("deleteAccount.resend").assertTextEquals("Resend the link").performClick()
+        button("deleteAccount.resend").assertTextEquals("Resend the link").performClick()
         assertThat(resent).isEqualTo(1)
     }
 
@@ -130,7 +134,7 @@ class DeletionScreensTest {
             "Your account is deleted in 6 days, on 13.10.2026. Until then nothing has changed, " +
                 "and canceling keeps everything as it is.",
         )
-        node("deleteAccount.cancel").assertTextEquals("Cancel").performClick()
+        button("deleteAccount.cancel").assertTextEquals("Cancel").performClick()
         assertThat(canceled).isEqualTo(1)
     }
 
@@ -158,8 +162,8 @@ class DeletionScreensTest {
         node("deleteAccount.body")
             .assertTextEquals("That's 14.10.2026. Until then nothing changes, and you can cancel from any device.")
         node("deleteAccount.sweep").assertIsOff()
-        node("deleteAccount.add").assertTextEquals("Add it to the deletion")
-        node("deleteAccount.onward").performScrollTo().assertTextEquals("Go to the feed").performClick()
+        button("deleteAccount.add").assertTextEquals("Add it to the deletion")
+        button("deleteAccount.onward").performScrollTo().assertTextEquals("Go to the feed").performClick()
         assertThat(onward).isEqualTo(1)
         node("delete_confirmed_signed_out").assertDoesNotExist()
     }
@@ -169,7 +173,7 @@ class DeletionScreensTest {
         landing(AccountDeletion(NOW.plusSeconds(7 * 86_400), includesContent = true), signedIn = true)
         node("deleteAccount.title").assertTextEquals("Your account and everything you posted are deleted in 7 days")
         node("deleteAccount.sweep").assertDoesNotExist()
-        node("deleteAccount.add").assertDoesNotExist()
+        button("deleteAccount.add").assertDoesNotExist()
     }
 
     @Test
@@ -177,6 +181,6 @@ class DeletionScreensTest {
         landing(AccountDeletion(NOW.plusSeconds(7 * 86_400), includesContent = false), signedIn = false)
         node("delete_confirmed_signed_out").performScrollTo()
             .assertTextEquals("You're not signed in here, and you don't need to be — the link was the proof.")
-        node("deleteAccount.onward").assertTextEquals("Sign in")
+        button("deleteAccount.onward").assertTextEquals("Sign in")
     }
 }

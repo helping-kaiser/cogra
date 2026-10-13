@@ -152,10 +152,12 @@ class DeleteAccountConfirmedViewModel @Inject constructor(
         viewModelScope.launch {
             val outcome = deletions.confirm(token, includeContent = s.sweepTicked)
             val deletion = (outcome as? Outcome.Success)?.value
+            // A confirm answers the deletion it confirmed; none is a fault.
+            val answered = outcome !is Outcome.Success || deletion != null
             _state.update {
                 it.copy(
                     adding = false,
-                    fault = if (outcome is Outcome.Success && deletion == null) R.string.network_error else faultOf(outcome),
+                    fault = if (answered) faultOf(outcome) else R.string.network_error,
                     landing = deletion?.let { d -> ConfirmedLanding.Confirmed(d) } ?: it.landing,
                     now = clock(),
                 )
