@@ -1,6 +1,34 @@
 import { describe, expect, it } from "vitest";
 
-import { dateline, ladderAge, shortTimestamp } from "./timestamp";
+import { dateline, forwardLadder, ladderAge, shortTimestamp } from "./timestamp";
+
+describe("forwardLadder (copy-voice *Ages*, the forward ladder)", () => {
+  const now = Date.parse("2026-10-13T12:00:00.000Z");
+  const ahead = (ms: number) => new Date(now + ms).toISOString();
+  const H = 3_600_000;
+  const D = 24 * H;
+
+  it("reads_seven_days_the_moment_a_deletion_is_confirmed", () => {
+    expect(forwardLadder(ahead(7 * D), now)).toBe("7 days");
+  });
+
+  it("rounds_days_to_the_nearest_whole_day_while_a_day_remains", () => {
+    expect(forwardLadder(ahead(6 * D + 11 * H), now)).toBe("6 days");
+    expect(forwardLadder(ahead(6 * D + 13 * H), now)).toBe("7 days");
+    expect(forwardLadder(ahead(D), now)).toBe("1 day");
+    expect(forwardLadder(ahead(D + 11 * H), now)).toBe("1 day");
+  });
+
+  it("counts_hours_rounded_up_on_the_last_day", () => {
+    expect(forwardLadder(ahead(D - 1), now)).toBe("24 hours");
+    expect(forwardLadder(ahead(4 * H + 1), now)).toBe("5 hours");
+    expect(forwardLadder(ahead(30 * 60_000), now)).toBe("1 hour");
+  });
+
+  it("never_counts_below_one_hour", () => {
+    expect(forwardLadder(ahead(-H), now)).toBe("1 hour");
+  });
+});
 
 describe("ladderAge (copy-voice *Ages*)", () => {
   const now = Date.parse("2026-09-09T12:00:00.000Z");

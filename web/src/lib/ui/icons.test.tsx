@@ -69,6 +69,8 @@ describe("icons", () => {
       "expand_more",
       "visibility",
       "visibility_off",
+      // The checkbox's mark (Checkbox.jsx), first needed by DeleteAccount's sweep.
+      "check",
     ];
     expect([...shippedNames()].sort()).toEqual([...needed].sort());
   });

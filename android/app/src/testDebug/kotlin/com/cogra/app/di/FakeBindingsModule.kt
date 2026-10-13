@@ -19,7 +19,9 @@ import com.cogra.domain.MediaAssetView
 import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.compose.SealedDraftStore
+import com.cogra.domain.deletion.AccountDeletionRepository
 import com.cogra.domain.testing.InMemoryComposeDraftStore
+import com.cogra.domain.testing.ScriptedAccountDeletionRepository
 import com.cogra.domain.testing.InMemorySealedDraftStore
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.ProcessedPicture
@@ -580,4 +582,13 @@ object FakeBindingsModule {
 
     @Provides
     fun viewHistoryRepository(fake: RecordingViewHistoryRepository): ViewHistoryRepository = fake
+
+    // A member with nothing standing, by default: no band, and the row opens
+    // the request screen. Tests script the grace or the applicant's path.
+    @Provides
+    @Singleton
+    fun scriptedAccountDeletionRepository(): ScriptedAccountDeletionRepository = ScriptedAccountDeletionRepository()
+
+    @Provides
+    fun accountDeletionRepository(fake: ScriptedAccountDeletionRepository): AccountDeletionRepository = fake
 }

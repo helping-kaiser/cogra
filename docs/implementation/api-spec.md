@@ -2563,9 +2563,8 @@ type FeedEntry {
   kind: NodeKind!
   "S(u, target) — the signed greedy disjoint-sum (feed-ranking.md §6.1)."
   score: Float!
-  "The viewer's held opinion of the person behind the row, read at
-   `asOfEpoch`. Null when none is held, for a Tags row, or when the
-   reader is not the viewer."
+  "The vantage's held opinion of the person behind the row, read at
+   `asOfEpoch`. Null when the vantage holds none, or for a Tags row."
   mark: PeopleMark
   "This entry's 0-based index among `entries` in NEWEST order. The
    indices are a permutation of 0..|entries|-1."

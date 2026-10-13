@@ -35,3 +35,31 @@ fun ageLadder(at: Instant, now: Instant, zone: ZoneId = ZoneId.systemDefault()):
         else -> dateLine(at, zone)
     }
 }
+
+/** The unit a forward count speaks in. */
+enum class ForwardUnit { DAYS, HOURS }
+
+/** A forward-ladder count — `in 6 days`, `in 5 hours` — before it is put in words. */
+data class ForwardCount(val count: Int, val unit: ForwardUnit)
+
+private const val SECONDS_PER_HOUR = 60L * 60
+private const val SECONDS_PER_DAY = SECONDS_PER_HOUR * 24
+
+/**
+ * How far off [deadline] is from [now], on copy-voice's forward ladder
+ * (*Ages*, ruled 2026-09-14; the rounding jakob 2026-10-07): while 24 hours
+ * or more remain, the nearest whole day — so a deadline seven days out
+ * reads 7 the moment it is set, and half a day rounds up — then the hours
+ * left, rounded up. A deadline at or past [now] that has not run yet (the
+ * executor runs behind its clock) reads one hour: a count of none would
+ * say it already happened.
+ */
+fun forwardLadder(deadline: Instant, now: Instant): ForwardCount {
+    val seconds = Duration.between(now, deadline).seconds
+    return if (seconds >= SECONDS_PER_DAY) {
+        ForwardCount(((seconds + SECONDS_PER_DAY / 2) / SECONDS_PER_DAY).toInt(), ForwardUnit.DAYS)
+    } else {
+        val hours = (seconds + SECONDS_PER_HOUR - 1).floorDiv(SECONDS_PER_HOUR).coerceAtLeast(1)
+        ForwardCount(hours.toInt(), ForwardUnit.HOURS)
+    }
+}

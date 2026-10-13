@@ -14,6 +14,11 @@
     <string name="vouch_card_vouch_back">Vouch back</string>
     <string name="vouch_card_put_away_failed">That didn\'t go through.</string>
     <string name="vouch_card_retry">Retry</string>
+    <!-- The deletion band's Cancel (FeedDeleting.md :19-21; copy-voice
+         "Deleting the account": the canceled line never carries Undo). -->
+    <string name="deletion_canceled">Canceled — your account stays, and nothing was deleted.</string>
+    <string name="deletion_cancel_no_answer">That didn\'t send. Try again.</string>
+    <string name="deletion_cancel_refused">That didn\'t go through.</string>
     <!-- The ceremony (VouchedIn; copy-voice.md, blessed). -->
     <string name="vouched_in_title">You\'re part of the sky now.</string>
     <string name="vouched_in_body">Your opinion on @%1$s is signed, and the way is open both ways. The feed you see from here is your own.</string>

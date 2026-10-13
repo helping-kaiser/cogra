@@ -50,6 +50,14 @@
    `DeleteAccountConfirmed` stay the member's. Here `Delete my account` is the
    true sentence for the press.
 
+   THE TWO BODIES KEY ON `User.deletionPath` (OS-15, seam 162 item 3; ER-G18),
+   the one value the server computes, never on `application.*` fields. The
+   chip's `member` value draws `BY_LINK` — a member, and an applicant whose
+   Registration landed (item 69's husk path), for whom the member's body is
+   just as true: they signed a Registration on the graph. Its `applicant`
+   value draws `IMMEDIATE`, an applicant whose address was never funded.
+   `LOCKED` opens neither body: the settings row answers its own snackbar.
+
    REGISTERED under the `deleteAccount` prefix (design ⇄ impl seam 080, the
    deletion packet), the family's surface. The one commitment is drawn once
    per `reader` value, one shown at a time, so its two copies take one path,

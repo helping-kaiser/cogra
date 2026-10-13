@@ -221,7 +221,7 @@
       "file": "VouchAskUnusable.dc.html",
       "title": "Invites · an ask that can't be taken up",
       "x": 4800,
-      "y": 6795,
+      "y": 7171,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -230,7 +230,7 @@
       "file": "VouchAskInvalid.dc.html",
       "title": "Invites · an ask link that doesn't work",
       "x": 4800,
-      "y": 7855,
+      "y": 8231,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1139,7 +1139,7 @@
       "file": "SettingsUnhidden.dc.html",
       "title": "Settings · hidden accounts, one just unhidden",
       "x": 3840,
-      "y": 4661,
+      "y": 5037,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1148,7 +1148,7 @@
       "file": "HistoryHidden.dc.html",
       "title": "History · someone just hidden",
       "x": 4320,
-      "y": 4661,
+      "y": 5037,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1704,10 +1704,10 @@
     },
     {
       "file": "MapProfile.dc.html",
-      "x": -5060,
+      "x": -5640,
       "y": 0,
-      "w": 4640,
-      "h": 7773,
+      "w": 5220,
+      "h": 7952,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1825,7 +1825,7 @@
       "x": 0,
       "y": 1928,
       "w": 390,
-      "h": 2670,
+      "h": 3046,
       "page": "profile"
     },
     {
@@ -1885,8 +1885,8 @@
     {
       "file": "DeleteLinkExpired.dc.html",
       "title": "Deletion link · already used or replaced",
-      "x": 6720,
-      "y": 2988,
+      "x": 7680,
+      "y": 1928,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1978,7 +1978,7 @@
       "x": 6720,
       "y": 1928,
       "w": 390,
-      "h": 2613,
+      "h": 2989,
       "page": "profile"
     },
     {
@@ -1987,7 +1987,7 @@
       "x": 7200,
       "y": 1928,
       "w": 390,
-      "h": 2660,
+      "h": 2966,
       "page": "profile"
     },
     {
@@ -2189,6 +2189,15 @@
       "page": "profile"
     },
     {
+      "file": "EraseConfirm.dc.html",
+      "title": "Settings · erasing everything from this browser",
+      "x": 8160,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "NoScreenLock.dc.html",
       "title": "Settings · no screen lock (Android)",
       "x": 3360,
@@ -2309,7 +2318,7 @@
       "file": "Saved.dc.html",
       "title": "Saved · what you kept",
       "x": 0,
-      "y": 4661,
+      "y": 5037,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2318,7 +2327,7 @@
       "file": "SavedEmpty.dc.html",
       "title": "Saved · nothing kept yet",
       "x": 480,
-      "y": 4661,
+      "y": 5037,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2327,7 +2336,7 @@
       "file": "SavedUndo.dc.html",
       "title": "Saved · one just removed",
       "x": 2400,
-      "y": 4661,
+      "y": 5037,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2336,7 +2345,7 @@
       "file": "History.dc.html",
       "title": "History · what you have read",
       "x": 960,
-      "y": 4661,
+      "y": 5037,
       "w": 390,
       "h": 1720,
       "page": "profile"
@@ -2345,7 +2354,7 @@
       "file": "HistoryEmpty.dc.html",
       "title": "History · nothing seen yet",
       "x": 1440,
-      "y": 4661,
+      "y": 5037,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2354,7 +2363,7 @@
       "file": "HistoryFilter.dc.html",
       "title": "History · what it shows",
       "x": 2880,
-      "y": 4661,
+      "y": 5037,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2363,7 +2372,7 @@
       "file": "HistoryNone.dc.html",
       "title": "History · nothing matches",
       "x": 3360,
-      "y": 4661,
+      "y": 5037,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2372,7 +2381,7 @@
       "file": "SettingsHidden.dc.html",
       "title": "Settings · hidden accounts",
       "x": 1920,
-      "y": 4661,
+      "y": 5037,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2381,7 +2390,7 @@
       "file": "Notifications.dc.html",
       "title": "Notifications · what happened",
       "x": 0,
-      "y": 5731,
+      "y": 6107,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2390,7 +2399,7 @@
       "file": "NotificationsEmpty.dc.html",
       "title": "Notifications · nothing yet",
       "x": 480,
-      "y": 5731,
+      "y": 6107,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2399,7 +2408,7 @@
       "file": "Invites.dc.html",
       "title": "Invites · waiting and live",
       "x": 0,
-      "y": 6795,
+      "y": 7171,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2408,7 +2417,7 @@
       "file": "InvitesEmpty.dc.html",
       "title": "Invites · none out yet",
       "x": 480,
-      "y": 6795,
+      "y": 7171,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2417,7 +2426,7 @@
       "file": "InviteNew.dc.html",
       "title": "Invites · a new link",
       "x": 960,
-      "y": 6795,
+      "y": 7171,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2426,7 +2435,7 @@
       "file": "InviteExpiry.dc.html",
       "title": "Invites · how long it lasts",
       "x": 1440,
-      "y": 6795,
+      "y": 7171,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2435,7 +2444,7 @@
       "file": "InviteCreated.dc.html",
       "title": "Invites · the link is ready",
       "x": 1920,
-      "y": 6795,
+      "y": 7171,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2444,7 +2453,7 @@
       "file": "ApprovePad.dc.html",
       "title": "Invites · approving is vouching",
       "x": 2400,
-      "y": 6795,
+      "y": 7171,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2453,7 +2462,7 @@
       "file": "RejectConfirm.dc.html",
       "title": "Invites · closing an application",
       "x": 2880,
-      "y": 6795,
+      "y": 7171,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2462,7 +2471,7 @@
       "file": "VouchAsk.dc.html",
       "title": "Invites · someone asked you to vouch",
       "x": 3360,
-      "y": 6795,
+      "y": 7171,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2471,7 +2480,7 @@
       "file": "VouchAskPad.dc.html",
       "title": "Invites · answering the ask",
       "x": 3840,
-      "y": 6795,
+      "y": 7171,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2480,7 +2489,7 @@
       "file": "RejectAllConfirm.dc.html",
       "title": "Invites · closing a link's applications",
       "x": 4320,
-      "y": 6795,
+      "y": 7171,
       "w": 390,
       "h": 844,
       "page": "profile"
