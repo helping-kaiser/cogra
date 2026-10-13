@@ -102,6 +102,12 @@ function renderSettings({
   const erase = vi.fn(async () => {});
   const leave = vi.fn();
   const tokens = signedInStore();
+  // The device lock's two settings-side calls (sign-out-custody §3.4-§3.5);
+  // the engine itself is covered by `device-lock.test.ts`.
+  const deviceLock = {
+    ensureHeld: vi.fn(async () => "held" as const),
+    discard: vi.fn(async () => {}),
+  };
   const rendered = renderWithProviders(
     <AccountDeletionProvider>
       <SettingsView
@@ -111,11 +117,12 @@ function renderSettings({
         forgetSeenRecord={forgetSeenRecord}
         erase={erase}
         leave={leave}
+        deviceLock={deviceLock}
       />
     </AccountDeletionProvider>,
     { store: tokens },
   );
-  return { ...rendered, identity, drafts, seals, forgetSeenRecord, tokens, erase, leave };
+  return { ...rendered, identity, drafts, seals, forgetSeenRecord, tokens, erase, leave, deviceLock };
 }
 
 /** The node a registered path names (`data-node.ts`). */
@@ -772,6 +779,26 @@ describe("signing out", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
+  it("forget_switch_on_obtains_a_lock_and_off_discards_it", async () => {
+    const { deviceLock } = renderSettings();
+    const row = await screen.findByTestId("settings.leaving.forget");
+    fireEvent.click(row);
+    await waitFor(() => expect(deviceLock.ensureHeld).toHaveBeenCalledWith("acct-1"));
+    fireEvent.click(row);
+    await waitFor(() => expect(deviceLock.discard).toHaveBeenCalledWith("acct-1"));
+    // Neither waits in the way: the switch reads its new state at once.
+    expect(row).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("the forget switch flips even when its lock gets no answer", async () => {
+    const { deviceLock } = renderSettings();
+    deviceLock.ensureHeld.mockRejectedValueOnce(new Error("offline"));
+    const row = await screen.findByTestId("settings.leaving.forget");
+    fireEvent.click(row);
+    await waitFor(() => expect(deviceLock.ensureHeld).toHaveBeenCalled());
+    expect(row).toHaveAttribute("aria-checked", "true");
+  });
+
   it("sign_out_remembered_keeps_the_key_and_offers_the_account — and keeps the draft (F4)", async () => {
     server.use(okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }));
     const { identity, drafts, seals, forgetSeenRecord, tokens } = renderSettings();
@@ -854,7 +881,7 @@ describe("signing out", () => {
       accountHandler({ keyBackupCreatedAt: null }),
       okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }),
     );
-    const { identity, drafts, seals, forgetSeenRecord, tokens } = renderSettings({ ephemeral: true });
+    const { identity, drafts, seals, forgetSeenRecord, tokens, deviceLock } = renderSettings({ ephemeral: true });
     await screen.findByTestId("settings.backup.recovery.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     fireEvent.click(await screen.findByTestId("settings.dialog.erase"));
@@ -863,6 +890,28 @@ describe("signing out", () => {
     expect(drafts.clear).toHaveBeenCalled();
     expect(seals.forget).toHaveBeenCalled();
     expect(forgetSeenRecord).toHaveBeenCalledWith("acct-1");
+    // erase_discards_the_device_lock (sign-out-custody §3.5 ERASE)
+    expect(deviceLock.discard).toHaveBeenCalledWith("acct-1");
+  });
+
+  it("erase_discards_the_device_lock", async () => {
+    // The Clearing-data erase too: the server half goes while a session
+    // still exists to name it.
+    const { deviceLock, leave } = renderSettings();
+    await screen.findByTestId("settings.backup.recovery.status");
+    fireEvent.click(screen.getByTestId("settings.clearing.erase"));
+    fireEvent.click(byNode("settings.dialog.erase", "made"));
+    await waitFor(() => expect(leave).toHaveBeenCalledWith("/login"));
+    expect(deviceLock.discard).toHaveBeenCalledWith("acct-1");
+  });
+
+  it("a forgotten sign-out with a backup discards the lock before it purges", async () => {
+    server.use(okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }));
+    const { deviceLock, tokens } = renderSettings({ ephemeral: true });
+    await screen.findByTestId("settings.credentials.password.status");
+    fireEvent.click(screen.getByTestId("settings.leaving.leave"));
+    await waitFor(() => expect(tokens.accessToken()).toBeNull());
+    expect(deviceLock.discard).toHaveBeenCalledWith("acct-1");
   });
 
   it("scrim_and_back_close_still_signed_in_focus_on_sign_out", async () => {

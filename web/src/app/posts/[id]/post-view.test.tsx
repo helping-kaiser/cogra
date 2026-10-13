@@ -434,11 +434,11 @@ describe("PostView", () => {
     expect(screen.queryByTestId("comment-license-terms-c1")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
-    fireEvent.click(screen.getByTestId("post-menu-license"));
-    expect(screen.getByTestId("license-sheet-terms")).toHaveTextContent("Public domain");
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.license"));
+    expect(screen.getByTestId("post-menu-license-sheet-terms")).toHaveTextContent("Public domain");
     // Raised from the post's own menu, over the page — never stacked
     // (design/readme.md:2364).
-    expect(screen.getByTestId("license-sheet").className).not.toContain(
+    expect(screen.getByTestId("post-menu-license-sheet").className).not.toContain(
       "bg-surface-container-highest",
     );
   });
@@ -478,30 +478,34 @@ describe("PostView", () => {
       writeSigner: fakeWriteSigner(),
     });
     fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
-    expect(screen.getByTestId("post-menu-save")).toHaveTextContent("Save");
-    expect(screen.getByTestId("post-menu-cite")).toHaveTextContent("Cite in a new post");
-    expect(screen.getByTestId("post-menu-edit")).toHaveTextContent("Edit");
-    expect(screen.getByTestId("post-menu-sensitive")).toHaveTextContent("Mark as sensitive");
-    expect(screen.getByTestId("post-menu-remove")).toHaveTextContent("Remove");
-    expect(screen.getByTestId("post-menu-license")).toHaveTextContent("License terms");
-    // A reader's rows are not on an author's menu.
-    expect(screen.queryByTestId("post-menu-hide")).not.toBeInTheDocument();
+    expect(screen.getByTestId("postDetail.menuSheet.save")).toHaveTextContent("Save");
+    expect(screen.getByTestId("postDetail.menuSheet.cite")).toHaveTextContent("Cite in a new post");
+    expect(screen.getByTestId("postDetail.menuSheet.edit")).toHaveTextContent("Edit");
+    expect(screen.getByTestId("postDetail.menuSheet.markSensitive")).toHaveTextContent(
+      "Mark as sensitive",
+    );
+    expect(screen.getByTestId("postDetail.menuSheet.remove")).toHaveTextContent("Remove");
+    expect(screen.getByTestId("postDetail.menuSheet.license")).toHaveTextContent("License terms");
+    // A reader's rows are not on an author's menu — nor is Report: a reader
+    // has nothing to report themselves for (ruling 75).
+    expect(screen.queryByTestId("postDetail.menuSheet.hide")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("postDetail.menuSheet.report")).not.toBeInTheDocument();
     const order = Array.from(
       screen.getByTestId("post-menu-sheet-body").querySelectorAll("[data-testid]"),
       (node) => node.getAttribute("data-testid"),
     );
     expect(order).toEqual([
-      "post-menu-save",
-      "post-menu-cite",
-      "post-menu-edit",
-      "post-menu-sensitive",
-      "post-menu-remove",
-      "post-menu-license",
+      "postDetail.menuSheet.save",
+      "postDetail.menuSheet.cite",
+      "postDetail.menuSheet.edit",
+      "postDetail.menuSheet.markSensitive",
+      "postDetail.menuSheet.remove",
+      "postDetail.menuSheet.license",
     ]);
   });
 
-  // The rows are `READER_POST_MENU` (`_shared.jsx:376`): Save · Cite in a new
-  // post · Hide @handle · License terms.
+  // The rows are `READER_POST_MENU` (`_shared.jsx:605`): Save · Cite in a new
+  // post · Hide @handle · License terms · Report at the sheet tail.
   it("gives a non-creator the reader menu, naming the author in its hide row", async () => {
     server.use(
       ...thread("someone-else", []),
@@ -513,13 +517,94 @@ describe("PostView", () => {
     await openComments();
     expect(await screen.findByTestId("post-no-comments")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
-    expect(screen.getByTestId("post-menu-save")).toHaveTextContent("Save");
-    expect(screen.getByTestId("post-menu-cite")).toHaveTextContent("Cite in a new post");
+    expect(screen.getByTestId("postDetail.menuSheet.save")).toHaveTextContent("Save");
+    expect(screen.getByTestId("postDetail.menuSheet.cite")).toHaveTextContent("Cite in a new post");
     // `Hide @ada`, never "Hide this author" (`ActorChip.jsx:67`).
-    expect(screen.getByTestId("post-menu-hide")).toHaveTextContent(/^Hide @/);
-    expect(screen.getByTestId("post-menu-license")).toHaveTextContent("License terms");
-    expect(screen.queryByTestId("post-menu-edit")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("post-menu-remove")).not.toBeInTheDocument();
+    expect(screen.getByTestId("postDetail.menuSheet.hide")).toHaveTextContent(/^Hide @/);
+    expect(screen.getByTestId("postDetail.menuSheet.license")).toHaveTextContent("License terms");
+    expect(screen.getByTestId("postDetail.menuSheet.report")).toHaveTextContent("Report");
+    expect(screen.queryByTestId("postDetail.menuSheet.edit")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("postDetail.menuSheet.remove")).not.toBeInTheDocument();
+    const order = Array.from(
+      screen.getByTestId("post-menu-sheet-body").querySelectorAll("[data-testid]"),
+      (node) => node.getAttribute("data-testid"),
+    );
+    expect(order).toEqual([
+      "postDetail.menuSheet.save",
+      "postDetail.menuSheet.cite",
+      "postDetail.menuSheet.hide",
+      "postDetail.menuSheet.license",
+      "postDetail.menuSheet.report",
+    ]);
+  });
+
+  // REPORT, CONFIRMED BEFORE IT GOES (ReportConfirm.md:3-11): the menu closes,
+  // `postDetail.reportSheet` rises in its place with nothing sent, and only its
+  // commit sends — the page's own snackbar then says `Reported.`.
+  it("report_confirm_sends_the_mail_and_snackbars_reported", async () => {
+    const targets: string[] = [];
+    server.use(
+      ...thread("someone-else", []),
+      graphql.mutation("SendReport", ({ variables }) => {
+        targets.push(variables.target as string);
+        return HttpResponse.json({
+          data: {
+            sendReport: {
+              __typename: "SendReportPayload",
+              reportedAt: "2026-10-13T12:00:00Z",
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.report"));
+    const sheet = screen.getByTestId("postDetail.reportSheet") as HTMLDialogElement;
+    expect(sheet.open).toBe(true);
+    expect(screen.getByTestId("postDetail.reportSheet.title")).toHaveTextContent(
+      "Report this post?",
+    );
+    expect(screen.getByTestId("postDetail.reportSheet.body")).toHaveTextContent(
+      "It goes to the people who run CoGra for a look.",
+    );
+    expect(targets).toEqual([]);
+
+    fireEvent.click(screen.getByTestId("postDetail.reportSheet.report"));
+    expect(await screen.findByTestId("postDetail.snackbar.message")).toHaveTextContent(
+      "Reported.",
+    );
+    expect(targets).toEqual(["p1"]);
+    await waitFor(() => expect(sheet.open).toBe(false));
+  });
+
+  // ReportConfirm.md:15 (FC-G15): a refusal keeps the sheet up and never
+  // claims the report went out.
+  it("a_rate_limited_report_answers_with_the_no_answer_snackbar", async () => {
+    server.use(
+      ...thread("someone-else", []),
+      graphql.mutation("SendReport", () =>
+        HttpResponse.json({
+          data: null,
+          errors: [{ message: "rate limited; retry later", extensions: { code: "RATE_LIMITED" } }],
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.report"));
+    fireEvent.click(screen.getByTestId("postDetail.reportSheet.report"));
+    expect(await screen.findByTestId("postDetail.snackbar.message")).toHaveTextContent(
+      "That didn't send. Try again.",
+    );
+    expect((screen.getByTestId("postDetail.reportSheet") as HTMLDialogElement).open).toBe(true);
   });
 
   // THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK (design/readme.md, jakob
@@ -642,11 +727,11 @@ describe("PostView", () => {
       writeSigner: fakeWriteSigner(),
     });
     fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
-    fireEvent.click(screen.getByTestId("post-menu-save"));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.save"));
     expect(screen.getByTestId(byNode("postDetail.card.body"))).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
-    fireEvent.click(screen.getByTestId("post-menu-hide"));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.hide"));
     expect(screen.getByTestId(byNode("postDetail.card.body"))).toBeInTheDocument();
   });
 
@@ -661,12 +746,12 @@ describe("PostView", () => {
       writeSigner: fakeWriteSigner(),
     });
     fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
-    fireEvent.click(screen.getByTestId("post-menu-remove"));
-    const dialog = screen.getByTestId("post-remove-confirm") as HTMLDialogElement;
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.remove"));
+    const dialog = screen.getByTestId("post-menu-remove-confirm") as HTMLDialogElement;
     expect(dialog.open).toBe(true);
     expect(dialog).toHaveTextContent("This is immediate and permanent.");
 
-    fireEvent.click(screen.getByTestId("post-remove-confirm-remove"));
+    fireEvent.click(screen.getByTestId("post-menu-remove-confirm-remove"));
     expect(dialog.open).toBe(false);
     // The post is still on the page: nothing was removed.
     expect(screen.getByTestId(byNode("postDetail.card.body"))).toBeInTheDocument();
@@ -1112,7 +1197,7 @@ describe("PostView", () => {
     expect(screen.queryByTestId("post-tag-input")).not.toBeInTheDocument();
     expect(screen.queryByTestId("post-topic-rust-remove")).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
-    fireEvent.click(screen.getByTestId("post-menu-edit"));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.edit"));
     expect(routerPush).toHaveBeenCalledWith("/compose?post=p1");
   });
 
@@ -1129,7 +1214,7 @@ describe("PostView", () => {
       writeSigner: fakeWriteSigner(),
     });
     fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
-    fireEvent.click(screen.getByTestId("post-menu-sensitive"));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.markSensitive"));
     expect(routerPush).toHaveBeenCalledWith("/compose?post=p1");
   });
 
@@ -2135,7 +2220,7 @@ describe("PostView — references", () => {
     await screen.findByTestId(byNode("postDetail.card.body"));
 
     fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
-    fireEvent.click(screen.getByTestId("post-menu-cite"));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.cite"));
     expect(routerPush).toHaveBeenCalledWith("/compose?reference=p1");
 
     fireEvent.click(screen.getByTestId("comment-menu-c1"));

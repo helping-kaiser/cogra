@@ -11,8 +11,10 @@ import com.cogra.domain.AuthTokens
 import com.cogra.domain.Outcome
 import com.cogra.domain.store.ThemeChoice
 import com.cogra.domain.testing.FakeDeviceData
+import com.cogra.domain.testing.FakeDeviceLockRepository
 import com.cogra.domain.testing.FakeDevicePreferences
 import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingOnboardingRepository
@@ -66,6 +68,11 @@ class KeyCeremonyTest {
     private val onboarding = AttachRecorder()
     private val account = StubAccount()
     private val ceremony = KeyCeremony(identity, onboarding, account)
+    private val custody = FakeLockCustodyStore()
+    private val locks = FakeDeviceLockRepository()
+    private val restoreTokens = FakeTokenStore()
+
+    private fun restorer() = ActorRestorer(identity, account, restoreTokens, DeviceLock(custody, restoreTokens, locks))
 
     @Test
     fun theCeremonyCreatesAndStoresTheKey() = runTest {
@@ -192,7 +199,7 @@ class KeyCeremonyTest {
         val seed = ActorKey.generate().seed()
         val code = RecoveryCode.generate()
         account.served = sealKeyBackup(seed, code)
-        val result = ActorRestorer(identity, account).restore(code.display(), forgetOnSignOut = false)
+        val result = restorer().restore(code.display(), forgetOnSignOut = false)
         assertThat(result).isEqualTo(RestoreResult.Restored)
         assertThat(identity.seed).isEqualTo(seed)
         assertThat(identity.forgetOnSignOut).isFalse()
@@ -200,7 +207,7 @@ class KeyCeremonyTest {
 
     @Test
     fun restoreDistinguishesItsFailures() = runTest {
-        val restorer = ActorRestorer(identity, account)
+        val restorer = restorer()
 
         // Not a code at all.
         assertThat(restorer.restore("nope", forgetOnSignOut = false))
@@ -229,7 +236,7 @@ class KeyCeremonyTest {
         val seed = ActorKey.generate().seed()
         val code = RecoveryCode.generate()
         account.served = sealKeyBackup(seed, code)
-        val restorer = ActorRestorer(identity, account)
+        val restorer = restorer()
 
         // The login-time opt-in survives an unchecked restore.
         identity.forgetOnSignOut = true
@@ -251,7 +258,7 @@ class KeyCeremonyTest {
     fun signOutClearsTokensEvenWhenRevocationFails() = runTest {
         val tokens = FakeTokenStore().apply { save(AuthTokens("a", "r", "u1")) }
         identity.seed = ActorKey.generate().seed()
-        SignOut(offlineSessions(), identity, tokens, FakeDeviceData()).signOut()
+        SignOut(offlineSessions(), identity, tokens, FakeDeviceData(), DeviceLock(custody, tokens, locks)).signOut()
         assertThat(tokens.current()).isNull()
         // Not opted out: the actor stays in its slot.
         assertThat(identity.seed).isNotNull()
@@ -272,7 +279,7 @@ class KeyCeremonyTest {
                 return Outcome.Success(Unit)
             }
         }
-        SignOut(sessions, identity, tokens, device).eraseEverything()
+        SignOut(sessions, identity, tokens, device, DeviceLock(custody, tokens, locks)).eraseEverything()
         assertThat(revokedWithSession).isTrue()
         assertThat(device.erases).isEqualTo(1)
         assertThat(tokens.current()).isNull()
@@ -284,7 +291,7 @@ class KeyCeremonyTest {
     fun eraseEverythingEndsTheSessionEvenOffline() = runTest {
         val tokens = FakeTokenStore().apply { save(AuthTokens("a", "r", "u1")) }
         val device = FakeDeviceData()
-        SignOut(offlineSessions(), identity, tokens, device).eraseEverything()
+        SignOut(offlineSessions(), identity, tokens, device, DeviceLock(custody, tokens, locks)).eraseEverything()
         assertThat(device.erases).isEqualTo(1)
         assertThat(tokens.current()).isNull()
     }
@@ -296,33 +303,79 @@ class KeyCeremonyTest {
         identity.pendingBlob = byteArrayOf(7)
         identity.stancePadTaught = true
         identity.forgetOnSignOut = true
-        SignOut(offlineSessions(), identity, tokens, FakeDeviceData()).signOut()
+        SignOut(offlineSessions(), identity, tokens, FakeDeviceData(), DeviceLock(custody, tokens, locks)).signOut()
         assertThat(tokens.current()).isNull()
         assertThat(identity.seed).isNull()
         assertThat(identity.pendingBlob).isNull()
         assertThat(identity.stancePadTaught).isFalse()
         assertThat(identity.handshakes).isEmpty()
-        // The explicit path clears the whole custody set, draft included
-        // — never the remote path's slot-only purge.
+        // The explicit path clears the whole custody set, draft included.
         assertThat(identity.custodyPurges).isEqualTo(1)
-        assertThat(identity.slotPurges).isEqualTo(0)
+    }
+
+    @Test
+    fun aForgottenSignOutDiscardsTheLockBeforeItPurges() = runTest {
+        val tokens = FakeTokenStore().apply { save(AuthTokens("a", "r", "u1")) }
+        locks.sessionAccount = "u1"
+        identity.forgetOnSignOut = true
+        DeviceLock(custody, tokens, locks).ensureHeld("u1")
+        val id = custody.lockId("u1")!!
+        SignOut(offlineSessions(), identity, tokens, FakeDeviceData(), DeviceLock(custody, tokens, locks)).signOut()
+        assertThat(locks.rows).doesNotContainKey(id)
+        assertThat(custody.lockId("u1")).isNull()
+    }
+
+    @Test
+    fun `erase_discards_the_device_lock`() = runTest {
+        val tokens = FakeTokenStore().apply { save(AuthTokens("a", "r", "u1")) }
+        locks.sessionAccount = "u1"
+        DeviceLock(custody, tokens, locks).ensureHeld("u1")
+        val id = custody.lockId("u1")!!
+        SignOut(offlineSessions(), identity, tokens, FakeDeviceData(), DeviceLock(custody, tokens, locks))
+            .eraseEverything()
+        assertThat(locks.rows).doesNotContainKey(id)
     }
 
     /**
-     * Pins today's REMOTE path (custody packet §1.2): a session ended from
-     * elsewhere still purges a forget account's slot — and only the slot.
-     * The draft-level pin over the real stores is
-     * `StoresTest.the_remote_end_keeps_its_purge_and_leaves_the_draft`.
+     * The remote path never purges an only copy (sign-out-custody §3.6): a
+     * forget account holding its lock is LOCKED. The pins over the real
+     * stores are `LockCustodyStoreTest`'s.
      */
     @Test
-    fun theRemoteEndPurgesTheSlotNotTheCustodySet() = runTest {
+    fun theRemoteEndLocksAForgetAccountHoldingItsLock() = runTest {
         val tokens = FakeTokenStore().apply { save(AuthTokens("a", "r", "u1")) }
-        identity.seed = ActorKey.generate().seed()
-        identity.forgetOnSignOut = true
-        EndLocalSession(identity, tokens).end()
+        custody.forget += "u1"
+        custody.custodyOf("u1")["key-seed"] = byteArrayOf(1)
+        custody.holdLock("u1", com.cogra.domain.store.HeldLock("lock-1", ByteArray(32)))
+        assertThat(EndLocalSession(custody, tokens).end()).isEqualTo(LocalSessionEnd.LOCKED)
         assertThat(tokens.current()).isNull()
-        assertThat(identity.seed).isNull()
-        assertThat(identity.slotPurges).isEqualTo(1)
-        assertThat(identity.custodyPurges).isEqualTo(0)
+        assertThat(custody.custodyOf("u1")).isEmpty()
+        assertThat(custody.isLocked("u1")).isTrue()
+        assertThat(custody.isLockPending("u1")).isFalse()
+    }
+
+    @Test
+    fun theBackedFlagFollowsTheKeysBackup() = runTest {
+        ceremony.createActorKey()
+        assertThat(identity.keyBacked).isFalse()
+        ceremony.createPendingBackup()
+        assertThat(ceremony.uploadPendingBackup()).isTrue()
+        assertThat(identity.keyBacked).isTrue()
+        // A fresh key has no backup until one uploads.
+        ceremony.createActorKey()
+        assertThat(identity.keyBacked).isFalse()
+    }
+
+    @Test
+    fun aRestoreIsBackedAndATickedRestoreObtainsItsLock() = runTest {
+        val seed = ActorKey.generate().seed()
+        val code = RecoveryCode.generate()
+        account.served = sealKeyBackup(seed, code)
+        restoreTokens.save(AuthTokens("token-u1", "r", "u1"))
+        locks.sessionAccount = "u1"
+        val restorer = restorer()
+        restorer.restore(code.display(), forgetOnSignOut = true)
+        assertThat(identity.keyBacked).isTrue()
+        assertThat(custody.heldLock("u1")).isNotNull()
     }
 }

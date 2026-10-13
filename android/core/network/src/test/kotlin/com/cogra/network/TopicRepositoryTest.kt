@@ -9,7 +9,7 @@ import com.apollographql.apollo.ApolloClient
 import com.cogra.domain.Outcome
 import com.cogra.domain.TaggedContentKind
 import com.cogra.domain.identity.EndLocalSession
-import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.auth.SessionRefresher
@@ -50,7 +50,7 @@ class TopicRepositoryTest {
         client,
         AuthGuard(
             tokenStore,
-            SessionRefresher(tokenStore, EndLocalSession(FakeIdentityStore(), tokenStore), Provider { client }),
+            SessionRefresher(tokenStore, EndLocalSession(FakeLockCustodyStore(), tokenStore), Provider { client }),
         ),
     )
 

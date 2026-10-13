@@ -36,18 +36,39 @@ import { useEffect, useRef, useState } from "react";
 
 import { scrollElementOf, scrollOffsetOf, useScrollHost, viewportHeightOf } from "./scroll-host";
 
+/**
+ * How deep a reader must be, in screenfuls, before the band they summon brings
+ * the way back up with it (FeedScrolled.md:3-5): three viewport-heights, never
+ * shallower.
+ */
+export const BACK_TO_TOP_DEPTH = 3;
+
 export function CollapsingTop({
   children,
   initiallyHidden = false,
+  onBackToTop,
 }: {
   children: React.ReactNode;
   /** Whether the first paint should already show this region gone. */
   initiallyHidden?: boolean;
+  /**
+   * THE BACK TO TOP PILL (FeedScrolled.md; `BackToTop.jsx`), for the surface
+   * that has one — the feed. The pill rides in with the band when the reader
+   * summons it from three screens down or deeper, centred directly under it,
+   * and leaves under it. This is what the tap does.
+   */
+  onBackToTop?: () => void;
 }) {
   const sentinel = useRef<HTMLDivElement>(null);
   const region = useRef<HTMLDivElement>(null);
   const host = useScrollHost();
   const [hidden, setHidden] = useState(initiallyHidden);
+  // Whether the band, as it stands, was summoned from deep enough to bring the
+  // pill: decided at the summoning and kept until the band leaves or the list
+  // is back at its hard top, where there is nothing left to go back up to.
+  const [summonedDeep, setSummonedDeep] = useState(false);
+  // Where the band ends, measured as it returns: the pill sits directly under.
+  const [bandBottom, setBandBottom] = useState(0);
   useEffect(() => {
     let lastY = scrollOffsetOf(host);
     let upRun = 0;
@@ -58,17 +79,27 @@ export function CollapsingTop({
       requestAnimationFrame(() => {
         const y = scrollOffsetOf(host);
         const delta = y - lastY;
+        if (y <= 0) setSummonedDeep(false);
         if (Math.abs(delta) > 4) {
           const height = region.current?.offsetHeight ?? 0;
           const slotTop = sentinel.current?.getBoundingClientRect().top ?? 0;
           if (delta > 0) {
             upRun = 0;
             // Hide only scrolling down with half the slot off-screen.
-            if (slotTop < -height / 2) setHidden(true);
+            if (slotTop < -height / 2) {
+              setHidden(true);
+              setSummonedDeep(false);
+            }
           } else {
             upRun -= delta;
-            if (upRun >= viewportHeightOf(host) / 3 || slotTop >= -height / 2) {
+            const viewport = viewportHeightOf(host);
+            if (slotTop >= -height / 2) {
               setHidden(false);
+              setSummonedDeep(false);
+            } else if (upRun >= viewport / 3) {
+              setHidden(false);
+              setSummonedDeep((deep) => deep || y >= BACK_TO_TOP_DEPTH * viewport);
+              setBandBottom((scrollElementOf(host)?.getBoundingClientRect().top ?? 0) + height);
             }
           }
           lastY = y;
@@ -95,6 +126,49 @@ export function CollapsingTop({
       >
         {children}
       </div>
+      {onBackToTop !== undefined && (
+        <BackToTop
+          shown={!hidden && summonedDeep}
+          top={bandBottom}
+          onPress={onBackToTop}
+        />
+      )}
     </>
+  );
+}
+
+/**
+ * THE PILL, FIXED UNDER THE BAND AND NEVER INSIDE IT (`BackToTop.jsx`): the
+ * region hides once half its own slot has scrolled past, so anything added to
+ * it would move that threshold and re-clamp the list (item 45.3). Fixed, it
+ * takes no layout space, and the band's collapse point stays where it is
+ * (FeedScrolled.md:9).
+ *
+ * IT SLIDES UNDER THE BAND, never over it: one rung below the region (19
+ * against 20), on the band's own duration, so what leaves and what it leaves
+ * behind move as one thing (:7). Plain words on the tonal ground — it commits
+ * nothing, so it is not `primary`.
+ */
+function BackToTop({ shown, top, onPress }: { shown: boolean; top: number; onPress: () => void }) {
+  return (
+    <div
+      data-testid="back-to-top"
+      data-shown={shown}
+      inert={!shown}
+      className="pointer-events-none fixed inset-x-0 z-[19] flex justify-center transition-transform duration-[var(--duration-collapsing-top)]"
+      style={{
+        top,
+        transform: shown ? "translateY(0)" : `translateY(calc(-100% - ${top}px))`,
+      }}
+    >
+      <button
+        type="button"
+        data-testid="back-to-top-pill"
+        onClick={onPress}
+        className="cg-state cg-focus cg-hit pointer-events-auto inline-flex min-h-8 min-w-16 items-center justify-center whitespace-nowrap rounded-full bg-surface-container-highest px-4 py-1.5 text-label-large text-on-surface"
+      >
+        Back to top
+      </button>
+    </div>
   );
 }

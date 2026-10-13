@@ -11,7 +11,7 @@ import com.cogra.domain.has
 import com.cogra.domain.history.SeenEntry
 import com.cogra.domain.history.SeenPage
 import com.cogra.domain.identity.EndLocalSession
-import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.auth.SessionRefresher
@@ -53,7 +53,7 @@ class ViewHistoryRepositoryTest {
         client,
         AuthGuard(
             tokenStore,
-            SessionRefresher(tokenStore, EndLocalSession(FakeIdentityStore(), tokenStore), Provider { client }),
+            SessionRefresher(tokenStore, EndLocalSession(FakeLockCustodyStore(), tokenStore), Provider { client }),
         ),
     )
 

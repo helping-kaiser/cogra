@@ -9,7 +9,8 @@ import com.cogra.domain.AuthTokens
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.identity.EndLocalSession
-import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.store.HeldLock
+import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.network.repo.SessionRepositoryImpl
 import com.google.common.truth.Truth.assertThat
@@ -29,10 +30,10 @@ class RefreshTest {
     private lateinit var server: MockWebServer
     private lateinit var client: ApolloClient
     private val tokenStore = FakeTokenStore()
-    private val identity = FakeIdentityStore()
+    private val custody = FakeLockCustodyStore()
 
     private fun refresher() =
-        SessionRefresher(tokenStore, EndLocalSession(identity, tokenStore), Provider { client })
+        SessionRefresher(tokenStore, EndLocalSession(custody, tokenStore), Provider { client })
 
     @Before
     fun setUp() {
@@ -121,7 +122,7 @@ class RefreshTest {
     @Test
     fun reuseDetectionSignsTheDeviceOut() = runTest {
         tokenStore.save(AuthTokens("access", "stolen-refresh", "u1"))
-        identity.seed = byteArrayOf(1, 2, 3)
+        custody.custodyOf("u1")["key-seed"] = byteArrayOf(1, 2, 3)
         val refresher = refresher()
         enqueue(
             """{"data":{"refreshSession":{"__typename":"RefreshPayload","auth":null,
@@ -130,17 +131,20 @@ class RefreshTest {
         )
         assertThat(refresher.refresh("access")).isFalse()
         assertThat(tokenStore.current()).isNull()
-        // Not opted out: the identity material stays.
-        assertThat(identity.seed).isNotNull()
+        // Not opted out: the identity material stays as it was.
+        assertThat(custody.custodyOf("u1")).containsKey("key-seed")
+        assertThat(custody.locked).isEmpty()
     }
 
     @Test
-    fun reuseDetectionPurgesAnAccountThatOptedOut() = runTest {
-        // The refresh-failure token clear honors "don't remember me"
-        // exactly like sign-out (auth.md "Sign-out").
+    fun `remote_session_end_never_purges_and_never_asks`() = runTest {
+        // The refresh-failure token clear honors "don't remember me" by
+        // LOCKING the account's custody (sign-out-custody §3.6), never by
+        // purging an only copy.
         tokenStore.save(AuthTokens("access", "stolen-refresh", "u1"))
-        identity.seed = byteArrayOf(1, 2, 3)
-        identity.forgetOnSignOut = true
+        custody.custodyOf("u1")["key-seed"] = byteArrayOf(1, 2, 3)
+        custody.forget += "u1"
+        custody.holdLock("u1", HeldLock("lock-1", ByteArray(32) { 1 }))
         val refresher = refresher()
         enqueue(
             """{"data":{"refreshSession":{"__typename":"RefreshPayload","auth":null,
@@ -149,7 +153,8 @@ class RefreshTest {
         )
         assertThat(refresher.refresh("access")).isFalse()
         assertThat(tokenStore.current()).isNull()
-        assertThat(identity.seed).isNull()
+        assertThat(custody.custodyOf("u1")).isEmpty()
+        assertThat(custody.locked.getValue("u1").second).containsKey("key-seed")
     }
 
     @Test

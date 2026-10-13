@@ -60,6 +60,7 @@ import com.cogra.domain.history.SeenRecordStore
 import com.cogra.domain.history.ViewHistoryRepository
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.ContentRepository
+import com.cogra.domain.repo.DeviceLockRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.SessionRepository
@@ -67,20 +68,25 @@ import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
 import com.cogra.domain.repo.WriteRepository
+import com.cogra.domain.report.ReportRepository
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.store.IdentityStore
+import com.cogra.domain.store.LockCustodyStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.testing.ThrowingSettingsRepository
 import com.cogra.domain.topics.TagClaim
+import com.cogra.domain.testing.FakeDeviceLockRepository
 import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.RecordingReportRepository
 import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.FakeSeenRecordStore
 import com.cogra.domain.testing.ScriptedSeenHistory
@@ -503,6 +509,20 @@ object FakeBindingsModule {
 
     @Provides
     @Singleton
+    fun fakeLockCustodyStore(): FakeLockCustodyStore = FakeLockCustodyStore()
+
+    @Provides
+    fun lockCustodyStore(fake: FakeLockCustodyStore): LockCustodyStore = fake
+
+    @Provides
+    @Singleton
+    fun fakeDeviceLockRepository(): FakeDeviceLockRepository = FakeDeviceLockRepository()
+
+    @Provides
+    fun deviceLockRepository(fake: FakeDeviceLockRepository): DeviceLockRepository = fake
+
+    @Provides
+    @Singleton
     fun fakeStorageHealth(): FakeStorageHealth = FakeStorageHealth()
 
     @Provides
@@ -633,6 +653,15 @@ object FakeBindingsModule {
 
     @Provides
     fun viewHistoryRepository(fake: RecordingViewHistoryRepository): ViewHistoryRepository = fake
+
+    // A report answers sent: the navigation tests that reach a menu's
+    // Report row read the confirm's aftermath, not the mail.
+    @Provides
+    @Singleton
+    fun recordingReportRepository(): RecordingReportRepository = RecordingReportRepository()
+
+    @Provides
+    fun reportRepository(fake: RecordingReportRepository): ReportRepository = fake
 
     // The seen record's sync reads an empty server list by default, and
     // the record itself rests in memory for the test process.

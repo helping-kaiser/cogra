@@ -56,10 +56,13 @@ async function seedLegacy(records: {
           seed: records.actorSeed.slice(),
         };
   await new Promise<void>((resolve, reject) => {
-    const req = indexedDB.open("cogra.identity", 2);
+    // At whatever version the store already opened (the legacy layout is a
+    // matter of KEYS, not of the schema version); a fresh database is created
+    // with the four stores the legacy store had.
+    const req = indexedDB.open("cogra.identity");
     req.onupgradeneeded = () => {
       for (const name of ["actor", "pendingBackup", "handshake", "ux"]) {
-        req.result.createObjectStore(name);
+        if (!req.result.objectStoreNames.contains(name)) req.result.createObjectStore(name);
       }
     };
     req.onsuccess = () => {
