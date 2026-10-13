@@ -20,10 +20,22 @@
    act), drawn once as `VouchBackCard` in `_shared.jsx` and shared with the
    pad's board.
 
+   THE CARD'S ACT IS THE FACE (jakob 2026-10-13, seam 157/165). The vouch-back
+   is an opinion like any other, so the card's act is the opinion's own
+   control — `StanceControl`'s anchor, the very face every post and profile
+   wears, never a button of its own: the tap blooms the vouch-back
+   pad, the hold signs the gentle default, and a signed vouch-back opens the
+   ceremony either way, as the profile's anchor already does. One line beside it teaches the gesture,
+   `Tap the face to vouch back.`, and claims nothing about first-ness: the
+   card stands while the member holds other opinions too, and the band's line
+   is where the first opinion is named. `Got it` takes the row's leading
+   edge, so the face keeps the trailing seat the act always had.
+
    REGISTERED under the feed's own prefix (design ⇄ impl seam 086): the shell
    is the feed, named as `Feed` names it, the band under the CoGra band
    `borrowedViewBand` as on `ApplicantRejected`; the card is `vouchCard`, its
-   `Got it` `dismiss` and its `Vouch back` `vouch`. */
+   `Got it` `dismiss`, its line `hint` and its face `stance`, as
+   `VouchBackPad` names the same control. */
 export const NODE = "feed";
 export function Screen() {
   return (
@@ -45,9 +57,9 @@ export function Screen() {
               <Button variant="text" style={{ color: "var(--on-tertiary-container)" }} node="dismiss">
                 Got it
               </Button>
-              <Button variant="inverse" node="vouch">
-                Vouch back
-              </Button>
+              <span style={{ flex: 1 }} />
+              <VouchBackHint node="hint" />
+              <StanceControl node="stance" targetLabel="@mira" helpLabel="Your vouch back" help={YOUR_VOUCH_BACK_HELP} />
             </>
           }
           node="vouchCard"

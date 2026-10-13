@@ -6,7 +6,9 @@
    `PadLine` LIVES IN `_shared.jsx` (the invites round): the approval pad on
    the other side of this same handshake draws the identical line, and a pad's
    own voice written twice is a pad's own voice that drifts. The card beneath
-   the wash is `VouchBackCard`, `VouchBack`'s own, in its olive register.
+   the wash is `VouchBackCard`, `VouchBack`'s own, in its olive register, its
+   row as `VouchBack` draws it: `Got it` leading, then `VouchBackHint`'s line
+   against the face the pad bloomed from (jakob 2026-10-13).
 
    REGISTERED under the feed's own prefix (design ⇄ impl seam 086), the shell
    beneath named as on `VouchBack` and the stance control `stance`, as on
@@ -36,6 +38,8 @@ export function Screen() {
               <Button variant="text" style={{ color: "var(--on-tertiary-container)" }} node="dismiss">
                 Got it
               </Button>
+              <span style={{ flex: 1 }} />
+              <VouchBackHint node="hint" />
               <StanceControl
                 node="stance"
                 targetLabel="@mira"
