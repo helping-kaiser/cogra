@@ -107,6 +107,18 @@ tasks.withType<Test>().configureEach {
     inputs.file(file("../../design/tokens/scheme.json"))
         .withPropertyName("designScheme")
         .withPathSensitivity(PathSensitivity.NONE)
+    // SystemBarOwnershipTest reads every module's production sources to pin
+    // the single owner of the system-bar appearance; declared for the same
+    // reason as the token files above.
+    inputs.files(
+        fileTree("..") {
+            include("*/src/main/**/*.kt", "*/*/src/main/**/*.kt")
+            include("*/src/main/res/**/*.xml", "*/*/src/main/res/**/*.xml")
+            exclude("**/build/**")
+        },
+    )
+        .withPropertyName("systemBarSources")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
 }
 
 dependencies {
