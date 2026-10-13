@@ -105,6 +105,16 @@ hollow face, the muted 🫥. Its accessible name reads
 `Your opinion` (jakob 2026-10-06). The tap opens `GuestGate`: nothing is
 staged and nothing signs.
 
+**Its printed words speak the viewpoint's name too** (the vantage law,
+jakob 2026-10-13; readme §13). Where an anchor draws its words — the
+wide anchor on a profile and on a tag page, beside the hollow face — a
+guest reads `@genesismod's opinion`, never `Your opinion`. The wide
+anchor has no overflow law of its own, and on a profile it leaves its
+words about 134px, which `@genesismod's opinion` already outgrows (150px
+measured); a name that outgrows the anchor falls back to `Their
+opinion`. That fallback is a flagged exception at jakob's review: on a
+profile, *their* can read as the profile owner's.
+
 **Only a nobody borrows stances** (jakob 2026-10-06). An applicant and
 a fresh member borrow a *walk*, never the faces: an applicant's feed
 grows from their inviter's vantage, and the vouch-back window browses

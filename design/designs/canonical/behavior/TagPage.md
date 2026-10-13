@@ -36,7 +36,9 @@ ALWAYS the back arrow reads Back to Explore from Explore at rest, Back to the se
 
 ALWAYS the back arrow reads Back to Explore and leads to Explore GIVEN the page was entered with no history behind it
 
-WHEN a guest reaches the tag page -> the page shows what is tagged AND every stance face wears the no-opinion face AND the scores come from the genesis vantage
+WHEN a guest reaches the tag page -> the page shows what is tagged AND every stance face wears the borrowed view's own stance, read-only, and the hollow face wherever the borrowed view holds none AND the scores come from the genesis vantage
+
+ALWAYS the topic's wide anchor's words beside the hollow face name the borrowed view, as @genesismod's opinion, and read Their opinion where the name outgrows the anchor GIVEN the reader is a guest and the borrowed view holds no opinion on the topic
 
 WHEN a guest taps a stance face on the tag page -> the guest gate opens over the tag page
 

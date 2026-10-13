@@ -6,44 +6,42 @@ import com.cogra.core.designsystem.EdgeSighting
 import com.cogra.domain.Outcome
 import com.cogra.domain.PostView
 import com.cogra.domain.content.LandingSignal
-import com.cogra.domain.content.NodeLanding
-import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.SeenPosts
+import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.SensitiveReveals
 import com.cogra.domain.di.WebOrigin
+import com.cogra.domain.feed.FeedFilter
+import com.cogra.domain.feed.FeedRanking
+import com.cogra.domain.feed.FeedRepository
+import com.cogra.domain.feed.FeedRow
+import com.cogra.domain.feed.FeedViewer
+import com.cogra.domain.feed.FilterChange
+import com.cogra.domain.feed.changeTo
+import com.cogra.domain.feed.derive
+import com.cogra.domain.history.SeenRecord
 import com.cogra.domain.history.SeenTracker
-import com.cogra.domain.repo.ContentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-/** One page per fetch; the server default is the same number. */
+/**
+ * One window per hydration: the first screenful arrives fast, well under
+ * the page budget of 100 ids (CD-2).
+ */
 internal const val FEED_PAGE_SIZE = 20
 
-/** The held entry keeps its place; only its landing state moves. */
-private fun List<PostView>.withLanding(update: NodeLanding): List<PostView> =
-    if (none { it.id == update.nodeId }) {
-        this
-    } else {
-        map { if (it.id == update.nodeId) it.copy(landing = update.landing) else it }
-    }
-
 data class FeedUiState(
+    /** A ranking is in flight: the first fetch, a pull, or a Done that changed kinds or topic. */
     val loading: Boolean = true,
+    /** The cards: the derived list's hydrated head, in its order. */
     val posts: List<PostView> = emptyList(),
-    val endCursor: String? = null,
+    /** Rows of the derived list not hydrated yet. */
     val hasNextPage: Boolean = false,
     val loadingMore: Boolean = false,
-    /**
-     * The API's own default: pending entries ride the listing, marked.
-     * False serves only what has landed on L1, for a reader who wants
-     * the settled graph (api-spec.md "Pending entries come first, in
-     * their own cursor namespace").
-     */
-    val includePending: Boolean = true,
     val transportFault: TransportFault? = null,
     /**
      * The veiled bodies this reader has chosen to look at, against the
@@ -51,16 +49,51 @@ data class FeedUiState(
      * made here is still made when the post opens.
      */
     val reveals: Map<String, SensitiveMark> = emptyMap(),
+    /** The filter in force — what the reader's last Done chose. */
+    val filter: FeedFilter = FeedFilter(),
+    /**
+     * The held answer, UNCUT: the frozen order every derive reads, and the
+     * off-feed lookup source (CD-9). Replaced only by a fetch — a local
+     * re-derive never touches it, nor its pin. Null before the first lands.
+     */
+    val ranking: FeedRanking? = null,
+    /**
+     * The derived list (§4.12): composed, ordered and cut at the last
+     * derive, and frozen until the next one — rows seen while it is on
+     * screen stay where they are (W-6).
+     */
+    val rows: List<FeedRow> = emptyList(),
 )
 
 /**
- * The chronological listing (roadmap "Slice 2"): every post,
- * newest-first in the graph's own landing order — deliberately not the
- * ranked feed.
+ * THE RANKED FEED (ranked-feed-api packet, RF-5): one `feedRanking` per
+ * open, per pull, and per Done that changes what the ranker computes; the
+ * device derives everything else from the held answer (CD-1).
+ *
+ * - **The pod orders, the device places and cuts.** Ranked is the
+ *   answer's own order, Newest its second permutation, the settling rows
+ *   stand where the pod wove them, and the seen, people and Still-settling
+ *   cuts delete rows without re-ordering any (CD-7, CD-8, CD-10, CD-11).
+ *   Nothing here scores or compares (PR-9/PR-10).
+ * - **A local re-derive is not a fetch.** A Done that changes only
+ *   device-side axes re-derives from the held answer: no call, no new pin.
+ * - **Seen is cut from the device's record, read fresh at every derive**,
+ *   and the derived list is frozen between derives: scrolling never
+ *   deletes the rows under the reader (W-6).
+ * - **Staleness (PR-55).** The ranking is fetched when this ViewModel is
+ *   created — a cold start always refetches — and otherwise only when the
+ *   reader pulls. Nothing here watches the app's lifecycle: a return from
+ *   the background shows the feed exactly as it was left, however long
+ *   the absence.
+ *
+ * Kinds other than posts hydrate to nothing until a card renders them;
+ * the sheet's controls and the card's figure are the feed/card rework's.
  */
 @HiltViewModel
 class FeedViewModel @Inject constructor(
-    private val content: ContentRepository,
+    private val feed: FeedRepository,
+    private val viewer: FeedViewer,
+    private val seenRecord: SeenRecord,
     landings: LandingSignal,
     private val reveals: SensitiveReveals,
     private val seen: SeenPosts,
@@ -70,6 +103,18 @@ class FeedViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(FeedUiState())
     val state = _state.asStateFlow()
+
+    /**
+     * The posts hydrated since the last fetch, by id: a re-derive that
+     * brings back a row already read shows it without reading it again.
+     */
+    private val hydrated = HashMap<String, PostView>()
+
+    /** How far into [FeedUiState.rows] the cards reach. */
+    private var cursor = 0
+
+    /** The fetch or derive in flight; a newer one supersedes it. */
+    private var composing: Job? = null
 
     /** Post cards that stood fully in the viewport, in the order they did. */
     fun onCardsSeen(postIds: List<String>) = seenTracker.saw(postIds)
@@ -88,6 +133,7 @@ class FeedViewModel @Inject constructor(
     fun onReveal(nodeId: String, mark: SensitiveMark) = reveals.reveal(nodeId, mark)
 
     init {
+        // The cold-start law (PR-55 (i)): a fresh process ranks afresh.
         refresh()
         // The reveal set is app-wide, so a choice made on the detail
         // screen reaches the card here too — being asked twice about the
@@ -97,90 +143,184 @@ class FeedViewModel @Inject constructor(
         }
         // A node the device has since read afresh — the reader opened
         // the post and pulled to refresh until it landed — carries its
-        // state back to the card that is still on screen. The page
-        // itself is untouched: no entry moves, arrives, or leaves, so
-        // this is not the page reconciliation the snapshot rule
-        // forbids (api-spec.md "A page is a snapshot, not a live
-        // view"). A read that asked the other landed-only question saw
-        // another version of the node, so it says nothing here.
+        // state back to the card that is still on screen. No row moves,
+        // arrives, or leaves (W-6). The windows read pending versions,
+        // so a landed-only read says nothing here.
         viewModelScope.launch {
             landings.updates.collect { update ->
-                _state.update {
-                    if (update.includePending != it.includePending) {
-                        it
-                    } else {
-                        it.copy(posts = it.posts.withLanding(update))
-                    }
-                }
+                if (!update.includePending) return@collect
+                val landed: (PostView) -> PostView = { it.copy(landing = update.landing) }
+                hydrated[update.nodeId]?.let { hydrated[update.nodeId] = landed(it) }
+                _state.update { it.copy(posts = it.posts.withLanding(update.nodeId, landed)) }
             }
         }
     }
 
-    // The fault reflects the last COMPLETED fetch: clearing it
-    // eagerly at fetch start made the error surface vanish and
-    // reappear — a visible flash — on every failed retry. It also
-    // carries which fetch failed, so the fault can surface where
-    // that fetch was requested.
+    // The fault reflects the last COMPLETED fetch: clearing it eagerly at
+    // fetch start made the error surface vanish and reappear — a visible
+    // flash — on every failed retry. It also carries which fetch failed,
+    // so the fault can surface where that fetch was requested.
 
-    /**
-     * The landed-only opt-out. The cursor namespaces differ, so a
-     * change restarts the walk rather than continuing the held one.
-     */
-    fun setIncludePending(include: Boolean) {
-        if (_state.value.includePending == include) return
-        _state.update { it.copy(includePending = include) }
-        refresh()
-    }
-
+    /** The explicit refresh — the pull, the retry, the shell's signal: one ranking. */
     fun refresh() {
         _state.update { it.copy(loading = true) }
-        val includePending = _state.value.includePending
-        viewModelScope.launch {
-            when (val outcome = content.posts(FEED_PAGE_SIZE, after = null, includePending = includePending)) {
-                is Outcome.Success -> _state.update {
-                    // What the reader can see is what the detail may
-                    // open from (HT-10).
-                    seen.saw(outcome.value.items)
+        composing?.cancel()
+        composing = viewModelScope.launch {
+            val filter = _state.value.filter
+            when (val ranked = feed.rank(viewer, filter)) {
+                is Outcome.Success -> {
+                    hydrated.clear()
+                    install(ranked.value)
+                }
+                // A failed refresh keeps the held snapshot on screen; the
+                // fault takes the house vehicles (§4.5) — never a silent
+                // fallback to another order.
+                else -> _state.update { it.copy(loading = false, transportFault = TransportFault.REFRESH) }
+            }
+        }
+    }
+
+    /**
+     * The sheet's Done (CD-1): no change asks nothing; a change to kinds or
+     * topic ranks once and derives; any other change is a local re-derive
+     * from the held answer, with the seen cut read fresh.
+     */
+    fun applyFilter(staged: FeedFilter) {
+        val change = _state.value.filter.changeTo(staged)
+        if (change == FilterChange.NONE) return
+        _state.update { it.copy(filter = staged) }
+        when (change) {
+            FilterChange.FETCH -> refresh()
+            FilterChange.DERIVE -> rederive()
+            FilterChange.NONE -> Unit
+        }
+    }
+
+    private fun rederive() {
+        // Nothing held yet: the fetch in flight derives with the new filter.
+        val held = _state.value.ranking ?: return
+        if (_state.value.loading) return
+        composing?.cancel()
+        composing = viewModelScope.launch { install(held) }
+    }
+
+    /**
+     * THE DERIVE (§4.12) over [ranking], by the filter in force and the
+     * seen record as it stands now, then the first window. The new list
+     * replaces the old one only once its first window is read.
+     */
+    private suspend fun install(ranking: FeedRanking) {
+        val filter = _state.value.filter
+        val rows = ranking.derive(filter, seenRecord.seenIds())
+        when (val first = feed.hydrate(rows, from = 0, hydrated)) {
+            is Outcome.Success -> {
+                val (posts, next) = first.value
+                cursor = next
+                // What the reader can see is what the detail may open
+                // from (HT-10).
+                seen.saw(posts)
+                _state.update {
                     it.copy(
                         loading = false,
                         transportFault = null,
-                        posts = outcome.value.items,
-                        endCursor = outcome.value.endCursor,
-                        hasNextPage = outcome.value.hasNextPage,
+                        ranking = ranking,
+                        rows = rows,
+                        posts = posts,
+                        hasNextPage = next < rows.size,
                     )
                 }
-                // The listing is anonymous-capable; a refusal here is a
-                // transport-shaped surprise, rendered the same way.
-                else -> _state.update {
-                    it.copy(loading = false, transportFault = TransportFault.REFRESH)
-                }
             }
+            else -> _state.update { it.copy(loading = false, transportFault = TransportFault.REFRESH) }
         }
     }
 
+    /** The next window of the frozen derived list — the tail watch's ask. */
     fun loadMore() {
         val s = _state.value
         if (s.loadingMore || !s.hasNextPage) return
         _state.update { it.copy(loadingMore = true) }
+        val rows = s.rows
+        val from = cursor
         viewModelScope.launch {
-            when (
-                val outcome =
-                    content.posts(FEED_PAGE_SIZE, after = s.endCursor, includePending = s.includePending)
-            ) {
-                is Outcome.Success -> _state.update {
-                    seen.saw(outcome.value.items)
-                    it.copy(
-                        loadingMore = false,
-                        transportFault = null,
-                        posts = it.posts.appendPage(outcome.value.items) { p -> p.id },
-                        endCursor = outcome.value.endCursor,
-                        hasNextPage = outcome.value.hasNextPage,
-                    )
+            val outcome = feed.hydrate(rows, from, hydrated)
+            // A derive that replaced the list meanwhile owns the cards now.
+            if (_state.value.rows !== rows) {
+                _state.update { it.copy(loadingMore = false) }
+                return@launch
+            }
+            when (outcome) {
+                is Outcome.Success -> {
+                    val (posts, next) = outcome.value
+                    cursor = next
+                    seen.saw(posts)
+                    _state.update {
+                        it.copy(
+                            loadingMore = false,
+                            transportFault = null,
+                            posts = it.posts.appendPage(posts) { p -> p.id },
+                            hasNextPage = next < rows.size,
+                        )
+                    }
                 }
-                else -> _state.update {
-                    it.copy(loadingMore = false, transportFault = TransportFault.APPEND)
-                }
+                else -> _state.update { it.copy(loadingMore = false, transportFault = TransportFault.APPEND) }
             }
         }
     }
 }
+
+/**
+ * The ranking for [filter]'s pod-side axes, of the view [viewer] resolves
+ * to; the empty answer where nothing would rank.
+ */
+private suspend fun FeedRepository.rank(viewer: FeedViewer, filter: FeedFilter): Outcome<FeedRanking> {
+    // Every kind off: the empty state, and the client never asks
+    // (FeedNothing.md:3-5).
+    if (filter.kinds.isEmpty()) return Outcome.Success(FeedRanking.EMPTY)
+    return when (val who = viewer.resolve()) {
+        is Outcome.Success -> {
+            val id = who.value ?: return Outcome.Success(FeedRanking.EMPTY)
+            when (val answer = ranking(id, filter.rankArgs)) {
+                is Outcome.Success -> Outcome.Success(answer.value ?: FeedRanking.EMPTY)
+                is Outcome.Refused -> answer
+                is Outcome.Failed -> answer
+            }
+        }
+        is Outcome.Refused -> who
+        is Outcome.Failed -> who
+    }
+}
+
+/**
+ * Hydrates [rows] from [from] a window at a time, until a window yields a
+ * card or the list ends (the fill rule, §5.1): a window of expired or
+ * not-yet-rendered rows loads the next rather than leaving the reader at a
+ * dead end. Rows already in [hydrated] — read since the last fetch — are
+ * not read again; what is read joins it. Returns the cards, in the list's
+ * order, and where the next window starts.
+ */
+private suspend fun FeedRepository.hydrate(
+    rows: List<FeedRow>,
+    from: Int,
+    hydrated: MutableMap<String, PostView>,
+): Outcome<Pair<List<PostView>, Int>> {
+    var at = from
+    val cards = mutableListOf<PostView>()
+    while (at < rows.size && cards.isEmpty()) {
+        val ids = rows.subList(at, minOf(at + FEED_PAGE_SIZE, rows.size)).map { it.targetId }
+        val unread = ids.filterNot { it in hydrated }
+        if (unread.isNotEmpty()) {
+            when (val read = window(unread)) {
+                is Outcome.Success -> read.value.forEach { hydrated[it.id] = it }
+                is Outcome.Refused -> return read
+                is Outcome.Failed -> return read
+            }
+        }
+        cards += ids.mapNotNull { hydrated[it] }
+        at += ids.size
+    }
+    return Outcome.Success(cards to at)
+}
+
+/** The held card keeps its place; only its own state moves. */
+private fun List<PostView>.withLanding(id: String, change: (PostView) -> PostView): List<PostView> =
+    if (none { it.id == id }) this else map { if (it.id == id) change(it) else it }
