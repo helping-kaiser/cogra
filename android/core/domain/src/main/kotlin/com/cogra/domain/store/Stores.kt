@@ -143,20 +143,20 @@ interface IdentityStore {
     suspend fun setForgetOnSignOut(value: Boolean)
 
     /**
-     * The opt-in's teeth on the REMOTE path (a session ended from
-     * elsewhere): remove ALL of the active account's slot — seed, pending
-     * blob, handshake material, and flags — in one atomic edit. Other
-     * accounts' slots are untouched, and the draft is deliberately NOT
-     * part of it: the remote path's custody is the sign-out custody
-     * packet's, and widening it here would move that boundary silently.
+     * Whether the active account's key is positively known to be backed up
+     * on the server — set when an upload succeeds or the key was restored
+     * from its backup, cleared when a fresh key is minted. The device lock
+     * reads it as "backup positively known" (sign-out-custody §3.2 reading
+     * 1): absent is unknown, and unknown locks rather than purges.
      */
-    suspend fun purge()
+    suspend fun setKeyBacked(value: Boolean)
 
     /**
      * The explicit sign-out's purge (Settings.md "Sign out" with the
      * don't-remember switch on): the account's whole custody set — its
      * slot AND its compose draft — in ONE atomic edit, so a process death
-     * can never leave a half-cleared account behind.
+     * can never leave a half-cleared account behind. A session ended
+     * elsewhere never purges this way: it locks ([LockCustodyStore]).
      */
     suspend fun purgeCustodySet()
 }

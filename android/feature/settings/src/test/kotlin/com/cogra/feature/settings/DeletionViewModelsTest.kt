@@ -13,7 +13,7 @@ import com.cogra.domain.deletion.AccountDeletion
 import com.cogra.domain.deletion.AccountDeletionState
 import com.cogra.domain.deletion.DeletionStanding
 import com.cogra.domain.identity.EndLocalSession
-import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.ScriptedAccountDeletionRepository
 import com.google.common.truth.Truth.assertThat
@@ -38,7 +38,7 @@ class DeletionViewModelsTest {
     private val deletions = ScriptedAccountDeletionRepository()
     private val standing = AccountDeletionState(deletions)
     private val tokens = FakeTokenStore()
-    private val identity = FakeIdentityStore()
+    private val custody = FakeLockCustodyStore()
     private val settings = ScriptedSettings()
     private val grace = AccountDeletion(NOW.plusSeconds(7 * 86_400), includesContent = false)
 
@@ -58,7 +58,7 @@ class DeletionViewModelsTest {
         deletions.standing = Outcome.Success(DeletionStanding(path, deletion))
     }
 
-    private fun request() = DeleteAccountViewModel(deletions, standing, EndLocalSession(identity, tokens))
+    private fun request() = DeleteAccountViewModel(deletions, standing, EndLocalSession(custody, tokens))
 
     private val rateLimited = Outcome.Refused(listOf(UserError(ErrorCode.RATE_LIMITED, "slow down")))
 

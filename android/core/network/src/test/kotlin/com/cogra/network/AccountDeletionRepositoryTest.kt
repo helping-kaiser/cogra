@@ -12,7 +12,7 @@ import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.deletion.AccountDeletion
 import com.cogra.domain.identity.EndLocalSession
-import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.auth.SessionRefresher
@@ -54,7 +54,7 @@ class AccountDeletionRepositoryTest {
         client,
         AuthGuard(
             tokenStore,
-            SessionRefresher(tokenStore, EndLocalSession(FakeIdentityStore(), tokenStore), Provider { client }),
+            SessionRefresher(tokenStore, EndLocalSession(FakeLockCustodyStore(), tokenStore), Provider { client }),
         ),
     )
 

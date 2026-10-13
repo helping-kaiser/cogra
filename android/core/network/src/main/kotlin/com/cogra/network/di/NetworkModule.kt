@@ -19,6 +19,7 @@ import com.cogra.domain.history.ViewHistoryRepository
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.ContentRepository
+import com.cogra.domain.repo.DeviceLockRepository
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
@@ -30,6 +31,7 @@ import com.cogra.domain.settings.SettingsRepository
 import com.cogra.domain.store.DeviceData
 import com.cogra.domain.store.DevicePreferences
 import com.cogra.domain.store.IdentityStore
+import com.cogra.domain.store.LockCustodyStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
 import com.cogra.network.auth.BearerInterceptor
@@ -37,6 +39,7 @@ import com.cogra.network.auth.SessionGate
 import com.cogra.network.repo.AccountDeletionRepositoryImpl
 import com.cogra.network.repo.AccountRepositoryImpl
 import com.cogra.network.repo.ContentRepositoryImpl
+import com.cogra.network.repo.DeviceLockRepositoryImpl
 import com.cogra.network.repo.MediaRepositoryImpl
 import com.cogra.network.repo.PartUploader
 import com.cogra.network.repo.ProfileRepositoryImpl
@@ -56,6 +59,7 @@ import com.cogra.network.store.DeviceDataImpl
 import com.cogra.network.store.DevicePreferencesImpl
 import com.cogra.network.store.EncryptedStore
 import com.cogra.network.store.IdentityStoreImpl
+import com.cogra.network.store.LockCustodyStoreImpl
 import com.cogra.network.store.StorageHealthImpl
 import com.cogra.network.store.StoreCipher
 import com.cogra.network.store.TinkStoreCipher
@@ -129,6 +133,12 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun identityStore(impl: IdentityStoreImpl): IdentityStore
+
+    @Binds
+    abstract fun lockCustodyStore(impl: LockCustodyStoreImpl): LockCustodyStore
+
+    @Binds
+    abstract fun deviceLockRepository(impl: DeviceLockRepositoryImpl): DeviceLockRepository
 
     @Binds
     abstract fun storageHealth(impl: StorageHealthImpl): StorageHealth

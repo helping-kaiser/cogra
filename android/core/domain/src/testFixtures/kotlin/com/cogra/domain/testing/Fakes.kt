@@ -48,7 +48,9 @@ import com.cogra.domain.Landing
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.LoginGrant
 import com.cogra.domain.ModeratedField
+import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
+import com.cogra.domain.UserError
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PostView
@@ -72,6 +74,8 @@ import com.cogra.domain.TaggedContentView
 import com.cogra.domain.TopicClaimView
 import com.cogra.domain.UserProfile
 import com.cogra.domain.repo.AccountRepository
+import com.cogra.domain.repo.DeviceLockRepository
+import com.cogra.domain.repo.IssuedLock
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.OnboardingRepository
@@ -88,7 +92,9 @@ import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.store.DeviceData
 import com.cogra.domain.store.DevicePreferences
+import com.cogra.domain.store.HeldLock
 import com.cogra.domain.store.IdentityStore
+import com.cogra.domain.store.LockCustodyStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.ThemeChoice
 import com.cogra.domain.store.TokenStore
@@ -176,16 +182,14 @@ class FakeIdentityStore : IdentityStore {
         forgetOnSignOut = value
     }
 
-    /** How many times the remote path's slot purge ran. */
-    var slotPurges = 0
+    var keyBacked = false
+
+    override suspend fun setKeyBacked(value: Boolean) {
+        keyBacked = value
+    }
 
     /** How many times the explicit sign-out's custody-set purge ran. */
     var custodyPurges = 0
-
-    override suspend fun purge() {
-        slotPurges++
-        clearSlot()
-    }
 
     override suspend fun purgeCustodySet() {
         custodyPurges++
@@ -200,6 +204,144 @@ class FakeIdentityStore : IdentityStore {
         inputMode.value = StanceInputMode.Default
         confirmMultiAction.value = true
         handshakes.clear()
+    }
+}
+
+/**
+ * The device lock's custody, in memory and per account: each account's
+ * custody set is a map of named values, `draft` names among them. A lock
+ * moves the set aside under the secret it was held with; the unlock gives it
+ * back only for that same secret. The real store's encryption and atomicity
+ * are `LockCustodyStoreImpl`'s own suite's (core:network).
+ */
+class FakeLockCustodyStore : LockCustodyStore {
+    val forget = mutableSetOf<String>()
+    val backed = mutableSetOf<String>()
+    val custody = mutableMapOf<String, MutableMap<String, ByteArray>>()
+    val held = mutableMapOf<String, HeldLock>()
+    val lockIds = mutableMapOf<String, String>()
+    val pending = mutableSetOf<String>()
+    val locked = mutableMapOf<String, Pair<ByteArray, Map<String, ByteArray>>>()
+
+    /** The draft's names in a fake set start with this. */
+    val draftPrefix = "draft"
+
+    fun custodyOf(account: String): MutableMap<String, ByteArray> = custody.getOrPut(account) { mutableMapOf() }
+
+    override suspend fun forgetOnSignOut(account: String): Boolean = account in forget
+
+    override suspend fun heldLock(account: String): HeldLock? = held[account]
+
+    override suspend fun holdLock(account: String, lock: HeldLock): String? {
+        val replaced = lockIds[account]?.takeIf { it != lock.id }
+        held[account] = lock
+        lockIds[account] = lock.id
+        return replaced
+    }
+
+    override suspend fun lockId(account: String): String? = lockIds[account]
+
+    override suspend fun dropLock(account: String) {
+        held.remove(account)
+        lockIds.remove(account)
+    }
+
+    override suspend fun setLockPending(account: String, pending: Boolean) {
+        if (pending) this.pending += account else this.pending -= account
+    }
+
+    override suspend fun isLockPending(account: String): Boolean = account in pending
+
+    override suspend fun lock(account: String): Boolean {
+        val secret = held[account]?.secret ?: return false
+        if (account in locked) return false
+        val set = custodyOf(account)
+        if (account in backed) set.keys.removeAll { it.startsWith(KEY_MATERIAL) }
+        locked[account] = secret to set.toMap()
+        set.clear()
+        held.remove(account)
+        return true
+    }
+
+    override suspend fun isLocked(account: String): Boolean = account in locked
+
+    override suspend fun unlock(account: String, secret: ByteArray): Boolean {
+        val (lockedWith, set) = locked[account] ?: return false
+        if (!lockedWith.contentEquals(secret)) return false
+        custodyOf(account).putAll(set)
+        locked.remove(account)
+        return true
+    }
+
+    override suspend fun deleteDeadLockedSet(account: String) {
+        locked.remove(account)
+        lockIds.remove(account)
+        pending.remove(account)
+    }
+
+    override suspend fun purgeBackedKeyMaterial(account: String) {
+        if (account in backed) custodyOf(account).keys.removeAll { it.startsWith(KEY_MATERIAL) }
+    }
+
+    override suspend fun removeLeftoverDraft(account: String) {
+        if (account in locked) custodyOf(account).keys.removeAll { it.startsWith(draftPrefix) }
+    }
+
+    override suspend fun lockSlots(): Set<String> = locked.keys + pending
+
+    companion object {
+        /** The key material's names in a fake set start with this. */
+        const val KEY_MATERIAL = "key"
+    }
+}
+
+/**
+ * The server half, in memory: one row per issue, released behind the
+ * account's CURRENT password, NOT_FOUND for an unknown or foreign lock —
+ * `crates/api`'s device-lock verbs as `device_lock.rs` pins them. A token
+ * names its account as `token-<account>`; a null token is [sessionAccount].
+ */
+class FakeDeviceLockRepository : DeviceLockRepository {
+    val rows = mutableMapOf<String, Pair<String, ByteArray>>()
+    val passwords = mutableMapOf<String, String>()
+    var online = true
+    var sessionAccount: String? = null
+    var issues = 0
+    var releases = 0
+    var discards = 0
+    private var next = 0
+
+    private fun accountOf(token: String?): String? = token?.removePrefix("token-") ?: sessionAccount
+
+    private val offline = Outcome.Failed(java.io.IOException("offline"))
+
+    override suspend fun issue(accessToken: String?): Outcome<IssuedLock> {
+        issues++
+        if (!online) return offline
+        val account = accountOf(accessToken) ?: return offline
+        val id = "lock-${next++}"
+        val secret = ByteArray(32) { (next * 7 + it).toByte() }
+        rows[id] = account to secret
+        return Outcome.Success(IssuedLock(id, secret.copyOf()))
+    }
+
+    override suspend fun release(lock: String, password: String, accessToken: String?): Outcome<ByteArray> {
+        releases++
+        if (!online) return offline
+        val account = accountOf(accessToken)
+        if (account == null || passwords[account] != password) {
+            return Outcome.Refused(listOf(UserError(ErrorCode.INVALID_CREDENTIALS, "no", listOf("password"))))
+        }
+        val row = rows[lock]?.takeIf { it.first == account }
+            ?: return Outcome.Refused(listOf(UserError(ErrorCode.NOT_FOUND, "no lock", listOf("lock"))))
+        return Outcome.Success(row.second.copyOf())
+    }
+
+    override suspend fun discard(lock: String, accessToken: String?): Outcome<Unit> {
+        discards++
+        if (!online) return offline
+        if (rows[lock]?.first == accountOf(accessToken)) rows.remove(lock)
+        return Outcome.Success(Unit)
     }
 }
 
