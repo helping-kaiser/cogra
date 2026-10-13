@@ -655,6 +655,7 @@ private fun CograNavGraphContent(
             )
         }
     }
+
     // The deletion band rides the signed-in reader's surfaces only: a
     // deletion is an account's, and a signed-out reader has none. It wears
     // the registered `feed.deletionBand` where the board draws it (the feed)

@@ -102,9 +102,9 @@ fun DeletionBand(
 private fun DeletionBandVariants() {
     Cogra2PreviewTheme {
         PreviewColumn(canvasWidth = true) {
-            DeletionBand(count = forwardCount(6, inHours = false), content = false, onCancel = {})
-            DeletionBand(count = forwardCount(6, inHours = false), content = true, onCancel = {})
-            DeletionBand(count = forwardCount(5, inHours = true), content = false, onCancel = {})
+            DeletionBand(count = forwardCount(count = 6, inHours = false), content = false, onCancel = {})
+            DeletionBand(count = forwardCount(count = 6, inHours = false), content = true, onCancel = {})
+            DeletionBand(count = forwardCount(count = 5, inHours = true), content = false, onCancel = {})
         }
     }
 }

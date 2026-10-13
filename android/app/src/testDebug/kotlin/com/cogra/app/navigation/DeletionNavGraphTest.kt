@@ -37,14 +37,14 @@ import com.cogra.domain.testing.ScriptedAccountDeletionRepository
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
-import java.time.Instant
-import javax.inject.Inject
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.time.Instant
+import javax.inject.Inject
 
 @OptIn(ExperimentalTestApi::class)
 @HiltAndroidTest

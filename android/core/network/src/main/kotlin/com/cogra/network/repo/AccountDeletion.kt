@@ -56,11 +56,12 @@ class AccountDeletionRepositoryImpl @Inject constructor(
 
     override suspend fun request(includeContent: Boolean): Outcome<AccountDeletion?> = guard.run {
         val input = RequestAccountDeletionInput(includeContent = Optional.present(includeContent))
-        client.mutation(RequestAccountDeletionMutation(input)).payloadOutcome({ it.requestAccountDeletion.userErrors.map { e -> e.userErrorFields } }) {
-            // Null is the ordinary answer — nothing is confirmed until the
-            // link is opened — so it rides in a box, never as a fault.
-            Standing(it.requestAccountDeletion.accountDeletion?.accountDeletionFields?.toDomain())
-        }.map { it.deletion }
+        client.mutation(RequestAccountDeletionMutation(input))
+            .payloadOutcome({ it.requestAccountDeletion.userErrors.map { e -> e.userErrorFields } }) {
+                // Null is the ordinary answer — nothing is confirmed until the
+                // link is opened — so it rides in a box, never as a fault.
+                Standing(it.requestAccountDeletion.accountDeletion?.accountDeletionFields?.toDomain())
+            }.map { it.deletion }
     }
 
     // Session-free and never guarded: the link is the capability, and a

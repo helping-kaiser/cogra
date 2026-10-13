@@ -171,27 +171,7 @@ fun SettingsScreen(
 
     Scaffold(
         modifier = Modifier.dataNodeSurface(),
-        // The header is pinned: it stands outside the scrolling body — and
-        // so does the deletion band directly under it (SettingsDeleting.md:3),
-        // which no surface may scroll away.
-        topBar = {
-            Column {
-                PageHeader(
-                    title = stringResource(R.string.settings_title),
-                    onBack = doors.onBack,
-                    backContentDescription = stringResource(R.string.settings_back),
-                    node = Page / "header",
-                )
-                state.graceDeletion?.let { deletion ->
-                    DeletionBand(
-                        count = forwardLadder(deletion.scheduledFor, state.now).words(),
-                        content = deletion.includesContent,
-                        onCancel = actions.onCancelDeletion,
-                        node = Page / "deletionBand",
-                    )
-                }
-            }
-        },
+        topBar = { SettingsTop(state, actions, doors) },
         snackbarHost = { CograSnackbarHost(snackbar, testTag = "settings_snackbar") },
     ) { padding ->
         Column(
@@ -234,6 +214,31 @@ fun SettingsScreen(
             },
             onDismiss = actions.onDismissLicense,
         )
+    }
+}
+
+/**
+ * The header is pinned: it stands outside the scrolling body — and so does
+ * the deletion band directly under it (SettingsDeleting.md:3), which no
+ * surface may scroll away.
+ */
+@Composable
+private fun SettingsTop(state: SettingsUiState, actions: SettingsActions, doors: SettingsDoors) {
+    Column {
+        PageHeader(
+            title = stringResource(R.string.settings_title),
+            onBack = doors.onBack,
+            backContentDescription = stringResource(R.string.settings_back),
+            node = Page / "header",
+        )
+        state.graceDeletion?.let { deletion ->
+            DeletionBand(
+                count = forwardLadder(deletion.scheduledFor, state.now).words(),
+                content = deletion.includesContent,
+                onCancel = actions.onCancelDeletion,
+                node = Page / "deletionBand",
+            )
+        }
     }
 }
 
