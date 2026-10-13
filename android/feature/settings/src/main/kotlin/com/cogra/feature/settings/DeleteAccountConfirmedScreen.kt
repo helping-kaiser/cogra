@@ -30,7 +30,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -197,12 +196,11 @@ fun DeleteAccountConfirmedRoute(
     LaunchedEffect(token, signedIn) { viewModel.start(token, signedIn) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
-    val context = LocalContext.current
+    val added = stringResource(R.string.delete_confirmed_added)
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
-                DeleteAccountConfirmedEvent.Added ->
-                    snackbar.showSnackbar(context.getString(R.string.delete_confirmed_added))
+                DeleteAccountConfirmedEvent.Added -> snackbar.showSnackbar(added)
             }
         }
     }

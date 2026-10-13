@@ -8,7 +8,8 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
@@ -140,9 +141,15 @@ fun DeletionBandRoute(
     LaunchedEffect(refreshSignal) { if (refreshSignal > 0) viewModel.refresh() }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refresh() }
     val host = LocalSnackbarHostState.current
-    val context = LocalContext.current
+    // Resolved in composition, so a configuration change re-reads them.
+    val lines = mapOf(
+        R.string.deletion_canceled to stringResource(R.string.deletion_canceled),
+        R.string.deletion_cancel_no_answer to stringResource(R.string.deletion_cancel_no_answer),
+        R.string.deletion_cancel_refused to stringResource(R.string.deletion_cancel_refused),
+    )
+    val currentLines by rememberUpdatedState(lines)
     LaunchedEffect(viewModel, host) {
-        viewModel.snackbars.collect { line -> host?.showSnackbar(context.getString(line)) }
+        viewModel.snackbars.collect { line -> currentLines[line]?.let { host?.showSnackbar(it) } }
     }
     val state by viewModel.state.collectAsStateWithLifecycle()
     DeletionBandBanner(state, onCancel = viewModel::onCancel, node = node)
