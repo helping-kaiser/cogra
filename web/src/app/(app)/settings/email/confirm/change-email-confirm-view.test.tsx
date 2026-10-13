@@ -170,7 +170,9 @@ describe("ChangeEmailConfirm", () => {
     await screen.findByTestId("changeEmail.code.input");
     typeCode("000000");
     press();
-    expect(await screen.findByTestId("changeEmail.code.support")).toHaveTextContent("That code doesn't check out.");
+    await waitFor(() =>
+      expect(screen.getByTestId("changeEmail.code.support")).toHaveTextContent("That code doesn't check out."),
+    );
   });
 
   it("disabled_code_line_stands_until_a_fresh_code_is_sent", async () => {
@@ -194,7 +196,7 @@ describe("ChangeEmailConfirm", () => {
     press();
     const line =
       "Too many tries — for safety we have disabled your current code. Resend sends a fresh one.";
-    expect(await screen.findByTestId("changeEmail.code.support")).toHaveTextContent(line);
+    await waitFor(() => expect(screen.getByTestId("changeEmail.code.support")).toHaveTextContent(line));
     typeCode("111111");
     expect(screen.getByTestId("changeEmail.code.support")).toHaveTextContent(line);
     fireEvent.click(screen.getByTestId("changeEmail.pair.resend"));

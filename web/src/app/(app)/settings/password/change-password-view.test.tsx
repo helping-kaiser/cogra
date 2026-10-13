@@ -146,8 +146,10 @@ describe("ChangePassword", () => {
     type("current", "the current one");
     type("password", "correct horse battery staple");
     press();
-    expect(await screen.findByTestId("changePassword.password.support")).toHaveTextContent(
-      "That password has turned up in a data breach — pick another one.",
+    await waitFor(() =>
+      expect(screen.getByTestId("changePassword.password.support")).toHaveTextContent(
+        "That password has turned up in a data breach — pick another one.",
+      ),
     );
     type("password", "another long password");
     expect(screen.getByTestId("changePassword.password.support")).toHaveTextContent("data breach");
