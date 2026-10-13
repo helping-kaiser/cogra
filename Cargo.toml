@@ -155,8 +155,7 @@ tempfile = { version = "3" }
 # `ln`, `exp`, `powf` and `tanh` as of unspecified precision that "varies by
 # platform, Rust version, and can even differ within the same execution";
 # libm is the pure-Rust port of musl's, so a ranking spot-checked on another
-# machine reproduces bit for bit. Already in the tree through the workspace's
-# float formatting dependencies.
+# machine reproduces bit for bit. Already in the tree through num-traits.
 libm = { version = "0.2" }
 
 # The key-backup blob reference (auth.md "Blob format (v1)") — used only

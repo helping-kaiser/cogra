@@ -84,7 +84,7 @@ impl Folded {
 /// conforming slice cannot hold: the published order is total.
 pub fn fold_members(members: &[Member]) -> Result<Folded, RankError> {
     let mut ordered = members.to_vec();
-    ordered.sort_by(|a, b| a.key.cmp(&b.key));
+    ordered.sort_by_key(|m| m.key);
     if let Some(pair) = ordered.windows(2).find(|w| w[0].key == w[1].key) {
         return Err(RankError::malformed(format!(
             "two bundle members claim the causal key {:?}",

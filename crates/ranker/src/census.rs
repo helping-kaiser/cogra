@@ -1,4 +1,4 @@
-//! ´mod:module:vocabulary´
+//! ´mod:module:census´
 //!
 //! The ranker's own names for record families and leg roles.
 //!
@@ -104,7 +104,11 @@ impl Family {
     /// The leg roles the census gives this family: one `Binary` leg, or an
     /// `A` and a `T` leg.
     pub fn roles(self) -> Vec<LegRole> {
-        self.seam().legs().iter().map(|l| LegRole::from_seam(l.role)).collect()
+        self.seam()
+            .legs()
+            .iter()
+            .map(|l| LegRole::from_seam(l.role))
+            .collect()
     }
 
     pub(crate) fn seam(self) -> seam::Family {
@@ -193,11 +197,14 @@ mod tests {
     /// census rows the ranker reads are the ones the seam publishes.
     ///
     /// Every family maps onto the seam's own family and carries exactly the leg roles the census gives it.
-    /// ´claim:vocabulary:every-family-maps-onto-the-seams-census´
+    /// ´claim:census:every-family-maps-onto-the-seams-census´
     #[test]
     fn every_family_maps_onto_the_seam_census() {
         for family in Family::ALL {
-            assert_eq!(seam::Family::parse(family.seam().as_str()), Some(family.seam()));
+            assert_eq!(
+                seam::Family::parse(family.seam().as_str()),
+                Some(family.seam())
+            );
             let roles = family.roles();
             for role in &roles {
                 assert!(family.leg(*role).is_some(), "{family} {role}");
@@ -211,7 +218,7 @@ mod tests {
     /// spellings, and parse back.
     ///
     /// Every family and leg role parses back from its own wire token.
-    /// ´claim:vocabulary:wire-tokens-round-trip´
+    /// ´claim:census:wire-tokens-round-trip´
     #[test]
     fn wire_tokens_round_trip() {
         for family in Family::ALL {

@@ -31,6 +31,4 @@ pub use bundle::{CausalKey, Folded, Member, fold_members};
 pub use census::{Family, LegRole};
 pub use error::RankError;
 pub use recency::{RecencyShape, epoch_age, recency_factor};
-pub use weight::{
-    BETA, ETA, PathView, damped_weight, maturity_gain, path_view, temporal_entropy,
-};
+pub use weight::{BETA, ETA, PathView, damped_weight, maturity_gain, path_view, temporal_entropy};
