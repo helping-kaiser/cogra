@@ -2966,7 +2966,10 @@ and starts the seven days.` · `Until you open it nothing is scheduled and
 nothing has changed. Closing this screen changes nothing either — the
 link is the whole of it.` · `Resend the link`. No expiry is claimed: the
 reset link states its fifteen minutes because `auth.md` gives it fifteen
-minutes, and `erasure.md` sets no window on this one.
+minutes, and `erasure.md` sets no window on this one. A resend that goes
+out answers in the email change's resend register, naming the inbox:
+`Sent again — the link is on its way to sol@solferreira.art.` (*new
+2026-10-13, drafted — jakob's at review*).
 
 **The band is one sentence and one word.** `Your account is deleted in 6
 days.` with `Cancel`, and `Your account and everything you posted are
