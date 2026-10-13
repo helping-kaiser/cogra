@@ -55,6 +55,13 @@ export type FeedIo = {
    * pages remembered beside it. Absent means always.
    */
   wanted?(): boolean;
+  /**
+   * Whether the reader has hidden this post's author (hidden-actors packet
+   * §4.4): a post-rank view filter the screen applies at render, so a window
+   * still carries the hidden rows — Undo puts them back where they stood —
+   * but only a visible row ends the fill. Absent hides nobody.
+   */
+  hides?(item: FeedPostView): boolean;
 };
 
 /** A hydrated stretch of the derived list. */
@@ -170,13 +177,15 @@ export class RankedFeed {
 
   /**
    * Hydrates the derived list from `from` on, a window at a time, until a
-   * window carries a row the card draws or the list ends — the shared fill
-   * rule (§5.1). Rows already hydrated for this answer are not asked again.
+   * window carries a row the card draws and the reader has not hidden, or the
+   * list ends — the shared fill rule (§5.1; hidden-actors §4.4 "over-fetch to
+   * fill"). Rows already hydrated for this answer are not asked again.
    */
   async window(from: number, io: FeedIo): Promise<Outcome<FeedWindow>> {
     let at = Math.max(0, from);
-    let items: FeedPostView[] = [];
-    while (at < this.rows.length && items.length === 0) {
+    const items: FeedPostView[] = [];
+    const visible = (item: FeedPostView) => io.hides?.(item) !== true;
+    while (at < this.rows.length && !items.some(visible)) {
       const ids = this.rows.slice(at, at + FEED_WINDOW).map((row) => row.targetId);
       const missing = ids.filter((id) => !this.hydrated.has(id));
       if (missing.length > 0) {
@@ -185,7 +194,7 @@ export class RankedFeed {
         const answered = new Map(fetched.value.map((item) => [item.id, item]));
         for (const id of missing) this.hydrated.set(id, answered.get(id) ?? null);
       }
-      items = ids.map((id) => this.hydrated.get(id)).filter(isPost);
+      items.push(...ids.map((id) => this.hydrated.get(id)).filter(isPost));
       at += ids.length;
     }
     return success({ items, next: at, hasMore: at < this.rows.length });

@@ -57,6 +57,7 @@ import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
 import { useScrollHost } from "@/lib/ui/scroll-host";
 import { ANCHOR_ATTRIBUTE, usePinnedPlace } from "@/lib/ui/scroll-pin";
 import { LINK_COPIED } from "@/lib/ui/share";
+import { useHiddenSet } from "@/lib/hidden/provider";
 import { useHostSnack } from "@/lib/saved/save-row";
 import { Snackbar } from "@/lib/ui/snackbar";
 import type { DataNode } from "@/lib/ui/data-node";
@@ -230,6 +231,19 @@ export function FeedView({
       alive.current = false;
     };
   }, []);
+  // THE READER'S HIDDEN SET (hidden-actors packet §4.3): a post-rank filter on
+  // this device, never a ranking input. A row whose author is hidden leaves
+  // the list — unless a hide or its Undo made from that very row did not go
+  // through, when the row stands carrying its line (design digest item 55).
+  const hidden = useHiddenSet();
+  const hides = useCallback(
+    (post: PostView) =>
+      reader !== null &&
+      post.author != null &&
+      hidden.has(post.author.id) &&
+      hidden.failure(post.id) === null,
+    [hidden, reader],
+  );
   // The reads the held ranking is handed per call (`ranked-feed.ts`).
   const io = useMemo<FeedIo>(() => {
     const gone = () => Promise.resolve(failed(new Error("the feed left the screen")));
@@ -251,8 +265,9 @@ export function FeedView({
         return seenRecord;
       },
       wanted: () => alive.current,
+      hides: (item) => hides(item as PostView),
     };
-  }, [client, guard, reader]);
+  }, [client, guard, reader, hides]);
   const [rememberedPlace] = useState(() => remembered?.place ?? null);
   const [posts, setPosts] = useState<readonly PostView[]>(remembered?.posts ?? []);
   const [endCursor, setEndCursor] = useState<string | null>(remembered?.endCursor ?? null);
@@ -318,8 +333,22 @@ export function FeedView({
       const mine = ++ask.current;
       const feed = feedFor(reader);
       void (async () => {
-        const ranked = await feed.refresh(io);
-        const first = ranked.kind === "success" ? await feed.window(0, io) : ranked;
+        // THE FEED NEVER RENDERS A PAGE BEFORE THE HIDDEN SET HAS BEEN READ
+        // (§5.1): both reads go together, and a set that could not be read at
+        // all is the feed's own fault — never an unfiltered page. Every open
+        // and every pull reads it again, so a hide made on another device
+        // reaches this one.
+        const [ranked, setRead] = await Promise.all([
+          feed.refresh(io),
+          reader === null ? Promise.resolve(true) : hidden.refetch(),
+        ]);
+        const hiddenKnown = setRead || hidden.status === "read";
+        const first =
+          ranked.kind !== "success"
+            ? ranked
+            : hiddenKnown
+              ? await feed.window(0, io)
+              : failed(new Error("the hidden set could not be read"));
         if (!alive.current || mine !== ask.current) return;
         setLoading(false);
         if (first.kind === "success") {
@@ -343,7 +372,7 @@ export function FeedView({
         }
       })();
     },
-    [feedFor, io, reader, showFirst],
+    [feedFor, hidden, io, reader, showFirst],
   );
 
   // THE FIRST OPEN RANKS — once per reader per page load. A feed remembered
@@ -361,6 +390,12 @@ export function FeedView({
     openedFor.current = reader;
     refresh();
   }, [phase, reader, refresh]);
+  // A RETURN TO THE FEED reads the hidden set again even where the list is
+  // the remembered one (§5.1, "at every feed open"); the list on screen is
+  // filtered by the set already held meanwhile.
+  useEffect(() => {
+    if (remembered !== null && reader !== null) void hidden.refetch();
+  }, [hidden, reader, remembered]);
 
   // A SHEET DONE (CD-1): the held ranking decides whether it ranks again or
   // re-derives locally, and the derived list's first window replaces the one
@@ -450,13 +485,30 @@ export function FeedView({
     onReach: loadMore,
     enabled: hasNextPage && transportFault !== "append",
   });
-  const tailIndex = tailIndexOf(posts.length);
+  // WHAT IS DRAWN: the held pages less the hidden people's rows (FeedHidden.md
+  // :3) — they leave, the rows behind move up, and nothing marks the space.
+  // The pages themselves keep them, so Undo stands the feed as it was (:11)
+  // and a hide made on another surface clears this list on return (:9).
+  const hiddenVersion = hidden.snapshot();
+  const shown = useMemo(
+    () => posts.filter((post) => !hides(post)),
+    // The set changes under a stable `hides`; its version says when.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [posts, hides, hiddenVersion],
+  );
+  const tailIndex = tailIndexOf(shown.length);
+  // A hide that took every drawn row while more pages wait: the tail watch has
+  // nothing to hang on, so the next page is asked for here.
+  const emptiedByHide = !loading && shown.length === 0 && posts.length > 0;
+  useEffect(() => {
+    if (emptiedByHide && hasNextPage && transportFault === null) void loadMore();
+  }, [emptiedByHide, hasNextPage, transportFault, loadMore]);
 
   // A POST WHOLLY ON SCREEN JOINS HISTORY (History.md:5) — the card's own
   // post, never its author or tags. Attached at the list, so the card stays
   // the feed's (`seen-tracker.ts` says what counts and when it is sent).
   const listRef = useRef<HTMLUListElement>(null);
-  const postIds = useMemo(() => posts.map((post) => post.id), [posts]);
+  const postIds = useMemo(() => shown.map((post) => post.id), [shown]);
   useSeenTracker({ root: host, list: listRef, ids: postIds, suspended: commentsOpen });
 
   return (
@@ -548,7 +600,7 @@ export function FeedView({
             Loading…
           </p>
         )}
-        {!loading && transportFault === null && posts.length === 0 && (
+        {!loading && transportFault === null && shown.length === 0 && !hasNextPage && (
           <p data-testid="feed-empty">Nothing here yet — write the first post.</p>
         )}
       </div>
@@ -569,7 +621,7 @@ export function FeedView({
               (`VouchBack.jsx`), after the security notice and the key card
               that head the column (ruling 45). */}
           {phase === "signedIn" && <VouchCard refreshSignal={listEra} />}
-          {posts.map((post, index) => (
+          {shown.map((post, index) => (
             // The card names itself to the pin: it is the anchor the reader's
             // place is measured against (`scroll-pin.ts`). One of them also
             // carries the watch that fetches the next page.
