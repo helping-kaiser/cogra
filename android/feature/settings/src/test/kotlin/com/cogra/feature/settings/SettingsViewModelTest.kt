@@ -7,7 +7,12 @@ import com.cogra.domain.AccountState
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
+import com.cogra.domain.AccountDeletionPath
+import com.cogra.domain.deletion.AccountDeletion
+import com.cogra.domain.deletion.AccountDeletionState
+import com.cogra.domain.deletion.DeletionStanding
 import com.cogra.domain.identity.BackupManager
+import com.cogra.domain.testing.ScriptedAccountDeletionRepository
 import com.cogra.domain.identity.SignOut
 import com.cogra.domain.settings.SensitiveContentChoice
 import com.cogra.domain.stance.StanceInputMode
@@ -41,6 +46,8 @@ class SettingsViewModelTest {
     private val settings = ScriptedSettings()
     private val sessions = ScriptedSessions()
     private val sensitive = SensitiveContentChoice()
+    private val deletions = ScriptedAccountDeletionRepository()
+    private val deletionState = AccountDeletionState(deletions)
 
     @Before
     fun setUp() {
@@ -61,6 +68,7 @@ class SettingsViewModelTest {
         identity,
         device,
         sensitive,
+        deletionState,
     ).also {
         it.clock = { NOW }
         it.refresh()
@@ -474,6 +482,87 @@ class SettingsViewModelTest {
         assertThat(tokens.current()).isNotNull()
         assertThat(identity.seed).isNotNull()
         assertThat(events).contains(SettingsEvent.FocusSignOut)
+        collecting.cancel()
+    }
+
+    // ---------------------------------------------------- delete account
+
+    private val grace = AccountDeletion(NOW.plusSeconds(6 * 86_400), includesContent = false)
+
+    private fun kotlinx.coroutines.test.TestScope.rowOpens(
+        standing: DeletionStanding,
+    ): List<SettingsEvent> {
+        deletions.standing = Outcome.Success(standing)
+        val vm = viewModel()
+        idle()
+        val events = mutableListOf<SettingsEvent>()
+        val collecting = launch { vm.events.toList(events) }
+        vm.onDeleteAccount()
+        idle()
+        collecting.cancel()
+        return events
+    }
+
+    @Test
+    fun `the_row_reads_the_servers_path_and_the_grace`() = runTest(dispatcher) {
+        deletions.standing = Outcome.Success(DeletionStanding(AccountDeletionPath.BY_LINK, grace))
+        val vm = viewModel()
+        idle()
+        assertThat(vm.state.value.deletion).isEqualTo(DeletionStanding(AccountDeletionPath.BY_LINK, grace))
+        assertThat(vm.state.value.graceDeletion).isEqualTo(grace)
+        assertThat(vm.state.value.deletionLocked).isFalse()
+    }
+
+    @Test
+    fun `the_row_opens_the_request_screen_on_either_open_path`() = runTest(dispatcher) {
+        assertThat(rowOpens(DeletionStanding(AccountDeletionPath.BY_LINK, null)))
+            .containsExactly(SettingsEvent.OpenDeletion(DeletionDoor.REQUEST))
+        assertThat(rowOpens(DeletionStanding(AccountDeletionPath.IMMEDIATE, null)))
+            .containsExactly(SettingsEvent.OpenDeletion(DeletionDoor.REQUEST))
+    }
+
+    @Test
+    fun `in_the_grace_the_row_opens_the_grace_page`() = runTest(dispatcher) {
+        assertThat(rowOpens(DeletionStanding(AccountDeletionPath.BY_LINK, grace)))
+            .containsExactly(SettingsEvent.OpenDeletion(DeletionDoor.PENDING))
+    }
+
+    @Test
+    fun `a_locked_row_answers_with_the_snackbar_and_opens_nothing`() = runTest(dispatcher) {
+        assertThat(rowOpens(DeletionStanding(AccountDeletionPath.LOCKED, null)))
+            .containsExactly(SettingsEvent.Snackbar(R.string.settings_ending_locked))
+        // A path this build cannot name is the weaker claim: locked.
+        assertThat(rowOpens(DeletionStanding(AccountDeletionPath.UNKNOWN, null)))
+            .containsExactly(SettingsEvent.Snackbar(R.string.settings_ending_locked))
+    }
+
+    @Test
+    fun `the_bands_cancel_takes_the_deletion_away_and_says_so`() = runTest(dispatcher) {
+        deletions.standing = Outcome.Success(DeletionStanding(AccountDeletionPath.BY_LINK, grace))
+        val vm = viewModel()
+        idle()
+        val events = mutableListOf<SettingsEvent>()
+        val collecting = launch { vm.events.toList(events) }
+        vm.onCancelDeletion()
+        idle()
+        assertThat(deletions.cancels).isEqualTo(1)
+        assertThat(vm.state.value.graceDeletion).isNull()
+        assertThat(events).containsExactly(SettingsEvent.Snackbar(R.string.deletion_canceled))
+        collecting.cancel()
+    }
+
+    @Test
+    fun `a_cancel_with_no_answer_keeps_the_band_and_says_the_network_error`() = runTest(dispatcher) {
+        deletions.standing = Outcome.Success(DeletionStanding(AccountDeletionPath.BY_LINK, grace))
+        deletions.cancel = Outcome.Failed(IOException("offline"))
+        val vm = viewModel()
+        idle()
+        val events = mutableListOf<SettingsEvent>()
+        val collecting = launch { vm.events.toList(events) }
+        vm.onCancelDeletion()
+        idle()
+        assertThat(vm.state.value.graceDeletion).isEqualTo(grace)
+        assertThat(events).containsExactly(SettingsEvent.Snackbar(R.string.network_error))
         collecting.cancel()
     }
 

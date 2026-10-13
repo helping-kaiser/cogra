@@ -30,4 +30,35 @@ class AgesTest {
     fun aFutureMomentReadsNow() {
         assertThat(ageLadder(now.plusSeconds(600), now, ZoneOffset.UTC)).isEqualTo("now")
     }
+
+    private fun ahead(d: Duration) = forwardLadder(now.plus(d), now)
+
+    @Test
+    fun aDeadlineSevenDaysOutReadsSevenTheMomentItIsSet() {
+        assertThat(ahead(Duration.ofDays(7))).isEqualTo(ForwardCount(7, ForwardUnit.DAYS))
+    }
+
+    @Test
+    fun daysRoundToTheNearestWholeDayWhileADayRemains() {
+        assertThat(ahead(Duration.ofDays(6).plusHours(13))).isEqualTo(ForwardCount(7, ForwardUnit.DAYS))
+        assertThat(ahead(Duration.ofDays(6).plusHours(12))).isEqualTo(ForwardCount(7, ForwardUnit.DAYS))
+        assertThat(ahead(Duration.ofDays(6).plusHours(11))).isEqualTo(ForwardCount(6, ForwardUnit.DAYS))
+        assertThat(ahead(Duration.ofHours(24))).isEqualTo(ForwardCount(1, ForwardUnit.DAYS))
+        assertThat(ahead(Duration.ofHours(35))).isEqualTo(ForwardCount(1, ForwardUnit.DAYS))
+        assertThat(ahead(Duration.ofHours(36))).isEqualTo(ForwardCount(2, ForwardUnit.DAYS))
+    }
+
+    @Test
+    fun underADayTheHoursCountRoundedUp() {
+        assertThat(ahead(Duration.ofHours(23).plusMinutes(59))).isEqualTo(ForwardCount(24, ForwardUnit.HOURS))
+        assertThat(ahead(Duration.ofHours(4).plusSeconds(1))).isEqualTo(ForwardCount(5, ForwardUnit.HOURS))
+        assertThat(ahead(Duration.ofHours(5))).isEqualTo(ForwardCount(5, ForwardUnit.HOURS))
+        assertThat(ahead(Duration.ofMinutes(1))).isEqualTo(ForwardCount(1, ForwardUnit.HOURS))
+    }
+
+    @Test
+    fun aDeadlineThatHasNotRunYetReadsOneHour() {
+        assertThat(ahead(Duration.ZERO)).isEqualTo(ForwardCount(1, ForwardUnit.HOURS))
+        assertThat(forwardLadder(now.minusSeconds(600), now)).isEqualTo(ForwardCount(1, ForwardUnit.HOURS))
+    }
 }
