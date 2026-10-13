@@ -41,6 +41,7 @@ export function Snackbar({
   testId,
   node,
   action,
+  token,
 }: {
   /** `null` leaves the region mounted and silent. */
   message: string | null;
@@ -53,12 +54,18 @@ export function Snackbar({
    */
   node?: DataNode;
   action?: SnackbarAction;
+  /**
+   * A RENEWED SNACKBAR STANDS ITS FULL 4s AGAIN (SavedUndo.md: a second unsave
+   * while it stands "renews" it). The same words raised twice are the same
+   * `message`, so the raise itself has to say it is new.
+   */
+  token?: number;
 }) {
   useEffect(() => {
     if (message === null) return;
     const timer = setTimeout(onDismiss, SNACKBAR_MS);
     return () => clearTimeout(timer);
-  }, [message, onDismiss]);
+  }, [message, onDismiss, token]);
 
   return (
     <div role="status" aria-live="polite" data-testid={`${testId}-region`}>

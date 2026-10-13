@@ -11,6 +11,7 @@ import { THEME_BOOT_SCRIPT } from "@/lib/settings/theme-boot";
 import { SessionProvider } from "@/lib/session/provider";
 import { AuthRuntimeProvider } from "@/lib/session/runtime";
 import { RegistrationProvider } from "@/lib/signing/provider";
+import { SavedProvider } from "@/lib/saved/provider";
 import { StanceDataProvider } from "@/lib/stance/provider";
 
 import { AppShell } from "./shell";
@@ -68,7 +69,9 @@ export default function RootLayout({
               <AccountDeletionProvider>
                 <RegistrationProvider>
                   <StanceDataProvider>
-                    <AppShell>{children}</AppShell>
+                    <SavedProvider>
+                      <AppShell>{children}</AppShell>
+                    </SavedProvider>
                   </StanceDataProvider>
                 </RegistrationProvider>
               </AccountDeletionProvider>
