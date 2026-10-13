@@ -92,6 +92,12 @@ export type SettingsRowProps = {
   onOpen?: () => void;
   /** The row's own accessible description, where a busy word needs one. */
   busy?: boolean;
+  /**
+   * THE LOCKED LOOK (Settings.md:157): visibly inactive at the disabled
+   * opacity and STILL TAPPABLE, because the tap is how the row says why —
+   * its answer is the caller's (a snackbar). Announced as unavailable.
+   */
+  locked?: boolean;
   node?: DataNode;
   rowRef?: Ref<HTMLElement>;
 };
@@ -110,6 +116,7 @@ export function SettingsRow({
   inert = false,
   onOpen,
   busy = false,
+  locked = false,
   node,
   rowRef,
 }: SettingsRowProps) {
@@ -224,8 +231,8 @@ export function SettingsRow({
       type="button"
       onClick={busy ? undefined : onOpen}
       aria-busy={busy || undefined}
-      aria-disabled={busy || undefined}
-      className={`${ROW} cg-state cg-focus cursor-pointer`}
+      aria-disabled={busy || locked || undefined}
+      className={`${ROW} cg-state cg-focus cursor-pointer ${locked ? "opacity-[var(--state-disabled)]" : ""}`}
       {...testAttributes(node)}
     >
       {words}

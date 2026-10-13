@@ -1,6 +1,6 @@
 # Settings · `spec:design:behavior-settings`
 
-ALWAYS settings is one scrolling page, its groups in the ruled order: Theme, Giving an opinion, Writing, Reading, People, Sensitive content, Key backup, Sessions, Credentials, About, the sign-out group, the delete-account group
+ALWAYS settings is one scrolling page, its groups in the ruled order: Theme, Giving an opinion, Writing, Reading, People, Sensitive content, Key backup, Clearing data, Sessions, Credentials, About, the sign-out group, the delete-account group
 
 ALWAYS settings carries no bottom bar
 
@@ -136,6 +136,20 @@ ALWAYS settings.backup.footnote reads Your key signs everything you publish and 
 
 ALWAYS settings.backup.footnote reads Your key signs everything you publish and lives only in this browser. Until you make a recovery code, it can't be brought back. on the web and Your key signs everything you publish and lives only in this app. Until you make a recovery code, it can't be brought back. on android GIVEN no recovery code exists
 
+ALWAYS settings.clearing.footnote reads Your key lives only in this browser. Clear CoGra's data here and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in. on the web and Your key lives only in this app. Clear the app's data, or uninstall it without keeping the data, and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in. on android GIVEN a recovery code exists
+
+ALWAYS settings.clearing.footnote reads Your key lives only in this browser, and it has no recovery code yet. Clear CoGra's data here and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in. on the web and Your key lives only in this app, and it has no recovery code yet. Clear the app's data, or uninstall it without keeping the data, and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in. on android GIVEN no recovery code exists
+
+ALWAYS settings.clearing.footnote opens on the key and says the account is gone for good before it names anything else that goes
+
+ALWAYS settings.clearing carries one row, settings.clearing.erase, reading Erase everything from this browser on the web and Erase everything from this app on android, quiet like Sign out and in no error colour
+
+WHEN tap settings.clearing.erase -> the dialog Erase everything from this browser? opens over settings AND NEVER anything is erased before an answer
+
+WHEN tap Manage space on the phone's own storage screen for CoGra on android -> settings opens with settings.clearing in view AND NEVER anything is cleared
+
+WHEN uninstalling CoGra on android -> the phone's own uninstall dialog offers to keep the app's data
+
 WHEN tap Don't remember this account on this device -> the switch flips AND NEVER a dialog asks AND NEVER the reader is signed out
 
 ALWAYS the login form carries the same Don't remember this account on this device
@@ -148,12 +162,14 @@ WHEN tap Sign out GIVEN the don't-remember switch is on and this device holds th
 
 WHEN the sign-out has not answered 200ms after the press -> Sign out reads Signing out… in its own place AND NEVER a spinner appears
 
-ALWAYS the deletion group's footnote reads Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you. GIVEN the reader is a member and no deletion is in its grace
+ALWAYS the deletion group's footnote reads Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you. GIVEN User.deletionPath reads BY_LINK and no deletion is in its grace
 
-ALWAYS the deletion group's footnote reads Nothing is deleted here. The next screen says what goes and what stays. GIVEN the reader is an applicant
+ALWAYS the deletion group's footnote reads Nothing is deleted here. The next screen says what goes and what stays. GIVEN User.deletionPath reads IMMEDIATE or LOCKED
 
-WHEN tap Delete account GIVEN no deletion is in its grace -> the deletion's request screen opens AND NEVER anything is deleted from the row
+ALWAYS the Delete account row's state reads User.deletionPath, the one value the server computes, and never the application's fields
 
-ALWAYS Delete account wears the locked look, visibly inactive at the disabled opacity and still tappable GIVEN the reader is an applicant whose application is approved and whose registration has not landed
+WHEN tap Delete account GIVEN User.deletionPath reads IMMEDIATE or BY_LINK and no deletion is in its grace -> the deletion's request screen opens AND NEVER anything is deleted from the row
 
-WHEN tap Delete account GIVEN the reader is an applicant whose application is approved and whose registration has not landed -> the snackbar reads You can delete your account once you're in. AND NEVER the deletion's request screen opens AND NEVER anything is deleted
+ALWAYS Delete account wears the locked look, visibly inactive at the disabled opacity and still tappable GIVEN User.deletionPath reads LOCKED
+
+WHEN tap Delete account GIVEN User.deletionPath reads LOCKED -> the snackbar reads You can delete your account once your registration lands. AND NEVER the deletion's request screen opens AND NEVER anything is deleted

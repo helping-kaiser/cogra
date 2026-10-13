@@ -3,6 +3,7 @@
 // SignOutConfirm.md).
 
 import type { SessionView, SettingsAccount } from "@/lib/api/settings-api";
+import { CANCELED } from "@/lib/deletion/deletion-copy";
 import { ladderAge } from "@/lib/ui/timestamp";
 
 /** Where the Email row opens. */
@@ -73,7 +74,13 @@ export function sessionLabel(session: SessionView): string {
 }
 
 /** What a subpage hands back to the page it returns to (`?done=`). */
-export type SettingsNotice = "password" | "handle" | "email" | "canceled" | "applicantSent";
+export type SettingsNotice =
+  | "password"
+  | "handle"
+  | "email"
+  | "canceled"
+  | "applicantSent"
+  | "deletionCanceled";
 
 export function settingsNoticeOf(value: string | null): SettingsNotice | null {
   switch (value) {
@@ -82,6 +89,7 @@ export function settingsNoticeOf(value: string | null): SettingsNotice | null {
     case "email":
     case "canceled":
     case "applicantSent":
+    case "deletionCanceled":
       return value;
     default:
       return null;
@@ -107,5 +115,8 @@ export function noticeMessage(notice: SettingsNotice, account: SettingsAccount):
       const to = account.pendingEmailChange?.newEmail;
       return to ? `Sent — the link is on its way to ${to}.` : null;
     }
+    case "deletionCanceled":
+      // The grace page's Cancel, answered where it returns (DeleteAccountPending.md:11).
+      return CANCELED;
   }
 }
