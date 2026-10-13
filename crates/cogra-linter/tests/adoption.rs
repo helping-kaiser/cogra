@@ -1185,6 +1185,7 @@ fn the_enforcement_section_round_trips() {
             PathPrefix::new("crates/common/"),
             PathPrefix::new("crates/api/"),
             PathPrefix::new("crates/ranker/"),
+            PathPrefix::new("crates/ranker-server/"),
             PathPrefix::new("docs/"),
             PathPrefix::new("web/"),
             PathPrefix::new("android/"),
@@ -2060,6 +2061,7 @@ fn the_ruled_claim_discipline_names_its_activated_owners() {
         "pkg.l1-standin",
         "pkg.postgres-store",
         "pkg.ranker",
+        "pkg.ranker-server",
     ]
     .into_iter()
     .filter(|owner| declared.activation.admits(&OwnerId::new(owner)))
