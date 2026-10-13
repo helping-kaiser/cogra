@@ -27,8 +27,6 @@ fn unlimited(pool: PgPool) -> WireRig {
     WireRig::new(pool, api::ratelimit::RateLimitConfig::unlimited())
 }
 
-// ---------------------------------------------------------------- members
-
 /// A seeded, funded member with a device key, logged in.
 struct Member {
     id: Uuid,
@@ -55,8 +53,6 @@ fn refused(payload: &Value) -> Vec<Value> {
         .cloned()
         .unwrap_or_default()
 }
-
-// ---------------------------------------------------------------- content
 
 const LICENSE: &str = r#"{ "attribution": 1.0, "provenance": 0.0 }"#;
 
@@ -193,8 +189,6 @@ async fn sever(rig: &WireRig, who: &Member, target: Uuid) {
     land(rig, who, &payload["writes"]).await;
 }
 
-// ------------------------------------------------------------------ reads
-
 const READ: &str = r#"query($first: Int, $after: String) {
   me {
     id
@@ -294,8 +288,6 @@ async fn unhide(pool: &PgPool, viewer: Uuid, hidden: Uuid) {
         .await
         .expect("unhide");
 }
-
-// ------------------------------------------------------------- applicants
 
 const CREATE_INVITE_LINK: &str = "mutation($input: CreateInviteLinkInput!) {
     createInviteLink(input: $input) { inviteLink { id } userErrors { code } }
@@ -485,9 +477,7 @@ fn of_kind(me: &Value, kind: &str) -> Vec<Value> {
     rows(me).into_iter().filter(|r| r["kind"] == kind).collect()
 }
 
-// =================================================================== codes
-
-/// `markNotificationsSeen` without a session is a transport-tier UNAUTHENTICATED.
+/// Marking the list seen without a session is a transport-tier UNAUTHENTICATED.
 /// ´claim:notifications:marking-seen-needs-a-session´
 #[sqlx::test(migrations = "../../migrations")]
 async fn marking_seen_without_a_session_is_unauthenticated(pool: PgPool) {
@@ -502,7 +492,7 @@ async fn marking_seen_without_a_session_is_unauthenticated(pool: PgPool) {
     assert_eq!(transport_code(&raw).as_deref(), Some("UNAUTHENTICATED"));
 }
 
-/// `markNotificationRead` without a session is a transport-tier UNAUTHENTICATED.
+/// Marking a row read without a session is a transport-tier UNAUTHENTICATED.
 /// ´claim:notifications:marking-read-needs-a-session´
 #[sqlx::test(migrations = "../../migrations")]
 async fn marking_read_without_a_session_is_unauthenticated(pool: PgPool) {
@@ -610,8 +600,6 @@ async fn marking_seen_through_a_future_moment_is_bad_input(pool: PgPool) {
     );
 }
 
-// ============================================================ record kinds
-
 /// A comment on the viewer's post reports the comment, on the post, from its Review.
 /// ´claim:notifications:a-comment-on-my-post-notifies-me´
 #[sqlx::test(migrations = "../../migrations")]
@@ -692,6 +680,9 @@ async fn a_mention_notifies_the_profile_owner(pool: PgPool) {
     assert_eq!(row["record"]["family"], "REFERENCE");
 }
 
+/// The decision funds and stages the Registration while the vouch stays
+/// unsigned, so the Profile lands and the account stays an applicant.
+///
 /// An applicant is an addressee: a mention of its registered profile reaches it.
 /// ´claim:notifications:an-applicant-is-mentioned´
 #[sqlx::test(migrations = "../../migrations")]
@@ -700,8 +691,6 @@ async fn an_applicant_is_mentioned_and_notified(pool: PgPool) {
     let mira = member(&rig, "mira").await;
     let noa = applicant(&rig, &mira, "noa").await;
     let key = prove(&rig, &noa).await;
-    // The decision funds and stages the Registration; the vouch stays
-    // unsigned, so the Profile lands while the account stays an applicant.
     decide(&rig, &mira, &noa.application).await;
     sign_registration_and_land(&rig, &noa, &key).await;
     let state = rig.gql(Some(&noa.token), MY_APPLICATION, json!({})).await;
@@ -803,6 +792,9 @@ async fn a_comment_edit_never_notifies(pool: PgPool) {
     assert_eq!(kinds_of(&rig, &ada.token).await, vec!["COMMENT"]);
 }
 
+/// The closing ceremony's Registration reports nothing to anyone; the
+/// voucher's one landing row is the transition's.
+///
 /// Tags, affinities, the author's own publishes and an admission Registration write no row.
 /// ´claim:notifications:tags-affinities-publishes-and-registrations-never-notify´
 #[sqlx::test(migrations = "../../migrations")]
@@ -840,8 +832,6 @@ async fn tags_affinities_publishes_and_registrations_never_notify(pool: PgPool) 
     assert!(kinds_of(&rig, &ada.token).await.is_empty());
     assert!(kinds_of(&rig, &bo.token).await.is_empty());
 
-    // A whole entry ceremony: the Registration reports nothing to anyone;
-    // the voucher's one landing row is the transition's.
     let noa = applicant(&rig, &ada, "noa").await;
     let key = prove(&rig, &noa).await;
     vouch(&rig, &ada, &noa.application).await;
@@ -872,8 +862,6 @@ async fn my_own_acts_never_notify_me(pool: PgPool) {
     .await;
     assert!(self_row.is_err(), "the CHECK refuses a self row");
 }
-
-// ======================================================= one act, one row
 
 /// A comment that also mentions the post's author reports once, as the comment.
 /// ´claim:notifications:a-comment-that-mentions-me-writes-one-row´
@@ -914,8 +902,6 @@ async fn a_later_standalone_citation_is_its_own_row(pool: PgPool) {
         vec!["CITATION", "MENTION"]
     );
 }
-
-// ====================================================== revisions (PR-59)
 
 /// A revised opinion on the viewer's profile is a new act and a new row, wearing the new pair.
 /// ´claim:notifications:a-revised-opinion-is-a-new-row´
@@ -974,8 +960,6 @@ async fn an_opinion_withdrawal_never_notifies(pool: PgPool) {
     assert_eq!(kinds_of(&rig, &ada.token).await, vec!["PROFILE_OPINION"]);
 }
 
-// ===================================================== idempotent writer
-
 /// A mirror rebuild re-ingests every epoch and writes nothing twice; rows keep their ids, times and read marks.
 /// ´claim:notifications:a-rebuild-writes-no-duplicate-rows´
 #[sqlx::test(migrations = "../../migrations")]
@@ -1015,6 +999,9 @@ async fn rebuilding_the_mirror_writes_no_duplicate_rows(pool: PgPool) {
     assert!(after.iter().any(|r| r.read_at.is_some()));
 }
 
+/// Two epochs are published and the pass stops after the first; the next
+/// pass resumes from the cursor.
+///
 /// Ingestion resumes from the cursor after a stop between epochs, and no epoch's rows are skipped or doubled.
 /// ´claim:notifications:a-crash-between-epochs-skips-no-rows´
 #[sqlx::test(migrations = "../../migrations")]
@@ -1023,8 +1010,6 @@ async fn a_crash_between_epochs_skips_no_rows(pool: PgPool) {
     let ada = member(&rig, "ada").await;
     let bo = member(&rig, "bo").await;
     let p = post(&rig, &ada, "Mine", json!([])).await;
-
-    // Two epochs published, the pass stopped after the first.
     let first = rig
         .gql(
             Some(&bo.token),
@@ -1064,8 +1049,6 @@ async fn a_crash_between_epochs_skips_no_rows(pool: PgPool) {
         vec!["PROFILE_OPINION", "COMMENT"]
     );
 }
-
-// ========================================================== transitions
 
 /// The second approvability proof notifies the path's approver, whichever proof comes second.
 /// ´claim:notifications:approvability-notifies-the-approver´
@@ -1368,8 +1351,6 @@ async fn closing_a_links_queue_notifies_each_applicant(pool: PgPool) {
     );
 }
 
-// ============================================================= applicants
-
 /// An applicant reads its own list and its bell like a member does.
 /// ´claim:notifications:an-applicant-reads-its-notifications´
 #[sqlx::test(migrations = "../../migrations")]
@@ -1415,8 +1396,6 @@ async fn an_unverified_applicant_reads_its_closed_application_row(pool: PgPool) 
     );
 }
 
-// ================================================================= PR-11
-
 /// A hidden actor's rows leave the list, its count and the bell at once.
 /// ´claim:notifications:a-hidden-actors-rows-leave-the-list-and-the-bell´
 #[sqlx::test(migrations = "../../migrations")]
@@ -1453,8 +1432,6 @@ async fn an_unhidden_actors_rows_return_in_their_place(pool: PgPool) {
     unhide(&rig.pool, ada.id, bo.id).await;
     assert_eq!(ids(&read(&rig, &ada.token).await), all);
 }
-
-// ============================================================ read state
 
 /// Opening clears the bell and leaves every row's own unread emphasis.
 /// ´claim:notifications:opening-clears-the-bell-not-the-rows´
@@ -1581,8 +1558,6 @@ async fn marking_writes_no_staged_write_and_no_record(pool: PgPool) {
     assert_eq!(count("mirror_records").await, records);
 }
 
-// ======================================================== order / paging
-
 /// The list reads newest first, one flat sequence.
 /// ´claim:notifications:the-list-reads-newest-first´
 #[sqlx::test(migrations = "../../migrations")]
@@ -1638,8 +1613,6 @@ async fn a_row_arriving_mid_scroll_never_shifts_the_next_page(pool: PgPool) {
     assert_eq!(next["notifications"]["pageInfo"]["hasNextPage"], false);
 }
 
-// =========================================================== viewer-only
-
 /// Another reader and an anonymous one read a null list and a quiet bell.
 /// ´claim:notifications:notifications-are-viewer-only´
 #[sqlx::test(migrations = "../../migrations")]
@@ -1658,8 +1631,8 @@ async fn notifications_are_viewer_only(pool: PgPool) {
     }
 }
 
-// ============================================================== deletion
-
+/// The reaper's twin is a never-verified applicant whose close told it.
+///
 /// An applicant deleting itself, or reaped unverified, takes the rows naming it — no FK wedges either.
 /// ´claim:notifications:an-applicants-deletion-takes-its-rows´
 #[sqlx::test(migrations = "../../migrations")]
@@ -1682,7 +1655,6 @@ async fn deleting_an_applicant_takes_their_approvable_row_with_them(pool: PgPool
     assert_eq!(deleted["deleteApplicantAccount"]["ok"], true, "{deleted}");
     assert!(kinds_of(&rig, &mira.token).await.is_empty());
 
-    // The reaper's twin: a never-verified applicant whose close told it.
     let ivy = applicant(&rig, &mira, "ivy").await;
     rig.gql(
         Some(&mira.token),
@@ -1710,8 +1682,6 @@ async fn deleting_an_applicant_takes_their_approvable_row_with_them(pool: PgPool
             .is_empty()
     );
 }
-
-// ======================================================= removed subject
 
 /// A removed subject keeps its row, and reads its removal mark through the ordinary read path.
 /// ´claim:notifications:a-removed-subject-keeps-its-row´

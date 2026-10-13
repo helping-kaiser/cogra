@@ -15,7 +15,6 @@ pub mod loaders;
 pub mod mailer;
 pub mod media;
 pub mod nodes;
-pub mod notifications;
 pub mod onboarding;
 pub mod prepare;
 pub mod profile;

@@ -1,17 +1,20 @@
-//! ´mod:module:schema-notifications´
+//! ´mod:module:notifications´
 //!
 //! The notification list's GraphQL vocabulary (api-spec.md "Private
 //! viewer state"; notifications.md "The contract"): the row, its kind,
-//! the connection `User.notifications` serves, and the two read-state
-//! mutations' inputs and payloads.
+//! the connection `User.notifications` serves with its keyset cursor, and
+//! the two read-state mutations' inputs and payloads. The writers and the
+//! read law live in the store (`postgres_store::notifications`).
 
 use std::collections::HashMap;
 
 use async_graphql::connection::{Connection, Edge};
 use async_graphql::dataloader::DataLoader;
 use async_graphql::{Context, Enum, InputObject, Object, SimpleObject};
+use base64::Engine;
+use base64::engine::general_purpose::STANDARD as B64;
 use chrono::{DateTime, Utc};
-use postgres_store::notifications::{self as store, Kind};
+use postgres_store::notifications::{self as store, Kind, NotificationCursor};
 use postgres_store::{PgPool, auth as auth_store, mirror};
 use uuid::Uuid;
 
@@ -137,9 +140,6 @@ impl NotificationType {
         if self.row.subject_id.is_some() {
             return Ok(None);
         }
-        // A content row whose node had no display row when the row was
-        // written resolves through its record: the minted comment, or the
-        // citing artifact.
         let leg = match self.kind {
             Kind::Comment | Kind::Reply => "t",
             Kind::Mention | Kind::Citation => "a",
@@ -198,6 +198,10 @@ impl NotificationType {
 }
 
 impl NotificationType {
+    /// The row's record from the mirror. Besides `record`, `subject` reads
+    /// it: a content row whose node had no display row when the row was
+    /// written resolves through the record instead — the minted comment's
+    /// terminal leg, or the citing artifact's A leg.
     async fn record_full(
         &self,
         ctx: &Context<'_>,
@@ -322,10 +326,9 @@ pub(crate) async fn page(
         .map_err(|e| super::query::bad_input(e.message))?;
     let backward = last.is_some() || before.is_some();
     let cursor = match if backward { &before } else { &after } {
-        Some(raw) => Some(
-            crate::notifications::decode_cursor(raw)
-                .ok_or_else(|| super::query::bad_input("invalid cursor"))?,
-        ),
+        Some(raw) => {
+            Some(decode_cursor(raw).ok_or_else(|| super::query::bad_input("invalid cursor"))?)
+        }
         None => None,
     };
     let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
@@ -352,7 +355,7 @@ pub(crate) async fn page(
         hydrate(pool, rows)
             .await?
             .into_iter()
-            .map(|item| Edge::new(crate::notifications::encode_cursor(item.row.cursor()), item)),
+            .map(|item| Edge::new(encode_cursor(item.row.cursor()), item)),
     );
     Ok(connection)
 }
@@ -388,4 +391,54 @@ pub struct MarkNotificationReadInput {
 pub struct MarkNotificationReadPayload {
     pub notification: Option<NotificationType>,
     pub user_errors: Vec<UserError>,
+}
+
+/// A cursor as the wire carries it: opaque per the Relay spec.
+pub fn encode_cursor(cursor: NotificationCursor) -> String {
+    B64.encode(format!(
+        "notifications:{}:{}",
+        cursor.created_at.timestamp_micros(),
+        cursor.id
+    ))
+}
+
+/// A wire cursor back to its position; None for anything this list did
+/// not issue.
+pub fn decode_cursor(cursor: &str) -> Option<NotificationCursor> {
+    let text = String::from_utf8(B64.decode(cursor).ok()?).ok()?;
+    let mut parts = text.split(':');
+    let (Some("notifications"), Some(micros), Some(id), None) =
+        (parts.next(), parts.next(), parts.next(), parts.next())
+    else {
+        return None;
+    };
+    Some(NotificationCursor {
+        created_at: DateTime::from_timestamp_micros(micros.parse().ok()?)?,
+        id: Uuid::parse_str(id).ok()?,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A notification cursor decodes back to its position, and one this list did not issue decodes to nothing.
+    /// ´claim:notifications:a-notification-cursor-round-trips´
+    #[test]
+    fn a_notification_cursor_round_trips_and_a_foreign_one_does_not_decode() {
+        let cursor = NotificationCursor {
+            created_at: DateTime::from_timestamp_micros(1_791_354_394_123_456).expect("instant"),
+            id: Uuid::new_v4(),
+        };
+        assert_eq!(decode_cursor(&encode_cursor(cursor)), Some(cursor));
+        for foreign in [
+            "garbage",
+            &B64.encode("history:0:00000000-0000-0000-0000-000000000000"),
+            &B64.encode("notifications:x:00000000-0000-0000-0000-000000000000"),
+            &B64.encode("notifications:0:not-a-uuid"),
+            &B64.encode("notifications:0:00000000-0000-0000-0000-000000000000:extra"),
+        ] {
+            assert_eq!(decode_cursor(foreign), None, "{foreign}");
+        }
+    }
 }

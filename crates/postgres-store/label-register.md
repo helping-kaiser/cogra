@@ -97,6 +97,7 @@ label.
 | `test:unit:a-settled-walk-never-asks-the-pending-branch`                             | a_settled_walk_never_asks_the_pending_branch                      |
 | `test:unit:a-sort-key-falls-back-to-the-authoring-instant`                           | a_sort_key_falls_back_to_the_authoring_instant                    |
 | `test:unit:account-states-round-trip-through-their-column-form`                      | account_states_round_trip_through_their_column_form               |
+| `test:unit:every-kind-round-trips-through-its-column-spelling`                       | every_kind_round_trips_through_its_column_spelling                |
 | `test:unit:every-pending-key-outranks-every-landed-one`                              | every_pending_key_outranks_every_landed_one                       |
 | `test:unit:every-state-round-trips-through-its-column-form`                          | every_state_round_trips_through_its_column_form                   |
 | `test:unit:only-a-findable-pending-cursor-is-re-read`                                | only_a_findable_pending_cursor_is_re_read                         |
