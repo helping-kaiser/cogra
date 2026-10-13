@@ -505,6 +505,12 @@ data class PostView(
      * page's.
      */
     val commentCount: Int = 0,
+    /**
+     * When the reader saved this post; null when it is not kept. What the
+     * menu's first row reads (`Save` / `Unsave`) — and nothing else does:
+     * the card shows no saved mark anywhere.
+     */
+    val viewerBookmarkedAt: Instant? = null,
 ) {
     /** The body is media rather than words (D16). */
     val isMediaPost: Boolean get() = attachments.isNotEmpty()
@@ -559,6 +565,8 @@ data class CommentView(
      * reason, and when the payload is gone.
      */
     val sensitiveReason: String? = null,
+    /** When the reader saved this comment; null when not kept — the comment menu's first row. */
+    val viewerBookmarkedAt: Instant? = null,
 )
 
 /**
@@ -799,7 +807,15 @@ data class ProfileView(
      * version it asked for from the one it already had.
      */
     val updatedAt: Instant = Instant.EPOCH,
-)
+    /** When the reader saved this person; null when not kept — the profile menu's first row. */
+    val viewerBookmarkedAt: Instant? = null,
+) {
+    /**
+     * A deleted account: the wire serves null values and the REDACTED mark
+     * (ER-G10, design digest item 19), and every surface reads it off that.
+     */
+    val deleted: Boolean get() = displayName.status == FieldStatus.REDACTED
+}
 
 /** A tappable link from a chronicle row into the content it touched. */
 sealed interface RecordLink {

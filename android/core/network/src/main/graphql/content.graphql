@@ -251,6 +251,25 @@ query CommentForEdit($id: UUID!) {
   }
 }
 
+# LANDING ON A COMMENT (Saved.md; jakob 2026-10-01): one step up a comment's
+# chain — what it answers. A reply sits behind its parent's collapsed count, so
+# the thread walks up to the top level and unfolds each branch on the way down.
+# web's twin is web/src/lib/graphql/content.graphql `CommentParent`.
+query CommentParent($id: UUID!) {
+  comment(id: $id) {
+    id
+    target {
+      __typename
+      ... on Comment {
+        id
+      }
+      ... on Post {
+        id
+      }
+    }
+  }
+}
+
 # The thread read (Q49). Replies are **counted, not carried**: the
 # board shows them collapsed behind "View n replies", and the count is
 # `totalCount` — cursor-independent, and filtered exactly as the edges
