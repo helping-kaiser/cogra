@@ -50,6 +50,7 @@ import androidx.navigation.toRoute
 import com.cogra.app.BuildConfig
 import com.cogra.app.R
 import com.cogra.app.ui.CograBottomBar
+import com.cogra.app.ui.DeviceLockKeeper
 import com.cogra.app.ui.SecurityNoticeHost
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.DataNode
@@ -600,6 +601,8 @@ private fun CograNavGraphContent(
     // Above the NavHost so the login security notice shows wherever
     // the post-login navigation lands (auth.md "Reuse detection").
     SecurityNoticeHost()
+    // The device lock's start-time duties (sign-out-custody §3.4-§3.5).
+    DeviceLockKeeper()
 
     // The guest prompt behind an account-needing slot (design.md §6):
     // ask, never bounce — the reader picks the auth flow or stays put.

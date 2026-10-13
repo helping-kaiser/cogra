@@ -38,13 +38,14 @@ import { composeDraftStore, type ComposeDraftStore } from "@/lib/compose/draft-s
 import { LOCKED_ROW, settingsRowStatus } from "@/lib/deletion/deletion-copy";
 import { useAccountDeletion } from "@/lib/deletion/deletion-status";
 import { sealedDraftStore, type SealedDraftStore } from "@/lib/compose/sealed-draft";
+import type { DeviceLockEngine } from "@/lib/identity/device-lock";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { seenRecord } from "@/lib/history/seen-record";
 import { forgetSeen } from "@/lib/history/seen-sync";
 import { useKeyOnDeviceState } from "@/lib/identity/use-key-on-device";
 import { licenseName, PUBLIC_DOMAIN, type License } from "@/lib/license";
 import { useTokenStore } from "@/lib/session/provider";
-import { useAuthGuard } from "@/lib/session/runtime";
+import { useAuthGuard, useDeviceLock } from "@/lib/session/runtime";
 import { eraseEverything } from "@/lib/settings/erase-everything";
 import {
   applyTheme,
@@ -152,6 +153,7 @@ export function SettingsView({
   forgetSeenRecord = (account: string) => forgetSeen(seenRecord, account),
   erase = eraseEverything,
   leave = hardNavigate,
+  deviceLock,
 }: {
   /** Test injection. */
   store?: IdentityStore;
@@ -161,10 +163,28 @@ export function SettingsView({
   forgetSeenRecord?: (account: string) => Promise<void>;
   erase?: () => Promise<void>;
   leave?: (url: string) => void;
+  deviceLock?: Pick<DeviceLockEngine, "ensureHeld" | "discard">;
 } = {}) {
   const client = useApolloClient();
   const guard = useAuthGuard();
   const tokens = useTokenStore();
+  const clientLock = useDeviceLock();
+  const lock = deviceLock ?? clientLock;
+
+  /**
+   * The opt-in's lock ends with it (sign-out-custody §3.3: discarded when
+   * the switch turns off, the slot is erased, or purged). Best effort, and
+   * never in the way of what the reader asked for.
+   */
+  const discardLock = async () => {
+    const account = tokens.activeAccountId();
+    if (account === null) return;
+    try {
+      await lock.discard(account);
+    } catch {
+      // an orphaned server half opens nothing, and dies with the account
+    }
+  };
   const router = useRouter();
   const notice = settingsNoticeOf(useSearchParams().get("done"));
   const keyOnDevice = useKeyOnDeviceState(store);
@@ -367,6 +387,7 @@ export function SettingsView({
     setSigningOut(true);
     // Best-effort self-revocation: an unreachable server never blocks signing
     // out (auth.md "Sign-out").
+    if (purge) await discardLock();
     await guard.run(() => revokeSession(client, null));
     if (purge) await purgeCustody();
     // Clearing the tokens flips the phase; the (app) gate replaces the
@@ -399,6 +420,19 @@ export function SettingsView({
       await store.setEphemeral(next);
     } catch {
       setForget(!next);
+      return;
+    }
+    // The switch flips with no dialog and never waits on the network
+    // (Settings.md:119): the lock follows behind, best effort — obtained
+    // when on (retried at the next start if it did not arrive), discarded
+    // when off (sign-out-custody §3.4).
+    const account = tokens.activeAccountId();
+    if (account === null) return;
+    try {
+      if (next) await lock.ensureHeld(account);
+      else await lock.discard(account);
+    } catch {
+      // the next start retries the hold; a stale server half opens nothing
     }
   };
 
@@ -412,6 +446,9 @@ export function SettingsView({
   const onEraseEverything = async () => {
     setEraseOpen(false);
     setSigningOut(true);
+    // The erase gains one step (sign-out-custody §3.5 ERASE): the lock's
+    // server half is discarded while a session still exists to name it.
+    await discardLock();
     await guard.run(() => revokeSession(client, null));
     try {
       await erase();

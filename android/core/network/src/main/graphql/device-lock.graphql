@@ -1,0 +1,34 @@
+# The device lock's three verbs (auth.md "Device lock"): issue while
+# signed in with "don't remember" on, release behind the current password
+# at sign-in, discard when the opt-in ends. Mirrors the web operation set
+# (web/src/lib/graphql).
+
+mutation IssueDeviceLock {
+  issueDeviceLock {
+    lock {
+      id
+      secret
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation ReleaseDeviceLock($input: ReleaseDeviceLockInput!) {
+  releaseDeviceLock(input: $input) {
+    secret
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation DiscardDeviceLock($input: DiscardDeviceLockInput!) {
+  discardDeviceLock(input: $input) {
+    ok
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}

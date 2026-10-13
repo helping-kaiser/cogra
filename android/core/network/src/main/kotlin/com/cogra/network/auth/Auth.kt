@@ -45,6 +45,14 @@ class SessionUnreadableException : Exception("the session store holds a record i
 /** The header a call sets to skip the gate — stripped before the wire. */
 internal const val SESSION_BYPASS_HEADER = "X-Cogra-Session-Bypass"
 
+/**
+ * The header a call sets to carry an access token of its own INSTEAD of the
+ * stored session's — the device lock's sign-in leg, which runs before the
+ * fresh pair is stored (sign-out-custody §3.5). Stripped before the wire;
+ * the gate is not consulted, since the session it rides is not the store's.
+ */
+internal const val EXPLICIT_BEARER_HEADER = "X-Cogra-Explicit-Bearer"
+
 /** Refresh this far before `exp` rather than sending a token about to die. */
 private const val CLOCK_SKEW_SECONDS = 30L
 
@@ -136,6 +144,15 @@ private fun expiry(access: String): Long? {
 /** Adds `Authorization: Bearer <access>` for every request the gate resolves. */
 class BearerInterceptor(private val gate: SessionGate) : HttpInterceptor {
     override suspend fun intercept(request: HttpRequest, chain: HttpInterceptorChain): HttpResponse {
+        val explicit = request.headers.firstOrNull { it.name == EXPLICIT_BEARER_HEADER }?.value
+        if (explicit != null) {
+            return chain.proceed(
+                request.newBuilder()
+                    .headers(request.headers.filterNot { it.name == EXPLICIT_BEARER_HEADER })
+                    .addHeader("Authorization", "Bearer $explicit")
+                    .build(),
+            )
+        }
         val bypass = request.headers.any { it.name == SESSION_BYPASS_HEADER }
         val outgoing = if (bypass) {
             request.newBuilder()
@@ -206,7 +223,8 @@ class SessionRefresher @Inject constructor(
             }
             is Outcome.Refused -> {
                 // Ending the session locally honors the account's
-                // "don't remember me" opt-in, exactly like sign-out.
+                // "don't remember me" opt-in: locked, or a backed key
+                // purged — never asked (sign-out-custody §3.6).
                 if (outcome.has(ErrorCode.REFRESH_TOKEN_INVALID)) endLocalSession.end()
                 false
             }

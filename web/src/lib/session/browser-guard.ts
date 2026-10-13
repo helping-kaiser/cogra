@@ -14,13 +14,20 @@
 import type { ApolloClient, ApolloLink } from "@apollo/client";
 
 import { refreshExecutor } from "@/lib/api/auth-api";
+import { discardDeviceLock, issueDeviceLock, releaseDeviceLock } from "@/lib/api/device-lock-api";
+import type { Outcome } from "@/lib/api/outcome";
 import { authorizedLink } from "@/lib/apollo-link";
+import { composeDraftStore } from "@/lib/compose/draft-store";
+import { seenRecord } from "@/lib/history/seen-record";
+import { forgetSeen } from "@/lib/history/seen-sync";
+import { createDeviceLockEngine, type DeviceLockEngine } from "@/lib/identity/device-lock";
 import { identityStore } from "@/lib/identity/store";
 import { createGuard, type AuthGuard } from "./guard";
 import { createRefresher } from "./refresher";
 import type { TokenStore } from "./token-store";
 
 const guards = new WeakMap<ApolloClient, AuthGuard>();
+const deviceLocks = new WeakMap<ApolloClient, DeviceLockEngine>();
 
 /**
  * Build a client over the authorized chain and give it its guard.
@@ -39,13 +46,35 @@ export function createGuardedClient<T extends ApolloClient>(
   // the null branch answers the type system rather than a race.
   let guard: AuthGuard | null = null;
   const client = make(authorizedLink(store, uri, () => guard?.prime() ?? Promise.resolve()));
+  // A call with no token of its own rides the tab's session, refreshed and
+  // replayed by the guard like any other; one with a token carries it.
+  const guarded = <T,>(accessToken: string | undefined, call: () => Promise<Outcome<T>>) =>
+    accessToken === undefined && guard !== null ? guard.run(call) : call();
+  const deviceLock = createDeviceLockEngine({
+    identity: identityStore,
+    drafts: composeDraftStore,
+    idb: () => indexedDB,
+    forgetSeen: (account) => forgetSeen(seenRecord, account),
+    api: {
+      issue: (token) => guarded(token, () => issueDeviceLock(client, token)),
+      release: (lock, password, token) =>
+        guarded(token, () => releaseDeviceLock(client, lock, password, token)),
+      discard: (lock, token) => guarded(token, () => discardDeviceLock(client, lock, token)),
+    },
+  });
   guard = createGuard(
     store,
-    // An invalidated session runs the "don't remember me" purge for its
-    // account before the tokens clear (auth.md "Sign-out").
-    createRefresher(store, refreshExecutor(client), () => identityStore.purgeIfEphemeral()),
+    // An invalidated session ends its account's custody here per the
+    // "don't remember me" opt-in — locked, or purged where a backup is
+    // known, never asked (sign-out-custody §3.6).
+    createRefresher(store, refreshExecutor(client), async (clearTokens) => {
+      const account = store.activeAccountId();
+      if (account === null) return;
+      await deviceLock.endLocalSession(account, clearTokens);
+    }),
   );
   guards.set(client, guard);
+  deviceLocks.set(client, deviceLock);
   return client;
 }
 
@@ -55,4 +84,13 @@ export function guardOf(client: ApolloClient): AuthGuard {
     throw new Error("this Apollo client carries no guard — build it with createGuardedClient");
   }
   return guard;
+}
+
+/** The device-lock engine built over this client (auth.md "Device lock"). */
+export function deviceLockOf(client: ApolloClient): DeviceLockEngine {
+  const engine = deviceLocks.get(client);
+  if (engine === undefined) {
+    throw new Error("this Apollo client carries no device lock — build it with createGuardedClient");
+  }
+  return engine;
 }

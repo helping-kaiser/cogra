@@ -8,7 +8,8 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
-import { guardOf } from "./browser-guard";
+import type { DeviceLockEngine } from "@/lib/identity/device-lock";
+import { deviceLockOf, guardOf } from "./browser-guard";
 import type { AuthGuard } from "./guard";
 
 const RuntimeContext = createContext<AuthGuard | null>(null);
@@ -22,4 +23,9 @@ export function useAuthGuard(): AuthGuard {
   const guard = useContext(RuntimeContext);
   if (guard === null) throw new Error("useAuthGuard requires an AuthRuntimeProvider");
   return guard;
+}
+
+/** The device-lock engine the browser client carries (auth.md "Device lock"). */
+export function useDeviceLock(): DeviceLockEngine {
+  return deviceLockOf(useApolloClient());
 }

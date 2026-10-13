@@ -3,6 +3,10 @@
     <string name="security_notice_title">Security notice</string>
     <string name="security_notice_reuse">A signed-out session token for your account was re-used on %1$s — likely token theft. All sessions were signed out as a precaution. If this wasn\'t you, consider changing your password.</string>
     <string name="security_notice_confirm">Got it</string>
+    <!-- PR-62's one-time notice (sign-out-custody SC-G2). PLACEHOLDER WORDS:
+         ruled "words are design's" (seam 179 item 3; vehicle ruled at seam
+         109 item 82) and not yet drawn; the drawn sentence replaces this. -->
+    <string name="lock_lost_notice_body">Your key was locked on this phone, but the lock can no longer be opened, so the locked copy is gone. If you made a recovery code, you can restore your key with it.</string>
     <string name="storage_notice_title">Secure storage problem</string>
     <string name="storage_notice_body">Some of this device\'s securely stored data could not be read and was treated as lost. You may have been signed out. If your actor key is missing after signing in, restore it from your backup.</string>
     <string name="bar_feed">Feed</string>

@@ -29,6 +29,8 @@
 
     <string name="error_generic">Something went wrong. Try again.</string>
     <string name="error_transport">Can\'t reach the server. Check your connection and try again.</string>
+    <!-- SignIn.md:71: no answer reached the device; Sign in is the retry. -->
+    <string name="login_no_answer">That didn\'t send. Try again.</string>
     <string name="error_rate_limited">Too many attempts — wait a moment and try again.</string>
     <string name="error_weak_password">Passwords need at least 12 characters and can\'t be a known breached password.</string>
 </resources>
