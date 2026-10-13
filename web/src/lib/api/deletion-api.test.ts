@@ -27,9 +27,18 @@ function userError(code: string, field: string[] | null = null) {
   return { __typename: "UserError", message: "refused", code, field };
 }
 
-function deletionPayload(field: string, accountDeletion: unknown, userErrors: unknown[] = []) {
-  return HttpResponse.json({
-    data: { [field]: { __typename: "AccountDeletionPayload", accountDeletion, userErrors } },
+/** A deletion verb answering one payload; `seen` collects each call's input. */
+function answers(
+  operation: string,
+  accountDeletion: object | null,
+  { userErrors = [] as object[], seen = [] as unknown[] } = {},
+) {
+  const field = operation.charAt(0).toLowerCase() + operation.slice(1);
+  return graphql.mutation(operation, ({ variables }) => {
+    seen.push(variables.input);
+    return HttpResponse.json({
+      data: { [field]: { __typename: "AccountDeletionPayload", accountDeletion, userErrors } },
+    });
   });
 }
 
@@ -57,15 +66,10 @@ describe("fetchDeletionStanding", () => {
 
 describe("requestAccountDeletion", () => {
   it("sends_the_sweep_choice_and_reads_a_null_deletion_as_success", async () => {
-    let sent: unknown = null;
-    server.use(
-      graphql.mutation("RequestAccountDeletion", ({ variables }) => {
-        sent = variables.input;
-        return deletionPayload("requestAccountDeletion", null);
-      }),
-    );
+    const seen: unknown[] = [];
+    server.use(answers("RequestAccountDeletion", null, { seen }));
     expect(await requestAccountDeletion(client(), true)).toEqual({ kind: "success", value: null });
-    expect(sent).toEqual({ includeContent: true });
+    expect(seen).toEqual([{ includeContent: true }]);
   });
 
   it("lifts_a_spent_budget_to_rate_limited", async () => {
@@ -81,12 +85,7 @@ describe("requestAccountDeletion", () => {
 describe("confirmAccountDeletion", () => {
   it("omits_include_content_unless_adding_the_sweep", async () => {
     const inputs: unknown[] = [];
-    server.use(
-      graphql.mutation("ConfirmAccountDeletion", ({ variables }) => {
-        inputs.push(variables.input);
-        return deletionPayload("confirmAccountDeletion", DELETION);
-      }),
-    );
+    server.use(answers("ConfirmAccountDeletion", DELETION, { seen: inputs }));
     expect((await confirmAccountDeletion(client(), "tok")).kind).toBe("success");
     expect((await confirmAccountDeletion(client(), "tok", true)).kind).toBe("success");
     expect(inputs).toEqual([{ deletionToken: "tok" }, { deletionToken: "tok", includeContent: true }]);
@@ -94,22 +93,22 @@ describe("confirmAccountDeletion", () => {
 
   it("refuses_a_dead_link_with_token_invalid", async () => {
     server.use(
-      graphql.mutation("ConfirmAccountDeletion", () =>
-        deletionPayload("confirmAccountDeletion", null, [userError("DELETION_TOKEN_INVALID", ["deletionToken"])]),
-      ),
+      answers("ConfirmAccountDeletion", null, {
+        userErrors: [userError("DELETION_TOKEN_INVALID", ["deletionToken"])],
+      }),
     );
     expect(hasCode(await confirmAccountDeletion(client(), "dead"), "DELETION_TOKEN_INVALID")).toBe(true);
   });
 
   it("treats_a_confirm_without_a_deletion_as_a_contract_break", async () => {
-    server.use(graphql.mutation("ConfirmAccountDeletion", () => deletionPayload("confirmAccountDeletion", null)));
+    server.use(answers("ConfirmAccountDeletion", null));
     expect((await confirmAccountDeletion(client(), "tok")).kind).toBe("failed");
   });
 });
 
 describe("cancelAccountDeletion", () => {
   it("is_idempotent_a_null_answer_is_success", async () => {
-    server.use(graphql.mutation("CancelAccountDeletion", () => deletionPayload("cancelAccountDeletion", null)));
+    server.use(answers("CancelAccountDeletion", null));
     expect(await cancelAccountDeletion(client())).toEqual({ kind: "success", value: true });
   });
 });
