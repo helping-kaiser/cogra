@@ -50,7 +50,10 @@ async fn land(rig: &WireRig, who: &Member, writes: &Value) {
 }
 
 fn refused(payload: &Value) -> Vec<Value> {
-    payload["userErrors"].as_array().cloned().unwrap_or_default()
+    payload["userErrors"]
+        .as_array()
+        .cloned()
+        .unwrap_or_default()
 }
 
 // ---------------------------------------------------------------- content
@@ -302,7 +305,8 @@ const REGISTER: &str = "mutation($input: RegisterInput!) {
     register(input: $input) { auth { accessToken user { id } } userErrors { code field } }
 }";
 
-const MY_APPLICATION: &str = "query { me { accountState askLink application { id approver { handle } } } }";
+const MY_APPLICATION: &str =
+    "query { me { accountState askLink application { id approver { handle } } } }";
 
 const APPROVE: &str = "mutation($input: ApproveApplicantsInput!) {
     approveApplicants(input: $input) { writes { id family canonicalProposal } userErrors { code field message } }
@@ -549,7 +553,10 @@ async fn marking_another_accounts_row_read_is_not_found(pool: PgPool) {
         )
         .await;
     assert_eq!(transport_code(&raw).as_deref(), Some("NOT_FOUND"));
-    assert_eq!(rows(&read(&rig, &ada.token).await)[0]["readAt"], Value::Null);
+    assert_eq!(
+        rows(&read(&rig, &ada.token).await)[0]["readAt"],
+        Value::Null
+    );
 }
 
 /// A page over the budget's cap is BAD_INPUT.
@@ -811,7 +818,11 @@ async fn tags_affinities_publishes_and_registrations_never_notify(pool: PgPool) 
             json!({ "input": { "target": p, "name": "gardening" } }),
         )
         .await;
-    assert_eq!(refused(&tagged["prepareTag"]), Vec::<Value>::new(), "{tagged}");
+    assert_eq!(
+        refused(&tagged["prepareTag"]),
+        Vec::<Value>::new(),
+        "{tagged}"
+    );
     land(&rig, &bo, &tagged["prepareTag"]["writes"]).await;
     let followed = rig
         .gql(
@@ -884,13 +895,7 @@ async fn a_post_that_mentions_me_and_cites_my_post_writes_one_row(pool: PgPool) 
     let ada = member(&rig, "ada").await;
     let bo = member(&rig, "bo").await;
     let p = post(&rig, &ada, "Mine", json!([])).await;
-    post(
-        &rig,
-        &bo,
-        "Both",
-        references(&[&ada.id.to_string(), &p]),
-    )
-    .await;
+    post(&rig, &bo, "Both", references(&[&ada.id.to_string(), &p])).await;
     assert_eq!(kinds_of(&rig, &ada.token).await, vec!["CITATION"]);
 }
 
@@ -1041,7 +1046,9 @@ async fn a_crash_between_epochs_skips_no_rows(pool: PgPool) {
         .await;
     rig.standin.close_epoch().await.expect("closes");
     let boundary = api::l1::StandInBoundary(rig.standin.clone());
-    let cursor = mirror::last_ingested_epoch(&rig.pool).await.expect("cursor");
+    let cursor = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
     let packages = boundary.epochs_since(cursor).await.expect("packages");
     assert_eq!(packages.len(), 2);
     mirror::ingest_epoch(&rig.pool, &packages[0])
@@ -1148,7 +1155,10 @@ async fn each_waiting_path_s_approver_is_notified(pool: PgPool) {
     assert_eq!(kinds(&at_kel), vec!["APPLICATION_APPROVABLE"]);
     assert_eq!(rows(&at_kel)[0]["application"]["id"], kels.as_str());
     let at_mira = read(&rig, &mira.token).await;
-    assert_eq!(rows(&at_mira)[0]["application"]["id"], noa.application.as_str());
+    assert_eq!(
+        rows(&at_mira)[0]["application"]["id"],
+        noa.application.as_str()
+    );
 }
 
 /// The voucher's taken signing tells the applicant — at the relay, before anything lands.
@@ -1273,7 +1283,10 @@ async fn only_the_winning_approver_gets_the_landed_row(pool: PgPool) {
     } else {
         (&kel, &mira)
     };
-    assert_eq!(of_kind(&read(&rig, &won.token).await, "INVITE_LANDED").len(), 1);
+    assert_eq!(
+        of_kind(&read(&rig, &won.token).await, "INVITE_LANDED").len(),
+        1
+    );
     assert!(of_kind(&read(&rig, &lost.token).await, "INVITE_LANDED").is_empty());
     assert_eq!(
         of_kind(&read(&rig, &noa.token).await, "APPLICATION_APPROVED").len(),
@@ -1586,7 +1599,13 @@ async fn notifications_read_newest_first(pool: PgPool) {
     assert_eq!(kinds(&me), vec!["MENTION", "PROFILE_OPINION", "COMMENT"]);
     let times: Vec<chrono::DateTime<chrono::Utc>> = rows(&me)
         .iter()
-        .map(|r| r["createdAt"].as_str().expect("at").parse().expect("instant"))
+        .map(|r| {
+            r["createdAt"]
+                .as_str()
+                .expect("at")
+                .parse()
+                .expect("instant")
+        })
         .collect();
     let mut sorted = times.clone();
     sorted.sort_unstable_by(|a, b| b.cmp(a));
@@ -1679,12 +1698,10 @@ async fn deleting_an_applicant_takes_their_approvable_row_with_them(pool: PgPool
             .len(),
         1
     );
-    let reaped = store::reap_unverified_accounts(
-        &rig.pool,
-        chrono::Utc::now() + chrono::Duration::days(30),
-    )
-    .await
-    .expect("reaps");
+    let reaped =
+        store::reap_unverified_accounts(&rig.pool, chrono::Utc::now() + chrono::Duration::days(30))
+            .await
+            .expect("reaps");
     assert_eq!(reaped, 1);
     assert!(
         notification_store::all_for(&rig.pool, ivy.id)

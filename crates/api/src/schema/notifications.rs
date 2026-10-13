@@ -348,11 +348,12 @@ pub(crate) async fn page(
         has_next,
         NotificationConnectionFields { viewer },
     );
-    connection
-        .edges
-        .extend(hydrate(pool, rows).await?.into_iter().map(|item| {
-            Edge::new(crate::notifications::encode_cursor(item.row.cursor()), item)
-        }));
+    connection.edges.extend(
+        hydrate(pool, rows)
+            .await?
+            .into_iter()
+            .map(|item| Edge::new(crate::notifications::encode_cursor(item.row.cursor()), item)),
+    );
     Ok(connection)
 }
 

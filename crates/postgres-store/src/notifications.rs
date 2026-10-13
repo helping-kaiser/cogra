@@ -281,7 +281,10 @@ pub async fn write_for_epoch(conn: &mut PgConnection, epoch: i64) -> Result<u64,
 /// account is not yet approvable (this was the first proof) writes
 /// nothing. A path staged later never gets one: its approver staged an
 /// approvable account themselves.
-pub async fn write_approvable(conn: &mut PgConnection, account_id: Uuid) -> Result<u64, sqlx::Error> {
+pub async fn write_approvable(
+    conn: &mut PgConnection,
+    account_id: Uuid,
+) -> Result<u64, sqlx::Error> {
     Ok(sqlx::query!(
         "INSERT INTO user_notifications (user_id, kind, actor_id, application_id, dedup_key)
          SELECT ap.approver_id, 'application_approvable', ap.account_id, ap.id,

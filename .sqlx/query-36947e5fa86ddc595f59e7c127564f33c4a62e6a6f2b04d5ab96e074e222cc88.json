@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT email_verified_at IS NULL AS \"unverified!\"\n           FROM user_credentials WHERE actor_id = $1 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "unverified!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "36947e5fa86ddc595f59e7c127564f33c4a62e6a6f2b04d5ab96e074e222cc88"
+}
