@@ -18,6 +18,10 @@ common    = { path = "../common" }
 libm      = { workspace = true }
 thiserror = { workspace = true }
 
+[[bench]]
+name    = "rank"
+harness = false
+
 [dev-dependencies]
 # The golden-vector export (tests/vectors.rs) and the property suites.
 serde_json = { workspace = true }

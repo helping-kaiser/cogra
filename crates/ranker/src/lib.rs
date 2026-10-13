@@ -54,10 +54,11 @@ pub use input::{
     TieStatistics,
 };
 pub use output::{FeedEntry, HopMember, RankHop, RankPath, TieBreakers};
-pub use rank::{rank, rank_search, score_target};
+pub use rank::{check_params, rank, rank_search, score_target};
 pub use recency::{RecencyShape, epoch_age, recency_factor};
 pub use spot::{SpotCheck, spot_check};
 pub use view::{
     FeedRanking, PeopleMark, RankedEntry, SettlingCandidate, SettlingPlace, feed_ranking,
+    search_ranking,
 };
 pub use weight::{BETA, ETA, PathView, damped_weight, maturity_gain, path_view, temporal_entropy};

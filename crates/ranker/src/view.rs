@@ -263,12 +263,37 @@ pub fn feed_ranking(
     let g = Graph::build(slice, cal.gamma)?;
     let candidates = feed_candidates(&g, params, &cal)?;
     let entries = rank_nodes(&g, &candidates, &cal)?;
+    assemble(&g, &cal, entries, settling)
+}
 
-    let newest = newest_indices(&g, &entries);
+/// The search re-ranking in the pod's answer shape: the in-slice subset of
+/// `candidates` a live path reaches, ordered, marked and placed in NEWEST
+/// order among themselves. No settling rows: search candidates are given.
+pub fn search_ranking(
+    slice: &Slice,
+    candidates: &[String],
+    params: &RankParams,
+    net: &NetworkParams,
+) -> Result<FeedRanking, RankError> {
+    let cal = calibrate(params, net)?;
+    let g = Graph::build(slice, cal.gamma)?;
+    let entries = crate::rank::rank_search_nodes(&g, candidates, &cal)?;
+    assemble(&g, &cal, entries, &[])
+}
+
+/// Marks the ranked entries, places them in NEWEST order, and weaves the
+/// settling candidates into both orders.
+fn assemble(
+    g: &Graph,
+    cal: &Calibration,
+    entries: Vec<FeedEntry>,
+    settling: &[SettlingCandidate],
+) -> Result<FeedRanking, RankError> {
+    let newest = newest_indices(g, &entries);
     let mut ranked = Vec::with_capacity(entries.len());
     for (entry, newest_index) in entries.iter().zip(newest) {
         let mark = match row_person(&entry.target_graph_id, entry.kind) {
-            Some(p) => mark(&g, &p)?,
+            Some(p) => mark(g, &p)?,
             None => None,
         };
         ranked.push(RankedEntry {
@@ -286,7 +311,7 @@ pub fn feed_ranking(
         }
     }
     let tree = dijkstra(
-        &g,
+        g,
         &Residual {
             allowed: None,
             blocked: &vec![false; g.nodes.len()],
@@ -296,14 +321,14 @@ pub fn feed_ranking(
     );
     let mut keyed = Vec::new();
     for candidate in settling {
-        let factor = landing_factor(candidate, &cal)?;
+        let factor = landing_factor(candidate, cal)?;
         if landed.contains(candidate.reference.as_str()) {
             continue;
         }
         let Some(&author) = g.index.get(&candidate.author) else {
             continue;
         };
-        let Some(reach) = strength(&g, author, &cal, walk_to(&tree, author)) else {
+        let Some(reach) = strength(g, author, cal, walk_to(&tree, author)) else {
             continue;
         };
         let key = reach * factor;
@@ -336,13 +361,13 @@ pub fn feed_ranking(
     for (i, row) in keyed.iter().enumerate() {
         places.push(SettlingPlace {
             reference: row.candidate.reference.clone(),
-            mark: mark(&g, &row.candidate.author)?,
+            mark: mark(g, &row.candidate.author)?,
             ranked_position: ranked_position[i],
             newest_position: newest_position[i],
         });
     }
     Ok(FeedRanking {
-        as_of_epoch: slice.as_of_epoch,
+        as_of_epoch: g.as_of_epoch,
         entries: ranked,
         settling: places,
     })

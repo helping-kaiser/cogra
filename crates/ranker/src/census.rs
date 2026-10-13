@@ -101,6 +101,12 @@ impl Family {
         Family::ALL.into_iter().find(|f| f.wire_name() == token)
     }
 
+    /// The family a census token names (`publish`, `join-request`, …) — the
+    /// spelling the mirror and the staged rows store.
+    pub fn from_census(token: &str) -> Option<Family> {
+        Family::ALL.into_iter().find(|f| f.seam().as_str() == token)
+    }
+
     /// The leg roles the census gives this family: one `Binary` leg, or an
     /// `A` and a `T` leg.
     pub fn roles(self) -> Vec<LegRole> {
@@ -217,13 +223,18 @@ mod tests {
     /// The wire tokens are the api's `RecordFamily` and `RecordLegRole`
     /// spellings, and parse back.
     ///
-    /// Every family and leg role parses back from its own wire token.
+    /// Every family and leg role parses back from its own wire token, and every family from its census token.
     /// ´claim:census:wire-tokens-round-trip´
     #[test]
     fn wire_tokens_round_trip() {
         for family in Family::ALL {
             assert_eq!(Family::from_wire(family.wire_name()), Some(family));
+            assert_eq!(Family::from_census(family.seam().as_str()), Some(family));
         }
+        assert_eq!(
+            Family::from_census("join-request"),
+            Some(Family::JoinRequest)
+        );
         for role in [LegRole::Binary, LegRole::A, LegRole::T] {
             assert_eq!(LegRole::from_wire(role.wire_name()), Some(role));
         }

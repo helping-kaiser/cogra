@@ -241,6 +241,17 @@ implementation serves every deployment
 standalone ranker container (never run inside `api`), which a
 delegated miner also uses, and bound into the Android app via UniFFI.
 
+### `crates/ranker-server`
+
+The standalone ranker container, binary `cogra-ranker`: the `ranker`
+crate behind a small GraphQL schema of its own — `rank` and
+`rankSearch` at the id level, exported as the checked-in
+`ranker-schema.graphql` that the api's relay generates its client
+from. It fetches the viewer's slice and the governed ranking
+parameters back from the api as any anonymous reader (`API_URL`) and
+listens on `RANKER_BIND`. It holds no session, no database handle, no
+secret and no state, and it is never a dependency of `api`.
+
 ### `android/`
 
 The reference frontend — Kotlin + Jetpack Compose, with the typed

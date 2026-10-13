@@ -714,6 +714,7 @@ label.
 | `test:integration:the-relay-sends-each-candidate-with-its-author-family-and-own-params`       | the_relay_sends_each_candidate_with_its_author_family_and_own_params       |
 | `test:integration:the-relay-sends-friend-reorder-disabled`                                    | the_relay_sends_friend_reorder_disabled                                    |
 | `test:integration:the-release-budgets-admit-every-client-operation`                           | the_release_budgets_admit_every_client_operation                           |
+| `test:integration:the-release-budgets-admit-the-ranker-pods-full-pages`                       | the_release_budgets_admit_the_ranker_pods_full_pages                       |
 | `test:integration:the-release-posture-serves-no-introspection`                                | the_release_posture_serves_no_introspection                                |
 | `test:integration:the-repair-restages-only-the-registration`                                  | the_repair_restages_only_the_registration                                  |
 | `test:integration:the-repair-runs-when-an-older-path-holds-the-live-vouch`                    | the_repair_runs_when_an_older_path_holds_the_live_vouch                    |
