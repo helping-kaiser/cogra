@@ -1538,7 +1538,8 @@ class ContentScreensTest {
         renderDetail(detailFixture(loading = false, post = testPost("p1")))
         compose.onNodeWithTag("postDetail.header.menu").performClick()
         compose.onNodeWithTag("comments_sheet").assertDoesNotExist()
-        compose.onNodeWithTag("postDetail.header.menu_sheet").assertExists()
+        // The registered sheet (ReaderPostMenu), never stacked.
+        compose.onNodeWithTag("postDetail.menuSheet").assertExists()
     }
 
     // ONE SHEET, TWO MENUS (`CommentLicense.jsx:9-10`): raised from a
