@@ -4876,10 +4876,11 @@ The night rulings executed (readme §13) left these for jakob's eye:
 - **The borrowed stance's words — RULED same day.** The guest
   anchor's accessible name reads the viewpoint's handle,
   `@genesismod's stance on this post`, never `Your opinion` (jakob
-  2026-10-06; stance-control, *A guest's view*). Still open here:
-  sweeping the printed `Your opinion` beside the hollow face on
-  `ProfileOther` and `TagPage` for the guest reading, and the
-  at-rest spoken string's exact remaining wording.
+  2026-10-06; stance-control, *A guest's view*). The printed words
+  beside the hollow face on `ProfileOther` and `TagPage` name the
+  viewpoint for a guest (the vantage law, 2026-10-13; their overflow
+  fallback is item 139's). Still open here: the at-rest spoken
+  string's exact remaining wording.
 - **The applicant's anchor — RULED same day.** Only a nobody borrows
   stances: an applicant's faces are their own, hollow where they hold
   none (jakob 2026-10-06; stance-control, *Only a nobody borrows
@@ -4919,3 +4920,50 @@ it).
   change, so a decision rather than a tweak (readme §11).
 - **Until ruled,** the role stays generated and unspent; no lane spends
   it to give it a home.
+
+### 139 · What round 9's vantage law and face anchor left for jakob · *design + contract* · **filed 2026-10-13**
+
+Round 9 (readme §13) wrote the vantage law and moved the vouch card's
+act onto the stance face. These are the drawing-level calls it could not
+make alone:
+
+- **The wide anchor's fallback.** A guest's wide anchor names the
+  viewpoint, `@genesismod's opinion`. On a profile it leaves its words
+  about 134px and that string measures 150px, so the flagged `Their
+  opinion` fallback already fires for the illustrative handle — and on a
+  profile, *their* can read as the profile owner's. Alternatives: the
+  handle ellipsized before `'s opinion`, or the face alone with no
+  words, as the card anchor rests. The tag page leaves about 254px and
+  fits handles to roughly twenty characters.
+- **The filter's topic door under a borrowed view.** The topic chips
+  become the vantage's topics, but `All your topics` opens the reader's
+  own list, and no page lists another account's topics. Keep, drop
+  under a borrowed view, or re-voice to a page still owed. Until ruled
+  the door stands as drawn. Note too that a guest now sees the
+  vantage's topic chips, where before a guest held none.
+- **Search and History under an applicant's borrowed view.** An
+  applicant searches "as a member" (readme *Search, settled*); whether
+  that rank is the vantage's is unwritten. If it is, `ExploreFilter`'s
+  and `HistoryFilter`'s `Ranked` line re-voices by the same law.
+- **A handle with no break in it.** `@` plus thirty wide letters runs
+  381px at the People row's size and 326px at the band's, past both
+  lines' room on a 390px screen (about 269px and 310px). Ordinary
+  handles fit: a thirty-character handle of ordinary letters runs
+  224px in the row, the word `people` wrapping under it. The
+  proposal is `overflow-wrap: anywhere` on every line that prints a
+  handle, as `ProfileHeader`'s name already wears.
+- **The kept vouch-back on the face.** Ruling 43(a) keeps the card
+  reading as if nothing were kept, so its face stays hollow; elsewhere
+  an anchor shows a kept pick with `Waiting for your key` under it.
+  Keep 43(a), or let the card's face show the kept pick as every other
+  anchor does.
+- **The hollow face on olive.** The card's act is the master's resting
+  face, grey at the resting opacity, and on `--tertiary-container` it
+  reads faint. The master is unchanged; a card-local treatment would be
+  a new anchor variant.
+- **Which guest viewpoint off the feed.** stance-control's *A guest's
+  view* says an invite link changes nothing and the viewpoint is
+  genesis's; §13 has an invite-link visitor browse the issuer's feed,
+  and an off-feed score looks its thing up in the feed's last fetch.
+  Whose read a guest's tag page or profile shows is two readings until
+  ruled.

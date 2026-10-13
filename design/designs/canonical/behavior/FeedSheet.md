@@ -78,7 +78,25 @@ WHEN pull down inside the filter sheet -> NEVER the feed refreshes
 
 ALWAYS the trigger's spoken name is its reading followed by what your feed shows
 
-WHEN tap Done GIVEN the staged filter differs from the feed's -> the sheet closes AND the feed re-queries once AND one polite status message says the trigger's new name AND focus returns to the trigger AND NEVER the message draws anything
+ALWAYS the People section's second row reads the borrowed view's account's name the band's way, as @mira's people, over Only the people @mira holds an opinion of — the same rank, narrowed to them. GIVEN the feed borrows a view
+
+ALWAYS Everyone's line reads The whole feed, as far as @mira's eyes reach. GIVEN the feed borrows a view
+
+ALWAYS @mira's people narrows the feed to the people the borrowed view's account holds an opinion of, by that account's marks and never the reader's, and For, Against and Either narrow it by that account's sign GIVEN the feed borrows a view
+
+ALWAYS the sign row's spoken name is Which of @mira's people GIVEN the feed borrows a view
+
+ALWAYS the trigger reads the people extra by the borrowed view's account's name, as @mira's people, @mira's people, for or @mira's people, against, and past the pill's budget collapses to the count like any extra GIVEN the feed borrows a view and @mira's people is on
+
+ALWAYS Order's line reads Ranked puts what's closest to @mira first — the view you're browsing from. Newest ignores it and lists by time. GIVEN the feed borrows a view
+
+ALWAYS the topic chips are the topics the borrowed view's account holds and is for, under Topics @mira holds and is for. A topic @mira holds against stays a record — it just never narrows a feed. GIVEN the feed borrows a view
+
+ALWAYS Show what you've already seen, the kinds, the kinds of post, Also show, Reset and the "?" keep the reader's own first person GIVEN the feed borrows a view
+
+WHEN tap Done GIVEN the staged filter changes Kinds or the topic -> the sheet closes AND the feed re-queries once AND one polite status message says the trigger's new name AND focus returns to the trigger AND NEVER the message draws anything
+
+WHEN tap Done GIVEN every staged change is the device's own — the people row and its sign, the order, Show what you've already seen, the kinds of post, Sensitive, Removed or Still settling -> the sheet closes AND the feed re-derives on the device from what it already holds AND one polite status message says the trigger's new name AND focus returns to the trigger AND NEVER the feed re-queries AND NEVER the message draws anything
 
 WHEN tap Done GIVEN the staged filter is the feed's own, nothing changed -> the sheet closes AND the feed is what it was AND focus returns to the trigger AND NEVER the feed re-queries
 
