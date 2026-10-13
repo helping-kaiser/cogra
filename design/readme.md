@@ -1510,6 +1510,22 @@ may serve any actor's view of the shared record to any reader. So:
   than any single rung: a reader should be shown the nearest real
   perspective the arrival carries, and genesis is what is left when the
   arrival carries none.
+- **The reader looks through the vantage's eyes** (jakob 2026-10-13,
+  the vantage law). Under a borrowed view the reader gets the vantage
+  account's whole read: its rank, the people it holds an opinion of —
+  the people narrowing and every row's mark — and the topics it holds.
+  What stays the reader's is theirs alone: the seen list, the hidden
+  accounts, the kept picks and the choices kept on the device, the
+  feed's filter and the Settings default among them; and, by *Only a
+  nobody borrows stances* (stance-control), every face a signed-in
+  reader can act on. Every first-person readout of the vantage's read
+  speaks its name, the band's way — `@mira's people`, `as far as
+  @mira's eyes reach` — and a control whose words outgrow it falls back
+  on its own overflow law, the trigger's collapse to a count among
+  them. A control with no overflow law that a long handle breaks falls
+  back to *their*, as a flagged exception for jakob. The law holds for
+  any vantage: the guest's and the applicant's today, a vantage the
+  reader chooses later.
 
 To port to the product docs as an open-questions resolution.
 
