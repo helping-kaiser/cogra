@@ -771,7 +771,7 @@ describe("signing out", () => {
     const row = await screen.findByTestId("settings.leaving.forget");
     expect(row).toHaveAttribute("aria-checked", "false");
     expect(screen.getByTestId("settings.leaving.forget.status")).toHaveTextContent(
-      "Your key, your draft and any kept picks are cleared from this browser when you sign out.",
+      "Your key, your draft, any kept picks and what you've seen are cleared from this browser when you sign out.",
     );
     fireEvent.click(row);
     await waitFor(() => expect(row).toHaveAttribute("aria-checked", "true"));

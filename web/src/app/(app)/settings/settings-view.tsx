@@ -783,7 +783,7 @@ export function SettingsView({
           <SettingsRow
             checked={forget}
             label="Don't remember this account on this device"
-            status="Your key, your draft and any kept picks are cleared from this browser when you sign out."
+            status="Your key, your draft, any kept picks and what you've seen are cleared from this browser when you sign out."
             onOpen={() => void onForget()}
             node={node("leaving.forget")}
           />
