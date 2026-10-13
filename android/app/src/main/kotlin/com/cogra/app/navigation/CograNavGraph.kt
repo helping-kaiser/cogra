@@ -677,6 +677,9 @@ private fun CograNavGraphContent(
     // The feed's own pulls, counted: the readers that ride the feed (the
     // band, the vouch card) read again with each one.
     var feedPulls by rememberSaveable { mutableIntStateOf(0) }
+    // The bar's Feed slot re-tapped over the feed's own root, counted: the
+    // feed answers each one it has not answered yet.
+    var feedReselects by rememberSaveable { mutableIntStateOf(0) }
     val borrowedViewBand: @Composable () -> Unit = {
         signedIn?.let { signed ->
             BorrowedViewBandRoute(
@@ -759,7 +762,16 @@ private fun CograNavGraphContent(
                     },
                     feedSelected = onFeedTab,
                     profileSelected = onOwnProfileTab,
-                    onFeed = { toTab(Feed) },
+                    // Over the feed's own root the slot is a re-tap the feed
+                    // answers (Feed.md:85-91); from anywhere else it is the
+                    // way back to the root, at the scroll it was left.
+                    onFeed = {
+                        if (onFeedTab) {
+                            feedReselects += 1
+                        } else {
+                            toTab(Feed)
+                        }
+                    },
                     onCompose = {
                         if (signedIn == true) {
                             navController.navigate(ComposePost())
@@ -873,6 +885,7 @@ private fun CograNavGraphContent(
                 val accountId by authState.accountId.collectAsStateWithLifecycle()
                 FeedRoute(
                     signedIn = signedIn,
+                    reselectSignal = feedReselects,
                     // A guest's Report asks them to join instead of raising
                     // the confirm (ReportConfirm.md:21).
                     onRequireAccount = { joinPrompt = true }.takeIf { signedIn == false },

@@ -14,8 +14,13 @@
 export const SHEET_OUT_MS = 200;
 
 export function exitDuration(ms: number): number {
+  return prefersStillness() ? 0 : ms;
+}
+
+/** The reader asked for reduced motion. */
+export function prefersStillness(): boolean {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-    return ms;
+    return false;
   }
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : ms;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
