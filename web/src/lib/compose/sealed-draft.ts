@@ -80,7 +80,7 @@ function sealKey(account: string, firstWrite: string): string {
 }
 
 /** Every key of this account's copies, and nothing else in the store. */
-function accountRange(account: string): IDBKeyRange {
+export function accountRange(account: string): IDBKeyRange {
   return IDBKeyRange.bound(`${PREFIX}${account}:`, `${PREFIX}${account}:￿`);
 }
 
