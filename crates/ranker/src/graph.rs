@@ -305,7 +305,11 @@ fn validate_record(
         }
     }
     let author_node = person(&record.author);
-    let (source, middle, target) = match (legs.get(&LegRole::Binary), legs.get(&LegRole::A), legs.get(&LegRole::T)) {
+    let (source, middle, target) = match (
+        legs.get(&LegRole::Binary),
+        legs.get(&LegRole::A),
+        legs.get(&LegRole::T),
+    ) {
         (Some(binary), None, None) => (binary.source.clone(), None, binary.target.clone()),
         (None, Some(a), Some(t)) if a.target == t.source => {
             (a.source.clone(), Some(a.target.clone()), t.target.clone())
@@ -333,10 +337,18 @@ fn validate_record(
     })
 }
 
+/// A slice that passed validation.
+pub(crate) struct Validated {
+    pub nodes: Vec<Node>,
+    pub index: BTreeMap<String, usize>,
+    pub root: usize,
+    pub records: Vec<Record>,
+}
+
 /// Validates the slice: nodes once each, records once each and one per
 /// causal key, every leg's ends in the node set, every leg in its family's
 /// census, every parameter in range, and the viewer present as a person.
-pub(crate) fn validate(slice: &Slice) -> Result<(Vec<Node>, BTreeMap<String, usize>, usize, Vec<Record>), RankError> {
+pub(crate) fn validate(slice: &Slice) -> Result<Validated, RankError> {
     let (nodes, index) = validate_nodes(slice)?;
     let root = nodes
         .iter()
@@ -365,13 +377,23 @@ pub(crate) fn validate(slice: &Slice) -> Result<(Vec<Node>, BTreeMap<String, usi
         records.push(validate_record(record, &index)?);
     }
     records.sort_by_key(|r| r.key);
-    Ok((nodes, index, root, records))
+    Ok(Validated {
+        nodes,
+        index,
+        root,
+        records,
+    })
 }
 
 impl Graph {
     /// Builds the traversal graph at `gamma`.
     pub(crate) fn build(slice: &Slice, gamma: f64) -> Result<Graph, RankError> {
-        let (nodes, index, root, records) = validate(slice)?;
+        let Validated {
+            nodes,
+            index,
+            root,
+            records,
+        } = validate(slice)?;
         let mut bundles: BTreeMap<HopKey, (Family, LegRole, String, Vec<HopMember>)> =
             BTreeMap::new();
         let mut gates: BTreeMap<BundleKey, bool> = BTreeMap::new();
@@ -448,7 +470,7 @@ impl Graph {
                 .ok_or_else(|| RankError::malformed("a folded bundle lost its newest member"))?;
             let w = damped_weight(family, role, folded.p_d, folded.p_i, tau)?;
             let factor = gamma * w;
-            if !(factor > 0.0) {
+            if factor.is_nan() || factor <= 0.0 {
                 continue;
             }
             let (Some(&s), Some(&t)) = (index.get(&source), index.get(&target)) else {

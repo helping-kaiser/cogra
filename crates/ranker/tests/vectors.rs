@@ -26,7 +26,7 @@ mod support;
 
 use std::path::Path;
 
-use ranker::{FeedEntry, Family, LegRole, damped_weight, path_view, rank, recency_factor};
+use ranker::{Family, FeedEntry, LegRole, damped_weight, path_view, rank, recency_factor};
 use serde_json::{Value, json};
 use support::{Case, bits, cost_tie_cases, entry_json, ranking_cases, slice_json};
 
@@ -150,7 +150,10 @@ fn the_ranking_cases_rank_as_stated() {
 
     let carrier = "mint:act:owner:1:publish";
     let cited = "mint:act:cited:1:publish";
-    assert_eq!(nodes_of(find(&all[0], cited)), vec![vec!["prof:v", carrier, cited]]);
+    assert_eq!(
+        nodes_of(find(&all[0], cited)),
+        vec![vec!["prof:v", carrier, cited]]
+    );
 
     assert_eq!(
         nodes_of(find(&all[1], cited)),
@@ -159,19 +162,47 @@ fn the_ranking_cases_rank_as_stated() {
     );
 
     let tagged = find(&all[2], "name:rust");
-    assert_eq!(nodes_of(tagged), vec![vec!["prof:v", "mint:act:writer:1:publish", "name:rust"]]);
-    assert_eq!(tagged.tie_breakers.genesis_epoch_age, None, "a Type has no genesis");
+    assert_eq!(
+        nodes_of(tagged),
+        vec![vec!["prof:v", "mint:act:writer:1:publish", "name:rust"]]
+    );
+    assert_eq!(
+        tagged.tie_breakers.genesis_epoch_age, None,
+        "a Type has no genesis"
+    );
 
     let far = find(&all[3], "mint:act:far:1:publish");
-    assert_eq!(nodes_of(far), vec![vec!["prof:v", "prof:friend", "prof:far", "mint:act:far:1:publish"]]);
-    assert_eq!(far.paths[0].hops[1].source, "prof:friend", "addr:friend reads as the person");
+    assert_eq!(
+        nodes_of(far),
+        vec![vec![
+            "prof:v",
+            "prof:friend",
+            "prof:far",
+            "mint:act:far:1:publish"
+        ]]
+    );
+    assert_eq!(
+        far.paths[0].hops[1].source, "prof:friend",
+        "addr:friend reads as the person"
+    );
 
     assert!(all[4].iter().any(|e| e.target_graph_id == "name:sink"));
-    assert!(all[4].iter().all(|e| e.target_graph_id != "mint:act:stranger:1:publish"));
+    assert!(
+        all[4]
+            .iter()
+            .all(|e| e.target_graph_id != "mint:act:stranger:1:publish")
+    );
 
     let order: Vec<&str> = all[5].iter().map(|e| e.target_graph_id.as_str()).collect();
-    assert_eq!(order, vec!["mint:act:rival:1:publish", "prof:rival"], "the strongest dislike last");
-    assert!(all[5].iter().all(|e| e.score < 0.0), "both reached through the dislike");
+    assert_eq!(
+        order,
+        vec!["mint:act:rival:1:publish", "prof:rival"],
+        "the strongest dislike last"
+    );
+    assert!(
+        all[5].iter().all(|e| e.score < 0.0),
+        "both reached through the dislike"
+    );
 
     let cancelled = find(&all[6], "mint:act:x:1:publish");
     assert_eq!(cancelled.score.to_bits(), 0.0f64.to_bits());
@@ -179,7 +210,11 @@ fn the_ranking_cases_rank_as_stated() {
 
     let order: Vec<&str> = all[7].iter().map(|e| e.target_graph_id.as_str()).collect();
     assert_eq!(order, vec!["mint:act:y:1:publish", "mint:act:x:1:publish"]);
-    assert_eq!(all[7][0].score.to_bits(), all[7][1].score.to_bits(), "a strict tie");
+    assert_eq!(
+        all[7][0].score.to_bits(),
+        all[7][1].score.to_bits(),
+        "a strict tie"
+    );
 }
 
 /// RC-G2 (a): equal-cost paths extract in canonical hop-key order — alpha's
@@ -201,9 +236,16 @@ fn cost_ties_break_by_hop_key() {
             vec!["prof:v", "prof:beta", post],
         ]
     );
-    assert_eq!(entry.paths[0].magnitude.to_bits(), entry.paths[1].magnitude.to_bits(), "an exact cost tie");
+    assert_eq!(
+        entry.paths[0].magnitude.to_bits(),
+        entry.paths[1].magnitude.to_bits(),
+        "an exact cost tie"
+    );
     let at_one = ranked(&cases[1]);
-    assert_eq!(nodes_of(find(&at_one, post)), vec![vec!["prof:v", "prof:alpha", post]]);
+    assert_eq!(
+        nodes_of(find(&at_one, post)),
+        vec![vec!["prof:v", "prof:alpha", post]]
+    );
 }
 
 /// A document that rounded its floats through decimal could not pin the

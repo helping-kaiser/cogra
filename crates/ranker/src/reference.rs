@@ -21,7 +21,12 @@ use crate::rank::{Calibration, compare, path_of};
 /// content-intrinsic channel, else the hop of the same bundle's A-leg it
 /// must continue (`Some(None)` when that A-leg is not live).
 fn gates(g: &Graph) -> Vec<Option<Option<usize>>> {
-    let by_key: BTreeMap<&HopKey, usize> = g.hops.iter().enumerate().map(|(i, h)| (&h.key, i)).collect();
+    let by_key: BTreeMap<&HopKey, usize> = g
+        .hops
+        .iter()
+        .enumerate()
+        .map(|(i, h)| (&h.key, i))
+        .collect();
     g.hops
         .iter()
         .map(|hop| {
@@ -30,8 +35,12 @@ fn gates(g: &Graph) -> Vec<Option<Option<usize>>> {
             }
             let bundle = &hop.key.bundle;
             let intrinsic = match hop.family {
-                Family::Reference | Family::Tag => creator(&bundle.middle).as_deref() == Some(bundle.author.as_str()),
-                Family::Review => creator(&bundle.target).as_deref() == Some(bundle.author.as_str()),
+                Family::Reference | Family::Tag => {
+                    creator(&bundle.middle).as_deref() == Some(bundle.author.as_str())
+                }
+                Family::Review => {
+                    creator(&bundle.target).as_deref() == Some(bundle.author.as_str())
+                }
                 _ => return None,
             };
             if intrinsic {
@@ -74,7 +83,13 @@ fn best_walk(
     let mut settled: BTreeSet<State> = BTreeSet::new();
     let mut queue: BTreeSet<(OrderedCost, Vec<usize>, State)> = BTreeSet::new();
     let start = (g.root, None);
-    labels.insert(start, Label { cost: 0.0, hops: Vec::new() });
+    labels.insert(
+        start,
+        Label {
+            cost: 0.0,
+            hops: Vec::new(),
+        },
+    );
     queue.insert((OrderedCost(0.0), Vec::new(), start));
     while let Some((_, _, state)) = queue.pop_first() {
         if !settled.insert(state) {
@@ -91,10 +106,10 @@ fn best_walk(
             if hop.source != node || hop.target == g.root || blocked[hop.target] {
                 continue;
             }
-            if let Some(required) = gates[h] {
-                if required.is_none() || last != required {
-                    continue;
-                }
+            if let Some(required) = gates[h]
+                && (required.is_none() || last != required)
+            {
+                continue;
             }
             if direct_spent && state == start && hop.target == target {
                 continue;
@@ -158,7 +173,7 @@ pub(crate) fn rank_reference(g: &Graph, candidates: &[usize], cal: &Calibration)
                 break;
             };
             let m = walk.magnitude(g);
-            if !(m > 0.0) || m < cal.chi {
+            if m.is_nan() || m <= 0.0 || m < cal.chi {
                 break;
             }
             let interior = &walk.nodes[1..walk.nodes.len() - 1];
@@ -186,7 +201,9 @@ pub(crate) fn rank_reference(g: &Graph, candidates: &[usize], cal: &Calibration)
             tie_breakers: crate::output::TieBreakers {
                 net_stance: None,
                 gross_volume: None,
-                genesis_epoch_age: node.genesis.map(|k| crate::recency::epoch_age(g.as_of_epoch, k.landing_epoch)),
+                genesis_epoch_age: node
+                    .genesis
+                    .map(|k| crate::recency::epoch_age(g.as_of_epoch, k.landing_epoch)),
             },
             paths,
         });

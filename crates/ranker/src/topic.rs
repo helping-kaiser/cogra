@@ -96,10 +96,10 @@ pub(crate) fn admitted(
             .index
             .get(&person(&author))
             .is_some_and(|i| reached.contains(i));
-        if intrinsic || through_author {
-            if let Some(&i) = g.index.get(&content) {
-                admitted.insert(i);
-            }
+        if (intrinsic || through_author)
+            && let Some(&i) = g.index.get(&content)
+        {
+            admitted.insert(i);
         }
     }
     Ok(admitted)

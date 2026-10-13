@@ -97,7 +97,11 @@ pub(crate) struct Residual<'a> {
 
 /// Dijkstra from the viewer over the residual graph, stopping once `stop`
 /// is settled.
-pub(crate) fn dijkstra(g: &Graph, residual: &Residual<'_>, stop: Option<usize>) -> Vec<Option<Label>> {
+pub(crate) fn dijkstra(
+    g: &Graph,
+    residual: &Residual<'_>,
+    stop: Option<usize>,
+) -> Vec<Option<Label>> {
     let n = g.nodes.len();
     let mut labels: Vec<Option<Label>> = vec![None; n];
     let mut settled = vec![false; n];
@@ -206,7 +210,13 @@ pub(crate) fn walk_to(labels: &[Option<Label>], target: usize) -> Option<Walk> {
 /// The greedy extraction for one candidate: up to `k` disjoint walks,
 /// strongest first, until the best remaining one falls below `chi` or
 /// underflows. `first` is the candidate's walk in the shared tree.
-pub(crate) fn extract(g: &Graph, candidate: usize, first: Option<Walk>, k: u32, chi: f64) -> Vec<Walk> {
+pub(crate) fn extract(
+    g: &Graph,
+    candidate: usize,
+    first: Option<Walk>,
+    k: u32,
+    chi: f64,
+) -> Vec<Walk> {
     let mut walks: Vec<Walk> = Vec::new();
     let mut blocked = vec![false; g.nodes.len()];
     let mut direct_spent = None;
@@ -217,7 +227,7 @@ pub(crate) fn extract(g: &Graph, candidate: usize, first: Option<Walk>, k: u32, 
             break;
         };
         let m = walk.magnitude(g);
-        if !(m > 0.0) || m < chi {
+        if m.is_nan() || m <= 0.0 || m < chi {
             break;
         }
         let interior = &walk.nodes[1..walk.nodes.len() - 1];

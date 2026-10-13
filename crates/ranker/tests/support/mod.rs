@@ -1,3 +1,5 @@
+//! ´mod:module:support´
+//!
 //! The hand-built ranking cases of vector sets (c) and (d), and the JSON
 //! forms they travel in.
 //!
@@ -11,8 +13,8 @@
 use std::collections::BTreeMap;
 
 use ranker::{
-    CausalKey, Family, FeedEntry, LegRole, NetworkParams, NodeKind, RankParams, RecencyShape, Slice,
-    SliceLeg, SliceNode, SliceRecord, TieBreakerKey,
+    CausalKey, Family, FeedEntry, LegRole, NetworkParams, NodeKind, RankParams, RecencyShape,
+    Slice, SliceLeg, SliceNode, SliceRecord, TieBreakerKey,
 };
 use serde_json::{Value, json};
 
@@ -132,7 +134,13 @@ impl Builder {
         let graph_id = format!("mint:{record}");
         let key = self.key();
         self.node(&graph_id, NodeKind::Post, Some(key));
-        let leg = self.leg(LegRole::Binary, &format!("addr:{author}"), &graph_id, 1.0, 1.0);
+        let leg = self.leg(
+            LegRole::Binary,
+            &format!("addr:{author}"),
+            &graph_id,
+            1.0,
+            1.0,
+        );
         self.records.push(SliceRecord {
             record_id: record,
             family: Family::Publish,
@@ -160,7 +168,15 @@ impl Builder {
         self.binary(Family::Opinion, author, target, p_d, p_i);
     }
 
-    pub fn hyper(&mut self, family: Family, author: &str, middle: &str, target: &str, p_d: f64, p_i: f64) {
+    pub fn hyper(
+        &mut self,
+        family: Family,
+        author: &str,
+        middle: &str,
+        target: &str,
+        p_d: f64,
+        p_i: f64,
+    ) {
         let record = self.act(author, family);
         let key = self.key();
         let a = self.leg(LegRole::A, &format!("addr:{author}"), middle, p_d, p_i);
@@ -203,7 +219,12 @@ pub fn ranking_cases() -> Vec<Case> {
     let target = b.post("cited");
     b.opinion("v", &carrier, 1.0, 1.0);
     b.hyper(Family::Reference, "owner", &carrier, &target, 1.0, 0.5);
-    cases.push(Case { name: "a reference crosses content-intrinsically from any arrival at its carrier", slice: b.build(), params: RankParams::default(), network: network(8) });
+    cases.push(Case {
+        name: "a reference crosses content-intrinsically from any arrival at its carrier",
+        slice: b.build(),
+        params: RankParams::default(),
+        network: network(8),
+    });
 
     let mut b = Builder::new();
     b.person("owner");
@@ -214,7 +235,12 @@ pub fn ranking_cases() -> Vec<Case> {
     b.opinion("v", &carrier, 1.0, 1.0);
     b.opinion("v", "prof:referrer", 0.5, 1.0);
     b.hyper(Family::Reference, "referrer", &carrier, &target, 1.0, 1.0);
-    cases.push(Case { name: "a stranger's reference crosses only as its author's own continuation", slice: b.build(), params: RankParams::default(), network: network(8) });
+    cases.push(Case {
+        name: "a stranger's reference crosses only as its author's own continuation",
+        slice: b.build(),
+        params: RankParams::default(),
+        network: network(8),
+    });
 
     let mut b = Builder::new();
     b.person("writer");
@@ -222,7 +248,12 @@ pub fn ranking_cases() -> Vec<Case> {
     let post = b.post("writer");
     b.opinion("v", &post, 1.0, 1.0);
     b.hyper(Family::Tag, "writer", &post, &topic, 1.0, 1.0);
-    cases.push(Case { name: "a tag's topic leg lands on its Type", slice: b.build(), params: every_kind(), network: network(8) });
+    cases.push(Case {
+        name: "a tag's topic leg lands on its Type",
+        slice: b.build(),
+        params: every_kind(),
+        network: network(8),
+    });
 
     let mut b = Builder::new();
     b.person("friend");
@@ -231,7 +262,12 @@ pub fn ranking_cases() -> Vec<Case> {
     b.opinion("friend", "prof:far", 0.5, 0.5);
     let post = b.post("far");
     let _ = post;
-    cases.push(Case { name: "a stance landing on a profile continues from the person's own records", slice: b.build(), params: every_kind(), network: network(8) });
+    cases.push(Case {
+        name: "a stance landing on a profile continues from the person's own records",
+        slice: b.build(),
+        params: every_kind(),
+        network: network(8),
+    });
 
     let mut b = Builder::new();
     b.person("stranger");
@@ -239,14 +275,24 @@ pub fn ranking_cases() -> Vec<Case> {
     let beyond = b.post("stranger");
     b.binary(Family::Affinity, "v", &topic, 1.0, 1.0);
     b.hyper(Family::Reference, "v", &topic, &beyond, 1.0, 1.0);
-    cases.push(Case { name: "a Type ranks and never transits", slice: b.build(), params: every_kind(), network: network(8) });
+    cases.push(Case {
+        name: "a Type ranks and never transits",
+        slice: b.build(),
+        params: every_kind(),
+        network: network(8),
+    });
 
     let mut b = Builder::new();
     b.person("rival");
     let post = b.post("rival");
     b.opinion("v", "prof:rival", -1.0, 1.0);
     let _ = post;
-    cases.push(Case { name: "a negative score sorts at the bottom, present", slice: b.build(), params: every_kind(), network: network(8) });
+    cases.push(Case {
+        name: "a negative score sorts at the bottom, present",
+        slice: b.build(),
+        params: every_kind(),
+        network: network(8),
+    });
 
     let mut b = Builder::new();
     b.person("a");
@@ -257,7 +303,12 @@ pub fn ranking_cases() -> Vec<Case> {
     b.opinion("v", "prof:c", 1.0, 1.0);
     b.opinion("a", &post, 1.0, 1.0);
     b.opinion("c", &post, -1.0, 1.0);
-    cases.push(Case { name: "opposing paths cancel to a present zero", slice: b.build(), params: RankParams::default(), network: network(8) });
+    cases.push(Case {
+        name: "opposing paths cancel to a present zero",
+        slice: b.build(),
+        params: RankParams::default(),
+        network: network(8),
+    });
 
     let mut b = Builder::new();
     b.person("x");
@@ -267,7 +318,12 @@ pub fn ranking_cases() -> Vec<Case> {
     b.epoch = 5;
     b.opinion("v", &older, 1.0, 1.0);
     b.opinion("v", &newer, 1.0, 1.0);
-    cases.push(Case { name: "a strict score tie breaks by genesis recency, newest first", slice: b.build(), params: RankParams::default(), network: network(8) });
+    cases.push(Case {
+        name: "a strict score tie breaks by genesis recency, newest first",
+        slice: b.build(),
+        params: RankParams::default(),
+        network: network(8),
+    });
 
     cases
 }

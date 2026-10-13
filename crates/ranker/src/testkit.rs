@@ -12,12 +12,17 @@ use proptest::test_runner::{Config, RngSeed, TestCaseError, TestRunner};
 
 use crate::bundle::CausalKey;
 use crate::census::{Family, LegRole};
-use crate::input::{NetworkParams, NodeKind, Slice, SliceLeg, SliceNode, SliceRecord, TieBreakerKey};
+use crate::input::{
+    NetworkParams, NodeKind, Slice, SliceLeg, SliceNode, SliceRecord, TieBreakerKey,
+};
 use crate::recency::RecencyShape;
 
 /// Runs a property from an ordinary test, seeded, persisting nothing.
-pub(crate) fn check<S>(cases: u32, strategy: S, test: impl Fn(S::Value) -> Result<(), TestCaseError>)
-where
+pub(crate) fn check<S>(
+    cases: u32,
+    strategy: S,
+    test: impl Fn(S::Value) -> Result<(), TestCaseError>,
+) where
     S: Strategy,
     S::Value: std::fmt::Debug,
 {
@@ -141,7 +146,14 @@ impl Builder {
         }
     }
 
-    fn push(&mut self, record_id: String, family: Family, author: &str, key: CausalKey, legs: Vec<SliceLeg>) -> String {
+    fn push(
+        &mut self,
+        record_id: String,
+        family: Family,
+        author: &str,
+        key: CausalKey,
+        legs: Vec<SliceLeg>,
+    ) -> String {
         self.records.push(SliceRecord {
             record_id: record_id.clone(),
             family,
@@ -158,13 +170,26 @@ impl Builder {
         let graph_id = format!("mint:{record}");
         let key = self.next_key();
         self.node(&graph_id, Some(NodeKind::Post), Some(key));
-        let leg = self.leg(LegRole::Binary, &format!("addr:{author}"), &graph_id, attachment, 1.0);
+        let leg = self.leg(
+            LegRole::Binary,
+            &format!("addr:{author}"),
+            &graph_id,
+            attachment,
+            1.0,
+        );
         self.push(record, Family::Publish, author, key, vec![leg]);
         graph_id
     }
 
     /// A binary record.
-    pub(crate) fn binary(&mut self, family: Family, author: &str, target: &str, p_d: f64, p_i: f64) -> String {
+    pub(crate) fn binary(
+        &mut self,
+        family: Family,
+        author: &str,
+        target: &str,
+        p_d: f64,
+        p_i: f64,
+    ) -> String {
         let record = self.act(author, family);
         let key = self.next_key();
         let leg = self.leg(LegRole::Binary, &format!("addr:{author}"), target, p_d, p_i);
@@ -177,7 +202,15 @@ impl Builder {
 
     /// A hyper-edge record: A-leg into `middle`, T-leg on to `target`, the
     /// T-leg rendering the tuple transposed.
-    pub(crate) fn hyper(&mut self, family: Family, author: &str, middle: &str, target: &str, p_d: f64, p_i: f64) -> String {
+    pub(crate) fn hyper(
+        &mut self,
+        family: Family,
+        author: &str,
+        middle: &str,
+        target: &str,
+        p_d: f64,
+        p_i: f64,
+    ) -> String {
         let record = self.act(author, family);
         let key = self.next_key();
         let a = self.leg(LegRole::A, &format!("addr:{author}"), middle, p_d, p_i);
@@ -219,12 +252,44 @@ impl Builder {
 /// One random authoring act, by indices into the generated population.
 #[derive(Debug, Clone)]
 enum Act {
-    Opinion { author: usize, target: usize, p_d: f64, p_i: f64 },
-    Tag { author: usize, content: usize, topic: usize, relevance: f64, confidence: f64 },
-    Reference { author: usize, carrier: usize, target: usize, p_d: f64, p_i: f64 },
-    Comment { author: usize, parent: usize, p_d: f64, p_i: f64 },
-    Edit { author: usize, comment: usize, p_d: f64, p_i: f64 },
-    Affinity { author: usize, topic: usize, p_d: f64, p_i: f64 },
+    Opinion {
+        author: usize,
+        target: usize,
+        p_d: f64,
+        p_i: f64,
+    },
+    Tag {
+        author: usize,
+        content: usize,
+        topic: usize,
+        relevance: f64,
+        confidence: f64,
+    },
+    Reference {
+        author: usize,
+        carrier: usize,
+        target: usize,
+        p_d: f64,
+        p_i: f64,
+    },
+    Comment {
+        author: usize,
+        parent: usize,
+        p_d: f64,
+        p_i: f64,
+    },
+    Edit {
+        author: usize,
+        comment: usize,
+        p_d: f64,
+        p_i: f64,
+    },
+    Affinity {
+        author: usize,
+        topic: usize,
+        p_d: f64,
+        p_i: f64,
+    },
 }
 
 fn parameter() -> impl Strategy<Value = f64> {
@@ -250,7 +315,14 @@ pub(crate) fn any_slice() -> impl Strategy<Value = Slice> {
     (
         2usize..7,
         prop::collection::vec(0usize..3, 7),
-        prop::collection::vec((act(), 0i64..5, prop::sample::select(vec![0.0, 0.3, 0.7, 0.95])), 0..40),
+        prop::collection::vec(
+            (
+                act(),
+                0i64..5,
+                prop::sample::select(vec![0.0, 0.3, 0.7, 0.95]),
+            ),
+            0..40,
+        ),
     )
         .prop_map(|(people, posts_per, acts)| {
             let atoms: Vec<String> = (0..people).map(|i| format!("p{i}")).collect();
@@ -274,36 +346,85 @@ pub(crate) fn any_slice() -> impl Strategy<Value = Slice> {
                 let any_node = |i: usize, contents: &[String]| {
                     let all = atoms.len() + contents.len();
                     let j = i % all;
-                    if j < atoms.len() { person(j) } else { contents[j - atoms.len()].clone() }
+                    if j < atoms.len() {
+                        person(j)
+                    } else {
+                        contents[j - atoms.len()].clone()
+                    }
                 };
                 match act {
-                    Act::Opinion { author, target, p_d, p_i } => {
+                    Act::Opinion {
+                        author,
+                        target,
+                        p_d,
+                        p_i,
+                    } => {
                         let t = any_node(target, &contents);
                         b.opinion(&atom(author), &t, p_d, p_i);
                     }
-                    Act::Tag { author, content, topic, relevance, confidence } if !contents.is_empty() => {
+                    Act::Tag {
+                        author,
+                        content,
+                        topic,
+                        relevance,
+                        confidence,
+                    } if !contents.is_empty() => {
                         let c = contents[content % contents.len()].clone();
-                        b.hyper(Family::Tag, &atom(author), &c, &topics[topic % 2], relevance, confidence);
+                        b.hyper(
+                            Family::Tag,
+                            &atom(author),
+                            &c,
+                            &topics[topic % 2],
+                            relevance,
+                            confidence,
+                        );
                     }
-                    Act::Reference { author, carrier, target, p_d, p_i } if !contents.is_empty() => {
+                    Act::Reference {
+                        author,
+                        carrier,
+                        target,
+                        p_d,
+                        p_i,
+                    } if !contents.is_empty() => {
                         let c = contents[carrier % contents.len()].clone();
                         let t = any_node(target, &contents);
                         if t != c {
                             b.hyper(Family::Reference, &atom(author), &c, &t, p_d, p_i);
                         }
                     }
-                    Act::Comment { author, parent, p_d, p_i } if !contents.is_empty() => {
+                    Act::Comment {
+                        author,
+                        parent,
+                        p_d,
+                        p_i,
+                    } if !contents.is_empty() => {
                         let p = contents[parent % contents.len()].clone();
                         let c = b.comment(&atom(author), &p, p_d, p_i);
                         comments.push((p, c.clone()));
                         contents.push(c);
                     }
-                    Act::Edit { author, comment, p_d, p_i } if !comments.is_empty() => {
+                    Act::Edit {
+                        author,
+                        comment,
+                        p_d,
+                        p_i,
+                    } if !comments.is_empty() => {
                         let (p, c) = comments[comment % comments.len()].clone();
                         b.hyper(Family::Review, &atom(author), &p, &c, p_d, p_i);
                     }
-                    Act::Affinity { author, topic, p_d, p_i } => {
-                        b.binary(Family::Affinity, &atom(author), &topics[topic % 2], p_d, p_i);
+                    Act::Affinity {
+                        author,
+                        topic,
+                        p_d,
+                        p_i,
+                    } => {
+                        b.binary(
+                            Family::Affinity,
+                            &atom(author),
+                            &topics[topic % 2],
+                            p_d,
+                            p_i,
+                        );
                     }
                     _ => {}
                 }

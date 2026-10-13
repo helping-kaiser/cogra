@@ -129,9 +129,8 @@ fn refolds(hop: &RankHop) -> bool {
             p_i: m.p_i,
         })
         .collect();
-    fold_members(&members).is_ok_and(|f| {
-        bits(f.p_d) == bits(hop.p_directed) && bits(f.p_i) == bits(hop.p_interest)
-    })
+    fold_members(&members)
+        .is_ok_and(|f| bits(f.p_d) == bits(hop.p_directed) && bits(f.p_i) == bits(hop.p_interest))
 }
 
 /// Re-ranks the sampled targets from the slice and compares them with a
@@ -193,8 +192,12 @@ pub fn spot_check(
         .collect();
     for pair in listed.windows(2) {
         let (Some(a), Some(b)) = (
-            honest_entries.iter().find(|h| h.target_id == pair[0].target_id),
-            honest_entries.iter().find(|h| h.target_id == pair[1].target_id),
+            honest_entries
+                .iter()
+                .find(|h| h.target_id == pair[0].target_id),
+            honest_entries
+                .iter()
+                .find(|h| h.target_id == pair[1].target_id),
         ) else {
             continue;
         };

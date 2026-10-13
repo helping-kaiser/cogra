@@ -47,16 +47,25 @@ fn bad(field: &str, reason: &str) -> RankError {
 /// Validates the governed parameters and the viewer's overrides, and
 /// resolves the overrides against the network defaults (miner-api.md
 /// "Inputs"; ranker-core §3.7).
-pub(crate) fn calibrate(params: &RankParams, net: &NetworkParams) -> Result<Calibration, RankError> {
+pub(crate) fn calibrate(
+    params: &RankParams,
+    net: &NetworkParams,
+) -> Result<Calibration, RankError> {
     let network = |reason: String| RankError::NetworkParameters { reason };
     if net.k == 0 {
         return Err(network("k must be at least 1".into()));
     }
-    if !(net.gamma > 0.0 && net.gamma <= 1.0) {
-        return Err(network(format!("gamma = {} lies outside (0, 1]", net.gamma)));
+    if net.gamma.is_nan() || net.gamma <= 0.0 || net.gamma > 1.0 {
+        return Err(network(format!(
+            "gamma = {} lies outside (0, 1]",
+            net.gamma
+        )));
     }
-    if !(net.dust_floor >= 0.0) {
-        return Err(network(format!("dust_floor = {} is negative", net.dust_floor)));
+    if net.dust_floor.is_nan() || net.dust_floor < 0.0 {
+        return Err(network(format!(
+            "dust_floor = {} is negative",
+            net.dust_floor
+        )));
     }
     let mut named = BTreeSet::new();
     for key in &net.tie_breakers {
@@ -68,12 +77,16 @@ pub(crate) fn calibrate(params: &RankParams, net: &NetworkParams) -> Result<Cali
         }
     }
     let gamma = match params.gamma {
-        Some(g) if !(g > 0.0 && g <= 1.0) => return Err(bad("gamma", "must lie in (0, 1]")),
+        Some(g) if g.is_nan() || g <= 0.0 || g > 1.0 => {
+            return Err(bad("gamma", "must lie in (0, 1]"));
+        }
         Some(g) => g,
         None => net.gamma,
     };
     let chi = match params.dust_floor {
-        Some(c) if !(c >= 0.0) => return Err(bad("dustFloor", "must be non-negative")),
+        Some(c) if c.is_nan() || c < 0.0 => {
+            return Err(bad("dustFloor", "must be non-negative"));
+        }
         Some(c) if c > net.dust_floor => {
             return Err(bad(
                 "dustFloor",
@@ -125,16 +138,27 @@ pub(crate) fn path_of(g: &Graph, walk: &Walk, half_life: u32) -> RankPath {
         .filter(|&&h| g.hops[h].folded.p_d < 0.0)
         .count();
     let tainted = walk.hops.iter().any(|&h| g.hops[h].folded.p_i < 0.0);
-    let sign = if negatives % 2 == 0 && !tainted { 1 } else { -1 };
+    let sign = if negatives % 2 == 0 && !tainted {
+        1
+    } else {
+        -1
+    };
     let magnitude = walk.magnitude(g);
-    let terminal = walk.hops.last().map(|&h| g.hops[h].folded.newest.landing_epoch);
+    let terminal = walk
+        .hops
+        .last()
+        .map(|&h| g.hops[h].folded.newest.landing_epoch);
     let recency = match terminal {
         Some(landed) => recency_factor(epoch_age(g.as_of_epoch, landed), half_life),
         None => 1.0,
     };
     let contribution = f64::from(sign) * magnitude * recency;
     RankPath {
-        nodes: walk.nodes.iter().map(|&n| g.nodes[n].graph_id.clone()).collect(),
+        nodes: walk
+            .nodes
+            .iter()
+            .map(|&n| g.nodes[n].graph_id.clone())
+            .collect(),
         hops,
         sign,
         magnitude,
@@ -292,7 +316,11 @@ pub(crate) fn feed_candidates(
 
 /// Ranks the viewer's slice into an ordered feed: every in-scope candidate
 /// a live path reaches, `S` descending, ties by the governed composition.
-pub fn rank(slice: &Slice, params: &RankParams, net: &NetworkParams) -> Result<Vec<FeedEntry>, RankError> {
+pub fn rank(
+    slice: &Slice,
+    params: &RankParams,
+    net: &NetworkParams,
+) -> Result<Vec<FeedEntry>, RankError> {
     let cal = calibrate(params, net)?;
     let g = Graph::build(slice, cal.gamma)?;
     let candidates = feed_candidates(&g, params, &cal)?;

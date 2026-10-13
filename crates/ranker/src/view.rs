@@ -117,7 +117,9 @@ pub(crate) fn mark(g: &Graph, person_node: &str) -> Result<Option<PeopleMark>, R
     let members: Vec<Member> = g
         .records
         .iter()
-        .filter(|r| r.family == Family::Opinion && r.author == viewer_atom && r.target == person_node)
+        .filter(|r| {
+            r.family == Family::Opinion && r.author == viewer_atom && r.target == person_node
+        })
         .filter_map(|r| {
             r.legs
                 .get(&LegRole::Binary)
@@ -154,7 +156,12 @@ pub(crate) fn row_person(graph_id: &str, kind: NodeKind) -> Option<String> {
 }
 
 /// `S(u, node)` for any node, or `None` when no live walk reaches it.
-fn strength(g: &Graph, node: usize, cal: &Calibration, first: Option<crate::extract::Walk>) -> Option<f64> {
+fn strength(
+    g: &Graph,
+    node: usize,
+    cal: &Calibration,
+    first: Option<crate::extract::Walk>,
+) -> Option<f64> {
     if node == g.root {
         return Some(1.0);
     }
@@ -197,7 +204,12 @@ fn landing_factor(candidate: &SettlingCandidate, cal: &Calibration) -> Result<f6
         | Family::Bid
         | Family::Accept
         | Family::Ratify => {}
-        _ => return Err(bad("settling", "the family carries no authorship edge the feed walks")),
+        _ => {
+            return Err(bad(
+                "settling",
+                "the family carries no authorship edge the feed walks",
+            ));
+        }
     }
     let mut factor = 1.0;
     for role in candidate.family.roles() {
@@ -308,14 +320,14 @@ pub fn feed_ranking(
             .then_with(|| b.key.total_cmp(&a.key))
             .then_with(|| by_instant_then_reference(a.candidate, b.candidate))
     });
-    let mut ranked_position = vec![0u32; keyed.len()];
-    let mut placed = 0usize;
-    for (i, row) in keyed.iter().enumerate() {
-        ranked_position[i] = (row.gap + placed) as u32;
-        placed += 1;
-    }
+    let ranked_position: Vec<u32> = keyed
+        .iter()
+        .enumerate()
+        .map(|(earlier_rows, row)| (row.gap + earlier_rows) as u32)
+        .collect();
     let mut newest_order: Vec<usize> = (0..keyed.len()).collect();
-    newest_order.sort_by(|&a, &b| by_instant_then_reference(keyed[a].candidate, keyed[b].candidate));
+    newest_order
+        .sort_by(|&a, &b| by_instant_then_reference(keyed[a].candidate, keyed[b].candidate));
     let mut newest_position = vec![0u32; keyed.len()];
     for (place, &row) in newest_order.iter().enumerate() {
         newest_position[row] = place as u32;

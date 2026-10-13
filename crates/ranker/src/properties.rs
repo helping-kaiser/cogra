@@ -10,7 +10,9 @@ use crate::bundle::CausalKey;
 use crate::census::{Family, LegRole};
 use crate::error::RankError;
 use crate::graph::Graph;
-use crate::input::{NetworkParams, NodeKind, RankParams, Slice, SliceRecord, TieBreakerKey, TieStatistics};
+use crate::input::{
+    NetworkParams, NodeKind, RankParams, Slice, SliceRecord, TieBreakerKey, TieStatistics,
+};
 use crate::output::FeedEntry;
 use crate::rank::{rank, rank_search, score_target};
 use crate::spot::{SpotCheck, spot_check};
@@ -67,45 +69,59 @@ fn t_zero_an_inert_hop_carries_no_path() {
 /// ´claim:properties:inbound-records-never-change-the-feed´
 #[test]
 fn t_fwd_inbound_records_never_change_the_feed() {
-    check(256, (any_slice(), prop::collection::vec((0usize..8, -1.0..=1.0f64, -1.0..=1.0f64), 1..6)), |(slice, inbound)| {
-        let before = ranked(&slice);
-        let mut more = slice.clone();
-        let people: Vec<String> = slice
-            .nodes
-            .iter()
-            .filter(|n| n.graph_id.starts_with("prof:") && n.id.as_deref() != Some(slice.viewer.as_str()))
-            .map(|n| n.graph_id.trim_start_matches("prof:").to_string())
-            .collect();
-        let viewer = slice
-            .nodes
-            .iter()
-            .find(|n| n.id.as_deref() == Some(slice.viewer.as_str()))
-            .map(|n| n.graph_id.clone())
-            .expect("the viewer is a node");
-        for (i, (who, p_d, p_i)) in inbound.into_iter().enumerate() {
-            if people.is_empty() {
-                break;
+    check(
+        256,
+        (
+            any_slice(),
+            prop::collection::vec((0usize..8, -1.0..=1.0f64, -1.0..=1.0f64), 1..6),
+        ),
+        |(slice, inbound)| {
+            let before = ranked(&slice);
+            let mut more = slice.clone();
+            let people: Vec<String> = slice
+                .nodes
+                .iter()
+                .filter(|n| {
+                    n.graph_id.starts_with("prof:")
+                        && n.id.as_deref() != Some(slice.viewer.as_str())
+                })
+                .map(|n| n.graph_id.trim_start_matches("prof:").to_string())
+                .collect();
+            let viewer = slice
+                .nodes
+                .iter()
+                .find(|n| n.id.as_deref() == Some(slice.viewer.as_str()))
+                .map(|n| n.graph_id.clone())
+                .expect("the viewer is a node");
+            for (i, (who, p_d, p_i)) in inbound.into_iter().enumerate() {
+                if people.is_empty() {
+                    break;
+                }
+                let atom = &people[who % people.len()];
+                more.records.push(SliceRecord {
+                    record_id: format!("act:{atom}:{}:opinion", 1000 + i),
+                    family: Family::Opinion,
+                    author: atom.clone(),
+                    key: CausalKey {
+                        landing_epoch: 9,
+                        act_time: 10_000 + i as i64,
+                        position: 10_000 + i as i64,
+                    },
+                    legs: vec![crate::input::SliceLeg {
+                        role: LegRole::Binary,
+                        source: format!("addr:{atom}"),
+                        target: viewer.clone(),
+                        p_d,
+                        p_i,
+                        tau: 0.5,
+                        census_unknown: false,
+                    }],
+                });
             }
-            let atom = &people[who % people.len()];
-            more.records.push(SliceRecord {
-                record_id: format!("act:{atom}:{}:opinion", 1000 + i),
-                family: Family::Opinion,
-                author: atom.clone(),
-                key: CausalKey { landing_epoch: 9, act_time: 10_000 + i as i64, position: 10_000 + i as i64 },
-                legs: vec![crate::input::SliceLeg {
-                    role: LegRole::Binary,
-                    source: format!("addr:{atom}"),
-                    target: viewer.clone(),
-                    p_d,
-                    p_i,
-                    tau: 0.5,
-                    census_unknown: false,
-                }],
-            });
-        }
-        prop_assert_eq!(format!("{before:?}"), format!("{:?}", ranked(&more)));
-        Ok(())
-    });
+            prop_assert_eq!(format!("{before:?}"), format!("{:?}", ranked(&more)));
+            Ok(())
+        },
+    );
 }
 
 /// feed-ranking.md §4 "Simple by construction" and §6.1 "strongest first":
@@ -146,7 +162,11 @@ fn menger_bound(g: &Graph, target: usize) -> usize {
     let mut cap = vec![vec![0i32; size]; size];
     let (inn, out) = (|v: usize| 2 * v, |v: usize| 2 * v + 1);
     for v in 0..n {
-        cap[inn(v)][out(v)] = if v == g.root || v == target { n as i32 } else { 1 };
+        cap[inn(v)][out(v)] = if v == g.root || v == target {
+            n as i32
+        } else {
+            1
+        };
     }
     for hop in &g.hops {
         if hop.target == g.root {
@@ -197,8 +217,12 @@ fn t_disj_extracted_paths_are_disjoint() {
             prop_assert!(entry.paths.len() <= 3);
             let mut seen = BTreeSet::new();
             for path in &entry.paths {
-                let interior: BTreeSet<&String> = path.nodes[1..path.nodes.len() - 1].iter().collect();
-                prop_assert!(!interior.contains(&entry.target_graph_id), "a walk ends at its target");
+                let interior: BTreeSet<&String> =
+                    path.nodes[1..path.nodes.len() - 1].iter().collect();
+                prop_assert!(
+                    !interior.contains(&entry.target_graph_id),
+                    "a walk ends at its target"
+                );
                 for node in interior {
                     prop_assert!(seen.insert(node.clone()), "{} shared", node);
                 }
@@ -267,7 +291,10 @@ fn t_greedy_extracts_the_greedy_set() {
     let entries = ranked(&slice);
     let e = entry(&entries, &t).expect("reached");
     assert_eq!(e.paths.len(), 1);
-    assert_eq!(e.paths[0].nodes, vec!["prof:u", "prof:a", "prof:d", t.as_str()]);
+    assert_eq!(
+        e.paths[0].nodes,
+        vec!["prof:u", "prof:a", "prof:d", t.as_str()]
+    );
 }
 
 /// feed-ranking.md §7 "Zero-jail": netting the last live entry bundle makes
@@ -328,7 +355,10 @@ fn t_sign_balance_and_taint() {
     b.opinion("v", "prof:e", 1.0, -1.0);
     let enemy_of_enemy = b.post("a", 1.0);
     let entries = ranked(&b.build());
-    let (l, h) = (entry(&entries, &love).expect("love"), entry(&entries, &hate).expect("hate"));
+    let (l, h) = (
+        entry(&entries, &love).expect("love"),
+        entry(&entries, &hate).expect("hate"),
+    );
     assert_eq!(h.score.to_bits(), (-l.score).to_bits());
     let mut b2 = Builder::new("v");
     b2.person("a");
@@ -337,7 +367,11 @@ fn t_sign_balance_and_taint() {
     b2.opinion("v", "prof:a", -1.0, 1.0);
     b2.opinion("a", &target, -1.0, 1.0);
     let e = ranked(&b2.build());
-    assert_eq!(entry(&e, &target).expect("reached").paths[0].sign, 1, "the enemy of my enemy");
+    assert_eq!(
+        entry(&e, &target).expect("reached").paths[0].sign,
+        1,
+        "the enemy of my enemy"
+    );
     let mut b3 = Builder::new("v");
     b3.person("a");
     b3.person("z");
@@ -345,7 +379,11 @@ fn t_sign_balance_and_taint() {
     b3.opinion("v", "prof:a", 1.0, -1.0);
     b3.opinion("a", &target, -1.0, -1.0);
     let e = ranked(&b3.build());
-    assert_eq!(entry(&e, &target).expect("reached").paths[0].sign, -1, "taint never composes back");
+    assert_eq!(
+        entry(&e, &target).expect("reached").paths[0].sign,
+        -1,
+        "taint never composes back"
+    );
     assert!(entry(&entries, &enemy_of_enemy).is_some_and(|e| e.score < 0.0));
 }
 
@@ -397,8 +435,14 @@ fn t_sink_no_path_leaves_a_type() {
     b.binary(Family::Affinity, "v", &topic, 1.0, 1.0);
     b.hyper(Family::Reference, "v", &topic, &p, 1.0, 1.0);
     let entries = rank(&b.build(), &all_kinds(), &network()).expect("ranks");
-    assert!(entry(&entries, &topic).is_some(), "the Type ranks as a target");
-    assert!(entry(&entries, &p).is_none(), "and nothing passes through it");
+    assert!(
+        entry(&entries, &topic).is_some(),
+        "the Type ranks as a target"
+    );
+    assert!(
+        entry(&entries, &p).is_none(),
+        "and nothing passes through it"
+    );
 }
 
 /// feed-ranking.md §4 "References" and "Tags": a stranger's citation or tag
@@ -414,16 +458,26 @@ fn t_chan_a_strangers_citation_crosses_only_through_its_author() {
         b.person("stranger");
         b.person("cited");
         let carrier = b.post("owner", 1.0);
-        let target = if family == Family::Tag { b.topic("t") } else { b.post("cited", 1.0) };
+        let target = if family == Family::Tag {
+            b.topic("t")
+        } else {
+            b.post("cited", 1.0)
+        };
         b.opinion("v", &carrier, 1.0, 1.0);
         b.hyper(family, "stranger", &carrier, &target, 1.0, 1.0);
         let params = all_kinds();
         let entries = rank(&b.build(), &params, &network()).expect("ranks");
-        assert!(entry(&entries, &target).is_none(), "{family}: the carrier is no switchboard");
+        assert!(
+            entry(&entries, &target).is_none(),
+            "{family}: the carrier is no switchboard"
+        );
         b.opinion("v", "prof:stranger", 1.0, 1.0);
         let entries = rank(&b.build(), &params, &network()).expect("ranks");
         let e = entry(&entries, &target).expect("through the author");
-        assert_eq!(e.paths[0].nodes, vec!["prof:v", "prof:stranger", carrier.as_str(), target.as_str()]);
+        assert_eq!(
+            e.paths[0].nodes,
+            vec!["prof:v", "prof:stranger", carrier.as_str(), target.as_str()]
+        );
     }
 }
 
@@ -439,12 +493,19 @@ fn t_chan_the_authors_own_citation_crosses_from_any_arrival() {
         b.person("owner");
         b.person("cited");
         let carrier = b.post("owner", 1.0);
-        let target = if family == Family::Tag { b.topic("t") } else { b.post("cited", 1.0) };
+        let target = if family == Family::Tag {
+            b.topic("t")
+        } else {
+            b.post("cited", 1.0)
+        };
         b.opinion("v", &carrier, 1.0, 1.0);
         b.hyper(family, "owner", &carrier, &target, 1.0, 1.0);
         let entries = rank(&b.build(), &all_kinds(), &network()).expect("ranks");
         let e = entry(&entries, &target).expect("content-intrinsic");
-        assert_eq!(e.paths[0].nodes, vec!["prof:v", carrier.as_str(), target.as_str()]);
+        assert_eq!(
+            e.paths[0].nodes,
+            vec!["prof:v", carrier.as_str(), target.as_str()]
+        );
     }
 }
 
@@ -465,11 +526,20 @@ fn t_chan_edit_legs_are_gated() {
     b.opinion("v", &other, 1.0, 1.0);
     b.hyper(Family::Review, "stranger", &other, &comment, 1.0, 1.0);
     let params = all_kinds();
-    assert!(entry(&rank(&b.build(), &params, &network()).expect("ranks"), &comment).is_none());
+    assert!(
+        entry(
+            &rank(&b.build(), &params, &network()).expect("ranks"),
+            &comment
+        )
+        .is_none()
+    );
     b.opinion("v", &parent, 1.0, 1.0);
     let entries = rank(&b.build(), &params, &network()).expect("ranks");
     let e = entry(&entries, &comment).expect("the genesis leg is ungated");
-    assert_eq!(e.paths[0].nodes, vec!["prof:v", parent.as_str(), comment.as_str()]);
+    assert_eq!(
+        e.paths[0].nodes,
+        vec!["prof:v", parent.as_str(), comment.as_str()]
+    );
 }
 
 /// feed-ranking.md §9.4: the seen list removes candidates, never transit.
@@ -508,7 +578,11 @@ fn t_permute_input_order_is_irrelevant() {
             (Just(s), nodes, records)
         }),
         |(slice, nodes, records)| {
-            let shuffled = Slice { nodes, records, ..slice.clone() };
+            let shuffled = Slice {
+                nodes,
+                records,
+                ..slice.clone()
+            };
             prop_assert_eq!(
                 format!("{:?}", rank(&slice, &all_kinds(), &network())),
                 format!("{:?}", rank(&shuffled, &all_kinds(), &network()))
@@ -527,17 +601,74 @@ fn t_permute_input_order_is_irrelevant() {
 #[test]
 fn t_noai_the_input_surface_is_the_allowlist() {
     let slice = Builder::new("v").build();
-    let Slice { as_of_epoch: _, viewer: _, nodes, records } = slice;
-    for crate::input::SliceNode { graph_id: _, id: _, kind: _, genesis: _, statistics } in nodes {
-        if let Some(TieStatistics { net_stance: _, gross_volume: _ }) = statistics {}
+    let Slice {
+        as_of_epoch: _,
+        viewer: _,
+        nodes,
+        records,
+    } = slice;
+    for crate::input::SliceNode {
+        graph_id: _,
+        id: _,
+        kind: _,
+        genesis: _,
+        statistics,
+    } in nodes
+    {
+        if let Some(TieStatistics {
+            net_stance: _,
+            gross_volume: _,
+        }) = statistics
+        {}
     }
-    for SliceRecord { record_id: _, family: _, author: _, key, legs } in records {
-        let CausalKey { landing_epoch: _, act_time: _, position: _ } = key;
-        for crate::input::SliceLeg { role: _, source: _, target: _, p_d: _, p_i: _, tau: _, census_unknown: _ } in legs {}
+    for SliceRecord {
+        record_id: _,
+        family: _,
+        author: _,
+        key,
+        legs,
+    } in records
+    {
+        let CausalKey {
+            landing_epoch: _,
+            act_time: _,
+            position: _,
+        } = key;
+        for crate::input::SliceLeg {
+            role: _,
+            source: _,
+            target: _,
+            p_d: _,
+            p_i: _,
+            tau: _,
+            census_unknown: _,
+        } in legs
+        {}
     }
-    let RankParams { kinds: _, topic: _, gamma: _, dust_floor: _, half_life_epochs: _, seen: _ } = RankParams::default();
-    let NetworkParams { k: _, gamma: _, dust_floor: _, half_life_epochs: _, shape: _, tie_breakers: _ } = network();
-    let SettlingCandidate { reference: _, author: _, family: _, p_d: _, p_i: _, authored_at: _ } = SettlingCandidate {
+    let RankParams {
+        kinds: _,
+        topic: _,
+        gamma: _,
+        dust_floor: _,
+        half_life_epochs: _,
+        seen: _,
+    } = RankParams::default();
+    let NetworkParams {
+        k: _,
+        gamma: _,
+        dust_floor: _,
+        half_life_epochs: _,
+        shape: _,
+        tie_breakers: _,
+    } = network();
+    let SettlingCandidate {
+        reference: _,
+        author: _,
+        family: _,
+        p_d: _,
+        p_i: _,
+        authored_at: _,
+    } = SettlingCandidate {
         reference: String::new(),
         author: String::new(),
         family: Family::Publish,
@@ -563,7 +694,10 @@ fn t_ffi_surface_is_ffi_clean() {
     let test_only = ["properties.rs", "reference.rs", "testkit.rs"];
     let mut public_lines = Vec::new();
     let mut exported = Vec::new();
-    let mut entries: Vec<_> = std::fs::read_dir(&dir).expect("src").filter_map(Result::ok).collect();
+    let mut entries: Vec<_> = std::fs::read_dir(&dir)
+        .expect("src")
+        .filter_map(Result::ok)
+        .collect();
     entries.sort_by_key(|e| e.file_name());
     for file in entries {
         let name = file.file_name().to_string_lossy().to_string();
@@ -576,13 +710,19 @@ fn t_ffi_surface_is_ffi_clean() {
         for line in body.lines() {
             let t = line.trim_start();
             let indented = line.starts_with(' ');
-            if !indented && !t.is_empty() && !t.starts_with("//") && !t.starts_with('#') && !t.starts_with('}') {
+            if !indented
+                && !t.is_empty()
+                && !t.starts_with("//")
+                && !t.starts_with('#')
+                && !t.starts_with('}')
+            {
                 enclosing = t.to_string();
             }
             if !t.starts_with("pub ") || t.starts_with("pub use") {
                 continue;
             }
-            let public_item = enclosing.starts_with("pub struct") || enclosing.starts_with("pub enum");
+            let public_item =
+                enclosing.starts_with("pub struct") || enclosing.starts_with("pub enum");
             if !indented {
                 public_lines.push(format!("{name}: {t}"));
                 exported.push(format!("{name}: {t}"));
@@ -595,18 +735,26 @@ fn t_ffi_surface_is_ffi_clean() {
             }
         }
     }
-    let forbidden = ["u128", "i128", "&'", "<'", "dyn ", "HashMap", "HashSet", "seam::", "common::"];
+    let forbidden = [
+        "u128", "i128", "&'", "<'", "dyn ", "HashMap", "HashSet", "seam::", "common::",
+    ];
     for line in &exported {
         for f in forbidden {
             assert!(!line.contains(f), "{line} uses {f}");
         }
         let item = line.split_once(": ").map_or(line.as_str(), |(_, t)| t);
         let returns = item.split("->").nth(1).unwrap_or_default();
-        assert!(!returns.trim_start().starts_with('('), "{line} returns a tuple");
-        if !item.contains("fn ") {
-            if let Some((_, field_type)) = item.split_once(": ") {
-                assert!(!field_type.trim_start().starts_with('('), "{line} has a tuple field");
-            }
+        assert!(
+            !returns.trim_start().starts_with('('),
+            "{line} returns a tuple"
+        );
+        if !item.contains("fn ")
+            && let Some((_, field_type)) = item.split_once(": ")
+        {
+            assert!(
+                !field_type.trim_start().starts_with('('),
+                "{line} has a tuple field"
+            );
         }
     }
     let items: BTreeSet<String> = public_lines
@@ -620,16 +768,57 @@ fn t_ffi_surface_is_ffi_clean() {
         })
         .collect();
     let allowed: BTreeSet<String> = [
-        "const ALL", "const BETA", "const ETA", "enum Family", "enum LegRole", "enum NodeKind",
-        "enum PeopleMark", "enum RankError", "enum RecencyShape", "enum SpotCheck", "enum TieBreakerKey",
-        "fn coherence", "fn damped_weight", "fn determinant", "fn epoch_age", "fn feed_ranking",
-        "fn fold_members", "fn from_parameter", "fn from_wire", "fn is_inert", "fn maturity_gain",
-        "fn parameter_name", "fn parity", "fn path_view", "fn rank", "fn rank_search", "fn recency_factor",
-        "fn roles", "fn score_target", "fn spot_check", "fn temporal_entropy", "fn wire_name",
-        "struct CausalKey", "struct FeedEntry", "struct FeedRanking", "struct Folded", "struct HopMember",
-        "struct Member", "struct NetworkParams", "struct PathView", "struct RankHop", "struct RankParams",
-        "struct RankPath", "struct RankedEntry", "struct SettlingCandidate", "struct SettlingPlace",
-        "struct Slice", "struct SliceLeg", "struct SliceNode", "struct SliceRecord", "struct TieBreakers",
+        "const ALL",
+        "const BETA",
+        "const ETA",
+        "enum Family",
+        "enum LegRole",
+        "enum NodeKind",
+        "enum PeopleMark",
+        "enum RankError",
+        "enum RecencyShape",
+        "enum SpotCheck",
+        "enum TieBreakerKey",
+        "fn coherence",
+        "fn damped_weight",
+        "fn determinant",
+        "fn epoch_age",
+        "fn feed_ranking",
+        "fn fold_members",
+        "fn from_parameter",
+        "fn from_wire",
+        "fn is_inert",
+        "fn maturity_gain",
+        "fn parameter_name",
+        "fn parity",
+        "fn path_view",
+        "fn rank",
+        "fn rank_search",
+        "fn recency_factor",
+        "fn roles",
+        "fn score_target",
+        "fn spot_check",
+        "fn temporal_entropy",
+        "fn wire_name",
+        "struct CausalKey",
+        "struct FeedEntry",
+        "struct FeedRanking",
+        "struct Folded",
+        "struct HopMember",
+        "struct Member",
+        "struct NetworkParams",
+        "struct PathView",
+        "struct RankHop",
+        "struct RankParams",
+        "struct RankPath",
+        "struct RankedEntry",
+        "struct SettlingCandidate",
+        "struct SettlingPlace",
+        "struct Slice",
+        "struct SliceLeg",
+        "struct SliceNode",
+        "struct SliceRecord",
+        "struct TieBreakers",
         "struct TieStatistics",
     ]
     .into_iter()
@@ -748,7 +937,10 @@ fn the_topic_fold_is_newest_wins_not_summed() {
     b.hyper(Family::Tag, "x", &p, &topic, 0.5, 1.0);
     b.hyper(Family::Tag, "x", &p, &topic, -0.5, 1.0);
     let entries = rank(&b.build(), &topic_params(&topic), &network()).expect("ranks");
-    assert!(entry(&entries, &p).is_some(), "a sum would read 0, the newest reads -0.5");
+    assert!(
+        entry(&entries, &p).is_some(),
+        "a sum would read 0, the newest reads -0.5"
+    );
 }
 
 /// Two targets that tie on `S` exactly: one person reaching each over the
@@ -776,12 +968,19 @@ fn equal_scores_break_by_net_stance_then_gross_volume_then_genesis_recency() {
     let (older, newer) = tied(&mut b);
     let mut slice = b.build();
     let net = NetworkParams {
-        tie_breakers: vec![TieBreakerKey::NetStance, TieBreakerKey::GrossVolume, TieBreakerKey::Recency],
+        tie_breakers: vec![
+            TieBreakerKey::NetStance,
+            TieBreakerKey::GrossVolume,
+            TieBreakerKey::Recency,
+        ],
         ..network()
     };
     let set = |slice: &mut Slice, id: &str, n: f64, g: f64| {
         if let Some(node) = slice.nodes.iter_mut().find(|x| x.graph_id == id) {
-            node.statistics = Some(TieStatistics { net_stance: n, gross_volume: g });
+            node.statistics = Some(TieStatistics {
+                net_stance: n,
+                gross_volume: g,
+            });
         }
     };
     let order = |slice: &Slice| -> Vec<String> {
@@ -793,12 +992,24 @@ fn equal_scores_break_by_net_stance_then_gross_volume_then_genesis_recency() {
     };
     set(&mut slice, &older, 2.0, 1.0);
     set(&mut slice, &newer, 1.0, 9.0);
-    assert_eq!(order(&slice), vec![older.clone(), newer.clone()], "net stance first");
+    assert_eq!(
+        order(&slice),
+        vec![older.clone(), newer.clone()],
+        "net stance first"
+    );
     set(&mut slice, &older, 1.0, 3.0);
     set(&mut slice, &newer, 1.0, 2.0);
-    assert_eq!(order(&slice), vec![older.clone(), newer.clone()], "then gross volume");
+    assert_eq!(
+        order(&slice),
+        vec![older.clone(), newer.clone()],
+        "then gross volume"
+    );
     set(&mut slice, &older, 1.0, 2.0);
-    assert_eq!(order(&slice), vec![newer.clone(), older.clone()], "then the newer genesis");
+    assert_eq!(
+        order(&slice),
+        vec![newer.clone(), older.clone()],
+        "then the newer genesis"
+    );
     if let Some(node) = slice.nodes.iter_mut().find(|x| x.graph_id == older) {
         node.statistics = None;
     }
@@ -806,8 +1017,13 @@ fn equal_scores_break_by_net_stance_then_gross_volume_then_genesis_recency() {
         rank(&slice, &RankParams::default(), &net),
         Err(RankError::MalformedSlice { .. })
     ));
-    let seeded = rank(&slice, &RankParams::default(), &network()).expect("the seed names no statistic");
-    assert!(seeded.iter().all(|e| e.tie_breakers.net_stance.is_none() && e.tie_breakers.gross_volume.is_none()));
+    let seeded =
+        rank(&slice, &RankParams::default(), &network()).expect("the seed names no statistic");
+    assert!(
+        seeded
+            .iter()
+            .all(|e| e.tie_breakers.net_stance.is_none() && e.tie_breakers.gross_volume.is_none())
+    );
 }
 
 /// feed-ranking.md §7: "An update record never refreshes it."
@@ -821,10 +1037,17 @@ fn an_update_record_never_refreshes_genesis_recency() {
     b.epoch = 9;
     b.binary(Family::Publish, "x", &older, 1.0, 1.0);
     let slice = b.build();
-    let order: Vec<String> = ranked(&slice).into_iter().map(|e| e.target_graph_id).collect();
+    let order: Vec<String> = ranked(&slice)
+        .into_iter()
+        .map(|e| e.target_graph_id)
+        .collect();
     let position = |id: &str| order.iter().position(|x| x == id);
     let (o, n) = (score(&slice, &older), score(&slice, &newer));
-    assert_eq!(o.map(f64::to_bits), n.map(f64::to_bits), "still tied: an update is no stance hop of the viewer's");
+    assert_eq!(
+        o.map(f64::to_bits),
+        n.map(f64::to_bits),
+        "still tied: an update is no stance hop of the viewer's"
+    );
     assert!(position(&newer) < position(&older));
 }
 
@@ -841,7 +1064,13 @@ fn genesis_epoch_age_reads_the_targets_genesis_record_not_its_newest_terminal() 
     b.epoch = 9;
     b.opinion("v", &p, 1.0, 1.0);
     let e = ranked(&b.build());
-    assert_eq!(entry(&e, &p).expect("reached").tie_breakers.genesis_epoch_age, Some(8));
+    assert_eq!(
+        entry(&e, &p)
+            .expect("reached")
+            .tie_breakers
+            .genesis_epoch_age,
+        Some(8)
+    );
 }
 
 /// ranked-feed-api X-6: a census-unknown leg is never folded and never
@@ -861,7 +1090,10 @@ fn a_census_unknown_leg_never_folds_or_transits() {
     let before = score(&b.build(), &p);
     b.opinion("v", &p, -0.5, -0.5);
     b.census_unknown_last();
-    assert_eq!(score(&b.build(), &p).map(f64::to_bits), before.map(f64::to_bits));
+    assert_eq!(
+        score(&b.build(), &p).map(f64::to_bits),
+        before.map(f64::to_bits)
+    );
 }
 
 fn marks(slice: &Slice) -> Vec<(String, Option<PeopleMark>)> {
@@ -893,20 +1125,32 @@ fn a_row_is_marked_by_the_viewers_folded_opinion_of_its_person() {
         let m = marks(&b.build());
         assert!(m.contains(&(p.clone(), want)), "{p_d}, {p_i}");
         if p_d != 0.0 {
-            assert!(m.contains(&("prof:x".to_string(), want)), "a profile row by its own person");
+            assert!(
+                m.contains(&("prof:x".to_string(), want)),
+                "a profile row by its own person"
+            );
         }
     }
     let mut b = Builder::new("v");
     b.person("x");
     let p = b.post("x", 1.0);
     b.opinion("v", &p, 1.0, 1.0);
-    assert!(marks(&b.build()).contains(&(p.clone(), None)), "never stanced");
+    assert!(
+        marks(&b.build()).contains(&(p.clone(), None)),
+        "never stanced"
+    );
     b.opinion("v", "prof:x", 0.5, 0.5);
     b.opinion("v", "prof:x", -0.5, -0.5);
-    assert!(marks(&b.build()).contains(&(p.clone(), None)), "netted to (0, 0)");
+    assert!(
+        marks(&b.build()).contains(&(p.clone(), None)),
+        "netted to (0, 0)"
+    );
     b.opinion("v", "prof:x", 0.5, 0.5);
     b.census_unknown_last();
-    assert!(marks(&b.build()).contains(&(p, None)), "a census-unknown leg never moves a mark");
+    assert!(
+        marks(&b.build()).contains(&(p, None)),
+        "a census-unknown leg never moves a mark"
+    );
 }
 
 /// PR-44: a Tags row belongs to no one; a comment's person is its genesis
@@ -951,7 +1195,10 @@ fn the_newest_index_orders_by_genesis_causal_key_descending() {
             prop_assert!(slot.is_none(), "a permutation");
             *slot = Some(i);
         }
-        let order: Vec<usize> = by_newest.into_iter().map(|s| s.expect("every index used")).collect();
+        let order: Vec<usize> = by_newest
+            .into_iter()
+            .map(|s| s.expect("every index used"))
+            .collect();
         let genesis = |i: usize| {
             slice
                 .nodes
@@ -1005,7 +1252,10 @@ fn a_settling_key_is_the_authors_reach_times_its_own_edge_factor() {
     let slice = b.build();
     let reach = score(&slice, "prof:a").expect("a is reached");
     let factor = w(Family::Publish, LegRole::Binary, 1.0, 1.0, 0.0);
-    assert_eq!(score(&slice, &landed).map(f64::to_bits), Some((reach * factor).to_bits()));
+    assert_eq!(
+        score(&slice, &landed).map(f64::to_bits),
+        Some((reach * factor).to_bits())
+    );
     let answer = feed_ranking(
         &slice,
         &all_kinds(),
@@ -1021,25 +1271,42 @@ fn a_settling_key_is_the_authors_reach_times_its_own_edge_factor() {
     .expect("weaves");
     let place = |r: &str| answer.settling.iter().find(|p| p.reference == r);
     assert!(place("unreached").is_none() && place("severed").is_none());
-    let landed_at = answer.entries.iter().position(|e| e.entry.target_graph_id == landed).expect("landed");
+    let landed_at = answer
+        .entries
+        .iter()
+        .position(|e| e.entry.target_graph_id == landed)
+        .expect("landed");
     let woven: Vec<u32> = answer.settling.iter().map(|p| p.ranked_position).collect();
     let landed_position = (0..answer.entries.len() + woven.len())
         .filter(|i| !woven.contains(&(*i as u32)))
         .nth(landed_at)
         .expect("a slot");
-    assert!(place("tie").expect("keyed").ranked_position as usize > landed_position, "ties go to the landed row");
-    assert!(place("low").expect("keyed").ranked_position > place("tie").expect("keyed").ranked_position);
+    assert!(
+        place("tie").expect("keyed").ranked_position as usize > landed_position,
+        "ties go to the landed row"
+    );
+    assert!(
+        place("low").expect("keyed").ranked_position > place("tie").expect("keyed").ranked_position
+    );
     let mine = place("mine").expect("the viewer reaches themself");
     assert_eq!(
         mine.ranked_position, 1,
         "S(u,u)·φ = φ ties the viewer's one-hop reach to a, and the tie goes to the landed row"
     );
     assert_eq!(
-        answer.settling.iter().map(|p| p.newest_position).collect::<BTreeSet<_>>(),
+        answer
+            .settling
+            .iter()
+            .map(|p| p.newest_position)
+            .collect::<BTreeSet<_>>(),
         (0..answer.settling.len() as u32).collect::<BTreeSet<_>>(),
         "every settling row stands ahead of every landed row under NEWEST"
     );
-    assert_eq!(place("tie").expect("keyed").newest_position, 0, "newest authored first");
+    assert_eq!(
+        place("tie").expect("keyed").newest_position,
+        0,
+        "newest authored first"
+    );
 }
 
 /// W-2's in-gap order (PR-66): equal keys break by the newest authoring
@@ -1057,7 +1324,11 @@ fn equal_settling_keys_break_by_authored_at_then_id() {
         &slice,
         &all_kinds(),
         &network(),
-        &[settling("b", "a", 1.0, 7), settling("a", "a", 1.0, 7), settling("c", "a", 1.0, 9)],
+        &[
+            settling("b", "a", 1.0, 7),
+            settling("a", "a", 1.0, 7),
+            settling("c", "a", 1.0, 9),
+        ],
     )
     .expect("weaves");
     let order: Vec<&str> = {
@@ -1067,7 +1338,10 @@ fn equal_settling_keys_break_by_authored_at_then_id() {
     };
     assert_eq!(order, vec!["c", "a", "b"]);
     assert!(
-        answer.settling.iter().all(|p| p.mark == Some(PeopleMark::For)),
+        answer
+            .settling
+            .iter()
+            .all(|p| p.mark == Some(PeopleMark::For)),
         "a settling row is marked by its author"
     );
 }
@@ -1082,8 +1356,14 @@ fn an_out_of_range_candidate_parameter_is_bad_input() {
     let slice = Builder::new("v").build();
     let run = |c: &[SettlingCandidate]| feed_ranking(&slice, &RankParams::default(), &network(), c);
     assert!(run(&[]).expect("empty").settling.is_empty());
-    assert!(matches!(run(&[settling("x", "v", 1.5, 0)]), Err(RankError::BadInput { .. })));
-    assert!(matches!(run(&[settling("x", "v", 1.0, 0), settling("x", "v", 1.0, 1)]), Err(RankError::BadInput { .. })));
+    assert!(matches!(
+        run(&[settling("x", "v", 1.5, 0)]),
+        Err(RankError::BadInput { .. })
+    ));
+    assert!(matches!(
+        run(&[settling("x", "v", 1.0, 0), settling("x", "v", 1.0, 1)]),
+        Err(RankError::BadInput { .. })
+    ));
     let mut leave = settling("x", "v", 1.0, 0);
     leave.family = Family::Leave;
     assert!(matches!(run(&[leave]), Err(RankError::BadInput { .. })));
@@ -1097,9 +1377,21 @@ fn an_out_of_range_candidate_parameter_is_bad_input() {
 /// ´claim:view:the-weave-never-moves-a-landed-entry´
 #[test]
 fn the_weave_never_moves_a_landed_entry() {
-    let candidates = prop::collection::vec((0usize..6, prop::sample::select(vec![-1.0, 0.25, 1.0]), 0i64..4), 0..6);
+    let candidates = prop::collection::vec(
+        (
+            0usize..6,
+            prop::sample::select(vec![-1.0, 0.25, 1.0]),
+            0i64..4,
+        ),
+        0..6,
+    );
     check(256, (any_slice(), candidates), |(slice, picks)| {
-        let people: Vec<String> = slice.nodes.iter().filter(|n| n.graph_id.starts_with("prof:")).map(|n| n.graph_id.clone()).collect();
+        let people: Vec<String> = slice
+            .nodes
+            .iter()
+            .filter(|n| n.graph_id.starts_with("prof:"))
+            .map(|n| n.graph_id.clone())
+            .collect();
         let mut cands: Vec<SettlingCandidate> = picks
             .iter()
             .enumerate()
@@ -1113,15 +1405,36 @@ fn the_weave_never_moves_a_landed_entry() {
             })
             .collect();
         if let Some(n) = slice.nodes.iter().find(|n| n.kind == Some(NodeKind::Post)) {
-            cands.push(SettlingCandidate { reference: n.id.clone().unwrap_or_default(), ..settling("", "p0", 1.0, 0) });
+            cands.push(SettlingCandidate {
+                reference: n.id.clone().unwrap_or_default(),
+                ..settling("", "p0", 1.0, 0)
+            });
         }
-        let answer = feed_ranking(&slice, &RankParams::default(), &network(), &cands).expect("weaves");
+        let answer =
+            feed_ranking(&slice, &RankParams::default(), &network(), &cands).expect("weaves");
         let total = answer.entries.len() + answer.settling.len();
-        let landed_ids: BTreeSet<&str> = answer.entries.iter().map(|e| e.entry.target_id.as_str()).collect();
-        prop_assert!(answer.settling.iter().all(|p| !landed_ids.contains(p.reference.as_str())));
+        let landed_ids: BTreeSet<&str> = answer
+            .entries
+            .iter()
+            .map(|e| e.entry.target_id.as_str())
+            .collect();
+        prop_assert!(
+            answer
+                .settling
+                .iter()
+                .all(|p| !landed_ids.contains(p.reference.as_str()))
+        );
         for positions in [
-            answer.settling.iter().map(|p| p.ranked_position).collect::<Vec<_>>(),
-            answer.settling.iter().map(|p| p.newest_position).collect::<Vec<_>>(),
+            answer
+                .settling
+                .iter()
+                .map(|p| p.ranked_position)
+                .collect::<Vec<_>>(),
+            answer
+                .settling
+                .iter()
+                .map(|p| p.newest_position)
+                .collect::<Vec<_>>(),
         ] {
             let set: BTreeSet<u32> = positions.iter().copied().collect();
             prop_assert_eq!(set.len(), positions.len());
@@ -1129,7 +1442,10 @@ fn the_weave_never_moves_a_landed_entry() {
         }
         let mut newest_set: Vec<u32> = answer.settling.iter().map(|p| p.newest_position).collect();
         newest_set.sort_unstable();
-        prop_assert_eq!(newest_set, (0..answer.settling.len() as u32).collect::<Vec<_>>());
+        prop_assert_eq!(
+            newest_set,
+            (0..answer.settling.len() as u32).collect::<Vec<_>>()
+        );
         for pair in answer.entries.windows(2) {
             prop_assert!(pair[1].entry.score <= pair[0].entry.score);
         }
@@ -1149,12 +1465,18 @@ fn spot_check_accepts_honest_and_flags_tampered() {
         let params = all_kinds();
         let honest = rank(&slice, &params, &network()).expect("ranks");
         let sample: Vec<String> = honest.iter().take(5).map(|e| e.target_id.clone()).collect();
-        prop_assert_eq!(spot_check(&slice, &params, &network(), &honest, &sample).expect("checks"), SpotCheck::Clean);
+        prop_assert_eq!(
+            spot_check(&slice, &params, &network(), &honest, &sample).expect("checks"),
+            SpotCheck::Clean
+        );
         if honest.is_empty() {
             return Ok(());
         }
         let flagged = |claimed: &[FeedEntry], sample: &[String]| {
-            !matches!(spot_check(&slice, &params, &network(), claimed, sample).expect("checks"), SpotCheck::Clean)
+            !matches!(
+                spot_check(&slice, &params, &network(), claimed, sample).expect("checks"),
+                SpotCheck::Clean
+            )
         };
         let mut flipped = honest.clone();
         flipped[0].paths[0].contribution = -flipped[0].paths[0].contribution - 1.0;
@@ -1187,13 +1509,43 @@ fn bad_input_names_the_parameter() {
         other => panic!("expected bad input, got {other:?}"),
     };
     for g in [0.0, -0.5, 1.5, f64::NAN] {
-        assert_eq!(field(RankParams { gamma: Some(g), ..RankParams::default() }), "gamma");
+        assert_eq!(
+            field(RankParams {
+                gamma: Some(g),
+                ..RankParams::default()
+            }),
+            "gamma"
+        );
     }
-    assert_eq!(field(RankParams { dust_floor: Some(-1.0), ..RankParams::default() }), "dustFloor");
-    assert_eq!(field(RankParams { dust_floor: Some(0.5), ..RankParams::default() }), "dustFloor");
-    assert_eq!(field(RankParams { half_life_epochs: Some(-1), ..RankParams::default() }), "recencyHalfLifeEpochs");
-    let bad_net = NetworkParams { tie_breakers: vec![TieBreakerKey::Recency, TieBreakerKey::Recency], ..network() };
-    assert!(matches!(rank(&slice, &RankParams::default(), &bad_net), Err(RankError::NetworkParameters { .. })));
+    assert_eq!(
+        field(RankParams {
+            dust_floor: Some(-1.0),
+            ..RankParams::default()
+        }),
+        "dustFloor"
+    );
+    assert_eq!(
+        field(RankParams {
+            dust_floor: Some(0.5),
+            ..RankParams::default()
+        }),
+        "dustFloor"
+    );
+    assert_eq!(
+        field(RankParams {
+            half_life_epochs: Some(-1),
+            ..RankParams::default()
+        }),
+        "recencyHalfLifeEpochs"
+    );
+    let bad_net = NetworkParams {
+        tie_breakers: vec![TieBreakerKey::Recency, TieBreakerKey::Recency],
+        ..network()
+    };
+    assert!(matches!(
+        rank(&slice, &RankParams::default(), &bad_net),
+        Err(RankError::NetworkParameters { .. })
+    ));
 }
 
 /// ranker-core §3.9: a family whose traversal needs an L2 fold this ranker
@@ -1225,7 +1577,12 @@ fn malformed_slice_errors() {
     b.person("x");
     b.opinion("v", "prof:x", 1.0, 1.0);
     let good = b.build();
-    let malformed = |s: Slice| matches!(rank(&s, &RankParams::default(), &network()), Err(RankError::MalformedSlice { .. }));
+    let malformed = |s: Slice| {
+        matches!(
+            rank(&s, &RankParams::default(), &network()),
+            Err(RankError::MalformedSlice { .. })
+        )
+    };
     let mut absent = good.clone();
     absent.records[0].legs[0].target = "prof:nobody".into();
     assert!(malformed(absent));
