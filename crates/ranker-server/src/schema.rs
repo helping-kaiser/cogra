@@ -320,7 +320,11 @@ fn from_api_error(error: ApiError) -> async_graphql::Error {
 /// Converts the request's parameters, refusing what the ranker cannot
 /// honour before anything is fetched.
 fn ranker_params(params: &RankParams) -> Result<ranker::RankParams, async_graphql::Error> {
-    if params.friend_author_reorder.as_ref().is_some_and(|r| r.enabled) {
+    if params
+        .friend_author_reorder
+        .as_ref()
+        .is_some_and(|r| r.enabled)
+    {
         return Err(bad_input(
             "friendAuthorReorder",
             "the friend-fresh reorder is not built (PR-18); send it disabled",
@@ -339,14 +343,17 @@ fn ranker_params(params: &RankParams) -> Result<ranker::RankParams, async_graphq
     })
 }
 
-fn settling_candidates(params: &RankParams) -> Result<Vec<ranker::SettlingCandidate>, async_graphql::Error> {
+fn settling_candidates(
+    params: &RankParams,
+) -> Result<Vec<ranker::SettlingCandidate>, async_graphql::Error> {
     params
         .settling
         .iter()
         .flatten()
         .map(|c| {
-            let family = ranker::Family::from_census(&c.family)
-                .ok_or_else(|| bad_input("settling.family", &format!("unknown family {}", c.family)))?;
+            let family = ranker::Family::from_census(&c.family).ok_or_else(|| {
+                bad_input("settling.family", &format!("unknown family {}", c.family))
+            })?;
             Ok(ranker::SettlingCandidate {
                 reference: c.reference.to_string(),
                 author: c.author.clone(),
@@ -484,8 +491,8 @@ impl Query {
     ) -> async_graphql::Result<FeedRanking> {
         let settling = settling_candidates(&params)?;
         let (slice, request, network) = inputs(ctx, viewer, &params, as_of_epoch).await?;
-        let ranking = ranker::feed_ranking(&slice, &request, &network, &settling)
-            .map_err(from_rank_error)?;
+        let ranking =
+            ranker::feed_ranking(&slice, &request, &network, &settling).map_err(from_rank_error)?;
         answer(ranking)
     }
 
@@ -502,8 +509,8 @@ impl Query {
     ) -> async_graphql::Result<FeedRanking> {
         let (slice, request, network) = inputs(ctx, viewer, &params, as_of_epoch).await?;
         let wanted: Vec<String> = candidates.iter().map(Uuid::to_string).collect();
-        let ranking = ranker::search_ranking(&slice, &wanted, &request, &network)
-            .map_err(from_rank_error)?;
+        let ranking =
+            ranker::search_ranking(&slice, &wanted, &request, &network).map_err(from_rank_error)?;
         answer(ranking)
     }
 }

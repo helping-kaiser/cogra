@@ -98,7 +98,10 @@ impl ApiClient {
         })
     }
 
-    async fn call<Q: GraphQLQuery>(&self, variables: Q::Variables) -> Result<Q::ResponseData, ApiError> {
+    async fn call<Q: GraphQLQuery>(
+        &self,
+        variables: Q::Variables,
+    ) -> Result<Q::ResponseData, ApiError> {
         let body = serde_json::to_vec(&Q::build_query(variables))
             .map_err(|e| ApiError::Undecodable(e.to_string()))?;
         let response = self
@@ -154,7 +157,9 @@ impl ApiClient {
             .as_u64()
             .and_then(|k| u32::try_from(k).ok())
             .ok_or_else(|| bad("k", "not a whole number"))?;
-        let gamma = read("gamma")?.as_f64().ok_or_else(|| bad("gamma", "not a number"))?;
+        let gamma = read("gamma")?
+            .as_f64()
+            .ok_or_else(|| bad("gamma", "not a number"))?;
         let dust_floor = read("dust_floor")?
             .as_f64()
             .ok_or_else(|| bad("dust_floor", "not a number"))?;
@@ -360,7 +365,9 @@ fn role(role: &slice_records::RecordLegRole) -> Result<LegRole, ApiError> {
     }
 }
 
-fn record(wire: slice_records::SliceRecordsFeedSliceRecordsEdgesNode) -> Result<SliceRecord, ApiError> {
+fn record(
+    wire: slice_records::SliceRecordsFeedSliceRecordsEdgesNode,
+) -> Result<SliceRecord, ApiError> {
     let legs = wire
         .legs
         .iter()

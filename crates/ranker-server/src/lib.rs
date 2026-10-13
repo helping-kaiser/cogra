@@ -44,7 +44,8 @@ impl Config {
     /// The configuration the environment names, the dev defaults beneath.
     pub fn from_env() -> anyhow::Result<Self> {
         use anyhow::Context;
-        let env_or = |key: &str, default: &str| std::env::var(key).unwrap_or_else(|_| default.to_string());
+        let env_or =
+            |key: &str, default: &str| std::env::var(key).unwrap_or_else(|_| default.to_string());
         let timeout_ms: u64 = env_or(
             "RANKER_API_TIMEOUT_MS",
             &Self::DEFAULT_API_TIMEOUT_MS.to_string(),

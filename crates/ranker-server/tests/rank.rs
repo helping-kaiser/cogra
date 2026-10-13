@@ -56,7 +56,9 @@ async fn run(stub: Stub, params: Value, as_of_epoch: Option<i64>) -> Value {
 }
 
 fn code(answer: &Value) -> Option<String> {
-    answer["errors"][0]["extensions"]["code"].as_str().map(String::from)
+    answer["errors"][0]["extensions"]["code"]
+        .as_str()
+        .map(String::from)
 }
 
 /// A log sink the test can read back.
@@ -123,7 +125,12 @@ async fn dust_floor_coarser_than_network_is_bad_input() {
 /// ´claim:pod:a-negative-half-life-is-bad-input´
 #[tokio::test]
 async fn negative_half_life_is_bad_input() {
-    let answer = run(stub(Some(wide_slice(3))), json!({"recencyHalfLifeEpochs": -1}), None).await;
+    let answer = run(
+        stub(Some(wide_slice(3))),
+        json!({"recencyHalfLifeEpochs": -1}),
+        None,
+    )
+    .await;
     assert_eq!(code(&answer).as_deref(), Some("BAD_INPUT"));
 }
 
@@ -135,12 +142,18 @@ async fn negative_half_life_is_bad_input() {
 #[tokio::test]
 async fn an_unbuilt_reorder_or_unknown_family_is_bad_input() {
     let enabled = json!({"friendAuthorReorder": {"enabled": true}});
-    assert_eq!(code(&run(stub(Some(wide_slice(3))), enabled, None).await).as_deref(), Some("BAD_INPUT"));
+    assert_eq!(
+        code(&run(stub(Some(wide_slice(3))), enabled, None).await).as_deref(),
+        Some("BAD_INPUT")
+    );
     let unknown = json!({"settling": [{
         "ref": uuid_of("pending"), "author": "prof:p0", "family": "nonesuch",
         "pDirected": 1.0, "pInterest": 1.0, "authoredAt": "2026-10-13T00:00:00Z",
     }]});
-    assert_eq!(code(&run(stub(Some(wide_slice(3))), unknown, None).await).as_deref(), Some("BAD_INPUT"));
+    assert_eq!(
+        code(&run(stub(Some(wide_slice(3))), unknown, None).await).as_deref(),
+        Some("BAD_INPUT")
+    );
     let disabled = json!({"friendAuthorReorder": {"enabled": false}});
     assert!(code(&run(stub(Some(wide_slice(3))), disabled, None).await).is_none());
 }
@@ -163,7 +176,10 @@ async fn unknown_viewer_is_not_found() {
 async fn slice_fetch_failure_is_internal() {
     let mut broken = stub(Some(wide_slice(3)));
     broken.broken = true;
-    assert_eq!(code(&run(broken, json!({}), None).await).as_deref(), Some("INTERNAL"));
+    assert_eq!(
+        code(&run(broken, json!({}), None).await).as_deref(),
+        Some("INTERNAL")
+    );
 }
 
 /// ranker-core §3.9: a family the ranker does not fold yet is internal,
@@ -214,7 +230,10 @@ async fn the_pod_ranks_over_the_pinned_epoch() {
     let answer = run(pinned, json!({}), Some(7)).await;
     assert_eq!(answer["data"]["rank"]["asOfEpoch"], 7);
     let seen = pins.lock().map(|p| p.clone()).unwrap_or_default();
-    assert!(seen.len() >= 4, "nodes and records, two pages each: {seen:?}");
+    assert!(
+        seen.len() >= 4,
+        "nodes and records, two pages each: {seen:?}"
+    );
     assert!(seen.iter().all(|p| *p == Some(7)));
     let unpinned = stub(Some(wide_slice(160)));
     let pins = unpinned.pins.clone();
@@ -250,7 +269,12 @@ fn claimed(answer: &Value) -> Vec<FeedEntry> {
                 .expect("paths")
                 .iter()
                 .map(|p| RankPath {
-                    nodes: p["nodeIds"].as_array().expect("ids").iter().map(s).collect(),
+                    nodes: p["nodeIds"]
+                        .as_array()
+                        .expect("ids")
+                        .iter()
+                        .map(s)
+                        .collect(),
                     hops: p["hops"]
                         .as_array()
                         .expect("hops")
@@ -334,7 +358,12 @@ async fn pod_output_passes_an_independent_spot_check() {
         kinds: Some(vec![NodeKind::Post, NodeKind::User]),
         ..RankParams::default()
     };
-    let sample: Vec<String> = entries.iter().step_by(9).take(5).map(|e| e.target_id.clone()).collect();
+    let sample: Vec<String> = entries
+        .iter()
+        .step_by(9)
+        .take(5)
+        .map(|e| e.target_id.clone())
+        .collect();
     assert_eq!(
         spot_check(&slice, &rank_params, &network(), &entries, &sample).expect("checks"),
         SpotCheck::Clean
@@ -349,7 +378,14 @@ async fn pod_output_passes_an_independent_spot_check() {
     let mut tampered = entries.clone();
     tampered[0].score += 1e-9;
     assert!(matches!(
-        spot_check(&slice, &rank_params, &network(), &tampered, &[tampered[0].target_id.clone()]).expect("checks"),
+        spot_check(
+            &slice,
+            &rank_params,
+            &network(),
+            &tampered,
+            &[tampered[0].target_id.clone()]
+        )
+        .expect("checks"),
         SpotCheck::Mismatch { .. }
     ));
 }
@@ -368,8 +404,14 @@ async fn settling_candidates_come_back_placed() {
          "pDirected": 1.0, "pInterest": 1.0, "authoredAt": "2026-10-13T09:00:00Z"},
     ]});
     let answer = run(stub(Some(wide_slice(5))), params, None).await;
-    let placed = answer["data"]["rank"]["settling"].as_array().expect("places");
-    assert_eq!(placed.len(), 1, "the unreached author's candidate is unplaced");
+    let placed = answer["data"]["rank"]["settling"]
+        .as_array()
+        .expect("places");
+    assert_eq!(
+        placed.len(),
+        1,
+        "the unreached author's candidate is unplaced"
+    );
     assert_eq!(placed[0]["ref"], json!(uuid_of("pending-1")));
     assert_eq!(placed[0]["newestPosition"], 0);
 }
@@ -381,7 +423,9 @@ async fn settling_candidates_come_back_placed() {
 #[tokio::test]
 async fn health_answers_ok() {
     let api = serve(stub(None)).await;
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("a port");
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+        .await
+        .expect("a port");
     let address = listener.local_addr().expect("bound");
     tokio::spawn(async move {
         let _ = axum::serve(listener, ranker_server::app(schema::build(api))).await;
@@ -402,8 +446,11 @@ async fn health_answers_ok() {
 /// ´claim:pod:the-checked-in-schema-is-the-pods´
 #[test]
 fn checked_in_ranker_schema_matches_the_pod() {
-    let checked_in = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../ranker-schema.graphql"))
-        .expect("ranker-schema.graphql exists at the repo root (make ranker-schema)");
+    let checked_in = std::fs::read_to_string(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../ranker-schema.graphql"
+    ))
+    .expect("ranker-schema.graphql exists at the repo root (make ranker-schema)");
     assert_eq!(
         checked_in,
         schema::sdl(),

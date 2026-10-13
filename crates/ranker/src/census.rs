@@ -231,7 +231,10 @@ mod tests {
             assert_eq!(Family::from_wire(family.wire_name()), Some(family));
             assert_eq!(Family::from_census(family.seam().as_str()), Some(family));
         }
-        assert_eq!(Family::from_census("join-request"), Some(Family::JoinRequest));
+        assert_eq!(
+            Family::from_census("join-request"),
+            Some(Family::JoinRequest)
+        );
         for role in [LegRole::Binary, LegRole::A, LegRole::T] {
             assert_eq!(LegRole::from_wire(role.wire_name()), Some(role));
         }

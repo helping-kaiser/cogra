@@ -293,7 +293,7 @@ fn assemble(
     let mut ranked = Vec::with_capacity(entries.len());
     for (entry, newest_index) in entries.iter().zip(newest) {
         let mark = match row_person(&entry.target_graph_id, entry.kind) {
-            Some(p) => mark(&g, &p)?,
+            Some(p) => mark(g, &p)?,
             None => None,
         };
         ranked.push(RankedEntry {
@@ -311,7 +311,7 @@ fn assemble(
         }
     }
     let tree = dijkstra(
-        &g,
+        g,
         &Residual {
             allowed: None,
             blocked: &vec![false; g.nodes.len()],
@@ -321,14 +321,14 @@ fn assemble(
     );
     let mut keyed = Vec::new();
     for candidate in settling {
-        let factor = landing_factor(candidate, &cal)?;
+        let factor = landing_factor(candidate, cal)?;
         if landed.contains(candidate.reference.as_str()) {
             continue;
         }
         let Some(&author) = g.index.get(&candidate.author) else {
             continue;
         };
-        let Some(reach) = strength(&g, author, &cal, walk_to(&tree, author)) else {
+        let Some(reach) = strength(g, author, cal, walk_to(&tree, author)) else {
             continue;
         };
         let key = reach * factor;
@@ -361,7 +361,7 @@ fn assemble(
     for (i, row) in keyed.iter().enumerate() {
         places.push(SettlingPlace {
             reference: row.candidate.reference.clone(),
-            mark: mark(&g, &row.candidate.author)?,
+            mark: mark(g, &row.candidate.author)?,
             ranked_position: ranked_position[i],
             newest_position: newest_position[i],
         });

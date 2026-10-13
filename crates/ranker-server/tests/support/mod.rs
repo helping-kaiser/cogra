@@ -110,7 +110,11 @@ async fn answer(State(stub): State<Stub>, Json(request): Json<Value>) -> Json<Va
     if operation == "RankingParameters" {
         let wanted: Vec<String> = variables["keys"]
             .as_array()
-            .map(|keys| keys.iter().filter_map(|k| k.as_str().map(String::from)).collect())
+            .map(|keys| {
+                keys.iter()
+                    .filter_map(|k| k.as_str().map(String::from))
+                    .collect()
+            })
             .unwrap_or_default();
         let read: Vec<Value> = stub
             .parameters
@@ -123,9 +127,11 @@ async fn answer(State(stub): State<Stub>, Json(request): Json<Value>) -> Json<Va
     if let Ok(mut pins) = stub.pins.lock() {
         pins.push(variables["asOfEpoch"].as_i64());
     }
-    let Some(slice) = stub.slice.as_ref().filter(|s| {
-        variables["viewer"].as_str() == Some(s.viewer.as_str())
-    }) else {
+    let Some(slice) = stub
+        .slice
+        .as_ref()
+        .filter(|s| variables["viewer"].as_str() == Some(s.viewer.as_str()))
+    else {
         return Json(json!({"data": {"feedSlice": null}}));
     };
     let as_of = variables["asOfEpoch"].as_i64().unwrap_or(slice.as_of_epoch);
@@ -146,11 +152,17 @@ pub async fn serve(stub: Stub) -> ApiClient {
         .await
         .expect("a free port");
     let address = listener.local_addr().expect("bound");
-    let app = Router::new().route("/graphql", post(answer)).with_state(stub);
+    let app = Router::new()
+        .route("/graphql", post(answer))
+        .with_state(stub);
     tokio::spawn(async move {
         let _ = axum::serve(listener, app).await;
     });
-    ApiClient::new(&format!("http://{address}/graphql"), Duration::from_secs(10)).expect("a client")
+    ApiClient::new(
+        &format!("http://{address}/graphql"),
+        Duration::from_secs(10),
+    )
+    .expect("a client")
 }
 
 /// Builds fixture slices the way Layer 1 publishes records.
@@ -212,7 +224,12 @@ impl Builder {
         graph_id
     }
 
-    fn push(&mut self, family: Family, author: &str, legs: Vec<(LegRole, String, String, f64, f64)>) -> String {
+    fn push(
+        &mut self,
+        family: Family,
+        author: &str,
+        legs: Vec<(LegRole, String, String, f64, f64)>,
+    ) -> String {
         let token = match family {
             Family::Publish => "publish",
             Family::Opinion => "opinion",
@@ -248,7 +265,13 @@ impl Builder {
         self.push(
             Family::Publish,
             author,
-            vec![(LegRole::Binary, format!("addr:{author}"), graph_id.clone(), 1.0, 1.0)],
+            vec![(
+                LegRole::Binary,
+                format!("addr:{author}"),
+                graph_id.clone(),
+                1.0,
+                1.0,
+            )],
         );
         let genesis = self.records.last().map(|r| r.key);
         self.node(&graph_id, NodeKind::Post, genesis);
@@ -259,7 +282,13 @@ impl Builder {
         self.push(
             Family::Opinion,
             author,
-            vec![(LegRole::Binary, format!("addr:{author}"), target.to_string(), p_d, p_i)],
+            vec![(
+                LegRole::Binary,
+                format!("addr:{author}"),
+                target.to_string(),
+                p_d,
+                p_i,
+            )],
         );
     }
 
@@ -306,7 +335,12 @@ pub fn wide_slice(people: usize) -> Slice {
         b.epoch = 1 + (i as i64 % 5);
         b.tau = [1.0 / 3.0, 2.0 / 3.0, 6.0 / 7.0, 0.1][i % 4];
         let sign = if i % 7 == 0 { -0.5 } else { 0.75 };
-        b.opinion("v", &format!("prof:{atom}"), sign, 0.5 + (i % 3) as f64 * 0.25);
+        b.opinion(
+            "v",
+            &format!("prof:{atom}"),
+            sign,
+            0.5 + (i % 3) as f64 * 0.25,
+        );
         b.post(&atom);
     }
     b.build(9)

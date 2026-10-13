@@ -322,7 +322,10 @@ async fn the_release_budgets_admit_the_ranker_pods_full_pages(pool: PgPool) {
             .map(|e| e.message.clone())
             .filter(|message| message == TOO_COMPLEX || message == TOO_DEEP)
             .collect();
-        assert!(rejected.is_empty(), "the release budgets reject the pod's {name} at the page cap: {rejected:?}");
+        assert!(
+            rejected.is_empty(),
+            "the release budgets reject the pod's {name} at the page cap: {rejected:?}"
+        );
     }
 }
 
