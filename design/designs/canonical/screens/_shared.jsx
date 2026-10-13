@@ -3415,13 +3415,15 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
             offer to keep the data. The section reads device state only; no
             server field rides it.
 
-            IT SAYS WHAT GOES AND WHAT COMES BACK. The key, the draft, any
-            kept picks and the choices kept on this device die with the
-            data; the seen list is a copy of the server's and returns on the
-            next sign-in (PR-52), so the words never claim it is lost. The
-            last sentence is the Key backup footnote's two states, said from
-            the other side: with a recovery code there is a way back, and
-            without one there is none.
+            THE KEY LEADS, AND THE ACCOUNT IS NAMED (jakob 2026-10-13: "Even
+            more emphasis on KEY. if they miss it their account is gone for
+            good"). The footnote opens on where the key lives and says, in its
+            second sentence, that clearing erases it and that without the
+            recovery code the account is gone for good — before anything else
+            is listed. With no code yet that sentence drops its condition. The
+            draft, the kept picks and the choices kept on this device follow,
+            and the seen list last: it is a copy of the server's and returns
+            on the next sign-in (PR-52), so the words never claim it is lost.
 
             A HEADING AND A FOOTNOTE, NO ROWS. Nothing here is a setting or a
             door — it is the fact a reader needs once, which is what a
@@ -3433,8 +3435,8 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
           label="Clearing data"
           footnote={
             backup === "none"
-              ? "Clearing CoGra's data from this browser erases your key, your draft, any kept picks and the choices kept on this device, and signs you out. What you've seen comes back when you sign in. Until you make a recovery code, nothing can bring your key back."
-              : "Clearing CoGra's data from this browser erases your key, your draft, any kept picks and the choices kept on this device, and signs you out. What you've seen comes back when you sign in. Only your recovery code can bring your key back."
+              ? "Your key lives only in this browser, and it has no recovery code yet. Clear CoGra's data here and the key is erased with it — your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in."
+              : "Your key lives only in this browser. Clear CoGra's data here and the key is erased with it — without your recovery code, your account is gone for good. Your draft, any kept picks and the choices kept on this device go too, and you're signed out. What you've seen comes back when you sign in."
           }
           node="clearing"
         />

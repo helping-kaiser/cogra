@@ -1719,21 +1719,27 @@ second sentence's place (*the app's lines blessed (jakob
 
 **Clearing data** (jakob 2026-10-13, seams 164 and 166) says what
 clearing the stored data erases, and what comes back, under a heading
-one string serves on both platforms; the group has no rows, only its
-footnote. In the browser: `Clearing CoGra's data from this browser
-erases your key, your draft, any kept picks and the choices kept on
-this device, and signs you out. What you've seen comes back when you
-sign in. Only your recovery code can bring your key back.` — in the
-app: `Clearing this app's data erases your key, your draft, any kept
-picks and the choices kept on this device, and signs you out —
-uninstalling does too, unless you keep its data when asked. What
-you've seen comes back when you sign in. Only your recovery code can
-bring your key back.` With no code yet, the last sentence reads `Until
-you make a recovery code, nothing can bring your key back.` The key is
-the loss the group exists for; the seen list is a copy of the server's
-and returns on sign-in, so the words never call it lost; `the choices
-kept on this device` echoes Theme's and Reading's own phrase.
-(*New 2026-10-13, drafted — wording jakob's at review.*)
+one string serves on both platforms. The key leads and the account is
+named, because a reader who misses it loses the account for good
+(jakob: "Even more emphasis on KEY"). In the browser: `Your key lives
+only in this browser. Clear CoGra's data here and the key is erased
+with it — without your recovery code, your account is gone for good.
+Your draft, any kept picks and the choices kept on this device go too,
+and you're signed out. What you've seen comes back when you sign in.`
+— in the app: `Your key lives only in this app. Clear the app's data,
+or uninstall it without keeping the data, and the key is erased with
+it — without your recovery code, your account is gone for good. Your
+draft, any kept picks and the choices kept on this device go too, and
+you're signed out. What you've seen comes back when you sign in.` With
+no code yet the first two sentences read `Your key lives only in this
+browser, and it has no recovery code yet. Clear CoGra's data here and
+the key is erased with it — your account is gone for good.` (`…in this
+app, and it has no recovery code yet. Clear the app's data, or
+uninstall it without keeping the data, and the key is erased with it —
+your account is gone for good.`). The seen list is a copy of the
+server's and returns on sign-in, so the words never call it lost;
+`the choices kept on this device` echoes Theme's and Reading's own
+phrase. (*New 2026-10-13, drafted — wording jakob's at review.*)
 
 **Sessions** keeps `Revoke` and `Sign out everywhere else`, and says the
 delay before it happens rather than only after:
