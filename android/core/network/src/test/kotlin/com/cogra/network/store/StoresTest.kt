@@ -10,16 +10,24 @@ import androidx.datastore.preferences.core.Preferences
 import com.cogra.crypto.ActorKey
 import com.cogra.crypto.decodeProposal
 import com.cogra.domain.AuthTokens
+import com.cogra.domain.Outcome
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
 import com.cogra.domain.compose.SealedDraft
 import com.cogra.domain.compose.StagedFate
+import com.cogra.domain.history.SeenWatermark
+import com.cogra.domain.history.StoredSeenRecord
 import com.cogra.domain.identity.EndLocalSession
+import com.cogra.domain.identity.SignOut
 import com.cogra.domain.store.SessionRead
 import com.cogra.domain.store.ThemeChoice
+import com.cogra.domain.testing.FakeDeviceData
+import com.cogra.domain.testing.ThrowingSessionRepository
 import com.google.common.truth.Truth.assertThat
 import java.io.File
+import java.io.IOException
+import java.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -235,7 +243,50 @@ class StoresTest {
         stores.identity.setForgetOnSignOut(true)
         ComposeDraftStoreImpl(encrypted, stores.tokens)
             .save(ComposeDraft(bodyKind = DraftBodyKind.Words, body = "half a thought"))
+        SeenRecordStoreImpl(encrypted).save(account, seenOf(account))
         return stores
+    }
+
+    /** A seen record with ids and a sync watermark, distinct per account. */
+    private fun seenOf(account: String) = StoredSeenRecord(
+        ids = setOf("n-$account"),
+        watermark = SeenWatermark("w-$account", Instant.parse("2026-10-13T08:00:00Z")),
+    )
+
+    private fun offlineSessions() = object : ThrowingSessionRepository() {
+        override suspend fun revokeSession(id: String?): Outcome<Unit> = Outcome.Failed(IOException("offline"))
+    }
+
+    /**
+     * jakob's ruling 2026-10-13: a don't-remember sign-out clears THAT
+     * account's seen record — ids and watermark, the one value — and no other
+     * account's on the device.
+     */
+    @Test
+    fun `a_dont_remember_sign_out_clears_only_that_accounts_record`() = runTest {
+        val encrypted = store()
+        seedCustody(encrypted, "account-b")
+        val stores = seedCustody(encrypted, "account-a")
+        val seen = SeenRecordStoreImpl(encrypted)
+        assertThat(seen.load("account-a")).isEqualTo(seenOf("account-a"))
+
+        SignOut(offlineSessions(), stores.identity, stores.tokens, FakeDeviceData()).signOut()
+
+        assertThat(seen.load("account-a")).isNull()
+        assertThat(encrypted.get("seen_record:account-a")).isNull()
+        // The other account's record, watermark included, is untouched.
+        assertThat(seen.load("account-b")).isEqualTo(seenOf("account-b"))
+    }
+
+    @Test
+    fun `a_remembered_sign_out_keeps_the_record`() = runTest {
+        val encrypted = store()
+        val stores = seedCustody(encrypted, "account-a")
+        stores.identity.setForgetOnSignOut(false)
+
+        SignOut(offlineSessions(), stores.identity, stores.tokens, FakeDeviceData()).signOut()
+
+        assertThat(SeenRecordStoreImpl(encrypted).load("account-a")).isEqualTo(seenOf("account-a"))
     }
 
     @Test
@@ -247,7 +298,7 @@ class StoresTest {
 
         counting.edits = 0
         stores.identity.purgeCustodySet()
-        // Six names of the slot plus the draft, gone in one transaction:
+        // Six names of the slot plus the draft and the seen record, gone in one transaction:
         // a process death can no longer leave the account half-cleared.
         assertThat(counting.edits).isEqualTo(1)
         assertThat(encrypted.names("acct:account-a:")).isEmpty()

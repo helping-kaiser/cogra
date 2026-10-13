@@ -155,8 +155,9 @@ interface IdentityStore {
     /**
      * The explicit sign-out's purge (Settings.md "Sign out" with the
      * don't-remember switch on): the account's whole custody set — its
-     * slot AND its compose draft — in ONE atomic edit, so a process death
-     * can never leave a half-cleared account behind.
+     * slot, its compose draft and its seen record (ids and sync watermark;
+     * the server's view log is untouched) — in ONE atomic edit, so a
+     * process death can never leave a half-cleared account behind.
      */
     suspend fun purgeCustodySet()
 }
