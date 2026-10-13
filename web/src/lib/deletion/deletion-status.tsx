@@ -184,16 +184,35 @@ export function useLeavingDeleted(): boolean {
 }
 
 /**
+ * THE ONE BAND ARBITRATION (ER-G4; FeedDeleting.md:13, FeedDeleting.jsx:16-18,
+ * jakob 2026-10-07): the deletion band stands exactly while a confirmed
+ * deletion runs its grace, and while it stands the borrowed view's band does
+ * not — it carries an act and a deadline, and the borrowed band asks for
+ * nothing. Both bands read this one answer, so no surface arbitrates on its own.
+ */
+export function useDeletionBandStands(): boolean {
+  return useBandDeletion() !== null;
+}
+
+/** The deletion the band stands on, or null where no band stands. */
+function useBandDeletion(): AccountDeletion | null {
+  return useContext(StatusContext)?.standing?.deletion ?? null;
+}
+
+/**
  * THE BAND'S SLOT, under every header (`PageHeader` on an inner surface,
  * `CograBand`'s children on a root): it stands exactly while a confirmed
  * deletion runs its grace, and its Cancel answers with the canceled snackbar,
  * no Undo, no dialog (FeedDeleting.md:19) — or, with no answer, the network
  * error, and the band stays (`:21`; SettingsDeleting.md:17).
+ *
+ * `bleed` is for a header whose host pads by the screen gutter: the band is
+ * full-width under the header, never inset like a card (FeedDeleting.md:5).
  */
-export function DeletionBandSlot({ node }: { node?: DataNode }) {
+export function DeletionBandSlot({ node, bleed = false }: { node?: DataNode; bleed?: boolean }) {
   const status = useContext(StatusContext);
+  const deletion = useBandDeletion();
   const [busy, setBusy] = useState(false);
-  const deletion = status?.standing?.deletion ?? null;
   if (status === null || deletion === null) return null;
 
   const onCancel = async () => {
@@ -204,5 +223,13 @@ export function DeletionBandSlot({ node }: { node?: DataNode }) {
     status.announce(outcome.kind === "success" ? CANCELED : NO_ANSWER);
   };
 
-  return <DeletionBand line={bandLine(deletion, status.now)} busy={busy} onCancel={() => void onCancel()} node={node} />;
+  return (
+    <DeletionBand
+      line={bandLine(deletion, status.now)}
+      busy={busy}
+      onCancel={() => void onCancel()}
+      node={node}
+      className={bleed ? "-mx-6" : undefined}
+    />
+  );
 }

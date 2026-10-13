@@ -20,7 +20,10 @@
 // DeletionBand.prompt.md): while the account's confirmed deletion runs its
 // grace, every inner surface carries the band in the header's own block, so
 // no surface can be without it. The one page that is the deletion's own
-// (DeleteAccountPending.md:9) passes `deletionBand={false}`.
+// (DeleteAccountPending.md:9) passes `deletionBand={false}`. The header and
+// the band are one block, so a host's flex gap never opens between them, and
+// a host that pads by the screen gutter says so (`inGutter`): the band bleeds
+// through it, full-width under the header rather than inset like a card.
 
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -38,7 +41,10 @@ export function PageHeader({
   action,
   node,
   deletionBand,
+  inGutter = false,
 }: {
+  /** The host pads this header by the 24px screen gutter (`px-6`); the band bleeds through it. */
+  inGutter?: boolean;
   /**
    * The deletion band under the header: its registered node on a registered
    * screen (`settings.deletionBand`), `false` on the page that steps it aside.
@@ -69,7 +75,7 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <>
+    <div>
       <header className="flex min-h-12 items-center justify-between gap-3 px-3" {...testAttributes(node)}>
         <div className="flex min-w-0 items-center gap-2">
           {backHref !== undefined && (
@@ -93,7 +99,7 @@ export function PageHeader({
         </div>
         {action}
       </header>
-      {deletionBand !== false && <DeletionBandSlot node={deletionBand} />}
-    </>
+      {deletionBand !== false && <DeletionBandSlot node={deletionBand} bleed={inGutter} />}
+    </div>
   );
 }

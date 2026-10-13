@@ -513,6 +513,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   const header = (
     <CollapsingTop>
       <PageHeader
+        inGutter
         title={editingId === null ? "New post" : "Edit post"}
         backHref={editingId === null || notFound ? "/feed" : `/posts/${editingId}`}
         backLabel={editingId === null || notFound ? "Back to feed" : "Back to post"}

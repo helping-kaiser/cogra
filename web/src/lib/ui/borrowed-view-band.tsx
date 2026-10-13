@@ -18,7 +18,13 @@
 // and offers a way on, and the loud surface on a read screen belongs to the
 // compose action (§2.4). It is not dismissible; the one thing that removes it
 // is the reader's own view coming into existence.
+//
+// IT YIELDS TO THE DELETION BAND (ER-G4; FeedDeleting.md:13): while the
+// account's confirmed deletion runs its grace, the deletion band stands and
+// this one does not. The arbitration is `useDeletionBandStands`, the one
+// answer both bands read.
 
+import { useDeletionBandStands } from "@/lib/deletion/deletion-status";
 import { Button } from "@/lib/ui/button";
 import { MonogramAvatar } from "@/lib/ui/actor-chip";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
@@ -49,6 +55,8 @@ export function BorrowedViewBand({
    */
   node?: DataNode;
 }) {
+  const yields = useDeletionBandStands();
+  if (yields) return null;
   const name = displayName?.trim() ? displayName : handle;
   return (
     // The master's own box: the screen gutter across, `space-3` below and
