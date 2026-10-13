@@ -40,10 +40,12 @@ import { useAccountDeletion } from "@/lib/deletion/deletion-status";
 import { sealedDraftStore, type SealedDraftStore } from "@/lib/compose/sealed-draft";
 import type { DeviceLockEngine } from "@/lib/identity/device-lock";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
+import { useHiddenSet } from "@/lib/hidden/provider";
 import { seenRecord } from "@/lib/history/seen-record";
 import { forgetSeen } from "@/lib/history/seen-sync";
 import { useKeyOnDeviceState } from "@/lib/identity/use-key-on-device";
 import { licenseName, PUBLIC_DOMAIN, type License } from "@/lib/license";
+import { useHostSnack } from "@/lib/saved/save-row";
 import { useTokenStore } from "@/lib/session/provider";
 import { useAuthGuard, useDeviceLock } from "@/lib/session/runtime";
 import { eraseEverything } from "@/lib/settings/erase-everything";
@@ -72,6 +74,7 @@ import { SettingsGroup, SettingsRow } from "@/lib/ui2/settings-row";
 import { useSlowAnswer } from "@/lib/ui2/waiting-commit";
 
 import { EraseConfirm } from "./erase-confirm";
+import { SettingsHiddenSheet } from "./settings-hidden-sheet";
 import { SettingsLicenseSheet } from "./settings-license-sheet";
 import {
   EMAIL_ROUTES,
@@ -194,7 +197,24 @@ export function SettingsView({
   const [account, setAccount] = useState<SettingsAccount | null>(null);
   const [readFailed, setReadFailed] = useState(false);
   const [forget, setForget] = useState(false);
-  const [snackbar, setSnackbar] = useState<string | null>(null);
+  // THE PAGE'S ONE SNACKBAR: the page's own confirmations, and the unhide's
+  // aftermath with its `Undo` — cleared if the unhide it announced reverts.
+  const { snack, notify, dismiss: dismissSnackbar } = useHostSnack();
+  const setSnackbar = useCallback(
+    (message: string | null) => (message === null ? dismissSnackbar() : notify(message)),
+    [dismissSnackbar, notify],
+  );
+  // HIDDEN ACCOUNTS (SettingsHidden.md): the count, the sheet and its way back.
+  const hidden = useHiddenSet();
+  const hiddenCount = hidden.count;
+  const [hiddenOpen, setHiddenOpen] = useState(false);
+  const hiddenRow = useRef<HTMLButtonElement | null>(null);
+  const hiddenFailures = hiddenOpen ? [] : [...hidden.failed().values()];
+  const hiddenRowFailure = hiddenFailures.find((failure) => failure.kind === "undoUnhide") ?? null;
+  const closeHidden = useCallback(() => {
+    setHiddenOpen(false);
+    queueMicrotask(() => hiddenRow.current?.focus());
+  }, []);
   const [revoking, setRevoking] = useState<string | null>(null);
   const [elsewhereBusy, setElsewhereBusy] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -248,7 +268,6 @@ export function SettingsView({
     if (noticeSaid && notice !== null) router.replace("/settings");
   }, [noticeSaid, notice, router]);
 
-  const dismissSnackbar = useCallback(() => setSnackbar(null), []);
 
   const onTheme = (next: ThemeChoice) => {
     setTheme(next);
@@ -582,9 +601,36 @@ export function SettingsView({
           footnote="Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking."
           node={node("people")}
         >
-          {/* Nobody can be hidden yet (the Hide packet), so the row is the
-              drawn empty state: inert, `None`. */}
-          <SettingsRow label="Hidden accounts" value="None" inert node={node("people.hidden")} />
+          {/* THE COUNT IS THE HIDDEN SET'S (hidden-actors §5.1). With nobody
+              hidden the row is inert and reads `None` — a tap that could only
+              open an empty sheet is a tap spent on nothing (Settings.md). An
+              Undo of an unhide that did not go through after the sheet closed
+              is said here, with Retry (SettingsHidden.md:33). */}
+          {hiddenRowFailure === null ? (
+            <SettingsRow
+              label="Hidden accounts"
+              value={hiddenCount === 0 ? "None" : String(hiddenCount)}
+              inert={hiddenCount === 0}
+              onOpen={hiddenCount === 0 ? undefined : () => setHiddenOpen(true)}
+              rowRef={hiddenRow}
+              node={node("people.hidden")}
+            />
+          ) : (
+            <SettingsRow
+              label="Hidden accounts"
+              status="That didn't go through."
+              statusTone="error"
+              value={hiddenCount === 0 ? "None" : String(hiddenCount)}
+              inert
+              trailing={
+                <InlineAction onClick={hiddenRowFailure.retry} testId="settings-hidden-retry">
+                  Retry
+                </InlineAction>
+              }
+              rowRef={hiddenRow}
+              node={node("people.hidden")}
+            />
+          )}
         </SettingsGroup>
 
         {/* THE VEIL IS THE ACCOUNT'S CHOICE, NOT THIS DEVICE'S (#141): its own
@@ -824,7 +870,14 @@ export function SettingsView({
         />
       )}
 
-      <Snackbar testId="settings-snackbar" message={snackbar} onDismiss={dismissSnackbar} />
+      <SettingsHiddenSheet open={hiddenOpen} set={hidden} notify={notify} onClose={closeHidden} />
+      <Snackbar
+        testId="settings-snackbar"
+        message={snack?.message ?? null}
+        action={snack?.action}
+        token={snack?.token}
+        onDismiss={dismissSnackbar}
+      />
     </main>
   );
 }

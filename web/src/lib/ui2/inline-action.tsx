@@ -23,6 +23,7 @@ export function InlineAction({
   node,
   testId,
   buttonRef,
+  describedBy,
 }: {
   children: ReactNode;
   onClick?: () => void;
@@ -33,6 +34,8 @@ export function InlineAction({
   node?: DataNode;
   testId?: string;
   buttonRef?: Ref<HTMLButtonElement>;
+  /** The element that names what the word acts on — a row's title (`Unhide`). */
+  describedBy?: string;
 }) {
   return (
     <button
@@ -42,6 +45,7 @@ export function InlineAction({
       onClick={busy ? undefined : onClick}
       aria-busy={busy || undefined}
       aria-disabled={busy || undefined}
+      aria-describedby={describedBy}
       {...testAttributes(node, testId)}
       className={`${BUTTON_CLASS} border-0 bg-transparent p-0 font-sans text-primary ${
         size === "sm" ? "self-start text-label-small" : "flex-none text-label-large"
