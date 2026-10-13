@@ -116,7 +116,9 @@ fun LoginScreen(
             }
             if (state.transportFailed) {
                 Text(
-                    text = stringResource(R.string.error_transport),
+                    // SignIn.md:71's drawn no-answer line — also the device
+                    // lock's leg, which keeps the session for this retry.
+                    text = stringResource(R.string.login_no_answer),
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.testTag("login_transport_error"),
                 )

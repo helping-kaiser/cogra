@@ -8,7 +8,19 @@
 // two drift.
 
 import type { License } from "@/lib/license";
+import type { DataNode } from "@/lib/ui/data-node";
 import type { MenuItem } from "./overflow-menu";
+
+/** The rows a post menu can hold, by the names their sheet nodes take. */
+export type PostMenuRow =
+  | "save"
+  | "cite"
+  | "hide"
+  | "license"
+  | "report"
+  | "edit"
+  | "markSensitive"
+  | "remove";
 
 /**
  * What a surface hands the builder so the rows can act.
@@ -30,6 +42,13 @@ export type PostMenuContext = {
   openLicense: (license: License) => void;
   openRemove: () => void;
   /**
+   * The report row's door: the confirm sheet over the surface the menu was
+   * opened from (ReportConfirm.md:3), or the join prompt for a guest (:21).
+   * Absent where the surface hosts no confirm yet, and the row then stands
+   * inert (jakob 2026-09-14, the introduced-but-inert law).
+   */
+  openReport?: () => void;
+  /**
    * THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK (design/readme.md, jakob
    * 2026-09-17, sharpened 2026-09-22 — PR #794): strictly below 360px of
    * viewport width the affordance row's Share control folds into this menu
@@ -41,19 +60,30 @@ export type PostMenuContext = {
   shareRow: MenuItem | null;
   /** Row test ids derive from this — `post-menu` gives `post-menu-save`. */
   testIdPrefix: string;
+  /**
+   * The registered node a row wears on a registered sheet
+   * (`feed.menuSheet.save`), or undefined for a row whose path the board does
+   * not register — that row keeps its `testIdPrefix` id.
+   */
+  rowNode?: (row: PostMenuRow) => DataNode | undefined;
 };
 
 /**
  * THE ROWS THE ONE MENU HOLDS — the author's post vs someone else's
- * (`_shared.jsx:372-380`). Both keep the card's order: the acts the menu was
- * opened for lead, and the license row closes it, the license being the
- * rarest read in the product. The license row is dropped when there is none
- * to show: the license rode the payload, so a redacted record has none
- * (`PostCard.jsx:146-148`).
+ * (`_shared.jsx:597-605`). Both keep the card's order: the acts the menu was
+ * opened for lead, and the license row closes the author's. The license row is
+ * dropped when there is none to show: the license rode the payload, so a
+ * redacted record has none (`PostCard.jsx:146-148`).
+ *
+ * REPORT SITS AT THE TAIL OF EVERY OTHER-PERSON MENU, below even the license
+ * (ruling 75; `_shared.jsx:586-596`): the one row a reader reaches for about
+ * someone else's conduct rather than about using the thing. Own menus carry
+ * none — a reader has nothing to report themselves for.
  *
  * ROWS WHOSE DESTINATION IS NOT BUILT STAND ANYWAY and do nothing (jakob
  * 2026-09-14, the introduced-but-inert law): a menu that grew a row per slice
- * would be a different menu every release, and the row order is ruled.
+ * would be a different menu every release, and the row order is ruled. Save
+ * waits on saved-surface's `setBookmark`, Hide on hidden-actors' `hideActor`.
  */
 export function postMenuItems({
   postId,
@@ -63,67 +93,50 @@ export function postMenuItems({
   navigate,
   openLicense,
   openRemove,
+  openReport,
   shareRow,
   testIdPrefix,
+  rowNode = () => undefined,
 }: PostMenuContext): MenuItem[] {
+  const row = (name: PostMenuRow, testName: string, label: string, onSelect: () => void) => ({
+    label,
+    onSelect,
+    testId: `${testIdPrefix}-${testName}`,
+    node: rowNode(name),
+  });
   const rows: MenuItem[] = [];
   // SHARE LEADS THE SHEET, ahead of Save: every other row here is a menu row
   // by nature, and share is the one that was a one-tap control a moment ago
   // (design/readme.md). Only the reader's menu gains it — no board draws it
   // leaving the author's own.
   if (!own && shareRow !== null) rows.push(shareRow);
-  rows.push({ label: "Save", onSelect: () => {}, testId: `${testIdPrefix}-save` });
+  rows.push(row("save", "save", "Save", () => {}));
+  // CITE STANDS SECOND ON BOTH MENUS (`_shared.jsx:414-420`, backlog item
+  // 100): self-citation is a real authorial act, so the thumb finds the row
+  // in one place on every menu that has it.
+  rows.push(row("cite", "cite", "Cite in a new post", () => navigate(`/compose?reference=${postId}`)));
   if (own) {
     rows.push(
-      // CITE RIDES THIS MENU TOO (`_shared.jsx:414-420`, backlog item 100):
-      // self-citation is a real authorial act, and the row takes the reader
-      // menu's own position, second, so the thumb finds one row in one
-      // place on every menu that has it.
-      {
-        label: "Cite in a new post",
-        onSelect: () => navigate(`/compose?reference=${postId}`),
-        testId: `${testIdPrefix}-cite`,
-      },
-      {
-        label: "Edit",
-        onSelect: () => navigate(`/compose?post=${postId}`),
-        testId: `${testIdPrefix}-edit`,
-      },
-      {
-        // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published
-        // post sensitive is always a signed action changing the post — an
-        // edit — so there is no standalone commit path and this row is a
-        // door into the edit flow rather than a sheet of its own. Edit is
-        // the general door; this is the intentioned one. When the edit
-        // surface's drawn Sensitive row lands (CW-46) the link can focus it.
-        label: "Mark as sensitive",
-        onSelect: () => navigate(`/compose?post=${postId}`),
-        testId: `${testIdPrefix}-sensitive`,
-      },
-      { label: "Remove", onSelect: openRemove, testId: `${testIdPrefix}-remove` },
+      row("edit", "edit", "Edit", () => navigate(`/compose?post=${postId}`)),
+      // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published post
+      // sensitive is always a signed action changing the post — an edit — so
+      // there is no standalone commit path and this row is a door into the
+      // edit flow rather than a sheet of its own. Edit is the general door;
+      // this is the intentioned one. When the edit surface's drawn Sensitive
+      // row lands (CW-46) the link can focus it.
+      row("markSensitive", "sensitive", "Mark as sensitive", () =>
+        navigate(`/compose?post=${postId}`),
+      ),
+      row("remove", "remove", "Remove", openRemove),
     );
   } else {
-    rows.push(
-      {
-        label: "Cite in a new post",
-        onSelect: () => navigate(`/compose?reference=${postId}`),
-        testId: `${testIdPrefix}-cite`,
-      },
-      {
-        // The handle is the thing a reader recognises, and the word they will
-        // look for again under Hidden accounts (`ActorChip.jsx:67`).
-        label: handle === null ? "Hide this account" : `Hide @${handle}`,
-        onSelect: () => {},
-        testId: `${testIdPrefix}-hide`,
-      },
-    );
+    // The handle is the thing a reader recognises, and the word they will
+    // look for again under Hidden accounts (`ActorChip.jsx:67`).
+    rows.push(row("hide", "hide", handle === null ? "Hide this account" : `Hide @${handle}`, () => {}));
   }
   if (license !== null) {
-    rows.push({
-      label: "License terms",
-      onSelect: () => openLicense(license),
-      testId: `${testIdPrefix}-license`,
-    });
+    rows.push(row("license", "license", "License terms", () => openLicense(license)));
   }
+  if (!own) rows.push(row("report", "report", "Report", openReport ?? (() => {})));
   return rows;
 }

@@ -50,6 +50,7 @@ import androidx.navigation.toRoute
 import com.cogra.app.BuildConfig
 import com.cogra.app.R
 import com.cogra.app.ui.CograBottomBar
+import com.cogra.app.ui.DeviceLockKeeper
 import com.cogra.app.ui.SecurityNoticeHost
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.DataNode
@@ -600,6 +601,8 @@ private fun CograNavGraphContent(
     // Above the NavHost so the login security notice shows wherever
     // the post-login navigation lands (auth.md "Reuse detection").
     SecurityNoticeHost()
+    // The device lock's start-time duties (sign-out-custody §3.4-§3.5).
+    DeviceLockKeeper()
 
     // The guest prompt behind an account-needing slot (design.md §6):
     // ask, never bounce — the reader picks the auth flow or stays put.
@@ -674,6 +677,9 @@ private fun CograNavGraphContent(
     // The feed's own pulls, counted: the readers that ride the feed (the
     // band, the vouch card) read again with each one.
     var feedPulls by rememberSaveable { mutableIntStateOf(0) }
+    // The bar's Feed slot re-tapped over the feed's own root, counted: the
+    // feed answers each one it has not answered yet.
+    var feedReselects by rememberSaveable { mutableIntStateOf(0) }
     val borrowedViewBand: @Composable () -> Unit = {
         signedIn?.let { signed ->
             BorrowedViewBandRoute(
@@ -756,7 +762,16 @@ private fun CograNavGraphContent(
                     },
                     feedSelected = onFeedTab,
                     profileSelected = onOwnProfileTab,
-                    onFeed = { toTab(Feed) },
+                    // Over the feed's own root the slot is a re-tap the feed
+                    // answers (Feed.md:85-91); from anywhere else it is the
+                    // way back to the root, at the scroll it was left.
+                    onFeed = {
+                        if (onFeedTab) {
+                            feedReselects += 1
+                        } else {
+                            toTab(Feed)
+                        }
+                    },
                     onCompose = {
                         if (signedIn == true) {
                             navController.navigate(ComposePost())
@@ -870,6 +885,10 @@ private fun CograNavGraphContent(
                 val accountId by authState.accountId.collectAsStateWithLifecycle()
                 FeedRoute(
                     signedIn = signedIn,
+                    reselectSignal = feedReselects,
+                    // A guest's Report asks them to join instead of raising
+                    // the confirm (ReportConfirm.md:21).
+                    onRequireAccount = { joinPrompt = true }.takeIf { signedIn == false },
                     onReply = { target -> navController.openReplyWizard(target) },
                     onEditComment = { commentId, parentTitle ->
                         navController.navigate(EditComment(commentId, parentTitle))
@@ -1010,6 +1029,7 @@ private fun CograNavGraphContent(
                     postId = entry.toRoute<PostDetail>().postId,
                     viewerId = accountId,
                     signedIn = signedIn,
+                    onRequireAccount = { joinPrompt = true }.takeIf { signedIn == false },
                     onEdit = { id -> navController.navigate(ComposePost(id)) },
                     // `ReplyEntry` 5 and 7 — the composer, pinned to
                     // whatever the thread said it answers.

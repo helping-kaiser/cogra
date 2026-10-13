@@ -295,9 +295,9 @@ pub enum ErrorCode {
     NotFound,
     /// Malformed input; `field` names the offender.
     BadInput,
-    /// An auth or upload endpoint's per-IP / per-account budget, or a
-    /// private-viewer-state budget (markSeen) — never a signing act. The
-    /// login backoff serves no retry-after figure.
+    /// An auth or upload endpoint's per-IP / per-account budget, a
+    /// private-viewer-state budget (markSeen), or the report mail budget —
+    /// never a signing act. The login backoff serves no retry-after figure.
     RateLimited,
     /// Collapsed server fault; detail is logged, not surfaced.
     Internal,

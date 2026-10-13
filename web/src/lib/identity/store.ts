@@ -8,11 +8,15 @@ import { decodeProposal, encodeProposal } from "@/lib/crypto/wire";
 import { tokenStore } from "@/lib/session/token-store";
 
 const DB_NAME = "cogra.identity";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const ACTOR = "actor";
 const BACKUP = "pendingBackup";
 const HANDSHAKE = "handshake";
 const UX = "ux";
+/** The device lock's local half while signed in: a non-extractable HKDF base key per account. */
+const LOCK_KEY = "deviceLockKey";
+/** A signed-out account's custody, locked (sign-out-custody §3.5). */
+const LOCKED = "lockedCustody";
 // Account ids are UUIDs, so the separator can never appear inside one.
 const KEY_SEPARATOR = "/";
 const LEGACY_SINGLETON_KEY = "current";
@@ -33,9 +37,48 @@ type HandshakeRecord = {
 
 type UxRecord = {
   ephemeral: boolean;
+  /**
+   * The device lock's id (auth.md "Device lock"), held from issue to discard
+   * — through a lock too, since the sign-in releases the secret by it.
+   */
+  lock?: string;
+  /** A lock begun and not yet finished; the next start completes it. */
+  lockPending?: boolean;
 };
 
 const EMPTY_UX: UxRecord = { ephemeral: false };
+
+/** The device lock as this browser holds it while the account is signed in. */
+export type HeldLock = {
+  readonly id: string;
+  readonly key: CryptoKey;
+};
+
+/** One locked record and the binding it was sealed under (sign-out-custody §3.3). */
+export type LockedRecord = {
+  readonly kind: string;
+  readonly key: string;
+  readonly record: Uint8Array;
+};
+
+/** The plaintext custody of one account in this database, read for a lock. */
+export type SlotCustody = {
+  /** The retained seed, or null when none is kept (the key is backed, or absent). */
+  readonly seed: Uint8Array | null;
+  /** Whether an actor record exists at all. */
+  readonly hasActor: boolean;
+  readonly backupBlob: Uint8Array | null;
+  readonly handshakes: readonly { readonly id: string; readonly record: HandshakeRecord }[];
+};
+
+/** What an unlock puts back (sign-out-custody §3.5 UNLOCK step 3). */
+export type UnlockedCustody = {
+  readonly seed: Uint8Array | null;
+  readonly backupBlob: Uint8Array | null;
+  readonly handshakes: readonly { readonly id: string; readonly record: HandshakeRecord }[];
+};
+
+export type { HandshakeRecord };
 
 export type IdentityStore = {
   /** The account's custody key, or null before the ceremony ran on this device. */
@@ -82,6 +125,68 @@ export type IdentityStore = {
    * (auth.md "Sign-out"). Runs while the account is still active.
    */
   purgeIfEphemeral(): Promise<void>;
+
+  // ------------------------------------------------------------ device lock
+  //
+  // Every call below names its account rather than resolving the active one:
+  // a lock runs while the session is ending, after the tokens were cleared,
+  // and an unlock runs before the fresh session is committed (sign-out-custody
+  // §3.5, "run for an explicit account id, never through activeAccountId()").
+
+  /** Whether the account is flagged "don't remember" here — by name. */
+  isEphemeralFor(account: string): Promise<boolean>;
+  /** The lock's id this slot holds — while signed in and while locked alike. */
+  lockIdOf(account: string): Promise<string | null>;
+  /** The held lock, or null when the slot holds none (or is locked: the key goes at lock). */
+  heldLock(account: string): Promise<HeldLock | null>;
+  /**
+   * Holds a lock: its id in the ux record and its key beside it, in one
+   * transaction. Answers the id it replaced, if any, so the caller can
+   * discard that one's server half.
+   */
+  holdLock(account: string, lock: HeldLock): Promise<string | null>;
+  /** Forgets the lock locally: id and key, in one transaction. Never touches a locked set. */
+  dropLock(account: string): Promise<void>;
+  setLockPending(account: string, pending: boolean): Promise<void>;
+  isLockPending(account: string): Promise<boolean>;
+  /** The plaintext custody a lock reads (seed and records; never the CryptoKey). */
+  custodyOf(account: string): Promise<SlotCustody>;
+  /**
+   * THE LOCK'S COMMIT, one transaction (sign-out-custody §3.5 LOCK step 4):
+   * writes the locked set and removes the actor record (CryptoKey and seed
+   * both), the parked blob, the handshakes and the held lock key. The ux
+   * record keeps the flag, the lock's id and the pending mark.
+   *
+   * CONDITIONAL: it commits only while the slot still holds its lock key and
+   * holds no locked set, and answers whether it did. A second lock racing the
+   * first — another tab, or a start-time completion — finds the key gone and
+   * writes nothing, so a locked set is never overwritten by a later read of a
+   * slot the first lock already emptied.
+   */
+  commitLock(account: string, locked: readonly LockedRecord[]): Promise<boolean>;
+  /**
+   * Removes the key material of a slot whose backup is positively known —
+   * actor record, parked blob, handshakes — and nothing else: the draft, the
+   * flag and the lock stay (sign-out-custody §3.2, a backed key on a session
+   * ended elsewhere). The key survives in its backup.
+   */
+  purgeBackedKeyMaterial(account: string): Promise<void>;
+  /** The locked set, or null when the slot is not locked. */
+  lockedSet(account: string): Promise<readonly LockedRecord[] | null>;
+  /**
+   * THE UNLOCK'S COMMIT, one transaction: the plaintext custody back (the
+   * actor key re-imported from the seed, the seed retained) and the locked
+   * set removed. A slot that is not locked is left as it is.
+   */
+  commitUnlock(account: string, custody: UnlockedCustody): Promise<void>;
+  /**
+   * DELETES A LOCKED SET THE SERVER CAN NO LONGER OPEN — the one deletion of
+   * key material this engine makes (PR-62: complete the sign-in, delete the
+   * dead ciphertext, say so once). The lock's id goes with it.
+   */
+  deleteDeadLockedSet(account: string): Promise<void>;
+  /** Every account whose slot is locked or holds an unfinished lock. */
+  lockSlots(): Promise<string[]>;
 };
 
 /**
@@ -137,6 +242,8 @@ function openDb(factory: IDBFactory, onLost: () => void): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(BACKUP)) db.createObjectStore(BACKUP);
       if (!db.objectStoreNames.contains(HANDSHAKE)) db.createObjectStore(HANDSHAKE);
       if (!db.objectStoreNames.contains(UX)) db.createObjectStore(UX);
+      if (!db.objectStoreNames.contains(LOCK_KEY)) db.createObjectStore(LOCK_KEY);
+      if (!db.objectStoreNames.contains(LOCKED)) db.createObjectStore(LOCKED);
     };
     // WITHOUT THIS HANDLER A VERSION BUMP HANGS CUSTODY FOR GOOD. `blocked`
     // fires when an older connection — another tab — is still open, and when
@@ -481,7 +588,7 @@ export function createIdentityStore(deps: {
     async purgeIfEphemeral() {
       const account = await forRead();
       if (account === null) return;
-      const tx = (await db()).transaction([ACTOR, BACKUP, HANDSHAKE, UX], "readwrite");
+      const tx = (await db()).transaction([ACTOR, BACKUP, HANDSHAKE, UX, LOCK_KEY], "readwrite");
       const landed = committed(tx);
       const ux = tx.objectStore(UX).get(account);
       ux.onsuccess = () => {
@@ -490,6 +597,12 @@ export function createIdentityStore(deps: {
         tx.objectStore(ACTOR).delete(account);
         tx.objectStore(BACKUP).delete(account);
         tx.objectStore(UX).delete(account);
+        // The held lock's local half goes with the slot it guarded; the
+        // caller discards the server half first (sign-out-custody §3.3,
+        // "living until it is discarded"). A locked set is never in this
+        // transaction — a purge runs while signed in, and no signed-in
+        // slot is locked.
+        tx.objectStore(LOCK_KEY).delete(account);
         const handshakes = tx.objectStore(HANDSHAKE);
         const keys = handshakes.getAllKeys();
         keys.onsuccess = () => {
@@ -500,6 +613,220 @@ export function createIdentityStore(deps: {
         };
       };
       await landed;
+    },
+
+    // ---------------------------------------------------------- device lock
+
+    async isEphemeralFor(account) {
+      await adopted(account);
+      return (await read<UxRecord>(UX, account))?.ephemeral ?? false;
+    },
+
+    async lockIdOf(account) {
+      return (await read<UxRecord>(UX, account))?.lock ?? null;
+    },
+
+    async heldLock(account) {
+      const tx = (await db()).transaction([UX, LOCK_KEY], "readonly");
+      const ux = asPromise(tx.objectStore(UX).get(account) as IDBRequest<UxRecord | undefined>);
+      const key = asPromise(tx.objectStore(LOCK_KEY).get(account) as IDBRequest<CryptoKey | undefined>);
+      const [record, held] = await Promise.all([ux, key]);
+      const id = record?.lock;
+      return id === undefined || held === undefined ? null : { id, key: held };
+    },
+
+    async holdLock(account, lock) {
+      const tx = (await db()).transaction([UX, LOCK_KEY], "readwrite");
+      const landed = committed(tx);
+      const ux = tx.objectStore(UX);
+      const current = ux.get(account);
+      let replaced: string | null = null;
+      current.onsuccess = () => {
+        const record = (current.result as UxRecord | undefined) ?? EMPTY_UX;
+        if (record.lock !== undefined && record.lock !== lock.id) replaced = record.lock;
+        ux.put({ ...record, lock: lock.id } satisfies UxRecord, account);
+        tx.objectStore(LOCK_KEY).put(lock.key, account);
+      };
+      await landed;
+      return replaced;
+    },
+
+    async dropLock(account) {
+      const tx = (await db()).transaction([UX, LOCK_KEY], "readwrite");
+      const landed = committed(tx);
+      const ux = tx.objectStore(UX);
+      const current = ux.get(account);
+      current.onsuccess = () => {
+        const record = (current.result as UxRecord | undefined) ?? null;
+        if (record !== null && record.lock !== undefined) {
+          const next: UxRecord = { ...record };
+          delete next.lock;
+          ux.put(next, account);
+        }
+        tx.objectStore(LOCK_KEY).delete(account);
+      };
+      await landed;
+    },
+
+    async setLockPending(account, pending) {
+      await updateRecord<UxRecord>(UX, account, (ux) => {
+        const record = ux ?? EMPTY_UX;
+        if (pending) return { ...record, lockPending: true };
+        if (ux === null || ux.lockPending === undefined) return null;
+        const next: UxRecord = { ...record };
+        delete next.lockPending;
+        return next;
+      });
+    },
+
+    async isLockPending(account) {
+      return (await read<UxRecord>(UX, account))?.lockPending ?? false;
+    },
+
+    async custodyOf(account) {
+      await adopted(account);
+      const tx = (await db()).transaction([ACTOR, BACKUP, HANDSHAKE], "readonly");
+      const actor = asPromise(tx.objectStore(ACTOR).get(account) as IDBRequest<ActorRecord | undefined>);
+      const backup = asPromise(tx.objectStore(BACKUP).get(account) as IDBRequest<Uint8Array | undefined>);
+      const handshakeStore = tx.objectStore(HANDSHAKE);
+      const prefix = account + KEY_SEPARATOR;
+      const range = IDBKeyRange.bound(prefix, prefix + "￿");
+      const keys = asPromise(handshakeStore.getAllKeys(range));
+      const values = asPromise(handshakeStore.getAll(range) as IDBRequest<HandshakeRecord[]>);
+      const [actorRecord, blob, handshakeKeys, handshakeValues] = await Promise.all([
+        actor,
+        backup,
+        keys,
+        values,
+      ]);
+      return {
+        seed: actorRecord?.seed ?? null,
+        hasActor: actorRecord !== undefined,
+        backupBlob: blob ?? null,
+        handshakes: handshakeKeys.map((key, i) => ({
+          id: String(key).slice(prefix.length),
+          record: handshakeValues[i]!,
+        })),
+      };
+    },
+
+    async commitLock(account, locked) {
+      const stores = [ACTOR, BACKUP, HANDSHAKE, LOCK_KEY, LOCKED];
+      const tx = (await db()).transaction(stores, "readwrite");
+      const landed = committed(tx);
+      const lockedStore = tx.objectStore(LOCKED);
+      const keyStore = tx.objectStore(LOCK_KEY);
+      let done = false;
+      const key = keyStore.get(account);
+      key.onsuccess = () => {
+        if (key.result === undefined) return;
+        const existing = lockedStore.get(account);
+        existing.onsuccess = () => {
+          if (existing.result !== undefined) return;
+          lockedStore.put(
+            locked.map((r) => ({ kind: r.kind, key: r.key, record: r.record.slice() })),
+            account,
+          );
+          tx.objectStore(ACTOR).delete(account);
+          tx.objectStore(BACKUP).delete(account);
+          keyStore.delete(account);
+          const prefix = account + KEY_SEPARATOR;
+          tx.objectStore(HANDSHAKE).delete(IDBKeyRange.bound(prefix, prefix + "￿"));
+          done = true;
+        };
+      };
+      await landed;
+      return done;
+    },
+
+    async purgeBackedKeyMaterial(account) {
+      const tx = (await db()).transaction([ACTOR, BACKUP, HANDSHAKE], "readwrite");
+      const landed = committed(tx);
+      const actor = tx.objectStore(ACTOR).get(account);
+      actor.onsuccess = () => {
+        const record = (actor.result as ActorRecord | undefined) ?? null;
+        // Decided INSIDE the transaction, by the one fact that proves a
+        // backup (`actorSeed`: the seed is wiped only after an upload). A
+        // slot without that proof keeps everything — an unbacked key is the
+        // only copy, and this is never the call that destroys it.
+        if (record === null || record.seed !== null) return;
+        tx.objectStore(ACTOR).delete(account);
+        tx.objectStore(BACKUP).delete(account);
+        const prefix = account + KEY_SEPARATOR;
+        tx.objectStore(HANDSHAKE).delete(IDBKeyRange.bound(prefix, prefix + "￿"));
+      };
+      await landed;
+    },
+
+    async lockedSet(account) {
+      return read<LockedRecord[]>(LOCKED, account);
+    },
+
+    async commitUnlock(account, custody) {
+      // Imported BEFORE the transaction opens: an await on crypto inside it
+      // would let IndexedDB auto-commit it early (the in-transaction rule
+      // `updateRecord` documents).
+      const pair = custody.seed === null ? null : await importActorKeyPair(custody.seed);
+      const tx = (await db()).transaction([ACTOR, BACKUP, HANDSHAKE, LOCKED], "readwrite");
+      const landed = committed(tx);
+      const lockedStore = tx.objectStore(LOCKED);
+      const present = lockedStore.get(account);
+      present.onsuccess = () => {
+        if (present.result === undefined) return;
+        if (pair !== null && custody.seed !== null) {
+          tx.objectStore(ACTOR).put(
+            {
+              privateKey: pair.privateKey,
+              publicKey: pair.publicKey,
+              // A locked key is an unbacked key, and an unbacked key keeps its
+              // seed (web.md "Key custody"): it is what made the lock possible.
+              seed: custody.seed.slice(),
+            } satisfies ActorRecord,
+            account,
+          );
+        }
+        if (custody.backupBlob !== null) {
+          tx.objectStore(BACKUP).put(custody.backupBlob.slice(), account);
+        }
+        const handshakes = tx.objectStore(HANDSHAKE);
+        for (const { id, record } of custody.handshakes) {
+          handshakes.put(record, handshakeKey(account, id));
+        }
+        lockedStore.delete(account);
+      };
+      await landed;
+    },
+
+    async deleteDeadLockedSet(account) {
+      const tx = (await db()).transaction([UX, LOCKED], "readwrite");
+      const landed = committed(tx);
+      tx.objectStore(LOCKED).delete(account);
+      const ux = tx.objectStore(UX);
+      const current = ux.get(account);
+      current.onsuccess = () => {
+        const record = (current.result as UxRecord | undefined) ?? null;
+        if (record === null) return;
+        const next: UxRecord = { ...record };
+        delete next.lock;
+        delete next.lockPending;
+        ux.put(next, account);
+      };
+      await landed;
+    },
+
+    async lockSlots() {
+      const tx = (await db()).transaction([UX, LOCKED], "readonly");
+      const uxStore = tx.objectStore(UX);
+      const [locked, uxKeys, uxValues] = await Promise.all([
+        asPromise(tx.objectStore(LOCKED).getAllKeys()),
+        asPromise(uxStore.getAllKeys()),
+        asPromise(uxStore.getAll() as IDBRequest<UxRecord[]>),
+      ]);
+      const accounts = new Set(locked.map(String));
+      uxKeys.forEach((key, i) => {
+        if (uxValues[i]?.lockPending === true) accounts.add(String(key));
+      });
+      return [...accounts];
     },
   };
 }

@@ -509,7 +509,7 @@ enum ErrorCode {
   EMAIL_NOT_VERIFIED           # acting before the address is proven
   NOT_FOUND                    # an id resolved to nothing
   BAD_INPUT                    # malformed args, or a constraint not modeled as data
-  RATE_LIMITED                 # an auth or upload endpoint's per-IP / per-account budget (incl. the email change's request and resend mail budget), or a private-viewer-state budget (markSeen) — never a signing act
+  RATE_LIMITED                 # an auth or upload endpoint's per-IP / per-account budget (incl. the email change's request and resend mail budget, and the report mail budget), or a private-viewer-state budget (markSeen) — never a signing act
   INTERNAL                     # collapsed server fault; detail is logged, not surfaced
 
   # Expected business failures — carried in UserError.code
@@ -5228,6 +5228,17 @@ type ReleaseDeviceLockPayload { secret: String }
 input DiscardDeviceLockInput { lock: UUID! }
 type DiscardDeviceLockPayload { ok: Boolean }
 
+input SendReportInput {
+  "The reported node: a post, a comment, or a person's profile —
+   never the reporter's own."
+  target: UUID!
+}
+type SendReportPayload {
+  "When the report was sent; null when it was refused."
+  reportedAt: DateTime
+  userErrors: [UserError!]!
+}
+
 extend type Mutation {
   register(input: RegisterInput!): RegisterPayload!
   verifyEmail(input: VerifyEmailInput!): VerifyEmailPayload!
@@ -5272,6 +5283,14 @@ extend type Mutation {
    unknown id, or another account's, answers the same and touches
    nothing."
   discardDeviceLock(input: DiscardDeviceLockInput!): DiscardDeviceLockPayload!
+  "Report a post, a comment or a person to CoGra by mail (the MVP's
+   report: no report machinery — moderation proposals come with
+   slice 8's moderation half). Mails the report address the reporter,
+   the reported node's id and the time; writes nothing to the graph
+   and keeps no row. Needs a session. Spends a per-account report
+   budget: a spent budget answers a transport-tier RATE_LIMITED and
+   nothing is mailed."
+  sendReport(input: SendReportInput!): SendReportPayload!
   createInviteLink(input: CreateInviteLinkInput!): CreateInviteLinkPayload!
   revokeInviteLink(input: RevokeInviteLinkInput!): RevokeInviteLinkPayload!
   removeContent(input: RemoveContentInput!): RemoveContentPayload!

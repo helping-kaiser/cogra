@@ -97,6 +97,21 @@ describe("refresher", () => {
     expect(store.activeAccountId()).toBeNull();
   });
 
+  it("hands the hook the clear, so a device lock clears the tokens before it reads", async () => {
+    const store = createTokenStore();
+    store.save(pair(1));
+    const order: string[] = [];
+    const onInvalidated = vi.fn(async (clearTokens: () => void) => {
+      clearTokens();
+      order.push(store.hasSession() ? "still signed in" : "cleared");
+    });
+    const exec = vi.fn<RefreshExecutor>().mockResolvedValue(refreshTokenInvalid());
+    const refresher = createRefresher(store, exec, onInvalidated);
+    expect(await refresher.refresh("access-1")).toBe(false);
+    expect(order).toEqual(["cleared"]);
+    expect(store.hasSession()).toBe(false);
+  });
+
   it("skips the invalidation hook on other refusals and failures", async () => {
     const store = createTokenStore();
     store.save(pair(1));

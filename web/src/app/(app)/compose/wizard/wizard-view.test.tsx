@@ -48,6 +48,7 @@ function fakeDrafts(initial: WizardState | null = null): ComposeDraftStore & {
     clear: async () => {
       held = null;
     },
+    abandonPendingSaves: () => undefined,
     held: () => held,
   };
 }

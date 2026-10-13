@@ -31,6 +31,7 @@ import { fetchFeedRanking, fetchFeedWindow } from "@/lib/api/feed-api";
 import { failed, success } from "@/lib/api/outcome";
 import { appendDeduped } from "@/lib/api/pagination";
 import { onFeedDone } from "@/lib/feed/feed-done";
+import { onFeedReselect } from "@/lib/feed/feed-reselect";
 import { RankedFeed, type FeedIo, type FeedWindow } from "@/lib/feed/ranked-feed";
 import { seenRecord } from "@/lib/history/seen-record";
 import { SEEN_ATTRIBUTE, useSeenTracker } from "@/lib/history/seen-tracker";
@@ -54,17 +55,37 @@ import { JoinPrompt } from "@/lib/ui/join-prompt";
 import { PostCard } from "@/lib/ui/post-card";
 import { tailIndexOf, useApproachingTail } from "@/lib/ui/infinite-list";
 import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
-import { useScrollHost } from "@/lib/ui/scroll-host";
+import { scrollHostToTopAnimated, scrollOffsetOf, useScrollHost } from "@/lib/ui/scroll-host";
 import { ANCHOR_ATTRIBUTE, usePinnedPlace } from "@/lib/ui/scroll-pin";
 import { LINK_COPIED } from "@/lib/ui/share";
 import { Snackbar } from "@/lib/ui/snackbar";
+import type { DataNode } from "@/lib/ui/data-node";
 import * as clipMemory from "@/lib/ui2/media/clip-memory";
+import type { PostMenuRow } from "@/lib/ui2/post-menu";
+import { PostMenuHost } from "@/lib/ui2/post-menu-host";
 import { StageHost } from "@/lib/ui2/media/stage-host";
 import { CommentsSheet } from "@/app/comments/comments-sheet";
 import { ComposeNotice, composeOutcomeOf } from "./compose-notice";
 import { recallFeed, rememberFeed, rememberFeedPlace } from "./feed-memory";
 import { VouchCard } from "./vouch-card";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
+
+/**
+ * The rows FeedPostMenu registers (`feed.menuSheet.*`) — the reader menu's.
+ * The author's own rows on the feed have no drawn board, so they keep their
+ * own ids rather than wear a path the registry does not hold.
+ */
+const FEED_MENU_ROWS: ReadonlySet<PostMenuRow> = new Set([
+  "save",
+  "cite",
+  "hide",
+  "license",
+  "report",
+]);
+
+function feedMenuRow(row: PostMenuRow): DataNode | undefined {
+  return FEED_MENU_ROWS.has(row) ? { path: `feed.menuSheet.${row}` } : undefined;
+}
 
 /** Every clip a list of posts draws, by the media id the clip memory keys on. */
 function clipIdsOf(posts: readonly PostView[]): string[] {
@@ -239,10 +260,17 @@ export function FeedView({
   const [loading, setLoading] = useState(remembered === null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [transportFault, setTransportFault] = useState<TransportFault | null>(null);
-  const [linkCopied, setLinkCopied] = useState(false);
+  // THE FEED'S ONE SNACKBAR (`feed.snackbar`): a copied link, and the
+  // aftermath of what the card menus did.
+  const [snack, setSnack] = useState<string | null>(null);
   // Stable, so the snackbar's own timer is not restarted by every render of
   // the feed underneath it.
-  const dismissLinkCopied = useCallback(() => setLinkCopied(false), []);
+  const dismissSnack = useCallback(() => setSnack(null), []);
+  // THE ONE MENU SHEET THE CARDS SHARE (ruling 84, FeedPostMenu.md:3): a
+  // card's ⋮ raises it over the feed, which stands unchanged beneath. The post
+  // outlives the flag so the sheet does not blank out through its exit.
+  const [menuPost, setMenuPost] = useState<PostView | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   // The band's chats affordance, signed out: the guest gate the canvas
   // draws (`graph.json` "FeedBare" → `GuestGate`) — ask, never bounce.
   const [chatsPrompting, setChatsPrompting] = useState(false);
@@ -391,6 +419,22 @@ export function FeedView({
   }, [releasePin, refresh]);
   usePullToRefresh({ host, onPull, enabled: !commentsOpen });
 
+  // THE WAY BACK UP (FeedScrolled.md:11-13): the list goes to the top,
+  // animated, and NEVER refreshes — the pill's tap and the bar's re-tap from a
+  // scrolled root alike. Going up is a move, so the place stops being held.
+  const goToTop = useCallback(() => {
+    releasePin();
+    scrollHostToTopAnimated(host);
+  }, [host, releasePin]);
+
+  // THE BAR'S RE-TAP OVER THE ROOT (Feed.md:81-91): scrolled, it is the way up;
+  // already at the top, it is the feed's other refresh route, the one a pull
+  // takes there.
+  useEffect(
+    () => onFeedReselect(() => (scrollOffsetOf(host) > 0 ? goToTop() : onPull())),
+    [goToTop, host, onPull],
+  );
+
   // The next window of the derived list — a hydration, never a ranking: the
   // order was fixed when the list was derived, and nothing in it moves while
   // the reader scrolls (W-6).
@@ -444,6 +488,7 @@ export function FeedView({
         // from the same lazy-state source the restore itself reads, so this
         // and the actual landing offset can never disagree.
         initiallyHidden={rememberedPlace !== null && rememberedPlace.offset > 0}
+        onBackToTop={goToTop}
       >
         {/* A tab root wears the mark, not a page title: the reader knows which
             tab they are on from the bar, and the band's other half works. */}
@@ -573,7 +618,12 @@ export function FeedView({
                   setCommentsPost(post);
                   setCommentsOpen(true);
                 }}
-                onLinkCopied={() => setLinkCopied(true)}
+                onLinkCopied={() => setSnack(LINK_COPIED)}
+                onOpenMenu={() => {
+                  setMenuPost(post);
+                  setMenuOpen(true);
+                }}
+                menuOpen={menuOpen && menuPost?.id === post.id}
               />
             </li>
           ))}
@@ -611,14 +661,28 @@ export function FeedView({
             Loading…
           </p>
         )}
-        {/* One region for the whole feed: a card that copied a link says so
-            here rather than each card mounting a live region of its own. */}
+        {/* One region for the whole feed: a card that copied a link, and a
+            menu row's aftermath, say so here rather than each card mounting a
+            live region of its own. */}
         <Snackbar
-          testId="feed-link-copied"
-          message={linkCopied ? LINK_COPIED : null}
-          onDismiss={dismissLinkCopied}
+          testId="feed-snackbar"
+          node={{ path: "feed.snackbar" }}
+          message={snack}
+          onDismiss={dismissSnack}
         />
       </div>
+      {/* THE CARDS' MENU, OVER THE FEED (FeedPostMenu.md). What its rows raise
+          rises over the feed too — the license terms (:21) and the report's
+          confirm (:23), whose feed-hosted states no board registers yet
+          (FC-G10), so they keep their own ids. */}
+      <PostMenuHost
+        post={menuPost}
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        nodes={{ sheet: { path: "feed.menuSheet" }, row: feedMenuRow }}
+        testId="feed-menu"
+        notify={setSnack}
+      />
       {/* Conditionally mounted, matching `stance-control.tsx`'s own guest
           gate: `JoinPrompt` always draws its `data-testid`, so a second one
           mounted unconditionally alongside a post card's own gate collides

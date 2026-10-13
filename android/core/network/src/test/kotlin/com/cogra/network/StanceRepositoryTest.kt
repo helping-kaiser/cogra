@@ -12,7 +12,7 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceTarget
-import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.ThrowingWriteRepository
 import com.cogra.crypto.Family
@@ -89,7 +89,7 @@ class StanceRepositoryTest {
         client,
         AuthGuard(
             tokenStore,
-            SessionRefresher(tokenStore, EndLocalSession(FakeIdentityStore(), tokenStore), Provider { client }),
+            SessionRefresher(tokenStore, EndLocalSession(FakeLockCustodyStore(), tokenStore), Provider { client }),
         ),
         writes,
     )

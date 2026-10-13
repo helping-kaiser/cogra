@@ -14,7 +14,7 @@ import com.cogra.network.auth.SessionRefresher
 import com.cogra.network.repo.MediaRepositoryImpl
 import com.cogra.network.repo.PartUploader
 import com.cogra.domain.identity.EndLocalSession
-import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.google.common.truth.Truth.assertThat
 import java.io.File
@@ -93,7 +93,7 @@ class MediaUploadTest {
 
     /** The suite's tokens are opaque, so the gate only ever passes them on. */
     private fun sessionGate() = SessionGate(tokens) {
-        SessionRefresher(tokens, EndLocalSession(FakeIdentityStore(), tokens)) { client }
+        SessionRefresher(tokens, EndLocalSession(FakeLockCustodyStore(), tokens)) { client }
     }
 
     private fun part(request: RecordedRequest): MockResponse {
@@ -166,7 +166,7 @@ class MediaUploadTest {
         )
         val guard = AuthGuard(
             tokens,
-            SessionRefresher(tokens, EndLocalSession(FakeIdentityStore(), tokens)) { client },
+            SessionRefresher(tokens, EndLocalSession(FakeLockCustodyStore(), tokens)) { client },
         )
         val repo = MediaRepositoryImpl(client, guard, uploader).apply {
             // Within reach of a test-sized file: eight mebibytes of

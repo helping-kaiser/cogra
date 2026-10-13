@@ -23,6 +23,7 @@ import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.store.DeviceData
 import com.cogra.domain.store.IdentityStore
+import com.cogra.domain.store.LockCustodyStore
 import com.cogra.domain.store.TokenStore
 import java.util.Base64
 import javax.inject.Inject
@@ -57,6 +58,9 @@ class KeyCeremony @Inject constructor(
     suspend fun createActorKey(): ActorPublicIdentity {
         val key = ActorKey.generate()
         identity.saveActorSeed(key.seed())
+        // A fresh key has no backup until one uploads (the device lock reads
+        // this flag as "backup positively known", sign-out-custody §3.2).
+        identity.setKeyBacked(false)
         // A blob parked under the superseded key would never upload:
         // its proof verifies against the key the account now has.
         identity.clearPendingBackupBlob()
@@ -109,6 +113,7 @@ class KeyCeremony @Inject constructor(
         return when (account.uploadSigned(seed, blob)) {
             is Outcome.Success -> {
                 identity.clearPendingBackupBlob()
+                identity.setKeyBacked(true)
                 true
             }
             else -> false
@@ -130,7 +135,10 @@ class BackupManager @Inject constructor(
         val seed = identity.actorSeed()
             ?: return Outcome.Failed(IllegalStateException("no actor key on this device"))
         val code = RecoveryCode.generate()
-        return account.uploadSigned(seed, sealKeyBackup(seed, code)).map { code.display() }
+        return account.uploadSigned(seed, sealKeyBackup(seed, code)).map {
+            identity.setKeyBacked(true)
+            code.display()
+        }
     }
 }
 
@@ -158,6 +166,8 @@ sealed interface RestoreResult {
 class ActorRestorer @Inject constructor(
     private val identity: IdentityStore,
     private val account: AccountRepository,
+    private val tokens: TokenStore,
+    private val deviceLock: DeviceLock,
 ) {
     /**
      * [forgetOnSignOut] is the restore form's "don't remember me"
@@ -188,32 +198,60 @@ class ActorRestorer @Inject constructor(
             return RestoreResult.WrongCode
         }
         identity.saveActorSeed(seed)
-        if (forgetOnSignOut) identity.setForgetOnSignOut(true)
+        // Restored from the backup: the backup is positively known.
+        identity.setKeyBacked(true)
+        if (forgetOnSignOut) {
+            identity.setForgetOnSignOut(true)
+            // The opt-in's lock (sign-out-custody §3.4). Best effort here —
+            // the restore is already signed in, and a lock that did not
+            // arrive is retried at the next start.
+            tokens.current()?.accountId?.let { deviceLock.ensureHeld(it) }
+        }
         return RestoreResult.Restored
     }
 }
 
 /**
  * The local half of a session ended from ELSEWHERE — the refresh
- * machinery's reuse-detected token clear (`REFRESH_TOKEN_INVALID`):
- * purge the account's identity slot when it opted out of being
- * remembered (auth.md "Sign-out"), then forget the tokens — in that
- * order, because the purge needs the tokens to know which account's
- * slot to clear.
+ * machinery's token clear (`REFRESH_TOKEN_INVALID`: sign out everywhere
+ * else, a password changed or reset, a reused token caught). It never
+ * asks, and it never purges an only copy (sign-out-custody §3.2, §3.6;
+ * SignOutConfirm.md:23):
+ * - a remembered account: the tokens go, nothing else;
+ * - a "don't remember" account holding its device lock: the custody set
+ *   is LOCKED — the key, the draft and its sealed copies, unusable until
+ *   this account signs in here again, online, with its current password
+ *   (a backed key is purged instead, as it survives in its backup);
+ * - a "don't remember" account that never obtained its lock (PR-61's
+ *   residual): the material is KEPT, refused by the app until the next
+ *   sign-in — NEVER destroyed. A backed key is still purged.
+ * Either "don't remember" branch also drops the account's seen record: a
+ * cache of the server's view log, never part of the lock set (PR-69).
  *
- * THE REMOTE PATH IS THE SIGN-OUT CUSTODY PACKET'S, and this keeps it
- * exactly as it stands: the slot purge, never the draft. The explicit
- * sign-out is [SignOut]'s and purges the whole custody set; the two
- * diverge on purpose, and widening this one would move the custody
- * boundary without that packet's lock behind it.
+ * The account is read before anything clears, because every step names it.
  */
 class EndLocalSession @Inject constructor(
-    private val identity: IdentityStore,
+    private val custody: LockCustodyStore,
     private val tokens: TokenStore,
 ) {
-    suspend fun end() {
-        if (identity.forgetOnSignOut()) identity.purge()
-        tokens.clear()
+    suspend fun end(): LocalSessionEnd {
+        val account = tokens.current()?.accountId
+        if (account == null || !custody.forgetOnSignOut(account)) {
+            tokens.clear()
+            return LocalSessionEnd.KEPT
+        }
+        val end = if (custody.heldLock(account) != null) {
+            lockHeld(custody, tokens, account)
+            LocalSessionEnd.LOCKED
+        } else {
+            tokens.clear()
+            custody.purgeBackedKeyMaterial(account)
+            LocalSessionEnd.REFUSED
+        }
+        // The seen record is never locked: a forget-on end drops it either
+        // way, as the explicit don't-remember sign-out does (PR-69).
+        custody.forgetSeenRecord(account)
+        return end
     }
 }
 
@@ -235,11 +273,20 @@ class SignOut @Inject constructor(
     private val identity: IdentityStore,
     private val tokens: TokenStore,
     private val device: DeviceData,
+    private val deviceLock: DeviceLock,
 ) {
     suspend fun signOut() {
+        val forget = identity.forgetOnSignOut()
+        // The opt-in's lock ends with the slot it guarded (sign-out-custody
+        // §3.3): its server half discarded while a session still names it.
+        if (forget) discardLock()
         sessions.revokeSession(null)
-        if (identity.forgetOnSignOut()) identity.purgeCustodySet()
+        if (forget) identity.purgeCustodySet()
         tokens.clear()
+    }
+
+    private suspend fun discardLock() {
+        tokens.current()?.accountId?.let { deviceLock.discard(it) }
     }
 
     /**
@@ -251,6 +298,9 @@ class SignOut @Inject constructor(
      * lands on sign-in with nothing remembered. It touches no other wire.
      */
     suspend fun eraseEverything() {
+        // The erase gains one step (sign-out-custody §3.5 ERASE): the lock's
+        // server half goes first, while a session still exists to name it.
+        discardLock()
         sessions.revokeSession(null)
         device.eraseEverything()
         // Already gone with the rest; said again so a wipe that failed

@@ -17,18 +17,42 @@
 
 import { useEffect } from "react";
 
+import { part, testAttributes, type DataNode } from "./data-node";
+
 /** Material's short snackbar duration. */
 export const SNACKBAR_MS = 4000;
+
+/**
+ * ONE ACTION, AND ONLY WHERE THE ACT IS WORTH REVERSING
+ * (`design/components/core/Snackbar.jsx`): Material's snackbar takes a single
+ * action and this one takes the same — `Undo` after a hide or an unsave. It is
+ * a word on the message's own line, never a button body: a pill's ground on a
+ * surface that is itself a lift would be a second surface arguing with the
+ * first.
+ */
+export type SnackbarAction = {
+  label: string;
+  onAction: () => void;
+};
 
 export function Snackbar({
   message,
   onDismiss,
   testId,
+  node,
+  action,
 }: {
   /** `null` leaves the region mounted and silent. */
   message: string | null;
   onDismiss: () => void;
   testId: string;
+  /**
+   * The registered snackbar of a registered screen (`feed.snackbar`,
+   * `postDetail.snackbar`): the bar wears it, its words `message` and its
+   * action `action`.
+   */
+  node?: DataNode;
+  action?: SnackbarAction;
 }) {
   useEffect(() => {
     if (message === null) return;
@@ -40,12 +64,30 @@ export function Snackbar({
     <div role="status" aria-live="polite" data-testid={`${testId}-region`}>
       {message !== null && (
         <div
-          data-testid={testId}
+          {...testAttributes(node, testId)}
           // Elevation is tonal (design.md §4): the inverse surface is
           // what lifts a snackbar off the page, not a drop shadow.
-          className="fixed inset-x-4 bottom-20 z-30 mx-auto w-fit max-w-[min(92vw,24rem)] rounded-extra-small bg-inverse-surface px-4 py-3 text-body-medium text-inverse-on-surface"
+          className="fixed inset-x-4 bottom-20 z-30 mx-auto flex w-fit max-w-[min(92vw,24rem)] items-center gap-4 rounded-extra-small bg-inverse-surface px-4 py-3 text-body-medium text-inverse-on-surface"
         >
-          {message}
+          <span className="min-w-0" {...testAttributes(part(node, "message"))}>
+            {message}
+          </span>
+          {action !== undefined && (
+            <button
+              type="button"
+              {...testAttributes(part(node, "action"), `${testId}-action`)}
+              onClick={() => {
+                action.onAction();
+                onDismiss();
+              }}
+              // `--action-on-snackbar` is `--inverse-primary`
+              // (design/tokens/semantic.css): `primary` on the inverse ground
+              // is the one place the brand colour stops being legible.
+              className="cg-state cg-focus cg-hit flex-none whitespace-nowrap rounded-extra-small border-0 bg-transparent p-0 text-label-large text-inverse-primary"
+            >
+              {action.label}
+            </button>
+          )}
         </div>
       )}
     </div>
