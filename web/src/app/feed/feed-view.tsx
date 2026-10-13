@@ -331,6 +331,7 @@ export function FeedView({
             tab they are on from the bar, and the band's other half works. */}
         <CograBand
           node={{ path: "feed.band" }}
+          deletionBandNode={{ path: "feed.deletionBand" }}
           // The chats affordance (jakob 2026-09-01). A signed-out tap
           // opens the guest gate, the edge the canvas draws
           // (`graph.json` "FeedBare" → `GuestGate`); a signed-in tap
