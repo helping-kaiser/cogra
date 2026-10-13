@@ -836,9 +836,8 @@ type FeedEntry {
 	"""
 	score: Float!
 	"""
-	The viewer's held opinion of the person behind the row, read at
-	`asOfEpoch`. Null when none is held, for a Tags row, or when the
-	reader is not the viewer.
+	The vantage's held opinion of the person behind the row, read at
+	`asOfEpoch`. Null when the vantage holds none, or for a Tags row.
 	"""
 	mark: PeopleMark
 	"""
