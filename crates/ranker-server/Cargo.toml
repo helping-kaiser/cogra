@@ -39,3 +39,5 @@ uuid               = { workspace = true }
 chrono             = { workspace = true }
 
 [dev-dependencies]
+# The stub api the pod's tests read from, and the raw HTTP probe of /health.
+reqwest = { workspace = true }
