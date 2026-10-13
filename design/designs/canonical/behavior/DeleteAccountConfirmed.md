@@ -8,6 +8,12 @@ ALWAYS the heading's days left round to the nearest whole day while 24 hours or 
 
 WHEN the deletion mail's link is opened GIVEN the deletion was canceled -> the spent link's landing opens, This link doesn't work anymore AND NEVER the deletion is confirmed again
 
+WHEN the deletion mail's link is opened GIVEN no answer reaches the device -> the landing holds the house fault, Can't reach the server. Check your connection and try again., over Try again AND NEVER the deletion is confirmed AND NEVER the grace starts
+
+WHEN the deletion mail's link is opened GIVEN the confirm is refused by its budget -> the line Too many tries. Wait a little, then try again. stands in the fault's place, over the same Try again AND NEVER the deletion is confirmed AND NEVER the grace starts
+
+WHEN tap Try again GIVEN either line stands -> the same link is checked again AND the landing answers as the check does
+
 ALWAYS the landing carries no back arrow
 
 ALWAYS the landing's heading is the band's sentence on its first day, with the deadline's date spelled out under it, and says nothing changes until then and any device can cancel
