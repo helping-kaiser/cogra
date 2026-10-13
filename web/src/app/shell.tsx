@@ -40,15 +40,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     pathname.startsWith("/u/") ||
     // The own profile is a gated read surface: its frame waits for the
     // gate, which replaces a signed-out arrival with /login.
-    (signedIn && pathname === "/profile");
+    (signedIn && pathname === "/profile") ||
+    (signedIn && pathname === "/saved");
   const showBar = phase !== "resolving" && readSurface;
+  // SAVED KEEPS PROFILE LIT (Saved.md, design digest item 51: the originating
+  // root stays lit on a drill-in) — its one door is the reader's own profile.
   const active =
-    pathname === "/feed" ? "feed" : pathname === "/profile" ? "profile" : null;
+    pathname === "/feed"
+      ? "feed"
+      : pathname === "/profile" || pathname === "/saved"
+        ? "profile"
+        : null;
   // The bar is drawn once, here, but its node belongs to the SCREEN it rides
-  // (`design/designs/canonical/nodes.json` registers `feed.bottomBar` and
-  // `postDetail.bottomBar`), so the registered screens name it by route.
+  // (`design/designs/canonical/nodes.json` registers `feed.bottomBar`,
+  // `postDetail.bottomBar` and `saved.bottomBar`), so the registered screens
+  // name it by route.
   const screen =
-    pathname === "/feed" ? "feed" : /^\/posts\/[^/]+$/.test(pathname) ? "postDetail" : null;
+    pathname === "/feed"
+      ? "feed"
+      : /^\/posts\/[^/]+$/.test(pathname)
+        ? "postDetail"
+        : pathname === "/saved"
+          ? "saved"
+          : null;
   const scroller = useRef<HTMLDivElement>(null);
   return (
     <div className="flex h-full flex-col">
