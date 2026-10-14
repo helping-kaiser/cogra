@@ -9,9 +9,9 @@
 //   digest items 18, 56a).
 // - THE SECOND LINE: a comment's or a reply's words; `in <title>` for a
 //   mention or a citation; nothing else.
-// - THE DISC: the opinion row wears the opinion's face; the approvable row the
-//   applicant's monogram, never a picture; every other row the actor's picture,
-//   else their monogram.
+// - THE DISC: the opinion row wears the opinion's face, the withdrawal row 🤷;
+//   the approvable row the applicant's monogram, never a picture; every other
+//   row the actor's picture, else their monogram.
 // - THE TAP: a comment row lands on its comment in the thread (Saved's comment
 //   landing); a mention or citation opens the post that carries it; a person
 //   row opens that person's profile; the application rows open Invites and
@@ -84,6 +84,8 @@ function predicate(row: Notification): string {
       return "replied to your comment";
     case "PROFILE_OPINION":
       return "gave an opinion on you";
+    case "PROFILE_OPINION_WITHDRAWN":
+      return "walked back their opinion on you";
     case "MENTION":
       return "mentioned you";
     case "CITATION":
@@ -170,6 +172,7 @@ function destination(row: Notification): string | null {
       return null;
     }
     case "PROFILE_OPINION":
+    case "PROFILE_OPINION_WITHDRAWN":
     case "INVITE_LANDED":
     case "APPLICATION_APPROVED":
       return `/u/${handle}?${FROM}`;
@@ -192,6 +195,8 @@ function discOf(row: Notification, deleted: boolean, name: string): ContentRowDi
   if (row.kind === "PROFILE_OPINION" && row.record !== null && row.record !== undefined) {
     return { kind: "face", pDirected: row.record.pDirected, pInterest: row.record.pInterest };
   }
+  // The opinion row's sibling: 🤷 where the opinion's face would be.
+  if (row.kind === "PROFILE_OPINION_WITHDRAWN") return { kind: "walkedBack" };
   // The applicant has no Profile to carry a picture until the approval lands.
   if (row.kind === "APPLICATION_APPROVABLE") return { kind: "monogram", name: row.actor.handle };
   const avatar = "avatar" in row.actor ? row.actor.avatar : null;

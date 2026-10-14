@@ -8,9 +8,9 @@
 //   digest items 18, 56a).
 // - THE SECOND LINE: a comment's or a reply's words; `in <title>` for a
 //   mention or a citation; nothing else.
-// - THE DISC: the opinion row wears the opinion's face; the approvable row the
-//   applicant's monogram, never a picture; every other row the actor's
-//   picture, else their monogram.
+// - THE DISC: the opinion row wears the opinion's face, the withdrawal row 🤷;
+//   the approvable row the applicant's monogram, never a picture; every other
+//   row the actor's picture, else their monogram.
 // - THE TAP: a comment row lands on its comment in the thread (Saved's comment
 //   landing); a mention or citation opens the post that carries it; a person
 //   row opens that person's profile; the application rows open Invites and
@@ -53,6 +53,9 @@ sealed interface NotificationDisc {
     data class Monogram(val name: String) : NotificationDisc
 
     data class Face(val directed: Double, val interest: Double) : NotificationDisc
+
+    /** 🤷 where the opinion's face would be: a stance walked back (Notifications.md:21). */
+    data object WalkedBack : NotificationDisc
 
     data object Redacted : NotificationDisc
 }
@@ -101,6 +104,7 @@ private fun predicate(row: Notification): String = when (row.kind) {
     NotificationKind.COMMENT -> "commented on your post"
     NotificationKind.REPLY -> "replied to your comment"
     NotificationKind.PROFILE_OPINION -> "gave an opinion on you"
+    NotificationKind.PROFILE_OPINION_WITHDRAWN -> "walked back their opinion on you"
     NotificationKind.MENTION -> "mentioned you"
     // NT-G3(b): a citation of the reader's comment reads `cited your comment`.
     NotificationKind.CITATION ->
@@ -162,6 +166,7 @@ private fun destination(row: Notification): NotificationTarget? = when (row.kind
         else -> null
     }
     NotificationKind.PROFILE_OPINION,
+    NotificationKind.PROFILE_OPINION_WITHDRAWN,
     NotificationKind.INVITE_LANDED,
     NotificationKind.APPLICATION_APPROVED,
     -> NotificationTarget.Person(row.actor.handle)
@@ -180,6 +185,8 @@ private fun discOf(row: Notification, deleted: Boolean, name: String): Notificat
     if (row.kind == NotificationKind.PROFILE_OPINION && row.pair != null) {
         return NotificationDisc.Face(row.pair.directed, row.pair.interest)
     }
+    // The opinion row's sibling: 🤷 where the opinion's face would be.
+    if (row.kind == NotificationKind.PROFILE_OPINION_WITHDRAWN) return NotificationDisc.WalkedBack
     // The applicant has no Profile to carry a picture until the approval lands.
     if (row.kind == NotificationKind.APPLICATION_APPROVABLE) return NotificationDisc.Monogram(row.actor.handle)
     return row.actor.avatarUrl?.let { NotificationDisc.Picture(it, name) } ?: NotificationDisc.Monogram(name)

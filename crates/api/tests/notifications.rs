@@ -842,7 +842,7 @@ async fn tags_affinities_publishes_and_registrations_never_notify(pool: PgPool) 
     );
 }
 
-/// Self-comment and self-opinion are ordinary acts that report nothing, and the table refuses a self row.
+/// Self-comment, self-opinion and its walk-back are ordinary acts that report nothing, and the table refuses a self row.
 /// ´claim:notifications:my-own-acts-never-notify-me´
 #[sqlx::test(migrations = "../../migrations")]
 async fn my_own_acts_never_notify_me(pool: PgPool) {
@@ -851,6 +851,7 @@ async fn my_own_acts_never_notify_me(pool: PgPool) {
     let p = post(&rig, &ada, "Mine", json!([])).await;
     comment(&rig, &ada, &p, references(&[&ada.id.to_string()])).await;
     opine(&rig, &ada, ada.id, 0.5, 0.5).await;
+    sever(&rig, &ada, ada.id).await;
     assert!(kinds_of(&rig, &ada.token).await.is_empty());
 
     let self_row = sqlx::query(
@@ -935,7 +936,7 @@ async fn a_revised_citation_is_a_new_row(pool: PgPool) {
     );
 }
 
-/// Withdrawing a citation nets its bundle to (0,0): no row, and the earlier row stands.
+/// Withdrawing a citation nets its bundle to (0,0): the withdrawal row is the profile opinion's alone, so no row, and the earlier row stands.
 /// ´claim:notifications:a-citation-withdrawal-never-notifies´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_citation_withdrawal_never_notifies(pool: PgPool) {
@@ -948,16 +949,88 @@ async fn a_citation_withdrawal_never_notifies(pool: PgPool) {
     assert_eq!(kinds_of(&rig, &ada.token).await, vec!["CITATION"]);
 }
 
-/// Severing an opinion on the viewer's profile writes no row, and the earlier row stands.
-/// ´claim:notifications:an-opinion-withdrawal-never-notifies´
+/// Severing an opinion on the viewer's profile reports the walk-back as its own row opening on the author's profile, and the earlier row stands.
+/// ´claim:notifications:an-opinion-withdrawal-on-my-profile-notifies-me´
 #[sqlx::test(migrations = "../../migrations")]
-async fn an_opinion_withdrawal_never_notifies(pool: PgPool) {
+async fn an_opinion_withdrawal_on_my_profile_notifies_me(pool: PgPool) {
+    let rig = unlimited(pool);
+    let ada = member(&rig, "ada").await;
+    let bo = member(&rig, "bo").await;
+    opine(&rig, &bo, ada.id, 0.5, 0.25).await;
+    sever(&rig, &bo, ada.id).await;
+
+    let me = read(&rig, &ada.token).await;
+    assert_eq!(
+        kinds(&me),
+        vec!["PROFILE_OPINION_WITHDRAWN", "PROFILE_OPINION"]
+    );
+    let row = &rows(&me)[0];
+    assert_eq!(row["actor"]["handle"], "bo");
+    assert_eq!(row["subject"]["__typename"], "User");
+    assert_eq!(row["subject"]["id"], bo.id.to_string());
+    assert_eq!(row["context"], Value::Null);
+    assert_eq!(row["application"], Value::Null);
+    assert_eq!(row["record"]["family"], "OPINION");
+    assert_eq!(row["record"]["pDirected"], -0.5);
+    assert_eq!(row["record"]["pInterest"], -0.25);
+    assert_eq!(rows(&me)[1]["record"]["pDirected"], 0.5);
+    assert_eq!(me["hasUnreadNotifications"], true);
+}
+
+/// A walk-back signed as several counter-records that land together is one act and one row.
+/// ´claim:notifications:a-multi-record-walk-back-writes-one-row´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_walk_back_of_several_counter_records_writes_one_row(pool: PgPool) {
+    let rig = unlimited(pool);
+    let ada = member(&rig, "ada").await;
+    let bo = member(&rig, "bo").await;
+    opine(&rig, &bo, ada.id, 0.75, 0.75).await;
+    opine(&rig, &bo, ada.id, 0.75, 0.75).await;
+    sever(&rig, &bo, ada.id).await;
+    assert_eq!(
+        kinds_of(&rig, &ada.token).await,
+        vec![
+            "PROFILE_OPINION_WITHDRAWN",
+            "PROFILE_OPINION",
+            "PROFILE_OPINION"
+        ]
+    );
+}
+
+/// A walk-back of an opinion on the viewer's post is a reading walked back, never a row.
+/// ´claim:notifications:an-opinion-withdrawal-on-my-post-never-notifies´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_opinion_withdrawal_on_my_post_never_notifies(pool: PgPool) {
+    let rig = unlimited(pool);
+    let ada = member(&rig, "ada").await;
+    let bo = member(&rig, "bo").await;
+    let p: Uuid = post(&rig, &ada, "Mine", json!([]))
+        .await
+        .parse()
+        .expect("uuid");
+    opine(&rig, &bo, p, 0.5, 0.5).await;
+    sever(&rig, &bo, p).await;
+    assert!(kinds_of(&rig, &ada.token).await.is_empty());
+}
+
+/// An opinion given again after a walk-back is a new pointing: three acts, three rows, newest first.
+/// ´claim:notifications:an-opinion-given-again-after-a-walk-back-is-a-new-row´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_opinion_given_again_after_a_walk_back_is_a_new_row(pool: PgPool) {
     let rig = unlimited(pool);
     let ada = member(&rig, "ada").await;
     let bo = member(&rig, "bo").await;
     opine(&rig, &bo, ada.id, 0.5, 0.5).await;
     sever(&rig, &bo, ada.id).await;
-    assert_eq!(kinds_of(&rig, &ada.token).await, vec!["PROFILE_OPINION"]);
+    opine(&rig, &bo, ada.id, 0.25, 0.5).await;
+    assert_eq!(
+        kinds_of(&rig, &ada.token).await,
+        vec![
+            "PROFILE_OPINION",
+            "PROFILE_OPINION_WITHDRAWN",
+            "PROFILE_OPINION"
+        ]
+    );
 }
 
 /// A mirror rebuild re-ingests every epoch and writes nothing twice; rows keep their ids, times and read marks.
@@ -970,6 +1043,7 @@ async fn rebuilding_the_mirror_writes_no_duplicate_rows(pool: PgPool) {
     let p = post(&rig, &ada, "Mine", json!([])).await;
     comment(&rig, &bo, &p, references(&[&ada.id.to_string()])).await;
     opine(&rig, &bo, ada.id, 0.5, 0.5).await;
+    sever(&rig, &bo, ada.id).await;
     let before = read(&rig, &ada.token).await;
     let first = ids(&before)[0].clone();
     rig.gql(
@@ -995,7 +1069,7 @@ async fn rebuilding_the_mirror_writes_no_duplicate_rows(pool: PgPool) {
         .await
         .expect("rows");
     assert_eq!(after, before);
-    assert_eq!(after.len(), 2);
+    assert_eq!(after.len(), 3);
     assert!(after.iter().any(|r| r.read_at.is_some()));
 }
 

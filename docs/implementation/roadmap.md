@@ -656,7 +656,7 @@ from the media path and carrying their own doc write-back:
 
 ### Slice 3.1 — Notifications
 
-- Built against [notifications.md](notifications.md): the nine
+- Built against [notifications.md](notifications.md): the ten
   addressed acts, the in-app list as the one channel, per-viewer
   rows and their two-level read state, and the contract sketch the
   slice moves into [api-spec.md](api-spec.md) and
