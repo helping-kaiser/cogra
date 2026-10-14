@@ -406,6 +406,15 @@
       "page": "feed"
     },
     {
+      "file": "FeedSeenTail.dc.html",
+      "title": "Feed · already seen",
+      "x": 10080,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "FeedWordsSensitive.dc.html",
       "title": "Feed · a words-only post, veiled",
       "x": 8160,
@@ -524,9 +533,9 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -6510,
+      "x": -6800,
       "y": 0,
-      "w": 6090,
+      "w": 6380,
       "h": 5377,
       "page": "feed",
       "title": "Feed & Search · flow map"
