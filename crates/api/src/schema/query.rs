@@ -16,14 +16,15 @@ use postgres_store::search as search_store;
 use postgres_store::{PgPool, auth as store, content as content_store, genesis, mirror, staged};
 use uuid::Uuid;
 
+use super::ranked_search::{self, ReadOrder};
 use super::types::{
     Actor, AskLinkCheck, CommentType, DEFAULT_PAGE_SIZE, EmailChangeLinkCheck,
     EmailChangeLinkState, HashtagType, InviteLinkCheck, KeysetConnection, MediaAttachmentType,
     Node, NodeKind, PostType, Record, RecordConnection, RecordFamily, RecordId, ReferenceCandidate,
-    ReferenceTarget, SearchConnection, SearchConnectionFields, SearchResult, StagedWriteType, User,
-    borrowed_vantage, connection_cost, content_cursor, content_cursor_key, keyset_connection,
-    keyset_page, list_cost, list_limit, record_connection, resolve_reference_target,
-    validate_page_args, viewer_address,
+    ReferenceTarget, SearchConnection, SearchConnectionFields, SearchEdgeFields, SearchResult,
+    StagedWriteType, User, borrowed_vantage, connection_cost, content_cursor, content_cursor_key,
+    keyset_connection, keyset_page, list_cost, list_limit, record_connection,
+    resolve_reference_target, validate_page_args, viewer_address,
 };
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
@@ -539,19 +540,21 @@ impl Query {
 
     /// Global search across nodes; returns a `SearchResult` per edge.
     /// Recall is lexical over the indexed name-class fields and post
-    /// titles — an untitled post is never matched by its words; order is
-    /// exact-match tier first, then newest first — viewer-independent,
-    /// the backend never graph-ranks (feed-ranking.md §11). A ranker may
-    /// re-order fetched results by the viewer's feed metric. Served kinds
-    /// grow with the slices: USER, POST, HASHTAG unscoped; COMMENT is
-    /// always a valid kind but is served only under a scope operator
-    /// (`@handle`, `#tag`) — unscoped, it contributes no rows, never an
-    /// error. COLLECTIVE, CHAT, CHAT_MESSAGE, ITEM and OFFER join with
-    /// their slices and read empty until then. An empty `kinds` list
-    /// means the same as null (no narrowing). `includeSeen: false` drops
-    /// nodes on the viewer's seen-list (`User.viewHistory`); it needs a
-    /// session and is ignored without one. Full semantics in the Search
-    /// section.
+    /// titles — an untitled post is never matched by its words. Order is
+    /// exact-match tier first, then newest first — viewer-independent —
+    /// unless `order: RANKED`, where the server's ranker container orders
+    /// the matches inside `viewer`'s slice, each tier by its ranker, and
+    /// the rest follow behind the seam, newest first; ranking never runs
+    /// in the backend process (feed-ranking.md §11). `order: RANKED`
+    /// needs `viewer`. Served kinds grow with the slices: USER, POST,
+    /// HASHTAG unscoped; COMMENT is always a valid kind but is served
+    /// only under a scope operator (`@handle`, `#tag`) — unscoped, it
+    /// contributes no rows, never an error. COLLECTIVE, CHAT,
+    /// CHAT_MESSAGE, ITEM and OFFER join with their slices and read empty
+    /// until then. An empty `kinds` list means the same as null (no
+    /// narrowing). `includeSeen: false` drops nodes on the reader's
+    /// seen-list (`User.viewHistory`); it needs a session and is ignored
+    /// without one. Full semantics in the Search section.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
     #[expect(
         clippy::too_many_arguments,
@@ -563,6 +566,8 @@ impl Query {
         query: String,
         kinds: Option<Vec<NodeKind>>,
         #[graphql(default_with = "Some(true)")] include_seen: Option<bool>,
+        #[graphql(default_with = "Some(ReadOrder::Newest)")] order: Option<ReadOrder>,
+        viewer: Option<Uuid>,
         first: Option<i32>,
         after: Option<String>,
         last: Option<i32>,
@@ -571,13 +576,30 @@ impl Query {
         let pool = ctx.data::<PgPool>()?;
         validate_page_args(first, last, after.as_deref(), before.as_deref())
             .map_err(|e| bad_input(e.message))?;
-        let backward = last.is_some() || before.is_some();
-        let cursor = match if backward { &before } else { &after } {
-            Some(raw) => {
-                Some(search::decode_cursor(raw).ok_or_else(|| bad_input("invalid cursor"))?)
+        let ranked_for = match (order.unwrap_or_default(), viewer) {
+            (ReadOrder::Ranked, None) => {
+                return Err(bad_input("order: RANKED ranks for a viewer; name one"));
             }
-            None => None,
+            (ReadOrder::Ranked, Some(viewer)) => Some(viewer),
+            (ReadOrder::Newest, _) => None,
         };
+        let backward = last.is_some() || before.is_some();
+        let raw_cursor = if backward { &before } else { &after };
+        let (cursor, ranked_cursor) = match (raw_cursor, ranked_for) {
+            (None, _) => (None, None),
+            (Some(raw), None) => (
+                Some(search::decode_cursor(raw).ok_or_else(|| bad_input("invalid cursor"))?),
+                None,
+            ),
+            (Some(raw), Some(_)) => (
+                None,
+                Some(
+                    ranked_search::RankedCursor::decode(raw)
+                        .ok_or_else(|| bad_input("invalid cursor"))?,
+                ),
+            ),
+        };
+        let had_cursor = raw_cursor.is_some();
         let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
 
         let parsed = search::parse(&query).map_err(|_| {
@@ -586,12 +608,12 @@ impl Query {
                 search::MAX_QUERY_CHARS
             ))
         })?;
-        let empty = || search_page(Vec::new(), cursor.is_some(), backward, false, None);
-        let viewer = match ctx.data_opt::<Option<Viewer>>() {
+        let empty = || search_page(Vec::new(), had_cursor, backward, false, None);
+        let reader = match ctx.data_opt::<Option<Viewer>>() {
             Some(Some(v)) => Some(v.user_id),
             _ => None,
         };
-        let exclude_seen_by = viewer.filter(|_| include_seen == Some(false));
+        let exclude_seen_by = reader.filter(|_| include_seen == Some(false));
         let request = match parsed {
             search::Parsed::Blank => return Ok(empty()),
             search::Parsed::Unscoped(text) => {
@@ -659,6 +681,9 @@ impl Query {
                 ))
             }
         };
+        if let Some(viewer) = ranked_for {
+            return ranked_search::page(ctx, request, viewer, ranked_cursor, backward, limit).await;
+        }
         let mut hits = request
             .find(pool, cursor, backward, limit + 1)
             .await
@@ -777,6 +802,24 @@ impl Query {
         filter: Option<super::feed::FeedRankFilter>,
     ) -> async_graphql::Result<Option<super::feed::FeedRanking>> {
         super::feed::feed_ranking(ctx, viewer, as_of_epoch, filter).await
+    }
+
+    /// The live trace of one thing in `viewer`'s view: its score and the
+    /// paths behind it, computed now by the server's standalone ranker
+    /// container and relayed (miner-api.md). Paths are never stored, so
+    /// every call is a real fetch at the newest ingested epoch; the read
+    /// takes no pin and reports none, and its figure may differ from a
+    /// held feed's — the reader adopts what the trace finds, and a feed
+    /// never re-orders for it. A target no live path reaches answers with
+    /// a null score and no paths. Null if `viewer` resolves to no
+    /// rankable actor.
+    async fn feed_trace(
+        &self,
+        ctx: &Context<'_>,
+        viewer: Uuid,
+        target: Uuid,
+    ) -> async_graphql::Result<Option<super::trace::FeedTrace>> {
+        super::trace::feed_trace(ctx, viewer, target).await
     }
 
     /// Hydrate a window of a ranking snapshot: the nodes behind the given
@@ -901,7 +944,7 @@ fn scoped_kinds(kinds: Option<&[NodeKind]>, scope: search::Scope) -> Vec<ScopedK
 
 /// The matched nodes, typed, in match order. A hit whose node vanished
 /// between the match and the load is dropped rather than served empty.
-async fn hydrate(
+pub(super) async fn hydrate(
     pool: &PgPool,
     hits: Vec<search_store::SearchHit>,
 ) -> async_graphql::Result<Vec<(search_store::SearchHit, SearchResult)>> {
@@ -974,10 +1017,15 @@ fn search_page(
         has_next,
         SearchConnectionFields { request },
     );
-    connection.edges.extend(
-        page.into_iter()
-            .map(|(hit, result)| Edge::new(search::encode_cursor(hit.cursor()), result)),
-    );
+    connection
+        .edges
+        .extend(page.into_iter().map(|(hit, result)| {
+            Edge::with_additional_fields(
+                search::encode_cursor(hit.cursor()),
+                result,
+                SearchEdgeFields { score: None },
+            )
+        }));
     connection
 }
 

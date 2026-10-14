@@ -32,6 +32,7 @@ label.
 | `test:integration:a-topic-kind-is-refused-by-the-table`                              | a_topic_kind_is_refused_by_the_table                              |
 | `test:integration:a-truncate-takes-the-rows-away`                                    | a_truncate_takes_the_rows_away                                    |
 | `test:integration:a-verdict-mark-does-not-hide-a-real-claim`                         | a_verdict_mark_does_not_hide_a_real_claim                         |
+| `test:integration:an-ingested-epoch-carries-its-attested-instant`                    | an_ingested_epoch_carries_its_attested_instant                    |
 | `test:integration:an-oldest-first-walk-pages-across-both-namespaces`                 | an_oldest_first_walk_pages_across_both_namespaces                 |
 | `test:integration:an-unanswered-target-counts-zero`                                  | an_unanswered_target_counts_zero                                  |
 | `test:integration:bookmarks-read-newest-first-by-save-time`                          | bookmarks_read_newest_first_by_save_time                          |

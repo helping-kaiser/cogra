@@ -224,10 +224,13 @@ pub struct PublishedLeg {
 
 /// One closed epoch as published through the seam: the ordered accepted
 /// act sequence 𝒬_k as records (§11.6 — the record projection of the
-/// final act sequence).
+/// final act sequence), with the boundary's attested timestamp.
 #[derive(Debug, Clone, PartialEq)]
 pub struct EpochPackage {
     pub epoch: i64,
+    /// The attested boundary timestamp (the Host Contract's accepted-records
+    /// package): when the epoch closed, so when its records landed.
+    pub attested_at: chrono::DateTime<chrono::Utc>,
     pub records: Vec<PublishedRecord>,
 }
 

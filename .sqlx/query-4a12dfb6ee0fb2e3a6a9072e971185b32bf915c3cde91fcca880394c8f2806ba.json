@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT record_id, family, author, epoch, act_time, position,\n                payload_marked, payload_witness\n         FROM mirror_records WHERE record_id = ANY($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "record_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "family",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "author",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "epoch",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "act_time",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "position",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "payload_marked",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "payload_witness",
+        "type_info": "Bytea"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "4a12dfb6ee0fb2e3a6a9072e971185b32bf915c3cde91fcca880394c8f2806ba"
+}

@@ -60,6 +60,8 @@ import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.dataNodeSurface
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
+import com.cogra.core.designsystem.v2.atom.BandBell
+import com.cogra.core.designsystem.v2.atom.CograBandBell
 import com.cogra.core.designsystem.v2.atom.CograBandChats
 import com.cogra.core.designsystem.v2.atom.CograBandIdentity
 import com.cogra.core.designsystem.v2.media.CoverKind
@@ -123,6 +125,8 @@ fun FeedRoute(
      * that opens nothing teaches the reader the band lies.
      */
     onChats: (() -> Unit)? = null,
+    /** The band's bell (FeedUnread.md); null for a guest, who has no list. */
+    bell: BandBell? = null,
     keyBanner: @Composable () -> Unit = {},
     /** The borrowed-view band, for the reader whose feed is not their own. */
     borrowedViewBand: @Composable () -> Unit = {},
@@ -181,10 +185,7 @@ fun FeedRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    if (refreshSignal) {
-        onRefreshSignalConsumed()
-        viewModel.refresh()
-    }
+    consumeRefreshSignal(refreshSignal, onRefreshSignalConsumed, viewModel::refresh)
     FeedScreen(
         commentsSheet = { postId, onDismiss ->
             val post = state.posts.firstOrNull { it.id == postId }
@@ -224,6 +225,7 @@ fun FeedRoute(
         onOpenActor = onOpenActor,
         onOpenTopic = onOpenTopic,
         onChats = onChats,
+        bell = bell,
         keyBanner = keyBanner,
         borrowedViewBand = borrowedViewBand,
         deletionBand = deletionBand,
@@ -277,6 +279,20 @@ private fun then(first: () -> Unit, second: () -> Unit): () -> Unit = {
  */
 private val FEED = DataNode("feed")
 
+/** A signed act the shell reported asks the feed to read again — once, then the signal is consumed. */
+private fun consumeRefreshSignal(signal: Boolean, consume: () -> Unit, refresh: () -> Unit) {
+    if (!signal) return
+    consume()
+    refresh()
+}
+
+/** The band's working edge: chats, then the bell, right-most (Profile.md:3; ChatsComingSoon.md:3). */
+@Composable
+private fun FeedBandActions(onChats: (() -> Unit)?, bell: BandBell?, band: DataNode) {
+    onChats?.let { CograBandChats(it, testTag = "feed_band", node = band) }
+    bell?.let { CograBandBell(it, testTag = "feed_band", node = band) }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeedScreen(
@@ -295,6 +311,7 @@ fun FeedScreen(
     /** Hands a post to the platform's own share sheet. */
     onShare: (String) -> Unit = {},
     onChats: (() -> Unit)? = null,
+    bell: BandBell? = null,
     keyBanner: @Composable () -> Unit = {},
     borrowedViewBand: @Composable () -> Unit = {},
     deletionBand: @Composable () -> Unit = {},
@@ -423,9 +440,7 @@ fun FeedScreen(
                         // (FE-09). The 48dp band is the drawn one (F-10).
                         title = { CograBandIdentity(testTag = "feed_band", node = band) },
                         modifier = Modifier.dataNode(band),
-                        actions = {
-                            onChats?.let { CograBandChats(it, testTag = "feed_band", node = band) }
-                        },
+                        actions = { FeedBandActions(onChats, bell, band) },
                         expandedHeight = Layout.TopBarHeight,
                         colors = surfaceTopAppBarColors(),
                         scrollBehavior = collapsingTop.scrollBehavior,

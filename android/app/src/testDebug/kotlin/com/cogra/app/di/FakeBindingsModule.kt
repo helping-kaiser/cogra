@@ -72,6 +72,7 @@ import com.cogra.domain.release.AnnouncedReleaseStore
 import com.cogra.domain.release.ReleaseRegistry
 import com.cogra.domain.report.ReportRepository
 import com.cogra.domain.hidden.HiddenRepository
+import com.cogra.domain.notifications.NotificationsRepository
 import com.cogra.domain.saved.SavedRepository
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StancePair
@@ -93,6 +94,7 @@ import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.InMemoryAnnouncedReleaseStore
 import com.cogra.domain.testing.RecordingReportRepository
 import com.cogra.domain.testing.RecordingHiddenRepository
+import com.cogra.domain.testing.RecordingNotificationsRepository
 import com.cogra.domain.testing.RecordingSavedRepository
 import com.cogra.domain.testing.ScriptedReleaseRegistry
 import com.cogra.domain.testing.RecordingViewHistoryRepository
@@ -672,6 +674,15 @@ object FakeBindingsModule {
 
     @Provides
     fun savedRepository(fake: RecordingSavedRepository): SavedRepository = fake
+
+    // The notification list reads empty and the bell quiet unless a test
+    // scripts them.
+    @Provides
+    @Singleton
+    fun recordingNotificationsRepository(): RecordingNotificationsRepository = RecordingNotificationsRepository()
+
+    @Provides
+    fun notificationsRepository(fake: RecordingNotificationsRepository): NotificationsRepository = fake
 
     // Hiding answers hidden, and the hidden set reads empty unless a test
     // scripts one.

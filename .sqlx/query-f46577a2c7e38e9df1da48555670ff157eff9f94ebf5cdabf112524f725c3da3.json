@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT epoch, closed_at FROM l1_epochs WHERE epoch > $1 ORDER BY epoch",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "epoch",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "closed_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "f46577a2c7e38e9df1da48555670ff157eff9f94ebf5cdabf112524f725c3da3"
+}

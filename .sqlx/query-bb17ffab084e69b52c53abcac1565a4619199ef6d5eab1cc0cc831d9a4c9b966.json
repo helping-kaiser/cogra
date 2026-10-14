@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO mirror_epochs (epoch, attested_at)\n         SELECT * FROM unnest($1::bigint[], $2::timestamptz[])\n         ON CONFLICT (epoch) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "TimestamptzArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bb17ffab084e69b52c53abcac1565a4619199ef6d5eab1cc0cc831d9a4c9b966"
+}

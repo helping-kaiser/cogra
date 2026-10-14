@@ -233,6 +233,25 @@ impl Loader<String> for PayloadStateLoader {
     }
 }
 
+/// An epoch's attested boundary timestamp, keyed on the epoch:
+/// `Record.landedAt` on every record of a page asks once per distinct
+/// epoch. An epoch the mirror has not ingested is absent.
+pub struct EpochInstantLoader(PgPool);
+
+impl Loader<i64> for EpochInstantLoader {
+    type Value = chrono::DateTime<chrono::Utc>;
+    type Error = LoadError;
+
+    async fn load(
+        &self,
+        keys: &[i64],
+    ) -> Result<HashMap<i64, chrono::DateTime<chrono::Utc>>, LoadError> {
+        postgres_store::mirror::epoch_instants(&self.0, keys)
+            .await
+            .map_err(LoadError::from_display)
+    }
+}
+
 /// When a viewer kept a node, keyed on `(viewer, node)`.
 ///
 /// `viewerBookmarkedAt` is a per-node field every menu host reads, so a
@@ -316,6 +335,7 @@ pub struct NodeLoaders {
     pub comment_galleries: DataLoader<CommentGalleryLoader>,
     pub media: DataLoader<MediaByIdLoader>,
     pub payload_states: DataLoader<PayloadStateLoader>,
+    pub epoch_instants: DataLoader<EpochInstantLoader>,
     pub bookmarks: DataLoader<BookmarkLoader>,
     pub thread_posts: DataLoader<ThreadPostLoader>,
 }
@@ -331,6 +351,7 @@ impl NodeLoaders {
             comment_galleries: DataLoader::new(CommentGalleryLoader(pool.clone()), tokio::spawn),
             media: DataLoader::new(MediaByIdLoader(pool.clone()), tokio::spawn),
             payload_states: DataLoader::new(PayloadStateLoader(pool.clone()), tokio::spawn),
+            epoch_instants: DataLoader::new(EpochInstantLoader(pool.clone()), tokio::spawn),
             bookmarks: DataLoader::new(BookmarkLoader(pool.clone()), tokio::spawn),
             thread_posts: DataLoader::new(ThreadPostLoader(pool), tokio::spawn),
         }

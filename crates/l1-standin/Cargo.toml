@@ -19,5 +19,7 @@ thiserror = { workspace = true }
 tracing   = { workspace = true }
 rand      = { workspace = true }
 ed25519-dalek = { workspace = true }
+# The epoch package's attested boundary timestamp.
+chrono    = { workspace = true }
 
 [dev-dependencies]
