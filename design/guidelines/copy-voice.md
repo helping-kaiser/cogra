@@ -252,6 +252,15 @@ one, but the words would win anyway — an arrow alone reaches a listener
 as "button" and a reader as a guess, for a control that exists to be
 obvious.
 
+## The feed's seen tail
+
+**`Already seen`** — the quiet separator's one label, centred on its
+hairline where the feed's unseen rows end and what the reader has
+already seen continues (`FeedSeenTail`; jakob 2026-10-14, picked over
+`You're caught up.`). It names what is below the line. No full stop —
+it labels the line, as `Beyond your reach — newest first` labels
+search's seam. *Blessed (jakob 2026-10-14).*
+
 ## The filter pill's state words
 
 The trigger over a feed or search speaks how the view departs from the
@@ -481,15 +490,19 @@ noun):
   name — the picture changes the moment yours lands. / The signing is
   paid for, like your posts. The record that you changed it stays,
   like every signed action.
-- **The filter** (the feed's and search's filter sheets): What you
+- **The filter** (the feed's and search's filter sheets; the seen
+  sentence is the surface's own, jakob 2026-10-14): What you
   let in, and in what order — the kinds combine freely, ranked or
-  newest is one choice, and what you've already seen stays out
+  newest is one choice, and — on the feed — what you've already seen
+  waits below the Already seen line unless you ask for it back; on
+  search, what you've already seen stays out
   unless you ask for it back. Nothing changes until you press Done,
   and nothing here is signed or shared. / It lasts until you change it,
   on this device only. Reset brings back your defaults, to change
   them go to settings. *(The Reset
   sentence is jakob's own, blessed 2026-10-02: one sentence for the
-  feed's, search's and the settings sheet.)*
+  feed's, search's and the settings sheet. The feed's seen sentence
+  follows the seen tail, jakob 2026-10-14.)*
 
 **A "?" is named by the dialog it opens.** Its accessible name is that
 dialog's own subject, so a listener hears which explanation the tap

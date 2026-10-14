@@ -17,3 +17,5 @@ WHEN tap Back to top -> the list goes to the top, animated AND NEVER the feed re
 WHEN tap the bar's Feed slot GIVEN the feed's root is scrolled -> the list goes to the top, animated AND NEVER the feed refreshes
 
 ALWAYS the collapsing band stands GIVEN the feed rests at its hard top, however little upward scroll brought it there
+
+ALWAYS the 3 viewport-heights the Back to top pill waits for count the whole list, the Already seen separator and the seen rows under it included

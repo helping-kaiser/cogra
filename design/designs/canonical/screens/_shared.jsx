@@ -707,7 +707,8 @@ function RemoveDialog({ kind, overSheet = false }) {
    takes the next rung. Over the post detail there is nothing to stack on.
 
    `node` names the sheet where a registered board places it (the feed's,
-   FC-G10): the surface takes it, and the terms block inside takes `terms`. */
+   FC-G10; the detail's and the thread's, round 11): the surface takes it,
+   the terms block inside takes `terms`, and the block names its axis rows. */
 function LicenseSheet({ license, stacked = false, node }) {
   return (
     <BottomSheet open stacked={stacked} ariaLabel="License terms" maxHeight="88%" node={node}>
@@ -853,8 +854,14 @@ function SkyField({ height = 180 }) {
 }
 
 /* The seam — where the ranked results end and the newest tail begins. Named by
-   its placer (seam 062/063), with its words as `label`. */
-function Seam({ node }) {
+   its placer (seam 062/063), with its words as `label`.
+
+   THE FEED'S SEEN TAIL WEARS THE SAME SEAM (jakob 2026-10-14, round 11): the
+   hairline with its centred quiet label is the one list-splitting line the
+   system draws, so the feed's `Already seen` separator is this drawing with
+   its own words, never a second construction. `children` carries the words;
+   Explore's stay the default. */
+function Seam({ node, children = "Beyond your reach — newest first" }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 24px" }} data-node={node}>
       <span style={{ flex: 1, height: 1, background: "var(--border-hairline)" }} />
@@ -868,7 +875,7 @@ function Seam({ node }) {
         }}
         data-node={node && "label"}
       >
-        Beyond your reach — newest first
+        {children}
       </span>
       <span style={{ flex: 1, height: 1, background: "var(--border-hairline)" }} />
     </div>

@@ -9954,6 +9954,49 @@ drafted and wait for his review (copy-voice marks each).
   `feed.vouchCard.vouch` is removed with the button it named (jakob's
   ruling, seam 165).
 
+### Round 11, the seen tail — 2026-10-14
+
+jakob's feature (ruled 2026-10-14) and the license-axis registration
+banked by round 10, drawn as one round.
+
+- **The seen tail.** At the foot of the unseen feed, when the filter
+  admits anything the reader has already seen, a quiet separator stands
+  — the hairline with the centred label `Already seen` (picked over
+  `You're caught up.`) — and the seen rows continue under it in the
+  feed's own order, ranked or newest. Only the seen cut lifts: the
+  kinds, the kinds of post, the topic, the people row, Still settling,
+  Sensitive, Removed and the hidden people all cut the tail as they cut
+  the feed. Scrolling or reading the tail records nothing. With nothing
+  unseen and seen rows to show, the feed opens at the separator — the
+  moment that was the empty feed. Why: a sparse network holds more feed
+  than its one new post. The separator is Explore's `Seam` with the
+  feed's own words, never a second construction. Drawn on
+  `FeedSeenTail` ("Feed · already seen", the feed row's next slot), its
+  `unseen` chip drawing the sparse morning (`one`) and the open-at-the-
+  separator load (`none`); an exemplar of `Feed`'s shell, wired on
+  `Feed`. Registered `feed.seenSeparator` and its `label`. The laws
+  around it: Back to top's three viewport-heights count the whole list,
+  the tail included (`FeedScrolled`); a refresh lands what arrives
+  unseen above the separator; Done carries the tail to the new filter by
+  the rows' own rule, re-derived or re-queried (`FeedSheet`); and
+  `FeedNothing`, every kind off, admits nothing seen or unseen, so its
+  empty state stands alone. The mechanics of paging the tail are the
+  implementation's.
+- **The license terms' axis rows.** The key rule jakob blessed for
+  round 10, `axis`: the axis's name as the terms print it, lowercased,
+  each run of other characters one - — so `credit` and
+  `public-record-of-use`. `LicenseTerms` names each row `axis` with its
+  `label` and `value` wherever its placer names the block. `PostLicense`
+  and `CommentLicense` register under `postDetail`, as `ReaderPostMenu`
+  and `CommentMenu` do, so the detail's and the thread's sheets join
+  the feed's: `postDetail.licenseSheet.terms.axis` and
+  `feed.licenseSheet.terms.axis`.
+- **The gate**: edges unchanged at **2041** (`FeedSeenTail` is an
+  exemplar with no control of its own); the registry **94 / 3679 → 97 /
+  3799** — `PostLicense`
+  and `CommentLicense` (38 paths each) and `FeedSeenTail` (41) join, and
+  `FeedPostLicense` grows its three axis paths; nothing removed.
+
 ---
 
 ## 14. The canvases

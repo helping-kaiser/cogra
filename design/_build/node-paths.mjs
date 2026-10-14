@@ -84,6 +84,7 @@ export const KEY_RULES = {
   account: "the hidden account's handle, without @ (the hidden-accounts sheet)",
   act: "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)",
   application: "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
+  axis: "the axis's name as the terms print it, lowercased, each run of other characters one - (LicenseTerms)",
   block: "the kind of thing the block holds — post, comment, person or topic (FeedEntryKinds' blocks)",
   card: "the author's handle, without @ (PostCard)",
   commentCard: "the comment author's handle, without @ (CommentCard)",
