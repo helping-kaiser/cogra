@@ -408,17 +408,7 @@ fun StanceControl(
     //
     // A VARIANT PAD CARRIES NO WALK IT BACK (VouchBackPad.md:11): the
     // vouch-back opens a relationship, it is never the place to leave one.
-    val severableNow = state.standing != null && variant == null
-    // THE PAD HOLDS ITS SHAPE WHILE SET IS ANSWERING (PR-57's reflow law,
-    // StancePadReflowTest). Set shows the pending fold as the standing at
-    // once, so a FIRST stance turns no standing into one while the pad is
-    // still up — and the walk-away appearing then grows the bottom-anchored
-    // card, lifting the whole pad. While busy the pad keeps the answer it
-    // had at rest; a signed stance closes it, and the next open offers the
-    // walk-away.
-    val severableAtRest = remember { mutableStateOf(severableNow) }
-    SideEffect { severableAtRest.value = if (state.busy) severableAtRest.value else severableNow }
-    val severable = if (state.busy) severableAtRest.value else severableNow
+    val severable = rememberSeverableAtRest(state.standing != null && variant == null, state.busy)
 
     StanceConfirmation(state.confirmation, standingLabel, axes, onConfirmationShown)
     // THE PAD AND THE SEVERANCE DIALOG SAY THEY ARE UP, wherever the control
@@ -565,6 +555,22 @@ fun StanceControl(
             )
         }
     }
+}
+
+/**
+ * THE PAD HOLDS ITS SHAPE WHILE SET IS ANSWERING (PR-57's reflow law,
+ * `StancePadReflowTest`). Set shows the pending fold as the standing at
+ * once, so a FIRST stance turns no standing into one while the pad is
+ * still up — and the walk-away appearing then grows the bottom-anchored
+ * card, lifting the whole pad. While [busy], the answer stays the one the
+ * control had at rest; a signed stance closes the pad, and the next open
+ * offers the walk-away.
+ */
+@Composable
+private fun rememberSeverableAtRest(severable: Boolean, busy: Boolean): Boolean {
+    val atRest = remember { mutableStateOf(severable) }
+    SideEffect { atRest.value = if (busy) atRest.value else severable }
+    return if (busy) atRest.value else severable
 }
 
 /**
