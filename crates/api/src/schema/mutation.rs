@@ -627,19 +627,21 @@ impl LicenseInput {
 #[derive(InputObject)]
 struct TagInput {
     name: String,
-    /// Relevance `r`; defaults to +0.1.
-    p_directed: Option<Dimension>,
-    /// Confidence `c`, census-bounded to `[0, 1]`; defaults to 1 — an
-    /// author believes their own declaration.
-    p_interest: Option<Dimension>,
+    /// Relevance `r`. Required: the server never fills a stance in — the
+    /// UI pre-fills +0.1 visibly and sends what it shows.
+    p_directed: Dimension,
+    /// Confidence `c`, census-bounded to `[0, 1]`. Required like
+    /// relevance; the UI pre-fills 1 — an author believes their own
+    /// declaration.
+    p_interest: Dimension,
 }
 
 impl TagInput {
     fn to_draft(&self) -> crate::topics::TagDraft {
         crate::topics::TagDraft {
             name: self.name.clone(),
-            relevance: self.p_directed.map(|d| d.0),
-            confidence: self.p_interest.map(|d| d.0),
+            relevance: self.p_directed.0,
+            confidence: self.p_interest.0,
         }
     }
 }
@@ -654,9 +656,9 @@ fn tag_drafts(tags: &Option<Vec<TagInput>>) -> Vec<crate::topics::TagDraft> {
 /// target is a person's Profile *is* a mention. Nothing is minted; both
 /// endpoints pre-exist.
 ///
-/// Both parameters are optional and default to +0.1, so a plain citation
-/// needs only its target. The defaults are strictly positive on both
-/// axes, which means a default mention vouches — weakly, at coefficient
+/// Both parameters are required: the server never fills a stance in.
+/// The UI pre-fills +0.1 on both axes and sends what it shows — strictly
+/// positive, so an untouched mention vouches, weakly, at coefficient
 /// `√0.01 = 0.1`.
 ///
 /// A citation carries no note. A payload would make the record
@@ -677,25 +679,24 @@ struct ReferenceInput {
     /// External links are body text, never citations: both endpoints
     /// of a Reference are nodes on the graph.
     target: Uuid,
-    /// How load-bearing the cited thing is to this artifact, `[-1, 1]`;
-    /// defaults to +0.1. The census calls this **effort `f`**, and it
-    /// occupies the `pDirected` slot — the same slot relevance occupies
-    /// on a tag.
-    relevance: Option<Dimension>,
-    /// Endorsing versus refuting, `[-1, 1]`; defaults to +0.1. The census
-    /// calls this **enthusiasm `e`**, and it occupies the `pInterest`
-    /// slot. This is the axis that decides whether a mention vouches: a
-    /// citation strictly positive on both axes resolves its fold cell to
-    /// the cited person, and every other citation resolves home.
-    support: Option<Dimension>,
+    /// How load-bearing the cited thing is to this artifact, `[-1, 1]`.
+    /// The census calls this **effort `f`**, and it occupies the
+    /// `pDirected` slot — the same slot relevance occupies on a tag.
+    relevance: Dimension,
+    /// Endorsing versus refuting, `[-1, 1]`. The census calls this
+    /// **enthusiasm `e`**, and it occupies the `pInterest` slot. This is
+    /// the axis that decides whether a mention vouches: a citation
+    /// strictly positive on both axes resolves its fold cell to the cited
+    /// person, and every other citation resolves home.
+    support: Dimension,
 }
 
 impl ReferenceInput {
     fn to_draft(&self) -> crate::references::ReferenceDraft {
         crate::references::ReferenceDraft {
             target: self.target,
-            relevance: self.relevance.map(|d| d.0),
-            support: self.support.map(|d| d.0),
+            relevance: self.relevance.0,
+            support: self.support.0,
         }
     }
 }
@@ -803,9 +804,10 @@ struct PreparePostInput {
     /// Breaking the rule is a field-level refusal on `content`.
     content: Option<String>,
     license: LicenseInput,
-    /// The author's attachment; defaults to the low-defaults policy
-    /// value (+0.1). `pInterest` is census-fixed at 1 for Publish.
-    p_directed: Option<Dimension>,
+    /// The author's attachment. Required: the server never fills a
+    /// stance in — the UI pre-fills +0.1 visibly and sends what it shows.
+    /// `pInterest` is census-fixed at 1 for Publish, so it is no field.
+    p_directed: Dimension,
     /// Topics declared at creation — explicit structured input, never
     /// parsed from the body, so display content and graph structure stay
     /// decoupled. At most 10 per batch; two names that canonicalize
@@ -861,9 +863,10 @@ struct PrepareCommentInput {
     target: Uuid,
     content: String,
     license: LicenseInput,
-    /// Enthusiasm and effort; each defaults to +0.1 (invitations.md §3).
-    p_directed: Option<Dimension>,
-    p_interest: Option<Dimension>,
+    /// Enthusiasm and effort. Required: the server never fills a stance
+    /// in — the UI pre-fills +0.1 on both visibly and sends what it shows.
+    p_directed: Dimension,
+    p_interest: Dimension,
     /// Topics declared at creation; same rules as on a Post.
     tags: Option<Vec<TagInput>>,
     /// Citations declared at creation; same rules as on a Post.
@@ -888,18 +891,19 @@ struct PrepareTagInput {
     /// The content being tagged.
     target: Uuid,
     name: String,
-    /// Relevance `r`; defaults to +0.1. Zero is the un-tag.
-    p_directed: Option<Dimension>,
-    /// Confidence `c`, census-bounded to `[0, 1]`; defaults to 1.
-    p_interest: Option<Dimension>,
+    /// Relevance `r`; zero is the un-tag. Required, as on `TagInput`.
+    p_directed: Dimension,
+    /// Confidence `c`, census-bounded to `[0, 1]`. Required, as on
+    /// `TagInput`.
+    p_interest: Dimension,
 }
 
 impl PrepareTagInput {
     fn to_draft(&self) -> crate::topics::TagDraft {
         crate::topics::TagDraft {
             name: self.name.clone(),
-            relevance: self.p_directed.map(|d| d.0),
-            confidence: self.p_interest.map(|d| d.0),
+            relevance: self.p_directed.0,
+            confidence: self.p_interest.0,
         }
     }
 }
@@ -919,18 +923,20 @@ struct PrepareReferenceInput {
     artifact: Uuid,
     /// The cited node. An artifact cannot cite itself.
     target: Uuid,
-    /// Effort `f`, the `pDirected` slot; defaults to +0.1.
-    relevance: Option<Dimension>,
-    /// Enthusiasm `e`, the `pInterest` slot; defaults to +0.1.
-    support: Option<Dimension>,
+    /// Effort `f`, the `pDirected` slot. Required, as on
+    /// `ReferenceInput`.
+    relevance: Dimension,
+    /// Enthusiasm `e`, the `pInterest` slot. Required, as on
+    /// `ReferenceInput`.
+    support: Dimension,
 }
 
 impl PrepareReferenceInput {
     fn to_draft(&self) -> crate::references::ReferenceDraft {
         crate::references::ReferenceDraft {
             target: self.target,
-            relevance: self.relevance.map(|d| d.0),
-            support: self.support.map(|d| d.0),
+            relevance: self.relevance.0,
+            support: self.support.0,
         }
     }
 }
@@ -3802,7 +3808,7 @@ impl Mutation {
             description: input.description,
             content: input.content,
             license,
-            p_directed: input.p_directed.map(|d| d.0),
+            p_directed: input.p_directed.0,
             tags: tag_drafts(&input.tags),
             references: reference_drafts(&input.references),
             attachments: attachment_drafts(&input.attachments),
@@ -3892,8 +3898,8 @@ impl Mutation {
             target: input.target,
             content: input.content,
             license,
-            p_directed: input.p_directed.map(|d| d.0),
-            p_interest: input.p_interest.map(|d| d.0),
+            p_directed: input.p_directed.0,
+            p_interest: input.p_interest.0,
             tags: tag_drafts(&input.tags),
             references: reference_drafts(&input.references),
             attachments: attachment_drafts(&input.attachments),

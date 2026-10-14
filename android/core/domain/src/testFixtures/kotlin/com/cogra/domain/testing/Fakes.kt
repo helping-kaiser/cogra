@@ -675,7 +675,7 @@ open class ThrowingContentRepository : ContentRepository {
         attachments: List<AttachmentClaim>,
         sensitive: Boolean,
         sensitiveReason: String?,
-        pDirected: Double?,
+        pDirected: Double,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun postSelfMark(id: String): Outcome<SelfMarkView?> =
         throw UnsupportedOperationException()
@@ -695,8 +695,8 @@ open class ThrowingContentRepository : ContentRepository {
         tags: List<TagClaim>,
         references: List<ReferenceClaim>,
         attachments: List<AttachmentClaim>,
-        pDirected: Double?,
-        pInterest: Double?,
+        pDirected: Double,
+        pInterest: Double,
         sensitive: Boolean,
         sensitiveReason: String?,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
@@ -795,8 +795,8 @@ open class ThrowingTopicRepository : TopicRepository {
     override suspend fun prepareTag(
         target: String,
         name: String,
-        pDirected: Double?,
-        pInterest: Double?,
+        pDirected: Double,
+        pInterest: Double,
     ): Outcome<List<PreparedWriteView>> = throw UnsupportedOperationException()
 }
 
@@ -808,8 +808,8 @@ open class ThrowingReferenceRepository : ReferenceRepository {
     override suspend fun prepareReference(
         artifact: String,
         target: String,
-        relevance: Double?,
-        support: Double?,
+        relevance: Double,
+        support: Double,
     ): Outcome<List<PreparedWriteView>> = throw UnsupportedOperationException()
     override suspend fun prepareReferenceWithdrawal(
         artifact: String,

@@ -119,8 +119,8 @@ class PostEditViewModelTest {
         override suspend fun prepareTag(
             target: String,
             name: String,
-            pDirected: Double?,
-            pInterest: Double?,
+            pDirected: Double,
+            pInterest: Double,
         ): Outcome<List<PreparedWriteView>> {
             calls += TagCall(target, name, pDirected, pInterest)
             return Outcome.Success(listOf(sealer.stage(Family.TAG)))
@@ -245,14 +245,16 @@ class PostEditViewModelTest {
 
     @Test
     fun theEditRecordAndItsTagActsRideOneSigningPass() = runTest(dispatcher) {
-        content.loadedTopics = listOf(testTopicClaim("wasm"))
+        content.loadedTopics = listOf(testTopicClaim("wasm", confidence = 0.6))
         val vm = opened()
         vm.onBodyChange("New body")
         vm.onRemoveTag("wasm")
         assertThat(actsSheetTitle(vm.state.value.signedActionCount)).isEqualTo("2 things, signed together")
         vm.signed()
         assertThat(content.editCalls).isEqualTo(1)
-        assertThat(topics.calls).containsExactly(TagCall("p1", "wasm", PostEditViewModel.WITHDRAWN, null))
+        // The un-tag signs the confidence the removed chip showed (0.6) —
+        // relevance is the only value a removal moves; the wire fills nothing.
+        assertThat(topics.calls).containsExactly(TagCall("p1", "wasm", PostEditViewModel.WITHDRAWN, 0.6))
         assertThat(vm.state.value.saved).isTrue()
     }
 

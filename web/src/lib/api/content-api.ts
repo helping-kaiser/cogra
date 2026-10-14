@@ -449,10 +449,10 @@ export async function preparePost(
     sensitiveReason?: string;
     /**
      * Where the author stands on their own post — the genesis Publish's
-     * `pDirected` (the seal's Adjust sets it). Omitted, the server applies the
-     * +0.1 policy default.
+     * `pDirected`, exactly as the seal shows it (the wizard pre-fills +0.1;
+     * Adjust moves it). Required on the wire: the server never fills it in.
      */
-    pDirected?: number;
+    pDirected: number;
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -465,7 +465,7 @@ export async function preparePost(
             description: fields.description,
             content: fields.content,
             license: fields.license,
-            pDirected: fields.pDirected ?? null,
+            pDirected: fields.pDirected,
             attachments: attachmentInputs(fields.attachments),
             ...sensitiveInput(fields.sensitive, fields.sensitiveReason),
             // The composer's tags are explicit structured input, never
@@ -541,10 +541,11 @@ export async function prepareComment(
     attachments?: readonly GalleryEntryDraft[];
     /**
      * Where the author stands on what they answer — the genesis Review's own
-     * pair, which the seal's Adjust sets (ReplySeal / ReplyPad). Omitted, the
-     * server applies the +0.1 policy default to each.
+     * pair, exactly as the seal shows it (pre-filled +0.1 each; ReplySeal /
+     * ReplyPad's Adjust moves it). Required on the wire: the server never
+     * fills it in.
      */
-    stance?: StancePair;
+    stance: StancePair;
     /**
      * The author's own sensitive mark, as ReplySeal's third term row sets it.
      * Stated rather than omitted for the reason an edit states it: the mark is
@@ -580,8 +581,8 @@ export async function prepareComment(
             // Referencing is part of the same gesture, under its own
             // ten-per-batch cap (D7).
             references: referenceInputs(fields.references),
-            pDirected: fields.stance?.pDirected ?? null,
-            pInterest: fields.stance?.pInterest ?? null,
+            pDirected: fields.stance.pDirected,
+            pInterest: fields.stance.pInterest,
           },
         },
       }),

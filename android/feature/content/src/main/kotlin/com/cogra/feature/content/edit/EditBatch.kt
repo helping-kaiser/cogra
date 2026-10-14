@@ -66,7 +66,7 @@ fun editActRows(
         val kind = if (row.name in loadedTags) EditActKind.TagsRevised else EditActKind.TagsAdded
         add(kind, "#${row.name}", 1, "tag")
     }
-    tags.removes.forEach { name -> add(EditActKind.TagsWithdrawn, "#$name", 1, "tag") }
+    tags.removes.forEach { row -> add(EditActKind.TagsWithdrawn, "#${row.name}", 1, "tag") }
     val loadedRefs = references.loaded.map(ReferenceRow::targetId).toSet()
     references.adds.forEach { row ->
         val kind = if (row.targetId in loadedRefs) EditActKind.CitationsRevised else EditActKind.CitationsAdded
@@ -106,7 +106,7 @@ fun actsFooterLine(count: Int): String = when (count) {
 fun actsSheetTitle(count: Int): String = if (count == 1) "1 thing, signed" else "$count things, signed together"
 
 /** The tags the edit withdrew — each a `Withdrawn:` line with its `Undo`. */
-fun TagSectionState.withdrawn(): List<String> = removes
+fun TagSectionState.withdrawn(): List<String> = removes.map { it.name }
 
 /** The citations the edit withdrew — each a `Withdrawn:` line with its `Undo`. */
 fun ReferenceSectionState.withdrawn(): List<ReferenceRow> = removes

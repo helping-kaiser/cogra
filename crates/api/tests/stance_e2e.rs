@@ -233,6 +233,7 @@ impl Rig {
                     "title": title,
                     "content": "a body",
                     "license": { "attribution": 1.0, "provenance": 0.0 },
+                    "pDirected": 0.1,
                 }}),
             )
             .await;
@@ -254,6 +255,8 @@ impl Rig {
                     "target": target,
                     "content": "a reply",
                     "license": { "attribution": 0.0, "provenance": 0.0 },
+                    "pDirected": 0.1,
+                    "pInterest": 0.1,
                 }}),
             )
             .await;

@@ -123,7 +123,8 @@ fn acting_mutations(target: Uuid) -> Vec<(&'static str, String)> {
             format!(
                 r#"mutation {{ prepareComment(input: {{
                      target: "{target}", content: "a reply",
-                     license: {{ attribution: 0.0, provenance: 0.0 }}
+                     license: {{ attribution: 0.0, provenance: 0.0 }},
+                     pDirected: 0.1, pInterest: 0.1
                    }}) {{ userErrors {{ code }} }} }}"#
             ),
         ),
@@ -139,7 +140,7 @@ fn acting_mutations(target: Uuid) -> Vec<(&'static str, String)> {
             "prepareTag",
             format!(
                 r#"mutation {{ prepareTag(input: {{
-                     target: "{target}", name: "birdsong"
+                     target: "{target}", name: "birdsong", pDirected: 0.1, pInterest: 1.0
                    }}) {{ userErrors {{ code }} }} }}"#
             ),
         ),

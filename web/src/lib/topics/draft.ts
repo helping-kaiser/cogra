@@ -1,8 +1,8 @@
 // The drafted tag as every tagging surface carries it: a canonical name
 // plus the two parameters that ride `TagInput` (api-spec.md: `pDirected`
-// is relevance `r`, `pInterest` is confidence `c`). The defaults mirror
-// the server's own, so an untouched slider commits exactly what omitting
-// the field would have.
+// is relevance `r`, `pInterest` is confidence `c`). Both are required on
+// the wire — the server fills nothing in — so the defaults below are the
+// visible pre-fill, and an untouched slider commits exactly what it shows.
 //
 // A tag is never withdrawn by deletion — a removal is another Tag act at
 // relevance 0 (hashtag.md §4), which is why the edit screen's changes
@@ -31,10 +31,14 @@ export function newTagDraft(name: string): TagDraft {
   return { name, relevance: DEFAULT_RELEVANCE, confidence: DEFAULT_CONFIDENCE };
 }
 
-/** One staged Tag act the edit screen owes the signing flow. */
+/**
+ * One staged Tag act the edit screen owes the signing flow. An un-tag
+ * carries the chip it takes off, so the withdrawal signs the confidence
+ * that chip showed — relevance is the only value the removal moves.
+ */
 export type TagChange =
   | { readonly kind: "tag"; readonly tag: TagDraft }
-  | { readonly kind: "untag"; readonly name: string };
+  | { readonly kind: "untag"; readonly tag: TagDraft };
 
 function sameParameters(a: TagDraft, b: TagDraft): boolean {
   return a.relevance === b.relevance && a.confidence === b.confidence;
@@ -58,7 +62,7 @@ export function tagChanges(
     if (was === undefined || !sameParameters(was, tag)) changes.push({ kind: "tag", tag });
   }
   for (const tag of original) {
-    if (!drafted.has(tag.name)) changes.push({ kind: "untag", name: tag.name });
+    if (!drafted.has(tag.name)) changes.push({ kind: "untag", tag });
   }
   return changes;
 }

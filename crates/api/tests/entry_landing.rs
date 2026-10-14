@@ -1268,7 +1268,8 @@ fn post_input(text: &str) -> Value {
     serde_json::json!({
         "content": text,
         "license": { "attribution": 0.0, "provenance": 0.0 },
-        "tags": [{ "name": "gardening" }],
+        "pDirected": 0.1,
+        "tags": [{ "name": "gardening", "pDirected": 0.1, "pInterest": 1.0 }],
     })
 }
 
@@ -1633,7 +1634,7 @@ async fn crate_post(rig: &Rig, author: &Member) -> api::content::PreparedContent
             description: None,
             content: Some("a draft that never lands".into()),
             license: api::content::License::PUBLIC_DOMAIN,
-            p_directed: None,
+            p_directed: 0.1,
             tags: vec![],
             references: vec![],
             attachments: vec![],

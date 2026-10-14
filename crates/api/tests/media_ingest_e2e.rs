@@ -131,6 +131,7 @@ impl Rig {
                 json!({ "input": {
                     "title": "A clip",
                     "license": { "attribution": 1.0, "provenance": 0.0 },
+                    "pDirected": 0.1,
                     "attachments": [{ "mediaId": media_id, "displayOrder": 0 }],
                 }}),
             )
@@ -343,6 +344,7 @@ impl Rig {
                 json!({ "input": {
                     "title": "A clip",
                     "license": { "attribution": 1.0, "provenance": 0.0 },
+                    "pDirected": 0.1,
                     "attachments": [{ "mediaId": media_id, "displayOrder": 0 }],
                 }}),
             )

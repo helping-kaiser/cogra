@@ -242,6 +242,7 @@ impl Citer {
                 "title": title,
                 "content": "a body",
                 "license": { "attribution": 1.0, "provenance": 0.0 },
+                "pDirected": 0.1,
                 "references": references,
             }}),
         )
@@ -457,7 +458,7 @@ async fn a_post_stages_one_act_per_declared_citation(pool: PgPool) {
         .prepare_post_citing(
             &token,
             "citing",
-            json!([{ "target": cited }, { "target": bob }]),
+            json!([{ "target": cited, "relevance": 0.1, "support": 0.1 }, { "target": bob, "relevance": 0.1, "support": 0.1 }]),
         )
         .await;
 
@@ -489,7 +490,9 @@ async fn a_comment_stages_its_citations_too(pool: PgPool) {
                 "target": parent,
                 "content": "a reply that cites",
                 "license": { "attribution": 0.0, "provenance": 0.0 },
-                "references": [{ "target": cited }],
+                "pDirected": 0.1,
+                "pInterest": 0.1,
+                "references": [{ "target": cited, "relevance": 0.1, "support": 0.1 }],
             }}),
         )
         .await;
@@ -522,8 +525,9 @@ async fn tags_and_citations_batch_into_one_gesture(pool: PgPool) {
                 "title": "both",
                 "content": "a body",
                 "license": { "attribution": 1.0, "provenance": 0.0 },
-                "tags": [{ "name": "rust" }, { "name": "graphs" }],
-                "references": [{ "target": cited }, { "target": bob }],
+                "pDirected": 0.1,
+                "tags": [{ "name": "rust", "pDirected": 0.1, "pInterest": 1.0 }, { "name": "graphs", "pDirected": 0.1, "pInterest": 1.0 }],
+                "references": [{ "target": cited, "relevance": 0.1, "support": 0.1 }, { "target": bob, "relevance": 0.1, "support": 0.1 }],
             }}),
         )
         .await;
@@ -554,7 +558,7 @@ async fn a_batch_refused_for_one_citation_stages_none_of_itself(pool: PgPool) {
         .prepare_post_citing(
             &token,
             "doomed",
-            json!([{ "target": cited }, { "target": Uuid::new_v4() }]),
+            json!([{ "target": cited, "relevance": 0.1, "support": 0.1 }, { "target": Uuid::new_v4(), "relevance": 0.1, "support": 0.1 }]),
         )
         .await;
 
@@ -585,7 +589,8 @@ async fn the_citation_cap_refuses_the_batch_as_a_batch(pool: PgPool) {
     let token = rig.log_in("alice@example.test").await;
     let mut targets = Vec::new();
     for i in 0..11 {
-        targets.push(json!({ "target": rig.plain_post(&token, &key, &format!("t{i}")).await }));
+        let target = rig.plain_post(&token, &key, &format!("t{i}")).await;
+        targets.push(json!({ "target": target, "relevance": 0.1, "support": 0.1 }));
     }
     let before = rig.writes_in_flight(alice).await;
 
@@ -623,7 +628,7 @@ async fn a_balance_that_cannot_carry_the_batch_refuses_all_of_it(pool: PgPool) {
         .prepare_post_citing(
             &bob_token,
             "three acts",
-            json!([{ "target": one }, { "target": two }]),
+            json!([{ "target": one, "relevance": 0.1, "support": 0.1 }, { "target": two, "relevance": 0.1, "support": 0.1 }]),
         )
         .await;
     let errors = refusals(&refused, "preparePost");
@@ -644,7 +649,11 @@ async fn a_balance_that_cannot_carry_the_batch_refuses_all_of_it(pool: PgPool) {
     );
 
     let accepted = rig
-        .prepare_post_citing(&bob_token, "two acts", json!([{ "target": one }]))
+        .prepare_post_citing(
+            &bob_token,
+            "two acts",
+            json!([{ "target": one, "relevance": 0.1, "support": 0.1 }]),
+        )
         .await;
     assert_eq!(
         refusals(&accepted, "preparePost"),
@@ -654,23 +663,96 @@ async fn a_balance_that_cannot_carry_the_batch_refuses_all_of_it(pool: PgPool) {
 }
 
 /// Citing after publishing is what post.md §3 promises with "or later",
-/// and the parameters default so a plain citation needs only its target.
+/// and the pair lands exactly as sent — the clients' pre-fill is a value
+/// the user saw and signed, not one the server supplied.
 ///
-/// (´claim:references:omitted-parameters-take-the-defaults´)
+/// (´claim:references:parameters-are-written-as-sent´)
 #[sqlx::test(migrations = "../../migrations")]
-async fn a_standalone_citation_defaults_both_parameters(pool: PgPool) {
+async fn a_standalone_citation_lands_its_parameters_as_signed(pool: PgPool) {
     let rig = Citer::new(pool).await;
     let (_, key) = rig.member("alice", "alice@example.test").await;
     let token = rig.log_in("alice@example.test").await;
     let carrier = rig.plain_post(&token, &key, "carrier").await;
     let cited = rig.plain_post(&token, &key, "cited").await;
 
-    rig.land_citation(&token, &key, &carrier, &cited, json!({}))
-        .await;
+    rig.land_citation(
+        &token,
+        &key,
+        &carrier,
+        &cited,
+        json!({ "relevance": 0.1, "support": 0.1 }),
+    )
+    .await;
 
     let row = &rig.references_of_post(Some(&token), &carrier).await[0];
-    assert_eq!(row["relevance"], json!(0.1), "the declared default");
+    assert_eq!(row["relevance"], json!(0.1), "as signed");
     assert_eq!(row["support"], json!(0.1));
+}
+
+/// The user signs only values they chose, so a citation missing either
+/// parameter — standalone or in a creation batch — is refused by the
+/// schema before any resolver runs, and nothing is staged.
+///
+/// A citation with a stance parameter left out is refused whole and nothing is staged.
+/// ´claim:references:an-omitted-parameter-is-refused-whole´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_omitted_citation_parameter_refuses_the_whole_request(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (alice, key) = rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+    let carrier = rig.plain_post(&token, &key, "carrier").await;
+    let cited = rig.plain_post(&token, &key, "cited").await;
+    let before = rig.writes_in_flight(alice).await;
+
+    for (present, missing) in [
+        (json!({ "support": 0.1 }), "relevance"),
+        (json!({ "relevance": 0.1 }), "support"),
+    ] {
+        let mut standalone = json!({ "artifact": carrier, "target": cited });
+        let mut nested = json!({ "target": cited });
+        for object in [&mut standalone, &mut nested] {
+            for (k, v) in present.as_object().expect("object") {
+                object[k] = v.clone();
+            }
+        }
+
+        let refused = rig
+            .gql_raw(
+                Some(&token),
+                PREPARE_REFERENCE,
+                json!({ "input": standalone }),
+            )
+            .await;
+        assert!(refused["data"].is_null(), "no resolver ran: {refused}");
+        assert!(
+            refused["errors"][0]["message"]
+                .as_str()
+                .expect("message")
+                .contains(missing),
+            "the refusal names {missing}: {refused}"
+        );
+
+        let batch = rig
+            .gql_raw(
+                Some(&token),
+                PREPARE_POST,
+                json!({ "input": {
+                    "title": "batch",
+                    "content": "a body",
+                    "license": { "attribution": 1.0, "provenance": 0.0 },
+                    "pDirected": 0.1,
+                    "references": [nested],
+                }}),
+            )
+            .await;
+        assert!(batch["data"].is_null(), "no resolver ran: {batch}");
+    }
+
+    assert_eq!(
+        rig.writes_in_flight(alice).await,
+        before,
+        "a refused request stages nothing"
+    );
 }
 
 /// Withdrawal nets rather than declares, so its cost is the batch length —
@@ -737,7 +819,12 @@ async fn citing_an_artifact_that_is_not_there_names_the_artifact_field(pool: PgP
     let cited = rig.plain_post(&token, &key, "cited").await;
 
     let refused = rig
-        .cite_from(&token, &Uuid::new_v4().to_string(), &cited, json!({}))
+        .cite_from(
+            &token,
+            &Uuid::new_v4().to_string(),
+            &cited,
+            json!({ "relevance": 0.1, "support": 0.1 }),
+        )
         .await;
     let errors = refusals(&refused, "prepareReference");
     assert_eq!(errors[0]["field"], json!(["artifact"]), "{refused}");
@@ -764,7 +851,7 @@ async fn a_parameter_outside_the_census_range_never_reaches_the_write_path(pool:
             Some(&token),
             PREPARE_REFERENCE,
             json!({ "input": {
-                "artifact": carrier, "target": cited, "support": -1.5,
+                "artifact": carrier, "target": cited, "relevance": 0.1, "support": -1.5,
             }}),
         )
         .await;
@@ -879,7 +966,12 @@ async fn a_mention_types_as_the_person_it_names(pool: PgPool) {
     let token = rig.log_in("alice@example.test").await;
     let (bob, _) = rig.member("bob", "bob@example.test").await;
     let carrier = rig
-        .landed_post_citing(&token, &key, "carrier", json!([{ "target": bob }]))
+        .landed_post_citing(
+            &token,
+            &key,
+            "carrier",
+            json!([{ "target": bob, "relevance": 0.1, "support": 0.1 }]),
+        )
         .await;
 
     let rows = rig.references_of_post(Some(&token), &carrier).await;
@@ -889,7 +981,7 @@ async fn a_mention_types_as_the_person_it_names(pool: PgPool) {
     assert!(
         rows[0]["relevance"].as_f64().expect("relevance") > 0.0
             && rows[0]["support"].as_f64().expect("support") > 0.0,
-        "a default mention vouches weakly"
+        "the pre-filled mention vouches weakly"
     );
 }
 
@@ -917,7 +1009,8 @@ async fn a_topic_is_refused_as_a_citation_target(pool: PgPool) {
                 "title": "tagged",
                 "content": "a body",
                 "license": { "attribution": 1.0, "provenance": 0.0 },
-                "tags": [{ "name": "rust" }],
+                "pDirected": 0.1,
+                "tags": [{ "name": "rust", "pDirected": 0.1, "pInterest": 1.0 }],
             }}),
         )
         .await;
@@ -938,7 +1031,11 @@ async fn a_topic_is_refused_as_a_citation_target(pool: PgPool) {
     let in_flight_before = rig.writes_in_flight(alice).await;
 
     let batch = rig
-        .prepare_post_citing(&token, "carrier", json!([{ "target": topic }]))
+        .prepare_post_citing(
+            &token,
+            "carrier",
+            json!([{ "target": topic, "relevance": 0.1, "support": 0.1 }]),
+        )
         .await;
     let refused = refusals(&batch, "preparePost");
     assert_eq!(refused.len(), 1, "creation batch refused: {batch}");
@@ -954,7 +1051,14 @@ async fn a_topic_is_refused_as_a_citation_target(pool: PgPool) {
     );
 
     let carrier = rig.plain_post(&token, &key, "carrier").await;
-    let standalone = rig.cite_from(&token, &carrier, &topic, json!({})).await;
+    let standalone = rig
+        .cite_from(
+            &token,
+            &carrier,
+            &topic,
+            json!({ "relevance": 0.1, "support": 0.1 }),
+        )
+        .await;
     let refused = refusals(&standalone, "prepareReference");
     assert_eq!(refused.len(), 1, "standalone refused: {standalone}");
     assert_eq!(refused[0]["field"], json!(["target"]));
@@ -1060,7 +1164,7 @@ async fn a_strangers_citation_stays_off_the_carriers_row(pool: PgPool) {
             &alice_token,
             &alice_key,
             "carrier",
-            json!([{ "target": cited }]),
+            json!([{ "target": cited, "relevance": 0.1, "support": 0.1 }]),
         )
         .await;
     let elsewhere = rig
@@ -1102,7 +1206,14 @@ async fn a_pending_citation_shows_to_its_author_alone(pool: PgPool) {
     let carrier = rig.plain_post(&token, &key, "carrier").await;
     let cited = rig.plain_post(&token, &key, "cited").await;
 
-    let prepared = rig.cite_from(&token, &carrier, &cited, json!({})).await;
+    let prepared = rig
+        .cite_from(
+            &token,
+            &carrier,
+            &cited,
+            json!({ "relevance": 0.1, "support": 0.1 }),
+        )
+        .await;
     rig.pre_sign(&token, &key, &prepared["prepareReference"]["writes"])
         .await;
 
@@ -1145,8 +1256,13 @@ async fn a_mentions_record_terminal_resolves_to_the_person(pool: PgPool) {
     let (_, key) = rig.member("alice", "alice@example.test").await;
     let token = rig.log_in("alice@example.test").await;
     let (bob, _) = rig.member("bob", "bob@example.test").await;
-    rig.landed_post_citing(&token, &key, "carrier", json!([{ "target": bob }]))
-        .await;
+    rig.landed_post_citing(
+        &token,
+        &key,
+        "carrier",
+        json!([{ "target": bob, "relevance": 0.1, "support": 0.1 }]),
+    )
+    .await;
 
     let data = rig
         .gql(
@@ -1241,6 +1357,8 @@ async fn the_finder_offers_each_target_class_by_its_id(pool: PgPool) {
                 "target": post,
                 "content": "a reply",
                 "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
+                "pInterest": 0.1,
             }}),
         )
         .await;
@@ -1297,7 +1415,8 @@ async fn the_finder_never_offers_a_topic(pool: PgPool) {
                 "title": "tagged",
                 "content": "a body",
                 "license": { "attribution": 1.0, "provenance": 0.0 },
-                "tags": [{ "name": "rust" }],
+                "pDirected": 0.1,
+                "tags": [{ "name": "rust", "pDirected": 0.1, "pInterest": 1.0 }],
             }}),
         )
         .await;
@@ -1454,7 +1573,11 @@ async fn citing_another_authors_pending_post_declares_its_mint_as_a_dependency(p
     let (cited, bobs_mint, _) = rig.pending_post(&bob, &bob_key, "still settling").await;
 
     let prepared = rig
-        .prepare_post_citing(&alice, "citing", json!([{ "target": cited }]))
+        .prepare_post_citing(
+            &alice,
+            "citing",
+            json!([{ "target": cited, "relevance": 0.1, "support": 0.1 }]),
+        )
         .await;
     assert_eq!(refusals(&prepared, "preparePost"), Vec::<Value>::new());
 
@@ -1479,7 +1602,14 @@ async fn citing_my_own_pending_post_declares_its_mint_as_a_dependency(pool: PgPo
     let carrier = rig.plain_post(&token, &key, "carrier").await;
     let (cited, mint, _) = rig.pending_post(&token, &key, "still settling").await;
 
-    let prepared = rig.cite_from(&token, &carrier, &cited, json!({})).await;
+    let prepared = rig
+        .cite_from(
+            &token,
+            &carrier,
+            &cited,
+            json!({ "relevance": 0.1, "support": 0.1 }),
+        )
+        .await;
     assert_eq!(refusals(&prepared, "prepareReference"), Vec::<Value>::new());
     assert_eq!(
         proposals(&prepared["prepareReference"]["writes"])[0].deps,
@@ -1499,7 +1629,14 @@ async fn a_citation_hung_off_a_pending_artifact_declares_its_mint(pool: PgPool) 
     let cited = rig.plain_post(&token, &key, "cited").await;
     let (carrier, carrier_mint, _) = rig.pending_post(&token, &key, "carrier").await;
 
-    let prepared = rig.cite_from(&token, &carrier, &cited, json!({})).await;
+    let prepared = rig
+        .cite_from(
+            &token,
+            &carrier,
+            &cited,
+            json!({ "relevance": 0.1, "support": 0.1 }),
+        )
+        .await;
     assert_eq!(refusals(&prepared, "prepareReference"), Vec::<Value>::new());
     assert_eq!(
         proposals(&prepared["prepareReference"]["writes"])[0].deps,
@@ -1520,7 +1657,14 @@ async fn a_citation_between_landed_nodes_declares_nothing(pool: PgPool) {
     let carrier = rig.plain_post(&token, &key, "carrier").await;
     let cited = rig.plain_post(&token, &key, "cited").await;
 
-    let prepared = rig.cite_from(&token, &carrier, &cited, json!({})).await;
+    let prepared = rig
+        .cite_from(
+            &token,
+            &carrier,
+            &cited,
+            json!({ "relevance": 0.1, "support": 0.1 }),
+        )
+        .await;
     assert!(
         proposals(&prepared["prepareReference"]["writes"])[0]
             .deps
@@ -1545,7 +1689,14 @@ async fn a_citation_whose_target_never_lands_expires(pool: PgPool) {
     let carrier = rig.plain_post(&token, &key, "carrier").await;
     let (cited, _, _) = rig.pending_post(&bob, &bob_key, "never lands").await;
 
-    let prepared = rig.cite_from(&token, &carrier, &cited, json!({})).await;
+    let prepared = rig
+        .cite_from(
+            &token,
+            &carrier,
+            &cited,
+            json!({ "relevance": 0.1, "support": 0.1 }),
+        )
+        .await;
     let writes = &prepared["prepareReference"]["writes"];
     let citation = writes[0]["id"].as_str().expect("id").to_string();
     rig.land(&token, &key, writes).await;
@@ -1576,7 +1727,14 @@ async fn a_withdrawal_toward_a_pending_target_declares_its_mint(pool: PgPool) {
     let token = rig.log_in("alice@example.test").await;
     let carrier = rig.plain_post(&token, &key, "carrier").await;
     let (cited, mint, _) = rig.pending_post(&token, &key, "still settling").await;
-    let citation = rig.cite_from(&token, &carrier, &cited, json!({})).await;
+    let citation = rig
+        .cite_from(
+            &token,
+            &carrier,
+            &cited,
+            json!({ "relevance": 0.1, "support": 0.1 }),
+        )
+        .await;
     let citation_act = proposals(&citation["prepareReference"]["writes"])[0]
         .body
         .act_id();
@@ -1796,8 +1954,14 @@ async fn a_withdrawal_of_an_already_netted_bundle_refuses_at_target(pool: PgPool
     let token = rig.log_in("alice@example.test").await;
     let carrier = rig.plain_post(&token, &key, "carrier").await;
     let cited = rig.plain_post(&token, &key, "cited").await;
-    rig.land_citation(&token, &key, &carrier, &cited, json!({}))
-        .await;
+    rig.land_citation(
+        &token,
+        &key,
+        &carrier,
+        &cited,
+        json!({ "relevance": 0.1, "support": 0.1 }),
+    )
+    .await;
 
     let input = json!({ "input": { "artifact": carrier, "target": cited }});
     let first = rig

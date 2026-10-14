@@ -3,6 +3,7 @@ import { graphql, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 
 import { fetchHashtagDetail, prepareTag } from "./topics-api";
+import { DEFAULT_CONFIDENCE, DEFAULT_RELEVANCE } from "@/lib/topics/draft";
 import { startMswServer } from "@/test/msw";
 
 const server = startMswServer();
@@ -59,7 +60,9 @@ describe("fetchHashtagDetail", () => {
 });
 
 describe("prepareTag", () => {
-  it("omits relevance and confidence when not given, for the server defaults (D13)", async () => {
+  // Both parameters are required on the wire — the server never fills a
+  // stance in — so an untouched chip sends the pre-fill it showed (D13).
+  it("sends the shown pre-fill, never null, for an untouched chip", async () => {
     let variables: Record<string, unknown> | null = null;
     server.use(
       graphql.mutation("PrepareTag", ({ variables: v }) => {
@@ -82,10 +85,15 @@ describe("prepareTag", () => {
         });
       }),
     );
-    const outcome = await prepareTag(client(), { target: "p1", name: "rust" });
+    const outcome = await prepareTag(client(), {
+      target: "p1",
+      name: "rust",
+      relevance: DEFAULT_RELEVANCE,
+      confidence: DEFAULT_CONFIDENCE,
+    });
     expect(outcome.kind).toBe("success");
     expect(variables).toEqual({
-      input: { target: "p1", name: "rust", pDirected: null, pInterest: null },
+      input: { target: "p1", name: "rust", pDirected: 0.1, pInterest: 1 },
     });
   });
 
@@ -115,9 +123,11 @@ describe("prepareTag", () => {
         });
       }),
     );
-    await prepareTag(client(), { target: "p1", name: "rust", relevance: 0 });
+    // The un-tag still signs the confidence its chip showed: relevance is
+    // the only value the removal moves.
+    await prepareTag(client(), { target: "p1", name: "rust", relevance: 0, confidence: 0.8 });
     expect(variables).toEqual({
-      input: { target: "p1", name: "rust", pDirected: 0, pInterest: null },
+      input: { target: "p1", name: "rust", pDirected: 0, pInterest: 0.8 },
     });
   });
 
@@ -142,7 +152,12 @@ describe("prepareTag", () => {
         }),
       ),
     );
-    const outcome = await prepareTag(client(), { target: "p1", name: "bad name" });
+    const outcome = await prepareTag(client(), {
+      target: "p1",
+      name: "bad name",
+      relevance: 0.1,
+      confidence: 1,
+    });
     expect(outcome.kind).toBe("refused");
     if (outcome.kind !== "refused") return;
     expect(outcome.errors[0].field).toEqual(["name"]);

@@ -75,10 +75,10 @@ export async function prepareReference(
     artifact: string;
     /** The cited node's L2 id. */
     target: string;
-    /** Effort `f`; omit for the server default `+0.1`. */
-    relevance?: number;
-    /** Enthusiasm `e`; omit for the server default `+0.1`. */
-    support?: number;
+    /** Effort `f`, as the UI shows it. Required: the server fills nothing in. */
+    relevance: number;
+    /** Enthusiasm `e`, as the UI shows it. Required, likewise. */
+    support: number;
   },
 ): Promise<Outcome<readonly StagedWriteView[]>> {
   return payloadOutcome(
@@ -89,8 +89,8 @@ export async function prepareReference(
           input: {
             artifact: fields.artifact,
             target: fields.target,
-            relevance: fields.relevance ?? null,
-            support: fields.support ?? null,
+            relevance: fields.relevance,
+            support: fields.support,
           },
         },
       }),
