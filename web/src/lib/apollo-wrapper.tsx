@@ -12,6 +12,7 @@ import {
 import type { ReactNode } from "react";
 
 import { graphqlUri } from "@/lib/graphql-uri";
+import { mediaTypePolicies } from "@/lib/media-origin";
 import { createGuardedClient } from "@/lib/session/browser-guard";
 import { tokenStore } from "@/lib/session/token-store";
 
@@ -22,7 +23,7 @@ function makeClient() {
   return createGuardedClient(
     tokenStore,
     graphqlUri(),
-    (link) => new ApolloClient({ cache: new InMemoryCache(), link }),
+    (link) => new ApolloClient({ cache: new InMemoryCache({ typePolicies: mediaTypePolicies }), link }),
   );
 }
 
