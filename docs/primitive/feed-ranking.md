@@ -218,8 +218,9 @@ stranger's reference onward to every viewer who reaches it.
   the continuation of *this* reference's own A-leg. The target is
   reached only *through* the reference's **author**, at the
   viewer's forward-path weight to that author (indirect connections
-  count, decayed). A carrier with no single author — a Type, a
-  Chat — has only this channel.
+  count, decayed). A carrier with no single author — a Chat — has
+  only this channel. A Type is no carrier at all: paths end there
+  (the **Types are sinks** invariant above).
 
 A `(0,0)` citation carries `w̃ = 0` and crosses neither channel.
 
