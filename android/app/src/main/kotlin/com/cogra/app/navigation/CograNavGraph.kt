@@ -62,7 +62,6 @@ import com.cogra.core.designsystem.StanceAxes
 import com.cogra.core.designsystem.StanceZeroWords
 import com.cogra.core.designsystem.v2.token.NavTransitions
 import com.cogra.domain.deletion.AccountDeletionState
-import com.cogra.domain.saved.SavedTarget
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.store.TokenStore
 import com.cogra.feature.auth.LoginRoute
@@ -75,6 +74,8 @@ import com.cogra.feature.content.edit.PostEditRoute
 import com.cogra.feature.content.wizard.ComposeWizardRoute
 import com.cogra.feature.content.FeedRoute
 import com.cogra.feature.content.PostDetailRoute
+import com.cogra.feature.content.SavedDoors
+import com.cogra.feature.content.SavedRoute
 import com.cogra.feature.content.reply.CommentEditRoute
 import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.content.reply.ReplyTargetKind
@@ -94,7 +95,6 @@ import com.cogra.feature.onboarding.KeyCeremonyRoute
 import com.cogra.feature.profile.ProfileEditRoute
 import com.cogra.feature.profile.ProfileRoute
 import com.cogra.feature.profile.SAVED_ORIGIN
-import com.cogra.feature.saved.SavedRoute
 import com.cogra.feature.notifications.BellViewModel
 import com.cogra.feature.notifications.NotificationsRoute
 import com.cogra.feature.notifications.RootBellViewModel
@@ -168,10 +168,16 @@ data class ComposePost(
 /**
  * A post's detail. [from] names where the reader came from, which the back
  * arrow reads (`saved` → `Back to Saved`); [commentId] lands the thread on
- * that comment, opened over the post (Saved.md "tap a comment's row").
+ * that comment, opened over the post (Saved.md), and [aimReply] — a comment
+ * card's comment glyph — opens the reply composer aimed at it.
  */
 @Serializable
-data class PostDetail(val postId: String, val from: String? = null, val commentId: String? = null)
+data class PostDetail(
+    val postId: String,
+    val from: String? = null,
+    val commentId: String? = null,
+    val aimReply: Boolean = false,
+)
 
 /**
  * The reply wizard, pinned to what it answers (graph.json `ReplyEntry`
@@ -1092,6 +1098,7 @@ private fun CograNavGraphContent(
                     postId = detailRoute.postId,
                     from = detailRoute.from,
                     landOn = detailRoute.commentId,
+                    aimReply = detailRoute.aimReply,
                     viewerId = accountId,
                     signedIn = signedIn,
                     onRequireAccount = { joinPrompt = true }.takeIf { signedIn == false },
@@ -1286,21 +1293,52 @@ private fun CograNavGraphContent(
                     },
                 )
             }
-            // SAVED (Saved.md): reached from the own profile's ⋮, and every row
-            // opens its thing with a back arrow reading `Back to Saved`.
-            composable<Saved> {
+            // SAVED (Saved.md): reached from the own profile's ⋮, a feed of
+            // every kept thing as its kind's own card; every door opens its
+            // thing with a back arrow reading `Back to Saved`. A post card's
+            // comment count raises the thread over Saved, as over the feed, so
+            // the thread's return is read here the same way.
+            composable<Saved> { entry ->
+                val (commentSigned, consumeCommentSigned) = entry.navResult(commentSignedKey)
+                val (commentParent, consumeCommentParent) = entry.navResult(commentParentKey)
+                val (commentsPlace, consumeCommentsPlace) = entry.navResult(commentsPlaceKey)
+                val accountId by authState.accountId.collectAsStateWithLifecycle()
                 SavedRoute(
                     onBack = { navController.navigateUp() },
-                    onOpen = { target ->
-                        when (target) {
-                            is SavedTarget.Post -> navController.navigate(
-                                PostDetail(target.postId, from = SAVED_ORIGIN),
+                    doors = SavedDoors(
+                        onOpenPost = { id -> navController.navigate(PostDetail(id, from = SAVED_ORIGIN)) },
+                        onOpenComment = { postId, commentId, aimReply ->
+                            navController.navigate(
+                                PostDetail(postId, from = SAVED_ORIGIN, commentId = commentId, aimReply = aimReply),
                             )
-                            is SavedTarget.Comment -> navController.navigate(
-                                PostDetail(target.postId, from = SAVED_ORIGIN, commentId = target.commentId),
-                            )
-                            is SavedTarget.Person -> navController.navigate(Profile(target.handle, from = SAVED_ORIGIN))
-                        }
+                        },
+                        onOpenActor = { handle -> navController.navigate(Profile(handle, from = SAVED_ORIGIN)) },
+                        onOpenTopic = { name -> navController.navigate(Topic(name)) },
+                    ),
+                    viewerId = accountId,
+                    signedIn = signedIn,
+                    onEditPost = { id -> navController.navigate(ComposePost(id)) },
+                    onCitePost = { id -> navController.navigate(ComposePost(referenceTargetId = id)) },
+                    onReply = { target -> navController.openReplyWizard(target) },
+                    onEditComment = { commentId, parentTitle ->
+                        navController.navigate(EditComment(commentId, parentTitle))
+                    },
+                    onSignInOrJoin = { navController.navigate(Login) },
+                    commentsReturn = CommentsReturn(
+                        scroll = commentsPlace.asCommentsScroll(),
+                        landed = commentSigned,
+                        parentCommentId = commentParent,
+                    ),
+                    onCommentsReturnConsumed = {
+                        consumeCommentSigned()
+                        consumeCommentParent()
+                        consumeCommentsPlace()
+                    },
+                    onCommentsDepart = { scroll ->
+                        navController.reportToCurrent(
+                            commentsPlaceKey,
+                            intArrayOf(scroll.index, scroll.offset),
+                        )
                     },
                 )
             }

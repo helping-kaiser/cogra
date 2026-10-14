@@ -1,80 +1,84 @@
 # The Saved list (api-spec.md `User.bookmarks`, `setBookmark`,
 # `removeBookmark`; saved-surface packet). One mixed list of posts,
-# comments and people, newest first by save time, a page of twenty at a
+# comments and people, newest first by save time, a page of TEN at a
 # time — the page size is written as a literal so the client-operation
-# guard prices the call the device actually makes.
+# guard prices the call the device actually makes. Ten, not the feed's
+# twenty: every edge carries two whole card selections (a post's and a
+# comment's), and twenty of them price past the complexity ceiling's
+# headroom (`crates/api/tests/client_operations.rs`).
 #
-# A row draws from its node alone (ContentRow's chronicle variant): a
-# title, an aside handle, one second line and the save age. A post
-# carries its mime types so an untitled media post names its stand-in
-# (`Pictures by @ada` / `A video by @ada`); a comment carries its
-# thread's post (`Comment.post`), which its `on <title>` names and
-# opens. Statuses ride along so a removed, redacted, sensitive or
-# deleted thing reads through its own mark rather than vanishing.
-query SavedPage($after: String) {
+# SAVED IS A FEED (Saved.md, round 12): every saved thing stands as its
+# kind's own live feed card, so each kind is read the way its card reads
+# it — a post as the feed's own `FeedPost`, a comment as the thread's
+# `CommentFields` plus what its head row names (the thing it answers)
+# and what its search reads it by (its thread's root post), and a person
+# as the profile card draws them. `bookmarkedAt` is the list's order and
+# Undo's restore time; no card wears it.
+query SavedPage($after: String, $includePending: Boolean! = true) {
   me {
     id
-    bookmarks(first: 20, after: $after) {
+    bookmarks(first: 10, after: $after) {
       edges {
         cursor
         bookmarkedAt
         node {
           __typename
           ... on Post {
-            id
-            title {
-              value
-              status
-            }
-            description {
-              value
-              status
-            }
-            content {
-              value
-              status
-            }
-            attachments {
-              mimeType
-            }
-            moderationStatus
-            sensitiveReason
-            author {
-              id
-              handle
-            }
+            ...FeedPost
           }
           ... on Comment {
-            id
-            content {
-              value
-              status
+            ...CommentFields
+            # The comment card's head row: what the comment answers — a
+            # post by its title (or first words) over its author, or a
+            # comment by its author over its first words.
+            target {
+              __typename
+              ... on Post {
+                id
+                title {
+                  value
+                  status
+                }
+                content {
+                  value
+                  status
+                }
+                # The head row's mark: the cover, or a clip's still.
+                attachments {
+                  url
+                  status
+                  mimeType
+                  coverMedia {
+                    url
+                    status
+                  }
+                }
+                author {
+                  id
+                  handle
+                }
+                moderationStatus
+              }
+              ... on Comment {
+                id
+                content {
+                  value
+                  status
+                }
+                author {
+                  id
+                  handle
+                }
+                moderationStatus
+              }
             }
-            attachments {
-              mimeType
-            }
-            moderationStatus
-            sensitiveReason
-            author {
-              id
-              handle
-            }
+            # The thread's root post: where the card's doors land, and the
+            # title a search reads a comment through.
             post {
               id
               title {
                 value
                 status
-              }
-              content {
-                value
-                status
-              }
-              attachments {
-                mimeType
-              }
-              author {
-                id
-                handle
               }
             }
           }
@@ -93,6 +97,7 @@ query SavedPage($after: String) {
               url
               status
             }
+            viewerBookmarkedAt
           }
         }
       }

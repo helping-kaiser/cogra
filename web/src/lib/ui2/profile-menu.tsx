@@ -13,6 +13,13 @@
 //   account, Report — no Mention row and no handle anywhere, the identity
 //   having gone with the account.
 //
+// THE PROFILE FEED CARD'S ⋮ IS THE SAME MENU LESS THE SHARE ROW the card's own
+// row already carries (`_shared.jsx` `FEED_PROFILE_MENU`,
+// `FEED_DELETED_PROFILE_MENU`): a person's reads Save · Mention · Hide, a
+// deleted account's Save · Hide · Report. `feed` places it on a card: the
+// card names the trigger, and the sheet and its rows carry the card's test
+// ids rather than the profile page's registered paths.
+//
 // BUILT WHOLE, WIRED IN PART (saved-surface SS-1; the introduced-but-inert
 // law, jakob 2026-09-14): History waits on the History surface, Mention on
 // the compose wizard's profile reference.
@@ -29,6 +36,7 @@ import { useHiddenSet } from "@/lib/hidden/provider";
 import { useSavedWrites } from "@/lib/saved/provider";
 import { saveRow, type Notify } from "@/lib/saved/save-row";
 import { useAuthGuard } from "@/lib/session/runtime";
+import type { DataNode } from "@/lib/ui/data-node";
 import { LINK_COPIED, shareLink } from "@/lib/ui/share";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
 import { MenuSheet, OverflowTrigger, type MenuItem } from "@/lib/ui2/overflow-menu";
@@ -38,19 +46,28 @@ import { REPORTED, REPORT_NOT_SENT } from "@/lib/ui2/post-menu-host";
 export type ProfileMenuKind = "own" | "other" | "deleted";
 
 const SHEET = { path: "profile.menuSheet" };
-const row = (name: string) => ({ path: `profile.menuSheet.${name}` });
+const pageRow = (name: string): DataNode => ({ path: `profile.menuSheet.${name}` });
+
+/** Where a profile feed card places the menu: its trigger's node, and its test-id scope. */
+export type FeedPlacement = {
+  readonly trigger?: DataNode;
+  readonly testId: string;
+};
 
 export function ProfileMenu({
   kind,
   profile,
   signedIn,
   notify,
+  feed,
 }: {
   kind: ProfileMenuKind;
   profile: ActorLike & { handle: string; viewerBookmarkedAt?: string | null };
   signedIn: boolean;
-  /** The profile's own snackbar. */
+  /** The host's own snackbar. */
   notify: Notify;
+  /** The menu on a profile feed card instead of the profile page. */
+  feed?: FeedPlacement;
 }) {
   const router = useRouter();
   const client = useApolloClient();
@@ -61,6 +78,9 @@ export function ProfileMenu({
   const [reportOpen, setReportOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
+
+  const prefix = feed?.testId ?? "profile-menu";
+  const row = (name: string): DataNode | undefined => (feed === undefined ? pageRow(name) : undefined);
 
   // A guest who taps any row but Share is asked to join (ProfileMenu.md;
   // GuestGate.md:5).
@@ -75,7 +95,7 @@ export function ProfileMenu({
   const report: MenuItem = {
     label: "Report",
     onSelect: gated(() => setReportOpen(true)),
-    testId: "profile-menu-report",
+    testId: `${prefix}-report`,
     node: row("report"),
   };
   const save: MenuItem = {
@@ -85,12 +105,25 @@ export function ProfileMenu({
       server: profile.viewerBookmarkedAt ?? null,
       notify,
       onGuest: signedIn ? null : () => setJoinOpen(true),
-      testId: "profile-menu-save",
+      testId: `${prefix}-save`,
     }),
     node: row("save"),
   };
-  // HIDING KEEPS THE READER ON THE PROFILE (ProfileMenu.md:23): the person
-  // leaves the feed, the page stays, and the profile's snackbar offers Undo.
+  const mention: MenuItem = {
+    // INERT until the wizard takes a profile as a staged reference.
+    label: "Mention in a new post",
+    onSelect: gated(inert),
+    testId: `${prefix}-mention`,
+    node: row("mention"),
+  };
+  const shareRow: MenuItem = {
+    label: "Share this profile",
+    onSelect: share,
+    testId: `${prefix}-share`,
+    node: row("share"),
+  };
+  // HIDING KEEPS THE READER WHERE THEY ARE (ProfileMenu.md:23): the person
+  // leaves the feed, the page stays, and the host's snackbar offers Undo.
   // A deleted account's row and snackbar name no one (ProfileDeletedMenu.md:19).
   const person = hiddenPersonOf(kind === "deleted" ? { ...profile, handle: null } : profile);
   const hide: MenuItem = {
@@ -102,13 +135,13 @@ export function ProfileMenu({
       notify,
       onGuest: signedIn ? null : () => setJoinOpen(true),
     }),
-    testId: "profile-menu-hide",
+    testId: `${prefix}-hide`,
     node: row("hide"),
   };
 
   let items: MenuItem[];
   let ariaLabel: string;
-  if (kind === "own") {
+  if (kind === "own" && feed === undefined) {
     ariaLabel = "More on your profile";
     items = [
       { label: "Saved", onSelect: () => router.push("/saved"), testId: "profile-menu-saved", node: row("saved") },
@@ -116,24 +149,15 @@ export function ProfileMenu({
       { label: "History", onSelect: inert, testId: "profile-menu-history", node: row("history") },
       { label: "Share your profile", onSelect: share, testId: "profile-menu-share", node: row("share") },
     ];
-  } else if (kind === "other") {
-    ariaLabel = `More about @${profile.handle}`;
-    items = [
-      save,
-      // INERT until the wizard takes a profile as a staged reference.
-      { label: "Mention in a new post", onSelect: gated(inert), testId: "profile-menu-mention", node: row("mention") },
-      { label: "Share this profile", onSelect: share, testId: "profile-menu-share", node: row("share") },
-      hide,
-      report,
-    ];
-  } else {
+  } else if (kind === "deleted") {
     ariaLabel = "More about this account";
-    items = [
-      save,
-      { label: "Share this profile", onSelect: share, testId: "profile-menu-share", node: row("share") },
-      hide,
-      report,
-    ];
+    items = feed === undefined ? [save, shareRow, hide, report] : [save, hide, report];
+  } else {
+    ariaLabel = `More about @${profile.handle}`;
+    // THE READER'S OWN CARD (undrawn: a card of oneself is reached only by
+    // saving one's own profile) keeps the one act that is theirs to take on it.
+    if (kind === "own") items = [save];
+    else items = feed === undefined ? [save, mention, shareRow, hide, report] : [save, mention, hide];
   }
 
   // THE COMMIT SENDS THE MAIL; refused or unanswered, the sheet stays and the
@@ -155,8 +179,8 @@ export function ProfileMenu({
     <>
       <OverflowTrigger
         ariaLabel={ariaLabel}
-        testId="profile-menu"
-        node={{ path: "profile.identity.actionRow.menu" }}
+        testId={prefix}
+        node={feed === undefined ? { path: "profile.identity.actionRow.menu" } : feed.trigger}
         expanded={open}
         onOpen={() => setOpen(true)}
       />
@@ -165,8 +189,8 @@ export function ProfileMenu({
         onClose={() => setOpen(false)}
         items={items}
         ariaLabel={ariaLabel}
-        testId="profile-menu-sheet"
-        node={SHEET}
+        testId={`${prefix}-sheet`}
+        node={feed === undefined ? SHEET : undefined}
       />
       {kind !== "own" && (
         <ReportConfirm
@@ -176,7 +200,7 @@ export function ProfileMenu({
           sending={sending}
           // THE TITLE NAMES THE PERSON, and a deleted account by no handle.
           title={kind === "deleted" ? "Report this account?" : `Report @${profile.handle}?`}
-          testId="profile-report-sheet"
+          testId={feed === undefined ? "profile-report-sheet" : `${prefix}-report-sheet`}
         />
       )}
       {joinOpen && <JoinPrompt open onClose={() => setJoinOpen(false)} />}

@@ -58,6 +58,7 @@ import com.cogra.feature.content.R
 import com.cogra.feature.saved.LocalSavedHost
 import com.cogra.feature.saved.rememberSavedHost
 import com.cogra.feature.saved.rememberSavedWrites
+import kotlinx.coroutines.flow.first
 
 /**
  * THE COMMENTS SHEET, WIRED TO ITS OWN THREAD — the one comments surface
@@ -115,11 +116,23 @@ fun CommentsSheetRoute(
     landOn: String? = null,
     /** The guest gate a signed-out reader's Save opens; null when signed in. */
     onRequireAccount: (() -> Unit)? = null,
+    /**
+     * The landing came from a comment card's comment glyph (FeedKinds.md,
+     * Saved.md): once the landed comment stands, the reply composer opens
+     * aimed at it.
+     */
+    aimReply: Boolean = false,
     viewModel: CommentsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(postId) { viewModel.start(postId) }
     LaunchedEffect(postId, landOn) { landOn?.let(viewModel.landing::landOn) }
+    LaunchedEffect(postId, landOn, aimReply) {
+        val at = landOn ?: return@LaunchedEffect
+        if (!aimReply) return@LaunchedEffect
+        val landed = viewModel.state.first { it.standing(at) != null }.standing(at)
+        onReply(ReplyTargetRequest(postId, landed))
+    }
     // In an effect, not the composition body: a recomposition that never
     // commits would otherwise fire the refetch anyway. The landing is
     // not consumed here — the place is the other half of the same
@@ -181,6 +194,12 @@ fun CommentsSheetRoute(
  * thread is what has them.
  */
 data class ReplyTargetRequest(val postId: String, val comment: CommentView?)
+
+/** [id]'s comment where the thread holds it — a top-level comment or an unfolded reply. */
+internal fun CommentsUiState.standing(id: String): CommentView? =
+    comments.firstOrNull { it.id == id } ?: replyThreads.values.firstNotNullOfOrNull { thread ->
+        thread.items.firstOrNull { it.id == id }
+    }
 
 /**
  * THE THREAD IS A SHEET OVER WHAT RAISED IT (`_shared.jsx:1247-1257`): the
@@ -507,7 +526,7 @@ private fun CommentsFoot(
  * went with a number would make the menu a different menu every time.
  */
 @Composable
-private fun commentMenuRows(
+internal fun commentMenuRows(
     comment: CommentView,
     onCite: () -> Unit,
     onLicense: () -> Unit,

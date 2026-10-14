@@ -1,0 +1,353 @@
+// Saved as a feed (Saved.md, SavedUndo.md, SavedEmpty.md, SavedNone.md; round
+// 12): every kept thing as its kind's own live card, newest by save time; the
+// unsave as the first row of each card's ⋮, Undo in place, the comfort line on
+// the returned card; the one search rule over the saved set; hidden accounts'
+// things staying. web's twin is `saved-view.test.tsx`.
+
+package com.cogra.feature.content
+
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextClearance
+import androidx.compose.ui.test.performTextInput
+import com.cogra.core.designsystem.CograSnackbarHost
+import com.cogra.core.designsystem.LocalSnackbarHostState
+import com.cogra.domain.ActorRef
+import com.cogra.domain.AuthTokens
+import com.cogra.domain.CommentView
+import com.cogra.domain.FieldStatus
+import com.cogra.domain.HashtagView
+import com.cogra.domain.Landing
+import com.cogra.domain.LicenseChoice
+import com.cogra.domain.ModeratedField
+import com.cogra.domain.ModerationState
+import com.cogra.domain.Outcome
+import com.cogra.domain.PostView
+import com.cogra.domain.ProfileView
+import com.cogra.domain.TopicClaimView
+import com.cogra.domain.saved.CommentTarget
+import com.cogra.domain.saved.SavedCard
+import com.cogra.domain.saved.SavedEntry
+import com.cogra.domain.saved.SavedWrites
+import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.RecordingSavedRepository
+import com.cogra.feature.saved.SavedUiState
+import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import java.io.IOException
+import java.time.Instant
+
+// A tall window, so every card of the list is composed at once: a lazy list
+// composes only what stands on screen.
+@RunWith(RobolectricTestRunner::class)
+@Config(qualifiers = "w411dp-h4000dp")
+class SavedScreenTest {
+
+    @get:Rule
+    val compose = createComposeRule()
+
+    // The cards read their ages against the clock, as they do on the feed.
+    private val now = Instant.now()
+    private val repository = RecordingSavedRepository()
+    private val writes = SavedWrites(
+        repository,
+        FakeTokenStore().apply { tokens.value = AuthTokens("a", "r", "u1") },
+        CoroutineScope(Dispatchers.Unconfined),
+    )
+
+    private fun text(value: String?, status: FieldStatus = FieldStatus.NORMAL) = ModeratedField(value, status)
+
+    private fun daysAgo(days: Long) = now.minusSeconds(days * 86_400)
+
+    private fun tag(name: String) = TopicClaimView(HashtagView("t-$name", text(name)), 0.5, 1.0, false)
+
+    private val ada = ActorRef("u1", "ada", "Ada")
+    private val tobias = ActorRef("u2", "tobias", "Tobias")
+
+    // Newest by when the reader saved each thing — the post written a week ago
+    // leads the comment written an hour ago, because it was kept later.
+    private val post = SavedEntry(
+        SavedCard.Post(
+            PostView(
+                id = "p1",
+                title = text("The long way home"),
+                description = text(null),
+                content = text("Took the coast road."),
+                author = ada,
+                createdAt = daysAgo(7),
+                updatedAt = daysAgo(7),
+                landing = Landing.landed(1),
+                license = LicenseChoice.PublicDomain,
+                topics = listOf(tag("coastroad")),
+                viewerBookmarkedAt = daysAgo(2),
+            ),
+        ),
+        daysAgo(2),
+    )
+    private val comment = SavedEntry(
+        SavedCard.Comment(
+            comment = CommentView(
+                id = "c1",
+                content = text("The third headland light is real"),
+                author = tobias,
+                createdAt = now.minusSeconds(3_600),
+                updatedAt = now.minusSeconds(3_600),
+                landing = Landing.landed(2),
+                license = LicenseChoice.PublicDomain,
+                topics = listOf(tag("glovebox")),
+                viewerBookmarkedAt = daysAgo(3),
+            ),
+            target = CommentTarget.Post(
+                id = "p1",
+                title = text("The long way home"),
+                content = text("words"),
+                mimeTypes = emptyList(),
+                coverUrl = null,
+                authorHandle = "ada",
+                moderation = ModerationState.NORMAL,
+                removed = false,
+            ),
+            threadPostId = "p1",
+            threadPostTitle = text("The long way home"),
+        ),
+        daysAgo(3),
+    )
+
+    private fun person(deleted: Boolean = false) = SavedEntry(
+        SavedCard.Person(
+            ProfileView(
+                id = "u3",
+                handle = "mira",
+                displayName = if (deleted) text(null, FieldStatus.REDACTED) else text("Mira Voss"),
+                bio = if (deleted) text(null, FieldStatus.REDACTED) else text("Runs the stand by the sea wall."),
+                websiteUrl = text(null),
+                viewerBookmarkedAt = daysAgo(5),
+            ),
+        ),
+        daysAgo(5),
+    )
+
+    private val all get() = listOf(post, comment, person())
+
+    private val opened = mutableListOf<String>()
+    private val doors = SavedDoors(
+        onOpenPost = { opened += "post:$it" },
+        onOpenComment = { postId, commentId, aim ->
+            opened += "comment:$postId/$commentId" + if (aim) "+reply" else ""
+        },
+        onOpenActor = { opened += "actor:$it" },
+        onOpenTopic = { opened += "topic:$it" },
+    )
+
+    private fun render(entries: List<SavedEntry>, hasNextPage: Boolean = false) {
+        val host = SnackbarHostState()
+        compose.setContent {
+            var query by mutableStateOf("")
+            CompositionLocalProvider(LocalSnackbarHostState provides host) {
+                SavedScreen(
+                    state = SavedUiState(entries = entries, loading = false, hasNextPage = hasNextPage, query = query),
+                    writes = writes,
+                    onRefresh = {},
+                    onLoadMore = {},
+                    onRetryMore = {},
+                    onSearch = { query = it },
+                    onBack = {},
+                    doors = doors,
+                )
+                CograSnackbarHost(host)
+            }
+        }
+    }
+
+    private fun shown(tag: String): Boolean = compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty()
+
+    private fun search(query: String) {
+        compose.onNodeWithTag("saved.searchField.input").performTextClearance()
+        if (query.isNotEmpty()) compose.onNodeWithTag("saved.searchField.input").performTextInput(query)
+        compose.waitForIdle()
+    }
+
+    private val postCard = "saved.card:p1"
+    private val commentCard = "saved.commentCard:c1"
+    private val personCard = "saved.profileCard:u3"
+
+    @Test
+    fun `saved stands each kind as its own feed card`() {
+        render(all)
+        assertThat(shown(postCard)).isTrue()
+        assertThat(shown(commentCard)).isTrue()
+        assertThat(shown(personCard)).isTrue()
+        // The comment card's head row names the post it answers, as one door.
+        compose.onNodeWithContentDescription("On “The long way home” — @ada").assertIsDisplayed()
+        compose.onNodeWithText("Mira Voss").assertIsDisplayed()
+        compose.onNodeWithText("@mira").assertIsDisplayed()
+    }
+
+    @Test
+    fun `no card carries a save age or an unsave control of its own`() {
+        render(all)
+        // The cards wear their own ages (7d, 1h), never the save's (2d, 3d, 5d).
+        compose.onNodeWithText("7d").assertIsDisplayed()
+        assertThat(compose.onAllNodesWithText("2d").fetchSemanticsNodes()).isEmpty()
+        assertThat(compose.onAllNodesWithContentDescription("Unsave", substring = true).fetchSemanticsNodes()).isEmpty()
+    }
+
+    @Test
+    fun `the first row of every card's menu reads unsave`() {
+        render(all)
+        compose.onNodeWithTag("saved.card.menu").performClick()
+        compose.onNodeWithTag("saved_p1_menu_save").assertIsDisplayed()
+        compose.onNodeWithText("Unsave").assertIsDisplayed()
+    }
+
+    @Test
+    fun `unsave from a card's menu takes the card and undo puts it back where it was`() {
+        render(all)
+        compose.onNodeWithTag("saved_comment_c1_menu").performClick()
+        compose.onNodeWithTag("comment_menu_save_c1").performClick()
+        compose.waitForIdle()
+        assertThat(shown(commentCard)).isFalse()
+        assertThat(shown(postCard)).isTrue()
+        assertThat(shown(personCard)).isTrue()
+        assertThat(repository.removes).containsExactly("c1")
+        compose.onNodeWithText("Removed from Saved.").assertIsDisplayed()
+        compose.onNodeWithTag("saved.snackbar.action").performClick()
+        compose.waitForIdle()
+        assertThat(shown(commentCard)).isTrue()
+        assertThat(repository.sets).containsExactly("c1" to comment.bookmarkedAt)
+    }
+
+    @Test
+    fun `a failed unsave brings the card back with its line and unsave still first`() {
+        repository.removeAnswers.addLast(Outcome.Failed(IOException("down")))
+        render(all)
+        compose.onNodeWithTag("saved.profileCard.menu").performClick()
+        compose.onNodeWithTag("saved_person_u3_menu_save").performClick()
+        compose.waitForIdle()
+        assertThat(shown(personCard)).isTrue()
+        compose.onNodeWithText("That didn't go through.").assertIsDisplayed()
+        // Retry asks the unsave again, and the card leaves again at the tap.
+        compose.onNodeWithTag("saved_person_u3_row_line_retry").performClick()
+        compose.waitForIdle()
+        assertThat(shown(personCard)).isFalse()
+        assertThat(repository.removes).containsExactly("u3", "u3")
+    }
+
+    @Test
+    fun `the last card's unsave stands the empty state`() {
+        render(listOf(post))
+        compose.onNodeWithTag("saved.card.menu").performClick()
+        compose.onNodeWithTag("saved_p1_menu_save").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithTag("saved.empty.title").assertIsDisplayed()
+        compose.onNodeWithText("Removed from Saved.").assertIsDisplayed()
+    }
+
+    @Test
+    fun `an unsave made elsewhere is applied on return`() {
+        writes.drop("p1", post.bookmarkedAt)
+        render(all)
+        assertThat(shown(postCard)).isFalse()
+        assertThat(shown(personCard)).isTrue()
+    }
+
+    @Test
+    fun `a hidden account's things and profile stay in saved`() {
+        // Nothing here reads the hidden set to narrow: the list is the read.
+        render(all)
+        assertThat(shown(postCard)).isTrue()
+        assertThat(shown(personCard)).isTrue()
+    }
+
+    @Test
+    fun `a deleted account's card stands redacted with no handle and no bio`() {
+        render(listOf(person(deleted = true)))
+        compose.onNodeWithText("Deleted account").assertIsDisplayed()
+        assertThat(shown("saved.profileCard.handle")).isFalse()
+        assertThat(shown("saved.profileCard.bio")).isFalse()
+    }
+
+    @Test
+    fun `every card's doors land as the feed's do`() {
+        render(all)
+        compose.onNodeWithTag("saved_comment_c1_head").performClick()
+        compose.onNodeWithTag("saved_comment_c1_reply").performClick()
+        compose.onNodeWithText("Mira Voss").performClick()
+        assertThat(opened).containsExactly("post:p1", "comment:p1/c1+reply", "actor:mira").inOrder()
+    }
+
+    @Test
+    fun `the field reads search what you saved and a query narrows by names and titles`() {
+        render(all)
+        compose.onNodeWithText("Search what you saved").assertIsDisplayed()
+        search("long way")
+        assertThat(shown(postCard)).isTrue()
+        assertThat(shown(commentCard)).isFalse()
+        assertThat(shown(personCard)).isFalse()
+        // A body is never matched: the comment's words carry "headland".
+        search("headland")
+        compose.onNodeWithTag("saved.empty.title").assertIsDisplayed()
+    }
+
+    @Test
+    fun `an at handle narrows to people and its remainder to their things`() {
+        render(all)
+        search("@mi")
+        assertThat(shown(personCard)).isTrue()
+        assertThat(shown(postCard)).isFalse()
+        search("@tobias long")
+        assertThat(shown(commentCard)).isTrue()
+        assertThat(shown(personCard)).isFalse()
+    }
+
+    @Test
+    fun `a bare hash tag matches nothing and its remainder matches what carries it`() {
+        render(all)
+        search("#coastroad")
+        compose.onNodeWithTag("saved.empty.action").assertIsDisplayed()
+        search("#glovebox home")
+        assertThat(shown(commentCard)).isTrue()
+        assertThat(shown(postCard)).isFalse()
+    }
+
+    @Test
+    fun `saved none keeps the query and show everything clears it`() {
+        render(all)
+        search("brackish cartography")
+        compose.onNodeWithText("Nothing you've saved carries that name.", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("fewer words reach further.", substring = true).assertIsDisplayed()
+        compose.onNodeWithTag("saved.empty.action").performClick()
+        compose.waitForIdle()
+        assertThat(shown(postCard)).isTrue()
+        assertThat(shown(commentCard)).isTrue()
+        assertThat(shown(personCard)).isTrue()
+    }
+
+    @Test
+    fun `saved empty names the save in words and draws no field`() {
+        render(emptyList())
+        compose.onNodeWithText(
+            "Nothing saved yet. A post, a comment or a person can be saved from its own menu, and it waits here.",
+        ).assertIsDisplayed()
+        assertThat(shown("saved.searchField")).isFalse()
+        assertThat(shown("saved.empty.action")).isFalse()
+    }
+}
