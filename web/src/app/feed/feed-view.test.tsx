@@ -1424,11 +1424,23 @@ describe("FeedView's ranked data path", () => {
     });
   });
 
-  /** Cards on screen, in order. */
+  /** Cards on screen, in order — above the seen line and under it alike. */
   function cardIds(): string[] {
-    return [...document.querySelectorAll("[data-seen-id]")].map(
-      (card) => card.getAttribute("data-seen-id") ?? "",
+    return [...document.querySelectorAll("[data-scroll-anchor]")].map(
+      (card) => card.getAttribute("data-scroll-anchor") ?? "",
     );
+  }
+
+  /** The cards drawn under `feed.seenSeparator`, in order. */
+  function tailIds(): string[] {
+    const separator = screen.queryByTestId("feed.seenSeparator");
+    if (separator === null) return [];
+    const tail: string[] = [];
+    for (let row = separator.nextElementSibling; row !== null; row = row.nextElementSibling) {
+      const id = row.getAttribute("data-scroll-anchor");
+      if (id !== null) tail.push(id);
+    }
+    return tail;
   }
 
   it("the_feed_ranks_once_per_open", async () => {
@@ -1481,10 +1493,10 @@ describe("FeedView's ranked data path", () => {
     expect(listing).not.toHaveBeenCalled();
   });
 
-  // jakob's scenario (PR-48): fetch, scroll Ranked until rows are seen, switch
-  // to Newest with a local Done — none of the newly seen rows is in the Newest
-  // list, and nothing was asked of the ranker.
-  it("a_switch_to_newest_never_shows_what_ranked_scrolling_made_seen", async () => {
+  // jakob's scenario (PR-48), under the seen tail (PR-80): fetch, scroll
+  // Ranked until rows are seen, switch to Newest with a local Done — the newly
+  // seen rows stand under the separator, and nothing was asked of the ranker.
+  it("a_switch_to_newest_stands_what_ranked_scrolling_made_seen_under_the_separator", async () => {
     const reads = feedReads();
     server.use(
       ...rankedFeed([post("p1", "First"), post("p2", "Second"), post("p3", "Third")], reads),
@@ -1505,11 +1517,13 @@ describe("FeedView's ranked data path", () => {
         { target: second, ratio: 1 },
       ]),
     );
-    // W-6: scrolling never deletes the rows under the reader.
+    // W-6: scrolling never moves the rows under the reader, nor raises the line.
     expect(cardIds()).toEqual(["p1", "p2", "p3"]);
+    expect(screen.queryByTestId("feed.seenSeparator")).not.toBeInTheDocument();
 
     act(() => announceFeedDone({ ...FEED_FILTER_DEFAULT, order: "newest" }));
-    await waitFor(() => expect(cardIds()).toEqual(["p3"]));
+    await waitFor(() => expect(cardIds()).toEqual(["p3", "p1", "p2"]));
+    expect(tailIds()).toEqual(["p1", "p2"]);
     expect(reads.ranks).toHaveLength(1);
     // p3 was hydrated with the first window: the re-derive asked for nothing.
     expect(reads.windows).toHaveLength(1);
@@ -1652,8 +1666,8 @@ describe("FeedView's ranked data path", () => {
   });
 
   // §4.3: the record is the reader's, on the reader's device — a borrowing
-  // applicant cuts their own seeing out of the lender's ranking.
-  it("a_borrowing_reader_cuts_their_own_seeing_from_the_lenders_ranking", async () => {
+  // applicant's own seeing forms the tail of the lender's ranking.
+  it("a_borrowing_readers_own_seeing_forms_the_tail_of_the_lenders_ranking", async () => {
     await seenRecord.use("acct-1");
     await seenRecord.add("acct-1", ["p1"]);
     const reads = feedReads();
@@ -1665,7 +1679,8 @@ describe("FeedView's ranked data path", () => {
     renderWithProviders(<FeedView />, { store: signedInStore() });
     await screen.findByTestId(byNode("feed.card", "p2"));
     expect(reads.ranks).toEqual(["inv-1"]);
-    expect(cardIds()).toEqual(["p2"]);
+    expect(cardIds()).toEqual(["p2", "p1"]);
+    expect(tailIds()).toEqual(["p1"]);
   });
 
   it("a_session_less_reader_cuts_nothing_for_seen", async () => {
@@ -1675,6 +1690,7 @@ describe("FeedView's ranked data path", () => {
     renderWithProviders(<FeedView />);
     await screen.findByTestId(byNode("feed.card", "p2"));
     expect(cardIds()).toEqual(["p1", "p2"]);
+    expect(screen.queryByTestId("feed.seenSeparator")).not.toBeInTheDocument();
   });
 
   it("a_restart_keeps_the_devices_seen_record", async () => {
@@ -1687,7 +1703,83 @@ describe("FeedView's ranked data path", () => {
     );
     renderWithProviders(<FeedView />, { store: signedInStore() });
     await screen.findByTestId(byNode("feed.card", "p2"));
-    expect(cardIds()).toEqual(["p2"]);
+    expect(cardIds()).toEqual(["p2", "p1"]);
+    expect(tailIds()).toEqual(["p1"]);
+  });
+
+  // THE SEEN TAIL (PR-80; FeedSeenTail.md, ranked-feed packet §21). The
+  // separator stands under the last unseen card and reads Already seen.
+  it("the_separator_stands_under_the_last_unseen_card", async () => {
+    await seenRecord.add("acct-1", ["p1"]);
+    server.use(
+      ...rankedFeed([post("p1", "First"), post("p2", "Second"), post("p3", "Third")]),
+      meHandler(),
+      borrowedViewHandler(null),
+    );
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+    const separator = await screen.findByTestId("feed.seenSeparator");
+    expect(screen.getByTestId("feed.seenSeparator.label")).toHaveTextContent("Already seen");
+    expect(separator.previousElementSibling?.getAttribute("data-scroll-anchor")).toBe("p3");
+    expect(tailIds()).toEqual(["p1"]);
+    // The separator carries no control.
+    expect(separator.querySelector("button, a, [role='button']")).toBeNull();
+  });
+
+  // PR-80's named device test: the reader scrolls and reads the cards under
+  // the separator, and NEVER anything is recorded — only the card above the
+  // line goes out when the list leaves.
+  it("reading_the_tail_records_nothing", async () => {
+    await seenRecord.add("acct-1", ["p1"]);
+    server.use(
+      ...rankedFeed([post("p1", "First"), post("p2", "Second")]),
+      meHandler(),
+      borrowedViewHandler(null),
+      markSeenOk,
+    );
+    marked.length = 0;
+    const { unmount } = renderWithProviders(<FeedView />, { store: signedInStore() });
+    await screen.findByTestId("feed.seenSeparator");
+    expect(tailIds()).toEqual(["p1"]);
+    // The tail card never names itself to the seen tracker.
+    const tailCard = document.querySelector('[data-scroll-anchor="p1"]') as HTMLElement;
+    expect(tailCard.hasAttribute("data-seen-id")).toBe(false);
+    const unseen = document.querySelector('[data-seen-id="p2"]') as HTMLElement;
+    await whenObserved(unseen);
+    act(() => intersectEach([{ target: unseen, ratio: 1 }]));
+    unmount();
+    await waitFor(() => expect(marked).toEqual([["p2"]]));
+  });
+
+  // PR-80's named device test: nothing the filter admits is unseen, and it
+  // admits seen rows — the feed opens at the separator, the seen cards under
+  // it, and the empty state never stands.
+  it("nothing_unseen_opens_the_feed_at_the_separator", async () => {
+    await seenRecord.add("acct-1", ["p1", "p2"]);
+    server.use(
+      ...rankedFeed([post("p1", "First"), post("p2", "Second")]),
+      meHandler(),
+      borrowedViewHandler(null),
+    );
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+    await screen.findByTestId("feed.seenSeparator");
+    expect(tailIds()).toEqual(["p1", "p2"]);
+    expect(cardIds()).toEqual(["p1", "p2"]);
+    expect(screen.queryByTestId("feed-empty")).not.toBeInTheDocument();
+  });
+
+  // Toggle on: one list, the seen cards ranked in among the rest, no separator.
+  it("show_seen_on_stands_one_list_with_no_separator", async () => {
+    await seenRecord.add("acct-1", ["p1"]);
+    server.use(
+      ...rankedFeed([post("p1", "First"), post("p2", "Second")]),
+      meHandler(),
+      borrowedViewHandler(null),
+    );
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+    await screen.findByTestId("feed.seenSeparator");
+    act(() => announceFeedDone({ ...FEED_FILTER_DEFAULT, seen: true }));
+    await waitFor(() => expect(cardIds()).toEqual(["p1", "p2"]));
+    expect(screen.queryByTestId("feed.seenSeparator")).not.toBeInTheDocument();
   });
 });
 
