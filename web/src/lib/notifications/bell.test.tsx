@@ -132,21 +132,27 @@ describe("the marks", () => {
         });
       }),
     );
-    let send: (() => Promise<void>) | null = null;
-    let flush: (() => Promise<void>) | null = null;
     function Marker() {
       const client = useApolloClient();
       const guard = useAuthGuard();
-      send = () => markSeenThrough(client, guard, "2026-10-14T10:00:00Z");
-      flush = () => flushMarks(client, guard);
-      return null;
+      return (
+        <>
+          <button
+            type="button"
+            data-testid="send"
+            onClick={() => void markSeenThrough(client, guard, "2026-10-14T10:00:00Z")}
+          />
+          <button type="button" data-testid="flush" onClick={() => void flushMarks(client, guard)} />
+        </>
+      );
     }
     renderWithProviders(<Marker />, { store: signedIn() });
-    await send!();
+    fireEvent.click(screen.getByTestId("send"));
+    await waitFor(() => expect(calls).toBe(1));
     // Not gone through: still owed, and nothing on screen says so.
-    expect(pendingMarks().through).toBe("2026-10-14T10:00:00Z");
-    await flush!();
-    expect(pendingMarks().through).toBe(null);
+    await waitFor(() => expect(pendingMarks().through).toBe("2026-10-14T10:00:00Z"));
+    fireEvent.click(screen.getByTestId("flush"));
+    await waitFor(() => expect(pendingMarks().through).toBe(null));
     expect(calls).toBe(2);
   });
 });
