@@ -69,6 +69,8 @@ data class PostEditUiState(
      * back (EditComposeUnchanged.md:3).
      */
     val recordStaged: Boolean = false,
+    /** `Discard the changes?` stands over the edit: leaving was asked with an act in the batch. */
+    val confirmingDiscard: Boolean = false,
     val sensitiveOpen: Boolean = false,
     val actsOpen: Boolean = false,
     val pickedOpen: Boolean = false,
@@ -106,6 +108,13 @@ data class PostEditUiState(
 
     /** What one signature commits, in records — the guard reads this and nothing else. */
     val signedActionCount: Int get() = actRows.actCount()
+
+    /**
+     * Whether leaving loses anything: the same acts-batch signal the sign
+     * guard reads. The edit keeps no draft, so a batch holding an act is
+     * asked before it goes, and an empty one leaves at once (DiscardConfirm.md).
+     */
+    val holdsAnAct: Boolean get() = signedActionCount > 0
 
     val titleTooLong: Boolean get() = isTitleTooLong(title)
 
@@ -220,6 +229,21 @@ class PostEditViewModel @Inject constructor(
     fun onBodyChange(v: String) = _state.update { it.copy(body = v, recordStaged = true) }
 
     fun onSavedConsumed() = _state.update { it.copy(saved = false) }
+
+    /**
+     * The back arrow or the X. True when the caller may leave now: the batch
+     * is empty, and nothing is kept or discarded. A batch holding an act
+     * raises `Discard the changes?` instead, and nothing is discarded
+     * unasked (EditCompose.md, DiscardConfirm.md).
+     */
+    fun onLeaveRequested(): Boolean {
+        if (!_state.value.holdsAnAct) return true
+        _state.update { it.copy(confirmingDiscard = true) }
+        return false
+    }
+
+    /** `Keep writing` — the dialog closes onto the edit as it was. */
+    fun onKeepWriting() = _state.update { it.copy(confirmingDiscard = false) }
 
     fun onOpenSensitive() = _state.update { it.copy(sensitiveOpen = true) }
 
