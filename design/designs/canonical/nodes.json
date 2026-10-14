@@ -3848,7 +3848,8 @@
           "6",
           "7",
           "8",
-          "9"
+          "9",
+          "10"
         ],
         "notifications.list.notification.disc": [
           "1",
@@ -3859,7 +3860,8 @@
           "6",
           "7",
           "8",
-          "9"
+          "9",
+          "10"
         ],
         "notifications.list.notification.dot": [
           "1",
@@ -3881,7 +3883,8 @@
           "6",
           "7",
           "8",
-          "9"
+          "9",
+          "10"
         ],
         "notifications.list.notification.trailing": [
           "1",
@@ -3892,7 +3895,8 @@
           "6",
           "7",
           "8",
-          "9"
+          "9",
+          "10"
         ]
       }
     },
