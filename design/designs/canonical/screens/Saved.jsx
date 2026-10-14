@@ -58,7 +58,7 @@
    card; the list holding them is the feed's, unnamed there and here. The
    field is `searchField`. */
 export const NODE = "saved";
-export const FRAME = { width: 390, height: 1560 };
+export const FRAME = { width: 390, height: 1370 };
 
 export function Screen() {
   return (

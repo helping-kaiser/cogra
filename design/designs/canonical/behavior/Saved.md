@@ -56,7 +56,7 @@ ALWAYS a thing removed after it was saved keeps its place in Saved and wears its
 
 WHEN tap a removed thing's card -> the removed page opens AND its back arrow reads Back to Saved
 
-ALWAYS a deleted account's saved.profileCard is the redacted profile card, reading Deleted account by the reserved disc, with no handle and no bio
+ALWAYS a deleted account's saved.profileCard stands redacted, reading Deleted account by the reserved disc, with no handle and no bio
 
 ALWAYS sensitive content in Saved keeps its veil, as on the feed
 

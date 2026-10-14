@@ -5803,7 +5803,13 @@
     },
     "Saved": {
       "prefix": "saved",
-      "keys": {},
+      "keys": {
+        "saved.card": "the author's handle, without @ (PostCard)",
+        "saved.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "saved.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "saved.commentCard": "the comment author's handle, without @ (CommentCard)",
+        "saved.profileCard": "the person's handle, without @ (the profile feed card)"
+      },
       "nodes": {
         "saved.bottomBar": [],
         "saved.bottomBar.composeSlot": [],
@@ -5811,9 +5817,150 @@
         "saved.bottomBar.profileSlot": [],
         "saved.bottomBar.searchSlot": [],
         "saved.bottomBar.walletSlot": [],
+        "saved.card": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.actionRow": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.actionRow.comments": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.actionRow.comments.count": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.actionRow.score": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.actionRow.score.value": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.actionRow.share": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.actionRow.stance": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.actionRow.stance.anchor": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.actionRow.stance.anchor.exact": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.actionRow.stance.anchor.face": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.authorChip": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.authorChip.avatar": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.authorChip.handle": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.authorChip.name": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.body": [
+          "tobias"
+        ],
+        "saved.card.description": [
+          "ada"
+        ],
+        "saved.card.media": [
+          "ada"
+        ],
+        "saved.card.media.frame": [
+          "ada/1"
+        ],
+        "saved.card.menu": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.opener": [
+          "ada"
+        ],
+        "saved.card.tagsLine": [
+          "ada"
+        ],
+        "saved.card.tagsLine.counts": [
+          "ada"
+        ],
+        "saved.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "saved.card.timestamp": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.title": [
+          "ada"
+        ],
+        "saved.commentCard": [
+          "tobias"
+        ],
         "saved.header": [],
         "saved.header.back": [],
-        "saved.header.title": []
+        "saved.header.title": [],
+        "saved.profileCard": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow.score": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow.score.value": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow.share": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow.stance": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow.stance.anchor": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow.stance.anchor.face": [
+          "mira"
+        ],
+        "saved.profileCard.avatar": [
+          "mira"
+        ],
+        "saved.profileCard.bio": [
+          "mira"
+        ],
+        "saved.profileCard.handle": [
+          "mira"
+        ],
+        "saved.profileCard.menu": [
+          "mira"
+        ],
+        "saved.profileCard.name": [
+          "mira"
+        ],
+        "saved.searchField": [],
+        "saved.searchField.glyph": [],
+        "saved.searchField.input": []
       }
     },
     "SavedEmpty": {
@@ -5833,7 +5980,7 @@
         "saved.header.title": []
       }
     },
-    "SavedUndo": {
+    "SavedNone": {
       "prefix": "saved",
       "keys": {},
       "nodes": {
@@ -5843,9 +5990,133 @@
         "saved.bottomBar.profileSlot": [],
         "saved.bottomBar.searchSlot": [],
         "saved.bottomBar.walletSlot": [],
+        "saved.empty": [],
+        "saved.empty.action": [],
+        "saved.empty.title": [],
         "saved.header": [],
         "saved.header.back": [],
         "saved.header.title": [],
+        "saved.searchField": [],
+        "saved.searchField.glyph": [],
+        "saved.searchField.input": []
+      }
+    },
+    "SavedUndo": {
+      "prefix": "saved",
+      "keys": {
+        "saved.card": "the author's handle, without @ (PostCard)",
+        "saved.commentCard": "the comment author's handle, without @ (CommentCard)",
+        "saved.profileCard": "the person's handle, without @ (the profile feed card)"
+      },
+      "nodes": {
+        "saved.bottomBar": [],
+        "saved.bottomBar.composeSlot": [],
+        "saved.bottomBar.feedSlot": [],
+        "saved.bottomBar.profileSlot": [],
+        "saved.bottomBar.searchSlot": [],
+        "saved.bottomBar.walletSlot": [],
+        "saved.card": [
+          "tobias"
+        ],
+        "saved.card.actionRow": [
+          "tobias"
+        ],
+        "saved.card.actionRow.comments": [
+          "tobias"
+        ],
+        "saved.card.actionRow.comments.count": [
+          "tobias"
+        ],
+        "saved.card.actionRow.score": [
+          "tobias"
+        ],
+        "saved.card.actionRow.score.value": [
+          "tobias"
+        ],
+        "saved.card.actionRow.share": [
+          "tobias"
+        ],
+        "saved.card.actionRow.stance": [
+          "tobias"
+        ],
+        "saved.card.actionRow.stance.anchor": [
+          "tobias"
+        ],
+        "saved.card.actionRow.stance.anchor.exact": [
+          "tobias"
+        ],
+        "saved.card.actionRow.stance.anchor.face": [
+          "tobias"
+        ],
+        "saved.card.authorChip": [
+          "tobias"
+        ],
+        "saved.card.authorChip.avatar": [
+          "tobias"
+        ],
+        "saved.card.authorChip.handle": [
+          "tobias"
+        ],
+        "saved.card.authorChip.name": [
+          "tobias"
+        ],
+        "saved.card.body": [
+          "tobias"
+        ],
+        "saved.card.menu": [
+          "tobias"
+        ],
+        "saved.card.timestamp": [
+          "tobias"
+        ],
+        "saved.commentCard": [
+          "tobias"
+        ],
+        "saved.header": [],
+        "saved.header.back": [],
+        "saved.header.title": [],
+        "saved.profileCard": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow.score": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow.score.value": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow.share": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow.stance": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow.stance.anchor": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow.stance.anchor.face": [
+          "mira"
+        ],
+        "saved.profileCard.avatar": [
+          "mira"
+        ],
+        "saved.profileCard.bio": [
+          "mira"
+        ],
+        "saved.profileCard.handle": [
+          "mira"
+        ],
+        "saved.profileCard.menu": [
+          "mira"
+        ],
+        "saved.profileCard.name": [
+          "mira"
+        ],
+        "saved.searchField": [],
+        "saved.searchField.glyph": [],
+        "saved.searchField.input": [],
         "saved.snackbar": [],
         "saved.snackbar.action": [],
         "saved.snackbar.message": []

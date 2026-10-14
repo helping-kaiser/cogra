@@ -1118,15 +1118,11 @@ spelling — one `License terms` everywhere, never the British spelling:
   will do (§3), which is why the kept state is a verb and never the
   word *Saved* sitting there as a status — and nothing outside the menu
   shows it, so this row is the only place a reader learns whether a
-  thing is kept. On the Saved list's own icon-only control, where the
-  filled bookmark carries the act and no word is drawn at all, the
-  accessible name is `Unsave` and the row's title — `Unsave The long
-  way home`, `Unsave Mira Voss` (the K13 round): a list of bare
-  `Unsave`s gives a listener the verb every time and the object never,
-  the defect the tag chip's × and the skip link were already ruled out
-  of. The glyph is a glyph, and the reader's word stays *save* — never
-  *bookmark*, which is a filing word for a thing readers think of as
-  keeping.
+  thing is kept. On `Saved` every card is kept, so every card's menu
+  opens on `Unsave`: the card's own Save is the list's unsave (the
+  Saved redesign, jakob 2026-10-14). The reader's word stays *save* —
+  never *bookmark*, which is a filing word for a thing readers think
+  of as keeping.
 
 ## The license block
 
@@ -2369,11 +2365,11 @@ Blessed with the close-out round.
 
 **Unsaving's snackbar.** `Removed from Saved.` with `Undo`, the second
 snackbar in the product to carry an action. It names the LIST and not
-the row: the thing that went is the one the reader just pressed, and
+the card: the thing that went is the one the reader just pressed, and
 the fact they may want reversed is that it is no longer kept. The pair
 is deliberately lopsided against saving's bare `Saved.` — saving costs
 a reader nothing to repeat, and a mis-pressed unsave costs them finding
-the thing again. The same line rides the empty list when the row that
+the thing again. The same line rides the empty list when the card that
 went was the last one, and answers `Unsave` on every menu, the sheet
 closing (jakob 2026-10-07).
 
@@ -2716,9 +2712,9 @@ relates` (spoken only; *new 2026-10-05, blessed (jakob 2026-10-05)*).
 
 ## Saved, History and hiding
 
-Drawn on `ProfileOwnMenu`, `Saved`, `SavedEmpty`, `History`,
-`HistoryEmpty`, `HistoryFilter`, `SettingsHidden`, the three content
-menus and the settings page.
+Drawn on `ProfileOwnMenu`, `Saved`, `SavedEmpty`, `SavedUndo`,
+`SavedNone`, `History`, `HistoryEmpty`, `HistoryFilter`,
+`SettingsHidden`, the three content menus and the settings page.
 
 **The reader's word is save** (jakob's ruling). The surface it fills is
 `Saved`, and the row in your own profile's ⋮ is that same word, so the
@@ -2764,6 +2760,16 @@ nothing seen read `Nothing you've seen is of that kind.`; and both offer
 `Show everything`, which clears the query and the kinds at once (*new
 2026-10-05, blessed (jakob 2026-10-05)*: the two first sentences and
 `Show everything`).
+
+**Saved is a feed too, and searched the same way** (the Saved
+redesign, jakob 2026-10-14). Its field reads and is named `Search what
+you saved` — the list it searches, in the reader's own act, since
+*your saved* is not a phrase — and it matches by Explore's one rule. It
+has no kinds trigger. A query nothing saved carries reads `Nothing
+you've saved carries that name.` before the same blessed second
+sentence, over `Show everything`, which clears the query (*new
+2026-10-14, drafts awaiting jakob's word*: `Search what you saved`,
+`Nothing you've saved carries that name.`).
 
 **Two empty states, and each says why the list is empty.**
 `Nothing saved yet. A post, a comment or a person can be saved from its
