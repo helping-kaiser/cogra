@@ -14,6 +14,7 @@ import com.cogra.crypto.Family
 import com.cogra.crypto.HandshakeException
 import com.cogra.crypto.PreSignedProposal
 import com.cogra.crypto.WireException
+import com.cogra.crypto.decodeProposal
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
@@ -322,3 +323,29 @@ private fun unsupported(id: String, what: String): WriteResult = WriteResult.Ref
 
 private fun preCommitmentSignature(pre: PreSignedProposal): String =
     java.util.Base64.getEncoder().encodeToString(com.cogra.crypto.encodePreCommitmentOf(pre))
+
+/**
+ * Why the batch is not what [intent] says it must be, or null when it is.
+ * A proposal that does not parse is a refusal too — the device cannot check
+ * what it cannot read. [author] is this device's address.
+ */
+internal fun intentRefusal(author: String, proposals: List<ByteArray>, intent: Intent): String? = try {
+    val batch = proposals.map { decodeProposal(it) }
+    when (intent) {
+        RegistrationExemption ->
+            if (batch.all { it.body.family == Family.REGISTRATION }) {
+                null
+            } else {
+                "only a Registration is exempt from the intent check"
+            }
+        is Expectation -> {
+            checkIntent(intent, author, batch)
+            null
+        }
+        TransportOnly -> null
+    }
+} catch (e: IntentMismatchException) {
+    e.message ?: "the batch is not the gesture ordered"
+} catch (e: WireException) {
+    e.message ?: "malformed proposal"
+}
