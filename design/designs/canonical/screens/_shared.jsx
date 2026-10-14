@@ -707,7 +707,8 @@ function RemoveDialog({ kind, overSheet = false }) {
    takes the next rung. Over the post detail there is nothing to stack on.
 
    `node` names the sheet where a registered board places it (the feed's,
-   FC-G10): the surface takes it, and the terms block inside takes `terms`. */
+   FC-G10; the detail's and the thread's, round 11): the surface takes it,
+   the terms block inside takes `terms`, and the block names its axis rows. */
 function LicenseSheet({ license, stacked = false, node }) {
   return (
     <BottomSheet open stacked={stacked} ariaLabel="License terms" maxHeight="88%" node={node}>
