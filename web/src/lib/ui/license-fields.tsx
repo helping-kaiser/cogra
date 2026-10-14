@@ -6,8 +6,6 @@
 // wire, but a degree CoGra has published no reading for is a term no
 // author could mean and no reader could check.
 
-import React from "react";
-
 import {
   ATTRIBUTION_TIERS,
   PROVENANCE_TIERS,
@@ -16,7 +14,7 @@ import {
   type License,
   type LicenseTier,
 } from "@/lib/license";
-import { testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 
 function AxisChoice({
   legend,
@@ -93,6 +91,14 @@ export function LicenseChooser({
 }
 
 /**
+ * The key a terms row is registered under (`...terms.axis`): the axis's name
+ * as the terms print it, lowercased, each run of other characters one `-`.
+ */
+function axisKey(axis: string): string {
+  return axis.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+}
+
+/**
  * What a landed node's qualifiers oblige, on the read surface
  * (`LicenseChooser.jsx:110-176`).
  *
@@ -114,7 +120,10 @@ export function LicenseTerms({
 }: {
   license: License;
   testId: string;
-  /** The registered inset (`feed.licenseSheet.terms`); it then names the block instead of `testId`. */
+  /**
+   * The registered inset (`feed.licenseSheet.terms`, `postDetail.licenseSheet.terms`);
+   * it then names the block instead of `testId`, and each row is its keyed `axis`.
+   */
   node?: DataNode;
 }) {
   return (
@@ -135,12 +144,22 @@ export function LicenseTerms({
         )}
       </div>
       <div className="grid grid-cols-[116px_1fr] gap-x-2 gap-y-1">
-        {licenseReadings(license).map((row) => (
-          <React.Fragment key={row.axis}>
-            <span className="text-body-small text-on-surface-variant">{row.axis}</span>
-            <span className="text-body-small">{row.reading}</span>
-          </React.Fragment>
-        ))}
+        {licenseReadings(license).map((row) => {
+          const axis = instance(node, "axis", axisKey(row.axis));
+          return (
+            <div key={row.axis} className="contents" {...testAttributes(axis)}>
+              <span
+                className="text-body-small text-on-surface-variant"
+                {...testAttributes(part(axis, "label"))}
+              >
+                {row.axis}
+              </span>
+              <span className="text-body-small" {...testAttributes(part(axis, "value"))}>
+                {row.reading}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

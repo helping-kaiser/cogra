@@ -458,6 +458,7 @@ export function PostView({
         nodes={{
           sheet: { path: "postDetail.menuSheet" },
           row: (row) => ({ path: `postDetail.menuSheet.${row}` }),
+          licenseSheet: { path: "postDetail.licenseSheet" },
           reportSheet: { path: "postDetail.reportSheet" },
         }}
         testId="post-menu"
