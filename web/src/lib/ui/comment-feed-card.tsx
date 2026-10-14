@@ -393,7 +393,9 @@ export function CommentFeedCard({
             <span className="flex min-w-0 flex-col">
               <span
                 data-testid={`${testId}-head-title`}
-                className={`truncate text-label-large ${head.removed ? "font-normal text-on-surface-variant" : ""}`}
+                // The removal line in the system's voice: the title's size at
+                // the body's weight — the body-medium role — in the quiet ink.
+                className={`truncate ${head.removed ? "text-body-medium text-on-surface-variant" : "text-label-large"}`}
               >
                 {head.title}
               </span>
