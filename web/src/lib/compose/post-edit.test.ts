@@ -94,6 +94,20 @@ describe("the post edit", () => {
     });
   });
 
+  // EditPicked.md: NEVER the signed edit carries a description — not even one the
+  // author re-typed earlier in this same edit, before the last picture left.
+  it("a_description_staged_before_the_flip_is_dropped_with_the_last_picture", () => {
+    const typed = run(media(), { type: "description", description: "Typed in this edit." });
+    expect(postEditInput(typed).description).toBe("Typed in this edit.");
+    const words = run(typed, { type: "removePicture", id: "m1" }, { type: "removePicture", id: "m2" });
+    expect(words.description).toBe("");
+    expect(postEditInput({ ...words, words: "Now words." })).toMatchObject({
+      description: null,
+      content: "Now words.",
+      attachments: [],
+    });
+  });
+
   it("the words path sends no description, the media path its own", () => {
     expect(postEditInput(base({ description: "left over" })).description).toBeNull();
     expect(postEditInput(media()).description).toBe("Rubbings against the salt crust.");
