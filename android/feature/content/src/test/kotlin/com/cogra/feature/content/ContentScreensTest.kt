@@ -631,7 +631,7 @@ class ContentScreensTest {
         compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
         compose.onNodeWithTag("feed.menuSheet.license").performClick()
         compose.onNodeWithTag("feed.licenseSheet").assertExists()
-        compose.onNodeWithTag("feed.licenseSheet.dragHandle").assertExists()
+        compose.onNodeWithTag("feed.licenseSheet.dragHandle", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag("feed.licenseSheet.terms").assertExists()
     }
 
