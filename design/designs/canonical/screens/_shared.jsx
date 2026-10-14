@@ -854,8 +854,14 @@ function SkyField({ height = 180 }) {
 }
 
 /* The seam — where the ranked results end and the newest tail begins. Named by
-   its placer (seam 062/063), with its words as `label`. */
-function Seam({ node }) {
+   its placer (seam 062/063), with its words as `label`.
+
+   THE FEED'S SEEN TAIL WEARS THE SAME SEAM (jakob 2026-10-14, round 11): the
+   hairline with its centred quiet label is the one list-splitting line the
+   system draws, so the feed's `Already seen` separator is this drawing with
+   its own words, never a second construction. `children` carries the words;
+   Explore's stay the default. */
+function Seam({ node, children = "Beyond your reach — newest first" }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 24px" }} data-node={node}>
       <span style={{ flex: 1, height: 1, background: "var(--border-hairline)" }} />
@@ -869,7 +875,7 @@ function Seam({ node }) {
         }}
         data-node={node && "label"}
       >
-        Beyond your reach — newest first
+        {children}
       </span>
       <span style={{ flex: 1, height: 1, background: "var(--border-hairline)" }} />
     </div>

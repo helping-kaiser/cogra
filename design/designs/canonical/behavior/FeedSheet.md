@@ -98,6 +98,8 @@ WHEN tap Done GIVEN the staged filter changes Kinds or the topic -> the sheet cl
 
 WHEN tap Done GIVEN every staged change is the device's own — the people row and its sign, the order, Show what you've already seen, the kinds of post, Sensitive, Removed or Still settling -> the sheet closes AND the feed re-derives on the device from what it already holds AND one polite status message says the trigger's new name AND focus returns to the trigger AND NEVER the feed re-queries AND NEVER the message draws anything
 
+ALWAYS Done carries the Already seen separator and the seen rows under it to the new filter by the same rule as the rows above it, re-derived on the device where every staged change is the device's own and re-queried where Kinds or the topic changed
+
 WHEN tap Done GIVEN the staged filter is the feed's own, nothing changed -> the sheet closes AND the feed is what it was AND focus returns to the trigger AND NEVER the feed re-queries
 
 WHEN tap the scrim -> the sheet closes AND the staged filter is dropped AND the feed is what it was AND NEVER the feed re-queries
