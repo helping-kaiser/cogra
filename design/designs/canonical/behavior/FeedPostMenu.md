@@ -18,8 +18,8 @@ WHEN tap feed.menuSheet.cite -> the post wizard opens fresh at its first stage A
 
 WHEN tap feed.menuSheet.hide -> the sheet closes AND that person's rows leave the feed AND the rows behind them move up AND feed.snackbar reads @ada is hidden — their posts stay out of your feed. with Undo AND NEVER a confirm step appears
 
-WHEN tap feed.menuSheet.license -> the menu closes AND the post's terms come up in a sheet over the feed
+WHEN tap feed.menuSheet.license -> the menu closes AND the post's terms come up in feed.licenseSheet over the feed
 
-WHEN tap feed.menuSheet.report -> the menu closes AND the report confirm sheet rises over the feed, its title reading Report this post? AND NEVER anything is sent yet
+WHEN tap feed.menuSheet.report -> the menu closes AND feed.reportSheet rises over the feed, feed.reportSheet.title reading Report this post? AND NEVER anything is sent yet
 
 WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND nothing changes

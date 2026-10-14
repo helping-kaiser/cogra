@@ -9616,6 +9616,14 @@ each).
   The plain feed's ⋮ edge now lands on it; the other feed-flavored
   boards' ⋮ edges still name the detail's master and wait for a ruled
   sweep.
+- **The feed-hosted license sheet and report confirm** (FC-G10, seams
+  187/190). `FeedPostLicense` and `FeedReportConfirm`: the feed as
+  `FeedPostMenu` draws it, with `PostLicense`'s sheet and
+  `ReportConfirm`'s sheet risen where the menu stood — the same sheets,
+  read from one place each. The drawn states register `feed.licenseSheet`
+  (with its `terms`) and `feed.reportSheet.*`, mirroring
+  `postDetail.reportSheet`'s; the feed menu's License terms and Report
+  edges now land on them.
 - **The aftermath extension** (item 83). The hide's snackbar landing,
   drawn on the two surfaces #122 left: `HistoryHidden` — History's top
   viewport as it stood, every card in place (the open list is frozen; the

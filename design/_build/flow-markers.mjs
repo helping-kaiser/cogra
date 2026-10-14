@@ -599,6 +599,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 6, find: ">Report</button>", tag: "button" },
   ],
+  // The feed-hosted report confirm and license sheet (FC-G10): scanExempt
+  // like the detail's, numbered as ReportConfirm and PostLicense number them.
+  FeedReportConfirm: [
+    { n: 1, find: ">Report</button>", tag: "button" },
+    { n: 2, find: ">Cancel</button>", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  FeedPostLicense: [{ n: 1, find: 'class="cg-scrim-in"', tag: "div" }],
   // The report confirm (ruling 75): scanExempt like every menu board, so the
   // sheet's own pair and its scrim are all that carries numbers.
   ReportConfirm: [

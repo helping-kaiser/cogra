@@ -1253,6 +1253,24 @@
       "page": "feed"
     },
     {
+      "file": "FeedPostLicense.dc.html",
+      "title": "Feed · the license sheet",
+      "x": 9120,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "FeedReportConfirm.dc.html",
+      "title": "Feed · the report confirm",
+      "x": 9600,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "FeedWordsSensitive.dc.html",
       "title": "Feed · a words-only post, veiled",
       "x": 8160,
