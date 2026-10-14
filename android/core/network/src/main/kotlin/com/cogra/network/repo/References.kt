@@ -46,16 +46,16 @@ class ReferenceRepositoryImpl @Inject constructor(
     override suspend fun prepareReference(
         artifact: String,
         target: String,
-        relevance: Double?,
-        support: Double?,
+        relevance: Double,
+        support: Double,
     ): Outcome<List<PreparedWriteView>> = guard.run {
         client.mutation(
             PrepareReferenceMutation(
                 PrepareReferenceInput(
                     artifact = artifact,
                     target = target,
-                    relevance = Optional.presentIfNotNull(relevance),
-                    support = Optional.presentIfNotNull(support),
+                    relevance = relevance,
+                    support = support,
                 ),
             ),
         ).payloadOutcome({ it.prepareReference.userErrors.map { e -> e.userErrorFields } }) {

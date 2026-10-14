@@ -85,7 +85,7 @@ class ComposeWizardViewModelTest {
             attachments: List<AttachmentClaim>,
             sensitive: Boolean,
             sensitiveReason: String?,
-            pDirected: Double?,
+            pDirected: Double,
         ): Outcome<PreparedContentView> {
             calls += 1
             lastPDirected = pDirected

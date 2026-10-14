@@ -226,12 +226,13 @@ interface ContentRepository {
         sensitiveReason: String? = null,
         /**
          * Where the author stands on their own post — the genesis
-         * Publish's `pDirected`, set at the seal's stance pad
-         * (`ComposeSeal`). Null leaves the low-defaults policy value the
-         * contract applies (+0.1); `pInterest` is census-fixed at 1 for a
-         * Publish and so is not a parameter.
+         * Publish's `pDirected`, exactly as the seal's stance pad
+         * (`ComposeSeal`) shows it. Required: the contract never fills a
+         * stance in, so the pre-filled +0.1 is the UI's to state.
+         * `pInterest` is census-fixed at 1 for a Publish and so is not a
+         * parameter.
          */
-        pDirected: Double? = null,
+        pDirected: Double,
     ): Outcome<PreparedContentView>
 
     /**
@@ -294,13 +295,13 @@ interface ContentRepository {
          */
         attachments: List<AttachmentClaim> = emptyList(),
         /**
-         * Where the author stands on what they answer — the reply
-         * seal's own pad (`ReplyPad`). Null leaves the low-defaults
-         * policy value the contract applies (+0.1 each); a comment box
-         * that offers no pad passes nothing rather than re-stating it.
+         * Where the author stands on what they answer, exactly as the
+         * reply seal's own pad (`ReplyPad`) shows it. Required: the
+         * contract never fills a stance in, so the pre-filled +0.1 each
+         * is the UI's to state.
          */
-        pDirected: Double? = null,
-        pInterest: Double? = null,
+        pDirected: Double,
+        pInterest: Double,
         /**
          * The author's own sensitive mark, and the reason that rides the
          * veil with it — the reply seal's Mark row (`ReplySeal`), the
@@ -492,13 +493,14 @@ interface TopicRepository {
      * Stages one standalone Tag on existing content — the chip row's
      * add gesture and, at `pDirected = 0`, its remove gesture
      * (hashtag.md §4). Never reachable from the post/comment editor
-     * (post.md §3, D14).
+     * (post.md §3, D14). Both values are required, as the chip shows
+     * them: the contract never fills a stance in.
      */
     suspend fun prepareTag(
         target: String,
         name: String,
-        pDirected: Double? = null,
-        pInterest: Double? = null,
+        pDirected: Double,
+        pInterest: Double,
     ): Outcome<List<PreparedWriteView>>
 }
 
@@ -526,13 +528,15 @@ interface ReferenceRepository {
     /**
      * Stages one standalone citation on existing content — the edit
      * screen's add gesture. Citations are never edit fields: changing
-     * what a post cites is its own priced act (post.md §3).
+     * what a post cites is its own priced act (post.md §3). Both values
+     * are required, as the row shows them: the contract never fills a
+     * stance in.
      */
     suspend fun prepareReference(
         artifact: String,
         target: String,
-        relevance: Double? = null,
-        support: Double? = null,
+        relevance: Double,
+        support: Double,
     ): Outcome<List<PreparedWriteView>>
 
     /**

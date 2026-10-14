@@ -383,9 +383,9 @@ class PostEditViewModel @Inject constructor(
             } ?: return null
             writes += staged
         }
-        for (name in s.tagSection.removes) {
-            val staged = staged(topics.prepareTag(postId, name, pDirected = WITHDRAWN)) {
-                refuseTag(name, it)
+        for (row in s.tagSection.removes) {
+            val staged = staged(topics.prepareTag(postId, row.name, WITHDRAWN, row.confidence)) {
+                refuseTag(row.name, it)
             } ?: return null
             writes += staged
         }

@@ -54,16 +54,16 @@ class TopicRepositoryImpl @Inject constructor(
     override suspend fun prepareTag(
         target: String,
         name: String,
-        pDirected: Double?,
-        pInterest: Double?,
+        pDirected: Double,
+        pInterest: Double,
     ): Outcome<List<PreparedWriteView>> = guard.run {
         client.mutation(
             PrepareTagMutation(
                 PrepareTagInput(
                     target = target,
                     name = name,
-                    pDirected = Optional.presentIfNotNull(pDirected),
-                    pInterest = Optional.presentIfNotNull(pInterest),
+                    pDirected = pDirected,
+                    pInterest = pInterest,
                 ),
             ),
         ).payloadOutcome({ it.prepareTag.userErrors.map { e -> e.userErrorFields } }) {
