@@ -1,7 +1,8 @@
 // The device derive (ranked-feed-api §4.12; CD-1, CD-7, CD-8, CD-10, CD-11):
 // compose both woven lists from the held answer by the pod's indices, pick
-// the sheet's order, then cut. Cutting deletes and never re-orders, so the
-// cuts commute with each other and with the weave (§4.10 W-2).
+// the sheet's order, cut, then partition at the seen line (PR-80,
+// FeedSeenTail.md). Cutting deletes and partitioning splits; neither
+// re-orders, so both commute with each other and with the weave (§4.10 W-2).
 
 package com.cogra.domain.feed
 
@@ -38,7 +39,7 @@ data class FeedFilter(
     val people: PeopleScope = PeopleScope.EVERYONE,
     /** Kept while Everyone is on, for Your people's return (FeedSheet.md:27) — client state, never sent. */
     val peopleSign: PeopleSign = PeopleSign.EITHER,
-    /** Show what you've already seen: off cuts the device's seen record. */
+    /** Show what you've already seen: off stands the device's seen record under `feed.seenSeparator`. */
     val showSeen: Boolean = false,
     /** Also show: Still settling — on by default, final (PR-35). */
     val stillSettling: Boolean = true,
@@ -143,19 +144,45 @@ fun FeedFilter.admitsMark(mark: PeopleMark?): Boolean = when (people) {
     }
 }
 
-/** Whether the device-side cuts keep [row]: Still settling, seen, people (§4.12 step 3). */
-fun FeedFilter.keeps(row: FeedRow, seen: Set<String>): Boolean =
-    (stillSettling || !row.settling) &&
-        (showSeen || row.targetId !in seen) &&
-        admitsMark(row.mark)
+/** Whether the device-side cuts keep [row]: Still settling and people (§4.12 step 3). */
+fun FeedFilter.keeps(row: FeedRow): Boolean = (stillSettling || !row.settling) && admitsMark(row.mark)
 
 /**
- * THE DERIVE: the held answer composed in the filter's order, then cut by
- * the device-side axes against [seen] — the device's seen record as it
- * stands at THIS derive (CD-10). The result is frozen until the next
- * derive: rows seen while it is on screen stay (W-6).
+ * Whether [row] stands above `feed.seenSeparator`: always while Show what
+ * you've already seen is on, else only a row the record does not hold.
  */
-fun FeedRanking.derive(filter: FeedFilter, seen: Set<String>): List<FeedRow> =
-    woven(filter.order).filter { filter.keeps(it, seen) }
+fun FeedFilter.standsAbove(row: FeedRow, seen: Set<String>): Boolean = showSeen || row.targetId !in seen
+
+/**
+ * The derived list, partitioned at `feed.seenSeparator` (FeedSeenTail.md):
+ * [head] the rows above it, [tail] the rows the reader has already seen,
+ * under it. Each keeps the filter's own order. The separator stands only
+ * when [tail] does — Show what you've already seen on puts every row in
+ * [head], ranked in among the rest.
+ */
+data class DerivedFeed(val head: List<FeedRow>, val tail: List<FeedRow>) {
+    /** The whole list, top to bottom: what hydration windows over. */
+    val rows: List<FeedRow> = head + tail
+
+    /** The ids under the separator — the rows whose reading records nothing. */
+    val tailIds: Set<String> = tail.mapTo(HashSet()) { it.targetId }
+
+    companion object {
+        val EMPTY = DerivedFeed(emptyList(), emptyList())
+    }
+}
+
+/**
+ * THE DERIVE: the held answer composed in the filter's order, cut by the
+ * device-side axes, then partitioned against [seen] — the device's seen
+ * record as it stands at THIS derive (CD-10). Partitioning keeps the
+ * relative order on both sides, so each side commutes with the weave as
+ * the cuts do. The result is frozen until the next derive: rows seen
+ * while it is on screen stay where they stand (W-6; FeedSeenTail.md).
+ */
+fun FeedRanking.derive(filter: FeedFilter, seen: Set<String>): DerivedFeed {
+    val (head, tail) = woven(filter.order).filter { filter.keeps(it) }.partition { filter.standsAbove(it, seen) }
+    return DerivedFeed(head, tail)
+}
 
 private const val TAG = "FeedDerive"
