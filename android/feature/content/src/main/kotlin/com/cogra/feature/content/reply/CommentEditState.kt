@@ -3,11 +3,15 @@ package com.cogra.feature.content.reply
 import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.core.designsystem.v2.compose.PickedPicture
 import com.cogra.core.designsystem.v2.media.MediaItem
+import com.cogra.domain.LicenseChoice
 import com.cogra.domain.content.isCommentBodyTooLong
 import com.cogra.domain.content.isSensitiveReasonTooLong
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagSectionState
+import com.cogra.feature.content.edit.EditActRow
+import com.cogra.feature.content.edit.actCount
+import com.cogra.feature.content.edit.editActRows
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.PickedAsset
@@ -55,6 +59,17 @@ data class CommentEditState(
     /** The mark as the read found it — what a change is measured against. */
     val loadedSensitive: Boolean = false,
     val loadedSensitiveReason: String? = null,
+
+    /** The comment's license as it was signed — shown on the locked row. */
+    val license: LicenseChoice = LicenseChoice.PublicDomain,
+
+    /**
+     * Whether the edit record is in the batch. STICKY: set by the first
+     * change to a field the record carries — the words, the pictures, the
+     * mark — and never cleared by typing it back. The guard is the acts
+     * batch, never a byte comparison (EditComposeUnchanged.md:3).
+     */
+    val recordStaged: Boolean = false,
 
     /** The acts sheet (`CommentEditActs`), open. */
     val actsOpen: Boolean = false,
@@ -113,41 +128,27 @@ data class CommentEditState(
     val anySheetOpen: Boolean get() = actsOpen || sensitiveOpen || describingIndex != null
 
     /**
-     * Whether the author moved their own mark.
-     *
-     * The reason counts only where it is shown: on an unmarked comment
-     * it is not sent at all, so changing it under a switch that is off
-     * is not a change to anything.
+     * Whether the edit record itself is staged — [recordStaged], the sticky
+     * acts-batch reading, never a comparison of the fields against what the
+     * read loaded. A topic or citation change beside it is its own act.
      */
-    val markMoved: Boolean
-        get() = sensitive != loadedSensitive ||
-            (sensitive && sensitiveReason.orEmpty() != loadedSensitiveReason.orEmpty())
+    val contentChanged: Boolean get() = recordStaged
+
+    /** The batch, every kind a row counted in the records it signs (`CommentEditActs`). */
+    val actRows: List<EditActRow>
+        get() = editActRows(
+            recordStaged = recordStaged,
+            recordName = body.trim().take(RECORD_NAME_CHARS).ifEmpty { "Your comment" },
+            tags = tagSection,
+            references = referenceSection,
+        )
 
     /**
-     * Whether the edit record itself is worth staging.
-     *
-     * An edit opened and left alone stages nothing: the words, the
-     * gallery and the mark are the edit record's whole payload, so if
-     * none moved there is nothing for it to say, and a topic change
-     * beside it is its own act anyway (F10).
-     *
-     * The mark is a term of that same record, so moving it stages the
-     * edit the way the body does — a comment whose only change is the
-     * author's own mark still has to write one, or the mark never moves.
+     * What the edit signs, in records: the Edit record once staged, one act
+     * per tag change, and a citation's withdrawal at its served
+     * counter-records (`withdrawalCost`), never one per gesture.
      */
-    val contentChanged: Boolean
-        get() = body != loadedBody || uploadedIds != loadedAttachmentIds || markMoved
-
-    /**
-     * What the edit signs: the Edit record when the body or the gallery
-     * moved, plus one Tag act per topic change and one Reference act per
-     * citation change — those ride their own mutations, which is why
-     * they count beside the edit rather than inside it.
-     */
-    val signedActionCount: Int
-        get() = (if (contentChanged) 1 else 0) +
-            tagSection.adds.size + tagSection.removes.size +
-            referenceSection.adds.size + referenceSection.removes.size
+    val signedActionCount: Int get() = actRows.actCount()
 
     /** An edit that changes nothing signs nothing. */
     val canSign: Boolean
@@ -162,6 +163,9 @@ data class CommentEditState(
 
     companion object {
         const val MAX_PICTURES = ContentRepository.MAX_COMMENT_ATTACHMENTS
+
+        /** How much of the words the acts card's Edit row names. */
+        const val RECORD_NAME_CHARS = 60
     }
 }
 
@@ -172,15 +176,20 @@ fun CommentEditState.pickedPictures(): List<PickedPicture> = picked.pickedPictur
 // Transitions.
 // ---------------------------------------------------------------------
 
+// A picture taken, removed or described is a change to the record's own
+// payload, so each stages the record — and it stays staged (the guard is
+// the acts batch, EditComposeUnchanged.md:3).
+
 fun CommentEditState.addPick(uri: String, sourceRatio: Float? = null): CommentEditState {
     if (picked.any { it.uri == uri }) return this
     if (!canAddPicture) return this
-    return copy(picked = picked + PickedAsset(uri, sourceRatio))
+    return copy(picked = picked + PickedAsset(uri, sourceRatio), recordStaged = true)
 }
 
 fun CommentEditState.removePick(uri: String): CommentEditState = copy(
     picked = picked.filterNot { it.uri == uri },
     describingIndex = null,
+    recordStaged = true,
 )
 
 fun CommentEditState.withUpload(uri: String, upload: AssetUpload): CommentEditState =
@@ -190,7 +199,7 @@ fun CommentEditState.withSourceRatio(uri: String, ratio: Float): CommentEditStat
     copy(picked = picked.withSourceRatio(uri, ratio))
 
 fun CommentEditState.withAltText(uri: String, text: String): CommentEditState =
-    copy(picked = picked.withAltText(uri, text))
+    copy(picked = picked.withAltText(uri, text), recordStaged = true)
 
 /** Drops every drawer without leaving the screen. */
 fun CommentEditState.closedSheets(): CommentEditState =

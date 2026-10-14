@@ -1,6 +1,7 @@
 package com.cogra.feature.content.reply
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -10,6 +11,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.cogra.core.designsystem.v2.compose.HelpTopic
+import com.cogra.feature.content.ReferenceRow
+import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagRow
 import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.wizard.AssetUpload
@@ -203,7 +206,33 @@ class CommentEditTest {
         }
 
         compose.onNodeWithTag("comment_edit_acts_sheet").assertIsDisplayed()
-        compose.onNodeWithTag("comment_edit_acts_total").assertExists()
+        compose.onNodeWithText("2 things, signed together").assertExists()
+        compose.onNodeWithTag("comment_edit_acts_sheet_row_Edit").assertExists()
+        compose.onNodeWithTag("comment_edit_acts_sheet_row_TagsAdded").assertExists()
+        compose.onNodeWithTag("comment_edit_acts_sheet_together").assertExists()
+    }
+
+    /** EditComposeUnchanged — the family's guard: at zero the foot is no control. */
+    @Test
+    fun anEmptyBatchLeavesSignInertAndTheFooterNotAControl() {
+        compose.setContent { Edit(untouched()) }
+
+        compose.onNodeWithText("Nothing to sign yet").assertIsDisplayed()
+        compose.onNodeWithTag("comment_edit_acts_footer").assertHasNoClickAction()
+        compose.onNodeWithTag("comment_edit_sign").assertIsDisplayed().assertIsNotEnabled()
+    }
+
+    /** A tag the comment carried, taken off, reads back under its block with Undo. */
+    @Test
+    fun aWithdrawnTagReadsBackWithUndo() {
+        val loaded = TagRow("glovebox")
+        compose.setContent {
+            Edit(untouched().copy(tagSection = TagSectionState(tags = emptyList(), loaded = listOf(loaded))))
+        }
+
+        compose.onNodeWithTag("comment_edit_withdrawn_tag_glovebox").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Withdrawn: #glovebox").assertExists()
+        compose.onNodeWithText("You're signing 1 thing").assertExists()
     }
 
     /** `CommentEdit` 12. */
@@ -252,6 +281,31 @@ class CommentEditTest {
     @Test
     fun changedWordsAreOneAct() {
         assertThat(edited().signedActionCount).isEqualTo(1)
+    }
+
+    /**
+     * THE GUARD IS THE ACTS BATCH, NOT A BYTE COMPARISON
+     * (EditComposeUnchanged.md:3): words typed and taken back keep the
+     * record staged, and the edit still signs — a priced no-op.
+     */
+    @Test
+    fun aTypedThenRevertedEditStillSigns() {
+        val reverted = untouched().copy(recordStaged = true)
+
+        assertThat(reverted.body).isEqualTo(ORIGINAL)
+        assertThat(reverted.signedActionCount).isEqualTo(1)
+        assertThat(reverted.canSign).isTrue()
+    }
+
+    /** A citation's withdrawal counts its served counter-records, not one per gesture. */
+    @Test
+    fun aCitationWithdrawalCountsItsCounterRecords() {
+        val cited = ReferenceRow("u-juno", target = null, withdrawalCost = 2)
+        val state = untouched().copy(
+            referenceSection = ReferenceSectionState(references = emptyList(), loaded = listOf(cited)),
+        )
+
+        assertThat(state.signedActionCount).isEqualTo(2)
     }
 
     /** The board's own example: an edit plus one topic is two actions. */
@@ -368,7 +422,7 @@ class CommentEditTest {
         loading = false,
     )
 
-    private fun edited() = untouched().copy(body = "$ORIGINAL Almost.")
+    private fun edited() = untouched().copy(body = "$ORIGINAL Almost.", recordStaged = true)
 
     private fun landed(uri: String) =
         PickedAsset(uri, sourceRatio = 0.8f, upload = AssetUpload.Done(MEDIA_A))

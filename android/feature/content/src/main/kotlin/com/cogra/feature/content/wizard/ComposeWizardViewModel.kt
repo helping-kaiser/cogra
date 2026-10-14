@@ -50,10 +50,9 @@ import kotlinx.coroutines.launch
  * boards): body-first pick, crop, details, and a seal that names every
  * act before a single one is signed.
  *
- * It replaces the old composer for **creation**. Editing still runs the
- * shipped `ComposePostScreen`: an edit's batching is its own ruled bite
- * (D19's split-out), and the wizard's body step has no meaning for a
- * post whose body already exists.
+ * It is the surface for **creation**. Editing runs the post edit
+ * (`edit/PostEditScreen.kt`, one screen and one batch): the wizard's
+ * body step has no meaning for a post whose body already exists.
  *
  * Three things drive the shape of this class:
  *
