@@ -33,6 +33,7 @@ within a phase, order is flexible.
 | 5. When a community wants its own pot | 1 | **Q55** | Community pool splitting — how a community leaves the global admission fund, where the `admission_fund` carve routes once pools multiply, and who governs each pool. One network splitting, not federation (Q15). |
 | 6. If Layer 1 cannot land a batch whole | 1 | **Q57** | Batch atomicity — how the seals' land-together guarantee holds if Layer 1 never backs it, without breaking the mirror. Deferred: the product builds to the guarantee. |
 | 7. At the L1 swap | 1 | **Q58** | The write rule's second gate on the surface — whether a W2a stamp-wall refusal needs its own reading once real stamps exist. On the stand-in W2a cannot fire, so one `WRITE_RULE_FAILED` reads the solvency words. Deferred to the swap. |
+| 8. When everyone can tag anything | 1 | **Q59** | Semi-passable Types — whether a path may cross a Type along tag edges whose author the viewer reaches, at viewer-to-tagger strength. The sinks invariant stands until open tagging makes a topic's crowd worth routing through; stored so the option is not lost. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -627,3 +628,49 @@ which the real substrate makes possible.
 ### Related
 
 Q56 (the other swap-time seam question).
+
+## Q59 — Semi-passable Types: topic edges that route
+
+**Where it shows up:**
+[feed-ranking.md §4](primitive/feed-ranking.md#4-the-path-set)
+("Types are sinks"; the topic T-leg's two channels)
+**Status:** open (deferred — a stored option for the era when everyone
+can tag anything; the sinks invariant stands until then)
+
+### Context
+
+Types are sinks: every path reaching a Type ends there, so a Type
+ranks as a target — a topic page — and never transits. The stop is
+CoGra's declared traversal policy, not a Layer 1 census fact. The
+original gives a Type outgoing legs (Tag/T to a Type, Review/T to a
+Comment, Reference/T to any passive node) and makes it a weak
+router at the Marginal tier, never a sink; hard sinks are CoGra's
+own overlay ([layer1-interface.md §8.7](primitive/layer1-interface.md)).
+
+The admission-level sibling of the option below already exists:
+third-party tags are read through their author, under the same two
+channels as citations ([edges.md §3](primitive/edges.md#3-hyper-edge-families-cogra-authors),
+the Tag row). Today the only thing that crosses to a Type is the
+tagged content's own T-leg, and it lands and stops.
+
+### The question
+
+When tagging is open to everyone and a topic's crowd matters, does a
+path get to cross a Type?
+
+- **Semi-passable Types.** A path may cross a Type only along tag
+  edges whose **author** the viewer reaches, at the viewer-to-tagger
+  strength. A friend's tag sorts the feed through the topic; a
+  stranger's tag routes nothing. Bot protection falls out of graph
+  distance, with no extra rule.
+- **Keep the sinks.** Types stay terminal. Topic-scoped browsing stays
+  a named feed (§10), with Affinity as the follow gesture.
+
+The sinks invariant is the decision in force; this entry stores the
+alternative for the era when it is worth the trade, so the reasoning
+is not lost.
+
+### Related
+
+Q34 (the current-topics fold, resolved — which Tag records a topic
+surfaces).

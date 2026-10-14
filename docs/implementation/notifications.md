@@ -121,12 +121,14 @@ no account has nothing that can be addressed and no list.
   public read path, which means a redacted subject shows its
   redaction marker like anywhere else
   ([layers.md §5](../primitive/layers.md#5-deletion-policy)).
-- **A revision is an act; a withdrawal is not.** An opinion on the
-  viewer's profile or a citation of their content re-signed with a
-  new pair reports again — someone who wants to know when a stance
+- **A revision is an act, and so is a withdrawal.** An opinion on
+  the viewer's profile or a citation of their content re-signed with
+  a new pair reports again — someone who wants to know when a stance
   toward them is created wants to know when it changes. A record
-  that nets its author's bundle back to `(0,0)` is addressed to no
-  one and reports nothing.
+  that nets its author's bundle back to `(0,0)` reports too: it is
+  addressed at the very connection it walks back. The scope is the
+  same as for creation and revision — stances toward the viewer and
+  their content, no wider.
 - **A withdrawn gesture leaves its notification standing.** A
   stance netted back to `(0,0)` is a later record, not an erasure
   of the earlier one; the row reports the moment it reported and
