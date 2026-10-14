@@ -252,6 +252,15 @@ one, but the words would win anyway — an arrow alone reaches a listener
 as "button" and a reader as a guess, for a control that exists to be
 obvious.
 
+## The feed's seen tail
+
+**`Already seen`** — the quiet separator's one label, centred on its
+hairline where the feed's unseen rows end and what the reader has
+already seen continues (`FeedSeenTail`; jakob 2026-10-14, picked over
+`You're caught up.`). It names what is below the line. No full stop —
+it labels the line, as `Beyond your reach — newest first` labels
+search's seam. *Blessed (jakob 2026-10-14).*
+
 ## The filter pill's state words
 
 The trigger over a feed or search speaks how the view departs from the
