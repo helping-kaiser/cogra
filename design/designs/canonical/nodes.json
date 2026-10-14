@@ -1141,7 +1141,8 @@
         "postDetail.licenseSheet.terms.axis.value": [
           "credit",
           "public-record-of-use"
-        ]
+        ],
+        "postDetail.licenseSheet.terms.publicDomain": []
       }
     },
     "CommentMenu": {

@@ -4,6 +4,6 @@ ALWAYS postDetail.licenseSheet opens stacked over the thread, its wash between t
 
 ALWAYS postDetail.licenseSheet carries the comment's own terms, never its post's
 
-ALWAYS the license caption reads public domain and the rows still spell what it means GIVEN both of the license's axes are zero
+ALWAYS postDetail.licenseSheet.terms.publicDomain carries the zero pair's name on the caption line and the rows still spell what it means GIVEN both of the license's axes are zero
 
 WHEN tap the scrim, swipe postDetail.licenseSheet down, press system Back or press Escape -> postDetail.licenseSheet closes AND the thread stands open beneath it as it was
