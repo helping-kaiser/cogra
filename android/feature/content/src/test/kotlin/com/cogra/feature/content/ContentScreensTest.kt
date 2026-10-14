@@ -954,7 +954,12 @@ class ContentScreensTest {
             // terms reach this mount, and they stand over the thread's own
             // sheet (design/readme.md:2364).
             licenseShown?.let { license ->
-                LicenseSheet(license = license, onDismiss = { licenseShown = null }, stacked = true)
+                LicenseSheet(
+                    license = license,
+                    onDismiss = { licenseShown = null },
+                    stacked = true,
+                    node = POST_DETAIL / "licenseSheet",
+                )
             }
         }
     }
