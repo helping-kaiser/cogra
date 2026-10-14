@@ -53,8 +53,10 @@ export type PostMenuHostNodes = {
   sheet?: DataNode;
   /** The rows the host's board names. */
   row?: (row: PostMenuRow) => DataNode | undefined;
-  /** The report confirm (`postDetail.reportSheet`). */
+  /** The report confirm (`postDetail.reportSheet`, `feed.reportSheet`). */
   reportSheet?: DataNode;
+  /** The license terms (`feed.licenseSheet`). */
+  licenseSheet?: DataNode;
 };
 
 export function PostMenuHost({
@@ -185,6 +187,7 @@ export function PostMenuHost({
           onClose={() => setLicenseOpen(false)}
           license={licenseShown}
           testId={`${testId}-license-sheet`}
+          node={nodes.licenseSheet}
         />
       )}
       {/* THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob 2026-09-14): erasure is

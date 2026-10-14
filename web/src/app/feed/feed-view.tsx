@@ -744,13 +744,18 @@ export function FeedView({
       </div>
       {/* THE CARDS' MENU, OVER THE FEED (FeedPostMenu.md). What its rows raise
           rises over the feed too — the license terms (:21) and the report's
-          confirm (:23), whose feed-hosted states no board registers yet
-          (FC-G10), so they keep their own ids. */}
+          confirm (:23), registered as `feed.licenseSheet` and
+          `feed.reportSheet` (FC-G10). */}
       <PostMenuHost
         post={menuPost}
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
-        nodes={{ sheet: { path: "feed.menuSheet" }, row: feedMenuRow }}
+        nodes={{
+          sheet: { path: "feed.menuSheet" },
+          row: feedMenuRow,
+          licenseSheet: { path: "feed.licenseSheet" },
+          reportSheet: { path: "feed.reportSheet" },
+        }}
         testId="feed-menu"
         notify={notify}
       />

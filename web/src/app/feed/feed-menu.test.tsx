@@ -171,7 +171,7 @@ async function openMenu() {
 async function openReport() {
   await openMenu();
   fireEvent.click(screen.getByTestId("feed.menuSheet.report"));
-  return screen.getByTestId("feed-menu-report-sheet") as HTMLDialogElement;
+  return screen.getByTestId("feed.reportSheet") as HTMLDialogElement;
 }
 
 function snackbar() {
@@ -249,12 +249,13 @@ describe("the feed's post menu", () => {
     renderWithProviders(<FeedView />, { store: signedInStore() });
     const menu = await openMenu();
     fireEvent.click(screen.getByTestId("feed.menuSheet.license"));
-    expect(screen.getByTestId("feed-menu-license-sheet-terms")).toHaveTextContent("Public domain");
-    expect((screen.getByTestId("feed-menu-license-sheet") as HTMLDialogElement).open).toBe(true);
+    expect(screen.getByTestId("feed.licenseSheet.terms")).toHaveTextContent("Public domain");
+    expect((screen.getByTestId("feed.licenseSheet") as HTMLDialogElement).open).toBe(true);
+    expect(screen.getByTestId("feed.licenseSheet.dragHandle")).toBeInTheDocument();
     await waitFor(() => expect(menu.open).toBe(false));
     // Over the feed, never a state of the card (PostLicense.md:9).
     expect(screen.getByTestId(byNode("feed.card", "p1"))).not.toContainElement(
-      screen.getByTestId("feed-menu-license-sheet-terms"),
+      screen.getByTestId("feed.licenseSheet.terms"),
     );
   });
 
@@ -267,7 +268,7 @@ describe("the feed's post menu", () => {
     expect(sheet.open).toBe(true);
     expect(sheet).toHaveAccessibleName("Report this post?");
     expect(sheet).toHaveTextContent("Report this post?");
-    expect(screen.getByTestId("feed-menu-report-sheet-text")).toHaveTextContent(
+    expect(screen.getByTestId("feed.reportSheet.body")).toHaveTextContent(
       "It goes to the people who run CoGra for a look.",
     );
     await waitFor(() =>
@@ -282,7 +283,7 @@ describe("the feed's post menu", () => {
     server.use(...rankedFeed([post("p1")]), report.handler);
     renderWithProviders(<FeedView />, { store: signedInStore() });
     const sheet = await openReport();
-    fireEvent.click(screen.getByTestId("feed-menu-report-sheet-cancel"));
+    fireEvent.click(screen.getByTestId("feed.reportSheet.cancel"));
     await waitFor(() => expect(sheet.open).toBe(false));
     expect(report.targets).toEqual([]);
     expect(snackbar()).not.toBeInTheDocument();
@@ -294,7 +295,7 @@ describe("the feed's post menu", () => {
     server.use(...rankedFeed([post("p1")]), report.handler);
     renderWithProviders(<FeedView />, { store: signedInStore() });
     const sheet = await openReport();
-    fireEvent.click(screen.getByTestId("feed-menu-report-sheet-report"));
+    fireEvent.click(screen.getByTestId("feed.reportSheet.report"));
     expect(await screen.findByTestId("feed.snackbar.message")).toHaveTextContent("Reported.");
     expect(report.targets).toEqual(["p1"]);
     await waitFor(() => expect(sheet.open).toBe(false));
@@ -306,7 +307,7 @@ describe("the feed's post menu", () => {
     server.use(...rankedFeed([post("p1")]), report.handler);
     renderWithProviders(<FeedView />, { store: signedInStore() });
     const sheet = await openReport();
-    fireEvent.click(screen.getByTestId("feed-menu-report-sheet-report"));
+    fireEvent.click(screen.getByTestId("feed.reportSheet.report"));
     expect(await screen.findByTestId("feed.snackbar.message")).toHaveTextContent(
       "That didn't send. Try again.",
     );
@@ -320,7 +321,7 @@ describe("the feed's post menu", () => {
     server.use(...rankedFeed([post("p1")]), report.handler);
     renderWithProviders(<FeedView />, { store: signedInStore() });
     const sheet = await openReport();
-    fireEvent.click(screen.getByTestId("feed-menu-report-sheet-report"));
+    fireEvent.click(screen.getByTestId("feed.reportSheet.report"));
     expect(await screen.findByTestId("feed.snackbar.message")).toHaveTextContent(
       "That didn't send. Try again.",
     );
@@ -333,7 +334,7 @@ describe("the feed's post menu", () => {
     server.use(...rankedFeed([post("p1")]), report.handler);
     renderWithProviders(<FeedView />, { store: signedInStore() });
     const sheet = await openReport();
-    fireEvent.click(screen.getByTestId("feed-menu-report-sheet-report"));
+    fireEvent.click(screen.getByTestId("feed.reportSheet.report"));
     expect(await screen.findByTestId("feed.snackbar.message")).toHaveTextContent(
       "That didn't send. Try again.",
     );
@@ -365,7 +366,7 @@ describe("the feed's post menu", () => {
     await openMenu();
     fireEvent.click(screen.getByTestId("feed.menuSheet.report"));
     expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
-    expect((screen.getByTestId("feed-menu-report-sheet") as HTMLDialogElement).open).toBe(false);
+    expect((screen.getByTestId("feed.reportSheet") as HTMLDialogElement).open).toBe(false);
     expect(report.targets).toEqual([]);
   });
 
