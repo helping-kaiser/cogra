@@ -256,11 +256,26 @@ later is a producer-side additive change.
 
 ## Act payload carriage
 
-Carriage is the payload bytes' only home — Layer 1 tracks the
-witness, never the bytes ([layers.md §5](../primitive/layers.md#5-deletion-policy)).
+Carriage is the payload bytes' permanent home; Layer 1 keeps the
+witness ([layers.md §5](../primitive/layers.md#5-deletion-policy)).
+The content commitment is invariant across custody phases and only
+carriage migrates
+([layer1-interface.md](../primitive/layer1-interface.md), "Custody
+across phases"). CoGra runs witness-only at Layer 1 from the start.
+The host holds the payload, its content salt and the proposal
+nonce **transiently**, from seal until acceptance, because it forms
+the commitments over them. At acceptance it nulls all three and
+keeps the payload length and both commitments. The nonce goes with
+them: the public pre-commitment is formed over it and the payload,
+so a kept nonce would confirm a guessed payload. The dependency salt
+stays, because an ordering fraud proof opens it. From acceptance on,
+`act_payloads` is the only carriage.
+
 At confirm, promotion moves the envelope and the seal's private
 value from the staged row into `act_payloads`, keyed by the L1 act
-identifier verbatim:
+identifier verbatim. A genesis act has no staged row, so the genesis
+bootstrap writes the carriage of each genesis payload the moment the
+seal returns its salt:
 
 ```sql
 CREATE TABLE act_payloads (

@@ -335,8 +335,9 @@ The mutation surface therefore has three legs:
   to verify and pre-sign. Nothing has happened on the graph yet.
 - **`submitProposals`** relays the pre-signed proposals to L1's
   seal round trip and returns each host-sealed **verified act**
-  for the device to verify — seal, exact body, both commitment
-  openings — and sign the approval witness over.
+  for the device to verify — seal, exact body and pre-commitment,
+  editions, both commitment openings — and sign the approval
+  witness over, together with its seal.
 - **`approveActs`** relays the approval witnesses — only an
   approved act is orderable — and drives retries across epoch
   boundaries. Confirmation is asynchronous: the act is final when
@@ -3135,8 +3136,9 @@ product-surfaced restoration flow, never an auth fault) — stages
 the write, and returns the canonical material.
 The device recomputes the pre-digests from the proposal and
 pre-signs; after `submitProposals` returns the host-sealed
-verified act, it verifies the seal, the exact body, and both
-commitment openings before signing the approval witness — **the
+verified act, it verifies the seal, the exact body and
+pre-commitment, the editions, and both commitment openings before
+signing the approval witness over the act and its seal — **the
 user never signs blind bytes, at either step**
 ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
 `approveActs` relays the approvals; `stagedWrite` (and

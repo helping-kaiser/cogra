@@ -220,8 +220,9 @@ the exact host-sealed verified act
    proposal to L1, whose host verifies it, adds the projection
    salts, and returns the sealed **verified act**.
 4. **Approve.** The client verifies the host seal and the exact
-   returned body, checks both commitment openings, and signs the
-   **approval witness** — only then is the act orderable. The
+   returned body and pre-commitment, checks the editions and both
+   commitment openings, and signs the **approval witness** over
+   the verified act and its seal — only then is the act orderable. The
    backend relays the approval and drives retries across epoch
    boundaries; relaying confers nothing: both signatures cover
    the act, so the backend can neither alter it nor author one
