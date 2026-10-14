@@ -1767,6 +1767,66 @@ describe("FeedView's ranked data path", () => {
     expect(screen.queryByTestId("feed-empty")).not.toBeInTheDocument();
   });
 
+  // PR-83's named device test (jakob, seam 199: "seen list is
+  // placement-only"): Show what you've already seen is a pure device
+  // re-partition of the held answer — never a fetch, never a re-sort. The held
+  // order m z a (newest z a m) disagrees with every sort the device could
+  // reach for — by id a m z, by score z a m — and each toggle reads that held
+  // permutation, split or whole.
+  it("toggling_show_seen_re_partitions_without_a_fetch_or_a_sort", async () => {
+    await seenRecord.add("acct-1", ["z"]);
+    const reads = feedReads();
+    const nodes = [post("m", "Em"), post("z", "Zed"), post("a", "Ay")];
+    server.use(
+      graphql.query("FeedRanking", ({ variables }) => {
+        reads.ranks.push(variables.viewer as string);
+        return HttpResponse.json({
+          data: {
+            feedRanking: {
+              __typename: "FeedRanking",
+              asOfEpoch: 4,
+              entries: [
+                { __typename: "FeedEntry", targetId: "m", kind: "POST", score: 0.1, mark: null, newestIndex: 2 },
+                { __typename: "FeedEntry", targetId: "z", kind: "POST", score: 0.9, mark: null, newestIndex: 0 },
+                { __typename: "FeedEntry", targetId: "a", kind: "POST", score: 0.5, mark: null, newestIndex: 1 },
+              ],
+              settling: [],
+            },
+          },
+        });
+      }),
+      graphql.query("Feed", ({ variables }) => {
+        reads.windows.push(variables.orderedIds as string[]);
+        return HttpResponse.json({ data: windowOf(nodes, variables.orderedIds as string[]) });
+      }),
+      meHandler(),
+      borrowedViewHandler(null),
+    );
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+    await screen.findByTestId("feed.seenSeparator");
+    expect(cardIds()).toEqual(["m", "a", "z"]);
+    expect(tailIds()).toEqual(["z"]);
+
+    act(() => announceFeedDone({ ...FEED_FILTER_DEFAULT, seen: true }));
+    await waitFor(() => expect(cardIds()).toEqual(["m", "z", "a"]));
+    expect(screen.queryByTestId("feed.seenSeparator")).not.toBeInTheDocument();
+
+    act(() => announceFeedDone({ ...FEED_FILTER_DEFAULT, seen: false }));
+    await waitFor(() => expect(tailIds()).toEqual(["z"]));
+    expect(cardIds()).toEqual(["m", "a", "z"]);
+
+    act(() => announceFeedDone({ ...FEED_FILTER_DEFAULT, order: "newest", seen: true }));
+    await waitFor(() => expect(cardIds()).toEqual(["z", "a", "m"]));
+    act(() => announceFeedDone({ ...FEED_FILTER_DEFAULT, order: "newest", seen: false }));
+    await waitFor(() => expect(cardIds()).toEqual(["a", "m", "z"]));
+    expect(tailIds()).toEqual(["z"]);
+
+    // One ranking, the open's — and one window: the toggles re-read the rows
+    // already hydrated and asked the wire for nothing.
+    expect(reads.ranks).toHaveLength(1);
+    expect(reads.windows).toHaveLength(1);
+  });
+
   // Toggle on: one list, the seen cards ranked in among the rest, no separator.
   it("show_seen_on_stands_one_list_with_no_separator", async () => {
     await seenRecord.add("acct-1", ["p1"]);
