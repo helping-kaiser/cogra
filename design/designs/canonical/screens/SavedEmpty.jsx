@@ -14,6 +14,11 @@
    the act, the line to the list, and for four seconds both are simply true.
    `SavedUndo` is where that pairing is drawn.
 
+   NO SEARCH FIELD YET (the Saved redesign, jakob 2026-10-14, `HistoryEmpty`'s
+   rule). The field searches what has been kept, and here nothing has; it
+   arrives with the first thing saved. A list searched to nothing is a
+   different state — the reader's own search — and it is `SavedNone`.
+
    NO ACTION BUTTON. `EmptyState` takes the one action that fills the list where
    there is one, and here that action is "save something", which cannot be done
    from this screen — it is done on a post, three surfaces away. A button that
