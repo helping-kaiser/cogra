@@ -1,7 +1,9 @@
 # The Saved list (api-spec.md `User.bookmarks`, `setBookmark`,
 # `removeBookmark`; saved-surface packet). The document is web's twin
 # (web/src/lib/graphql/saved.graphql): one mixed list of posts, comments
-# and people, newest first by save time, a page of twenty at a time.
+# and people, newest first by save time, a page of TEN at a time — every
+# edge carries two whole card selections, and twenty of them price past
+# the complexity ceiling's headroom (`crates/api/tests/client_operations.rs`).
 #
 # SAVED IS A FEED (Saved.md, round 12): every saved thing stands as its
 # kind's own live feed card, so each kind is read the way its card reads
@@ -13,7 +15,7 @@
 query SavedPage($after: String) {
   me {
     id
-    bookmarks(first: 20, after: $after) {
+    bookmarks(first: 10, after: $after) {
       edges {
         cursor
         bookmarkedAt

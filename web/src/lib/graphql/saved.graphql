@@ -1,8 +1,11 @@
 # The Saved list (api-spec.md `User.bookmarks`, `setBookmark`,
 # `removeBookmark`; saved-surface packet). One mixed list of posts,
-# comments and people, newest first by save time, a page of twenty at a
+# comments and people, newest first by save time, a page of TEN at a
 # time — the page size is written as a literal so the client-operation
-# guard prices the call the device actually makes.
+# guard prices the call the device actually makes. Ten, not the feed's
+# twenty: every edge carries two whole card selections (a post's and a
+# comment's), and twenty of them price past the complexity ceiling's
+# headroom (`crates/api/tests/client_operations.rs`).
 #
 # SAVED IS A FEED (Saved.md, round 12): every saved thing stands as its
 # kind's own live feed card, so each kind is read the way its card reads
@@ -14,7 +17,7 @@
 query SavedPage($after: String, $includePending: Boolean! = true) {
   me {
     id
-    bookmarks(first: 20, after: $after) {
+    bookmarks(first: 10, after: $after) {
       edges {
         cursor
         bookmarkedAt
