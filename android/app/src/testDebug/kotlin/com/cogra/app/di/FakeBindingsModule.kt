@@ -181,13 +181,6 @@ class ScriptedContentRepository : ThrowingContentRepository() {
         return Outcome.Success(PreparedContentView(preparedNode, emptyList()))
     }
 
-    override suspend fun posts(
-        first: Int,
-        after: String?,
-        includePending: Boolean,
-    ): Outcome<Page<PostView>> =
-        Outcome.Success(Page(listing, endCursor = null, hasNextPage = false))
-
     override suspend fun post(
         id: String,
         commentsFirst: Int,

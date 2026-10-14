@@ -75,22 +75,6 @@ fragment FeedPost on Post {
   }
 }
 
-# `includePending` carries the schema's own default: a listing serves
-# pending entries unless the reader asks for the settled graph.
-query Posts($first: Int!, $after: String, $includePending: Boolean! = true) {
-  posts(first: $first, after: $after, includePending: $includePending) {
-    edges {
-      node {
-        ...FeedPost
-      }
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
-  }
-}
-
 query PostDetail(
   $id: UUID!
   $commentsFirst: Int!

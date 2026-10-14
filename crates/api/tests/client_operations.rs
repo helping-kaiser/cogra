@@ -473,10 +473,54 @@ fn the_corpora_carry_the_operations_they_are_read_for() {
             .into_iter()
             .map(|(name, _)| name)
             .collect();
-        for expected in ["PostDetail", "Posts", "CommentReplies", "PreparePost"] {
+        for expected in ["PostDetail", "FeedRanking", "CommentReplies", "PreparePost"] {
             assert!(
                 names.contains(expected),
                 "{relative} is missing {expected}: {names:?}"
+            );
+        }
+    }
+}
+
+/// The root fields one wire document selects, read off the parsed document
+/// rather than its text, so an alias cannot hide a field from the check.
+fn root_fields(document: &str) -> BTreeSet<String> {
+    use async_graphql::parser::types::{DocumentOperations, Selection};
+    let parsed = async_graphql::parser::parse_query(document)
+        .unwrap_or_else(|e| panic!("a client document does not parse: {e}"));
+    let operations: Vec<_> = match parsed.operations {
+        DocumentOperations::Single(operation) => vec![operation],
+        DocumentOperations::Multiple(operations) => operations.into_values().collect(),
+    };
+    operations
+        .iter()
+        .flat_map(|operation| operation.node.selection_set.node.items.iter())
+        .filter_map(|selection| match &selection.node {
+            Selection::Field(field) => Some(field.node.name.node.to_string()),
+            _ => None,
+        })
+        .collect()
+}
+
+/// The chronological `posts` listing is retired from both clients: once
+/// the ranked feed shipped, the feed reads `feedRanking` and its `feed`
+/// windows, and Newest is the pod's permutation of that one answer, never
+/// the global listing (ranked-feed packet §4.9, item 89). The root stays in
+/// the schema; a client document selecting it again would quietly bring
+/// back the interim the ranked feed closed, so it fails here by name.
+///
+/// No client document reads the retired chronological posts listing.
+/// ´claim:budgets:the-retired-posts-listing-stays-retired´
+#[test]
+fn no_client_reads_the_retired_posts_listing() {
+    for relative in [
+        "android/core/network/src/main/graphql",
+        "web/src/lib/graphql",
+    ] {
+        for (name, document) in client_operations(relative) {
+            assert!(
+                !root_fields(&document).contains("posts"),
+                "{relative} operation {name} reads the retired `posts` listing"
             );
         }
     }
