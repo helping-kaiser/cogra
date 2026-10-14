@@ -102,7 +102,10 @@ impl MediaAsset {
             map.insert(ASSET_KEY_COVER_TAKEN, Value::Bool(true));
         }
         if let Some(upload_digest) = &self.upload_digest {
-            map.insert(ASSET_KEY_UPLOAD_DIGEST, Value::Bytes(upload_digest.to_vec()));
+            map.insert(
+                ASSET_KEY_UPLOAD_DIGEST,
+                Value::Bytes(upload_digest.to_vec()),
+            );
         }
         Value::Map(map)
     }
@@ -182,9 +185,12 @@ impl MediaAsset {
         };
         let upload_digest = match map.get(&ASSET_KEY_UPLOAD_DIGEST) {
             None => None,
-            Some(Value::Bytes(upload)) => Some(upload.as_slice().try_into().map_err(|_| {
-                EnvelopeError::Guild("media upload digest must be 32 bytes")
-            })?),
+            Some(Value::Bytes(upload)) => Some(
+                upload
+                    .as_slice()
+                    .try_into()
+                    .map_err(|_| EnvelopeError::Guild("media upload digest must be 32 bytes"))?,
+            ),
             Some(_) => return Err(EnvelopeError::Guild("media upload digest must be a digest")),
         };
         Ok(Self {

@@ -702,7 +702,8 @@ pub async fn prepare_post<B: L1Boundary>(
         media: gallery.manifest,
         sensitive: mark,
     }
-    .encode_payload();
+    .encode_for_prepare()
+    .map_err(|e| ContentError::Internal(format!("payload not admissible: {e}")))?;
     let prepared = prepare::prepare(
         boundary,
         pool,
@@ -882,7 +883,8 @@ pub async fn prepare_post_edit<B: L1Boundary>(
         media: gallery.manifest,
         sensitive: mark,
     }
-    .encode_payload();
+    .encode_for_prepare()
+    .map_err(|e| ContentError::Internal(format!("payload not admissible: {e}")))?;
     let prepared = prepare::prepare(
         boundary,
         pool,
@@ -957,7 +959,8 @@ pub async fn prepare_comment<B: L1Boundary>(
         media: gallery.manifest,
         sensitive: mark,
     }
-    .encode_payload();
+    .encode_for_prepare()
+    .map_err(|e| ContentError::Internal(format!("payload not admissible: {e}")))?;
     let prepared = prepare::prepare(
         boundary,
         pool,
@@ -1049,7 +1052,8 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
         media: gallery.manifest,
         sensitive: mark,
     }
-    .encode_payload();
+    .encode_for_prepare()
+    .map_err(|e| ContentError::Internal(format!("payload not admissible: {e}")))?;
     let prepared = prepare::prepare(
         boundary,
         pool,

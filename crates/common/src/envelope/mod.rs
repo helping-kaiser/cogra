@@ -775,7 +775,10 @@ mod tests {
         );
         let mut cleared = profile(None, None, None);
         cleared.avatar = Some(None);
-        assert!(cleared.encode_for_prepare().is_ok(), "a cleared slot names no asset");
+        assert!(
+            cleared.encode_for_prepare().is_ok(),
+            "a cleared slot names no asset"
+        );
     }
 
     /// A payload landed before the upload digest existed carries an entry

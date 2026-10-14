@@ -492,6 +492,30 @@ mod pictures {
         );
     }
 
+    /// The avatar slot is a manifest entry like any gallery's, so it rides
+    /// with both digests: the rendition it serves and the bytes the device
+    /// uploaded, equal for a still stored as it arrived.
+    ///
+    /// The avatar slot carries both the rendition digest and the upload digest.
+    /// ´claim:profile:the-avatar-slot-carries-both-digests´
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn the_avatar_slot_carries_both_digests(pool: PgPool) {
+        let rig = Rig::new(pool).await;
+        let (actor, _key) = rig.registered_actor("ada").await;
+        let face = asset(&rig.pool, actor, 5).await;
+        let prepared = rig
+            .update(actor, with_picture(Some(Some(face))))
+            .await
+            .expect("prepares update");
+        let update = common::envelope::CograProfile::decode_payload(&prepared.proposal.payload)
+            .expect("decodes");
+        let Some(Some(avatar)) = update.avatar else {
+            panic!("the slot is set");
+        };
+        assert_eq!(avatar.digest, [5; 32]);
+        assert_eq!(avatar.upload_digest, Some([5; 32]));
+    }
+
     /// The anti-hijack rule reaches a profile picture too: an avatar must
     /// be an asset this account uploaded.
     ///

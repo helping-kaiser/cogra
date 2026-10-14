@@ -5053,6 +5053,21 @@ impl MediaAttachmentType {
         &self.asset.digest_algo
     }
 
+    /// The upload digest, lowercase hex under `digestAlgo`: the digest of
+    /// the bytes as they arrived, after the metadata strip. It is the
+    /// server's echo of the hash the uploading device took of the bytes it
+    /// sent, and what a placement's manifest witnesses beside `digest`
+    /// (manifest key 5). Equal to `digest` for an asset stored as it
+    /// arrived; the bytes before a re-encode for one that was not.
+    ///
+    /// It belongs to the id this value answers under. Read through
+    /// `uploadMedia`, `completeMediaUpload` or `mediaAttachment(id)`, that
+    /// is the upload the caller named — never the asset a merge resolved
+    /// it to, whose own upload sent other bytes.
+    async fn upload_digest(&self) -> String {
+        hex::encode(&self.asset.upload_digest)
+    }
+
     async fn mime_type(&self) -> &str {
         &self.asset.mime_type
     }

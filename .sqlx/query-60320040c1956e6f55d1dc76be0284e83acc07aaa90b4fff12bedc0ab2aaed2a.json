@@ -1,82 +1,82 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT named.id AS requested,\n               m.id, m.author_id, m.digest, m.digest_algo, m.storage_key,\n               m.mime_type, m.size_bytes,\n               m.options AS \"options!: serde_json::Value\",\n               m.state AS \"state: AssetState\", m.failure_reason,\n               m.redaction_reason, m.redacted_at, m.created_at\n        FROM media_attachments named\n        JOIN media_attachments m ON m.id = COALESCE(named.merged_into, named.id)\n        WHERE named.id = ANY($1)\n        ",
+  "query": "\n        SELECT named.id, m.author_id, m.digest, m.digest_algo, m.storage_key,\n               m.mime_type, m.size_bytes,\n               m.options AS \"options!: serde_json::Value\",\n               m.state AS \"state: AssetState\", m.failure_reason,\n               m.redaction_reason, m.redacted_at, m.created_at,\n               COALESCE(named.source_digest, named.digest) AS \"upload_digest!\"\n        FROM media_attachments named\n        JOIN media_attachments m ON m.id = COALESCE(named.merged_into, named.id)\n        WHERE named.id = $1\n        ",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "requested",
-        "type_info": "Uuid"
-      },
-      {
-        "ordinal": 1,
         "name": "id",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 2,
+        "ordinal": 1,
         "name": "author_id",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 3,
+        "ordinal": 2,
         "name": "digest",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 4,
+        "ordinal": 3,
         "name": "digest_algo",
         "type_info": "Text"
       },
       {
-        "ordinal": 5,
+        "ordinal": 4,
         "name": "storage_key",
         "type_info": "Text"
       },
       {
-        "ordinal": 6,
+        "ordinal": 5,
         "name": "mime_type",
         "type_info": "Text"
       },
       {
-        "ordinal": 7,
+        "ordinal": 6,
         "name": "size_bytes",
         "type_info": "Int8"
       },
       {
-        "ordinal": 8,
+        "ordinal": 7,
         "name": "options!: serde_json::Value",
         "type_info": "Jsonb"
       },
       {
-        "ordinal": 9,
+        "ordinal": 8,
         "name": "state: AssetState",
         "type_info": "Text"
       },
       {
-        "ordinal": 10,
+        "ordinal": 9,
         "name": "failure_reason",
         "type_info": "Text"
       },
       {
-        "ordinal": 11,
+        "ordinal": 10,
         "name": "redaction_reason",
         "type_info": "Text"
       },
       {
-        "ordinal": 12,
+        "ordinal": 11,
         "name": "redacted_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 13,
+        "ordinal": 12,
         "name": "created_at",
         "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 13,
+        "name": "upload_digest!",
+        "type_info": "Bytea"
       }
     ],
     "parameters": {
       "Left": [
-        "UuidArray"
+        "Uuid"
       ]
     },
     "nullable": [
@@ -86,15 +86,15 @@
       false,
       false,
       false,
-      false,
       true,
       false,
       false,
       true,
       true,
       true,
-      false
+      false,
+      null
     ]
   },
-  "hash": "e1fe8ed1d74c17e0222a855ad1b7837126afae761267f00a0f6ede82f7cb66a1"
+  "hash": "60320040c1956e6f55d1dc76be0284e83acc07aaa90b4fff12bedc0ab2aaed2a"
 }
