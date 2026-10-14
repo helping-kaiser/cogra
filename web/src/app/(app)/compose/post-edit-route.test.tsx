@@ -273,7 +273,7 @@ describe("PostEditRoute — one batch (EditCompose, EditActs)", () => {
     let withdrawal: unknown;
     serve(
       editablePost({
-        topics: [topicClaim("wasm")],
+        topics: [topicClaim("wasm", 0.1, 0.6)],
         references: [referenceClaim("u-juno", "juno", 2)],
       }),
     );
@@ -307,7 +307,9 @@ describe("PostEditRoute — one batch (EditCompose, EditActs)", () => {
     // Sign is the confirmation: no dialog asks again (EditActs.jsx).
     fireEvent.click(sign());
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
-    expect(tagInputs).toEqual([{ target: "p1", name: "wasm", pDirected: 0, pInterest: null }]);
+    // The un-tag signs the confidence the removed chip showed (0.6), never a
+    // hole the server would fill.
+    expect(tagInputs).toEqual([{ target: "p1", name: "wasm", pDirected: 0, pInterest: 0.6 }]);
     expect(withdrawal).toEqual({ artifact: "p1", target: "u-juno" });
     expect(signer.signStaged).toHaveBeenCalledTimes(4);
   });

@@ -100,7 +100,7 @@ export function editActRows(input: EditBatchInput): readonly EditActRow[] {
 
   if (input.recordStaged) add("edit", input.recordName, 1, "edit");
   for (const change of tagChanges(input.loadedTags, input.tags)) {
-    if (change.kind === "untag") add("tagsWithdrawn", hashtag(change.name), 1, "tag");
+    if (change.kind === "untag") add("tagsWithdrawn", hashtag(change.tag.name), 1, "tag");
     else if (loadedTagNames.has(change.tag.name)) add("tagsRevised", hashtag(change.tag.name), 1, "tag");
     else add("tagsAdded", hashtag(change.tag.name), 1, "tag");
   }

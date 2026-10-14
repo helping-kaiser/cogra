@@ -232,6 +232,7 @@ describe("preparePost", () => {
       description: null,
       content: "B",
       license,
+      pDirected: 0.1,
     });
     expect(outcome.kind).toBe("success");
     if (outcome.kind !== "success") return;
@@ -239,8 +240,8 @@ describe("preparePost", () => {
     expect(outcome.value.writes[0]).toMatchObject({ id: "w1", state: "AWAITING_PRE_SIGN" });
   });
 
-  // Pins the drop: the picked creating-edge stance used to be absent from the
-  // input, so every Publish landed at the server default.
+  // The creating-edge stance is required on the wire and the server fills
+  // nothing in, so the value the seal shows is the value the input carries.
   it("carries the author's picked pDirected on the input", async () => {
     let variables: Record<string, unknown> | null = null;
     server.use(
@@ -290,6 +291,7 @@ describe("preparePost", () => {
       description: null,
       content: "B",
       license,
+      pDirected: 0.1,
     });
     expect(outcome.kind).toBe("refused");
     if (outcome.kind !== "refused") return;
@@ -456,6 +458,7 @@ describe("prepareComment", () => {
       target: "p1",
       content: "First!",
       license: { attribution: 0, provenance: 0.5 },
+      stance: { pDirected: 0.25, pInterest: -0.5 },
     });
     expect(outcome.kind).toBe("success");
     expect(variables).toEqual({
@@ -468,12 +471,11 @@ describe("prepareComment", () => {
         attachments: null,
         tags: null,
         references: null,
-        // The seal's Adjust writes the genesis Review's own pair. A caller
-        // that names no stance sends neither, and the server applies its own
-        // +0.1 default to each — stating a value here would be this client
-        // inventing the policy.
-        pDirected: null,
-        pInterest: null,
+        // The genesis Review's own pair, exactly as the seal showed it. Both
+        // are required on the wire: the server never fills a stance in, so
+        // the value always comes from the UI state that displayed it.
+        pDirected: 0.25,
+        pInterest: -0.5,
         // The mark is COMPLETE STATE, so a caller that names none says so
         // rather than omitting it — the same rule an edit follows, and the
         // reason a reason never travels without its mark.
@@ -505,6 +507,7 @@ describe("prepareComment", () => {
       target: "p1",
       content: "Two from the sea wall.",
       license: { attribution: 0, provenance: 0.5 },
+      stance: { pDirected: 0.1, pInterest: 0.1 },
       attachments: [
         { mediaId: "m-a", altText: "the sea wall at dusk" },
         { mediaId: "m-b", altText: "  " },
@@ -572,6 +575,7 @@ describe("prepareComment", () => {
       target: "p1",
       content: "First!",
       license: { attribution: 0, provenance: 0.5 },
+      stance: { pDirected: 0.1, pInterest: 0.1 },
       tags: [{ name: "rust", relevance: 0.4, confidence: 0.8 }],
     });
     expect(outcome.kind).toBe("success");

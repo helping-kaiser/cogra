@@ -48,10 +48,10 @@ export async function prepareTag(
   fields: {
     target: string;
     name: string;
-    /** Relevance `r`; omit for the server default `+0.1`. `0` un-tags. */
-    relevance?: number;
-    /** Confidence `c`; omit for the server default `1`. */
-    confidence?: number;
+    /** Relevance `r`, as the UI shows it; `0` un-tags. Required. */
+    relevance: number;
+    /** Confidence `c`, as the UI shows it. Required. */
+    confidence: number;
   },
 ): Promise<Outcome<readonly StagedWriteView[]>> {
   return payloadOutcome(
@@ -62,8 +62,8 @@ export async function prepareTag(
           input: {
             target: fields.target,
             name: fields.name,
-            pDirected: fields.relevance ?? null,
-            pInterest: fields.confidence ?? null,
+            pDirected: fields.relevance,
+            pInterest: fields.confidence,
           },
         },
       }),
