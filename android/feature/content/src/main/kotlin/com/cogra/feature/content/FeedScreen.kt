@@ -185,10 +185,7 @@ fun FeedRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    if (refreshSignal) {
-        onRefreshSignalConsumed()
-        viewModel.refresh()
-    }
+    consumeRefreshSignal(refreshSignal, onRefreshSignalConsumed, viewModel::refresh)
     FeedScreen(
         commentsSheet = { postId, onDismiss ->
             val post = state.posts.firstOrNull { it.id == postId }
@@ -281,6 +278,13 @@ private fun then(first: () -> Unit, second: () -> Unit): () -> Unit = {
  * them by id.
  */
 private val FEED = DataNode("feed")
+
+/** A signed act the shell reported asks the feed to read again — once, then the signal is consumed. */
+private fun consumeRefreshSignal(signal: Boolean, consume: () -> Unit, refresh: () -> Unit) {
+    if (!signal) return
+    consume()
+    refresh()
+}
 
 /** The band's working edge: chats, then the bell, right-most (Profile.md:3; ChatsComingSoon.md:3). */
 @Composable
