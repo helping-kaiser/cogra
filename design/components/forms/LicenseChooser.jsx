@@ -185,6 +185,7 @@ export function LicenseTerms({ license = PUBLIC_DOMAIN, node }) {
             than replacing the rows, which stay uniform across every license. */}
         {publicDomain && (
           <span
+            data-node={node && "publicDomain"}
             style={{
               fontSize: "var(--text-label-small)",
               lineHeight: "var(--text-label-small--line-height)",
