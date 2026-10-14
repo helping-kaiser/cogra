@@ -45,12 +45,43 @@ describe("CograBand", () => {
     expect(onChats).toHaveBeenCalledOnce();
   });
 
-  // Left of the screen's own trailing control, so the ruled corner occupants
-  // keep their edge.
-  it("puts chats left of the trailing control", () => {
-    render(<CograBand onChats={() => {}} trailing={<button type="button">Newest</button>} />);
-    const chats = screen.getByTestId("band-chats");
+  // The cluster reads the screen's own control, then chats, then the bell
+  // (Profile.md:3; ChatsComingSoon.md:3): the bell keeps the corner.
+  it("reads the screen's control, then chats, then the bell", () => {
+    render(
+      <CograBand
+        onChats={() => {}}
+        trailing={<button type="button">Newest</button>}
+        bell={{ lit: false, onOpen: () => {} }}
+      />,
+    );
     const trailing = screen.getByRole("button", { name: "Newest" });
-    expect(chats.compareDocumentPosition(trailing) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const chats = screen.getByTestId("band-chats");
+    const bell = screen.getByTestId("band-bell");
+    expect(trailing.compareDocumentPosition(chats) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(chats.compareDocumentPosition(bell) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  // FeedUnread.md:11, :13, :15 — a dot, never a count, and the name says so.
+  it("the_bell_is_a_dot_never_a_count_and_says_so", () => {
+    const onOpen = vi.fn();
+    const { rerender } = render(<CograBand bell={{ lit: false, onOpen }} node={{ path: "feed.band" }} />);
+    const bell = screen.getByRole("button", { name: "Notifications" });
+    expect(screen.queryByTestId("feed.band.bell.dot")).not.toBeInTheDocument();
+    rerender(<CograBand bell={{ lit: true, onOpen }} node={{ path: "feed.band" }} />);
+    expect(screen.getByRole("button", { name: "Notifications — something new" })).toBe(bell);
+    const dot = screen.getByTestId("feed.band.bell.dot");
+    expect(dot).toHaveAttribute("aria-hidden");
+    expect(dot).toBeEmptyDOMElement();
+    expect(bell.textContent).not.toMatch(/\d/);
+    fireEvent.click(bell);
+    expect(onOpen).toHaveBeenCalledOnce();
+  });
+
+  // Main.md:9, FeedBare.md:9 — a guest has no list, so no bell.
+  it("a_guest_band_has_no_bell", () => {
+    render(<CograBand onChats={() => {}} />);
+    expect(screen.queryByTestId("band-bell")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Notifications/ })).not.toBeInTheDocument();
   });
 });

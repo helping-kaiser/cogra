@@ -3,9 +3,8 @@
 # `markNotificationRead`; notifications.md). The document is web's twin
 # (web/src/lib/graphql/notifications.graphql).
 
-# The bell's dot, read on a fresh root load and never live (FeedUnread):
-# a boolean, never a count. A root whose own load query has no `me` (the
-# Wallet coming-soon root) reads this alone.
+# THE BELL'S DOT, read on a fresh root load and never live (FeedUnread):
+# a boolean, never a count.
 query NotificationBell {
   me {
     id
@@ -13,12 +12,19 @@ query NotificationBell {
   }
 }
 
-# The list, newest first, one page of the default size at a time. `kind`
-# picks the drawn sentence, `actor` names who acted, `subject` is where
+# THE LIST, newest first, a page of twenty at a time — the page size is
+# written as a literal so the client-operation guard prices the call the
+# device actually makes. Every row is one act: `kind` picks the drawn
+# sentence, `actor` names who acted and fills the disc, `subject` is where
 # the tap lands and carries the second line's words, `record` carries an
-# opinion row's pair, and `application` is the queue entry an
-# application row concerns, in its current state. A comment's own thread
-# post is walked two levels up, for `in <the thread's post title>`.
+# opinion row's pair, and `application` is the queue entry an application
+# row concerns.
+#
+# The subject's selection is Saved's: a post carries its mime types for the
+# untitled stand-in, a comment carries its thread's post (`Comment.post`),
+# which a mention or citation carried by a comment names (`in <title>`) and
+# a comment row opens on. Statuses ride along so a removed or sensitive
+# thing reads through its own mark.
 query Notifications($after: String) {
   me {
     id
@@ -52,12 +58,22 @@ query Notifications($after: String) {
                 value
                 status
               }
+              description {
+                value
+                status
+              }
               content {
                 value
                 status
               }
               attachments {
                 mimeType
+              }
+              moderationStatus
+              sensitiveReason
+              author {
+                id
+                handle
               }
             }
             ... on Comment {
@@ -69,35 +85,28 @@ query Notifications($after: String) {
               attachments {
                 mimeType
               }
-              target {
-                __typename
-                ... on Post {
-                  id
-                  title {
-                    value
-                    status
-                  }
-                  content {
-                    value
-                    status
-                  }
+              moderationStatus
+              sensitiveReason
+              author {
+                id
+                handle
+              }
+              post {
+                id
+                title {
+                  value
+                  status
                 }
-                ... on Comment {
+                content {
+                  value
+                  status
+                }
+                attachments {
+                  mimeType
+                }
+                author {
                   id
-                  target {
-                    __typename
-                    ... on Post {
-                      id
-                      title {
-                        value
-                        status
-                      }
-                      content {
-                        value
-                        status
-                      }
-                    }
-                  }
+                  handle
                 }
               }
             }
@@ -137,7 +146,8 @@ query Notifications($after: String) {
 }
 
 # Clears the bell's dot when the list opens: everything at or before the
-# newest row the opened list holds becomes seen.
+# newest row the opened list holds becomes seen. A row that arrived after
+# the read stays unseen and lights the bell at the next root load.
 mutation MarkNotificationsSeen($through: DateTime!) {
   markNotificationsSeen(input: { through: $through }) {
     hasUnreadNotifications

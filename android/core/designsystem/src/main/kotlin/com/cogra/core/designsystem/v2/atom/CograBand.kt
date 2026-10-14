@@ -1,15 +1,20 @@
 package com.cogra.core.designsystem.v2.atom
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -17,8 +22,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
@@ -46,9 +54,13 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  *
  * **Chats ride the band** (jakob 2026-09-01): messaging must be reachable
  * from any major screen, so every tab root's band carries the chats
- * affordance built in. It sits LEFT of the screen's own trailing control, so
- * the ruled corner occupants keep their edge. `onChats = null` opts a band
- * out where messaging cannot apply.
+ * affordance built in. `onChats = null` opts a band out where messaging
+ * cannot apply.
+ *
+ * **The bell keeps the corner** (CograBand.jsx; FeedUnread.md): the cluster
+ * reads the screen's own control, then chats, then the bell (Profile.md:3;
+ * ChatsComingSoon.md:3). A guest has no list, so a guest's band passes no
+ * [bell].
  *
  * [content] rides below the band inside the same block. A surface whose top
  * region collapses hosts the two pieces itself — [CograBandIdentity] in the
@@ -64,6 +76,7 @@ fun CograBand(
     chatsContentDescription: String = stringResource(R.string.cogra_band_chats),
     trailing: @Composable (RowScope.() -> Unit)? = null,
     testTag: String? = null,
+    bell: BandBell? = null,
     content: @Composable ColumnScope.() -> Unit = {},
 ) {
     Column(modifier = modifier.then(if (testTag != null) Modifier.testTag(testTag) else Modifier)) {
@@ -75,12 +88,61 @@ fun CograBand(
             horizontalArrangement = Arrangement.spacedBy(Space.x2),
         ) {
             CograBandIdentity(Modifier.weight(1f), testTag)
+            trailing?.invoke(this)
             if (onChats != null) {
                 CograBandChats(onChats, chatsContentDescription, testTag)
             }
-            trailing?.invoke(this)
+            bell?.let { CograBandBell(it, testTag) }
         }
         content()
+    }
+}
+
+/** The bell's state as a root passes it: lit only on a fresh root load (FeedUnread.md). */
+data class BandBell(val lit: Boolean, val onOpen: () -> Unit)
+
+/**
+ * The bell (`BandIcon` with `dot`): right-most on every signed-in root band,
+ * a dot and never a count — `--primary` at 8dp, ringed in the surface — and
+ * it is the button's name that says the dot is lit
+ * (FeedUnread.md:11, :13, :15).
+ *
+ * @param node the band's data-node on a registered screen; the control wears
+ *   its `bell` part and the dot `bell.dot`.
+ */
+@Composable
+fun CograBandBell(bell: BandBell, testTag: String? = null, node: DataNode? = null) {
+    val name = stringResource(if (bell.lit) R.string.cogra_band_bell_lit else R.string.cogra_band_bell)
+    val tag = node?.div("bell")?.tag ?: testTag?.let { "${it}_bell" } ?: "cogra_band_bell"
+    IconButton(
+        onClick = bell.onOpen,
+        modifier = Modifier
+            .size(Layout.TouchTargetMin)
+            .testTag(tag)
+            .semantics { contentDescription = name },
+    ) {
+        Box {
+            Icon(
+                imageVector = Icons.Filled.Notifications,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(22.dp),
+            )
+            if (bell.lit) {
+                Box(
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 2.dp, y = (-1).dp)
+                        .size(12.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(2.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary)
+                        .testTag(node?.div("bell")?.div("dot")?.tag ?: "${tag}_dot"),
+                )
+            }
+        }
     }
 }
 
@@ -152,6 +214,7 @@ private fun CograBandVariants() {
             CograBand(
                 onChats = {},
                 trailing = { InlineAction("Newest", {}) },
+                bell = BandBell(lit = true, onOpen = {}),
             )
         }
     }
