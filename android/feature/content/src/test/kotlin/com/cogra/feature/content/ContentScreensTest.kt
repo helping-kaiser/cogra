@@ -954,7 +954,12 @@ class ContentScreensTest {
             // terms reach this mount, and they stand over the thread's own
             // sheet (design/readme.md:2364).
             licenseShown?.let { license ->
-                LicenseSheet(license = license, onDismiss = { licenseShown = null }, stacked = true)
+                LicenseSheet(
+                    license = license,
+                    onDismiss = { licenseShown = null },
+                    stacked = true,
+                    node = POST_DETAIL / "licenseSheet",
+                )
             }
         }
     }
@@ -1478,7 +1483,8 @@ class ContentScreensTest {
         )
         compose.onNodeWithTag("postDetail.header.menu").performClick()
         compose.onNodeWithTag("postDetail.menuSheet.license").performClick()
-        compose.onNodeWithTag("license_sheet_terms_public_domain").assertExists()
+        compose.onNodeWithTag("postDetail.licenseSheet.terms.publicDomain").assertExists()
+        compose.onNodeWithTag("license_sheet_terms_public_domain").assertDoesNotExist()
         // The rows below still spell what it means.
         compose.onNodeWithText("Not required").assertExists()
         compose.onNodeWithText("Not logged").assertExists()
@@ -1620,7 +1626,31 @@ class ContentScreensTest {
         compose.onNodeWithTag("comment_c1_menu").performClick()
         compose.onNodeWithTag("comment_menu_license_c1").performClick()
         compose.onNodeWithTag("comments_sheet").assertExists()
-        compose.onNodeWithTag("license_sheet_terms").assertExists()
+        compose.onNodeWithTag("postDetail.licenseSheet").assertExists()
+        compose.onNodeWithTag("postDetail.licenseSheet.dragHandle", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("postDetail.licenseSheet.terms").assertExists()
+        // The legacy tags are retired: the registered paths are the only names.
+        compose.onNodeWithTag("license_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("license_sheet_terms").assertDoesNotExist()
+        // A comment defaults to public domain: the zero pair's caption wears its registered part.
+        compose.onNodeWithTag("postDetail.licenseSheet.terms.publicDomain").assertExists()
+        compose.onNodeWithTag("license_sheet_terms_public_domain").assertDoesNotExist()
+    }
+
+    /** The comment's stacked terms ride `postDetail.licenseSheet`, their rows the keyed `axis`. */
+    @Test
+    fun aCommentsLicenseRowsAreTheRegisteredAxes() {
+        renderDetail(
+            detailFixture(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(testComment("c1")),
+            ),
+        )
+        openComments()
+        compose.onNodeWithTag("comment_c1_menu").performClick()
+        compose.onNodeWithTag("comment_menu_license_c1").performClick()
+        assertAxisRows("postDetail", "Not required", "Not logged")
     }
 
     // THE INTRODUCED-BUT-INERT LAW (jakob 2026-09-14): a row whose destination
