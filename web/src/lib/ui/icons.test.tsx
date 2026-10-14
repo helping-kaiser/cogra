@@ -71,8 +71,8 @@ describe("icons", () => {
       "visibility_off",
       // The checkbox's mark (Checkbox.jsx), first needed by DeleteAccount's sweep.
       "check",
-      // A Saved row's own Unsave (Saved.jsx; Icon.jsx `bookmark`).
-      "bookmark",
+      // The search field's glyph, first needed by Saved's search (SearchBar.jsx).
+      "search",
       // The band's bell (CograBand.jsx; Icon.jsx `notifications`).
       "notifications",
       // The unset stance face in a host's ink (Icon.jsx `sentiment_neutral`).

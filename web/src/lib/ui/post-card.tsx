@@ -157,6 +157,7 @@ export function PostCard({
   post,
   variant = "summary",
   href,
+  shareHref = href,
   testId,
   authorTestId,
   stanceTestId,
@@ -200,6 +201,11 @@ export function PostCard({
   variant?: "summary" | "detail";
   /** The post's own route — the summary card's link, and what share hands over. */
   href: string;
+  /**
+   * What share hands over, where the card's link carries an origin the shared
+   * link must not (`?from=saved` names a back arrow, never a recipient's).
+   */
+  shareHref?: string;
   /** The card's test-id scope; every part of it derives from this. */
   testId: string;
   authorTestId: string;
@@ -301,7 +307,7 @@ export function PostCard({
         ? {
             label: "Share",
             onSelect: () => {
-              void shareLink(new URL(href, window.location.href).toString()).then((outcome) => {
+              void shareLink(new URL(shareHref, window.location.href).toString()).then((outcome) => {
                 if (outcome === "copied") onLinkCopied();
               });
             },
@@ -584,7 +590,7 @@ export function PostCard({
             the sheet. */}
         {!narrow && (
           <ShareButton
-            href={href}
+            href={shareHref}
             onCopied={onLinkCopied}
             testId={`${testId}-share`}
             node={part(node, "actionRow.share")}

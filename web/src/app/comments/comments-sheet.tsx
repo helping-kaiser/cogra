@@ -121,7 +121,8 @@ import { StanceControl } from "@/lib/ui/stance-control";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
 import { RowLine } from "@/lib/ui/row-line";
 import { useSavedWrites } from "@/lib/saved/provider";
-import { saveRow, useHostSnack } from "@/lib/saved/save-row";
+import { useHostSnack } from "@/lib/saved/save-row";
+import { commentMenuItems } from "@/lib/ui2/comment-menu";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
@@ -216,6 +217,7 @@ export function CommentsSheet({
   onCount,
   refreshToken = 0,
   landOn = null,
+  aimReply = false,
 }: {
   open: boolean;
   /**
@@ -248,6 +250,11 @@ export function CommentsSheet({
    * read, it pages and unfolds until that comment stands, then scrolls to it.
    */
   landOn?: string | null;
+  /**
+   * The landing came from a comment card's comment glyph (FeedKinds.md): once
+   * the comment stands, the reply composer opens aimed at it.
+   */
+  aimReply?: boolean;
 }) {
   const client = useApolloClient();
   const router = useRouter();
@@ -527,6 +534,8 @@ export function CommentsSheet({
   // finish lands on the deepest comment it could open.
   const landedOn = useRef<string | null>(null);
   const [landingAt, setLandingAt] = useState<string | null>(null);
+  // Where the landing came to rest — what an aimed reply opens on.
+  const landedAt = useRef<string | null>(null);
   useEffect(() => {
     if (!open || landOn === null || landedOn.current === landOn || loading) return;
     landedOn.current = landOn;
@@ -592,6 +601,7 @@ export function CommentsSheet({
     target.scrollIntoView?.({ block: "center" });
     target.setAttribute("tabindex", "-1");
     target.focus({ preventScroll: true });
+    landedAt.current = landingAt;
     setLandingAt(null);
   }, [landingAt, comments, replyThreads]);
 
@@ -908,6 +918,22 @@ export function CommentsSheet({
     setReplying(target);
   };
 
+  // A LANDING THAT CAME FROM A COMMENT CARD'S GLYPH (FeedKinds.md, Saved.md)
+  // opens the reply composer aimed at the comment it came to rest on — once.
+  const aimed = useRef<string | null>(null);
+  useMeasureEffect(() => {
+    const at = landedAt.current;
+    if (!aimReply || at === null || at !== landOn || aimed.current === at) return;
+    const landed =
+      comments.find((comment) => comment.id === at) ??
+      Object.values(replyThreads)
+        .flatMap((thread) => thread.items)
+        .find((reply) => reply.id === at);
+    if (landed === undefined) return;
+    aimed.current = at;
+    openComposer(commentTarget(landed));
+  }, [landingAt, comments, replyThreads]);
+
   /** ...AND TAKES ITS PLACE BACK, whole. Both composers' exits land here. */
   const backToThread = (returned: Return) => {
     setReplying(null);
@@ -933,58 +959,22 @@ export function CommentsSheet({
   };
 
   /**
-   * THE COMMENT'S ROWS (`_shared.jsx:392` — `[...CARD_MENU, OPINIONS_ROW,
-   * LICENSE_ROW]`). Save · Cite in a new post · Opinions on this · License
-   * terms, and no Hide: hiding names an actor, and its route is the
-   * commenter's profile (jakob 2026-09-12). Save is the one behaviour every
-   * menu shares (`saveRow`), its aftermath on this thread's own snackbar.
-   *
-   * `Opinions on this` STANDS WHATEVER THE COUNT IS, which is the difference
-   * between a menu row and a count line: a row that came and went with a number
-   * would make the menu a different menu every time.
+   * THE COMMENT'S ROWS — the one builder every comment's ⋮ shares
+   * (`comment-menu.ts`), its aftermath on this thread's own snackbar. The
+   * license terms rise from inside the thread, a sheet over a sheet
+   * (`CommentLicense.jsx`, design/readme.md:2364).
    */
-  const commentMenuItems = (comment: ThreadComment): MenuItem[] => {
-    const rows: MenuItem[] = [
-      saveRow({
-        writes,
-        node: comment.id,
-        server: comment.viewerBookmarkedAt ?? null,
-        notify,
-        onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
-        testId: `comment-menu-save-${comment.id}`,
-      }),
-      {
-        label: "Cite in a new post",
-        onSelect: () => router.push(`/compose?reference=${comment.id}`),
-        testId: `comment-menu-cite-${comment.id}`,
-      },
-      // INBOUND BEFORE OPINIONS (`_shared.jsx:397-413`): it sits between the
-      // acts and the license because it is a fact about the ARTIFACT, where
-      // the row under it is a fact about people. Like that row it stands
-      // whatever the count is — a comment has no count line of its own, so
-      // this is the only door to the list, and the only way to meet it empty.
-      {
-        label: "Cited by",
-        onSelect: () => openCitedBy(comment.id),
-        testId: `comment-menu-cited-by-${comment.id}`,
-      },
-      {
-        label: "Opinions on this",
-        onSelect: () => {},
-        testId: `comment-menu-opinions-${comment.id}`,
-      },
-    ];
-    if (comment.license !== null && comment.license !== undefined) {
-      rows.push({
-        label: "License terms",
-        // Raised from inside the comments thread — a sheet over a sheet
-        // (`CommentLicense.jsx`, design/readme.md:2364).
-        onSelect: () => openLicense(comment.license),
-        testId: `comment-menu-license-${comment.id}`,
-      });
-    }
-    return rows;
-  };
+  const menuRowsOf = (comment: ThreadComment): MenuItem[] =>
+    commentMenuItems({
+      comment,
+      writes,
+      notify,
+      onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
+      navigate: (route) => router.push(route),
+      openCitedBy,
+      openLicense,
+      testIdPrefix: "comment-menu",
+    });
 
   const openEditor = (comment: ThreadComment, parentId: string | null) => {
     // The editor opens on what the comment actually carries — text and
@@ -1109,7 +1099,7 @@ export function CommentsSheet({
                 thread already lives in a sheet, so this menu is a sheet on a
                 sheet (design/readme.md:2364). */}
             <OverflowMenu
-              items={commentMenuItems(comment)}
+              items={menuRowsOf(comment)}
               ariaLabel="More on this comment"
               testId={`comment-menu-${comment.id}`}
               stacked

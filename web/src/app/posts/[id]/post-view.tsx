@@ -55,6 +55,7 @@ export function PostView({
   store = identityStore,
   from = null,
   landOn = null,
+  aimReply = false,
 }: {
   postId: string;
   /** Test injection. */
@@ -66,6 +67,8 @@ export function PostView({
    * (jakob 2026-10-01; Saved.md "tap a comment's row").
    */
   landOn?: string | null;
+  /** The landing opens the reply composer aimed at that comment (a card's comment glyph). */
+  aimReply?: boolean;
 }) {
   // THE BACK ARROW NAMES WHERE THE READER CAME FROM (the origin-naming table):
   // a Saved row's destination reads `Back to Saved`, a notification's `Back to
@@ -443,6 +446,7 @@ export function PostView({
         onCount={setLiveComments}
         refreshToken={threadToken}
         landOn={landOn}
+        aimReply={aimReply}
       />
       {/* THE POST'S MENU AND WHAT ITS ROWS RAISE, over this page
           (ReaderPostMenu, ReportConfirm). A removed post has no menu left, so
