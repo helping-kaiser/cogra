@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionContains
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
@@ -268,6 +269,16 @@ class ComposeWizardScreenTest {
         compose.onNodeWithTag("wizard_header_action").assertDoesNotExist()
         compose.onNodeWithTag("wizard_crop_next").assertIsDisplayed()
         compose.onNodeWithTag("wizard_header_leave").assertIsDisplayed()
+    }
+
+    @Test
+    fun theComposeXStillReadsTheDraftWordingWhilePostEditsReadDiscarded() {
+        // The compose wizard keeps the draft, so its X says so; only the
+        // post edits (EditCompose, round 10) say the edit is discarded.
+        compose.setContent { Wizard(withPicks) }
+
+        compose.onNodeWithTag("wizard_header_leave")
+            .assertContentDescriptionEquals("Leave — your draft is kept")
     }
 
     @Test
