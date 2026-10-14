@@ -9991,7 +9991,9 @@ banked by round 10, drawn as one round.
   and `CommentMenu` do, so the detail's and the thread's sheets join
   the feed's: `postDetail.licenseSheet.terms.axis` and
   `feed.licenseSheet.terms.axis`.
-- **The gate**: the registry **94 / 3679 → 97 / 3799** — `PostLicense`
+- **The gate**: edges unchanged at **2041** (`FeedSeenTail` is an
+  exemplar with no control of its own); the registry **94 / 3679 → 97 /
+  3799** — `PostLicense`
   and `CommentLicense` (38 paths each) and `FeedSeenTail` (41) join, and
   `FeedPostLicense` grows its three axis paths; nothing removed.
 
