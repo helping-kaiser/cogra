@@ -224,6 +224,14 @@ interface ContentRepository {
          */
         sensitive: Boolean = false,
         sensitiveReason: String? = null,
+        /**
+         * Where the author stands on their own post — the genesis
+         * Publish's `pDirected`, set at the seal's stance pad
+         * (`ComposeSeal`). Null leaves the low-defaults policy value the
+         * contract applies (+0.1); `pInterest` is census-fixed at 1 for a
+         * Publish and so is not a parameter.
+         */
+        pDirected: Double? = null,
     ): Outcome<PreparedContentView>
 
     /**

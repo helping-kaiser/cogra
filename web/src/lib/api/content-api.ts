@@ -447,6 +447,12 @@ export async function preparePost(
     /** The author's own sensitive mark. Omitted counts as false. */
     sensitive?: boolean;
     sensitiveReason?: string;
+    /**
+     * Where the author stands on their own post — the genesis Publish's
+     * `pDirected` (the seal's Adjust sets it). Omitted, the server applies the
+     * +0.1 policy default.
+     */
+    pDirected?: number;
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -459,6 +465,7 @@ export async function preparePost(
             description: fields.description,
             content: fields.content,
             license: fields.license,
+            pDirected: fields.pDirected ?? null,
             attachments: attachmentInputs(fields.attachments),
             ...sensitiveInput(fields.sensitive, fields.sensitiveReason),
             // The composer's tags are explicit structured input, never

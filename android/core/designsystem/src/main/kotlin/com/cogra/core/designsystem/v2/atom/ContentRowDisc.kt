@@ -13,6 +13,9 @@ sealed interface ContentRowDisc {
     /** A stance's face where a picture would go, no digits (the chronicle's opinion row). */
     data class Face(val directed: Double, val interest: Double) : ContentRowDisc
 
+    /** 🤷 where a picture would go, for a stance walked back (the withdrawal notification). */
+    data object WalkedBack : ContentRowDisc
+
     /** A deleted account: the disc keeps its space and fills with nothing. */
     data object Redacted : ContentRowDisc
 }

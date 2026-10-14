@@ -29,6 +29,11 @@ function answerOf(ids: string[], settling: string[] = []): HeldAnswer {
   };
 }
 
+/** The derived list top to bottom: above the seen line, then under it. */
+function rowIds(feed: RankedFeed): string[] {
+  return [...feed.derived.head, ...feed.derived.tail].map((row) => row.targetId);
+}
+
 function postItem(id: string): FeedItemView {
   return { __typename: "Post", id } as unknown as FeedItemView;
 }
@@ -74,7 +79,7 @@ describe("the held ranking", () => {
     expect(fake.ranks).toHaveLength(1);
     expect(feed.answer).toBe(held);
     expect(feed.answer?.asOfEpoch).toBe(9);
-    expect(feed.derived.map((row) => row.targetId)).toEqual(["c", "b", "a"]);
+    expect(rowIds(feed)).toEqual(["c", "b", "a"]);
   });
 
   it("an_off_feed_lookup_reads_the_uncut_held_list", async () => {
@@ -86,7 +91,7 @@ describe("the held ranking", () => {
     });
     await feed.refresh(fake.reads);
     // Nothing is marked, so Your people cuts every row from the list shown…
-    expect(feed.derived).toEqual([]);
+    expect(rowIds(feed)).toEqual([]);
     // …and the lookup still hits.
     expect(feed.lookup("a")?.score).toBe(1);
   });
@@ -95,8 +100,23 @@ describe("the held ranking", () => {
     const fake = io([answerOf(["a", "b"])], new Set(["a"]));
     const feed = new RankedFeed("reader-1");
     await feed.refresh(fake.reads);
-    expect(feed.derived.map((row) => row.targetId)).toEqual(["b"]);
+    expect(rowIds(feed)).toEqual(["b", "a"]);
     expect(feed.lookup("a")).toBeDefined();
+  });
+
+  // THE SEEN TAIL (PR-80, FeedSeenTail.md): the windows run down the unseen
+  // rows, then on into the seen ones, and each says which ids stand under the
+  // separator — the list it was cut from, not the record as it stands later.
+  it("the_windows_run_on_into_the_seen_tail_and_name_it", async () => {
+    const seen = new Set(["a"]);
+    const fake = io([answerOf(["a", "b", "d"])], seen);
+    const feed = new RankedFeed("reader-1");
+    await feed.refresh(fake.reads);
+    const first = await feed.window(0, fake.reads);
+    expect(first.kind === "success" && first.value.items.map((item) => item.id)).toEqual(["b", "d", "a"]);
+    expect(first.kind === "success" && [...first.value.seenTail]).toEqual(["a"]);
+    seen.add("b");
+    expect([...feed.seenTail]).toEqual(["a"]);
   });
 
   it("an_off_feed_miss_reads_the_dash", async () => {
@@ -108,7 +128,7 @@ describe("the held ranking", () => {
   it("a_settling_thing_is_never_looked_up", async () => {
     const feed = new RankedFeed("reader-1");
     await feed.refresh(io([answerOf(["a"], ["s"])]).reads);
-    expect(feed.derived.map((row) => row.targetId)).toEqual(["s", "a"]);
+    expect(rowIds(feed)).toEqual(["s", "a"]);
     expect(feed.lookup("s")).toBeUndefined();
   });
 
@@ -129,7 +149,7 @@ describe("the held ranking", () => {
     const done = await feed.done({ ...FEED_FILTER_DEFAULT, kinds: ["comments"] }, fake.reads);
     expect(done.kind).toBe("failed");
     expect(feed.filter).toEqual(FEED_FILTER_DEFAULT);
-    expect(feed.derived.map((row) => row.targetId)).toEqual(["a"]);
+    expect(rowIds(feed)).toEqual(["a"]);
   });
 
   it("a_window_of_only_filtered_rows_loads_the_next", async () => {
@@ -141,7 +161,9 @@ describe("the held ranking", () => {
     const feed = new RankedFeed("reader-1");
     await feed.refresh(fake.reads);
     const first = await feed.window(0, fake.reads);
-    expect(first).toEqual(success({ items: [postItem("p-after")], next: FEED_WINDOW + 1, hasMore: false }));
+    expect(first).toEqual(
+      success({ items: [postItem("p-after")], next: FEED_WINDOW + 1, hasMore: false, seenTail: new Set() }),
+    );
     expect(fake.windows.map((window) => window.length)).toEqual([FEED_WINDOW, 1]);
   });
 
@@ -181,7 +203,7 @@ describe("the held ranking", () => {
       fake.reads,
     );
     expect(fake.ranks).toHaveLength(2);
-    expect(feed.derived.map((row) => row.targetId)).toEqual(["d", "c"]);
+    expect(rowIds(feed)).toEqual(["d", "c"]);
   });
 
   it("done_without_changes_never_ranks", async () => {
@@ -199,7 +221,7 @@ describe("the held ranking", () => {
     const late = await feed.refresh({ ...fake.reads, wanted: () => false });
     expect(late.kind).toBe("failed");
     expect(feed.lookup("a")).toBeDefined();
-    expect(feed.derived.map((row) => row.targetId)).toEqual(["a"]);
+    expect(rowIds(feed)).toEqual(["a"]);
   });
 
   it("ranks nothing for a viewer that resolves to no one", async () => {
@@ -208,6 +230,6 @@ describe("the held ranking", () => {
     const reads: FeedIo = { ...fake.reads, resolveViewer: async () => success(null) };
     expect((await feed.refresh(reads)).kind).toBe("success");
     expect(fake.ranks).toHaveLength(0);
-    expect(feed.derived).toEqual([]);
+    expect(rowIds(feed)).toEqual([]);
   });
 });

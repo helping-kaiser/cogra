@@ -14,6 +14,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.cogra.core.designsystem.v2.atom.WALKED_BACK_DISC_TAG
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.ModeratedField
 import com.cogra.domain.ModerationState
@@ -135,6 +136,24 @@ class NotificationsScreenTest {
         render(loaded(opinion))
         compose.onNodeWithText("@sol gave an opinion on you").assertIsDisplayed()
         assertThat(compose.onAllNodesWithText("0.4", substring = true).fetchSemanticsNodes()).isEmpty()
+    }
+
+    // Notifications.md:13, :21, :43 — the tenth kind, the opinion row's sibling.
+    @Test
+    fun `the withdrawal row wears the walked back face and opens the withdrawers profile`() {
+        val withdrawn = opinion.copy(
+            id = "n4",
+            kind = NotificationKind.PROFILE_OPINION_WITHDRAWN,
+            pair = NotificationPair(-0.4, -0.5),
+        )
+        render(loaded(withdrawn))
+        compose.onNodeWithText("@sol walked back their opinion on you").assertIsDisplayed()
+        // 🤷 where a picture would go, decorative: the sentence says what happened.
+        compose.onNodeWithTag(WALKED_BACK_DISC_TAG, useUnmergedTree = true).assertIsDisplayed()
+        assertThat(compose.onAllNodesWithText("🤷", useUnmergedTree = true).fetchSemanticsNodes()).isEmpty()
+        assertThat(compose.onAllNodesWithText("0.4", substring = true).fetchSemanticsNodes()).isEmpty()
+        compose.onNodeWithTag("notification_n4_open").performClick()
+        assertThat(opened).containsExactly("n4" to NotificationTarget.Person("sol"))
     }
 
     @Test

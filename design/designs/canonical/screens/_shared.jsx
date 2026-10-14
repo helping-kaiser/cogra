@@ -970,53 +970,6 @@ function ChronicleList({ children, node }) {
   );
 }
 
-/* THE SAVED ROW'S OWN UNSAVE (jakob 2026-09-11). Sending a reader back to the
-   thing's own ⋮ to undo what is in front of them is the long way round, and the
-   Saved list is the one place where every row offers the same act. It is
-   ICON-ONLY — the filled bookmark, `Unsave` in the accessibility tree, no word
-   on screen (jakob: with the icon "we dont even need any word there") — because
-   the same word repeated down a list is four copies of one sentence, and this
-   glyph is one every reader already reads as "kept".
-
-   IT TAKES THE CHEVRON'S SLOT, NEVER THE AGE'S. The age is when YOU saved the
-   thing, which is this list's whole order and what a reader is retracing, so it
-   keeps its place and the control stands outboard of it. The chevron was never
-   drawn here — a row that opens says so by being a row — so the edge was already
-   free. The glyph takes `text-secondary`, the colour every icon-only control in
-   this system rests in: it is the row's control, not a badge saying the row is
-   saved. Every row in this list is.
-
-   It lives here because the list is drawn on more than one board — at rest and
-   in the moment after a row goes — and a control spelled twice is a control
-   that drifts.
-
-   ITS NAME CARRIES THE THING (the K13 round): `Unsave The long way home`,
-   `Unsave Mira Voss` — the row's own title after the verb, the rule the tag
-   chip's × and the skip link already keep. A list of identical `Unsave`s tells
-   a listener the verb four times and the object never. */
-const Unsave = ({ name, node }) => (
-  <button
-    type="button"
-    aria-label={`Unsave ${name}`}
-    data-node={node}
-    className="cg-state cg-focus cg-hit"
-    style={{
-      display: "grid",
-      placeItems: "center",
-      height: "40px",
-      width: "40px",
-      border: 0,
-      background: "none",
-      borderRadius: "var(--radius-full)",
-      color: "var(--text-secondary)",
-      cursor: "pointer",
-      padding: 0,
-    }}
-  >
-    <Icon name="bookmark" size={22} />
-  </button>
-);
-
 /* The post-detail column: the read surface a card opens into. */
 /* THE EDITED-WHILE-YOU-READ LINE (jakob 2026-10-09, seam 120; drawn
    2026-10-12, the slice-3 round). A detail HOLDS the post as it was opened —
@@ -4747,7 +4700,7 @@ const SOL_INVITE_LINK_OPEN = "https://cogra.social/join/c47b19e0-3a52-4f68-b1d9-
    opens it is answering the same standing question. */
 const ASK_LINK = "https://cogra.social/vouch/5d9e7a41-b062-4c38-8e5f-1a4703cbd926";
 
-/* THE ROW'S OWN CLOSE, the Saved list's `Unsave` one surface over: icon-only,
+/* THE ROW'S OWN CLOSE: icon-only,
    `ContentRow`'s `action` slot, `text-secondary`, its name only in the
    accessibility tree. A row in this list has exactly two things a reader can
    do to it — approve it, which is the row, and close it, which is this — so a
@@ -4755,7 +4708,7 @@ const ASK_LINK = "https://cogra.social/vouch/5d9e7a41-b062-4c38-8e5f-1a4703cbd92
    deleted and the person keeps the account they made, so the glyph is `close`
    and the name says what happens, not how it feels.
 
-   IT TAKES THE HANDLE, unlike `Unsave`, because a list of applications is a
+   IT TAKES THE HANDLE because a list of applications is a
    list of PEOPLE and four identical "Close" buttons is four chances for a
    screen reader to close the wrong one. */
 const CloseApplication = ({ handle, node }) => (

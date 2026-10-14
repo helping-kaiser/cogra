@@ -29,9 +29,7 @@ import { StanceValue, ZERO_BUNDLE_EMOJI } from "../stance/StanceReadout.jsx";
    it takes the TRAILING-MOST slot — the chevron's, free by definition, since a
    chevron means "this opens another surface" and a row with its own control is
    not spending its edge on saying so. It does not displace the trailing edge:
-   on the Saved list the age is when YOU saved the thing, which is the list's
-   whole order and what a reader is retracing, so the age keeps its place and
-   the control stands outboard of it. `SettingsRow` assigns the same slot the
+   the age keeps its place and the control stands outboard of it. `SettingsRow` assigns the same slot the
    same way — "a control of the row's own" is one of its four trailing variants.
 
    A control inside a control is not markup, so with `action` the row splits

@@ -20,7 +20,15 @@
 
 import { failed, success, type Outcome } from "@/lib/api/outcome";
 import type { FeedItemView, FeedPostView } from "@/lib/api/feed-api";
-import { derive, type FeedRow, type HeldAnswer, type HeldEntry, type SeenLookup } from "./derive";
+import {
+  derive,
+  NOTHING_DERIVED,
+  type DerivedFeed,
+  type FeedRow,
+  type HeldAnswer,
+  type HeldEntry,
+  type SeenLookup,
+} from "./derive";
 import {
   deviceCutsOf,
   doneEffectOf,
@@ -70,6 +78,12 @@ export type FeedWindow = {
   /** Where the next window starts in the derived list. */
   readonly next: number;
   readonly hasMore: boolean;
+  /**
+   * The ids under `feed.seenSeparator` in the list this window was cut from
+   * (FeedSeenTail.md): they stand after every unseen row, and reading them
+   * records nothing.
+   */
+  readonly seenTail: ReadonlySet<string>;
 };
 
 /** What every kind switched off answers, without asking (FeedNothing.md:3-5). */
@@ -82,7 +96,10 @@ function isPost(item: FeedItemView | null | undefined): item is FeedPostView {
 export class RankedFeed {
   private applied: FeedFilterValue;
   private held: HeldAnswer | null = null;
+  private split: DerivedFeed = NOTHING_DERIVED;
+  // Head then tail: the one list hydration windows over.
   private rows: readonly FeedRow[] = [];
+  private tailIds: ReadonlySet<string> = new Set();
   // Null: asked for, and the server could not hydrate it (skipped, §4.4).
   private hydrated = new Map<string, FeedItemView | null>();
 
@@ -104,9 +121,20 @@ export class RankedFeed {
     return this.held;
   }
 
-  /** The derived list, as of the last derive. */
-  get derived(): readonly FeedRow[] {
-    return this.rows;
+  /** The derived list, as of the last derive: above the seen line, then under it. */
+  get derived(): DerivedFeed {
+    return this.split;
+  }
+
+  /** The ids under `feed.seenSeparator`, as of the last derive. */
+  get seenTail(): ReadonlySet<string> {
+    return this.tailIds;
+  }
+
+  private adopt(split: DerivedFeed): void {
+    this.split = split;
+    this.rows = [...split.head, ...split.tail];
+    this.tailIds = new Set(split.tail.map((row) => row.targetId));
   }
 
   /**
@@ -143,14 +171,14 @@ export class RankedFeed {
     if (io.wanted?.() === false) return failed(new Error("the ranking landed after its screen left"));
     this.held = answer;
     this.hydrated = new Map();
-    this.rows = answer === null ? [] : derive(answer, deviceCutsOf(this.applied), seen);
+    this.adopt(answer === null ? NOTHING_DERIVED : derive(answer, deviceCutsOf(this.applied), seen));
     return success(undefined);
   }
 
   /** The derive again, from the held answer and the record as it stands now. */
   private async rederive(io: FeedIo): Promise<void> {
     const seen = await io.seen();
-    this.rows = this.held === null ? [] : derive(this.held, deviceCutsOf(this.applied), seen);
+    this.adopt(this.held === null ? NOTHING_DERIVED : derive(this.held, deviceCutsOf(this.applied), seen));
   }
 
   /**
@@ -197,6 +225,6 @@ export class RankedFeed {
       items.push(...ids.map((id) => this.hydrated.get(id)).filter(isPost));
       at += ids.length;
     }
-    return success({ items, next: at, hasMore: at < this.rows.length });
+    return success({ items, next: at, hasMore: at < this.rows.length, seenTail: this.tailIds });
   }
 }

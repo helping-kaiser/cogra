@@ -1829,7 +1829,7 @@ type Notification {
   subject: Node
   "The viewer's own node the act reached: the post commented on, the
    comment replied to, the cited post or comment, the viewer's own
-   profile for a mention. Null for PROFILE_OPINION and the four
+   profile for a mention. Null for the two opinion kinds and the four
    application kinds."
   context: Node
   "The landed L1 record behind the act — the row's traceable source,
@@ -1841,7 +1841,7 @@ type Notification {
   "The application the act concerns — the waiting application for
    APPLICATION_APPROVABLE, the viewer's own path for
    APPLICATION_APPROVED and APPLICATION_REJECTED, the landed path for
-   INVITE_LANDED; null for the five content kinds. Resolves while the
+   INVITE_LANDED; null for the six record kinds. Resolves while the
    row exists; an application later closed or landed reads in its
    current state."
   application: Application
@@ -1852,7 +1852,7 @@ type Notification {
   readAt: DateTime
 }
 
-"The nine addressed acts. A kind is the act plus what it reached,
+"The ten addressed acts. A kind is the act plus what it reached,
  which is what a reader needs to know before opening."
 enum NotificationKind {
   "A comment on the viewer's post."
@@ -1864,8 +1864,12 @@ enum NotificationKind {
   "A citation whose target is the viewer's post or comment."
   CITATION
   "An opinion whose target is the viewer's profile — a first one or a
-   revision; a withdrawal reports nothing."
+   revision."
   PROFILE_OPINION
+  "An opinion on the viewer's profile walked back — its author's
+   bundle netted to (0, 0). Opens on the author's profile; the earlier
+   PROFILE_OPINION row stands."
+  PROFILE_OPINION_WITHDRAWN
   "An application waiting in the viewer's queue became approvable —
    email verified and key attached."
   APPLICATION_APPROVABLE
@@ -2607,8 +2611,9 @@ observable
 
 The reader's seen-list is not part of the slice and rides no ranking
 request: the ranker ranks seen and unseen content alike, and the
-reader's device cuts what it has already seen from the ranked answer,
-re-reading its own record at every change of view. `markSeen` writes
+reader's device stands what it has already seen under the feed's
+"Already seen" line, in the answer's own order, re-reading its own
+record at every change of view. `markSeen` writes
 the record History reads (`User.viewHistory`); the feed path never
 reads it back. Order, Still settling and the people scope are
 device-side too: the answer carries each row's people mark and its

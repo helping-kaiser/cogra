@@ -66,6 +66,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -254,16 +255,23 @@ private const val RESTING_FACE = "🫥"
  * control, and the 2026-09-09 ruling that retired the second disabled
  * token kept this one for exactly that reason.
  */
-private const val RESTING_FACE_ALPHA = 0.4f
+internal const val RESTING_FACE_ALPHA = 0.4f
 
 /**
- * The empty resting face's opacity: muted ([RESTING_FACE_ALPHA]) everywhere,
- * full ink where the host asks for it (the vouch card). The web twin also
- * greys the glyph; this face has never been desaturated, so only the
- * opacity differs.
+ * What the empty resting face is drawn as: the muted 🫥 everywhere
+ * ([RESTING_FACE_ALPHA]), or — where the host hands an ink (the vouch card) —
+ * the line face in that ink at full opacity (stance-control.md, jakob
+ * 2026-10-14). The 🫥 emoji draws in its own fixed pale greys and cannot be
+ * tinted, so neither muting nor full opacity reads on the card's ground.
  */
-internal fun restingFaceAlpha(fullInkEmpty: Boolean): Float =
-    if (fullInkEmpty) 1f else RESTING_FACE_ALPHA
+internal sealed interface EmptyFace {
+    data object MutedEmoji : EmptyFace
+
+    data class Line(val ink: Color) : EmptyFace
+}
+
+internal fun emptyFaceFor(lineFaceInk: Color?): EmptyFace =
+    if (lineFaceInk == null) EmptyFace.MutedEmoji else EmptyFace.Line(lineFaceInk)
 
 /** How close to the viewport's edge an overlay is allowed to sit. */
 private val PAD_MARGIN = 12.dp
@@ -374,14 +382,16 @@ fun StanceControl(
      */
     padOnly: Boolean = false,
     /**
-     * THE VOUCH CARD'S EMPTY FACE WEARS FULL INK (stance-control.md, jakob
-     * 2026-10-13; the master's `fullInkEmpty`). The muted, translucent
-     * resting face all but vanishes on the card's tertiary-container
-     * ground, so the card's hollow face stands at full opacity. Only the
-     * empty resting face is affected; off by default, so every other host
-     * keeps the muted face.
+     * THE VOUCH CARD'S EMPTY FACE IS A LINE FACE IN THE CARD'S INK
+     * (stance-control.md, jakob 2026-10-14; the master's `lineFaceInk`).
+     * The 🫥 emoji's fixed pale greys never read on the card's
+     * tertiary-container ground, so the card's unset state is the line
+     * face, `sentiment_neutral`, drawn in the ink handed here at full
+     * opacity. Only the empty resting face is affected (a set stance keeps
+     * its own emoji); null by default, so every other host keeps the muted
+     * face.
      */
-    fullInkEmpty: Boolean = false,
+    lineFaceInk: Color? = null,
 ) {
     val marginPx = with(LocalDensity.current) { PAD_MARGIN.roundToPx() }
     val bottomPx = with(LocalDensity.current) { PAD_BOTTOM.roundToPx() }
@@ -407,7 +417,7 @@ fun StanceControl(
     //
     // A VARIANT PAD CARRIES NO WALK IT BACK (VouchBackPad.md:11): the
     // vouch-back opens a relationship, it is never the place to leave one.
-    val severable = state.standing != null && variant == null
+    val severable = rememberSeverableAtRest(state.standing != null && variant == null, state.busy)
 
     StanceConfirmation(state.confirmation, standingLabel, axes, onConfirmationShown)
     // THE PAD AND THE SEVERANCE DIALOG SAY THEY ARE UP, wherever the control
@@ -531,7 +541,7 @@ fun StanceControl(
                     }
                     .testTag(anchor?.tag ?: "${testTagPrefix}_stance"),
             ) {
-                StanceRestingFace(state.standing, testTagPrefix, anchor, fullInkEmpty)
+                StanceRestingFace(state.standing, testTagPrefix, anchor, emptyFaceFor(lineFaceInk))
                 pad()
             }
         }
@@ -554,6 +564,22 @@ fun StanceControl(
             )
         }
     }
+}
+
+/**
+ * THE PAD HOLDS ITS SHAPE WHILE SET IS ANSWERING (PR-57's reflow law,
+ * `StancePadReflowTest`). Set shows the pending fold as the standing at
+ * once, so a FIRST stance turns no standing into one while the pad is
+ * still up — and the walk-away appearing then grows the bottom-anchored
+ * card, lifting the whole pad. While [busy], the answer stays the one the
+ * control had at rest; a signed stance closes the pad, and the next open
+ * offers the walk-away.
+ */
+@Composable
+private fun rememberSeverableAtRest(severable: Boolean, busy: Boolean): Boolean {
+    val atRest = remember { mutableStateOf(severable) }
+    SideEffect { atRest.value = if (busy) atRest.value else severable }
+    return if (busy) atRest.value else severable
 }
 
 /**
@@ -1005,17 +1031,28 @@ private fun StanceRestingFace(
     standing: StancePoint?,
     testTagPrefix: String,
     anchor: DataNode?,
-    fullInkEmpty: Boolean,
+    emptyFace: EmptyFace,
 ) {
     if (standing == null) {
-        Text(
-            text = RESTING_FACE,
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-                .alpha(restingFaceAlpha(fullInkEmpty))
-                .testTag(anchor?.div("face")?.tag ?: "${testTagPrefix}_stance_empty_face"),
-        )
+        val faceTag = anchor?.div("face")?.tag ?: "${testTagPrefix}_stance_empty_face"
+        when (emptyFace) {
+            is EmptyFace.Line -> LineFace(
+                ink = emptyFace.ink,
+                // The same 16/12 inset the emoji sits in, so the anchor's
+                // resting height does not move with the face.
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .testTag(faceTag),
+            )
+            EmptyFace.MutedEmoji -> Text(
+                text = RESTING_FACE,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .alpha(RESTING_FACE_ALPHA)
+                    .testTag(faceTag),
+            )
+        }
         return
     }
     Row(

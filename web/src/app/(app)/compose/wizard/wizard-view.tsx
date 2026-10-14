@@ -629,6 +629,7 @@ export function ComposeWizard({
         sensitive: state.sensitive,
         sensitiveReason: state.sensitiveReason,
         license: state.license,
+        pDirected: state.pDirected,
         tags: state.tags,
         references: state.references,
         attachments: attachmentClaims(state) ?? undefined,

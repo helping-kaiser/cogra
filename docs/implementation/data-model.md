@@ -1257,6 +1257,7 @@ CREATE TABLE user_notifications (
     user_id        UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
     kind           TEXT        NOT NULL CHECK (kind IN (
                        'comment', 'reply', 'mention', 'citation', 'profile_opinion',
+                       'profile_opinion_withdrawn',
                        'application_approvable', 'invite_landed',
                        'application_approved', 'application_rejected')),
     actor_id       UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,

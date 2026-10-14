@@ -75,6 +75,8 @@ describe("icons", () => {
       "bookmark",
       // The band's bell (CograBand.jsx; Icon.jsx `notifications`).
       "notifications",
+      // The unset stance face in a host's ink (Icon.jsx `sentiment_neutral`).
+      "sentiment_neutral",
     ];
     expect([...shippedNames()].sort()).toEqual([...needed].sort());
   });

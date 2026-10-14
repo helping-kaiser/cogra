@@ -601,6 +601,7 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
         attachments: List<AttachmentClaim>,
         sensitive: Boolean,
         sensitiveReason: String?,
+        pDirected: Double?,
     ): Outcome<PreparedContentView> = guard.run {
         client.mutation(
             PreparePostMutation(
@@ -613,6 +614,9 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
                     // value and would read as "both".
                     content = Optional.presentIfNotNull(content),
                     license = license.toInput(),
+                    // Absent leaves the contract's own +0.1; the seal's
+                    // stance pad always names it.
+                    pDirected = Optional.presentIfNotNull(pDirected),
                     tags = tags.toInput(),
                     references = references.toInput(),
                     attachments = attachments.toInput(),

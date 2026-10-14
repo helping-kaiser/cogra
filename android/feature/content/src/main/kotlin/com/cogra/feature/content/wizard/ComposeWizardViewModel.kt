@@ -776,6 +776,7 @@ class ComposeWizardViewModel @Inject constructor(
                     // the transport: an empty string is a value, and "no
                     // reason" is what the author actually chose.
                     sensitiveReason = current.sensitiveReason.ifBlank { null },
+                    pDirected = current.pDirected,
                 )
             ) {
                 is Outcome.Success -> outcome.value

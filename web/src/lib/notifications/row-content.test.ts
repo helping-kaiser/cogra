@@ -66,6 +66,7 @@ describe("notificationRow", () => {
       ["INVITE_LANDED", "@ada landed through your invite"],
       ["APPLICATION_APPROVED", "@ada approved your application"],
       ["APPLICATION_REJECTED", "@ada closed your application"],
+      ["PROFILE_OPINION_WITHDRAWN", "@ada walked back their opinion on you"],
     ];
     for (const [kind, sentence] of sentences) {
       expect(notificationRow(row(kind)).title, kind).toBe(sentence);
@@ -118,6 +119,26 @@ describe("notificationRow", () => {
     expect(opinion.disc).toEqual({ kind: "face", pDirected: 0.4, pInterest: 0.5 });
     expect(opinion.second).toBe(undefined);
     expect(opinion.title).not.toMatch(/\d/);
+  });
+
+  // Notifications.md:21: 🤷 where a picture would go, no digits, no second
+  // line — even for an actor with a picture, and whatever pair the record says.
+  it("the_withdrawal_row_wears_the_walked_back_face_with_no_digits_and_no_second_line", () => {
+    const withdrawn = notificationRow(
+      row("PROFILE_OPINION_WITHDRAWN", {
+        actor: {
+          id: "a1",
+          handle: "sol",
+          displayName: moderated("Sol"),
+          avatar: { url: "https://media/sol.jpg", status: "NORMAL" },
+        },
+        record: { id: "act:y", pDirected: -0.4, pInterest: -0.5 },
+      } as Partial<Notification>),
+    );
+    expect(withdrawn.title).toBe("@sol walked back their opinion on you");
+    expect(withdrawn.disc).toEqual({ kind: "walkedBack" });
+    expect(withdrawn.second).toBe(undefined);
+    expect(withdrawn.title).not.toMatch(/\d/);
   });
 
   it("the_approvable_row_wears_the_monogram_never_a_picture", () => {
@@ -180,6 +201,8 @@ describe("notificationRow", () => {
       [row("MENTION", { subject: post("p2", "A") } as Partial<Notification>), "/posts/p2?from=notifications"],
       [row("CITATION", { subject: post("p3", "B") } as Partial<Notification>), "/posts/p3?from=notifications"],
       [row("PROFILE_OPINION"), "/u/ada?from=notifications"],
+      // Notifications.md:43: the profile of the person who walked it back.
+      [row("PROFILE_OPINION_WITHDRAWN"), "/u/ada?from=notifications"],
       [row("INVITE_LANDED"), "/u/ada?from=notifications"],
       [row("APPLICATION_APPROVED"), "/u/ada?from=notifications"],
     ];

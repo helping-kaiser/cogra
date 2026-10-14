@@ -27,13 +27,14 @@ interface NotificationsRepository {
     suspend fun markRead(id: String): Outcome<Instant>
 }
 
-/** The nine addressed acts; UNKNOWN is a kind this build cannot name. */
+/** The ten addressed acts; UNKNOWN is a kind this build cannot name. */
 enum class NotificationKind {
     COMMENT,
     REPLY,
     MENTION,
     CITATION,
     PROFILE_OPINION,
+    PROFILE_OPINION_WITHDRAWN,
     APPLICATION_APPROVABLE,
     INVITE_LANDED,
     APPLICATION_APPROVED,

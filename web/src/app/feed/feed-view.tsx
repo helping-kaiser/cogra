@@ -21,7 +21,7 @@
 // opening a post and coming back is not a fresh feed; `scroll-pin.ts` says why
 // the place is an anchor rather than a number, and how it is held afterwards.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
@@ -64,7 +64,7 @@ import { useHiddenSet } from "@/lib/hidden/provider";
 import { useNewerVersionAnnouncement } from "@/lib/release/newer-version-announcer";
 import { useHostSnack } from "@/lib/saved/save-row";
 import { Snackbar } from "@/lib/ui/snackbar";
-import type { DataNode } from "@/lib/ui/data-node";
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import * as clipMemory from "@/lib/ui2/media/clip-memory";
 import type { PostMenuRow } from "@/lib/ui2/post-menu";
 import { PostMenuHost } from "@/lib/ui2/post-menu-host";
@@ -90,6 +90,33 @@ const FEED_MENU_ROWS: ReadonlySet<PostMenuRow> = new Set([
 
 function feedMenuRow(row: PostMenuRow): DataNode | undefined {
   return FEED_MENU_ROWS.has(row) ? { path: `feed.menuSheet.${row}` } : undefined;
+}
+
+/** No row under the separator: the list before its first derive. */
+const NO_SEEN_TAIL: ReadonlySet<string> = new Set();
+
+const SEEN_SEPARATOR: DataNode = { path: "feed.seenSeparator" };
+
+/**
+ * `feed.seenSeparator` (FeedSeenTail.md, the `FeedSeenTail` board): a hairline
+ * with "Already seen" centred on it, quiet, and no control — the board's 12px
+ * gap and 8px/24px padding, the hairline `--border-hairline`
+ * (`outline-variant`), the words label-small in `--text-secondary`
+ * (`on-surface-variant`).
+ */
+function SeenSeparator() {
+  return (
+    <li className="flex items-center gap-3 px-6 py-2" {...testAttributes(SEEN_SEPARATOR)}>
+      <span aria-hidden="true" className="h-px flex-1 bg-outline-variant" />
+      <span
+        className="flex-none text-label-small text-on-surface-variant"
+        {...testAttributes(part(SEEN_SEPARATOR, "label"))}
+      >
+        Already seen
+      </span>
+      <span aria-hidden="true" className="h-px flex-1 bg-outline-variant" />
+    </li>
+  );
 }
 
 /** Every clip a list of posts draws, by the media id the clip memory keys on. */
@@ -276,6 +303,12 @@ export function FeedView({
   const [posts, setPosts] = useState<readonly PostView[]>(remembered?.posts ?? []);
   const [endCursor, setEndCursor] = useState<string | null>(remembered?.endCursor ?? null);
   const [hasNextPage, setHasNextPage] = useState(remembered?.hasNextPage ?? false);
+  // THE SEEN TAIL (FeedSeenTail.md): which of the list's rows stand under the
+  // separator — fixed when the list was derived, like its order, so a row seen
+  // on screen moves only at the next load, refresh or re-derive.
+  const [seenTail, setSeenTail] = useState<ReadonlySet<string>>(
+    () => remembered?.feed.seenTail ?? NO_SEEN_TAIL,
+  );
   const [loading, setLoading] = useState(remembered === null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [transportFault, setTransportFault] = useState<TransportFault | null>(null);
@@ -337,6 +370,7 @@ export function FeedView({
   /** Puts the derived list's first window on screen. */
   const showFirst = useCallback((first: FeedWindow) => {
     setPosts(first.items);
+    setSeenTail(first.seenTail);
     setEndCursor(first.hasMore ? String(first.next) : null);
     setHasNextPage(first.hasMore);
   }, []);
@@ -539,6 +573,10 @@ export function FeedView({
   const listRef = useRef<HTMLUListElement>(null);
   const postIds = useMemo(() => shown.map((post) => post.id), [shown]);
   useSeenTracker({ root: host, list: listRef, ids: postIds, suspended: commentsOpen });
+  // Where the drawn cards cross into the seen tail: the derive stands every
+  // tail row after every unseen one, so the separator goes before the first
+  // tail card drawn — and with nothing unseen, the feed opens at it.
+  const seenFrom = useMemo(() => shown.findIndex((post) => seenTail.has(post.id)), [shown, seenTail]);
 
   return (
     // The band is chrome and full-bleed, so the gutter belongs to the content
@@ -659,42 +697,47 @@ export function FeedView({
               that head the column (ruling 45). */}
           {phase === "signedIn" && <VouchCard refreshSignal={listEra} />}
           {shown.map((post, index) => (
-            // The card names itself to the pin: it is the anchor the reader's
-            // place is measured against (`scroll-pin.ts`). One of them also
-            // carries the watch that fetches the next page.
-            <li
-              key={post.id}
-              {...{ [ANCHOR_ATTRIBUTE]: post.id, [SEEN_ATTRIBUTE]: post.id }}
-              ref={index === tailIndex ? tailRef : undefined}
-            >
-              <PostCard
-                post={post}
-                // The registered Feed screen's card, keyed by the post's id —
-                // the record's own identity, where the board keys its sample
-                // cards by author (`design/designs/canonical/nodes.json`).
-                node={{ path: "feed.card", key: post.id }}
-                href={`/posts/${post.id}`}
-                testId={`feed-post-${post.id}`}
-                authorTestId={`feed-author-${post.id}`}
-                stanceTestId={`feed-stance-${post.id}`}
-                comments={
-                  liveComments?.id === post.id ? liveComments.total : post.comments.totalCount
-                }
-                // THE COUNT RAISES THE THREAD (graph.json: every `comment count`
-                // edge advances to `ReplyEntry`) — the card's own tap opens the
-                // post, which is the different intent.
-                onOpenComments={() => {
-                  setCommentsPost(post);
-                  setCommentsOpen(true);
-                }}
-                onLinkCopied={() => notify(LINK_COPIED)}
-                onOpenMenu={() => {
-                  setMenuPost(post);
-                  setMenuOpen(true);
-                }}
-                menuOpen={menuOpen && menuPost?.id === post.id}
-              />
-            </li>
+            <Fragment key={post.id}>
+              {index === seenFrom && <SeenSeparator />}
+              {/* The card names itself to the pin: it is the anchor the
+                  reader's place is measured against (`scroll-pin.ts`). One of
+                  them also carries the watch that fetches the next page.
+                  READING THE TAIL RECORDS NOTHING (FeedSeenTail.md): a card
+                  under the separator never names itself to the seen tracker. */}
+              <li
+                {...{ [ANCHOR_ATTRIBUTE]: post.id }}
+                {...(seenTail.has(post.id) ? {} : { [SEEN_ATTRIBUTE]: post.id })}
+                ref={index === tailIndex ? tailRef : undefined}
+              >
+                <PostCard
+                  post={post}
+                  // The registered Feed screen's card, keyed by the post's id —
+                  // the record's own identity, where the board keys its sample
+                  // cards by author (`design/designs/canonical/nodes.json`).
+                  node={{ path: "feed.card", key: post.id }}
+                  href={`/posts/${post.id}`}
+                  testId={`feed-post-${post.id}`}
+                  authorTestId={`feed-author-${post.id}`}
+                  stanceTestId={`feed-stance-${post.id}`}
+                  comments={
+                    liveComments?.id === post.id ? liveComments.total : post.comments.totalCount
+                  }
+                  // THE COUNT RAISES THE THREAD (graph.json: every `comment count`
+                  // edge advances to `ReplyEntry`) — the card's own tap opens the
+                  // post, which is the different intent.
+                  onOpenComments={() => {
+                    setCommentsPost(post);
+                    setCommentsOpen(true);
+                  }}
+                  onLinkCopied={() => notify(LINK_COPIED)}
+                  onOpenMenu={() => {
+                    setMenuPost(post);
+                    setMenuOpen(true);
+                  }}
+                  menuOpen={menuOpen && menuPost?.id === post.id}
+                />
+              </li>
+            </Fragment>
           ))}
         </ul>
       </StageHost>
