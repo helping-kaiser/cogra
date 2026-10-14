@@ -93,12 +93,20 @@ pub struct StanceProjection {
 /// drag, and cost surfaces price severance against the sum, so the
 /// history beyond the clip has to reach them (design.md §8.3).
 pub struct StanceBundle {
+    target: String,
     sum: common::l1::fold::BundleSum,
     pick: Option<(f64, f64)>,
 }
 
 #[Object]
 impl StanceBundle {
+    /// The raw L1 identifier of the node this bundle points at — the
+    /// target a stance or severance toward it names, which the device
+    /// binds the acts it signs to.
+    async fn target_graph_id(&self) -> &str {
+        &self.target
+    }
+
     /// The folded valence as it stands.
     async fn p_directed(&self) -> Dimension {
         Dimension(self.sum.fold().p_d)
@@ -269,8 +277,9 @@ pub(crate) async fn viewer_stance(
     };
     let pool = ctx.data::<PgPool>()?;
     match crate::stance::bundle(pool, viewer.user_id, target, include_pending).await {
-        Ok(sum) => Ok(Some(StanceBundle {
-            sum,
+        Ok(read) => Ok(Some(StanceBundle {
+            target: read.node.to_string(),
+            sum: read.sum,
             pick: pick.map(|p| (p.p_directed.0, p.p_interest.0)),
         })),
         Err(crate::stance::StanceError::BadInput { .. })
@@ -3352,8 +3361,9 @@ impl HashtagType {
         };
         let pool = ctx.data::<PgPool>()?;
         match crate::stance::topic_bundle(pool, viewer.user_id, &self.name, include_pending).await {
-            Ok(sum) => Ok(Some(StanceBundle {
-                sum,
+            Ok(read) => Ok(Some(StanceBundle {
+                target: read.node.to_string(),
+                sum: read.sum,
                 pick: pick.map(|p| (p.p_directed.0, p.p_interest.0)),
             })),
             Err(crate::stance::StanceError::BadInput { .. })

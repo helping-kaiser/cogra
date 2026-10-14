@@ -3433,6 +3433,10 @@ type StanceProjection {
 "The viewer's own stance bundle toward one node: the read-side
  per-author fold. Null for a viewer who has none."
 type StanceBundle {
+  "The raw L1 identifier of the node the bundle points at — the
+   target a stance or severance toward it names, which the device
+   binds the acts it signs to."
+  targetGraphId: String!
   "The folded pair as it stands."
   pDirected: Dimension!
   pInterest: Dimension!

@@ -4233,6 +4233,12 @@ enum StagedWriteState {
 
 type StanceBundle {
 	"""
+	The raw L1 identifier of the node this bundle points at — the
+	target a stance or severance toward it names, which the device
+	binds the acts it signs to.
+	"""
+	targetGraphId: String!
+	"""
 	The folded valence as it stands.
 	"""
 	pDirected: Dimension!
