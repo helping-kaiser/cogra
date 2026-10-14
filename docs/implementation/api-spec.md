@@ -331,8 +331,9 @@ The mutation surface therefore has three legs:
 - **`prepare*` mutations** stage a gesture: the server validates
   it against L2 policy, pre-checks L1's write rule, assembles the
   canonical proposal(s) — act body, payload envelope, dependency
-  list — and returns them with their pre-digests for the device
-  to verify and pre-sign. Nothing has happened on the graph yet.
+  list — and returns them for the device to check against the
+  gesture its user ordered and pre-sign. Nothing has happened on
+  the graph yet.
 - **`submitProposals`** relays the pre-signed proposals to L1's
   seal round trip and returns each host-sealed **verified act**
   for the device to verify — seal, exact body and pre-commitment,
@@ -1050,6 +1051,10 @@ placeholder instead of a silent gap.
  account (user_credentials) authenticates the service, never the
  graph (auth.md)."
 type User implements Node & Actor {
+  "The person's raw L1 identifier as a record toward them names it —
+   prof:<address>; null for a keyless account. A device binds the
+   acts it signs toward this person to it."
+  graphId: String
   "Free-text profile bio."
   bio: ModeratedText!
   "When the viewer saved this person; null when not kept, or with no
@@ -1211,6 +1216,9 @@ type Collective implements Node & Actor {
  record's payload is the whole content state
  (substrate.md §9, post.md §4)."
 type Post implements Node {
+  "The post's raw L1 identifier — the mint its genesis record
+   minted. A device binds the acts it signs about this post to it."
+  graphId: String!
   "Optional title / headline."
   title: ModeratedText!
   "Optional short summary or subtitle."
@@ -1267,6 +1275,10 @@ type Post implements Node {
  it responds to; reply chains are causal chains of Reviews and
  depth attenuates natively (comment.md)."
 type Comment implements Node {
+  "The comment's raw L1 identifier — the mint its genesis record
+   minted. A device binds the acts it signs about this comment to
+   it."
+  graphId: String!
   "The body."
   content: ModeratedText!
   "The author's own sensitive mark, alone — the state an edit
@@ -1512,6 +1524,11 @@ type ReferenceClaim {
   "Endorsing versus refuting — enthusiasm `e`, folded and clipped.
    Strictly positive on both axes is what makes a mention a vouch."
   support: Dimension!
+  "The raw sums before the clip. A withdrawal's counter-records net
+   exactly these to (0,0), so a device checks the batch it is asked
+   to sign against them."
+  rawRelevance: Float!
+  rawSupport: Float!
   "How many counter-records withdrawing this citation stages right
    now — the gesture's cost, since each is its own priced act.
    Never zero: a bundle already netted to (0,0) has left the fold.
@@ -1727,6 +1744,10 @@ type Application {
   "Whether the account has attached its device-minted key and
    address — the other approvability proof."
   keyAttached: Boolean!
+  "The applicant's raw L1 identifier, prof:<address>, once the key
+   is attached — the node the approver's vouch points at, and what
+   the approver's device binds that vouch to. Null before."
+  graphId: String
   "The member whose queue this application sits in — whose vouch it
    waits on, or whose vouch is in play: the invite link's issuer for
    the registration application, the member who took it up for an
@@ -3134,8 +3155,10 @@ rule — solvency, and the per-account signing budget (a failure is
 a `WRITE_RULE_FAILED` userError — a normal account state with a
 product-surfaced restoration flow, never an auth fault) — stages
 the write, and returns the canonical material.
-The device recomputes the pre-digests from the proposal and
-pre-signs; after `submitProposals` returns the host-sealed
+The device checks every proposal of the batch against the gesture
+its user ordered, refusing the whole batch on any difference
+([architecture.md "The write path"](architecture.md#the-write-path)),
+then recomputes the pre-digests and pre-signs; after `submitProposals` returns the host-sealed
 verified act, it verifies the seal, the exact body and
 pre-commitment, the editions, and both commitment openings before
 signing the approval witness over the act and its seal — **the
@@ -3156,13 +3179,6 @@ type PreparedWrite {
    payload bytes, dependency list — so the relay can neither
    alter it nor author one unasked."
   canonicalProposal: String!
-  "Domain-separated digest over the payload bytes — a transport
-   cross-check for the parsed proposal. The signing pre-digests are
-   salted by the device's private nonce and never leave it."
-  contentPreDigest: String!
-  "Domain-separated digest over the canonical dependency encoding —
-   the dependency-side transport cross-check."
-  dependencyPreDigest: String!
   "Epoch budget: a staged write that never completes the handshake
    and lands is garbage-collected — staged payload included — after
    this many epochs (an operational parameter; data-model.md
@@ -3417,6 +3433,10 @@ type StanceProjection {
 "The viewer's own stance bundle toward one node: the read-side
  per-author fold. Null for a viewer who has none."
 type StanceBundle {
+  "The raw L1 identifier of the node the bundle points at — the
+   target a stance or severance toward it names, which the device
+   binds the acts it signs to."
+  targetGraphId: String!
   "The folded pair as it stands."
   pDirected: Dimension!
   pInterest: Dimension!

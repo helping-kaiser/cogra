@@ -38,6 +38,9 @@ export type ReferenceClaimNode = {
    * editing surface has to carry the number that surface confirms on.
    */
   readonly withdrawalCost: number;
+  /** The raw sums before the clip — what a withdrawal nets to zero. */
+  readonly rawRelevance: number;
+  readonly rawSupport: number;
   readonly pending: boolean;
   /** Null when CoGra carries no display row for the referenced node. */
   readonly target?: ReferenceTargetNode | null;
@@ -61,6 +64,8 @@ export function referenceDrafts(
       relevance: claim.relevance,
       support: claim.support,
       withdrawalCost: claim.withdrawalCost,
+      rawRelevance: claim.rawRelevance,
+      rawSupport: claim.rawSupport,
     });
   }
   return drafts;

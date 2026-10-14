@@ -170,6 +170,13 @@ type Application {
 	"""
 	keyAttached: Boolean!
 	"""
+	The applicant's raw L1 identifier, `prof:<address>`, once the key
+	is attached — the node the approver's vouch points at, and what
+	the approver's device binds the vouch it signs to. Null before
+	the key ceremony.
+	"""
+	graphId: String
+	"""
 	The member whose queue this application sits in — whose vouch it
 	waits on, or whose vouch is in play: the invite link's issuer for
 	the registration application, the member who took it up for an
@@ -505,6 +512,12 @@ type ChangePasswordPayload {
 
 type Comment implements Node {
 	id: UUID!
+	"""
+	The comment's raw L1 identifier — the `mint` its genesis record
+	minted, and the identifier every record toward it names. A
+	device binds the acts it signs about this comment to it.
+	"""
+	graphId: String!
 	"""
 	When this node was created — when its minting record was
 	authored, which on a pending node precedes landing.
@@ -2481,6 +2494,12 @@ enum PeopleMark {
 type Post implements Node {
 	id: UUID!
 	"""
+	The post's raw L1 identifier — the `mint` its genesis record
+	minted, and the identifier every record toward it names. A
+	device binds the acts it signs about this post to it.
+	"""
+	graphId: String!
+	"""
 	When this node was created — when its minting record was
 	authored, which on a pending node precedes landing.
 	"""
@@ -2953,21 +2972,11 @@ type PreparedWrite {
 	"""
 	The canonical proposal, serialized for pre-signing (base64). It
 	carries everything the author asserts — endpoints, parameters,
-	dependency list, payload bytes — and the device recomputes every
-	signing base from it: the user never signs blind bytes.
+	dependency list, payload bytes. The device checks it against the
+	gesture its user ordered and recomputes every signing base from
+	it: the user never signs blind bytes.
 	"""
 	canonicalProposal: String!
-	"""
-	Domain-separated digest over the payload bytes — a transport
-	cross-check for the parsed proposal. The signing pre-digests are
-	computed on-device under the private nonce and never leave it.
-	"""
-	contentPreDigest: String!
-	"""
-	Domain-separated digest over the canonical dependency encoding —
-	the dependency-side transport cross-check.
-	"""
-	dependencyPreDigest: String!
 	"""
 	A staged write that never completes the handshake and lands is
 	garbage-collected — staged payload included — after this many
@@ -3599,6 +3608,18 @@ type ReferenceClaim {
 	"""
 	support: Dimension!
 	"""
+	The raw relevance sum, before the clip — beyond `±1` where the
+	bundle carries more than the fold shows. A withdrawal's
+	counter-records net exactly these sums to zero, so a device
+	checks the batch it is asked to sign against them. Not a
+	`Dimension`, for the reason `StanceBundle.rawPDirected` is not.
+	"""
+	rawRelevance: Float!
+	"""
+	The raw support sum, before the clip.
+	"""
+	rawSupport: Float!
+	"""
 	How many counter-records withdrawing this citation stages right
 	now — the gesture's cost, since each is its own priced act
 	(D11). Never zero: a bundle already netted to `(0, 0)` has left
@@ -4212,6 +4233,12 @@ enum StagedWriteState {
 
 type StanceBundle {
 	"""
+	The raw L1 identifier of the node this bundle points at — the
+	target a stance or severance toward it names, which the device
+	binds the acts it signs to.
+	"""
+	targetGraphId: String!
+	"""
 	The folded valence as it stands.
 	"""
 	pDirected: Dimension!
@@ -4435,6 +4462,13 @@ type UploadMediaPayload {
 
 type User implements Node & Actor {
 	id: UUID!
+	"""
+	The person's raw L1 identifier as a record toward them names it —
+	`prof:<address>`. A device binds the acts it signs toward this
+	person to it. Null for a keyless account, which fronts nothing
+	on the graph yet.
+	"""
+	graphId: String
 	"""
 	When this node was created — when the account row that fronts the
 	Profile was written, which precedes the Registration record

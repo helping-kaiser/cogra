@@ -55,6 +55,7 @@ import com.cogra.network.graphql.CommentForEditQuery
 import com.cogra.network.graphql.CommentParentQuery
 import com.cogra.network.graphql.CommentRepliesQuery
 import com.cogra.network.graphql.ConfirmPasswordResetMutation
+import com.cogra.network.graphql.ContentGraphIdsQuery
 import com.cogra.network.graphql.CreateInviteLinkMutation
 import com.cogra.network.graphql.CreateKeyBackupChallengeMutation
 import com.cogra.network.graphql.DismissVouchBackMutation
@@ -84,6 +85,7 @@ import com.cogra.network.graphql.StagedWriteQuery
 import com.cogra.network.graphql.SubmitProposalsMutation
 import com.cogra.network.graphql.UploadKeyBackupMutation
 import com.cogra.network.graphql.UserByHandleQuery
+import com.cogra.network.graphql.UserGraphIdQuery
 import com.cogra.network.graphql.VerifyEmailMutation
 import com.cogra.network.graphql.type.ApplicationApprovalInput
 import com.cogra.network.graphql.type.ApprovalSignatureInput
@@ -489,8 +491,35 @@ class AccountRepositoryImpl @Inject constructor(private val client: ApolloClient
 }
 
 @Singleton
+@Suppress("TooManyFunctions") // one override per ContentRepository verb, which names its own reason
 class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient, private val guard: AuthGuard) :
     ContentRepository {
+
+    override suspend fun graphIds(ids: List<String>): Outcome<Map<String, String>> = guard.run {
+        val unique = ids.distinct()
+        val found = mutableMapOf<String, String>()
+        if (unique.isEmpty()) return@run Outcome.Success(found)
+        when (val content = client.query(ContentGraphIdsQuery(unique)).fetch()) {
+            is Outcome.Failed -> return@run Outcome.Failed(content.cause)
+            is Outcome.Refused -> return@run Outcome.Refused(content.errors)
+            is Outcome.Success -> for (node in content.value.nodes) {
+                node?.onPost?.let { found[it.id] = it.graphId }
+                node?.onComment?.let { found[it.id] = it.graphId }
+            }
+        }
+        for (id in unique.filterNot { it in found }) {
+            when (val person = client.query(UserGraphIdQuery(id)).fetch()) {
+                is Outcome.Failed -> return@run Outcome.Failed(person.cause)
+                is Outcome.Refused -> return@run Outcome.Refused(person.errors)
+                is Outcome.Success -> {
+                    val graphId = person.value.user?.graphId
+                        ?: return@run Outcome.Failed(IllegalStateException("no graph identifier for node $id"))
+                    found[id] = graphId
+                }
+            }
+        }
+        Outcome.Success(found)
+    }
 
     // Reads are public-graph queries; they still ride the guard so a
     // signed-in viewer's stale token refreshes rather than erroring.
@@ -558,6 +587,12 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
     override suspend fun commentParent(commentId: String): Outcome<String?> = guard.run {
         client.query(CommentParentQuery(id = commentId)).fetch().map { data ->
             data.comment?.target?.onComment?.id
+        }
+    }
+
+    override suspend fun commentAnswers(commentId: String): Outcome<String?> = guard.run {
+        client.query(CommentParentQuery(id = commentId)).fetch().map { data ->
+            data.comment?.target?.let { it.onComment?.id ?: it.onPost?.id }
         }
     }
 

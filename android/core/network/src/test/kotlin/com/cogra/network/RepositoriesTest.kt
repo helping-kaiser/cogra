@@ -5,6 +5,7 @@
 package com.cogra.network
 
 import com.apollographql.apollo.ApolloClient
+import com.cogra.domain.AuthTokens
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.WriteState
@@ -16,17 +17,16 @@ import com.cogra.network.auth.SessionRefresher
 import com.cogra.network.repo.OnboardingRepositoryImpl
 import com.cogra.network.repo.SessionRepositoryImpl
 import com.cogra.network.repo.WriteRepositoryImpl
-import com.cogra.domain.AuthTokens
 import com.google.common.truth.Truth.assertThat
-import java.time.Instant
-import java.util.Base64
-import javax.inject.Provider
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.time.Instant
+import java.util.Base64
+import javax.inject.Provider
 
 class RepositoriesTest {
 
@@ -146,7 +146,7 @@ class RepositoriesTest {
         enqueue(
             """{"data":{"me":{"__typename":"User","id":"u1","accountState":"APPLICANT","actorPubkey":"attached-key",
                "application":{"__typename":"Application","id":"app1","handle":"joiner",
-                 "emailVerified":true,"keyAttached":false,"approvedAt":null,"landedAt":null,
+                 "emailVerified":true,"keyAttached":false,"graphId":null,"approvedAt":null,"landedAt":null,
                  "createdAt":"2026-08-06T12:00:00+00:00"},
                "stagedWrites":{"__typename":"StagedWriteConnection","edges":[
                  {"__typename":"StagedWriteEdge","node":

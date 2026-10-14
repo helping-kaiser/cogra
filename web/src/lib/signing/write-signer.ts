@@ -1,7 +1,9 @@
 // The device's half of the write handshake (api-spec.md "The write
-// flow"; Android mirror: WriteSigner.kt): material persists BEFORE the
-// submit, and the approve step verifies against that persisted copy,
-// never the server's echo — the user never signs blind bytes.
+// flow"; Android mirror: WriteSigner.kt): a batch is checked against the
+// gesture its user ordered before its first pre-signature (intent.ts),
+// material persists BEFORE the submit, and the approve step verifies
+// against that persisted copy, never the server's echo — the user never
+// signs blind bytes.
 
 import type { ApolloClient } from "@apollo/client";
 
@@ -22,6 +24,12 @@ import type { PreSignedProposal } from "@/lib/crypto/handshake";
 import { decodeProposal, decodeVerifiedAct, encodePreCommitmentOf, WireError } from "@/lib/crypto/wire";
 import type { AuthGuard } from "@/lib/session/guard";
 import type { IdentityStore } from "@/lib/identity/store";
+import {
+  checkIntent,
+  IntentMismatch,
+  type Expectation,
+  type RegistrationExemption,
+} from "./intent";
 import { keyUsable } from "./key-usable";
 
 export type WriteResult =
@@ -38,11 +46,15 @@ export type WriteResult =
 
 export type WriteSigner = {
   /**
-   * Runs the handshake for a staged write discovered on the poll — the
-   * admission Registration's path. Dispatches on the staged state so a
-   * crash between any two legs heals here.
+   * Runs the handshake for one staged write discovered on a poll.
+   * Dispatches on the staged state so a crash between any two legs heals
+   * here. The write is checked against `intent` first — the form's
+   * expectation, or the named Registration exemption (intent.ts).
    */
-  signStaged(staged: StagedWriteView): Promise<WriteResult>;
+  signStaged(
+    staged: StagedWriteView,
+    intent: Expectation | RegistrationExemption,
+  ): Promise<WriteResult>;
   /**
    * Signs a whole staged batch, in order, and answers one result per
    * write.
@@ -54,11 +66,25 @@ export type WriteSigner = {
    * drifts per surface. Android's `WriteSigner.sign(prepared)` is the
    * same seam.
    *
+   * THE BATCH IS CHECKED WHOLE BEFORE ANYTHING IS SIGNED. `expected` is
+   * the gesture rebuilt from its form state; one write that disagrees
+   * refuses every write of the batch, before the first pre-signature —
+   * writes are independent priced acts, so a refusal midway would leave
+   * half a gesture standing. There is no overload without an expectation.
+   *
    * Sequential by construction: the legs share one device key and one
    * custody store, and the batch is small enough that concurrency would
    * buy less than it risks.
    */
-  sign(writes: readonly StagedWriteView[]): Promise<WriteResult[]>;
+  sign(writes: readonly StagedWriteView[], expected: Expectation): Promise<WriteResult[]>;
+  /**
+   * Signs the batch carried with this account's application, released by
+   * the landing. It was prepared before the account landed, by whichever
+   * device applied, and no form for it is held at the landing — so it is
+   * signed on the transport checks alone, exactly as the landing has
+   * always signed it.
+   */
+  signCarriedAtLanding(writes: readonly StagedWriteView[]): Promise<WriteResult[]>;
   /** Continues every persisted handshake — the parked-acts entry point. */
   resume(): Promise<WriteResult[]>;
 };
@@ -322,20 +348,79 @@ export function createWriteSigner(deps: {
     }
   }
 
+  /**
+   * Why the batch is not what its user ordered, or null when it is. A
+   * proposal that does not parse is a refusal too — the device cannot
+   * check what it cannot read.
+   */
+  async function intentRefusal(
+    key: ActorKey,
+    writes: readonly StagedWriteView[],
+    intent: Expectation | RegistrationExemption,
+  ): Promise<string | null> {
+    try {
+      const proposals = writes.map((staged) => decodeProposal(fromBase64(staged.canonicalProposal)));
+      if (intent.kind === "registrationExemption") {
+        return proposals.every((p) => p.body.family === "registration")
+          ? null
+          : "only a Registration is exempt from the intent check";
+      }
+      checkIntent(intent, await key.address(), proposals);
+      return null;
+    } catch (e) {
+      if (e instanceof IntentMismatch || e instanceof WireError) return e.message;
+      throw e;
+    }
+  }
+
+  /** The whole batch refused by the device: nothing of it is signed. */
+  async function rejectAll(
+    writes: readonly StagedWriteView[],
+    reason: string,
+  ): Promise<WriteResult[]> {
+    const results: WriteResult[] = [];
+    for (const staged of writes) results.push(await reject(staged.id, reason));
+    return results;
+  }
+
+  async function signChecked(
+    writes: readonly StagedWriteView[],
+    intent: Expectation | RegistrationExemption | null,
+  ): Promise<WriteResult[]> {
+    if (writes.length === 0) return [];
+    const answer = await accountKey();
+    if (answer.kind !== "key") return writes.map((staged) => withoutKey(staged.id, answer));
+    if (intent !== null) {
+      let refusal: string | null;
+      try {
+        refusal = await intentRefusal(answer.key, writes, intent);
+      } catch (e) {
+        // A browser that cannot hash learned nothing about the batch —
+        // the same environment-fault rule as the approve step.
+        if (e instanceof CryptoUnavailableError) {
+          return writes.map((staged) => ({ kind: "failed", id: staged.id, cause: e }));
+        }
+        throw e;
+      }
+      if (refusal !== null) return rejectAll(writes, refusal);
+    }
+    const results: WriteResult[] = [];
+    for (const staged of writes) results.push(await signOne(answer.key, staged));
+    return results;
+  }
+
   return {
-    async signStaged(staged) {
-      const answer = await accountKey();
-      if (answer.kind !== "key") return withoutKey(staged.id, answer);
-      return signOne(answer.key, staged);
+    async signStaged(staged, intent) {
+      const [result] = await signChecked([staged], intent);
+      return result;
     },
 
-    async sign(writes) {
-      if (writes.length === 0) return [];
-      const answer = await accountKey();
-      if (answer.kind !== "key") return writes.map((staged) => withoutKey(staged.id, answer));
-      const results: WriteResult[] = [];
-      for (const staged of writes) results.push(await signOne(answer.key, staged));
-      return results;
+    sign(writes, expected) {
+      return signChecked(writes, expected);
+    },
+
+    signCarriedAtLanding(writes) {
+      return signChecked(writes, null);
     },
 
     async resume() {

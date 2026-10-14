@@ -247,6 +247,11 @@ fragment ReferenceClaimFields on ReferenceClaim {
   # surface builds its drafts from this same type, so the field the
   # withdrawal confirm reads has to be on the selection.
   withdrawalCost
+  # The sums that cost is read off: a withdrawal's counter-records must
+  # net exactly these to (0, 0), and the device checks that before it
+  # signs one (intent.ts).
+  rawRelevance
+  rawSupport
   pending
   # WHAT A CITATION POINTS AT, AND WHY IT IS NOT A FRAGMENT. Typed so a
   # chip renders without a second read; a referenced comment opens the
@@ -311,6 +316,9 @@ fragment ReferenceClaimFields on ReferenceClaim {
 # The viewer's bundle toward one node, and where a candidate pick lands
 # it. `projected` is null exactly when the read named no pick.
 fragment StanceBundleFields on StanceBundle {
+  # The node the bundle points at — what a stance or severance signed from
+  # this read must name (intent.ts).
+  targetGraphId
   pDirected
   pInterest
   # The sums before the clip. The landing line folds them locally so it

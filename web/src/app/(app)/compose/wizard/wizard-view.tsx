@@ -32,6 +32,9 @@ import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
 import type { StagedWriteView } from "@/lib/api/writes-api";
+import { fetchGraphIds } from "@/lib/api/graph-ids-api";
+import { postExpectation } from "@/lib/compose/intent";
+import type { Expectation } from "@/lib/signing/intent";
 import { TransportError } from "@/lib/ui/transport-error";
 import {
   advanceGate,
@@ -621,6 +624,20 @@ export function ComposeWizard({
     setReferenceErrors({});
     setTransportFailed(false);
 
+    // The cited nodes' L1 ids, read before anything is staged: the batch
+    // is checked against them before its first pre-signature (intent.ts).
+    const graphIds = await guard.run(() =>
+      fetchGraphIds(
+        client,
+        state.references.map((reference) => reference.targetId),
+      ),
+    );
+    if (graphIds.kind !== "success") {
+      setBusy(false);
+      setTransportFailed(true);
+      return;
+    }
+
     const prepared = await guard.run(() =>
       preparePost(client, {
         title: state.title.trim() === "" ? null : state.title,
@@ -662,11 +679,15 @@ export function ComposeWizard({
       return;
     }
 
-    await finish(prepared.value.node, prepared.value.writes);
+    await finish(prepared.value.node, prepared.value.writes, postExpectation(state, graphIds.value));
   };
 
-  const finish = async (node: string, writes: readonly StagedWriteView[]) => {
-    const results = await signer.sign(writes);
+  const finish = async (
+    node: string,
+    writes: readonly StagedWriteView[],
+    expected: Expectation,
+  ) => {
+    const results = await signer.sign(writes, expected);
     setBusy(false);
 
     if (results.every((result) => result.kind === "done")) {

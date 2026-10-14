@@ -77,7 +77,7 @@ class RegistrationSigner @Inject constructor(
             // material for resume, and one never started is still
             // AWAITING_PRE_SIGN on the next pass.
             if (status.carriedBatch.isNotEmpty() && keyOnDevice(status.actorPubkey)) {
-                status.carriedBatch.forEach { writeSigner.signStaged(it) }
+                writeSigner.signCarriedAtLanding(status.carriedBatch)
             }
             return RegistrationProgress.Member
         }
@@ -91,7 +91,10 @@ class RegistrationSigner @Inject constructor(
             // mismatched slot key would only fail server-side — a
             // mismatch reads as awaiting-the-key, i.e. the restore path.
             if (!keyOnDevice(status.actorPubkey)) return RegistrationProgress.AwaitingSigningKey
-            return when (val result = writeSigner.signStaged(staged)) {
+            // No form stands behind the staged Registration — the backend
+            // staged it at approval — so it is the one named exemption from
+            // the intent check (Intent.kt), and still runs every transport check.
+            return when (val result = writeSigner.signStaged(staged, RegistrationExemption)) {
                 is WriteResult.Done, is WriteResult.AwaitingSeal -> RegistrationProgress.AwaitingLanding
                 is WriteResult.Refused -> RegistrationProgress.Refused(result.errors)
                 is WriteResult.RejectedByDevice -> RegistrationProgress.RejectedByDevice(result.reason)

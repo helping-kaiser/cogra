@@ -21,6 +21,7 @@ import {
   type InviteLinkView,
 } from "@/lib/api/invites-api";
 import { useAuthGuard } from "@/lib/session/runtime";
+import { expectation, stanceRecord } from "@/lib/signing/intent";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
@@ -182,6 +183,17 @@ export function InvitesView() {
 
   const onApprove = async (applicationId: string, pDirected: number, pInterest: number) => {
     if (approvingId !== null) return;
+    // The vouch must point at the applicant this row shows, by the L1 id
+    // the queue read served for them (intent.ts). A row without one has no
+    // key attached, and nothing approvable.
+    const applicantGraphId =
+      links
+        .flatMap((link) => link.applications.edges)
+        .find((edge) => edge.node.id === applicationId)?.node.graphId ?? null;
+    if (applicantGraphId === null) {
+      setError("BAD_INPUT");
+      return;
+    }
     setApprovingId(applicationId);
     beginOperation();
     const prepared = await guard.run(() =>
@@ -197,7 +209,10 @@ export function InvitesView() {
       setTransportFailed(true);
       return;
     }
-    const results = await signer.sign(prepared.value);
+    const results = await signer.sign(
+      prepared.value,
+      expectation([stanceRecord(applicantGraphId, pDirected, pInterest)]),
+    );
     if (results.every((result) => result.kind === "done")) {
       setVouchSigned(true);
     } else {

@@ -17,7 +17,7 @@ use chrono::{DateTime, Utc};
 use common::hashtag_uuid;
 use common::l1::census::Family;
 use common::l1::identifier::NodeId;
-use common::l1::{crypto, wire};
+use common::l1::wire;
 use postgres_store::content::ThreadOrder;
 use postgres_store::references::ReferenceView;
 use postgres_store::topics::{TagChannel, TopicView};
@@ -93,12 +93,20 @@ pub struct StanceProjection {
 /// drag, and cost surfaces price severance against the sum, so the
 /// history beyond the clip has to reach them (design.md §8.3).
 pub struct StanceBundle {
+    target: String,
     sum: common::l1::fold::BundleSum,
     pick: Option<(f64, f64)>,
 }
 
 #[Object]
 impl StanceBundle {
+    /// The raw L1 identifier of the node this bundle points at — the
+    /// target a stance or severance toward it names, which the device
+    /// binds the acts it signs to.
+    async fn target_graph_id(&self) -> &str {
+        &self.target
+    }
+
     /// The folded valence as it stands.
     async fn p_directed(&self) -> Dimension {
         Dimension(self.sum.fold().p_d)
@@ -269,8 +277,9 @@ pub(crate) async fn viewer_stance(
     };
     let pool = ctx.data::<PgPool>()?;
     match crate::stance::bundle(pool, viewer.user_id, target, include_pending).await {
-        Ok(sum) => Ok(Some(StanceBundle {
-            sum,
+        Ok(read) => Ok(Some(StanceBundle {
+            target: read.node.to_string(),
+            sum: read.sum,
             pick: pick.map(|p| (p.p_directed.0, p.p_interest.0)),
         })),
         Err(crate::stance::StanceError::BadInput { .. })
@@ -916,29 +925,11 @@ impl PreparedWrite {
 
     /// The canonical proposal, serialized for pre-signing (base64). It
     /// carries everything the author asserts — endpoints, parameters,
-    /// dependency list, payload bytes — and the device recomputes every
-    /// signing base from it: the user never signs blind bytes.
+    /// dependency list, payload bytes. The device checks it against the
+    /// gesture its user ordered and recomputes every signing base from
+    /// it: the user never signs blind bytes.
     async fn canonical_proposal(&self) -> String {
         B64.encode(wire::encode_proposal(&self.proposal))
-    }
-
-    /// Domain-separated digest over the payload bytes — a transport
-    /// cross-check for the parsed proposal. The signing pre-digests are
-    /// computed on-device under the private nonce and never leave it.
-    async fn content_pre_digest(&self) -> String {
-        B64.encode(crypto::sha256_tagged(
-            b"cogra-api:transport-digest:content:v1",
-            &[&self.proposal.payload],
-        ))
-    }
-
-    /// Domain-separated digest over the canonical dependency encoding —
-    /// the dependency-side transport cross-check.
-    async fn dependency_pre_digest(&self) -> String {
-        B64.encode(crypto::sha256_tagged(
-            b"cogra-api:transport-digest:deps:v1",
-            &[&common::l1::handshake::canonical_deps(&self.proposal.deps)],
-        ))
     }
 
     /// A staged write that never completes the handshake and lands is
@@ -1214,6 +1205,17 @@ impl User {
 impl User {
     async fn id(&self) -> Uuid {
         self.identity.id
+    }
+
+    /// The person's raw L1 identifier as a record toward them names it —
+    /// `prof:<address>`. A device binds the acts it signs toward this
+    /// person to it. Null for a keyless account, which fronts nothing
+    /// on the graph yet.
+    async fn graph_id(&self) -> Option<String> {
+        self.identity
+            .realization_address
+            .as_deref()
+            .map(|address| NodeId::Prof(address.to_string()).to_string())
     }
 
     /// When this node was created — when the account row that fronts the
@@ -2350,6 +2352,21 @@ impl Application {
         self.0.key_attached
     }
 
+    /// The applicant's raw L1 identifier, `prof:<address>`, once the key
+    /// is attached — the node the approver's vouch points at, and what
+    /// the approver's device binds the vouch it signs to. Null before
+    /// the key ceremony.
+    async fn graph_id(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<String>> {
+        if !self.0.key_attached {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::actor_identity(pool, self.0.account_id)
+            .await?
+            .and_then(|identity| identity.realization_address)
+            .map(|address| NodeId::Prof(address).to_string()))
+    }
+
     /// The member whose queue this application sits in — whose vouch it
     /// waits on, or whose vouch is in play: the invite link's issuer for
     /// the registration application, the member who took it up for an
@@ -2671,6 +2688,13 @@ impl PostType {
         self.0.id
     }
 
+    /// The post's raw L1 identifier — the `mint` its genesis record
+    /// minted, and the identifier every record toward it names. A
+    /// device binds the acts it signs about this post to it.
+    async fn graph_id(&self) -> &str {
+        &self.0.l1_node_id
+    }
+
     /// When this node was created — when its minting record was
     /// authored, which on a pending node precedes landing.
     async fn created_at(&self) -> DateTime<Utc> {
@@ -2959,6 +2983,13 @@ pub struct CommentType(pub postgres_store::content::Comment);
 impl CommentType {
     async fn id(&self) -> Uuid {
         self.0.id
+    }
+
+    /// The comment's raw L1 identifier — the `mint` its genesis record
+    /// minted, and the identifier every record toward it names. A
+    /// device binds the acts it signs about this comment to it.
+    async fn graph_id(&self) -> &str {
+        &self.0.l1_node_id
     }
 
     /// When this node was created — when its minting record was
@@ -3330,8 +3361,9 @@ impl HashtagType {
         };
         let pool = ctx.data::<PgPool>()?;
         match crate::stance::topic_bundle(pool, viewer.user_id, &self.name, include_pending).await {
-            Ok(sum) => Ok(Some(StanceBundle {
-                sum,
+            Ok(read) => Ok(Some(StanceBundle {
+                target: read.node.to_string(),
+                sum: read.sum,
                 pick: pick.map(|p| (p.p_directed.0, p.p_interest.0)),
             })),
             Err(crate::stance::StanceError::BadInput { .. })
@@ -3393,6 +3425,8 @@ pub struct ReferenceClaim {
     pub target_id: String,
     pub relevance: Dimension,
     pub support: Dimension,
+    pub raw_relevance: f64,
+    pub raw_support: f64,
     pub withdrawal_cost: i32,
     pub pending: bool,
 }
@@ -3430,6 +3464,20 @@ impl ReferenceClaim {
     /// Strictly positive on both axes is what makes a mention a vouch.
     async fn support(&self) -> Dimension {
         self.support
+    }
+
+    /// The raw relevance sum, before the clip — beyond `±1` where the
+    /// bundle carries more than the fold shows. A withdrawal's
+    /// counter-records net exactly these sums to zero, so a device
+    /// checks the batch it is asked to sign against them. Not a
+    /// `Dimension`, for the reason `StanceBundle.rawPDirected` is not.
+    async fn raw_relevance(&self) -> f64 {
+        self.raw_relevance
+    }
+
+    /// The raw support sum, before the clip.
+    async fn raw_support(&self) -> f64 {
+        self.raw_support
     }
 
     /// How many counter-records withdrawing this citation stages right
@@ -3770,6 +3818,8 @@ async fn reference_claims(
             target_id: row.target,
             relevance: Dimension(row.relevance),
             support: Dimension(row.support),
+            raw_relevance: row.raw_relevance,
+            raw_support: row.raw_support,
             withdrawal_cost: row.withdrawal_cost.try_into().unwrap_or(i32::MAX),
             pending: row.pending,
         })

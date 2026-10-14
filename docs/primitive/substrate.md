@@ -211,11 +211,14 @@ the exact host-sealed verified act
 1. **Prepare.** The backend validates the gesture (envelope
    conformance, L2 policy), pre-checks the write rule below, and
    assembles the canonical proposal — act body, payload envelope,
-   dependency list — returning it to the client with the
-   pre-digests, so the client recomputes what it commits to. The
-   user never signs blind bytes.
-2. **Pre-sign.** On the device, the client signs the proposal
-   pre-commitment; the key never leaves it.
+   dependency list — and returns it to the client.
+2. **Pre-sign.** On the device, the client first checks the
+   proposal against the gesture its user ordered: it rebuilds what
+   every act's body must be from the choices the user made, and
+   refuses the whole gesture on any difference. Only then does it
+   recompute the pre-digests from the bytes it holds and sign the
+   proposal pre-commitment; the key never leaves it. The user never
+   signs blind bytes.
 3. **Relay and seal.** The backend submits the pre-signed
    proposal to L1, whose host verifies it, adds the projection
    salts, and returns the sealed **verified act**.

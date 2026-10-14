@@ -17,11 +17,15 @@ import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.media.awaitReady
 import com.cogra.domain.media.overPictureCap
+import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
+import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.commentExpectation
+import com.cogra.domain.topics.TagClaim
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.SectionsEditor
@@ -31,26 +35,26 @@ import com.cogra.feature.content.tagFieldIndex
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.COMMENT_SCALE
 import com.cogra.feature.content.wizard.COMMENT_VIDEO_MAX_BYTES
-import com.cogra.feature.content.wizard.UploadFailure
-import com.cogra.feature.content.wizard.uploadPicture
 import com.cogra.feature.content.wizard.CoverChoice
 import com.cogra.feature.content.wizard.FirstFrameStill
 import com.cogra.feature.content.wizard.RefusedPick
+import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.attachmentFieldIndex
 import com.cogra.feature.content.wizard.refusesVideo
 import com.cogra.feature.content.wizard.screenPicture
 import com.cogra.feature.content.wizard.storesFirstFrame
 import com.cogra.feature.content.wizard.toResolvedUpload
 import com.cogra.feature.content.wizard.uploadFirstFrame
-import java.io.File
+import com.cogra.feature.content.wizard.uploadPicture
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
+import javax.inject.Inject
 
 /**
  * The reply wizard.
@@ -554,6 +558,34 @@ class ReplyWizardViewModel @Inject constructor(
     // -- Signing --
 
     /**
+     * What the reply orders, as the intent check reads it (Intent.kt): the
+     * L1 ids of the node answered and of every cited node are read first,
+     * before anything is staged. Null once the read failed — already
+     * reported.
+     */
+    private suspend fun expectation(
+        current: ReplyWizardState,
+        parentId: String,
+        tags: List<TagClaim>,
+        references: List<ReferenceClaim>,
+    ): Expectation? {
+        val graphIds = when (val read = content.graphIds(listOf(parentId) + references.map { it.targetId })) {
+            is Outcome.Success -> read.value
+            is Outcome.Refused -> return null.also { refuse(read.errors) }
+            is Outcome.Failed -> return null.also { failTransport() }
+        }
+        return commentExpectation(
+            parentGraphId = graphIds.getValue(parentId),
+            pDirected = current.pDirected,
+            pInterest = current.pInterest,
+            license = current.license,
+            tags = tags,
+            references = references,
+            graphIds = graphIds,
+        )
+    }
+
+    /**
      * Stages the batch and signs it. A refusal from the prepare stops
      * before any signature: nothing was signed, so nothing may claim
      * signing failed.
@@ -572,13 +604,16 @@ class ReplyWizardViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
+            val tags = current.tagSection.tags.map { it.toClaim() }
+            val references = current.referenceSection.references.map { it.toClaim() }
+            val expected = expectation(current, target.id, tags, references) ?: return@launch
             val prepared = when (
                 val outcome = content.prepareComment(
                     target = target.id,
                     content = current.body,
                     license = current.license,
-                    tags = current.tagSection.tags.map { it.toClaim() },
-                    references = current.referenceSection.references.map { it.toClaim() },
+                    tags = tags,
+                    references = references,
                     // The poster rides the clip's own placement, the same
                     // way a post's does, so it never enters the gallery.
                     attachments = current.picked.mapNotNull { asset ->
@@ -607,7 +642,7 @@ class ReplyWizardViewModel @Inject constructor(
             }
 
             val results = try {
-                signer.sign(prepared.writes)
+                signer.sign(prepared.writes, expected)
             } catch (_: NoActorKeyException) {
                 // `ComposeKeyAbsent`: the write waits on the reader
                 // restoring the key. There is no draft to keep, so the

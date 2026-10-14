@@ -64,9 +64,13 @@ function fakeWriteSigner(result: WriteResult): WriteSigner & { calls: number } {
       return Promise.resolve(result);
     },
     // Counted the same way, so a batch member is not a free call. The
-    // registration path signs one write at a time, so nothing here
-    // reaches this arm today — it exists because the interface has it.
+    // registration path never signs a form's batch, so nothing here
+    // reaches `sign` today — it exists because the interface has it.
     sign(writes) {
+      holder.calls += writes.length;
+      return Promise.resolve(writes.map(() => result));
+    },
+    signCarriedAtLanding(writes) {
       holder.calls += writes.length;
       return Promise.resolve(writes.map(() => result));
     },

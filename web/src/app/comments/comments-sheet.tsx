@@ -44,6 +44,9 @@ import {
 import { firstRefusalMessage } from "@/lib/ui/error-messages";
 import { appendDeduped } from "@/lib/api/pagination";
 import type { StagedWriteView } from "@/lib/api/writes-api";
+import { fetchGraphIds, graphIdOf } from "@/lib/api/graph-ids-api";
+import { editExpectation } from "@/lib/compose/intent";
+import { commentEdit, type Expectation } from "@/lib/signing/intent";
 import { prepareTag } from "@/lib/api/topics-api";
 import {
   fetchCitedBy,
@@ -726,8 +729,11 @@ export function CommentsSheet({
    * mints with tags comes back as the record plus one act per tag, and
    * all of them are this device's to sign.
    */
-  const signAll = async (writes: readonly StagedWriteView[]): Promise<boolean> => {
-    const results = await signer.sign(writes);
+  const signAll = async (
+    writes: readonly StagedWriteView[],
+    expected: Expectation,
+  ): Promise<boolean> => {
+    const results = await signer.sign(writes, expected);
     return results.every((result) => result.kind === "done");
   };
 
@@ -780,6 +786,30 @@ export function CommentsSheet({
     const perTag: Record<number, string> = {};
     const perReference: Record<number, string> = {};
     let general: string | null = null;
+
+    // The L1 ids of the comment, the node it answers, and every cited node
+    // the edit touches — read before anything is staged, so the batch is
+    // checked against them before its first pre-signature (intent.ts).
+    const parentUuid = editing.parentId ?? post.id;
+    const graphIds = await guard.run(() =>
+      fetchGraphIds(client, [
+        editing.id,
+        parentUuid,
+        ...editReferenceChanges.map((change) => change.reference.targetId),
+      ]),
+    );
+    if (graphIds.kind !== "success") {
+      setEditSubmitting(false);
+      setEditFailed(true);
+      return;
+    }
+    const commentGraphId = graphIdOf(graphIds.value, editing.id);
+    const expected = editExpectation(
+      commentGraphId,
+      editTextChanged ? commentEdit(graphIdOf(graphIds.value, parentUuid), commentGraphId) : null,
+      { tags: editChanges, references: editReferenceChanges },
+      graphIds.value,
+    );
 
     if (editTextChanged) {
       const prepared = await guard.run(() =>
@@ -885,7 +915,7 @@ export function CommentsSheet({
       return;
     }
 
-    const done = await signAll(writes);
+    const done = await signAll(writes, expected);
     setEditSubmitting(false);
     if (done) {
       // The edit settles IN THE THREAD (`CommentEdit` 12 → the thread), so

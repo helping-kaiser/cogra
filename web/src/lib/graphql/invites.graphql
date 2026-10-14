@@ -21,6 +21,9 @@ query InviteLinks {
                 handle
                 emailVerified
                 keyAttached
+                # The node an approval's vouch points at — what the device
+                # checks the vouch it signs against (intent.ts).
+                graphId
                 approvedAt
                 landedAt
               }

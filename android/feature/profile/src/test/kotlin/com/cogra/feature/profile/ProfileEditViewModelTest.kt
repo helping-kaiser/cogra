@@ -1,7 +1,6 @@
 package com.cogra.feature.profile
 
 import com.cogra.crypto.ActorKey
-import com.cogra.crypto.Family
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetView
@@ -13,7 +12,9 @@ import com.cogra.domain.UserError
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.PICTURE_MAX_BYTES
 import com.cogra.domain.media.ProcessedPicture
+import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.profileUpdate
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingMediaProcessor
@@ -21,7 +22,6 @@ import com.cogra.domain.testing.ThrowingMediaRepository
 import com.cogra.domain.testing.ThrowingProfileRepository
 import com.cogra.domain.testing.testProfile
 import com.google.common.truth.Truth.assertThat
-import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -31,6 +31,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfileEditViewModelTest {
@@ -60,7 +61,7 @@ class ProfileEditViewModelTest {
         ): Outcome<List<PreparedWriteView>> {
             lastUpdate = Triple(displayName, bio, websiteUrl)
             lastAvatar = avatar
-            return prepareOutcome ?: Outcome.Success(listOf(sealer.stage(Family.REGISTRATION)))
+            return prepareOutcome ?: Outcome.Success(sealer.stageFaithful(Expectation(listOf(profileUpdate()))))
         }
     }
 

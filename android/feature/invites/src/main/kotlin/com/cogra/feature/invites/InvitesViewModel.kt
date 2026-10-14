@@ -7,18 +7,20 @@ import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.Outcome
 import com.cogra.domain.di.WebOrigin
 import com.cogra.domain.repo.AccountRepository
+import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.stanceRecord
 import com.cogra.domain.store.IdentityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import javax.inject.Inject
 
 data class InvitesUiState(
     val loading: Boolean = true,
@@ -147,6 +149,18 @@ class InvitesViewModel @Inject constructor(
      */
     fun onApprove(applicationId: String, pDirected: Double, pInterest: Double) {
         if (_state.value.approvingId != null) return
+        // The vouch must point at the applicant this row shows, by the L1 id
+        // the queue read served for them (Intent.kt). A row without one has
+        // no key attached, and nothing approvable.
+        val applicantGraphId = _state.value.links
+            .flatMap { it.applications }
+            .firstOrNull { it.id == applicationId }
+            ?.graphId
+        if (applicantGraphId == null) {
+            _state.update { it.copy(error = ErrorCode.BAD_INPUT) }
+            return
+        }
+        val expected = Expectation(listOf(stanceRecord(applicantGraphId, pDirected, pInterest)))
         _state.update {
             it.copy(approvingId = applicationId, error = null, vouchSigned = false, signingFailed = false)
         }
@@ -172,7 +186,7 @@ class InvitesViewModel @Inject constructor(
                 }
             }
             val results = try {
-                signer.sign(prepared)
+                signer.sign(prepared, expected)
             } catch (_: NoActorKeyException) {
                 // The seed vanished between the gate and signing (a
                 // concurrent purge): the approval landed, the vouch

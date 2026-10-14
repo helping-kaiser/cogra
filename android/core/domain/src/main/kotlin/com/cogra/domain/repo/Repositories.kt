@@ -9,33 +9,33 @@ import com.cogra.domain.ActorRef
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.AuthTokens
-import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.CommentForEdit
 import com.cogra.domain.CommentPage
 import com.cogra.domain.CommentView
 import com.cogra.domain.HashtagView
-import com.cogra.domain.ProfileView
-import com.cogra.domain.RecordRow
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.LoginGrant
+import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ProfileView
+import com.cogra.domain.RecordRow
 import com.cogra.domain.ReferenceCandidateView
 import com.cogra.domain.SelfMarkView
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.TaggedContentView
 import com.cogra.domain.UserProfile
+import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.stance.StanceTarget
-import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.topics.TagClaim
 import java.time.Instant
 
@@ -174,7 +174,20 @@ interface AccountRepository {
  * "Slice 2"): prepare verbs stage device-signed writes; reads serve
  * the display store.
  */
+@Suppress("TooManyFunctions") // the content surface's reads and prepares, plus the two reads the intent check binds to
 interface ContentRepository {
+    /**
+     * The raw L1 identifier of every node in [ids] (L2 ids), read through
+     * the read surface — never the prepare it is checking — before a
+     * gesture's batch is prepared: the intent check (signing/Intent.kt)
+     * binds every act's endpoints to them. Content first, in one batch;
+     * whatever that leaves is read as a person. An id that resolves to
+     * neither fails the whole read: an act toward a node the device cannot
+     * name is an act it cannot check. A node's L1 id never changes once
+     * minted, so reading it at signing time is reading what was on screen.
+     */
+    suspend fun graphIds(ids: List<String>): Outcome<Map<String, String>>
+
     /** One post with its first comments page; null for an unknown id. */
     suspend fun post(
         id: String,
@@ -358,6 +371,13 @@ interface ContentRepository {
      */
     suspend fun commentParent(commentId: String): Outcome<String?> = Outcome.Success(null)
 
+    /**
+     * The node a comment answers — its post or its parent comment, by L2
+     * id; null for an unknown comment. A comment edit's record keeps its
+     * A leg there, so the edit's expectation names it (signing/Intent.kt).
+     */
+    suspend fun commentAnswers(commentId: String): Outcome<String?>
+
     companion object {
         /**
          * api-spec.md `PrepareCommentInput`: at most four per comment
@@ -414,6 +434,13 @@ interface StanceRepository {
      * act for this device to sign.
      */
     suspend fun prepareSeverance(target: StanceTarget): Outcome<List<PreparedWriteView>>
+
+    /**
+     * The raw L1 identifier of the node [target] names — what a stance or
+     * severance toward it must point at (signing/Intent.kt). The one the
+     * last bundle read for [target] served, or read now.
+     */
+    suspend fun targetGraphId(target: StanceTarget): Outcome<String>
 }
 
 /**

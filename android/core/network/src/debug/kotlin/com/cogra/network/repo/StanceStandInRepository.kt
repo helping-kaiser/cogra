@@ -61,6 +61,14 @@ class StanceStandInRepository @Inject constructor(private val writes: WriteRepos
         return prepared
     }
 
+    /**
+     * The stand-in fakes the reads, so it has no node to name: a gesture
+     * signed against it cannot be checked, and is refused rather than
+     * signed blind.
+     */
+    override suspend fun targetGraphId(target: StanceTarget): Outcome<String> =
+        Outcome.Failed(UnsupportedOperationException("the stance stand-in reads no graph identifiers"))
+
     override suspend fun standing(target: StanceTarget, includePending: Boolean): Outcome<StanceStanding> =
         lock.withLock {
             val own = picks[target].orEmpty()

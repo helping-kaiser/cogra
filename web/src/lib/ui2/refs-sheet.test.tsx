@@ -20,7 +20,16 @@ function reference(
   target: ReferenceClaimNode["target"],
   pending = false,
 ): ReferenceClaimNode {
-  return { targetId, relevance, support, withdrawalCost: 1, pending, target };
+  return {
+    targetId,
+    relevance,
+    support,
+    withdrawalCost: 1,
+    rawRelevance: relevance,
+    rawSupport: support,
+    pending,
+    target,
+  };
 }
 
 /** The board's own two tag rows (`RefsSheet.jsx:44-45`). */

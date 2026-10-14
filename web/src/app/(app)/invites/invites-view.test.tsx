@@ -3,6 +3,7 @@ import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { expectation, stanceRecord } from "@/lib/signing/intent";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
@@ -40,9 +41,12 @@ type ApplicationFields = {
   handle: string;
   emailVerified: boolean;
   keyAttached: boolean;
+  graphId: string | null;
   approvedAt: string | null;
   landedAt: string | null;
 };
+
+const BOB = `prof:${"b0".repeat(20)}`;
 
 function application(overrides: Partial<ApplicationFields> = {}): ApplicationFields {
   return {
@@ -50,6 +54,7 @@ function application(overrides: Partial<ApplicationFields> = {}): ApplicationFie
     handle: "bob",
     emailVerified: true,
     keyAttached: true,
+    graphId: BOB,
     approvedAt: null,
     landedAt: null,
     ...overrides,
@@ -269,8 +274,11 @@ describe("InvitesView", () => {
 
     fireEvent.click(await screen.findByTestId("approve_a1"));
     expect(await screen.findByTestId("invites_vouch_signed")).toBeInTheDocument();
+    // The vouch is signed against what the row showed: exactly the picked
+    // pair, toward the applicant the queue read named.
     expect(writeSigner.signStaged).toHaveBeenCalledWith(
       expect.objectContaining({ id: "w1", state: "AWAITING_PRE_SIGN" }),
+      expectation([stanceRecord(BOB, 0.1, 0.1)]),
     );
     expect(variables).toEqual({
       input: { approvals: [{ application: "a1", pDirected: 0.1, pInterest: 0.1 }] },

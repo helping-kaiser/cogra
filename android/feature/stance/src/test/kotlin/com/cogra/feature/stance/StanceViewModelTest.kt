@@ -5,7 +5,9 @@ import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.UserError
+import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.severance
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
@@ -17,6 +19,7 @@ import com.cogra.domain.stance.localLanding
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingStanceRepository
+import com.cogra.domain.testing.testGraphId
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -102,12 +105,15 @@ class StanceViewModelTest {
             return Outcome.Success(localLanding(raw ?: net, pick))
         }
 
+        /** The sums the last quote was read at — what the server's batch walks back. */
+        var quoted: StancePair? = null
+
         override suspend fun severanceQuote(target: StanceTarget, includePending: Boolean): Outcome<SeveranceQuote> =
             Outcome.Success(
                 SeveranceQuote(
                     target = target,
                     standing = net,
-                    raw = raw ?: net,
+                    raw = (raw ?: net).also { quoted = it },
                     records = records,
                     alreadySevered = net == StancePair.Origin,
                 ),
@@ -115,7 +121,15 @@ class StanceViewModelTest {
 
         override suspend fun prepareSeverance(target: StanceTarget): Outcome<List<PreparedWriteView>> {
             severanceCalls += 1
-            return severanceOutcome ?: Outcome.Success(List(records) { writes.stage() })
+            // A faithful walk-back: the quoted raw sums, netted in the
+            // quoted number of records, toward the node the read named.
+            val node = when (target) {
+                is StanceTarget.Node -> testGraphId(target.id)
+                is StanceTarget.Topic -> "name:${target.name}"
+            }
+            val sums = quoted ?: raw ?: net
+            val walkBack = severance(node, sums.pDirected, sums.pInterest, records)
+            return severanceOutcome ?: Outcome.Success(writes.stageFaithful(Expectation(emptyList(), listOf(walkBack))))
         }
     }
 

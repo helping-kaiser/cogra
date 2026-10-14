@@ -16,10 +16,14 @@ import com.cogra.domain.content.isTitleTooLong
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
+import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.editExpectation
+import com.cogra.domain.signing.postEdit
 import com.cogra.domain.store.IdentityStore
+import com.cogra.domain.topics.TagClaim
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.SectionsEditor
@@ -362,12 +366,39 @@ class PostEditViewModel @Inject constructor(
         viewModelScope.launch {
             // THE KEY-ABSENT SEAL: nothing is staged or signed without the key.
             if (identity.actorSeed() == null) return@launch end { it.copy(keyAbsent = true) }
+            val expected = expectation(s, postId) ?: return@launch
             val writes = prepareBatch(s, postId) ?: return@launch
             // THE COUNT THE SIGNING PREPARED IS THE ONE THE FOOT READ, or
             // nothing is signed: the held press drops (EditCompose.md).
             if (writes.size != s.signedActionCount) return@launch end { it.copy(countChanged = true) }
-            sign(writes)
+            sign(writes, expected)
         }
+    }
+
+    /**
+     * The acts card as the intent check reads it (Intent.kt): the L1 ids of
+     * the post and of every cited node the edit touches are read first,
+     * before anything is staged. Null once the read failed — already
+     * reported.
+     */
+    private suspend fun expectation(s: PostEditUiState, postId: String): Expectation? {
+        val refs = s.referenceSection
+        val ids = listOf(postId) + (refs.adds + refs.removes).map { it.targetId }
+        val graphIds = when (val read = content.graphIds(ids)) {
+            is Outcome.Success -> read.value
+            is Outcome.Refused -> return null.also { refuse(read.errors) }
+            is Outcome.Failed -> return null.also { failTransport() }
+        }
+        val postGraphId = graphIds.getValue(postId)
+        return editExpectation(
+            nodeGraphId = postGraphId,
+            record = postEdit(postGraphId).takeIf { s.recordStaged },
+            tags = s.tagSection.adds.map { it.toClaim() } +
+                s.tagSection.removes.map { TagClaim(it.name, WITHDRAWN, it.confidence) },
+            references = refs.adds.map { it.toClaim() },
+            withdrawals = refs.removes.map { it.toWithdrawn() },
+            graphIds = graphIds,
+        )
     }
 
     /** The press is held: errors clear, and past 5s the slow line stands. */
@@ -460,9 +491,9 @@ class PostEditViewModel @Inject constructor(
         is Outcome.Failed -> null.also { failTransport() }
     }
 
-    private suspend fun sign(writes: List<PreparedWriteView>) {
+    private suspend fun sign(writes: List<PreparedWriteView>, expected: Expectation) {
         val results = try {
-            signer.sign(writes)
+            signer.sign(writes, expected)
         } catch (_: NoActorKeyException) {
             return end { it.copy(keyAbsent = true) }
         }

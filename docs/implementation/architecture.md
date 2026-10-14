@@ -284,10 +284,22 @@ steps:
    dependency list — and store it as a **staged write** (Postgres
    row; payload bytes ride the row until confirm promotes them
    into carriage). Return the
-   proposal with its pre-digests to the client so it recomputes
-   what it commits to before signing.
-2. **Pre-sign** (client). The device signs the proposal
-   pre-commitment; the key never leaves it.
+   proposal to the client.
+2. **Pre-sign** (client). The device runs the **intent check**
+   before the first pre-signature of a batch: it rebuilds, from the
+   form state of the gesture, what every act's structural body must
+   be — family, author, endpoints, the picked parameters, license,
+   asserted parents, payload presence — and refuses the whole batch
+   on any extra, missing, or differing write. A severance-shaped
+   batch, whose counter-records the server computes, is checked as a
+   property instead: every record toward the shown target, each
+   value in range, as many records as the cost shown, and the shown
+   raw sums plus the batch netting to exactly `(0, 0)`. The staged
+   admission Registration is the one exemption: the backend stages
+   it at approval and the device holds no form for it, so it runs
+   the transport checks alone. The acts carried with an application
+   sign at the landing without an intent check. Then the device
+   signs the proposal pre-commitment; the key never leaves it.
 3. **Relay and seal** (backend ↔ L1). Submit the pre-signed
    proposal through the L1 boundary; the L1 host verifies it,
    adds the projection salts, and returns the sealed **verified

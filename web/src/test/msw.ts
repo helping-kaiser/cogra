@@ -5,11 +5,12 @@ import { setupServer } from "msw/node";
 import type { RequestHandler } from "msw";
 import { afterAll, afterEach, beforeAll } from "vitest";
 
+import { GRAPH_IDS } from "./graph-ids";
 import { NOBODY_HIDDEN } from "./hidden";
 
 export function startMswServer(...handlers: RequestHandler[]) {
-  // The hidden set's read goes last: a file's own handler for it wins.
-  const server = setupServer(...handlers, NOBODY_HIDDEN);
+  // The shared defaults go last: a file's own handler for either wins.
+  const server = setupServer(...handlers, NOBODY_HIDDEN, ...GRAPH_IDS);
   beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
