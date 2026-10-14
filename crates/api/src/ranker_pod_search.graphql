@@ -1,0 +1,14 @@
+# The ranked-search relay's operation against the ranker pod
+# (ranker-schema.graphql; ranked-feed-api §4.8). It selects exactly what
+# the relay maps into `SearchEdge.score`: the order is the array's, the
+# score each entry's. Paths, marks and the NEWEST permutation are the
+# pod's answer to other questions and are never fetched here.
+query RankSearch($viewer: UUID!, $candidates: [UUID!]!, $params: RankParams!, $asOfEpoch: Int) {
+  rankSearch(viewer: $viewer, candidates: $candidates, params: $params, asOfEpoch: $asOfEpoch) {
+    asOfEpoch
+    entries {
+      targetId
+      score
+    }
+  }
+}

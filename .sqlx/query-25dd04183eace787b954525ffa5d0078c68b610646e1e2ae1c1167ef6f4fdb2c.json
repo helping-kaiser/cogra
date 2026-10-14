@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT epoch, attested_at FROM mirror_epochs WHERE epoch = ANY($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "epoch",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "attested_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "25dd04183eace787b954525ffa5d0078c68b610646e1e2ae1c1167ef6f4fdb2c"
+}

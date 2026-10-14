@@ -13,6 +13,8 @@ pub mod feed;
 mod mutation;
 pub mod notifications;
 mod query;
+pub mod ranked_search;
+pub mod trace;
 pub mod types;
 
 use std::sync::Arc;
@@ -141,6 +143,7 @@ pub fn build_with(ctx: ApiContext, budgets: QueryBudgets) -> ApiSchema {
         .data(loaders.comment_galleries)
         .data(loaders.media)
         .data(loaders.payload_states)
+        .data(loaders.epoch_instants)
         .data(loaders.bookmarks)
         .data(loaders.thread_posts)
         .data(ctx.pool)

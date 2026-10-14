@@ -133,6 +133,7 @@ async fn crash_before_the_l1_half_is_repaired(pool: PgPool) {
     for table in [
         "mirror_record_legs",
         "mirror_records",
+        "mirror_epochs",
         "l1_act_legs",
         "l1_acts",
         "l1_epochs",
@@ -182,6 +183,7 @@ async fn a_repair_run_with_changed_input_is_refused(pool: PgPool) {
     for table in [
         "mirror_record_legs",
         "mirror_records",
+        "mirror_epochs",
         "l1_act_legs",
         "l1_acts",
         "l1_epochs",
@@ -249,6 +251,7 @@ async fn rewind_to_partial_genesis(pool: &PgPool, keep: &[String]) {
         "l1_node_state",
         "mirror_record_legs",
         "mirror_records",
+        "mirror_epochs",
     ] {
         sqlx::query(&format!("DELETE FROM {table}"))
             .execute(pool)

@@ -745,6 +745,25 @@ impl Record {
         self.0.epoch
     }
 
+    /// When the record landed: its epoch's attested boundary timestamp
+    /// (layer1-interface.md, the Host Contract). Wall-clock time for
+    /// display; `landingEpoch` and the causal key carry the order.
+    async fn landed_at(&self, ctx: &Context<'_>) -> async_graphql::Result<DateTime<Utc>> {
+        use async_graphql::ErrorExtensions;
+        ctx.data::<DataLoader<crate::loaders::EpochInstantLoader>>()?
+            .load_one(self.0.epoch)
+            .await?
+            .ok_or_else(|| {
+                tracing::error!(
+                    epoch = self.0.epoch,
+                    record = %self.0.record_id,
+                    "a mirrored record's epoch has no attested instant"
+                );
+                async_graphql::Error::new("the record's landing instant is missing")
+                    .extend_with(|_, e| e.set("code", "INTERNAL"))
+            })
+    }
+
     /// Authoritative act time — the first component of the causal key.
     async fn act_time(&self) -> i64 {
         self.0.act_time
@@ -4353,11 +4372,21 @@ pub type SearchConnection = Connection<
     String,
     SearchResult,
     SearchConnectionFields,
-    async_graphql::connection::EmptyFields,
+    SearchEdgeFields,
     SearchConnectionName,
     SearchEdgeName,
     async_graphql::connection::DisableNodesField,
 >;
+
+/// `SearchEdge`'s own field.
+#[derive(SimpleObject)]
+pub struct SearchEdgeFields {
+    /// The viewer's feed score of the result, S(viewer, result)
+    /// (feed-ranking.md §6.1), under `order: RANKED`. Null past the seam —
+    /// a match outside the viewer's slice, or one no live path reaches —
+    /// and on every row under `NEWEST`.
+    pub score: Option<f64>,
+}
 
 /// `SearchConnection`'s connection-level fields. It holds the match
 /// request that served the edges, so the count is resolved under exactly
