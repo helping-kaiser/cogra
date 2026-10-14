@@ -25,7 +25,7 @@ use super::types::{
 use crate::loaders::ActorByIdLoader;
 use crate::nodes::ContentNode;
 
-/// The nine addressed acts. A kind is the act plus what it reached,
+/// The ten addressed acts. A kind is the act plus what it reached,
 /// which is what a reader needs to know before opening.
 #[derive(Enum, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum NotificationKind {
@@ -38,8 +38,12 @@ pub enum NotificationKind {
     /// A citation whose target is the viewer's post or comment.
     Citation,
     /// An opinion whose target is the viewer's profile — a first one or a
-    /// revision; a withdrawal reports nothing.
+    /// revision.
     ProfileOpinion,
+    /// An opinion on the viewer's profile walked back — its author's bundle
+    /// netted to (0, 0). Opens on the author's profile; the earlier
+    /// PROFILE_OPINION row stands.
+    ProfileOpinionWithdrawn,
     /// An application waiting in the viewer's queue became approvable —
     /// email verified and key attached.
     ApplicationApprovable,
@@ -62,6 +66,7 @@ impl NotificationKind {
             Kind::Mention => Self::Mention,
             Kind::Citation => Self::Citation,
             Kind::ProfileOpinion => Self::ProfileOpinion,
+            Kind::ProfileOpinionWithdrawn => Self::ProfileOpinionWithdrawn,
             Kind::ApplicationApprovable => Self::ApplicationApprovable,
             Kind::InviteLanded => Self::InviteLanded,
             Kind::ApplicationApproved => Self::ApplicationApproved,
@@ -156,7 +161,7 @@ impl NotificationType {
 
     /// The viewer's own node the act reached: the post commented on, the
     /// comment replied to, the cited post or comment, the viewer's own
-    /// profile for a mention. Null for PROFILE_OPINION and the four
+    /// profile for a mention. Null for the two opinion kinds and the four
     /// application kinds.
     async fn context(&self) -> Option<Node> {
         self.context.clone().map(ContentOrProfile::node)
@@ -174,7 +179,7 @@ impl NotificationType {
     /// The application the act concerns — the waiting application for
     /// APPLICATION_APPROVABLE, the viewer's own path for
     /// APPLICATION_APPROVED and APPLICATION_REJECTED, the landed path for
-    /// INVITE_LANDED; null for the five content kinds. Resolves while the
+    /// INVITE_LANDED; null for the six record kinds. Resolves while the
     /// row exists; an application later closed or landed reads in its
     /// current state.
     async fn application(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Application>> {
