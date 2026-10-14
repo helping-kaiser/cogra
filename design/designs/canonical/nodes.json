@@ -1039,6 +1039,111 @@
         "changePassword.title": []
       }
     },
+    "CommentLicense": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the author's handle, without @ (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.licenseSheet.terms.axis": "the axis's name as the terms print it, lowercased, each run of other characters one - (LicenseTerms)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "ada"
+        ],
+        "postDetail.card.actionRow": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.score": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.share": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "postDetail.card.authorChip": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.name": [
+          "ada"
+        ],
+        "postDetail.card.description": [
+          "ada"
+        ],
+        "postDetail.card.media": [
+          "ada"
+        ],
+        "postDetail.card.media.frame": [
+          "ada/1"
+        ],
+        "postDetail.card.opinions": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine.counts": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "ada"
+        ],
+        "postDetail.card.title": [
+          "ada"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.licenseSheet": [],
+        "postDetail.licenseSheet.dragHandle": [],
+        "postDetail.licenseSheet.terms": [],
+        "postDetail.licenseSheet.terms.axis": [
+          "credit",
+          "public-record-of-use"
+        ],
+        "postDetail.licenseSheet.terms.axis.label": [
+          "credit",
+          "public-record-of-use"
+        ],
+        "postDetail.licenseSheet.terms.axis.value": [
+          "credit",
+          "public-record-of-use"
+        ]
+      }
+    },
     "CommentMenu": {
       "prefix": "postDetail",
       "keys": {
@@ -2719,7 +2824,8 @@
       "keys": {
         "feed.card": "the author's handle, without @ (PostCard)",
         "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
-        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "feed.licenseSheet.terms.axis": "the axis's name as the terms print it, lowercased, each run of other characters one - (LicenseTerms)"
       },
       "nodes": {
         "feed.band": [],
@@ -2832,7 +2938,19 @@
         ],
         "feed.licenseSheet": [],
         "feed.licenseSheet.dragHandle": [],
-        "feed.licenseSheet.terms": []
+        "feed.licenseSheet.terms": [],
+        "feed.licenseSheet.terms.axis": [
+          "credit",
+          "public-record-of-use"
+        ],
+        "feed.licenseSheet.terms.axis.label": [
+          "credit",
+          "public-record-of-use"
+        ],
+        "feed.licenseSheet.terms.axis.value": [
+          "credit",
+          "public-record-of-use"
+        ]
       }
     },
     "FeedPostMenu": {
@@ -4121,6 +4239,111 @@
         "postDetail.snackbar": [],
         "postDetail.snackbar.action": [],
         "postDetail.snackbar.message": []
+      }
+    },
+    "PostLicense": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the author's handle, without @ (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.licenseSheet.terms.axis": "the axis's name as the terms print it, lowercased, each run of other characters one - (LicenseTerms)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "ada"
+        ],
+        "postDetail.card.actionRow": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.score": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.share": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "postDetail.card.authorChip": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.name": [
+          "ada"
+        ],
+        "postDetail.card.description": [
+          "ada"
+        ],
+        "postDetail.card.media": [
+          "ada"
+        ],
+        "postDetail.card.media.frame": [
+          "ada/1"
+        ],
+        "postDetail.card.opinions": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine.counts": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "ada"
+        ],
+        "postDetail.card.title": [
+          "ada"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.licenseSheet": [],
+        "postDetail.licenseSheet.dragHandle": [],
+        "postDetail.licenseSheet.terms": [],
+        "postDetail.licenseSheet.terms.axis": [
+          "credit",
+          "public-record-of-use"
+        ],
+        "postDetail.licenseSheet.terms.axis.label": [
+          "credit",
+          "public-record-of-use"
+        ],
+        "postDetail.licenseSheet.terms.axis.value": [
+          "credit",
+          "public-record-of-use"
+        ]
       }
     },
     "Profile": {
