@@ -3600,12 +3600,15 @@ input AttachmentInput {
  (hashtag.md §4)."
 input TagInput {
   name: String!
-  "Relevance `r`; defaults to +0.1, the low-defaults value."
-  pDirected: Dimension
-  "Confidence `c`, census-bounded to [0, 1]; defaults to 1 — an
-   author believes their own declaration, and confidence is not a
-   stance whose headroom needs preserving."
-  pInterest: Dimension
+  "Relevance `r`. Required: the server never fills a stance in —
+   the UI pre-fills +0.1, the low-defaults value, visibly and sends
+   what it shows."
+  pDirected: Dimension!
+  "Confidence `c`, census-bounded to [0, 1]. Required like
+   relevance; the UI pre-fills 1 — an author believes their own
+   declaration, and confidence is not a stance whose headroom needs
+   preserving."
+  pInterest: Dimension!
 }
 
 "A citation — one Reference record from the authored artifact to
@@ -3631,19 +3634,21 @@ input ReferenceInput {
    External links are body text, never citations: both endpoints of
    a Reference are nodes on the graph."
   target: UUID!
-  "How load-bearing the cited thing is to this artifact, `[-1, 1]`;
-   defaults to +0.1. The census calls this **effort `f`**, and it
+  "How load-bearing the cited thing is to this artifact, `[-1, 1]`.
+   Required, like every stance value: the UI pre-fills +0.1 and
+   sends what it shows. The census calls this **effort `f`**, and it
    occupies the `pDirected` slot — the same slot relevance occupies
    on a tag."
-  relevance: Dimension
-  "Endorsing versus refuting, `[-1, 1]`; defaults to +0.1. The
-   census calls this **enthusiasm `e`**, and it occupies the
-   `pInterest` slot. This is the axis that decides whether a mention
-   vouches: a citation strictly positive on both axes resolves its
-   fold cell to the cited person, and every other citation resolves
-   home. Both defaults are strictly positive, so a default mention
-   vouches — weakly, at coefficient `√0.01 = 0.1`."
-  support: Dimension
+  relevance: Dimension!
+  "Endorsing versus refuting, `[-1, 1]`. Required; the UI pre-fills
+   +0.1. The census calls this **enthusiasm `e`**, and it occupies
+   the `pInterest` slot. This is the axis that decides whether a
+   mention vouches: a citation strictly positive on both axes
+   resolves its fold cell to the cited person, and every other
+   citation resolves home. Both pre-fills are strictly positive, so
+   an untouched mention vouches — weakly, at coefficient
+   `√0.01 = 0.1`."
+  support: Dimension!
 }
 
 "The qualifiers a content node was minted with
@@ -3696,9 +3701,10 @@ input PreparePostInput {
   "The mark's optional public reason, shown on the veil. Refused
    without sensitive: true; blank counts as none."
   sensitiveReason: String
-  "The Publish record's attachment parameter; defaults to the
-   low-defaults policy value (+0.1)."
-  pDirected: Dimension
+  "The Publish record's attachment parameter. Required: the server
+   never fills a stance in — the UI pre-fills the low-defaults policy
+   value (+0.1) visibly and sends what it shows."
+  pDirected: Dimension!
   "Act as this Collective (see conventions)."
   actAs: UUID
 }
@@ -3740,8 +3746,9 @@ input PrepareCommentInput {
    same seal a post does, so it carries the same switch."
   sensitive: Boolean
   sensitiveReason: String
-  pDirected: Dimension
-  pInterest: Dimension
+  "Effort and enthusiasm, required: the UI pre-fills +0.1 on both."
+  pDirected: Dimension!
+  pInterest: Dimension!
   actAs: UUID
 }
 
@@ -3765,8 +3772,10 @@ input PrepareTagInput {
   "The content being tagged."
   target: UUID!
   name: String!
-  pDirected: Dimension
-  pInterest: Dimension
+  "Required, as on TagInput. An un-tag signs the confidence the
+   removed chip showed; relevance is the only value it moves."
+  pDirected: Dimension!
+  pInterest: Dimension!
 }
 
 "One standalone citation on existing content — the gesture that
@@ -3783,10 +3792,12 @@ input PrepareReferenceInput {
   artifact: UUID!
   "The cited node. An artifact cannot cite itself."
   target: UUID!
-  "Effort `f`, the `pDirected` slot; defaults to +0.1."
-  relevance: Dimension
-  "Enthusiasm `e`, the `pInterest` slot; defaults to +0.1."
-  support: Dimension
+  "Effort `f`, the `pDirected` slot. Required, as on
+   ReferenceInput."
+  relevance: Dimension!
+  "Enthusiasm `e`, the `pInterest` slot. Required, as on
+   ReferenceInput."
+  support: Dimension!
 }
 
 "Withdrawing one citation. Records are never deleted, and
@@ -4345,8 +4356,8 @@ input PrepareChatInvitationInput {
   chat: UUID!
   invitee: UUID!
   message: String
-  pDirected: Dimension
-  pInterest: Dimension
+  pDirected: Dimension!
+  pInterest: Dimension!
   actAs: UUID
 }
 
@@ -4501,8 +4512,9 @@ settlement is recognized
 
 ```graphql
 "List a good — stages the genesis Owner (mints the Item; payload
- carries the display fields and digests). Attachment parameter
- defaults to the low-defaults policy value."
+ carries the display fields and digests). The attachment parameter
+ is required, as every stance value is; the UI pre-fills the
+ low-defaults policy value."
 input PrepareItemInput {
   name: String!
   description: String
@@ -4515,7 +4527,7 @@ input PrepareItemInput {
   "CGT amount, rail-precision string; omitted = not offered for
    sale (items.md §6)."
   askingPrice: String
-  pDirected: Dimension
+  pDirected: Dimension!
   actAs: UUID
 }
 
@@ -4544,8 +4556,8 @@ input PrepareBidInput {
    locked there — a Bid is funded before it lands (fund-at-Bid,
    ledger.md)."
   escrow: String!
-  pDirected: Dimension
-  pInterest: Dimension
+  pDirected: Dimension!
+  pInterest: Dimension!
   actAs: UUID
 }
 
@@ -4614,15 +4626,16 @@ to prompt the recipient.
  never an amount). Valid targets: any authored passive node except
  Chats and Items — Profiles included (the direct person tip), chat
  Messages included (existence and membership are already public
- structure; the body stays ciphertext). Stance parameters default
- to the low-defaults policy value."
+ structure; the body stays ciphertext). Stance parameters are
+ required, as every stance value is; the UI pre-fills the
+ low-defaults policy value."
 input PrepareTipInput {
   target: UUID!
   "Pointer to the executed Liquid transfer; its destination must
    match the target author's witnessed payout address in force."
   txPointer: String!
-  pDirected: Dimension
-  pInterest: Dimension
+  pDirected: Dimension!
+  pInterest: Dimension!
   actAs: UUID
 }
 
