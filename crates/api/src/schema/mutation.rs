@@ -1491,6 +1491,32 @@ struct RemoveBookmarkPayload {
 }
 
 #[derive(InputObject)]
+struct HideActorInput {
+    actor: Uuid,
+    /// Restores an earlier hiding's moment — the Undo of an unhide puts the
+    /// row back where it stood. Null means now; a moment after now is
+    /// BAD_INPUT.
+    hidden_at: Option<DateTime<Utc>>,
+}
+
+#[derive(SimpleObject)]
+struct HideActorPayload {
+    hidden: Option<crate::schema::types::HiddenActorEdge>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
+struct UnhideActorInput {
+    actor: Uuid,
+}
+
+#[derive(SimpleObject)]
+struct UnhideActorPayload {
+    ok: Option<bool>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
 struct MarkSeenInput {
     /// The nodes the viewer has seen, in the order they were seen.
     nodes: Vec<Uuid>,
@@ -2810,6 +2836,62 @@ impl Mutation {
         let pool = ctx.data::<PgPool>()?;
         postgres_store::bookmarks::remove_bookmark(pool, v.user_id, input.node).await?;
         Ok(RemoveBookmarkPayload {
+            ok: Some(true),
+            user_errors: vec![],
+        })
+    }
+
+    /// Hide an actor from the viewer's own feed. Idempotent: an actor
+    /// already hidden keeps its edge and its moment. Any actor may be
+    /// hidden, a deleted account included; the viewer's own id is
+    /// BAD_INPUT, an id naming no actor NOT_FOUND, a restore moment after
+    /// now BAD_INPUT — all at the transport, client bugs no surface renders.
+    /// Needs a session and no particular account state — an applicant
+    /// hides like a member; this is private viewer state, not acting.
+    /// Nothing reaches the graph or the hidden actor.
+    async fn hide_actor(
+        &self,
+        ctx: &Context<'_>,
+        input: HideActorInput,
+    ) -> async_graphql::Result<HideActorPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        if input.actor == v.user_id {
+            return Err(super::query::bad_input("an account cannot hide itself"));
+        }
+        if let Some(at) = input.hidden_at
+            && !crate::bookmarks::restore_time_ok(at, Utc::now())
+        {
+            return Err(super::query::bad_input(
+                "a hiding moment may not be later than now",
+            ));
+        }
+        let Some(row) =
+            postgres_store::hidden::hide(pool, v.user_id, input.actor, input.hidden_at).await?
+        else {
+            return Err(not_found("no such actor"));
+        };
+        let edge = crate::schema::types::hydrate_hidden(pool, vec![row])
+            .await?
+            .pop()
+            .ok_or_else(|| not_found("no such actor"))?;
+        Ok(HideActorPayload {
+            hidden: Some(edge),
+            user_errors: vec![],
+        })
+    }
+
+    /// Unhide an actor — a genuine delete. Idempotent: an actor not hidden
+    /// answers ok. Needs a session; no account state.
+    async fn unhide_actor(
+        &self,
+        ctx: &Context<'_>,
+        input: UnhideActorInput,
+    ) -> async_graphql::Result<UnhideActorPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        postgres_store::hidden::unhide(pool, v.user_id, input.actor).await?;
+        Ok(UnhideActorPayload {
             ok: Some(true),
             user_errors: vec![],
         })

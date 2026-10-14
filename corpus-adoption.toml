@@ -2117,7 +2117,7 @@ names      = [
 surface    = "mutation"
 built_by   = "UNTRIAGED: unbuilt surface the spec declares ahead of the schema; the owning feature packet is not yet named"
 names      = [
-  "hideActor", "markChatRead", "prepareAccept", "prepareBallot",
+  "markChatRead", "prepareAccept", "prepareBallot",
   "prepareBid", "prepareCampaign", "prepareCampaignAdjustment",
   "prepareChat", "prepareChatInvitation", "prepareChatJoin",
   "prepareChatJoinRequest", "prepareChatLeave", "prepareChatMessage",
@@ -2128,7 +2128,6 @@ names      = [
   "prepareProposal", "prepareRatify", "prepareReport", "prepareRescind",
   "prepareSettlement", "prepareTip", "prepareWithdraw",
   "removeContent",
-  "unhideActor",
 ]
 
 # A prose paragraph on the profile field caps sits inside a graphql
