@@ -79,8 +79,8 @@ async fn land(pool: &PgPool, epoch: i64, records: Vec<PublishedRecord>) {
             records,
         },
     )
-        .await
-        .expect("ingests");
+    .await
+    .expect("ingests");
 }
 
 /// Stages a Tag act that has been pre-signed but has not landed. The

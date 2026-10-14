@@ -3318,7 +3318,9 @@ async fn a_single_target_trace_reads_at_the_newest_epoch_with_no_pin(pool: PgPoo
         .collect();
     assert_eq!(args, vec!["viewer", "target"]);
     trace(&rig, f.viewer, f.post).await;
-    let cursor = mirror::last_ingested_epoch(&rig.pool).await.expect("cursor");
+    let cursor = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
     assert_eq!(pod.last_variables()["asOfEpoch"], json!(cursor));
     assert_eq!(pod.last_variables()["candidates"], json!([f.post]));
     assert_eq!(pod.last_variables()["viewer"], json!(f.viewer));
@@ -3553,7 +3555,10 @@ async fn a_t_leg_hop_shows_the_t_legs_pair_not_the_actors(pool: PgPool) {
     assert_eq!(path["nodes"][3]["id"], json!(k));
     assert_eq!(path["nodes"][3]["kind"], json!("COMMENT"));
     let hop = &path["hops"][2];
-    assert_eq!((hop["pDirected"].clone(), hop["pInterest"].clone()), (json!(0.4), json!(0.1)));
+    assert_eq!(
+        (hop["pDirected"].clone(), hop["pInterest"].clone()),
+        (json!(0.4), json!(0.1))
+    );
     let legs = hop["records"][0]["legs"].as_array().expect("legs");
     let crossing: Vec<&Value> = legs
         .iter()
@@ -3562,7 +3567,10 @@ async fn a_t_leg_hop_shows_the_t_legs_pair_not_the_actors(pool: PgPool) {
     assert_eq!(crossing.len(), 1);
     assert_eq!(crossing[0]["role"], json!("T"));
     assert_eq!(
-        (crossing[0]["pDirected"].clone(), crossing[0]["pInterest"].clone()),
+        (
+            crossing[0]["pDirected"].clone(),
+            crossing[0]["pInterest"].clone()
+        ),
         (json!(0.4), json!(0.1))
     );
     let actor_leg = legs
@@ -3645,7 +3653,9 @@ async fn a_feed_ranking_without_paths_selected_costs_what_it_costs_today(pool: P
 async fn a_malformed_pod_trace_answer_is_internal_and_logged(pool: PgPool) {
     let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
     let f = fixture(&rig.pool).await;
-    let cursor = mirror::last_ingested_epoch(&rig.pool).await.expect("cursor");
+    let cursor = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
     let mut wrong_epoch = trace_answer(vec![trace_entry(f.post, 0.1, vec![])]);
     wrong_epoch["asOfEpoch"] = json!(cursor - 1);
     let unheld = trace_answer(vec![trace_entry(
@@ -3653,7 +3663,11 @@ async fn a_malformed_pod_trace_answer_is_internal_and_logged(pool: PgPool) {
         0.1,
         vec![trace_path(
             &[prof("a").to_string(), f.p.to_string()],
-            vec![trace_hop(&["act:nobody:1:publish".to_string()], (0.5, 0.5), 0.5)],
+            vec![trace_hop(
+                &["act:nobody:1:publish".to_string()],
+                (0.5, 0.5),
+                0.5,
+            )],
             1,
             0.1,
         )],

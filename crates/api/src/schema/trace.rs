@@ -178,7 +178,10 @@ fn the_entry(
     match entry {
         None => Ok(None),
         Some(entry) if entry.target_id == target => Ok(Some((entry.score, entry.paths))),
-        Some(entry) => Err(format!("an entry for {} in a trace of {target}", entry.target_id)),
+        Some(entry) => Err(format!(
+            "an entry for {} in a trace of {target}",
+            entry.target_id
+        )),
     }
 }
 
