@@ -567,7 +567,7 @@ impl Query {
         query: String,
         kinds: Option<Vec<NodeKind>>,
         #[graphql(default_with = "Some(true)")] include_seen: Option<bool>,
-        #[graphql(default)] order: ReadOrder,
+        #[graphql(default_with = "Some(ReadOrder::Newest)")] order: Option<ReadOrder>,
         viewer: Option<Uuid>,
         first: Option<i32>,
         after: Option<String>,
@@ -577,7 +577,7 @@ impl Query {
         let pool = ctx.data::<PgPool>()?;
         validate_page_args(first, last, after.as_deref(), before.as_deref())
             .map_err(|e| bad_input(e.message))?;
-        let ranked_for = match (order, viewer) {
+        let ranked_for = match (order.unwrap_or_default(), viewer) {
             (ReadOrder::Ranked, None) => {
                 return Err(bad_input("order: RANKED ranks for a viewer; name one"));
             }
