@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT act_id, author, family, act_time AS \"act_time!\",\n                  position AS \"position!\", length(payload) AS payload_len,\n                  content_commitment\n           FROM l1_acts WHERE epoch = $1 AND status = 'accepted'\n           ORDER BY position",
+  "query": "SELECT act_id, author, family, act_time AS \"act_time!\",\n                  position AS \"position!\", payload_len, content_commitment\n           FROM l1_acts WHERE epoch = $1 AND status = 'accepted'\n           ORDER BY position",
   "describe": {
     "columns": [
       {
@@ -31,7 +31,7 @@
       {
         "ordinal": 5,
         "name": "payload_len",
-        "type_info": "Int4"
+        "type_info": "Int8"
       },
       {
         "ordinal": 6,
@@ -50,9 +50,9 @@
       false,
       true,
       true,
-      null,
+      false,
       false
     ]
   },
-  "hash": "c1daad15e342484a0dd0e623b0d98813786a349fd79d16c3b829d166e397d10c"
+  "hash": "78a4fa317a184a53307b7cfa72a52c3524f180feab13b86be7bef7a19d0c10c5"
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT author, seq, family, author_pubkey, middle, target, p_d, p_i,\n                settlement_ref, license, asserted_parents, pre_signature,\n                content_commitment, deps_commitment, status\n         FROM l1_acts WHERE act_id = $1",
+  "query": "SELECT author, seq, family, author_pubkey, middle, target, p_d, p_i,\n                settlement_ref, license, asserted_parents, deps, payload,\n                payload_len, nonce, pre_signature, pre_commitment,\n                content_salt, deps_salt, content_commitment, deps_commitment,\n                host_seal, status\n         FROM l1_acts WHERE act_id = $1",
   "describe": {
     "columns": [
       {
@@ -60,21 +60,61 @@
       },
       {
         "ordinal": 11,
-        "name": "pre_signature",
-        "type_info": "Bytea"
+        "name": "deps",
+        "type_info": "TextArray"
       },
       {
         "ordinal": 12,
-        "name": "content_commitment",
+        "name": "payload",
         "type_info": "Bytea"
       },
       {
         "ordinal": 13,
+        "name": "payload_len",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 14,
+        "name": "nonce",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 15,
+        "name": "pre_signature",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 16,
+        "name": "pre_commitment",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 17,
+        "name": "content_salt",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 18,
+        "name": "deps_salt",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 19,
+        "name": "content_commitment",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 20,
         "name": "deps_commitment",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 14,
+        "ordinal": 21,
+        "name": "host_seal",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 22,
         "name": "status",
         "type_info": "Text"
       }
@@ -97,10 +137,18 @@
       true,
       false,
       false,
+      true,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false,
       false,
       false,
       false
     ]
   },
-  "hash": "6203bbd2a87d92debdf44453e743505fd24ced447e3446d29cef766989428323"
+  "hash": "d1a022b91dd317ab9b466ad8fb0a1716207a58057c33c05558a8c93d1d6b223c"
 }

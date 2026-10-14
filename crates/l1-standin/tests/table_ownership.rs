@@ -16,12 +16,16 @@
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-/// The migrations that create the stand-in's tables — the only ones
-/// allowed to name them freely.
+/// The migrations that create the stand-in's tables — with `AMENDMENTS`,
+/// the only ones allowed to name them freely.
 const OWNERS: &[&str] = &[
     "20260724000003_l1_standin.sql",
     "20261007200000_l1_standin_admission_burns.sql",
 ];
+
+/// The stand-in's own migrations that alter its tables without creating
+/// one, owned by the crate like `OWNERS`.
+const AMENDMENTS: &[&str] = &["20261014180000_l1_acts_witness_only.sql"];
 
 /// The one recorded exception, with the reason it cannot be removed.
 ///
@@ -105,7 +109,7 @@ fn no_migration_outside_the_stand_in_reads_its_tables() {
             .and_then(|n| n.to_str())
             .unwrap_or_default()
             .to_string();
-        if OWNERS.contains(&name.as_str()) {
+        if OWNERS.contains(&name.as_str()) || AMENDMENTS.contains(&name.as_str()) {
             continue;
         }
         let text = std::fs::read_to_string(&path).expect("a readable migration");
