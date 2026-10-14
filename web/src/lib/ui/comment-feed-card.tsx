@@ -43,7 +43,7 @@ import { RemovedPlaceholder, type RemovalReason } from "@/lib/ui2/media/removed-
 import { OverflowMenu } from "@/lib/ui2/overflow-menu";
 import { ActorChip } from "./actor-chip";
 import { Card } from "./card";
-import { part, type DataNode } from "./data-node";
+import type { DataNode } from "./data-node";
 import { Icon } from "./icons";
 import { NodeMark } from "./node-mark";
 import { PendingMarker } from "./pending-marker";
@@ -283,7 +283,6 @@ export function CommentFeedCard({
             maxHeight="220px"
             surface="reading"
             testId={`${testId}-media`}
-            dataNode={part(node, "media")}
           />
         </div>
       )}
