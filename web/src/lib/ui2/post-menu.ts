@@ -63,6 +63,11 @@ export type PostMenuContext = {
    * (`saveRow`, the one save behaviour every menu shares).
    */
   save: { label: string; onSelect: () => void };
+  /**
+   * The reader menu's hide act (`hideAct`, the one hide behaviour every menu
+   * shares); absent stands the row inert.
+   */
+  hide?: () => void;
   /** Row test ids derive from this — `post-menu` gives `post-menu-save`. */
   testIdPrefix: string;
   /**
@@ -87,8 +92,7 @@ export type PostMenuContext = {
  *
  * ROWS WHOSE DESTINATION IS NOT BUILT STAND ANYWAY and do nothing (jakob
  * 2026-09-14, the introduced-but-inert law): a menu that grew a row per slice
- * would be a different menu every release, and the row order is ruled. Hide
- * waits on hidden-actors' `hideActor`.
+ * would be a different menu every release, and the row order is ruled.
  */
 export function postMenuItems({
   postId,
@@ -101,6 +105,7 @@ export function postMenuItems({
   openReport,
   shareRow,
   save,
+  hide,
   testIdPrefix,
   rowNode = () => undefined,
 }: PostMenuContext): MenuItem[] {
@@ -138,7 +143,7 @@ export function postMenuItems({
   } else {
     // The handle is the thing a reader recognises, and the word they will
     // look for again under Hidden accounts (`ActorChip.jsx:67`).
-    rows.push(row("hide", "hide", handle === null ? "Hide this account" : `Hide @${handle}`, () => {}));
+    rows.push(row("hide", "hide", handle === null ? "Hide this account" : `Hide @${handle}`, hide ?? (() => {})));
   }
   if (license !== null) {
     rows.push(row("license", "license", "License terms", () => openLicense(license)));

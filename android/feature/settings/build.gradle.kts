@@ -27,6 +27,8 @@ android {
 dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:domain"))
+    // The hide row's words and snackbar, which Hidden accounts' unhide shares.
+    implementation(project(":feature:saved"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

@@ -25,8 +25,7 @@ import com.cogra.domain.LicenseChoice
  * ROWS WHOSE DESTINATION IS NOT BUILT YET STAND ANYWAY and do nothing
  * (jakob 2026-09-14, the introduced-but-inert law): a menu that grew a
  * row per slice would be a different menu every release, and the row
- * order is ruled. The hide row waits on hidden-actors' `hideActor`;
- * `Remove` waits on slice 8's erasure.
+ * order is ruled. `Remove` waits on slice 8's erasure.
  *
  * @param onShare THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK
  *   (design/readme.md, jakob 2026-09-17, sharpened 2026-09-22 — PR #794):
@@ -63,6 +62,11 @@ internal fun postMenuRows(
      * the row inert, for a host rendered outside the app's graph.
      */
     saveRow: MenuRow? = null,
+    /**
+     * The reader menu's hide act (`SavedHost.hideAct`, the one hide behaviour
+     * every menu shares). Null stands the row inert.
+     */
+    onHide: (() -> Unit)? = null,
 ): List<MenuRow> {
     fun tag(row: PostMenuRow, legacy: String): String = rowNode(row)?.tag ?: "${testTagPrefix}_$legacy"
     val save = stringResource(R.string.content_menu_save)
@@ -105,7 +109,7 @@ internal fun postMenuRows(
             add(MenuRow(sensitive, tag(PostMenuRow.MarkSensitive, "sensitive"), onEdit))
             add(MenuRow(remove, tag(PostMenuRow.Remove, "remove"), onRemove))
         } else {
-            add(MenuRow(hide, tag(PostMenuRow.Hide, "hide")) {})
+            add(MenuRow(hide, tag(PostMenuRow.Hide, "hide"), onHide ?: {}))
         }
         // The license rode the payload, so a redacted record has none to show
         // (`PostCard.jsx:146-148`).

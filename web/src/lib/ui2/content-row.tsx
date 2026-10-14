@@ -74,7 +74,10 @@ export function ContentRow({
   onOpen,
   node,
   testId,
+  titleId,
 }: {
+  /** The title's element id, for a control that is described by it. */
+  titleId?: string;
   variant?: ContentRowVariant;
   title: string;
   /** A word riding the title's baseline — Saved's `@handle`. */
@@ -103,6 +106,7 @@ export function ContentRow({
   const quiet = redacted || titleQuiet;
   const heading = (
     <span
+      id={titleId}
       className={`${ELLIPSIS} text-label-large ${quiet ? "text-on-surface-variant" : "text-on-surface"}`}
       {...testAttributes(part(node, "title"), `${testId}-title`)}
     >

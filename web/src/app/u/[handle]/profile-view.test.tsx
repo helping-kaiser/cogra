@@ -7,6 +7,7 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { createStubStanceData } from "@/lib/stance/stub-stance-data";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
+import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { bookmarkHandlers, bookmarkLog } from "@/test/saved";
@@ -307,8 +308,8 @@ describe("ProfileScreen", () => {
   });
 
   // THE PROFILE'S ⋮ (ProfileOwnMenu.md, ProfileMenu.md, ProfileDeletedMenu.md;
-  // saved-surface SS-1): three sheets, built whole; History, Hide and Mention
-  // stand inert until their packets wire them.
+  // saved-surface SS-1): three sheets, built whole; History and Mention stand
+  // inert until their packets wire them.
   describe("the profile menu", () => {
     function rows() {
       return Array.from(
@@ -416,6 +417,59 @@ describe("ProfileScreen", () => {
         "That didn't go through.",
       );
       expect(screen.queryByTestId("profile.snackbar.message")).not.toBeInTheDocument();
+    });
+    it("hide_from_a_profile_keeps_the_profile_open", async () => {
+      const log = hiddenLog();
+      server.use(meHandler(), other(), recordsHandler([]), ...hiddenHandlers(log));
+      renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+      fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
+      fireEvent.click(screen.getByTestId("profile.menuSheet.hide"));
+      expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent(
+        "@ada is hidden — their posts stay out of your feed.",
+      );
+      // ProfileMenu.md:23 — the reader stays on the profile.
+      expect(screen.getByTestId("profile.identity.actionRow.menu")).toBeInTheDocument();
+      await waitFor(() => expect(log.hides).toEqual([{ actor: "u2", at: null }]));
+      fireEvent.click(screen.getByTestId("profile.snackbar.action"));
+      await waitFor(() => expect(log.unhides).toEqual(["u2"]));
+    });
+
+    it("a_deleted_accounts_hide_reads_this_account_is_hidden", async () => {
+      server.use(
+        meHandler(),
+        other({ displayName: { __typename: "ModeratedText", value: null, status: "REDACTED" } }),
+        recordsHandler([]),
+        ...hiddenHandlers(hiddenLog()),
+      );
+      renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+      fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
+      fireEvent.click(screen.getByTestId("profile.menuSheet.hide"));
+      expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent(
+        "This account is hidden — its posts stay out of your feed.",
+      );
+    });
+
+    it("a_hidden_persons_profile_still_opens", async () => {
+      server.use(
+        meHandler(),
+        other(),
+        recordsHandler([]),
+        ...hiddenHandlers(hiddenLog(), {
+          entries: [{ id: "u2", handle: "ada", displayName: "Ada", hiddenAt: "2026-10-01T00:00:00Z" }],
+        }),
+      );
+      renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+      expect(await screen.findByTestId("profile.identity.actionRow.menu")).toBeInTheDocument();
+    });
+
+    it("a_guest_meets_the_ask_on_hide", async () => {
+      const log = hiddenLog();
+      server.use(other(), recordsHandler([]), ...hiddenHandlers(log));
+      renderWithProviders(<ProfileScreen handle="ada" />);
+      fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
+      fireEvent.click(screen.getByTestId("profile.menuSheet.hide"));
+      expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
+      expect(log.hides).toEqual([]);
     });
 
     it("a_guest_meets_the_ask_on_a_profile_save", async () => {

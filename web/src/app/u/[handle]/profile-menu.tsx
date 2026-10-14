@@ -14,8 +14,8 @@
 //   having gone with the account.
 //
 // BUILT WHOLE, WIRED IN PART (saved-surface SS-1; the introduced-but-inert
-// law, jakob 2026-09-14): History waits on the History surface, Hide on the
-// hidden-actors packet, Mention on the compose wizard's profile reference.
+// law, jakob 2026-09-14): History waits on the History surface, Mention on
+// the compose wizard's profile reference.
 // Those rows stand at full strength and do nothing yet; the hand-test notes
 // name each.
 
@@ -24,6 +24,8 @@ import { useRouter } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
 import { sendReport } from "@/lib/api/report-api";
+import { hideAct, hideLabel, hiddenPersonOf, type ActorLike } from "@/lib/hidden/hide-row";
+import { useHiddenSet } from "@/lib/hidden/provider";
 import { useSavedWrites } from "@/lib/saved/provider";
 import { saveRow, type Notify } from "@/lib/saved/save-row";
 import { useAuthGuard } from "@/lib/session/runtime";
@@ -45,7 +47,7 @@ export function ProfileMenu({
   notify,
 }: {
   kind: ProfileMenuKind;
-  profile: { id: string; handle: string; viewerBookmarkedAt?: string | null };
+  profile: ActorLike & { handle: string; viewerBookmarkedAt?: string | null };
   signedIn: boolean;
   /** The profile's own snackbar. */
   notify: Notify;
@@ -54,6 +56,7 @@ export function ProfileMenu({
   const client = useApolloClient();
   const guard = useAuthGuard();
   const writes = useSavedWrites();
+  const hidden = useHiddenSet();
   const [open, setOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -86,6 +89,22 @@ export function ProfileMenu({
     }),
     node: row("save"),
   };
+  // HIDING KEEPS THE READER ON THE PROFILE (ProfileMenu.md:23): the person
+  // leaves the feed, the page stays, and the profile's snackbar offers Undo.
+  // A deleted account's row and snackbar name no one (ProfileDeletedMenu.md:19).
+  const person = hiddenPersonOf(kind === "deleted" ? { ...profile, handle: null } : profile);
+  const hide: MenuItem = {
+    label: hideLabel(person),
+    onSelect: hideAct({
+      set: hidden,
+      person,
+      origin: profile.id,
+      notify,
+      onGuest: signedIn ? null : () => setJoinOpen(true),
+    }),
+    testId: "profile-menu-hide",
+    node: row("hide"),
+  };
 
   let items: MenuItem[];
   let ariaLabel: string;
@@ -104,8 +123,7 @@ export function ProfileMenu({
       // INERT until the wizard takes a profile as a staged reference.
       { label: "Mention in a new post", onSelect: gated(inert), testId: "profile-menu-mention", node: row("mention") },
       { label: "Share this profile", onSelect: share, testId: "profile-menu-share", node: row("share") },
-      // INERT until the hidden-actors packet wires `hideActor`.
-      { label: `Hide @${profile.handle}`, onSelect: gated(inert), testId: "profile-menu-hide", node: row("hide") },
+      hide,
       report,
     ];
   } else {
@@ -113,8 +131,7 @@ export function ProfileMenu({
     items = [
       save,
       { label: "Share this profile", onSelect: share, testId: "profile-menu-share", node: row("share") },
-      // INERT until the hidden-actors packet wires `hideActor`.
-      { label: "Hide this account", onSelect: gated(inert), testId: "profile-menu-hide", node: row("hide") },
+      hide,
       report,
     ];
   }
