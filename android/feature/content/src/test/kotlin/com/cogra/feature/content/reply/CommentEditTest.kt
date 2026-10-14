@@ -385,7 +385,7 @@ class CommentEditTest {
 
         compose.onNodeWithTag("comment_edit_discard_confirm").assertIsDisplayed()
         // The one shared dialog, asking the edit's own question.
-        compose.onNodeWithText("Discard this edit?").assertIsDisplayed()
+        compose.onNodeWithText("Discard the changes?").assertIsDisplayed()
         compose.onNodeWithText("Nothing is kept.").assertIsDisplayed()
     }
 
