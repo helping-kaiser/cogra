@@ -28,6 +28,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetHost
 import com.cogra.core.designsystem.v2.atom.CograTextField
+import com.cogra.core.designsystem.v2.atom.DiscardConfirm
+import com.cogra.core.designsystem.v2.atom.DiscardSubject
 import com.cogra.core.designsystem.v2.atom.Hairline
 import com.cogra.core.designsystem.v2.atom.HelpDialog
 import com.cogra.core.designsystem.v2.atom.SettingRow
@@ -58,9 +60,17 @@ const val WORDS_OVER_CAP_LINE = "A post's words are at most 5,000 characters."
 /** The rule the body field carries on every edit (EditCompose.md, EditWords.md). */
 const val BODY_RULE_LINE = "A post's body is words or media, never both."
 
+/** The header X's accessible name: the edit keeps no draft (EditCompose, EditWords boards). */
+const val EDIT_LEAVE_LABEL = "Leave — the edit is discarded"
+
 /**
  * The post edit's route: reads the post, wires the batch, and returns to the
  * post once the edit is signed (it opens with the edit settling).
+ *
+ * THE EDIT KEEPS NO DRAFT. The back arrow and the X leave at once with an
+ * empty batch; with an act in the batch they raise `Discard the changes?`,
+ * and Discard leaves toward where the edit began with the post as it was —
+ * the ViewModel is scoped to this back-stack entry, so nothing outlives it.
  *
  * DRIFT (registration-gated, feed-card-rework §16): no Edit* board is in
  * nodes.json yet, so this surface carries test tags, not node paths; the
@@ -70,14 +80,15 @@ const val BODY_RULE_LINE = "A post's body is words or media, never both."
  * pictures · N of 10` through the device picker and the locked crop, the
  * upload gate's lines, and a clip's `Change the cover` — are not built here;
  * the media this edit authors is the post's own pictures, reordered,
- * re-covered, described or removed. The header's ✕ (`Leave — your draft is
- * kept`) waits on the edit draft it promises; the back arrow leaves.
+ * re-covered, described or removed. When the crops land, their X raises the
+ * same ask the edit's own X does (ComposeCrop.md, CoverCrop.md).
  */
 @Composable
 fun PostEditRoute(
     postId: String,
     /** The edit signed; the caller returns to the post. */
     onSaved: () -> Unit,
+    /** Leaves the edit toward where it began. */
     onBack: () -> Unit,
     /** The key-absent seal, standing in the commit's place. */
     keyCard: @Composable () -> Unit = {},
@@ -110,7 +121,9 @@ fun PostEditRoute(
             onOpenActs = viewModel::onOpenActs,
             onCloseSheet = viewModel::onCloseSheet,
             onSign = viewModel::onSign,
-            onBack = onBack,
+            onLeave = { if (viewModel.onLeaveRequested()) onBack() },
+            onKeepWriting = viewModel::onKeepWriting,
+            onDiscard = onBack,
             onTagInputChange = viewModel::onTagInputChange,
             onAddTag = viewModel::onAddTag,
             onRemoveTag = viewModel::onRemoveTag,
@@ -151,7 +164,10 @@ data class PostEditActions(
     val onOpenActs: () -> Unit = {},
     val onCloseSheet: () -> Unit = {},
     val onSign: () -> Unit = {},
-    val onBack: () -> Unit = {},
+    /** The back arrow, the X and the platform back: the batch decides whether it asks. */
+    val onLeave: () -> Unit = {},
+    val onKeepWriting: () -> Unit = {},
+    val onDiscard: () -> Unit = {},
     val onTagInputChange: (String) -> Unit = {},
     val onAddTag: () -> Unit = {},
     val onRemoveTag: (String) -> Unit = {},
@@ -189,10 +205,19 @@ fun PostEditScreen(
 ) {
     val slowAnswer = rememberSlowAnswer(state.submitting)
     var help by remember { mutableStateOf<HelpTopic?>(null) }
-    // While the signing holds the reader, the way out refuses a press and
-    // never dims (EditCompose.md).
-    val back = { if (!slowAnswer) actions.onBack() }
-    BackHandler(onBack = back)
+    // While the signing holds the reader, the back arrow and the X refuse a
+    // press and never dim (EditCompose.md).
+    val leave = { if (!slowAnswer) actions.onLeave() }
+    BackHandler(onBack = leave)
+
+    if (state.confirmingDiscard) {
+        DiscardConfirm(
+            subject = DiscardSubject.Edit,
+            onKeepWriting = actions.onKeepWriting,
+            onDiscard = actions.onDiscard,
+            testTag = "post_edit_discard_confirm",
+        )
+    }
 
     Column(
         modifier = modifier
@@ -201,8 +226,10 @@ fun PostEditScreen(
     ) {
         WizardHeader(
             title = "Edit post",
-            onBack = back,
+            onBack = leave,
             backContentDescription = "Back to the post",
+            onLeave = leave,
+            leaveContentDescription = EDIT_LEAVE_LABEL,
             onHelp = { help = HelpTopic.Editing },
             helpContentDescription = HelpTopic.Editing.title,
             testTag = "post_edit_header",
