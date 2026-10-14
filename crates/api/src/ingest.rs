@@ -91,6 +91,7 @@ pub async fn ingest_pending<B: L1Boundary>(
     gc_after_epochs: i64,
 ) -> Result<IngestOutcome, IngestError> {
     let cursor = mirror::last_ingested_epoch(pool).await?;
+    repair_instants(boundary, pool, cursor).await?;
     let packages = boundary.epochs_since(cursor).await?;
     let mut outcome = IngestOutcome::default();
     for package in &packages {
@@ -128,6 +129,34 @@ pub async fn ingest_pending<B: L1Boundary>(
     outcome.lapsed = crate::onboarding::lapse_dead_vouches(pool).await;
     outcome.funding = crate::onboarding::settle_admission_fundings(boundary, pool).await;
     Ok(outcome)
+}
+
+/// Fills the attested instant of every ingested epoch that lacks one —
+/// the epochs a mirror took in before the epoch package carried the
+/// instant — from their published packages, read back through the seam.
+/// A complete mirror costs one count; the repair reads the sequence once.
+async fn repair_instants<B: L1Boundary>(
+    boundary: &B,
+    pool: &PgPool,
+    cursor: i64,
+) -> Result<(), IngestError> {
+    let Some(from) = mirror::first_epoch_without_instant(pool).await? else {
+        return Ok(());
+    };
+    let instants: Vec<_> = boundary
+        .epochs_since(from - 1)
+        .await?
+        .into_iter()
+        .filter(|package| package.epoch <= cursor)
+        .map(|package| (package.epoch, package.attested_at))
+        .collect();
+    let repaired = mirror::record_instants(pool, &instants).await?;
+    tracing::info!(
+        from,
+        repaired,
+        "mirror epoch instants filled from the published sequence"
+    );
+    Ok(())
 }
 
 /// The server's background ingestion loop: poll the seam on an interval.

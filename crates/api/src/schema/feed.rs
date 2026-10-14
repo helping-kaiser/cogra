@@ -365,7 +365,7 @@ pub struct CausalKey {
 /// One node of a slice, keyed by its L1 identifier — the identifier every
 /// record leg names. Persons appear under their profile identifier: a leg
 /// naming `addr:a` names the same person as `prof:a`.
-#[derive(SimpleObject)]
+#[derive(SimpleObject, Clone)]
 pub struct SliceNode {
     /// The node's raw L1 identifier (an `addr`/`prof`, `name`, or `mint`).
     pub graph_id: String,
@@ -385,7 +385,7 @@ pub struct SliceNode {
 
 /// Types the given identifiers from CoGra's rows — never from identifier
 /// syntax, except a Type, whose id is a pure function of its name.
-async fn slice_nodes(
+pub(super) async fn slice_nodes(
     pool: &PgPool,
     graph_ids: Vec<String>,
     as_of_epoch: i64,

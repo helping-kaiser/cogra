@@ -70,9 +70,17 @@ fn tag(
 /// Lands one epoch holding the given records. Epochs are ingested in
 /// order, so `epoch` doubles as the call index.
 async fn land(pool: &PgPool, epoch: i64, records: Vec<PublishedRecord>) {
-    mirror::ingest_epoch(pool, &EpochPackage { epoch, records })
-        .await
-        .expect("ingests");
+    let attested_at = chrono::Utc::now();
+    mirror::ingest_epoch(
+        pool,
+        &EpochPackage {
+            epoch,
+            attested_at,
+            records,
+        },
+    )
+    .await
+    .expect("ingests");
 }
 
 /// Stages a Tag act that has been pre-signed but has not landed. The

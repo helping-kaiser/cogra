@@ -97,10 +97,20 @@ impl StubPod {
 
 /// The pod's one route. A fixture without its own epoch ranks at the pin
 /// it was asked for, as the real pod does; one that names an epoch keeps
-/// it.
+/// it. The answer rides under the root field the request's operation
+/// selects — `rankSearch` for the search and trace documents, `rank`
+/// otherwise — from the same fixture.
 async fn answer(State(pod): State<Pod>, Json(request): Json<Value>) -> Json<Value> {
     let viewer = request["variables"]["viewer"].clone();
     let pin = request["variables"]["asOfEpoch"].clone();
+    let field = if request["query"]
+        .as_str()
+        .is_some_and(|q| q.contains("rankSearch("))
+    {
+        "rankSearch"
+    } else {
+        "rank"
+    };
     pod.requests.lock().expect("requests").push(request);
     let mode = pod.mode.lock().expect("mode").clone();
     let pinned = |mut rank: Value| {
@@ -109,8 +119,9 @@ async fn answer(State(pod): State<Pod>, Json(request): Json<Value>) -> Json<Valu
         }
         rank
     };
+    let data = |rank: Value| json!({ "data": { field: pinned(rank) } });
     Json(match mode {
-        Mode::Answer(rank) => json!({ "data": { "rank": pinned(rank) } }),
+        Mode::Answer(rank) => data(rank),
         Mode::Fault(code) => json!({
             "data": null,
             "errors": [{ "message": format!("stub {code}"), "extensions": { "code": code } }],
@@ -118,7 +129,7 @@ async fn answer(State(pod): State<Pod>, Json(request): Json<Value>) -> Json<Valu
         Mode::Raw(body) => body,
         Mode::Slow(delay, rank) => {
             tokio::time::sleep(delay).await;
-            json!({ "data": { "rank": pinned(rank) } })
+            data(rank)
         }
         Mode::Hold => {
             tokio::time::sleep(Duration::from_secs(3600)).await;
@@ -143,8 +154,26 @@ async fn answer(State(pod): State<Pod>, Json(request): Json<Value>) -> Json<Valu
                 .expect("the slice body");
             let slice: Value = serde_json::from_slice(&bytes).expect("a JSON slice");
             assert!(slice["errors"].is_null(), "the slice read faulted: {slice}");
-            json!({ "data": { "rank": pinned(rank) } })
+            data(rank)
         }
+    })
+}
+
+/// A `rankSearch` answer, ranked at whatever epoch it is asked for: the
+/// in-slice candidates a live path reaches, as (targetId, kind, score), in
+/// the pod's order, each with the fields the pod's `FeedEntry` carries.
+pub fn search_ranking(entries: &[(uuid::Uuid, &str, f64)]) -> Value {
+    json!({
+        "entries": entries.iter().enumerate().map(|(i, (id, kind, score))| json!({
+            "targetId": id,
+            "targetKind": kind,
+            "score": score,
+            "tieBreakers": { "netStance": 1.0, "grossVolume": 2.0, "genesisEpochAge": 3 },
+            "mark": null,
+            "newestIndex": i,
+            "paths": [],
+        })).collect::<Vec<_>>(),
+        "settling": [],
     })
 }
 

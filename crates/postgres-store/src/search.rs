@@ -130,6 +130,19 @@ pub enum SearchRequest {
     Scoped(ScopedQuery),
 }
 
+/// A restriction of one page read to part of the request's matches. It
+/// narrows what a page may hold, never what the request matches, so
+/// [`count`] never sees it: ranked search reads its in-slice candidates
+/// `within` the viewer's slice, and pages the rest `excluding` what the
+/// ranker ordered (ranked-feed-api §4.8).
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Window<'a> {
+    /// Only these nodes may be served; None restricts nothing.
+    pub within: Option<&'a [Uuid]>,
+    /// These nodes are never served.
+    pub excluding: &'a [Uuid],
+}
+
 impl SearchRequest {
     /// One page of matches — see [`find`].
     pub async fn find(
@@ -139,9 +152,22 @@ impl SearchRequest {
         backward: bool,
         limit: i64,
     ) -> Result<Vec<SearchHit>, sqlx::Error> {
+        self.find_in(pool, Window::default(), cursor, backward, limit)
+            .await
+    }
+
+    /// One page of the matches inside `window` — see [`find_in`].
+    pub async fn find_in(
+        &self,
+        pool: &PgPool,
+        window: Window<'_>,
+        cursor: Option<SearchCursor>,
+        backward: bool,
+        limit: i64,
+    ) -> Result<Vec<SearchHit>, sqlx::Error> {
         match self {
-            Self::Match(q) => find(pool, q, cursor, backward, limit).await,
-            Self::Scoped(q) => find_scoped(pool, q, cursor, backward, limit).await,
+            Self::Match(q) => find_in(pool, q, window, cursor, backward, limit).await,
+            Self::Scoped(q) => find_scoped(pool, q, window, cursor, backward, limit).await,
         }
     }
 
@@ -227,6 +253,19 @@ pub async fn find(
     backward: bool,
     limit: i64,
 ) -> Result<Vec<SearchHit>, sqlx::Error> {
+    find_in(pool, q, Window::default(), cursor, backward, limit).await
+}
+
+/// [`find`], served only inside `window`. The window joins the match's
+/// own predicate, so a page is still `limit` rows of the request's order.
+pub async fn find_in(
+    pool: &PgPool,
+    q: &MatchQuery,
+    window: Window<'_>,
+    cursor: Option<SearchCursor>,
+    backward: bool,
+    limit: i64,
+) -> Result<Vec<SearchHit>, sqlx::Error> {
     let (tier, at, id) = match cursor {
         Some(c) => (Some(c.tier), Some(c.created_at), Some(c.node_id)),
         None => (None, None, None),
@@ -250,6 +289,8 @@ pub async fn find(
                          WHERE a.id = s.node_id AND a.realization_address IS NOT NULL))
                      AND (NOT $11 OR (s.field IN ('handle', 'name')
                                       AND s.folded LIKE lower($2) || '%'))
+                     AND ($12::uuid[] IS NULL OR s.node_id = ANY($12))
+                     AND NOT (s.node_id = ANY($13::uuid[]))
                    GROUP BY s.node_id, s.kind, s.created_at
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
@@ -271,6 +312,8 @@ pub async fn find(
             id,
             limit,
             q.lookup,
+            window.within,
+            window.excluding,
         )
         .fetch_all(pool)
         .await?;
@@ -295,6 +338,8 @@ pub async fn find(
                          WHERE a.id = s.node_id AND a.realization_address IS NOT NULL))
                      AND (NOT $11 OR (s.field IN ('handle', 'name')
                                       AND s.folded LIKE lower($2) || '%'))
+                     AND ($12::uuid[] IS NULL OR s.node_id = ANY($12))
+                     AND NOT (s.node_id = ANY($13::uuid[]))
                    GROUP BY s.node_id, s.kind, s.created_at
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
@@ -316,6 +361,8 @@ pub async fn find(
             id,
             limit,
             q.lookup,
+            window.within,
+            window.excluding,
         )
         .fetch_all(pool)
         .await
@@ -367,10 +414,11 @@ pub async fn count(pool: &PgPool, q: &MatchQuery) -> Result<i64, sqlx::Error> {
 ///   person tagged their own content with it.
 ///
 /// A person is never a scoped result: `@handle <text>` returns no row
-/// for the person it names.
+/// for the person it names. `window` narrows a page as in [`find_in`].
 pub async fn find_scoped(
     pool: &PgPool,
     q: &ScopedQuery,
+    window: Window<'_>,
     cursor: Option<SearchCursor>,
     backward: bool,
     limit: i64,
@@ -484,6 +532,8 @@ pub async fn find_scoped(
                WHERE ($5::uuid IS NULL OR NOT EXISTS (
                          SELECT 1 FROM user_view_log l
                          WHERE l.user_id = $5 AND l.content_id = h.node_id))
+                 AND ($14::uuid[] IS NULL OR h.node_id = ANY($14))
+                 AND NOT (h.node_id = ANY($15::uuid[]))
                  AND ($10::int IS NULL
                       OR tier < $10
                       OR (tier = $10 AND (created_at, node_id) > ($11::timestamptz, $12::uuid)))
@@ -502,6 +552,8 @@ pub async fn find_scoped(
             at,
             id,
             limit,
+            window.within,
+            window.excluding,
         )
         .fetch_all(pool)
         .await?;
@@ -611,6 +663,8 @@ pub async fn find_scoped(
                WHERE ($5::uuid IS NULL OR NOT EXISTS (
                          SELECT 1 FROM user_view_log l
                          WHERE l.user_id = $5 AND l.content_id = h.node_id))
+                 AND ($14::uuid[] IS NULL OR h.node_id = ANY($14))
+                 AND NOT (h.node_id = ANY($15::uuid[]))
                  AND ($10::int IS NULL
                       OR tier > $10
                       OR (tier = $10 AND (created_at, node_id) < ($11::timestamptz, $12::uuid)))
@@ -629,6 +683,8 @@ pub async fn find_scoped(
             at,
             id,
             limit,
+            window.within,
+            window.excluding,
         )
         .fetch_all(pool)
         .await
