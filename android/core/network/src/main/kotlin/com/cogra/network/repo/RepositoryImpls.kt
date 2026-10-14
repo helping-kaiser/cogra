@@ -22,7 +22,6 @@ import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
-import com.cogra.domain.PostView
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ProfileView
@@ -69,7 +68,6 @@ import com.cogra.network.graphql.MyProfileQuery
 import com.cogra.network.graphql.PostCommentsQuery
 import com.cogra.network.graphql.PostDetailQuery
 import com.cogra.network.graphql.PostSelfMarkQuery
-import com.cogra.network.graphql.PostsQuery
 import com.cogra.network.graphql.PrepareCommentEditMutation
 import com.cogra.network.graphql.PrepareCommentMutation
 import com.cogra.network.graphql.PreparePostEditMutation
@@ -496,31 +494,6 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
 
     // Reads are public-graph queries; they still ride the guard so a
     // signed-in viewer's stale token refreshes rather than erroring.
-    override suspend fun posts(
-        first: Int,
-        after: String?,
-        includePending: Boolean,
-    ): Outcome<Page<PostView>> = guard.run {
-        client.query(
-            PostsQuery(
-                first = first,
-                after = Optional.presentIfNotNull(after),
-                includePending = Optional.present(includePending),
-            ),
-        )
-            .fetch()
-            .map { data ->
-                Page(
-                    items = data.posts.edges.map { edge ->
-                        edge.node.postFields.toDomain()
-                            .copy(commentCount = edge.node.commentCount.totalCount)
-                    },
-                    endCursor = data.posts.pageInfo.endCursor,
-                    hasNextPage = data.posts.pageInfo.hasNextPage,
-                )
-            }
-    }
-
     override suspend fun post(
         id: String,
         commentsFirst: Int,

@@ -591,6 +591,7 @@ label.
 | `test:integration:network-parameters-read-every-key`                                          | network_parameters_read_every_key                                          |
 | `test:integration:network-parameters-read-the-named-keys`                                     | network_parameters_read_the_named_keys                                     |
 | `test:integration:newest-search-carries-no-score-and-never-calls-the-ranker`                  | newest_search_carries_no_score_and_never_calls_the_ranker                  |
+| `test:integration:no-client-reads-the-retired-posts-listing`                                  | no_client_reads_the_retired_posts_listing                                  |
 | `test:integration:no-query-reaches-session-material`                                          | no_query_reaches_session_material                                          |
 | `test:integration:non-aac-audio-alone-queues-and-settles-with-aac`                            | non_aac_audio_alone_queues_and_settles_with_aac                            |
 | `test:integration:notifications-are-viewer-only`                                              | notifications_are_viewer_only                                              |

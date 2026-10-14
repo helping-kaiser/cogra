@@ -135,6 +135,20 @@ class FeedDeriveTest {
         assertThat(away.rankArgs).isEqualTo(FeedFilter().rankArgs)
     }
 
+    /**
+     * PR-54's vantage law (ranked-feed packet §5.4): a ranking's marks are
+     * the vantage's whoever reads it, so the Your-people cut keys on the
+     * marks that arrive with or without a session — an empty seen record,
+     * and no session test in the cut. The server half is
+     * `a_session_less_rankings_marks_are_the_vantages`.
+     */
+    @Test
+    fun `a session less derives people cut keys on the vantages marks`() {
+        assertThat(answer.ids(yourPeople(PeopleSign.FOR), seen = emptySet())).containsExactly("a")
+        assertThat(answer.ids(yourPeople(PeopleSign.EITHER), seen = emptySet()))
+            .containsExactly("a", "s", "b").inOrder()
+    }
+
     @Test
     fun `a device cut never reorders the derived list`() {
         val full = answer.ids()

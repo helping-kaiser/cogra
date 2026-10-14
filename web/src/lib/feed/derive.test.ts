@@ -190,6 +190,20 @@ describe("the device derive: people (CD-11)", () => {
     }
   });
 
+  // PR-54's vantage law (ranked-feed packet §5.4): a ranking's marks are
+  // the vantage's whoever reads it, so the Your-people cut keys on the marks
+  // that arrive with or without a session — no record, no session test in the
+  // cut. The server half is `a_session_less_rankings_marks_are_the_vantages`.
+  it("a_session_less_derives_people_cut_keys_on_the_vantages_marks", () => {
+    expect(ids(derive(marked, people("for"), NOTHING_SEEN))).toEqual(["for", "s-for"]);
+    expect(ids(derive(marked, people("either"), NOTHING_SEEN))).toEqual([
+      "for",
+      "s-for",
+      "against",
+      "signless",
+    ]);
+  });
+
   it("a_device_cut_never_reorders_the_derived_list", () => {
     for (const order of ["ranked", "newest"] as const) {
       const whole = ids(compose(marked, order));

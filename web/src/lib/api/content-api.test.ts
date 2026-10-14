@@ -4,13 +4,13 @@ import { describe, expect, it } from "vitest";
 
 import {
   fetchPostDetail,
-  fetchPosts,
   prepareComment,
   preparePost,
   preparePostEdit,
   readCachedPost,
   sensitiveInput,
 } from "./content-api";
+import { fetchFeedWindow } from "./feed-api";
 import { startMswServer } from "@/test/msw";
 
 const server = startMswServer();
@@ -49,61 +49,6 @@ function post(id: string, overrides: Record<string, unknown> = {}) {
 function pageInfo(hasNextPage: boolean, endCursor: string | null) {
   return { __typename: "PageInfo", hasNextPage, endCursor };
 }
-
-describe("fetchPosts", () => {
-  it("maps the page and its cursor", async () => {
-    server.use(
-      graphql.query("Posts", () =>
-        HttpResponse.json({
-          data: {
-            posts: {
-              __typename: "PostConnection",
-              edges: [{ __typename: "PostEdge", node: post("p1") }],
-              pageInfo: pageInfo(true, "c1"),
-            },
-          },
-        }),
-      ),
-    );
-    const outcome = await fetchPosts(client());
-    expect(outcome.kind).toBe("success");
-    if (outcome.kind !== "success") return;
-    expect(outcome.value.items.map((p) => p.id)).toEqual(["p1"]);
-    expect(outcome.value.items[0].title.value).toBe("Hello");
-    expect(outcome.value.endCursor).toBe("c1");
-    expect(outcome.value.hasNextPage).toBe(true);
-  });
-
-  it("fails on a transport fault", async () => {
-    server.use(graphql.query("Posts", () => HttpResponse.error()));
-    expect((await fetchPosts(client())).kind).toBe("failed");
-  });
-
-  // The listing serves pending entries unless the reader opts out
-  // (api-spec.md "Pagination"): the default rides every read, and false
-  // asks for the settled graph.
-  it("asks for pending entries by default and carries the landed-only opt-out", async () => {
-    const asked: unknown[] = [];
-    server.use(
-      graphql.query("Posts", ({ variables }) => {
-        asked.push(variables.includePending);
-        return HttpResponse.json({
-          data: {
-            posts: {
-              __typename: "PostConnection",
-              edges: [],
-              pageInfo: pageInfo(false, null),
-            },
-          },
-        });
-      }),
-    );
-    const c = client();
-    await fetchPosts(c);
-    await fetchPosts(c, null, { includePending: false });
-    expect(asked).toEqual([true, false]);
-  });
-});
 
 describe("fetchPostDetail", () => {
   it("maps the thread and serves null for an unknown id", async () => {
@@ -178,14 +123,14 @@ describe("readCachedPost", () => {
     });
   }
 
+  /** The feed's own window read — the read that writes the cards. */
   function feedAnswer(...nodes: Record<string, unknown>[]) {
-    return graphql.query("Posts", () =>
+    return graphql.query("Feed", () =>
       HttpResponse.json({
         data: {
-          posts: {
-            __typename: "PostConnection",
-            edges: nodes.map((node) => ({ __typename: "PostEdge", node })),
-            pageInfo: pageInfo(false, null),
+          feed: {
+            __typename: "FeedConnection",
+            edges: nodes.map((node) => ({ __typename: "FeedEdge", node })),
           },
         },
       }),
@@ -217,7 +162,7 @@ describe("readCachedPost", () => {
   it("reads the card the feed wrote, comment count included", async () => {
     server.use(feedAnswer({ ...wholePost("p1", "Hello"), ...feedCount }));
     const c = client();
-    await fetchPosts(c);
+    await fetchFeedWindow(c, ["p1"]);
     const cached = readCachedPost(c, "p1");
     expect(cached?.title.value).toBe("Hello");
     expect(cached?.author?.displayName.value).toBe("Alice");
@@ -248,7 +193,7 @@ describe("readCachedPost", () => {
       detailAnswer(wholePost("p1", "Hello, edited")),
     );
     const c = client();
-    await fetchPosts(c);
+    await fetchFeedWindow(c, ["p1"]);
     await fetchPostDetail(c, "p1");
     const cached = readCachedPost(c, "p1");
     expect(cached?.title.value).toBe("Hello, edited");

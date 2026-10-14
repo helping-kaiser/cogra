@@ -23,7 +23,6 @@ import com.cogra.domain.LoginGrant
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
-import com.cogra.domain.PostView
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ReferenceCandidateView
@@ -176,19 +175,6 @@ interface AccountRepository {
  * the display store.
  */
 interface ContentRepository {
-    /**
-     * The chronological listing, newest first — pending entries first,
-     * then landed entries in landing order. `includePending = false`
-     * serves only what has landed on L1, for a reader who wants the
-     * settled graph (api-spec.md "Pending entries come first, in their
-     * own cursor namespace"); true is the API's own default.
-     */
-    suspend fun posts(
-        first: Int,
-        after: String?,
-        includePending: Boolean = true,
-    ): Outcome<Page<PostView>>
-
     /** One post with its first comments page; null for an unknown id. */
     suspend fun post(
         id: String,
