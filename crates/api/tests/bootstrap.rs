@@ -22,7 +22,10 @@ use api::l1::{L1Boundary, StandInBoundary};
 use api::profile::ProfileUpdateDraft;
 use common::l1::Family;
 use common::l1::client::ActorKey;
+use common::l1::handshake::content_commitment;
+use common::l1::identifier::ActId;
 use l1_standin::{StandIn, StandInConfig};
+use postgres_store::content as content_store;
 use postgres_store::genesis;
 use postgres_store::mirror;
 use postgres_store::staged::{self, PreSignedParts};
@@ -225,11 +228,38 @@ async fn address_of(pool: &PgPool, handle: &str) -> String {
         .expect("keyed")
 }
 
+/// Keeps a copy of every act's handshake custody — payload, content salt,
+/// nonce — as acceptance drops it, so a rewind can put an act back in the
+/// state it held before the close. Installed before the first run; the
+/// table and trigger are test scaffolding in the test's own database.
+async fn keep_custody(pool: &PgPool) {
+    for statement in [
+        "CREATE TABLE test_custody (
+             act_id TEXT PRIMARY KEY, payload BYTEA, content_salt BYTEA, nonce BYTEA)",
+        "CREATE FUNCTION test_keep_custody() RETURNS trigger AS $$
+         BEGIN
+             INSERT INTO test_custody VALUES (OLD.act_id, OLD.payload, OLD.content_salt, OLD.nonce)
+             ON CONFLICT (act_id) DO NOTHING;
+             RETURN NEW;
+         END $$ LANGUAGE plpgsql",
+        "CREATE TRIGGER test_keep_custody BEFORE UPDATE OF status ON l1_acts
+         FOR EACH ROW WHEN (NEW.status = 'accepted' AND OLD.payload IS NOT NULL)
+         EXECUTE FUNCTION test_keep_custody()",
+    ] {
+        sqlx::query(statement)
+            .execute(pool)
+            .await
+            .expect("custody scaffolding");
+    }
+}
+
 /// Rewinds a bootstrapped substrate to the state a run interrupted inside
 /// the L1 sequence leaves behind: only `keep` of the genesis acts stand
-/// (approved, unordered), no epoch is closed, nothing is published or
-/// mirrored, and balances are back at their post-burn values. The L2 half
-/// is untouched — the crash window under test is inside the sequence.
+/// (approved, unordered, with the handshake custody an unaccepted act
+/// still holds), no epoch is closed, nothing is published or mirrored, and
+/// balances are back at their post-burn values. The L2 half is untouched —
+/// the crash window under test is inside the sequence. Needs
+/// [`keep_custody`] installed before the first run.
 async fn rewind_to_partial_genesis(pool: &PgPool, keep: &[String]) {
     sqlx::query("DELETE FROM l1_act_legs")
         .execute(pool)
@@ -241,7 +271,9 @@ async fn rewind_to_partial_genesis(pool: &PgPool, keep: &[String]) {
         .await
         .expect("wipe");
     sqlx::query(
-        "UPDATE l1_acts SET status = 'approved', epoch = NULL, act_time = NULL, position = NULL",
+        "UPDATE l1_acts SET status = 'approved', epoch = NULL, act_time = NULL, position = NULL,
+                payload = c.payload, content_salt = c.content_salt, nonce = c.nonce
+           FROM test_custody c WHERE c.act_id = l1_acts.act_id",
     )
     .execute(pool)
     .await
@@ -278,6 +310,7 @@ async fn rewind_to_partial_genesis(pool: &PgPool, keep: &[String]) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn crash_inside_the_l1_sequence_is_repaired(pool: PgPool) {
     let host = standin(&pool);
+    keep_custody(&pool).await;
     run(&host, &pool, input()).await.expect("first run");
     let operator = address_of(&pool, "operator").await;
     let publisher = address_of(&pool, genesis::PUBLISHER_HANDLE).await;
@@ -326,6 +359,7 @@ async fn crash_inside_the_l1_sequence_is_repaired(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_sealed_unapproved_act_is_recovered(pool: PgPool) {
     let host = standin(&pool);
+    keep_custody(&pool).await;
     run(&host, &pool, input()).await.expect("first run");
     let operator = address_of(&pool, "operator").await;
     let publisher = address_of(&pool, genesis::PUBLISHER_HANDLE).await;
@@ -378,6 +412,7 @@ async fn a_sealed_unapproved_act_is_recovered(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_diverged_substrate_act_is_refused(pool: PgPool) {
     let host = standin(&pool);
+    keep_custody(&pool).await;
     run(&host, &pool, input()).await.expect("first run");
     let operator = address_of(&pool, "operator").await;
     let publisher = address_of(&pool, genesis::PUBLISHER_HANDLE).await;
@@ -413,6 +448,7 @@ async fn a_diverged_substrate_act_is_refused(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_occupied_author_sequence_is_refused(pool: PgPool) {
     let host = standin(&pool);
+    keep_custody(&pool).await;
     run(&host, &pool, input()).await.expect("first run");
     let operator = address_of(&pool, "operator").await;
     let publisher = address_of(&pool, genesis::PUBLISHER_HANDLE).await;
@@ -438,6 +474,185 @@ async fn an_occupied_author_sequence_is_refused(pool: PgPool) {
 
     let err = run(&host, &pool, input()).await.expect_err("occupied");
     assert!(matches!(err, BootstrapError::Diverged(_)), "got {err:?}");
+}
+
+/// Every genesis act lands witness-only on the substrate, and each one
+/// with a payload — the Charter and the role Tag — has its carriage beside
+/// it in `act_payloads`, opening the witness the host kept. A full-empty
+/// payload has no carriage row.
+///
+/// Every genesis act lands witness-only on the substrate, with carriage beside each payload that opens its witness.
+/// ´claim:bootstrap:genesis-carriage-opens-the-witness-the-host-kept´
+#[sqlx::test(migrations = "../../migrations")]
+async fn every_genesis_act_lands_witness_only_with_its_carriage_beside_it(pool: PgPool) {
+    let host = standin(&pool);
+    run(&host, &pool, input()).await.expect("bootstraps");
+    let ids = mirror::record_ids_in_epoch(&pool, 0).await.expect("ids");
+    assert_eq!(ids.len(), 8);
+    let mut carried = 0;
+    for id in ids {
+        let act_id = ActId::parse(&id).expect("a record id");
+        let stored = host
+            .sealed_act(&act_id)
+            .await
+            .expect("reads")
+            .expect("stored");
+        assert!(stored.sealed.is_none(), "{id} kept its handshake custody");
+        let carriage = content_store::act_payload(&pool, &id).await.expect("reads");
+        if stored.payload_len == 0 {
+            assert!(
+                carriage.is_none(),
+                "{id} has an empty payload and a carriage row"
+            );
+            continue;
+        }
+        carried += 1;
+        let carriage = carriage.unwrap_or_else(|| panic!("{id} has no carriage"));
+        assert_eq!(carriage.payload.len() as u64, stored.payload_len);
+        assert_eq!(
+            content_commitment(
+                &act_id,
+                &stored.pre_commitment,
+                &carriage.content_salt,
+                &carriage.payload
+            )
+            .to_vec(),
+            stored.content_commitment,
+            "the carriage of {id} opens its witness"
+        );
+    }
+    assert_eq!(carried, 2, "the Charter and the role Tag carry payloads");
+}
+
+/// Rewinds a bootstrapped substrate to a run interrupted after its first
+/// epoch closed over `keep` alone: those acts stand accepted and
+/// witness-only, every other genesis act is gone, and the mirror is empty
+/// so the re-run ingests the kept epoch again. The L2 half and the
+/// genesis carriage are untouched.
+async fn rewind_keeping_accepted(pool: &PgPool, keep: &[String]) {
+    sqlx::query("DELETE FROM l1_act_legs WHERE NOT (act_id = ANY($1))")
+        .bind(keep)
+        .execute(pool)
+        .await
+        .expect("wipe");
+    sqlx::query("DELETE FROM l1_acts WHERE NOT (act_id = ANY($1))")
+        .bind(keep)
+        .execute(pool)
+        .await
+        .expect("wipe");
+    for table in ["mirror_record_legs", "mirror_records", "mirror_epochs"] {
+        sqlx::query(&format!("DELETE FROM {table}"))
+            .execute(pool)
+            .await
+            .expect("wipe");
+    }
+    sqlx::query("UPDATE mirror_epoch_cursor SET last_epoch = -1")
+        .execute(pool)
+        .await
+        .expect("cursor reset");
+}
+
+async fn registrations(pool: &PgPool) -> Vec<String> {
+    let mut ids = Vec::new();
+    for handle in [
+        "operator",
+        genesis::PUBLISHER_HANDLE,
+        genesis::MODERATOR_HANDLE,
+        genesis::TREASURY_HANDLE,
+    ] {
+        ids.push(format!(
+            "act:{}:0:registration",
+            address_of(pool, handle).await
+        ));
+    }
+    ids
+}
+
+/// A repair resuming over genesis acts the substrate already accepted —
+/// their payload, salt and nonce gone, their carriage beside them — is not
+/// mistaken for divergence: it finishes the sequence.
+///
+/// A repair over accepted, witness-only genesis acts finishes the sequence rather than refusing it as divergence.
+/// ´claim:bootstrap:a-repair-over-witness-only-acts-finishes´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_genesis_repair_over_an_accepted_act_is_not_refused_as_diverged(pool: PgPool) {
+    let host = standin(&pool);
+    run(&host, &pool, input()).await.expect("first run");
+    let keep = registrations(&pool).await;
+    rewind_keeping_accepted(&pool, &keep).await;
+
+    let outcome = run(&host, &pool, input()).await.expect("repairs");
+    assert_eq!(outcome, BootstrapOutcome::Repaired);
+    let publisher = address_of(&pool, genesis::PUBLISHER_HANDLE).await;
+    assert!(
+        mirror::has_record_by(&pool, &publisher, Family::Publish)
+            .await
+            .expect("gate")
+    );
+    let witness_only: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM l1_acts WHERE status = 'accepted' AND payload IS NULL",
+    )
+    .fetch_one(&pool)
+    .await
+    .expect("count");
+    assert_eq!(witness_only, 8);
+}
+
+/// An accepted act holding no payload is still compared: a stored body,
+/// payload length or carriage that disagrees with the genesis input is
+/// refused, the carriage case as unrepairable because it is the carriage
+/// that is wrong. (The kept acts are Registrations, whose empty payloads
+/// carry no row, so the carriage case plants one that does not open the
+/// witness.)
+///
+/// A repair over an accepted act still refuses a body, payload length or carriage that disagrees with the genesis input.
+/// ´claim:bootstrap:a-witness-only-act-is-still-compared´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_genesis_repair_with_changed_input_over_an_accepted_act_is_still_refused(pool: PgPool) {
+    let host = standin(&pool);
+    run(&host, &pool, input()).await.expect("first run");
+    let keep = registrations(&pool).await;
+    rewind_keeping_accepted(&pool, &keep).await;
+    let operator_reg = keep[0].clone();
+
+    sqlx::query("UPDATE l1_acts SET p_d = 0.5 WHERE act_id = $1")
+        .bind(&operator_reg)
+        .execute(&pool)
+        .await
+        .expect("tamper the body");
+    let err = run(&host, &pool, input()).await.expect_err("diverged");
+    assert!(matches!(err, BootstrapError::Diverged(_)), "got {err:?}");
+    sqlx::query("UPDATE l1_acts SET p_d = 1.0 WHERE act_id = $1")
+        .bind(&operator_reg)
+        .execute(&pool)
+        .await
+        .expect("restore the body");
+
+    sqlx::query("UPDATE l1_acts SET payload_len = 3 WHERE act_id = $1")
+        .bind(&operator_reg)
+        .execute(&pool)
+        .await
+        .expect("tamper the length");
+    let err = run(&host, &pool, input()).await.expect_err("diverged");
+    assert!(matches!(err, BootstrapError::Diverged(_)), "got {err:?}");
+    sqlx::query("UPDATE l1_acts SET payload_len = 0 WHERE act_id = $1")
+        .bind(&operator_reg)
+        .execute(&pool)
+        .await
+        .expect("restore the length");
+
+    sqlx::query(
+        "INSERT INTO act_payloads (act_id, payload, content_salt) VALUES ($1, '', '\\x00')",
+    )
+    .bind(&operator_reg)
+    .execute(&pool)
+    .await
+    .expect("plant a carriage row");
+    let err = run(&host, &pool, input()).await.expect_err("unrepairable");
+    assert!(
+        matches!(err, BootstrapError::Unrepairable(_)),
+        "got {err:?}"
+    );
 }
 
 /// Drives one profile update authored by the Genesis Moderator through
