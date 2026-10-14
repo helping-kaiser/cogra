@@ -149,6 +149,7 @@ generated_files = [
   "client-constants.json",
   "stance-fold-vectors.json",
   "intent-vectors.json",
+  "envelope-vectors.json",
   "crates/ranker/tests/vectors/ranker-vectors.json",
   "android/gradle/libs.versions.toml",
   # The per-owner label registers of the rust-test profile, one per
