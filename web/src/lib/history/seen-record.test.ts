@@ -261,9 +261,12 @@ describe("the seen record's sync", () => {
     // This device has seen nothing; the phone saw p2.
     const desktop = record();
     await desktop.use(ACCOUNT_A);
-    expect(derive(held, cuts, desktop).map((row) => row.targetId)).toEqual(["p1", "p2", "p3"]);
+    expect(derive(held, cuts, desktop).head.map((row) => row.targetId)).toEqual(["p1", "p2", "p3"]);
 
+    // Cut from the unseen run: it stands under the separator (PR-80).
     await syncSeenRecord(desktop, ACCOUNT_A, viewLog(seenAt("p2")).fetchPage);
-    expect(derive(held, cuts, desktop).map((row) => row.targetId)).toEqual(["p1", "p3"]);
+    const derived = derive(held, cuts, desktop);
+    expect(derived.head.map((row) => row.targetId)).toEqual(["p1", "p3"]);
+    expect(derived.tail.map((row) => row.targetId)).toEqual(["p2"]);
   });
 });
