@@ -117,7 +117,7 @@ export function decodeProposal(bytes: Uint8Array): Proposal {
  */
 export function encodeVerifiedAct(act: VerifiedAct): Uint8Array<ArrayBuffer> {
   const e = new CborEncoder();
-  e.array(12n);
+  e.array(15n);
   e.uint(WIRE_VERSION);
   e.bytes(act.proposal.body.canonicalBytes());
   e.bytes(act.proposal.payload);
@@ -125,10 +125,13 @@ export function encodeVerifiedAct(act: VerifiedAct): Uint8Array<ArrayBuffer> {
   e.bytes(act.authorPubkey);
   e.bytes(act.nonce);
   e.bytes(act.preSignature);
+  e.bytes(act.preCommitment);
   e.bytes(act.contentSalt);
   e.bytes(act.depsSalt);
   e.bytes(act.contentCommitment);
   e.bytes(act.depsCommitment);
+  e.uint(act.contentEdition);
+  e.uint(act.depsEdition);
   e.bytes(act.hostSeal);
   return e.finish();
 }
@@ -136,7 +139,7 @@ export function encodeVerifiedAct(act: VerifiedAct): Uint8Array<ArrayBuffer> {
 export function decodeVerifiedAct(bytes: Uint8Array): VerifiedAct {
   const d = new CborDecoder(bytes);
   try {
-    if (d.array() !== 12n) throw new WireError("malformed verified act");
+    if (d.array() !== 15n) throw new WireError("malformed verified act");
     const version = d.uint();
     if (version !== WIRE_VERSION) throw new WireError(`unsupported wire version ${version}`);
     const body = decodeBody(d.bytes());
@@ -147,10 +150,13 @@ export function decodeVerifiedAct(bytes: Uint8Array): VerifiedAct {
       authorPubkey: d.bytes(),
       nonce: d.bytes(),
       preSignature: d.bytes(),
+      preCommitment: d.bytes(),
       contentSalt: d.bytes(),
       depsSalt: d.bytes(),
       contentCommitment: d.bytes(),
       depsCommitment: d.bytes(),
+      contentEdition: d.uint(),
+      depsEdition: d.uint(),
       hostSeal: d.bytes(),
     });
     d.finish();

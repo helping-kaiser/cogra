@@ -8,16 +8,17 @@ import { concat, toHex } from "./bytes";
 
 /**
  * Domain-separation tags. Every signed or hashed object is prefixed so
- * no artifact of one role verifies in another.
+ * no artifact of one role verifies in another. A tag's version names its
+ * formula, so no artifact of an earlier formula verifies under a later one.
  */
 export const Tags = {
-  PRE_DIGEST_CONTENT: "cogra-l1:pre-digest:content:v1",
-  PRE_DIGEST_DEPS: "cogra-l1:pre-digest:deps:v1",
+  PRE_DIGEST_CONTENT: "cogra-l1:pre-digest:content:v2",
+  PRE_DIGEST_DEPS: "cogra-l1:pre-digest:deps:v2",
   PRE_COMMITMENT: "cogra-l1:pre-commitment:v1",
-  COMMIT_CONTENT: "cogra-l1:commitment:content:v1",
-  COMMIT_DEPS: "cogra-l1:commitment:deps:v1",
-  HOST_SEAL: "cogra-l1:host-seal:v1",
-  APPROVAL: "cogra-l1:approval:v1",
+  COMMIT_CONTENT: "cogra-l1:commitment:content:v2",
+  COMMIT_DEPS: "cogra-l1:commitment:deps:v2",
+  HOST_SEAL: "cogra-l1:host-seal:v2",
+  APPROVAL: "cogra-l1:approval:v2",
 } as const;
 
 /** Salt / nonce length — the published entropy floor of the stand-in. */
@@ -47,37 +48,53 @@ export async function sha256Tagged(
 }
 
 /**
- * The actor-side pre-digest of a removable projection: binds the exact
- * bytes under the actor's private nonce, before any host salt exists.
+ * The actor-side pre-digest of a removable projection: SHA-256 over (tag,
+ * act identifier, the actor's private nonce, bytes) — the exact bytes
+ * bound to the one act they were proposed for, before any host salt
+ * exists.
  */
 export function preDigest(
   tag: string,
+  actId: Uint8Array,
   nonce: Uint8Array,
   bytes: Uint8Array,
 ): Promise<Uint8Array<ArrayBuffer>> {
-  return sha256Tagged(tag, [nonce, bytes]);
+  return sha256Tagged(tag, [actId, nonce, bytes]);
 }
 
 /**
  * The host-side binding, concealing commitment over a removable
- * projection: SHA-256 over (tag, host salt, bytes).
+ * projection: SHA-256 over (tag, act identifier, pre-commitment, host
+ * salt, bytes).
  */
 export function commitment(
   tag: string,
+  actId: Uint8Array,
+  preCommitment: Uint8Array,
   salt: Uint8Array,
   bytes: Uint8Array,
 ): Promise<Uint8Array<ArrayBuffer>> {
-  return sha256Tagged(tag, [salt, bytes]);
+  return sha256Tagged(tag, [actId, preCommitment, salt, bytes]);
 }
 
-/** Ed25519 over the tagged digest — the interim signing primitive. */
+/**
+ * Ed25519 over a digest the caller already formed — the pre-signature over
+ * the pre-commitment, and the approval over its tagged digest.
+ */
+export async function signDigest(
+  privateKey: CryptoKey,
+  digest: Uint8Array<ArrayBuffer>,
+): Promise<Uint8Array<ArrayBuffer>> {
+  return new Uint8Array(await crypto.subtle.sign("Ed25519", privateKey, digest));
+}
+
+/** Ed25519 over the tagged digest of one message. */
 export async function sign(
   privateKey: CryptoKey,
   tag: string,
   msg: Uint8Array,
 ): Promise<Uint8Array<ArrayBuffer>> {
-  const framed = await sha256Tagged(tag, [msg]);
-  return new Uint8Array(await crypto.subtle.sign("Ed25519", privateKey, framed));
+  return signDigest(privateKey, await sha256Tagged(tag, [msg]));
 }
 
 /**
@@ -176,11 +193,22 @@ export async function verify(
   msg: Uint8Array,
   signature: Uint8Array,
 ): Promise<boolean> {
+  return verifyDigest(publicKey, await sha256Tagged(tag, [msg]), signature);
+}
+
+/**
+ * Verifies a signature made by {@link signDigest}. The strict rules
+ * {@link verify} states are checked here, where both verifications meet.
+ */
+export async function verifyDigest(
+  publicKey: Uint8Array,
+  digest: Uint8Array<ArrayBuffer>,
+  signature: Uint8Array,
+): Promise<boolean> {
   if (publicKey.length !== 32) return false;
   if (signature.length !== 64) return false;
   if (SMALL_ORDER_KEYS.has(toHex(publicKey))) return false;
   if (signatureScalar(signature) >= ED25519_ORDER) return false;
-  const framed = await sha256Tagged(tag, [msg]);
   let key: CryptoKey;
   try {
     key = await crypto.subtle.importKey("raw", publicKey.slice(), "Ed25519", false, ["verify"]);
@@ -194,7 +222,7 @@ export async function verify(
     throw new CryptoUnavailableError("this browser cannot import an Ed25519 key", { cause: e });
   }
   try {
-    return await crypto.subtle.verify("Ed25519", key, signature.slice(), framed);
+    return await crypto.subtle.verify("Ed25519", key, signature.slice(), digest);
   } catch (e) {
     throw new CryptoUnavailableError("this browser cannot verify an Ed25519 signature", {
       cause: e,
