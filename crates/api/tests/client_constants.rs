@@ -15,13 +15,11 @@
 //! drift fails `cargo test`; `make constants` (UPDATE_CLIENT_CONSTANTS=1)
 //! rewrites it.
 //!
-//! `stance.tapDefault` exports the CLIENT-FACING half of the low-defaults
-//! policy only. The server states that policy in six named constants
-//! across content, references and topics, and folding those six into one
-//! is a backend refactor rather than a cross-surface one — but a client's
-//! own copy of the tap default has to agree with the value the server
-//! writes when a client omits the parameters, and that is what travels
-//! here.
+//! `stance.tapDefault` is the low-defaults policy value the clients'
+//! wizards and pads pre-fill. The policy lives wholly on the clients —
+//! every stance dimension is a required wire field and the server fills
+//! nothing in — so this is the one statement both clients' pre-fills are
+//! pinned against, never a value the server writes.
 
 use std::path::Path;
 
@@ -30,8 +28,8 @@ use api::auth::{
     PASSWORD_MAX_CHARS, PASSWORD_MIN_CHARS,
 };
 use api::content::{
-    DEFAULT_STANCE, MAX_COMMENT_BODY_CHARS, MAX_DESCRIPTION_CHARS, MAX_POST_BODY_CHARS,
-    MAX_SENSITIVE_REASON_CHARS, MAX_TITLE_CHARS,
+    MAX_COMMENT_BODY_CHARS, MAX_DESCRIPTION_CHARS, MAX_POST_BODY_CHARS, MAX_SENSITIVE_REASON_CHARS,
+    MAX_TITLE_CHARS, TAP_DEFAULT_STANCE,
 };
 use api::media::{
     MAX_ALT_TEXT_CHARS, MAX_COMMENT_ATTACHMENTS, MAX_COMMENT_VIDEO_BYTES, MAX_PIXEL_DIMENSION,
@@ -92,7 +90,7 @@ fn build_constants() -> Value {
             "websiteUrlChars": MAX_WEBSITE_URL_CHARS,
         },
         "stance": {
-            "tapDefault": DEFAULT_STANCE,
+            "tapDefault": TAP_DEFAULT_STANCE,
         },
         "registration": {
             "passwordMinChars": PASSWORD_MIN_CHARS,

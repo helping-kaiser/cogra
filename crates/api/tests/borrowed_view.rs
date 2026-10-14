@@ -530,6 +530,7 @@ async fn an_opinion_on_a_post_ends_the_borrowing(pool: PgPool) {
                 "title": "a post",
                 "content": "a body",
                 "license": { "attribution": 1.0, "provenance": 0.0 },
+                "pDirected": 0.1,
             }}),
         )
         .await;
@@ -628,6 +629,7 @@ async fn an_expired_first_opinion_returns_the_borrowing(pool: PgPool) {
                 json!({ "input": {
                     "content": format!("a step of the clock, {n}"),
                     "license": { "attribution": 0.0, "provenance": 0.0 },
+                    "pDirected": 0.1,
                 }}),
             )
             .await;

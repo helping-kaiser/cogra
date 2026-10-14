@@ -93,7 +93,12 @@ fn license() -> Value {
 }
 
 fn references(targets: &[&str]) -> Value {
-    Value::Array(targets.iter().map(|t| json!({ "target": t })).collect())
+    Value::Array(
+        targets
+            .iter()
+            .map(|t| json!({ "target": t, "relevance": 0.1, "support": 0.1 }))
+            .collect(),
+    )
 }
 
 /// A post by `who`, carrying `refs`, landed. Returns its id.
@@ -103,7 +108,8 @@ async fn post(rig: &WireRig, who: &Member, title: &str, refs: Value) -> String {
             Some(&who.token),
             PREPARE_POST,
             json!({ "input": {
-                "title": title, "content": "a body", "license": license(), "references": refs,
+                "title": title, "content": "a body", "license": license(), "pDirected": 0.1,
+                "references": refs,
             }}),
         )
         .await;
@@ -121,7 +127,7 @@ async fn comment(rig: &WireRig, who: &Member, target: &str, refs: Value) -> Stri
             PREPARE_COMMENT,
             json!({ "input": {
                 "target": target, "content": "some words", "license": license(),
-                "references": refs,
+                "pDirected": 0.1, "pInterest": 0.1, "references": refs,
             }}),
         )
         .await;
@@ -807,7 +813,7 @@ async fn tags_affinities_publishes_and_registrations_never_notify(pool: PgPool) 
         .gql(
             Some(&bo.token),
             PREPARE_TAG,
-            json!({ "input": { "target": p, "name": "gardening" } }),
+            json!({ "input": { "target": p, "name": "gardening", "pDirected": 0.1, "pInterest": 1.0 } }),
         )
         .await;
     assert_eq!(
@@ -1088,7 +1094,9 @@ async fn a_crash_between_epochs_skips_no_rows(pool: PgPool) {
         .gql(
             Some(&bo.token),
             PREPARE_COMMENT,
-            json!({ "input": { "target": p, "content": "one", "license": license() } }),
+            json!({ "input": {
+                "target": p, "content": "one", "license": license(), "pDirected": 0.1, "pInterest": 0.1,
+            } }),
         )
         .await;
     rig.sign_prepared(&bo.token, &bo.key, &first["prepareComment"]["writes"])

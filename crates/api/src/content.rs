@@ -30,9 +30,15 @@ use crate::ratelimit::SigningClass;
 use crate::references::{self, ReferenceDraft, ReferenceError, ReferencesError};
 use crate::topics::{self, TagDraft, TagError, TopicsError};
 
-/// The low-defaults stance value (invitations.md §3): defaults sit low
-/// so stronger stances stay expressible.
-pub const DEFAULT_STANCE: f64 = 0.1;
+/// The low-defaults stance value (invitations.md §3) that the clients'
+/// wizards and pads pre-fill: defaults sit low so stronger stances stay
+/// expressible. Exported to both clients as `stance.tapDefault`.
+///
+/// The server never applies it. A user signs only values they chose and
+/// saw, so every stance dimension is a required wire field, and a value
+/// the server filled in after the fact would be a signature over
+/// something nobody picked.
+pub const TAP_DEFAULT_STANCE: f64 = 0.1;
 
 /// The longest title a Post carries (post.md §1), counted in Unicode
 /// scalar values — the unit every character cap on this surface counts
@@ -382,7 +388,9 @@ pub struct PostDraft {
     /// is absent exactly when the gallery carries the body.
     pub content: Option<String>,
     pub license: License,
-    pub p_directed: Option<f64>,
+    /// The author's attachment, exactly as the user chose it — never
+    /// optional, so no path can reach the minting record without one.
+    pub p_directed: f64,
     /// The topics declared at creation. Explicit structured input, never
     /// parsed from the body, so display content and graph structure stay
     /// decoupled (api-spec.md "Content authoring").
@@ -439,8 +447,9 @@ pub struct CommentDraft {
     pub target: Uuid,
     pub content: String,
     pub license: License,
-    pub p_directed: Option<f64>,
-    pub p_interest: Option<f64>,
+    /// Effort and enthusiasm, exactly as the user chose them.
+    pub p_directed: f64,
+    pub p_interest: f64,
     /// The topics declared at creation — a Comment is Taggable like any
     /// other passive node (layer1-interface.md §9).
     pub tags: Vec<TagDraft>,
@@ -647,8 +656,8 @@ async fn author_address(pool: &PgPool, viewer: Uuid) -> Result<String, ContentEr
 
 /// Prepares a new Post: one genesis Publish whose envelope carries the
 /// display fields (post.md §1), plus one Tag act per declared topic and
-/// one Reference act per declared citation. The attachment defaults low;
-/// `p_i` is census-fixed at 1.
+/// one Reference act per declared citation. The attachment is written as
+/// the user chose it; `p_i` is census-fixed at 1.
 ///
 /// Everything the batch could be refused for is checked before the
 /// minting record is staged — the topic names, the citation targets, and
@@ -664,7 +673,7 @@ pub async fn prepare_post<B: L1Boundary>(
     draft: PostDraft,
 ) -> Result<PreparedContent, ContentError> {
     let gc_after_epochs = staging.gc_after_epochs;
-    let p_d = draft.p_directed.unwrap_or(DEFAULT_STANCE);
+    let p_d = draft.p_directed;
     stance_range("pDirected", p_d)?;
     let title = checked_title(draft.title)?;
     let description = checked_description(draft.description)?;
@@ -918,8 +927,8 @@ pub async fn prepare_comment<B: L1Boundary>(
     draft: CommentDraft,
 ) -> Result<PreparedContent, ContentError> {
     let gc_after_epochs = staging.gc_after_epochs;
-    let p_d = draft.p_directed.unwrap_or(DEFAULT_STANCE);
-    let p_i = draft.p_interest.unwrap_or(DEFAULT_STANCE);
+    let p_d = draft.p_directed;
+    let p_i = draft.p_interest;
     stance_range("pDirected", p_d)?;
     stance_range("pInterest", p_i)?;
     let content = checked_comment_body(draft.content)?;

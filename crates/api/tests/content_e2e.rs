@@ -252,6 +252,7 @@ async fn post_from_the_phone_read_it_back(pool: PgPool) {
                 "title": "Hello graph",
                 "content": "The very first post.",
                 "license": { "attribution": 1.0, "provenance": 0.0 },
+                "pDirected": 0.1,
             }}),
         )
         .await;
@@ -313,6 +314,7 @@ async fn post_from_the_phone_read_it_back(pool: PgPool) {
                 "target": post_id,
                 "content": "Great start!",
                 "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
                 "pInterest": 0.5,
             }}),
         )
@@ -414,6 +416,7 @@ async fn content_writes_need_a_member_session(pool: PgPool) {
             json!({ "input": {
                 "content": "anonymous?",
                 "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
             }}),
         )
         .await;
@@ -447,6 +450,7 @@ async fn a_self_marked_post_veils_its_body_and_keeps_its_title(pool: PgPool) {
                 "title": "A hard thing",
                 "content": "The body nobody sees unmarked.",
                 "license": { "attribution": 1.0, "provenance": 0.0 },
+                "pDirected": 0.1,
                 "sensitive": true,
                 "sensitiveReason": "Depicts an injury",
             }}),
@@ -546,6 +550,7 @@ async fn a_sensitive_reason_without_the_mark_is_refused(pool: PgPool) {
             json!({ "input": {
                 "content": "unmarked",
                 "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
                 "sensitiveReason": "why",
             }}),
         )
@@ -580,6 +585,7 @@ async fn a_self_marked_comment_veils_its_body(pool: PgPool) {
                 "title": "Host",
                 "content": "The thread starts here.",
                 "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
             }}),
         )
         .await;
@@ -600,6 +606,8 @@ async fn a_self_marked_comment_veils_its_body(pool: PgPool) {
                 "target": post_id,
                 "content": "Hard to look at.",
                 "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
+                "pInterest": 0.1,
                 "sensitive": true,
                 "sensitiveReason": "Describes the injury",
             }}),
@@ -649,6 +657,8 @@ async fn a_refused_prepare_reports_user_errors(pool: PgPool) {
                 "target": Uuid::new_v4(),
                 "content": "into the void",
                 "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
+                "pInterest": 0.1,
             }}),
         )
         .await;
@@ -679,6 +689,69 @@ async fn a_refused_prepare_reports_user_errors(pool: PgPool) {
             .contains("Dimension"),
         "expected a Dimension validation refusal: {response}"
     );
+}
+
+/// The user signs only values they chose: a post without its attachment,
+/// or a comment without either of its two stance values, is refused by
+/// the schema before any resolver runs. Nothing is staged, so nothing can
+/// land — the server never fills the hole with a default.
+///
+/// A post or comment with a stance value left out is refused whole and nothing is staged.
+/// ´claim:content:an-omitted-stance-is-refused-whole´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_omitted_stance_value_refuses_the_whole_request(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, _key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let staged = || async {
+        sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM staged_writes")
+            .fetch_one(&rig.pool)
+            .await
+            .expect("counts")
+    };
+    let before = staged().await;
+    let license = json!({ "attribution": 0.0, "provenance": 0.0 });
+
+    let post = rig
+        .gql_raw(
+            Some(&token),
+            PREPARE_POST,
+            json!({ "input": { "content": "x", "license": license } }),
+        )
+        .await;
+    assert!(post["data"].is_null(), "no resolver ran: {post}");
+    assert!(
+        post["errors"][0]["message"]
+            .as_str()
+            .expect("message")
+            .contains("pDirected"),
+        "the refusal names the missing field: {post}"
+    );
+
+    for (present, missing) in [("pDirected", "pInterest"), ("pInterest", "pDirected")] {
+        let comment = rig
+            .gql_raw(
+                Some(&token),
+                PREPARE_COMMENT,
+                json!({ "input": {
+                    "target": Uuid::new_v4(),
+                    "content": "x",
+                    "license": license,
+                    present: 0.1,
+                }}),
+            )
+            .await;
+        assert!(comment["data"].is_null(), "no resolver ran: {comment}");
+        assert!(
+            comment["errors"][0]["message"]
+                .as_str()
+                .expect("message")
+                .contains(missing),
+            "the refusal names {missing}: {comment}"
+        );
+    }
+
+    assert_eq!(staged().await, before, "a refused request stages nothing");
 }
 
 /// One asset in two posts, described differently in each — the property
@@ -730,6 +803,7 @@ async fn one_asset_reads_differently_in_two_posts(pool: PgPool) {
                     "title": "Look",
                     "description": description,
                     "license": { "attribution": 1.0, "provenance": 0.0 },
+                    "pDirected": 0.1,
                     "attachments": [{
                         "mediaId": asset.to_string(),
                         "displayOrder": 0,
@@ -829,6 +903,7 @@ async fn a_taken_cover_round_trips_to_the_reader(pool: PgPool) {
                 "title": "Look",
                 "description": "A clip",
                 "license": { "attribution": 1.0, "provenance": 0.0 },
+                "pDirected": 0.1,
                 "attachments": [attachment],
             }}),
         )
