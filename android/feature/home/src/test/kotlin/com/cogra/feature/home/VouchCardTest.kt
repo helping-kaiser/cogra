@@ -1,10 +1,12 @@
 package com.cogra.feature.home
 
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import com.cogra.core.designsystem.StanceControl
@@ -50,7 +52,7 @@ class VouchCardTest {
                         testTagPrefix = "vouch_back",
                         targetLabel = "@mira",
                         node = VOUCH_CARD / "stance",
-                        fullInkEmpty = true,
+                        lineFaceInk = MaterialTheme.colorScheme.onTertiaryContainer,
                     )
                 },
             )
@@ -85,6 +87,16 @@ class VouchCardTest {
         compose.onNodeWithTag("feed.vouchCard.stance.anchor").assertExists()
         // The hollow face: the account holds no opinion of the voucher.
         compose.onNodeWithTag("feed.vouchCard.stance.anchor.face", useUnmergedTree = true).assertExists()
+    }
+
+    // stance-control.md, jakob 2026-10-14: the card's empty face is the line
+    // face in the card's ink, never the 🫥 emoji (whose fixed colours cannot
+    // read on the olive ground). The face keeps its registered `face` node.
+    @Test
+    fun theEmptyFaceIsALineFaceAndNeverTheEmoji() {
+        render()
+        compose.onNodeWithTag("feed.vouchCard.stance.anchor.face", useUnmergedTree = true).assertExists()
+        compose.onNodeWithText("🫥", useUnmergedTree = true).assertDoesNotExist()
     }
 
     // VouchBack.md:11 — Got it takes the row's leading edge, the line sits
