@@ -19,7 +19,11 @@ import { useApolloClient } from "@apollo/client/react";
 
 import type { PostView } from "@/lib/api/content-api";
 import { sendReport } from "@/lib/api/report-api";
+import { hideAct, hiddenPersonOf } from "@/lib/hidden/hide-row";
+import { useHiddenSet } from "@/lib/hidden/provider";
 import type { License } from "@/lib/license";
+import { useSavedWrites } from "@/lib/saved/provider";
+import { saveRow, type Notify } from "@/lib/saved/save-row";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import type { DataNode } from "@/lib/ui/data-node";
@@ -69,13 +73,15 @@ export function PostMenuHost({
   /** Ids of the parts no board registers derive from this. */
   testId: string;
   /** The host's own snackbar, which carries the menu's aftermath. */
-  notify: (message: string) => void;
+  notify: Notify;
 }) {
   const router = useRouter();
   const client = useApolloClient();
   const guard = useAuthGuard();
   const phase = useAuthPhase();
   const viewerId = useActiveAccountId();
+  const writes = useSavedWrites();
+  const hidden = useHiddenSet();
   // THE NARROW-SHARE FOLD (design/readme.md, jakob 2026-09-17, sharpened
   // 2026-09-22 — PR #794): strictly below 360px the card's row sheds Share and
   // the reader's menu leads with it instead. Capability gated the same way the
@@ -121,6 +127,27 @@ export function PostMenuHost({
                   testId: `${testId}-share`,
                 }
               : null,
+          // A GUEST IS ASKED TO JOIN before anything is kept (GuestGate.md:5).
+          save: saveRow({
+            writes,
+            node: post.id,
+            server: post.viewerBookmarkedAt ?? null,
+            notify,
+            onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
+            testId: `${testId}-save`,
+          }),
+          // HIDING NAMES ITS PERSON AND ASKS NOTHING (FeedHidden.md:3): the
+          // host's rows take the person out, and its snackbar offers Undo.
+          hide:
+            post.author == null
+              ? undefined
+              : hideAct({
+                  set: hidden,
+                  person: hiddenPersonOf(post.author),
+                  origin: post.id,
+                  notify,
+                  onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
+                }),
           testIdPrefix: testId,
           rowNode: nodes.row,
         });

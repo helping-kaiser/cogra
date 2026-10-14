@@ -52,6 +52,10 @@ import { part, testAttributes, type DataNode } from "./data-node";
 import { Icon } from "./icons";
 import { useNarrowShare } from "./narrow-share";
 import { PendingMarker } from "./pending-marker";
+import { RowLine } from "./row-line";
+import { useComfortLine } from "@/lib/saved/comfort-line";
+import { useSavedWrites } from "@/lib/saved/provider";
+import { saveRow, type Notify } from "@/lib/saved/save-row";
 import {
   BodyRegion,
   PostMedia,
@@ -167,8 +171,14 @@ export function PostCard({
   onOpenMenu,
   menuOpen = false,
   node,
+  onNotify,
 }: {
   post: PostView;
+  /**
+   * The host's snackbar, for the card's own menu (`Saved.`, `Removed from
+   * Saved.` with `Undo`). A surface hosting the menu itself never needs it.
+   */
+  onNotify?: Notify;
   /**
    * THE SURFACE HOSTS THE MENU (ruling 84; `PostMenuHost`): the card draws its
    * ⋮ and the tap asks the host to raise the one sheet it keeps for every
@@ -259,6 +269,8 @@ export function PostCard({
   // never grows a dead row (`share.ts`).
   const narrow = useNarrowShare();
   const shareCapable = useShareCapable();
+  const comfort = useComfortLine(post.id);
+  const writes = useSavedWrites();
 
   const redacted = payloadIsRedacted(post);
   const media = !redacted && hasMedia(post);
@@ -296,6 +308,17 @@ export function PostCard({
             testId: `${testId}-menu-share`,
           }
         : null,
+    // The card's own menu serves the surfaces that host none of their own; it
+    // saves the same way, and says so on the host's snackbar where there is
+    // one (`onNotify`).
+    save: saveRow({
+      writes,
+      node: post.id,
+      server: post.viewerBookmarkedAt ?? null,
+      notify: onNotify ?? (() => {}),
+      onGuest: null,
+      testId: `${testId}-menu-save`,
+    }),
     testIdPrefix: `${testId}-menu`,
   });
 
@@ -568,6 +591,11 @@ export function PostCard({
           />
         )}
       </div>
+      {/* THE ROW LINE, under the face (RowSigning.md): here, a read-side
+          comfort on this post that did not go through — its save or unsave
+          reverted. The hold's two states ride the same master once the stance
+          lanes wire them. */}
+      {comfort !== null && <RowLine state={comfort} testId={`${testId}-row-line`} />}
     </Card>
   );
 }

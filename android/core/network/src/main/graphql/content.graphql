@@ -63,6 +63,8 @@ fragment PostFields on Post {
   references {
     ...ReferenceClaimFields
   }
+  # The post menu's Save / Unsave row: the only place a kept state shows.
+  viewerBookmarkedAt
 }
 
 fragment CommentFields on Comment {
@@ -132,6 +134,8 @@ fragment CommentFields on Comment {
   references {
     ...ReferenceClaimFields
   }
+  # The comment menu's Save / Unsave row.
+  viewerBookmarkedAt
 }
 
 mutation PreparePost($input: PreparePostInput!) {
@@ -244,6 +248,25 @@ query PostSelfMark($id: UUID!) {
 query CommentForEdit($id: UUID!) {
   comment(id: $id) {
     ...CommentFields
+  }
+}
+
+# LANDING ON A COMMENT (Saved.md; jakob 2026-10-01): one step up a comment's
+# chain — what it answers. A reply sits behind its parent's collapsed count, so
+# the thread walks up to the top level and unfolds each branch on the way down.
+# web's twin is web/src/lib/graphql/content.graphql `CommentParent`.
+query CommentParent($id: UUID!) {
+  comment(id: $id) {
+    id
+    target {
+      __typename
+      ... on Comment {
+        id
+      }
+      ... on Post {
+        id
+      }
+    }
   }
 }
 

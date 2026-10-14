@@ -1465,6 +1465,58 @@ struct DeviceLock {
 }
 
 #[derive(InputObject)]
+struct SetBookmarkInput {
+    node: Uuid,
+    /// When the save took place; null means now. Undo passes the removed
+    /// row's own `bookmarkedAt`, so the row returns to its place
+    /// (SavedUndo). Never later than now: BAD_INPUT at ["bookmarkedAt"].
+    bookmarked_at: Option<DateTime<Utc>>,
+}
+
+#[derive(SimpleObject)]
+struct SetBookmarkPayload {
+    bookmark: Option<crate::schema::types::BookmarkEdge>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
+struct RemoveBookmarkInput {
+    node: Uuid,
+}
+
+#[derive(SimpleObject)]
+struct RemoveBookmarkPayload {
+    ok: Option<bool>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
+struct HideActorInput {
+    actor: Uuid,
+    /// Restores an earlier hiding's moment — the Undo of an unhide puts the
+    /// row back where it stood. Null means now; a moment after now is
+    /// BAD_INPUT.
+    hidden_at: Option<DateTime<Utc>>,
+}
+
+#[derive(SimpleObject)]
+struct HideActorPayload {
+    hidden: Option<crate::schema::types::HiddenActorEdge>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
+struct UnhideActorInput {
+    actor: Uuid,
+}
+
+#[derive(SimpleObject)]
+struct UnhideActorPayload {
+    ok: Option<bool>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
 struct MarkSeenInput {
     /// The nodes the viewer has seen, in the order they were seen.
     nodes: Vec<Uuid>,
@@ -2710,6 +2762,137 @@ impl Mutation {
         .await?;
         Ok(SetPreferencesPayload {
             preferences: Some(UserPreferences::from_store(stored)),
+            user_errors: vec![],
+        })
+    }
+
+    /// Keep a post, comment or person in the viewer's Saved list. Any
+    /// other kind of node is BAD_INPUT at ["node"]; an id that names
+    /// nothing is NOT_FOUND. Saving a kept node changes nothing and
+    /// returns its edge as it stands (idempotent). Needs a session
+    /// (UNAUTHENTICATED otherwise) and no particular account state — an
+    /// applicant keeps things like a member; this is private viewer
+    /// state, not acting. L2 only: no record, no staged write.
+    async fn set_bookmark(
+        &self,
+        ctx: &Context<'_>,
+        input: SetBookmarkInput,
+    ) -> async_graphql::Result<SetBookmarkPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        let refused = |message: &str, field: &str| SetBookmarkPayload {
+            bookmark: None,
+            user_errors: vec![UserError::at(
+                ErrorCode::BadInput,
+                message,
+                vec![field.to_string()],
+            )],
+        };
+        if let Some(at) = input.bookmarked_at
+            && !crate::bookmarks::restore_time_ok(at, Utc::now())
+        {
+            return Ok(refused(
+                "a save time may not be later than now",
+                "bookmarkedAt",
+            ));
+        }
+        use postgres_store::bookmarks::SaveOutcome;
+        let bookmark = match postgres_store::bookmarks::set_bookmark(
+            pool,
+            v.user_id,
+            input.node,
+            input.bookmarked_at,
+        )
+        .await?
+        {
+            SaveOutcome::Kept(bookmark) => bookmark,
+            SaveOutcome::NotSaveable => {
+                return Ok(refused(
+                    "only a post, a comment or a person can be saved",
+                    "node",
+                ));
+            }
+            SaveOutcome::Unknown => return Err(not_found("no such node")),
+        };
+        let edge = crate::schema::types::hydrate_bookmarks(pool, vec![bookmark])
+            .await?
+            .pop()
+            .ok_or_else(|| not_found("no such node"))?;
+        Ok(SetBookmarkPayload {
+            bookmark: Some(edge),
+            user_errors: vec![],
+        })
+    }
+
+    /// Drop a node from the viewer's Saved list — a genuine delete.
+    /// Dropping a node that is not kept is ok (idempotent). Needs a
+    /// session; no account state.
+    async fn remove_bookmark(
+        &self,
+        ctx: &Context<'_>,
+        input: RemoveBookmarkInput,
+    ) -> async_graphql::Result<RemoveBookmarkPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        postgres_store::bookmarks::remove_bookmark(pool, v.user_id, input.node).await?;
+        Ok(RemoveBookmarkPayload {
+            ok: Some(true),
+            user_errors: vec![],
+        })
+    }
+
+    /// Hide an actor from the viewer's own feed. Idempotent: an actor
+    /// already hidden keeps its edge and its moment. Any actor may be
+    /// hidden, a deleted account included; the viewer's own id is
+    /// BAD_INPUT, an id naming no actor NOT_FOUND, a restore moment after
+    /// now BAD_INPUT — all at the transport, client bugs no surface renders.
+    /// Needs a session and no particular account state — an applicant
+    /// hides like a member; this is private viewer state, not acting.
+    /// Nothing reaches the graph or the hidden actor.
+    async fn hide_actor(
+        &self,
+        ctx: &Context<'_>,
+        input: HideActorInput,
+    ) -> async_graphql::Result<HideActorPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        if input.actor == v.user_id {
+            return Err(super::query::bad_input("an account cannot hide itself"));
+        }
+        if let Some(at) = input.hidden_at
+            && !crate::bookmarks::restore_time_ok(at, Utc::now())
+        {
+            return Err(super::query::bad_input(
+                "a hiding moment may not be later than now",
+            ));
+        }
+        let Some(row) =
+            postgres_store::hidden::hide(pool, v.user_id, input.actor, input.hidden_at).await?
+        else {
+            return Err(not_found("no such actor"));
+        };
+        let edge = crate::schema::types::hydrate_hidden(pool, vec![row])
+            .await?
+            .pop()
+            .ok_or_else(|| not_found("no such actor"))?;
+        Ok(HideActorPayload {
+            hidden: Some(edge),
+            user_errors: vec![],
+        })
+    }
+
+    /// Unhide an actor — a genuine delete. Idempotent: an actor not hidden
+    /// answers ok. Needs a session; no account state.
+    async fn unhide_actor(
+        &self,
+        ctx: &Context<'_>,
+        input: UnhideActorInput,
+    ) -> async_graphql::Result<UnhideActorPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        postgres_store::hidden::unhide(pool, v.user_id, input.actor).await?;
+        Ok(UnhideActorPayload {
+            ok: Some(true),
             user_errors: vec![],
         })
     }

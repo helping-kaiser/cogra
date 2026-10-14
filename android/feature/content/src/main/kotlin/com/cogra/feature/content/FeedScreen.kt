@@ -53,6 +53,7 @@ import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.LocalSnackbarHostState
 import com.cogra.core.designsystem.NodeSnackbarVisuals
 import com.cogra.core.designsystem.PendingMarker
+import com.cogra.core.designsystem.RowLine
 import com.cogra.core.designsystem.SeenCardsEffect
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.dataNode
@@ -75,9 +76,17 @@ import com.cogra.domain.LicenseChoice
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
+import com.cogra.domain.hidden.HiddenSet
+import com.cogra.domain.saved.SavedWrites
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.R
 import com.cogra.feature.content.reply.ReplyTarget
+import com.cogra.feature.saved.LocalSavedHost
+import com.cogra.feature.saved.asHiddenPerson
+import com.cogra.feature.saved.rememberHiddenSet
+import com.cogra.feature.saved.rememberSavedHost
+import com.cogra.feature.saved.rememberSavedWrites
+import com.cogra.feature.saved.viewState
 import com.cogra.feature.stance.StanceControlRoute
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -223,11 +232,36 @@ fun FeedRoute(
         viewerId = viewerId,
         onEditPost = onEditPost,
         onCitePost = onCitePost,
-        stanceControl = { target, tag, node ->
-            StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node)
-        },
+        stanceControl = nodeStanceControl,
+        saved = rememberSavedWrites(),
+        onRequireAccount = onRequireAccount,
+        hidden = rememberHiddenSet(),
     )
 }
+
+/**
+ * WHAT IS DRAWN (FeedHidden.md:3, hidden-actors §4.3): the held cards less the
+ * hidden people's rows — they leave, the rows behind move up, and nothing
+ * marks the space. The ViewModel keeps them, so Undo stands the feed as it was
+ * (:11), and a hide made on another surface clears this list on return (:9).
+ * A hide that took every drawn card while more wait asks for the next window,
+ * since the tail watch has nothing left to hang on.
+ */
+@Composable
+private fun rememberShownFeed(state: FeedUiState, hidden: HiddenSet?, onLoadMore: () -> Unit): FeedUiState {
+    val view = hidden.viewState()
+    val shown = remember(state, view) {
+        val kept = state.posts.filterNot { view.hides(it.author?.id, it.id) }
+        if (kept.size == state.posts.size) state else state.copy(posts = kept)
+    }
+    val emptied = shown.posts.isEmpty() && state.posts.isNotEmpty() && state.hasNextPage
+    LaunchedEffect(emptied) { if (emptied) onLoadMore() }
+    return shown
+}
+
+/** The stance control a route hands its cards: the live control on the node, wearing its registered path. */
+internal val nodeStanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit =
+    { target, tag, node -> StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node) }
 
 /** One callback after another — the pull tells the shell, then refreshes. */
 private fun then(first: () -> Unit, second: () -> Unit): () -> Unit = {
@@ -295,6 +329,15 @@ fun FeedScreen(
      * through a view model this screen keeps out of its own signature.
      */
     reportSheet: ReportSheetSlot = { _, _, _ -> },
+    /**
+     * The app's one Saved overlay (`SavedWrites`), which the cards' menus
+     * save through; null stands their Save rows inert.
+     */
+    saved: SavedWrites? = null,
+    /** The guest gate a signed-out reader's Save opens; null when signed in. */
+    onRequireAccount: (() -> Unit)? = null,
+    /** The reader's hidden set, which the cards' menus hide through; null stands their Hide rows inert. */
+    hidden: HiddenSet? = null,
     /** The bar's Feed slot re-tapped over this root, counted ([FeedReselectEffect]). */
     reselectSignal: Int = 0,
 ) {
@@ -302,6 +345,7 @@ fun FeedScreen(
     // card's menu, the terms and the report's confirm each stop the playing
     // clip while they stand, the way the raised thread does, and the stage
     // re-elects when the last of them drops.
+    val drawn = rememberShownFeed(state, hidden, onLoadMore)
     val layers = remember { CoveringLayers() }
     // Which post's report confirm is up. Remembered, not saved: a reader who
     // comes back to the feed finds it as they left it, never a sheet still
@@ -337,7 +381,7 @@ fun FeedScreen(
     // (`VideoPreload`). The feed knows which posts carry one and where the
     // reader is; the position is read off the layout inside a snapshot, so
     // scrolling moves it without recomposing the screen.
-    val clips = remember(state.posts) { FeedClips.of(state.posts) }
+    val clips = remember(drawn.posts) { FeedClips.of(drawn.posts) }
     PreloadClips(clips = clips.urls, focus = { clips.focus(listState.layoutInfo) })
     // The collapsing top (design.md §6): the bar hides scrolling down
     // and returns after a third of a screen of upward scroll; the
@@ -351,11 +395,11 @@ fun FeedScreen(
     // to the gate as "the reader is at the top" — the region returned
     // the moment it left.
     val collapsingTop = rememberCollapsingTop()
-    WatchFeedTail(listState = listState, state = state, onLoadMore = onLoadMore)
+    WatchFeedTail(listState = listState, state = drawn, onLoadMore = onLoadMore)
     // SEEN, AT THE LIST: a post card fully in the viewport joins the
     // reader's History, as itself (History.md). Only the post rows map to
     // an id; the banner and expiry rows are not cards.
-    val postIds = remember(state.posts) { state.posts.mapTo(HashSet()) { it.id } }
+    val postIds = remember(drawn.posts) { drawn.posts.mapTo(HashSet()) { it.id } }
     SeenCardsEffect(
         listState = listState,
         nodeIdOf = { key -> (key as? String)?.takeIf { it in postIds } },
@@ -365,7 +409,10 @@ fun FeedScreen(
         suspended = commentsFor != null,
     )
     val band = FEED / "band"
-    CompositionLocalProvider(LocalCoveringLayers provides layers) {
+    // THE CARDS' MENUS SAVE THROUGH THE ONE OVERLAY AND HIDE THROUGH THE ONE
+    // SET, their aftermath on the feed's own snackbar (`saveMenuRow`, `hidePerson`).
+    val savedHost = rememberSavedHost(saved, snackbar, FEED / "snackbar", onRequireAccount, hidden)
+    CompositionLocalProvider(LocalCoveringLayers provides layers, LocalSavedHost provides savedHost) {
         Scaffold(
             modifier = Modifier.dataNodeSurface(),
             topBar = {
@@ -417,7 +464,7 @@ fun FeedScreen(
                     // The status banners ride every branch — an applicant with an
                     // empty feed still sees their application cards.
                     when {
-                        state.transportFault != null && state.posts.isEmpty() -> Column(
+                        state.transportFault != null && drawn.posts.isEmpty() -> Column(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .verticalScroll(rememberScrollState())
@@ -432,7 +479,7 @@ fun FeedScreen(
                                 Text(stringResource(R.string.content_retry))
                             }
                         }
-                        !state.loading && state.posts.isEmpty() -> Column(
+                        !state.loading && drawn.posts.isEmpty() -> Column(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .verticalScroll(rememberScrollState())
@@ -523,7 +570,7 @@ fun FeedScreen(
                                             }
                                         }
                                     }
-                                    items(state.posts, key = { it.id }) { post ->
+                                    items(drawn.posts, key = { it.id }) { post ->
                                         // The row's key again, so the stage can ask
                                         // the list whether this card is still placed.
                                         ScrollStageRow(post.id) {
@@ -553,7 +600,7 @@ fun FeedScreen(
                                     // way back — the drawn twin of `MoreComments`.
                                     val appendFault = state.transportFault == TransportFault.APPEND
                                     if (state.hasNextPage && (state.loadingMore || appendFault)) {
-                                        item { Gutter { FeedTailSlot(state = state, onLoadMore = onLoadMore) } }
+                                        item { Gutter { FeedTailSlot(state = drawn, onLoadMore = onLoadMore) } }
                                     }
                                 }
                             }
@@ -820,6 +867,9 @@ private fun PostCard(
             ) {
                 stanceControl(post.id, "feed_post_${post.id}", card / "actionRow" / "stance")
             }
+            // THE ROW LINE under the face (RowSigning.md): a save or unsave
+            // of this post that did not go through.
+            LocalSavedHost.current?.comfortLine(post.id)?.let { RowLine(it, "feed_post_${post.id}_row_line") }
         }
     }
 }
@@ -899,6 +949,12 @@ private fun CardMenuHeader(
                 testTagPrefix = "feed_${post.id}_menu",
                 onReport = onReport,
                 rowNode = { row -> (menuSheet / row.nodeName).takeIf { row in FEED_MENU_ROWS } },
+                saveRow = LocalSavedHost.current?.menuRow(
+                    post.id,
+                    post.viewerBookmarkedAt,
+                    "feed_${post.id}_menu_save",
+                ),
+                onHide = post.author?.let { LocalSavedHost.current?.hideAct(it.asHiddenPerson(), post.id) },
             )
         },
         menuContentDescription = stringResource(R.string.content_menu_post),

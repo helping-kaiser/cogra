@@ -71,6 +71,8 @@ describe("icons", () => {
       "visibility_off",
       // The checkbox's mark (Checkbox.jsx), first needed by DeleteAccount's sweep.
       "check",
+      // A Saved row's own Unsave (Saved.jsx; Icon.jsx `bookmark`).
+      "bookmark",
     ];
     expect([...shippedNames()].sort()).toEqual([...needed].sort());
   });

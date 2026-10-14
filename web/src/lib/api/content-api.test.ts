@@ -41,6 +41,7 @@ function post(id: string, overrides: Record<string, unknown> = {}) {
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
     references: [],
+    viewerBookmarkedAt: null,
     ...overrides,
   };
 }

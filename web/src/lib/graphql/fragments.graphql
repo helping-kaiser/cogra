@@ -170,6 +170,8 @@ fragment PostFields on Post {
   references(includePending: $includePending) {
     ...ReferenceClaimFields
   }
+  # The post menu's Save / Unsave row: the only place a kept state shows.
+  viewerBookmarkedAt
 }
 
 # A comment as the thread read and the expand read both draw it.
@@ -225,6 +227,8 @@ fragment CommentFields on Comment {
   references(includePending: $includePending) {
     ...ReferenceClaimFields
   }
+  # The comment menu's Save / Unsave row.
+  viewerBookmarkedAt
 }
 
 # One standing citation.

@@ -7,6 +7,7 @@ import { RUNNING_VERSION } from "@/lib/release/running-version";
 import { createTokenStore } from "@/lib/session/token-store";
 import { accountFilterLevel, setAccountFilterLevel } from "@/lib/settings/sensitive-content";
 import { fakeIdentityStore } from "@/test/identity";
+import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { SettingsView } from "./settings-view";
@@ -780,7 +781,7 @@ describe("signing out", () => {
     const row = await screen.findByTestId("settings.leaving.forget");
     expect(row).toHaveAttribute("aria-checked", "false");
     expect(screen.getByTestId("settings.leaving.forget.status")).toHaveTextContent(
-      "Your key, your draft and any kept picks are cleared from this browser when you sign out.",
+      "Your key, your draft, any kept picks and what you've seen are cleared from this browser when you sign out.",
     );
     fireEvent.click(row);
     await waitFor(() => expect(row).toHaveAttribute("aria-checked", "true"));
@@ -1096,5 +1097,107 @@ describe("clearing data (B6)", () => {
     expect(push).toHaveBeenCalledWith("/settings/backup");
     expect(erase).not.toHaveBeenCalled();
     expect(tokens.accessToken()).toBe("access-1");
+  });
+});
+
+describe("hidden accounts (SettingsHidden.md; hidden-actors packet §5.4, §6)", () => {
+  const JUNO = { id: "j", handle: "juno", displayName: "Juno Baptiste", hiddenAt: ago(3) };
+  const ADA = { id: "a", handle: "ada", displayName: "Ada Okonkwo", hiddenAt: ago(14) };
+
+  /** The Unhide of the row keyed `handle`. */
+  const unhideOf = (handle: string) => byNode("settings.hiddenSheet.list.account.trailing.unhide", handle);
+
+  it("hidden_row_reads_the_count_and_opens_the_sheet_titled_with_no_count", async () => {
+    server.use(...hiddenHandlers(hiddenLog(), { entries: [JUNO, ADA] }));
+    renderSettings();
+    await waitFor(() => expect(screen.getByTestId("settings.people.hidden.value")).toHaveTextContent("2"));
+    fireEvent.click(screen.getByTestId("settings.people.hidden"));
+    const sheet = await screen.findByTestId("settings.hiddenSheet");
+    expect(within(sheet).getByTestId("settings.hiddenSheet.title")).toHaveTextContent(/^Hidden accounts$/);
+  });
+
+  it("rows_stand_most_recently_hidden_first_reading_name_handle_and_hidden_age_with_unhide", async () => {
+    server.use(...hiddenHandlers(hiddenLog(), { entries: [ADA, JUNO] }));
+    renderSettings();
+    await waitFor(() => expect(screen.getByTestId("settings.people.hidden.value")).toHaveTextContent("2"));
+    fireEvent.click(screen.getByTestId("settings.people.hidden"));
+    await screen.findByTestId("settings.hiddenSheet");
+    const keys = screen
+      .getAllByTestId("settings.hiddenSheet.list.account")
+      .map((row) => row.getAttribute("data-testid-key"));
+    expect(keys).toEqual(["juno", "ada"]);
+    const juno = byNode("settings.hiddenSheet.list.account", "juno");
+    expect(juno).toHaveTextContent("Juno Baptiste");
+    expect(juno).toHaveTextContent("@juno");
+    expect(juno).toHaveTextContent("Hidden 3d");
+    expect(unhideOf("juno")).toHaveTextContent("Unhide");
+  });
+
+  it("unhide_takes_the_row_and_the_snackbar_offers_undo_which_puts_it_back_in_place", async () => {
+    const log = hiddenLog();
+    server.use(...hiddenHandlers(log, { entries: [JUNO, ADA] }));
+    renderSettings();
+    await waitFor(() => expect(screen.getByTestId("settings.people.hidden.value")).toHaveTextContent("2"));
+    fireEvent.click(screen.getByTestId("settings.people.hidden"));
+    await screen.findByTestId("settings.hiddenSheet");
+    fireEvent.click(unhideOf("juno"));
+    expect(screen.getAllByTestId("settings.hiddenSheet.list.account")).toHaveLength(1);
+    expect(await screen.findByTestId("settings-snackbar")).toHaveTextContent(
+      "@juno is unhidden — their posts can reach your feed again.",
+    );
+    await waitFor(() => expect(log.unhides).toEqual(["j"]));
+    fireEvent.click(screen.getByRole("button", { name: "Undo" }));
+    // Back in its place, with its own age (the restore passes the row's hiddenAt).
+    expect(
+      screen.getAllByTestId("settings.hiddenSheet.list.account").map((row) => row.getAttribute("data-testid-key")),
+    ).toEqual(["juno", "ada"]);
+    await waitFor(() => expect(log.hides).toEqual([{ actor: "j", at: JUNO.hiddenAt }]));
+  });
+
+  it("unhiding_the_last_closes_onto_settings_reading_none", async () => {
+    server.use(...hiddenHandlers(hiddenLog(), { entries: [JUNO] }));
+    renderSettings();
+    await waitFor(() => expect(screen.getByTestId("settings.people.hidden.value")).toHaveTextContent("1"));
+    fireEvent.click(screen.getByTestId("settings.people.hidden"));
+    await screen.findByTestId("settings.hiddenSheet");
+    fireEvent.click(unhideOf("juno"));
+    await waitFor(() => expect(screen.getByTestId("settings.people.hidden.value")).toHaveTextContent("None"));
+    await waitFor(() =>
+      expect((screen.getByTestId("settings.hiddenSheet") as HTMLDialogElement).open).toBe(false),
+    );
+  });
+
+  it("a_failed_unhide_reverts_with_retry_in_the_rows_own_slots", async () => {
+    const log = hiddenLog();
+    server.use(...hiddenHandlers(log, { entries: [JUNO, ADA], failUnhide: true }));
+    renderSettings();
+    await waitFor(() => expect(screen.getByTestId("settings.people.hidden.value")).toHaveTextContent("2"));
+    fireEvent.click(screen.getByTestId("settings.people.hidden"));
+    await screen.findByTestId("settings.hiddenSheet");
+    fireEvent.click(unhideOf("juno"));
+    await waitFor(() =>
+      expect(byNode("settings.hiddenSheet.list.account", "juno")).toHaveTextContent("That didn't go through."),
+    );
+    fireEvent.click(screen.getByTestId("settings-hidden-j-retry"));
+    await waitFor(() => expect(log.unhides).toEqual(["j", "j"]));
+  });
+
+  it("a_deleted_accounts_row_reads_deleted_account_keyed_by_its_id", async () => {
+    server.use(
+      ...hiddenHandlers(hiddenLog(), {
+        entries: [{ id: "gone-1", handle: "gone", displayName: "x", hiddenAt: ago(40), redacted: true }],
+      }),
+    );
+    renderSettings();
+    await waitFor(() => expect(screen.getByTestId("settings.people.hidden.value")).toHaveTextContent("1"));
+    fireEvent.click(screen.getByTestId("settings.people.hidden"));
+    await screen.findByTestId("settings.hiddenSheet");
+    const row = byNode("settings.hiddenSheet.list.redactedAccount", "gone-1");
+    expect(row).toHaveTextContent("Deleted account");
+    expect(row).not.toHaveTextContent("@gone");
+    fireEvent.click(byNode("settings.hiddenSheet.list.redactedAccount.trailing.unhide", "gone-1"));
+    expect(await screen.findByTestId("settings-snackbar")).toHaveTextContent(
+      "This account is unhidden — its posts can reach your feed again.",
+    );
   });
 });

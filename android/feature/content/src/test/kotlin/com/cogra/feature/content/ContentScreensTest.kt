@@ -47,6 +47,11 @@ import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.MediaAssetView
 import com.cogra.core.designsystem.v2.media.DETAIL_CLIP_TAG
 import com.cogra.domain.ModeratedField
+import com.cogra.domain.AuthTokens
+import com.cogra.domain.Outcome
+import com.cogra.domain.saved.SavedWrites
+import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.RecordingSavedRepository
 import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testContentTarget
 import com.cogra.domain.testing.testMentionTarget
@@ -55,6 +60,8 @@ import com.cogra.domain.testing.testReferenceClaim
 import com.cogra.domain.testing.testTopicClaim
 import com.cogra.feature.content.reply.ReplyTargetKind
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -88,9 +95,11 @@ class ContentScreensTest {
         onCitePost: (String) -> Unit = {},
         thread: CommentsUiState = CommentsUiState(loading = false),
         onThreadRaised: (String) -> Unit = {},
+        saved: SavedWrites? = null,
     ) {
         compose.setContent {
             FeedScreen(
+                saved = saved,
                 onShare = onShare,
                 stanceControl = { target, tag, node ->
                     onStance(target, tag)
@@ -466,6 +475,53 @@ class ContentScreensTest {
         compose.onNodeWithTag("feed_load_more_error").performScrollTo().assertExists()
         compose.onNodeWithTag("feed_load_more_retry").performClick()
         assertThat(more).isTrue()
+    }
+
+    // -- The save row (saved-surface packet, "The save action") --
+
+    private fun savedWrites(repository: RecordingSavedRepository) = SavedWrites(
+        repository,
+        FakeTokenStore().apply { tokens.value = AuthTokens("a", "r", "someone-else") },
+        CoroutineScope(Dispatchers.Unconfined),
+    )
+
+    /** ReaderPostMenu.md:5-11 — Save keeps the post at the tap, and the row then reads Unsave. */
+    @Test
+    fun theFeedMenusSaveKeepsThePostAndTheRowThenReadsUnsave() {
+        val repository = RecordingSavedRepository()
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            viewerId = "someone-else",
+            saved = savedWrites(repository),
+        )
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.save").assertTextEquals("Save")
+        compose.onNodeWithTag("feed.menuSheet.save").performClick()
+        compose.waitForIdle()
+        assertThat(repository.sets).containsExactly("p1" to null)
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.save").assertTextEquals("Unsave")
+    }
+
+    /** RowSigning.md — a save that does not go through reverts, and the card's row says so with Retry. */
+    @Test
+    fun aFailedSaveRevertsAndTheCardsRowSaysRetry() {
+        val repository = RecordingSavedRepository().apply {
+            setAnswers.addLast(Outcome.Failed(java.io.IOException("down")))
+        }
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            viewerId = "someone-else",
+            saved = savedWrites(repository),
+        )
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.save").performClick()
+        compose.waitForIdle()
+        // The card merges its descendants, so the line is found in the unmerged tree.
+        compose.onNodeWithTag("feed_post_p1_row_line", useUnmergedTree = true).assertExists()
+        compose.onNodeWithText("That didn't go through.", useUnmergedTree = true).assertExists()
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.save").assertTextEquals("Save")
     }
 
     // -- The feed card's ⋮ (`PostCard.jsx:262`) --
@@ -3065,6 +3121,107 @@ class ContentScreensTest {
             ),
         )
         compose.onNodeWithTag("compose_confirm_withdrawal").assertDoesNotExist()
+    }
+
+    // -- The hide row (hidden-actors packet §5.2, §12.2) --
+
+    private fun hiddenSet(repository: com.cogra.domain.testing.RecordingHiddenRepository) =
+        com.cogra.domain.hidden.HiddenSet(
+            repository,
+            FakeTokenStore().apply { tokens.value = AuthTokens("a", "r", "someone-else") },
+            CoroutineScope(Dispatchers.Unconfined),
+        )
+
+    private val ada = com.cogra.domain.ActorRef("ada-id", "ada")
+
+    private fun twoByAdaOneByBo() = FeedUiState(
+        loading = false,
+        posts = listOf(
+            testPost("p1", author = ada),
+            testPost("p2", author = com.cogra.domain.ActorRef("bo-id", "bo")),
+            testPost("p3", author = ada),
+        ),
+    )
+
+    /** The feed under a hidden set, on a snackbar host the test can read. */
+    private fun renderHiding(
+        repository: com.cogra.domain.testing.RecordingHiddenRepository,
+        host: androidx.compose.material3.SnackbarHostState = androidx.compose.material3.SnackbarHostState(),
+    ) {
+        val store = hiddenSet(repository)
+        compose.setContent {
+            androidx.compose.runtime.CompositionLocalProvider(
+                com.cogra.core.designsystem.LocalSnackbarHostState provides host,
+            ) {
+                FeedScreen(
+                    state = twoByAdaOneByBo(),
+                    onRefresh = {},
+                    onLoadMore = {},
+                    onOpenPost = {},
+                    onOpenActor = {},
+                    onOpenTopic = {},
+                    viewerId = "someone-else",
+                    saved = savedWrites(RecordingSavedRepository()),
+                    hidden = store,
+                    stanceControl = { _, _, _ -> },
+                )
+            }
+        }
+    }
+
+    /** FeedHidden.md:3 — hiding from a card takes the person's rows out; nothing marks the space. */
+    @Test
+    fun hideFromAFeedCardClosesThePersonsRows() {
+        val repository = com.cogra.domain.testing.RecordingHiddenRepository()
+        renderHiding(repository)
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.hide").assertTextEquals("Hide @ada").performClick()
+        compose.waitForIdle()
+
+        // Never asks first: the hide went out at the tap.
+        assertThat(repository.hides).containsExactly("ada-id" to null)
+        compose.onNodeWithTag(feedCard("p1")).assertDoesNotExist()
+        compose.onNodeWithTag(feedCard("p3")).assertDoesNotExist()
+        compose.onNodeWithTag(feedCard("p2")).assertExists()
+    }
+
+    /** FeedHidden.md:11 — the snackbar names the handle, and Undo stands the feed as it was. */
+    @Test
+    fun hideSnackbarNamesTheHandleAndUndoStandsTheFeedAsItWas() {
+        val repository = com.cogra.domain.testing.RecordingHiddenRepository()
+        val host = androidx.compose.material3.SnackbarHostState()
+        renderHiding(repository, host)
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.hide").performClick()
+        compose.waitForIdle()
+        assertThat(host.currentSnackbarData?.visuals?.message)
+            .isEqualTo("@ada is hidden — their posts stay out of your feed.")
+        assertThat(host.currentSnackbarData?.visuals?.actionLabel).isEqualTo("Undo")
+
+        host.currentSnackbarData?.performAction()
+        compose.waitForIdle()
+        assertThat(repository.unhides).containsExactly("ada-id")
+        compose.onNodeWithTag(feedCard("p1")).assertExists()
+        compose.onNodeWithTag(feedCard("p3")).assertExists()
+    }
+
+    /** ReaderPostMenu.md:17, RowSigning.md:21 — a failed hide reverts, and its row says so with Retry. */
+    @Test
+    fun aFailedHideRevertsAndTheRowSaysRetry() {
+        val repository = com.cogra.domain.testing.RecordingHiddenRepository().apply {
+            hideAnswers.addLast(Outcome.Failed(java.io.IOException("down")))
+        }
+        renderHiding(repository)
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.hide").performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithTag(feedCard("p1")).assertExists()
+        compose.onNodeWithTag("feed_post_p1_row_line", useUnmergedTree = true).assertExists()
+        // Retry hides again and signs nothing.
+        compose.onNodeWithText("Retry", useUnmergedTree = true).performClick()
+        compose.waitForIdle()
+        assertThat(repository.hides).hasSize(2)
     }
 }
 

@@ -7,6 +7,7 @@
 import type { ApolloClient } from "@apollo/client";
 
 import {
+  CommentParentDocument,
   CommentRepliesDocument,
   CommentSelfMarkDocument,
   FeedPostFragmentDoc,
@@ -409,6 +410,39 @@ export async function fetchCommentSelfMark(
     sensitive: comment.sensitiveSelfMark,
     reason: comment.sensitiveReason ?? "",
   });
+}
+
+/** How far up a chain the landing walks before it settles for the deepest ancestor it found. */
+const LANDING_DEPTH = 16;
+
+/**
+ * A comment's chain from its top-level ancestor down to itself — what the
+ * thread must unfold for the comment to be on screen. One read per level; a
+ * chain deeper than the bound, or one the read cannot finish, answers with
+ * what it walked so far (the landing then stops at the deepest branch it can
+ * open).
+ */
+export async function fetchCommentChain(
+  client: ApolloClient,
+  id: string,
+): Promise<Outcome<readonly string[]>> {
+  const chain = [id];
+  let current = id;
+  for (let step = 0; step < LANDING_DEPTH; step += 1) {
+    const fetched = await fetchOutcome(() =>
+      client.query({
+        query: CommentParentDocument,
+        variables: { id: current },
+        fetchPolicy: "network-only",
+      }),
+    );
+    if (fetched.kind !== "success") return step === 0 ? fetched : success(chain);
+    const target = fetched.value.comment?.target;
+    if (target?.__typename !== "Comment") return success(chain);
+    current = target.id;
+    chain.unshift(current);
+  }
+  return success(chain);
 }
 
 function liftPrepared(payload: {

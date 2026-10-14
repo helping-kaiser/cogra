@@ -5,8 +5,11 @@ import { setupServer } from "msw/node";
 import type { RequestHandler } from "msw";
 import { afterAll, afterEach, beforeAll } from "vitest";
 
+import { NOBODY_HIDDEN } from "./hidden";
+
 export function startMswServer(...handlers: RequestHandler[]) {
-  const server = setupServer(...handlers);
+  // The hidden set's read goes last: a file's own handler for it wins.
+  const server = setupServer(...handlers, NOBODY_HIDDEN);
   beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());

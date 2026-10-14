@@ -31,6 +31,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import {
+  fetchCommentChain,
   fetchCommentReplies,
   fetchCommentSelfMark,
   fetchPostComments,
@@ -115,6 +116,10 @@ import { commentTarget, ReplyWizard } from "@/app/posts/[id]/reply/reply-wizard-
 import { CommentEditView } from "@/app/posts/[id]/edit/comment-edit-view";
 import { MultiActionConfirm } from "@/lib/ui/signed-actions";
 import { StanceControl } from "@/lib/ui/stance-control";
+import { JoinPrompt } from "@/lib/ui/join-prompt";
+import { RowLine } from "@/lib/ui/row-line";
+import { useSavedWrites } from "@/lib/saved/provider";
+import { saveRow, useHostSnack } from "@/lib/saved/save-row";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
@@ -141,6 +146,9 @@ type ReplyThread = {
  * 26 tracks that lag).
  */
 const MAX_INDENT_DEPTH = 1;
+
+/** How many pages a landing reads, of the thread or of one branch, before it settles. */
+const LANDING_PAGES = 10;
 
 /** A reader who has not scrolled the thread is at its top. */
 const TOP: ScrollPlace = { offset: 0, anchorId: null, anchorTop: 0 };
@@ -208,6 +216,7 @@ export function CommentsSheet({
   store = identityStore,
   onCount,
   refreshToken = 0,
+  landOn = null,
 }: {
   open: boolean;
   /**
@@ -235,6 +244,11 @@ export function CommentsSheet({
    * before the pull.
    */
   refreshToken?: number;
+  /**
+   * A comment to land on (Saved.md "tap a comment's row"): once the thread is
+   * read, it pages and unfolds until that comment stands, then scrolls to it.
+   */
+  landOn?: string | null;
 }) {
   const client = useApolloClient();
   const router = useRouter();
@@ -257,6 +271,10 @@ export function CommentsSheet({
   // the wizard's own machine, and nothing of a discarded comment survives here.
   const [replying, setReplying] = useState<ReplyTarget | null>(null);
   const [commentSigned, setCommentSigned] = useState(false);
+  const { snack: menuSnack, notify, dismiss: dismissMenuSnack } = useHostSnack();
+  const writes = useSavedWrites();
+  // A guest's Save is asked to join first (GuestGate.md:5).
+  const [joinOpen, setJoinOpen] = useState(false);
   // THE LICENSE IS NEVER A STATE OF THE CARD (`ReaderPostMenu.jsx:27-29`): one
   // sheet for the thread, raised by whichever comment's menu row asked for it.
   // The license it shows outlives the `open` flag so the block does not blank
@@ -496,6 +514,84 @@ export function CommentsSheet({
     const branch = restoring.unfolding;
     if (branch === null || replyThreads[branch]?.loading === false) setRestoring(null);
   }, [restoring, open, loading, comments, replyThreads, measurePlace]);
+
+  // ---- landing on a comment -----------------------------------------------
+
+  // THE THREAD OPENS LANDED ON THE COMMENT (jakob 2026-10-01; Saved.md). A
+  // reply sits behind its parent's collapsed count, and its top-level
+  // ancestor may be pages down the thread, so the landing walks the chain up,
+  // pages the thread until the top of it arrives, unfolds each branch on the
+  // way down, and only then scrolls. Each step is bounded: a chain it cannot
+  // finish lands on the deepest comment it could open.
+  const landedOn = useRef<string | null>(null);
+  const [landingAt, setLandingAt] = useState<string | null>(null);
+  useEffect(() => {
+    if (!open || landOn === null || landedOn.current === landOn || loading) return;
+    landedOn.current = landOn;
+    void (async () => {
+      const chain = await fetchCommentChain(client, landOn);
+      if (chain.kind !== "success") return;
+      const ids = chain.value;
+      const top = ids[0]!;
+      let items: readonly CommentView[] = [];
+      let cursor: string | null = null;
+      let more = true;
+      for (let page = 0; page < LANDING_PAGES && more && !items.some((c) => c.id === top); page += 1) {
+        const next = await fetchPostComments(client, post.id, cursor);
+        if (next.kind !== "success" || next.value === null) break;
+        items = appendDeduped(items, next.value.items);
+        cursor = next.value.endCursor;
+        more = next.value.hasNextPage;
+      }
+      if (items.length > 0) {
+        setComments(items);
+        setEndCursor(cursor);
+        setHasMore(more);
+      }
+      let deepest = items.some((c) => c.id === top) ? top : null;
+      for (let at = 0; deepest !== null && at < ids.length - 1; at += 1) {
+        const parent = ids[at]!;
+        const child = ids[at + 1]!;
+        let replies: readonly ThreadComment[] = [];
+        let replyCursor: string | null = null;
+        let replyMore = true;
+        for (let page = 0; page < LANDING_PAGES && replyMore && !replies.some((r) => r.id === child); page += 1) {
+          const next = await fetchCommentReplies(client, parent, replyCursor);
+          if (next.kind !== "success") {
+            replyMore = false;
+            break;
+          }
+          replies = appendDeduped(replies, next.value.items);
+          replyCursor = next.value.endCursor;
+          replyMore = next.value.hasNextPage;
+        }
+        const thread: ReplyThread = {
+          items: replies,
+          endCursor: replyCursor,
+          hasMore: replyMore,
+          loading: false,
+          failed: false,
+        };
+        setReplyThreads((current) => ({ ...current, [parent]: thread }));
+        deepest = replies.some((r) => r.id === child) ? child : null;
+        if (deepest === null) setLandingAt(parent);
+      }
+      if (deepest !== null) setLandingAt(deepest);
+    })();
+  }, [open, landOn, loading, client, post.id]);
+
+  // The comment stands once its branch has rendered: scroll it into the
+  // sheet's view and hand it focus, so the reader lands where they asked to.
+  useMeasureEffect(() => {
+    if (landingAt === null) return;
+    const scroller = bodyRef.current;
+    const target = scroller?.querySelector<HTMLElement>(`[${ANCHOR_ATTRIBUTE}="${landingAt}"]`);
+    if (!target) return;
+    target.scrollIntoView?.({ block: "center" });
+    target.setAttribute("tabindex", "-1");
+    target.focus({ preventScroll: true });
+    setLandingAt(null);
+  }, [landingAt, comments, replyThreads]);
 
   // ---- the edit's own pictures --------------------------------------------
 
@@ -847,7 +943,8 @@ export function CommentsSheet({
    * THE COMMENT'S ROWS (`_shared.jsx:392` — `[...CARD_MENU, OPINIONS_ROW,
    * LICENSE_ROW]`). Save · Cite in a new post · Opinions on this · License
    * terms, and no Hide: hiding names an actor, and its route is the
-   * commenter's profile (jakob 2026-09-12).
+   * commenter's profile (jakob 2026-09-12). Save is the one behaviour every
+   * menu shares (`saveRow`), its aftermath on this thread's own snackbar.
    *
    * `Opinions on this` STANDS WHATEVER THE COUNT IS, which is the difference
    * between a menu row and a count line: a row that came and went with a number
@@ -855,7 +952,14 @@ export function CommentsSheet({
    */
   const commentMenuItems = (comment: ThreadComment): MenuItem[] => {
     const rows: MenuItem[] = [
-      { label: "Save", onSelect: () => {}, testId: `comment-menu-save-${comment.id}` },
+      saveRow({
+        writes,
+        node: comment.id,
+        server: comment.viewerBookmarkedAt ?? null,
+        notify,
+        onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
+        testId: `comment-menu-save-${comment.id}`,
+      }),
       {
         label: "Cite in a new post",
         onSelect: () => router.push(`/compose?reference=${comment.id}`),
@@ -1086,6 +1190,17 @@ export function CommentsSheet({
             target={{ id: comment.id, kind: "comment", label: "this comment" }}
             testIdPrefix={`comment-stance-${comment.id}`}
           />
+          {/* THE ROW LINE under the face (RowSigning.md): a save or unsave of
+              this comment that did not go through. */}
+          {writes.failure(comment.id) !== null && (
+            <RowLine
+              state={{
+                kind: "didntGoThrough",
+                onRetry: () => writes.failure(comment.id)?.retry(),
+              }}
+              testId={`comment-${comment.id}-row-line`}
+            />
+          )}
           <div className="flex gap-2">
             {phase === "signedIn" && (
               <Button
@@ -1193,6 +1308,18 @@ export function CommentsSheet({
               testId="comment-signed"
               message={commentSigned ? "Signed — it's in the thread now, still settling." : null}
               onDismiss={dismissCommentSigned}
+            />
+            {/* THE COMMENT MENUS' AFTERMATH (CommentMenu.md, design digest item
+                54): `Saved.`, and `Removed from Saved.` with `Undo`. It reads
+                inside the thread, where the menu was opened; the page's own
+                `postDetail.snackbar` is beneath the sheet's scrim, so this one
+                carries no registered path until a stacked state is drawn. */}
+            <Snackbar
+              testId="comment-menu-snackbar"
+              message={menuSnack?.message ?? null}
+              action={menuSnack?.action}
+              token={menuSnack?.token}
+              onDismiss={dismissMenuSnack}
             />
             {/* ReplyEntry's entry row, pinned at the foot of the sheet: the
                 door that pins the POST as what the comment answers. The board
@@ -1434,6 +1561,7 @@ export function CommentsSheet({
           }}
         />
       )}
+      {joinOpen && <JoinPrompt open onClose={() => setJoinOpen(false)} />}
     </>
   );
 }

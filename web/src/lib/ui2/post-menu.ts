@@ -58,6 +58,16 @@ export type PostMenuContext = {
    * browser with no share door grows no dead row either).
    */
   shareRow: MenuItem | null;
+  /**
+   * The first row's words and act — `Save` or `Unsave` as the post is kept
+   * (`saveRow`, the one save behaviour every menu shares).
+   */
+  save: { label: string; onSelect: () => void };
+  /**
+   * The reader menu's hide act (`hideAct`, the one hide behaviour every menu
+   * shares); absent stands the row inert.
+   */
+  hide?: () => void;
   /** Row test ids derive from this — `post-menu` gives `post-menu-save`. */
   testIdPrefix: string;
   /**
@@ -82,8 +92,7 @@ export type PostMenuContext = {
  *
  * ROWS WHOSE DESTINATION IS NOT BUILT STAND ANYWAY and do nothing (jakob
  * 2026-09-14, the introduced-but-inert law): a menu that grew a row per slice
- * would be a different menu every release, and the row order is ruled. Save
- * waits on saved-surface's `setBookmark`, Hide on hidden-actors' `hideActor`.
+ * would be a different menu every release, and the row order is ruled.
  */
 export function postMenuItems({
   postId,
@@ -95,6 +104,8 @@ export function postMenuItems({
   openRemove,
   openReport,
   shareRow,
+  save,
+  hide,
   testIdPrefix,
   rowNode = () => undefined,
 }: PostMenuContext): MenuItem[] {
@@ -110,7 +121,7 @@ export function postMenuItems({
   // (design/readme.md). Only the reader's menu gains it — no board draws it
   // leaving the author's own.
   if (!own && shareRow !== null) rows.push(shareRow);
-  rows.push(row("save", "save", "Save", () => {}));
+  rows.push(row("save", "save", save.label, save.onSelect));
   // CITE STANDS SECOND ON BOTH MENUS (`_shared.jsx:414-420`, backlog item
   // 100): self-citation is a real authorial act, so the thumb finds the row
   // in one place on every menu that has it.
@@ -132,7 +143,7 @@ export function postMenuItems({
   } else {
     // The handle is the thing a reader recognises, and the word they will
     // look for again under Hidden accounts (`ActorChip.jsx:67`).
-    rows.push(row("hide", "hide", handle === null ? "Hide this account" : `Hide @${handle}`, () => {}));
+    rows.push(row("hide", "hide", handle === null ? "Hide this account" : `Hide @${handle}`, hide ?? (() => {})));
   }
   if (license !== null) {
     rows.push(row("license", "license", "License terms", () => openLicense(license)));

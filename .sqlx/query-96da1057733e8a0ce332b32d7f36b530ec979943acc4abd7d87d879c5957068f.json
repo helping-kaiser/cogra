@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH RECURSIVE up(origin, target_id, target_type) AS (\n               SELECT c.id, c.target_id, c.target_type\n               FROM comments c WHERE c.id = ANY($1)\n               UNION ALL\n               SELECT up.origin, c.target_id, c.target_type\n               FROM up JOIN comments c\n                 ON up.target_type = 'comment' AND c.id = up.target_id\n           )\n           SELECT origin AS \"comment!\", target_id AS \"post!\"\n           FROM up WHERE target_type = 'post'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "comment!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "post!",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "96da1057733e8a0ce332b32d7f36b530ec979943acc4abd7d87d879c5957068f"
+}

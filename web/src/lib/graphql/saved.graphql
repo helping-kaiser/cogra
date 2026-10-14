@@ -1,0 +1,128 @@
+# The Saved list (api-spec.md `User.bookmarks`, `setBookmark`,
+# `removeBookmark`; saved-surface packet). One mixed list of posts,
+# comments and people, newest first by save time, a page of twenty at a
+# time — the page size is written as a literal so the client-operation
+# guard prices the call the device actually makes.
+#
+# A row draws from its node alone (ContentRow's chronicle variant): a
+# title, an aside handle, one second line and the save age. A post
+# carries its mime types so an untitled media post names its stand-in
+# (`Pictures by @ada` / `A video by @ada`); a comment carries its
+# thread's post (`Comment.post`), which its `on <title>` names and
+# opens. Statuses ride along so a removed, redacted, sensitive or
+# deleted thing reads through its own mark rather than vanishing.
+query SavedPage($after: String) {
+  me {
+    id
+    bookmarks(first: 20, after: $after) {
+      edges {
+        cursor
+        bookmarkedAt
+        node {
+          __typename
+          ... on Post {
+            id
+            title {
+              value
+              status
+            }
+            description {
+              value
+              status
+            }
+            content {
+              value
+              status
+            }
+            attachments {
+              mimeType
+            }
+            moderationStatus
+            sensitiveReason
+            author {
+              id
+              handle
+            }
+          }
+          ... on Comment {
+            id
+            content {
+              value
+              status
+            }
+            attachments {
+              mimeType
+            }
+            moderationStatus
+            sensitiveReason
+            author {
+              id
+              handle
+            }
+            post {
+              id
+              title {
+                value
+                status
+              }
+              content {
+                value
+                status
+              }
+              attachments {
+                mimeType
+              }
+              author {
+                id
+                handle
+              }
+            }
+          }
+          ... on User {
+            id
+            handle
+            displayName {
+              value
+              status
+            }
+            bio {
+              value
+              status
+            }
+            avatar {
+              url
+              status
+            }
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# Save, or restore a removed row's place: Undo passes the edge's own
+# `bookmarkedAt` back.
+mutation SetBookmark($node: UUID!, $bookmarkedAt: DateTime) {
+  setBookmark(input: { node: $node, bookmarkedAt: $bookmarkedAt }) {
+    bookmark {
+      cursor
+      bookmarkedAt
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation RemoveBookmark($node: UUID!) {
+  removeBookmark(input: { node: $node }) {
+    ok
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}

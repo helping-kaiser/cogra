@@ -1199,10 +1199,13 @@ The seen-list is append-only and never compacts
 -- for where the filter computes).
 CREATE TABLE user_hidden_actors (
     viewer_id   UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
-    hidden_id   UUID        NOT NULL REFERENCES actors(id),
+    hidden_id   UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
     hidden_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (viewer_id, hidden_id)
 );
+-- Most recently hidden first, keyset on (hidden_at, hidden_id).
+CREATE INDEX user_hidden_actors_recency_idx
+    ON user_hidden_actors (viewer_id, hidden_at DESC, hidden_id DESC);
 
 -- Chat read state: per-user, per-chat 'last read' pointer.
 -- ChatMessages are timestamp-ordered, so a single TIMESTAMPTZ marks
@@ -1220,16 +1223,20 @@ CREATE TABLE chat_read_state (
 -- User bookmarks: per-viewer "save this for later" list. Private
 -- state, never visible to other actors and never an input to the
 -- ranking math (see graph-model.md §3 — bookmarking is a frontend
--- event, not a stance). content_id can be any node UUID; no
--- discriminator is stored.
+-- event, not a stance). `kind` is read from the L2 registries at
+-- write time — posts, comments and people are saveable — and Saved's
+-- keyset on (bookmarked_at, content_id) routes through the index. An
+-- unsave deletes the row.
 CREATE TABLE user_bookmarks (
     user_id       UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
     content_id    UUID        NOT NULL,
     bookmarked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    kind          TEXT        NOT NULL
+                              CHECK (kind IN ('post', 'comment', 'user')),
     PRIMARY KEY (user_id, content_id)
 );
 CREATE INDEX user_bookmarks_recency_idx
-    ON user_bookmarks (user_id, bookmarked_at DESC);
+    ON user_bookmarks (user_id, bookmarked_at DESC, content_id DESC);
 
 -- Notification rows: per-viewer pointers at acts other actors made
 -- that reached the viewer's content, profile or application
@@ -1855,7 +1862,8 @@ Every user-scoped table (`auth_refresh_tokens`,
 `user_hidden_actors`, `chat_read_state`, `user_bookmarks`,
 `user_notifications`, `user_notification_state`,
 `user_preferences`) carries
-`user_id REFERENCES actors(id) ON DELETE CASCADE`. That these
+`user_id REFERENCES actors(id) ON DELETE CASCADE` (`user_hidden_actors`
+names it `viewer_id`). That these
 rows exist only for user-kind actors is a service-layer fact
 (only a login mints them), not a constraint. Account deletion
 does **not** remove the `actors` row or its credentials — PII
@@ -1875,8 +1883,12 @@ operator running an explicit `DELETE` (e.g. emergency cleanup) a
 single command that takes the user's private state with them.
 
 Every other actor-reference column (`author_id` everywhere,
-`auth_invite_links.inviter_id`, `user_hidden_actors.hidden_id`)
-is likewise a real FK to `actors(id)` — see the next note.
+`auth_invite_links.inviter_id`) is likewise a real FK to
+`actors(id)` — see the next note. `user_hidden_actors.hidden_id`
+cascades: a reaped or applicant-deleted account no longer exists to
+hide, and a hide of it must not wedge the delete; a member's erasure
+keeps its `actors` row, so other readers' hides of a deleted account
+stand.
 `user_notifications.actor_id` cascades too: an applicant row is the
 actor of its approver's APPLICATION_APPROVABLE row, and a
 non-cascading FK would wedge the two whole-account deletes above. A

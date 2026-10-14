@@ -1043,10 +1043,21 @@ placeholder instead of a silent gap.
 type User implements Node & Actor {
   "Free-text profile bio."
   bio: ModeratedText!
+  "When the viewer saved this person; null when not kept, or with no
+   session. What the profile menus' Save / Unsave row reads."
+  viewerBookmarkedAt: DateTime
 
   # Private viewer state — each field resolves only when the authenticated
   # viewer is this User; null otherwise (see "Private viewer state" below).
-  "Saved-for-later nodes, most recent first."
+  "Saved-for-later nodes: the posts, comments and people the viewer
+   kept, one mixed list, newest first by `bookmarkedAt`. Paging is
+   keyset on `(bookmarkedAt, node id)`, so a save made elsewhere while
+   the list is open joins at the next read and never shifts a page.
+   Kept things stay in the list whatever becomes of them — removed,
+   redacted, a deleted account, or an actor the viewer hid — and read
+   through their own status; hiding never narrows it. A kept node that
+   no longer resolves — a pending write that never landed — is
+   skipped. Field-level: viewer-only."
   bookmarks(first: Int, after: String, last: Int, before: String): BookmarkConnection
   "The seen-list (feed-ranking.md §9.4): every node the viewer has
    seen, once each, newest first by first seeing — the list the
@@ -1066,8 +1077,10 @@ type User implements Node & Actor {
     first: Int, after: String, last: Int, before: String
   ): ViewHistoryConnection
   "Actors this user has hidden from their own feed — a read-side
-   comfort that does not lift the viewer's own records' effect on
-   anyone else's feed (feed-ranking.md §8)."
+   comfort applied post-rank on the viewer's side (feed-ranking.md
+   §8.2, §9.1); it does not lift the viewer's own records' effect on
+   anyone else's feed. Most recently hidden first; keyset on
+   `(hiddenAt, actor id)`. Field-level: viewer-only."
   hiddenActors(first: Int, after: String, last: Int, before: String): HiddenActorConnection
   "Acts other actors made that reached this user's content, profile or
    application — newest first, one row per act (notifications.md). A
@@ -1236,6 +1249,9 @@ type Post implements Node {
    viewer through the citer, at the forward-path weight that gates
    them (slice 3)."
   references(includePending: Boolean! = true): [ReferenceClaim!]!
+  "When the viewer saved this; null when it is not kept, or with no
+   session. What the menus' Save / Unsave row reads."
+  viewerBookmarkedAt: DateTime
 }
 
 "A threaded response — minted by a Review record targeting whatever
@@ -1253,6 +1269,11 @@ type Comment implements Node {
   author: Actor!
   "The node this comment is on — the Review's parent."
   target: CommentTarget!
+  "The post this comment's thread hangs under — the target itself
+   for a top-level comment, the thread's post for a reply at any
+   depth (replies are uncapped, so a client never walks `target` to
+   find it). What a comment row's `on <title>` names and opens."
+  post: Post
   "The gallery, in the author's order; a comment gallery has no cover."
   attachments: [MediaAttachment!]!
   "Moderation status for the attachment gallery as a whole."
@@ -1274,6 +1295,9 @@ type Comment implements Node {
    author-owned channel as `Post.references`; a Comment is a citing
    artifact like any other passive node."
   references(includePending: Boolean! = true): [ReferenceClaim!]!
+  "When the viewer saved this; null when it is not kept, or with no
+   session. What the menus' Save / Unsave row reads."
+  viewerBookmarkedAt: DateTime
 }
 
 "Reply order within one branch (design: replies read oldest first,
@@ -1731,6 +1755,10 @@ type ApplicationEdge {
   node: Application!
 }
 
+"The Saved list page. Paging is keyset on `(bookmarkedAt, node id)`:
+ a save made while the reader scrolls sorts above the open page, so
+ forward paging never shifts, and it joins at the next open or pull;
+ an unsave never skips the row after it."
 type BookmarkConnection {
   edges: [BookmarkEdge!]!
   pageInfo: PageInfo!
@@ -1739,6 +1767,8 @@ type BookmarkConnection {
 type BookmarkEdge {
   cursor: String!
   node: Node!
+  "When the viewer saved this — the list's order, and the time an
+   Undo passes back to restore the row's place."
   bookmarkedAt: DateTime!
 }
 
@@ -2980,10 +3010,11 @@ These bind every mutation below.
   `EMAIL_NOT_VERIFIED` while the address is unproven, `FORBIDDEN`
   otherwise — so a client that reaches the refusal anyway can name
   the one thing the person can do about it. The private-viewer-state
-  verbs are not acting: `markSeen`, `markNotificationsSeen` and
-  `markNotificationRead` need a session and no particular account
-  state, so an applicant's read state — an unverified one's included
-  — moves like a member's.
+  verbs are not acting: `markSeen`, `markNotificationsSeen`,
+  `markNotificationRead`, `setBookmark`, `removeBookmark`, `hideActor`
+  and `unhideActor` need a session and no particular account state. They write the viewer's own
+  L2 rows and act on nothing, so an applicant's private state — an
+  unverified one's included — moves like a member's.
 - **Errors follow the tiered model** (governing principles). A
   `userErrors: [UserError!]!` field is **implied on every payload type
   below and omitted from its body**, exactly as the interface fields
@@ -5418,15 +5449,32 @@ field-level authorization on the read surface. None of it touches
 the graph.
 
 ```graphql
-input SetBookmarkInput { node: UUID! }
-type SetBookmarkPayload { bookmark: BookmarkEdge! }
+input SetBookmarkInput {
+  node: UUID!
+  "When the save took place; null means now. Undo passes the removed
+   row's own `bookmarkedAt`, so the row returns to its place
+   (SavedUndo). Never later than now: BAD_INPUT at [\"bookmarkedAt\"]
+   (a few seconds of client clock skew are allowed)."
+  bookmarkedAt: DateTime
+}
+"`bookmark` is null exactly when a userError refused the save, which
+ then wrote nothing."
+type SetBookmarkPayload { bookmark: BookmarkEdge }
 input RemoveBookmarkInput { node: UUID! }
-type RemoveBookmarkPayload { ok: Boolean! }
+type RemoveBookmarkPayload { ok: Boolean }
 
-input HideActorInput { actor: UUID! }
-type HideActorPayload { hidden: HiddenActorEdge! }
+input HideActorInput {
+  actor: UUID!
+  "Restores an earlier hiding's moment — the Undo of an unhide puts
+   the row back where it stood. Null means now; a moment after now is
+   BAD_INPUT (a few seconds of client clock skew are allowed)."
+  hiddenAt: DateTime
+}
+"Every refusal is transport-tier, so `userErrors` stays empty and
+ `hidden` is set on success."
+type HideActorPayload { hidden: HiddenActorEdge }
 input UnhideActorInput { actor: UUID! }
-type UnhideActorPayload { ok: Boolean! }
+type UnhideActorPayload { ok: Boolean }
 
 input MarkSeenInput {
   "The nodes the viewer has seen, in the order they were seen."
@@ -5480,9 +5528,29 @@ type SetPreferencesPayload {
 }
 
 extend type Mutation {
+  "Keep a post, comment or person in the viewer's Saved list. Any
+   other kind of node is BAD_INPUT at [\"node\"]; an id that names
+   nothing is NOT_FOUND. Saving a kept node changes nothing and
+   returns its edge as it stands (idempotent). Needs a session
+   (UNAUTHENTICATED otherwise) and no particular account state — an
+   applicant keeps things like a member; this is private viewer state,
+   not acting. L2 only: no record, no staged write."
   setBookmark(input: SetBookmarkInput!): SetBookmarkPayload!
+  "Drop a node from the viewer's Saved list — a genuine delete.
+   Dropping a node that is not kept is ok (idempotent). Needs a
+   session; no account state."
   removeBookmark(input: RemoveBookmarkInput!): RemoveBookmarkPayload!
+  "Hide an actor from the viewer's own feed. Idempotent: an actor
+   already hidden keeps its edge and its moment. Any actor may be
+   hidden, a deleted account included; the viewer's own id is
+   BAD_INPUT, an id naming no actor NOT_FOUND — both at the transport,
+   client bugs no surface renders. Needs a session and no particular
+   account state — an applicant hides like a member; this is private
+   viewer state, not acting. Nothing reaches the graph or the hidden
+   actor."
   hideActor(input: HideActorInput!): HideActorPayload!
+  "Unhide an actor — a genuine delete. Idempotent: an actor not
+   hidden answers ok. Needs a session; no account state."
   unhideActor(input: UnhideActorInput!): UnhideActorPayload!
   "Record that the viewer has seen nodes — first seeing only: a node
    already on the list is left as it is (re-seeing never counts, never
@@ -5514,7 +5582,8 @@ extend type Mutation {
 }
 ```
 
-Bookmarks and hidden-actors have explicit `remove*` verbs because
+Bookmarks and hidden-actors have explicit removal verbs
+(`removeBookmark`, `unhideActor`) because
 the "no destructive operation" rule is a *graph* invariant —
 private operational state carries no append-only history and no
 public visibility, so a remove is a genuine delete of a row, not a

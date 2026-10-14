@@ -227,3 +227,21 @@ query CommentSelfMark($id: UUID!) {
     sensitiveReason
   }
 }
+
+# LANDING ON A COMMENT (Saved.md; jakob 2026-10-01): one step up a comment's
+# chain — what it answers. A reply sits behind its parent's collapsed count, so
+# the thread walks up to the top level and unfolds each branch on the way down.
+query CommentParent($id: UUID!) {
+  comment(id: $id) {
+    id
+    target {
+      __typename
+      ... on Comment {
+        id
+      }
+      ... on Post {
+        id
+      }
+    }
+  }
+}

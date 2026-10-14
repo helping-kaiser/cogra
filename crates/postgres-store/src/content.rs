@@ -1598,6 +1598,32 @@ pub async fn content_refs(pool: &PgPool, ids: &[Uuid]) -> Result<Vec<ContentRef>
     .await?)
 }
 
+/// The post each comment's thread hangs under, for every comment among
+/// `ids` whose chain of targets ends at a post, in one round trip.
+///
+/// A reply targets a comment, and reply depth is uncapped
+/// (comment.md), so the walk climbs the target chain to its post rather
+/// than a fixed number of levels. Answers `(comment, post)` pairs; a
+/// comment whose chain ends anywhere else is absent.
+pub async fn thread_posts(pool: &PgPool, ids: &[Uuid]) -> Result<Vec<(Uuid, Uuid)>, ContentError> {
+    let rows = sqlx::query!(
+        r#"WITH RECURSIVE up(origin, target_id, target_type) AS (
+               SELECT c.id, c.target_id, c.target_type
+               FROM comments c WHERE c.id = ANY($1)
+               UNION ALL
+               SELECT up.origin, c.target_id, c.target_type
+               FROM up JOIN comments c
+                 ON up.target_type = 'comment' AND c.id = up.target_id
+           )
+           SELECT origin AS "comment!", target_id AS "post!"
+           FROM up WHERE target_type = 'post'"#,
+        ids,
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows.into_iter().map(|r| (r.comment, r.post)).collect())
+}
+
 /// Which content kind a UUID names — the `node(id)` dispatch. The
 /// entity tables are the registry, pending rows included; a UUID in
 /// neither is not a content node (actors resolve through their own

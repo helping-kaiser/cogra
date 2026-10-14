@@ -18,10 +18,13 @@ import com.cogra.domain.feed.FeedViewer
 import com.cogra.domain.feed.FilterChange
 import com.cogra.domain.feed.changeTo
 import com.cogra.domain.feed.derive
+import com.cogra.domain.hidden.HiddenSet
+import com.cogra.domain.hidden.HiddenStatus
 import com.cogra.domain.history.SeenRecord
 import com.cogra.domain.history.SeenTracker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -99,7 +102,11 @@ class FeedViewModel @Inject constructor(
     private val seen: SeenPosts,
     @WebOrigin private val webOrigin: String,
     private val seenTracker: SeenTracker,
+    private val hidden: HiddenSet,
 ) : ViewModel() {
+
+    /** Whether the reader's hidden set takes [post] out of the feed (hidden-actors §4.3). */
+    private fun visible(post: PostView): Boolean = !hidden.view.value.hides(post.author?.id, post.id)
 
     private val _state = MutableStateFlow(FeedUiState())
     val state = _state.asStateFlow()
@@ -167,8 +174,15 @@ class FeedViewModel @Inject constructor(
         composing?.cancel()
         composing = viewModelScope.launch {
             val filter = _state.value.filter
-            when (val ranked = feed.rank(viewer, filter)) {
-                is Outcome.Success -> {
+            // THE FEED NEVER DRAWS A PAGE BEFORE THE HIDDEN SET HAS BEEN READ
+            // (hidden-actors §5.1): both reads go together, every open and
+            // every pull, and a set that could not be read at all is the
+            // feed's own fault — never an unfiltered page.
+            val setRead = async { hidden.refetch() }
+            val ranked = feed.rank(viewer, filter)
+            val setKnown = setRead.await() || hidden.view.value.status == HiddenStatus.READ
+            when {
+                ranked is Outcome.Success && setKnown -> {
                     hydrated.clear()
                     install(ranked.value)
                 }
@@ -212,7 +226,7 @@ class FeedViewModel @Inject constructor(
     private suspend fun install(ranking: FeedRanking) {
         val filter = _state.value.filter
         val rows = ranking.derive(filter, seenRecord.seenIds())
-        when (val first = feed.hydrate(rows, from = 0, hydrated)) {
+        when (val first = feed.hydrate(rows, from = 0, hydrated, ::visible)) {
             is Outcome.Success -> {
                 val (posts, next) = first.value
                 cursor = next
@@ -242,7 +256,7 @@ class FeedViewModel @Inject constructor(
         val rows = s.rows
         val from = cursor
         viewModelScope.launch {
-            val outcome = feed.hydrate(rows, from, hydrated)
+            val outcome = feed.hydrate(rows, from, hydrated, ::visible)
             // A derive that replaced the list meanwhile owns the cards now.
             if (_state.value.rows !== rows) {
                 _state.update { it.copy(loadingMore = false) }
@@ -292,20 +306,23 @@ private suspend fun FeedRepository.rank(viewer: FeedViewer, filter: FeedFilter):
 
 /**
  * Hydrates [rows] from [from] a window at a time, until a window yields a
- * card or the list ends (the fill rule, §5.1): a window of expired or
- * not-yet-rendered rows loads the next rather than leaving the reader at a
- * dead end. Rows already in [hydrated] — read since the last fetch — are
- * not read again; what is read joins it. Returns the cards, in the list's
- * order, and where the next window starts.
+ * [visible] card or the list ends (the fill rule, §5.1; hidden-actors §4.4
+ * "over-fetch to fill"): a window of expired, not-yet-rendered or hidden
+ * people's rows loads the next rather than leaving the reader at a dead end.
+ * The hidden rows still ride along — the screen leaves them out, and Undo
+ * puts them back where they stood. Rows already in [hydrated] — read since
+ * the last fetch — are not read again; what is read joins it. Returns the
+ * cards, in the list's order, and where the next window starts.
  */
 private suspend fun FeedRepository.hydrate(
     rows: List<FeedRow>,
     from: Int,
     hydrated: MutableMap<String, PostView>,
+    visible: (PostView) -> Boolean,
 ): Outcome<Pair<List<PostView>, Int>> {
     var at = from
     val cards = mutableListOf<PostView>()
-    while (at < rows.size && cards.isEmpty()) {
+    while (at < rows.size && cards.none(visible)) {
         val ids = rows.subList(at, minOf(at + FEED_PAGE_SIZE, rows.size)).map { it.targetId }
         val unread = ids.filterNot { it in hydrated }
         if (unread.isNotEmpty()) {

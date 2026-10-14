@@ -57,6 +57,9 @@
     <string name="settings_people">People</string>
     <string name="settings_people_hidden">Hidden accounts</string>
     <string name="settings_people_hidden_none">None</string>
+    <!-- SettingsHidden (hidden-actors packet §6): a row's age and its one control. -->
+    <string name="settings_hidden_age">Hidden %1$s</string>
+    <string name="settings_hidden_unhide">Unhide</string>
     <string name="settings_people_footnote">Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking.</string>
 
     <string name="settings_sensitive">Sensitive content</string>
@@ -106,7 +109,7 @@
 
     <string name="settings_leaving">Sign out</string>
     <string name="settings_leaving_forget">Don\'t remember this account on this device</string>
-    <string name="settings_leaving_forget_status">Your key, your draft and any kept picks are cleared from this app when you sign out.</string>
+    <string name="settings_leaving_forget_status">Your key, your draft, any kept picks and what you\'ve seen are cleared from this app when you sign out.</string>
     <string name="settings_leaving_leave">Sign out</string>
     <string name="settings_leaving_signing_out">Signing out…</string>
 

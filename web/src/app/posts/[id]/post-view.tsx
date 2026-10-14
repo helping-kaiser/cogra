@@ -42,6 +42,7 @@ import { CitedBySheet } from "@/lib/ui2/cited-by-sheet";
 import { OverflowTrigger } from "@/lib/ui2/overflow-menu";
 import { PostMenuHost } from "@/lib/ui2/post-menu-host";
 import { CommentsSheet } from "@/app/comments/comments-sheet";
+import { useHostSnack } from "@/lib/saved/save-row";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
@@ -51,11 +52,23 @@ import { NewerVersionLine } from "./newer-version-line";
 export function PostView({
   postId,
   store = identityStore,
+  from = null,
+  landOn = null,
 }: {
   postId: string;
   /** Test injection. */
   store?: IdentityStore;
+  /** The surface the reader came from, which the back arrow names (`saved`). */
+  from?: string | null;
+  /**
+   * A comment to land on: the thread opens over the post, scrolled to it
+   * (jakob 2026-10-01; Saved.md "tap a comment's row").
+   */
+  landOn?: string | null;
 }) {
+  // THE BACK ARROW NAMES WHERE THE READER CAME FROM (the origin-naming table):
+  // a Saved row's destination reads `Back to Saved`.
+  const back = from === "saved" ? { href: "/saved", label: "Back to Saved" } : { href: "/feed", label: "Back to feed" };
   const client = useApolloClient();
   const host = useScrollHost();
 
@@ -91,10 +104,12 @@ export function PostView({
   // THE THREAD IS A SHEET (`_shared.jsx:1247-1257`), raised by the affordance
   // row's comment count and dropped like any other drawer. The post keeps its
   // place underneath: nothing about the page scrolls when the sheet opens.
-  const [commentsOpen, setCommentsOpen] = useState(false);
+  // A Saved comment row opens the post with its thread already up.
+  const [commentsOpen, setCommentsOpen] = useState(landOn !== null);
   // THE PAGE'S ONE SNACKBAR (`postDetail.snackbar`): a copied link, and the
-  // aftermath of what the post's menu did.
-  const [snack, setSnack] = useState<string | null>(null);
+  // aftermath of what the post's menu did — `Removed from Saved.` with its
+  // `Undo` on `postDetail.snackbar.action` among them.
+  const { snack, notify, dismiss: dismissSnack } = useHostSnack();
   // THE POST'S MENU, hosted by the page (`PostMenuHost`): the same sheet the
   // feed hosts, raised here by the header's ⋮. What its rows raise — the
   // license terms, the report's confirm — rises over this page.
@@ -114,7 +129,6 @@ export function PostView({
   const [citedByLoadingMore, setCitedByLoadingMore] = useState(false);
   // The post's own inbound count, for the line that draws only above zero.
   const [citedByCount, setCitedByCount] = useState(0);
-  const dismissSnack = useCallback(() => setSnack(null), []);
 
   // `asked`: the reader's own pull — the one read that brings the newest in
   // over the opened version rather than holding it behind the line.
@@ -227,11 +241,11 @@ export function PostView({
     <div className="sticky top-0 z-10 -mx-6 bg-surface px-6" data-testid="post-header-bar">
       <PageHeader
         inGutter
-        backHref="/feed"
+        backHref={back.href}
         // The feed restores the place the reader left it in; scrolling it to
         // the top would land on top of that restore.
         backScroll={false}
-        backLabel="Back to feed"
+        backLabel={back.label}
         backTestId="post-back"
         node={{ path: "postDetail.header" }}
         action={
@@ -411,7 +425,7 @@ export function PostView({
           // edge advances to `ReplyEntry`), here as on every other board that
           // carries it.
           onOpenComments={() => setCommentsOpen(true)}
-          onLinkCopied={() => setSnack(LINK_COPIED)}
+          onLinkCopied={() => notify(LINK_COPIED)}
           citedBy={citedByCount}
           onOpenCitedBy={openCitedBy}
         />
@@ -426,6 +440,7 @@ export function PostView({
         store={store}
         onCount={setLiveComments}
         refreshToken={threadToken}
+        landOn={landOn}
       />
       {/* THE POST'S MENU AND WHAT ITS ROWS RAISE, over this page
           (ReaderPostMenu, ReportConfirm). A removed post has no menu left, so
@@ -440,7 +455,7 @@ export function PostView({
           reportSheet: { path: "postDetail.reportSheet" },
         }}
         testId="post-menu"
-        notify={setSnack}
+        notify={notify}
       />
       {/* The post's own count line. A comment's ⋮ raises the thread's own
           copy, stacked over the sheet, which is the sheet's to mount. */}
@@ -461,7 +476,9 @@ export function PostView({
       <Snackbar
         testId="post-snackbar"
         node={{ path: "postDetail.snackbar" }}
-        message={snack}
+        message={snack?.message ?? null}
+        action={snack?.action}
+        token={snack?.token}
         onDismiss={dismissSnack}
       />
       {/* THE VIEWER, over everything and answering to nothing behind it. Last
