@@ -2767,8 +2767,8 @@ you saved` — the list it searches, in the reader's own act, since
 *your saved* is not a phrase — and it matches by Explore's one rule. It
 has no kinds trigger. A query nothing saved carries reads `Nothing
 you've saved carries that name.` before the same blessed second
-sentence, over `Show everything`, which clears the query (*new
-2026-10-14, drafts awaiting jakob's word*: `Search what you saved`,
+sentence, over `Show everything`, which clears the query (*blessed
+jakob 2026-10-14*: `Search what you saved`,
 `Nothing you've saved carries that name.`).
 
 **Two empty states, and each says why the list is empty.**
