@@ -50,6 +50,9 @@ class NotificationBellTest {
     @Test
     fun `a failed mark is retried silently`() = runTest {
         val through = Instant.parse("2026-10-14T10:00:00Z")
+        // Down for the seen mark and for the read mark's own flush, which
+        // retries the seen mark it still owes.
+        repository.seenAnswers += Outcome.Failed(IOException("down"))
         repository.seenAnswers += Outcome.Failed(IOException("down"))
         repository.readAnswers += Outcome.Failed(IOException("down"))
         bell.markSeen(through)
