@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -40,7 +41,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -74,9 +74,6 @@ internal fun ProfileFeedCard(
     stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
 ) {
     val card = node.keyed(profile.id)
-    val deleted = profile.deleted
-    val name = profile.displayName.value?.trim()?.takeIf { it.isNotEmpty() && !deleted } ?: profile.handle
-    val bio = profile.bio.takeIf { it.status != FieldStatus.REDACTED && !deleted }?.value?.trim()?.takeIf { it.isNotEmpty() }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -90,52 +87,10 @@ internal fun ProfileFeedCard(
             verticalArrangement = Arrangement.spacedBy(Space.x3),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Row(
-                    modifier = Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(Space.x4),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (deleted) {
-                        // The reserved disc: its space kept, filled with nothing.
-                        Box(
-                            Modifier
-                                .size(PROFILE_CARD_AVATAR)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                                .dataNode(card / "avatar"),
-                        )
-                    } else {
-                        CograAvatar(
-                            name = name,
-                            size = PROFILE_CARD_AVATAR,
-                            url = profile.avatar?.url,
-                            modifier = Modifier.dataNode(card / "avatar"),
-                        )
-                    }
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(
-                            text = if (deleted) stringResource(R.string.content_deleted_account) else name,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = if (deleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.dataNode(card / "name"),
-                        )
-                        if (!deleted) {
-                            Text(
-                                text = "@${profile.handle}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.dataNode(card / "handle"),
-                            )
-                        }
-                    }
-                }
+                ProfileLead(profile, card)
                 CograOverflowMenu(
                     items = profileCardMenu(profile, viewerId, testTagPrefix),
-                    contentDescription = if (deleted) {
+                    contentDescription = if (profile.deleted) {
                         stringResource(R.string.content_profile_menu_deleted)
                     } else {
                         stringResource(R.string.content_profile_menu_other, "@${profile.handle}")
@@ -143,7 +98,7 @@ internal fun ProfileFeedCard(
                     testTag = (card / "menu").tag,
                 )
             }
-            bio?.let {
+            bioOf(profile)?.let {
                 Text(
                     text = it,
                     style = MaterialTheme.typography.bodyMedium,
@@ -153,27 +108,95 @@ internal fun ProfileFeedCard(
                     modifier = Modifier.dataNode(card / "bio"),
                 )
             }
-            Row(
-                modifier = Modifier.fillMaxWidth().dataNode(card / "actionRow"),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                stanceControl(profile.id, testTagPrefix, card / "actionRow" / "stance")
-                GlyphAffordance(
-                    icon = Icons.Filled.Share,
-                    description = if (deleted) {
-                        stringResource(R.string.content_share_account)
-                    } else {
-                        stringResource(R.string.content_share_person, "@${profile.handle}")
-                    },
-                    testTag = (card / "actionRow" / "share").tag,
-                    onClick = onShare,
-                )
-            }
+            ProfileRow(profile, card, testTagPrefix, onShare, stanceControl)
             // THE ROW LINE under the face (RowSigning.md): a save or unsave of
             // this person that did not go through.
             LocalSavedHost.current?.comfortLine(profile.id)?.let { RowLine(it, "${testTagPrefix}_row_line") }
         }
+    }
+}
+
+/** The bio as the card shows it: none for a deleted account, a redacted one, or an empty one. */
+private fun bioOf(profile: ProfileView): String? {
+    if (profile.deleted || profile.bio.status == FieldStatus.REDACTED) return null
+    return profile.bio.value?.trim()?.takeIf { it.isNotEmpty() }
+}
+
+/** The picture beside the name in a title's weight, the handle under it. */
+@Composable
+private fun RowScope.ProfileLead(profile: ProfileView, card: DataNode) {
+    val deleted = profile.deleted
+    val name = profile.displayName.value?.trim()?.takeIf { it.isNotEmpty() && !deleted } ?: profile.handle
+    Row(
+        modifier = Modifier.weight(1f),
+        horizontalArrangement = Arrangement.spacedBy(Space.x4),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (deleted) {
+            // The reserved disc: its space kept, filled with nothing.
+            Box(
+                Modifier
+                    .size(PROFILE_CARD_AVATAR)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .dataNode(card / "avatar"),
+            )
+        } else {
+            CograAvatar(
+                name = name,
+                size = PROFILE_CARD_AVATAR,
+                url = profile.avatar?.url,
+                modifier = Modifier.dataNode(card / "avatar"),
+            )
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = if (deleted) stringResource(R.string.content_deleted_account) else name,
+                style = MaterialTheme.typography.titleMedium,
+                color = quietIf(deleted),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.dataNode(card / "name"),
+            )
+            if (!deleted) {
+                Text(
+                    text = "@${profile.handle}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.dataNode(card / "handle"),
+                )
+            }
+        }
+    }
+}
+
+/** Opinion · (score, waiting) · share — the act's slot waits for chats. */
+@Composable
+private fun ProfileRow(
+    profile: ProfileView,
+    card: DataNode,
+    testTagPrefix: String,
+    onShare: () -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().dataNode(card / "actionRow"),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        stanceControl(profile.id, testTagPrefix, card / "actionRow" / "stance")
+        GlyphAffordance(
+            icon = Icons.Filled.Share,
+            description = if (profile.deleted) {
+                stringResource(R.string.content_share_account)
+            } else {
+                stringResource(R.string.content_share_person, "@${profile.handle}")
+            },
+            testTag = (card / "actionRow" / "share").tag,
+            onClick = onShare,
+        )
     }
 }
 

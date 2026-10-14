@@ -34,7 +34,8 @@ class SavedRowsTest {
 
     @Test
     fun a_titled_post_reads_its_title() {
-        assertThat(postTitle(text("The long way home"), text("words"), emptyList(), "ada")).isEqualTo("The long way home")
+        val title = postTitle(text("The long way home"), text("words"), emptyList(), "ada")
+        assertThat(title).isEqualTo("The long way home")
     }
 
     @Test
@@ -60,7 +61,8 @@ class SavedRowsTest {
 
     @Test
     fun a_head_row_names_an_untitled_post_by_its_first_words() {
-        assertThat(headRowOf(post(title = null, content = "Low tide at six\nanyone?")).title).isEqualTo("Low tide at six")
+        val row = headRowOf(post(title = null, content = "Low tide at six\nanyone?"))
+        assertThat(row.title).isEqualTo("Low tide at six")
     }
 
     @Test

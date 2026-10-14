@@ -966,25 +966,39 @@ internal fun PostCard(
                 node = card / "tagsLine",
                 testTagPrefix = tag,
             )
-            // Stance, comment, share — the master's row, minus the two
-            // it gates (see `PostAffordanceRow`). THE COUNT RAISES THE
-            // THREAD (graph.json: every `comment count` edge advances to
-            // `ReplyEntry`), which is the master's own destination — the
-            // card's tap, its fallback, opens the post instead.
-            PostAffordanceRow(
-                commentCount = post.commentCount,
-                onOpenComments = onOpenComments,
-                onShare = { onShare(post.id) },
-                testTagPrefix = tag,
-                node = card / "actionRow",
-            ) {
-                stanceControl(post.id, tag, card / "actionRow" / "stance")
-            }
-            // THE ROW LINE under the face (RowSigning.md): a save or unsave
-            // of this post that did not go through.
-            LocalSavedHost.current?.comfortLine(post.id)?.let { RowLine(it, "${tag}_row_line") }
+            CardRow(post, card, tag, onOpenComments, onShare, stanceControl)
         }
     }
+}
+
+/**
+ * Stance, comment, share — the master's row, minus the two it gates (see
+ * `PostAffordanceRow`) — and the row line under the face. THE COUNT RAISES
+ * THE THREAD (graph.json: every `comment count` edge advances to
+ * `ReplyEntry`), which is the master's own destination — the card's tap, its
+ * fallback, opens the post instead.
+ */
+@Composable
+private fun CardRow(
+    post: PostView,
+    card: DataNode,
+    tag: String,
+    onOpenComments: () -> Unit,
+    onShare: (String) -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
+) {
+    PostAffordanceRow(
+        commentCount = post.commentCount,
+        onOpenComments = onOpenComments,
+        onShare = { onShare(post.id) },
+        testTagPrefix = tag,
+        node = card / "actionRow",
+    ) {
+        stanceControl(post.id, tag, card / "actionRow" / "stance")
+    }
+    // THE ROW LINE under the face (RowSigning.md): a save or unsave of this
+    // post that did not go through.
+    LocalSavedHost.current?.comfortLine(post.id)?.let { RowLine(it, "${tag}_row_line") }
 }
 
 /**

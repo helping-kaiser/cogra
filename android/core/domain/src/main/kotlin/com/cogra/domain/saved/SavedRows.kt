@@ -73,9 +73,10 @@ fun headRowOf(target: CommentTarget): HeadRow = when (target) {
     is CommentTarget.Post -> {
         val by = target.authorHandle?.let { "@$it" }.orEmpty()
         if (target.removed) {
+            val byPlatform = target.moderation == ModerationState.ILLEGAL
             HeadRow(
                 comment = false,
-                title = if (target.moderation == ModerationState.ILLEGAL) REMOVED_BY_THE_PLATFORM else REMOVED_BY_AUTHOR,
+                title = if (byPlatform) REMOVED_BY_THE_PLATFORM else REMOVED_BY_AUTHOR,
                 sub = by,
                 coverUrl = null,
                 removed = true,

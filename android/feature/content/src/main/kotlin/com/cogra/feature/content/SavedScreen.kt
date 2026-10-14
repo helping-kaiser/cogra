@@ -50,6 +50,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -70,8 +71,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.CollapsingTop
 import com.cogra.core.designsystem.CollapsingTopBand
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.LocalSnackbarHostState
@@ -88,6 +90,7 @@ import com.cogra.core.designsystem.v2.media.ScrollStageHost
 import com.cogra.core.designsystem.v2.media.ScrollStageRow
 import com.cogra.core.designsystem.v2.media.SurfaceCover
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
 import com.cogra.domain.hidden.HiddenSet
@@ -163,35 +166,70 @@ fun SavedRoute(
         onSearch = viewModel::search,
         onBack = onBack,
         doors = doors,
-        onShare = { url -> context.sharePost(url) },
-        shareUrls = SavedShareUrls(viewModel::postShareUrl, viewModel::commentShareUrl, viewModel::profileShareUrl),
-        viewerId = viewerId,
-        onEditPost = onEditPost,
-        onCitePost = onCitePost,
-        onReveal = viewModel::onReveal,
-        stanceControl = nodeStanceControl,
+        hooks = SavedCardHooks(
+            viewerId = viewerId,
+            onShare = { url -> context.sharePost(url) },
+            shareUrls = SavedShareUrls(viewModel::postShareUrl, viewModel::commentShareUrl, viewModel::profileShareUrl),
+            onEditPost = onEditPost,
+            onCitePost = onCitePost,
+            onReveal = viewModel::onReveal,
+            stanceControl = nodeStanceControl,
+        ),
         commentsSheet = { postId, onDismiss ->
-            val post = state.entries.firstNotNullOfOrNull { (it.card as? SavedCard.Post)?.post?.takeIf { p -> p.id == postId } }
-            CommentsSheetRoute(
+            SavedThread(
                 postId = postId,
+                post = state.postOf(postId),
                 viewerId = viewerId,
                 signedIn = signedIn,
                 onDismiss = onDismiss,
-                onReply = { request -> (request.comment?.asReplyTarget() ?: post?.asReplyTarget())?.let(onReply) },
-                onEditComment = { commentId -> onEditComment(commentId, post?.title?.value.orEmpty()) },
-                onOpenActor = doors.onOpenActor,
-                onOpenTopic = doors.onOpenTopic,
-                onReference = onCitePost,
+                doors = doors,
+                onCitePost = onCitePost,
+                onReply = onReply,
+                onEditComment = onEditComment,
                 onSignInOrJoin = onSignInOrJoin,
-                onDepart = onCommentsDepart,
                 commentsReturn = commentsReturn,
-                onReturnConsumed = onCommentsReturnConsumed,
-                stanceControl = { target, tag ->
-                    StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag)
-                },
+                onCommentsReturnConsumed = onCommentsReturnConsumed,
+                onCommentsDepart = onCommentsDepart,
             )
         },
         reportSheet = reportDoor(null, SAVED_REPORT_SHEET),
+    )
+}
+
+/** THE THREAD, OVER SAVED: a post card's comment count raises it, as over the feed. */
+@Composable
+private fun SavedThread(
+    postId: String,
+    post: PostView?,
+    viewerId: String?,
+    signedIn: Boolean?,
+    onDismiss: () -> Unit,
+    doors: SavedDoors,
+    onCitePost: (String) -> Unit,
+    onReply: (ReplyTarget) -> Unit,
+    onEditComment: (commentId: String, parentTitle: String) -> Unit,
+    onSignInOrJoin: () -> Unit,
+    commentsReturn: CommentsReturn,
+    onCommentsReturnConsumed: () -> Unit,
+    onCommentsDepart: (CommentsScroll) -> Unit,
+) {
+    CommentsSheetRoute(
+        postId = postId,
+        viewerId = viewerId,
+        signedIn = signedIn,
+        onDismiss = onDismiss,
+        onReply = { request -> (request.comment?.asReplyTarget() ?: post?.asReplyTarget())?.let(onReply) },
+        onEditComment = { commentId -> onEditComment(commentId, post?.title?.value.orEmpty()) },
+        onOpenActor = doors.onOpenActor,
+        onOpenTopic = doors.onOpenTopic,
+        onReference = onCitePost,
+        onSignInOrJoin = onSignInOrJoin,
+        onDepart = onCommentsDepart,
+        commentsReturn = commentsReturn,
+        onReturnConsumed = onCommentsReturnConsumed,
+        stanceControl = { target, tag ->
+            StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag)
+        },
     )
 }
 
@@ -205,9 +243,72 @@ data class SavedShareUrls(
 /** The report confirm over Saved — no Saved board draws one, so it keeps its tag. */
 internal const val SAVED_REPORT_SHEET = "saved_report_sheet"
 
+/** A kept post by its id — the one whose thread is raised over Saved. */
+private fun SavedUiState.postOf(id: String): PostView? =
+    entries.firstNotNullOfOrNull { (it.card as? SavedCard.Post)?.post?.takeIf { post -> post.id == id } }
+
 /** Cards on screen: what the reader still keeps, plus a failed Undo's card, which stays with its line. */
 fun keptEntries(entries: List<SavedEntry>, overlay: SavedOverlay): List<SavedEntry> =
     entries.filter { overlay.kept(it.id, it.bookmarkedAt) != null || overlay.failure(it.id) == ComfortKind.RESTORE }
+
+/** What Saved stands as: the kept cards, the ones a query leaves, and which state the page is in. */
+internal data class SavedView(
+    val kept: List<SavedEntry>,
+    val shown: List<SavedEntry>,
+    /** SAVEDEMPTY: nothing kept and no query standing. */
+    val empty: Boolean,
+    /** SAVEDNONE: a query that finds nothing in what is kept. */
+    val none: Boolean,
+    /** The field stands wherever something is kept or a query still stands. */
+    val fielded: Boolean,
+)
+
+internal fun savedView(state: SavedUiState, overlay: SavedOverlay): SavedView {
+    val kept = keptEntries(state.entries, overlay)
+    val parsed = state.parsed
+    val searching = parsed != SavedQuery.Blank
+    val shown = kept.filter { matches(it.card.searchable(), parsed) }
+    val settled = !state.loading && !state.failed && !state.hasNextPage
+    // SAVEDEMPTY draws no field: it arrives with the first thing saved. A
+    // query still standing keeps it, so `Show everything` is the way back.
+    val empty = settled && kept.isEmpty() && !searching
+    val none = settled && searching && shown.isEmpty() && !state.loadingMore
+    return SavedView(kept, shown, empty, none, fielded = !empty && (kept.isNotEmpty() || searching))
+}
+
+/**
+ * What the route hands Saved's cards beyond their doors: the viewer, the
+ * shares, the menus' routes, the veil's reveal and the stance control —
+ * hoisted, so the screen stays free of DI and previewable.
+ */
+data class SavedCardHooks(
+    val viewerId: String? = null,
+    val onShare: (String) -> Unit = {},
+    val shareUrls: SavedShareUrls = SavedShareUrls({ it }, { _, comment -> comment }, { it }),
+    val onEditPost: (String) -> Unit = {},
+    val onCitePost: (String) -> Unit = {},
+    val onReveal: (String, SensitiveMark) -> Unit = { _, _ -> },
+    val stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit =
+        { _, _, _ -> },
+)
+
+/** What every card on Saved is handed: the route's hooks, its doors, the reveals and the sheets it raises. */
+internal data class SavedCardActions(
+    val hooks: SavedCardHooks,
+    val doors: SavedDoors,
+    val reveals: Map<String, SensitiveMark>,
+    val onOpenComments: (String) -> Unit,
+    val onReport: (String) -> Unit,
+) {
+    val viewerId: String? get() = hooks.viewerId
+    val onShare: (String) -> Unit get() = hooks.onShare
+    val shareUrls: SavedShareUrls get() = hooks.shareUrls
+    val onEditPost: (String) -> Unit get() = hooks.onEditPost
+    val onCitePost: (String) -> Unit get() = hooks.onCitePost
+    val onReveal: (String, SensitiveMark) -> Unit get() = hooks.onReveal
+    val stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit
+        get() = hooks.stanceControl
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -221,13 +322,7 @@ fun SavedScreen(
     onBack: () -> Unit,
     doors: SavedDoors,
     hidden: HiddenSet? = null,
-    onShare: (String) -> Unit = {},
-    shareUrls: SavedShareUrls = SavedShareUrls({ it }, { _, c -> c }, { it }),
-    viewerId: String? = null,
-    onEditPost: (String) -> Unit = {},
-    onCitePost: (String) -> Unit = {},
-    onReveal: (String, SensitiveMark) -> Unit = { _, _ -> },
-    stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit = { _, _, _ -> },
+    hooks: SavedCardHooks = SavedCardHooks(),
     commentsSheet: @Composable (postId: String, onDismiss: () -> Unit) -> Unit = { _, _ -> },
     reportSheet: ReportSheetSlot = { _, _, _ -> },
 ) {
@@ -236,199 +331,236 @@ fun SavedScreen(
     // THE CARDS' MENUS SAVE THROUGH THE ONE OVERLAY AND HIDE THROUGH THE ONE
     // SET, their aftermath on this page's snackbar (`saved.snackbar`).
     val savedHost = rememberSavedHost(writes, snackbar, SAVED / "snackbar", null, hidden)
-    val kept = keptEntries(state.entries, overlay)
-    val parsed = state.parsed
-    val shown = kept.filter { matches(it.card.searchable(), parsed) }
-    val idle = !state.loading && !state.failed
-    // SAVEDEMPTY draws no field: it arrives with the first thing saved. A
-    // query still standing keeps it, so `Show everything` is the way back.
-    val empty = idle && kept.isEmpty() && !state.hasNextPage && parsed == SavedQuery.Blank
-    val none = idle && parsed != SavedQuery.Blank && shown.isEmpty() && !state.hasNextPage && !state.loadingMore
-    val fielded = !empty && (kept.isNotEmpty() || parsed != SavedQuery.Blank)
+    val view = savedView(state, overlay)
     val listState = rememberLazyListState()
     val layers = remember { CoveringLayers() }
     var commentsFor by rememberSaveable { mutableStateOf<String?>(null) }
     var reportFor by remember { mutableStateOf<String?>(null) }
-    val scope = rememberCoroutineScope()
-    val notify: (String) -> Unit = { text ->
-        scope.launch { snackbar?.showSnackbar(NodeSnackbarVisuals(text, SAVED / "snackbar")) }
-    }
-    val focus = rememberCardFocus(shown, overlay)
-    LoadNextAtTheTail(listState, state, shown.size, onLoadMore)
-    val collapsingTop = rememberCollapsingTop()
+    val notify = rememberSavedNotify(snackbar)
+    LoadNextAtTheTail(listState, state, view.shown.size, onLoadMore)
+    val actions = SavedCardActions(hooks, doors, state.reveals, { commentsFor = it }, { reportFor = it })
     CompositionLocalProvider(LocalCoveringLayers provides layers, LocalSavedHost provides savedHost) {
-        Scaffold(
-            modifier = Modifier.dataNodeSurface(),
-            topBar = {
-                // THE HEADER AND THE FIELD COLLAPSE ON THE WAY DOWN AND RETURN
-                // ON THE WAY UP (Saved.md), one region.
-                CollapsingTopBand(collapsingTop) {
-                    Column {
-                        PageHeader(
-                            title = stringResource(SavedR.string.saved_title),
-                            onBack = onBack,
-                            backContentDescription = stringResource(SavedR.string.saved_back),
-                            node = SAVED / "header",
-                        )
-                        if (fielded) {
-                            SearchBar(
-                                query = state.query,
-                                onQueryChange = onSearch,
-                                placeholder = stringResource(R.string.content_saved_search),
-                                label = stringResource(R.string.content_saved_search),
-                                node = SAVED / "searchField",
-                            )
-                        }
-                    }
-                }
-            },
-        ) { padding ->
-            PullToRefreshBox(
-                isRefreshing = state.loading && state.entries.isNotEmpty(),
-                onRefresh = onRefresh,
-                modifier = Modifier.padding(padding).fillMaxSize(),
-            ) {
-                Box(Modifier.fillMaxSize().collapsingTop(collapsingTop)) {
-                    when {
-                        state.loading && state.entries.isEmpty() -> Text(
-                            stringResource(com.cogra.core.designsystem.R.string.loading_state),
-                            modifier = Modifier.padding(Space.x4).testTag("saved_loading"),
-                        )
-
-                        state.failed && state.entries.isEmpty() -> SavedLoadFailed(onRefresh)
-
-                        empty -> SavedEmpty(focus.empty)
-
-                        none -> SavedNone(focus.empty) { onSearch("") }
-
-                        else -> ScrollStageHost(
-                            listState,
-                            suspended = commentsFor != null || layers.cover == SurfaceCover.Suspended,
-                            hardTopReelects = true,
-                        ) {
-                            LazyColumn(
-                                state = listState,
-                                modifier = Modifier.fillMaxSize().testTag("saved_list"),
-                                contentPadding = PaddingValues(top = Space.x2, bottom = Space.x4),
-                                verticalArrangement = Arrangement.spacedBy(Space.x2),
-                            ) {
-                                items(shown, key = { it.id }) { entry ->
-                                    ScrollStageRow(entry.id) {
-                                        Box(Modifier.focusRequester(focus.card(entry.id)).focusable()) {
-                                            SavedCardFor(
-                                                entry = entry,
-                                                state = state,
-                                                doors = doors,
-                                                viewerId = viewerId,
-                                                onShare = onShare,
-                                                shareUrls = shareUrls,
-                                                onEditPost = onEditPost,
-                                                onCitePost = onCitePost,
-                                                onReveal = onReveal,
-                                                onOpenComments = { commentsFor = it },
-                                                onReport = { reportFor = it },
-                                                stanceControl = stanceControl,
-                                            )
-                                        }
-                                    }
-                                }
-                                if (state.moreFailed) {
-                                    item(key = "saved_more_failed") { SavedMoreFailed(onRetryMore) }
-                                }
-                            }
-                        }
-                    }
-                    // THE WAY BACK UP (Saved.md): with the band from three
-                    // screens down; it goes up, animated, and never re-reads.
-                    FeedBackToTop(
-                        bandShown = collapsingTop.showTop,
-                        listState = listState,
-                        modifier = Modifier.align(Alignment.TopCenter),
-                    )
-                }
-            }
-        }
+        SavedScaffold(
+            state = state,
+            view = view,
+            listState = listState,
+            focus = rememberCardFocus(view.shown, overlay),
+            actions = actions,
+            suspended = commentsFor != null || layers.cover == SurfaceCover.Suspended,
+            onRefresh = onRefresh,
+            onRetryMore = onRetryMore,
+            onSearch = onSearch,
+            onBack = onBack,
+        )
         commentsFor?.let { postId -> commentsSheet(postId) { commentsFor = null } }
         reportFor?.let { postId -> reportSheet(postId, { reportFor = null }, notify) }
     }
 }
 
+/** A line on this page's own snackbar (`saved.snackbar`) — the report's aftermath. */
+@Composable
+private fun rememberSavedNotify(snackbar: SnackbarHostState?): (String) -> Unit {
+    val scope = rememberCoroutineScope()
+    return { text -> scope.launch { snackbar?.showSnackbar(NodeSnackbarVisuals(text, SAVED / "snackbar")) } }
+}
+
+/** The page: its collapsing top over the pull-to-refresh body and the way back up. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SavedScaffold(
+    state: SavedUiState,
+    view: SavedView,
+    listState: LazyListState,
+    focus: CardFocus,
+    actions: SavedCardActions,
+    suspended: Boolean,
+    onRefresh: () -> Unit,
+    onRetryMore: () -> Unit,
+    onSearch: (String) -> Unit,
+    onBack: () -> Unit,
+) {
+    val collapsingTop = rememberCollapsingTop()
+    Scaffold(
+        modifier = Modifier.dataNodeSurface(),
+        topBar = { SavedTopBar(collapsingTop, view.fielded, state.query, onBack, onSearch) },
+    ) { padding ->
+        PullToRefreshBox(
+            isRefreshing = state.loading && state.entries.isNotEmpty(),
+            onRefresh = onRefresh,
+            modifier = Modifier.padding(padding).fillMaxSize(),
+        ) {
+            Box(Modifier.fillMaxSize().collapsingTop(collapsingTop)) {
+                SavedContent(
+                    state = state,
+                    view = view,
+                    listState = listState,
+                    suspended = suspended,
+                    focus = focus,
+                    actions = actions,
+                    onRefresh = onRefresh,
+                    onRetryMore = onRetryMore,
+                    onShowEverything = { onSearch("") },
+                )
+                // THE WAY BACK UP (Saved.md): with the band from three screens
+                // down; it goes up, animated, and never re-reads.
+                FeedBackToTop(
+                    bandShown = collapsingTop.showTop,
+                    listState = listState,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                )
+            }
+        }
+    }
+}
+
+/** THE HEADER AND THE FIELD COLLAPSE ON THE WAY DOWN AND RETURN ON THE WAY UP (Saved.md), one region. */
+@Composable
+private fun SavedTopBar(
+    collapsingTop: CollapsingTop,
+    fielded: Boolean,
+    query: String,
+    onBack: () -> Unit,
+    onSearch: (String) -> Unit,
+) {
+    CollapsingTopBand(collapsingTop) {
+        Column {
+            PageHeader(
+                title = stringResource(SavedR.string.saved_title),
+                onBack = onBack,
+                backContentDescription = stringResource(SavedR.string.saved_back),
+                node = SAVED / "header",
+            )
+            if (fielded) {
+                SearchBar(
+                    query = query,
+                    onQueryChange = onSearch,
+                    placeholder = stringResource(R.string.content_saved_search),
+                    label = stringResource(R.string.content_saved_search),
+                    node = SAVED / "searchField",
+                )
+            }
+        }
+    }
+}
+
+/** What stands under the top: the first read, its fault, SavedEmpty, SavedNone, or the cards. */
+@Composable
+private fun SavedContent(
+    state: SavedUiState,
+    view: SavedView,
+    listState: LazyListState,
+    suspended: Boolean,
+    focus: CardFocus,
+    actions: SavedCardActions,
+    onRefresh: () -> Unit,
+    onRetryMore: () -> Unit,
+    onShowEverything: () -> Unit,
+) {
+    when {
+        state.loading && state.entries.isEmpty() -> Text(
+            stringResource(com.cogra.core.designsystem.R.string.loading_state),
+            modifier = Modifier.padding(Space.x4).testTag("saved_loading"),
+        )
+
+        state.failed && state.entries.isEmpty() -> SavedLoadFailed(onRefresh)
+
+        view.empty -> SavedEmpty(focus.empty)
+
+        view.none -> SavedNone(focus.empty, onShowEverything)
+
+        // THE FEED'S ONE STAGE (Saved.md): at most one clip plays, and the
+        // stage re-elects at the list's hard top, by the feed's law.
+        else -> ScrollStageHost(listState, suspended = suspended, hardTopReelects = true) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize().testTag("saved_list"),
+                contentPadding = PaddingValues(top = Space.x2, bottom = Space.x4),
+                verticalArrangement = Arrangement.spacedBy(Space.x2),
+            ) {
+                items(view.shown, key = { it.id }) { entry ->
+                    ScrollStageRow(entry.id) {
+                        Box(Modifier.focusRequester(focus.card(entry.id)).focusable()) {
+                            SavedCardFor(entry, actions)
+                        }
+                    }
+                }
+                if (state.moreFailed) {
+                    item(key = "saved_more_failed") { SavedMoreFailed(onRetryMore) }
+                }
+            }
+        }
+    }
+}
+
 /** One kept thing, as its kind's own feed card. */
 @Composable
-private fun SavedCardFor(
-    entry: SavedEntry,
-    state: SavedUiState,
-    doors: SavedDoors,
-    viewerId: String?,
-    onShare: (String) -> Unit,
-    shareUrls: SavedShareUrls,
-    onEditPost: (String) -> Unit,
-    onCitePost: (String) -> Unit,
-    onReveal: (String, SensitiveMark) -> Unit,
-    onOpenComments: (String) -> Unit,
-    onReport: (String) -> Unit,
-    stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
-) {
+private fun SavedCardFor(entry: SavedEntry, actions: SavedCardActions) {
+    val doors = actions.doors
     when (val card = entry.card) {
         is SavedCard.Post -> PostCard(
             post = card.post,
             onClick = { doors.onOpenPost(card.post.id) },
-            onOpenComments = { onOpenComments(card.post.id) },
+            onOpenComments = { actions.onOpenComments(card.post.id) },
             onOpenPost = doors.onOpenPost,
             onOpenActor = doors.onOpenActor,
             onOpenTopic = doors.onOpenTopic,
-            onShare = { id -> onShare(shareUrls.post(id)) },
-            viewerId = viewerId,
-            onEdit = onEditPost,
-            onCite = onCitePost,
-            onReport = { onReport(card.post.id) },
-            revealed = state.reveals.isRevealed(card.post.id, card.post.sensitiveMark()),
-            onReveal = { onReveal(card.post.id, card.post.sensitiveMark()) },
-            stanceControl = stanceControl,
+            onShare = { id -> actions.onShare(actions.shareUrls.post(id)) },
+            viewerId = actions.viewerId,
+            onEdit = actions.onEditPost,
+            onCite = actions.onCitePost,
+            onReport = { actions.onReport(card.post.id) },
+            revealed = actions.reveals.isRevealed(card.post.id, card.post.sensitiveMark()),
+            onReveal = { actions.onReveal(card.post.id, card.post.sensitiveMark()) },
+            stanceControl = actions.stanceControl,
             placement = SAVED_PLACEMENT,
         )
 
-        is SavedCard.Comment -> {
-            val comment = card.comment
-            val post = card.threadPostId
-            var licenseOpen by remember(comment.id) { mutableStateOf(false) }
-            CommentFeedCard(
-                comment = comment,
-                target = card.target,
-                node = SAVED / "commentCard",
-                testTagPrefix = "saved_comment_${comment.id}",
-                revealed = state.reveals.isRevealed(comment.id, comment.sensitiveMark()),
-                onReveal = { onReveal(comment.id, comment.sensitiveMark()) },
-                onOpenTarget = {
-                    when (val target = card.target) {
-                        is CommentTarget.Post -> doors.onOpenPost(target.id)
-                        is CommentTarget.Comment -> post?.let { doors.onOpenComment(it, target.id, false) }
-                        null -> Unit
-                    }
-                },
-                onOpenPlace = { post?.let { doors.onOpenComment(it, comment.id, false) } },
-                onReply = { post?.let { doors.onOpenComment(it, comment.id, true) } },
-                onShare = { post?.let { onShare(shareUrls.comment(it, comment.id)) } },
-                onOpenActor = doors.onOpenActor,
-                onOpenTopic = doors.onOpenTopic,
-                onCite = { onCitePost(comment.id) },
-                onLicense = { licenseOpen = true },
-                stanceControl = stanceControl,
-            )
-            if (licenseOpen) {
-                LicenseSheet(license = comment.license, onDismiss = { licenseOpen = false })
-            }
-        }
+        is SavedCard.Comment -> SavedCommentCard(card, actions)
 
         is SavedCard.Person -> ProfileFeedCard(
             profile = card.profile,
             node = SAVED / "profileCard",
             testTagPrefix = "saved_person_${card.profile.id}",
-            viewerId = viewerId,
+            viewerId = actions.viewerId,
             onOpen = { doors.onOpenActor(card.profile.handle) },
-            onShare = { onShare(shareUrls.profile(card.profile.handle)) },
-            stanceControl = stanceControl,
+            onShare = { actions.onShare(actions.shareUrls.profile(card.profile.handle)) },
+            stanceControl = actions.stanceControl,
         )
+    }
+}
+
+/** A kept comment as the comment feed card, its doors landing on its thread. */
+@Composable
+private fun SavedCommentCard(card: SavedCard.Comment, actions: SavedCardActions) {
+    val doors = actions.doors
+    val comment = card.comment
+    val post = card.threadPostId
+    var licenseOpen by remember(comment.id) { mutableStateOf(false) }
+    CommentFeedCard(
+        comment = comment,
+        target = card.target,
+        node = SAVED / "commentCard",
+        testTagPrefix = "saved_comment_${comment.id}",
+        revealed = actions.reveals.isRevealed(comment.id, comment.sensitiveMark()),
+        onReveal = { actions.onReveal(comment.id, comment.sensitiveMark()) },
+        onOpenTarget = {
+            when (val target = card.target) {
+                is CommentTarget.Post -> doors.onOpenPost(target.id)
+                is CommentTarget.Comment -> post?.let { doors.onOpenComment(it, target.id, false) }
+                null -> Unit
+            }
+        },
+        onOpenPlace = { post?.let { doors.onOpenComment(it, comment.id, false) } },
+        onReply = { post?.let { doors.onOpenComment(it, comment.id, true) } },
+        onShare = { post?.let { actions.onShare(actions.shareUrls.comment(it, comment.id)) } },
+        onOpenActor = doors.onOpenActor,
+        onOpenTopic = doors.onOpenTopic,
+        onCite = { actions.onCitePost(comment.id) },
+        onLicense = { licenseOpen = true },
+        stanceControl = actions.stanceControl,
+    )
+    if (licenseOpen) {
+        LicenseSheet(license = comment.license, onDismiss = { licenseOpen = false })
     }
 }
 
@@ -507,7 +639,10 @@ private fun SavedEmpty(focus: FocusRequester) {
 @Composable
 private fun SavedNone(focus: FocusRequester, onShowEverything: () -> Unit) {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = Space.x6, vertical = Space.x2).dataNode(SAVED / "empty"),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Space.x6, vertical = Space.x2)
+            .dataNode(SAVED / "empty"),
         verticalArrangement = Arrangement.spacedBy(Space.x3),
     ) {
         Text(

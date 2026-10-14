@@ -24,7 +24,8 @@ class SavedSearchTest {
 
     @Test
     fun only_a_leading_sigil_is_a_scope() {
-        assertThat(parseSavedQuery("  @ada  long way ")).isEqualTo(SavedQuery.Scoped(tag = false, name = "ada", remainder = "long way"))
+        assertThat(parseSavedQuery("  @ada  long way "))
+            .isEqualTo(SavedQuery.Scoped(tag = false, name = "ada", remainder = "long way"))
         assertThat(parseSavedQuery("#salt")).isEqualTo(SavedQuery.Scoped(tag = true, name = "salt", remainder = null))
         assertThat(parseSavedQuery("long @ada")).isEqualTo(SavedQuery.Unscoped("long @ada"))
     }

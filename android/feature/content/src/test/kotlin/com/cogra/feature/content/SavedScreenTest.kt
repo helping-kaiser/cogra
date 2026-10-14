@@ -16,6 +16,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -50,16 +51,21 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import java.io.IOException
 import java.time.Instant
 
+// A tall window, so every card of the list is composed at once: a lazy list
+// composes only what stands on screen.
 @RunWith(RobolectricTestRunner::class)
+@Config(qualifiers = "w411dp-h4000dp")
 class SavedScreenTest {
 
     @get:Rule
     val compose = createComposeRule()
 
-    private val now = Instant.parse("2026-10-13T12:00:00Z")
+    // The cards read their ages against the clock, as they do on the feed.
+    private val now = Instant.now()
     private val repository = RecordingSavedRepository()
     private val writes = SavedWrites(
         repository,
@@ -144,7 +150,9 @@ class SavedScreenTest {
     private val opened = mutableListOf<String>()
     private val doors = SavedDoors(
         onOpenPost = { opened += "post:$it" },
-        onOpenComment = { postId, commentId, aim -> opened += "comment:$postId/$commentId${if (aim) "+reply" else ""}" },
+        onOpenComment = { postId, commentId, aim ->
+            opened += "comment:$postId/$commentId" + if (aim) "+reply" else ""
+        },
         onOpenActor = { opened += "actor:$it" },
         onOpenTopic = { opened += "topic:$it" },
     )
@@ -187,8 +195,8 @@ class SavedScreenTest {
         assertThat(shown(postCard)).isTrue()
         assertThat(shown(commentCard)).isTrue()
         assertThat(shown(personCard)).isTrue()
-        // The comment card's head row names the post it answers.
-        compose.onNodeWithTag("saved_comment_c1_head_title").assertIsDisplayed()
+        // The comment card's head row names the post it answers, as one door.
+        compose.onNodeWithContentDescription("On “The long way home” — @ada").assertIsDisplayed()
         compose.onNodeWithText("Mira Voss").assertIsDisplayed()
         compose.onNodeWithText("@mira").assertIsDisplayed()
     }
@@ -324,9 +332,8 @@ class SavedScreenTest {
     fun `saved none keeps the query and show everything clears it`() {
         render(all)
         search("brackish cartography")
-        compose.onNodeWithText(
-            "Nothing you've saved carries that name. Search reads names and titles, never bodies — fewer words reach further.",
-        ).assertIsDisplayed()
+        compose.onNodeWithText("Nothing you've saved carries that name.", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("fewer words reach further.", substring = true).assertIsDisplayed()
         compose.onNodeWithTag("saved.empty.action").performClick()
         compose.waitForIdle()
         assertThat(shown(postCard)).isTrue()

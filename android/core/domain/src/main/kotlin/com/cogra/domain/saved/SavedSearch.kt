@@ -133,7 +133,11 @@ private fun List<TopicClaimView>.carried(): List<String> =
 /** What a kept card offers the matcher — a payload that went offers nothing. */
 fun SavedCard.searchable(): Searchable = when (this) {
     is SavedCard.Post -> Searchable.Post(post.author?.handle, post.title.shown(), post.topics.carried())
-    is SavedCard.Comment -> Searchable.Comment(comment.author?.handle, threadPostTitle.shown(), comment.topics.carried())
+    is SavedCard.Comment -> Searchable.Comment(
+        authorHandle = comment.author?.handle,
+        rootTitle = threadPostTitle.shown(),
+        tags = comment.topics.carried(),
+    )
     is SavedCard.Person -> Searchable.Person(
         handle = profile.handle.takeUnless { profile.deleted },
         displayName = profile.displayName.shown(),

@@ -48,6 +48,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -184,23 +185,30 @@ private fun HeadRow(target: CommentTarget, testTagPrefix: String, onOpen: () -> 
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .testTag("${testTagPrefix}_head")
             .clip(RoundedCornerShape(Space.x2))
             .clickable(onClick = onOpen)
+            // ONE DOOR, ONE NAME: the row is heard as `On <what it names>`,
+            // never as its title and sub-line read apart.
             .clearAndSetSemantics {
                 contentDescription = door
                 role = Role.Button
-            }
-            .testTag("${testTagPrefix}_head"),
+            },
         horizontalArrangement = Arrangement.spacedBy(Space.x3),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        NodeMark(comment = row.comment, coverUrl = row.coverUrl, removed = row.removed, testTag = "${testTagPrefix}_head_mark")
+        NodeMark(
+            comment = row.comment,
+            coverUrl = row.coverUrl,
+            removed = row.removed,
+            testTag = "${testTagPrefix}_head_mark",
+        )
         Column(Modifier.weight(1f)) {
             Text(
                 text = row.title,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = if (row.removed) FontWeight.Normal else null,
-                color = if (row.removed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                color = quietIf(row.removed),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.testTag("${testTagPrefix}_head_title"),
@@ -215,6 +223,11 @@ private fun HeadRow(target: CommentTarget, testTagPrefix: String, onOpen: () -> 
         }
     }
 }
+
+/** The system's voice where [quiet] — a removal's line, a deleted account's name — else the plain ink. */
+@Composable
+internal fun quietIf(quiet: Boolean): Color =
+    if (quiet) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
 
 /**
  * A kind's mark (`ReferenceRow.jsx` `NodeMark`) where the head row draws it: a
