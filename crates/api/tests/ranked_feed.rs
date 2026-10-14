@@ -149,10 +149,22 @@ async fn land(pool: &PgPool, records: Vec<PublishedRecord>) -> i64 {
             r
         })
         .collect();
-    mirror::ingest_epoch(pool, &EpochPackage { epoch, records })
-        .await
-        .expect("ingests");
+    mirror::ingest_epoch(
+        pool,
+        &EpochPackage {
+            epoch,
+            attested_at: landing_instant(epoch),
+            records,
+        },
+    )
+    .await
+    .expect("ingests");
     epoch
+}
+
+/// The attested boundary timestamp of a fixture epoch: a minute per epoch.
+fn landing_instant(epoch: i64) -> chrono::DateTime<chrono::Utc> {
+    chrono::DateTime::from_timestamp(1_850_000_000 + epoch * 60, 0).expect("instant")
 }
 
 async fn person(pool: &PgPool, handle: &str, kind: &str) -> Uuid {
@@ -3164,4 +3176,511 @@ async fn newest_search_carries_no_score_and_never_calls_the_ranker(pool: PgPool)
         );
     }
     assert!(pod.requests().is_empty());
+}
+
+/// The live trace read (RF-7; ranked-feed-api §4.11, X-SR1): one target's
+/// score and paths, relayed to the pod's `rankSearch` with no pin.
+const TRACE: &str = r#"query($viewer: UUID!, $target: UUID!) {
+  feedTrace(viewer: $viewer, target: $target) {
+    score
+    paths {
+      sign contribution magnitude recency
+      nodes { graphId id kind }
+      hops {
+        pDirected pInterest weight
+        records {
+          id family landingEpoch landedAt
+          legs { role sourceId targetId pDirected pInterest }
+        }
+      }
+    }
+  }
+}"#;
+
+async fn trace_raw(rig: &WireRig, variables: Value) -> Value {
+    rig.gql_raw(None, TRACE, variables).await
+}
+
+async fn trace(rig: &WireRig, viewer: Uuid, target: Uuid) -> Value {
+    rig.gql(None, TRACE, json!({ "viewer": viewer, "target": target }))
+        .await["feedTrace"]
+        .clone()
+}
+
+/// A pod `rankSearch` answer for a trace: the given entries, as the pod's
+/// `FeedRanking` carries them.
+fn trace_answer(entries: Vec<Value>) -> Value {
+    json!({ "entries": entries, "settling": [] })
+}
+
+/// One traced entry with its paths, in the pod's wire.
+fn trace_entry(target: Uuid, score: f64, paths: Vec<Value>) -> Value {
+    json!({
+        "targetId": target,
+        "targetKind": "POST",
+        "score": score,
+        "tieBreakers": { "netStance": 1.0, "grossVolume": 2.0, "genesisEpochAge": 3 },
+        "mark": null,
+        "newestIndex": 0,
+        "paths": paths,
+    })
+}
+
+/// One extracted path: its raw node ids, its hops, its sign and
+/// contribution.
+fn trace_path(nodes: &[String], hops: Vec<Value>, sign: i64, contribution: f64) -> Value {
+    json!({
+        "nodeIds": nodes,
+        "hops": hops,
+        "sign": sign,
+        "magnitude": contribution.abs(),
+        "recency": 1.0,
+        "contribution": contribution,
+    })
+}
+
+/// One folded hop: its member record ids, its folded pair, its factor.
+fn trace_hop(records: &[String], pair: (f64, f64), weight: f64) -> Value {
+    json!({
+        "family": "opinion",
+        "role": "binary",
+        "authorId": "addr-x",
+        "sourceId": "",
+        "targetId": "",
+        "recordIds": records,
+        "members": [],
+        "pDirected": pair.0,
+        "pInterest": pair.1,
+        "maturity": 0.5,
+        "weight": weight,
+    })
+}
+
+fn record_id(handle: &str, seq: u64, family: Family) -> String {
+    act(handle, seq, family).to_string()
+}
+
+/// Comment K, the fixture's minted Review node, carried as a landed row.
+async fn landed_comment(pool: &PgPool, parent: Uuid) -> Uuid {
+    let id = Uuid::new_v4();
+    let author = actor_id(pool, "a").await;
+    let mut tx = pool.begin().await.expect("tx");
+    content::insert_comment(
+        &mut tx,
+        id,
+        parent,
+        "post",
+        author,
+        &minted("a", 3, Family::Review).to_string(),
+        "a=0;o=0",
+        Some(LandingOrder {
+            landed_epoch: 2,
+            act_time: 200,
+            position: 0,
+        }),
+        authored_at(0),
+        "a reply",
+        None,
+    )
+    .await
+    .expect("comment");
+    tx.commit().await.expect("commit");
+    id
+}
+
+/// The read is live (PR-39): its arguments are the viewer and the target
+/// and nothing else, so no pin can be sent, and the relay asks the pod at
+/// the newest ingested epoch for exactly the one target.
+///
+/// A trace reads one target at the newest epoch, with no pin argument.
+/// ´claim:trace:a-trace-is-live-and-unpinned´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_single_target_trace_reads_at_the_newest_epoch_with_no_pin(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(trace_answer(vec![]))).await;
+    let f = fixture(&rig.pool).await;
+    let data = rig
+        .gql(
+            None,
+            r#"{ __type(name: "Query") { fields { name args { name } } } }"#,
+            json!({}),
+        )
+        .await;
+    let args: Vec<String> = data["__type"]["fields"]
+        .as_array()
+        .expect("fields")
+        .iter()
+        .find(|field| field["name"] == "feedTrace")
+        .expect("feedTrace is declared")["args"]
+        .as_array()
+        .expect("args")
+        .iter()
+        .map(|arg| arg["name"].as_str().expect("name").to_string())
+        .collect();
+    assert_eq!(args, vec!["viewer", "target"]);
+    trace(&rig, f.viewer, f.post).await;
+    let cursor = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
+    assert_eq!(pod.last_variables()["asOfEpoch"], json!(cursor));
+    assert_eq!(pod.last_variables()["candidates"], json!([f.post]));
+    assert_eq!(pod.last_variables()["viewer"], json!(f.viewer));
+}
+
+/// The relay resolves the epoch itself and passes it explicitly, so a
+/// newer epoch is the next trace's: one pin-resolution path for the feed
+/// and the trace, one consistent slice snapshot for the pod's pages.
+///
+/// The trace hands the pod the mirror cursor at call time, explicitly.
+/// ´claim:trace:the-relay-passes-the-cursor´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_trace_passes_the_mirror_cursor_to_the_pod_explicitly(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(trace_answer(vec![]))).await;
+    let f = fixture(&rig.pool).await;
+    trace(&rig, f.viewer, f.post).await;
+    let first = pod.last_variables()["asOfEpoch"].clone();
+    let newer = land(&rig.pool, vec![binary("v", 9, Family::Opinion, prof("b"))]).await;
+    trace(&rig, f.viewer, f.post).await;
+    assert_eq!(first, json!(newer - 1));
+    assert_eq!(pod.last_variables()["asOfEpoch"], json!(newer));
+}
+
+/// An echoed epoch invites a re-pin, and a client has no use for one: the
+/// answer is a score and its paths, nothing else.
+///
+/// A trace answer carries no epoch.
+/// ´claim:trace:the-answer-carries-no-epoch´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_trace_answer_carries_no_epoch(pool: PgPool) {
+    let rig = rig(pool);
+    assert_eq!(
+        fields_of(&rig, "FeedTrace").await,
+        Some(vec!["score".to_string(), "paths".to_string()])
+    );
+}
+
+/// A target the pod leaves absent — unreached, unknown, or moved on — is
+/// an answer with no paths, which the client renders as the moved-on
+/// state; never an error.
+///
+/// A trace of an absent target answers a null score and no paths.
+/// ´claim:trace:an-absent-target-has-no-paths´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_trace_of_an_absent_target_answers_with_no_paths(pool: PgPool) {
+    let (rig, _pod) = pod_rig(pool, Mode::Answer(trace_answer(vec![]))).await;
+    let f = fixture(&rig.pool).await;
+    assert_eq!(
+        trace(&rig, f.viewer, f.post).await,
+        json!({ "score": null, "paths": [] })
+    );
+}
+
+/// A viewer resolving to no rankable actor reads null, as `feedRanking`
+/// does.
+///
+/// A trace for an unrankable viewer reads null.
+/// ´claim:trace:an-unrankable-viewer-reads-null´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_trace_for_an_unknown_viewer_reads_null(pool: PgPool) {
+    let (rig, _pod) = pod_rig(pool, Mode::Fault("NOT_FOUND")).await;
+    let f = fixture(&rig.pool).await;
+    let response = trace_raw(&rig, json!({ "viewer": Uuid::new_v4(), "target": f.post })).await;
+    assert!(response["errors"].is_null(), "{response}");
+    assert!(response["data"]["feedTrace"].is_null(), "{response}");
+}
+
+/// The pod's absence is the drawn fault (score-readout.md:853's mirror
+/// row), never a guessed or stale figure.
+///
+/// A trace read with the ranker down is INTERNAL.
+/// ´claim:trace:the-ranker-down-is-internal´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_trace_read_with_the_ranker_down_is_internal(pool: PgPool) {
+    let closed = {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("bind");
+        listener.local_addr().expect("addr")
+    };
+    let rig = WireRig::with_ranker(
+        pool,
+        RateLimitConfig::unlimited(),
+        &RankerConfig {
+            url: format!("http://{closed}/graphql"),
+            ..RankerConfig::default()
+        },
+    );
+    let f = fixture(&rig.pool).await;
+    let (_guard, logs) = Logs::capture();
+    let response = trace_raw(&rig, json!({ "viewer": f.viewer, "target": f.post })).await;
+    assert_eq!(codes(&response), vec!["INTERNAL"]);
+    assert!(response["data"]["feedTrace"].is_null(), "{response}");
+    assert!(logs.text().contains("unreachable"), "{}", logs.text());
+}
+
+/// The trace's own score is the sum of its paths' contributions
+/// (FeedEntry.md:15), and the paths come in the pod's extraction order —
+/// the relay never re-sorts them. Each node hydrates to its slice
+/// identity: CoGra's id and kind where CoGra carries the node.
+///
+/// A trace returns the pod's paths in extraction order, adding up to its score.
+/// ´claim:trace:paths-in-extraction-order-add-up´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_trace_returns_paths_in_extraction_order_summing_to_the_score(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = fixture(&rig.pool).await;
+    let a = actor_id(&rig.pool, "a").await;
+    let (v, pa, p) = (
+        prof("v").to_string(),
+        prof("a").to_string(),
+        f.p.to_string(),
+    );
+    pod.set(Mode::Answer(trace_answer(vec![trace_entry(
+        f.post,
+        0.3,
+        vec![
+            trace_path(
+                &[v.clone(), pa.clone(), p.clone()],
+                vec![
+                    trace_hop(&[record_id("v", 1, Family::Opinion)], (0.5, 0.5), 0.5),
+                    trace_hop(&[record_id("a", 1, Family::Publish)], (0.5, 0.5), 0.4),
+                ],
+                1,
+                0.5,
+            ),
+            trace_path(
+                &[v.clone(), p.clone()],
+                vec![trace_hop(
+                    &[record_id("v", 3, Family::Opinion)],
+                    (-0.2, 0.9),
+                    0.2,
+                )],
+                -1,
+                -0.2,
+            ),
+        ],
+    )])));
+    let answer = trace(&rig, f.viewer, f.post).await;
+    let paths = answer["paths"].as_array().expect("paths");
+    let contributions: Vec<f64> = paths
+        .iter()
+        .map(|path| path["contribution"].as_f64().expect("contribution"))
+        .collect();
+    assert_eq!(contributions, vec![0.5, -0.2]);
+    let sum: f64 = contributions.iter().sum();
+    assert!((sum - answer["score"].as_f64().expect("score")).abs() < 1e-12);
+    assert_eq!(paths[1]["sign"], json!(-1));
+    assert_eq!(
+        paths[0]["nodes"],
+        json!([
+            { "graphId": v, "id": f.viewer, "kind": "USER" },
+            { "graphId": pa, "id": a, "kind": "USER" },
+            { "graphId": p, "id": f.post, "kind": "POST" },
+        ])
+    );
+}
+
+/// A hop's records are exactly the fold's members the pod names, in its
+/// order — none added, none dropped, each the mirror's public `Record`.
+///
+/// Every hop carries exactly its fold's member records, in the pod's order.
+/// ´claim:trace:a-hop-carries-exactly-its-members´
+#[sqlx::test(migrations = "../../migrations")]
+async fn every_hop_carries_exactly_its_folds_members(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = fixture(&rig.pool).await;
+    let members = vec![
+        record_id("a", 1, Family::Publish),
+        record_id("a", 3, Family::Review),
+        record_id("a", 4, Family::Publish),
+    ];
+    pod.set(Mode::Answer(trace_answer(vec![trace_entry(
+        f.post,
+        0.4,
+        vec![trace_path(
+            &[prof("a").to_string(), f.p.to_string()],
+            vec![trace_hop(&members, (0.5, 0.4), 0.4)],
+            1,
+            0.4,
+        )],
+    )])));
+    let answer = trace(&rig, f.viewer, f.post).await;
+    let records: Vec<&str> = answer["paths"][0]["hops"][0]["records"]
+        .as_array()
+        .expect("records")
+        .iter()
+        .map(|r| r["id"].as_str().expect("id"))
+        .collect();
+    assert_eq!(records, members);
+    assert_eq!(
+        answer["paths"][0]["hops"][0]["records"][1]["family"],
+        json!("REVIEW")
+    );
+}
+
+/// X-SR4: hop `i` crosses `nodes[i]` → `nodes[i + 1]`, and the member's
+/// leg crossing it is the one in `Record.legs` with those ends. On a
+/// hyper act's terminal hop that is the T leg — the pair the hop shows is
+/// the T leg's, never the actor's A leg's.
+///
+/// A hop over a T leg shows the T leg's pair, and its member's matching leg is the T leg.
+/// ´claim:trace:a-t-leg-hop-shows-the-t-pair´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_t_leg_hop_shows_the_t_legs_pair_not_the_actors(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = fixture(&rig.pool).await;
+    let k = landed_comment(&rig.pool, f.post).await;
+    let review = record_id("a", 3, Family::Review);
+    let nodes = [
+        prof("v").to_string(),
+        prof("a").to_string(),
+        f.p.to_string(),
+        minted("a", 3, Family::Review).to_string(),
+    ];
+    pod.set(Mode::Answer(trace_answer(vec![trace_entry(
+        k,
+        0.1,
+        vec![trace_path(
+            &nodes,
+            vec![
+                trace_hop(&[record_id("v", 1, Family::Opinion)], (0.5, 0.5), 0.5),
+                trace_hop(&[record_id("a", 1, Family::Publish)], (0.5, 0.5), 0.5),
+                trace_hop(std::slice::from_ref(&review), (0.4, 0.1), 0.4),
+            ],
+            1,
+            0.1,
+        )],
+    )])));
+    let answer = trace(&rig, f.viewer, k).await;
+    let path = &answer["paths"][0];
+    assert_eq!(path["nodes"][3]["id"], json!(k));
+    assert_eq!(path["nodes"][3]["kind"], json!("COMMENT"));
+    let hop = &path["hops"][2];
+    assert_eq!(
+        (hop["pDirected"].clone(), hop["pInterest"].clone()),
+        (json!(0.4), json!(0.1))
+    );
+    let legs = hop["records"][0]["legs"].as_array().expect("legs");
+    let crossing: Vec<&Value> = legs
+        .iter()
+        .filter(|leg| leg["sourceId"] == json!(nodes[2]) && leg["targetId"] == json!(nodes[3]))
+        .collect();
+    assert_eq!(crossing.len(), 1);
+    assert_eq!(crossing[0]["role"], json!("T"));
+    assert_eq!(
+        (
+            crossing[0]["pDirected"].clone(),
+            crossing[0]["pInterest"].clone()
+        ),
+        (json!(0.4), json!(0.1))
+    );
+    let actor_leg = legs
+        .iter()
+        .find(|leg| leg["role"] == json!("A"))
+        .expect("the review's actor leg");
+    assert_ne!(actor_leg["pDirected"], hop["pDirected"]);
+}
+
+/// X-SR3: a record's landing instant is its epoch's attested boundary
+/// timestamp — wall-clock time for the ages ladder, never the logical
+/// act time.
+///
+/// A record's landing instant is its epoch's attested boundary timestamp.
+/// ´claim:trace:a-records-landing-instant-is-its-epochs´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_records_landing_instant_is_its_epochs_boundary_timestamp(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = fixture(&rig.pool).await;
+    pod.set(Mode::Answer(trace_answer(vec![trace_entry(
+        f.post,
+        0.4,
+        vec![trace_path(
+            &[prof("a").to_string(), f.p.to_string()],
+            vec![trace_hop(
+                &[
+                    record_id("a", 1, Family::Publish),
+                    record_id("a", 3, Family::Review),
+                ],
+                (0.5, 0.4),
+                0.4,
+            )],
+            1,
+            0.4,
+        )],
+    )])));
+    let answer = trace(&rig, f.viewer, f.post).await;
+    let records = &answer["paths"][0]["hops"][0]["records"];
+    for record in records.as_array().expect("records") {
+        let epoch = record["landingEpoch"].as_i64().expect("epoch");
+        let landed: chrono::DateTime<chrono::Utc> = record["landedAt"]
+            .as_str()
+            .expect("landedAt")
+            .parse()
+            .expect("an instant");
+        assert_eq!(landed, landing_instant(epoch), "{record}");
+    }
+    assert_ne!(records[0]["landedAt"], records[1]["landedAt"]);
+}
+
+/// Paths are drawn on demand (miner-api.md "Output"): the feed's own pod
+/// document selects none, so a feed open costs what it cost before the
+/// trace existed; only the trace's document asks for them.
+///
+/// A feed ranking never asks the pod for paths; only the trace does.
+/// ´claim:trace:the-feed-never-fetches-paths´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_feed_ranking_without_paths_selected_costs_what_it_costs_today(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    let f = fixture(&rig.pool).await;
+    rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    pod.set(Mode::Answer(trace_answer(vec![])));
+    trace(&rig, f.viewer, f.post).await;
+    let queries: Vec<String> = pod
+        .requests()
+        .iter()
+        .map(|r| r["query"].as_str().expect("query").to_string())
+        .collect();
+    assert!(queries[0].contains("rank(") && !queries[0].contains("paths"));
+    assert!(queries[1].contains("rankSearch(") && queries[1].contains("paths"));
+}
+
+/// The relay adopts no trace it cannot place: an answer at another epoch
+/// than it asked, an entry for another target, or a member record the
+/// mirror does not hold is a logged fault, never a served path.
+///
+/// A malformed pod trace answer is INTERNAL and logged.
+/// ´claim:trace:a-malformed-trace-is-internal´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_malformed_pod_trace_answer_is_internal_and_logged(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = fixture(&rig.pool).await;
+    let cursor = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
+    let mut wrong_epoch = trace_answer(vec![trace_entry(f.post, 0.1, vec![])]);
+    wrong_epoch["asOfEpoch"] = json!(cursor - 1);
+    let unheld = trace_answer(vec![trace_entry(
+        f.post,
+        0.1,
+        vec![trace_path(
+            &[prof("a").to_string(), f.p.to_string()],
+            vec![trace_hop(
+                &["act:nobody:1:publish".to_string()],
+                (0.5, 0.5),
+                0.5,
+            )],
+            1,
+            0.1,
+        )],
+    )]);
+    for answer in [
+        wrong_epoch,
+        trace_answer(vec![trace_entry(Uuid::new_v4(), 0.1, vec![])]),
+        unheld,
+    ] {
+        pod.set(Mode::Answer(answer));
+        let (_guard, logs) = Logs::capture();
+        let response = trace_raw(&rig, json!({ "viewer": f.viewer, "target": f.post })).await;
+        assert_eq!(codes(&response), vec!["INTERNAL"], "{response}");
+        assert!(logs.text().contains("malformed"), "{}", logs.text());
+    }
 }

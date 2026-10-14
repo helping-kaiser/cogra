@@ -347,7 +347,8 @@ Who funds the debits is economics
 Per epoch, the backend ingests the accepted ordered act sequence
 `𝒬_k` through the L1 boundary and appends it to the mirror
 tables — each record with its authoritative causal key (act time,
-position) — advancing a stored epoch cursor. The contract is
+position), each epoch with its attested boundary timestamp —
+advancing a stored epoch cursor. The contract is
 exactly the mirror's truth relationship: it may lag L1; it must
 never diverge; it is fully rebuildable from the published
 sequence, so ingestion state is never precious. Confirmation of staged writes (§ above) and overlay

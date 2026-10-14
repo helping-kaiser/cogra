@@ -804,6 +804,24 @@ impl Query {
         super::feed::feed_ranking(ctx, viewer, as_of_epoch, filter).await
     }
 
+    /// The live trace of one thing in `viewer`'s view: its score and the
+    /// paths behind it, computed now by the server's standalone ranker
+    /// container and relayed (miner-api.md). Paths are never stored, so
+    /// every call is a real fetch at the newest ingested epoch; the read
+    /// takes no pin and reports none, and its figure may differ from a
+    /// held feed's — the reader adopts what the trace finds, and a feed
+    /// never re-orders for it. A target no live path reaches answers with
+    /// a null score and no paths. Null if `viewer` resolves to no
+    /// rankable actor.
+    async fn feed_trace(
+        &self,
+        ctx: &Context<'_>,
+        viewer: Uuid,
+        target: Uuid,
+    ) -> async_graphql::Result<Option<super::trace::FeedTrace>> {
+        super::trace::feed_trace(ctx, viewer, target).await
+    }
+
     /// Hydrate a window of a ranking snapshot: the nodes behind the given
     /// ids, in the given order. At most 100 ids per call (the page
     /// budget). An id that resolves to nothing hydratable (a pending write

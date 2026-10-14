@@ -10,6 +10,8 @@ workspace = true
 [dependencies]
 uuid      = { workspace = true }
 thiserror = { workspace = true }
+# The epoch package's attested boundary timestamp (common::l1::handshake).
+chrono    = { workspace = true }
 
 # The L1 seam model's interim act-authentication realization
 # (common::l1::crypto; open-questions.md Q30) and the key-backup blob

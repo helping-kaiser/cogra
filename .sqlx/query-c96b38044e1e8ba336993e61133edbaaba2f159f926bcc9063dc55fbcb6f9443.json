@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM mirror_epochs",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "c96b38044e1e8ba336993e61133edbaaba2f159f926bcc9063dc55fbcb6f9443"
+}

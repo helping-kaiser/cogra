@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO l1_epochs (epoch, act_count) VALUES ($1, $2) RETURNING closed_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "closed_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d0f53b3fbd3795a4acf79cc4a6f9541cd5b994f39a3a04a0afaacb0241fdaa3f"
+}
