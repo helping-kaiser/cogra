@@ -368,4 +368,75 @@ class PostEditViewModelTest {
         assertThat(vm.state.value.transportFailed).isTrue()
         assertThat(vm.state.value.refusal).isNull()
     }
+
+    // -- Leaving (EditCompose.md, DiscardConfirm.md): the edit keeps no draft --
+
+    @Test
+    fun leavingAnEmptyBatchLeavesAtOnceAndNeverAsks() = runTest(dispatcher) {
+        val vm = opened()
+        assertThat(vm.onLeaveRequested()).isTrue()
+        assertThat(vm.state.value.confirmingDiscard).isFalse()
+    }
+
+    @Test
+    fun leavingWithAnActInTheBatchAsksAndKeepWritingClosesOntoTheEditAsItWas() = runTest(dispatcher) {
+        val vm = opened()
+        vm.onTitleChange("Retitled")
+        assertThat(vm.onLeaveRequested()).isFalse()
+        assertThat(vm.state.value.confirmingDiscard).isTrue()
+
+        vm.onKeepWriting()
+        assertThat(vm.state.value.confirmingDiscard).isFalse()
+        assertThat(vm.state.value.title).isEqualTo("Retitled")
+        assertThat(vm.state.value.signedActionCount).isEqualTo(1)
+    }
+
+    /** The ask reads the acts batch, never the bytes: a withdrawal alone is an act. */
+    @Test
+    fun aWithdrawalAloneIsAnActSoLeavingAsks() = runTest(dispatcher) {
+        content.loadedTopics = listOf(testTopicClaim("coastroad"))
+        val vm = opened()
+        vm.onRemoveTag("coastroad")
+        assertThat(vm.state.value.recordStaged).isFalse()
+        assertThat(vm.onLeaveRequested()).isFalse()
+        assertThat(vm.state.value.confirmingDiscard).isTrue()
+    }
+
+    /** The record stays staged once touched (EditComposeUnchanged.md), so typing it back still asks. */
+    @Test
+    fun aChangeTypedBackStillAsksBecauseTheStagedRecordStays() = runTest(dispatcher) {
+        val vm = opened()
+        vm.onTitleChange("Retitled")
+        vm.onTitleChange("Loaded title")
+        assertThat(vm.onLeaveRequested()).isFalse()
+    }
+
+    /** A pick taken back in the same edit leaves the batch empty, and the way out asks nothing. */
+    @Test
+    fun aPickTakenBackLeavesTheBatchEmptyAndLeavingNeverAsks() = runTest(dispatcher) {
+        val vm = opened()
+        vm.onTagInputChange("saltmaps")
+        vm.onAddTag()
+        vm.onRemoveTag("saltmaps")
+        assertThat(vm.onLeaveRequested()).isTrue()
+        assertThat(vm.state.value.confirmingDiscard).isFalse()
+    }
+
+    /**
+     * Discard keeps nothing: the edit holds no draft store, so the next edit
+     * opens on the post as it stands, never on the discarded changes.
+     */
+    @Test
+    fun aDiscardedEditKeepsNothingAndTheNextEditOpensOnThePostAsItWas() = runTest(dispatcher) {
+        val discarded = opened()
+        discarded.onTitleChange("Retitled")
+        discarded.onBodyChange("Reworded")
+        assertThat(discarded.onLeaveRequested()).isFalse()
+
+        val next = opened()
+        assertThat(next.state.value.title).isEqualTo("Loaded title")
+        assertThat(next.state.value.body).isEqualTo("Loaded body")
+        assertThat(next.state.value.signedActionCount).isEqualTo(0)
+        assertThat(content.editCalls).isEqualTo(0)
+    }
 }

@@ -4,7 +4,7 @@
 // board is registered yet (feed-card-rework §16), so these pin behavior by test
 // id; the structural diff waits on registration.
 
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -197,6 +197,98 @@ describe("PostEditRoute — the guard is the acts batch (EditComposeUnchanged)",
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
     expect(sent).toMatchObject({ id: "p1", title: "Old title", content: "Old body", description: null });
     expect(signer.signStaged).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("PostEditRoute — leaving (EditCompose, EditWords, DiscardConfirm): the edit keeps no draft", () => {
+  beforeEach(() => push.mockClear());
+
+  const ask = () => screen.getByTestId("post-edit-discard-confirm");
+
+  it("the_x_is_named_leave_the_edit_is_discarded", async () => {
+    serve(editablePost());
+    draw();
+    await screen.findByTestId("post-edit");
+    expect(screen.getByRole("button", { name: "Leave — the edit is discarded" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Leave — your draft is kept" })).toBeNull();
+  });
+
+  it("an_empty_batch_leaves_at_once_by_the_x_and_the_back_arrow", async () => {
+    serve(editablePost());
+    draw();
+    await screen.findByTestId("post-edit");
+    fireEvent.click(screen.getByTestId("header-leave"));
+    expect(push).toHaveBeenCalledWith("/posts/p1");
+    fireEvent.click(screen.getByTestId("header-back"));
+    expect(push).toHaveBeenCalledTimes(2);
+    expect(ask()).not.toHaveAttribute("open");
+  });
+
+  it("a_staged_batch_asks_discard_the_changes_before_the_x_leaves", async () => {
+    serve(editablePost());
+    draw();
+    fireEvent.change(await screen.findByTestId("post-edit-title"), { target: { value: "New title" } });
+    fireEvent.click(screen.getByTestId("header-leave"));
+    expect(push).not.toHaveBeenCalled();
+    expect(ask()).toHaveAttribute("open");
+    expect(ask()).toHaveTextContent("Discard the changes?");
+    expect(ask()).toHaveTextContent("Nothing is kept.");
+  });
+
+  it("a_staged_batch_asks_the_same_before_the_back_arrow_leaves", async () => {
+    serve(editablePost());
+    draw();
+    fireEvent.change(await screen.findByTestId("post-edit-title"), { target: { value: "New title" } });
+    fireEvent.click(screen.getByTestId("header-back"));
+    expect(push).not.toHaveBeenCalled();
+    expect(ask()).toHaveAttribute("open");
+  });
+
+  it("a_withdrawal_alone_is_an_act_so_leaving_asks", async () => {
+    serve(editablePost({ topics: [topicClaim("coastroad")] }));
+    draw();
+    fireEvent.click(await screen.findByTestId("post-edit-tag-0-remove"));
+    fireEvent.click(screen.getByTestId("header-leave"));
+    expect(push).not.toHaveBeenCalled();
+    expect(ask()).toHaveAttribute("open");
+  });
+
+  it("keep_writing_closes_the_ask_onto_the_edit_as_it_was", async () => {
+    serve(editablePost());
+    draw();
+    const title = await screen.findByTestId("post-edit-title");
+    fireEvent.change(title, { target: { value: "New title" } });
+    fireEvent.click(screen.getByTestId("header-leave"));
+    fireEvent.click(screen.getByTestId("post-edit-discard-confirm-keep"));
+    expect(ask()).not.toHaveAttribute("open");
+    expect(push).not.toHaveBeenCalled();
+    expect(title).toHaveValue("New title");
+    expect(footer()).toHaveTextContent("You're signing 1 thing");
+  });
+
+  it("discard_leaves_toward_the_post_and_stages_or_signs_nothing", async () => {
+    let prepared = false;
+    serve(editablePost());
+    server.use(
+      graphql.mutation("PreparePostEdit", () => {
+        prepared = true;
+        return HttpResponse.json({ data: editPrepared() });
+      }),
+    );
+    const signer = draw();
+    fireEvent.change(await screen.findByTestId("post-edit-title"), { target: { value: "New title" } });
+    fireEvent.click(screen.getByTestId("header-leave"));
+    fireEvent.click(screen.getByTestId("post-edit-discard-confirm-discard"));
+    expect(push).toHaveBeenCalledTimes(1);
+    expect(push).toHaveBeenCalledWith("/posts/p1");
+    expect(prepared).toBe(false);
+    expect(signer.signStaged).not.toHaveBeenCalled();
+
+    // Nothing is kept: the next edit opens on the post as it stands.
+    cleanup();
+    draw();
+    expect(await screen.findByTestId("post-edit-title")).toHaveValue("Old title");
+    expect(footer()).toHaveTextContent("Nothing to sign yet");
   });
 });
 

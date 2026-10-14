@@ -1,14 +1,20 @@
 "use client";
 
-// DiscardConfirm — the one question asked before a written comment is lost.
+// DiscardConfirm — the one question asked before writing that keeps no draft
+// is lost: a reply, a comment edit, a post edit.
 //
-// WHY IT EXISTS AT ALL, given comments have no drafts. Precisely because they
+// WHY IT EXISTS AT ALL, given those have no drafts. Precisely because they
 // have none: the post wizard's X is safe to press because the draft survives
-// it, and a comment's X is not, so the two cannot share the same silent
-// behaviour. The boards route EVERY leave edge in the reply flow through this
-// dialog when something is written — ReplyCompose, ReplyPictures(Web),
-// ReplyVideo, ReplyMediaErrors, ReplySeal and CommentEdit all carry the same
-// pair: "something written — the confirm", "empty — leaves at once".
+// it, and a reply's or an edit's X is not, so the two cannot share the same
+// silent behaviour. The boards route EVERY leave edge in the reply flow and
+// the edits through this dialog when something is at stake — ReplyCompose,
+// ReplyPictures(Web), ReplyVideo, ReplyMediaErrors, ReplySeal, CommentEdit and
+// the EditCompose family all carry the same pair: "something to lose — the
+// confirm", "nothing — leaves at once".
+//
+// ONLY THE QUESTION VARIES (DiscardConfirm.md): the reply asks for itself, and
+// both edits ask `Discard the changes?` — the post edit reuses the comment
+// edit's sibling rather than drawing a dialog of its own.
 //
 // IT ASKS ONLY WHEN THERE IS SOMETHING TO LOSE. An empty composer leaves at
 // once, because a confirmation over nothing trains an author to dismiss the
@@ -24,15 +30,25 @@ import { useEffect, useRef } from "react";
 import { useCoversSurface } from "../covering-layer";
 import { PillButton } from "../pill-button";
 
+/** What the dialog asks about — the only thing that varies between its surfaces. */
+export type DiscardSubject = "reply" | "edit";
+
+const QUESTIONS: Readonly<Record<DiscardSubject, string>> = {
+  reply: "Discard this reply?",
+  edit: "Discard the changes?",
+};
+
 export function DiscardConfirm({
   open,
   onKeepWriting,
   onDiscard,
+  subject = "reply",
   testId = "discard-confirm",
 }: {
   open: boolean;
   onKeepWriting: () => void;
   onDiscard: () => void;
+  subject?: DiscardSubject;
   testId?: string;
 }) {
   const dialog = useRef<HTMLDialogElement | null>(null);
@@ -74,7 +90,7 @@ export function DiscardConfirm({
       {/* `headline-small` is a dialog heading's role; `title-medium` is a
           card's (readme §13, the audit answers, and the type table). */}
       <h2 id={`${testId}-title`} className="m-0 text-headline-small">
-        Discard this reply?
+        {QUESTIONS[subject]}
       </h2>
       <p className="mt-2 mb-6 text-body-medium text-on-surface-variant">Nothing is kept.</p>
       <div className="flex justify-end gap-2">

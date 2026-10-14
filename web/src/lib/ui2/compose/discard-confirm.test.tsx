@@ -1,4 +1,4 @@
-// DiscardConfirm — the one question asked before a written comment is lost.
+// DiscardConfirm — the one question asked before writing that keeps no draft is lost.
 //
 // What is worth asserting is not that a dialog renders: it is that the
 // DESTRUCTIVE answer is never the easy one to reach by accident. Escape keeps
@@ -26,6 +26,14 @@ describe("DiscardConfirm", () => {
     expect(dialog).toHaveTextContent("Discard this reply?");
     // The second line is not decoration: comments have no drafts, and this is
     // where that is said.
+    expect(dialog).toHaveTextContent("Nothing is kept.");
+  });
+
+  it("asks an edit's question for an edit, over the same Nothing is kept.", () => {
+    render(<DiscardConfirm open subject="edit" onKeepWriting={() => {}} onDiscard={() => {}} />);
+    const dialog = screen.getByTestId("discard-confirm");
+    expect(dialog).toHaveTextContent("Discard the changes?");
+    expect(dialog).not.toHaveTextContent("Discard this reply?");
     expect(dialog).toHaveTextContent("Nothing is kept.");
   });
 

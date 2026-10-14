@@ -28,6 +28,7 @@ import { useWriteSigner } from "@/lib/signing/provider";
 import { RestoreCard } from "@/app/applicant-status";
 import { TransportError } from "@/lib/ui/transport-error";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
+import { DiscardConfirm } from "@/lib/ui2/compose/discard-confirm";
 import { PickedSheet } from "@/lib/ui2/compose/picked-sheet";
 import { SensitiveSheet } from "@/lib/ui2/compose/sensitive-sheet";
 import { ActsSheet } from "@/lib/ui2/compose/edit-acts";
@@ -94,6 +95,8 @@ export function PostEditRoute({
   const [sheet, setSheet] = useState<"acts" | "pictures" | "sensitive" | null>(null);
   const [describing, setDescribing] = useState<string | null>(null);
   const [help, setHelp] = useState<HelpTopic | null>(null);
+  // `Discard the changes?` stands over the edit (DiscardConfirm.md).
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const slowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -137,6 +140,15 @@ export function PostEditRoute({
   const previews = useMemo(() => (state === null ? {} : keptPreviews(state.gallery)), [state]);
 
   const back = () => router.push(`/posts/${postId}`);
+  // THE EDIT KEEPS NO DRAFT, so the way out reads the acts batch — the same
+  // count the sign guard reads, never a byte comparison: an empty batch leaves
+  // at once, and a batch holding an act is asked before anything is discarded
+  // (EditCompose.md, DiscardConfirm.md).
+  const leave = () => {
+    if (busy) return;
+    if (count === 0) back();
+    else setConfirmingDiscard(true);
+  };
 
   if (loaded.kind === "loading" || state === null) {
     if (loaded.kind === "failed") {
@@ -350,10 +362,20 @@ export function PostEditRoute({
         onOpenActs={() => setSheet("acts")}
         onHelp={() => setHelp(HELP_TOPICS.editing)}
         onSign={() => void sign()}
-        onBack={() => {
-          if (!busy) back();
-        }}
+        onLeave={leave}
         keyCard={<RestoreCard />}
+      />
+      {/* Discard keeps nothing: the edit's state lives in this route alone, and
+          leaving unmounts it — the post stands as it was. */}
+      <DiscardConfirm
+        open={confirmingDiscard}
+        subject="edit"
+        onKeepWriting={() => setConfirmingDiscard(false)}
+        onDiscard={() => {
+          setConfirmingDiscard(false);
+          back();
+        }}
+        testId="post-edit-discard-confirm"
       />
       <ActsSheet open={sheet === "acts"} rows={rows} onClose={() => setSheet(null)} testId="post-edit-acts" />
       <PickedSheet

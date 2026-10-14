@@ -550,6 +550,14 @@ class AtomsTest {
         buttons[1].assert(hasTestTag("discard_keep"))
     }
 
+    // DiscardConfirm.md: the reply asks for itself; the comment edit and the
+    // post edit share one question, the post edit reusing its sibling.
+    @Test
+    fun bothEditsAskDiscardTheChangesAndTheReplyAsksForItself() {
+        assertThat(DiscardSubject.Reply.question).isEqualTo("Discard this reply?")
+        assertThat(DiscardSubject.Edit.question).isEqualTo("Discard the changes?")
+    }
+
     // Pinned to the master (`design/components/states/EmptyState.jsx`): a
     // calm statement and nothing else when the surface has no action.
     @Test
