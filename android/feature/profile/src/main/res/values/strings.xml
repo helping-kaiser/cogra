@@ -4,6 +4,7 @@
     <string name="profile_back">Back</string>
     <!-- A Saved row's person reads its origin (the origin-naming table). -->
     <string name="profile_back_saved">Back to Saved</string>
+    <string name="profile_back_notifications">Back to Notifications</string>
 
     <!-- The profile's ⋮ (ProfileOwnMenu.md, ProfileMenu.md, ProfileDeletedMenu.md). -->
     <string name="profile_menu_own">More on your profile</string>

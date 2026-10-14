@@ -39,11 +39,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.R
+import com.cogra.core.designsystem.StancePoint
 import com.cogra.core.designsystem.dataNode
+import com.cogra.core.designsystem.pair
+import com.cogra.core.designsystem.standingReadout
 import com.cogra.core.designsystem.v2.media.CograAvatar
 
 private val DISC = 40.dp
@@ -60,6 +66,7 @@ private fun Disc(disc: ContentRowDisc) {
 
         is ContentRowDisc.Picture -> CograAvatar(name = disc.name, size = DISC, url = disc.url)
         is ContentRowDisc.Monogram -> CograAvatar(name = disc.name, size = DISC)
+        is ContentRowDisc.Face -> FaceDisc(disc)
         is ContentRowDisc.Glyph -> Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -74,6 +81,31 @@ private fun Disc(disc: ContentRowDisc) {
                 modifier = Modifier.size(20.dp),
             )
         }
+    }
+}
+
+/**
+ * `StanceValue` with `showPair={false}` (StanceReadout.jsx): the face on
+ * screen, its words and the exact pair spoken.
+ */
+@Composable
+private fun FaceDisc(disc: ContentRowDisc.Face) {
+    val point = StancePoint(disc.directed, disc.interest)
+    val readout = standingReadout(point)
+    val spoken = "${stringResource(readout.label)}, ${point.pair()}"
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(DISC)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .semantics(mergeDescendants = true) { contentDescription = spoken },
+    ) {
+        Text(
+            text = readout.emoji,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.clearAndSetSemantics {},
+        )
     }
 }
 
@@ -99,13 +131,17 @@ fun ContentRow(
     onOpen: (() -> Unit)? = null,
     action: (@Composable () -> Unit)? = null,
     node: DataNode? = null,
+    unread: Boolean = false,
+    sentence: Boolean = false,
 ) {
     // A DELETED ACCOUNT'S ROW (HA-3, design digest item 56): the reserved disc
-    // and `Deleted account` in the system's voice, the aside dropped.
+    // and `Deleted account` in the system's voice, the aside dropped — unless
+    // the title is a sentence that already names the deleted actor in prose
+    // (`A deleted account commented on your post`, design digest item 18).
     val redacted = disc == ContentRowDisc.Redacted
-    val shownTitle = if (redacted) stringResource(R.string.content_row_deleted_account) else title
+    val shownTitle = if (redacted && !sentence) stringResource(R.string.content_row_deleted_account) else title
     val aside = if (redacted) null else titleAside
-    val quiet = redacted || titleQuiet
+    val quiet = (redacted && !sentence) || titleQuiet
     val part: (String) -> DataNode? = { name -> node?.let { DataNode("${it.path}.$name") } }
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -133,17 +169,45 @@ fun ContentRow(
                     Box(Modifier.dataNode(part("second"))) { line() }
                 }
             }
-            trailing?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.dataNode(part("trailing")),
-                )
-            }
+            TrailingEdge(trailing, unread, part, testTag)
         }
         action?.invoke()
     }
+}
+
+/** The trailing edge: the quiet time, and under it the unread dot. */
+@Composable
+private fun TrailingEdge(trailing: String?, unread: Boolean, part: (String) -> DataNode?, testTag: String) {
+    if (trailing == null && !unread) return
+    Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        trailing?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.dataNode(part("trailing")),
+            )
+        }
+        if (unread) UnreadDot(part("dot"), testTag)
+    }
+}
+
+/**
+ * The shell's unread mark at row scale (ContentRow.jsx `unread`): the bell's
+ * own dot, spoken `New` — a dot and never a weight change, so a list of
+ * unread rows stays a list.
+ */
+@Composable
+private fun UnreadDot(node: DataNode?, testTag: String) {
+    val spoken = stringResource(R.string.content_row_new)
+    Box(
+        Modifier
+            .size(8.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primary)
+            .semantics { contentDescription = spoken }
+            .then(if (node != null) Modifier.dataNode(node) else Modifier.testTag("${testTag}_dot")),
+    )
 }
 
 @Composable

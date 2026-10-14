@@ -94,6 +94,12 @@ import com.cogra.feature.profile.ProfileEditRoute
 import com.cogra.feature.profile.ProfileRoute
 import com.cogra.feature.profile.SAVED_ORIGIN
 import com.cogra.feature.saved.SavedRoute
+import com.cogra.feature.notifications.BellViewModel
+import com.cogra.feature.notifications.NotificationsRoute
+import com.cogra.feature.notifications.RootBellViewModel
+import com.cogra.feature.profile.NOTIFICATIONS_ORIGIN
+import com.cogra.domain.notifications.NotificationTarget
+import com.cogra.core.designsystem.v2.atom.BandBell
 import com.cogra.feature.profile.avatar.AvatarFlowRoute
 import com.cogra.feature.settings.AboutScreen
 import com.cogra.feature.settings.BackupRoute
@@ -199,6 +205,14 @@ data class Profile(val handle: String? = null, val from: String? = null)
 /** The reader's Saved list, reached from their own profile's ⋮ (Saved.md). */
 @Serializable
 data object Saved
+
+/**
+ * The reader's notification list, reached from the bell on a root band
+ * (Notifications.md). [from] names the root the bell was tapped on — the slot
+ * the bar keeps lit and the root the back arrow names.
+ */
+@Serializable
+data class Notifications(val from: String = "feed")
 
 @Serializable
 data object ProfileEdit
@@ -666,11 +680,22 @@ private fun CograNavGraphContent(
     // originating root stays lit on a drill-in) — its one door is the
     // reader's own profile.
     val onSaved = backStackEntry?.destination?.hasRoute(Saved::class) == true
+    // NOTIFICATIONS KEEPS LIT THE ROOT THE BELL WAS TAPPED ON (Notifications.md:27).
+    val onNotifications = backStackEntry?.destination?.hasRoute(Notifications::class) == true
+    val notificationsFrom = if (onNotifications) backStackEntry?.toRoute<Notifications>()?.from else null
     val onOwnProfileTab = onSaved ||
+        notificationsFrom == "profile" ||
         (onProfile && backStackEntry?.toRoute<Profile>()?.handle == null)
     val onPostDetail = backStackEntry?.destination?.hasRoute(PostDetail::class) == true
     val onChatsComingSoon = backStackEntry?.destination?.hasRoute(ChatsComingSoon::class) == true
-    val onReadSurface = onFeedTab || onProfile || onPostDetail || onChatsComingSoon || onSaved
+    val onReadSurface = onFeedTab || onProfile || onPostDetail || onChatsComingSoon || onSaved || onNotifications
+    // THE BELL'S DOT: one state the whole shell shows, lit only on a root's
+    // fresh load (FeedUnread.md) — each root reads it through its own entry's
+    // `RootBellViewModel`; a guest has no list and no bell.
+    val bellModel: BellViewModel = hiltViewModel()
+    val bellLit by bellModel.lit.collectAsStateWithLifecycle()
+    fun bellFor(from: String): BandBell? =
+        BandBell(lit = bellLit, onOpen = { navController.navigate(Notifications(from)) }).takeIf { signedIn == true }
 
     // The documented tab pattern: pop to the signed-in root saving
     // state, single-top, restoring the target tab's state.
@@ -781,9 +806,10 @@ private fun CograNavGraphContent(
                     node = when {
                         onFeedTab -> DataNode("feed") / "bottomBar"
                         onPostDetail -> DataNode("postDetail") / "bottomBar"
+                        onNotifications -> DataNode("notifications") / "bottomBar"
                         else -> null
                     },
-                    feedSelected = onFeedTab,
+                    feedSelected = onFeedTab || notificationsFrom == "feed",
                     profileSelected = onOwnProfileTab,
                     // Over the feed's own root the slot is a re-tap the feed
                     // answers (Feed.md:85-91); from anywhere else it is the
@@ -906,6 +932,9 @@ private fun CograNavGraphContent(
                 val (commentParent, consumeCommentParent) = entry.navResult(commentParentKey)
                 val (commentsPlace, consumeCommentsPlace) = entry.navResult(commentsPlaceKey)
                 val accountId by authState.accountId.collectAsStateWithLifecycle()
+                // THE BELL LIGHTS ON THIS ROOT'S FRESH LOAD (FeedUnread.md:5):
+                // once per entry, and again on the reader's pull.
+                val rootBell: RootBellViewModel? = if (signedIn == true) hiltViewModel(entry) else null
                 FeedRoute(
                     signedIn = signedIn,
                     reselectSignal = feedReselects,
@@ -968,6 +997,7 @@ private fun CograNavGraphContent(
                         }
                         null -> null
                     },
+                    bell = bellFor("feed"),
                     refreshSignal = signedResult,
                     onRefreshSignalConsumed = consumeSigned,
                     keyBanner = keyBanner,
@@ -975,7 +1005,10 @@ private fun CograNavGraphContent(
                     deletionBand = deletionBand(DataNode("feed") / "deletionBand"),
                     banners = { statusBanners(actorRestored, consumeRestored) },
                     vouchCard = vouchCard,
-                    onPulled = { feedPulls += 1 },
+                    onPulled = {
+                        feedPulls += 1
+                        rootBell?.pulled()
+                    },
                 )
                 // A newer version, said once per release on a cold open's
                 // feed — to members, applicants and guests alike
@@ -1191,8 +1224,13 @@ private fun CograNavGraphContent(
                 val (handleChanged, consumeHandleChanged) = entry.navResult(handleChangedKey)
                 val (profileSaved, consumeProfileSaved) = entry.navResult(profileSavedKey)
                 val (actorRestored, consumeRestored) = entry.navResult(actorRestoredKey)
+                // The own profile is a ROOT: its fresh load reads the bell
+                // (Profile.md:41; FeedUnread.md:5). Another actor's is a drill-in.
+                val ownRoot = route.handle == null && signedIn == true
+                if (ownRoot) hiltViewModel<RootBellViewModel>(entry)
                 ProfileRoute(
                     handle = route.handle,
+                    bell = if (ownRoot) bellFor("profile") else null,
                     handleChangedResult = handleChanged,
                     onHandleChangedResultConsumed = consumeHandleChanged,
                     profileSavedResult = profileSaved,
@@ -1220,6 +1258,31 @@ private fun CograNavGraphContent(
                     onOpenSaved = { navController.navigate(Saved) },
                     onRequireAccount = { joinPrompt = true }.takeIf { signedIn == false },
                     from = route.from,
+                )
+            }
+            // NOTIFICATIONS (Notifications.md): reached from the bell on a root
+            // band; every row opens its thing with a back arrow reading `Back to
+            // Notifications`, and the list's own arrow pops to the bell's root.
+            composable<Notifications> { entry ->
+                val route = entry.toRoute<Notifications>()
+                NotificationsRoute(
+                    from = route.from,
+                    onBack = { navController.navigateUp() },
+                    onOpen = { target ->
+                        when (target) {
+                            is NotificationTarget.Post -> navController.navigate(
+                                PostDetail(target.postId, from = NOTIFICATIONS_ORIGIN),
+                            )
+                            is NotificationTarget.Comment -> navController.navigate(
+                                PostDetail(target.postId, from = NOTIFICATIONS_ORIGIN, commentId = target.commentId),
+                            )
+                            is NotificationTarget.Person -> navController.navigate(
+                                Profile(target.handle, from = NOTIFICATIONS_ORIGIN),
+                            )
+                            NotificationTarget.Invites -> navController.navigate(Invites)
+                            NotificationTarget.OwnFeed -> toTab(Feed)
+                        }
+                    },
                 )
             }
             // SAVED (Saved.md): reached from the own profile's ⋮, and every row

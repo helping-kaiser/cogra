@@ -8,6 +8,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertTouchHeightIsEqualTo
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.assertIsDisplayed
@@ -256,6 +257,60 @@ class AtomsTest {
         }
 
         compose.onNodeWithTag("band_chats").assertDoesNotExist()
+    }
+
+    // FeedUnread.md:11, :13, :15 — a dot, never a count, and the name says so.
+    @Test
+    fun `the bell is a dot never a count and says so`() {
+        var lit by mutableStateOf(false)
+        var opened = 0
+        compose.setContent {
+            Cogra2PreviewTheme {
+                CograBand(onChats = {}, testTag = "band", bell = BandBell(lit = lit, onOpen = { opened += 1 }))
+            }
+        }
+
+        compose.onNodeWithTag("band_bell").assertContentDescriptionEquals("Notifications")
+        compose.onNodeWithTag("band_bell_dot", useUnmergedTree = true).assertDoesNotExist()
+        lit = true
+        compose.onNodeWithTag("band_bell").assertContentDescriptionEquals("Notifications — something new")
+        compose.onNodeWithTag("band_bell_dot", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("band_bell").assertTouchHeightIsEqualTo(48.dp)
+        compose.onNodeWithTag("band_bell").performClick()
+        assertThat(opened).isEqualTo(1)
+    }
+
+    // Main.md:9, FeedBare.md:9 — a guest has no list, so no bell.
+    @Test
+    fun `a guest band has no bell`() {
+        compose.setContent {
+            Cogra2PreviewTheme { CograBand(onChats = {}, testTag = "band") }
+        }
+
+        compose.onNodeWithTag("band_bell").assertDoesNotExist()
+    }
+
+    // Profile.md:3; ChatsComingSoon.md:3 — the screen's control, then chats, then the bell.
+    @Test
+    fun `the cluster reads the screens control then chats then the bell`() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                Column(Modifier.width(390.dp)) {
+                    CograBand(
+                        onChats = {},
+                        testTag = "band",
+                        trailing = { InlineAction("Newest", {}, testTag = "band_control") },
+                        bell = BandBell(lit = false, onOpen = {}),
+                    )
+                }
+            }
+        }
+
+        val control = compose.onNodeWithTag("band_control").fetchSemanticsNode().boundsInRoot.left
+        val chats = compose.onNodeWithTag("band_chats").fetchSemanticsNode().boundsInRoot.left
+        val bell = compose.onNodeWithTag("band_bell").fetchSemanticsNode().boundsInRoot.left
+        assertThat(control).isLessThan(chats)
+        assertThat(chats).isLessThan(bell)
     }
 
     @Test

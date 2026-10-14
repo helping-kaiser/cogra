@@ -10,6 +10,9 @@ sealed interface ContentRowDisc {
 
     data class Monogram(val name: String) : ContentRowDisc
 
+    /** A stance's face where a picture would go, no digits (the chronicle's opinion row). */
+    data class Face(val directed: Double, val interest: Double) : ContentRowDisc
+
     /** A deleted account: the disc keeps its space and fills with nothing. */
     data object Redacted : ContentRowDisc
 }

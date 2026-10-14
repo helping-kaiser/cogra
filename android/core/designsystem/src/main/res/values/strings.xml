@@ -37,6 +37,9 @@
 
     <!-- The read shell's band (design.md §6). -->
     <string name="cogra_band_chats">Chats</string>
+    <!-- The bell's spoken names, quiet and lit (FeedUnread.md:13, :15). -->
+    <string name="cogra_band_bell">Notifications</string>
+    <string name="cogra_band_bell_lit">Notifications — something new</string>
 
     <!-- The house page header's back target (design.md §11). An icon never
          carries meaning alone: the label lives in the accessibility tree. -->
@@ -322,4 +325,6 @@
 
     <!-- A deleted account's row (`ActorChip.jsx` REDACTED_ACTOR_NAME). -->
     <string name="content_row_deleted_account">Deleted account</string>
+    <!-- A row not yet opened (ContentRow.jsx `unread`). -->
+    <string name="content_row_new">New</string>
 </resources>

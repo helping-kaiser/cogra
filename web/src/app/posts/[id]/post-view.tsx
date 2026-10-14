@@ -45,6 +45,7 @@ import { CommentsSheet } from "@/app/comments/comments-sheet";
 import { useHostSnack } from "@/lib/saved/save-row";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
+import { backFor } from "@/lib/ui/back-origin";
 
 import { freezeReducer, type Freeze } from "./detail-freeze";
 import { NewerVersionLine } from "./newer-version-line";
@@ -67,8 +68,9 @@ export function PostView({
   landOn?: string | null;
 }) {
   // THE BACK ARROW NAMES WHERE THE READER CAME FROM (the origin-naming table):
-  // a Saved row's destination reads `Back to Saved`.
-  const back = from === "saved" ? { href: "/saved", label: "Back to Saved" } : { href: "/feed", label: "Back to feed" };
+  // a Saved row's destination reads `Back to Saved`, a notification's `Back to
+  // Notifications`.
+  const back = backFor(from);
   const client = useApolloClient();
   const host = useScrollHost();
 
