@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -275,7 +277,7 @@ fun PickedSheet(
             }
         }
         Text(
-            text = "The first one is the cover — drag to reorder.",
+            text = "The first one is the cover.",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -302,14 +304,7 @@ private fun PickedSheetRow(
 ) {
     val cover = index == 0
     val name = if (cover) "the cover" else "picture ${index + 1}"
-    val moves = buildList {
-        if (index > 0) {
-            add(CustomAccessibilityAction("Move earlier") { onMove(index, index - 1); true })
-        }
-        if (index < total - 1) {
-            add(CustomAccessibilityAction("Move later") { onMove(index, index + 1); true })
-        }
-    }
+    val moves = moveActions(index, total, onMove)
 
     Row(
         modifier = Modifier
@@ -342,30 +337,7 @@ private fun PickedSheetRow(
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            if (picture.described) {
-                Text(
-                    text = "Described",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            } else {
-                Text(
-                    text = "Describe",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .minimumInteractiveComponentSize()
-                        .defaultMinSize(minHeight = 0.dp)
-                        .clickable(
-                            role = Role.Button,
-                            onClickLabel = "Describe $name",
-                            onClick = onDescribe,
-                        )
-                        .then(
-                            if (testTag != null) Modifier.testTag("${testTag}_describe") else Modifier,
-                        ),
-                )
-            }
+            RowActions(picture, index, total, name, onDescribe, onMove, testTag)
         }
         Box(
             modifier = Modifier
@@ -382,6 +354,88 @@ private fun PickedSheetRow(
             )
         }
     }
+}
+
+/** The same moves as TalkBack custom actions (PickedSheet.jsx), each only where it is possible. */
+private fun moveActions(index: Int, total: Int, onMove: (Int, Int) -> Unit): List<CustomAccessibilityAction> =
+    buildList {
+        if (index > 0) {
+            add(
+                CustomAccessibilityAction("Make it the cover") {
+                    onMove(index, 0)
+                    true
+                },
+            )
+            add(
+                CustomAccessibilityAction("Move up") {
+                    onMove(index, index - 1)
+                    true
+                },
+            )
+        }
+        if (index < total - 1) {
+            add(
+                CustomAccessibilityAction("Move down") {
+                    onMove(index, index + 1)
+                    true
+                },
+            )
+        }
+    }
+
+/**
+ * A row's second line. THE DRAG HAS NON-DRAG TWINS (the K13 round;
+ * PickedSheet.jsx): after Describe, `Make it the cover` · `Move up` · `Move
+ * down`, each only where the move is possible — the cover neither becomes
+ * the cover nor moves up, the last row does not move down.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun RowActions(
+    picture: PickedPicture,
+    index: Int,
+    total: Int,
+    name: String,
+    onDescribe: () -> Unit,
+    onMove: (Int, Int) -> Unit,
+    testTag: String?,
+) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(Space.x3),
+        verticalArrangement = Arrangement.spacedBy(Space.x2),
+    ) {
+        if (picture.described) {
+            Text(
+                text = "Described",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            RowAction("Describe", "Describe $name", onDescribe, testTag?.let { "${it}_describe" })
+        }
+        if (index > 0) {
+            RowAction("Make it the cover", null, { onMove(index, 0) }, testTag?.let { "${it}_make_cover" })
+            RowAction("Move up", null, { onMove(index, index - 1) }, testTag?.let { "${it}_up" })
+        }
+        if (index < total - 1) {
+            RowAction("Move down", null, { onMove(index, index + 1) }, testTag?.let { "${it}_down" })
+        }
+    }
+}
+
+/** A small inline action on a row's second line — the board's `InlineAction size="sm"`. */
+@Composable
+private fun RowAction(text: String, clickLabel: String?, onClick: () -> Unit, testTag: String?) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier
+            .minimumInteractiveComponentSize()
+            .defaultMinSize(minHeight = 0.dp)
+            .clickable(role = Role.Button, onClickLabel = clickLabel, onClick = onClick)
+            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+    )
 }
 
 @ThemePreviews
