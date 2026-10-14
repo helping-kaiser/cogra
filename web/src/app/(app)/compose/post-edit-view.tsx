@@ -12,6 +12,11 @@
 // THE MARK IS THE AUTHOR'S ONGOING JUDGMENT, which is why it sits beside a
 // license that cannot move; it opens the seal's own sheet (ruling 42).
 //
+// THE EDIT KEEPS NO DRAFT. The back arrow and the X are one way out: with an
+// act in the batch the route asks `Discard the changes?` first, with none it
+// leaves at once — so the X says what leaving does, `Leave — the edit is
+// discarded` (EditCompose.md, EditWords.md, DiscardConfirm.md).
+//
 // DRIFT (registration-gated, feed-card-rework §16): no Edit* board is in
 // nodes.json yet, so this surface carries test ids, not node paths — the
 // structural diff waits on registration; the behavior tests pin the sidecars.
@@ -20,8 +25,8 @@
 // pictures · N of 10` through the device picker and the locked crop, the
 // upload gate's lines, and a clip's `Change the cover` — are not built here;
 // the media this edit can author is the post's own pictures, reordered,
-// re-covered, described or removed. The header's ✕ (`Leave — your draft is
-// kept`) waits on the edit draft it promises; the back arrow leaves.
+// re-covered, described or removed. When the crops land, their X raises the
+// same ask the edit's own X does (ComposeCrop.md, CoverCrop.md).
 
 import type { ReactNode } from "react";
 
@@ -61,6 +66,9 @@ function FieldLabel({ children, id }: { children: string; id?: string }) {
   );
 }
 
+/** The header X's accessible name: the edit keeps no draft (EditCompose, EditWords boards). */
+export const EDIT_LEAVE_LABEL = "Leave — the edit is discarded";
+
 function BodyRule() {
   return (
     <p className="m-0 text-body-small text-on-surface-variant">
@@ -96,7 +104,7 @@ export function PostEditView({
   onOpenActs,
   onHelp,
   onSign,
-  onBack,
+  onLeave,
   keyCard,
 }: {
   state: PostEditState;
@@ -128,7 +136,8 @@ export function PostEditView({
   onOpenActs: () => void;
   onHelp: () => void;
   onSign: () => void;
-  onBack: () => void;
+  /** The back arrow and the X alike: the route decides whether leaving asks. */
+  onLeave: () => void;
   /** The key-absent seal, standing in the commit's place. */
   keyCard: ReactNode;
 }) {
@@ -143,6 +152,9 @@ export function PostEditView({
   const inert = count === 0 || problem !== null;
   const withdrawnTagList = withdrawnTags(state.loadedTags, state.tags);
   const withdrawnRefList = withdrawnReferences(state.loadedReferences, state.references);
+  const leave = () => {
+    if (!slowAnswer) onLeave();
+  };
   const subline = slow
     ? "Still signing — the network is slow right now."
     : countChanged
@@ -167,9 +179,9 @@ export function PostEditView({
       <HeaderBar
         title="Edit post"
         backLabel="Back to the post"
-        onBack={() => {
-          if (!slowAnswer) onBack();
-        }}
+        onBack={leave}
+        onLeave={leave}
+        leaveLabel={EDIT_LEAVE_LABEL}
         help={<HelpButton label="Editing" onOpen={onHelp} />}
         testId="post-edit-header"
       />
