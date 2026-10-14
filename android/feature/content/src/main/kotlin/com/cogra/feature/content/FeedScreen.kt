@@ -257,6 +257,13 @@ private fun then(first: () -> Unit, second: () -> Unit): () -> Unit = {
  */
 private val FEED = DataNode("feed")
 
+/** The band's working edge: chats, then the bell, right-most (Profile.md:3; ChatsComingSoon.md:3). */
+@Composable
+private fun FeedBandActions(onChats: (() -> Unit)?, bell: BandBell?, band: DataNode) {
+    onChats?.let { CograBandChats(it, testTag = "feed_band", node = band) }
+    bell?.let { CograBandBell(it, testTag = "feed_band", node = band) }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeedScreen(
@@ -401,12 +408,7 @@ fun FeedScreen(
                         // (FE-09). The 48dp band is the drawn one (F-10).
                         title = { CograBandIdentity(testTag = "feed_band", node = band) },
                         modifier = Modifier.dataNode(band),
-                        // The cluster reads chats, then the bell, right-most
-                        // (Profile.md:3; ChatsComingSoon.md:3).
-                        actions = {
-                            onChats?.let { CograBandChats(it, testTag = "feed_band", node = band) }
-                            bell?.let { CograBandBell(it, testTag = "feed_band", node = band) }
-                        },
+                        actions = { FeedBandActions(onChats, bell, band) },
                         expandedHeight = Layout.TopBarHeight,
                         colors = surfaceTopAppBarColors(),
                         scrollBehavior = collapsingTop.scrollBehavior,

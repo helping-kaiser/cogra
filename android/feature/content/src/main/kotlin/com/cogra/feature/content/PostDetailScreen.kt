@@ -206,13 +206,17 @@ fun PostDetailRoute(
         },
         saved = rememberSavedWrites(),
         onRequireAccount = onRequireAccount,
-        backDescription = when (from) {
-            "saved" -> stringResource(R.string.content_back_saved)
-            "notifications" -> stringResource(R.string.content_back_notifications)
-            else -> null
-        },
+        backDescription = originBack(from),
         landOn = landOn,
     )
+}
+
+/** The origin-naming table (`Back to Saved`, `Back to Notifications`); null for the plain arrow. */
+@Composable
+private fun originBack(from: String?): String? = when (from) {
+    "saved" -> stringResource(R.string.content_back_saved)
+    "notifications" -> stringResource(R.string.content_back_notifications)
+    else -> null
 }
 
 /** The back arrow's spoken name: the origin's when one is named, else the plain `Back`. */

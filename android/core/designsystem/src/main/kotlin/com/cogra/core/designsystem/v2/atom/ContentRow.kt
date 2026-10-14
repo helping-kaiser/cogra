@@ -101,7 +101,11 @@ private fun FaceDisc(disc: ContentRowDisc.Face) {
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .semantics(mergeDescendants = true) { contentDescription = spoken },
     ) {
-        Text(text = readout.emoji, style = MaterialTheme.typography.titleMedium, modifier = Modifier.clearAndSetSemantics {})
+        Text(
+            text = readout.emoji,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.clearAndSetSemantics {},
+        )
     }
 }
 
@@ -165,21 +169,26 @@ fun ContentRow(
                     Box(Modifier.dataNode(part("second"))) { line() }
                 }
             }
-            if (trailing != null || unread) {
-                Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    trailing?.let {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.dataNode(part("trailing")),
-                        )
-                    }
-                    if (unread) UnreadDot(part("dot"), testTag)
-                }
-            }
+            TrailingEdge(trailing, unread, part, testTag)
         }
         action?.invoke()
+    }
+}
+
+/** The trailing edge: the quiet time, and under it the unread dot. */
+@Composable
+private fun TrailingEdge(trailing: String?, unread: Boolean, part: (String) -> DataNode?, testTag: String) {
+    if (trailing == null && !unread) return
+    Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        trailing?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.dataNode(part("trailing")),
+            )
+        }
+        if (unread) UnreadDot(part("dot"), testTag)
     }
 }
 

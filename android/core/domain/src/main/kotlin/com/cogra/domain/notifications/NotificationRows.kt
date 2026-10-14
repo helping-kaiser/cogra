@@ -115,31 +115,38 @@ private fun predicate(row: Notification): String = when (row.kind) {
 private fun contentOf(row: Notification): SavedNode? = (row.subject as? NotificationSubject.Content)?.node
 
 private fun secondLine(row: Notification): String? = when (row.kind) {
-    NotificationKind.COMMENT, NotificationKind.REPLY -> (contentOf(row) as? SavedNode.Comment)?.let { comment ->
-        // NT-G3(e) removed, (d) sensitive gives way to its reason, (c) wordless: none.
-        if (comment.content.redacted()) {
-            REMOVED_BY_AUTHOR
-        } else {
-            sensitiveReason(comment.moderation, comment.sensitiveReason)
-                ?: oneLine(comment.content.text()).takeIf { it.isNotEmpty() }
-        }
-    }
-    NotificationKind.MENTION, NotificationKind.CITATION -> when (val node = contentOf(row)) {
-        is SavedNode.Post ->
-            if (node.title.redacted() || node.content.redacted()) {
-                REMOVED_BY_AUTHOR
-            } else {
-                "in ${postTitle(node.title, node.content, node.mimeTypes, node.authorHandle)}"
-            }
-        is SavedNode.Comment -> when {
-            node.content.redacted() -> REMOVED_BY_AUTHOR
-            // NT-G3(a): a comment carrying it reads its thread's post.
-            node.post != null -> "in ${postTitle(node.post.title, node.post.content, node.post.mimeTypes, node.post.authorHandle)}"
-            else -> "in " + oneLine(node.content.text()).ifEmpty { mediaStandIn(node.mimeTypes, node.authorHandle) }
-        }
-        else -> null
-    }
+    NotificationKind.COMMENT, NotificationKind.REPLY -> (contentOf(row) as? SavedNode.Comment)?.let(::wordsLine)
+    NotificationKind.MENTION, NotificationKind.CITATION -> contentOf(row)?.let(::carryingLine)
     else -> null
+}
+
+/** A comment's or a reply's words — NT-G3 (e) removed, (d) sensitive gives way to its reason, (c) wordless: none. */
+private fun wordsLine(comment: SavedNode.Comment): String? = if (comment.content.redacted()) {
+    REMOVED_BY_AUTHOR
+} else {
+    sensitiveReason(comment.moderation, comment.sensitiveReason)
+        ?: oneLine(comment.content.text()).takeIf { it.isNotEmpty() }
+}
+
+/** `in <title>` of the piece that carries a mention or a citation. */
+private fun carryingLine(node: SavedNode): String? = when (node) {
+    is SavedNode.Post -> if (node.title.redacted() || node.content.redacted()) {
+        REMOVED_BY_AUTHOR
+    } else {
+        "in ${postTitle(node.title, node.content, node.mimeTypes, node.authorHandle)}"
+    }
+    is SavedNode.Comment -> commentCarryingLine(node)
+    else -> null
+}
+
+/** NT-G3(a): a comment carrying it reads its thread's post. */
+private fun commentCarryingLine(node: SavedNode.Comment): String {
+    val post = node.post
+    return when {
+        node.content.redacted() -> REMOVED_BY_AUTHOR
+        post != null -> "in ${postTitle(post.title, post.content, post.mimeTypes, post.authorHandle)}"
+        else -> "in " + oneLine(node.content.text()).ifEmpty { mediaStandIn(node.mimeTypes, node.authorHandle) }
+    }
 }
 
 private fun destination(row: Notification): NotificationTarget? = when (row.kind) {

@@ -85,13 +85,14 @@ class NotificationRowsTest {
         val got = notificationRow(row(NotificationKind.REPLY, NotificationSubject.Content(words)))
         assertThat(got.second).isEqualTo("The third headland light is real — I have a print.")
         // NT-G3(c): a wordless comment carries no second line.
-        assertThat(notificationRow(row(NotificationKind.COMMENT, NotificationSubject.Content(comment("c2", "")))).second)
-            .isNull()
+        val wordless = row(NotificationKind.COMMENT, NotificationSubject.Content(comment("c2", "")))
+        assertThat(notificationRow(wordless).second).isNull()
     }
 
     @Test
     fun `mention and citation rows read in the carrying title`() {
-        val titled = row(NotificationKind.MENTION, NotificationSubject.Content(post("p2", "Salt maps of the coast road")))
+        val carrying = NotificationSubject.Content(post("p2", "Salt maps of the coast road"))
+        val titled = row(NotificationKind.MENTION, carrying)
         assertThat(notificationRow(titled).second).isEqualTo("in Salt maps of the coast road")
         val untitled = row(
             NotificationKind.CITATION,
@@ -144,8 +145,14 @@ class NotificationRowsTest {
             .isEqualTo(NotificationTarget.Comment("p1", "c7"))
         assertThat(notificationRow(row(NotificationKind.MENTION, NotificationSubject.Content(post("p2", "A")))).target)
             .isEqualTo(NotificationTarget.Post("p2"))
-        listOf(NotificationKind.PROFILE_OPINION, NotificationKind.INVITE_LANDED, NotificationKind.APPLICATION_APPROVED)
-            .forEach { kind -> assertThat(notificationRow(row(kind)).target).isEqualTo(NotificationTarget.Person("ada")) }
+        val people = listOf(
+            NotificationKind.PROFILE_OPINION,
+            NotificationKind.INVITE_LANDED,
+            NotificationKind.APPLICATION_APPROVED,
+        )
+        people.forEach { kind ->
+            assertThat(notificationRow(row(kind)).target).isEqualTo(NotificationTarget.Person("ada"))
+        }
         assertThat(notificationRow(row(NotificationKind.APPLICATION_APPROVABLE)).target)
             .isEqualTo(NotificationTarget.Invites)
         // NT-G4 (a): the reader's own feed as it stands.
