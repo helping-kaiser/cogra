@@ -589,7 +589,11 @@ fun PostDetailScreen(
         // thread and stand over it — that mount moved into the sheet, which is
         // now the one thing that knows it is a sheet over a sheet.
         licenseShown?.let { license ->
-            LicenseSheet(license = license, onDismiss = { licenseShown = null })
+            LicenseSheet(
+                license = license,
+                onDismiss = { licenseShown = null },
+                node = POST_DETAIL / "licenseSheet",
+            )
         }
         // THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob 2026-09-14): erasure is
         // slice 8's, whole — "we need to do erasure right so it should be one

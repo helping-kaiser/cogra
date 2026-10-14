@@ -37,6 +37,7 @@ import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.sheetContainerColor
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.LicenseChoice
+import java.util.Locale
 
 /**
  * A QUIET INSET, NOT A PARAGRAPH (`LicenseChooser.jsx:110-176`).
@@ -88,19 +89,36 @@ internal fun LicenseTerms(license: LicenseChoice, testTag: String, node: DataNod
                 )
             }
         }
+        val axes = node?.div("axis")
         licenseReadings(license).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(Space.x2)) {
+            val axis = axes?.keyed(axisKey(row.axis))
+            Row(
+                modifier = Modifier.dataNode(axis),
+                horizontalArrangement = Arrangement.spacedBy(Space.x2),
+            ) {
                 Text(
                     row.axis,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.width(116.dp),
+                    modifier = Modifier.width(116.dp).dataNode(axis?.div("label")),
                 )
-                Text(row.reading, style = MaterialTheme.typography.bodySmall)
+                Text(
+                    row.reading,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.dataNode(axis?.div("value")),
+                )
             }
         }
     }
 }
+
+/**
+ * The key a terms row is registered under (`…terms.axis`): the axis's name as
+ * the terms print it, lowercased, each run of other characters one `-` — so
+ * `credit` and `public-record-of-use`.
+ */
+internal fun axisKey(axis: String): String =
+    axis.lowercase(Locale.ROOT).replace(Regex("[^a-z0-9]+"), "-")
 
 /**
  * IT CARRIES NO `SheetTitle`. The inset heads itself — its caption is the words
@@ -113,8 +131,9 @@ internal fun LicenseTerms(license: LicenseChoice, testTag: String, node: DataNod
  * (`CommentLicense.jsx`, design/readme.md:2364). The post's own terms stay
  * unstacked, over the post page.
  *
- * [node] is the registered sheet where a board draws one (`feed.licenseSheet`):
- * the sheet wears it, with its grip and `terms` parts, in place of [testTag].
+ * [node] is the registered sheet where a board draws one (`feed.licenseSheet`,
+ * `postDetail.licenseSheet`): the sheet wears it, with its grip and `terms`
+ * parts, in place of [testTag].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
