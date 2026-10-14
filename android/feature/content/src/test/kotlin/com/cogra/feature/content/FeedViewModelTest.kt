@@ -482,6 +482,56 @@ class FeedViewModelTest {
         assertThat(vm.state.value.seenTail).containsExactly("a", "b")
     }
 
+    /**
+     * PR-83's named device test (jakob, seam 199: "seen list is
+     * placement-only"): Show what you've already seen is a pure device
+     * re-partition of the held answer — never a fetch, never a re-sort. The
+     * held order m z a (newest z a m) disagrees with every sort the device
+     * could reach for — by id a m z, by score z a m — and each toggle reads
+     * that held permutation, split or whole.
+     */
+    @Test
+    fun togglingShowSeenRePartitionsWithoutAFetchOrASort() = runTest(dispatcher) {
+        records.records["u1"] = StoredSeenRecord(setOf("z"), watermark = null)
+        feed.answer = Outcome.Success(
+            FeedRanking(
+                asOfEpoch = 7,
+                entries = listOf(
+                    entry("m", newestIndex = 2, score = 0.1),
+                    entry("z", newestIndex = 0, score = 0.9),
+                    entry("a", newestIndex = 1, score = 0.5),
+                ),
+                settling = emptyList(),
+            ),
+        )
+        val vm = viewModel()
+        settle()
+        assertThat(vm.ids()).containsExactly("m", "a", "z").inOrder()
+        assertThat(vm.state.value.seenTail).containsExactly("z")
+
+        vm.applyFilter(FeedFilter(showSeen = true))
+        settle()
+        assertThat(vm.ids()).containsExactly("m", "z", "a").inOrder()
+        assertThat(vm.state.value.seenTail).isEmpty()
+
+        vm.applyFilter(FeedFilter(showSeen = false))
+        settle()
+        assertThat(vm.ids()).containsExactly("m", "a", "z").inOrder()
+        assertThat(vm.state.value.seenTail).containsExactly("z")
+
+        vm.applyFilter(FeedFilter(order = FeedOrder.NEWEST, showSeen = true))
+        settle()
+        assertThat(vm.ids()).containsExactly("z", "a", "m").inOrder()
+        vm.applyFilter(FeedFilter(order = FeedOrder.NEWEST))
+        settle()
+        assertThat(vm.ids()).containsExactly("a", "m", "z").inOrder()
+
+        // One ranking, the open's — and one window: the toggles re-read the
+        // rows already hydrated and asked the wire for nothing.
+        assertThat(feed.rankings).hasSize(1)
+        assertThat(feed.windows).hasSize(1)
+    }
+
     /** Toggle on: one list, the seen rows ranked in among the rest, no separator (FeedSeenTail.md). */
     @Test
     fun showSeenOnStandsOneListWithNoSeparator() = runTest(dispatcher) {
