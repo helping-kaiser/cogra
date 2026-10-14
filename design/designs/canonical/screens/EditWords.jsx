@@ -34,7 +34,7 @@
 export function Screen() {
   return (
     <>
-      <WizardHeader title="Edit post" leaveLabel="Leave — your draft is kept" help="Editing" />
+      <WizardHeader title="Edit post" leaveLabel="Leave — the edit is discarded" help="Editing" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6, minHeight: 0 }}>
           <FieldLabel>What do you want to publish?</FieldLabel>

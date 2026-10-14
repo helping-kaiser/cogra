@@ -2,7 +2,7 @@ import React from "react";
 import { Icon } from "../navigation/Icon.jsx";
 import { MonogramAvatar, REDACTED_ACTOR_NAME } from "../people/ActorChip.jsx";
 import { PendingMarker } from "../honesty/PendingMarker.jsx";
-import { StanceValue } from "../stance/StanceReadout.jsx";
+import { StanceValue, ZERO_BUNDLE_EMOJI } from "../stance/StanceReadout.jsx";
 
 /* THE IDENTITY ROW — the card-lite line every list in this product is built
    from: a 40px disc saying who or what, two lines of words saying which and
@@ -108,7 +108,22 @@ function Disc({ redacted, image, imageShape, name, face, letter, glyph, tone }) 
         placeItems: "center",
       }}
     >
-      {face ? (
+      {face === "walkedBack" ? (
+        /* THE WALKED-BACK FACE (jakob 2026-10-14): the withdrawal row wears
+           🤷, the system's own readout for a bundle walked back to zero
+           (ZERO_BUNDLE_EMOJI) — 🫥 stays meaning "no opinion yet". Full
+           emoji treatment like the opinion row's face; the row's sentence
+           says what happened, so the face is decorative. */
+        <span
+          aria-hidden="true"
+          style={{
+            fontSize: "var(--text-title-medium)",
+            lineHeight: 1,
+          }}
+        >
+          {ZERO_BUNDLE_EMOJI}
+        </span>
+      ) : face ? (
         <StanceValue pDirected={face.pDirected} pInterest={face.pInterest} showPair={false} />
       ) : letter ? (
         <span

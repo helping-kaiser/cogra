@@ -869,7 +869,7 @@ boards already speak, recorded so the registry is whole:
 - **The wizard's two ends** — `Back a step`, the arrow on every wizard
   stage; the X says what leaving keeps: `Leave — your
   draft is kept` (the post), `Leave — the reply is discarded`, `Leave —
-  the edit is discarded` (a comment edit), and a bare `Leave` on the
+  the edit is discarded` (a comment edit and a post edit), and a bare `Leave` on the
   profile's and the picture's seals and the picture's crop.
 - **The overflow doors and their sheets** — `More on this post` · `More
   on this comment` · `More on your profile` · `More about @ada` (another's
@@ -2847,7 +2847,7 @@ Drawn on `Notifications`, `NotificationsEmpty` and `FeedUnread`.
 **A row is a sentence, and the handle is its subject.** `@ada commented
 on your post`, not *Ada Okonkwo · commented* — the disc already carries
 the face, so the words are free to be the whole fact, and a handle is
-what a reader recognises and can go looking for. Nine kinds, nine
+what a reader recognises and can go looking for. Ten kinds, ten
 sentences, all present tense of the act that happened:
 
 - `@ada commented on your post` — a comment on a post of yours.
@@ -2876,11 +2876,17 @@ sentences, all present tense of the act that happened:
   itself carries, so the row and the button tell one story. Not
   *rejected*, which names a verdict the network never passed: one member
   declining is one member declining.
+- `@sol walked back their opinion on you` — an opinion on your profile
+  netted back to nothing (jakob 2026-10-14). *Walked back* is the stance
+  control's own word for it (`Walk it back`), and it says plainly that a
+  standing connection was taken away. Its disc wears 🤷, the system's own
+  readout for a bundle walked back to zero, the opinion row's sibling —
+  🫥 keeps meaning only *no opinion yet*.
 
 **The second line is what arrived, or where it is.** The comment's and
 the reply's own words for the two that carry words; `in <title>` for the
 mention and the citation, the saved comment row's `on <title>`
-construction turned to the citing side. The other five have neither and
+construction turned to the citing side. The other six have neither and
 carry none — a line invented to even the rhythm would be chrome.
 
 **The unread mark is a dot and says `New`.** On the row's trailing edge
@@ -3759,7 +3765,9 @@ tap on it used to reach nothing, and now it raises this:
 **The comment edit's ask** (`DiscardConfirm`, jakob 2026-10-02). The
 edit asks only when it changed since it opened, and its title says what
 goes: `Discard the changes?`, over the shared dialog's `Nothing is
-kept.`, `Discard` and `Keep writing`. *Blessed, jakob 2026-10-02.*
+kept.`, `Discard` and `Keep writing`. *Blessed, jakob 2026-10-02.* The
+post edit asks the same, in the same words, when its batch holds an act
+(jakob 2026-10-14).
 
 **The body fork's ask** (`ComposeBodyDiscard`, jakob 2026-10-02, the
 fix-fix round's ruling 14). Switching halves with something in the body

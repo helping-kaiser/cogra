@@ -599,6 +599,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 6, find: ">Report</button>", tag: "button" },
   ],
+  // The feed-hosted report confirm and license sheet (FC-G10): scanExempt
+  // like the detail's, numbered as ReportConfirm and PostLicense number them.
+  FeedReportConfirm: [
+    { n: 1, find: ">Report</button>", tag: "button" },
+    { n: 2, find: ">Cancel</button>", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  FeedPostLicense: [{ n: 1, find: 'class="cg-scrim-in"', tag: "div" }],
   // The report confirm (ruling 75): scanExempt like every menu board, so the
   // sheet's own pair and its scrim are all that carries numbers.
   ReportConfirm: [
@@ -1045,7 +1053,7 @@ Object.assign(FLOW_MARKERS, {
   EditComposeVideo: [
     { n: 14, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
-    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 2, find: 'aria-label="Leave — the edit is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
     { n: 4, find: 'aria-label="Remove this video"', tag: "button" },
     { n: 5, find: ">Describe the video</button>", tag: "button" },
@@ -2102,7 +2110,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 14, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
     { n: 14, find: "aria-label=\"#saltmaps — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
-    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 2, find: 'aria-label="Leave — the edit is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
     // The `upload` chip's `failed` draws the row a second time, its second
     // tile marked; the `signing` chip's `slow` draws the footer a second time
@@ -2138,7 +2146,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 14, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
     { n: 14, find: "aria-label=\"#saltmaps — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
-    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 2, find: 'aria-label="Leave — the edit is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
     { n: 4, find: 'aria-label="Manage the pictures"', tag: "button" },
     { n: 5, find: 'data-field="Title"', tag: "div" },
@@ -2176,7 +2184,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 12, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
     { n: 12, find: "aria-label=\"#saltmaps — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
-    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 2, find: 'aria-label="Leave — the edit is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
     { n: 4, find: "1px solid var(--border-field)", tag: "div" },
     { n: 5, find: "+ Add pictures or a video", tag: "button" },
@@ -2314,6 +2322,8 @@ Object.assign(FLOW_MARKERS, {
     // The ninth, the eighth's twin (the reject extension), taking its next
     // free number for the same reason.
     { n: 15, find: ">@kel closed your application<", tag: "button" },
+    // The tenth, the opinion row's sibling (PR-72), the next free number.
+    { n: 16, find: ">@sol walked back their opinion on you<", tag: "button" },
   ],
   /* ── The Feed score’s drill-down (backlog item 13) ─────────────────────
      The path rows and the step rows carry one number each: they are one control

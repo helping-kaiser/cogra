@@ -14,10 +14,9 @@ ALWAYS feed.vouchCard.hint stands beside feed.vouchCard.stance.anchor and reads 
 
 ALWAYS feed.vouchCard.hint reads Tap the face to vouch back. GIVEN the member who vouched the account in deleted their account
 
-ALWAYS feed.vouchCard.stance.anchor.face is the hollow face, the account holding no opinion of the member who vouched it in
+ALWAYS feed.vouchCard.stance.anchor.face is the empty face, the account holding no opinion of the member who vouched it in
 
-ALWAYS feed.vouchCard.stance.anchor.face wears full ink on the card, never the muted resting treatment, the hollow glyph alone saying no opinion yet
-
+ALWAYS feed.vouchCard.stance.anchor.face is the line face drawn in the card's own ink, never the 🫥 emoji and never the muted resting treatment, the empty face alone saying no opinion yet GIVEN the account holds no opinion of the member who vouched it in
 ALWAYS feed.vouchCard and its band claim no order between the vouch-back and any other opinion
 
 ALWAYS the band reads Browsing from @mira's view — your first opinion starts your own. GIVEN the member has signed no opinion yet

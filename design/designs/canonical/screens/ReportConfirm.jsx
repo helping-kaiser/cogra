@@ -23,7 +23,8 @@
    risen where the menu stood — and a MASTER for every other host: the same
    sheet rises over the thread, the feed and the profiles, its heading
    naming that host's thing. The title, the body and the confirm heading are
-   drafted for jakob.
+   drafted for jakob. The feed's host is drawn as its own state
+   (`FeedReportConfirm`, FC-G10), the sheet `ReportPostSheet` both read.
 
    REGISTERED under the `postDetail` prefix (the hosting-surface rule): the
    detail beneath as `PostDetail` names it, the sheet `reportSheet` with its
@@ -38,26 +39,7 @@ export function Screen() {
       </DetailColumn>
       <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
 
-      <BottomSheet open ariaLabel="Report this post" node="reportSheet">
-        <SheetTitle node="title">Report this post?</SheetTitle>
-        <p
-          style={{
-            margin: 0,
-            padding: "0 var(--space-6) var(--space-2)",
-            fontSize: "var(--text-body-medium)",
-            lineHeight: "var(--text-body-medium--line-height)",
-            letterSpacing: "var(--text-body-medium--letter-spacing)",
-            color: "var(--text-secondary)",
-          }}
-          data-node="body"
-        >
-          It goes to the people who run CoGra for a look.
-        </p>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-2)", padding: "var(--space-2) var(--space-6) 0" }}>
-          <Button variant="text" node="cancel">Cancel</Button>
-          <Button node="report">Report</Button>
-        </div>
-      </BottomSheet>
+      <ReportPostSheet />
     </>
   );
 }

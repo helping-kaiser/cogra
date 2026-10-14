@@ -24,7 +24,7 @@
    THE X SAYS WHAT LEAVING KEEPS, BY ENTRANCE (copy-voice, *The wizard's two
    ends*). The board draws the post's entrance, `Leave — your draft is kept`;
    entered from a reply's video it reads `Leave — the reply is discarded`, and
-   from a comment edit's `Leave — the edit is discarded` — the X of the flow
+   from a comment edit's or a post edit's `Leave — the edit is discarded` — the X of the flow
    that opened the crop, asking first where that flow's X asks. */
 export function Screen() {
   return (

@@ -142,10 +142,11 @@ export function LicenseChooser({ value = PUBLIC_DOMAIN, onChange, name = "licens
    elevation this owes nothing to; a hairline at the medium rung recesses it in
    both. Nothing here is coloured — the terms are neither a warning nor a
    promotion, and `--error` is spoken for (readme §13, the input-error round). */
-export function LicenseTerms({ license = PUBLIC_DOMAIN }) {
+export function LicenseTerms({ license = PUBLIC_DOMAIN, node }) {
   const publicDomain = license.attribution === 0 && license.provenance === 0;
   return (
     <div
+      data-node={node}
       style={{
         display: "flex",
         flexDirection: "column",
