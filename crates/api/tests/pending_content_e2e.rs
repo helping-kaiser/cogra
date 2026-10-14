@@ -332,6 +332,7 @@ impl Rig {
                     "title": title,
                     "content": body,
                     "license": { "attribution": 1.0, "provenance": 0.0 },
+                    "pDirected": 0.1,
                 }}),
             )
             .await;
@@ -734,6 +735,8 @@ async fn a_staging_failure_hands_the_write_back_instead_of_wedging_it(pool: PgPo
                 "target": post_id,
                 "content": "Orphaned before it was signed.",
                 "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
+                "pInterest": 0.1,
             }}),
         )
         .await;
@@ -1013,6 +1016,8 @@ async fn a_pending_comment_reads_in_its_thread(pool: PgPool) {
                 "target": post_id,
                 "content": "Settling too.",
                 "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
+                "pInterest": 0.1,
             }}),
         )
         .await;
@@ -1216,7 +1221,9 @@ async fn a_citation_lands_only_after_its_pending_target(pool: PgPool) {
         .gql(
             Some(&citer),
             PREPARE_REFERENCE,
-            json!({ "input": { "artifact": carrier, "target": target }}),
+            json!({ "input": {
+                "artifact": carrier, "target": target, "relevance": 0.1, "support": 0.1,
+            }}),
         )
         .await;
     let writes = &prepared["prepareReference"]["writes"];
@@ -1280,6 +1287,8 @@ async fn a_reply_lands_only_after_its_pending_parent(pool: PgPool) {
                 "target": parent,
                 "content": "Early reply.",
                 "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
+                "pInterest": 0.1,
             }}),
         )
         .await;
@@ -1311,6 +1320,8 @@ async fn reply(
                 "target": target,
                 "content": text,
                 "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
+                "pInterest": 0.1,
             }}),
         )
         .await;
@@ -1511,7 +1522,7 @@ async fn a_tag_or_stance_on_pending_content_declares_its_mint(pool: PgPool) {
             r#"mutation($input: PrepareTagInput!) {
                  prepareTag(input: $input) { writes { canonicalProposal } userErrors { message } }
                }"#,
-            json!({ "input": { "target": post, "name": "rust" }}),
+            json!({ "input": { "target": post, "name": "rust", "pDirected": 0.1, "pInterest": 1.0 }}),
         )
         .await;
     assert_eq!(

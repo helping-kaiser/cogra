@@ -93,14 +93,19 @@ fn post(content: &str) -> Value {
     json!({ "input": {
         "content": content,
         "license": { "attribution": 0.0, "provenance": 0.0 },
+        "pDirected": 0.1,
     }})
 }
 
 fn tagged_post(content: &str, tags: &[&str]) -> Value {
-    let tags: Vec<Value> = tags.iter().map(|t| json!({ "name": t })).collect();
+    let tags: Vec<Value> = tags
+        .iter()
+        .map(|t| json!({ "name": t, "pDirected": 0.1, "pInterest": 1.0 }))
+        .collect();
     json!({ "input": {
         "content": content,
         "license": { "attribution": 0.0, "provenance": 0.0 },
+        "pDirected": 0.1,
         "tags": tags,
     }})
 }
@@ -110,6 +115,8 @@ fn comment(target: &str, content: &str) -> Value {
         "target": target,
         "content": content,
         "license": { "attribution": 0.0, "provenance": 0.0 },
+        "pDirected": 0.1,
+        "pInterest": 0.1,
     }})
 }
 

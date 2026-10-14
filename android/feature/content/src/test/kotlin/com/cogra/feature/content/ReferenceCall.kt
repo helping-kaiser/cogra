@@ -9,6 +9,6 @@ package com.cogra.feature.content
 internal data class ReferenceCall(
     val artifact: String,
     val target: String,
-    val relevance: Double?,
-    val support: Double?,
+    val relevance: Double,
+    val support: Double,
 )

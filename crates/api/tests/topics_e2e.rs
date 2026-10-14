@@ -233,6 +233,7 @@ impl Rig {
                 "title": title,
                 "content": "a body",
                 "license": { "attribution": 1.0, "provenance": 0.0 },
+                "pDirected": 0.1,
                 "tags": tags,
             }}),
         )
@@ -273,6 +274,8 @@ impl Rig {
                     "target": target,
                     "content": "a reply",
                     "license": { "attribution": 0.0, "provenance": 0.0 },
+                    "pDirected": 0.1,
+                    "pInterest": 0.1,
                     "tags": tags,
                 }}),
             )
@@ -439,7 +442,7 @@ const PREPARE_SEVERANCE: &str = r#"mutation($input: PrepareSeveranceInput!) {
 }"#;
 
 fn tag(name: &str) -> Value {
-    json!({ "name": name })
+    json!({ "name": name, "pDirected": 0.1, "pInterest": 1.0 })
 }
 
 fn errors(payload: &Value, mutation: &str) -> Value {
@@ -502,6 +505,8 @@ async fn a_comment_carries_topics_too(pool: PgPool) {
                 "target": post,
                 "content": "a reply",
                 "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
+                "pInterest": 0.1,
                 "tags": [tag("rust")],
             }}),
         )
@@ -724,7 +729,7 @@ async fn negative_confidence_is_a_field_level_refusal(pool: PgPool) {
         .prepare_post(
             &token,
             "A post",
-            json!([{ "name": "rust", "pInterest": -0.5 }]),
+            json!([{ "name": "rust", "pDirected": 0.1, "pInterest": -0.5 }]),
         )
         .await;
     assert_eq!(errors(&refused, "preparePost")[0]["code"], "BAD_INPUT");
@@ -754,7 +759,8 @@ async fn a_parameter_off_the_dimension_scale_is_a_transport_fault(pool: PgPool) 
                 "title": "A post",
                 "content": "a body",
                 "license": { "attribution": 0.0, "provenance": 0.0 },
-                "tags": [{ "name": "rust", "pInterest": 1.5 }],
+                "pDirected": 0.1,
+                "tags": [{ "name": "rust", "pDirected": 0.1, "pInterest": 1.5 }],
             }}),
         )
         .await;
@@ -792,7 +798,11 @@ async fn a_standalone_tag_names_its_own_fields_on_refusal(pool: PgPool) {
     assert_eq!(errors(&bad_name, "prepareTag")[0]["field"], json!(["name"]));
 
     let bad_confidence = rig
-        .prepare_tag(&token, &post, json!({ "name": "rust", "pInterest": -0.1 }))
+        .prepare_tag(
+            &token,
+            &post,
+            json!({ "name": "rust", "pDirected": 0.1, "pInterest": -0.1 }),
+        )
         .await;
     assert_eq!(
         errors(&bad_confidence, "prepareTag")[0]["field"],
@@ -828,7 +838,7 @@ async fn a_guest_cannot_tag(pool: PgPool) {
         .gql_raw(
             None,
             PREPARE_TAG,
-            json!({ "input": { "target": Uuid::new_v4().to_string(), "name": "rust" }}),
+            json!({ "input": { "target": Uuid::new_v4().to_string(), "name": "rust", "pDirected": 0.1, "pInterest": 1.0 }}),
         )
         .await;
     assert!(refused.get("errors").is_some(), "{refused}");
@@ -852,7 +862,7 @@ async fn un_tagging_is_a_further_tag_at_relevance_zero(pool: PgPool) {
         &token,
         &ak,
         &post,
-        json!({ "name": "rust", "pDirected": 0.0 }),
+        json!({ "name": "rust", "pDirected": 0.0, "pInterest": 1.0 }),
     )
     .await;
 
@@ -1186,12 +1196,13 @@ async fn a_posts_chip_row_serves_the_authors_current_topics(pool: PgPool) {
     assert_eq!(chips[0]["pending"], false);
 }
 
-/// Defaults, as jakob ruled them: a modest relevance claim held with
-/// full confidence in one's own declaration (D13).
+/// The pair lands exactly as sent: the clients' pre-fill (a modest
+/// relevance held with full confidence, D13) is a value the user saw and
+/// signed, not one the server supplied.
 ///
-/// (´claim:topics:omitted-parameters-take-the-defaults´)
+/// (´claim:topics:parameters-are-written-as-sent´)
 #[sqlx::test(migrations = "../../migrations")]
-async fn omitted_parameters_land_the_declared_defaults(pool: PgPool) {
+async fn the_sent_parameters_land_as_signed(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let (_, ak) = rig.seed_member("author", "author@example.com").await;
     let token = rig.log_in("author@example.com").await;
@@ -1202,6 +1213,63 @@ async fn omitted_parameters_land_the_declared_defaults(pool: PgPool) {
     let topics = rig.post_topics(None, &post, true).await;
     assert_eq!(topics[0]["relevance"], 0.1);
     assert_eq!(topics[0]["confidence"], 1.0);
+}
+
+/// The user signs only values they chose, so a tag missing either
+/// parameter — in a creation batch or standalone — is refused by the
+/// schema before any resolver runs. Nothing is staged, so nothing can
+/// land; the server never fills the hole.
+///
+/// A tag with a stance parameter left out is refused whole and nothing lands.
+/// ´claim:topics:an-omitted-parameter-is-refused-whole´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_omitted_tag_parameter_refuses_the_whole_request(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let post = rig.landed_post(&token, &ak, "A post", json!([])).await;
+
+    for (partial, missing) in [
+        (json!({ "name": "rust", "pInterest": 1.0 }), "pDirected"),
+        (json!({ "name": "rust", "pDirected": 0.1 }), "pInterest"),
+    ] {
+        let mut standalone = json!({ "target": post });
+        merge(&mut standalone, partial.clone());
+        let refused = rig
+            .gql_raw(Some(&token), PREPARE_TAG, json!({ "input": standalone }))
+            .await;
+        assert!(refused["data"].is_null(), "no resolver ran: {refused}");
+        assert!(
+            refused["errors"][0]["message"]
+                .as_str()
+                .expect("message")
+                .contains(missing),
+            "the refusal names {missing}: {refused}"
+        );
+
+        let batch = rig
+            .gql_raw(
+                Some(&token),
+                PREPARE_POST,
+                json!({ "input": {
+                    "title": "Another",
+                    "content": "a body",
+                    "license": { "attribution": 1.0, "provenance": 0.0 },
+                    "pDirected": 0.1,
+                    "tags": [partial],
+                }}),
+            )
+            .await;
+        assert!(batch["data"].is_null(), "no resolver ran: {batch}");
+        assert!(batch["errors"].as_array().is_some_and(|e| !e.is_empty()));
+    }
+
+    rig.close_and_ingest().await;
+    assert_eq!(
+        rig.post_topics(None, &post, true).await,
+        json!([]),
+        "nothing was staged, so nothing landed"
+    );
 }
 
 /// The un-tag, read through the fold: relevance 0 is a record like any
@@ -1230,7 +1298,7 @@ async fn un_tagging_takes_the_chip_off_the_row(pool: PgPool) {
         &token,
         &ak,
         &post,
-        json!({ "name": "rust", "pDirected": 0.0 }),
+        json!({ "name": "rust", "pDirected": 0.0, "pInterest": 1.0 }),
     )
     .await;
 
@@ -1611,7 +1679,11 @@ async fn the_un_tag_is_admitted_on_an_artifact_at_the_standing_topic_cap(pool: P
     .await;
 
     let prepared = rig
-        .prepare_tag(&token, &post, json!({ "name": "live0", "pDirected": 0.0 }))
+        .prepare_tag(
+            &token,
+            &post,
+            json!({ "name": "live0", "pDirected": 0.0, "pInterest": 1.0 }),
+        )
         .await;
     let writes = prepared["prepareTag"]["writes"].as_array().expect("writes");
     assert_eq!(writes.len(), 1, "{prepared}");

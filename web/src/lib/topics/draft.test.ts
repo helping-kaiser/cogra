@@ -28,7 +28,7 @@ describe("tagChanges", () => {
   });
 
   it("stages an untag for a removed topic — never a deletion", () => {
-    expect(tagChanges([tag("rust")], [])).toEqual([{ kind: "untag", name: "rust" }]);
+    expect(tagChanges([tag("rust")], [])).toEqual([{ kind: "untag", tag: tag("rust") }]);
   });
 
   it("re-declares a topic whose parameters moved", () => {
@@ -40,7 +40,7 @@ describe("tagChanges", () => {
     const changes = tagChanges([tag("rust"), tag("wasm")], [tag("rust"), tag("webdev")]);
     expect(changes).toEqual([
       { kind: "tag", tag: tag("webdev") },
-      { kind: "untag", name: "wasm" },
+      { kind: "untag", tag: tag("wasm") },
     ]);
   });
 

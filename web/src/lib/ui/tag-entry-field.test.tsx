@@ -123,7 +123,7 @@ describe("TagEntryField — the input-time gate (F1)", () => {
 });
 
 describe("TagEntryField — the parameter sliders (F6)", () => {
-  it("opens both sliders on the server's defaults, keyboard-reachable and labelled", () => {
+  it("opens both sliders on the visible pre-fill, keyboard-reachable and labelled", () => {
     render(<Harness />);
     const relevance = screen.getByTestId("t-tag-new-relevance");
     const confidence = screen.getByTestId("t-tag-new-confidence");

@@ -17,7 +17,7 @@ class TagSectionStateTest {
         assertThat(section.input).isEmpty()
     }
 
-    /** The defaults are the server's own (D13), so an untouched chip says what omitting it would. */
+    /** A fresh chip opens on the visible pre-fill (D13), which it sends as shown. */
     @Test
     fun aFreshChipCarriesTheDefaultParameters() {
         val row = TagSectionState(input = "rust").added().tags.single()
@@ -96,7 +96,7 @@ class TagSectionStateTest {
         val loaded = listOf(TagRow("rust"), TagRow("kotlin"))
         val section = TagSectionState(tags = loaded, loaded = loaded).removed("kotlin")
         assertThat(section.adds).isEmpty()
-        assertThat(section.removes).containsExactly("kotlin")
+        assertThat(section.removes.map { it.name }).containsExactly("kotlin")
         assertThat(section.changeCount).isEqualTo(1)
     }
 

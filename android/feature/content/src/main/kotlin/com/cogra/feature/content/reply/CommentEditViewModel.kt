@@ -333,9 +333,9 @@ class CommentEditViewModel @Inject constructor(
                     is Outcome.Failed -> return@launch failTransport()
                 }
             }
-            for (name in current.tagSection.removes) {
+            for (row in current.tagSection.removes) {
                 when (
-                    val outcome = topics.prepareTag(current.commentId, name, pDirected = WITHDRAWN)
+                    val outcome = topics.prepareTag(current.commentId, row.name, WITHDRAWN, row.confidence)
                 ) {
                     is Outcome.Success -> writes += outcome.value
                     is Outcome.Refused -> return@launch refuse(outcome.errors)

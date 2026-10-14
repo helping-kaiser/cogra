@@ -94,16 +94,18 @@ class CommentEditViewModelTest {
 
     private class ScriptedTopics(private val sealer: SealingWriteRepository) :
         ThrowingTopicRepository() {
-        val staged = mutableListOf<Triple<String, String, Double?>>()
+        val staged = mutableListOf<Triple<String, String, Double>>()
+        val interests = mutableListOf<Double>()
         var outcome: Outcome<List<PreparedWriteView>>? = null
 
         override suspend fun prepareTag(
             target: String,
             name: String,
-            pDirected: Double?,
-            pInterest: Double?,
+            pDirected: Double,
+            pInterest: Double,
         ): Outcome<List<PreparedWriteView>> {
             staged += Triple(target, name, pDirected)
+            interests += pInterest
             return outcome ?: Outcome.Success(listOf(sealer.stage(Family.REGISTRATION)))
         }
     }
@@ -320,6 +322,9 @@ class CommentEditViewModelTest {
         val staged = topics.staged.single()
         assertThat(staged.second).isEqualTo("rust")
         assertThat(staged.third).isEqualTo(0.0)
+        // The un-tag signs the confidence the removed chip showed (0.6):
+        // relevance is the only value a removal moves.
+        assertThat(topics.interests.single()).isEqualTo(0.6)
     }
 
     @Test

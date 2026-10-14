@@ -59,9 +59,9 @@ fun isAddableTagName(raw: String): Boolean =
 
 /**
  * One tag a write will declare: the canonical name and the two
- * parameters the Tag act carries (api-spec.md `TagInput`). The client
- * always sends both — the defaults it starts from are the server's own,
- * so an explicit value never changes what an untouched slider means.
+ * parameters the Tag act carries (api-spec.md `TagInput`). Both are
+ * required on the wire and the server fills nothing in, so the defaults
+ * here are the visible pre-fill an untouched slider sends as shown.
  */
 data class TagClaim(
     val name: String,

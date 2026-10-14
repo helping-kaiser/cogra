@@ -601,7 +601,7 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
         attachments: List<AttachmentClaim>,
         sensitive: Boolean,
         sensitiveReason: String?,
-        pDirected: Double?,
+        pDirected: Double,
     ): Outcome<PreparedContentView> = guard.run {
         client.mutation(
             PreparePostMutation(
@@ -614,9 +614,8 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
                     // value and would read as "both".
                     content = Optional.presentIfNotNull(content),
                     license = license.toInput(),
-                    // Absent leaves the contract's own +0.1; the seal's
-                    // stance pad always names it.
-                    pDirected = Optional.presentIfNotNull(pDirected),
+                    // Required: the value the seal's stance pad shows.
+                    pDirected = pDirected,
                     tags = tags.toInput(),
                     references = references.toInput(),
                     attachments = attachments.toInput(),
@@ -695,8 +694,8 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
         tags: List<TagClaim>,
         references: List<ReferenceClaim>,
         attachments: List<AttachmentClaim>,
-        pDirected: Double?,
-        pInterest: Double?,
+        pDirected: Double,
+        pInterest: Double,
         sensitive: Boolean,
         sensitiveReason: String?,
     ): Outcome<PreparedContentView> = guard.run {
@@ -709,10 +708,9 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
                     tags = tags.toInput(),
                     references = references.toInput(),
                     attachments = attachments.toCommentInput(),
-                    // Absent leaves the contract's own +0.1; the reply
-                    // seal's pad always names both.
-                    pDirected = Optional.presentIfNotNull(pDirected),
-                    pInterest = Optional.presentIfNotNull(pInterest),
+                    // Required: the pair the reply seal's pad shows.
+                    pDirected = pDirected,
+                    pInterest = pInterest,
                     sensitive = Optional.present(sensitive),
                     // Blank counts as none, and a reason without the
                     // switch is refused on `["sensitiveReason"]` — so the
@@ -783,16 +781,16 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
 
 /**
  * The topics a creation declares, as the API takes them. Both parameters
- * ride explicitly: the sliders start at the server's own defaults, so an
- * untouched slider says exactly what omitting it would (api-spec.md
- * `TagInput`). An empty list stays absent rather than riding as `[]`.
+ * are required (api-spec.md `TagInput`): the sliders open on the visible
+ * pre-fill, and an untouched slider sends exactly what it shows. An empty
+ * list stays absent rather than riding as `[]`.
  */
 private fun List<TagClaim>.toInput(): Optional<List<TagInput>?> = Optional.presentIfNotNull(
     takeIf { it.isNotEmpty() }?.map {
         TagInput(
             name = it.name,
-            pDirected = Optional.present(it.relevance),
-            pInterest = Optional.present(it.confidence),
+            pDirected = it.relevance,
+            pInterest = it.confidence,
         )
     },
 )
@@ -800,8 +798,8 @@ private fun List<TagClaim>.toInput(): Optional<List<TagInput>?> = Optional.prese
 /**
  * The references a creation declares, as the API takes them — the
  * same shape the tags beside them ride (api-spec.md `ReferenceInput`).
- * Both parameters go explicitly for the same reason: an untouched
- * slider sits on the server's own default and says so.
+ * Both parameters are required for the same reason: an untouched
+ * slider sends the pre-fill it shows.
  */
 @JvmName("referenceClaimsToInput")
 private fun List<ReferenceClaim>.toInput(): Optional<List<ReferenceInput>?> =
@@ -809,8 +807,8 @@ private fun List<ReferenceClaim>.toInput(): Optional<List<ReferenceInput>?> =
         takeIf { it.isNotEmpty() }?.map {
             ReferenceInput(
                 target = it.targetId,
-                relevance = Optional.present(it.relevance),
-                support = Optional.present(it.support),
+                relevance = it.relevance,
+                support = it.support,
             )
         },
     )

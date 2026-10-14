@@ -154,6 +154,7 @@ async fn a_staged_write_past_gc_is_staged_write_expired(pool: PgPool) {
             json!({ "input": {
                 "content": "never signed in time",
                 "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
             }}),
         )
         .await;
@@ -173,6 +174,7 @@ async fn a_staged_write_past_gc_is_staged_write_expired(pool: PgPool) {
                 json!({ "input": {
                     "content": format!("a step of the clock, {n}"),
                     "license": { "attribution": 0.0, "provenance": 0.0 },
+                    "pDirected": 0.1,
                 }}),
             )
             .await;
