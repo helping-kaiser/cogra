@@ -1478,7 +1478,8 @@ class ContentScreensTest {
         )
         compose.onNodeWithTag("postDetail.header.menu").performClick()
         compose.onNodeWithTag("postDetail.menuSheet.license").performClick()
-        compose.onNodeWithTag("license_sheet_terms_public_domain").assertExists()
+        compose.onNodeWithTag("postDetail.licenseSheet.terms.publicDomain").assertExists()
+        compose.onNodeWithTag("license_sheet_terms_public_domain").assertDoesNotExist()
         // The rows below still spell what it means.
         compose.onNodeWithText("Not required").assertExists()
         compose.onNodeWithText("Not logged").assertExists()
@@ -1626,6 +1627,9 @@ class ContentScreensTest {
         // The legacy tags are retired: the registered paths are the only names.
         compose.onNodeWithTag("license_sheet").assertDoesNotExist()
         compose.onNodeWithTag("license_sheet_terms").assertDoesNotExist()
+        // A comment defaults to public domain: the zero pair's caption wears its registered part.
+        compose.onNodeWithTag("postDetail.licenseSheet.terms.publicDomain").assertExists()
+        compose.onNodeWithTag("license_sheet_terms_public_domain").assertDoesNotExist()
     }
 
     /** The comment's stacked terms ride `postDetail.licenseSheet`, their rows the keyed `axis`. */

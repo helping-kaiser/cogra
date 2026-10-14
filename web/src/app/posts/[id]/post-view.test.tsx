@@ -440,6 +440,9 @@ describe("PostView", () => {
     fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
     fireEvent.click(screen.getByTestId("postDetail.menuSheet.license"));
     expect(screen.getByTestId("postDetail.licenseSheet.terms")).toHaveTextContent("Public domain");
+    expect(screen.getByTestId("postDetail.licenseSheet.terms.publicDomain")).toHaveTextContent(
+      "Public domain",
+    );
     // Raised from the post's own menu, over the page — never stacked
     // (design/readme.md:2364).
     expect(screen.getByTestId("postDetail.licenseSheet").className).not.toContain(
@@ -449,6 +452,9 @@ describe("PostView", () => {
     // The legacy ids are retired: the registered paths are the only names.
     expect(screen.queryByTestId("post-menu-license-sheet")).not.toBeInTheDocument();
     expect(screen.queryByTestId("post-menu-license-sheet-terms")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("post-menu-license-sheet-terms-public-domain"),
+    ).not.toBeInTheDocument();
   });
 
   // The terms' two rows are the registered keyed `axis`
@@ -497,6 +503,9 @@ describe("PostView", () => {
     );
     fireEvent.click(screen.getByTestId("comment-menu-license-c1"));
     expect(screen.getByTestId("postDetail.licenseSheet.terms")).toHaveTextContent("Public domain");
+    expect(screen.getByTestId("postDetail.licenseSheet.terms.publicDomain")).toHaveTextContent(
+      "Public domain",
+    );
     // Raised from a comment's menu, over the comments thread — stacked
     // (`CommentLicense.jsx`, design/readme.md:2364).
     expect(screen.getByTestId("postDetail.licenseSheet").className).toContain(
@@ -506,6 +515,7 @@ describe("PostView", () => {
     // The legacy ids are retired: the registered paths are the only names.
     expect(screen.queryByTestId("license-sheet")).not.toBeInTheDocument();
     expect(screen.queryByTestId("license-sheet-terms")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("license-sheet-terms-public-domain")).not.toBeInTheDocument();
   });
 
   // The comment's stacked terms ride the same registered `postDetail.licenseSheet`

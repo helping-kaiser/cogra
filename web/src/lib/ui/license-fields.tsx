@@ -138,7 +138,10 @@ export function LicenseTerms({
             the two rows that spell it — so it rides the caption line rather
             than replacing the rows, which stay uniform across every license. */}
         {isPublicDomain(license) && (
-          <span className="text-label-small" data-testid={`${testId}-public-domain`}>
+          <span
+            className="text-label-small"
+            {...testAttributes(part(node, "publicDomain"), `${testId}-public-domain`)}
+          >
             Public domain
           </span>
         )}

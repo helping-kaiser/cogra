@@ -70,6 +70,7 @@ import { useWriteSigner } from "@/lib/signing/provider";
 import { ActorChip } from "@/lib/ui/actor-chip";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
+import type { DataNode } from "@/lib/ui/data-node";
 import { PUBLIC_DOMAIN, type License } from "@/lib/license";
 import { PendingMarker } from "@/lib/ui/pending-marker";
 import { useMeasureEffect } from "@/lib/ui/measure-effect";
