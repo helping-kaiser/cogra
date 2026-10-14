@@ -77,6 +77,7 @@ private fun WireKind.toDomain(): NotificationKind = when (this) {
     WireKind.MENTION -> NotificationKind.MENTION
     WireKind.CITATION -> NotificationKind.CITATION
     WireKind.PROFILE_OPINION -> NotificationKind.PROFILE_OPINION
+    WireKind.PROFILE_OPINION_WITHDRAWN -> NotificationKind.PROFILE_OPINION_WITHDRAWN
     WireKind.APPLICATION_APPROVABLE -> NotificationKind.APPLICATION_APPROVABLE
     WireKind.INVITE_LANDED -> NotificationKind.INVITE_LANDED
     WireKind.APPLICATION_APPROVED -> NotificationKind.APPLICATION_APPROVED

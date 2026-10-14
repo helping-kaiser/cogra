@@ -1,5 +1,5 @@
 // Notifications (Notifications.md, NotificationsEmpty.md; packet
-// notifications-list §12.2): one flat list newest first, nine sentences, the
+// notifications-list §12.2): one flat list newest first, ten sentences, the
 // row dots, the two read marks, the empty state, the faults and the back
 // arrow by origin.
 
@@ -211,6 +211,30 @@ describe("NotificationsScreen", () => {
       "/posts/p1?comment=c1&from=notifications",
     );
     expect(screen.getByTestId("notification-n2-open")).toHaveAttribute("href", "/u/sol?from=notifications");
+  });
+
+  // Notifications.md:13, :21, :43 — the tenth kind, the opinion row's sibling.
+  it("the_withdrawal_row_wears_the_walked_back_face_and_opens_the_withdrawers_profile", async () => {
+    serve([
+      row("n4", "PROFILE_OPINION_WITHDRAWN", 2, {
+        actor: actor("sol", "Sol"),
+        subject: { __typename: "User", id: "u-sol", handle: "sol" },
+        record: { __typename: "Record", id: "act:sol:2:opinion", pDirected: -0.4, pInterest: -0.5 },
+      }),
+    ]);
+    renderWithProviders(<NotificationsScreen from="feed" />, { store: signedIn() });
+    await screen.findByTestId("notifications.list");
+    const [withdrawn] = rows();
+    expect(within(withdrawn!).getByTestId("notifications.list.notification.title")).toHaveTextContent(
+      "@sol walked back their opinion on you",
+    );
+    // 🤷 where a picture would go, decorative: the sentence says what happened.
+    const face = within(withdrawn!).getByText("🤷");
+    expect(face.closest("[aria-hidden='true']")).not.toBeNull();
+    expect(within(withdrawn!).queryByRole("img", { name: /Sol|0\.40/ })).not.toBeInTheDocument();
+    expect(within(withdrawn!).queryByTestId("notifications.list.notification.second")).not.toBeInTheDocument();
+    expect(withdrawn!.textContent).not.toMatch(/\d\.\d/);
+    expect(screen.getByTestId("notification-n4-open")).toHaveAttribute("href", "/u/sol?from=notifications");
   });
 
   it("the_empty_list_names_the_kinds_with_no_action_and_no_error_colour", async () => {
