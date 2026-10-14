@@ -1,12 +1,13 @@
 # Miner API · `spec:implementation:miner-api`
 
 The ranking surface. The backend API ([api-spec.md](api-spec.md))
-deliberately does not rank: it serves each viewer their `χ`-bounded
-subgraph slice (`Query.feedSlice`) and hydrates an ordered id list back
-into a feed (`Query.feed`). Between those two calls sits **ranking**, and
-ranking runs off the backend's hot path — on the viewer's own device, in
-the server's own ranker container, or on a delegated miner ([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)). This
-doc specifies that intermediate surface: slice in, ordered list out.
+never ranks in its own process: it serves each viewer their
+`χ`-bounded subgraph slice (`Query.feedSlice`), relays ranking requests
+to the server's own ranker container (`Query.feedRanking`), and
+hydrates an ordered id list back into a feed (`Query.feed`). **Ranking**
+runs off the backend's hot path — on the viewer's own device, in the
+server's own ranker container, or on a delegated miner ([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)). This
+doc specifies that surface: slice in, ordered list out.
 
 - **Runner**: the viewer's device (default), the server's own ranker
   container, or a chosen miner.
@@ -424,16 +425,23 @@ same types, no wire at all.
 
 ### The slice path — the miner re-fetches
 
-The remote wire signatures replace the slice argument with the viewer:
+The remote wire signatures replace the slice argument with the viewer,
+take an optional `asOfEpoch`, and return a `FeedRanking`:
 
 ```graphql
-rank(viewer: UUID!, params: RankParams!): [FeedEntry!]!
-rankSearch(viewer: UUID!, candidates: [UUID!]!, params: RankParams!): [FeedEntry!]!
+rank(viewer: UUID!, params: RankParams!, asOfEpoch: Int): FeedRanking!
+rankSearch(viewer: UUID!, candidates: [UUID!]!, params: RankParams!, asOfEpoch: Int): FeedRanking!
 ```
+
+`FeedRanking` carries the `asOfEpoch` the slice was read as of, the
+ranked `entries`, and the placed `settling` candidates. `asOfEpoch`
+pins the slice (null: the newest ingested epoch); a ranking re-run at
+the same epoch over the same candidates is identical, which is what
+makes spot-checks possible.
 
 Reads are unauthenticated and `feedSlice` is viewer-parameterized
 ([api-spec.md](api-spec.md)), so the miner fetches
-`feedSlice(viewer, params.dustFloor, params.gamma)` itself — the same
+`feedSlice(viewer, params.dustFloor, params.gamma, asOfEpoch)` itself — the same
 public subgraph any client could fetch, bounded by best-possible path
 product `∏(γ·w̃) ≥ χ`
 ([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)).
