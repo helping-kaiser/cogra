@@ -41,6 +41,11 @@ export interface StanceControlProps {
   /** The anchor restyled to sit on photography: a line-face glyph in the rail's
    *  family instead of the card's muted emoji. Restyles the anchor only. */
   overMedia?: boolean;
+  /** The ink the unset face is drawn in as a LINE face (`sentiment_neutral`)
+   *  instead of the muted 🫥 — a host ground the emoji's fixed colors cannot
+   *  read on, the vouch card's (`var(--on-tertiary-container)`). A set stance
+   *  still shows its own emoji face. */
+  lineFaceInk?: string;
   /**
    * The pad's "?" accessible name (jakob's ruling A7) — the name of the
    * dialog it belongs to, not a generic one, on a board that draws a named

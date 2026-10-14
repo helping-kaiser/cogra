@@ -240,14 +240,16 @@ export function StanceControl({
   padNote,
   wide = false,
   overMedia = false,
-  /* THE VOUCH CARD'S EMPTY FACE WEARS FULL INK (jakob 2026-10-13). The
-     muted-and-translucent resting treatment dies on the vouch card's
-     tertiary-container ground — three layers of quiet stack and the face
-     all but vanishes. On that card the hollow glyph alone carries "no
-     opinion yet", at full opacity and its own colors; the per-surface
-     restyle pattern is OVER_MEDIA's. Everywhere else the muted resting
-     face stands unchanged. */
-  fullInkEmpty = false,
+  /* THE VOUCH CARD'S EMPTY FACE IS A LINE FACE IN THE CARD'S INK (jakob
+     2026-10-14). The 🫥 emoji draws in its own fixed pale greys and cannot
+     be tinted, so neither the muted resting treatment nor full opacity
+     reads on the vouch card's tertiary-container ground. The card joins
+     over media: its unset state is `sentiment_neutral`, the line face, here
+     drawn in the ink the host hands (`var(--on-tertiary-container)` on the
+     card) — the glyph says "no opinion yet" by being the empty face. A set
+     stance still shows its own emoji face. Everywhere else the muted
+     resting face stands unchanged. */
+  lineFaceInk,
   helpLabel = "How opinions work",
   /* A NAMED PAD'S HELP, IN PLACE (jakob 2026-10-05, the collected brief's
      D4). The "?" replaces the pad's body with its help wherever the pad is
@@ -515,14 +517,20 @@ export function StanceControl({
                glyph says "no opinion yet" by being the empty face rather than
                by being faint. */
             <Icon name="sentiment_neutral" size={28} />
+          ) : lineFaceInk && restingFace === null ? (
+            /* The card's unset state: the same line face, in the host's ink,
+               and still the anchor's `face`. */
+            <span aria-hidden="true" style={{ display: "inline-flex", color: lineFaceInk }} data-node={node && "face"}>
+              <Icon name="sentiment_neutral" size={24} />
+            </span>
           ) : (
             <span
               aria-hidden="true"
               style={{
                 fontSize: overMedia ? "var(--size-face-over-media)" : "var(--text-title-large)",
                 lineHeight: 1,
-                opacity: restingFace === null && !fullInkEmpty ? "var(--opacity-resting-face)" : 1,
-                filter: restingFace === null && !fullInkEmpty ? "grayscale(1)" : "none",
+                opacity: restingFace === null ? "var(--opacity-resting-face)" : 1,
+                filter: restingFace === null ? "grayscale(1)" : "none",
               }}
               data-node={node && "face"}
             >

@@ -4959,7 +4959,9 @@ make alone:
   an anchor shows a kept pick with `Waiting for your key` under it.
   Keep 43(a), or let the card's face show the kept pick as every other
   anchor does.
-- **The hollow face on olive.** The card's act is the master's resting
+- ~~**The hollow face on olive.**~~ Ruled 2026-10-14: the card's empty
+  face is the line face (`sentiment_neutral`) in the card's ink, the
+  over-media precedent (stance-control, `lineFaceInk`). The card's act is the master's resting
   face, grey at the resting opacity, and on `--tertiary-container` it
   reads faint. The master is unchanged; a card-local treatment would be
   a new anchor variant.

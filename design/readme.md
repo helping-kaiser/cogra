@@ -9914,7 +9914,9 @@ drafted and wait for his review (copy-voice marks each).
   with no first-opinion words, which stay the band's. The tap blooms the
   vouch-back pad, holding a kept pick where there is one; the hold signs
   the gentle default and the ceremony opens, as from the profile's
-  anchor. The card's reading lines keep their words.
+  anchor. The card's reading lines keep their words. Its empty face is
+  the line face in the card's own ink, never the 🫥 emoji, whose fixed
+  colors cannot read on the olive ground (jakob 2026-10-14).
 - **The borrowed view is the vantage's whole read** (*Guest and applicant
   feeds borrow a vantage point*). The filter sheet speaks it by name
   under a borrowed view — `@mira's people`, `as far as @mira's eyes
