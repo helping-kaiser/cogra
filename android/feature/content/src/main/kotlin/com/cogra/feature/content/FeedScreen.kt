@@ -615,10 +615,12 @@ fun FeedScreen(
                                     // once a seen card is drawn, so with nothing
                                     // unseen the feed opens at it.
                                     val split = seenSplit(drawn.posts, state.seenTail)
-                                    items(drawn.posts.subList(0, split), key = { it.id }) { postRow(it) }
-                                    if (split < drawn.posts.size) {
+                                    val unseen = drawn.posts.subList(0, split)
+                                    val seen = drawn.posts.subList(split, drawn.posts.size)
+                                    items(unseen, key = { it.id }) { postRow(it) }
+                                    if (seen.isNotEmpty()) {
                                         item(key = FEED_SEEN_SEPARATOR) { SeenSeparator() }
-                                        items(drawn.posts.subList(split, drawn.posts.size), key = { it.id }) { postRow(it) }
+                                        items(seen, key = { it.id }) { postRow(it) }
                                     }
                                     // The slot the next page fills. At rest it draws
                                     // nothing — the page comes because the reader
