@@ -109,9 +109,12 @@ class PreSignedProposal(
         result = 31 * result + preSignature.contentHashCode()
         return result
     }
+
+    /** The pre-commitment the pre-signature covers, recomputed from the proposal and nonce. */
+    fun preCommitment(): ByteArray = preCommitment(proposal, nonce)
 }
 
-/** The message the pre-commitment signature covers. */
+/** The message the pre-commitment hashes: the canonical body and both pre-digests. */
 fun preCommitmentMsg(
     body: StructuralBody,
     digestContent: ByteArray,
@@ -125,43 +128,92 @@ fun preCommitmentMsg(
     return e.finish()
 }
 
+/** The act identifier's bytes as every pre-digest and commitment binds them. */
+private fun ActId.bound(): ByteArray = toString().toByteArray(Charsets.UTF_8)
+
 /**
- * The host-sealed verified act: the exact proposal plus host salts and
- * the binding commitments, sealed by the host signature. No host order
- * fields.
+ * The proposal pre-commitment: the tagged hash of the canonical body and
+ * both pre-digests, each pre-digest over the act identifier, the private
+ * nonce and the projection's bytes. The pre-signature signs exactly these
+ * 32 bytes, and both commitments bind them.
+ */
+fun preCommitment(proposal: Proposal, nonce: ByteArray): ByteArray {
+    val actId = proposal.body.actId().bound()
+    val digestContent = preDigest(Tags.PRE_DIGEST_CONTENT, actId, nonce, proposal.payload)
+    val digestDeps = preDigest(Tags.PRE_DIGEST_DEPS, actId, nonce, canonicalDeps(proposal.deps))
+    return sha256Tagged(Tags.PRE_COMMITMENT, listOf(preCommitmentMsg(proposal.body, digestContent, digestDeps)))
+}
+
+/** The content commitment of an act — the payload witness. */
+fun contentCommitment(actId: ActId, preCommitment: ByteArray, salt: ByteArray, payload: ByteArray): ByteArray =
+    commitment(Tags.COMMIT_CONTENT, actId.bound(), preCommitment, salt, payload)
+
+/** The dependency commitment of an act, over its canonical dependency list. */
+fun depsCommitment(actId: ActId, preCommitment: ByteArray, salt: ByteArray, deps: List<ActId>): ByteArray =
+    commitment(Tags.COMMIT_DEPS, actId.bound(), preCommitment, salt, canonicalDeps(deps))
+
+/**
+ * The edition tags the stand-in seals under, for the content and the
+ * dependency projection alike. The device refuses any other edition.
+ */
+const val EDITION: ULong = 1u
+
+/**
+ * Items in the encoded verified act: body, pre-commitment, pre-signature,
+ * both commitments, both editions, and the frame's schema version.
+ */
+private const val VERIFIED_ACT_FRAME_ITEMS = 8UL
+
+/**
+ * The host-sealed verified act: the exact proposal plus the named
+ * pre-commitment, host salts, the binding commitments and the edition
+ * tags, sealed by the host signature. No host order fields.
  */
 class VerifiedAct(
     val proposal: Proposal,
     val authorPubkey: ByteArray,
     val nonce: ByteArray,
     val preSignature: ByteArray,
+    val preCommitment: ByteArray,
     val contentSalt: ByteArray,
     val depsSalt: ByteArray,
     val contentCommitment: ByteArray,
     val depsCommitment: ByteArray,
+    val contentEdition: ULong,
+    val depsEdition: ULong,
     val hostSeal: ByteArray,
 ) {
     /**
-     * The message the host seal and the approval witness cover: the
-     * exact verified act including the host-added commitments — the
-     * witness signs no epoch index, position, or logical time.
+     * The encoded verified act — the message the host seal covers, and
+     * with the seal the message the approval witness covers. No epoch
+     * index, position, or logical time.
      */
     fun sealMsg(): ByteArray {
         val e = CborEncoder()
-        e.array(5u)
+        e.array(VERIFIED_ACT_FRAME_ITEMS)
         e.bytes(proposal.body.canonicalBytes())
+        e.bytes(preCommitment)
         e.bytes(preSignature)
         e.bytes(contentCommitment)
         e.bytes(depsCommitment)
+        e.uint(contentEdition)
+        e.uint(depsEdition)
+        // Trailing schema version for forward evolution of the frame shape.
         e.uint(1u)
         return e.finish()
     }
 
     /**
+     * The digest the author's approval witness signs: the encoded
+     * verified act and its host seal, together.
+     */
+    fun approvalDigest(): ByteArray = sha256Tagged(Tags.APPROVAL, listOf(sealMsg(), hostSeal))
+
+    /**
      * Content equality, like every Rust counterpart derives. A
-     * round-trip is then one assertion rather than nine spelled out by
-     * hand — and a decoder that swapped two same-length salts fails it,
-     * which a nine-field list only catches if every field is listed.
+     * round-trip is then one assertion rather than every field spelled
+     * out by hand — and a decoder that swapped two same-length salts
+     * fails it, which a field list only catches if every field is listed.
      */
     override fun equals(other: Any?): Boolean =
         other is VerifiedAct &&
@@ -169,10 +221,13 @@ class VerifiedAct(
             authorPubkey.contentEquals(other.authorPubkey) &&
             nonce.contentEquals(other.nonce) &&
             preSignature.contentEquals(other.preSignature) &&
+            preCommitment.contentEquals(other.preCommitment) &&
             contentSalt.contentEquals(other.contentSalt) &&
             depsSalt.contentEquals(other.depsSalt) &&
             contentCommitment.contentEquals(other.contentCommitment) &&
             depsCommitment.contentEquals(other.depsCommitment) &&
+            contentEdition == other.contentEdition &&
+            depsEdition == other.depsEdition &&
             hostSeal.contentEquals(other.hostSeal)
 
     override fun hashCode(): Int {
@@ -180,10 +235,13 @@ class VerifiedAct(
         result = 31 * result + authorPubkey.contentHashCode()
         result = 31 * result + nonce.contentHashCode()
         result = 31 * result + preSignature.contentHashCode()
+        result = 31 * result + preCommitment.contentHashCode()
         result = 31 * result + contentSalt.contentHashCode()
         result = 31 * result + depsSalt.contentHashCode()
         result = 31 * result + contentCommitment.contentHashCode()
         result = 31 * result + depsCommitment.contentHashCode()
+        result = 31 * result + contentEdition.hashCode()
+        result = 31 * result + depsEdition.hashCode()
         result = 31 * result + hostSeal.contentHashCode()
         return result
     }

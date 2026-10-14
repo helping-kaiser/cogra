@@ -9,7 +9,7 @@
 //! and reaped when a write never lands.
 
 use common::l1::census::Family;
-use common::l1::handshake::{PreSignedProposal, Proposal, StructuralBody, VerifiedAct};
+use common::l1::handshake::{EDITION, PreSignedProposal, Proposal, StructuralBody, VerifiedAct};
 use common::l1::identifier::{ActId, NodeId};
 use sqlx::{PgConnection, PgPool};
 use uuid::Uuid;
@@ -137,18 +137,27 @@ impl StagedWrite {
     }
 
     /// The host-sealed verified act, once the seal has returned.
+    ///
+    /// The pre-commitment and the edition tags are not stored: the first is
+    /// a function of the proposal and the nonce this row holds, the second
+    /// the stand-in's constant. Rebuilding them hides nothing from the
+    /// device, because the host seal covers both — a host that sealed any
+    /// other value fails the device's seal check on the rebuilt act.
     pub fn verified_act(&self) -> Option<VerifiedAct> {
-        let p = self.pre_signed.as_ref()?;
+        let pre = self.pre_signed_proposal()?;
         let s = self.sealed.as_ref()?;
         Some(VerifiedAct {
-            proposal: self.proposal.clone(),
-            author_pubkey: p.author_pubkey.clone(),
-            nonce: p.nonce.clone(),
-            pre_signature: p.pre_signature.clone(),
+            pre_commitment: pre.pre_commitment().to_vec(),
+            proposal: pre.proposal,
+            author_pubkey: pre.author_pubkey,
+            nonce: pre.nonce,
+            pre_signature: pre.pre_signature,
             content_salt: s.content_salt.clone(),
             deps_salt: s.deps_salt.clone(),
             content_commitment: s.content_commitment.clone(),
             deps_commitment: s.deps_commitment.clone(),
+            content_edition: EDITION,
+            deps_edition: EDITION,
             host_seal: s.host_seal.clone(),
         })
     }

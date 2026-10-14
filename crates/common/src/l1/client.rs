@@ -11,9 +11,10 @@ use ed25519_dalek::SigningKey;
 use rand::RngCore;
 use rand::rngs::OsRng;
 
-use super::crypto::{self, tags};
+use super::crypto;
 use super::handshake::{
-    ApprovalWitness, PreSignedProposal, Proposal, VerifiedAct, canonical_deps, pre_commitment_msg,
+    ApprovalWitness, EDITION, PreSignedProposal, Proposal, VerifiedAct, content_commitment,
+    deps_commitment, pre_commitment,
 };
 
 /// What the client can find wrong with what the host returned.
@@ -65,19 +66,11 @@ impl ActorKey {
 
     /// Step 2 of the write — pre-sign: bind the exact proposal under a fresh
     /// private nonce, forming the proposal pre-commitment of
-    /// layer1-interface.md §8.2.
+    /// layer1-interface.md §8.2, and sign those 32 bytes.
     pub fn pre_sign(&self, proposal: Proposal) -> PreSignedProposal {
         let mut nonce = vec![0u8; crypto::SALT_LEN];
         OsRng.fill_bytes(&mut nonce);
-        let digest_content =
-            crypto::pre_digest(tags::PRE_DIGEST_CONTENT, &nonce, &proposal.payload);
-        let digest_deps = crypto::pre_digest(
-            tags::PRE_DIGEST_DEPS,
-            &nonce,
-            &canonical_deps(&proposal.deps),
-        );
-        let msg = pre_commitment_msg(&proposal.body, &digest_content, &digest_deps);
-        let pre_signature = crypto::sign(&self.key, tags::PRE_COMMITMENT, &msg);
+        let pre_signature = crypto::sign_digest(&self.key, &pre_commitment(&proposal, &nonce));
         PreSignedProposal {
             proposal,
             author_pubkey: self.public_key_bytes(),
@@ -86,11 +79,12 @@ impl ActorKey {
         }
     }
 
-    /// Step 4 of the write — approve: verify the host seal, the exact
-    /// returned body, and both commitment openings, then sign the approval
-    /// witness (layer1-interface.md §8.2). `sent` is the proposal the client
-    /// pre-signed; the check is exact equality against what the host
-    /// returned.
+    /// Step 4 of the write — approve: verify the exact returned act, the
+    /// pre-commitment and the editions, the host seal, and both commitment
+    /// openings, then sign the approval witness over the verified act and
+    /// its seal (layer1-interface.md §8.2, "Approval witness").
+    /// `sent` is the proposal the client pre-signed; the check is exact
+    /// equality against what the host returned.
     ///
     /// The equality check comes first for a reason: it is what lets both
     /// commitment openings recompute from the returned salts and the bytes
@@ -109,6 +103,11 @@ impl ActorKey {
                 "host returned a different act than was pre-signed".into(),
             ));
         }
+        if sealed.pre_commitment.as_slice() != sent.pre_commitment().as_slice() {
+            return Err(ClientError::Authentication(
+                "host returned a different pre-commitment than was formed".into(),
+            ));
+        }
         self.verify_host_additions(sealed, host_pubkey)?;
         Ok(self.sign_approval(sealed))
     }
@@ -116,39 +115,27 @@ impl ActorKey {
     /// Crash-recovery approve, for custody-held keys (the genesis
     /// bootstrap): step 4 over an act this key sealed in an earlier run,
     /// whose in-memory pre-signed proposal is gone. Authorship is proven
-    /// instead of matched — the stored pre-commitment must verify under
-    /// this very key over the act's own bytes and nonce — then the host
-    /// seal and both commitment openings are checked as in `approve`. The
-    /// caller confirms the act is the one it means to approve; this
-    /// method proves it is authentically this key's own sealed act.
+    /// instead of matched — the pre-commitment recomputed from the act's
+    /// own bytes and nonce must equal the stored one, and the stored
+    /// pre-signature must verify under this very key over it — then the
+    /// editions, the host seal and both commitment openings are checked as
+    /// in `approve`. The caller confirms the act is the one it means to
+    /// approve; this method proves it is authentically this key's own
+    /// sealed act.
     pub fn approve_recovered(
         &self,
         sealed: &VerifiedAct,
         host_pubkey: &[u8],
     ) -> Result<ApprovalWitness, ClientError> {
-        let body = &sealed.proposal.body;
-        if body.author != self.address() {
+        if sealed.proposal.body.author != self.address() {
             return Err(ClientError::Authentication(
                 "the sealed act is not this actor's".into(),
             ));
         }
-        let digest_content = crypto::pre_digest(
-            tags::PRE_DIGEST_CONTENT,
-            &sealed.nonce,
-            &sealed.proposal.payload,
-        );
-        let digest_deps = crypto::pre_digest(
-            tags::PRE_DIGEST_DEPS,
-            &sealed.nonce,
-            &canonical_deps(&sealed.proposal.deps),
-        );
-        let msg = pre_commitment_msg(body, &digest_content, &digest_deps);
-        if !crypto::verify(
-            &self.key.verifying_key(),
-            tags::PRE_COMMITMENT,
-            &msg,
-            &sealed.pre_signature,
-        ) {
+        let formed = pre_commitment(&sealed.proposal, &sealed.nonce);
+        if sealed.pre_commitment.as_slice() != formed.as_slice()
+            || !crypto::verify_digest(&self.key.verifying_key(), &formed, &sealed.pre_signature)
+        {
             return Err(ClientError::Authentication(
                 "the stored pre-commitment is not this key's signature over the act".into(),
             ));
@@ -157,26 +144,34 @@ impl ActorKey {
         Ok(self.sign_approval(sealed))
     }
 
-    /// The host-added parts of a sealed act: the host seal over the exact
-    /// sealed message, and both commitment openings against the act's
-    /// payload and dependency bytes.
+    /// The host-added parts of a sealed act: the editions, the host seal
+    /// over the encoded verified act, and both commitment openings against
+    /// the act's payload and dependency bytes.
     fn verify_host_additions(
         &self,
         sealed: &VerifiedAct,
         host_pubkey: &[u8],
     ) -> Result<(), ClientError> {
+        if sealed.content_edition != EDITION || sealed.deps_edition != EDITION {
+            return Err(ClientError::Authentication(format!(
+                "unexpected editions (content {}, dependencies {}); this device signs edition {EDITION}",
+                sealed.content_edition, sealed.deps_edition
+            )));
+        }
         let host_key = crypto::verifying_key_from_bytes(host_pubkey)
             .ok_or_else(|| ClientError::Authentication("malformed host key".into()))?;
         if !crypto::verify(
             &host_key,
-            tags::HOST_SEAL,
+            crypto::tags::HOST_SEAL,
             &sealed.seal_msg(),
             &sealed.host_seal,
         ) {
             return Err(ClientError::Authentication("invalid host seal".into()));
         }
-        let content = crypto::commitment(
-            tags::COMMIT_CONTENT,
+        let act_id = sealed.proposal.body.act_id();
+        let content = content_commitment(
+            &act_id,
+            &sealed.pre_commitment,
             &sealed.content_salt,
             &sealed.proposal.payload,
         );
@@ -185,10 +180,11 @@ impl ActorKey {
                 "content commitment does not open over the payload".into(),
             ));
         }
-        let deps = crypto::commitment(
-            tags::COMMIT_DEPS,
+        let deps = deps_commitment(
+            &act_id,
+            &sealed.pre_commitment,
             &sealed.deps_salt,
-            &canonical_deps(&sealed.proposal.deps),
+            &sealed.proposal.deps,
         );
         if deps.as_slice() != sealed.deps_commitment.as_slice() {
             return Err(ClientError::Authentication(
@@ -201,7 +197,7 @@ impl ActorKey {
     fn sign_approval(&self, sealed: &VerifiedAct) -> ApprovalWitness {
         ApprovalWitness {
             act_id: sealed.proposal.body.act_id(),
-            approval_signature: crypto::sign(&self.key, tags::APPROVAL, &sealed.seal_msg()),
+            approval_signature: crypto::sign_digest(&self.key, &sealed.approval_digest()),
         }
     }
 }
@@ -236,29 +232,154 @@ mod tests {
     /// stand-in's job, tested there), just salts, commits, and seals —
     /// enough to exercise the client-side verification branches.
     fn seal(pre: &PreSignedProposal, host: &SigningKey) -> VerifiedAct {
+        seal_as(pre, host, pre.pre_commitment().to_vec(), EDITION)
+    }
+
+    /// The same host, sealing under a pre-commitment and an edition of the
+    /// caller's choosing — every part consistent with them and the seal
+    /// valid, so only the device's own pre-commitment and edition checks
+    /// can refuse it.
+    fn seal_as(
+        pre: &PreSignedProposal,
+        host: &SigningKey,
+        pre_commitment: Vec<u8>,
+        edition: u64,
+    ) -> VerifiedAct {
+        let act_id = pre.proposal.body.act_id();
         let content_salt = vec![1u8; crypto::SALT_LEN];
         let deps_salt = vec![2u8; crypto::SALT_LEN];
-        let content_commitment =
-            crypto::commitment(tags::COMMIT_CONTENT, &content_salt, &pre.proposal.payload).to_vec();
-        let deps_commitment = crypto::commitment(
-            tags::COMMIT_DEPS,
-            &deps_salt,
-            &canonical_deps(&pre.proposal.deps),
+        let content_commitment = content_commitment(
+            &act_id,
+            &pre_commitment,
+            &content_salt,
+            &pre.proposal.payload,
         )
         .to_vec();
+        let deps_commitment =
+            deps_commitment(&act_id, &pre_commitment, &deps_salt, &pre.proposal.deps).to_vec();
         let mut act = VerifiedAct {
             proposal: pre.proposal.clone(),
             author_pubkey: pre.author_pubkey.clone(),
             nonce: pre.nonce.clone(),
             pre_signature: pre.pre_signature.clone(),
+            pre_commitment,
             content_salt,
             deps_salt,
             content_commitment,
             deps_commitment,
+            content_edition: edition,
+            deps_edition: edition,
             host_seal: vec![],
         };
-        act.host_seal = crypto::sign(host, tags::HOST_SEAL, &act.seal_msg());
+        act.host_seal = crypto::sign(host, crypto::tags::HOST_SEAL, &act.seal_msg());
         act
+    }
+
+    /// The pre-signature is the author's signature over the named 32-byte pre-commitment, and over nothing else.
+    /// ´claim:client:the-pre-signature-verifies-over-the-named-pre-commitment´
+    #[test]
+    fn the_pre_signature_verifies_over_the_named_pre_commitment() {
+        let actor = ActorKey::generate();
+        let pre = actor.pre_sign(proposal(&actor.address()));
+        let key = crypto::verifying_key_from_bytes(&pre.author_pubkey).expect("key");
+        assert!(crypto::verify_digest(
+            &key,
+            &pre.pre_commitment(),
+            &pre.pre_signature
+        ));
+        let mut other = pre.proposal.clone();
+        other.payload = b"another payload".to_vec();
+        assert!(!crypto::verify_digest(
+            &key,
+            &pre_commitment(&other, &pre.nonce),
+            &pre.pre_signature
+        ));
+    }
+
+    /// A verified act sealed over a pre-commitment the device did not form is refused before any approval is signed, even when the host's seal and both openings hold.
+    /// ´claim:client:a-foreign-pre-commitment-is-refused-before-approval´
+    #[test]
+    fn a_verified_act_whose_pre_commitment_differs_from_the_devices_is_refused_before_approval() {
+        let actor = ActorKey::generate();
+        let host = SigningKey::generate(&mut OsRng);
+        let pre = actor.pre_sign(proposal(&actor.address()));
+        let sealed = seal_as(&pre, &host, vec![5u8; 32], EDITION);
+        assert!(
+            actor
+                .approve(&pre, &sealed, host.verifying_key().as_bytes())
+                .is_err()
+        );
+        assert!(
+            actor
+                .approve_recovered(&sealed, host.verifying_key().as_bytes())
+                .is_err()
+        );
+    }
+
+    /// A verified act under any edition but the expected one is refused before approval.
+    /// ´claim:client:an-unexpected-edition-is-refused-before-approval´
+    #[test]
+    fn a_verified_act_with_an_unexpected_edition_is_refused_before_approval() {
+        let actor = ActorKey::generate();
+        let host = SigningKey::generate(&mut OsRng);
+        let pre = actor.pre_sign(proposal(&actor.address()));
+        let sealed = seal_as(&pre, &host, pre.pre_commitment().to_vec(), EDITION + 1);
+        assert!(
+            actor
+                .approve(&pre, &sealed, host.verifying_key().as_bytes())
+                .is_err()
+        );
+        assert!(
+            actor
+                .approve_recovered(&sealed, host.verifying_key().as_bytes())
+                .is_err()
+        );
+    }
+
+    /// The approval witness signs the encoded verified act and its host seal together, so it verifies over that pair and over neither half alone.
+    /// ´claim:client:the-approval-signs-the-verified-act-and-its-seal-together´
+    #[test]
+    fn the_approval_witness_signs_the_verified_act_and_its_host_seal_together() {
+        let actor = ActorKey::generate();
+        let host = SigningKey::generate(&mut OsRng);
+        let pre = actor.pre_sign(proposal(&actor.address()));
+        let sealed = seal(&pre, &host);
+        let witness = actor
+            .approve(&pre, &sealed, host.verifying_key().as_bytes())
+            .expect("approves");
+        let key = crypto::verifying_key_from_bytes(&pre.author_pubkey).expect("key");
+        assert!(crypto::verify_digest(
+            &key,
+            &crate::l1::handshake::approval_digest(&sealed.seal_msg(), &sealed.host_seal),
+            &witness.approval_signature
+        ));
+        let mut reseal = sealed.clone();
+        reseal.host_seal = crypto::sign(&host, b"another seal", &sealed.seal_msg());
+        assert!(!crypto::verify_digest(
+            &key,
+            &reseal.approval_digest(),
+            &witness.approval_signature
+        ));
+    }
+
+    /// An approval over the verified act alone, without its seal, is not the witness.
+    ///
+    /// (´claim:client:the-approval-signs-the-verified-act-and-its-seal-together´)
+    #[test]
+    fn an_approval_over_the_verified_act_without_its_seal_does_not_verify() {
+        let actor = ActorKey::generate();
+        let host = SigningKey::generate(&mut OsRng);
+        let pre = actor.pre_sign(proposal(&actor.address()));
+        let sealed = seal(&pre, &host);
+        let key = crypto::verifying_key_from_bytes(&pre.author_pubkey).expect("key");
+        let seed = actor.seed();
+        let signing = SigningKey::from_bytes(&seed);
+        let unsealed = crypto::sign(&signing, crypto::tags::APPROVAL, &sealed.seal_msg());
+        assert!(!crypto::verify_digest(
+            &key,
+            &sealed.approval_digest(),
+            &unsealed
+        ));
     }
 
     /// An approval names the act it was made for, and the witness carries that name.

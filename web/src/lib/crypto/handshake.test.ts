@@ -4,10 +4,14 @@
 
 import { expect, it } from "vitest";
 import { equalBytes, toHex } from "./bytes";
-import { commitment, sha256Tagged, Tags, verify } from "./hashing";
+import { commitment, preDigest, sha256Tagged, Tags, verify, verifyDigest } from "./hashing";
 import { ActId, ProfId } from "./identifiers";
 import {
   canonicalDeps,
+  contentCommitment,
+  depsCommitment,
+  EDITION,
+  preCommitment,
   PreSignedProposal,
   Proposal,
   StructuralBody,
@@ -36,13 +40,19 @@ function proposal(author: string): Proposal {
   return new Proposal(body(author), utf8("hello, cogra"), [ActId.parse("act:bob:1:registration")]);
 }
 
-/** The host side of the handshake, as the tests play it. */
+/**
+ * The host side of the handshake, as the tests play it: every part
+ * consistent with the pre-commitment and edition it seals under, so a
+ * refusal comes from the one check a test aims at.
+ */
 async function sealBy(
   host: ActorKey,
   sent: PreSignedProposal,
   fields?: Partial<{
     proposal: Proposal;
     nonce: Uint8Array;
+    preCommitment: Uint8Array;
+    edition: bigint;
     contentSalt: Uint8Array;
     depsSalt: Uint8Array;
     carriedContentSalt: Uint8Array;
@@ -50,21 +60,28 @@ async function sealBy(
   }>,
 ): Promise<VerifiedAct> {
   const sealedProposal = fields?.proposal ?? sent.proposal;
+  const actId = sealedProposal.body.actId();
+  const sealedPreCommitment = fields?.preCommitment ?? (await sent.preCommitment());
   const contentSalt = fields?.contentSalt ?? new Uint8Array(32).fill(1);
   const depsSalt = fields?.depsSalt ?? new Uint8Array(32).fill(2);
-  const build = async (hostSeal: Uint8Array) =>
+  const contentWitness = await contentCommitment(actId, sealedPreCommitment, contentSalt, sealedProposal.payload);
+  const depsWitness = await depsCommitment(actId, sealedPreCommitment, depsSalt, sealedProposal.deps);
+  const build = (hostSeal: Uint8Array) =>
     new VerifiedAct({
       proposal: sealedProposal,
       authorPubkey: sent.authorPubkey,
       nonce: fields?.nonce ?? sent.nonce,
       preSignature: sent.preSignature,
+      preCommitment: sealedPreCommitment,
       contentSalt: fields?.carriedContentSalt ?? contentSalt,
       depsSalt: fields?.carriedDepsSalt ?? depsSalt,
-      contentCommitment: await commitment(Tags.COMMIT_CONTENT, contentSalt, sealedProposal.payload),
-      depsCommitment: await commitment(Tags.COMMIT_DEPS, depsSalt, canonicalDeps(sealedProposal.deps)),
+      contentCommitment: contentWitness,
+      depsCommitment: depsWitness,
+      contentEdition: fields?.edition ?? EDITION,
+      depsEdition: fields?.edition ?? EDITION,
       hostSeal,
     });
-  const unsealed = await build(new Uint8Array(64));
+  const unsealed = build(new Uint8Array(64));
   return build(await host.signTagged(Tags.HOST_SEAL, unsealed.sealMsg()));
 }
 
@@ -75,7 +92,58 @@ it("approve happy path", async () => {
   const sealed = await sealBy(host, sent);
   const witness = await actor.approve(sent, sealed, host.publicKeyBytes());
   expect(witness.actId.toString()).toBe(sent.proposal.body.actId().toString());
-  expect(await verify(actor.publicKeyBytes(), Tags.APPROVAL, sealed.sealMsg(), witness.approvalSignature)).toBe(true);
+  expect(await verifyDigest(actor.publicKeyBytes(), await sealed.approvalDigest(), witness.approvalSignature)).toBe(
+    true,
+  );
+});
+
+it("the pre-signature verifies over the named pre-commitment", async () => {
+  const actor = await ActorKey.generate();
+  const sent = await actor.preSign(proposal(await actor.address()));
+  expect(await verifyDigest(actor.publicKeyBytes(), await sent.preCommitment(), sent.preSignature)).toBe(true);
+  const other = new Proposal(sent.proposal.body, utf8("another payload"), sent.proposal.deps);
+  expect(await verifyDigest(actor.publicKeyBytes(), await preCommitment(other, sent.nonce), sent.preSignature)).toBe(
+    false,
+  );
+});
+
+it("a verified act whose pre-commitment differs from the device's is refused before approval", async () => {
+  const actor = await ActorKey.generate();
+  const host = await ActorKey.generate();
+  const sent = await actor.preSign(proposal(await actor.address()));
+  const sealed = await sealBy(host, sent, { preCommitment: new Uint8Array(32).fill(5) });
+  await expect(actor.approve(sent, sealed, host.publicKeyBytes())).rejects.toThrow(
+    new HandshakeError("host returned a different pre-commitment than was formed"),
+  );
+});
+
+it("a verified act with an unexpected edition is refused before approval", async () => {
+  const actor = await ActorKey.generate();
+  const host = await ActorKey.generate();
+  const sent = await actor.preSign(proposal(await actor.address()));
+  const sealed = await sealBy(host, sent, { edition: EDITION + 1n });
+  await expect(actor.approve(sent, sealed, host.publicKeyBytes())).rejects.toBeInstanceOf(HandshakeError);
+});
+
+it("the approval witness signs the verified act and its host seal together", async () => {
+  const actor = await ActorKey.generate();
+  const host = await ActorKey.generate();
+  const sent = await actor.preSign(proposal(await actor.address()));
+  const sealed = await sealBy(host, sent);
+  const witness = await actor.approve(sent, sealed, host.publicKeyBytes());
+  const digest = await sha256Tagged(Tags.APPROVAL, [sealed.sealMsg(), sealed.hostSeal]);
+  expect(await verifyDigest(actor.publicKeyBytes(), digest, witness.approvalSignature)).toBe(true);
+  const otherSeal = await sha256Tagged(Tags.APPROVAL, [sealed.sealMsg(), new Uint8Array(64)]);
+  expect(await verifyDigest(actor.publicKeyBytes(), otherSeal, witness.approvalSignature)).toBe(false);
+});
+
+it("an approval over the verified act without its seal does not verify", async () => {
+  const actor = await ActorKey.generate();
+  const host = await ActorKey.generate();
+  const sent = await actor.preSign(proposal(await actor.address()));
+  const sealed = await sealBy(host, sent);
+  const unsealed = await actor.signTagged(Tags.APPROVAL, sealed.sealMsg());
+  expect(await verifyDigest(actor.publicKeyBytes(), await sealed.approvalDigest(), unsealed)).toBe(false);
 });
 
 it("approve rejects an altered body", async () => {
@@ -203,12 +271,57 @@ it("length framing prevents concatenation ambiguity", async () => {
   expect(toHex(a)).not.toBe(toHex(b));
 });
 
+const ACT = utf8("act:alice:1:publish");
+const OTHER_ACT = utf8("act:alice:2:publish");
+const PRE = new Uint8Array(32).fill(3);
+
 it("commitments bind", async () => {
   const salt = new Uint8Array(32).fill(3);
   const bytes = utf8("payload");
-  const base = await commitment(Tags.COMMIT_CONTENT, salt, bytes);
-  expect(equalBytes(await commitment(Tags.COMMIT_CONTENT, salt, bytes), base)).toBe(true);
-  expect(equalBytes(await commitment(Tags.COMMIT_CONTENT, salt, utf8("payloae")), base)).toBe(false);
-  expect(equalBytes(await commitment(Tags.COMMIT_CONTENT, new Uint8Array(32).fill(5), bytes), base)).toBe(false);
-  expect(equalBytes(await commitment(Tags.COMMIT_DEPS, salt, bytes), base)).toBe(false);
+  const base = await commitment(Tags.COMMIT_CONTENT, ACT, PRE, salt, bytes);
+  expect(equalBytes(await commitment(Tags.COMMIT_CONTENT, ACT, PRE, salt, bytes), base)).toBe(true);
+  expect(equalBytes(await commitment(Tags.COMMIT_CONTENT, ACT, PRE, salt, utf8("payloae")), base)).toBe(false);
+  expect(equalBytes(await commitment(Tags.COMMIT_CONTENT, ACT, PRE, new Uint8Array(32).fill(5), bytes), base)).toBe(
+    false,
+  );
+  expect(equalBytes(await commitment(Tags.COMMIT_DEPS, ACT, PRE, salt, bytes), base)).toBe(false);
+});
+
+it("a content commitment binds the act id and the pre-commitment", async () => {
+  const salt = new Uint8Array(32).fill(7);
+  const bytes = utf8("payload");
+  const base = await commitment(Tags.COMMIT_CONTENT, ACT, PRE, salt, bytes);
+  // The same payload and salt under another act id commit differently …
+  expect(equalBytes(await commitment(Tags.COMMIT_CONTENT, OTHER_ACT, PRE, salt, bytes), base)).toBe(false);
+  // … and under another pre-commitment.
+  expect(equalBytes(await commitment(Tags.COMMIT_CONTENT, ACT, new Uint8Array(32).fill(4), salt, bytes), base)).toBe(
+    false,
+  );
+});
+
+it("a dependency commitment binds the act id and the pre-commitment", async () => {
+  const salt = new Uint8Array(32).fill(7);
+  const deps = Uint8Array.of(0x80);
+  const base = await commitment(Tags.COMMIT_DEPS, ACT, PRE, salt, deps);
+  expect(equalBytes(await commitment(Tags.COMMIT_DEPS, OTHER_ACT, PRE, salt, deps), base)).toBe(false);
+  expect(equalBytes(await commitment(Tags.COMMIT_DEPS, ACT, new Uint8Array(32).fill(4), salt, deps), base)).toBe(
+    false,
+  );
+});
+
+it("a pre-digest binds the act id it was formed for", async () => {
+  const nonce = new Uint8Array(32).fill(9);
+  const bytes = utf8("payload");
+  const base = await preDigest(Tags.PRE_DIGEST_CONTENT, ACT, nonce, bytes);
+  expect(equalBytes(await preDigest(Tags.PRE_DIGEST_CONTENT, ACT, nonce, bytes), base)).toBe(true);
+  expect(equalBytes(await preDigest(Tags.PRE_DIGEST_CONTENT, OTHER_ACT, nonce, bytes), base)).toBe(false);
+  expect(equalBytes(await preDigest(Tags.PRE_DIGEST_DEPS, ACT, nonce, bytes), base)).toBe(false);
+});
+
+it("a v1 commitment never verifies under the v2 formula", async () => {
+  const salt = new Uint8Array(32).fill(7);
+  const bytes = utf8("payload");
+  const v1 = await sha256Tagged("cogra-l1:commitment:content:v1", [salt, bytes]);
+  expect(equalBytes(await commitment(Tags.COMMIT_CONTENT, ACT, PRE, salt, bytes), v1)).toBe(false);
+  expect(equalBytes(await sha256Tagged(Tags.COMMIT_CONTENT, [salt, bytes]), v1)).toBe(false);
 });

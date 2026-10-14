@@ -36,10 +36,7 @@ class ActorKey private constructor(private val key: Ed25519PrivateKeyParameters)
     /** The deterministic form the golden vectors pin. */
     internal fun preSignWith(proposal: Proposal, nonce: ByteArray): PreSignedProposal {
         require(nonce.size == SALT_LEN) { "nonce must be $SALT_LEN bytes" }
-        val digestContent = preDigest(Tags.PRE_DIGEST_CONTENT, nonce, proposal.payload)
-        val digestDeps = preDigest(Tags.PRE_DIGEST_DEPS, nonce, canonicalDeps(proposal.deps))
-        val msg = preCommitmentMsg(proposal.body, digestContent, digestDeps)
-        val preSignature = sign(key, Tags.PRE_COMMITMENT, msg)
+        val preSignature = signDigest(key, preCommitment(proposal, nonce))
         return PreSignedProposal(
             proposal = proposal,
             authorPubkey = publicKeyBytes(),
@@ -49,10 +46,12 @@ class ActorKey private constructor(private val key: Ed25519PrivateKeyParameters)
     }
 
     /**
-     * Step 4 of the write — approve: verify the host seal, the exact
-     * returned body, and both commitment openings, then sign the
-     * approval witness. [sent] is the proposal the client pre-signed;
-     * the check is exact equality against what the host returned.
+     * Step 4 of the write — approve: verify the exact returned act, the
+     * pre-commitment and the editions, the host seal, and both
+     * commitment openings, then sign the approval witness over the
+     * verified act and its seal. [sent] is the proposal the client
+     * pre-signed; the check is exact equality against what the host
+     * returned.
      */
     fun approve(sent: PreSignedProposal, sealed: VerifiedAct, hostPubkey: ByteArray): ApprovalWitness {
         if (sealed.proposal != sent.proposal ||
@@ -61,23 +60,33 @@ class ActorKey private constructor(private val key: Ed25519PrivateKeyParameters)
         ) {
             throw HandshakeException("host returned a different act than was pre-signed")
         }
+        val formed = sent.preCommitment()
+        if (!sealed.preCommitment.contentEquals(formed)) {
+            throw HandshakeException("host returned a different pre-commitment than was formed")
+        }
+        if (sealed.contentEdition != EDITION || sealed.depsEdition != EDITION) {
+            throw HandshakeException(
+                "unexpected editions (content ${sealed.contentEdition}, dependencies ${sealed.depsEdition}); " +
+                    "this device signs edition $EDITION",
+            )
+        }
         if (!verify(hostPubkey, Tags.HOST_SEAL, sealed.sealMsg(), sealed.hostSeal)) {
             throw HandshakeException("invalid host seal")
         }
-        // Both commitment openings: recompute from the returned salts and
-        // the bytes the client itself holds.
-        val content = commitment(Tags.COMMIT_CONTENT, sealed.contentSalt, sent.proposal.payload)
+        // Both commitment openings: recompute from the returned salts, the
+        // pre-commitment the client formed, and the bytes it holds.
+        val actId = sent.proposal.body.actId()
+        val content = contentCommitment(actId, formed, sealed.contentSalt, sent.proposal.payload)
         if (!content.contentEquals(sealed.contentCommitment)) {
             throw HandshakeException("content commitment does not open over the sent payload")
         }
-        val deps = commitment(Tags.COMMIT_DEPS, sealed.depsSalt, canonicalDeps(sent.proposal.deps))
+        val deps = depsCommitment(actId, formed, sealed.depsSalt, sent.proposal.deps)
         if (!deps.contentEquals(sealed.depsCommitment)) {
             throw HandshakeException("dependency commitment does not open over the sent list")
         }
-        val approvalSignature = sign(key, Tags.APPROVAL, sealed.sealMsg())
         return ApprovalWitness(
-            actId = sent.proposal.body.actId(),
-            approvalSignature = approvalSignature,
+            actId = actId,
+            approvalSignature = signDigest(key, sealed.approvalDigest()),
         )
     }
 

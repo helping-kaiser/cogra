@@ -8,10 +8,11 @@
 
 use common::l1::Family;
 use common::l1::client::ActorKey;
-use common::l1::handshake::{Proposal, StructuralBody};
+use common::l1::handshake::{Proposal, StructuralBody, VerifiedAct, content_commitment};
 use common::l1::identifier::{ActId, NodeId};
 use l1_standin::StandIn;
 use postgres_store::PgPool;
+use postgres_store::content as content_store;
 use postgres_store::genesis::{
     self, MODERATOR_HANDLE, PUBLISHER_HANDLE, RESERVED_TYPES, TREASURY_HANDLE,
 };
@@ -304,10 +305,11 @@ pub async fn run(
             let sealed = match standin.seal(pre.clone()).await {
                 Ok(sealed) => sealed,
                 Err(l1_standin::StandInError::Conflict(_)) => {
-                    return resume_act(standin, &actor, &pre.proposal, &host_key).await;
+                    return resume_act(standin, pool, &actor, &pre.proposal, &host_key).await;
                 }
                 Err(e) => return Err(e.into()),
             };
+            store_carriage(pool, &sealed).await?;
             let witness = actor.approve(&pre, &sealed, &host_key)?;
             standin.approve(witness).await?;
             Ok::<(), BootstrapError>(())
@@ -445,6 +447,37 @@ async fn refuse_diverged_input(pool: &PgPool, input: &GenesisInput) -> Result<()
     Ok(())
 }
 
+/// Stores a genesis act's carriage — its payload and the content salt the
+/// host returned — the moment the seal returns it.
+///
+/// The host holds both only until acceptance (data-model.md "Act payload
+/// carriage"), and a genesis act has no staged write whose landing would
+/// promote them, so this is where the Charter's payload gets its permanent
+/// home. A re-run over the same sealing writes the same row again. A
+/// full-empty payload has no carriage row, here as on the write path.
+async fn store_carriage(pool: &PgPool, sealed: &VerifiedAct) -> Result<(), BootstrapError> {
+    if sealed.proposal.payload.is_empty() {
+        return Ok(());
+    }
+    let mut tx = pool.begin().await?;
+    content_store::put_genesis_act_payload(
+        &mut tx,
+        &sealed.proposal.body.act_id().to_string(),
+        &sealed.proposal.payload,
+        &sealed.content_salt,
+    )
+    .await
+    .map_err(carriage_error)?;
+    tx.commit().await?;
+    Ok(())
+}
+
+fn carriage_error(e: content_store::ContentError) -> BootstrapError {
+    match e {
+        content_store::ContentError::Storage(e) => BootstrapError::Storage(e),
+    }
+}
+
 /// Resumes one genesis act past a seal Conflict. An identical act sealed
 /// by an interrupted earlier run is skipped when its approval stands, or
 /// completed by recovering the approval from the custodied key; anything
@@ -452,8 +485,18 @@ async fn refuse_diverged_input(pool: &PgPool, input: &GenesisInput) -> Result<()
 /// author sequence, or the same identifier with different content (e.g. a
 /// re-run with changed genesis input) — and is refused truthfully rather
 /// than replayed into the same Conflict forever.
+///
+/// "The same content" is read from what the host still holds. Before
+/// acceptance that is the whole sealed act. After it the host keeps only
+/// the structural record, the payload length and the witness, so the
+/// payload is compared against the act's carriage, which must also open
+/// the stored witness. An empty payload is matched by its length alone,
+/// as it has no carriage; a non-empty one without carriage leaves the
+/// length as the last thing to compare, and the repair says it went
+/// ahead on that alone.
 async fn resume_act(
     standin: &StandIn,
+    pool: &PgPool,
     actor: &ActorKey,
     proposal: &Proposal,
     host_key: &[u8],
@@ -464,14 +507,54 @@ async fn resume_act(
             "the author sequence of {act_id} is occupied by a different act"
         ))
     })?;
-    if stored.act.proposal != *proposal {
-        return Err(BootstrapError::Diverged(format!(
+    let diverged = || {
+        BootstrapError::Diverged(format!(
             "the act stored at {act_id} does not match the genesis input"
-        )));
+        ))
+    };
+    if stored.body != proposal.body || stored.deps != proposal.deps {
+        return Err(diverged());
     }
-    if !stored.approved {
-        let witness = actor.approve_recovered(&stored.act, host_key)?;
-        standin.approve(witness).await?;
+    if let Some(sealed) = &stored.sealed {
+        if sealed.proposal.payload != proposal.payload {
+            return Err(diverged());
+        }
+        store_carriage(pool, sealed).await?;
+        if !stored.approved {
+            let witness = actor.approve_recovered(sealed, host_key)?;
+            standin.approve(witness).await?;
+        }
+        return Ok(());
+    }
+
+    if stored.payload_len != proposal.payload.len() as u64 {
+        return Err(diverged());
+    }
+    match content_store::act_payload(pool, &act_id.to_string())
+        .await
+        .map_err(carriage_error)?
+    {
+        Some(carriage) if !carriage.reduced => {
+            let opens = content_commitment(
+                &act_id,
+                &stored.pre_commitment,
+                &carriage.content_salt,
+                &carriage.payload,
+            );
+            if opens.as_slice() != stored.content_commitment.as_slice() {
+                return Err(BootstrapError::Unrepairable(format!(
+                    "the carriage of {act_id} does not open its witness"
+                )));
+            }
+            if carriage.payload != proposal.payload {
+                return Err(diverged());
+            }
+        }
+        _ if proposal.payload.is_empty() => {}
+        _ => tracing::warn!(
+            act = %act_id,
+            "accepted genesis act has no carriage; resumed on its structural record and payload length alone"
+        ),
     }
     Ok(())
 }

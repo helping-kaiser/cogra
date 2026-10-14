@@ -293,8 +293,9 @@ steps:
    adds the projection salts, and returns the sealed **verified
    act**, stored on the staged write.
 4. **Approve** (client, then backend). The device verifies the
-   host seal, the exact returned body, and both commitment
-   openings, then signs the **approval witness** — only then is
+   host seal, the exact returned body and pre-commitment, the
+   editions, and both commitment openings, then signs the
+   **approval witness** over the verified act and its seal — only then is
    the act orderable. The backend relays the approval and drives
    retries across epoch boundaries. Both signatures cover the
    act, so the relay can neither alter it nor author one unasked.

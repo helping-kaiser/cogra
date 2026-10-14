@@ -16,7 +16,7 @@ use base64::engine::general_purpose::STANDARD as B64;
 use common::l1::crypto::{self, tags};
 use common::l1::device_lock::{self, Binding};
 use common::l1::encoding::Encoder;
-use common::l1::handshake::{canonical_deps, pre_commitment_msg};
+use common::l1::handshake::{self, canonical_deps, pre_commitment_msg};
 use common::l1::key_backup::{self, RecoveryCode};
 use common::l1::{
     ActId, ActorKey, NodeId, PreSignedProposal, Proposal, StructuralBody, VerifiedAct, wire,
@@ -442,6 +442,72 @@ fn recovery_code_inputs(code: &RecoveryCode) -> Value {
     json!(out)
 }
 
+/// Verified acts a device must refuse to approve, each validly sealed by
+/// the host so that only the device's own check can catch it: a
+/// pre-commitment the device did not form (both commitments consistent
+/// with it), an unexpected edition on either projection, and a content
+/// commitment under the earlier formula — tag, salt, payload, with no act
+/// identifier or pre-commitment.
+fn handshake_refusals(
+    actor: &ActorKey,
+    pre: &PreSignedProposal,
+    sealed: &VerifiedAct,
+    host: &SigningKey,
+) -> Value {
+    let act_id = sealed.proposal.body.act_id();
+    let reseal = |mut act: VerifiedAct| {
+        act.host_seal = crypto::sign(host, tags::HOST_SEAL, &act.seal_msg());
+        act
+    };
+    let mut foreign = sealed.clone();
+    foreign.pre_commitment = vec![0x55; 32];
+    foreign.content_commitment = handshake::content_commitment(
+        &act_id,
+        &foreign.pre_commitment,
+        &foreign.content_salt,
+        &foreign.proposal.payload,
+    )
+    .to_vec();
+    foreign.deps_commitment = handshake::deps_commitment(
+        &act_id,
+        &foreign.pre_commitment,
+        &foreign.deps_salt,
+        &foreign.proposal.deps,
+    )
+    .to_vec();
+    let mut content_edition = sealed.clone();
+    content_edition.content_edition = handshake::EDITION + 1;
+    let mut deps_edition = sealed.clone();
+    deps_edition.deps_edition = handshake::EDITION + 1;
+    let mut v1 = sealed.clone();
+    v1.content_commitment = crypto::sha256_tagged(
+        b"cogra-l1:commitment:content:v1",
+        &[&v1.content_salt, &v1.proposal.payload],
+    )
+    .to_vec();
+    let cases = [
+        ("a pre-commitment the device did not form", foreign),
+        ("an unexpected content edition", content_edition),
+        ("an unexpected dependency edition", deps_edition),
+        ("a content commitment under the earlier formula", v1),
+    ];
+    json!(
+        cases
+            .into_iter()
+            .map(|(case, act)| {
+                let act = reseal(act);
+                assert!(
+                    actor
+                        .approve(pre, &act, host.verifying_key().as_bytes())
+                        .is_err(),
+                    "the reference refuses {case}"
+                );
+                json!({"case": case, "wireVerifiedActHex": hx(&wire::encode_verified_act(&act))})
+            })
+            .collect::<Vec<_>>()
+    )
+}
+
 /// Builds the whole vector document.
 ///
 /// The handshake section runs exactly as l1::client performs it, under a
@@ -452,11 +518,14 @@ fn recovery_code_inputs(code: &RecoveryCode) -> Value {
 /// fixture in turn. The upload proof (auth.md "Key recovery") has the actor
 /// key sign the server's challenge bound to those exact blob bytes.
 ///
-/// `version` is 2 since the refusal corpus arrived: `signatureRefusals`,
-/// `rejections`, `families` and `keyBackup.recoveryCodeInputs` are groups a
-/// version-1 reader does not know to look for. The number moves only once
-/// every client reads the new shape, which is what each client's own version
-/// assertion states.
+/// `version` is 3 since the handshake took the original's structure: act
+/// identifier and pre-commitment inside both commitments and both
+/// pre-digests, the pre-commitment named and carried, edition tags in the
+/// verified act, and the approval over the verified act and its seal —
+/// with `handshakeRefusals`, the sealed acts a device must not approve. A
+/// version-2 reader would recompute every handshake value under the old
+/// formulas. The number moves only once every client reads the new shape,
+/// which is what each client's own version assertion states.
 fn build_vectors() -> Value {
     let actor_seed: [u8; 32] = seq_bytes(0x01, 32).try_into().expect("32 bytes");
     let actor = ActorKey::from_seed(actor_seed);
@@ -510,11 +579,28 @@ fn build_vectors() -> Value {
         deps: vec![ActId::parse("act:bob:1:registration").expect("valid act id")],
     };
     let nonce = seq_bytes(0xA1, crypto::SALT_LEN);
-    let digest_content = crypto::pre_digest(tags::PRE_DIGEST_CONTENT, &nonce, &proposal.payload);
+    let act_id = proposal.body.act_id().to_string();
+    let digest_content = crypto::pre_digest(
+        tags::PRE_DIGEST_CONTENT,
+        act_id.as_bytes(),
+        &nonce,
+        &proposal.payload,
+    );
     let deps_bytes = canonical_deps(&proposal.deps);
-    let digest_deps = crypto::pre_digest(tags::PRE_DIGEST_DEPS, &nonce, &deps_bytes);
+    let digest_deps = crypto::pre_digest(
+        tags::PRE_DIGEST_DEPS,
+        act_id.as_bytes(),
+        &nonce,
+        &deps_bytes,
+    );
     let msg = pre_commitment_msg(&proposal.body, &digest_content, &digest_deps);
-    let pre_signature = crypto::sign(&actor_signing, tags::PRE_COMMITMENT, &msg);
+    let pre_commitment = crypto::sha256_tagged(tags::PRE_COMMITMENT, &[&msg]);
+    assert_eq!(
+        pre_commitment,
+        handshake::pre_commitment(&proposal, &nonce),
+        "the exported steps are the reference's own"
+    );
+    let pre_signature = crypto::sign_digest(&actor_signing, &pre_commitment);
     let pre = PreSignedProposal {
         proposal: proposal.clone(),
         author_pubkey: actor.public_key_bytes(),
@@ -529,22 +615,44 @@ fn build_vectors() -> Value {
         author_pubkey: pre.author_pubkey.clone(),
         nonce: nonce.clone(),
         pre_signature: pre_signature.clone(),
+        pre_commitment: pre_commitment.to_vec(),
         content_commitment: crypto::commitment(
             tags::COMMIT_CONTENT,
+            act_id.as_bytes(),
+            &pre_commitment,
             &content_salt,
             &proposal.payload,
         )
         .to_vec(),
-        deps_commitment: crypto::commitment(tags::COMMIT_DEPS, &deps_salt, &deps_bytes).to_vec(),
+        deps_commitment: crypto::commitment(
+            tags::COMMIT_DEPS,
+            act_id.as_bytes(),
+            &pre_commitment,
+            &deps_salt,
+            &deps_bytes,
+        )
+        .to_vec(),
         content_salt,
         deps_salt,
+        content_edition: handshake::EDITION,
+        deps_edition: handshake::EDITION,
         host_seal: vec![],
     };
     sealed.host_seal = crypto::sign(&host, tags::HOST_SEAL, &sealed.seal_msg());
+    let approval_digest =
+        crypto::sha256_tagged(tags::APPROVAL, &[&sealed.seal_msg(), &sealed.host_seal]);
 
     let witness = actor
         .approve(&pre, &sealed, host.verifying_key().as_bytes())
         .expect("the client approval path accepts the sealed act");
+    assert!(
+        crypto::verify_digest(
+            &actor_signing.verifying_key(),
+            &approval_digest,
+            &witness.approval_signature
+        ),
+        "the approval witness signs the verified act and its seal"
+    );
 
     let wire_proposal = wire::encode_proposal(&proposal);
     let wire_pre_commitment = wire::encode_pre_commitment(&nonce, &pre_signature);
@@ -597,7 +705,7 @@ fn build_vectors() -> Value {
     ));
 
     json!({
-        "version": 2,
+        "version": 3,
         "encoding": encoding_vectors(),
         "families": family_vectors(),
         "rejections": rejection_vectors(),
@@ -631,18 +739,23 @@ fn build_vectors() -> Value {
             "contentPreDigestHex": hx(&digest_content),
             "depsPreDigestHex": hx(&digest_deps),
             "preCommitmentMsgHex": hx(&msg),
+            "preCommitmentHex": hx(&pre_commitment),
             "preSignatureHex": hx(&pre_signature),
             "wirePreCommitmentHex": hx(&wire_pre_commitment),
             "contentSaltHex": hx(&sealed.content_salt),
             "depsSaltHex": hx(&sealed.deps_salt),
             "contentCommitmentHex": hx(&sealed.content_commitment),
             "depsCommitmentHex": hx(&sealed.deps_commitment),
+            "contentEdition": sealed.content_edition,
+            "depsEdition": sealed.deps_edition,
             "sealMsgHex": hx(&sealed.seal_msg()),
             "hostSealHex": hx(&sealed.host_seal),
+            "approvalDigestHex": hx(&approval_digest),
             "wireVerifiedActHex": hx(&wire_verified_act),
             "approvalActId": witness.act_id.to_string(),
             "approvalSignatureHex": hx(&witness.approval_signature),
         },
+        "handshakeRefusals": handshake_refusals(&actor, &pre, &sealed, &host),
         "keyBackup": {
             "recoveryCodeBytesHex": hx(&code_bytes),
             "recoveryCodeDisplay": code.display(),

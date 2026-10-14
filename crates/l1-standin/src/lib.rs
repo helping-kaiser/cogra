@@ -29,7 +29,7 @@ use common::l1::handshake::{
     AccountBalance, ApprovalWitness, BurnSettlement, BurnTicket, EpochPackage,
 };
 use common::l1::identifier::ActId;
-use common::l1::{PreSignedProposal, VerifiedAct};
+use common::l1::{PreSignedProposal, StructuralBody, VerifiedAct};
 use ed25519_dalek::SigningKey;
 use rand::RngCore;
 use rand::rngs::OsRng;
@@ -160,12 +160,24 @@ pub enum StandInError {
     Storage(#[from] sqlx::Error),
 }
 
-/// An act read back from the host's store: the exact sealed object as
-/// returned to its author at seal time, and whether an approval witness
-/// has been recorded for it.
+/// An act read back from the host's store, and whether an approval
+/// witness has been recorded for it.
+///
+/// The structural record — body, dependency list, pre-commitment, the
+/// content commitment (the witness) and the payload length — is held in
+/// every status. The payload, content salt and nonce are transient
+/// handshake custody: held from seal until acceptance, when the host
+/// keeps only the witness (data-model.md "Act payload carriage").
 #[derive(Debug, Clone, PartialEq)]
 pub struct StoredAct {
-    pub act: VerifiedAct,
+    pub body: StructuralBody,
+    pub deps: Vec<ActId>,
+    pub pre_commitment: Vec<u8>,
+    pub content_commitment: Vec<u8>,
+    pub payload_len: u64,
+    /// The exact sealed object as returned to its author at seal time,
+    /// while the host still holds its custody; `None` once accepted.
+    pub sealed: Option<VerifiedAct>,
     pub approved: bool,
 }
 

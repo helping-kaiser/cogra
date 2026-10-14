@@ -121,7 +121,7 @@ pub fn decode_proposal(bytes: &[u8]) -> Result<Proposal, WireError> {
 /// (realization transparency, layer1-interface.md §8.2).
 pub fn encode_verified_act(act: &VerifiedAct) -> Vec<u8> {
     let mut e = Encoder::new();
-    e.array(12);
+    e.array(15);
     e.uint(WIRE_VERSION);
     e.bytes(&act.proposal.body.canonical_bytes());
     e.bytes(&act.proposal.payload);
@@ -129,17 +129,20 @@ pub fn encode_verified_act(act: &VerifiedAct) -> Vec<u8> {
     e.bytes(&act.author_pubkey);
     e.bytes(&act.nonce);
     e.bytes(&act.pre_signature);
+    e.bytes(&act.pre_commitment);
     e.bytes(&act.content_salt);
     e.bytes(&act.deps_salt);
     e.bytes(&act.content_commitment);
     e.bytes(&act.deps_commitment);
+    e.uint(act.content_edition);
+    e.uint(act.deps_edition);
     e.bytes(&act.host_seal);
     e.finish()
 }
 
 pub fn decode_verified_act(bytes: &[u8]) -> Result<VerifiedAct, WireError> {
     let mut d = Decoder::new(bytes);
-    if d.array()? != 12 {
+    if d.array()? != 15 {
         return Err(WireError::Shape("verified act"));
     }
     let version = d.uint()?;
@@ -158,10 +161,13 @@ pub fn decode_verified_act(bytes: &[u8]) -> Result<VerifiedAct, WireError> {
         author_pubkey: d.bytes()?,
         nonce: d.bytes()?,
         pre_signature: d.bytes()?,
+        pre_commitment: d.bytes()?,
         content_salt: d.bytes()?,
         deps_salt: d.bytes()?,
         content_commitment: d.bytes()?,
         deps_commitment: d.bytes()?,
+        content_edition: d.uint()?,
+        deps_edition: d.uint()?,
         host_seal: d.bytes()?,
     };
     d.finish()?;
@@ -268,25 +274,59 @@ mod tests {
         assert_eq!(d.bytes().expect("body"), p.body.canonical_bytes());
     }
 
-    /// A verified act round-trips with every part of the handshake it carries.
-    /// ´claim:wire:a-verified-act-round-trips-with-all-its-parts´
-    #[test]
-    fn verified_act_round_trips() {
-        let act = VerifiedAct {
+    fn verified_act() -> VerifiedAct {
+        VerifiedAct {
             proposal: proposal(),
             author_pubkey: vec![1; 32],
             nonce: vec![2; 32],
             pre_signature: vec![3; 64],
+            pre_commitment: vec![9; 32],
             content_salt: vec![4; 32],
             deps_salt: vec![5; 32],
             content_commitment: vec![6; 32],
             deps_commitment: vec![7; 32],
+            content_edition: 1,
+            deps_edition: 2,
             host_seal: vec![8; 64],
-        };
+        }
+    }
+
+    /// A verified act round-trips with every part of the handshake it carries.
+    /// ´claim:wire:a-verified-act-round-trips-with-all-its-parts´
+    #[test]
+    fn verified_act_round_trips() {
+        let act = verified_act();
         assert_eq!(
             decode_verified_act(&encode_verified_act(&act)).expect("decodes"),
             act
         );
+    }
+
+    /// The verified act on the wire carries the named pre-commitment and both edition tags, each in its own position.
+    /// ´claim:wire:the-verified-act-carries-the-pre-commitment-and-both-edition-tags´
+    #[test]
+    fn the_verified_act_carries_the_pre_commitment_and_both_edition_tags() {
+        let act = verified_act();
+        let wire = encode_verified_act(&act);
+        let mut d = Decoder::new(&wire);
+        assert_eq!(d.array().expect("array"), 15);
+        d.uint().expect("version");
+        for _ in 0..2 {
+            d.bytes().expect("body, payload");
+        }
+        d.array().expect("deps");
+        d.text().expect("one dep");
+        for _ in 0..3 {
+            d.bytes().expect("pubkey, nonce, pre-signature");
+        }
+        assert_eq!(d.bytes().expect("pre-commitment"), act.pre_commitment);
+        for _ in 0..4 {
+            d.bytes().expect("salts, commitments");
+        }
+        assert_eq!(d.uint().expect("content edition"), 1);
+        assert_eq!(d.uint().expect("dependency edition"), 2);
+        assert_eq!(d.bytes().expect("seal"), act.host_seal);
+        d.finish().expect("nothing trails the seal");
     }
 
     /// A pre-commitment round-trips as the nonce and the signature it holds.
