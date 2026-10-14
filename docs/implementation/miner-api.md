@@ -459,8 +459,8 @@ on-device call uses directly.
 
 The viewer's inputs — the rank params, and for a delegated miner that is
 handed one, the seen-list — ride inside each request. The server's own
-ranker container is handed none: the reader's device cuts seen content
-from the ranked answer
+ranker container is handed none: the reader's device sets seen content
+apart from the rest of the ranked answer
 ([feed-ranking.md §9.4](../primitive/feed-ranking.md#94-the-already-seen-filter)). The miner holds no credential and no standing
 state, and never authenticates to the backend: to the backend, a miner
 is indistinguishable from any anonymous reader, and

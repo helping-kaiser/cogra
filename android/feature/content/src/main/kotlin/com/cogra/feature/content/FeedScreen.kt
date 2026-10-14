@@ -19,6 +19,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -585,7 +586,7 @@ fun FeedScreen(
                                             }
                                         }
                                     }
-                                    items(drawn.posts, key = { it.id }) { post ->
+                                    val postRow: @Composable (PostView) -> Unit = { post ->
                                         // The row's key again, so the stage can ask
                                         // the list whether this card is still placed.
                                         ScrollStageRow(post.id) {
@@ -606,6 +607,20 @@ fun FeedScreen(
                                                 stanceControl = stanceControl,
                                             )
                                         }
+                                    }
+                                    // THE SEEN TAIL (FeedSeenTail.md): the unseen
+                                    // cards, then the separator, then the cards the
+                                    // reader has already seen — each run in the
+                                    // feed's own order. The separator stands only
+                                    // once a seen card is drawn, so with nothing
+                                    // unseen the feed opens at it.
+                                    val split = seenSplit(drawn.posts, state.seenTail)
+                                    val unseen = drawn.posts.subList(0, split)
+                                    val seen = drawn.posts.subList(split, drawn.posts.size)
+                                    items(unseen, key = { it.id }) { postRow(it) }
+                                    if (seen.isNotEmpty()) {
+                                        item(key = FEED_SEEN_SEPARATOR) { SeenSeparator() }
+                                        items(seen, key = { it.id }) { postRow(it) }
                                     }
                                     // The slot the next page fills. At rest it draws
                                     // nothing — the page comes because the reader
@@ -717,6 +732,49 @@ private fun FeedTailSlot(state: FeedUiState, onLoadMore: () -> Unit) {
 @Composable
 private fun Gutter(content: @Composable () -> Unit) {
     Box(Modifier.padding(horizontal = Space.x4)) { content() }
+}
+
+/** The separator's list key — never a post id, so no post-keyed watch reads it as a card. */
+internal const val FEED_SEEN_SEPARATOR = "feed_seen_separator"
+
+/**
+ * Where the drawn cards cross into the seen tail: the index of the first
+ * card under `feed.seenSeparator`, or the card count when none is drawn
+ * yet. The derive stands every tail row after every unseen one, so the
+ * cards split at one point.
+ */
+internal fun seenSplit(posts: List<PostView>, seenTail: Set<String>): Int {
+    val first = posts.indexOfFirst { it.id in seenTail }
+    return if (first < 0) posts.size else first
+}
+
+/**
+ * `feed.seenSeparator` (FeedSeenTail.md, the `FeedSeenTail` board): a
+ * hairline with "Already seen" centred on it, quiet, and no control — the
+ * board's 12dp gap and 8dp/24dp padding, the hairline `--border-hairline`
+ * (`outlineVariant`), the words label-small in `--text-secondary`
+ * (`onSurfaceVariant`).
+ */
+@Composable
+private fun SeenSeparator() {
+    val node = FEED / "seenSeparator"
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .dataNode(node)
+            .padding(horizontal = Space.x6, vertical = Space.x2),
+        horizontalArrangement = Arrangement.spacedBy(Space.x3),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        HorizontalDivider(Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
+        Text(
+            text = stringResource(R.string.content_feed_seen_separator),
+            modifier = Modifier.dataNode(node / "label"),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        HorizontalDivider(Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
+    }
 }
 
 /**

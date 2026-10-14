@@ -1566,31 +1566,76 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 3, find: ">Undo</button>", tag: "button" },
   ],
-  // Saved and History: the back arrow, the rows (one control, one number, drawn
-  // once per row) and the bar.
+  /* Saved as a feed (the Saved redesign, jakob 2026-10-14), History's own
+     construction: the header's arrow and the search field, then the cards in
+     reading order down the column, FeedKinds' grammar — each card's own door
+     its own number, and what the cards repeat (author chip, tag chips, faces,
+     share, score, the post's ⋮) one number each (`all`). Each ⋮ is the card's
+     own Save, its first row reading Unsave here. The bar closes the list. */
   Saved: [
     { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
-    { n: 2, find: ">The long way home<", tag: "button" },
-    { n: 2, find: ">The third headland light is real<", tag: "button" },
-    { n: 2, find: ">Mira Voss<", tag: "button" },
-    { n: 2, find: ">Sunday at the tide market<", tag: "button" },
-    // The row's own unsave, drawn once per row — one edge covers all four.
-    { n: 8, find: 'aria-label="Unsave ', tag: "button", all: true },
-    ...nav(3),
+    { n: 2, find: ">Search what you saved<", tag: "div" },
+    { n: 3, find: '<a href="/u/', tag: "a", all: true },
+    { n: 4, find: 'aria-label="More on this post"', tag: "button", all: true },
+    { n: 5, find: ">More</button>", tag: "button" },
+    { n: 6, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 7, find: '<a href="/t/', tag: "a", all: true },
+    { n: 8, find: ">· 1 reference<", tag: "button" },
+    { n: 9, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
+    { n: 9, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
+    { n: 9, find: 'aria-label="Give your opinion on this comment"', tag: "button" },
+    { n: 9, find: ">Choose your opinion on this comment</button>", tag: "button" },
+    { n: 9, find: 'aria-label="Give your opinion on @mira"', tag: "button" },
+    { n: 9, find: ">Choose your opinion on @mira</button>", tag: "button" },
+    { n: 10, find: ">Feed score</span>", tag: "button", all: true },
+    { n: 11, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 11, find: 'aria-label="1 comment"', tag: "button" },
+    { n: 12, find: 'aria-label="Share ', tag: "button", all: true },
+    { n: 13, find: 'aria-label="On “', tag: "button" },
+    { n: 14, find: 'aria-label="More on this comment"', tag: "button" },
+    { n: 15, find: ">That stretch after the second bend", tag: "a" },
+    { n: 16, find: 'aria-label="Reply to @tobias"', tag: "button" },
+    { n: 17, find: 'aria-label="More about @mira"', tag: "button" },
+    { n: 18, find: ">Runs the stand by the sea wall", tag: "a" },
+    ...nav(19),
   ],
-  // The same list a moment after one row was unsaved. It borrows `Saved`'s
-  // numbering — the same controls in the same places — and appends `Undo`
-  // rather than inserting it, so no via renumbers.
+  /* Saved a moment after an unsave: the top viewport of the same page with
+     the post that went gone — the field, the comment, the person and the
+     words post — so it numbers its own subset in reading order, and the
+     snackbar's Undo takes the next free number after it. */
   SavedUndo: [
     { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
-    { n: 2, find: ">The third headland light is real<", tag: "button" },
-    { n: 2, find: ">Mira Voss<", tag: "button" },
-    { n: 2, find: ">Sunday at the tide market<", tag: "button" },
-    { n: 8, find: 'aria-label="Unsave ', tag: "button", all: true },
-    { n: 9, find: ">Undo</button>", tag: "button" },
-    ...nav(3),
+    { n: 2, find: ">Search what you saved<", tag: "div" },
+    { n: 3, find: 'aria-label="On “', tag: "button" },
+    { n: 4, find: '<a href="/u/', tag: "a", all: true },
+    { n: 5, find: 'aria-label="More on this comment"', tag: "button" },
+    { n: 6, find: ">That stretch after the second bend", tag: "a" },
+    { n: 7, find: '<a href="/t/', tag: "a", all: true },
+    { n: 8, find: 'aria-label="Give your opinion on this comment"', tag: "button" },
+    { n: 8, find: ">Choose your opinion on this comment</button>", tag: "button" },
+    { n: 8, find: 'aria-label="Give your opinion on @mira"', tag: "button" },
+    { n: 8, find: ">Choose your opinion on @mira</button>", tag: "button" },
+    { n: 8, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
+    { n: 8, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
+    { n: 9, find: 'aria-label="Reply to @tobias"', tag: "button" },
+    { n: 10, find: ">Feed score</span>", tag: "button", all: true },
+    { n: 11, find: 'aria-label="Share ', tag: "button", all: true },
+    { n: 12, find: 'aria-label="More about @mira"', tag: "button" },
+    { n: 13, find: ">Runs the stand by the sea wall", tag: "a" },
+    { n: 14, find: 'aria-label="More on this post"', tag: "button" },
+    { n: 15, find: 'aria-label="1 comment"', tag: "button" },
+    { n: 16, find: ">Undo</button>", tag: "button" },
+    ...nav(17),
   ],
   SavedEmpty: [{ n: 1, find: 'aria-label="Back to your profile"', tag: "a" }, ...nav(2)],
+  /* Saved searched to nothing (the Saved redesign): the arrow, the field
+     holding the query, the empty state's one action, the bar. */
+  SavedNone: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">brackish cartography<", tag: "div" },
+    { n: 3, find: ">Show everything</button>", tag: "button" },
+    ...nav(4),
+  ],
   /* History as a feed (the History redesign, 2026-10-05): the header's arrow,
      the search field and the trigger, then the cards in reading order down
      the column, FeedKinds' grammar — each card's own door its own number, and
