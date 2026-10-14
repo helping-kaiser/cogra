@@ -396,6 +396,56 @@ class ContentRepositoryTest {
         assertThat((refused as Outcome.Refused).errors.single().code).isEqualTo(ErrorCode.FORBIDDEN)
     }
 
+    /**
+     * The author's creating-edge stance rides the input; it used to be
+     * dropped, so every Publish landed at the server's +0.1 default.
+     */
+    @Test
+    fun aPostCarriesTheAuthorsPickedStanceOnTheWire() = runTest {
+        enqueue(
+            """{"data":{"preparePost":{"__typename":"PrepareContentPayload",
+               "node":"node-1","writes":[],"userErrors":[]}}}""",
+        )
+        repo().preparePost(
+            title = "T",
+            description = null,
+            content = "B",
+            license = LicenseChoice(attribution = 1.0, provenance = 0.0),
+            pDirected = -0.8,
+        )
+        assertThat(server.takeRequest().body.readUtf8()).contains("\"pDirected\":-0.8")
+    }
+
+    /** Nothing stated is nothing sent: the contract's own default applies. */
+    @Test
+    fun aPostWithoutAStanceSendsNoPDirectedKey() = runTest {
+        enqueue(
+            """{"data":{"preparePost":{"__typename":"PrepareContentPayload",
+               "node":"node-1","writes":[],"userErrors":[]}}}""",
+        )
+        repo().preparePost("T", null, "B", LicenseChoice(attribution = 1.0, provenance = 0.0))
+        assertThat(server.takeRequest().body.readUtf8()).doesNotContain("pDirected")
+    }
+
+    /** The reply seal's pad names both parameters, and both ride. */
+    @Test
+    fun aCommentCarriesItsPickedStancePairOnTheWire() = runTest {
+        enqueue(
+            """{"data":{"prepareComment":{"__typename":"PrepareContentPayload",
+               "node":"c1","writes":[],"userErrors":[]}}}""",
+        )
+        repo().prepareComment(
+            target = "p1",
+            content = "Nice",
+            license = LicenseChoice.PublicDomain,
+            pDirected = 0.6,
+            pInterest = -0.3,
+        )
+        val body = server.takeRequest().body.readUtf8()
+        assertThat(body).contains("\"pDirected\":0.6")
+        assertThat(body).contains("\"pInterest\":-0.3")
+    }
+
     @Test
     fun anEditSendsTheCompleteFieldSet() = runTest {
         enqueue(

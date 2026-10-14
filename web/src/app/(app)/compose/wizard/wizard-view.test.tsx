@@ -13,7 +13,7 @@ import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
-import { emptyWizard, type WizardState } from "@/lib/compose/wizard";
+import { DEFAULT_P_DIRECTED, emptyWizard, type WizardState } from "@/lib/compose/wizard";
 import { createComposeDraftStore, type ComposeDraftStore } from "@/lib/compose/draft-store";
 import { createSealedDraftStore, type SealedDraftStore } from "@/lib/compose/sealed-draft";
 import { IDBFactory } from "fake-indexeddb";
@@ -174,7 +174,9 @@ afterEach(() => {
 
 describe("the compose wizard", () => {
   it("publishes a words post without ever showing a crop screen", async () => {
-    let variables: { input: { content: string | null; attachments: unknown } } | null = null;
+    let variables: {
+      input: { content: string | null; attachments: unknown; pDirected: unknown };
+    } | null = null;
     server.use(
       graphql.mutation("PreparePost", ({ variables: v }) => {
         variables = v as never;
@@ -215,6 +217,9 @@ describe("the compose wizard", () => {
     expect(variables!.input.content).toBe("Three weekends at low tide.");
     // The XOR, on the wire: a words post carries no gallery at all.
     expect(variables!.input.attachments).toBeNull();
+    // The stance the seal showed is the one on the wire (here the untouched
+    // default, which the wizard states explicitly rather than leaving absent).
+    expect(variables!.input.pDirected).toBe(DEFAULT_P_DIRECTED);
   });
 
   // CW-26: WizardHeader.jsx's stageLabel slot draws at --text-label-small.
