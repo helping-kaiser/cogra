@@ -259,6 +259,29 @@ describe("the feed's post menu", () => {
     );
   });
 
+  // The terms' two rows are the registered keyed `axis`.
+  it("license_rows_are_the_registered_axes", async () => {
+    server.use(...rankedFeed([post("p1")]));
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+    await openMenu();
+    fireEvent.click(screen.getByTestId("feed.menuSheet.license"));
+    for (const [key, label, value] of [
+      ["credit", "Credit", "Not required"],
+      ["public-record-of-use", "Public record of use", "Not logged"],
+    ]) {
+      const axis = screen.getByTestId(byNode("feed.licenseSheet.terms.axis", key));
+      expect(axis).toContainElement(
+        screen.getByTestId(byNode("feed.licenseSheet.terms.axis.label", key)),
+      );
+      expect(screen.getByTestId(byNode("feed.licenseSheet.terms.axis.label", key))).toHaveTextContent(
+        label,
+      );
+      expect(screen.getByTestId(byNode("feed.licenseSheet.terms.axis.value", key))).toHaveTextContent(
+        value,
+      );
+    }
+  });
+
   // FeedPostMenu.md:23
   it("report_closes_the_menu_and_raises_the_confirm_over_the_feed_sending_nothing", async () => {
     const report = reportHandler(sent);

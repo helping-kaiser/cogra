@@ -633,6 +633,7 @@ class ContentScreensTest {
         compose.onNodeWithTag("feed.licenseSheet").assertExists()
         compose.onNodeWithTag("feed.licenseSheet.dragHandle", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag("feed.licenseSheet.terms").assertExists()
+        assertAxisRows("feed", "Required for every use", "Not logged")
     }
 
     /**
@@ -1406,7 +1407,40 @@ class ContentScreensTest {
 
         compose.onNodeWithTag("postDetail.header.menu").performClick()
         compose.onNodeWithTag("postDetail.menuSheet.license").performClick()
-        compose.onNodeWithTag("license_sheet_terms").assertExists()
+        compose.onNodeWithTag("postDetail.licenseSheet").assertExists()
+        compose.onNodeWithTag("postDetail.licenseSheet.dragHandle", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("postDetail.licenseSheet.terms").assertExists()
+        // The legacy tags are retired: the registered paths are the only names.
+        compose.onNodeWithTag("license_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("license_sheet_terms").assertDoesNotExist()
+    }
+
+    /** The terms' two rows are the registered keyed `axis` (`credit`, `public-record-of-use`). */
+    @Test
+    fun theDetailsLicenseRowsAreTheRegisteredAxes() {
+        renderDetail(
+            detailFixture(
+                loading = false,
+                post = testPost("p1", license = LicenseChoice(attribution = 1.0, provenance = 0.0)),
+            ),
+        )
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.license").performClick()
+        assertAxisRows("postDetail", "Required for every use", "Not logged")
+    }
+
+    private fun assertAxisRows(prefix: String, creditValue: String, recordValue: String) {
+        val axis = "$prefix.licenseSheet.terms.axis"
+        listOf(
+            Triple("credit", "Credit", creditValue),
+            Triple("public-record-of-use", "Public record of use", recordValue),
+        ).forEach { (key, label, value) ->
+            compose.onNodeWithTag("$axis:$key").assertExists()
+            compose.onNode(hasTestTag("$axis.label") and hasAnyAncestor(hasTestTag("$axis:$key")))
+                .assertTextEquals(label)
+            compose.onNode(hasTestTag("$axis.value") and hasAnyAncestor(hasTestTag("$axis:$key")))
+                .assertTextEquals(value)
+        }
     }
 
     // THE READER'S READINGS, not the author's (`LicenseChooser.jsx:36-49`).

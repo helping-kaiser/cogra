@@ -439,12 +439,47 @@ describe("PostView", () => {
 
     fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
     fireEvent.click(screen.getByTestId("postDetail.menuSheet.license"));
-    expect(screen.getByTestId("post-menu-license-sheet-terms")).toHaveTextContent("Public domain");
+    expect(screen.getByTestId("postDetail.licenseSheet.terms")).toHaveTextContent("Public domain");
     // Raised from the post's own menu, over the page — never stacked
     // (design/readme.md:2364).
-    expect(screen.getByTestId("post-menu-license-sheet").className).not.toContain(
+    expect(screen.getByTestId("postDetail.licenseSheet").className).not.toContain(
       "bg-surface-container-highest",
     );
+    expect(screen.getByTestId("postDetail.licenseSheet.dragHandle")).toBeInTheDocument();
+    // The legacy ids are retired: the registered paths are the only names.
+    expect(screen.queryByTestId("post-menu-license-sheet")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("post-menu-license-sheet-terms")).not.toBeInTheDocument();
+  });
+
+  // The terms' two rows are the registered keyed `axis`
+  // (design/readme.md round 10: `credit`, `public-record-of-use`).
+  it("names the post's license rows by their registered axis keys", async () => {
+    server.use(...thread("u1", [{ id: "c1", body: "First!" }]));
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
+    await screen.findByTestId(byNode("postDetail.card.body"));
+    fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.license"));
+    const credit = screen.getByTestId(byNode("postDetail.licenseSheet.terms.axis", "credit"));
+    expect(
+      within(credit).getByTestId(byNode("postDetail.licenseSheet.terms.axis.label", "credit")),
+    ).toHaveTextContent("Credit");
+    expect(
+      within(credit).getByTestId(byNode("postDetail.licenseSheet.terms.axis.value", "credit")),
+    ).toHaveTextContent("Not required");
+    const record = screen.getByTestId(
+      byNode("postDetail.licenseSheet.terms.axis", "public-record-of-use"),
+    );
+    expect(
+      within(record).getByTestId(
+        byNode("postDetail.licenseSheet.terms.axis.label", "public-record-of-use"),
+      ),
+    ).toHaveTextContent("Public record of use");
+    expect(
+      within(record).getByTestId(
+        byNode("postDetail.licenseSheet.terms.axis.value", "public-record-of-use"),
+      ),
+    ).toHaveTextContent("Not logged");
   });
 
   it("raises a comment's own terms from the comment's menu", async () => {

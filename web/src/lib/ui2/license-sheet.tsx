@@ -34,7 +34,10 @@ export function LicenseSheet({
   onClose: () => void;
   license: License;
   testId: string;
-  /** The registered sheet (`feed.licenseSheet`); its grip and `terms` follow. */
+  /**
+   * The registered sheet (`feed.licenseSheet`, `postDetail.licenseSheet`); its
+   * grip and `terms` follow, and each terms row is a keyed `axis`.
+   */
   node?: DataNode;
   /**
    * Raised from a comment's menu, this sheet comes up over the comments
