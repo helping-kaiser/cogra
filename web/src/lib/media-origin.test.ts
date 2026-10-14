@@ -31,7 +31,7 @@ describe("toSameOriginMediaUrl", () => {
 
 describe("mediaTypePolicies", () => {
   const ATTACHMENT = gql`
-    fragment MediaFields on MediaAttachment {
+    fragment MediaSameOriginProbe on MediaAttachment {
       id
       url
     }
