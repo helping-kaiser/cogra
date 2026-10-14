@@ -6,9 +6,11 @@ ALWAYS the empty Saved offers no action button and wears no error colour
 
 ALWAYS the empty Saved names the save in words and never draws its glyph
 
-WHEN the last row's Unsave lands -> the empty Saved stands with the snackbar Removed from Saved. and Undo over it
+ALWAYS the empty Saved draws no search field
 
-WHEN tap Undo GIVEN the empty Saved stands under the unsave's snackbar -> the row that went comes back AND Saved stands as it was before the unsave
+WHEN the last card's unsave lands -> the empty Saved stands with the snackbar Removed from Saved. and Undo over it
+
+WHEN tap Undo GIVEN the empty Saved stands under the unsave's snackbar -> the card that went comes back AND Saved stands as it was before the unsave
 
 WHEN the unsave's snackbar has stood 4s without Undo -> the snackbar clears AND the empty Saved stays
 

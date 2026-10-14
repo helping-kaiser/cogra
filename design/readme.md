@@ -621,7 +621,7 @@ cold launch only** — the app closed by the reader, or updated — and
 that lands on Feed's root, fresh.
 
 **Landing on a comment is one statement for every deep link** (jakob
-2026-10-01). A notification, a Saved row, a search result, a Cited by
+2026-10-01). A notification, a comment card in Saved, a search result, a Cited by
 row or a shared link that opens a thread on a comment opens the comments
 sheet with that comment scrolled to the sheet's top, its branch
 expanded, and a brief tonal highlight on it — one rung up the surface
@@ -705,8 +705,10 @@ rulings*) — under Newest, the reader's choice or what the search serves
 before the ranker exists, the tiers stay and each runs newest first, with
 no seam, every row's age on its edge and a tag row bare (§13, *The five
 ordered draws*); History searches the reader's seen-list, newest first by
-first seeing. A query that finds nothing says so in the list's place and
-offers the way back (`ExploreNone`, `HistoryNone`).
+first seeing; Saved searches the reader's saved list, newest first by
+when each thing was saved. A query that finds nothing says so in the
+list's place and offers the way back (`ExploreNone`, `HistoryNone`,
+`SavedNone`).
 
 ### Orientation
 
@@ -4425,7 +4427,8 @@ Ruled by jakob the same day.
   picture in that circle reads as a person, which is the one thing a
   round disc means here. The chat message is the fourth saveable kind
   and waits for the chat round: it joins this list rather than starting
-  a second one.
+  a second one. (The Saved redesign, 2026-10-14, draws every saved
+  thing as its kind's own feed card.)
 - **History is posts only, ordered by the first time you saw one**
   (jakob). Saving is a deliberate act on anything; being seen is
   something posts do in a feed, and a history that collected every
@@ -4835,6 +4838,8 @@ such.
   reader is retracing — so `ContentRow` gains `action`, splits into a
   pressable part and the control beside it, and nests no button in a
   button. `SettingsRow` had already assigned that slot the same way.
+  (The Saved redesign, 2026-10-14, retires the row and its control:
+  the card's own Save is the unsave.)
 - **The saved state is one word, `Unsave`**, replacing
   `Remove from saved` on every menu and in copy-voice. **Save joins your
   own post's menu too**, and LEADS it — saving is private, so whose post
@@ -9996,6 +10001,54 @@ banked by round 10, drawn as one round.
   3799** — `PostLicense`
   and `CommentLicense` (38 paths each) and `FeedSeenTail` (41) join, and
   `FeedPostLicense` grows its three axis paths; nothing removed.
+
+### Round 12, the Saved redesign — 2026-10-14
+
+jakob's ruling (2026-10-14): Saved becomes "a normal feed looking page
+that is just composed of my saved contents... just like history is a
+normal feed composed of my view history". It supersedes the 2026-09-11
+chronicle-row shape.
+
+- **Every saved thing as its kind's own feed card.** Posts, comments and
+  people — the saveable kinds — stand as `PostCard`, `CommentFeedCard`
+  and `ProfileFeedCard`, unchanged and fully live; no card anatomy is the
+  page's own, and every door lands where the feed's does. A tag is never
+  saved, so the tag card never stands here; the chat message still waits
+  for the chat round. One mixed list (2026-09-11 stands), newest first
+  by when the reader saved each thing; the cards wear their own ages,
+  and the scores do not order it. Drawn whole, `History`'s reason.
+- **The unsave is the card's own Save.** A card's Save control is its
+  ⋮'s first row; every card in Saved is kept, so it reads `Unsave`
+  there, and the tap closes the sheet, takes the card out, closes the
+  list over it and answers `Removed from Saved.` with `Undo` — no
+  dialog, nothing marking the space. The row's icon-only control and
+  the shared `Unsave` it was built from are retired. A failed unsave
+  brings the card back with the row line under its face; a failed Undo
+  keeps the returned card with the same line. Focus moves to the next
+  card, else the previous, else the empty state.
+- **Search ships with it** (jakob: "the same search just over a
+  different set of nodes"): `Search what you saved`, Explore's one rule
+  over the saved list, newest first by save time; `SavedNone` is the
+  no-match state, `HistoryNone`'s construction with only the query's
+  cause. No kinds trigger — no kind filter is ruled for this list.
+  `SavedEmpty` draws no field, `HistoryEmpty`'s rule.
+- **The standing edges carry over to cards**: a removed thing keeps its
+  place with its removal mark, a deleted account is the redacted profile
+  card, sensitive content keeps its veil, and a hidden account's things
+  and profile stay.
+- **Boards.** `Saved` redrawn whole (390×1370) and moved to the profile
+  page's row slot at x 4800; `SavedUndo` is its top viewport with the
+  snackbar, `HistoryHidden`'s construction; `SavedNone` ("Saved ·
+  nothing matches") takes the next slot at x 5280. The card's ⋮ is the
+  unsave's door in the graph: the three menus' first-row edges land on
+  `SavedUndo` from a card in Saved.
+- **The gate**: edges **2041 → 2076**, flows 225 → **226**
+  (`search-what-you-saved`; `unsave-and-undo` re-routed through the
+  card's ⋮); the registry **97 / 3799 → 98 / 3876** — `SavedNone` joins,
+  `Saved` and `SavedUndo` register their cards, and the sixteen
+  `saved.list` row paths (eight on each board) and the `saved.list.entry`
+  key rule leave the registry by hand, the breaking change proposed for
+  blessing.
 
 ---
 
