@@ -611,7 +611,19 @@ data class ComposeWizardState(
 
     /** The description's own cap — blocks the seal the same way the title does. */
     val descriptionTooLong: Boolean
-        get() = isDescriptionTooLong(description)
+        get() = mode == BodyMode.Media && isDescriptionTooLong(description)
+
+    /**
+     * The description the post carries, or null. THE WORDS PATH COMPOSES
+     * NONE (K8.1/D4; design/readme.md:8179-8181): a description is how
+     * words stand beside pictures, so on the words side it is neither drawn
+     * nor sent — the server refuses one at `["description"]`. A description
+     * typed beside the pictures rides with them: swapping to words drops it
+     * from the post, and it comes back only with the pictures it stood
+     * beside.
+     */
+    val descriptionContent: String?
+        get() = description.takeIf { mode == BodyMode.Media && it.isNotBlank() }
 
     /** The sensitive mark's reason, capped the same way every authored field is. */
     val sensitiveReasonTooLong: Boolean

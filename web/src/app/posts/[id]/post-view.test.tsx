@@ -2145,7 +2145,7 @@ describe("PostView", () => {
       expect(screen.getByTestId("comment-edit-input")).toBeInTheDocument();
     });
 
-    it("counts the edit as the record only when the text moved", async () => {
+    it("counts the batch: the record once the words were typed, and each tag act", async () => {
       server.use(
         ...threadFrom(() => ownComment([topicClaim("wasm", 0.1, 1)])),
       );
@@ -2155,23 +2155,31 @@ describe("PostView", () => {
       });
       await openComments();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
-      // Untouched: nothing to sign, and nothing to press.
+      // Untouched: nothing to sign, and the press is inert.
       expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
-        "creates no signed actions",
+        "Nothing to sign yet",
       );
       expect(screen.getByTestId("comment-edit-save")).toBeDisabled();
 
       fireEvent.click(screen.getByTestId("comment-edit-tag-0-remove"));
       expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
-        "creates 1 signed action",
+        "You're signing 1 thing",
       );
-      fireEvent.change(screen.getByTestId("comment-edit-input"), { target: { value: "moved" } });
+      const input = screen.getByTestId("comment-edit-input");
+      const words = (input as HTMLTextAreaElement).value;
+      fireEvent.change(input, { target: { value: "moved" } });
       expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
-        "creates 2 signed actions",
+        "You're signing 2 things",
+      );
+      // THE GUARD IS THE ACTS BATCH, NOT A BYTE COMPARISON
+      // (EditComposeUnchanged.md:3): typed back, the record stays staged.
+      fireEvent.change(input, { target: { value: words } });
+      expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
+        "You're signing 2 things",
       );
     });
 
-    it("asks before an edit that signs more than one action", async () => {
+    it("signs a batch of more than one act on the press, no dialog asking again", async () => {
       writeConfirmMultiAction(true);
       server.use(
         ...threadFrom(() => ownComment([])),
@@ -2188,13 +2196,13 @@ describe("PostView", () => {
       fireEvent.change(screen.getByTestId("comment-edit-input"), { target: { value: "moved" } });
       fireEvent.change(screen.getByTestId("comment-edit-tag-input"), { target: { value: "rust" } });
       fireEvent.click(screen.getByTestId("comment-edit-tag-add"));
+      expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
+        "You're signing 2 things",
+      );
       fireEvent.click(screen.getByTestId("comment-edit-save"));
 
-      expect(screen.getByTestId("comment-edit-multi-action-count")).toHaveTextContent(
-        "creates 2 signed actions",
-      );
-      expect(signer.signStaged).not.toHaveBeenCalled();
-      fireEvent.click(screen.getByTestId("comment-edit-multi-action-proceed"));
+      // Sign is the confirmation: the count was said on the foot.
+      expect(screen.queryByTestId("comment-edit-multi-action-count")).not.toBeInTheDocument();
       await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(2));
     });
   });
@@ -2385,7 +2393,7 @@ describe("PostView — references", () => {
     expect(routerPush).toHaveBeenCalledWith("/compose?reference=c1");
   });
 
-  it("asks before it prepares a comment's withdrawal, on the served cost", async () => {
+  it("counts a comment's withdrawal at its served cost before anything is prepared", async () => {
     writeConfirmMultiAction(true);
     let withdrawalInput: Record<string, unknown> | undefined;
     server.use(
@@ -2419,15 +2427,16 @@ describe("PostView — references", () => {
 
     fireEvent.click(await screen.findByTestId("comment-edit-c1"));
     fireEvent.click(screen.getByTestId("comment-edit-reference-0-remove"));
-    fireEvent.click(screen.getByTestId("comment-edit-save"));
-
-    const count = await screen.findByTestId("comment-edit-multi-action-count");
-    expect(count).toHaveTextContent("creates 2 signed actions");
-    // Nothing is staged, let alone signed, while the reader decides.
+    // The foot counts the withdrawal's counter-records, served by the claim,
+    // and nothing is staged while the reader reads it.
+    expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
+      "You're signing 2 things",
+    );
+    expect(screen.getByText(/Withdrawn:/)).toBeInTheDocument();
     expect(withdrawalInput).toBeUndefined();
     expect(signer.signStaged).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByTestId("comment-edit-multi-action-proceed"));
+    fireEvent.click(screen.getByTestId("comment-edit-save"));
     await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(2));
     // The withdrawal names the L2 id, never the claim's L1 identifier.
     expect((withdrawalInput as { input: { target: string } }).input.target).toBe("u-ada");
@@ -2448,7 +2457,7 @@ describe("PostView — references", () => {
     await openComments();
     fireEvent.click(await screen.findByTestId("comment-edit-c1"));
     expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
-      "creates no signed actions",
+      "Nothing to sign yet",
     );
     expect(screen.getByTestId("comment-edit-reference-0")).toHaveTextContent("@ada");
   });

@@ -370,7 +370,8 @@ async fn a_post_title_is_capped_at_a_hundred_characters(pool: PgPool) {
 }
 
 /// The description's own cap, the same unit and the same blank-fold rule
-/// as the title's — checked on a create and on an edit alike.
+/// as the title's — checked on a create and on an edit alike. The body is
+/// a picture: a description stands beside media and nowhere else.
 ///
 /// A post description is capped at five hundred Unicode scalar values on a create and on an edit alike, with a blank description folding to absent.
 /// ´claim:content:a-description-stops-at-five-hundred-characters´
@@ -378,16 +379,17 @@ async fn a_post_title_is_capped_at_a_hundred_characters(pool: PgPool) {
 async fn a_post_description_is_capped_at_five_hundred_characters(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let (actor, key) = rig.funded_actor("alice").await;
+    let picture = galleries::asset(&rig.pool, actor, 7).await;
 
     let draft = |description: &str| PostDraft {
         title: None,
         description: Some(description.into()),
-        content: Some("The body".into()),
+        content: None,
         license: license(),
         p_directed: None,
         tags: vec![],
         references: vec![],
-        attachments: vec![],
+        attachments: galleries::placements(&[picture]),
         sensitive: Default::default(),
     };
 
@@ -442,6 +444,176 @@ async fn a_post_description_is_capped_at_five_hundred_characters(pool: PgPool) {
         ),
         "an edit cannot land a description a create would have refused"
     );
+}
+
+/// A words body carries no description (K8.1/D4): the pair refuses at
+/// `["description"]`, while a blank description folds to absent and
+/// prepares, and the same description beside a picture prepares.
+///
+/// A post whose body is words refuses a description beside it at the description, while a blank one folds to absent and a description beside media stands.
+/// ´claim:content:a-words-post-carries-no-description´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_words_post_with_a_description_is_bad_input(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, _key) = rig.funded_actor("alice").await;
+    let picture = galleries::asset(&rig.pool, actor, 9).await;
+
+    let draft = |description: &str, words: bool| PostDraft {
+        title: Some("Salt maps".into()),
+        description: Some(description.into()),
+        content: words.then(|| "Three weekends at low tide.".into()),
+        license: license(),
+        p_directed: None,
+        tags: vec![],
+        references: vec![],
+        attachments: if words {
+            vec![]
+        } else {
+            galleries::placements(&[picture])
+        },
+        sensitive: Default::default(),
+    };
+
+    let refused = content::prepare_post(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        actor,
+        draft("Beside the words", true),
+    )
+    .await;
+    assert!(
+        matches!(
+            refused,
+            Err(ContentError::BadInput {
+                field: "description",
+                ..
+            })
+        ),
+        "a description beside words is refused at the description"
+    );
+
+    let blank = content::prepare_post(&rig.pool, &rig.boundary, STAGING, actor, draft("   ", true))
+        .await
+        .expect("a blank description folds to absent and prepares");
+    assert_eq!(
+        CograContent::decode_payload(&blank.writes[0].proposal.payload)
+            .expect("decodes")
+            .description,
+        None
+    );
+
+    content::prepare_post(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        actor,
+        draft("Beside the picture", false),
+    )
+    .await
+    .expect("a description beside media prepares");
+}
+
+/// The edit refuses the same pair the create does: an edit cannot land a
+/// description beside words that a create would have refused.
+///
+/// A post edit whose body is words refuses a description beside it at the description.
+/// ´claim:content:a-words-edit-carries-no-description´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_words_edit_with_a_description_is_bad_input(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.funded_actor("alice").await;
+    let post = rig
+        .post(actor, &key, "Salt maps", "Three weekends at low tide.")
+        .await;
+
+    let edit = content::prepare_post_edit(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        actor,
+        PostEditDraft {
+            id: post,
+            title: Some("Salt maps".into()),
+            description: Some("Beside the words".into()),
+            content: Some("Three weekends at low tide.".into()),
+            attachments: vec![],
+            sensitive: Default::default(),
+        },
+    )
+    .await;
+    assert!(
+        matches!(
+            edit,
+            Err(ContentError::BadInput {
+                field: "description",
+                ..
+            })
+        ),
+        "an edit cannot land a description beside words"
+    );
+}
+
+/// An edit identical to what stands is still an act: the protocol accepts
+/// a priced no-op (roadmap slice 3; the edit's guard is its acts batch,
+/// never a byte comparison — design/readme.md §13). It stages one Edit
+/// record, lands, and appends a version, the content unchanged.
+///
+/// An edit that changes nothing is accepted as one priced act, lands, and appends a version with the content as it stood.
+/// ´claim:content:an-unchanged-edit-is-a-priced-act´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_unchanged_post_edit_is_accepted_and_priced(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.funded_actor("alice").await;
+    let post_id = rig
+        .post(actor, &key, "Salt maps", "Three weekends at low tide.")
+        .await;
+    let before = content_store::post(&rig.pool, post_id)
+        .await
+        .expect("reads")
+        .expect("post");
+
+    let unchanged = content::prepare_post_edit(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        actor,
+        PostEditDraft {
+            id: post_id,
+            title: before.title.clone(),
+            description: before.description.clone(),
+            content: Some(before.content.clone()),
+            attachments: vec![],
+            sensitive: Default::default(),
+        },
+    )
+    .await
+    .expect("an unchanged edit is accepted at prepare");
+    assert_eq!(
+        unchanged.writes.len(),
+        1,
+        "the unchanged edit is one priced act — the Edit record"
+    );
+    assert_eq!(
+        unchanged.writes[0].proposal.body.family,
+        common::l1::Family::Publish
+    );
+    rig.land(&unchanged, &key).await;
+
+    let after = content_store::post(&rig.pool, post_id)
+        .await
+        .expect("reads")
+        .expect("post");
+    assert_eq!(after.title, before.title);
+    assert_eq!(after.description, before.description);
+    assert_eq!(after.content, before.content);
+    let versions =
+        sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM post_versions WHERE post_id = $1")
+            .bind(post_id)
+            .fetch_one(&rig.pool)
+            .await
+            .expect("counts");
+    assert_eq!(versions, 2, "the no-op landed as its own version");
 }
 
 /// The words-body's own cap: a post's body when it carries words rather
@@ -670,7 +842,7 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
         actor,
         PostDraft {
             title: Some("First".into()),
-            description: Some("hello".into()),
+            description: None,
             content: Some("The body".into()),
             license: license(),
             p_directed: Some(0.4),
@@ -705,7 +877,10 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
     assert_eq!(post.author_id, actor);
     assert_eq!(post.l1_node_id, own_mint);
     assert_eq!(post.title.as_deref(), Some("First"));
-    assert_eq!(post.description.as_deref(), Some("hello"));
+    assert_eq!(
+        post.description, None,
+        "a words post carries no description"
+    );
     assert_eq!(post.content, "The body");
     assert!(post.redaction_reason.is_none());
 
@@ -812,7 +987,7 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
         PostEditDraft {
             id: post_id,
             title: Some(String::new()),
-            description: Some("Sub".into()),
+            description: None,
             content: Some("Newer body".into()),
             attachments: vec![],
             sensitive: Default::default(),
@@ -827,7 +1002,7 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
         .expect("reads")
         .expect("post");
     assert_eq!(post.title, None);
-    assert_eq!(post.description.as_deref(), Some("Sub"));
+    assert_eq!(post.description, None);
     assert_eq!(post.content, "Newer body");
 
     let versions =
@@ -1409,7 +1584,7 @@ mod galleries {
     /// end-to-end test and nothing here is about bytes. The digest is what
     /// binds the row to the manifest, so it is the field these fixtures
     /// vary.
-    async fn asset(pool: &PgPool, author: Uuid, fill: u8) -> Uuid {
+    pub(super) async fn asset(pool: &PgPool, author: Uuid, fill: u8) -> Uuid {
         let id = Uuid::new_v4();
         media_store::insert(
             pool,
@@ -1460,7 +1635,7 @@ mod galleries {
     /// description is authored here rather than on the asset, which is
     /// the whole point: the same asset can read differently in two
     /// parents.
-    fn placements(ids: &[Uuid]) -> Vec<AttachmentDraft> {
+    pub(super) fn placements(ids: &[Uuid]) -> Vec<AttachmentDraft> {
         ids.iter()
             .enumerate()
             .map(|(i, id)| AttachmentDraft {

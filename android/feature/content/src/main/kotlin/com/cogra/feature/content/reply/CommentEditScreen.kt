@@ -4,22 +4,14 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,17 +22,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetHost
-import com.cogra.core.designsystem.v2.atom.CograSheetSurface
 import com.cogra.core.designsystem.v2.atom.DiscardConfirm
 import com.cogra.core.designsystem.v2.atom.DiscardSubject
 import com.cogra.core.designsystem.v2.atom.CograTextField
@@ -48,14 +36,13 @@ import com.cogra.core.designsystem.v2.atom.Hairline
 import com.cogra.core.designsystem.v2.atom.HelpDialog
 import com.cogra.core.designsystem.v2.atom.InlineAction
 import com.cogra.core.designsystem.v2.atom.SettingRow
-import com.cogra.core.designsystem.v2.atom.SheetTitle
-import com.cogra.core.designsystem.v2.atom.SummaryRow
 import com.cogra.core.designsystem.v2.atom.WizardHeader
 import com.cogra.core.designsystem.v2.compose.CommentEditThumbHeight
 import com.cogra.core.designsystem.v2.compose.CommentPictureTray
 import com.cogra.core.designsystem.v2.compose.DescribeCounter
 import com.cogra.core.designsystem.v2.compose.DescribeSheet
 import com.cogra.core.designsystem.v2.compose.HelpTopic
+import com.cogra.core.designsystem.v2.compose.licenseName
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.content.MAX_COMMENT_BODY_CHARS
@@ -65,6 +52,14 @@ import com.cogra.feature.content.R
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceEntry
 import com.cogra.feature.content.TopicEntry
+import com.cogra.feature.content.edit.ActsFooter
+import com.cogra.feature.content.edit.ActsSheet
+import com.cogra.feature.content.edit.LockedLicenseRow
+import com.cogra.feature.content.edit.WithdrawnLine
+import com.cogra.feature.content.edit.label
+import com.cogra.feature.content.edit.rememberSlowAnswer
+import com.cogra.feature.content.edit.signLabel
+import com.cogra.feature.content.edit.withdrawn
 import com.cogra.feature.content.wizard.SensitiveSheet
 import com.cogra.feature.content.wizard.WizardBody
 import com.cogra.feature.content.wizard.WizardFooter
@@ -139,6 +134,8 @@ fun CommentEditRoute(
         onDoneTuningReference = viewModel::onDoneTuningReference,
         onReferenceRelevanceChange = viewModel::onReferenceRelevanceChange,
         onReferenceSupportChange = viewModel::onReferenceSupportChange,
+        onUndoTagWithdrawal = viewModel::onUndoTagWithdrawal,
+        onUndoReferenceWithdrawal = viewModel::onUndoReferenceWithdrawal,
         modifier = modifier,
     )
 }
@@ -192,6 +189,8 @@ internal fun CommentEditScreen(
     onDoneTuningReference: () -> Unit,
     onReferenceRelevanceChange: (String, Double) -> Unit,
     onReferenceSupportChange: (String, Double) -> Unit,
+    onUndoTagWithdrawal: (String) -> Unit = {},
+    onUndoReferenceWithdrawal: (String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     BackHandler(onBack = onLeave)
@@ -294,6 +293,13 @@ internal fun CommentEditScreen(
                     onTagConfidenceChange = onTagConfidenceChange,
                     showHeading = false,
                 )
+                state.tagSection.withdrawn().forEach { name ->
+                    WithdrawnLine(
+                        name = "#$name",
+                        onUndo = { onUndoTagWithdrawal(name) },
+                        testTag = "comment_edit_withdrawn_tag_$name",
+                    )
+                }
             }
 
             FieldGroup(label = "References") {
@@ -311,9 +317,19 @@ internal fun CommentEditScreen(
                     onReferenceSupportChange = onReferenceSupportChange,
                     showHeading = false,
                 )
+                state.referenceSection.withdrawn().forEach { row ->
+                    WithdrawnLine(
+                        name = row.label(),
+                        onUndo = { onUndoReferenceWithdrawal(row.targetId) },
+                        testTag = "comment_edit_withdrawn_reference_${row.targetId}",
+                    )
+                }
             }
 
-            LockedLicenseRow()
+            LockedLicenseRow(
+                name = licenseName(state.license.attribution, state.license.provenance),
+                testTag = "comment_edit_license",
+            )
             // The license keeps its lock; this row does not. The
             // license is fixed by contract the moment it is signed,
             // while the mark is the author's ongoing judgment about
@@ -341,11 +357,19 @@ internal fun CommentEditScreen(
         }
 
         WizardFooter {
-            ActsFooter(count = state.signedActionCount, onClick = onOpenActs)
+            ActsFooter(
+                count = state.signedActionCount,
+                onOpen = onOpenActs,
+                testTag = "comment_edit_acts_footer",
+            )
+            // Inert, never hidden, at an empty batch; a press while the
+            // signing is out is refused without the button dimming, and past
+            // 200ms it reads `Signing the edit…` in its own place.
+            val slow = rememberSlowAnswer(state.submitting)
             CograButton(
-                text = "Sign the edit",
-                onClick = onSign,
-                enabled = state.canSign,
+                text = signLabel(slow),
+                onClick = { if (!state.submitting) onSign() },
+                enabled = state.canSign || state.submitting,
                 modifier = Modifier.fillMaxWidth(),
                 testTag = "comment_edit_sign",
             )
@@ -411,7 +435,11 @@ private fun CommentEditSheets(
                 testTag = "comment_edit_describe_sheet",
             )
 
-            state.actsOpen -> CommentEditActsSheet(state = state, onDone = onCloseSheet)
+            state.actsOpen -> ActsSheet(
+                rows = state.actRows,
+                onDone = onCloseSheet,
+                testTag = "comment_edit_acts_sheet",
+            )
 
             // The post seal's own sheet — one sheet for every surface
             // that marks (ruling 42).
@@ -443,149 +471,6 @@ private fun FieldGroup(label: String, content: @Composable ColumnScope.() -> Uni
             color = MaterialTheme.colorScheme.onSurface,
         )
         content()
-    }
-}
-
-/**
- * The license, shown and locked.
- *
- * It is on the screen rather than off it because the reader is deciding
- * what the edit changes, and the terms not changing is part of that
- * answer — the lock says so without offering a control that would be
- * refused. `PrepareCommentEditInput` carries no license field at all.
- */
-@Composable
-private fun LockedLicenseRow() {
-    Column(Modifier.fillMaxWidth()) {
-        Hairline()
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = 44.dp)
-                .testTag("comment_edit_license"),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Space.x2),
-        ) {
-            Text(
-                text = "License",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f),
-            )
-            Text(
-                text = "Public domain",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Icon(
-                imageVector = Icons.Filled.Lock,
-                contentDescription = stringResource(R.string.content_license_locked),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(16.dp),
-            )
-        }
-        Hairline()
-    }
-}
-
-/**
- * The acts footer: what the edit signs, and the way into the sheet that
- * itemises it (`CommentEditActs`).
- */
-@Composable
-private fun ActsFooter(count: Int, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(role = Role.Button, onClick = onClick)
-            .testTag("comment_edit_acts_footer"),
-        horizontalArrangement = Arrangement.spacedBy(Space.x1, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = if (count == 1) "This creates 1 signed action" else "This creates $count signed actions",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Icon(
-            imageVector = Icons.Filled.ExpandMore,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(16.dp),
-        )
-    }
-}
-
-/**
- * `CommentEditActs` — the footer's count, opened.
- *
- * The sheet title carries the count and the card carries the rows and
- * the all-or-nothing note: the `ActsCard` split of the comment-media
- * round, where a composer peeks at its acts in a sheet and ceremony
- * screens keep the inline card.
- */
-@Composable
-private fun CommentEditActsSheet(state: CommentEditState, onDone: () -> Unit) {
-    val acts = state.signedActionCount
-    CograSheetSurface(testTag = "comment_edit_acts_sheet") {
-        SheetTitle(if (acts == 1) "1 signed action" else "$acts signed actions")
-        Column(Modifier.fillMaxWidth()) {
-            ActsRow(label = "Edit", value = state.body, count = "1 action")
-            state.tagSection.adds.forEach { tag ->
-                Hairline()
-                ActsRow(label = "Topic added", value = "#${tag.name}", count = "1 action")
-            }
-            val citations = state.referenceSection.adds.size
-            if (citations > 0) {
-                Hairline()
-                ActsRow(
-                    label = "Citations added",
-                    value = "$citations cited",
-                    count = if (citations == 1) "1 action" else "$citations actions",
-                )
-            }
-        }
-        SummaryRow(
-            headline = if (acts == 1) "1 signed action" else "$acts signed actions",
-            detail = "They land together, or none does.".takeIf { acts > 1 },
-            testTag = "comment_edit_acts_total",
-        )
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            CograButton("Done", onDone, kind = ButtonKind.Text, testTag = "comment_edit_acts_done")
-        }
-    }
-}
-
-@Composable
-private fun ActsRow(label: String, value: String, count: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = Space.x2),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.x2),
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(96.dp),
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            // Without this the one line hard-clips mid-glyph; every other
-            // one-line row in the tree says where it was cut.
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
-        )
-        Text(
-            text = count,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 

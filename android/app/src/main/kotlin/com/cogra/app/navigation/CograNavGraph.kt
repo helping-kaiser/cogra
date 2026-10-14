@@ -70,7 +70,7 @@ import com.cogra.feature.auth.RestoreRoute
 import com.cogra.feature.content.ChatsComingSoonRoute
 import com.cogra.feature.content.CommentsReturn
 import com.cogra.feature.content.CommentsScroll
-import com.cogra.feature.content.ComposePostRoute
+import com.cogra.feature.content.edit.PostEditRoute
 import com.cogra.feature.content.wizard.ComposeWizardRoute
 import com.cogra.feature.content.FeedRoute
 import com.cogra.feature.content.PostDetailRoute
@@ -1033,11 +1033,11 @@ private fun CograNavGraphContent(
             }
             composable<ComposePost> { entry ->
                 val editing = entry.toRoute<ComposePost>().postId != null
-                // Creating a post runs the wizard (D19); editing one
-                // still runs the shipped composer, whose batching is
-                // its own ruled bite. Both live behind the same
-                // destination so the bottom bar's centre action and the
-                // post menu's Edit keep their routes.
+                // Creating a post runs the wizard (D19); editing one runs
+                // the post edit, one screen and one batch (EditCompose).
+                // Both live behind the same destination so the bottom
+                // bar's centre action and the post menu's Edit keep their
+                // routes.
                 if (!editing) {
                     ComposeWizardRoute(
                         referenceTargetId = entry.toRoute<ComposePost>().referenceTargetId,
@@ -1066,17 +1066,17 @@ private fun CograNavGraphContent(
                     )
                     return@composable
                 }
-                ComposePostRoute(
-                    postId = entry.toRoute<ComposePost>().postId,
-                    referenceTargetId = entry.toRoute<ComposePost>().referenceTargetId,
-                    // An edit came from its post already and simply
-                    // returns to it, refreshed.
+                // The post edit, one screen and one batch (EditCompose). An
+                // edit came from its post already and simply returns to it,
+                // refreshed, the edit settling.
+                PostEditRoute(
+                    postId = checkNotNull(entry.toRoute<ComposePost>().postId),
                     onSaved = {
                         navController.report(contentSignedKey, true)
                         navController.popBackStack()
                     },
                     onBack = { navController.navigateUp() },
-                    keyBanner = keyBanner,
+                    keyCard = keyBanner,
                     deletionBand = deletionBand(node = null),
                 )
             }

@@ -55,18 +55,22 @@ import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { tagChanges, WITHDRAWN_RELEVANCE, type TagDraft } from "@/lib/topics/draft";
 import { referenceDrafts } from "@/lib/references/claims";
 import {
-  referenceActs,
+  editActCount,
+  editActRows,
+  undoReferenceWithdrawal,
+  undoTagWithdrawal,
+} from "@/lib/compose/edit-batch";
+import {
   referenceChanges,
   type ReferenceDraft,
 } from "@/lib/references/draft";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
-import { useConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { ActorChip } from "@/lib/ui/actor-chip";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
-import type { License } from "@/lib/license";
+import { PUBLIC_DOMAIN, type License } from "@/lib/license";
 import { PendingMarker } from "@/lib/ui/pending-marker";
 import { useMeasureEffect } from "@/lib/ui/measure-effect";
 import {
@@ -92,7 +96,6 @@ import {
   addedAssets,
   editBlocked,
   editClaims,
-  galleryChanged,
   galleryOf,
   keptPreviews,
   pictureAltText,
@@ -114,7 +117,6 @@ import { OverflowMenu, type MenuItem } from "@/lib/ui2/overflow-menu";
 import { StageHost } from "@/lib/ui2/media/stage-host";
 import { commentTarget, ReplyWizard } from "@/app/posts/[id]/reply/reply-wizard-view";
 import { CommentEditView } from "@/app/posts/[id]/edit/comment-edit-view";
-import { MultiActionConfirm } from "@/lib/ui/signed-actions";
 import { StanceControl } from "@/lib/ui/stance-control";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
 import { RowLine } from "@/lib/ui/row-line";
@@ -193,9 +195,6 @@ function postTarget(post: PostView): ReplyTarget {
 function replyCount(comment: ThreadComment): number {
   return comment.replies.totalCount;
 }
-
-/** Which composer on this surface a confirmation is standing in front of. */
-type PendingSubmit = "edit";
 
 /**
  * What the sheet has to be given back when a composer hands the screen over.
@@ -322,6 +321,14 @@ export function CommentsSheet({
     loadedSensitiveReason: string;
     sensitive: boolean;
     sensitiveReason: string;
+    /** The comment's license as signed — shown on the locked row. */
+    license: License;
+    /**
+     * Whether the edit record is in the batch: set by the first change to a
+     * field it carries and never cleared by typing it back — the guard is the
+     * acts batch, never a byte comparison (EditComposeUnchanged.md:3).
+     */
+    recordStaged: boolean;
   } | null>(null);
   const [editDescribing, setEditDescribing] = useState<string | null>(null);
   const [editActsOpen, setEditActsOpen] = useState(false);
@@ -336,11 +343,6 @@ export function CommentsSheet({
   const [editReferenceErrors, setEditReferenceErrors] = useState<
     Readonly<Record<number, string>>
   >({});
-  // F4: a submit staging more than one act asks first. The two composers that
-  // used to raise it now seal instead — ReplySeal names every act with its
-  // price — so the edit is the one surface left that asks.
-  const [confirmMultiAction, setConfirmMultiAction] = useConfirmMultiAction();
-  const [confirming, setConfirming] = useState<PendingSubmit | null>(null);
 
   // ---- where the reader was -----------------------------------------------
 
@@ -708,36 +710,28 @@ export function CommentsSheet({
     return results.every((result) => result.kind === "done");
   };
 
-  // What pressing each submit right now would sign (F4). A comment or a
-  // reply mints its record and batches one act per drafted topic; an
-  // edit signs the edit record only if the text moved, plus one act per
-  // tag change.
+  // What the edit signs (CommentEdit / CommentEditActs): THE GUARD IS THE ACTS
+  // BATCH, NEVER A BYTE COMPARISON (EditComposeUnchanged.md — the family's
+  // rule). The edit record is staged by the first change to a field it
+  // carries — the words, the gallery, the mark — and stays staged when the
+  // field is typed back; each tag and citation change is its own act, a
+  // citation's withdrawal at its counter-records (`withdrawalCost`).
   const editChanges = editing === null ? [] : tagChanges(editing.loadedTags, editing.tags);
   const editReferenceChanges =
     editing === null ? [] : referenceChanges(editing.loadedReferences, editing.references);
-  // The edit record carries the body AND the gallery, so either moving is what
-  // stages it — a comment whose only change was a removed picture still has to
-  // write one, or the removal never happens.
-  const editGalleryMoved =
-    editing !== null && galleryChanged(editing.loadedGallery, editing.gallery);
-  // The mark is a term of the same record, so moving it stages the edit the
-  // way the body and the gallery do — a comment whose only change is the
-  // author's own mark still has to write one, or the mark never moves. The
-  // reason counts only where it is shown: on an unmarked comment it is not
-  // sent at all.
-  const editMarkMoved =
-    editing !== null &&
-    (editing.sensitive !== editing.loadedSensitive ||
-      (editing.sensitive && editing.sensitiveReason !== editing.loadedSensitiveReason));
-  const editTextChanged =
-    editing !== null &&
-    (editing.draft !== editing.loadedDraft || editGalleryMoved || editMarkMoved);
-  // A withdrawal is a whole counter-record batch, and the claim quotes
-  // it: `withdrawalCost` comes off the raw bundle sums the clipped pair
-  // has already lost, so this count is exact and every edit asks before
-  // it prepares.
-  const editActions =
-    (editTextChanged ? 1 : 0) + editChanges.length + referenceActs(editReferenceChanges);
+  const editTextChanged = editing !== null && editing.recordStaged;
+  const editRows =
+    editing === null
+      ? []
+      : editActRows({
+          recordStaged: editing.recordStaged,
+          recordName: editing.draft.trim().slice(0, 60) || "Your comment",
+          loadedTags: editing.loadedTags,
+          tags: editing.tags,
+          loadedReferences: editing.loadedReferences,
+          references: editing.references,
+        });
+  const editActions = editActCount(editRows);
   // The reason answers to its cap only while the mark is on: an unmarked
   // edit's reason is never sent (`sensitiveInput`), so a leftover over-length
   // reason from a mark switched back off must not hold up an edit that no
@@ -889,10 +883,9 @@ export function CommentsSheet({
   const onSubmitEdit = async () => {
     if (editing === null || editSubmitting || editing.draft.trim() === "") return;
     if (editActions === 0) return;
-    if (editActions > 1 && confirmMultiAction) {
-      setConfirming("edit");
-      return;
-    }
+    // Sign is the confirmation: the count is said on the foot and in the acts
+    // sheet, and no dialog asks again (CommentEditActs; `_shared.jsx`
+    // `CommentEditBody`).
     await runEdit();
   };
 
@@ -1025,6 +1018,8 @@ export function CommentsSheet({
       loadedSensitiveReason: "",
       sensitive: false,
       sensitiveReason: "",
+      license: comment.license ?? PUBLIC_DOMAIN,
+      recordStaged: false,
     });
     void fetchCommentSelfMark(client, comment.id).then((outcome) => {
       if (outcome.kind !== "success") return;
@@ -1473,22 +1468,27 @@ export function CommentsSheet({
             words={editing.draft}
             gallery={editing.gallery}
             previews={{ ...keptPreviews(editing.gallery), ...editPickedPreviews }}
+            license={editing.license}
             tags={editing.tags}
             references={editing.references}
+            loadedTags={editing.loadedTags}
+            loadedReferences={editing.loadedReferences}
             tagErrors={editTagErrors}
             referenceErrors={editReferenceErrors}
             sensitive={editing.sensitive}
             sensitiveReason={editing.sensitiveReason}
             sensitiveOpen={editSensitiveOpen}
-            acts={editActions}
+            acts={editRows}
             actsOpen={editActsOpen}
             busy={editSubmitting}
             blocked={editGateReason}
             refusal={editRefusedMessage}
             failed={editFailed}
-            onWords={(draft) => setEditing({ ...editing, draft })}
-            onSensitive={(sensitive) => setEditing({ ...editing, sensitive })}
-            onSensitiveReason={(sensitiveReason) => setEditing({ ...editing, sensitiveReason })}
+            onWords={(draft) => setEditing({ ...editing, draft, recordStaged: true })}
+            onSensitive={(sensitive) => setEditing({ ...editing, sensitive, recordStaged: true })}
+            onSensitiveReason={(sensitiveReason) =>
+              setEditing({ ...editing, sensitiveReason, recordStaged: true })
+            }
             onSensitiveOpen={setEditSensitiveOpen}
             onSensitiveHelp={() => setEditHelp(HELP_TOPICS.markingAsSensitive)}
             onPick={(files) =>
@@ -1498,14 +1498,35 @@ export function CommentsSheet({
                   editing.gallery,
                   files.map((file) => ({ id: crypto.randomUUID(), file })),
                 ),
+                recordStaged: true,
               })
             }
             onRemovePicture={(id) =>
-              setEditing({ ...editing, gallery: removeFromGallery(editing.gallery, id) })
+              setEditing({
+                ...editing,
+                gallery: removeFromGallery(editing.gallery, id),
+                recordStaged: true,
+              })
             }
             onDescribe={setEditDescribing}
             onTags={(tags) => setEditing({ ...editing, tags })}
             onReferences={(references) => setEditing({ ...editing, references })}
+            onUndoTag={(name) =>
+              setEditing({
+                ...editing,
+                tags: undoTagWithdrawal(editing.loadedTags, editing.tags, name),
+              })
+            }
+            onUndoReference={(targetId) =>
+              setEditing({
+                ...editing,
+                references: undoReferenceWithdrawal(
+                  editing.loadedReferences,
+                  editing.references,
+                  targetId,
+                ),
+              })
+            }
             onActs={setEditActsOpen}
             onHelp={() => setEditHelp(HELP_TOPICS.editing)}
             onSign={() => void onSubmitEdit()}
@@ -1535,6 +1556,7 @@ export function CommentsSheet({
                 setEditing({
                   ...editing,
                   gallery: withAltText(editing.gallery, editDescribing, altText),
+                  recordStaged: true,
                 });
               }
             }}
@@ -1547,19 +1569,6 @@ export function CommentsSheet({
             testId="comment-edit-help-dialog"
           />
         </>
-      )}
-      {confirming !== null && (
-        <MultiActionConfirm
-          count={editActions}
-          busy={editSubmitting}
-          testIdPrefix="comment-edit"
-          onCancel={() => setConfirming(null)}
-          onConfirm={(stopAsking) => {
-            if (stopAsking) setConfirmMultiAction(false);
-            setConfirming(null);
-            void runEdit();
-          }}
-        />
       )}
       {joinOpen && <JoinPrompt open onClose={() => setJoinOpen(false)} />}
     </>

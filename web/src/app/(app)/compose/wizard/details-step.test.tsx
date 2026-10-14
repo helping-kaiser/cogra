@@ -72,23 +72,36 @@ describe("DetailsStep", () => {
 
   // Description's cap is 500, tenth-driven: the window is max(20, round(500/10)) = 50.
   it("shows the count at the exact boundary of the description's tenth-driven window", () => {
-    renderStep({ description: "a".repeat(450) }); // remaining 50 — exactly the tenth
+    renderStep({ mode: "media", description: "a".repeat(450) }); // remaining 50 — exactly the tenth
     expect(screen.getByText("50 left")).toBeInTheDocument();
   });
 
   it("says nothing one scalar value short of the description's window", () => {
-    renderStep({ description: "a".repeat(449) }); // remaining 51 — outside the window
+    renderStep({ mode: "media", description: "a".repeat(449) }); // remaining 51 — outside the window
     expect(screen.queryByText(/left$/)).not.toBeInTheDocument();
   });
 
   it("flips the description's count to over past 500 and reaches the drawn refusal", () => {
     // The board's own fixture: 507 of 500 reads "7 over"
     // (design/designs/canonical/screens/ComposeDetailsCaps.jsx:14-19).
-    renderStep({ description: "a".repeat(507) });
+    renderStep({ mode: "media", description: "a".repeat(507) });
     expect(screen.getByText("7 over")).toBeInTheDocument();
     expect(
       screen.getByText("Too long — at most 500 characters."),
     ).toBeInTheDocument();
+  });
+
+  // K8.1/D4 (ComposeDetailsWords.md:3, ComposeCited.md:15): the words path
+  // composes no description; the media path keeps its field.
+  it("the_words_path_draws_no_description", () => {
+    renderStep({ mode: "words", description: "left over" });
+    expect(screen.queryByTestId(byNode("composeDetails.description.input"))).not.toBeInTheDocument();
+    expect(screen.queryByText("Description")).not.toBeInTheDocument();
+  });
+
+  it("the_media_path_keeps_its_description", () => {
+    renderStep({ mode: "media", description: "Beside the pictures" });
+    expect(screen.getByText("Description")).toBeInTheDocument();
   });
 
   // ComposeDetailsCaps.jsx:21-24 — Next goes inert while a field is over.

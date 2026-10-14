@@ -1,0 +1,212 @@
+// The post edit's state — design/designs/canonical/EditCompose, EditWords,
+// EditComposeVideo, EditPicked; the guard is `edit-batch.ts`'s.
+//
+// AN EDIT IS COMPLETE STATE (`PreparePostEditInput`): the record re-states the
+// title, the description, the body, the gallery and the author's own mark, so
+// each is carried from the read and sent back whether or not it was touched.
+//
+// THE BODY IS WORDS OR MEDIA, never both, and the edit may end up a different
+// kind than the post that was published: the LAST picture or the clip leaving
+// flips it to words, the words field arriving empty (EditPicked.md,
+// EditWords.md). THE FLIP DROPS A STANDING DESCRIPTION (design/readme.md
+// :8179-8181, K8.1/D4): a description is how words stand BESIDE pictures, so a
+// words post carries none, and the server refuses one at ["description"].
+
+import type { GalleryEntryDraft, PostDetailView } from "@/lib/api/content-api";
+import type { License } from "@/lib/license";
+import { referenceDrafts } from "@/lib/references/claims";
+import type { ReferenceDraft } from "@/lib/references/draft";
+import type { TagDraft } from "@/lib/topics/draft";
+import {
+  editClaims,
+  galleryOf,
+  pictureId,
+  removeFrom,
+  withAltText,
+  type EditGallery,
+} from "./comment-edit";
+import { bodyProblem, descriptionProblem, sensitiveReasonProblem, titleProblem } from "./wizard";
+
+export type PostEditState = {
+  readonly id: string;
+  readonly license: License;
+  readonly title: string;
+  readonly description: string;
+  readonly words: string;
+  readonly gallery: EditGallery;
+  /** The pictures' durations, by media id — a clip's tile is drawn as one. */
+  readonly durations: Readonly<Record<string, number>>;
+  readonly tags: readonly TagDraft[];
+  readonly references: readonly ReferenceDraft[];
+  readonly sensitive: boolean;
+  readonly sensitiveReason: string;
+  /** What the post arrived with: the baseline the tag and citation acts read. */
+  readonly loadedTags: readonly TagDraft[];
+  readonly loadedReferences: readonly ReferenceDraft[];
+  /**
+   * Whether the edit record is in the batch. STICKY: set by the first change
+   * to a field the record carries and never cleared by typing it back — the
+   * guard is the acts batch, not a byte comparison (EditComposeUnchanged.md:3).
+   */
+  readonly recordStaged: boolean;
+};
+
+export type PostEditAction =
+  | { type: "title"; title: string }
+  | { type: "description"; description: string }
+  | { type: "words"; words: string }
+  | { type: "tags"; tags: readonly TagDraft[] }
+  | { type: "references"; references: readonly ReferenceDraft[] }
+  | { type: "sensitive"; sensitive: boolean }
+  | { type: "sensitiveReason"; reason: string }
+  | { type: "removePicture"; id: string }
+  | { type: "movePicture"; from: number; to: number }
+  | { type: "describe"; id: string; altText: string };
+
+/** The post as the read served it, ready to edit. */
+export function postEditOf(post: PostDetailView): PostEditState {
+  const tags = post.topics.map((claim) => ({
+    name: claim.hashtag.name.value ?? "",
+    relevance: claim.relevance,
+    confidence: claim.confidence,
+  }));
+  // A claim CoGra cannot type is dropped: it has no L2 id to name it back by,
+  // so it renders on the detail but is never staged — nor read as withdrawn.
+  const references = referenceDrafts(post.references);
+  const durations: Record<string, number> = {};
+  for (const attachment of post.attachments) {
+    const ms = attachment.options?.durationMs;
+    if (typeof ms === "number") durations[attachment.id] = ms;
+  }
+  return {
+    id: post.id,
+    license: post.license,
+    title: post.title.value ?? "",
+    description: post.description.value ?? "",
+    words: post.content.value ?? "",
+    gallery: galleryOf(post.attachments),
+    durations,
+    tags,
+    references,
+    // THE AUTHOR'S OWN mark (round 4): what a reader sees is the OR of the
+    // author's mark and a moderator's, and re-stating the OR would adopt a
+    // moderator's verdict as the author's own.
+    sensitive: post.sensitiveSelfMark,
+    sensitiveReason: post.sensitiveReason ?? "",
+    loadedTags: tags,
+    loadedReferences: references,
+    recordStaged: false,
+  };
+}
+
+/** Whether the body is media: the gallery holds anything. */
+export function isMediaBody(state: PostEditState): boolean {
+  return state.gallery.length > 0;
+}
+
+/** Whether the body is one clip — `EditComposeVideo`'s anatomy. */
+export function isClipBody(state: PostEditState): boolean {
+  const first = state.gallery[0];
+  return state.gallery.length === 1 && first !== undefined && pictureId(first) in state.durations;
+}
+
+function move<T>(items: readonly T[], from: number, to: number): readonly T[] {
+  if (from === to || from < 0 || to < 0 || from >= items.length || to >= items.length) return items;
+  const next = [...items];
+  const [moved] = next.splice(from, 1);
+  next.splice(to, 0, moved as T);
+  return next;
+}
+
+export function postEditReducer(state: PostEditState, action: PostEditAction): PostEditState {
+  switch (action.type) {
+    case "title":
+      return { ...state, title: action.title, recordStaged: true };
+    case "description":
+      return { ...state, description: action.description, recordStaged: true };
+    case "words":
+      return { ...state, words: action.words, recordStaged: true };
+    case "tags":
+      return { ...state, tags: action.tags };
+    case "references":
+      return { ...state, references: action.references };
+    case "sensitive":
+      // The contract refuses a reason without the mark, so a reason left
+      // behind could only be a refusal waiting at the submit.
+      return {
+        ...state,
+        sensitive: action.sensitive,
+        sensitiveReason: action.sensitive ? state.sensitiveReason : "",
+        recordStaged: true,
+      };
+    case "sensitiveReason":
+      return { ...state, sensitiveReason: action.reason, recordStaged: true };
+    case "removePicture": {
+      const gallery = removeFrom(state.gallery, action.id);
+      if (gallery.length === state.gallery.length) return state;
+      if (gallery.length > 0) return { ...state, gallery, recordStaged: true };
+      // The last picture or the clip left: the body becomes words, the field
+      // arrives empty, and the description goes with the pictures (K8.1).
+      return { ...state, gallery, words: "", description: "", recordStaged: true };
+    }
+    case "movePicture": {
+      const gallery = move(state.gallery, action.from, action.to);
+      return gallery === state.gallery ? state : { ...state, gallery, recordStaged: true };
+    }
+    case "describe":
+      return {
+        ...state,
+        gallery: withAltText(state.gallery, action.id, action.altText),
+        recordStaged: true,
+      };
+  }
+}
+
+/**
+ * The words body past its cap, in the board's own line (EditWords.md: the
+ * body takes the error outline and `A post's words are at most 5,000
+ * characters.` stands under it). The cap is the wizard's — one number,
+ * pinned to the server's `content.postBodyChars`.
+ */
+export function wordsProblem(words: string): string | null {
+  return bodyProblem(words) === null ? null : "A post's words are at most 5,000 characters.";
+}
+
+/** Why Sign the edit is inert beyond the empty batch: a field over its cap, or null. */
+export function postEditProblem(state: PostEditState): string | null {
+  return (
+    titleProblem(state.title) ??
+    (isMediaBody(state) ? descriptionProblem(state.description) : wordsProblem(state.words)) ??
+    (state.sensitive ? sensitiveReasonProblem(state.sensitiveReason) : null)
+  );
+}
+
+/** What `preparePostEdit` is sent: the whole content state, the words path without a description. */
+export function postEditInput(state: PostEditState): {
+  id: string;
+  title: string | null;
+  description: string | null;
+  content: string;
+  attachments: readonly GalleryEntryDraft[];
+  sensitive: boolean;
+  sensitiveReason: string;
+} {
+  const media = isMediaBody(state);
+  return {
+    id: state.id,
+    title: state.title.trim() === "" ? null : state.title,
+    description: media && state.description.trim() !== "" ? state.description : null,
+    content: media ? "" : state.words,
+    attachments: editClaims(state.gallery) ?? [],
+    sensitive: state.sensitive,
+    sensitiveReason: state.sensitiveReason,
+  };
+}
+
+/** What the acts card's Edit row names: the title, else the words' head. */
+export function recordName(state: PostEditState): string {
+  const title = state.title.trim();
+  if (title !== "") return title;
+  const words = state.words.trim();
+  return words === "" ? "The post" : words.slice(0, 60);
+}

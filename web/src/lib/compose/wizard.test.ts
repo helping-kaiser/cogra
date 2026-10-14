@@ -14,6 +14,8 @@ import {
   bodyContent,
   bodyGate,
   DESCRIPTION_MAX_CHARS,
+  descriptionContent,
+  detailsGate,
   effectiveCover,
   emptyWizard,
   nextStep,
@@ -490,6 +492,26 @@ describe("the details and the sheets", () => {
     expect(blocked.ok === false && blocked.reason).toMatch(/too long/i);
     // The seal is the boundary the server sees, so it refuses it too.
     expect(sealGate(uploaded(over)).ok).toBe(false);
+  });
+
+  // K8.1/D4 (design/readme.md:8179-8181): the words path composes no
+  // description, and a swap from pictures to words drops the standing one —
+  // never sent, never holding the words post up at its cap.
+  it("swapping_pictures_for_words_drops_the_description", () => {
+    const media = run(emptyWizard(), picks(1), {
+      type: "description",
+      description: "x".repeat(DESCRIPTION_MAX_CHARS + 1),
+    });
+    expect(descriptionContent({ ...media, description: "Beside the picture" })).toBe(
+      "Beside the picture",
+    );
+    const words = run(media, { type: "mode", mode: "words" }, { type: "words", words: "hi" }, {
+      type: "goto",
+      step: "details",
+    });
+    expect(descriptionContent(words)).toBeNull();
+    expect(bodyContent(words)).toBe("hi");
+    expect(detailsGate(words).ok).toBe(true);
   });
 
   it("refuses a description past the cap, counting scalar values and not code units", () => {

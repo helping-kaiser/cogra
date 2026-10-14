@@ -2,8 +2,19 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { galleryOf } from "@/lib/compose/comment-edit";
+import type { EditActRow } from "@/lib/compose/edit-batch";
+import { newTagDraft } from "@/lib/topics/draft";
 import { raisedLayersForTests } from "@/lib/ui2/covering-layer";
 import { CommentEditView } from "./comment-edit-view";
+
+const EDIT: EditActRow = { kind: "edit", label: "Edit", value: "The glovebox", count: 1, noun: "edit" };
+const WITHDRAWN: EditActRow = {
+  kind: "citationsWithdrawn",
+  label: "Citations withdrawn",
+  value: "Tide tables — @juno",
+  count: 2,
+  noun: "thing",
+};
 
 function draw(overrides: Partial<Parameters<typeof CommentEditView>[0]> = {}) {
   const props = {
@@ -11,12 +22,15 @@ function draw(overrides: Partial<Parameters<typeof CommentEditView>[0]> = {}) {
     words: "The glovebox camera earns its keep.",
     gallery: galleryOf([]),
     previews: {},
+    license: { attribution: 0, provenance: 0 },
     tags: [],
     references: [],
+    loadedTags: [],
+    loadedReferences: [],
     sensitive: false,
     sensitiveReason: "",
     sensitiveOpen: false,
-    acts: 1,
+    acts: [EDIT],
     actsOpen: false,
     busy: false,
     blocked: null,
@@ -32,6 +46,8 @@ function draw(overrides: Partial<Parameters<typeof CommentEditView>[0]> = {}) {
     onDescribe: vi.fn(),
     onTags: vi.fn(),
     onReferences: vi.fn(),
+    onUndoTag: vi.fn(),
+    onUndoReference: vi.fn(),
     onActs: vi.fn(),
     onHelp: vi.fn(),
     onSign: vi.fn(),
@@ -150,41 +166,53 @@ describe("CommentEdit", () => {
   });
 
   describe("the acts footer", () => {
-    it("names what the edit would sign", () => {
-      draw({ acts: 2 });
+    it("reads the live count of the batch, You're signing N things", () => {
+      draw({ acts: [EDIT, WITHDRAWN] });
       expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
-        "This creates 2 signed actions",
+        "You're signing 3 things",
       );
     });
 
-    it("uses the product's own words for an untouched editor", () => {
-      draw({ acts: 0 });
-      expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
-        "This creates no signed actions",
-      );
+    // EditComposeUnchanged.md — the family's guard, CommentEdit included.
+    it("an_empty_batch_leaves_sign_inert_and_the_footer_not_a_control", () => {
+      draw({ acts: [] });
+      const foot = screen.getByTestId("comment-edit-signed-actions");
+      expect(foot).toHaveTextContent("Nothing to sign yet");
+      expect(foot.tagName).not.toBe("BUTTON");
+      expect(screen.getByTestId("comment-edit-save")).toBeVisible();
+      expect(screen.getByTestId("comment-edit-save")).toBeDisabled();
     });
 
     it("opens the acts sheet — the footer is an affordance, not a label", () => {
-      const props = draw({ acts: 2 });
+      const props = draw({ acts: [EDIT, WITHDRAWN] });
       fireEvent.click(screen.getByTestId("comment-edit-signed-actions"));
       expect(props.onActs).toHaveBeenCalledWith(true);
     });
 
-    it("carries the count in the sheet's own title", () => {
-      draw({ acts: 2, actsOpen: true });
-      expect(screen.getByTestId("comment-edit-acts-sheet")).toHaveAttribute(
-        "aria-label",
-        "2 signed actions",
+    it("carries the count in the sheet's own title, every kind counted in records", () => {
+      draw({ acts: [EDIT, WITHDRAWN], actsOpen: true });
+      const sheet = screen.getByTestId("comment-edit-acts-sheet");
+      expect(sheet).toHaveTextContent("3 things, signed together");
+      expect(screen.getByTestId("comment-edit-acts-sheet-row-citationsWithdrawn")).toHaveTextContent(
+        "2",
       );
-      expect(screen.getByTestId("comment-edit-acts-sheet")).toHaveTextContent(
-        "They land together, or none does.",
+      expect(sheet).toHaveTextContent("They land together, or none does.");
+    });
+
+    it("reads a withdrawn tag back under its block, with Undo", () => {
+      const coastroad = newTagDraft("coastroad");
+      const props = draw({ loadedTags: [coastroad], tags: [] });
+      expect(screen.getByTestId("comment-edit-withdrawn-tag-coastroad")).toHaveTextContent(
+        "Withdrawn: #coastroad",
       );
+      fireEvent.click(screen.getByTestId("comment-edit-withdrawn-tag-coastroad-undo"));
+      expect(props.onUndoTag).toHaveBeenCalledWith("coastroad");
     });
   });
 
   describe("signing", () => {
     it("refuses to sign an edit that would stage nothing", () => {
-      draw({ acts: 0 });
+      draw({ acts: [] });
       expect(screen.getByTestId("comment-edit-save")).toBeDisabled();
     });
 
@@ -197,7 +225,7 @@ describe("CommentEdit", () => {
     });
 
     it("signs when there is something to sign", () => {
-      const props = draw({ acts: 1 });
+      const props = draw({ acts: [EDIT] });
       fireEvent.click(screen.getByTestId("comment-edit-save"));
       expect(props.onSign).toHaveBeenCalled();
     });

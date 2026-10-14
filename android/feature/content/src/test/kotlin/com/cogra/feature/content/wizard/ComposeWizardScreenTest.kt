@@ -747,6 +747,17 @@ class ComposeWizardScreenTest {
         compose.onNodeWithTag("wizard_header").assertDoesNotExist()
     }
 
+    /** K8.1/D4 (ComposeDetailsWords.md:3, ComposeCited.md:15): no description on the words path. */
+    @Test
+    fun theWordsPathDrawsNoDescription() {
+        compose.setContent {
+            Wizard(words.copy(step = WizardStep.Details, body = "Three weekends", description = "left over"))
+        }
+
+        compose.onNodeWithTag("composeDetails.title", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("composeDetails.description", useUnmergedTree = true).assertDoesNotExist()
+    }
+
     @Test
     fun theDetailsStageCountsWhatHasBeenDescribed() {
         val state = withPicks
@@ -764,9 +775,15 @@ class ComposeWizardScreenTest {
         val state = withPicks.copy(step = WizardStep.Details, pickedSheetOpen = true)
         compose.setContent { Wizard(state) }
 
-        compose.onNodeWithText("The first one is the cover — drag to reorder.").assertExists()
+        compose.onNodeWithText("The first one is the cover.").assertExists()
         compose.onNodeWithTag("wizard_picked_sheet_row_1_describe").performClick()
         assertThat(describedAt).containsExactly(1)
+        // The drag's non-drag twins (PickedSheet.jsx): only where each move
+        // is possible — the cover offers neither, the last no Move down.
+        compose.onNodeWithTag("wizard_picked_sheet_row_0_make_cover").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_picked_sheet_row_0_up").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_picked_sheet_row_1_down").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_picked_sheet_row_1_make_cover").assertExists()
 
         compose.onNodeWithTag("wizard_picked_sheet_row_1_remove").performClick()
         assertThat(removals).containsExactly(1)

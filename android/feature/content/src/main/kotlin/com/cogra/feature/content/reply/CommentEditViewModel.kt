@@ -21,6 +21,7 @@ import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.SectionsEditor
 import com.cogra.feature.content.TagRow
 import com.cogra.feature.content.TagSectionState
+import com.cogra.feature.content.edit.undoWithdrawal
 import com.cogra.feature.content.editableRow
 import com.cogra.feature.content.referenceFieldIndex
 import com.cogra.feature.content.tagFieldIndex
@@ -134,6 +135,7 @@ class CommentEditViewModel @Inject constructor(
                             sensitiveReason = loaded.selfMark.reason,
                             loadedSensitive = loaded.selfMark.sensitive,
                             loadedSensitiveReason = loaded.selfMark.reason,
+                            license = loaded.comment.license,
                         )
                     }
                 } ?: _state.update { it.copy(loading = false, refusal = GONE) }
@@ -146,7 +148,7 @@ class CommentEditViewModel @Inject constructor(
         }
     }
 
-    fun onBodyChange(value: String) = _state.update { it.copy(body = value) }
+    fun onBodyChange(value: String) = _state.update { it.copy(body = value, recordStaged = true) }
 
     fun onPicked(uri: String) {
         val before = _state.value
@@ -192,11 +194,11 @@ class CommentEditViewModel @Inject constructor(
      * come back with the switch as words the author never re-read.
      */
     fun onSensitiveChange(marked: Boolean) = _state.update {
-        it.copy(sensitive = marked, sensitiveReason = if (marked) it.sensitiveReason else null)
+        it.copy(sensitive = marked, sensitiveReason = if (marked) it.sensitiveReason else null, recordStaged = true)
     }
 
     fun onSensitiveReasonChange(reason: String) =
-        _state.update { it.copy(sensitiveReason = reason) }
+        _state.update { it.copy(sensitiveReason = reason, recordStaged = it.recordStaged || it.sensitive) }
 
     fun onCloseSheet() = _state.update { it.closedSheets() }
 
@@ -264,9 +266,15 @@ class CommentEditViewModel @Inject constructor(
     private fun updateReferences(block: (ReferenceSectionState) -> ReferenceSectionState) =
         sections.updateReferences(block)
 
+    /** Undo on a tag's `Withdrawn:` line: it returns as it stood, and the withdrawal unstages. */
+    fun onUndoTagWithdrawal(name: String) = updateTags { it.undoWithdrawal(name) }
+
+    /** Undo on a citation's `Withdrawn:` line, the same way. */
+    fun onUndoReferenceWithdrawal(targetId: String) = updateReferences { it.undoWithdrawal(targetId) }
+
     /**
-     * Signs the edit, then each topic and citation the edit newly
-     * declares — the "2 signed actions" the footer counts.
+     * Signs the edit, then each tag and citation change — every act the
+     * footer counts, the record included once it is staged.
      */
     fun onSign() {
         val current = _state.value

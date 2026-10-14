@@ -33,7 +33,7 @@ import { LicenseRows } from "@/lib/ui/license-rows";
 import { nearestAnchor } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
-import { licenseTerms, PUBLIC_DOMAIN, type License } from "@/lib/license";
+import { licenseReading, type License } from "@/lib/license";
 import type { ReferenceDraft } from "@/lib/references/draft";
 import type { WizardState } from "@/lib/compose/wizard";
 import { signedActions } from "@/lib/compose/wizard";
@@ -190,7 +190,7 @@ export function SealStep({
       <div className="flex flex-col">
         <TermRow
           label="License"
-          value={licenseSummary(state.license)}
+          value={licenseReading(state.license)}
           action="Change"
           testId="wizard-open-license"
           onAction={() => onSheet("license")}
@@ -305,7 +305,7 @@ export function SealStep({
           <LicenseRows value={state.license} onChange={onLicense} testIdPrefix="wizard" />
           <div className="flex items-center gap-2 border-t border-outline-variant pt-2.5">
             <span className="flex-1 text-label-small text-on-surface-variant">
-              {licenseTerms(state.license).join(" ")}
+              {licenseReading(state.license)}
             </span>
             <PillButton testId="wizard-license-done" onClick={() => onSheet("none")}>
               Done
@@ -500,14 +500,6 @@ function TermRow({
       </TextAction>
     </div>
   );
-}
-
-/** The licence in one line, the way the board writes it. */
-export function licenseSummary(license: License): string {
-  return license.attribution === PUBLIC_DOMAIN.attribution &&
-    license.provenance === PUBLIC_DOMAIN.provenance
-    ? "Public domain — your default"
-    : licenseTerms(license).join(" ");
 }
 
 /**

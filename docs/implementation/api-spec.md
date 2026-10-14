@@ -3477,7 +3477,10 @@ server would refuse rather than spending the round trip.
 A Post's description runs the same trim-and-blank-fold rule as
 the title, at its own cap: **at most 500 characters**
 (`content.descriptionChars`), refused at `["description"]` on a
-create and an edit alike. A Post's words-body — `content`, when
+create and an edit alike. A Post whose body is words carries no
+description: `description` beside a words `content` is refused at
+`["description"]` on a create and an edit alike — words beside
+media are the description's only place. A Post's words-body — `content`, when
 the body is words and not media — is capped separately, wider
 than the description since it is the artifact's whole text: **at
 most 5000 characters** (`content.postBodyChars`), refused at

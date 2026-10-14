@@ -445,7 +445,6 @@ async fn a_self_marked_post_veils_its_body_and_keeps_its_title(pool: PgPool) {
             PREPARE_POST,
             json!({ "input": {
                 "title": "A hard thing",
-                "description": "Beside the words",
                 "content": "The body nobody sees unmarked.",
                 "license": { "attribution": 1.0, "provenance": 0.0 },
                 "sensitive": true,
@@ -483,7 +482,6 @@ async fn a_self_marked_post_veils_its_body_and_keeps_its_title(pool: PgPool) {
             json!({ "input": {
                 "id": post_id,
                 "title": "A hard thing",
-                "description": "Beside the words",
                 "content": "Softened.",
             }}),
         )

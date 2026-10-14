@@ -70,7 +70,8 @@ export function PickedSheet({
             <button
               type="button"
               data-testid={`${testId}-move-${index}`}
-              aria-label={`Reorder ${rowName(index)}. Use the arrow keys to move it.`}
+              aria-label={`Reorder ${index === 0 ? "the cover" : `picture ${index + 1}`}`}
+              aria-keyshortcuts="ArrowUp ArrowDown"
               onKeyDown={(event) => {
                 if (event.key === "ArrowUp" && index > 0) {
                   event.preventDefault();
@@ -96,23 +97,42 @@ export function PickedSheet({
             />
             <span className="flex flex-1 flex-col gap-0.5">
               <span className="text-label-large">{rowName(index)}</span>
-              {item.described ? (
-                <span
-                  data-testid={`${testId}-described-${index}`}
-                  className="text-label-small text-on-surface-variant"
-                >
-                  Described
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  data-testid={`${testId}-describe-${index}`}
-                  onClick={() => onDescribe(item.id)}
-                  className="cg-state cg-focus cursor-pointer self-start border-0 bg-transparent p-0 text-label-small text-primary"
-                >
-                  Describe
-                </button>
-              )}
+              {/* THE DRAG HAS NON-DRAG TWINS (the K13 round; PickedSheet.jsx):
+                  after Describe, `Make it the cover` · `Move up` · `Move down`,
+                  each only where the move is possible. They wrap at a 24px
+                  pitch, clear under WCAG 2.5.8's spacing rule. */}
+              <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                {item.described ? (
+                  <span
+                    data-testid={`${testId}-described-${index}`}
+                    className="text-label-small text-on-surface-variant"
+                  >
+                    Described
+                  </span>
+                ) : (
+                  <InlineMove testId={`${testId}-describe-${index}`} onClick={() => onDescribe(item.id)}>
+                    Describe
+                  </InlineMove>
+                )}
+                {index > 0 && (
+                  <InlineMove testId={`${testId}-make-cover-${index}`} onClick={() => onMove(index, 0)}>
+                    Make it the cover
+                  </InlineMove>
+                )}
+                {index > 0 && (
+                  <InlineMove testId={`${testId}-up-${index}`} onClick={() => onMove(index, index - 1)}>
+                    Move up
+                  </InlineMove>
+                )}
+                {index < items.length - 1 && (
+                  <InlineMove
+                    testId={`${testId}-down-${index}`}
+                    onClick={() => onMove(index, index + 1)}
+                  >
+                    Move down
+                  </InlineMove>
+                )}
+              </span>
             </span>
             <button
               type="button"
@@ -129,7 +149,7 @@ export function PickedSheet({
         ))}
       </ul>
       <p className="m-0 pt-3 text-label-small text-on-surface-variant">
-        The first one is the cover — drag to reorder.
+        The first one is the cover.
       </p>
       <div className="flex justify-end pt-2">
         <PillButton testId={`${testId}-done`} variant="text" onClick={onClose}>
@@ -137,5 +157,27 @@ export function PickedSheet({
         </PillButton>
       </div>
     </BottomSheet>
+  );
+}
+
+/** A small inline action on a row's second line — the board's `InlineAction size="sm"`. */
+function InlineMove({
+  children,
+  testId,
+  onClick,
+}: {
+  children: string;
+  testId: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      data-testid={testId}
+      onClick={onClick}
+      className="cg-state cg-focus cg-hit cursor-pointer border-0 bg-transparent p-0 text-label-small text-primary"
+    >
+      {children}
+    </button>
   );
 }

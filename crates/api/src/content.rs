@@ -538,6 +538,26 @@ fn post_body(content: Option<String>, gallery: &PlannedGallery) -> Result<String
     }
 }
 
+/// A words body carries no description (K8.1/D4): a description is how
+/// words stand BESIDE pictures, so words beside words would only ask the
+/// reader which of the two is the post. `body` is `post_body`'s answer —
+/// empty exactly for a media body — and `description` is already
+/// blank-folded, so a whitespace-only one never refuses.
+///
+/// Create and edit both come through here, so an edit cannot land the
+/// pair a create would have refused.
+fn description_beside(body: &str, description: Option<&str>) -> Result<(), ContentError> {
+    if body.is_empty() || description.is_none() {
+        return Ok(());
+    }
+    Err(ContentError::BadInput {
+        field: "description",
+        message: "a post whose body is words carries no description — words beside media \
+                  are the description's only place"
+            .into(),
+    })
+}
+
 /// The title as the envelope will carry it: trimmed, length-checked, and
 /// blank folded to absent so `""` and null cannot mean two different
 /// nothings — the same rule the body and the self-mark's reason run.
@@ -652,6 +672,7 @@ pub async fn prepare_post<B: L1Boundary>(
     let citations = references::plan_batch(pool, &draft.references).await?;
     let gallery = media::plan_gallery(pool, viewer, GalleryKind::Post, &draft.attachments).await?;
     let body = post_body(draft.content, &gallery)?;
+    description_beside(&body, description.as_deref())?;
     let mark = self_mark(draft.sensitive)?;
     let address = author_address(pool, viewer).await?;
     prepare::check_write_rule(
@@ -830,6 +851,7 @@ pub async fn prepare_post_edit<B: L1Boundary>(
     let description = checked_description(draft.description)?;
     let gallery = media::plan_gallery(pool, viewer, GalleryKind::Post, &draft.attachments).await?;
     let body = post_body(draft.content, &gallery)?;
+    description_beside(&body, description.as_deref())?;
     let mark = self_mark(draft.sensitive)?;
     let address = author_address(pool, viewer).await?;
     let node =
