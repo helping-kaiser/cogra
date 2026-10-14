@@ -25,7 +25,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { bundleReadout } from "@/lib/stance/anchors";
+import { bundleReadout, ZERO_BUNDLE_EMOJI } from "@/lib/stance/anchors";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon, type GlyphName } from "@/lib/ui/icons";
 import { formatStancePair } from "@/lib/ui/stance-format";
@@ -45,6 +45,8 @@ export type ContentRowDisc =
   | { readonly kind: "monogram"; readonly name: string }
   /** A stance's face where a picture would go, no digits (the chronicle's opinion row). */
   | { readonly kind: "face"; readonly pDirected: number; readonly pInterest: number }
+  /** 🤷 where a picture would go, for a stance walked back (the withdrawal notification). */
+  | { readonly kind: "walkedBack" }
   | { readonly kind: "glyph"; readonly glyph: GlyphName }
   | { readonly kind: "redacted" };
 
@@ -73,6 +75,18 @@ function Disc({ disc }: { disc: ContentRowDisc }) {
         </span>
       );
     }
+    case "walkedBack":
+      // ContentRow.jsx `face="walkedBack"`: 🤷, the system's own readout for a
+      // bundle walked back to zero, at the face's treatment. Decorative — the
+      // row's sentence says what happened.
+      return (
+        <span
+          aria-hidden="true"
+          className="grid size-10 place-items-center rounded-full bg-surface-container-high text-title-medium"
+        >
+          {ZERO_BUNDLE_EMOJI}
+        </span>
+      );
     case "glyph":
       return (
         <span className="grid size-10 place-items-center rounded-full bg-surface-container-high text-on-surface-variant">
