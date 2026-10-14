@@ -64,6 +64,8 @@ adds nothing. Conventions:
   publishes (layer1-interface.md, the Host Contract) — when the
   epoch's records landed, the wall-clock instant a record's display
   reads (`Record.landedAt`). The stand-in attests its own close time.
+  An ingested epoch missing its instant is filled by the next
+  ingestion pass from the published sequence, through the seam.
 
 The contract is the mirror's whole identity: it may lag L1, it
 must never diverge, and it can be rebuilt from the published

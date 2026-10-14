@@ -4,14 +4,12 @@
 -- it, the wall-clock time the ages ladder reads (copy-voice.md), where
 -- the landing epoch and the causal key keep the order. Rebuildable with
 -- the rest of the mirror from the published sequence.
+--
+-- Epochs ingested before the package carried the instant are filled
+-- through the seam, never from here: the ingestion pass re-reads their
+-- published packages (api::ingest::ingest_pending). A migration may not
+-- read the stand-in's tables, which leave at the swap.
 CREATE TABLE mirror_epochs (
     epoch       BIGINT      PRIMARY KEY,
     attested_at TIMESTAMPTZ NOT NULL
 );
-
--- The epochs already ingested take their instant from the stand-in's own
--- record of each close, the source every later package carries.
-INSERT INTO mirror_epochs (epoch, attested_at)
-SELECT e.epoch, e.closed_at
-FROM l1_epochs e
-WHERE e.epoch <= (SELECT last_epoch FROM mirror_epoch_cursor WHERE singleton);

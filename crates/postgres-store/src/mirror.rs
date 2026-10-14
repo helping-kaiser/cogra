@@ -530,6 +530,44 @@ pub async fn epoch_instants(
     .collect())
 }
 
+/// The oldest ingested epoch the mirror holds no attested instant for, if
+/// any. Ingested epochs are contiguous from 0 to the cursor, so a full
+/// set is a count check; only an incomplete one is searched.
+pub async fn first_epoch_without_instant(pool: &PgPool) -> Result<Option<i64>, MirrorError> {
+    Ok(sqlx::query_scalar!(
+        r#"WITH c AS (SELECT last_epoch FROM mirror_epoch_cursor WHERE singleton)
+           SELECT CASE
+               WHEN (SELECT COUNT(*) FROM mirror_epochs, c
+                     WHERE epoch <= c.last_epoch) = (SELECT last_epoch + 1 FROM c)
+               THEN NULL
+               ELSE (SELECT MIN(s) FROM c, generate_series(0, c.last_epoch) s
+                     WHERE NOT EXISTS (SELECT 1 FROM mirror_epochs e WHERE e.epoch = s))
+           END AS "epoch""#,
+    )
+    .fetch_one(pool)
+    .await?)
+}
+
+/// Records the attested instants of already-ingested epochs, read back
+/// from their published packages. An epoch that already has one keeps it.
+pub async fn record_instants(
+    pool: &PgPool,
+    instants: &[(i64, chrono::DateTime<chrono::Utc>)],
+) -> Result<u64, MirrorError> {
+    let epochs: Vec<i64> = instants.iter().map(|(epoch, _)| *epoch).collect();
+    let at: Vec<chrono::DateTime<chrono::Utc>> = instants.iter().map(|(_, at)| *at).collect();
+    Ok(sqlx::query!(
+        "INSERT INTO mirror_epochs (epoch, attested_at)
+         SELECT * FROM unnest($1::bigint[], $2::timestamptz[])
+         ON CONFLICT (epoch) DO NOTHING",
+        &epochs,
+        &at,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected())
+}
+
 /// One mirror row as the chronicle read selects it, before its legs are
 /// attached. Named rather than anonymous because the two direction
 /// branches must agree on one row type.

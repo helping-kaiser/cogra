@@ -504,6 +504,7 @@ label.
 | `test:integration:email-change-requests-trip-the-account-budget`                              | email_change_requests_trip_the_account_budget                              |
 | `test:integration:email-change-resends-trip-the-account-budget`                               | email_change_resends_trip_the_account_budget                               |
 | `test:integration:empty-update-refuses-with-a-user-error`                                     | empty_update_refuses_with_a_user_error                                     |
+| `test:integration:epoch-instants-cross-the-seam-and-missing-ones-are-filled`                  | epoch_instants_cross_the_seam_and_missing_ones_are_filled                  |
 | `test:integration:equal-settling-keys-break-by-authored-at-then-id`                           | equal_settling_keys_break_by_authored_at_then_id                           |
 | `test:integration:every-acting-gesture-refuses-an-unverified-account`                         | every_acting_gesture_refuses_an_unverified_account                         |
 | `test:integration:every-hop-carries-exactly-its-folds-members`                                | every_hop_carries_exactly_its_folds_members                                |
