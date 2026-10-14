@@ -125,18 +125,23 @@ export function DetailsStep({
         cap={TITLE_MAX_CHARS}
         error={titleProblem(title) ?? undefined}
       />
-      <TextField
-        label="Description"
-        optional
-        multiline
-        rows={3}
-        value={description}
-        onChange={onDescription}
-        testId="wizard-description"
-        node={{ path: "composeDetails.description" }}
-        cap={DESCRIPTION_MAX_CHARS}
-        error={descriptionProblem(description) ?? undefined}
-      />
+      {/* THE WORDS PATH COMPOSES NO DESCRIPTION (K8.1/D4; ComposeCited.md:15,
+          ComposeDetailsWords.md:3): a description is how words stand BESIDE
+          pictures, and the server refuses one beside words. */}
+      {mode === "media" && (
+        <TextField
+          label="Description"
+          optional
+          multiline
+          rows={3}
+          value={description}
+          onChange={onDescription}
+          testId="wizard-description"
+          node={{ path: "composeDetails.description" }}
+          cap={DESCRIPTION_MAX_CHARS}
+          error={descriptionProblem(description) ?? undefined}
+        />
+      )}
 
       <TagEntryField
         tags={tags}

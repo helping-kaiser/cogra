@@ -336,7 +336,9 @@ export function bodyGate(state: WizardState): Gate {
 export function detailsGate(state: WizardState): Gate {
   const titleIssue = titleProblem(state.title);
   if (titleIssue !== null) return { ok: false, reason: titleIssue };
-  const descriptionIssue = descriptionProblem(state.description);
+  // The words side carries no description, so one left over the cap beside
+  // pictures the author swapped away never holds the words post up.
+  const descriptionIssue = state.mode === "media" ? descriptionProblem(state.description) : null;
   return descriptionIssue === null ? ALLOWED : { ok: false, reason: descriptionIssue };
 }
 
@@ -495,6 +497,19 @@ export function attachmentClaims(state: WizardState): readonly GalleryEntryDraft
 /** The words half, or null on a media post — the XOR, as the input wants it. */
 export function bodyContent(state: WizardState): string | null {
   return state.mode === "words" ? state.words : null;
+}
+
+/**
+ * The description the post carries, or null. THE WORDS PATH COMPOSES NONE
+ * (K8.1/D4; design/readme.md:8179-8181): a description is how words stand
+ * beside pictures, so on the words side it is neither drawn nor sent — the
+ * server refuses one at `["description"]`. A description typed beside the
+ * pictures rides with them: swapping to words drops it from the post, and
+ * it comes back only with the pictures it stood beside.
+ */
+export function descriptionContent(state: WizardState): string | null {
+  if (state.mode !== "media") return null;
+  return state.description.trim() === "" ? null : state.description;
 }
 
 export function shapeRatio(state: WizardState): number {

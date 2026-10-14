@@ -740,7 +740,7 @@ class ComposeWizardViewModel @Inject constructor(
             val prepared = when (
                 val outcome = content.preparePost(
                     title = current.title.ifBlank { null },
-                    description = current.description.ifBlank { null },
+                    description = current.descriptionContent,
                     // The XOR, structurally: a media post sends no
                     // content at all, and a words post no gallery.
                     content = current.body.takeIf { current.mode == BodyMode.Words },

@@ -747,6 +747,17 @@ class ComposeWizardScreenTest {
         compose.onNodeWithTag("wizard_header").assertDoesNotExist()
     }
 
+    /** K8.1/D4 (ComposeDetailsWords.md:3, ComposeCited.md:15): no description on the words path. */
+    @Test
+    fun theWordsPathDrawsNoDescription() {
+        compose.setContent {
+            Wizard(words.copy(step = WizardStep.Details, body = "Three weekends", description = "left over"))
+        }
+
+        compose.onNodeWithTag("composeDetails.title", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("composeDetails.description", useUnmergedTree = true).assertDoesNotExist()
+    }
+
     @Test
     fun theDetailsStageCountsWhatHasBeenDescribed() {
         val state = withPicks

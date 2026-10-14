@@ -38,6 +38,7 @@ import {
   attachmentClaims,
   bodyContent,
   COVER_FROM_PICTURE,
+  descriptionContent,
   effectiveCover,
   emptyWizard,
   isVideoPost,
@@ -623,7 +624,7 @@ export function ComposeWizard({
     const prepared = await guard.run(() =>
       preparePost(client, {
         title: state.title.trim() === "" ? null : state.title,
-        description: state.description.trim() === "" ? null : state.description,
+        description: descriptionContent(state),
         content: bodyContent(state),
         sensitive: state.sensitive,
         sensitiveReason: state.sensitiveReason,

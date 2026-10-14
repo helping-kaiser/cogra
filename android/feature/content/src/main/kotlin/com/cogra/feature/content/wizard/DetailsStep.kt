@@ -114,7 +114,13 @@ internal fun ColumnScope.DetailsStepBody(
         }
 
         TitleField(state.title, state.titleTooLong, onTitleChange)
-        DescriptionField(state.description, state.descriptionTooLong, onDescriptionChange)
+        // THE WORDS PATH COMPOSES NO DESCRIPTION (K8.1/D4;
+        // ComposeDetailsWords.md:3, ComposeCited.md:15): a description is
+        // how words stand beside pictures, and the server refuses one
+        // beside words.
+        if (state.mode == BodyMode.Media) {
+            DescriptionField(state.description, state.descriptionTooLong, onDescriptionChange)
+        }
 
         topics()
         references()
