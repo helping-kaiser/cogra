@@ -28,17 +28,16 @@ query FeedRanking($viewer: UUID!, $kinds: [NodeKind!], $topic: UUID) {
 }
 
 # One window of the derived list, in the order handed (CD-2). The card
-# reads a post exactly as the chronological listing served it, the comment
-# count included; the other kinds hydrate to their typename only until a
-# surface renders them.
+# reads a post as `PostFields` carries it, the comment count included; the
+# other kinds hydrate to their typename only until a surface renders them.
 query FeedWindow($ids: [UUID!]!, $first: Int!) {
   feed(orderedIds: $ids, first: $first) {
     edges {
       node {
         ... on Post {
           ...PostFields
-          # The card's comment count, as `Posts` reads it: the woven list
-          # carries pending rows, so the count includes pending comments.
+          # The card's comment count: the woven list carries pending rows,
+          # so the count includes pending comments.
           commentCount: comments(first: 0, includePending: true) {
             totalCount
           }

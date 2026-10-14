@@ -3,7 +3,7 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { PostsDocument, type PostsQuery } from "@/__generated__/graphql";
+import { FeedDocument, type FeedQuery } from "@/__generated__/graphql";
 import { COMMENT_BODY_MAX_CHARS } from "@/lib/compose/reply-wizard";
 import { SENSITIVE_REASON_MAX_CHARS } from "@/lib/compose/wizard";
 import { createTokenStore } from "@/lib/session/token-store";
@@ -2814,15 +2814,18 @@ describe("PostView — opened from the feed", () => {
   function feedCache(...nodes: Record<string, unknown>[]) {
     const cache = new InMemoryCache();
     cache.writeQuery({
-      query: PostsDocument,
-      variables: { first: 20, after: null, includePending: true },
+      query: FeedDocument,
+      variables: {
+        orderedIds: nodes.map((node) => String(node.id)),
+        first: nodes.length,
+        includePending: true,
+      },
       data: {
-        posts: {
-          __typename: "PostConnection",
-          edges: nodes.map((node) => ({ __typename: "PostEdge", node })),
-          pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+        feed: {
+          __typename: "FeedConnection",
+          edges: nodes.map((node) => ({ __typename: "FeedEdge", node })),
         },
-      } as unknown as PostsQuery,
+      } as unknown as FeedQuery,
     });
     return cache;
   }

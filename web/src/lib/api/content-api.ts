@@ -13,16 +13,15 @@ import {
   FeedPostFragmentDoc,
   PostCommentsDocument,
   PostDetailDocument,
-  PostsDocument,
   PrepareCommentDocument,
   PrepareCommentEditDocument,
   PreparePostDocument,
   PreparePostEditDocument,
   type CommentRepliesQuery,
+  type FeedPostFragment,
   type LandingState,
   type PostCommentsQuery,
   type PostDetailQuery,
-  type PostsQuery,
 } from "@/__generated__/graphql";
 import type { License } from "@/lib/license";
 import type { ReferenceDraft } from "@/lib/references/draft";
@@ -31,7 +30,11 @@ import type { TagDraft } from "@/lib/topics/draft";
 import { failed, fetchOutcome, payloadOutcome, success, type Outcome } from "./outcome";
 import { stagedFromPrepared, type StagedWriteView } from "./writes-api";
 
-export type PostView = PostsQuery["posts"]["edges"][number]["node"];
+/**
+ * A post as a card draws it: the `FeedPost` selection, whichever read wrote
+ * it — the feed's window, or the cache the detail paints from.
+ */
+export type PostView = FeedPostFragment;
 
 /**
  * A comment, as THE THREAD'S OWN read serves it.
@@ -273,30 +276,6 @@ export async function fetchCommentReplies(
   });
 }
 
-export async function fetchPosts(
-  client: ApolloClient,
-  after: string | null = null,
-  options: ListingOptions = {},
-): Promise<Outcome<Page<PostView>>> {
-  const fetched = await fetchOutcome(() =>
-    client.query({
-      query: PostsDocument,
-      variables: {
-        first: CONTENT_PAGE_SIZE,
-        after,
-        includePending: includePendingOf(options),
-      },
-      fetchPolicy: "network-only",
-    }),
-  );
-  if (fetched.kind !== "success") return fetched;
-  const posts = fetched.value.posts;
-  return success({
-    items: posts.edges.map((edge) => edge.node),
-    endCursor: posts.pageInfo.endCursor ?? null,
-    hasNextPage: posts.pageInfo.hasNextPage,
-  });
-}
 
 /**
  * The post as the cache already holds it — the card a feed (or any read that

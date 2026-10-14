@@ -653,11 +653,6 @@ open class ThrowingStanceRepository : StanceRepository {
 
 /** Content-repository base: every call throws until overridden. */
 open class ThrowingContentRepository : ContentRepository {
-    override suspend fun posts(
-        first: Int,
-        after: String?,
-        includePending: Boolean,
-    ): Outcome<Page<PostView>> = throw UnsupportedOperationException()
     override suspend fun post(
         id: String,
         commentsFirst: Int,

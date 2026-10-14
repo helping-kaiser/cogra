@@ -15,6 +15,7 @@ import {
   resendEmailChange,
   revokeOtherSessions,
   revokeSession,
+  setAlwaysUnveil,
   setDefaultLicense,
 } from "./settings-api";
 import { startMswServer } from "@/test/msw";
@@ -382,6 +383,44 @@ describe("the default license", () => {
       { input: { defaultLicense: { attribution: 1, provenance: 0.5 } } },
       { input: { defaultLicense: null } },
     ]);
+  });
+
+  // THE ABSENT-FIELD CONVENTION (api-spec.md `SetPreferencesInput`): an
+  // absent field is left as it is and an explicit null restores its
+  // default. Every write here carries its own axis and nothing else — above
+  // all never `hasSeenOnboarding`, whose explicit null would bring the intro
+  // back on every device of the account (OS-25).
+  it("setAlwaysUnveil sends its own threshold and never the intro flag", async () => {
+    const sent: Record<string, unknown>[] = [];
+    server.use(
+      graphql.mutation("SetPreferences", ({ variables }) => {
+        sent.push(variables);
+        return HttpResponse.json({
+          data: {
+            setPreferences: {
+              __typename: "SetPreferencesPayload",
+              preferences: {
+                __typename: "UserPreferences",
+                contentFilteringSeverityLevel: null,
+                defaultLicense: null,
+              },
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    await setAlwaysUnveil(client(), true);
+    await setAlwaysUnveil(client(), false);
+    await setDefaultLicense(client(), null);
+    expect(sent).toEqual([
+      { input: { contentFilteringSeverityLevel: 0 } },
+      { input: { contentFilteringSeverityLevel: null } },
+      { input: { defaultLicense: null } },
+    ]);
+    for (const variables of sent) {
+      expect(Object.keys(variables.input as object)).not.toContain("hasSeenOnboarding");
+    }
   });
 
   it("fetchDefaultLicense reads null as unset", async () => {
