@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import com.google.common.truth.Truth.assertThat
@@ -157,6 +158,37 @@ class StancePadReflowTest {
                 onDismissSeverance = {},
                 onConfirmationShown = {},
                 testTagPrefix = "post",
+            )
+        }
+        compose.waitForIdle()
+        val h0 = compose.onNodeWithTag("post_stance").fetchSemanticsNode().size.height
+        state = state.copy(standing = StancePoint(0.1, 0.1), busy = true)
+        compose.waitForIdle()
+        val h1 = compose.onNodeWithTag("post_stance").fetchSemanticsNode().size.height
+        assertThat(h1).isEqualTo(h0)
+    }
+
+    @Test
+    fun theFirstOpinionLeavesTheVouchCardsLineFaceItsHeight() {
+        // The vouch card's hollow face is the line face, a drawn glyph rather
+        // than text: it must stand exactly as tall as the folded face that
+        // replaces it, or the card's row jumps on the first stance.
+        var state by mutableStateOf(open.copy(pad = StancePadMode.CLOSED))
+        compose.setContent {
+            StanceControl(
+                state = state,
+                onHoldDefault = {},
+                onOpenPad = {},
+                onPick = {},
+                onCommit = {},
+                onDismissPad = {},
+                onToggleExactValues = {},
+                onOpenSeverance = {},
+                onConfirmSeverance = {},
+                onDismissSeverance = {},
+                onConfirmationShown = {},
+                testTagPrefix = "post",
+                lineFaceInk = Color.Black,
             )
         }
         compose.waitForIdle()
