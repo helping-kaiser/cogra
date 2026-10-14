@@ -390,6 +390,7 @@ mod tests {
             alt_text: alt_text.map(Into::into),
             cover: None,
             cover_taken: false,
+            upload_digest: Some([!fill; MEDIA_DIGEST_LEN]),
         }
     }
 
@@ -698,10 +699,126 @@ mod tests {
             Value::Array(vec![media_entry(vec![
                 (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
                 (ASSET_KEY_MIME, Value::Text("image/webp".into())),
-                (5, Value::Uint(1080)),
+                (6, Value::Uint(1080)),
             ])]),
             "unknown media entry field",
         );
+    }
+
+    /// Both digests ride every entry a prepare stages: the rendition the
+    /// asset serves and the bytes the author's device sent. For a still
+    /// they are one value carried twice; for a re-encoded clip they differ,
+    /// and both survive the round trip in their own keys.
+    ///
+    /// Every manifest entry carries both the rendition digest and the upload digest, each in its own key.
+    /// ´claim:envelope:every-entry-carries-both-digests´
+    #[test]
+    fn every_manifest_entry_carries_both_the_rendition_and_the_upload_digest() {
+        let still = MediaAsset {
+            upload_digest: Some([1; MEDIA_DIGEST_LEN]),
+            ..asset(1, "image/webp", None)
+        };
+        let clip = MediaAsset {
+            upload_digest: Some([8; MEDIA_DIGEST_LEN]),
+            ..asset(3, "video/mp4", Some("A clip"))
+        };
+        let mut content = cogra(None, Some("beside"), None);
+        content.media = vec![still, clip];
+        let bytes = content.clone().encode_for_prepare().expect("admitted");
+        assert_eq!(
+            CograContent::decode_payload(&bytes).expect("valid"),
+            content
+        );
+        let Some(Value::Map(guild)) = Envelope::decode(&bytes)
+            .expect("valid")
+            .extensions
+            .get(&COGRA_GUILD_KEY)
+            .cloned()
+        else {
+            panic!("the guild map");
+        };
+        let Some(Value::Array(entries)) = guild.get(&COGRA_KEY_MEDIA) else {
+            panic!("a manifest array");
+        };
+        for entry in entries {
+            let Value::Map(entry) = entry else {
+                panic!("an entry map")
+            };
+            assert!(entry.contains_key(&ASSET_KEY_DIGEST));
+            assert!(entry.contains_key(&ASSET_KEY_UPLOAD_DIGEST));
+        }
+    }
+
+    /// The prepare-side admission refuses an entry that would witness a
+    /// rendition without the bytes the author sent, in a gallery and in
+    /// the avatar slot alike.
+    ///
+    /// A prepare refuses a manifest entry without an upload digest, in a gallery and in the avatar slot alike.
+    /// ´claim:envelope:a-prepare-refuses-an-entry-without-an-upload-digest´
+    #[test]
+    fn a_manifest_entry_without_an_upload_digest_is_refused_at_prepare() {
+        let bare = MediaAsset {
+            upload_digest: None,
+            ..asset(1, "image/webp", None)
+        };
+        let mut content = cogra(None, None, None);
+        content.media = vec![asset(2, "image/webp", None), bare.clone()];
+        assert_eq!(
+            content.encode_for_prepare(),
+            Err(EnvelopeError::Guild("media entry without an upload digest"))
+        );
+        let mut update = profile(None, None, None);
+        update.avatar = Some(Some(bare));
+        assert_eq!(
+            update.encode_for_prepare(),
+            Err(EnvelopeError::Guild("media entry without an upload digest"))
+        );
+        let mut cleared = profile(None, None, None);
+        cleared.avatar = Some(None);
+        assert!(cleared.encode_for_prepare().is_ok(), "a cleared slot names no asset");
+    }
+
+    /// A payload landed before the upload digest existed carries an entry
+    /// with keys 0–4 only. The reader still reads it — it renders no
+    /// upload digest rather than refusing the record — because the
+    /// refusal is the prepare's, not the decoder's.
+    ///
+    /// Landed history without an upload digest still reads, with no upload digest to render.
+    /// ´claim:envelope:landed-history-without-an-upload-digest-reads´
+    #[test]
+    fn landed_history_without_an_upload_digest_still_reads() {
+        let bytes = with_media_value(Value::Array(vec![media_entry(vec![
+            (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
+            (ASSET_KEY_MIME, Value::Text("image/webp".into())),
+        ])]));
+        let decoded = CograContent::decode_payload(&bytes).expect("landed history reads");
+        assert_eq!(decoded.media[0].upload_digest, None);
+    }
+
+    /// The upload digest is a digest or nothing: a wrong type or a wrong
+    /// length refuses the entry rather than being read as some other value.
+    ///
+    /// An upload digest is a well-sized digest or the entry is refused.
+    /// ´claim:envelope:an-upload-digest-is-a-well-sized-digest´
+    #[test]
+    fn manifest_rejects_an_upload_digest_that_is_not_a_digest() {
+        let entry = |upload: Value| {
+            Value::Array(vec![media_entry(vec![
+                (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
+                (ASSET_KEY_MIME, Value::Text("image/webp".into())),
+                (ASSET_KEY_UPLOAD_DIGEST, upload),
+            ])])
+        };
+        refuses_media(
+            entry(Value::Text("not bytes".into())),
+            "media upload digest must be a digest",
+        );
+        for length in [0, 16, 31, 33, 64] {
+            refuses_media(
+                entry(Value::Bytes(vec![2; length])),
+                "media upload digest must be 32 bytes",
+            );
+        }
     }
 
     /// The poster is witnessed as a digest, so a value that is not one —
@@ -749,6 +866,7 @@ mod tests {
                     alt_text: None,
                     cover,
                     cover_taken: false,
+                    upload_digest: Some([2; MEDIA_DIGEST_LEN]),
                 }],
                 ..cogra(None, None, Some("a clip"))
             };
@@ -792,6 +910,7 @@ mod tests {
                     alt_text: None,
                     cover: Some([9; MEDIA_DIGEST_LEN]),
                     cover_taken,
+                    upload_digest: Some([2; MEDIA_DIGEST_LEN]),
                 }],
                 ..cogra(None, None, Some("a clip"))
             };
@@ -1107,7 +1226,7 @@ mod tests {
             Value::Array(vec![media_entry(vec![
                 (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
                 (ASSET_KEY_MIME, Value::Text("image/webp".into())),
-                (5, Value::Uint(1)),
+                (6, Value::Uint(1)),
             ])]),
             "unknown media entry field",
         );

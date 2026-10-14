@@ -256,6 +256,17 @@ impl CograContent {
         self.into_envelope().encode()
     }
 
+    /// The payload a prepare stages: [`Self::encode_payload`] behind the
+    /// prepare-side admission, which refuses a manifest entry without its
+    /// upload digest. Every prepare encodes through here, so no new
+    /// record can witness a rendition without the bytes the author sent.
+    pub fn encode_for_prepare(self) -> Result<Vec<u8>, EnvelopeError> {
+        for asset in &self.media {
+            asset.admit_at_prepare()?;
+        }
+        Ok(self.encode_payload())
+    }
+
     /// The content family's guild admission over a decoded envelope: the
     /// shared checks (`cogra_guild_map`), a 16-byte node id, and only the
     /// content keys — the still-unbuilt provenance key and the profile
@@ -349,6 +360,16 @@ impl CograProfile {
     /// Serialized payload bytes for the canonical proposal.
     pub fn encode_payload(self) -> Vec<u8> {
         self.into_envelope().encode()
+    }
+
+    /// The payload a prepare stages, behind the same prepare-side
+    /// admission [`CograContent::encode_for_prepare`] runs: an avatar
+    /// that is set carries its upload digest.
+    pub fn encode_for_prepare(self) -> Result<Vec<u8>, EnvelopeError> {
+        if let Some(Some(asset)) = &self.avatar {
+            asset.admit_at_prepare()?;
+        }
+        Ok(self.encode_payload())
     }
 
     /// The profile family's guild admission: the shared checks

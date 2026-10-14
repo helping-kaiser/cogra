@@ -2,9 +2,10 @@
 //!
 //! Key 5 is the media manifest: an array of per-asset maps carrying the
 //! digest of the bytes, the type they are to be read as, the alt text
-//! describing them, and — for a video — the digest of the still that
-//! covers it and whether that still was chosen or taken, with array
-//! position carrying gallery order. It commits
+//! describing them, — for a video — the digest of the still that covers
+//! it and whether that still was chosen or taken, and the digest of the
+//! bytes the author's device uploaded, with array position carrying
+//! gallery order. It commits
 //! what a reader needs to render honestly and nothing a server measured —
 //! aspect ratio, size, and duration are derived, so they stay out of what
 //! the author signs. The nested map runs the same reserved-key discipline
@@ -27,6 +28,7 @@ pub(super) const ASSET_KEY_MIME: u64 = 1;
 pub(super) const ASSET_KEY_ALT_TEXT: u64 = 2;
 pub(super) const ASSET_KEY_COVER: u64 = 3;
 pub(super) const ASSET_KEY_COVER_TAKEN: u64 = 4;
+pub(super) const ASSET_KEY_UPLOAD_DIGEST: u64 = 5;
 
 /// SHA-256, the algorithm the manifest's digests are (data-model.md
 /// `media_attachments`). The length is the only place the choice appears
@@ -36,11 +38,12 @@ pub const MEDIA_DIGEST_LEN: usize = 32;
 
 /// One asset in the media manifest (guild key 5).
 ///
-/// The five fields are what a reader needs to render the asset honestly:
-/// which bytes (`digest`), what to read them as (`mime`), what the
-/// picture is of (`alt_text`), which still stands in for a clip that is
-/// not playing (`cover`), and whether that still was chosen or taken
-/// (`cover_taken`). Alt text rides here rather than staying Postgres-side
+/// The six fields are what a reader needs to render the asset honestly
+/// and to check it: which bytes (`digest`), what to read them as
+/// (`mime`), what the picture is of (`alt_text`), which still stands in
+/// for a clip that is not playing (`cover`), whether that still was
+/// chosen or taken (`cover_taken`), and which bytes the author's device
+/// sent (`upload_digest`). Alt text rides here rather than staying Postgres-side
 /// because it is what a blind reader *reads* — leaving it unwitnessed
 /// while the body is witnessed would make the accessible rendering the
 /// only one a reader cannot check against the record.
@@ -57,6 +60,19 @@ pub const MEDIA_DIGEST_LEN: usize = 32;
 /// it qualifies: absent without a cover, and absent (never an in-band
 /// `false`) when the author chose the still themselves.
 ///
+/// `digest` and `upload_digest` are the two halves of one witness. The
+/// first is the **rendition digest**: the server's hash of the bytes the
+/// asset serves, so a reader can check what it was shown. The second is
+/// the **upload digest**: the device's hash of the bytes it sent, after
+/// its own metadata strip, so the record also says what the author
+/// handed over. They are equal for an asset stored as it arrived and
+/// differ for a clip the server re-encoded. The server keeps no raw
+/// original, so the upload digest is the only trace of the author's own
+/// bytes once the re-encode replaces them. Both always ride: a prepare
+/// refuses an entry without the upload digest
+/// ([`MediaAsset::admit_at_prepare`]). The reader tolerates its absence,
+/// because payloads landed before the field existed carry none.
+///
 /// Everything a server measured — aspect ratio, byte size, duration —
 /// stays out: the author signs what they wrote, never a measurement.
 /// Gallery order is the array position, so no index rides that could
@@ -68,6 +84,7 @@ pub struct MediaAsset {
     pub alt_text: Option<String>,
     pub cover: Option<[u8; MEDIA_DIGEST_LEN]>,
     pub cover_taken: bool,
+    pub upload_digest: Option<[u8; MEDIA_DIGEST_LEN]>,
 }
 
 impl MediaAsset {
@@ -84,7 +101,21 @@ impl MediaAsset {
         if self.cover_taken {
             map.insert(ASSET_KEY_COVER_TAKEN, Value::Bool(true));
         }
+        if let Some(upload_digest) = &self.upload_digest {
+            map.insert(ASSET_KEY_UPLOAD_DIGEST, Value::Bytes(upload_digest.to_vec()));
+        }
         Value::Map(map)
+    }
+
+    /// The prepare-side half of "always both": an entry a prepare is about
+    /// to stage must carry the upload digest. The decoder cannot be the one
+    /// to refuse it, because landed history from before the field existed
+    /// lacks it and still has to read.
+    pub(super) fn admit_at_prepare(&self) -> Result<(), EnvelopeError> {
+        if self.upload_digest.is_none() {
+            return Err(EnvelopeError::Guild("media entry without an upload digest"));
+        }
+        Ok(())
     }
 
     /// One entry's admission. Unknown keys are refused rather than
@@ -96,7 +127,7 @@ impl MediaAsset {
             return Err(EnvelopeError::Guild("media entry must be a map"));
         };
         for key in map.keys() {
-            if *key > ASSET_KEY_COVER_TAKEN {
+            if *key > ASSET_KEY_UPLOAD_DIGEST {
                 return Err(EnvelopeError::Guild("unknown media entry field"));
             }
         }
@@ -149,12 +180,20 @@ impl MediaAsset {
                 }
             }
         };
+        let upload_digest = match map.get(&ASSET_KEY_UPLOAD_DIGEST) {
+            None => None,
+            Some(Value::Bytes(upload)) => Some(upload.as_slice().try_into().map_err(|_| {
+                EnvelopeError::Guild("media upload digest must be 32 bytes")
+            })?),
+            Some(_) => return Err(EnvelopeError::Guild("media upload digest must be a digest")),
+        };
         Ok(Self {
             digest,
             mime,
             alt_text,
             cover,
             cover_taken,
+            upload_digest,
         })
     }
 }
