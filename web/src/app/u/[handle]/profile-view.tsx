@@ -28,7 +28,7 @@ import {
   type RecordRow,
 } from "@/lib/api/profile-api";
 import { useAuthGuard } from "@/lib/session/runtime";
-import { useAuthPhase } from "@/lib/session/provider";
+import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { StatusBanners } from "@/app/status-banners";
 import { MonogramAvatar } from "@/lib/ui/actor-chip";
 import { Button, buttonClassName } from "@/lib/ui/button";
@@ -43,6 +43,10 @@ import { useComfortLine } from "@/lib/saved/comfort-line";
 import { useHostSnack } from "@/lib/saved/save-row";
 import { RowLine } from "@/lib/ui/row-line";
 import { Snackbar } from "@/lib/ui/snackbar";
+import { backFor } from "@/lib/ui/back-origin";
+import { BellButton } from "@/lib/ui/cogra-band";
+import { notificationsHref } from "@/lib/notifications/origin";
+import { firstArrival, useBellLit, useFreshRootBell } from "@/lib/notifications/bell";
 import { ProfileMenu } from "./profile-menu";
 
 const FILTERS: readonly { key: ChronicleFilter; label: string }[] = [
@@ -71,6 +75,14 @@ export function ProfileScreen({
   const phase = useAuthPhase();
   const host = useScrollHost();
   const router = useRouter();
+  // THE BELL ON THE OWN PROFILE ROOT (Profile.md:3, :41): lit only on this
+  // root's fresh load — its first arrival in the page load — and never by a
+  // return (FeedUnread.md:3, :9).
+  const account = useActiveAccountId();
+  const reader = handle === null && phase === "signedIn" ? account : null;
+  const [freshRoot] = useState(() => firstArrival(reader, "profile"));
+  useFreshRootBell(reader, freshRoot);
+  const bellIsLit = useBellLit(reader);
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [own, setOwn] = useState(false);
@@ -211,20 +223,29 @@ export function ProfileScreen({
         <PageHeader
           inGutter
           title={profile ? `@${profile.handle}` : "Profile"}
-          backHref={handle === null ? undefined : from === "saved" ? "/saved" : "/feed"}
+          backHref={handle === null ? undefined : backFor(from).href}
           backScroll={false}
-          backLabel={from === "saved" ? "Back to Saved" : "Back to feed"}
+          backLabel={backFor(from).label}
           backTestId="profile-back"
           action={
             own ? (
-              <Link
-                href="/settings"
-                aria-label="Settings"
-                data-testid="profile-settings"
-                className={buttonClassName({ variant: "text", size: "sm" })}
-              >
-                Settings
-              </Link>
+              <span className="flex items-center">
+                <Link
+                  href="/settings"
+                  aria-label="Settings"
+                  data-testid="profile-settings"
+                  className={buttonClassName({ variant: "text", size: "sm" })}
+                >
+                  Settings
+                </Link>
+                {/* The bell rides the own profile ROOT only, right-most — the
+                    header is not yet the drawn band (N3 conformance). */}
+                {handle === null && (
+                  <BellButton
+                    bell={{ lit: bellIsLit, onOpen: () => router.push(notificationsHref("profile")) }}
+                  />
+                )}
+              </span>
             ) : undefined
           }
         />

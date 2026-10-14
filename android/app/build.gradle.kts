@@ -153,6 +153,7 @@ dependencies {
     implementation(project(":feature:invites"))
     implementation(project(":feature:profile"))
     implementation(project(":feature:saved"))
+    implementation(project(":feature:notifications"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:stance"))
     implementation(project(":feature:topics"))
