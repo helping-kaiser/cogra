@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -309,7 +309,9 @@ private fun PickedSheetRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(Layout.PickedRowHeight)
+            // A minimum, as the master draws it (`minHeight: 68px`): a row whose
+            // move twins wrap grows rather than clipping them.
+            .heightIn(min = Layout.PickedRowHeight)
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
             .semantics { customActions = moves },
         verticalAlignment = Alignment.CenterVertically,
