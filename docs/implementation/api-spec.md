@@ -2512,22 +2512,27 @@ type Query {
 
   "Global search across nodes; returns a `SearchResult` per edge. Recall is
    lexical over the indexed name-class fields and post titles — an
-   untitled post is never matched by its words; order is exact-match
-   tier first, then newest first — viewer-independent, the backend
-   never graph-ranks (feed-ranking.md §11). A ranker may re-order
-   fetched results by the viewer's feed metric. Served kinds grow
-   with the slices: USER, POST, HASHTAG unscoped; COMMENT is always a
-   valid kind but is served only under a scope operator (`@handle`,
-   `#tag`) — unscoped, it contributes no rows, never an error.
-   COLLECTIVE, CHAT, CHAT_MESSAGE, ITEM and OFFER join with their
-   slices and read empty until then. An empty `kinds` list means the
-   same as null (no narrowing). `includeSeen: false` drops nodes
-   on the viewer's seen-list (`User.viewHistory`); it needs a session
-   and is ignored without one. Full semantics in the Search section."
+   untitled post is never matched by its words. Order is exact-match
+   tier first, then newest first — viewer-independent — unless
+   `order: RANKED`, where the server's ranker container orders the
+   matches inside `viewer`'s slice, each tier by its ranker, and the
+   rest follow behind the seam, newest first; ranking never runs in the
+   backend process (feed-ranking.md §11). `order: RANKED` needs
+   `viewer`. Served kinds grow with the slices: USER, POST, HASHTAG
+   unscoped; COMMENT is always a valid kind but is served only under a
+   scope operator (`@handle`, `#tag`) — unscoped, it contributes no
+   rows, never an error. COLLECTIVE, CHAT, CHAT_MESSAGE, ITEM and OFFER
+   join with their slices and read empty until then. An empty `kinds`
+   list means the same as null (no narrowing). `includeSeen: false`
+   drops nodes on the reader's seen-list (`User.viewHistory`); it needs
+   a session and is ignored without one. Full semantics in the Search
+   section."
   search(
     query: String!
     kinds: [NodeKind!]
     includeSeen: Boolean = true
+    order: ReadOrder = NEWEST
+    viewer: UUID
     first: Int, after: String, last: Int, before: String
   ): SearchConnection!
 
@@ -2797,22 +2802,30 @@ A blank query returns an empty connection, never an error. A query
 longer than 640 characters is BAD_INPUT. Only a leading `@handle`
 or `#tag` scopes; elsewhere those characters are text.
 
-**Order.** Backend order is exact-match tier first — a result
-whose indexed field equals the query case-insensitively — then
-newest first, by the node's `createdAt`; a Hashtag, which carries
-no date, by its registry entry's age (not served). Both keys are viewer-independent: the backend never
-ranks by graph
+**Order.** `NEWEST`, the default, is exact-match tier first — a
+result whose indexed field equals the query case-insensitively —
+then newest first, by the node's `createdAt`; a Hashtag, which
+carries no date, by its registry entry's age (not served). Both keys
+are viewer-independent.
+
+`RANKED` orders by `viewer`'s feed score, and ranking never runs in
+the backend process
 ([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)).
-Graph-blended ordering is the ranker's option, the same split as
-the feed: the client or delegated miner re-orders the fetched
-candidates by the viewer's feed metric where the match is in the
-viewer's slice; matches outside the slice keep the recency order,
-which is the sort cascade's deepest fallback anyway
-([feed-ranking.md §7](../primitive/feed-ranking.md#7-sort-order-tie-breakers-zero-jail)).
-The delegated form is the miner's `rankSearch` operation
-([miner-api.md](miner-api.md)).
-The no-AI rule applies to search ranking as much as to feeds.
-`chatSearch` is always newest first.
+The candidates are the matches inside `viewer`'s slice: a globally
+ranked tier cannot come from re-ranking page by page, and the slice
+is viewer-bounded, so the candidate set is too, however many matches
+the query has. The server's ranker container orders them through its
+`rankSearch` operation ([miner-api.md](miner-api.md)); each tier
+keeps the ranker's order, the exact-match tier first, and every
+ranked edge carries its `score`. What the ranker cannot score — a
+match outside the slice, or one no live path reaches — follows
+behind the seam in the `NEWEST` order, `score` null. A `viewer` that
+resolves to no rankable actor ranks nothing, so every match stands
+behind the seam; with the ranker container unreachable the read is
+`INTERNAL`, never an all-seam list. Paging reuses the first page's
+pinned epoch, carried inside the opaque cursor, so the order never
+reshuffles across pages. The no-AI rule applies to search ranking as
+much as to feeds. `chatSearch` is always newest first.
 
 **Moderation.** `sensitive`-classified fields stay indexed and
 matchable; a result carries its per-field status and the frontend
@@ -2841,6 +2854,20 @@ type SearchConnection {
 type SearchEdge {
   cursor: String!
   node: SearchResult!
+  "The viewer's feed score of the result, S(viewer, result)
+   (feed-ranking.md §6.1), under `order: RANKED`. Null past the seam —
+   a match outside the viewer's slice, or one no live path reaches —
+   and on every row under `NEWEST`."
+  score: Float
+}
+
+"How a read orders what it serves: by the viewer's ranker, or by time."
+enum ReadOrder {
+  "The viewer's ranker orders what their slice reaches; the rest
+   follows behind, newest first."
+  RANKED
+  "Newest first, viewer-independent."
+  NEWEST
 }
 type ChatMessageConnection {
   edges: [ChatMessageEdge!]!

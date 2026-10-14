@@ -29,7 +29,7 @@ use common::l1::identifier::{ActId, NodeId};
 use postgres_store::content::{self, LandingOrder};
 use postgres_store::{genesis, hashtag, mirror};
 use rig::WireRig;
-use rig::pod::{Mode, StubPod, ranking};
+use rig::pod::{Mode, StubPod, ranking, search_ranking};
 use serde_json::{Value, json};
 use sqlx::PgPool;
 use std::collections::BTreeSet;
@@ -2732,4 +2732,436 @@ fn no_query_reaches_session_material() {
         from_mutations.contains(&"AuthSession.accessToken".to_string()),
         "{from_mutations:?}"
     );
+}
+
+/// Ranked search (RF-4; ranked-feed-api §4.8): the in-slice candidate
+/// bound, the pod's order, the seam, and the pin the cursor carries.
+const SEARCH: &str = r#"query($q: String!, $order: ReadOrder, $viewer: UUID,
+                          $first: Int, $after: String, $last: Int, $before: String) {
+  search(query: $q, order: $order, viewer: $viewer,
+         first: $first, after: $after, last: $last, before: $before) {
+    totalCount
+    edges { cursor score node { __typename ... on Post { id } } }
+    pageInfo { hasNextPage hasPreviousPage startCursor endCursor }
+  }
+}"#;
+
+/// A landed post by `author` with its own title, created `secs` into the
+/// fixture's day — the search index's newest-first key.
+async fn titled_post(
+    pool: &PgPool,
+    author: Uuid,
+    node: &NodeId,
+    epoch: i64,
+    title: &str,
+    secs: i64,
+) -> Uuid {
+    let id = Uuid::new_v4();
+    let mut tx = pool.begin().await.expect("tx");
+    content::insert_post(
+        &mut tx,
+        id,
+        author,
+        &node.to_string(),
+        "a=0;o=0",
+        Some(LandingOrder {
+            landed_epoch: epoch,
+            act_time: epoch * 100,
+            position: 0,
+        }),
+        chrono::DateTime::from_timestamp(1_800_000_000 + secs, 0).expect("instant"),
+        Some(title),
+        None,
+        "a body",
+        None,
+    )
+    .await
+    .expect("post");
+    tx.commit().await.expect("commit");
+    id
+}
+
+/// The search fixture. `v` holds an opinion of `a`, so `a`'s two posts
+/// lie in v's slice; `b`'s post matches too but no path of v's reaches it.
+/// Every title matches `salt`; only `salt` itself is an exact match.
+struct SearchFixture {
+    viewer: Uuid,
+    /// a's "salt maps", the oldest match (tier 1, in the slice).
+    near: Uuid,
+    /// a's "salt" (tier 0, in the slice).
+    near_exact: Uuid,
+    /// b's "salt flats", the newest match (tier 1, outside the slice).
+    far: Uuid,
+}
+
+async fn search_fixture(pool: &PgPool) -> SearchFixture {
+    let viewer = person(pool, "v", "user").await;
+    let a = person(pool, "a", "user").await;
+    let b = person(pool, "b", "user").await;
+    land(
+        pool,
+        ["v", "a", "b"]
+            .into_iter()
+            .map(|h| binary(h, 0, Family::Registration, prof(h)))
+            .collect(),
+    )
+    .await;
+    let (p1, p2, pb) = (
+        minted("a", 1, Family::Publish),
+        minted("a", 2, Family::Publish),
+        minted("b", 1, Family::Publish),
+    );
+    let epoch = land(
+        pool,
+        vec![
+            binary("v", 1, Family::Opinion, prof("a")),
+            binary("a", 1, Family::Publish, p1.clone()),
+            binary("a", 2, Family::Publish, p2.clone()),
+            binary("b", 1, Family::Publish, pb.clone()),
+        ],
+    )
+    .await;
+    SearchFixture {
+        viewer,
+        near: titled_post(pool, a, &p1, epoch, "salt maps", 1).await,
+        near_exact: titled_post(pool, a, &p2, epoch, "salt", 2).await,
+        far: titled_post(pool, b, &pb, epoch, "salt flats", 3).await,
+    }
+}
+
+async fn search_raw(rig: &WireRig, variables: Value) -> Value {
+    rig.gql_raw(None, SEARCH, variables).await
+}
+
+async fn search(rig: &WireRig, variables: Value) -> Value {
+    rig.gql(None, SEARCH, variables).await["search"].clone()
+}
+
+/// The page's rows as (post id, score).
+fn scored(page: &Value) -> Vec<(Uuid, Option<f64>)> {
+    page["edges"]
+        .as_array()
+        .expect("edges")
+        .iter()
+        .map(|edge| {
+            (
+                edge["node"]["id"]
+                    .as_str()
+                    .expect("a post id")
+                    .parse()
+                    .expect("uuid"),
+                edge["score"].as_f64(),
+            )
+        })
+        .collect()
+}
+
+/// The candidates the pod was last asked to rank.
+fn sent_search_candidates(pod: &StubPod) -> HashSet<Uuid> {
+    pod.last_variables()["candidates"]
+        .as_array()
+        .expect("candidates")
+        .iter()
+        .map(|c| c.as_str().expect("uuid").parse().expect("uuid"))
+        .collect()
+}
+
+/// `order: RANKED` ranks for a named view; with none it is refused, never
+/// served as some default view's ranking.
+///
+/// A ranked search without a viewer is BAD_INPUT.
+/// ´claim:search:ranked-needs-a-viewer´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_without_a_viewer_is_bad_input(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(search_ranking(&[]))).await;
+    search_fixture(&rig.pool).await;
+    let response = search_raw(&rig, json!({ "q": "salt", "order": "RANKED" })).await;
+    assert_eq!(codes(&response), vec!["BAD_INPUT"]);
+    assert!(pod.requests().is_empty());
+}
+
+/// No silent fallback (§4.8, the §4.5 law): a seam over every row would
+/// label all of them "beyond your reach", so the pod's absence is the
+/// drawn fault instead.
+///
+/// A ranked search with the ranker down is INTERNAL, never an all-seam list.
+/// ´claim:search:ranked-with-the-ranker-down-is-internal´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_with_the_ranker_down_is_internal(pool: PgPool) {
+    let closed = {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("bind");
+        listener.local_addr().expect("addr")
+    };
+    let rig = WireRig::with_ranker(
+        pool,
+        RateLimitConfig::unlimited(),
+        &RankerConfig {
+            url: format!("http://{closed}/graphql"),
+            ..RankerConfig::default()
+        },
+    );
+    let f = search_fixture(&rig.pool).await;
+    let (_guard, logs) = Logs::capture();
+    let response = search_raw(
+        &rig,
+        json!({ "q": "salt", "order": "RANKED", "viewer": f.viewer }),
+    )
+    .await;
+    assert_eq!(codes(&response), vec!["INTERNAL"]);
+    assert!(response["data"].is_null(), "{response}");
+    assert!(logs.text().contains("unreachable"), "{}", logs.text());
+}
+
+/// The candidate bound (§4.8 step 1): the pod is handed exactly the
+/// matches inside the viewer's slice at the pin, never a match outside it,
+/// however many the query has.
+///
+/// Ranked search hands the pod only the matches inside the viewer's slice, at the pin.
+/// ´claim:search:the-candidates-are-the-in-slice-matches´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_sends_only_the_matches_inside_the_viewers_slice(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(search_ranking(&[]))).await;
+    let f = search_fixture(&rig.pool).await;
+    let pin = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
+    search(
+        &rig,
+        json!({ "q": "salt", "order": "RANKED", "viewer": f.viewer }),
+    )
+    .await;
+    assert_eq!(
+        sent_search_candidates(&pod),
+        HashSet::from([f.near, f.near_exact])
+    );
+    assert_eq!(pod.last_variables()["viewer"], json!(f.viewer));
+    assert_eq!(pod.last_variables()["asOfEpoch"], json!(pin));
+}
+
+/// The pod's order is the head's order, scores carried as the pod gave
+/// them; every match the ranker cannot score follows behind, newest first,
+/// with no score. "sal" equals no title, so every match is a partial
+/// match and the head is one tier.
+///
+/// Ranked search serves the pod's order, then the unscored matches behind the seam, newest first.
+/// ´claim:search:the-pods-order-then-the-seam´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_orders_the_head_by_the_pod_and_the_rest_behind_the_seam(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = search_fixture(&rig.pool).await;
+    pod.set(Mode::Answer(search_ranking(&[
+        (f.near, "POST", 0.2),
+        (f.near_exact, "POST", 0.9),
+    ])));
+    let page = search(
+        &rig,
+        json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer }),
+    )
+    .await;
+    assert_eq!(
+        scored(&page),
+        vec![
+            (f.near, Some(0.2)),
+            (f.near_exact, Some(0.9)),
+            (f.far, None)
+        ]
+    );
+    assert_eq!(page["totalCount"], json!(3));
+}
+
+/// The tiers are the query's, not the ranker's (ExploreSearch.md:5): a
+/// full match stands before a partial one even when the ranker scored the
+/// partial one higher, and inside each tier the pod's order stands.
+///
+/// Under ranked search an exact match still leads, each tier in the pod's order.
+/// ´claim:search:the-exact-tier-leads-the-ranked-head´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_keeps_the_exact_match_tier_first(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = search_fixture(&rig.pool).await;
+    pod.set(Mode::Answer(search_ranking(&[
+        (f.near, "POST", 0.9),
+        (f.near_exact, "POST", 0.2),
+    ])));
+    let page = search(
+        &rig,
+        json!({ "q": "salt", "order": "RANKED", "viewer": f.viewer }),
+    )
+    .await;
+    assert_eq!(
+        scored(&page),
+        vec![
+            (f.near_exact, Some(0.2)),
+            (f.near, Some(0.9)),
+            (f.far, None)
+        ]
+    );
+}
+
+/// An in-slice match no live path reaches is absent from the pod's
+/// answer, not zero-scored: it stands behind the seam with the
+/// out-of-slice matches, in the matcher's order.
+///
+/// A candidate the ranker leaves absent stands behind the seam, unscored.
+/// ´claim:search:an-unreached-candidate-stands-behind-the-seam´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_candidate_the_pod_leaves_absent_stands_behind_the_seam(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = search_fixture(&rig.pool).await;
+    pod.set(Mode::Answer(search_ranking(&[(f.near, "POST", 0.5)])));
+    let page = search(
+        &rig,
+        json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer }),
+    )
+    .await;
+    assert_eq!(
+        scored(&page),
+        vec![(f.near, Some(0.5)), (f.far, None), (f.near_exact, None)]
+    );
+}
+
+/// Paging reuses the pin (§4.8 "Paging"): the cursor carries the first
+/// page's epoch, every later page asks the pod at it even after a new
+/// epoch lands, and the pages join into the one order with no row twice.
+///
+/// A ranked search's later pages rank at the first page's pin.
+/// ´claim:search:ranked-pages-reuse-the-pin´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_pages_reuse_the_pin(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = search_fixture(&rig.pool).await;
+    pod.set(Mode::Answer(search_ranking(&[
+        (f.near_exact, "POST", 0.9),
+        (f.near, "POST", 0.2),
+    ])));
+    let pin = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
+    let variables = |after: Value| json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer, "first": 1, "after": after });
+    let first = search(&rig, variables(Value::Null)).await;
+    land(&rig.pool, vec![binary("v", 9, Family::Opinion, prof("b"))]).await;
+    let second = search(&rig, variables(first["pageInfo"]["endCursor"].clone())).await;
+    let third = search(&rig, variables(second["pageInfo"]["endCursor"].clone())).await;
+    assert_eq!(scored(&first), vec![(f.near_exact, Some(0.9))]);
+    assert_eq!(scored(&second), vec![(f.near, Some(0.2))]);
+    assert_eq!(scored(&third), vec![(f.far, None)]);
+    assert_eq!(third["pageInfo"]["hasNextPage"], json!(false));
+    assert_eq!(second["pageInfo"]["hasPreviousPage"], json!(true));
+    let pins: Vec<Value> = pod
+        .requests()
+        .iter()
+        .map(|r| r["variables"]["asOfEpoch"].clone())
+        .collect();
+    assert_eq!(pins, vec![json!(pin); 3]);
+}
+
+/// Walking backward crosses the seam the other way: the last rows are
+/// the tail's, and the page before the tail's head reaches into the
+/// ranked head.
+///
+/// A ranked search walks backward across the seam in the same order.
+/// ´claim:search:ranked-walks-back-across-the-seam´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_walks_back_across_the_seam(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = search_fixture(&rig.pool).await;
+    pod.set(Mode::Answer(search_ranking(&[
+        (f.near_exact, "POST", 0.9),
+        (f.near, "POST", 0.2),
+    ])));
+    let last = search(
+        &rig,
+        json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer, "last": 2 }),
+    )
+    .await;
+    assert_eq!(scored(&last), vec![(f.near, Some(0.2)), (f.far, None)]);
+    assert_eq!(last["pageInfo"]["hasPreviousPage"], json!(true));
+    let before = search(
+        &rig,
+        json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer,
+                "last": 2, "before": last["pageInfo"]["startCursor"] }),
+    )
+    .await;
+    assert_eq!(scored(&before), vec![(f.near_exact, Some(0.9))]);
+    assert_eq!(before["pageInfo"]["hasPreviousPage"], json!(false));
+    assert_eq!(before["pageInfo"]["hasNextPage"], json!(true));
+}
+
+/// Search must still find (PR-3's spirit): a viewer resolving to no
+/// rankable actor ranks nothing, so every match stands behind the seam —
+/// and the pod, which could only answer NOT_FOUND, is never called.
+///
+/// Ranked search for an unrankable viewer lists every match past the seam.
+/// ´claim:search:an-unrankable-viewer-lists-every-match-past-the-seam´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_for_an_unrankable_viewer_lists_every_match_past_the_seam(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(search_ranking(&[]))).await;
+    let f = search_fixture(&rig.pool).await;
+    let page = search(
+        &rig,
+        json!({ "q": "sal", "order": "RANKED", "viewer": Uuid::new_v4() }),
+    )
+    .await;
+    assert_eq!(
+        scored(&page),
+        vec![(f.far, None), (f.near_exact, None), (f.near, None)]
+    );
+    assert!(pod.requests().is_empty());
+}
+
+/// The relay adopts no answer it cannot place: an entry that was never a
+/// candidate, an entry ranked twice, or an answer at another epoch than
+/// the pin is a relay-visible fault, logged, never served.
+///
+/// A malformed pod search answer is INTERNAL and logged.
+/// ´claim:search:a-malformed-search-answer-is-internal´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_malformed_pod_search_answer_is_internal_and_logged(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = search_fixture(&rig.pool).await;
+    let pin = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
+    let mut wrong_epoch = search_ranking(&[(f.near, "POST", 0.5)]);
+    wrong_epoch["asOfEpoch"] = json!(pin - 1);
+    for answer in [
+        search_ranking(&[(f.far, "POST", 0.5)]),
+        search_ranking(&[(f.near, "POST", 0.5), (f.near, "POST", 0.4)]),
+        wrong_epoch,
+    ] {
+        pod.set(Mode::Answer(answer));
+        let (_guard, logs) = Logs::capture();
+        let response = search_raw(
+            &rig,
+            json!({ "q": "salt", "order": "RANKED", "viewer": f.viewer }),
+        )
+        .await;
+        assert_eq!(codes(&response), vec!["INTERNAL"], "{response}");
+        assert!(logs.text().contains("malformed"), "{}", logs.text());
+    }
+}
+
+/// `NEWEST` stays the viewer-independent order it always was: no score on
+/// any row, and no ranking requested.
+///
+/// A Newest search carries no score and never calls the ranker.
+/// ´claim:search:newest-never-calls-the-ranker´
+#[sqlx::test(migrations = "../../migrations")]
+async fn newest_search_carries_no_score_and_never_calls_the_ranker(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(search_ranking(&[]))).await;
+    let f = search_fixture(&rig.pool).await;
+    for order in [Value::Null, json!("NEWEST")] {
+        let page = search(
+            &rig,
+            json!({ "q": "salt", "order": order, "viewer": f.viewer }),
+        )
+        .await;
+        assert_eq!(
+            scored(&page),
+            vec![(f.near_exact, None), (f.far, None), (f.near, None)]
+        );
+    }
+    assert!(pod.requests().is_empty());
 }

@@ -13,6 +13,7 @@ pub mod feed;
 mod mutation;
 pub mod notifications;
 mod query;
+pub mod ranked_search;
 pub mod types;
 
 use std::sync::Arc;

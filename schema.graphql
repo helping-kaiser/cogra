@@ -3153,21 +3153,23 @@ type Query {
 	"""
 	Global search across nodes; returns a `SearchResult` per edge.
 	Recall is lexical over the indexed name-class fields and post
-	titles — an untitled post is never matched by its words; order is
-	exact-match tier first, then newest first — viewer-independent,
-	the backend never graph-ranks (feed-ranking.md §11). A ranker may
-	re-order fetched results by the viewer's feed metric. Served kinds
-	grow with the slices: USER, POST, HASHTAG unscoped; COMMENT is
-	always a valid kind but is served only under a scope operator
-	(`@handle`, `#tag`) — unscoped, it contributes no rows, never an
-	error. COLLECTIVE, CHAT, CHAT_MESSAGE, ITEM and OFFER join with
-	their slices and read empty until then. An empty `kinds` list
-	means the same as null (no narrowing). `includeSeen: false` drops
-	nodes on the viewer's seen-list (`User.viewHistory`); it needs a
-	session and is ignored without one. Full semantics in the Search
-	section.
+	titles — an untitled post is never matched by its words. Order is
+	exact-match tier first, then newest first — viewer-independent —
+	unless `order: RANKED`, where the server's ranker container orders
+	the matches inside `viewer`'s slice, each tier by its ranker, and
+	the rest follow behind the seam, newest first; ranking never runs
+	in the backend process (feed-ranking.md §11). `order: RANKED`
+	needs `viewer`. Served kinds grow with the slices: USER, POST,
+	HASHTAG unscoped; COMMENT is always a valid kind but is served
+	only under a scope operator (`@handle`, `#tag`) — unscoped, it
+	contributes no rows, never an error. COLLECTIVE, CHAT,
+	CHAT_MESSAGE, ITEM and OFFER join with their slices and read empty
+	until then. An empty `kinds` list means the same as null (no
+	narrowing). `includeSeen: false` drops nodes on the reader's
+	seen-list (`User.viewHistory`); it needs a session and is ignored
+	without one. Full semantics in the Search section.
 	"""
-	search(query: String!, kinds: [NodeKind!], includeSeen: Boolean = true, first: Int, after: String, last: Int, before: String): SearchConnection!
+	search(query: String!, kinds: [NodeKind!], includeSeen: Boolean = true, order: ReadOrder = NEWEST, viewer: UUID, first: Int, after: String, last: Int, before: String): SearchConnection!
 	"""
 	The chronological listing (roadmap "Slice 2"): every post,
 	newest-first — pending entries, then landed entries in landing
@@ -3228,6 +3230,21 @@ type Query {
 	anonymously; served in `released_at` order.
 	"""
 	appVersions(component: AppComponent, first: Int, after: String, last: Int, before: String): AppVersionConnection!
+}
+
+"""
+How a read orders what it serves: by the viewer's ranker, or by time.
+"""
+enum ReadOrder {
+	"""
+	The viewer's ranker orders what their slice reaches; the rest
+	follows behind, newest first.
+	"""
+	RANKED
+	"""
+	Newest first, viewer-independent.
+	"""
+	NEWEST
 }
 
 type Record {
@@ -3789,6 +3806,13 @@ type SearchEdge {
 	The item at the end of the edge
 	"""
 	node: SearchResult!
+	"""
+	The viewer's feed score of the result, S(viewer, result)
+	(feed-ranking.md §6.1), under `order: RANKED`. Null past the seam —
+	a match outside the viewer's slice, or one no live path reaches —
+	and on every row under `NEWEST`.
+	"""
+	score: Float
 	"""
 	A cursor for use in pagination
 	"""
