@@ -300,6 +300,26 @@ class PostEditViewModelTest {
         assertThat(content.lastEditAttachments).isEmpty()
     }
 
+    // EditPicked.md: NEVER the signed edit carries a description — not even one
+    // the author retyped earlier in this same edit, before the last picture left.
+    @Test
+    fun aDescriptionStagedBeforeTheFlipIsDroppedWithTheLastPicture() = runTest(dispatcher) {
+        content.loadedAttachments = listOf(picture("m1"), picture("m2"))
+        content.loadedDescription = "Rubbings at low tide."
+        val vm = opened()
+        vm.onDescriptionChange("Typed in this edit.")
+        vm.onRemovePicture(1)
+        assertThat(vm.state.value.description).isEqualTo("Typed in this edit.")
+        vm.onRemovePicture(0)
+
+        assertThat(vm.state.value.mediaBody).isFalse()
+        assertThat(vm.state.value.description).isEmpty()
+        vm.onBodyChange("Now it is words.")
+        vm.signed()
+        assertThat(content.lastEdit).containsExactly("p1", "Loaded title", null, "Now it is words.").inOrder()
+        assertThat(content.lastEditAttachments).isEmpty()
+    }
+
     @Test
     fun describingAPictureStagesTheRecordAndRidesItsPlacement() = runTest(dispatcher) {
         content.loadedAttachments = listOf(picture("m1"))
