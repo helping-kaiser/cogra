@@ -1,63 +1,90 @@
 "use client";
 
-// SAVED — everything the reader kept, in one list (Saved.md, SavedUndo.md,
-// SavedEmpty.md; design/designs/canonical/screens/Saved.jsx). Reached from the
-// reader's own profile's ⋮.
+// SAVED — everything the reader kept, as a feed (Saved.md, SavedUndo.md,
+// SavedEmpty.md, SavedNone.md; design/designs/canonical/screens/Saved.jsx,
+// round 12). Reached from the reader's own profile's ⋮.
 //
-// ONE MIXED LIST, newest first by when the reader saved each thing, with no
-// kind label, filter or heading: the disc says what a row is. Every row
-// carries its own Unsave — the filled bookmark, no word on screen, in the
-// chevron's slot outboard of the age.
+// ONE MIXED LIST, EACH THING AS ITS KIND'S OWN FEED CARD: a post as the
+// feed's `PostCard`, a comment as the `CommentFeedCard`, a person as the
+// `ProfileFeedCard` — unchanged and fully live, so the opinion, the kind's own
+// act and the share answer here exactly as on the feed. No card anatomy is
+// this page's own: no age of the save, no kind label, no heading, no saved
+// mark and no unsave control of Saved's own (the quiet-card law).
+//
+// NEWEST FIRST, BY WHEN THE READER SAVED EACH THING — never by when it was
+// written or seen, and never by score.
+//
+// THE UNSAVE IS THE CARD'S OWN SAVE. Every card's ⋮ leads with `Save` /
+// `Unsave`, and here every card is kept, so the row reads `Unsave`: the sheet
+// closes, the card leaves, the cards behind it move up, and `Removed from
+// Saved.` with `Undo` answers on this page's snackbar.
 //
 // THE LIST IS THE LAST READ WITH THE READER'S OWN ACTS LAID OVER IT
-// (`SavedWrites`). That one rule carries three drawn behaviours: an unsave
-// here takes the row out at the tap and Undo puts it back in its place (the
-// loaded page still holds it); an unsave made inside a page opened from here
-// is gone on return, with no snackbar (design digest item 57); and a revert
-// brings the row back where it stood.
+// (`SavedWrites`). That one rule carries the rest: Undo puts the card back in
+// its place (the loaded page still holds it); an unsave made inside a page
+// opened from here is gone on return, with no snackbar; a failed unsave brings
+// the card back carrying `That didn't go through.` with Retry; a failed Undo's
+// card stays on screen carrying that line.
 //
-// A comfort that did not go through says so in the row's own slots (design
-// digest item 46): the second line carries `That didn't go through.` and
-// `Retry`, and the Unsave stays. A failed Undo's row STAYS on screen carrying
-// that line (item 47) — the reader asked for it back, and the line says why it
-// is not, yet.
+// SEARCH ON TOP: the one search rule, over the saved set (`saved-search.ts`).
+// A search that finds nothing is SavedNone; a reader who has kept nothing
+// meets SavedEmpty, which draws no field.
+//
+// A HIDDEN ACCOUNT'S THINGS STAY: the hidden list is the feed's, not this
+// one's (ruling 49d), so nothing here reads the hidden set.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
-import { fetchSavedPage, type SavedEntry } from "@/lib/api/saved-api";
+import { CommentsSheet } from "@/app/comments/comments-sheet";
+import type { PostView } from "@/lib/api/content-api";
 import { appendDeduped } from "@/lib/api/pagination";
+import { fetchSavedPage, type SavedEntry, type SavedPost } from "@/lib/api/saved-api";
 import { useSavedWrites } from "@/lib/saved/provider";
-import { REMOVED_FROM_SAVED, UNDO, useHostSnack } from "@/lib/saved/save-row";
-import { savedRow } from "@/lib/saved/row-content";
+import { useHostSnack } from "@/lib/saved/save-row";
+import { searchableOf } from "@/lib/saved/saved-node";
+import { matches, parseQuery } from "@/lib/saved/saved-search";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { Button } from "@/lib/ui/button";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
-import { instance, part, type DataNode } from "@/lib/ui/data-node";
-import { Icon } from "@/lib/ui/icons";
+import { CommentFeedCard } from "@/lib/ui/comment-feed-card";
 import { tailIndexOf, useApproachingTail } from "@/lib/ui/infinite-list";
 import { PageHeader } from "@/lib/ui/page-header";
+import { PostCard } from "@/lib/ui/post-card";
+import { ProfileFeedCard } from "@/lib/ui/profile-feed-card";
 import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
-import { RowLine } from "@/lib/ui/row-line";
-import { useScrollHost } from "@/lib/ui/scroll-host";
+import { scrollHostToTopAnimated, useScrollHost } from "@/lib/ui/scroll-host";
+import { LINK_COPIED } from "@/lib/ui/share";
 import { Snackbar } from "@/lib/ui/snackbar";
-import { ladderAge } from "@/lib/ui/timestamp";
 import { TransportError } from "@/lib/ui/transport-error";
-import { ContentRow } from "@/lib/ui2/content-row";
+import { StageHost } from "@/lib/ui2/media/stage-host";
+import { PostMenuHost } from "@/lib/ui2/post-menu-host";
+import { SearchBar } from "@/lib/ui2/search-bar";
 
 /** SavedEmpty.md:3, verbatim. */
 export const SAVED_EMPTY =
   "Nothing saved yet. A post, a comment or a person can be saved from its own menu, and it waits here.";
 
-/** The chronicle's load-more fault (design digest item 57; copy-voice). */
+/** SavedNone.md:3, verbatim. */
+export const SAVED_NONE =
+  "Nothing you've saved carries that name. Search reads names and titles, never bodies — fewer words reach further.";
+
+/** SavedNone.md:7 — the empty state's one action. */
+export const SHOW_EVERYTHING = "Show everything";
+
+/** Saved.jsx: the field's placeholder, naming the list it searches. */
+export const SEARCH_WHAT_YOU_SAVED = "Search what you saved";
+
+/** The chronicle's load-more fault (design digest item 57; Saved.md). */
 export const COULDNT_LOAD_MORE = "Couldn't load more";
 
-const LIST: DataNode = { path: "saved.list" };
+/** Where a card's doors say the reader came from: `Back to Saved`. */
+const FROM = "saved";
 
 type Entry = SavedEntry & { readonly id: string };
 
-function idOf(entry: SavedEntry): string {
-  return entry.node.id;
+function entriesOf(items: readonly SavedEntry[]): Entry[] {
+  return items.map((entry) => ({ ...entry, id: entry.node.id }));
 }
 
 export function SavedScreen() {
@@ -74,9 +101,50 @@ export function SavedScreen() {
   const [failed, setFailed] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [moreFailed, setMoreFailed] = useState(false);
+  const [query, setQuery] = useState("");
+  // The feed's own two hosted sheets: a post card's menu, and the thread its
+  // comment count raises — over this page, as over the feed.
+  const [menuPost, setMenuPost] = useState<PostView | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [commentsPost, setCommentsPost] = useState<PostView | null>(null);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [liveComments, setLiveComments] = useState<{ id: string; total: number } | null>(null);
   // Which read is live: a pull fires a new one, and the old one resolving
   // afterwards must not overwrite it.
   const request = useRef(0);
+
+  // A SEARCH READS THE WHOLE SAVED SET: the contract pages the list and takes
+  // no query, so a standing query walks the rest of it in, page by page —
+  // started by the query itself, and again by a fresh read while one stands.
+  const queryRef = useRef(query);
+  const walking = useRef(false);
+  const readRest = useCallback(
+    async (from: string | null, more: boolean) => {
+      if (walking.current || !more || from === null) return;
+      walking.current = true;
+      setLoadingMore(true);
+      setMoreFailed(false);
+      let cursor: string | null = from;
+      let next: boolean = more;
+      while (next && cursor !== null) {
+        const after: string = cursor;
+        const outcome = await guard.run(() => fetchSavedPage(client, after));
+        if (outcome.kind !== "success") {
+          // THE CARDS ON SCREEN STAY, and the fault ends the list (Saved.md).
+          setMoreFailed(true);
+          break;
+        }
+        setEntries((current) => appendDeduped(current, entriesOf(outcome.value.items)));
+        cursor = outcome.value.endCursor;
+        next = outcome.value.hasNextPage;
+        setEndCursor(cursor);
+        setHasNextPage(next);
+      }
+      setLoadingMore(false);
+      walking.current = false;
+    },
+    [client, guard],
+  );
 
   const read = useCallback(() => {
     const asked = (request.current += 1);
@@ -88,16 +156,19 @@ export function SavedScreen() {
         setFailed(true);
         return;
       }
-      // A FRESH LOAD: the rows' lines go (RowSigning.md:17), and the overlay
+      // A FRESH LOAD: the cards' lines go (RowSigning.md:17), and the overlay
       // steps aside for what the read now says.
       writes.settle();
       setFailed(false);
       setMoreFailed(false);
-      setEntries(outcome.value.items.map((entry) => ({ ...entry, id: idOf(entry) })));
+      setEntries(entriesOf(outcome.value.items));
       setEndCursor(outcome.value.endCursor);
       setHasNextPage(outcome.value.hasNextPage);
+      if (parseQuery(queryRef.current).kind !== "blank") {
+        void readRest(outcome.value.endCursor, outcome.value.hasNextPage);
+      }
     })();
-  }, [client, guard, writes]);
+  }, [client, guard, writes, readRest]);
 
   useEffect(() => {
     read();
@@ -106,8 +177,8 @@ export function SavedScreen() {
     };
   }, [read]);
 
-  // Saved pull-down on (design digest item 57): the platform's own refresh,
-  // through the same read the first arrival takes.
+  // Saved pull-down on (Saved.md): the platform's own refresh, through the
+  // same read the first arrival takes.
   const onPull = useCallback(() => {
     setLoading(true);
     read();
@@ -121,72 +192,74 @@ export function SavedScreen() {
     const outcome = await guard.run(() => fetchSavedPage(client, endCursor));
     setLoadingMore(false);
     if (outcome.kind !== "success") {
-      // THE ROWS ON SCREEN STAY, and the fault ends the list (Saved.md).
+      // THE CARDS ON SCREEN STAY, and the fault ends the list (Saved.md).
       setMoreFailed(true);
       return;
     }
-    setEntries((current) =>
-      appendDeduped(
-        current,
-        outcome.value.items.map((entry) => ({ ...entry, id: idOf(entry) })),
-      ),
-    );
+    setEntries((current) => appendDeduped(current, entriesOf(outcome.value.items)));
     setEndCursor(outcome.value.endCursor);
     setHasNextPage(outcome.value.hasNextPage);
   }, [client, guard, loadingMore, hasNextPage, endCursor]);
 
-  // What stands: what the reader has not dropped, plus a row whose Undo did
-  // not go through, which stays carrying its line.
-  const visible = entries.filter(
+  const parsed = parseQuery(query);
+  const searching = parsed.kind !== "blank";
+  const onQuery = (next: string) => {
+    queryRef.current = next;
+    setQuery(next);
+    if (parseQuery(next).kind !== "blank") void readRest(endCursor, hasNextPage);
+  };
+
+  // What the reader still keeps, plus a card whose Undo did not go through,
+  // which stays carrying its line.
+  const kept = entries.filter(
     (entry) =>
-      writes.kept(entry.id, entry.bookmarkedAt) !== null ||
-      writes.failure(entry.id)?.kind === "restore",
+      writes.kept(entry.id, entry.bookmarkedAt) !== null || writes.failure(entry.id)?.kind === "restore",
   );
+  const shown = kept.filter((entry) => {
+    const searchable = searchableOf(entry.node);
+    return searchable !== null && matches(searchable, parsed);
+  });
 
   const tailRef = useApproachingTail({
     root: host,
     onReach: () => void loadMore(),
     enabled: hasNextPage && !moreFailed,
   });
-  const tailIndex = tailIndexOf(visible.length);
+  const tailIndex = tailIndexOf(shown.length);
 
-  // FOCUS AFTER A ROW REMOVES ITSELF (Saved.md; the K13 focus law): the next
-  // row, else the previous, else the empty state.
-  const rowOpeners = useRef(new Map<string, HTMLElement>());
+  // FOCUS AFTER A CARD'S UNSAVE LANDS (Saved.md; the K13 focus law): the next
+  // card, else the previous, else the empty state.
+  const cards = useRef(new Map<string, HTMLDivElement>());
   const emptyRef = useRef<HTMLParagraphElement>(null);
-  const focusAfter = useRef<{ next: string | null; previous: string | null } | null>(null);
+  const before = useRef<readonly string[]>([]);
+  const shownIds = shown.map((entry) => entry.id).join(" ");
   useEffect(() => {
-    const after = focusAfter.current;
-    if (after === null) return;
-    focusAfter.current = null;
-    const target =
-      (after.next !== null ? rowOpeners.current.get(after.next) : undefined) ??
-      (after.previous !== null ? rowOpeners.current.get(after.previous) : undefined) ??
-      emptyRef.current;
+    const now = shownIds === "" ? [] : shownIds.split(" ");
+    const previous = before.current;
+    before.current = now;
+    const gone = previous.filter((id) => !now.includes(id) && writes.touched(id));
+    if (gone.length !== 1) return;
+    const at = previous.indexOf(gone[0]!);
+    const next = previous.slice(at + 1).find((id) => now.includes(id));
+    const prior = [...previous.slice(0, at)].reverse().find((id) => now.includes(id));
+    const card = cards.current.get(next ?? prior ?? "");
+    const target = card?.querySelector<HTMLElement>("a[href], button") ?? emptyRef.current;
     target?.focus();
-  }, [visible.length]);
+  }, [shownIds, writes]);
 
-  const unsave = (entry: Entry, index: number) => {
-    const kept = writes.kept(entry.id, entry.bookmarkedAt);
-    focusAfter.current = {
-      next: visible[index + 1]?.id ?? null,
-      previous: visible[index - 1]?.id ?? null,
-    };
-    writes.drop(entry.id, entry.bookmarkedAt);
-    // UNDO PUTS THE ROW BACK WHERE IT WAS (SavedUndo.md): it keeps the thing
-    // again at the time it was first kept, which is its place in the list.
-    notify(
-      REMOVED_FROM_SAVED,
-      { label: UNDO, onAction: () => writes.keep(entry.id, null, kept ?? entry.bookmarkedAt, "restore") },
-      entry.id,
-    );
-  };
-
-  const empty = !loading && !failed && visible.length === 0 && !hasNextPage;
+  const nothingKept = !loading && !failed && kept.length === 0 && !hasNextPage;
+  // SAVEDEMPTY draws no field: it arrives with the first thing saved. A query
+  // still standing keeps it, so `Show everything` is the way back.
+  const empty = nothingKept && !searching;
+  const none = !loading && !failed && searching && shown.length === 0 && !hasNextPage && !loadingMore;
+  const fielded = !empty && (kept.length > 0 || searching);
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col">
-      <CollapsingTop>
+      {/* THE HEADER AND THE FIELD COLLAPSE ON THE WAY DOWN AND RETURN ON THE
+          WAY UP, and a reader three screens down summons Back to top with
+          them; its tap goes up, animated, and never re-reads. */}
+      <CollapsingTop onBackToTop={() => scrollHostToTopAnimated(host)}>
         <PageHeader
           title="Saved"
           backHref="/profile"
@@ -195,6 +268,15 @@ export function SavedScreen() {
           backTestId="saved-back"
           node={{ path: "saved.header" }}
         />
+        {fielded && (
+          <SearchBar
+            query={query}
+            onChange={onQuery}
+            placeholder={SEARCH_WHAT_YOU_SAVED}
+            ariaLabel={SEARCH_WHAT_YOU_SAVED}
+            node={{ path: "saved.searchField" }}
+          />
+        )}
       </CollapsingTop>
       {loading && entries.length === 0 && (
         <p role="status" aria-live="polite" data-testid="saved-loading" className="px-4 pt-2">
@@ -231,72 +313,76 @@ export function SavedScreen() {
           </p>
         </div>
       )}
-      {visible.length > 0 && (
-        <ul data-testid="saved.list" className="m-0 flex list-none flex-col gap-2 px-4 pt-2">
-          {visible.map((entry, index) => {
-            const row = savedRow(entry.node);
-            if (row === null) return null;
-            const node = instance(LIST, "entry", row.key);
-            const failure = writes.failure(entry.id);
-            return (
-              <li
-                key={entry.id}
-                ref={index === tailIndex ? tailRef : undefined}
-                data-saved-id={entry.id}
-              >
+      {none && (
+        // SAVEDNONE: the reader's own search found nothing — the field keeps
+        // the query, and the one way back clears it.
+        <div className="flex flex-col items-start gap-3 px-6 pt-2" data-testid="saved.empty">
+          <p
+            ref={emptyRef}
+            tabIndex={-1}
+            data-testid="saved.empty.title"
+            className="py-2 text-body-medium text-on-surface-variant outline-none"
+          >
+            {SAVED_NONE}
+          </p>
+          <Button
+            testId="saved-none-action"
+            node={{ path: "saved.empty.action" }}
+            variant="outline"
+            size="sm"
+            selfStart
+            onClick={() => onQuery("")}
+          >
+            {SHOW_EVERYTHING}
+          </Button>
+        </div>
+      )}
+      {shown.length > 0 && (
+        // THE FEED'S ONE STAGE (Saved.md): at most one clip plays, and the
+        // stage re-elects at the list's hard top, by the feed's law.
+        <StageHost>
+          <ul data-testid="saved-list" className="m-0 flex list-none flex-col gap-2 p-0 pt-2">
+            {shown.map((entry, index) => (
+              <li key={entry.id} data-saved-id={entry.id} ref={index === tailIndex ? tailRef : undefined}>
                 <div
                   ref={(element) => {
-                    const opener = element?.querySelector<HTMLElement>("[data-testid$='-open']");
-                    if (opener) rowOpeners.current.set(entry.id, opener);
-                    else rowOpeners.current.delete(entry.id);
+                    if (element === null) cards.current.delete(entry.id);
+                    else cards.current.set(entry.id, element);
                   }}
                 >
-                  <ContentRow
-                    variant="chronicle"
-                    title={row.title}
-                    titleQuiet={row.titleQuiet}
-                    titleAside={row.aside}
-                    // A FAILED COMFORT TAKES THE SECOND LINE'S SLOT (item 46).
-                    second={
-                      failure !== null ? (
-                        <RowLine
-                          state={{ kind: "didntGoThrough", onRetry: failure.retry }}
-                          testId={`saved-row-line-${entry.id}`}
-                        />
-                      ) : (
-                        row.second
-                      )
-                    }
-                    trailing={ladderAge(entry.bookmarkedAt)}
-                    disc={row.disc}
-                    href={row.href}
-                    node={node}
-                    testId={`saved-entry-${entry.id}`}
-                    action={
-                      <button
-                        type="button"
-                        aria-label={`Unsave ${row.name}`}
-                        onClick={() => unsave(entry, index)}
-                        data-testid={part(node, "unsave").path}
-                        data-testid-key={node.key}
-                        className="cg-state cg-focus grid size-10 place-items-center rounded-full border-0 bg-transparent text-on-surface-variant"
-                      >
-                        <Icon name="bookmark" size={22} />
-                      </button>
-                    }
-                  />
+                <SavedCard
+                  entry={entry}
+                  notify={notify}
+                  comments={(post) =>
+                    liveComments?.id === post.id ? liveComments.total : post.comments.totalCount
+                  }
+                  onOpenComments={(post) => {
+                    setCommentsPost(post);
+                    setCommentsOpen(true);
+                  }}
+                  onOpenMenu={(post) => {
+                    setMenuPost(post);
+                    setMenuOpen(true);
+                  }}
+                  menuOpenFor={menuOpen ? (menuPost?.id ?? null) : null}
+                />
                 </div>
               </li>
-            );
-          })}
-        </ul>
+            ))}
+          </ul>
+        </StageHost>
       )}
       {moreFailed && (
         <div className="flex items-center gap-3 px-4 pt-3" role="alert">
           <span className="text-body-medium text-error" data-testid="saved-more-failed">
             {COULDNT_LOAD_MORE}
           </span>
-          <Button testId="saved-more-retry" variant="text" size="sm" onClick={() => void loadMore()}>
+          <Button
+            testId="saved-more-retry"
+            variant="text"
+            size="sm"
+            onClick={() => void (searching ? readRest(endCursor, hasNextPage) : loadMore())}
+          >
             Retry
           </Button>
         </div>
@@ -314,6 +400,88 @@ export function SavedScreen() {
         token={snack?.token}
         onDismiss={dismiss}
       />
+      {/* A POST CARD'S MENU, OVER SAVED: the reader's menu every post card
+          opens, its Unsave first, its aftermath on this page's snackbar. */}
+      <PostMenuHost
+        post={menuPost}
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        testId="saved-menu"
+        notify={notify}
+      />
+      {commentsPost !== null && (
+        <CommentsSheet
+          open={commentsOpen}
+          onOpenChange={setCommentsOpen}
+          post={commentsPost}
+          onCount={(total) => setLiveComments({ id: commentsPost.id, total })}
+        />
+      )}
     </main>
   );
+}
+
+/** One kept thing, as its kind's own feed card. */
+function SavedCard({
+  entry,
+  notify,
+  comments,
+  onOpenComments,
+  onOpenMenu,
+  menuOpenFor,
+}: {
+  entry: Entry;
+  notify: ReturnType<typeof useHostSnack>["notify"];
+  comments: (post: SavedPost) => number;
+  onOpenComments: (post: SavedPost) => void;
+  onOpenMenu: (post: SavedPost) => void;
+  menuOpenFor: string | null;
+}) {
+  const node = entry.node;
+  const copied = () => notify(LINK_COPIED);
+  switch (node.__typename) {
+    case "Post":
+      return (
+        <PostCard
+          post={node}
+          // Each card keeps its kind's own name on the page (Saved.jsx),
+          // keyed by the record's own identity, as the feed keys its cards.
+          node={{ path: "saved.card", key: node.id }}
+          href={`/posts/${node.id}?from=${FROM}`}
+          shareHref={`/posts/${node.id}`}
+          testId={`saved-post-${node.id}`}
+          authorTestId={`saved-author-${node.id}`}
+          stanceTestId={`saved-stance-${node.id}`}
+          comments={comments(node)}
+          onOpenComments={() => onOpenComments(node)}
+          onLinkCopied={copied}
+          onOpenMenu={() => onOpenMenu(node)}
+          menuOpen={menuOpenFor === node.id}
+        />
+      );
+    case "Comment":
+      return (
+        <CommentFeedCard
+          comment={node}
+          from={FROM}
+          node={{ path: "saved.commentCard", key: node.id }}
+          testId={`saved-comment-${node.id}`}
+          onNotify={notify}
+          onLinkCopied={copied}
+        />
+      );
+    case "User":
+      return (
+        <ProfileFeedCard
+          person={node}
+          href={`/u/${node.handle}?from=${FROM}`}
+          node={{ path: "saved.profileCard", key: node.id }}
+          testId={`saved-person-${node.id}`}
+          onNotify={notify}
+          onLinkCopied={copied}
+        />
+      );
+    default:
+      return null;
+  }
 }

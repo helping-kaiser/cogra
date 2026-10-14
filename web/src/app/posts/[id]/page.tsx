@@ -31,6 +31,9 @@ export default async function PostPage({
         // A COMMENT'S ROW LANDS ON THE COMMENT (jakob 2026-10-01; Saved.md):
         // the thread opens over the post, scrolled to that comment.
         landOn={one(query.comment)}
+        // ...AND A COMMENT CARD'S COMMENT GLYPH AIMS THE REPLY COMPOSER AT IT
+        // (FeedKinds.md; Saved.md).
+        aimReply={one(query.reply) === "1"}
       />
       {/* `useSearchParams` opts its subtree into client rendering, so it is
           bounded to the notice rather than allowed to reach the post itself.

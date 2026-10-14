@@ -18,6 +18,12 @@ type SavedEdge = NonNullable<
 
 /** One kept thing, as the Saved page's read serves it. */
 export type SavedNode = SavedEdge["node"];
+/** A kept post: the feed card's own `FeedPost`. */
+export type SavedPost = Extract<SavedNode, { __typename: "Post" }>;
+/** A kept comment: the thread's `CommentFields`, what it answers, and its thread's post. */
+export type SavedComment = Extract<SavedNode, { __typename: "Comment" }>;
+/** A kept person, as the profile card draws them. */
+export type SavedPerson = Extract<SavedNode, { __typename: "User" }>;
 
 /** One row of the Saved list: the thing, and when the reader kept it. */
 export type SavedEntry = {

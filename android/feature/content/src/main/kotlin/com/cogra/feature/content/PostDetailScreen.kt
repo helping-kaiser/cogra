@@ -141,6 +141,8 @@ fun PostDetailRoute(
     from: String? = null,
     /** A comment to land on: the thread opens over the post, scrolled to it. */
     landOn: String? = null,
+    /** The landing opens the reply composer aimed at that comment (a comment card's glyph). */
+    aimReply: Boolean = false,
     viewModel: PostDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -202,6 +204,7 @@ fun PostDetailRoute(
                 onReturnConsumed = onCommentsReturnConsumed,
                 refreshToken = threadToken,
                 landOn = landOn,
+                aimReply = aimReply,
                 onRequireAccount = onRequireAccount,
             )
         },
@@ -244,6 +247,7 @@ private fun DetailThread(
     onReturnConsumed: () -> Unit,
     refreshToken: Int,
     landOn: String?,
+    aimReply: Boolean,
     onRequireAccount: (() -> Unit)?,
 ) {
     CommentsSheetRoute(
@@ -268,6 +272,7 @@ private fun DetailThread(
             StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag)
         },
         landOn = landOn,
+        aimReply = aimReply,
         onRequireAccount = onRequireAccount,
     )
 }

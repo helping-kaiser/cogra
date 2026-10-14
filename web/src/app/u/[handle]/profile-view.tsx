@@ -47,7 +47,7 @@ import { backFor } from "@/lib/ui/back-origin";
 import { BellButton } from "@/lib/ui/cogra-band";
 import { notificationsHref } from "@/lib/notifications/origin";
 import { firstArrival, useBellLit, useFreshRootBell } from "@/lib/notifications/bell";
-import { ProfileMenu } from "./profile-menu";
+import { ProfileMenu } from "@/lib/ui2/profile-menu";
 
 const FILTERS: readonly { key: ChronicleFilter; label: string }[] = [
   { key: "posts", label: "Posts" },

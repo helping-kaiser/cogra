@@ -6,14 +6,15 @@ package com.cogra.network.repo
 
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Optional
+import com.cogra.domain.FieldStatus
 import com.cogra.domain.ModeratedField
 import com.cogra.domain.Outcome
 import com.cogra.domain.map
+import com.cogra.domain.saved.CommentTarget
+import com.cogra.domain.saved.SavedCard
 import com.cogra.domain.saved.SavedEntry
-import com.cogra.domain.saved.SavedNode
 import com.cogra.domain.saved.SavedPage
 import com.cogra.domain.saved.SavedRepository
-import com.cogra.domain.saved.ThreadPost
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
 import com.cogra.network.graphql.RemoveBookmarkMutation
@@ -61,45 +62,54 @@ class SavedRepositoryImpl @Inject constructor(
     }
 }
 
-private fun SavedPageQuery.Node.toSaved(): SavedNode? {
+/** Each kept thing as its kind's own feed card reads it (Saved.md, round 12). */
+private fun SavedPageQuery.Node.toSaved(): SavedCard? {
     onPost?.let { post ->
-        return SavedNode.Post(
+        return SavedCard.Post(post.postFields.toDomain().copy(commentCount = post.commentCount.totalCount))
+    }
+    onComment?.let { comment ->
+        return SavedCard.Comment(
+            comment = comment.commentFields.toDomain(),
+            target = comment.target?.toTarget(),
+            threadPostId = comment.post?.id,
+            threadPostTitle = comment.post?.let { ModeratedField(it.title.value, it.title.status.toDomain()) },
+        )
+    }
+    onUser?.let { user -> return SavedCard.Person(user.profileFields.toDomain()) }
+    return null
+}
+
+private const val REDACTED = "REDACTED"
+
+private fun SavedPageQuery.Target.toTarget(): CommentTarget? {
+    onPost?.let { post ->
+        val title = ModeratedField(post.title.value, post.title.status.toDomain())
+        val content = ModeratedField(post.content.value, post.content.status.toDomain())
+        val lead = post.attachments.firstOrNull()
+        // The head row's mark: a picture's own frame, or a clip's still.
+        val cover = when {
+            lead == null -> null
+            lead.mimeType.startsWith("video/") -> lead.coverMedia?.takeIf { it.status.rawValue != REDACTED }?.url
+            else -> lead.url
+        }
+        return CommentTarget.Post(
             id = post.id,
-            title = ModeratedField(post.title.value, post.title.status.toDomain()),
-            description = ModeratedField(post.description.value, post.description.status.toDomain()),
-            content = ModeratedField(post.content.value, post.content.status.toDomain()),
+            title = title,
+            content = content,
             mimeTypes = post.attachments.map { it.mimeType },
-            moderation = post.moderationStatus.toDomain(),
-            sensitiveReason = post.sensitiveReason,
+            coverUrl = cover,
             authorHandle = post.author?.handle,
+            moderation = post.moderationStatus.toDomain(),
+            removed = title.status == FieldStatus.REDACTED ||
+                content.status == FieldStatus.REDACTED ||
+                post.attachments.any { it.status.rawValue == REDACTED },
         )
     }
     onComment?.let { comment ->
-        return SavedNode.Comment(
+        return CommentTarget.Comment(
             id = comment.id,
             content = ModeratedField(comment.content.value, comment.content.status.toDomain()),
-            mimeTypes = comment.attachments.map { it.mimeType },
-            moderation = comment.moderationStatus.toDomain(),
-            sensitiveReason = comment.sensitiveReason,
             authorHandle = comment.author?.handle,
-            post = comment.post?.let { post ->
-                ThreadPost(
-                    id = post.id,
-                    title = ModeratedField(post.title.value, post.title.status.toDomain()),
-                    content = ModeratedField(post.content.value, post.content.status.toDomain()),
-                    mimeTypes = post.attachments.map { it.mimeType },
-                    authorHandle = post.author?.handle,
-                )
-            },
-        )
-    }
-    onUser?.let { user ->
-        return SavedNode.Person(
-            id = user.id,
-            handle = user.handle,
-            displayName = ModeratedField(user.displayName.value, user.displayName.status.toDomain()),
-            bio = ModeratedField(user.bio.value, user.bio.status.toDomain()),
-            avatarUrl = user.avatar?.takeIf { it.status.rawValue != "REDACTED" }?.url,
         )
     }
     return null
