@@ -847,8 +847,44 @@ private fun SummaryTitle(post: PostView, node: DataNode) {
     }
 }
 
+/**
+ * Where a post card stands: the card's registered node, the sheets its ⋮
+ * raises, the scope its fallback tags read under (`<tag>_post_<id>`,
+ * `<tag>_<id>`), and which menu rows the host's board registers. The feed's
+ * is [FEED_PLACEMENT]; Saved places the same card (Saved.md: "the same card
+ * the feed draws, fully live").
+ */
+internal data class CardPlacement(
+    val card: DataNode,
+    val menuSheet: DataNode?,
+    val licenseSheet: DataNode?,
+    val tag: String,
+    val menuRows: Set<PostMenuRow>,
+)
+
+/**
+ * The rows FeedPostMenu registers (`feed.menuSheet.*`) — the reader menu's.
+ * The author's own rows on the feed have no drawn board, so they keep their
+ * own tags rather than wear a path the registry does not hold.
+ */
+private val FEED_MENU_ROWS = setOf(
+    PostMenuRow.Save,
+    PostMenuRow.Cite,
+    PostMenuRow.Hide,
+    PostMenuRow.License,
+    PostMenuRow.Report,
+)
+
+internal val FEED_PLACEMENT = CardPlacement(
+    card = FEED / "card",
+    menuSheet = FEED / "menuSheet",
+    licenseSheet = FEED / "licenseSheet",
+    tag = "feed",
+    menuRows = FEED_MENU_ROWS,
+)
+
 @Composable
-private fun PostCard(
+internal fun PostCard(
     post: PostView,
     onClick: () -> Unit,
     /** The count's own destination: the comments sheet, over the feed. */
@@ -870,11 +906,13 @@ private fun PostCard(
     revealed: Boolean,
     onReveal: () -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
+    placement: CardPlacement = FEED_PLACEMENT,
 ) {
     // The instance the board keys by author handle is keyed here by the
     // post's id — the same key the web's card carries, so the harness pairs
     // both platforms' cards with one live post.
-    val card = FEED / "card"
+    val card = placement.card
+    val tag = "${placement.tag}_post_${post.id}"
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -896,6 +934,7 @@ private fun PostCard(
                 onReport = onReport,
                 onShare = onShare,
                 node = card,
+                placement = placement,
             )
             SummaryTitle(post, card / "title")
             PostBody(
@@ -904,7 +943,7 @@ private fun PostCard(
                 attachments = post.attachments,
                 attachmentsStatus = post.attachmentsStatus,
                 moderation = post.moderation,
-                testTagPrefix = "feed_post_${post.id}",
+                testTagPrefix = tag,
                 node = card,
                 collapsed = true,
                 bleed = Space.x4,
@@ -918,13 +957,14 @@ private fun PostCard(
                 revealed = revealed,
                 onReveal = onReveal,
             )
-            if (post.landing.isPending) PendingMarker(testTag = "feed_post_pending_${post.id}")
+            if (post.landing.isPending) PendingMarker(testTag = "${placement.tag}_post_pending_${post.id}")
             CardTopicsLine(
                 post = post,
                 onOpenTopic = onOpenTopic,
                 onOpenActor = onOpenActor,
                 onOpenPost = onOpenPost,
                 node = card / "tagsLine",
+                testTagPrefix = tag,
             )
             // Stance, comment, share — the master's row, minus the two
             // it gates (see `PostAffordanceRow`). THE COUNT RAISES THE
@@ -935,30 +975,17 @@ private fun PostCard(
                 commentCount = post.commentCount,
                 onOpenComments = onOpenComments,
                 onShare = { onShare(post.id) },
-                testTagPrefix = "feed_post_${post.id}",
+                testTagPrefix = tag,
                 node = card / "actionRow",
             ) {
-                stanceControl(post.id, "feed_post_${post.id}", card / "actionRow" / "stance")
+                stanceControl(post.id, tag, card / "actionRow" / "stance")
             }
             // THE ROW LINE under the face (RowSigning.md): a save or unsave
             // of this post that did not go through.
-            LocalSavedHost.current?.comfortLine(post.id)?.let { RowLine(it, "feed_post_${post.id}_row_line") }
+            LocalSavedHost.current?.comfortLine(post.id)?.let { RowLine(it, "${tag}_row_line") }
         }
     }
 }
-
-/**
- * The rows FeedPostMenu registers (`feed.menuSheet.*`) — the reader menu's.
- * The author's own rows on the feed have no drawn board, so they keep their
- * own tags rather than wear a path the registry does not hold.
- */
-private val FEED_MENU_ROWS = setOf(
-    PostMenuRow.Save,
-    PostMenuRow.Cite,
-    PostMenuRow.Hide,
-    PostMenuRow.License,
-    PostMenuRow.Report,
-)
 
 /**
  * THE CARD'S HEADER AND THE ⋮ IT CARRIES, with the sheets its rows raise.
@@ -980,12 +1007,14 @@ private fun CardMenuHeader(
     onReport: () -> Unit,
     onShare: (String) -> Unit,
     node: DataNode,
+    placement: CardPlacement,
 ) {
     var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
     var removeOpen by remember { mutableStateOf(false) }
     CoversSurface(open = licenseShown != null, kind = CoverKind.Suspend)
     CoversSurface(open = removeOpen, kind = CoverKind.Suspend)
-    val menuSheet = FEED / "menuSheet"
+    val menuSheet = placement.menuSheet
+    val tag = "${placement.tag}_${post.id}"
     // A REMOVED POST HAS NO MENU LEFT (`Removed.jsx:5-6`): there is nothing
     // of it to edit, cite or license, so the ⋮ goes wholesale rather than a
     // row at a time. An empty list draws no trigger.
@@ -1004,7 +1033,7 @@ private fun CardMenuHeader(
         author = post.author,
         at = post.createdAt,
         onOpenActor = onOpenActor,
-        testTagPrefix = "feed_${post.id}",
+        testTagPrefix = tag,
         menu = if (removed) {
             emptyList()
         } else {
@@ -1019,13 +1048,13 @@ private fun CardMenuHeader(
                 onShare = shareRow,
                 // The rows sit under the trigger's own tag, which
                 // `ContentCardHeader` derives the same way.
-                testTagPrefix = "feed_${post.id}_menu",
+                testTagPrefix = "${tag}_menu",
                 onReport = onReport,
-                rowNode = { row -> (menuSheet / row.nodeName).takeIf { row in FEED_MENU_ROWS } },
+                rowNode = { row -> menuSheet?.div(row.nodeName)?.takeIf { row in placement.menuRows } },
                 saveRow = LocalSavedHost.current?.menuRow(
                     post.id,
                     post.viewerBookmarkedAt,
-                    "feed_${post.id}_menu_save",
+                    "${tag}_menu_save",
                 ),
                 onHide = post.author?.let { LocalSavedHost.current?.hideAct(it.asHiddenPerson(), post.id) },
             )
@@ -1035,7 +1064,7 @@ private fun CardMenuHeader(
         node = node,
     )
     licenseShown?.let { license ->
-        LicenseSheet(license = license, onDismiss = { licenseShown = null }, node = FEED / "licenseSheet")
+        LicenseSheet(license = license, onDismiss = { licenseShown = null }, node = placement.licenseSheet)
     }
     // THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob 2026-09-14): erasure is
     // slice 8's, whole, so Remove closes the dialog and changes nothing.
@@ -1062,6 +1091,7 @@ private fun CardTopicsLine(
     onOpenActor: (String) -> Unit,
     onOpenPost: (String) -> Unit,
     node: DataNode,
+    testTagPrefix: String,
 ) {
     var refsOpen by rememberSaveable { mutableStateOf(false) }
     // A sheet over the feed like any other (Feed.md:31).
@@ -1070,7 +1100,7 @@ private fun CardTopicsLine(
         topics = post.topics,
         references = post.references,
         onOpenTopic = onOpenTopic,
-        testTagPrefix = "feed_post_${post.id}",
+        testTagPrefix = testTagPrefix,
         onOpenReferences = { refsOpen = true },
         node = node,
     )
@@ -1082,7 +1112,7 @@ private fun CardTopicsLine(
             onOpenTopic = onOpenTopic,
             onOpenActor = onOpenActor,
             onOpenPost = onOpenPost,
-            testTagPrefix = "feed_post_${post.id}",
+            testTagPrefix = testTagPrefix,
         )
     }
 }

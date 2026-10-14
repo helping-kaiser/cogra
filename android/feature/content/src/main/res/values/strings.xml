@@ -191,6 +191,23 @@
     <string name="content_menu_opinions">Opinions on this</string>
     <string name="content_menu_license">License terms</string>
     <string name="content_menu_report">Report</string>
+    <!-- The comment feed card (`_shared.jsx` CommentFeedCard; FeedCommentShapes.md): the head
+         row's door names what the comment answers, and the comment glyph is the reply. -->
+    <string name="content_card_on">On %1$s</string>
+    <string name="content_card_reply_to">Reply to %1$s</string>
+    <string name="content_share_comment">Share this comment</string>
+    <!-- The profile feed card (`_shared.jsx` ProfileFeedCard; FeedProfileShapes.md): its ⋮ is the
+         profile's own menu less the share the row carries. -->
+    <string name="content_profile_menu_other">More about %1$s</string>
+    <string name="content_profile_menu_deleted">More about this account</string>
+    <string name="content_menu_mention">Mention in a new post</string>
+    <string name="content_share_person">Share %1$s</string>
+    <string name="content_share_account">Share this account</string>
+    <string name="content_deleted_account">Deleted account</string>
+    <!-- Saved as a feed (Saved.md, SavedNone.md; round 12). -->
+    <string name="content_saved_search">Search what you saved</string>
+    <string name="content_saved_none">Nothing you\'ve saved carries that name. Search reads names and titles, never bodies — fewer words reach further.</string>
+    <string name="content_saved_show_everything">Show everything</string>
     <!-- Back to top (BackToTop.jsx; FeedScrolled.md): plain words, no glyph. -->
     <string name="content_back_to_top">Back to top</string>
     <!-- Report — the confirm sheet (ReportConfirm.jsx; ruling 75). Report is the filled commit, Cancel the quiet way out. -->
