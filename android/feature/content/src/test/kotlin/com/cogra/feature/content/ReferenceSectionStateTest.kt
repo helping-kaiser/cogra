@@ -37,7 +37,7 @@ class ReferenceSectionStateTest {
         assertThat(state.references.map { it.targetId }).containsExactly("p1")
     }
 
-    /** Both parameters sit on the server's own defaults until a slider moves (D3). */
+    /** Both parameters sit on the visible pre-fill until a slider moves (D3). */
     @Test
     fun aFreshReferenceCarriesTheDefaultParameters() {
         val row = ReferenceSectionState().added("p1", post("p1", "On latency")).references.single()

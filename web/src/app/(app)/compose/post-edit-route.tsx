@@ -231,10 +231,11 @@ export function PostEditRoute({
       const prepared = await guard.run(() =>
         prepareTag(client, {
           target: postId,
-          name: change.kind === "tag" ? change.tag.name : change.name,
+          name: change.tag.name,
           // Withdrawing is a Tag act at relevance 0 (hashtag.md §4).
           relevance: change.kind === "tag" ? change.tag.relevance : WITHDRAWN_RELEVANCE,
-          confidence: change.kind === "tag" ? change.tag.confidence : undefined,
+          // An un-tag signs the confidence its chip showed; only relevance moves.
+          confidence: change.tag.confidence,
         }),
       );
       if (prepared.kind === "failed") {

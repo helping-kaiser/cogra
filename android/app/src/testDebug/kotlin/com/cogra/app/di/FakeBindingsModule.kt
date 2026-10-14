@@ -178,7 +178,7 @@ class ScriptedContentRepository : ThrowingContentRepository() {
         attachments: List<AttachmentClaim>,
         sensitive: Boolean,
         sensitiveReason: String?,
-        pDirected: Double?,
+        pDirected: Double,
     ): Outcome<PreparedContentView> {
         pendingAfterPrepare?.let { listing = listOf(it) + listing }
         return Outcome.Success(PreparedContentView(preparedNode, emptyList()))
@@ -401,8 +401,8 @@ class ScriptedTopicRepository(private val writes: WriteRepository) : ThrowingTop
     override suspend fun prepareTag(
         target: String,
         name: String,
-        pDirected: Double?,
-        pInterest: Double?,
+        pDirected: Double,
+        pInterest: Double,
     ): Outcome<List<PreparedWriteView>> = writes.prepareStance(target, pDirected ?: 0.1, pInterest ?: 1.0)
 }
 
@@ -424,8 +424,8 @@ class ScriptedReferenceRepository(private val writes: WriteRepository) : Throwin
     override suspend fun prepareReference(
         artifact: String,
         target: String,
-        relevance: Double?,
-        support: Double?,
+        relevance: Double,
+        support: Double,
     ): Outcome<List<PreparedWriteView>> =
         writes.prepareStance(target, relevance ?: 0.1, support ?: 0.1)
 

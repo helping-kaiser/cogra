@@ -49,15 +49,6 @@ pub const MAX_TAGS_PER_BATCH: usize = 10;
 /// at relevance 0 has left the set and freed its slot.
 pub const MAX_LIVE_TOPICS_PER_ARTIFACT: usize = 50;
 
-/// Default relevance — the low-defaults policy value, as everywhere else
-/// (invitations.md §3): a modest claim, leaving stronger ones expressible.
-pub const DEFAULT_RELEVANCE: f64 = 0.1;
-
-/// Default confidence (D13). Confidence is not a stance whose headroom
-/// needs preserving: an author declaring their own content's topic
-/// believes their own declaration, and `c = 0.1` would say the opposite.
-pub const DEFAULT_CONFIDENCE: f64 = 1.0;
-
 /// A field-level refusal, carrying the path into the input that names the
 /// offender (api-spec.md "Conventions" — `userErrors[].field`).
 #[derive(Debug, thiserror::Error)]
@@ -87,12 +78,13 @@ pub enum TopicsError {
 }
 
 /// One topic declaration as the wire carries it: a raw name plus the
-/// optional parameter pair.
+/// parameter pair the user chose. Both are required — the server writes
+/// what was signed for and fills nothing in.
 #[derive(Debug, Clone)]
 pub struct TagDraft {
     pub name: String,
-    pub relevance: Option<f64>,
-    pub confidence: Option<f64>,
+    pub relevance: f64,
+    pub confidence: f64,
 }
 
 /// A checked declaration: the canonical Type name and the act tuple that
@@ -120,8 +112,8 @@ fn name_message(e: &HashtagNameError) -> String {
 /// formation fault and would surface as an internal-shaped error (D12).
 fn check(draft: &TagDraft) -> Result<PlannedTag, (&'static str, String)> {
     let name = canonicalize(&draft.name).map_err(|e| ("name", name_message(&e)))?;
-    let relevance = draft.relevance.unwrap_or(DEFAULT_RELEVANCE);
-    let confidence = draft.confidence.unwrap_or(DEFAULT_CONFIDENCE);
+    let relevance = draft.relevance;
+    let confidence = draft.confidence;
     if !(0.0..=1.0).contains(&confidence) {
         return Err(("pInterest", "tag confidence must lie in [0, 1]".to_string()));
     }
@@ -348,19 +340,24 @@ mod tests {
     fn draft(name: &str) -> TagDraft {
         TagDraft {
             name: name.to_string(),
-            relevance: None,
-            confidence: None,
+            relevance: 0.1,
+            confidence: 1.0,
         }
     }
 
-    /// An omitted tag parameter takes the declared default: a modest relevance claim, held with full confidence in one's own declaration.
-    /// ´claim:topics:omitted-parameters-take-the-defaults´
+    /// The draft carries no optional parameter, so a tag is planned with exactly the pair the user signed for and nothing the server filled in.
+    /// ´claim:topics:parameters-are-written-as-sent´
     #[test]
-    fn omitted_parameters_take_the_declared_defaults() {
-        let planned = plan_one(&draft("#Rust")).expect("legal");
+    fn the_parameters_are_written_exactly_as_sent() {
+        let planned = plan_one(&TagDraft {
+            name: "#Rust".to_string(),
+            relevance: -0.4,
+            confidence: 0.3,
+        })
+        .expect("legal");
         assert_eq!(planned.name, "rust", "the name is canonicalized first");
-        assert_eq!(planned.relevance, DEFAULT_RELEVANCE);
-        assert_eq!(planned.confidence, DEFAULT_CONFIDENCE);
+        assert_eq!(planned.relevance, -0.4);
+        assert_eq!(planned.confidence, 0.3);
     }
 
     /// A malformed topic name is refused against the name field the client sent.
@@ -378,7 +375,7 @@ mod tests {
     #[test]
     fn confidence_outside_the_census_range_names_pinterest() {
         let mut d = draft("rust");
-        d.confidence = Some(-0.5);
+        d.confidence = -0.5;
         let e = plan_one(&d).expect_err("refused");
         assert_eq!(e.path, vec!["pInterest".to_string()]);
     }
@@ -389,7 +386,7 @@ mod tests {
     fn the_whole_confidence_range_is_accepted() {
         for c in [0.0, 0.5, 1.0] {
             let mut d = draft("rust");
-            d.confidence = Some(c);
+            d.confidence = c;
             assert_eq!(plan_one(&d).expect("legal").confidence, c);
         }
     }
@@ -399,7 +396,7 @@ mod tests {
     #[test]
     fn relevance_zero_is_the_un_tag_and_is_legal() {
         let mut d = draft("rust");
-        d.relevance = Some(0.0);
+        d.relevance = 0.0;
         assert_eq!(plan_one(&d).expect("legal").relevance, 0.0);
     }
 
@@ -408,7 +405,7 @@ mod tests {
     #[test]
     fn negative_relevance_is_legal() {
         let mut d = draft("rust");
-        d.relevance = Some(-1.0);
+        d.relevance = -1.0;
         assert_eq!(plan_one(&d).expect("legal").relevance, -1.0);
     }
 

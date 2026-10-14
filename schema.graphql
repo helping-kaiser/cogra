@@ -2664,10 +2664,11 @@ input PrepareCommentInput {
 	content: String!
 	license: LicenseInput!
 	"""
-	Enthusiasm and effort; each defaults to +0.1 (invitations.md §3).
+	Enthusiasm and effort. Required: the server never fills a stance
+	in — the UI pre-fills +0.1 on both visibly and sends what it shows.
 	"""
-	pDirected: Dimension
-	pInterest: Dimension
+	pDirected: Dimension!
+	pInterest: Dimension!
 	"""
 	Topics declared at creation; same rules as on a Post.
 	"""
@@ -2766,10 +2767,11 @@ input PreparePostInput {
 	content: String
 	license: LicenseInput!
 	"""
-	The author's attachment; defaults to the low-defaults policy
-	value (+0.1). `pInterest` is census-fixed at 1 for Publish.
+	The author's attachment. Required: the server never fills a
+	stance in — the UI pre-fills +0.1 visibly and sends what it shows.
+	`pInterest` is census-fixed at 1 for Publish, so it is no field.
 	"""
-	pDirected: Dimension
+	pDirected: Dimension!
 	"""
 	Topics declared at creation — explicit structured input, never
 	parsed from the body, so display content and graph structure stay
@@ -2844,13 +2846,15 @@ input PrepareReferenceInput {
 	"""
 	target: UUID!
 	"""
-	Effort `f`, the `pDirected` slot; defaults to +0.1.
+	Effort `f`, the `pDirected` slot. Required, as on
+	`ReferenceInput`.
 	"""
-	relevance: Dimension
+	relevance: Dimension!
 	"""
-	Enthusiasm `e`, the `pInterest` slot; defaults to +0.1.
+	Enthusiasm `e`, the `pInterest` slot. Required, as on
+	`ReferenceInput`.
 	"""
-	support: Dimension
+	support: Dimension!
 }
 
 """
@@ -2930,13 +2934,14 @@ input PrepareTagInput {
 	target: UUID!
 	name: String!
 	"""
-	Relevance `r`; defaults to +0.1. Zero is the un-tag.
+	Relevance `r`; zero is the un-tag. Required, as on `TagInput`.
 	"""
-	pDirected: Dimension
+	pDirected: Dimension!
 	"""
-	Confidence `c`, census-bounded to `[0, 1]`; defaults to 1.
+	Confidence `c`, census-bounded to `[0, 1]`. Required, as on
+	`TagInput`.
 	"""
-	pInterest: Dimension
+	pInterest: Dimension!
 }
 
 type PreparedWrite {
@@ -3619,9 +3624,9 @@ the target's node class is the whole distinction: a Reference whose
 target is a person's Profile *is* a mention. Nothing is minted; both
 endpoints pre-exist.
 
-Both parameters are optional and default to +0.1, so a plain citation
-needs only its target. The defaults are strictly positive on both
-axes, which means a default mention vouches — weakly, at coefficient
+Both parameters are required: the server never fills a stance in.
+The UI pre-fills +0.1 on both axes and sends what it shows — strictly
+positive, so an untouched mention vouches, weakly, at coefficient
 `√0.01 = 0.1`.
 
 A citation carries no note. A payload would make the record
@@ -3645,20 +3650,19 @@ input ReferenceInput {
 	"""
 	target: UUID!
 	"""
-	How load-bearing the cited thing is to this artifact, `[-1, 1]`;
-	defaults to +0.1. The census calls this **effort `f`**, and it
-	occupies the `pDirected` slot — the same slot relevance occupies
-	on a tag.
+	How load-bearing the cited thing is to this artifact, `[-1, 1]`.
+	The census calls this **effort `f`**, and it occupies the
+	`pDirected` slot — the same slot relevance occupies on a tag.
 	"""
-	relevance: Dimension
+	relevance: Dimension!
 	"""
-	Endorsing versus refuting, `[-1, 1]`; defaults to +0.1. The census
-	calls this **enthusiasm `e`**, and it occupies the `pInterest`
-	slot. This is the axis that decides whether a mention vouches: a
-	citation strictly positive on both axes resolves its fold cell to
-	the cited person, and every other citation resolves home.
+	Endorsing versus refuting, `[-1, 1]`. The census calls this
+	**enthusiasm `e`**, and it occupies the `pInterest` slot. This is
+	the axis that decides whether a mention vouches: a citation
+	strictly positive on both axes resolves its fold cell to the cited
+	person, and every other citation resolves home.
 	"""
-	support: Dimension
+	support: Dimension!
 }
 
 """
@@ -4308,14 +4312,16 @@ wins, and relevance 0 is the un-tag, read as withdrawn (hashtag.md
 input TagInput {
 	name: String!
 	"""
-	Relevance `r`; defaults to +0.1.
+	Relevance `r`. Required: the server never fills a stance in — the
+	UI pre-fills +0.1 visibly and sends what it shows.
 	"""
-	pDirected: Dimension
+	pDirected: Dimension!
 	"""
-	Confidence `c`, census-bounded to `[0, 1]`; defaults to 1 — an
-	author believes their own declaration.
+	Confidence `c`, census-bounded to `[0, 1]`. Required like
+	relevance; the UI pre-fills 1 — an author believes their own
+	declaration.
 	"""
-	pInterest: Dimension
+	pInterest: Dimension!
 }
 
 """

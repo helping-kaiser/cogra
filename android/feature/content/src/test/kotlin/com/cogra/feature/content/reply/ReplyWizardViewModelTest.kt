@@ -79,8 +79,8 @@ class ReplyWizardViewModelTest {
             tags: List<TagClaim>,
             references: List<ReferenceClaim>,
             attachments: List<AttachmentClaim>,
-            pDirected: Double?,
-            pInterest: Double?,
+            pDirected: Double,
+            pInterest: Double,
             sensitive: Boolean,
             sensitiveReason: String?,
         ): Outcome<PreparedContentView> {

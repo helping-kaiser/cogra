@@ -2011,7 +2011,7 @@ describe("PostView", () => {
       const tagInputs: Record<string, unknown>[] = [];
       let editCalled = false;
       server.use(
-        ...threadFrom(() => ownComment([topicClaim("wasm", 0.1, 1)])),
+        ...threadFrom(() => ownComment([topicClaim("wasm", 0.1, 0.6)])),
         graphql.mutation("PrepareCommentEdit", () => {
           editCalled = true;
           return HttpResponse.json({ data: editPayload() });
@@ -2041,8 +2041,10 @@ describe("PostView", () => {
       expect(editCalled).toBe(true);
       expect(tagInputs).toEqual([
         { target: "c1", name: "rust", pDirected: 0.1, pInterest: 1 },
-        // A withdrawal is a Tag act at relevance 0, never a deletion.
-        { target: "c1", name: "wasm", pDirected: 0, pInterest: null },
+        // A withdrawal is a Tag act at relevance 0, never a deletion, and it
+        // signs the confidence the removed chip showed — never a hole the
+        // server would fill.
+        { target: "c1", name: "wasm", pDirected: 0, pInterest: 0.6 },
       ]);
     });
 

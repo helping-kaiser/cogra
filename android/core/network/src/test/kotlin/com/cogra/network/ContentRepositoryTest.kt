@@ -7,6 +7,7 @@ package com.cogra.network
 
 import com.apollographql.apollo.ApolloClient
 import com.cogra.domain.AttachmentClaim
+import com.cogra.domain.DEFAULT_STANCE
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.Landing
@@ -381,7 +382,8 @@ class ContentRepositoryTest {
                "userErrors":[]}}}""",
         )
         val license = LicenseChoice(attribution = 1.0, provenance = 0.0)
-        val prepared = (repo().preparePost("T", null, "B", license) as Outcome.Success).value
+        val first = repo().preparePost("T", null, "B", license, pDirected = DEFAULT_STANCE)
+        val prepared = (first as Outcome.Success).value
         assertThat(prepared.node).isEqualTo("node-1")
         assertThat(prepared.writes.single().id).isEqualTo("w1")
         assertThat(prepared.writes.single().canonicalProposal).isEqualTo(byteArrayOf(0, 1, 2, 3))
@@ -392,58 +394,8 @@ class ContentRepositoryTest {
                "userErrors":[{"__typename":"UserError","message":"not a member",
                               "code":"FORBIDDEN","field":null}]}}}""",
         )
-        val refused = repo().preparePost("T", null, "B", license)
+        val refused = repo().preparePost("T", null, "B", license, pDirected = DEFAULT_STANCE)
         assertThat((refused as Outcome.Refused).errors.single().code).isEqualTo(ErrorCode.FORBIDDEN)
-    }
-
-    /**
-     * The author's creating-edge stance rides the input; it used to be
-     * dropped, so every Publish landed at the server's +0.1 default.
-     */
-    @Test
-    fun aPostCarriesTheAuthorsPickedStanceOnTheWire() = runTest {
-        enqueue(
-            """{"data":{"preparePost":{"__typename":"PrepareContentPayload",
-               "node":"node-1","writes":[],"userErrors":[]}}}""",
-        )
-        repo().preparePost(
-            title = "T",
-            description = null,
-            content = "B",
-            license = LicenseChoice(attribution = 1.0, provenance = 0.0),
-            pDirected = -0.8,
-        )
-        assertThat(server.takeRequest().body.readUtf8()).contains("\"pDirected\":-0.8")
-    }
-
-    /** Nothing stated is nothing sent: the contract's own default applies. */
-    @Test
-    fun aPostWithoutAStanceSendsNoPDirectedKey() = runTest {
-        enqueue(
-            """{"data":{"preparePost":{"__typename":"PrepareContentPayload",
-               "node":"node-1","writes":[],"userErrors":[]}}}""",
-        )
-        repo().preparePost("T", null, "B", LicenseChoice(attribution = 1.0, provenance = 0.0))
-        assertThat(server.takeRequest().body.readUtf8()).doesNotContain("pDirected")
-    }
-
-    /** The reply seal's pad names both parameters, and both ride. */
-    @Test
-    fun aCommentCarriesItsPickedStancePairOnTheWire() = runTest {
-        enqueue(
-            """{"data":{"prepareComment":{"__typename":"PrepareContentPayload",
-               "node":"c1","writes":[],"userErrors":[]}}}""",
-        )
-        repo().prepareComment(
-            target = "p1",
-            content = "Nice",
-            license = LicenseChoice.PublicDomain,
-            pDirected = 0.6,
-            pInterest = -0.3,
-        )
-        val body = server.takeRequest().body.readUtf8()
-        assertThat(body).contains("\"pDirected\":0.6")
-        assertThat(body).contains("\"pInterest\":-0.3")
     }
 
     @Test
@@ -609,8 +561,8 @@ class ContentRepositoryTest {
 
     /**
      * A comment declares its topics on the creation input, the way a
-     * post does (F9), and both parameters ride explicitly so an
-     * untouched slider says what omitting it would.
+     * post does (F9), and both parameters ride explicitly — the wire
+     * requires them — so an untouched slider sends the pre-fill it shows.
      */
     @Test
     fun aCommentCarriesItsDeclaredTopicsOnTheWire() = runTest {
@@ -627,6 +579,8 @@ class ContentRepositoryTest {
             target = "p1",
             content = "Nice",
             license = LicenseChoice.PublicDomain,
+            pDirected = DEFAULT_STANCE,
+            pInterest = DEFAULT_STANCE,
             tags = listOf(TagClaim("rust", relevance = 0.4, confidence = 0.9)),
         )
         val body = server.takeRequest().body.readUtf8()
@@ -648,7 +602,13 @@ class ContentRepositoryTest {
                           "canonicalProposal":"AA==","gcAfterEpochs":8}],
                "userErrors":[]}}}""",
         )
-        repo().prepareComment("p1", "Nice", LicenseChoice.PublicDomain)
+        repo().prepareComment(
+            "p1",
+            "Nice",
+            LicenseChoice.PublicDomain,
+            pDirected = DEFAULT_STANCE,
+            pInterest = DEFAULT_STANCE,
+        )
         assertThat(server.takeRequest().body.readUtf8()).doesNotContain("\"tags\"")
     }
 
@@ -666,6 +626,8 @@ class ContentRepositoryTest {
             target = "p1",
             content = "Nice",
             license = LicenseChoice.PublicDomain,
+            pDirected = DEFAULT_STANCE,
+            pInterest = DEFAULT_STANCE,
             tags = listOf(TagClaim("x y")),
         )
         val error = (refused as Outcome.Refused).errors.single()
@@ -693,6 +655,8 @@ class ContentRepositoryTest {
             target = "p1",
             content = "Two from the sea wall",
             license = LicenseChoice.PublicDomain,
+            pDirected = DEFAULT_STANCE,
+            pInterest = DEFAULT_STANCE,
             attachments = listOf(AttachmentClaim("m1"), AttachmentClaim("m2")),
         )
 

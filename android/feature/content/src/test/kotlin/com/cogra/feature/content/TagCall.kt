@@ -8,6 +8,6 @@ package com.cogra.feature.content
 internal data class TagCall(
     val target: String,
     val name: String,
-    val pDirected: Double?,
-    val pInterest: Double?,
+    val pDirected: Double,
+    val pInterest: Double,
 )

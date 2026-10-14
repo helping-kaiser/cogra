@@ -73,22 +73,6 @@ pub const MAX_REFERENCES_PER_BATCH: usize = 10;
 /// realistic gesture (mentioning everyone in a group photo) needs.
 pub const MAX_LIVE_REFERENCES_PER_ARTIFACT: usize = 50;
 
-/// Default relevance — effort `f`, the `p_d` slot (D3).
-///
-/// Effort is not Tag's confidence: it is signed, spans `[−1, 1]`, and
-/// multiplies the act's coefficient `√|e·f|`, so the low-defaults policy
-/// applies to it as it does to any stance-shaped quantity.
-pub const DEFAULT_RELEVANCE: f64 = 0.1;
-
-/// Default support — enthusiasm `e`, the `p_i` slot (D3).
-///
-/// Strictly positive on both axes by default, which means **a default
-/// mention vouches** — weakly, at coefficient `√0.01 = 0.1`. Defaulting
-/// effort to 0 instead would make the default gesture contribute to no
-/// standing entry and reach its target through no channel at all, i.e. a
-/// decorative act.
-pub const DEFAULT_SUPPORT: f64 = 0.1;
-
 /// A field-level refusal, carrying the path into the input that names the
 /// offender (api-spec.md "Conventions" — `userErrors[].field`).
 #[derive(Debug, thiserror::Error)]
@@ -137,14 +121,15 @@ impl From<store_refs::ReferencesError> for ReferencesError {
 }
 
 /// One citation as the wire carries it: the target's L2 id plus the
-/// optional parameter pair.
+/// parameter pair the user chose. Both are required — the server writes
+/// what was signed for and fills nothing in.
 #[derive(Debug, Clone)]
 pub struct ReferenceDraft {
     pub target: Uuid,
     /// Effort `f` — the `p_d` slot. See the module header.
-    pub relevance: Option<f64>,
+    pub relevance: f64,
     /// Enthusiasm `e` — the `p_i` slot.
-    pub support: Option<f64>,
+    pub support: f64,
 }
 
 /// A checked citation: the resolved target node and the act tuple that
@@ -188,8 +173,8 @@ pub fn act_count(planned: &[PlannedReference]) -> usize {
 /// because a field path a client cannot find in the input it sent is a
 /// refusal it cannot attach to anything.
 fn check(draft: &ReferenceDraft) -> Result<(f64, f64), (&'static str, String)> {
-    let relevance = draft.relevance.unwrap_or(DEFAULT_RELEVANCE);
-    let support = draft.support.unwrap_or(DEFAULT_SUPPORT);
+    let relevance = draft.relevance;
+    let support = draft.support;
     if !(-1.0..=1.0).contains(&relevance) {
         return Err((
             "relevance",
@@ -731,22 +716,17 @@ mod tests {
         g.family.params_check(g.p_d, g.p_i).expect("params");
     }
 
-    /// An omitted citation parameter takes the declared default rather than zero or a refusal.
-    /// ´claim:references:omitted-parameters-take-the-defaults´
+    /// The draft carries no optional parameter, so a citation is planned with exactly the pair the user signed for and nothing the server filled in.
+    /// ´claim:references:parameters-are-written-as-sent´
     #[test]
-    fn omitted_reference_parameters_take_the_declared_defaults() {
+    fn reference_parameters_are_written_exactly_as_sent() {
         let (relevance, support) = check(&ReferenceDraft {
             target: Uuid::nil(),
-            relevance: None,
-            support: None,
+            relevance: 0.7,
+            support: -0.2,
         })
         .expect("legal");
-        assert_eq!(relevance, DEFAULT_RELEVANCE);
-        assert_eq!(support, DEFAULT_SUPPORT);
-        assert!(
-            relevance > 0.0 && support > 0.0,
-            "a default mention vouches weakly (D3)"
-        );
+        assert_eq!((relevance, support), (0.7, -0.2));
     }
 
     /// The refusal names the field the client actually sent, which on
@@ -759,15 +739,15 @@ mod tests {
     fn out_of_range_parameters_name_their_own_input_field() {
         let over = ReferenceDraft {
             target: Uuid::nil(),
-            relevance: Some(1.5),
-            support: None,
+            relevance: 1.5,
+            support: 0.1,
         };
         assert_eq!(check(&over).expect_err("refused").0, "relevance");
 
         let under = ReferenceDraft {
             target: Uuid::nil(),
-            relevance: None,
-            support: Some(-1.5),
+            relevance: 0.1,
+            support: -1.5,
         };
         assert_eq!(check(&under).expect_err("refused").0, "support");
     }
@@ -779,8 +759,8 @@ mod tests {
         for v in [-1.0, -0.5, 0.0, 0.5, 1.0] {
             let d = ReferenceDraft {
                 target: Uuid::nil(),
-                relevance: Some(v),
-                support: Some(v),
+                relevance: v,
+                support: v,
             };
             assert_eq!(check(&d).expect("legal"), (v, v));
         }
