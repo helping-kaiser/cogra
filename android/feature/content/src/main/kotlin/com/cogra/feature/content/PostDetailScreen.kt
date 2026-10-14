@@ -77,6 +77,7 @@ import com.cogra.domain.LicenseChoice
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
+import com.cogra.domain.hidden.HiddenSet
 import com.cogra.domain.saved.SavedWrites
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.R
@@ -84,6 +85,8 @@ import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.content.reply.ReplyTargetKind
 import com.cogra.feature.saved.ComfortRowLine
 import com.cogra.feature.saved.SavedHost
+import com.cogra.feature.saved.asHiddenPerson
+import com.cogra.feature.saved.rememberHiddenSet
 import com.cogra.feature.saved.rememberSavedHost
 import com.cogra.feature.saved.rememberSavedWrites
 import com.cogra.feature.stance.StanceControlRoute
@@ -180,9 +183,7 @@ fun PostDetailRoute(
         onShare = { id -> context.sharePost(viewModel.shareUrl(id)) },
         onBack = onBack,
         reportSheet = reportDoor(onRequireAccount, "detail_report_sheet", POST_DETAIL / "reportSheet"),
-        stanceControl = { target, tag, node ->
-            StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node)
-        },
+        stanceControl = nodeStanceControl,
         commentsSheet = { onDismiss ->
             DetailThread(
                 postId = postId,
@@ -205,6 +206,7 @@ fun PostDetailRoute(
             )
         },
         saved = rememberSavedWrites(),
+        hidden = rememberHiddenSet(),
         onRequireAccount = onRequireAccount,
         backDescription = originBack(from),
         landOn = landOn,
@@ -349,6 +351,12 @@ fun PostDetailScreen(
      * stands raised over the post from the first frame.
      */
     landOn: String? = null,
+    /**
+     * The reader's hidden set, which the menu hides through; null stands its
+     * Hide row inert. HIDING KEEPS THE READER ON THE POST (ReaderPostMenu.md:15):
+     * the person leaves the feed, never this page.
+     */
+    hidden: HiddenSet? = null,
 ) {
     val snackbar = remember { SnackbarHostState() }
     // THE PAGE'S SNACKBAR (`postDetail.snackbar`): the scope is the screen's,
@@ -357,9 +365,9 @@ fun PostDetailScreen(
     val notify: (String) -> Unit = { text ->
         scope.launch { snackbar.showSnackbar(NodeSnackbarVisuals(text, POST_DETAIL / "snackbar")) }
     }
-    // THE MENU SAVES THROUGH THE ONE OVERLAY, its aftermath on this page's
-    // snackbar — `Removed from Saved.` with `Undo` on `postDetail.snackbar.action`.
-    val savedHost = rememberSavedHost(saved, snackbar, POST_DETAIL / "snackbar", onRequireAccount)
+    // THE MENU SAVES THROUGH THE ONE OVERLAY AND HIDES THROUGH THE ONE SET, its
+    // aftermath on this page's snackbar — `Undo` on `postDetail.snackbar.action`.
+    val savedHost = rememberSavedHost(saved, snackbar, POST_DETAIL / "snackbar", onRequireAccount, hidden)
     // Which post's report confirm is up — the post the page is reading.
     var reportFor by remember { mutableStateOf<String?>(null) }
     // THE LICENSE IS NEVER A STATE OF THE CARD (`ReaderPostMenu.jsx:27-29`):
@@ -650,6 +658,7 @@ private fun DetailMenu(
             // wears its `postDetail.menuSheet` path.
             rowNode = { row -> menuSheet / row.nodeName },
             saveRow = saved?.menuRow(post.id, post.viewerBookmarkedAt, "detail_menu_save"),
+            onHide = post.author?.let { saved?.hideAct(it.asHiddenPerson(), post.id) },
         ),
         contentDescription = stringResource(R.string.content_menu_post),
         testTag = node.tag,

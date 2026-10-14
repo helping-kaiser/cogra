@@ -28,11 +28,15 @@ import com.cogra.domain.feed.FeedViewer
 import com.cogra.domain.feed.PeopleMark
 import com.cogra.domain.feed.PeopleScope
 import com.cogra.domain.feed.PeopleSign
+import com.cogra.domain.hidden.HiddenEntry
+import com.cogra.domain.hidden.HiddenPerson
+import com.cogra.domain.hidden.HiddenSet
 import com.cogra.domain.history.SeenRecord
 import com.cogra.domain.history.SeenTracker
 import com.cogra.domain.history.StoredSeenRecord
 import com.cogra.domain.testing.FakeSeenRecordStore
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.RecordingHiddenRepository
 import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.ScriptedFeedRepository
 import com.cogra.domain.testing.ScriptedSeenHistory
@@ -81,8 +85,21 @@ class FeedViewModelTest {
     private val seenRecord by lazy { SeenRecord(records, server, session, appScope) }
     private val seenTracker by lazy { SeenTracker(history, session, appScope, seenRecord) }
 
-    private fun viewModel() =
-        FeedViewModel(feed, FeedViewer(account, session), seenRecord, landings, reveals, seen, WEB_ORIGIN, seenTracker)
+    /** The reader's hidden set; empty unless a test scripts one. */
+    private val hiddenRepository = RecordingHiddenRepository()
+    private val hidden by lazy { HiddenSet(hiddenRepository, session, appScope) }
+
+    private fun viewModel() = FeedViewModel(
+        feed,
+        FeedViewer(account, session),
+        seenRecord,
+        landings,
+        reveals,
+        seen,
+        WEB_ORIGIN,
+        seenTracker,
+        hidden,
+    )
 
     private fun FeedViewModel.ids() = state.value.posts.map { it.id }
 
@@ -110,6 +127,56 @@ class FeedViewModelTest {
         assertThat(vm.state.value.loading).isFalse()
         assertThat(vm.ids()).containsExactly("p1", "p2").inOrder()
     }
+
+    /**
+     * Hidden-actors §4.4 "over-fetch to fill": a window of nothing but a
+     * hidden person's posts reads the next window rather than leaving the
+     * reader at a dead end. The hidden rows ride along — the screen leaves
+     * them out, and Undo puts them back where they stood.
+     */
+    @Test
+    fun aPageOfOnlyHiddenPostsLoadsTheNext() = runTest(dispatcher) {
+        val hiddenIds = List(FEED_PAGE_SIZE) { "h$it" }
+        hiddenIds.forEach { feed.posts[it] = testPost(it, author = ActorRef("ada-id", "ada")) }
+        feed.answer = Outcome.Success(rankingOf(hiddenIds + "p-after"))
+        hiddenRepository.served = Outcome.Success(listOf(hiddenEntry("ada-id", "ada")))
+        val vm = viewModel()
+        settle()
+
+        assertThat(feed.windows.map { it.size }).containsExactly(FEED_PAGE_SIZE, 1).inOrder()
+        assertThat(vm.ids()).containsExactlyElementsIn(hiddenIds + "p-after").inOrder()
+        assertThat(vm.state.value.hasNextPage).isFalse()
+    }
+
+    /** Hidden-actors §5.1: the feed never draws a page before the hidden set has been read. */
+    @Test
+    fun theFeedNeverRendersBeforeTheHiddenSetIsRead() = runTest(dispatcher) {
+        feed.answer = Outcome.Success(rankingOf("p1"))
+        hiddenRepository.served = Outcome.Failed(IOException("down"))
+        val vm = viewModel()
+        settle()
+
+        assertThat(vm.ids()).isEmpty()
+        assertThat(vm.state.value.transportFault).isEqualTo(TransportFault.REFRESH)
+        assertThat(hiddenRepository.reads).isEqualTo(1)
+    }
+
+    /** Hidden-actors §5.1: every pull reads the set again, so a hide made elsewhere reaches this feed. */
+    @Test
+    fun theHiddenSetRefetchesOnFeedOpenAndPull() = runTest(dispatcher) {
+        feed.answer = Outcome.Success(rankingOf("p1"))
+        val vm = viewModel()
+        settle()
+        vm.refresh()
+        settle()
+
+        assertThat(hiddenRepository.reads).isEqualTo(2)
+    }
+
+    private fun hiddenEntry(id: String, handle: String) = HiddenEntry(
+        HiddenPerson(id, handle, displayName = null, avatarUrl = null, redacted = false),
+        java.time.Instant.parse("2026-10-01T00:00:00Z"),
+    )
 
     /** PR-55 (i): a fully-closed, reopened app ranks afresh — a new process is a new ViewModel. */
     @Test
@@ -484,6 +551,7 @@ class FeedViewModelTest {
             seen,
             WEB_ORIGIN,
             seenTracker,
+            hidden,
         )
         settle()
 

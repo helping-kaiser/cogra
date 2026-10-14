@@ -13,6 +13,7 @@ import { notificationsHref, resetNotificationsOrigin } from "@/lib/notifications
 import { NOTIFICATIONS_EMPTY } from "@/lib/notifications/row-content";
 import { createTokenStore } from "@/lib/session/token-store";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
+import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { intersect } from "@/test/media-env";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
@@ -285,24 +286,19 @@ describe("NotificationsScreen", () => {
     expect(await screen.findByTestId("notifications.header.back")).toHaveAccessibleName("Back to your profile");
   });
 
-  // PR-11's client half: the list never holds rows it did not just read, so
-  // a reader who hid someone from a page opened off a row comes back to a
-  // list re-read without that person's rows.
+  // PR-11's client half: the rows the list holds are laid under the reader's
+  // own hidden set, the one the feed filters by — a hide made anywhere takes
+  // that person's rows out of the held list.
   it("hiding_someone_elsewhere_drops_their_rows_from_the_held_list", async () => {
-    let served = THREE;
+    serve(THREE);
     server.use(
-      graphql.query("Notifications", () => HttpResponse.json({ data: page(served) })),
-      graphql.mutation("MarkNotificationsSeen", () =>
-        HttpResponse.json({ data: { markNotificationsSeen: { hasUnreadNotifications: false, userErrors: [] } } }),
-      ),
+      ...hiddenHandlers(hiddenLog(), {
+        entries: [{ id: "u-sol", handle: "sol", displayName: "Sol", hiddenAt: at(1) }],
+      }),
     );
-    const first = renderWithProviders(<NotificationsScreen from="feed" />, { store: signedIn() });
-    await screen.findByTestId("notifications.list");
-    expect(rows()).toHaveLength(3);
-    first.unmount();
-    served = THREE.filter((r) => r.id !== "n2");
     renderWithProviders(<NotificationsScreen from="feed" />, { store: signedIn() });
-    await waitFor(() => expect(rows()).toHaveLength(2));
-    expect(screen.queryByText("@sol gave an opinion on you")).not.toBeInTheDocument();
+    await screen.findByText("@ada commented on your post");
+    await waitFor(() => expect(screen.queryByText("@sol gave an opinion on you")).not.toBeInTheDocument());
+    expect(rows()).toHaveLength(2);
   });
 });

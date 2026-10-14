@@ -96,7 +96,9 @@ describe("the announcer", () => {
     renderWithProviders(<Feed deps={d} />);
     await waitFor(() => expect(snackbarText()).toBe(NEWER_VERSION_SNACKBAR));
     expect(screen.getByTestId("feed.snackbar.action")).toHaveTextContent(UPDATE_NOW);
-    expect((d.flag as ReturnType<typeof memoryFlag>).value).toBe("0.1.3");
+    // The mark is the shown snackbar's effect: it lands after the commit that
+    // drew the words, so it is awaited rather than read in the same tick.
+    await waitFor(() => expect((d.flag as ReturnType<typeof memoryFlag>).value).toBe("0.1.3"));
   });
 
   it("feedNewerVersion_5_a_late_read_announces_as_it_arrives", async () => {
@@ -173,7 +175,7 @@ describe("the announcer", () => {
     const newer = [release("0.1.4"), ...BEHIND];
     renderWithProviders(<Feed deps={deps({ flag, load: () => Promise.resolve(success(newer)) })} />);
     await waitFor(() => expect(snackbarText()).toBe(NEWER_VERSION_SNACKBAR));
-    expect(flag.value).toBe("0.1.4");
+    await waitFor(() => expect(flag.value).toBe("0.1.4"));
   });
 
   it("feedNewerVersion_21_update_now_on_the_web_reloads_into_the_new_version", async () => {

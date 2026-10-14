@@ -17,14 +17,16 @@
 // surface, and a mark that does not go through is sent again, never shown.
 //
 // A HIDDEN ACCOUNT'S ROWS LEAVE AT ONCE (PR-11). The server drops them from
-// every read, and this list is read afresh each time it opens — a reader who
-// hides someone from a profile opened off a row comes back to a list re-read
-// without that person's rows. It never shows rows it did not just read.
+// every read, and the rows this list holds are laid under the reader's own
+// hidden set (`useHiddenSet`, the one store the feed filters by) — so a hide
+// made anywhere takes that person's rows out the moment it is made, and an
+// unhide brings them back in place.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import { fetchNotificationsPage, type Notification } from "@/lib/api/notifications-api";
+import { useHiddenSet } from "@/lib/hidden/provider";
 import { appendDeduped } from "@/lib/api/pagination";
 import { clearBell } from "@/lib/notifications/bell";
 import { flushMarks, markRead, markSeenThrough } from "@/lib/notifications/marks";
@@ -50,6 +52,7 @@ export function NotificationsScreen({ from }: { from: string | null }) {
   const client = useApolloClient();
   const guard = useAuthGuard();
   const host = useScrollHost();
+  const hidden = useHiddenSet();
   const root = ROOTS[notificationsOrigin(from)];
 
   const [rows, setRows] = useState<readonly Notification[]>([]);
@@ -115,19 +118,21 @@ export function NotificationsScreen({ from }: { from: string | null }) {
     setHasNextPage(outcome.value.hasNextPage);
   }, [client, guard, loadingMore, hasNextPage, endCursor]);
 
+  const visible = rows.filter((row) => !hidden.has(row.actor.id));
+
   const tailRef = useApproachingTail({
     root: host,
     onReach: () => void loadMore(),
     enabled: hasNextPage && !moreFailed,
   });
-  const tailIndex = tailIndexOf(rows.length);
+  const tailIndex = tailIndexOf(visible.length);
 
   const open = (row: Notification) => {
     setOpened((current) => new Set(current).add(row.id));
     if (row.readAt === null) void markRead(client, guard, row.id);
   };
 
-  const empty = !loading && !failed && rows.length === 0 && !hasNextPage;
+  const empty = !loading && !failed && visible.length === 0 && !hasNextPage;
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col">
@@ -174,9 +179,9 @@ export function NotificationsScreen({ from }: { from: string | null }) {
           </p>
         </div>
       )}
-      {rows.length > 0 && (
+      {visible.length > 0 && (
         <ul data-testid="notifications.list" className="m-0 flex list-none flex-col gap-2 px-4 pt-2">
-          {rows.map((row, index) => {
+          {visible.map((row, index) => {
             const content = notificationRow(row);
             // Keyed by place in the list, newest first (the board's key rule).
             const node = instance(LIST, "notification", String(index + 1));

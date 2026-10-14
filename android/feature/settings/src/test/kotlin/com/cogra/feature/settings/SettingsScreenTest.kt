@@ -467,7 +467,7 @@ class SettingsScreenTest {
     fun theForgetSwitchSaysWhatItClearsInThisApp() {
         render()
         node("settings.leaving.forget.status").assertTextEquals(
-            "Your key, your draft and any kept picks are cleared from this app when you sign out.",
+            "Your key, your draft, any kept picks and what you've seen are cleared from this app when you sign out.",
         )
     }
 

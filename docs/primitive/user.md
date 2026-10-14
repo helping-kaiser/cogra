@@ -73,6 +73,11 @@ held off-graph: an account in the applicant state
 ([auth.md "Account states"](../implementation/auth.md#account-states));
 the inviter's approval stages the Registration, the applicant's
 device signs it, and only the confirmed record creates the User.
+One window is on-graph yet pre-landing: a confirmed Registration
+creates the Actor — registered and funded — before any
+vouch-Opinion toward them lands, and the account lands only when
+both facts hold; that window is a whole actor awaiting its first
+vouch, never partial actorhood.
 The invariant is an L2 registration rule — L1 sees only the
 records once CoGra submits them
 ([auth.md "Account lifecycle"](../implementation/auth.md#account-lifecycle)).

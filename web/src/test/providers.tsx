@@ -7,6 +7,7 @@ import { render } from "@testing-library/react";
 import type { ReactNode } from "react";
 
 import { createGuardedClient } from "@/lib/session/browser-guard";
+import { HiddenProvider } from "@/lib/hidden/provider";
 import type { KeyCeremony } from "@/lib/identity/key-ceremony";
 import { SavedProvider } from "@/lib/saved/provider";
 import { SessionProvider } from "@/lib/session/provider";
@@ -54,7 +55,9 @@ export function renderWithProviders(
         <AuthRuntimeProvider>
           <RegistrationProvider ceremony={ceremony} flow={flow} writeSigner={writeSigner}>
             <StanceDataProvider data={stanceData}>
-              <SavedProvider>{ui}</SavedProvider>
+              <SavedProvider>
+                <HiddenProvider>{ui}</HiddenProvider>
+              </SavedProvider>
             </StanceDataProvider>
           </RegistrationProvider>
         </AuthRuntimeProvider>

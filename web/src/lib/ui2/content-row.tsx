@@ -96,7 +96,10 @@ export function ContentRow({
   testId,
   unread = false,
   sentence = false,
+  titleId,
 }: {
+  /** The title's element id, for a control that is described by it. */
+  titleId?: string;
   variant?: ContentRowVariant;
   title: string;
   /**
@@ -136,6 +139,7 @@ export function ContentRow({
   const quiet = (redacted && !sentence) || titleQuiet;
   const heading = (
     <span
+      id={titleId}
       className={`${ELLIPSIS} text-label-large ${quiet ? "text-on-surface-variant" : "text-on-surface"}`}
       {...testAttributes(part(node, "title"), `${testId}-title`)}
     >

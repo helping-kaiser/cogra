@@ -3,6 +3,8 @@ package com.cogra.feature.notifications
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.domain.Outcome
+import com.cogra.domain.hidden.HiddenSet
+import com.cogra.domain.hidden.HiddenView
 import com.cogra.domain.notifications.Notification
 import com.cogra.domain.notifications.NotificationBell
 import com.cogra.domain.notifications.NotificationsRepository
@@ -38,17 +40,21 @@ data class NotificationsUiState(
  * dot. Both marks go silently through the bell's queue ([NotificationBell]).
  *
  * A HIDDEN ACCOUNT'S ROWS LEAVE AT ONCE (PR-11). The server drops them from
- * every read, and the list reads again whenever it comes back on screen
- * ([resumed]) — so a reader who hides someone from a profile opened off a row
- * comes back to a list without that person's rows.
+ * every read, the held rows are laid under the reader's own hidden set
+ * ([hidden], the one store the feed filters by), and the list reads again
+ * whenever it comes back on screen ([resumed]).
  */
 @HiltViewModel
 class NotificationsViewModel @Inject constructor(
     private val repository: NotificationsRepository,
     private val bell: NotificationBell,
+    private val hiddenSet: HiddenSet,
 ) : ViewModel() {
     private val _state = MutableStateFlow(NotificationsUiState())
     val state: StateFlow<NotificationsUiState> = _state.asStateFlow()
+
+    /** The reader's hidden set, as the tap left it. */
+    val hidden: StateFlow<HiddenView> = hiddenSet.view
 
     /** Which read is live: a newer one must not be overwritten by an older answer. */
     private var request = 0
@@ -56,6 +62,7 @@ class NotificationsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch { bell.listOpened() }
+        viewModelScope.launch { hiddenSet.ensure() }
         read()
     }
 

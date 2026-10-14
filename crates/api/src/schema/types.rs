@@ -1470,6 +1470,68 @@ impl User {
         Ok(Some(connection))
     }
 
+    /// Actors this user has hidden from their own feed — a read-side
+    /// comfort applied post-rank on the viewer's side (feed-ranking.md
+    /// §8.2, §9.1); it does not lift the viewer's own records' effect on
+    /// anyone else's feed. Most recently hidden first; keyset on
+    /// `(hiddenAt, actor id)`. Field-level: viewer-only.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    async fn hidden_actors(
+        &self,
+        ctx: &Context<'_>,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<Option<HiddenActorConnection>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        validate_page_args(first, last, after.as_deref(), before.as_deref())
+            .map_err(|e| super::query::bad_input(e.message))?;
+        let backward = last.is_some() || before.is_some();
+        let cursor = match if backward { &before } else { &after } {
+            Some(raw) => Some(
+                crate::hidden::decode_cursor(raw)
+                    .ok_or_else(|| super::query::bad_input("invalid cursor"))?,
+            ),
+            None => None,
+        };
+        let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
+        let mut hidden = postgres_store::hidden::hidden_actors(
+            pool,
+            self.identity.id,
+            cursor,
+            backward,
+            limit + 1,
+        )
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let has_more = hidden.len() as i64 > limit;
+        if has_more {
+            if backward {
+                hidden.remove(0);
+            } else {
+                hidden.pop();
+            }
+        }
+        let (has_previous, has_next) = if backward {
+            (has_more, cursor.is_some())
+        } else {
+            (cursor.is_some(), has_more)
+        };
+        let mut connection = HiddenActorConnection::with_additional_fields(
+            has_previous,
+            has_next,
+            HiddenActorConnectionFields {
+                viewer: self.identity.id,
+            },
+        );
+        connection.edges.extend(hydrate_hidden(pool, hidden).await?);
+        Ok(Some(connection))
+    }
+
     /// When the viewer saved this person; null when not kept, or with no
     /// session. What the profile menus' Save / Unsave row reads.
     async fn viewer_bookmarked_at(
@@ -4167,6 +4229,100 @@ pub(crate) async fn hydrate_bookmarks(
                 node,
                 BookmarkEdgeFields {
                     bookmarked_at: bookmark.bookmarked_at,
+                },
+            ))
+        })
+        .collect())
+}
+
+/// Names the hidden-actors connection `HiddenActorConnection`, as the
+/// contract does.
+pub struct HiddenActorConnectionName;
+
+impl async_graphql::connection::ConnectionNameType for HiddenActorConnectionName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "HiddenActorConnection".to_string()
+    }
+}
+
+/// Names the hidden-actors edge `HiddenActorEdge`.
+pub struct HiddenActorEdgeName;
+
+impl async_graphql::connection::EdgeNameType for HiddenActorEdgeName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "HiddenActorEdge".to_string()
+    }
+}
+
+/// `HiddenActorEdge`'s own field: when the viewer hid the actor.
+#[derive(SimpleObject)]
+pub struct HiddenActorEdgeFields {
+    /// When the viewer hid this actor — the list's order, newest first,
+    /// and the moment an Undo of an unhide passes back to restore its place.
+    pub hidden_at: DateTime<Utc>,
+}
+
+/// One hidden actor.
+pub type HiddenActorEdge = Edge<String, Actor, HiddenActorEdgeFields, HiddenActorEdgeName>;
+
+/// A page of the viewer's hidden actors.
+pub type HiddenActorConnection = Connection<
+    String,
+    Actor,
+    HiddenActorConnectionFields,
+    HiddenActorEdgeFields,
+    HiddenActorConnectionName,
+    HiddenActorEdgeName,
+    async_graphql::connection::DisableNodesField,
+>;
+
+/// `HiddenActorConnection`'s connection-level fields: the viewer whose list
+/// served the edges, so the count runs only when asked.
+pub struct HiddenActorConnectionFields {
+    viewer: Uuid,
+}
+
+#[Object]
+impl HiddenActorConnectionFields {
+    /// How many actors the viewer has hidden, across every page — the
+    /// settings row's count. Priced at zero like every connection count;
+    /// saturates at [`i32::MAX`].
+    #[graphql(complexity = 0)]
+    async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
+        let pool = ctx.data::<PgPool>()?;
+        let total = postgres_store::hidden::count_hidden(pool, self.viewer)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
+    }
+}
+
+/// Hidden actors as edges, typed, in list order, through the actor
+/// registry (a keyless applicant is still an actor) — never
+/// `nodes::resolve_target`, which reads an unkeyed account as nothing.
+pub(crate) async fn hydrate_hidden(
+    pool: &PgPool,
+    hidden: Vec<postgres_store::hidden::HiddenActor>,
+) -> async_graphql::Result<Vec<HiddenActorEdge>> {
+    let ids: Vec<Uuid> = hidden.iter().map(|h| h.actor_id).collect();
+    let mut actors: std::collections::HashMap<Uuid, store::ActorIdentity> =
+        store::actor_identities_by_ids(pool, &ids)
+            .await?
+            .into_iter()
+            .map(|identity| (identity.id, identity))
+            .collect();
+    Ok(hidden
+        .into_iter()
+        .filter_map(|row| {
+            let identity = actors.remove(&row.actor_id)?;
+            Some(Edge::with_additional_fields(
+                crate::hidden::encode_cursor(row.cursor()),
+                Actor::User(User {
+                    identity,
+                    viewer_session: None,
+                }),
+                HiddenActorEdgeFields {
+                    hidden_at: row.hidden_at,
                 },
             ))
         })

@@ -22,6 +22,8 @@ import { useCallback, useEffect, useState } from "react";
 import type { SnackbarAction } from "@/lib/ui/snackbar";
 import type { DataNode } from "@/lib/ui/data-node";
 import type { MenuItem } from "@/lib/ui2/overflow-menu";
+import { hideCause } from "@/lib/hidden/hidden-set";
+import { useHiddenSet } from "@/lib/hidden/provider";
 import { useSavedWrites } from "./provider";
 import type { Kept, SavedWrites } from "./saved-writes";
 
@@ -56,10 +58,19 @@ export function useHostSnack(): {
   dismiss: () => void;
 } {
   const writes = useSavedWrites();
+  const hidden = useHiddenSet();
   const [snack, setSnack] = useState<HostSnack | null>(null);
   useEffect(
     () => writes.onRevert((node) => setSnack((current) => (current?.cause === node ? null : current))),
     [writes],
+  );
+  // A hide or unhide that did not go through clears its snackbar the same way.
+  useEffect(
+    () =>
+      hidden.onRevert((_, origin) =>
+        setSnack((current) => (current?.cause === hideCause(origin) ? null : current)),
+      ),
+    [hidden],
   );
   const notify = useCallback<Notify>((message, action, cause) => {
     tokens += 1;

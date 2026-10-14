@@ -1,8 +1,13 @@
 package com.cogra.feature.notifications
 
+import com.cogra.domain.AuthTokens
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.ModeratedField
 import com.cogra.domain.Outcome
+import com.cogra.domain.hidden.HiddenSet
+import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.RecordingHiddenRepository
+import kotlinx.coroutines.CoroutineScope
 import com.cogra.domain.notifications.Notification
 import com.cogra.domain.notifications.NotificationActor
 import com.cogra.domain.notifications.NotificationBell
@@ -27,6 +32,13 @@ class NotificationsViewModelTest {
     private val repository = RecordingNotificationsRepository()
     private val bell = NotificationBell(repository)
     private val newest = Instant.parse("2026-10-14T11:00:00Z")
+    private val hidden = HiddenSet(
+        RecordingHiddenRepository(),
+        FakeTokenStore().apply { tokens.value = AuthTokens("a", "r", "u1") },
+        CoroutineScope(Dispatchers.Unconfined),
+    )
+
+    private fun model() = NotificationsViewModel(repository, bell, hidden)
 
     private fun row(id: String, at: Instant, handle: String = "ada") = Notification(
         id = id,
@@ -59,7 +71,7 @@ class NotificationsViewModelTest {
         repository.bellAnswers += Outcome.Success(true)
         bell.freshRootLoad()
         serve(row("n1", newest), row("n2", newest.minusSeconds(60)))
-        val model = NotificationsViewModel(repository, bell)
+        val model = model()
         assertThat(bell.lit.value).isFalse()
         assertThat(model.state.value.notifications.map { it.id }).containsExactly("n1", "n2").inOrder()
         assertThat(repository.seen).containsExactly(newest)
@@ -67,14 +79,14 @@ class NotificationsViewModelTest {
 
     @Test
     fun `an empty list sends no mark`() = runTest {
-        NotificationsViewModel(repository, bell)
+        model()
         assertThat(repository.seen).isEmpty()
     }
 
     @Test
     fun `a tap clears its row and is marked read`() = runTest {
         serve(row("n1", newest))
-        val model = NotificationsViewModel(repository, bell)
+        val model = model()
         model.opened(model.state.value.notifications.single())
         assertThat(model.state.value.opened).containsExactly("n1")
         assertThat(repository.reads).containsExactly("n1")
@@ -83,7 +95,7 @@ class NotificationsViewModelTest {
     @Test
     fun `hiding someone elsewhere drops their rows from the held list`() = runTest {
         serve(row("n1", newest), row("n2", newest.minusSeconds(60), handle = "sol"))
-        val model = NotificationsViewModel(repository, bell)
+        val model = model()
         model.resumed()
         // The reader hid @sol from a profile opened off a row; the server
         // drops the rows, and the list reads again on its return.

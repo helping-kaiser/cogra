@@ -30,6 +30,7 @@ import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.release.AnnouncedReleaseStore
 import com.cogra.domain.release.ReleaseRegistry
 import com.cogra.domain.report.ReportRepository
+import com.cogra.domain.hidden.HiddenRepository
 import com.cogra.domain.notifications.NotificationsRepository
 import com.cogra.domain.saved.SavedRepository
 import com.cogra.domain.settings.SettingsRepository
@@ -55,6 +56,7 @@ import com.cogra.network.repo.StanceRepositoryImpl
 import com.cogra.network.repo.ReferenceRepositoryImpl
 import com.cogra.network.repo.ReleaseRegistryImpl
 import com.cogra.network.repo.ReportRepositoryImpl
+import com.cogra.network.repo.HiddenRepositoryImpl
 import com.cogra.network.repo.NotificationsRepositoryImpl
 import com.cogra.network.repo.SavedRepositoryImpl
 import com.cogra.network.repo.TopicRepositoryImpl
@@ -212,6 +214,9 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun notificationsRepository(impl: NotificationsRepositoryImpl): NotificationsRepository
+
+    @Binds
+    abstract fun hiddenRepository(impl: HiddenRepositoryImpl): HiddenRepository
 
     @Binds
     abstract fun seenRecordStore(impl: SeenRecordStoreImpl): SeenRecordStore

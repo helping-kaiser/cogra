@@ -17,6 +17,10 @@ import androidx.compose.ui.test.performClick
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.ModeratedField
 import com.cogra.domain.ModerationState
+import com.cogra.domain.hidden.HiddenEntry
+import com.cogra.domain.hidden.HiddenPerson
+import com.cogra.domain.hidden.HiddenStatus
+import com.cogra.domain.hidden.HiddenView
 import com.cogra.domain.notifications.BellRoot
 import com.cogra.domain.notifications.NOTIFICATIONS_EMPTY
 import com.cogra.domain.notifications.Notification
@@ -190,6 +194,26 @@ class NotificationsScreenTest {
         compose.onNodeWithText("Couldn't load more").assertIsDisplayed()
         compose.onNodeWithTag("notifications_more_retry").performClick()
         assertThat(asked).isAtLeast(1)
+    }
+
+    // PR-11's client half: the held rows are laid under the reader's hidden set.
+    @Test
+    fun `hiding someone elsewhere drops their rows from the held list`() {
+        val sol = HiddenPerson("u-sol", "sol", "Sol", avatarUrl = null, redacted = false)
+        compose.setContent {
+            NotificationsScreen(
+                state = loaded(commented, opinion),
+                root = BellRoot.FEED,
+                onRetry = {},
+                onLoadMore = {},
+                onBack = {},
+                onOpen = { _, _ -> },
+                now = now,
+                hidden = HiddenView(status = HiddenStatus.READ, entries = listOf(HiddenEntry(sol, now))),
+            )
+        }
+        compose.onNodeWithText("@ada commented on your post").assertIsDisplayed()
+        assertThat(compose.onAllNodesWithText("@sol gave an opinion on you").fetchSemanticsNodes()).isEmpty()
     }
 
     @Test

@@ -17,4 +17,12 @@
     <string name="saved_more_failed">Couldn\'t load more</string>
     <string name="saved_retry">Retry</string>
     <string name="saved_load_failed">Can\'t reach the server. Check your connection and try again.</string>
+
+    <!-- Hiding (hidden-actors packet §5.2; copy-voice "Saved, History and hiding"). -->
+    <string name="hidden_menu_hide">Hide %1$s</string>
+    <string name="hidden_menu_hide_account">Hide this account</string>
+    <string name="hidden_snackbar_hidden">%1$s is hidden — their posts stay out of your feed.</string>
+    <string name="hidden_snackbar_hidden_account">This account is hidden — its posts stay out of your feed.</string>
+    <string name="hidden_snackbar_unhidden">%1$s is unhidden — their posts can reach your feed again.</string>
+    <string name="hidden_snackbar_unhidden_account">This account is unhidden — its posts can reach your feed again.</string>
 </resources>

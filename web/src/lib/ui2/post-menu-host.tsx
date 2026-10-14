@@ -19,6 +19,8 @@ import { useApolloClient } from "@apollo/client/react";
 
 import type { PostView } from "@/lib/api/content-api";
 import { sendReport } from "@/lib/api/report-api";
+import { hideAct, hiddenPersonOf } from "@/lib/hidden/hide-row";
+import { useHiddenSet } from "@/lib/hidden/provider";
 import type { License } from "@/lib/license";
 import { useSavedWrites } from "@/lib/saved/provider";
 import { saveRow, type Notify } from "@/lib/saved/save-row";
@@ -79,6 +81,7 @@ export function PostMenuHost({
   const phase = useAuthPhase();
   const viewerId = useActiveAccountId();
   const writes = useSavedWrites();
+  const hidden = useHiddenSet();
   // THE NARROW-SHARE FOLD (design/readme.md, jakob 2026-09-17, sharpened
   // 2026-09-22 — PR #794): strictly below 360px the card's row sheds Share and
   // the reader's menu leads with it instead. Capability gated the same way the
@@ -133,6 +136,18 @@ export function PostMenuHost({
             onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
             testId: `${testId}-save`,
           }),
+          // HIDING NAMES ITS PERSON AND ASKS NOTHING (FeedHidden.md:3): the
+          // host's rows take the person out, and its snackbar offers Undo.
+          hide:
+            post.author == null
+              ? undefined
+              : hideAct({
+                  set: hidden,
+                  person: hiddenPersonOf(post.author),
+                  origin: post.id,
+                  notify,
+                  onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
+                }),
           testIdPrefix: testId,
           rowNode: nodes.row,
         });

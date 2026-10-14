@@ -145,6 +145,22 @@ describe("the held ranking", () => {
     expect(fake.windows.map((window) => window.length)).toEqual([FEED_WINDOW, 1]);
   });
 
+  it("a_page_of_only_hidden_posts_loads_the_next", async () => {
+    const ids = [...Array.from({ length: FEED_WINDOW }, (_, i) => `h${i}`), "p-after"];
+    const fake = io([answerOf(ids)]);
+    const reads: FeedIo = { ...fake.reads, hides: (item) => item.id.startsWith("h") };
+    const feed = new RankedFeed("reader-1");
+    await feed.refresh(reads);
+    const first = await feed.window(0, reads);
+    expect(first.kind).toBe("success");
+    if (first.kind !== "success") return;
+    // The hidden rows ride along — the screen's filter drops them, and Undo
+    // brings them back where they stood — but only the visible one ended the fill.
+    expect(first.value.items.map((item) => item.id)).toEqual(ids);
+    expect(first.value.next).toBe(FEED_WINDOW + 1);
+    expect(fake.windows.map((window) => window.length)).toEqual([FEED_WINDOW, 1]);
+  });
+
   it("skips what the server could not hydrate and never asks for it again", async () => {
     const fake = io([answerOf(["a", "gone", "b"])]);
     const feed = new RankedFeed("reader-1");

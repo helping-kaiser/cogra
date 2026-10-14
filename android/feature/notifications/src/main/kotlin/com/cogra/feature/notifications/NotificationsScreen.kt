@@ -46,6 +46,7 @@ import com.cogra.core.designsystem.v2.atom.ContentRowDisc
 import com.cogra.core.designsystem.v2.atom.ContentRowSecond
 import com.cogra.core.designsystem.v2.atom.PageHeader
 import com.cogra.domain.ageLadder
+import com.cogra.domain.hidden.HiddenView
 import com.cogra.domain.notifications.BellRoot
 import com.cogra.domain.notifications.NOTIFICATIONS_EMPTY
 import com.cogra.domain.notifications.Notification
@@ -72,12 +73,14 @@ fun NotificationsRoute(
     viewModel: NotificationsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val hidden by viewModel.hidden.collectAsStateWithLifecycle()
     LifecycleResumeEffect(viewModel) {
         viewModel.resumed()
         onPauseOrDispose {}
     }
     NotificationsScreen(
         state = state,
+        hidden = hidden,
         root = bellRootOf(from),
         onRetry = viewModel::read,
         onLoadMore = viewModel::loadMore,
@@ -98,9 +101,12 @@ fun NotificationsScreen(
     onBack: () -> Unit,
     onOpen: (Notification, NotificationTarget?) -> Unit,
     now: Instant = Instant.now(),
+    /** The reader's hidden set: a hidden person's rows leave the held list at once (PR-11). */
+    hidden: HiddenView = HiddenView(),
 ) {
     val list = rememberLazyListState()
-    LoadNextAtTheTail(list, state, onLoadMore)
+    val shown = state.copy(notifications = state.notifications.filterNot { hidden.has(it.actor.id) })
+    LoadNextAtTheTail(list, shown, onLoadMore)
     Column(Modifier.fillMaxSize().dataNodeSurface()) {
         PageHeader(
             title = stringResource(R.string.notifications_title),
@@ -109,16 +115,16 @@ fun NotificationsScreen(
             node = NOTIFICATIONS / "header",
         )
         when {
-            state.loading && state.notifications.isEmpty() -> Text(
+            shown.loading && shown.notifications.isEmpty() -> Text(
                 stringResource(com.cogra.core.designsystem.R.string.loading_state),
                 modifier = Modifier.padding(16.dp).testTag("notifications_loading"),
             )
 
-            state.failed && state.notifications.isEmpty() -> LoadFailed(onRetry)
+            shown.failed && shown.notifications.isEmpty() -> LoadFailed(onRetry)
 
-            state.notifications.isEmpty() && !state.hasNextPage -> Empty()
+            shown.notifications.isEmpty() && !shown.hasNextPage -> Empty()
 
-            else -> NotificationList(list, state, now, onOpen, onLoadMore)
+            else -> NotificationList(list, shown, now, onOpen, onLoadMore)
         }
     }
 }

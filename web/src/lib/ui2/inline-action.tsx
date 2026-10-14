@@ -23,6 +23,7 @@ export function InlineAction({
   node,
   testId,
   buttonRef,
+  describedBy,
   ariaLabel,
 }: {
   children: ReactNode;
@@ -34,6 +35,8 @@ export function InlineAction({
   node?: DataNode;
   testId?: string;
   buttonRef?: Ref<HTMLButtonElement>;
+  /** The element that names what the word acts on — a row's title (`Unhide`). */
+  describedBy?: string;
   /** The spoken name, when the word alone names the verb and not its object (`Update to version 0.1.3`). */
   ariaLabel?: string;
 }) {
@@ -46,6 +49,7 @@ export function InlineAction({
       onClick={busy ? undefined : onClick}
       aria-busy={busy || undefined}
       aria-disabled={busy || undefined}
+      aria-describedby={describedBy}
       {...testAttributes(node, testId)}
       className={`${BUTTON_CLASS} border-0 bg-transparent p-0 font-sans text-primary ${
         size === "sm" ? "self-start text-label-small" : "flex-none text-label-large"
