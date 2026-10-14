@@ -1620,7 +1620,28 @@ class ContentScreensTest {
         compose.onNodeWithTag("comment_c1_menu").performClick()
         compose.onNodeWithTag("comment_menu_license_c1").performClick()
         compose.onNodeWithTag("comments_sheet").assertExists()
-        compose.onNodeWithTag("license_sheet_terms").assertExists()
+        compose.onNodeWithTag("postDetail.licenseSheet").assertExists()
+        compose.onNodeWithTag("postDetail.licenseSheet.dragHandle", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("postDetail.licenseSheet.terms").assertExists()
+        // The legacy tags are retired: the registered paths are the only names.
+        compose.onNodeWithTag("license_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("license_sheet_terms").assertDoesNotExist()
+    }
+
+    /** The comment's stacked terms ride `postDetail.licenseSheet`, their rows the keyed `axis`. */
+    @Test
+    fun aCommentsLicenseRowsAreTheRegisteredAxes() {
+        renderDetail(
+            detailFixture(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(testComment("c1")),
+            ),
+        )
+        openComments()
+        compose.onNodeWithTag("comment_c1_menu").performClick()
+        compose.onNodeWithTag("comment_menu_license_c1").performClick()
+        assertAxisRows("postDetail", "Not required", "Not logged")
     }
 
     // THE INTRODUCED-BUT-INERT LAW (jakob 2026-09-14): a row whose destination
