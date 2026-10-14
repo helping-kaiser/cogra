@@ -1593,13 +1593,34 @@ zero magnitude, not a sign; (3) stance survives in the stored slice's
 marginal row and terminal stance read-sites; it is never substituted for
 path parity.
 
-Determinant magnitude per tier (`prop:graph:path-view-determinant-bound`):
+Determinant magnitude per tier (`prop:graph:path-view-determinant-bound`).
+The determinant is a function of the parameter tuple $(p_d, p_i)$, so a
+tier has no single value; the table reads each tier at the worked
+fixtures of the original's verification section:
 
-| Tier | $\sqrt{\lvert\det(\boldsymbol{\Psi}^{[P]})\rvert}$ | Edge types |
-|---|---|---|
-| Full | $\approx 0.27$–$0.36$ | Opinion, Review/A, Reference/T, Self, Owner, Publish, Participant/A, Send/A |
-| Half | $\approx 0.20$–$0.22$ | Bid, Accept, Ratify, Join Request, Invitation/A |
-| Marginal | $\approx 0.07$–$0.08$ | Tag, Affinity, Review/T, Reference/A, Send/T, Invitation/T, Participant/T, control legs |
+| Tier | Edge | $(p_d, p_i)$ | $\sqrt{\lvert\det(\boldsymbol{\Psi}^{[P]})\rvert}$ |
+|---|---|---|---|
+| Full | Opinion | $(0.90, 0.70)$ | $0.350$ |
+| Full | Review/A | $(0.70, 0.80)$ | $0.342$ |
+| Full | Owner | $(0.70, 1.00)$ | $0.355$ |
+| Full | Self (Identity mask, standing-dependent) | $(1.00, 0.75)$ | $0.588$ |
+| Half | Accept | $(0.70, 0.80)$ | $0.217$ |
+| Half | Ratify | $(-0.70, 0.80)$ | $0.217$ |
+| Half | Join Request | $(0.70, 0.80)$ | $0.217$ |
+| Half | Bid | $(0.80, 0.60)$ | $0.198$ |
+| Marginal | Review/T | $(0.80, 0.70)$ | $0.077$ |
+| Marginal | Tag/A | $(0.80, 0.90)$ | $0.079$ |
+| Marginal | Tag/T | $(0.90, 0.80)$ | $0.079$ |
+| Marginal | Affinity | $(0.60, 0.80)$ | $0.073$ |
+| Marginal | Invitation/T | $(1.00, 0.80)$ | $0.079$ |
+| Marginal | Leave, De-invite legs (fixed parameters) | $(1.00, 1.00)$ | $0.153$ |
+
+The tier assignment of the remaining edge types follows the census,
+without a worked fixture in the original: Full — Reference/T, Publish,
+Participant/A, Send/A; Half — Invitation/A; Marginal — Reference/A,
+Send/T, Participant/T. The original presents $0.27$–$0.36$ as the
+reference band for non-Self full-mask edges, Self above it
+(`prop:graph:path-view-determinant-bound`).
 
 Self/Reputation is Full but standing-dependent
 ($\lvert\det\rvert^{1/2} \to 0$ as $\alpha \to 0$); supremum tracked by
