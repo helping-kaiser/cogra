@@ -2,7 +2,7 @@ import React from "react";
 import { Icon } from "../navigation/Icon.jsx";
 import { MonogramAvatar, REDACTED_ACTOR_NAME } from "../people/ActorChip.jsx";
 import { PendingMarker } from "../honesty/PendingMarker.jsx";
-import { StanceValue } from "../stance/StanceReadout.jsx";
+import { StanceValue, RESTING_FACE_EMOJI } from "../stance/StanceReadout.jsx";
 
 /* THE IDENTITY ROW — the card-lite line every list in this product is built
    from: a 40px disc saying who or what, two lines of words saying which and
@@ -108,7 +108,23 @@ function Disc({ redacted, image, imageShape, name, face, letter, glyph, tone }) 
         placeItems: "center",
       }}
     >
-      {face ? (
+      {face === "hollow" ? (
+        /* THE HOLLOW FACE (jakob 2026-10-14): a stance that was there and is
+           not — the withdrawal row's face, the resting 🫥 at the anchors'
+           muted treatment. The row's sentence says what happened, so the
+           face is decorative. */
+        <span
+          aria-hidden="true"
+          style={{
+            fontSize: "var(--text-title-medium)",
+            lineHeight: 1,
+            opacity: "var(--opacity-resting-face)",
+            filter: "grayscale(1)",
+          }}
+        >
+          {RESTING_FACE_EMOJI}
+        </span>
+      ) : face ? (
         <StanceValue pDirected={face.pDirected} pInterest={face.pInterest} showPair={false} />
       ) : letter ? (
         <span

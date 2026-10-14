@@ -2847,7 +2847,7 @@ Drawn on `Notifications`, `NotificationsEmpty` and `FeedUnread`.
 **A row is a sentence, and the handle is its subject.** `@ada commented
 on your post`, not *Ada Okonkwo · commented* — the disc already carries
 the face, so the words are free to be the whole fact, and a handle is
-what a reader recognises and can go looking for. Nine kinds, nine
+what a reader recognises and can go looking for. Ten kinds, ten
 sentences, all present tense of the act that happened:
 
 - `@ada commented on your post` — a comment on a post of yours.
@@ -2876,11 +2876,16 @@ sentences, all present tense of the act that happened:
   itself carries, so the row and the button tell one story. Not
   *rejected*, which names a verdict the network never passed: one member
   declining is one member declining.
+- `@sol walked back their opinion on you` — an opinion on your profile
+  netted back to nothing (jakob 2026-10-14). *Walked back* is the stance
+  control's own word for it (`Walk it back`), and it says plainly that a
+  standing connection was taken away. Its disc wears the hollow face 🫥,
+  the opinion row's sibling.
 
 **The second line is what arrived, or where it is.** The comment's and
 the reply's own words for the two that carry words; `in <title>` for the
 mention and the citation, the saved comment row's `on <title>`
-construction turned to the citing side. The other five have neither and
+construction turned to the citing side. The other six have neither and
 carry none — a line invented to even the rhythm would be chrome.
 
 **The unread mark is a dot and says `New`.** On the row's trailing edge

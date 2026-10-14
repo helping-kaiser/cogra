@@ -30,8 +30,10 @@ export interface ContentRowProps {
   image?: string;
   /** …else a monogram for this display name… */
   name?: string;
-  /** …else a stance face, for a record that is a stance… */
-  face?: { pDirected: number; pInterest: number };
+  /** …else a stance face, for a record that is a stance — or `"hollow"`, the
+   *  resting 🫥 at the muted treatment, for a stance walked back (the
+   *  withdrawal notification)… */
+  face?: { pDirected: number; pInterest: number } | "hollow";
   /**
    * …else the mark a kind with no icon wears — a topic's `#`, a text post's
    * `T`. `NodeMark`'s own rule, read by a second row master: no icon set has a

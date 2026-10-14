@@ -2322,6 +2322,8 @@ Object.assign(FLOW_MARKERS, {
     // The ninth, the eighth's twin (the reject extension), taking its next
     // free number for the same reason.
     { n: 15, find: ">@kel closed your application<", tag: "button" },
+    // The tenth, the opinion row's sibling (PR-72), the next free number.
+    { n: 16, find: ">@sol walked back their opinion on you<", tag: "button" },
   ],
   /* ── The Feed score’s drill-down (backlog item 13) ─────────────────────
      The path rows and the step rows carry one number each: they are one control
