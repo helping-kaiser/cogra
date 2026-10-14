@@ -25,3 +25,5 @@ WHEN the feed loads GIVEN Show what you've already seen is off, nothing the filt
 WHEN a row above feed.seenSeparator becomes seen -> NEVER the row moves AND NEVER feed.seenSeparator moves
 
 WHEN the feed refreshes, by a pull down all the way at its top or a tap of feed.bottomBar.feedSlot at its top -> what arrives unseen stands above feed.seenSeparator AND NEVER an unseen row stands under feed.seenSeparator
+
+ALWAYS the feed stands as one list, the seen rows ranked in among the rest and no feed.seenSeparator standing GIVEN Show what you've already seen is on

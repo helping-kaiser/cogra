@@ -72,6 +72,8 @@ ALWAYS the trigger reads your people among its deviations, as your people, for o
 
 ALWAYS the filter's "?" says Reset brings back your defaults, to change them go to settings.
 
+ALWAYS the feed filter's "?" says What you've already seen waits below the Already seen line unless you ask for it back. and the search sheet's keeps its stays-out sentence
+
 WHEN the last kind chip is switched off -> NEVER the chip refuses the tap
 
 WHEN pull down inside the filter sheet -> NEVER the feed refreshes
