@@ -3,15 +3,15 @@
 //! Host side of the admission handshake's two relay legs
 //! (layer1-interface.md §8.2). `seal` verifies the pre-signed proposal,
 //! adds salts, forms the binding commitments, and seals the verified
-//! act; `approve` verifies the approval witness over that exact sealed
-//! act. Ordering admits only a verified act carrying a valid approval
-//! witness.
+//! act; `approve` verifies the approval witness over that exact verified
+//! act and its seal. Ordering admits only a verified act carrying a valid
+//! approval witness.
 
 use common::l1::census::FamilyKind;
 use common::l1::crypto::{self, tags};
 use common::l1::handshake::{
-    ApprovalWitness, PreSignedProposal, VerifiedAct, canonical_deps, pre_commitment_msg,
-    seal_message,
+    ApprovalWitness, EDITION, PreSignedProposal, SealFrame, VerifiedAct, approval_digest,
+    content_commitment, deps_commitment, seal_message,
 };
 use common::l1::identifier::{ActId, NodeId};
 use rand::RngCore;
@@ -131,15 +131,8 @@ pub(crate) async fn seal(
             "author public key does not bind to the author address".into(),
         ));
     }
-    let digest_content =
-        crypto::pre_digest(tags::PRE_DIGEST_CONTENT, &pre.nonce, &pre.proposal.payload);
-    let digest_deps = crypto::pre_digest(
-        tags::PRE_DIGEST_DEPS,
-        &pre.nonce,
-        &canonical_deps(&pre.proposal.deps),
-    );
-    let msg = pre_commitment_msg(body, &digest_content, &digest_deps);
-    if !crypto::verify(&author_key, tags::PRE_COMMITMENT, &msg, &pre.pre_signature) {
+    let pre_commitment = pre.pre_commitment();
+    if !crypto::verify_digest(&author_key, &pre_commitment, &pre.pre_signature) {
         return Err(StandInError::Authentication(
             "pre-commitment signature does not verify".into(),
         ));
@@ -149,24 +142,28 @@ pub(crate) async fn seal(
     let mut deps_salt = vec![0u8; crypto::SALT_LEN];
     OsRng.fill_bytes(&mut content_salt);
     OsRng.fill_bytes(&mut deps_salt);
-    let content_commitment =
-        crypto::commitment(tags::COMMIT_CONTENT, &content_salt, &pre.proposal.payload).to_vec();
-    let deps_commitment = crypto::commitment(
-        tags::COMMIT_DEPS,
-        &deps_salt,
-        &canonical_deps(&pre.proposal.deps),
+    let content_commitment = content_commitment(
+        &act_id,
+        &pre_commitment,
+        &content_salt,
+        &pre.proposal.payload,
     )
     .to_vec();
+    let deps_commitment =
+        deps_commitment(&act_id, &pre_commitment, &deps_salt, &pre.proposal.deps).to_vec();
 
     let mut act = VerifiedAct {
         proposal: pre.proposal.clone(),
         author_pubkey: pre.author_pubkey.clone(),
         nonce: pre.nonce.clone(),
         pre_signature: pre.pre_signature.clone(),
+        pre_commitment: pre_commitment.to_vec(),
         content_salt,
         deps_salt,
         content_commitment,
         deps_commitment,
+        content_edition: EDITION,
+        deps_edition: EDITION,
         host_seal: vec![],
     };
     let host_key = standin.host_key().await?;
@@ -178,14 +175,17 @@ pub(crate) async fn seal(
         .map(|p| p.to_string())
         .collect();
     let deps: Vec<String> = pre.proposal.deps.iter().map(|d| d.to_string()).collect();
+    let payload_len = i64::try_from(pre.proposal.payload.len())
+        .map_err(|_| formation("payload length exceeds the stored range"))?;
     let mut tx = standin.pool().begin().await?;
     let inserted = sqlx::query!(
         "INSERT INTO l1_acts (
             act_id, author, seq, family, author_pubkey, middle, target,
             p_d, p_i, settlement_ref, license, asserted_parents, deps,
-            payload, nonce, pre_signature, content_salt, deps_salt,
-            content_commitment, deps_commitment, host_seal, status
-         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,'sealed')
+            payload, payload_len, nonce, pre_signature, pre_commitment,
+            content_salt, deps_salt, content_commitment, deps_commitment,
+            host_seal, status
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,'sealed')
          ON CONFLICT DO NOTHING",
         act_id.to_string(),
         body.author,
@@ -201,8 +201,10 @@ pub(crate) async fn seal(
         &parents,
         &deps,
         &pre.proposal.payload,
+        payload_len,
         &pre.nonce,
         &pre.pre_signature,
+        &act.pre_commitment,
         &act.content_salt,
         &act.deps_salt,
         &act.content_commitment,
@@ -230,7 +232,8 @@ pub(crate) async fn seal(
     Ok(act)
 }
 
-/// Reads back the act stored under an identifier, rebuilt as the exact
+/// Reads back the act stored under an identifier: its structural record,
+/// and — while the host still holds the handshake custody — the exact
 /// sealed object the host returned to its author, with whether its
 /// approval is recorded (crate::StandIn::sealed_act).
 pub(crate) async fn sealed_act(
@@ -240,8 +243,9 @@ pub(crate) async fn sealed_act(
     let row = sqlx::query!(
         "SELECT author, seq, family, author_pubkey, middle, target, p_d, p_i,
                 settlement_ref, license, asserted_parents, deps, payload,
-                nonce, pre_signature, content_salt, deps_salt,
-                content_commitment, deps_commitment, host_seal, status
+                payload_len, nonce, pre_signature, pre_commitment,
+                content_salt, deps_salt, content_commitment, deps_commitment,
+                host_seal, status
          FROM l1_acts WHERE act_id = $1",
         act_id.to_string(),
     )
@@ -255,22 +259,37 @@ pub(crate) async fn sealed_act(
         .map(|d| ActId::parse(d))
         .collect::<Result<Vec<_>, _>>()
         .map_err(|e| StandInError::Formation(e.to_string()))?;
-    Ok(Some(crate::StoredAct {
-        act: VerifiedAct {
+    let payload_len = u64::try_from(row.payload_len).map_err(|_| {
+        StandInError::Formation(format!("stored act {act_id} has a negative length"))
+    })?;
+    let sealed = match (row.payload, row.content_salt, row.nonce) {
+        (Some(payload), Some(content_salt), Some(nonce)) => Some(VerifiedAct {
             proposal: common::l1::handshake::Proposal {
-                body,
-                payload: row.payload,
-                deps,
+                body: body.clone(),
+                payload,
+                deps: deps.clone(),
             },
             author_pubkey: row.author_pubkey,
-            nonce: row.nonce,
+            nonce,
             pre_signature: row.pre_signature,
-            content_salt: row.content_salt,
+            pre_commitment: row.pre_commitment.clone(),
+            content_salt,
             deps_salt: row.deps_salt,
-            content_commitment: row.content_commitment,
+            content_commitment: row.content_commitment.clone(),
             deps_commitment: row.deps_commitment,
+            content_edition: EDITION,
+            deps_edition: EDITION,
             host_seal: row.host_seal,
-        },
+        }),
+        _ => None,
+    };
+    Ok(Some(crate::StoredAct {
+        body,
+        deps,
+        pre_commitment: row.pre_commitment,
+        content_commitment: row.content_commitment,
+        payload_len,
+        sealed,
         approved: row.status != "sealed",
     }))
 }
@@ -286,7 +305,8 @@ pub(crate) async fn approve(
     let row = sqlx::query!(
         "SELECT author, seq, family, author_pubkey, middle, target, p_d, p_i,
                 settlement_ref, license, asserted_parents, pre_signature,
-                content_commitment, deps_commitment, status
+                pre_commitment, content_commitment, deps_commitment, host_seal,
+                status
          FROM l1_acts WHERE act_id = $1",
         act_id,
     )
@@ -299,18 +319,20 @@ pub(crate) async fn approve(
     }
 
     let body = stored_body!(row).to_body()?;
-    let seal_msg = seal_message(
-        &body,
-        &row.pre_signature,
-        &row.content_commitment,
-        &row.deps_commitment,
-    );
+    let seal_msg = seal_message(&SealFrame {
+        body: &body,
+        pre_commitment: &row.pre_commitment,
+        pre_signature: &row.pre_signature,
+        content_commitment: &row.content_commitment,
+        deps_commitment: &row.deps_commitment,
+        content_edition: EDITION,
+        deps_edition: EDITION,
+    });
     let author_key = crypto::verifying_key_from_bytes(&row.author_pubkey)
         .ok_or_else(|| StandInError::Authentication("stored author key malformed".into()))?;
-    if !crypto::verify(
+    if !crypto::verify_digest(
         &author_key,
-        tags::APPROVAL,
-        &seal_msg,
+        &approval_digest(&seal_msg, &row.host_seal),
         &witness.approval_signature,
     ) {
         return Err(StandInError::Authentication(

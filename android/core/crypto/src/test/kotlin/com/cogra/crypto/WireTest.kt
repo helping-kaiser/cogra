@@ -67,10 +67,13 @@ class WireTest {
         authorPubkey = ByteArray(32) { 1 },
         nonce = ByteArray(32) { 2 },
         preSignature = ByteArray(64) { 3 },
+        preCommitment = ByteArray(32) { 9 },
         contentSalt = ByteArray(32) { 4 },
         depsSalt = ByteArray(32) { 5 },
         contentCommitment = ByteArray(32) { 6 },
         depsCommitment = ByteArray(32) { 7 },
+        contentEdition = 1u,
+        depsEdition = 2u,
         hostSeal = ByteArray(64) { 8 },
     )
 
@@ -85,13 +88,26 @@ class WireTest {
             authorPubkey = act.authorPubkey,
             nonce = act.nonce,
             preSignature = act.preSignature,
+            preCommitment = act.preCommitment,
             contentSalt = act.depsSalt,
             depsSalt = act.contentSalt,
             contentCommitment = act.contentCommitment,
             depsCommitment = act.depsCommitment,
+            contentEdition = act.contentEdition,
+            depsEdition = act.depsEdition,
             hostSeal = act.hostSeal,
         )
         assertThat(decodeVerifiedAct(encodeVerifiedAct(act))).isNotEqualTo(swapped)
+    }
+
+    @Test
+    fun theVerifiedActCarriesThePreCommitmentAndBothEditionTags() {
+        val act = fullAct()
+        val decoded = decodeVerifiedAct(encodeVerifiedAct(act))
+        assertThat(decoded.preCommitment).isEqualTo(act.preCommitment)
+        assertThat(decoded.contentEdition).isEqualTo(1UL)
+        assertThat(decoded.depsEdition).isEqualTo(2UL)
+        assertThat(CborDecoder(encodeVerifiedAct(act)).array()).isEqualTo(15UL)
     }
 
     @Test

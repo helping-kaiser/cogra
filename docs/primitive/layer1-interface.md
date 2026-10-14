@@ -1250,9 +1250,10 @@ recognition quantity.
 1. **Proposal pre-commitment (`def:graph:proposal-pre-commitment`).**
    Because the host contributes the final projection salts, the actor first
    binds its proposal: with a fresh private nonce, it forms domain-separated
-   pre-digests of the content bytes and canonical dependency encoding, then
-   signs the pre-commitment over the canonical structural body plus both
-   pre-digests. The pre-commitment exists before host salting, binds the
+   pre-digests of the content bytes and canonical dependency encoding, each
+   over the act identifier, the nonce, and the bytes; the pre-commitment is
+   the hash of the canonical structural body plus both pre-digests, and the
+   actor signs it. The pre-commitment exists before host salting, binds the
    exact proposal, cannot be transplanted to another act identifier,
    carries no host order, and grants no inclusion.
 2. **Verified act (`def:graph:verified-act`).** The host verifies the actor
@@ -1261,15 +1262,19 @@ recognition quantity.
    bounds, and the recomputed pre-commitment (a failure produces no Layer-1
    object); chooses independent fresh domain-separated salts meeting the
    published entropy floor; forms the binding content and dependency
-   commitments; and seals the resulting **verified act** header (no host
-   order fields) with its host signature. The seal attests receipt,
-   verification, and salt addition; it promises no inclusion.
+   commitments, each over the act identifier, the pre-commitment, its salt,
+   and the projection's bytes; and seals the resulting **verified act**
+   header — body, pre-commitment, pre-signature, both commitments, and the
+   content and dependency edition tags, no host order fields — with its
+   host signature. The seal attests receipt, verification, and salt
+   addition; it promises no inclusion.
 3. **Approval witness (`def:graph:approval-witness`).** The actor verifies
-   the host seal, exact equality of the returned body and references,
-   correct opening of both commitments, and (for a hyper-edge) agreement of
-   all act-level fields across both legs — then signs the **approval
-   witness** over the exact verified act including its host-added
-   commitments. The witness signs no epoch index, position, logical time,
+   the host seal, exact equality of the returned body, references,
+   pre-commitment and pre-signature, correct opening of both commitments,
+   correct editions, and (for a hyper-edge) agreement of all act-level
+   fields across both legs — then signs the **approval witness** over the
+   encoded verified act together with its host seal. The witness signs no
+   epoch index, position, logical time,
    final-set membership, standing, or title outcome. **Only a verified act
    with a valid approval witness is eligible for host ordering**; a
    verified but unaccepted act remains off-record submission state.
@@ -1447,7 +1452,10 @@ content commitment (*witness*) is invariant across phases; only carriage
 migrates. Centralized: Layer 1 tracks payload and salt, removable on
 request. Decentralized: Layer 1 tracks only the witness; payload and salt
 are a terminal carriage obligation. The structural record is identical in
-both.
+both. The L1 author has confirmed that Layer-1 carriage of payload and salt
+is optional from the start, so a centralized deployment may already run
+witness-only. CoGra does
+([data-model.md](../implementation/data-model.md#act-payload-carriage)).
 
 **Payload envelope convention (L2).** The opaque payload MAY carry a structured
 Layer-2 **content-envelope** — a deterministic-CBOR convention; the Peer Content

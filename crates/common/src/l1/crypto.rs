@@ -16,13 +16,19 @@ pub mod tags {
     //!
     //! Domain-separation tags. Every signed or hashed object is prefixed so
     //! no artifact of one role verifies in another.
-    pub const PRE_DIGEST_CONTENT: &[u8] = b"cogra-l1:pre-digest:content:v1";
-    pub const PRE_DIGEST_DEPS: &[u8] = b"cogra-l1:pre-digest:deps:v1";
+    //!
+    //! A tag's version names its formula: a tag whose formula changes moves
+    //! to the next version, so no artifact of the old formula verifies under
+    //! the new one. The structures follow the original's handshake
+    //! (layer1-interface.md §8.2, "The admission handshake"); the `PN-*`
+    //! strings arrive with the real substrate.
+    pub const PRE_DIGEST_CONTENT: &[u8] = b"cogra-l1:pre-digest:content:v2";
+    pub const PRE_DIGEST_DEPS: &[u8] = b"cogra-l1:pre-digest:deps:v2";
     pub const PRE_COMMITMENT: &[u8] = b"cogra-l1:pre-commitment:v1";
-    pub const COMMIT_CONTENT: &[u8] = b"cogra-l1:commitment:content:v1";
-    pub const COMMIT_DEPS: &[u8] = b"cogra-l1:commitment:deps:v1";
-    pub const HOST_SEAL: &[u8] = b"cogra-l1:host-seal:v1";
-    pub const APPROVAL: &[u8] = b"cogra-l1:approval:v1";
+    pub const COMMIT_CONTENT: &[u8] = b"cogra-l1:commitment:content:v2";
+    pub const COMMIT_DEPS: &[u8] = b"cogra-l1:commitment:deps:v2";
+    pub const HOST_SEAL: &[u8] = b"cogra-l1:host-seal:v2";
+    pub const APPROVAL: &[u8] = b"cogra-l1:approval:v2";
 }
 
 /// Salt / nonce length: the published entropy floor of the stand-in, which
@@ -40,24 +46,39 @@ pub fn sha256_tagged(tag: &[u8], parts: &[&[u8]]) -> [u8; 32] {
     h.finalize().into()
 }
 
-/// The actor-side pre-digest of a removable projection: binds the exact
-/// bytes under the actor's private nonce, before any host salt exists
-/// (layer1-interface.md §8.2).
-pub fn pre_digest(tag: &[u8], nonce: &[u8], bytes: &[u8]) -> [u8; 32] {
-    sha256_tagged(tag, &[nonce, bytes])
+/// The actor-side pre-digest of a removable projection: SHA-256 over (tag,
+/// act identifier, the actor's private nonce, bytes). It binds the exact
+/// bytes to the one act they were proposed for, before any host salt
+/// exists (layer1-interface.md §8.2, "Proposal pre-commitment").
+pub fn pre_digest(tag: &[u8], act_id: &[u8], nonce: &[u8], bytes: &[u8]) -> [u8; 32] {
+    sha256_tagged(tag, &[act_id, nonce, bytes])
 }
 
 /// The host-side binding, concealing commitment over a removable
-/// projection: SHA-256 over (tag, host salt, bytes). Binding — no second
-/// payload is consistent with it; concealing — without salt and bytes the
-/// commitment reveals nothing (layer1-interface.md §8.4).
-pub fn commitment(tag: &[u8], salt: &[u8], bytes: &[u8]) -> [u8; 32] {
-    sha256_tagged(tag, &[salt, bytes])
+/// projection: SHA-256 over (tag, act identifier, pre-commitment, host
+/// salt, bytes). Binding — no second payload is consistent with it;
+/// concealing — without salt and bytes the commitment reveals nothing;
+/// and it cannot be transplanted to another act or another proposal
+/// (layer1-interface.md §8.4; §8.2, "Verified act").
+pub fn commitment(
+    tag: &[u8],
+    act_id: &[u8],
+    pre_commitment: &[u8],
+    salt: &[u8],
+    bytes: &[u8],
+) -> [u8; 32] {
+    sha256_tagged(tag, &[act_id, pre_commitment, salt, bytes])
 }
 
+/// Ed25519 over a digest the caller already formed — the pre-signature
+/// over the pre-commitment, and the approval over its tagged digest.
+pub fn sign_digest(key: &SigningKey, digest: &[u8; 32]) -> Vec<u8> {
+    key.sign(digest).to_bytes().to_vec()
+}
+
+/// Ed25519 over the tagged digest of one message.
 pub fn sign(key: &SigningKey, tag: &[u8], msg: &[u8]) -> Vec<u8> {
-    let framed = sha256_tagged(tag, &[msg]);
-    key.sign(&framed).to_bytes().to_vec()
+    sign_digest(key, &sha256_tagged(tag, &[msg]))
 }
 
 /// Strict Ed25519 verification, which is the seam's acceptance boundary:
@@ -76,11 +97,16 @@ pub fn sign(key: &SigningKey, tag: &[u8], msg: &[u8]) -> Vec<u8> {
 /// The refusals are pinned across the clients by the `signatureRefusals`
 /// group of `client-crypto-vectors.json`.
 pub fn verify(key: &VerifyingKey, tag: &[u8], msg: &[u8], signature: &[u8]) -> bool {
+    verify_digest(key, &sha256_tagged(tag, &[msg]), signature)
+}
+
+/// Strict verification of a signature made by [`sign_digest`], under the
+/// same acceptance boundary as [`verify`].
+pub fn verify_digest(key: &VerifyingKey, digest: &[u8; 32], signature: &[u8]) -> bool {
     let Ok(sig) = Signature::from_slice(signature) else {
         return false;
     };
-    let framed = sha256_tagged(tag, &[msg]);
-    key.verify_strict(&framed, &sig).is_ok()
+    key.verify_strict(digest, &sig).is_ok()
 }
 
 pub fn verifying_key_from_bytes(bytes: &[u8]) -> Option<VerifyingKey> {
@@ -182,19 +208,131 @@ mod tests {
         assert!(!verify(&key.verifying_key(), tags::APPROVAL, msg, &sig));
     }
 
+    const ACT: &[u8] = b"act:alice:1:publish";
+    const PRE: [u8; 32] = [3u8; 32];
+
     /// A commitment binds its tag, its salt, and its payload, so changing any one of the three changes it.
     /// ´claim:crypto:a-commitment-binds-its-tag-salt-and-payload´
     #[test]
     fn commitments_bind() {
         let salt = [7u8; SALT_LEN];
-        let c = commitment(tags::COMMIT_CONTENT, &salt, b"payload");
-        assert_eq!(c, commitment(tags::COMMIT_CONTENT, &salt, b"payload"));
-        assert_ne!(c, commitment(tags::COMMIT_CONTENT, &salt, b"payloaX"));
+        let c = commitment(tags::COMMIT_CONTENT, ACT, &PRE, &salt, b"payload");
+        assert_eq!(
+            c,
+            commitment(tags::COMMIT_CONTENT, ACT, &PRE, &salt, b"payload")
+        );
         assert_ne!(
             c,
-            commitment(tags::COMMIT_CONTENT, &[8u8; SALT_LEN], b"payload")
+            commitment(tags::COMMIT_CONTENT, ACT, &PRE, &salt, b"payloaX")
         );
-        assert_ne!(c, commitment(tags::COMMIT_DEPS, &salt, b"payload"));
+        assert_ne!(
+            c,
+            commitment(
+                tags::COMMIT_CONTENT,
+                ACT,
+                &PRE,
+                &[8u8; SALT_LEN],
+                b"payload"
+            )
+        );
+        assert_ne!(
+            c,
+            commitment(tags::COMMIT_DEPS, ACT, &PRE, &salt, b"payload")
+        );
+    }
+
+    /// The same payload under the same salt commits differently under another act identifier, so a content witness cannot be transplanted to another act.
+    /// ´claim:crypto:a-content-commitment-binds-the-act-id-and-the-pre-commitment´
+    #[test]
+    fn the_same_payload_and_salt_under_another_act_id_commit_differently() {
+        let salt = [7u8; SALT_LEN];
+        assert_ne!(
+            commitment(tags::COMMIT_CONTENT, ACT, &PRE, &salt, b"payload"),
+            commitment(
+                tags::COMMIT_CONTENT,
+                b"act:alice:2:publish",
+                &PRE,
+                &salt,
+                b"payload"
+            )
+        );
+    }
+
+    /// And differently under another pre-commitment, so it binds the one proposal it realizes.
+    ///
+    /// (´claim:crypto:a-content-commitment-binds-the-act-id-and-the-pre-commitment´)
+    #[test]
+    fn the_same_payload_and_salt_under_another_pre_commitment_commit_differently() {
+        let salt = [7u8; SALT_LEN];
+        assert_ne!(
+            commitment(tags::COMMIT_CONTENT, ACT, &PRE, &salt, b"payload"),
+            commitment(tags::COMMIT_CONTENT, ACT, &[4u8; 32], &salt, b"payload")
+        );
+    }
+
+    /// The dependency commitment binds the act identifier and the pre-commitment exactly as the content commitment does.
+    /// ´claim:crypto:a-dependency-commitment-binds-the-act-id-and-the-pre-commitment´
+    #[test]
+    fn a_dependency_commitment_binds_the_act_id_and_the_pre_commitment() {
+        let salt = [7u8; SALT_LEN];
+        let deps = [0x80u8];
+        let c = commitment(tags::COMMIT_DEPS, ACT, &PRE, &salt, &deps);
+        assert_ne!(
+            c,
+            commitment(
+                tags::COMMIT_DEPS,
+                b"act:alice:2:publish",
+                &PRE,
+                &salt,
+                &deps
+            )
+        );
+        assert_ne!(
+            c,
+            commitment(tags::COMMIT_DEPS, ACT, &[4u8; 32], &salt, &deps)
+        );
+    }
+
+    /// A pre-digest binds the act identifier it was formed for, so the same bytes under the same nonce digest differently for another act.
+    /// ´claim:crypto:a-pre-digest-binds-the-act-id-it-was-formed-for´
+    #[test]
+    fn a_pre_digest_binds_the_act_id_it_was_formed_for() {
+        let nonce = [9u8; SALT_LEN];
+        let d = pre_digest(tags::PRE_DIGEST_CONTENT, ACT, &nonce, b"payload");
+        assert_eq!(
+            d,
+            pre_digest(tags::PRE_DIGEST_CONTENT, ACT, &nonce, b"payload")
+        );
+        assert_ne!(
+            d,
+            pre_digest(
+                tags::PRE_DIGEST_CONTENT,
+                b"act:alice:2:publish",
+                &nonce,
+                b"payload"
+            )
+        );
+        assert_ne!(
+            d,
+            pre_digest(tags::PRE_DIGEST_DEPS, ACT, &nonce, b"payload")
+        );
+    }
+
+    /// A commitment formed under the earlier formula — tag, salt, bytes, with no act identifier or pre-commitment — never equals one formed under the current tag and formula.
+    /// ´claim:crypto:a-v1-commitment-never-verifies-under-the-v2-formula´
+    #[test]
+    fn a_v1_commitment_never_verifies_under_the_v2_formula() {
+        let salt = [7u8; SALT_LEN];
+        let v1 = sha256_tagged(b"cogra-l1:commitment:content:v1", &[&salt, b"payload"]);
+        assert_ne!(
+            v1,
+            commitment(tags::COMMIT_CONTENT, ACT, &PRE, &salt, b"payload")
+        );
+        assert_ne!(
+            v1,
+            sha256_tagged(tags::COMMIT_CONTENT, &[&salt, b"payload"]),
+            "the version bump alone already separates the two formulas"
+        );
     }
 
     /// Without the length prefixes, two different part lists sharing a

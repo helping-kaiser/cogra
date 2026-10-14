@@ -50,9 +50,12 @@ class GoldenVectorsTest {
     // shape of vectors it holds, and this client reads that shape. It
     // says nothing about whether the file was regenerated recently —
     // that is the Gradle input's job (build.gradle.kts).
+    // 3: the handshake took the original's structure (act identifier and
+    // pre-commitment in every pre-digest and commitment, editions, the
+    // approval over the verified act and its seal).
     @Test
     fun theVectorsFileIsTheContractVersionThisClientReads() {
-        assertThat(vectors.str("version")).isEqualTo("2")
+        assertThat(vectors.str("version")).isEqualTo("3")
     }
 
     @Test
@@ -178,29 +181,43 @@ class GoldenVectorsTest {
         }
     }
 
-    @Test
-    fun handshakeVectorsMatch() {
-        val hs = vectors.jsonObject.getValue("handshake")
-        val actor = ActorKey.fromSeed(vectors.jsonObject.getValue("signing").str("seedHex").hexToBytes())
-        val hostPubkey = hs.jsonObject.getValue("host").str("publicKeyHex").hexToBytes()
+    private class HandshakeFixture(val hs: JsonElement, val actor: ActorKey, val proposal: Proposal) {
+        val hostPubkey: ByteArray = hs.jsonObject.getValue("host").str("publicKeyHex").hexToBytes()
+        val nonce: ByteArray = hs.str("nonceHex").hexToBytes()
+        val pre: PreSignedProposal = actor.preSignWith(proposal, nonce)
+    }
 
+    private fun handshakeFixture(): HandshakeFixture {
+        val hs = vectors.jsonObject.getValue("handshake")
         val proposalJson = hs.jsonObject.getValue("proposal")
-        val proposal = Proposal(
-            body = bodyOf(proposalJson.jsonObject.getValue("body")),
-            payload = proposalJson.str("payloadHex").hexToBytes(),
-            deps = proposalJson.jsonObject.getValue("deps").jsonArray
-                .map { ActId.parse(it.jsonPrimitive.content) },
+        return HandshakeFixture(
+            hs = hs,
+            actor = ActorKey.fromSeed(vectors.jsonObject.getValue("signing").str("seedHex").hexToBytes()),
+            proposal = Proposal(
+                body = bodyOf(proposalJson.jsonObject.getValue("body")),
+                payload = proposalJson.str("payloadHex").hexToBytes(),
+                deps = proposalJson.jsonObject.getValue("deps").jsonArray
+                    .map { ActId.parse(it.jsonPrimitive.content) },
+            ),
         )
+    }
+
+    @Test
+    fun theDeviceReproducesEveryConformantHandshakeVector() {
+        val f = handshakeFixture()
+        val hs = f.hs
+        val proposal = f.proposal
         assertThat(canonicalDeps(proposal.deps).toHex()).isEqualTo(hs.str("canonicalDepsHex"))
         assertThat(encodeProposal(proposal).toHex()).isEqualTo(hs.str("wireProposalHex"))
         assertThat(decodeProposal(hs.str("wireProposalHex").hexToBytes())).isEqualTo(proposal)
 
         // Pre-sign under the pinned nonce: every intermediate matches.
-        val nonce = hs.str("nonceHex").hexToBytes()
-        val pre = actor.preSignWith(proposal, nonce)
-        assertThat(preDigest(Tags.PRE_DIGEST_CONTENT, nonce, proposal.payload).toHex())
+        val nonce = f.nonce
+        val pre = f.pre
+        val actId = proposal.body.actId().toString().toByteArray(Charsets.UTF_8)
+        assertThat(preDigest(Tags.PRE_DIGEST_CONTENT, actId, nonce, proposal.payload).toHex())
             .isEqualTo(hs.str("contentPreDigestHex"))
-        assertThat(preDigest(Tags.PRE_DIGEST_DEPS, nonce, canonicalDeps(proposal.deps)).toHex())
+        assertThat(preDigest(Tags.PRE_DIGEST_DEPS, actId, nonce, canonicalDeps(proposal.deps)).toHex())
             .isEqualTo(hs.str("depsPreDigestHex"))
         assertThat(
             preCommitmentMsg(
@@ -209,29 +226,41 @@ class GoldenVectorsTest {
                 hs.str("depsPreDigestHex").hexToBytes(),
             ).toHex(),
         ).isEqualTo(hs.str("preCommitmentMsgHex"))
+        assertThat(preCommitment(proposal, nonce).toHex()).isEqualTo(hs.str("preCommitmentHex"))
         assertThat(pre.preSignature.toHex()).isEqualTo(hs.str("preSignatureHex"))
+        assertThat(
+            verifyDigest(f.actor.publicKeyBytes(), hs.str("preCommitmentHex").hexToBytes(), pre.preSignature),
+        ).isTrue()
         assertThat(encodePreCommitmentOf(pre).toHex()).isEqualTo(hs.str("wirePreCommitmentHex"))
 
         // The sealed act: commitments recompute, the seal message and
         // wire form match, and the host seal verifies.
+        val preCommitmentBytes = hs.str("preCommitmentHex").hexToBytes()
         val sealed = VerifiedAct(
             proposal = proposal,
-            authorPubkey = actor.publicKeyBytes(),
+            authorPubkey = f.actor.publicKeyBytes(),
             nonce = nonce,
             preSignature = pre.preSignature,
+            preCommitment = preCommitmentBytes,
             contentSalt = hs.str("contentSaltHex").hexToBytes(),
             depsSalt = hs.str("depsSaltHex").hexToBytes(),
             contentCommitment = hs.str("contentCommitmentHex").hexToBytes(),
             depsCommitment = hs.str("depsCommitmentHex").hexToBytes(),
+            contentEdition = hs.str("contentEdition").toULong(),
+            depsEdition = hs.str("depsEdition").toULong(),
             hostSeal = hs.str("hostSealHex").hexToBytes(),
         )
         assertThat(
-            commitment(Tags.COMMIT_CONTENT, sealed.contentSalt, proposal.payload).toHex(),
+            commitment(Tags.COMMIT_CONTENT, actId, preCommitmentBytes, sealed.contentSalt, proposal.payload).toHex(),
         ).isEqualTo(hs.str("contentCommitmentHex"))
         assertThat(
-            commitment(Tags.COMMIT_DEPS, sealed.depsSalt, canonicalDeps(proposal.deps)).toHex(),
+            commitment(Tags.COMMIT_DEPS, actId, preCommitmentBytes, sealed.depsSalt, canonicalDeps(proposal.deps))
+                .toHex(),
         ).isEqualTo(hs.str("depsCommitmentHex"))
+        assertThat(sealed.contentEdition).isEqualTo(EDITION)
+        assertThat(sealed.depsEdition).isEqualTo(EDITION)
         assertThat(sealed.sealMsg().toHex()).isEqualTo(hs.str("sealMsgHex"))
+        assertThat(sealed.approvalDigest().toHex()).isEqualTo(hs.str("approvalDigestHex"))
         assertThat(encodeVerifiedAct(sealed).toHex()).isEqualTo(hs.str("wireVerifiedActHex"))
         // Every field, not a sample of two: a decoder that swapped the
         // two same-length salts passed the old pair of assertions.
@@ -239,9 +268,24 @@ class GoldenVectorsTest {
 
         // The real approval path accepts the pinned act and reproduces
         // the pinned witness.
-        val witness = actor.approve(pre, sealed, hostPubkey)
+        val witness = f.actor.approve(pre, sealed, f.hostPubkey)
         assertThat(witness.actId.toString()).isEqualTo(hs.str("approvalActId"))
         assertThat(witness.approvalSignature.toHex()).isEqualTo(hs.str("approvalSignatureHex"))
+    }
+
+    // Each of these is validly sealed by the host, so only the device's
+    // own checks can catch it — and the reference catches every one.
+    @Test
+    fun theDeviceRefusesEveryHandshakeRejectionVector() {
+        val f = handshakeFixture()
+        val cases = vectors.jsonObject.getValue("handshakeRefusals").jsonArray
+        assertThat(cases).isNotEmpty()
+        for (case in cases) {
+            val act = decodeVerifiedAct(case.str("wireVerifiedActHex").hexToBytes())
+            assertThrows(case.str("case"), HandshakeException::class.java) {
+                f.actor.approve(f.pre, act, f.hostPubkey)
+            }
+        }
     }
 
     @Test

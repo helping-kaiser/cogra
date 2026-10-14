@@ -9,7 +9,7 @@
 //! The relay confers nothing: both signatures cover the act, so nothing
 //! here can alter or author one (architecture.md "The write path").
 
-use common::l1::crypto::{self, tags};
+use common::l1::crypto;
 use common::l1::handshake::{ApprovalWitness, PreSignedProposal, VerifiedAct};
 use postgres_store::PgPool;
 use postgres_store::staged::{self, PreSignedParts, StagedState};
@@ -201,7 +201,7 @@ fn check_witness(write: &staged::StagedWrite, approval_signature: &[u8]) -> Resu
     let key = crypto::verifying_key_from_bytes(&act.author_pubkey).ok_or_else(|| {
         RelayError::SignatureInvalid("the sealed act's author key is malformed".into())
     })?;
-    if crypto::verify(&key, tags::APPROVAL, &act.seal_msg(), approval_signature) {
+    if crypto::verify_digest(&key, &act.approval_digest(), approval_signature) {
         Ok(())
     } else {
         Err(RelayError::SignatureInvalid(

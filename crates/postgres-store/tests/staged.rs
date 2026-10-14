@@ -59,10 +59,13 @@ fn verified_act(p: &Proposal) -> VerifiedAct {
         author_pubkey: vec![1; 32],
         nonce: vec![2; 32],
         pre_signature: vec![3; 64],
+        pre_commitment: common::l1::handshake::pre_commitment(p, &[2; 32]).to_vec(),
         content_salt: vec![4; 32],
         deps_salt: vec![5; 32],
         content_commitment: vec![6; 32],
         deps_commitment: vec![7; 32],
+        content_edition: common::l1::handshake::EDITION,
+        deps_edition: common::l1::handshake::EDITION,
         host_seal: vec![8; 64],
     }
 }

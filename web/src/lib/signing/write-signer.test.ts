@@ -16,9 +16,11 @@ import type { StagedWriteState } from "@/__generated__/graphql";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { ActorKey } from "@/lib/crypto/actor-key";
 import { fromBase64, randomBytes, toBase64 } from "@/lib/crypto/bytes";
-import { commitment, Tags, verify } from "@/lib/crypto/hashing";
+import { Tags, verifyDigest } from "@/lib/crypto/hashing";
 import {
-  canonicalDeps,
+  contentCommitment,
+  depsCommitment,
+  EDITION,
   PreSignedProposal,
   Proposal,
   StructuralBody,
@@ -69,15 +71,20 @@ async function sealOver(
 ): Promise<VerifiedAct> {
   const contentSalt = randomBytes(32);
   const depsSalt = randomBytes(32);
+  const formed = await pre.preCommitment();
+  const actId = proposal.body.actId();
   const fields = {
     proposal,
     authorPubkey: pre.authorPubkey,
     nonce: pre.nonce,
     preSignature: pre.preSignature,
+    preCommitment: formed,
     contentSalt,
     depsSalt,
-    contentCommitment: await commitment(Tags.COMMIT_CONTENT, contentSalt, proposal.payload),
-    depsCommitment: await commitment(Tags.COMMIT_DEPS, depsSalt, canonicalDeps(proposal.deps)),
+    contentCommitment: await contentCommitment(actId, formed, contentSalt, proposal.payload),
+    depsCommitment: await depsCommitment(actId, formed, depsSalt, proposal.deps),
+    contentEdition: EDITION,
+    depsEdition: EDITION,
     hostSeal: new Uint8Array(64),
   };
   const unsealed = new VerifiedAct(fields);
@@ -192,10 +199,9 @@ describe("write signer", () => {
       graphql.mutation("ApproveActs", async ({ variables }) => {
         const input = (variables as { input: { approvals: { signature: string }[] } }).input;
         if (sealed === null) throw new Error("approve before submit");
-        const witnessOk = await verify(
+        const witnessOk = await verifyDigest(
           actorPub,
-          Tags.APPROVAL,
-          sealed.sealMsg(),
+          await sealed.approvalDigest(),
           fromBase64(input.approvals[0].signature),
         );
         if (!witnessOk) throw new Error("approval witness does not verify");

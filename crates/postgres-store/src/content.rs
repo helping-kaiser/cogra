@@ -626,6 +626,60 @@ pub async fn insert_act_payload(
     Ok(())
 }
 
+/// Stores a genesis act's carriage, replacing a full row already held
+/// under the identifier.
+///
+/// The genesis bootstrap writes carriage at seal, not at a landing, so its
+/// row follows the act's current sealing: a stand-in substrate wiped and
+/// re-sealed under the same identifier returns a fresh salt, and the
+/// carriage has to open the witness the host holds now. A reduced row is
+/// never replaced.
+pub async fn put_genesis_act_payload(
+    tx: &mut Transaction<'_, Postgres>,
+    act_id: &str,
+    payload: &[u8],
+    content_salt: &[u8],
+) -> Result<(), ContentError> {
+    sqlx::query!(
+        "INSERT INTO act_payloads (act_id, payload, content_salt)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (act_id) DO UPDATE
+         SET payload = EXCLUDED.payload, content_salt = EXCLUDED.content_salt
+         WHERE act_payloads.payload_state = 'full'",
+        act_id,
+        payload,
+        content_salt,
+    )
+    .execute(&mut **tx)
+    .await?;
+    Ok(())
+}
+
+/// One act's carriage as stored: the payload bytes, the private value
+/// behind its content commitment, and whether the controller has reduced
+/// it (layers.md §5).
+#[derive(Debug, Clone, PartialEq)]
+pub struct ActPayload {
+    pub payload: Vec<u8>,
+    pub content_salt: Vec<u8>,
+    pub reduced: bool,
+}
+
+/// The carriage of one act, if any row holds it.
+pub async fn act_payload(pool: &PgPool, act_id: &str) -> Result<Option<ActPayload>, ContentError> {
+    Ok(sqlx::query!(
+        "SELECT payload, content_salt, payload_state FROM act_payloads WHERE act_id = $1",
+        act_id,
+    )
+    .fetch_optional(pool)
+    .await?
+    .map(|row| ActPayload {
+        payload: row.payload,
+        content_salt: row.content_salt,
+        reduced: row.payload_state == "reduced",
+    }))
+}
+
 /// Which of `act_ids` carry a payload the controller has reduced
 /// (layers.md §5), in one round trip.
 ///

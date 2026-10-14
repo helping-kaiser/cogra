@@ -318,7 +318,7 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
     let rows = sqlx::query!(
         "SELECT act_id, author, seq, family, middle, target, p_d, p_i,
                 settlement_ref, license, asserted_parents, deps,
-                length(payload) AS payload_len, content_commitment
+                payload_len, content_commitment
          FROM l1_acts WHERE status = 'approved'
          ORDER BY approved_at, act_id",
     )
@@ -337,7 +337,9 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
             act_id: row.act_id.clone(),
             author: row.author.clone(),
             body: stored_body!(row).to_body()?,
-            payload_len: row.payload_len.unwrap_or(0) as usize,
+            payload_len: usize::try_from(row.payload_len).map_err(|_| {
+                StandInError::Formation(format!("stored act {} has a negative length", row.act_id))
+            })?,
             payload_witness: row.content_commitment.clone(),
             prerequisites,
         });
@@ -409,6 +411,14 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
 /// `EXCLUSIVE` lock while it runs, and at the default budget a per-record
 /// loop is tens of thousands of round trips inside it. Returns the epoch
 /// row's close instant — the boundary timestamp the package attests.
+///
+/// Acceptance ends the host's handshake custody: the payload, its content
+/// salt and the proposal nonce are nulled together in the statement that
+/// accepts, and the row keeps its length and both commitments. The nonce
+/// goes with them because the public pre-commitment is formed over it and
+/// the payload, so a kept nonce would let anyone confirm a guessed
+/// payload. The dependency salt stays — the ordering fraud proof opens it
+/// (data-model.md "Act payload carriage").
 async fn persist(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     epoch: i64,
@@ -443,7 +453,8 @@ async fn persist(
 
     sqlx::query!(
         "UPDATE l1_acts SET status = 'accepted', epoch = $1,
-                act_time = published.act_time, position = published.position
+                act_time = published.act_time, position = published.position,
+                payload = NULL, content_salt = NULL, nonce = NULL
            FROM UNNEST($2::TEXT[], $3::BIGINT[], $4::BIGINT[])
                 AS published(act_id, act_time, position)
           WHERE l1_acts.act_id = published.act_id",
@@ -549,8 +560,7 @@ async fn load_epoch(
 ) -> Result<EpochPackage, StandInError> {
     let rows = sqlx::query!(
         r#"SELECT act_id, author, family, act_time AS "act_time!",
-                  position AS "position!", length(payload) AS payload_len,
-                  content_commitment
+                  position AS "position!", payload_len, content_commitment
            FROM l1_acts WHERE epoch = $1 AND status = 'accepted'
            ORDER BY position"#,
         epoch,
@@ -593,7 +603,7 @@ async fn load_epoch(
             epoch,
             act_time: row.act_time,
             position: row.position,
-            payload_marked: row.payload_len.unwrap_or(0) > 0,
+            payload_marked: row.payload_len > 0,
             payload_witness: row.content_commitment,
         });
     }

@@ -6,6 +6,7 @@
 package com.cogra.domain.testing
 
 import com.cogra.crypto.ActorKey
+import com.cogra.crypto.EDITION
 import com.cogra.crypto.Family
 import com.cogra.crypto.NodeId
 import com.cogra.crypto.PreSignedProposal
@@ -14,9 +15,10 @@ import com.cogra.crypto.SALT_LEN
 import com.cogra.crypto.StructuralBody
 import com.cogra.crypto.Tags
 import com.cogra.crypto.VerifiedAct
-import com.cogra.crypto.canonicalDeps
-import com.cogra.crypto.commitment
+import com.cogra.crypto.contentCommitment
 import com.cogra.crypto.decodePreCommitment
+import com.cogra.crypto.depsCommitment
+import com.cogra.crypto.preCommitment
 import com.cogra.crypto.decodeProposal
 import com.cogra.crypto.encodeProposal
 import com.cogra.crypto.encodeVerifiedAct
@@ -409,15 +411,20 @@ class TestHost {
         val pre = decodePreCommitment(preCommitmentBlob)
         val contentSalt = ByteArray(SALT_LEN) { 3 }
         val depsSalt = ByteArray(SALT_LEN) { 4 }
+        val actId = proposal.body.actId()
+        val formed = preCommitment(proposal, pre.nonce)
         val unsealed = VerifiedAct(
             proposal = proposal,
             authorPubkey = authorPubkey,
             nonce = pre.nonce,
             preSignature = pre.preSignature,
+            preCommitment = formed,
             contentSalt = contentSalt,
             depsSalt = depsSalt,
-            contentCommitment = commitment(Tags.COMMIT_CONTENT, contentSalt, proposal.payload),
-            depsCommitment = commitment(Tags.COMMIT_DEPS, depsSalt, canonicalDeps(proposal.deps)),
+            contentCommitment = contentCommitment(actId, formed, contentSalt, proposal.payload),
+            depsCommitment = depsCommitment(actId, formed, depsSalt, proposal.deps),
+            contentEdition = EDITION,
+            depsEdition = EDITION,
             hostSeal = ByteArray(0),
         )
         val sealed = VerifiedAct(
@@ -425,10 +432,13 @@ class TestHost {
             authorPubkey = unsealed.authorPubkey,
             nonce = unsealed.nonce,
             preSignature = unsealed.preSignature,
+            preCommitment = unsealed.preCommitment,
             contentSalt = unsealed.contentSalt,
             depsSalt = unsealed.depsSalt,
             contentCommitment = unsealed.contentCommitment,
             depsCommitment = unsealed.depsCommitment,
+            contentEdition = unsealed.contentEdition,
+            depsEdition = unsealed.depsEdition,
             hostSeal = key.signTagged(Tags.HOST_SEAL, unsealed.sealMsg()),
         )
         return encodeVerifiedAct(sealed)

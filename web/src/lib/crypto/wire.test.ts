@@ -62,10 +62,13 @@ function verifiedActOf(proposal: Proposal): VerifiedAct {
     authorPubkey: new Uint8Array(32).fill(3),
     nonce: new Uint8Array(32).fill(4),
     preSignature: new Uint8Array(64).fill(5),
+    preCommitment: new Uint8Array(32).fill(11),
     contentSalt: new Uint8Array(32).fill(6),
     depsSalt: new Uint8Array(32).fill(7),
     contentCommitment: new Uint8Array(32).fill(8),
     depsCommitment: new Uint8Array(32).fill(9),
+    contentEdition: 1n,
+    depsEdition: 2n,
     hostSeal: new Uint8Array(64).fill(10),
   });
 }
@@ -96,6 +99,16 @@ it("verified acts round-trip", () => {
   expect(toHex(decoded.contentCommitment)).toBe(toHex(act.contentCommitment));
   expect(toHex(decoded.depsCommitment)).toBe(toHex(act.depsCommitment));
   expect(toHex(decoded.hostSeal)).toBe(toHex(act.hostSeal));
+});
+
+it("the verified act carries the pre-commitment and both edition tags", () => {
+  const act = verifiedActOf(fullProposal());
+  const decoded = decodeVerifiedAct(encodeVerifiedAct(act));
+  expect(toHex(decoded.preCommitment)).toBe(toHex(act.preCommitment));
+  expect(decoded.contentEdition).toBe(1n);
+  expect(decoded.depsEdition).toBe(2n);
+  const d = new CborDecoder(encodeVerifiedAct(act));
+  expect(d.array()).toBe(15n);
 });
 
 it("pre-commitments round-trip", () => {

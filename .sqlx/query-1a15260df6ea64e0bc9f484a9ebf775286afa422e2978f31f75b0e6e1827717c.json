@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT author, seq, family, author_pubkey, middle, target, p_d, p_i,\n                settlement_ref, license, asserted_parents, deps, payload,\n                nonce, pre_signature, content_salt, deps_salt,\n                content_commitment, deps_commitment, host_seal, status\n         FROM l1_acts WHERE act_id = $1",
+  "query": "SELECT author, seq, family, author_pubkey, middle, target, p_d, p_i,\n                settlement_ref, license, asserted_parents, pre_signature,\n                pre_commitment, content_commitment, deps_commitment, host_seal,\n                status\n         FROM l1_acts WHERE act_id = $1",
   "describe": {
     "columns": [
       {
@@ -60,51 +60,31 @@
       },
       {
         "ordinal": 11,
-        "name": "deps",
-        "type_info": "TextArray"
-      },
-      {
-        "ordinal": 12,
-        "name": "payload",
-        "type_info": "Bytea"
-      },
-      {
-        "ordinal": 13,
-        "name": "nonce",
-        "type_info": "Bytea"
-      },
-      {
-        "ordinal": 14,
         "name": "pre_signature",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 15,
-        "name": "content_salt",
+        "ordinal": 12,
+        "name": "pre_commitment",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 16,
-        "name": "deps_salt",
-        "type_info": "Bytea"
-      },
-      {
-        "ordinal": 17,
+        "ordinal": 13,
         "name": "content_commitment",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 18,
+        "ordinal": 14,
         "name": "deps_commitment",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 19,
+        "ordinal": 15,
         "name": "host_seal",
         "type_info": "Bytea"
       },
       {
-        "ordinal": 20,
+        "ordinal": 16,
         "name": "status",
         "type_info": "Text"
       }
@@ -131,12 +111,8 @@
       false,
       false,
       false,
-      false,
-      false,
-      false,
-      false,
       false
     ]
   },
-  "hash": "9c6287ac2787e052c94f7d1c18f86f2799ffc277694b2ff40e75009dce5e2980"
+  "hash": "1a15260df6ea64e0bc9f484a9ebf775286afa422e2978f31f75b0e6e1827717c"
 }
