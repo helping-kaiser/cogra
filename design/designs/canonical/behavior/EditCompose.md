@@ -78,10 +78,14 @@ WHEN press Sign the edit GIVEN the signing is taken -> the post opens with the e
 
 WHEN press Sign the edit GIVEN the signing key is not on this device -> the key-absent seal stands AND nothing is staged or signed
 
-WHEN press Sign the edit GIVEN the signing is refused by the write rule -> the notice You can't sign right now takes the commit's place AND NEVER Retry appears
+WHEN press Sign the edit GIVEN the signing is refused by the write rule -> the notice You can't sign right now takes the commit's place AND NEVER the notice says a draft is kept AND NEVER Retry appears
 
-WHEN press the header back arrow -> the edit is left toward where it began AND the draft is kept AND NEVER a dialog asks
+WHEN press the header back arrow or the header X GIVEN the batch holds an act -> the dialog Discard the changes? opens over the edit with Nothing is kept. AND NEVER the changes are discarded unasked
 
-WHEN press the header X -> the edit is left AND the draft is kept AND NEVER a dialog asks
+WHEN press the header back arrow GIVEN the batch is empty -> the edit is left toward where it began AND NEVER a dialog asks
+
+WHEN press the header X GIVEN the batch is empty -> the edit is left AND nothing is kept or discarded AND NEVER a dialog asks
+
+WHEN tap Discard in the dialog Discard the changes? -> the changes are discarded AND the edit is left toward where it began with the post as it was AND NEVER a draft is kept
 
 WHEN the stage opens -> focus lands on the stage's heading AND NEVER the keyboard rises before a field is tapped

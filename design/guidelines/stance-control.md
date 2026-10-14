@@ -111,18 +111,20 @@ wide anchor on a profile and on a tag page, beside the hollow face — a
 guest reads `@genesismod's opinion`, never `Your opinion`. The wide
 anchor has no overflow law of its own, and on a profile it leaves its
 words about 134px, which `@genesismod's opinion` already outgrows (150px
-measured); a name that outgrows the anchor falls back to `Their
-opinion`. That fallback is a flagged exception at jakob's review: on a
-profile, *their* can read as the profile owner's.
+measured); a name that outgrows the anchor ellipsizes, the handle
+truncating before its `'s opinion` — `@genesismo…'s opinion` — so the
+words always name whose view it is (jakob 2026-10-14). The ellipsis is
+print only: the anchor's accessible name keeps the full handle.
 
-**The vouch card's empty face wears full ink** (jakob 2026-10-13). The
-resting treatment — the muted, translucent 🫥 — stacks three layers of
-quiet, and on the vouch card's tertiary-container ground it all but
-vanishes. On that card alone the hollow glyph stands at full opacity in
-its own colors; the glyph's emptiness carries "no opinion yet" by
-itself. The per-surface restyle follows the stream's precedent (*over
-media*, where the unset state is a line face for the same reason);
-everywhere else the muted resting face stands.
+**The vouch card's empty face is a line face in the card's ink** (jakob
+2026-10-14). The 🫥 emoji draws in its own fixed pale greys and cannot
+be tinted, so on the vouch card's olive tertiary-container ground it
+never reads — muted or at full opacity. The card joins *over media*:
+its unset state is the line face, `sentiment_neutral`, here drawn in
+the card's own ink (`on-tertiary-container`), and the empty face
+carries "no opinion yet" by itself. A set stance still shows its own
+emoji face, and the face's accessible name is unchanged; everywhere
+else the muted resting face stands.
 
 **Only a nobody borrows stances** (jakob 2026-10-06). An applicant and
 a fresh member borrow a *walk*, never the faces: an applicant's feed

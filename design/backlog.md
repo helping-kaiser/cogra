@@ -4927,7 +4927,9 @@ Round 9 (readme §13) wrote the vantage law and moved the vouch card's
 act onto the stance face. These are the drawing-level calls it could not
 make alone:
 
-- **The wide anchor's fallback.** A guest's wide anchor names the
+- ~~**The wide anchor's fallback.**~~ Ruled 2026-10-14 (PR-78): the
+  handle ellipsizes before `'s opinion`, `@genesismo…'s opinion`; the
+  accessible name keeps the full handle. A guest's wide anchor names the
   viewpoint, `@genesismod's opinion`. On a profile it leaves its words
   about 134px and that string measures 150px, so the flagged `Their
   opinion` fallback already fires for the illustrative handle — and on a
@@ -4957,7 +4959,9 @@ make alone:
   an anchor shows a kept pick with `Waiting for your key` under it.
   Keep 43(a), or let the card's face show the kept pick as every other
   anchor does.
-- **The hollow face on olive.** The card's act is the master's resting
+- ~~**The hollow face on olive.**~~ Ruled 2026-10-14: the card's empty
+  face is the line face (`sentiment_neutral`) in the card's ink, the
+  over-media precedent (stance-control, `lineFaceInk`). The card's act is the master's resting
   face, grey at the resting opacity, and on `--tertiary-container` it
   reads faint. The master is unchanged; a card-local treatment would be
   a new anchor variant.

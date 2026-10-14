@@ -30,6 +30,8 @@ export declare function LicenseChooser(props: LicenseChooserProps): JSX.Element;
 /** What a landed node's qualifiers oblige, on a read surface. */
 export interface LicenseTermsProps {
   license?: License;
+  /** The data-node name its placer gives the terms block (design ⇄ impl seam 002; renders as attributes only). Each axis row inside it is then an `axis`, keyed by the axis's printed name, with its `label` and `value`. */
+  node?: string;
 }
 
 export declare function LicenseTerms(props: LicenseTermsProps): JSX.Element;

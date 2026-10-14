@@ -704,12 +704,46 @@ function RemoveDialog({ kind, overSheet = false }) {
 
    `stacked` is for the copy that comes up over the comments thread: a sheet over
    a sheet takes the layer above, so its wash dims the thread and its surface
-   takes the next rung. Over the post detail there is nothing to stack on. */
-function LicenseSheet({ license, stacked = false }) {
+   takes the next rung. Over the post detail there is nothing to stack on.
+
+   `node` names the sheet where a registered board places it (the feed's,
+   FC-G10; the detail's and the thread's, round 11): the surface takes it,
+   the terms block inside takes `terms`, and the block names its axis rows. */
+function LicenseSheet({ license, stacked = false, node }) {
   return (
-    <BottomSheet open stacked={stacked} ariaLabel="License terms" maxHeight="88%">
+    <BottomSheet open stacked={stacked} ariaLabel="License terms" maxHeight="88%" node={node}>
       <div style={{ padding: "0 24px" }}>
-        <LicenseTerms license={license} />
+        <LicenseTerms license={license} node={node && "terms"} />
+      </div>
+    </BottomSheet>
+  );
+}
+
+/* THE REPORT CONFIRM over a post (ruling 75) — `ReportConfirm` draws it over
+   the detail and `FeedReportConfirm` over the feed (FC-G10), one sheet on
+   two hosts, so the two cannot disagree. Board glue, not a master: the
+   sheet, its title, the one body line and the `Cancel`/`Report` pair, each
+   named under the placer's `reportSheet`. */
+function ReportPostSheet() {
+  return (
+    <BottomSheet open ariaLabel="Report this post" node="reportSheet">
+      <SheetTitle node="title">Report this post?</SheetTitle>
+      <p
+        style={{
+          margin: 0,
+          padding: "0 var(--space-6) var(--space-2)",
+          fontSize: "var(--text-body-medium)",
+          lineHeight: "var(--text-body-medium--line-height)",
+          letterSpacing: "var(--text-body-medium--letter-spacing)",
+          color: "var(--text-secondary)",
+        }}
+        data-node="body"
+      >
+        It goes to the people who run CoGra for a look.
+      </p>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-2)", padding: "var(--space-2) var(--space-6) 0" }}>
+        <Button variant="text" node="cancel">Cancel</Button>
+        <Button node="report">Report</Button>
       </div>
     </BottomSheet>
   );
@@ -820,8 +854,14 @@ function SkyField({ height = 180 }) {
 }
 
 /* The seam — where the ranked results end and the newest tail begins. Named by
-   its placer (seam 062/063), with its words as `label`. */
-function Seam({ node }) {
+   its placer (seam 062/063), with its words as `label`.
+
+   THE FEED'S SEEN TAIL WEARS THE SAME SEAM (jakob 2026-10-14, round 11): the
+   hairline with its centred quiet label is the one list-splitting line the
+   system draws, so the feed's `Already seen` separator is this drawing with
+   its own words, never a second construction. `children` carries the words;
+   Explore's stay the default. */
+function Seam({ node, children = "Beyond your reach — newest first" }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 24px" }} data-node={node}>
       <span style={{ flex: 1, height: 1, background: "var(--border-hairline)" }} />
@@ -835,7 +875,7 @@ function Seam({ node }) {
         }}
         data-node={node && "label"}
       >
-        Beyond your reach — newest first
+        {children}
       </span>
       <span style={{ flex: 1, height: 1, background: "var(--border-hairline)" }} />
     </div>
@@ -2239,7 +2279,7 @@ function editFootSign({ unchanged, faultHoles }) {
 function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes } = {}) {
   return (
     <>
-      <WizardHeader title="Edit post" leaveLabel="Leave — your draft is kept" help="Editing" />
+      <WizardHeader title="Edit post" leaveLabel="Leave — the edit is discarded" help="Editing" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         {/* The fields scroll under the pinned foot, the wizard reading: a
             form taller than the phone runs on under it, and the foot stays

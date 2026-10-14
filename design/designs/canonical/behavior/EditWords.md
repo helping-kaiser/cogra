@@ -4,6 +4,8 @@ WHEN the edit opens GIVEN the post's body is words -> the words edit stands with
 
 WHEN the last picture or the clip leaves a media post's edit -> the words edit stands AND the words field arrives empty
 
+WHEN the last picture leaves a media post's edit GIVEN the post carries a description -> the media-to-words flip drops the standing description with the last picture AND NEVER the signed edit carries a description
+
 ALWAYS the words edit carries a title field and no description field
 
 ALWAYS the line A post's body is words or media, never both. stands under + Add pictures or a video
@@ -36,9 +38,13 @@ WHEN the signing has not answered 5s after the press -> the line Still signing â
 
 WHEN the signing answers GIVEN the slow line stands under the acts footer -> the slow line goes
 
-WHEN press the header back arrow -> the edit is left toward where it began AND the draft is kept AND NEVER a dialog asks
+WHEN press the header back arrow or the header X GIVEN the batch holds an act -> the dialog Discard the changes? opens over the edit with Nothing is kept. AND NEVER the changes are discarded unasked
 
-WHEN press the header X -> the edit is left AND the draft is kept AND NEVER a dialog asks
+WHEN press the header back arrow GIVEN the batch is empty -> the edit is left toward where it began AND NEVER a dialog asks
+
+WHEN press the header X GIVEN the batch is empty -> the edit is left AND nothing is kept or discarded AND NEVER a dialog asks
+
+WHEN tap Discard in the dialog Discard the changes? -> the changes are discarded AND the edit is left toward where it began with the post as it was AND NEVER a draft is kept
 
 WHEN the words stage opens -> the body takes focus with its caret at the end AND the keyboard rises
 

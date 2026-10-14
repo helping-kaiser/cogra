@@ -1,7 +1,10 @@
 /* DISCARD THIS REPLY? (legacy conversion, lane C) — the one ask the wizard's X
    raises, and only where leaving costs something. The post wizard keeps its
-   draft and leaves silently; a reply and a comment edit keep nothing, so a
-   composer with words in it stops to check (`WizardHeader`'s two ways out).
+   draft and leaves silently; a reply, a comment edit and a post edit keep
+   nothing, so a composer with words in it, or an edit changed since it
+   opened, stops to check (`WizardHeader`'s two ways out). The edits ask
+   `Discard the changes?` over the same `Nothing is kept.` — the board draws
+   the reply's title (the post edit's ask, jakob 2026-10-14).
 
    THE SAFE ACTION IS THE FILLED ONE, as it is everywhere else in the system —
    `RemoveConfirm`'s weighting. A think-twice dialog exists to make the costly

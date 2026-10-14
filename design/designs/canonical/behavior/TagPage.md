@@ -38,7 +38,9 @@ ALWAYS the back arrow reads Back to Explore and leads to Explore GIVEN the page 
 
 WHEN a guest reaches the tag page -> the page shows what is tagged AND every stance face wears the borrowed view's own stance, read-only, and the hollow face wherever the borrowed view holds none AND the scores come from the genesis vantage
 
-ALWAYS the topic's wide anchor's words beside the hollow face name the borrowed view, as @genesismod's opinion, and read Their opinion where the name outgrows the anchor GIVEN the reader is a guest and the borrowed view holds no opinion on the topic
+ALWAYS the topic's wide anchor's words beside the hollow face name the borrowed view, as @genesismod's opinion, its handle ellipsized before 's opinion where the name outgrows the anchor, as @genesismo…'s opinion, GIVEN the reader is a guest and the borrowed view holds no opinion on the topic
+
+ALWAYS the topic's wide anchor's accessible name keeps the borrowed view's full handle, never ellipsized GIVEN the reader is a guest
 
 WHEN a guest taps a stance face on the tag page -> the guest gate opens over the tag page
 

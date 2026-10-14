@@ -252,6 +252,15 @@ one, but the words would win anyway — an arrow alone reaches a listener
 as "button" and a reader as a guess, for a control that exists to be
 obvious.
 
+## The feed's seen tail
+
+**`Already seen`** — the quiet separator's one label, centred on its
+hairline where the feed's unseen rows end and what the reader has
+already seen continues (`FeedSeenTail`; jakob 2026-10-14, picked over
+`You're caught up.`). It names what is below the line. No full stop —
+it labels the line, as `Beyond your reach — newest first` labels
+search's seam. *Blessed (jakob 2026-10-14).*
+
 ## The filter pill's state words
 
 The trigger over a feed or search speaks how the view departs from the
@@ -481,15 +490,19 @@ noun):
   name — the picture changes the moment yours lands. / The signing is
   paid for, like your posts. The record that you changed it stays,
   like every signed action.
-- **The filter** (the feed's and search's filter sheets): What you
+- **The filter** (the feed's and search's filter sheets; the seen
+  sentence is the surface's own, jakob 2026-10-14): What you
   let in, and in what order — the kinds combine freely, ranked or
-  newest is one choice, and what you've already seen stays out
+  newest is one choice, and — on the feed — what you've already seen
+  waits below the Already seen line unless you ask for it back; on
+  search, what you've already seen stays out
   unless you ask for it back. Nothing changes until you press Done,
   and nothing here is signed or shared. / It lasts until you change it,
   on this device only. Reset brings back your defaults, to change
   them go to settings. *(The Reset
   sentence is jakob's own, blessed 2026-10-02: one sentence for the
-  feed's, search's and the settings sheet.)*
+  feed's, search's and the settings sheet. The feed's seen sentence
+  follows the seen tail, jakob 2026-10-14.)*
 
 **A "?" is named by the dialog it opens.** Its accessible name is that
 dialog's own subject, so a listener hears which explanation the tap
@@ -869,7 +882,7 @@ boards already speak, recorded so the registry is whole:
 - **The wizard's two ends** — `Back a step`, the arrow on every wizard
   stage; the X says what leaving keeps: `Leave — your
   draft is kept` (the post), `Leave — the reply is discarded`, `Leave —
-  the edit is discarded` (a comment edit), and a bare `Leave` on the
+  the edit is discarded` (a comment edit and a post edit), and a bare `Leave` on the
   profile's and the picture's seals and the picture's crop.
 - **The overflow doors and their sheets** — `More on this post` · `More
   on this comment` · `More on your profile` · `More about @ada` (another's
@@ -2847,7 +2860,7 @@ Drawn on `Notifications`, `NotificationsEmpty` and `FeedUnread`.
 **A row is a sentence, and the handle is its subject.** `@ada commented
 on your post`, not *Ada Okonkwo · commented* — the disc already carries
 the face, so the words are free to be the whole fact, and a handle is
-what a reader recognises and can go looking for. Nine kinds, nine
+what a reader recognises and can go looking for. Ten kinds, ten
 sentences, all present tense of the act that happened:
 
 - `@ada commented on your post` — a comment on a post of yours.
@@ -2876,11 +2889,17 @@ sentences, all present tense of the act that happened:
   itself carries, so the row and the button tell one story. Not
   *rejected*, which names a verdict the network never passed: one member
   declining is one member declining.
+- `@sol walked back their opinion on you` — an opinion on your profile
+  netted back to nothing (jakob 2026-10-14). *Walked back* is the stance
+  control's own word for it (`Walk it back`), and it says plainly that a
+  standing connection was taken away. Its disc wears 🤷, the system's own
+  readout for a bundle walked back to zero, the opinion row's sibling —
+  🫥 keeps meaning only *no opinion yet*.
 
 **The second line is what arrived, or where it is.** The comment's and
 the reply's own words for the two that carry words; `in <title>` for the
 mention and the citation, the saved comment row's `on <title>`
-construction turned to the citing side. The other five have neither and
+construction turned to the citing side. The other six have neither and
 carry none — a line invented to even the rhythm would be chrome.
 
 **The unread mark is a dot and says `New`.** On the row's trailing edge
@@ -3759,7 +3778,9 @@ tap on it used to reach nothing, and now it raises this:
 **The comment edit's ask** (`DiscardConfirm`, jakob 2026-10-02). The
 edit asks only when it changed since it opened, and its title says what
 goes: `Discard the changes?`, over the shared dialog's `Nothing is
-kept.`, `Discard` and `Keep writing`. *Blessed, jakob 2026-10-02.*
+kept.`, `Discard` and `Keep writing`. *Blessed, jakob 2026-10-02.* The
+post edit asks the same, in the same words, when its batch holds an act
+(jakob 2026-10-14).
 
 **The body fork's ask** (`ComposeBodyDiscard`, jakob 2026-10-02, the
 fix-fix round's ruling 14). Switching halves with something in the body

@@ -1615,11 +1615,11 @@ card form everywhere; only license and sensitive present as sheets.
 nothing is signed; the draft stays on the device, and the state
 wears `tertiary` — a waiting state, never `error`. Leaving mid-write
 keeps one local draft per target, on-device only, on the surfaces
-that keep drafts — the post wizard, the post edit, the profile
-picture; there the draft is the safety, so nothing asks on the way
-out. The reply wizard and the comment edit keep no draft: leaving
-them discards, so a non-empty composer, or an edit changed since it
-opened, is asked first — one shared dialog (the *DiscardConfirm* board)
+that keep drafts — the post wizard and the profile picture; there
+the draft is the safety, so nothing asks on the way out. The reply
+wizard, the comment edit and the post edit keep no draft (the post
+edit's, jakob 2026-10-14): leaving them discards, so a non-empty
+composer, or an edit changed since it opened, is asked first — one shared dialog (the *DiscardConfirm* board)
 reading "Discard this reply?" or, from an edit, "Discard the changes?"
 (jakob 2026-10-02), body "Nothing is kept.", a quiet *Discard* beside a
 filled *Keep writing* — the safe answer carries the weight, as it does
@@ -9616,6 +9616,14 @@ each).
   The plain feed's ⋮ edge now lands on it; the other feed-flavored
   boards' ⋮ edges still name the detail's master and wait for a ruled
   sweep.
+- **The feed-hosted license sheet and report confirm** (FC-G10, seams
+  187/190). `FeedPostLicense` and `FeedReportConfirm`: the feed as
+  `FeedPostMenu` draws it, with `PostLicense`'s sheet and
+  `ReportConfirm`'s sheet risen where the menu stood — the same sheets,
+  read from one place each. The drawn states register `feed.licenseSheet`
+  (with its `terms`) and `feed.reportSheet.*`, mirroring
+  `postDetail.reportSheet`'s; the feed menu's License terms and Report
+  edges now land on them.
 - **The aftermath extension** (item 83). The hide's snackbar landing,
   drawn on the two surfaces #122 left: `HistoryHidden` — History's top
   viewport as it stood, every card in place (the open list is frozen; the
@@ -9906,16 +9914,19 @@ drafted and wait for his review (copy-voice marks each).
   with no first-opinion words, which stay the band's. The tap blooms the
   vouch-back pad, holding a kept pick where there is one; the hold signs
   the gentle default and the ceremony opens, as from the profile's
-  anchor. The card's reading lines keep their words.
+  anchor. The card's reading lines keep their words. Its empty face is
+  the line face in the card's own ink, never the 🫥 emoji, whose fixed
+  colors cannot read on the olive ground (jakob 2026-10-14).
 - **The borrowed view is the vantage's whole read** (*Guest and applicant
   feeds borrow a vantage point*). The filter sheet speaks it by name
   under a borrowed view — `@mira's people`, `as far as @mira's eyes
   reach`, Ranked's `closest to @mira first — the view you're browsing
   from`, the topics `@mira holds` — and the trigger's extra collapses to
   the count past its 154px like any other. A guest's wide anchor reads
-  `@genesismod's opinion` beside the hollow face, falling back to
-  `Their opinion` where the name outgrows it: a flagged exception, and
-  on a profile it fires for most handles (backlog item 139).
+  `@genesismod's opinion` beside the hollow face, its handle ellipsized
+  before `'s opinion` where the name outgrows it — `@genesismo…'s
+  opinion` (jakob 2026-10-14, backlog item 139) — and its accessible
+  name keeps the full handle.
 - **The sweep.** Already third person under a borrowed view: the trace,
   its steps, folds and records, and a guest anchor's spoken name. The
   reader's own, so first person by the law: the seen toggle, the kinds'
@@ -9942,6 +9953,49 @@ drafted and wait for his review (copy-voice marks each).
   join `VouchBack`, `feed.vouchCard.hint` joins both boards, and
   `feed.vouchCard.vouch` is removed with the button it named (jakob's
   ruling, seam 165).
+
+### Round 11, the seen tail — 2026-10-14
+
+jakob's feature (ruled 2026-10-14) and the license-axis registration
+banked by round 10, drawn as one round.
+
+- **The seen tail.** At the foot of the unseen feed, when the filter
+  admits anything the reader has already seen, a quiet separator stands
+  — the hairline with the centred label `Already seen` (picked over
+  `You're caught up.`) — and the seen rows continue under it in the
+  feed's own order, ranked or newest. Only the seen cut lifts: the
+  kinds, the kinds of post, the topic, the people row, Still settling,
+  Sensitive, Removed and the hidden people all cut the tail as they cut
+  the feed. Scrolling or reading the tail records nothing. With nothing
+  unseen and seen rows to show, the feed opens at the separator — the
+  moment that was the empty feed. Why: a sparse network holds more feed
+  than its one new post. The separator is Explore's `Seam` with the
+  feed's own words, never a second construction. Drawn on
+  `FeedSeenTail` ("Feed · already seen", the feed row's next slot), its
+  `unseen` chip drawing the sparse morning (`one`) and the open-at-the-
+  separator load (`none`); an exemplar of `Feed`'s shell, wired on
+  `Feed`. Registered `feed.seenSeparator` and its `label`. The laws
+  around it: Back to top's three viewport-heights count the whole list,
+  the tail included (`FeedScrolled`); a refresh lands what arrives
+  unseen above the separator; Done carries the tail to the new filter by
+  the rows' own rule, re-derived or re-queried (`FeedSheet`); and
+  `FeedNothing`, every kind off, admits nothing seen or unseen, so its
+  empty state stands alone. The mechanics of paging the tail are the
+  implementation's.
+- **The license terms' axis rows.** The key rule jakob blessed for
+  round 10, `axis`: the axis's name as the terms print it, lowercased,
+  each run of other characters one - — so `credit` and
+  `public-record-of-use`. `LicenseTerms` names each row `axis` with its
+  `label` and `value` wherever its placer names the block. `PostLicense`
+  and `CommentLicense` register under `postDetail`, as `ReaderPostMenu`
+  and `CommentMenu` do, so the detail's and the thread's sheets join
+  the feed's: `postDetail.licenseSheet.terms.axis` and
+  `feed.licenseSheet.terms.axis`.
+- **The gate**: edges unchanged at **2041** (`FeedSeenTail` is an
+  exemplar with no control of its own); the registry **94 / 3679 → 97 /
+  3799** — `PostLicense`
+  and `CommentLicense` (38 paths each) and `FeedSeenTail` (41) join, and
+  `FeedPostLicense` grows its three axis paths; nothing removed.
 
 ---
 

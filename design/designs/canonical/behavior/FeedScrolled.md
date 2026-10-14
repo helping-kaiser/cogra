@@ -6,6 +6,10 @@ WHEN the reader scrolls back up far enough to summon the collapsing band GIVEN t
 
 WHEN the collapsing band leaves GIVEN the Back to top pill stands -> the pill leaves under the band AND NEVER the pill passes over the band
 
+WHEN the reader scrolls on up above the 3-viewport-heights line GIVEN the Back to top pill stands -> the pill stays with the band AND NEVER the pill leaves before the feed reaches its hard top or the collapsing band leaves
+
+WHEN the feed reaches its hard top GIVEN the Back to top pill stands -> the pill leaves AND the collapsing band stands
+
 ALWAYS the Back to top pill takes no layout space and leaves the band's collapse point where it is
 
 WHEN tap Back to top -> the list goes to the top, animated AND NEVER the feed refreshes
@@ -13,3 +17,5 @@ WHEN tap Back to top -> the list goes to the top, animated AND NEVER the feed re
 WHEN tap the bar's Feed slot GIVEN the feed's root is scrolled -> the list goes to the top, animated AND NEVER the feed refreshes
 
 ALWAYS the collapsing band stands GIVEN the feed rests at its hard top, however little upward scroll brought it there
+
+ALWAYS the 3 viewport-heights the Back to top pill waits for count the whole list, the Already seen separator and the seen rows under it included
