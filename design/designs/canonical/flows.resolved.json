@@ -3639,12 +3639,12 @@
       "status": "resolved",
       "steps": [
         "start · Feed · 3 «post overflow ⋮» → FeedPostMenu — the reader's sheet on the feed (the feed-hosted state, drawn — ruling 84)",
-        "end · FeedPostMenu · 4 «License terms» → PostLicense — the menu closes and the terms come up in a sheet over the feed (master)"
+        "end · FeedPostMenu · 4 «License terms» → FeedPostLicense — the menu closes and the terms come up in a sheet over the feed (the feed-hosted state, drawn — FC-G10)"
       ],
       "boards": [
         "Feed",
         "FeedPostMenu",
-        "PostLicense"
+        "FeedPostLicense"
       ]
     },
     {
@@ -5333,6 +5333,14 @@
         "undo-the-narrowing"
       ]
     },
+    "FeedPostLicense": {
+      "flows": [
+        "read-a-posts-license"
+      ],
+      "endpoint": [
+        "read-a-posts-license"
+      ]
+    },
     "FeedPostMenu": {
       "flows": [
         "cite-a-post",
@@ -5898,14 +5906,6 @@
       ],
       "endpoint": [
         "reveal-a-sensitive-video-post"
-      ]
-    },
-    "PostLicense": {
-      "flows": [
-        "read-a-posts-license"
-      ],
-      "endpoint": [
-        "read-a-posts-license"
       ]
     },
     "PostNotFound": {

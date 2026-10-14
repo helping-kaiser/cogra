@@ -1644,7 +1644,7 @@
       "x": -3610,
       "y": 0,
       "w": 3190,
-      "h": 4749,
+      "h": 4827,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1659,9 +1659,9 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -5930,
+      "x": -6510,
       "y": 0,
-      "w": 5510,
+      "w": 6090,
       "h": 5377,
       "page": "feed",
       "title": "Feed & Search · flow map"
@@ -1680,7 +1680,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 4665,
+      "h": 4743,
       "page": "media",
       "title": "Media · flow map"
     },
