@@ -2951,7 +2951,8 @@
         "feed.licenseSheet.terms.axis.value": [
           "credit",
           "public-record-of-use"
-        ]
+        ],
+        "feed.licenseSheet.terms.publicDomain": []
       }
     },
     "FeedPostMenu": {
