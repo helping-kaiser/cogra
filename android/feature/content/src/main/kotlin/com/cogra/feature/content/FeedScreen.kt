@@ -102,8 +102,8 @@ import kotlinx.coroutines.launch
 internal const val FEED_TAIL_DISTANCE = 5
 
 /**
- * The report confirm over the feed. Its feed-hosted state is not a registered
- * board (FC-G10), so it keeps its own tag until a board draws it there.
+ * The report confirm over the feed, wearing the registered `feed.reportSheet`
+ * (FC-G10); the tag is the fallback the sheet shows only without its node.
  */
 internal const val FEED_REPORT_SHEET = "feed_report_sheet"
 
@@ -208,7 +208,7 @@ fun FeedRoute(
                 },
             )
         },
-        reportSheet = reportDoor(onRequireAccount, testTag = FEED_REPORT_SHEET),
+        reportSheet = reportDoor(onRequireAccount, FEED_REPORT_SHEET, FEED / "reportSheet"),
         reselectSignal = reselectSignal,
         onShare = { postId -> context.sharePost(viewModel.shareUrl(postId)) },
         state = state,
@@ -977,7 +977,7 @@ private fun CardMenuHeader(
         node = node,
     )
     licenseShown?.let { license ->
-        LicenseSheet(license = license, onDismiss = { licenseShown = null })
+        LicenseSheet(license = license, onDismiss = { licenseShown = null }, node = FEED / "licenseSheet")
     }
     // THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob 2026-09-14): erasure is
     // slice 8's, whole, so Remove closes the dialog and changes nothing.

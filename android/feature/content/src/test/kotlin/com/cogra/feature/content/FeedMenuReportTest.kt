@@ -48,6 +48,7 @@ class FeedMenuReportTest {
                 onDismiss = onDismiss,
                 notify = notify,
                 testTag = "feed_report_sheet",
+                node = DataNode("feed") / "reportSheet",
                 viewModel = viewModel,
             )
         }
@@ -94,8 +95,8 @@ class FeedMenuReportTest {
         renderFeed()
         openReport()
         compose.onAllNodesWithTag("feed.menuSheet").assertCountEquals(0)
-        compose.onNodeWithTag("feed_report_sheet_title").assertTextEquals("Report this post?")
-        compose.onNodeWithTag("feed_report_sheet_body")
+        compose.onNodeWithTag("feed.reportSheet.title").assertTextEquals("Report this post?")
+        compose.onNodeWithTag("feed.reportSheet.body")
             .assertTextEquals("It goes to the people who run CoGra for a look.")
         assertThat(reports.targets).isEmpty()
     }
@@ -105,9 +106,9 @@ class FeedMenuReportTest {
     fun report_cancel_sends_nothing() {
         renderFeed()
         openReport()
-        compose.onNodeWithTag("feed_report_sheet_cancel").performClick()
+        compose.onNodeWithTag("feed.reportSheet.cancel").performClick()
         compose.waitForIdle()
-        compose.onAllNodesWithTag("feed_report_sheet").assertCountEquals(0)
+        compose.onAllNodesWithTag("feed.reportSheet").assertCountEquals(0)
         assertThat(reports.targets).isEmpty()
         compose.onAllNodesWithTag("feed.snackbar").assertCountEquals(0)
     }
@@ -117,11 +118,11 @@ class FeedMenuReportTest {
     fun report_confirm_sends_the_mail_and_snackbars_reported() {
         renderFeed()
         openReport()
-        compose.onNodeWithTag("feed_report_sheet_report").performClick()
+        compose.onNodeWithTag("feed.reportSheet.report").performClick()
         compose.waitForIdle()
         assertThat(reports.targets).containsExactly("p1")
         compose.onNodeWithTag("feed.snackbar.message", useUnmergedTree = true).assertTextEquals("Reported.")
-        compose.onAllNodesWithTag("feed_report_sheet").assertCountEquals(0)
+        compose.onAllNodesWithTag("feed.reportSheet").assertCountEquals(0)
     }
 
     /** ReportConfirm.md:15 — the day's reports spent (FC-G15). */
@@ -130,12 +131,12 @@ class FeedMenuReportTest {
         reports.answers += Outcome.Refused(listOf(UserError(ErrorCode.RATE_LIMITED, "rate limited")))
         renderFeed()
         openReport()
-        compose.onNodeWithTag("feed_report_sheet_report").performClick()
+        compose.onNodeWithTag("feed.reportSheet.report").performClick()
         compose.waitForIdle()
         compose.onNodeWithTag("feed.snackbar.message", useUnmergedTree = true)
             .assertTextEquals("That didn't send. Try again.")
         // The sheet stays, so the reader can try again.
-        compose.onNodeWithTag("feed_report_sheet").assertExists()
+        compose.onNodeWithTag("feed.reportSheet").assertExists()
     }
 
     /** ReportConfirm.md:15 — the thing gone (FC-G15). */
@@ -144,11 +145,11 @@ class FeedMenuReportTest {
         reports.answers += Outcome.Refused(listOf(UserError(ErrorCode.NOT_FOUND, "gone", listOf("target"))))
         renderFeed()
         openReport()
-        compose.onNodeWithTag("feed_report_sheet_report").performClick()
+        compose.onNodeWithTag("feed.reportSheet.report").performClick()
         compose.waitForIdle()
         compose.onNodeWithTag("feed.snackbar.message", useUnmergedTree = true)
             .assertTextEquals("That didn't send. Try again.")
-        compose.onNodeWithTag("feed_report_sheet").assertExists()
+        compose.onNodeWithTag("feed.reportSheet").assertExists()
     }
 
     /** ReportConfirm.md:13 — no answer reaches the device. */
@@ -157,11 +158,11 @@ class FeedMenuReportTest {
         reports.answers += Outcome.Failed(java.io.IOException("offline"))
         renderFeed()
         openReport()
-        compose.onNodeWithTag("feed_report_sheet_report").performClick()
+        compose.onNodeWithTag("feed.reportSheet.report").performClick()
         compose.waitForIdle()
         compose.onNodeWithTag("feed.snackbar.message", useUnmergedTree = true)
             .assertTextEquals("That didn't send. Try again.")
-        compose.onNodeWithTag("feed_report_sheet").assertExists()
+        compose.onNodeWithTag("feed.reportSheet").assertExists()
     }
 
     /**
@@ -199,7 +200,7 @@ class FeedMenuReportTest {
         renderFeed(signedOut = true)
         openReport()
         assertThat(joinAsked).isEqualTo(1)
-        compose.onAllNodesWithTag("feed_report_sheet").assertCountEquals(0)
+        compose.onAllNodesWithTag("feed.reportSheet").assertCountEquals(0)
         assertThat(reports.targets).isEmpty()
     }
 }
