@@ -55,7 +55,7 @@ export type PostMenuHostNodes = {
   row?: (row: PostMenuRow) => DataNode | undefined;
   /** The report confirm (`postDetail.reportSheet`, `feed.reportSheet`). */
   reportSheet?: DataNode;
-  /** The license terms (`feed.licenseSheet`). */
+  /** The license terms (`feed.licenseSheet`, `postDetail.licenseSheet`). */
   licenseSheet?: DataNode;
 };
 
