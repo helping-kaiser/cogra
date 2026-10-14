@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import com.google.common.truth.Truth.assertThat
@@ -117,6 +118,121 @@ class StancePadReflowTest {
         val held = open.copy(standing = StancePoint(0.6, 0.35))
         val (before, after) = heights(held, held.copy(busy = true))
         assertThat(after).isEqualTo(before)
+    }
+
+    @Test
+    fun theFirstOpinionDoesNotMoveThePad() {
+        // The one transition an update never makes: the pending fold turns
+        // NO standing into one while the pad is still open and answering
+        // (jakob, hand test 2026-10-14 — the first stance only).
+        val (before, after) = heights(open, open.copy(standing = StancePoint(0.1, 0.1), busy = true))
+        assertThat(after).isEqualTo(before)
+    }
+
+    @Test
+    fun theFirstOpinionUnderTheLongestAxisWordsDoesNotMoveThePad() {
+        val (before, after) = heights(
+            open,
+            open.copy(standing = StancePoint(-0.7, -0.45), busy = true),
+            axes = StanceAxes.Affinity,
+        )
+        assertThat(after).isEqualTo(before)
+    }
+
+    @Test
+    fun theFirstOpinionLeavesTheRestingTargetItsHeight() {
+        // The resting face swaps from the hollow face to the folded one in
+        // the same frame; it may change width, never the row's height.
+        var state by mutableStateOf(open.copy(pad = StancePadMode.CLOSED))
+        compose.setContent {
+            StanceControl(
+                state = state,
+                onHoldDefault = {},
+                onOpenPad = {},
+                onPick = {},
+                onCommit = {},
+                onDismissPad = {},
+                onToggleExactValues = {},
+                onOpenSeverance = {},
+                onConfirmSeverance = {},
+                onDismissSeverance = {},
+                onConfirmationShown = {},
+                testTagPrefix = "post",
+            )
+        }
+        compose.waitForIdle()
+        val h0 = compose.onNodeWithTag("post_stance").fetchSemanticsNode().size.height
+        state = state.copy(standing = StancePoint(0.1, 0.1), busy = true)
+        compose.waitForIdle()
+        val h1 = compose.onNodeWithTag("post_stance").fetchSemanticsNode().size.height
+        assertThat(h1).isEqualTo(h0)
+    }
+
+    @Test
+    fun theFirstOpinionLeavesTheVouchCardsLineFaceItsHeight() {
+        // The vouch card's hollow face is the line face, a drawn glyph rather
+        // than text: it must stand exactly as tall as the folded face that
+        // replaces it, or the card's row jumps on the first stance.
+        var state by mutableStateOf(open.copy(pad = StancePadMode.CLOSED))
+        compose.setContent {
+            StanceControl(
+                state = state,
+                onHoldDefault = {},
+                onOpenPad = {},
+                onPick = {},
+                onCommit = {},
+                onDismissPad = {},
+                onToggleExactValues = {},
+                onOpenSeverance = {},
+                onConfirmSeverance = {},
+                onDismissSeverance = {},
+                onConfirmationShown = {},
+                testTagPrefix = "post",
+                lineFaceInk = Color.Black,
+            )
+        }
+        compose.waitForIdle()
+        val h0 = compose.onNodeWithTag("post_stance").fetchSemanticsNode().size.height
+        state = state.copy(standing = StancePoint(0.1, 0.1), busy = true)
+        compose.waitForIdle()
+        val h1 = compose.onNodeWithTag("post_stance").fetchSemanticsNode().size.height
+        assertThat(h1).isEqualTo(h0)
+    }
+
+    @Test
+    fun aHeldPadKeepsItsWalkAwayWhileSetIsAnswering() {
+        val held = open.copy(standing = StancePoint(0.6, 0.35))
+        heights(held, held.copy(standing = StancePoint(0.7, 0.45), busy = true))
+        compose.onNodeWithTag("post_stance_sever").assertExists()
+    }
+
+    @Test
+    fun theFirstOpinionGainsItsWalkAwayOnlyOnceSetHasAnswered() {
+        val pending = open.copy(standing = StancePoint(0.1, 0.1), busy = true)
+        var state by mutableStateOf(open)
+        compose.setContent {
+            StanceControl(
+                state = state,
+                onHoldDefault = {},
+                onOpenPad = {},
+                onPick = {},
+                onCommit = {},
+                onDismissPad = {},
+                onToggleExactValues = {},
+                onOpenSeverance = {},
+                onConfirmSeverance = {},
+                onDismissSeverance = {},
+                onConfirmationShown = {},
+                testTagPrefix = "post",
+            )
+        }
+        compose.waitForIdle()
+        state = pending
+        compose.waitForIdle()
+        compose.onNodeWithTag("post_stance_sever").assertDoesNotExist()
+        state = pending.copy(busy = false)
+        compose.waitForIdle()
+        compose.onNodeWithTag("post_stance_sever").assertExists()
     }
 
     @Test

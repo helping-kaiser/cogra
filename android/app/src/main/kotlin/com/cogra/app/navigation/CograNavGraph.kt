@@ -14,6 +14,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -771,7 +772,7 @@ private fun CograNavGraphContent(
                         targetLabel = "@${voucher.handle}",
                         node = VOUCH_CARD / "stance",
                         variant = vouchBackVariant(VOUCH_CARD / "stance" / "pad"),
-                        fullInkEmpty = true,
+                        lineFaceInk = MaterialTheme.colorScheme.onTertiaryContainer,
                         onTaken = {
                             openCeremony(voucher.handle, voucher.displayName, voucher.avatar?.url)
                         },

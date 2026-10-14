@@ -1496,22 +1496,27 @@
     },
     {
       "name": "open-something-you-saved",
-      "description": "Saved, in your own profile's menu, lists what you kept — posts, comments and people in one list; a saved post's row opens the post.",
+      "description": "Saved, in your own profile's menu, lists what you kept — posts, comments and people as their own feed cards in one list; a saved post's picture opens the post.",
       "start": { "board": "Profile", "via": 2 },
       "waypoints": [
         { "board": "ProfileOwnMenu", "via": 1, "to": "Saved" }
       ],
-      "end": { "board": "Saved", "via": 2, "to": "PostDetail" }
+      "end": { "board": "Saved", "via": 6, "to": "PostDetail" }
     },
     {
       "name": "unsave-and-undo",
-      "description": "A row's unsave takes it out of Saved, the list closing over it, and the line offers Undo; Undo puts the row back where it was.",
-      "start": { "board": "Profile", "via": 2 },
+      "description": "A card's own Save, its ⋮'s first row reading Unsave in Saved, takes it out of the list, the list closing over it, and the line offers Undo; Undo puts the card back where it was.",
+      "start": { "board": "Saved", "via": 4 },
       "waypoints": [
-        { "board": "ProfileOwnMenu", "via": 1, "to": "Saved" },
-        { "board": "Saved", "via": 8, "to": "SavedUndo" }
+        { "board": "ReaderPostMenu", "via": 1, "to": "SavedUndo" }
       ],
-      "end": { "board": "SavedUndo", "via": 9, "to": "Saved" }
+      "end": { "board": "SavedUndo", "via": 16, "to": "Saved" }
+    },
+    {
+      "name": "search-what-you-saved",
+      "description": "Saved's field searches the saved list alone by the one search rule; a query nothing saved carries says so, and Show everything brings the whole list back.",
+      "start": { "board": "Saved", "via": 2, "to": "SavedNone" },
+      "end": { "board": "SavedNone", "via": 3, "to": "Saved" }
     },
     {
       "name": "find-nothing-saved-yet",

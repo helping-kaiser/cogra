@@ -66,6 +66,12 @@ data class FeedUiState(
      * screen stay where they are (W-6).
      */
     val rows: List<FeedRow> = emptyList(),
+    /**
+     * The rows of [rows] under `feed.seenSeparator` — the reader's seen
+     * record as it stood at the last derive (FeedSeenTail.md). They stand
+     * after every unseen row; empty, no separator stands.
+     */
+    val seenTail: Set<String> = emptySet(),
 )
 
 /**
@@ -75,14 +81,15 @@ data class FeedUiState(
  *
  * - **The pod orders, the device places and cuts.** Ranked is the
  *   answer's own order, Newest its second permutation, the settling rows
- *   stand where the pod wove them, and the seen, people and Still-settling
- *   cuts delete rows without re-ordering any (CD-7, CD-8, CD-10, CD-11).
+ *   stand where the pod wove them, the people and Still-settling cuts
+ *   delete rows, and the seen rows stand under `feed.seenSeparator` —
+ *   none of it re-orders a row (CD-7, CD-8, CD-10, CD-11, PR-80).
  *   Nothing here scores or compares (PR-9/PR-10).
  * - **A local re-derive is not a fetch.** A Done that changes only
  *   device-side axes re-derives from the held answer: no call, no new pin.
- * - **Seen is cut from the device's record, read fresh at every derive**,
- *   and the derived list is frozen between derives: scrolling never
- *   deletes the rows under the reader (W-6).
+ * - **Seen is read from the device's record fresh at every derive**, and
+ *   the derived list is frozen between derives: scrolling never moves the
+ *   rows under the reader, nor the separator (W-6; FeedSeenTail.md).
  * - **Staleness (PR-55).** The ranking is fetched when this ViewModel is
  *   created — a cold start always refetches — and otherwise only when the
  *   reader pulls. Nothing here watches the app's lifecycle: a return from
@@ -123,12 +130,23 @@ class FeedViewModel @Inject constructor(
     /** The fetch or derive in flight; a newer one supersedes it. */
     private var composing: Job? = null
 
+    // READING THE TAIL RECORDS NOTHING (FeedSeenTail.md): a card under the
+    // separator is one the record already holds, and seeing it again is
+    // never reported — the tracker hears only the rows above the line.
+
     /** Post cards that stood fully in the viewport, in the order they did. */
-    fun onCardsSeen(postIds: List<String>) = seenTracker.saw(postIds)
+    fun onCardsSeen(postIds: List<String>) {
+        val tail = _state.value.seenTail
+        seenTracker.saw(postIds.filterNot { it in tail })
+    }
 
     /** Tall post cards with an edge on screen; each joins once both edges have been. */
-    fun onCardEdgesSeen(sightings: List<EdgeSighting>) =
-        sightings.forEach { seenTracker.sawEdges(it.nodeId, top = it.top, bottom = it.bottom) }
+    fun onCardEdgesSeen(sightings: List<EdgeSighting>) {
+        val tail = _state.value.seenTail
+        sightings
+            .filterNot { it.nodeId in tail }
+            .forEach { seenTracker.sawEdges(it.nodeId, top = it.top, bottom = it.bottom) }
+    }
 
     /** The reading paused — the scroll rested or the reader left. */
     fun onSeenCheckpoint() = seenTracker.flush()
@@ -225,7 +243,8 @@ class FeedViewModel @Inject constructor(
      */
     private suspend fun install(ranking: FeedRanking) {
         val filter = _state.value.filter
-        val rows = ranking.derive(filter, seenRecord.seenIds())
+        val derived = ranking.derive(filter, seenRecord.seenIds())
+        val rows = derived.rows
         when (val first = feed.hydrate(rows, from = 0, hydrated, ::visible)) {
             is Outcome.Success -> {
                 val (posts, next) = first.value
@@ -239,6 +258,7 @@ class FeedViewModel @Inject constructor(
                         transportFault = null,
                         ranking = ranking,
                         rows = rows,
+                        seenTail = derived.tailIds,
                         posts = posts,
                         hasNextPage = next < rows.size,
                     )

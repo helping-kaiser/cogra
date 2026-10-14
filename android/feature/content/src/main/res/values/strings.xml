@@ -1,5 +1,7 @@
 <resources>
     <string name="content_feed_empty">Nothing here yet — write the first post.</string>
+    <!-- feed.seenSeparator.label (FeedSeenTail.md: "feed.seenSeparator.label reads Already seen"). -->
+    <string name="content_feed_seen_separator">Already seen</string>
     <!-- The blessed line (design/guidelines/copy-voice.md "The coming-soon
          surfaces"; the Sky card's own construction: the thing, an em dash,
          the promise, then what will be there). Verbatim — never retyped. -->

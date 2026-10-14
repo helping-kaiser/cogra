@@ -2611,8 +2611,9 @@ observable
 
 The reader's seen-list is not part of the slice and rides no ranking
 request: the ranker ranks seen and unseen content alike, and the
-reader's device cuts what it has already seen from the ranked answer,
-re-reading its own record at every change of view. `markSeen` writes
+reader's device stands what it has already seen under the feed's
+"Already seen" line, in the answer's own order, re-reading its own
+record at every change of view. `markSeen` writes
 the record History reads (`User.viewHistory`); the feed path never
 reads it back. Order, Still settling and the people scope are
 device-side too: the answer carries each row's people mark and its

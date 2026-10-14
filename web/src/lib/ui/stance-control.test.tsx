@@ -232,19 +232,52 @@ describe("the stance control at rest", () => {
     expect(affordance.className).toContain("grayscale");
   });
 
-  it("wears full ink on an empty face when the host asks for it (the vouch card)", async () => {
-    // stance-control.md, jakob 2026-10-13: `fullInkEmpty` lifts the muting
-    // from the empty resting face only; the face itself is unchanged.
+  it("draws a line face in the host's ink on an empty face (the vouch card)", async () => {
+    // stance-control.md, jakob 2026-10-14: the card's unset state is the line
+    // face, `sentiment_neutral`, in the ink the host hands — never the 🫥,
+    // whose fixed pale greys cannot read on the card's ground — and at full
+    // opacity: the line face carries no muting of its own.
     const data = createStubStanceData({});
-    renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} fullInkEmpty />, {
-      store: signedInStore(),
-      stanceData: data,
-    });
+    renderWithProviders(
+      <StanceControl
+        target={TARGET}
+        testIdPrefix={PREFIX}
+        lineFaceInk="var(--on-tertiary-container)"
+      />,
+      { store: signedInStore(), stanceData: data },
+    );
     await settle();
     const face = screen.getByTestId(`${PREFIX}-resting-face`);
-    expect(face).toHaveTextContent("🫥");
+    expect(face).not.toHaveTextContent("🫥");
+    expect(face.style.color).toBe("var(--on-tertiary-container)");
     expect(face.className).not.toContain("opacity-40");
     expect(face.className).not.toContain("grayscale");
+    const glyph = face.querySelector("svg");
+    expect(glyph).not.toBeNull();
+    expect(glyph?.querySelectorAll("path")).toHaveLength(4);
+    // The accessible name is the muted face's own, unchanged.
+    expect(screen.getByTestId(PREFIX)).toHaveAttribute(
+      "aria-label",
+      `Take a stance on ${TARGET.label}`,
+    );
+  });
+
+  it("keeps a set stance's own emoji even where the host hands a line-face ink", async () => {
+    const data = createStubStanceData({
+      seed: { "post-1": { records: [{ pDirected: 0.55, pInterest: 0.2 }] } },
+    });
+    renderWithProviders(
+      <StanceControl
+        target={TARGET}
+        testIdPrefix={PREFIX}
+        lineFaceInk="var(--on-tertiary-container)"
+      />,
+      { store: signedInStore(), stanceData: data },
+    );
+    await settle();
+    const face = screen.getByTestId(`${PREFIX}-resting-face`);
+    expect(face).toHaveTextContent("😊");
+    expect(face.querySelector("svg")).toBeNull();
   });
 
   it("drops the muting the moment there is a standing to show", async () => {
