@@ -2879,8 +2879,9 @@ sentences, all present tense of the act that happened:
 - `@sol walked back their opinion on you` — an opinion on your profile
   netted back to nothing (jakob 2026-10-14). *Walked back* is the stance
   control's own word for it (`Walk it back`), and it says plainly that a
-  standing connection was taken away. Its disc wears the hollow face 🫥,
-  the opinion row's sibling.
+  standing connection was taken away. Its disc wears 🤷, the system's own
+  readout for a bundle walked back to zero, the opinion row's sibling —
+  🫥 keeps meaning only *no opinion yet*.
 
 **The second line is what arrived, or where it is.** The comment's and
 the reply's own words for the two that carry words; `in <title>` for the

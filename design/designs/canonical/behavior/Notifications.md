@@ -18,7 +18,7 @@ ALWAYS a mention's and a citation's row reads in with the title of the piece tha
 
 ALWAYS the opinion row wears the opinion's face where a picture would go, with no digits in either reading mode, and carries no second line
 
-ALWAYS the withdrawal row wears the hollow face 🫥 where a picture would go, at the resting face's muted treatment, with no digits, and carries no second line
+ALWAYS the withdrawal row wears the walked-back face 🤷 where a picture would go, with no digits, and carries no second line
 
 ALWAYS the ready-for-your-approval row wears the monogram from the applicant's handle, never a picture
 

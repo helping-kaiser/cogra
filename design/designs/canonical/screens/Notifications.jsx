@@ -183,7 +183,7 @@ export function Screen() {
         <ContentRow
           variant="chronicle"
           chevron={false}
-          face="hollow"
+          face="walkedBack"
           title="@sol walked back their opinion on you"
           trailing="16d"
           onOpen={() => {}}
