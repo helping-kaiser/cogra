@@ -25,12 +25,45 @@ private fun proposal(author: String) = Proposal(
     deps = emptyList(),
 )
 
+/** One verified act with some fields replaced — the tests' stand-in for a data-class copy. */
+private fun VerifiedAct.with(
+    proposal: Proposal = this.proposal,
+    nonce: ByteArray = this.nonce,
+    preCommitment: ByteArray = this.preCommitment,
+    contentSalt: ByteArray = this.contentSalt,
+    depsSalt: ByteArray = this.depsSalt,
+    contentCommitment: ByteArray = this.contentCommitment,
+    depsCommitment: ByteArray = this.depsCommitment,
+    edition: ULong = this.contentEdition,
+    hostSeal: ByteArray = this.hostSeal,
+) = VerifiedAct(
+    proposal = proposal,
+    authorPubkey = authorPubkey,
+    nonce = nonce,
+    preSignature = preSignature,
+    preCommitment = preCommitment,
+    contentSalt = contentSalt,
+    depsSalt = depsSalt,
+    contentCommitment = contentCommitment,
+    depsCommitment = depsCommitment,
+    contentEdition = edition,
+    depsEdition = edition,
+    hostSeal = hostSeal,
+)
+
 /**
  * A minimal in-test host: verifies nothing (host checks are the
- * backend's job), just salts, commits, and seals — enough to exercise
- * the client-side verification branches.
+ * backend's job), just salts, commits, and seals — every part consistent
+ * with the pre-commitment and edition it seals under, so a refusal comes
+ * from the one device check a test aims at.
  */
-private fun seal(pre: PreSignedProposal, host: ActorKey): VerifiedAct {
+private fun seal(
+    pre: PreSignedProposal,
+    host: ActorKey,
+    preCommitment: ByteArray = pre.preCommitment(),
+    edition: ULong = EDITION,
+): VerifiedAct {
+    val actId = pre.proposal.body.actId()
     val contentSalt = ByteArray(SALT_LEN) { 1 }
     val depsSalt = ByteArray(SALT_LEN) { 2 }
     val unsealed = VerifiedAct(
@@ -38,24 +71,21 @@ private fun seal(pre: PreSignedProposal, host: ActorKey): VerifiedAct {
         authorPubkey = pre.authorPubkey,
         nonce = pre.nonce,
         preSignature = pre.preSignature,
+        preCommitment = preCommitment,
         contentSalt = contentSalt,
         depsSalt = depsSalt,
-        contentCommitment = commitment(Tags.COMMIT_CONTENT, contentSalt, pre.proposal.payload),
-        depsCommitment = commitment(Tags.COMMIT_DEPS, depsSalt, canonicalDeps(pre.proposal.deps)),
+        contentCommitment = contentCommitment(actId, preCommitment, contentSalt, pre.proposal.payload),
+        depsCommitment = depsCommitment(actId, preCommitment, depsSalt, pre.proposal.deps),
+        contentEdition = edition,
+        depsEdition = edition,
         hostSeal = ByteArray(0),
     )
-    return VerifiedAct(
-        proposal = unsealed.proposal,
-        authorPubkey = unsealed.authorPubkey,
-        nonce = unsealed.nonce,
-        preSignature = unsealed.preSignature,
-        contentSalt = unsealed.contentSalt,
-        depsSalt = unsealed.depsSalt,
-        contentCommitment = unsealed.contentCommitment,
-        depsCommitment = unsealed.depsCommitment,
-        hostSeal = host.signTagged(Tags.HOST_SEAL, unsealed.sealMsg()),
-    )
+    return unsealed.with(hostSeal = host.signTagged(Tags.HOST_SEAL, unsealed.sealMsg()))
 }
+
+private val ACT = "act:alice:1:publish".toByteArray()
+private val OTHER_ACT = "act:alice:2:publish".toByteArray()
+private val PRE = ByteArray(32) { 3 }
 
 class HandshakeTest {
 
@@ -68,7 +98,7 @@ class HandshakeTest {
         val witness = actor.approve(pre, sealed, host.publicKeyBytes())
         assertThat(witness.actId).isEqualTo(pre.proposal.body.actId())
         assertThat(
-            verify(actor.publicKeyBytes(), Tags.APPROVAL, sealed.sealMsg(), witness.approvalSignature)
+            verifyDigest(actor.publicKeyBytes(), sealed.approvalDigest(), witness.approvalSignature),
         ).isTrue()
     }
 
@@ -79,17 +109,7 @@ class HandshakeTest {
         val pre = actor.preSign(proposal(actor.address()))
         val altered = pre.proposal.body.copy(pD = -1.0)
         val sealed = seal(pre, host)
-        val tampered = VerifiedAct(
-            proposal = Proposal(altered, pre.proposal.payload, pre.proposal.deps),
-            authorPubkey = sealed.authorPubkey,
-            nonce = sealed.nonce,
-            preSignature = sealed.preSignature,
-            contentSalt = sealed.contentSalt,
-            depsSalt = sealed.depsSalt,
-            contentCommitment = sealed.contentCommitment,
-            depsCommitment = sealed.depsCommitment,
-            hostSeal = sealed.hostSeal,
-        )
+        val tampered = sealed.with(proposal = Proposal(altered, pre.proposal.payload, pre.proposal.deps))
         assertThrows(HandshakeException::class.java) {
             actor.approve(pre, tampered, host.publicKeyBytes())
         }
@@ -100,18 +120,7 @@ class HandshakeTest {
         val actor = ActorKey.generate()
         val host = ActorKey.generate()
         val pre = actor.preSign(proposal(actor.address()))
-        val sealed = seal(pre, host)
-        val foreign = VerifiedAct(
-            proposal = sealed.proposal,
-            authorPubkey = sealed.authorPubkey,
-            nonce = ByteArray(SALT_LEN) { 9 },
-            preSignature = sealed.preSignature,
-            contentSalt = sealed.contentSalt,
-            depsSalt = sealed.depsSalt,
-            contentCommitment = sealed.contentCommitment,
-            depsCommitment = sealed.depsCommitment,
-            hostSeal = sealed.hostSeal,
-        )
+        val foreign = seal(pre, host).with(nonce = ByteArray(SALT_LEN) { 9 })
         assertThrows(HandshakeException::class.java) {
             actor.approve(pre, foreign, host.publicKeyBytes())
         }
@@ -146,23 +155,11 @@ class HandshakeTest {
         val host = ActorKey.generate()
         val pre = actor.preSign(proposal(actor.address()))
         val sealed = seal(pre, host)
-        // Host swaps a salt after sealing: the opening no longer matches.
-        val swapped = VerifiedAct(
-            proposal = sealed.proposal,
-            authorPubkey = sealed.authorPubkey,
-            nonce = sealed.nonce,
-            preSignature = sealed.preSignature,
-            contentSalt = ByteArray(SALT_LEN) { 9 },
-            depsSalt = sealed.depsSalt,
-            contentCommitment = sealed.contentCommitment,
-            depsCommitment = sealed.depsCommitment,
-            hostSeal = host.signTagged(
-                Tags.HOST_SEAL,
-                sealed.sealMsg(),
-            ),
-        )
+        // Host swaps a salt after committing and re-seals: the opening no longer matches.
+        val swapped = sealed.with(contentSalt = ByteArray(SALT_LEN) { 9 })
+        val resealed = swapped.with(hostSeal = host.signTagged(Tags.HOST_SEAL, swapped.sealMsg()))
         assertThrows(HandshakeException::class.java) {
-            actor.approve(pre, swapped, host.publicKeyBytes())
+            actor.approve(pre, resealed, host.publicKeyBytes())
         }
     }
 
@@ -171,21 +168,109 @@ class HandshakeTest {
         val actor = ActorKey.generate()
         val host = ActorKey.generate()
         val pre = actor.preSign(proposal(actor.address()))
-        val sealed = seal(pre, host)
-        val swapped = VerifiedAct(
-            proposal = sealed.proposal,
-            authorPubkey = sealed.authorPubkey,
-            nonce = sealed.nonce,
-            preSignature = sealed.preSignature,
-            contentSalt = sealed.contentSalt,
-            depsSalt = ByteArray(SALT_LEN) { 9 },
-            contentCommitment = sealed.contentCommitment,
-            depsCommitment = sealed.depsCommitment,
-            hostSeal = sealed.hostSeal,
-        )
+        val swapped = seal(pre, host).with(depsSalt = ByteArray(SALT_LEN) { 9 })
         assertThrows(HandshakeException::class.java) {
             actor.approve(pre, swapped, host.publicKeyBytes())
         }
+    }
+
+    @Test
+    fun thePreSignatureVerifiesOverTheNamedPreCommitment() {
+        val actor = ActorKey.generate()
+        val pre = actor.preSign(proposal(actor.address()))
+        assertThat(verifyDigest(actor.publicKeyBytes(), pre.preCommitment(), pre.preSignature)).isTrue()
+        val other = Proposal(pre.proposal.body, "another payload".toByteArray(), pre.proposal.deps)
+        assertThat(
+            verifyDigest(actor.publicKeyBytes(), preCommitment(other, pre.nonce), pre.preSignature),
+        ).isFalse()
+    }
+
+    @Test
+    fun aVerifiedActWhosePreCommitmentDiffersFromTheDevicesIsRefusedBeforeApproval() {
+        val actor = ActorKey.generate()
+        val host = ActorKey.generate()
+        val pre = actor.preSign(proposal(actor.address()))
+        val sealed = seal(pre, host, preCommitment = ByteArray(32) { 5 })
+        val e = assertThrows(HandshakeException::class.java) {
+            actor.approve(pre, sealed, host.publicKeyBytes())
+        }
+        assertThat(e).hasMessageThat().isEqualTo("host returned a different pre-commitment than was formed")
+    }
+
+    @Test
+    fun aVerifiedActWithAnUnexpectedEditionIsRefusedBeforeApproval() {
+        val actor = ActorKey.generate()
+        val host = ActorKey.generate()
+        val pre = actor.preSign(proposal(actor.address()))
+        val sealed = seal(pre, host, edition = EDITION + 1u)
+        assertThrows(HandshakeException::class.java) {
+            actor.approve(pre, sealed, host.publicKeyBytes())
+        }
+    }
+
+    @Test
+    fun theApprovalWitnessSignsTheVerifiedActAndItsHostSealTogether() {
+        val actor = ActorKey.generate()
+        val host = ActorKey.generate()
+        val pre = actor.preSign(proposal(actor.address()))
+        val sealed = seal(pre, host)
+        val witness = actor.approve(pre, sealed, host.publicKeyBytes())
+        val digest = sha256Tagged(Tags.APPROVAL, listOf(sealed.sealMsg(), sealed.hostSeal))
+        assertThat(verifyDigest(actor.publicKeyBytes(), digest, witness.approvalSignature)).isTrue()
+        val otherSeal = sha256Tagged(Tags.APPROVAL, listOf(sealed.sealMsg(), ByteArray(64)))
+        assertThat(verifyDigest(actor.publicKeyBytes(), otherSeal, witness.approvalSignature)).isFalse()
+    }
+
+    @Test
+    fun anApprovalOverTheVerifiedActWithoutItsSealDoesNotVerify() {
+        val actor = ActorKey.generate()
+        val host = ActorKey.generate()
+        val pre = actor.preSign(proposal(actor.address()))
+        val sealed = seal(pre, host)
+        val unsealed = actor.signTagged(Tags.APPROVAL, sealed.sealMsg())
+        assertThat(verifyDigest(actor.publicKeyBytes(), sealed.approvalDigest(), unsealed)).isFalse()
+    }
+
+    @Test
+    fun aContentCommitmentBindsTheActIdAndThePreCommitment() {
+        val salt = ByteArray(SALT_LEN) { 7 }
+        val bytes = "payload".toByteArray()
+        val base = commitment(Tags.COMMIT_CONTENT, ACT, PRE, salt, bytes)
+        assertThat(commitment(Tags.COMMIT_CONTENT, ACT, PRE, salt, bytes)).isEqualTo(base)
+        // The same payload and salt under another act id commit differently …
+        assertThat(commitment(Tags.COMMIT_CONTENT, OTHER_ACT, PRE, salt, bytes)).isNotEqualTo(base)
+        // … and under another pre-commitment.
+        assertThat(commitment(Tags.COMMIT_CONTENT, ACT, ByteArray(32) { 4 }, salt, bytes)).isNotEqualTo(base)
+        assertThat(commitment(Tags.COMMIT_CONTENT, ACT, PRE, ByteArray(SALT_LEN) { 8 }, bytes)).isNotEqualTo(base)
+        assertThat(commitment(Tags.COMMIT_DEPS, ACT, PRE, salt, bytes)).isNotEqualTo(base)
+    }
+
+    @Test
+    fun aDependencyCommitmentBindsTheActIdAndThePreCommitment() {
+        val salt = ByteArray(SALT_LEN) { 7 }
+        val deps = byteArrayOf(0x80.toByte())
+        val base = commitment(Tags.COMMIT_DEPS, ACT, PRE, salt, deps)
+        assertThat(commitment(Tags.COMMIT_DEPS, OTHER_ACT, PRE, salt, deps)).isNotEqualTo(base)
+        assertThat(commitment(Tags.COMMIT_DEPS, ACT, ByteArray(32) { 4 }, salt, deps)).isNotEqualTo(base)
+    }
+
+    @Test
+    fun aPreDigestBindsTheActIdItWasFormedFor() {
+        val nonce = ByteArray(SALT_LEN) { 9 }
+        val bytes = "payload".toByteArray()
+        val base = preDigest(Tags.PRE_DIGEST_CONTENT, ACT, nonce, bytes)
+        assertThat(preDigest(Tags.PRE_DIGEST_CONTENT, ACT, nonce, bytes)).isEqualTo(base)
+        assertThat(preDigest(Tags.PRE_DIGEST_CONTENT, OTHER_ACT, nonce, bytes)).isNotEqualTo(base)
+        assertThat(preDigest(Tags.PRE_DIGEST_DEPS, ACT, nonce, bytes)).isNotEqualTo(base)
+    }
+
+    @Test
+    fun aV1CommitmentNeverVerifiesUnderTheV2Formula() {
+        val salt = ByteArray(SALT_LEN) { 7 }
+        val bytes = "payload".toByteArray()
+        val v1 = sha256Tagged("cogra-l1:commitment:content:v1", listOf(salt, bytes))
+        assertThat(commitment(Tags.COMMIT_CONTENT, ACT, PRE, salt, bytes)).isNotEqualTo(v1)
+        assertThat(sha256Tagged(Tags.COMMIT_CONTENT, listOf(salt, bytes))).isNotEqualTo(v1)
     }
 
     @Test
@@ -215,7 +300,7 @@ class HandshakeTest {
         assertThat(a.canonicalBytes()).isEqualTo(proposal("alice").body.canonicalBytes())
         assertThat(a.copy(pI = 0.6).canonicalBytes()).isNotEqualTo(a.canonicalBytes())
         assertThat(
-            a.copy(assertedParents = listOf(ActId.parse("act:alice:1:opinion"))).canonicalBytes()
+            a.copy(assertedParents = listOf(ActId.parse("act:alice:1:opinion"))).canonicalBytes(),
         ).isNotEqualTo(a.canonicalBytes())
     }
 

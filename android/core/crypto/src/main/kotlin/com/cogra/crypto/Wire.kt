@@ -15,6 +15,13 @@ class WireException(message: String, cause: Throwable? = null) : Exception(messa
 /** The wire format version every envelope opens with. */
 private const val WIRE_VERSION = 1UL
 
+/**
+ * Items in a verified act's wire array: version, body, payload, deps,
+ * author key, nonce, pre-signature, pre-commitment, both salts, both
+ * commitments, both editions, and the host seal.
+ */
+private const val VERIFIED_ACT_ITEMS = 15UL
+
 /** The device's pre-commitment leg: nonce plus pre-commitment signature. */
 class PreCommitment(val nonce: ByteArray, val preSignature: ByteArray) {
     override fun equals(other: Any?): Boolean =
@@ -106,7 +113,7 @@ fun decodeProposal(bytes: ByteArray): Proposal {
  */
 fun encodeVerifiedAct(act: VerifiedAct): ByteArray {
     val e = CborEncoder()
-    e.array(12u)
+    e.array(VERIFIED_ACT_ITEMS)
     e.uint(WIRE_VERSION)
     e.bytes(encodeBodyBytes(act.proposal.body))
     e.bytes(act.proposal.payload)
@@ -114,10 +121,13 @@ fun encodeVerifiedAct(act: VerifiedAct): ByteArray {
     e.bytes(act.authorPubkey)
     e.bytes(act.nonce)
     e.bytes(act.preSignature)
+    e.bytes(act.preCommitment)
     e.bytes(act.contentSalt)
     e.bytes(act.depsSalt)
     e.bytes(act.contentCommitment)
     e.bytes(act.depsCommitment)
+    e.uint(act.contentEdition)
+    e.uint(act.depsEdition)
     e.bytes(act.hostSeal)
     return e.finish()
 }
@@ -125,7 +135,7 @@ fun encodeVerifiedAct(act: VerifiedAct): ByteArray {
 fun decodeVerifiedAct(bytes: ByteArray): VerifiedAct {
     val d = CborDecoder(bytes)
     try {
-        if (d.array() != 12UL) throw WireException("malformed verified act")
+        if (d.array() != VERIFIED_ACT_ITEMS) throw WireException("malformed verified act")
         val version = d.uint()
         if (version != WIRE_VERSION) throw WireException("unsupported wire version $version")
         val body = decodeBody(d.bytes())
@@ -136,10 +146,13 @@ fun decodeVerifiedAct(bytes: ByteArray): VerifiedAct {
             authorPubkey = d.bytes(),
             nonce = d.bytes(),
             preSignature = d.bytes(),
+            preCommitment = d.bytes(),
             contentSalt = d.bytes(),
             depsSalt = d.bytes(),
             contentCommitment = d.bytes(),
             depsCommitment = d.bytes(),
+            contentEdition = d.uint(),
+            depsEdition = d.uint(),
             hostSeal = d.bytes(),
         )
         d.finish()
