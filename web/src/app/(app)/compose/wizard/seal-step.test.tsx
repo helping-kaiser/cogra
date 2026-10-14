@@ -376,6 +376,25 @@ describe("SealStep", () => {
     expect(screen.queryByTestId("wizard-open-sensitive")).not.toBeInTheDocument();
   });
 
+  // FC-8b (copy-voice "The license block"; seam 106.5): the seal's License row
+  // reads the author's reading of the pair — its name, then the two hints by
+  // the one joining rule — and never `your default`, wherever the terms came
+  // from. The sheet's foot reads the same sentence.
+  it("the_seal_license_summary_reads_license_name_and_reading", () => {
+    renderStep({}, "none", true);
+    const row = screen.getByTestId("wizard-open-license").parentElement!;
+    expect(row).toHaveTextContent("Public domain — nobody owes you a name, and uses go unlogged.");
+    expect(row).not.toHaveTextContent("your default");
+  });
+
+  it("names a non-zero pair by its tier names before the reading", () => {
+    renderStep({ license: { attribution: 1, provenance: 0 } }, "none", true);
+    const row = screen.getByTestId("wizard-open-license").parentElement!;
+    expect(row).toHaveTextContent(
+      "Credit always · Not logged — every use credits you, and uses go unlogged.",
+    );
+  });
+
   it("shows all three terms on a live seal", () => {
     renderStep({}, "none", true);
     expect(screen.getByTestId("wizard-open-license")).toBeInTheDocument();

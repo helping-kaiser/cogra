@@ -33,12 +33,11 @@ import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
 import { nearestAnchor } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
-import { licenseTerms, type License } from "@/lib/license";
+import { licenseReading, type License } from "@/lib/license";
 import { TAG_BATCH_CAP } from "@/lib/topics/normalize";
 import { REFERENCE_BATCH_CAP } from "@/lib/references/normalize";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
-import { licenseSummary } from "@/app/(app)/compose/wizard/seal-step";
 import {
   replyActLabel,
   replySummary,
@@ -195,7 +194,7 @@ export function ReplySealStep({
           label="License"
           value={
             <span className="text-body-medium text-on-surface-variant">
-              {licenseSummary(state.license)}
+              {licenseReading(state.license)}
             </span>
           }
           action="Change"
@@ -294,7 +293,7 @@ export function ReplySealStep({
         <LicenseRows value={state.license} onChange={onLicense} testIdPrefix="reply" />
         <div className="flex items-center gap-2 border-t border-outline-variant pt-2.5">
           <span className="flex-1 text-label-small text-on-surface-variant">
-            {licenseTerms(state.license).join(" ")}
+            {licenseReading(state.license)}
           </span>
           <PillButton testId="reply-license-done" onClick={() => onSheet("none")}>
             Done

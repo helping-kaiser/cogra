@@ -46,8 +46,11 @@ import com.cogra.core.designsystem.v2.atom.HelpDot
 import com.cogra.core.designsystem.v2.atom.SettingRow
 import com.cogra.core.designsystem.v2.atom.SheetTitle
 import com.cogra.core.designsystem.v2.atom.SummaryRow
+import com.cogra.core.designsystem.v2.compose.AttributionTiers
 import com.cogra.core.designsystem.v2.compose.HelpTopic
+import com.cogra.core.designsystem.v2.compose.ProvenanceTiers
 import com.cogra.core.designsystem.v2.compose.UploadStatusLine
+import com.cogra.core.designsystem.v2.compose.licenseSummary
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
@@ -646,17 +649,14 @@ internal fun LicenseSheet(
 
 private data class Degree(val value: Double, val label: String, val reading: String)
 
-private val CREDIT = listOf(
-    Degree(0.0, "No credit", "Nobody owes you a name."),
-    Degree(0.5, "Credit commercially", "Commercial uses credit you; everything else is free."),
-    Degree(1.0, "Credit always", "Every use credits you."),
-)
+// The published tiers, read from the one shared place (`LicenseTier.kt`)
+// rather than restated here: the record axis's tier names are verbs
+// (`Not logged` · `Log commercial use` · `Log every use`, copy-voice "The
+// license block"), never the retired `No record` the graph's own word made
+// false.
+private val CREDIT = AttributionTiers.map { Degree(it.value, it.label, it.hint) }
 
-private val RECORD = listOf(
-    Degree(0.0, "No record", "Uses go unlogged."),
-    Degree(0.5, "Record commercially", "Commercial uses are logged publicly and stay open to audit."),
-    Degree(1.0, "Record always", "Every use is logged publicly and stays open to audit."),
-)
+private val RECORD = ProvenanceTiers.map { Degree(it.value, it.label, it.hint) }
 
 @Composable
 private fun DegreeGroup(
@@ -828,18 +828,13 @@ private val PAD_CORNER = 28.dp
 private val PAD_HELP_GUTTER = 40.dp
 
 /**
- * The seal's reading of a license, the way the board words it — the
- * default says it is the default, so an author who never opened the
- * sheet knows where the terms came from.
+ * The seal's reading of a license: the author's reading of the pair by
+ * copy-voice's one joining rule (`licenseSummary`, the license block) —
+ * the same sentence the license sheets' foot and the settings default
+ * read. It carries no `your default`: the reading says what the post's
+ * terms are, wherever they came from (FC-8b; seam 106.5).
  */
-internal fun LicenseChoice.sealLabel(): String = when {
-    this == LicenseChoice.PublicDomain -> "Public domain — your default"
-    attribution >= 1.0 -> "Credit always"
-    attribution > 0.0 -> "Credit commercially"
-    provenance >= 1.0 -> "Record always"
-    provenance > 0.0 -> "Record commercially"
-    else -> "Public domain"
-}
+internal fun LicenseChoice.sealLabel(): String = licenseSummary(attribution, provenance)
 
 @ThemePreviews
 @Composable

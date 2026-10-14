@@ -1036,7 +1036,8 @@ describe("the license a new post starts from", () => {
     await screen.findByText("Last step");
     // The seal's License row reads the seeded pair, never public domain.
     const licenseRow = screen.getByTestId("wizard-open-license").parentElement!;
-    await waitFor(() => expect(licenseRow).toHaveTextContent("Every use credits you."));
+    await waitFor(() => expect(licenseRow).toHaveTextContent("Credit always"));
+    expect(licenseRow).toHaveTextContent("every use credits you");
     expect(licenseRow).not.toHaveTextContent("Public domain");
   });
 
