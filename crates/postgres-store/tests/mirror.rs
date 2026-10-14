@@ -30,8 +30,45 @@ fn registration(author: &str, epoch: i64, position: i64) -> PublishedRecord {
     }
 }
 
+/// The instant a fixture epoch closed: a minute per epoch.
+fn closed_at(epoch: i64) -> chrono::DateTime<chrono::Utc> {
+    chrono::DateTime::from_timestamp(1_850_000_000 + epoch * 60, 0).expect("instant")
+}
+
 fn package(epoch: i64, records: Vec<PublishedRecord>) -> EpochPackage {
-    EpochPackage { epoch, records }
+    EpochPackage {
+        epoch,
+        attested_at: closed_at(epoch),
+        records,
+    }
+}
+
+/// The mirror keeps each epoch's attested boundary timestamp beside its
+/// records, and a rebuild clears it with them (X-SR3).
+///
+/// An ingested epoch carries its attested boundary timestamp, cleared with the mirror on a rebuild.
+/// ´claim:mirror:an-epoch-carries-its-attested-instant´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_ingested_epoch_carries_its_attested_instant(pool: PgPool) {
+    mirror::ingest_epoch(&pool, &package(0, vec![registration("alice", 0, 0)]))
+        .await
+        .expect("ingests");
+    mirror::ingest_epoch(&pool, &package(1, vec![]))
+        .await
+        .expect("ingests");
+    let instants = mirror::epoch_instants(&pool, &[0, 1, 2])
+        .await
+        .expect("instants");
+    assert_eq!(instants.len(), 2);
+    assert_eq!(instants[&0], closed_at(0));
+    assert_eq!(instants[&1], closed_at(1));
+    mirror::reset(&pool).await.expect("reset");
+    assert!(
+        mirror::epoch_instants(&pool, &[0, 1])
+            .await
+            .expect("instants")
+            .is_empty()
+    );
 }
 
 /// Ingesting a package appends its records and advances the cursor, and

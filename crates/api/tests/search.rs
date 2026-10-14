@@ -988,6 +988,7 @@ async fn claim(
         pool,
         &EpochPackage {
             epoch,
+            attested_at: chrono::Utc::now(),
             records: vec![record],
         },
     )

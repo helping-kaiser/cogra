@@ -149,10 +149,22 @@ async fn land(pool: &PgPool, records: Vec<PublishedRecord>) -> i64 {
             r
         })
         .collect();
-    mirror::ingest_epoch(pool, &EpochPackage { epoch, records })
-        .await
-        .expect("ingests");
+    mirror::ingest_epoch(
+        pool,
+        &EpochPackage {
+            epoch,
+            attested_at: landing_instant(epoch),
+            records,
+        },
+    )
+    .await
+    .expect("ingests");
     epoch
+}
+
+/// The attested boundary timestamp of a fixture epoch: a minute per epoch.
+fn landing_instant(epoch: i64) -> chrono::DateTime<chrono::Utc> {
+    chrono::DateTime::from_timestamp(1_850_000_000 + epoch * 60, 0).expect("instant")
 }
 
 async fn person(pool: &PgPool, handle: &str, kind: &str) -> Uuid {
