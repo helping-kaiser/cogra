@@ -308,13 +308,16 @@ introspection query costs 181, well under any content read; what
 it needs is *depth*, 13 `ofType` levels, which is what fixes the
 depth cap at 15. Dev builds keep introspection on.
 
-**Feed ranking and cursors.** The backend does not rank
-([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)): it serves the
-viewer's weight-bounded subgraph slice, a ranker (device or delegated
-miner) orders it off the hot path, and the resulting id list is hydrated
-back into a cursor-paginated feed. The frozen snapshot lives with the
-ranker; the cursor indexes into the order it produced, never a per-page
-re-rank. The feed surface below splits the slice from the hydration.
+**Feed ranking and cursors.** Ranking never runs in the backend
+process
+([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)).
+The ranker is standalone: on the viewer's device, or in the server's
+own ranker container ([miner-api.md](miner-api.md)). The backend serves
+the viewer's weight-bounded subgraph slice (`feedSlice`), relays a
+ranking request to the container (`feedRanking`), and hydrates windows
+of the ordered result (`feed`). The client holds the result as the
+frozen order; its `asOfEpoch` pins the slice it was computed over, so a
+later call pinned there reproduces it and no cursor ever re-ranks.
 
 ### The API prepares and relays; only the device signs
 
@@ -2558,11 +2561,12 @@ type Health {
 
 ### Feed
 
-The backend does not rank
+Ranking never runs in the backend process
 ([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)).
-It serves the viewer's weight-bounded subgraph slice; a ranker —
-the viewer's device or a delegated miner — orders it and hands
-back an id list, which `feed` hydrates in order. The ranking
+The backend serves the viewer's weight-bounded subgraph slice; the
+standalone ranker — the viewer's device or the server's own ranker
+container — orders it. `feedRanking` relays the request to the
+container, and `feed` hydrates the resulting ids in order. The ranking
 metrics, the parameters, and the contributing paths live with the
 ranker, specified in [miner-api.md](miner-api.md). The slice is
 generic: one per viewer and epoch, never shaped by a filter.
