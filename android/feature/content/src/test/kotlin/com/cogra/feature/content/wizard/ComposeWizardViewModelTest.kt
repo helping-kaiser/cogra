@@ -72,6 +72,7 @@ class ComposeWizardViewModelTest {
         var lastAttachments: List<AttachmentClaim> = emptyList()
         var lastSensitive: Boolean? = null
         var lastSensitiveReason: String? = null
+        var lastPDirected: Double? = null
         var calls = 0
 
         override suspend fun preparePost(
@@ -84,8 +85,10 @@ class ComposeWizardViewModelTest {
             attachments: List<AttachmentClaim>,
             sensitive: Boolean,
             sensitiveReason: String?,
+            pDirected: Double?,
         ): Outcome<PreparedContentView> {
             calls += 1
+            lastPDirected = pDirected
             lastContent = content
             lastAttachments = attachments
             lastSensitive = sensitive
@@ -1987,6 +1990,28 @@ class ComposeWizardViewModelTest {
         vm.onSetStance()
         assertThat(vm.state.value.pDirected).isEqualTo(-0.8)
         assertThat(vm.state.value.sheet).isEqualTo(SealSheet.None)
+    }
+
+    // The pick the seal shows is the pick the Publish carries: the wizard held
+    // it, but `preparePost` was never handed it, so every post took +0.1.
+    @Test
+    fun aSetStanceRidesOnThePreparePost() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.signWords {
+            vm.onOpenSheet(SealSheet.Stance)
+            vm.onPDirectedChange(-0.8)
+            vm.onSetStance()
+        }
+
+        assertThat(content.lastPDirected).isEqualTo(-0.8)
+    }
+
+    @Test
+    fun anUntouchedStanceRidesAsTheDefaultExplicitly() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.signWords()
+
+        assertThat(content.lastPDirected).isEqualTo(ComposeWizardState.DEFAULT_P_DIRECTED)
     }
 
     @Test

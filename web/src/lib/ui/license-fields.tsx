@@ -16,6 +16,7 @@ import {
   type License,
   type LicenseTier,
 } from "@/lib/license";
+import { testAttributes, type DataNode } from "@/lib/ui/data-node";
 
 function AxisChoice({
   legend,
@@ -106,11 +107,20 @@ export function LicenseChooser({
  * an elevation this owes nothing to; a hairline recesses it in both. Nothing
  * here is coloured — the terms are neither a warning nor a promotion.
  */
-export function LicenseTerms({ license, testId }: { license: License; testId: string }) {
+export function LicenseTerms({
+  license,
+  testId,
+  node,
+}: {
+  license: License;
+  testId: string;
+  /** The registered inset (`feed.licenseSheet.terms`); it then names the block instead of `testId`. */
+  node?: DataNode;
+}) {
   return (
     <div
       className="flex flex-col gap-2 rounded-medium border border-outline-variant p-3"
-      data-testid={testId}
+      {...testAttributes(node, testId)}
     >
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-label-small text-on-surface-variant">License terms</span>

@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.R
 import com.cogra.core.designsystem.StancePoint
+import com.cogra.core.designsystem.ZERO_BUNDLE_READOUT
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.pair
 import com.cogra.core.designsystem.standingReadout
@@ -67,6 +68,7 @@ private fun Disc(disc: ContentRowDisc) {
         is ContentRowDisc.Picture -> CograAvatar(name = disc.name, size = DISC, url = disc.url)
         is ContentRowDisc.Monogram -> CograAvatar(name = disc.name, size = DISC)
         is ContentRowDisc.Face -> FaceDisc(disc)
+        ContentRowDisc.WalkedBack -> WalkedBackDisc()
         is ContentRowDisc.Glyph -> Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -103,6 +105,32 @@ private fun FaceDisc(disc: ContentRowDisc.Face) {
     ) {
         Text(
             text = readout.emoji,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.clearAndSetSemantics {},
+        )
+    }
+}
+
+/** The test tag the walked-back disc wears; it speaks nothing. */
+const val WALKED_BACK_DISC_TAG = "content_row_walked_back"
+
+/**
+ * ContentRow.jsx `face="walkedBack"`: 🤷, the system's own readout for a
+ * bundle walked back to zero, at the face's treatment. Decorative — the row's
+ * sentence says what happened.
+ */
+@Composable
+private fun WalkedBackDisc() {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(DISC)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .testTag(WALKED_BACK_DISC_TAG),
+    ) {
+        Text(
+            text = ZERO_BUNDLE_READOUT.emoji,
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.clearAndSetSemantics {},
         )

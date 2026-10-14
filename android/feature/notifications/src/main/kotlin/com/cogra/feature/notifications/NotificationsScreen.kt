@@ -226,5 +226,6 @@ private fun NotificationDisc.toContentRowDisc(): ContentRowDisc = when (this) {
     is NotificationDisc.Picture -> ContentRowDisc.Picture(url, name)
     is NotificationDisc.Monogram -> ContentRowDisc.Monogram(name)
     is NotificationDisc.Face -> ContentRowDisc.Face(directed, interest)
+    NotificationDisc.WalkedBack -> ContentRowDisc.WalkedBack
     NotificationDisc.Redacted -> ContentRowDisc.Redacted
 }

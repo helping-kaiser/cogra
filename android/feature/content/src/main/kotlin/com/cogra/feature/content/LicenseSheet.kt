@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -31,6 +32,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.sheetContainerColor
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.LicenseChoice
@@ -50,7 +53,7 @@ import com.cogra.domain.LicenseChoice
  * here is coloured — the terms are neither a warning nor a promotion.
  */
 @Composable
-internal fun LicenseTerms(license: LicenseChoice, testTag: String) {
+internal fun LicenseTerms(license: LicenseChoice, testTag: String, node: DataNode? = null) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -60,7 +63,7 @@ internal fun LicenseTerms(license: LicenseChoice, testTag: String) {
                 RoundedCornerShape(12.dp),
             )
             .padding(Space.x3)
-            .testTag(testTag),
+            .testTag(node?.tag ?: testTag),
         verticalArrangement = Arrangement.spacedBy(Space.x2),
     ) {
         Row(
@@ -109,6 +112,9 @@ internal fun LicenseTerms(license: LicenseChoice, testTag: String) {
  * plain page — a comment's own terms, raised over the comments thread
  * (`CommentLicense.jsx`, design/readme.md:2364). The post's own terms stay
  * unstacked, over the post page.
+ *
+ * [node] is the registered sheet where a board draws one (`feed.licenseSheet`):
+ * the sheet wears it, with its grip and `terms` parts, in place of [testTag].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -117,6 +123,7 @@ internal fun LicenseSheet(
     onDismiss: () -> Unit,
     testTag: String = "license_sheet",
     stacked: Boolean = false,
+    node: DataNode? = null,
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -125,7 +132,10 @@ internal fun LicenseSheet(
             MaterialTheme.colorScheme,
             MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
-        modifier = Modifier.testTag(testTag),
+        modifier = Modifier.testTag(node?.tag ?: testTag),
+        dragHandle = {
+            BottomSheetDefaults.DragHandle(modifier = Modifier.dataNode(node?.div("dragHandle")))
+        },
     ) {
         Column(
             modifier = Modifier
@@ -133,7 +143,7 @@ internal fun LicenseSheet(
                 .padding(horizontal = Space.x6)
                 .padding(bottom = Space.x6),
         ) {
-            LicenseTerms(license, "${testTag}_terms")
+            LicenseTerms(license, "${testTag}_terms", node?.div("terms"))
         }
     }
 }

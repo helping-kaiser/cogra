@@ -47,7 +47,7 @@ Out of scope:
 
 ## What notifies
 
-Nine kinds. Each is a completed act by **another actor** whose
+Ten kinds. Each is a completed act by **another actor** whose
 target is the viewer's own content, profile, or application.
 
 | Kind | The act behind it | Actor | Opening the row lands on |
@@ -57,6 +57,7 @@ target is the viewer's own content, profile, or application.
 | **Mention** | a **Reference** whose target is the viewer's Profile — the target's node class is what makes the citation a mention ([api-spec.md](api-spec.md)) | the citing artifact's author | the citing post or comment |
 | **Citation** | a **Reference** whose target is a Post or Comment the viewer authored | the citing author | the citing post or comment |
 | **Opinion on your profile** | an **Opinion** whose target is the viewer's Profile — the gesture that makes one person follow another | the opinion's author | that actor's profile |
+| **Opinion walked back** | an **Opinion** whose target is the viewer's Profile and that nets its author's bundle back to `(0,0)` | the opinion's author | that actor's profile |
 | **Application approvable** | an application waiting in the viewer's queue — staged through one of their invite links or taken up from an ask link — completed the second of its two proofs, so it is now the viewer's to act on ([auth.md "Application"](auth.md#application-the-applicant-state)) | the applicant | the invites screen, on the waiting application |
 | **Invite landed** | an account landed on the viewer's vouch — the vouch that completed its entry was the viewer's ([invitations.md](../primitive/invitations.md)) | the account that landed | the new member's profile |
 | **Application approved** | a member's signed approval of the viewer's application — their vouch ([auth.md "Approval and landing"](auth.md#approval-and-landing)) | the approving member | the approver's profile — who vouched, and where the reciprocation the landing prompts is made |
@@ -75,7 +76,7 @@ reports one member's decision, never the network's — the account
 reads on, and the row opens where both ways back in are offered
 ([auth.md "Rejection"](auth.md#application-the-applicant-state)).
 
-Two properties hold across all nine and are what make the set a
+Two properties hold across all ten and are what make the set a
 set rather than a list of features:
 
 - **Someone else acted.** The viewer is the addressee, never the
@@ -124,11 +125,11 @@ no account has nothing that can be addressed and no list.
 - **A revision is an act, and so is a withdrawal.** An opinion on
   the viewer's profile or a citation of their content re-signed with
   a new pair reports again — someone who wants to know when a stance
-  toward them is created wants to know when it changes. A record
-  that nets its author's bundle back to `(0,0)` reports too: it is
-  addressed at the very connection it walks back. The scope is the
-  same as for creation and revision — stances toward the viewer and
-  their content, no wider.
+  toward them is created wants to know when it changes. An opinion
+  on the viewer's profile netted back to `(0,0)` reports too: it is
+  addressed at the very connection it walks back. A citation of
+  their content netted back reports nothing — the withdrawal row is
+  the profile opinion's sibling, no wider.
 - **A withdrawn gesture leaves its notification standing.** A
   stance netted back to `(0,0)` is a later record, not an erasure
   of the earlier one; the row reports the moment it reported and

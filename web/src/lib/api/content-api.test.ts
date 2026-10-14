@@ -239,6 +239,35 @@ describe("preparePost", () => {
     expect(outcome.value.writes[0]).toMatchObject({ id: "w1", state: "AWAITING_PRE_SIGN" });
   });
 
+  // Pins the drop: the picked creating-edge stance used to be absent from the
+  // input, so every Publish landed at the server default.
+  it("carries the author's picked pDirected on the input", async () => {
+    let variables: Record<string, unknown> | null = null;
+    server.use(
+      graphql.mutation("PreparePost", ({ variables: v }) => {
+        variables = v;
+        return HttpResponse.json({
+          data: {
+            preparePost: {
+              __typename: "PrepareContentPayload",
+              node: "node-1",
+              writes: [],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    await preparePost(client(), {
+      title: "T",
+      description: null,
+      content: "B",
+      license,
+      pDirected: 0.7,
+    });
+    expect((variables as unknown as { input: { pDirected: unknown } }).input.pDirected).toBe(0.7);
+  });
+
   it("refuses with the payload's userErrors", async () => {
     server.use(
       graphql.mutation("PreparePost", () =>

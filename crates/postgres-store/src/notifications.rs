@@ -10,8 +10,8 @@
 //! Every row is written by one of two kinds of writer, and every writer is
 //! idempotent on `(user_id, dedup_key)` — one row per viewer and act:
 //!
-//! - **Record kinds** (COMMENT, REPLY, MENTION, CITATION, PROFILE_OPINION)
-//!   are written by [`write_for_epoch`], inside the mirror's own
+//! - **Record kinds** (COMMENT, REPLY, MENTION, CITATION, PROFILE_OPINION,
+//!   PROFILE_OPINION_WITHDRAWN) are written by [`write_for_epoch`], inside the mirror's own
 //!   ingestion transaction, so an epoch's rows commit with the epoch and
 //!   advance with its cursor: a crash between epochs skips none, and a
 //!   replay or a rebuild writes nothing twice.
@@ -33,10 +33,14 @@
 //!
 //! Every stance record toward a standing pair reports (PR-59): a revised
 //! opinion or citation is a new act and a new row. A record that leaves
-//! its author's bundle netted to `(0, 0)` is a withdrawal, not an act
-//! addressed to anyone, and writes nothing; the earlier row stands
+//! its author's bundle netted to `(0, 0)` is a withdrawal (PR-72). On the
+//! viewer's profile it is addressed at the connection it walks back and
+//! reports as PROFILE_OPINION_WITHDRAWN — once per bundle and epoch, on
+//! the epoch's last record toward it, so a walk-back signed as several
+//! counter-records landing together is one row. A netted citation of the
+//! viewer's content writes nothing. Either way the earlier row stands
 //! (notifications.md "Anti-notification rules"). A record whose own pair
-//! is `(0, 0)` changes nothing and writes nothing either.
+//! is `(0, 0)` changes nothing and writes nothing.
 //!
 //! # Reads
 //!
@@ -48,7 +52,7 @@ use chrono::{DateTime, Utc};
 use sqlx::{PgConnection, PgPool};
 use uuid::Uuid;
 
-/// The nine addressed acts, as the `kind` column spells them.
+/// The ten addressed acts, as the `kind` column spells them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Kind {
     Comment,
@@ -56,6 +60,7 @@ pub enum Kind {
     Mention,
     Citation,
     ProfileOpinion,
+    ProfileOpinionWithdrawn,
     ApplicationApprovable,
     InviteLanded,
     ApplicationApproved,
@@ -63,12 +68,13 @@ pub enum Kind {
 }
 
 impl Kind {
-    pub const ALL: [Kind; 9] = [
+    pub const ALL: [Kind; 10] = [
         Kind::Comment,
         Kind::Reply,
         Kind::Mention,
         Kind::Citation,
         Kind::ProfileOpinion,
+        Kind::ProfileOpinionWithdrawn,
         Kind::ApplicationApprovable,
         Kind::InviteLanded,
         Kind::ApplicationApproved,
@@ -82,6 +88,7 @@ impl Kind {
             Kind::Mention => "mention",
             Kind::Citation => "citation",
             Kind::ProfileOpinion => "profile_opinion",
+            Kind::ProfileOpinionWithdrawn => "profile_opinion_withdrawn",
             Kind::ApplicationApprovable => "application_approvable",
             Kind::InviteLanded => "invite_landed",
             Kind::ApplicationApproved => "application_approved",
@@ -203,6 +210,26 @@ pub async fn write_for_epoch(conn: &mut PgConnection, epoch: i64) -> Result<u64,
                        AND NOT br.payload_marked AND NOT b.census_unknown
                      HAVING SUM(b.p_d) <> 0 OR SUM(b.p_i) <> 0)
            ),
+           withdrawn_opinions AS (
+               SELECT DISTINCT ON (lb.source, lb.target)
+                      recs.record_id, recs.actor_id, recs.ord, lb.target AS profile
+               FROM recs
+               JOIN mirror_record_legs lb ON lb.record_id = recs.record_id AND lb.leg = 'binary'
+               WHERE recs.family = 'opinion'
+                 AND NOT recs.payload_marked
+                 AND lb.target LIKE 'prof:%'
+                 AND NOT lb.census_unknown
+                 AND NOT (lb.p_d = 0 AND lb.p_i = 0)
+                 AND NOT EXISTS (
+                     SELECT 1
+                     FROM mirror_record_legs b
+                     JOIN mirror_records br ON br.record_id = b.record_id
+                     WHERE b.leg = 'binary' AND b.family = 'opinion'
+                       AND b.source = lb.source AND b.target = lb.target
+                       AND NOT br.payload_marked AND NOT b.census_unknown
+                     HAVING SUM(b.p_d) <> 0 OR SUM(b.p_i) <> 0)
+               ORDER BY lb.source, lb.target, recs.ord DESC
+           ),
            candidates AS (
                SELECT p.author_id AS user_id, 'comment' AS kind, m.actor_id,
                       c.id AS subject_id, p.id AS context_id, m.record_id,
@@ -243,6 +270,11 @@ pub async fn write_for_epoch(conn: &mut PgConnection, epoch: i64) -> Result<u64,
                       o.record_id, 'act:' || o.record_id, o.ord, 0
                FROM standing_opinions o
                JOIN actors a ON a.realization_address = substr(o.profile, 6)
+             UNION ALL
+               SELECT a.id, 'profile_opinion_withdrawn', w.actor_id, w.actor_id, NULL::uuid,
+                      w.record_id, 'act:' || w.record_id, w.ord, 0
+               FROM withdrawn_opinions w
+               JOIN actors a ON a.realization_address = substr(w.profile, 6)
            ),
            best AS (
                SELECT DISTINCT ON (cand.user_id, cand.dedup_key) cand.*

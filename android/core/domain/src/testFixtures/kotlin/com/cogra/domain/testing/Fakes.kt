@@ -675,6 +675,7 @@ open class ThrowingContentRepository : ContentRepository {
         attachments: List<AttachmentClaim>,
         sensitive: Boolean,
         sensitiveReason: String?,
+        pDirected: Double?,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun postSelfMark(id: String): Outcome<SelfMarkView?> =
         throw UnsupportedOperationException()
