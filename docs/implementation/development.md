@@ -101,7 +101,7 @@ over file values.
 | `MEDIA_REGION` | `us-east-1` | S3 region the requests are signed for; any value the store accepts |
 | `MEDIA_PORT` | `9000` | Exposed host port of the media S3 API |
 | `MEDIA_CONSOLE_PORT` | `9001` | Exposed host port of the media store's web console |
-| `MEDIA_BASE_URL` | `http://localhost:3000/media` | The public origin every `MediaAttachment.url` is minted against. In development the web dev server's `/media` proxy, so a phone loads bytes from the https origin it already trusts; in production the media origin or the CDN in front of it |
+| `MEDIA_BASE_URL` | `http://localhost:3000/media` | The public origin every `MediaAttachment.url` is minted against. In development the web dev server's `/media` proxy, so a phone loads bytes from the https origin it already trusts; in production the media origin or the CDN in front of it. The web client normalizes `/media/` URLs to same-origin relative paths, so any origin that proxies `/media` serves them |
 | `MEDIA_ORIGIN` | `http://localhost:9000/cogra-media` | The web front's `/media` proxy target — the store's bucket URL (web-only; the binaries never read it). `stamp-net.sh` stamps it to the LAN address like `MEDIA_S3_ENDPOINT`, because the web server and the store can live in separate WSL distros where cross-distro localhost is dead |
 | `MEDIA_MAX_UPLOAD_BYTES` | `10485760` | Per-picture upload cap. An ordinary over-cap upload gets a field-level `userError` naming `file` |
 | `MEDIA_MAX_VIDEO_UPLOAD_BYTES` | `104857600` | Per-video upload cap — parity with the picture body, a post being ten pictures or one video. The multipart transport refuses at twice the larger of the two caps, which cap applies being a fact about bytes it has not sniffed yet |
