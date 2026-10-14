@@ -4353,11 +4353,21 @@ pub type SearchConnection = Connection<
     String,
     SearchResult,
     SearchConnectionFields,
-    async_graphql::connection::EmptyFields,
+    SearchEdgeFields,
     SearchConnectionName,
     SearchEdgeName,
     async_graphql::connection::DisableNodesField,
 >;
+
+/// `SearchEdge`'s own field.
+#[derive(SimpleObject)]
+pub struct SearchEdgeFields {
+    /// The viewer's feed score of the result, S(viewer, result)
+    /// (feed-ranking.md §6.1), under `order: RANKED`. Null past the seam —
+    /// a match outside the viewer's slice, or one no live path reaches —
+    /// and on every row under `NEWEST`.
+    pub score: Option<f64>,
+}
 
 /// `SearchConnection`'s connection-level fields. It holds the match
 /// request that served the edges, so the count is resolved under exactly

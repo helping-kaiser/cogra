@@ -7,9 +7,9 @@
 //! only carries the request there and the answer back.
 //!
 //! The client is generated at compile time from the pod's checked-in
-//! `ranker-schema.graphql` and the relay's one document
-//! (`ranker_pod.graphql`), so a pod schema change that breaks the relay
-//! fails this crate's build. The `ranker` crate itself is never a
+//! `ranker-schema.graphql` and the relay's documents — `ranker_pod.graphql`
+//! for the feed, `ranker_pod_search.graphql` for ranked search — so a pod
+//! schema change that breaks the relay fails this crate's build. The `ranker` crate itself is never a
 //! dependency of the api (PR-9).
 //!
 //! Backpressure is technical, never a rate-limit scope (ranked-feed-api
@@ -56,6 +56,24 @@ pub use rank::{
     RankRank as PodRanking, RankRankEntries as PodEntry, RankRankSettling as PodPlace,
     SettlingCandidate, Variables as RankVariables,
 };
+
+/// The ranked-search relay's `rankSearch` document (ranked-feed-api §4.8).
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "../../ranker-schema.graphql",
+    query_path = "src/ranker_pod_search.graphql",
+    response_derives = "Debug, Clone, PartialEq",
+    variables_derives = "Debug, Clone"
+)]
+pub struct RankSearch;
+
+pub mod search {
+    //! The `rankSearch` document's generated types, under the relay's names.
+    pub use super::rank_search::{
+        FriendAuthorReorder, RankParams, RankSearchRankSearch as PodSearchRanking,
+        RankSearchRankSearchEntries as PodSearchEntry, Variables as RankSearchVariables,
+    };
+}
 
 /// Where the pod is and how hard the relay may lean on it (ranked-feed-api
 /// §4.6; production-deploy.md names `RANKER_URL` as this packet's).
@@ -156,15 +174,33 @@ impl RankerClient {
         })
     }
 
-    /// One `rank` call. The wait for a slot and the call each get the
+    /// One `rank` call.
+    pub async fn rank(&self, variables: RankVariables) -> Result<PodRanking, PodError> {
+        self.call::<Rank>(variables).await.map(|data| data.rank)
+    }
+
+    /// One `rankSearch` call (ranked-feed-api §4.8).
+    pub async fn rank_search(
+        &self,
+        variables: search::RankSearchVariables,
+    ) -> Result<search::PodSearchRanking, PodError> {
+        self.call::<RankSearch>(variables)
+            .await
+            .map(|data| data.rank_search)
+    }
+
+    /// One pod operation. The wait for a slot and the call each get the
     /// configured timeout, so a call queued behind the cap is refused as
     /// over the cap rather than as slow.
-    pub async fn rank(&self, variables: RankVariables) -> Result<PodRanking, PodError> {
+    async fn call<Q: GraphQLQuery>(
+        &self,
+        variables: Q::Variables,
+    ) -> Result<Q::ResponseData, PodError> {
         let _slot = tokio::time::timeout(self.timeout, self.slots.clone().acquire_owned())
             .await
             .map_err(|_| PodError::OverCap(self.timeout))?
             .map_err(|_| PodError::OverCap(self.timeout))?;
-        let body = serde_json::to_vec(&Rank::build_query(variables))
+        let body = serde_json::to_vec(&Q::build_query(variables))
             .map_err(|e| PodError::Undecodable(e.to_string()))?;
         let call = async {
             let response = self
@@ -180,7 +216,7 @@ impl RankerClient {
         let (status, bytes) = tokio::time::timeout(self.timeout, call)
             .await
             .map_err(|_| PodError::Timeout(self.timeout))??;
-        let answer: graphql_client::Response<rank::ResponseData> =
+        let answer: graphql_client::Response<Q::ResponseData> =
             serde_json::from_slice(&bytes)
                 .map_err(|e| PodError::Undecodable(format!("HTTP {status}: {e}")))?;
         if let Some(error) = answer.errors.as_deref().and_then(<[_]>::first) {
@@ -201,7 +237,6 @@ impl RankerClient {
         }
         answer
             .data
-            .map(|data| data.rank)
             .ok_or_else(|| PodError::Undecodable(format!("HTTP {status}: no data and no error")))
     }
 }
