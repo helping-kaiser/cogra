@@ -379,15 +379,16 @@ class FeedViewModelTest {
         assertThat(vm.state.value.transportFault).isNull()
     }
 
-    // ── SEEN (CD-10; PR-48, PR-49, PR-51) ────────────────────────────────
+    // ── SEEN (CD-10; PR-48, PR-49, PR-51, PR-80) ─────────────────────────
 
     /**
-     * jakob's scenario (PR-48): fetch, scroll Ranked until rows are reported
-     * seen, switch to Newest with a local Done — none of the newly seen rows
-     * is in the Newest list, and no call was made.
+     * jakob's scenario (PR-48), under the seen tail (PR-80): fetch, scroll
+     * Ranked until rows are reported seen, switch to Newest with a local
+     * Done — the newly seen rows stand under the separator, by time, and no
+     * call was made.
      */
     @Test
-    fun aSwitchToNewestNeverShowsWhatRankedScrollingMadeSeen() = runTest(dispatcher) {
+    fun aSwitchToNewestStandsWhatRankedScrollingMadeSeenUnderTheSeparator() = runTest(dispatcher) {
         feed.answer = Outcome.Success(rankingOf("a", "b", "c", "d"))
         val vm = viewModel()
         settle()
@@ -397,8 +398,49 @@ class FeedViewModelTest {
         vm.applyFilter(FeedFilter(order = FeedOrder.NEWEST))
         settle()
 
-        assertThat(vm.ids()).containsExactly("d", "c").inOrder()
+        assertThat(vm.ids()).containsExactly("d", "c", "b", "a").inOrder()
+        assertThat(vm.state.value.seenTail).containsExactly("a", "b")
         assertThat(feed.rankings).hasSize(1)
+    }
+
+    /**
+     * PR-80's named device test (FeedSeenTail.md "WHEN the reader scrolls or
+     * reads the rows under feed.seenSeparator -> NEVER anything is
+     * recorded"): a tail card that stands fully in view, or edge by edge,
+     * is never handed to the tracker — only the row above the line goes out.
+     */
+    @Test
+    fun readingTheTailRecordsNothing() = runTest(dispatcher) {
+        records.records["u1"] = StoredSeenRecord(setOf("a", "t"), watermark = null)
+        feed.answer = Outcome.Success(rankingOf("a", "b", "t"))
+        val vm = viewModel()
+        settle()
+        assertThat(vm.state.value.seenTail).containsExactly("a", "t")
+
+        vm.onCardsSeen(listOf("b", "a"))
+        vm.onCardEdgesSeen(listOf(EdgeSighting("t", top = true, bottom = false)))
+        vm.onCardEdgesSeen(listOf(EdgeSighting("t", top = false, bottom = true)))
+        vm.onSeenCheckpoint()
+        settle()
+
+        assertThat(history.calls).containsExactly(listOf("b"))
+    }
+
+    /**
+     * FeedSeenTail.md: nothing unseen, seen rows admitted — the feed loads
+     * the seen rows, all of them under the separator, and the empty state
+     * never stands. The screen half is
+     * `FeedSeenTailTest.nothing_unseen_opens_the_feed_at_the_separator`.
+     */
+    @Test
+    fun nothingUnseenLoadsTheSeenRowsAllUnderTheSeparator() = runTest(dispatcher) {
+        records.records["u1"] = StoredSeenRecord(setOf("a", "b"), watermark = null)
+        feed.answer = Outcome.Success(rankingOf("a", "b"))
+        val vm = viewModel()
+        settle()
+
+        assertThat(vm.ids()).containsExactly("a", "b").inOrder()
+        assertThat(vm.state.value.seenTail).containsExactly("a", "b")
     }
 
     /** W-6: scrolling never deletes the rows under the reader. */
@@ -415,24 +457,84 @@ class FeedViewModelTest {
         assertThat(vm.ids()).containsExactly("a", "b", "c").inOrder()
     }
 
+    /**
+     * The record is read fresh at every derive, and a refresh lands what is
+     * still unseen above the separator — a row seen since joins the tail,
+     * in the feed's own order (FeedSeenTail.md, the refresh law).
+     */
     @Test
-    fun theSeenCutReadsTheDevicesRecordFreshAtEveryDerive() = runTest(dispatcher) {
+    fun theSeenPartitionReadsTheDevicesRecordFreshAtEveryDerive() = runTest(dispatcher) {
         records.records["u1"] = StoredSeenRecord(setOf("a"), watermark = null)
         feed.answer = Outcome.Success(rankingOf("a", "b", "c"))
         val vm = viewModel()
         settle()
-        assertThat(vm.ids()).containsExactly("b", "c").inOrder()
+        assertThat(vm.ids()).containsExactly("b", "c", "a").inOrder()
+        assertThat(vm.state.value.seenTail).containsExactly("a")
 
         vm.onCardsSeen(listOf("b"))
         settle()
+        // W-6: the row seen on screen does not move, nor does the line.
+        assertThat(vm.ids()).containsExactly("b", "c", "a").inOrder()
         vm.refresh()
         settle()
 
-        assertThat(vm.ids()).containsExactly("c")
+        assertThat(vm.ids()).containsExactly("c", "a", "b").inOrder()
+        assertThat(vm.state.value.seenTail).containsExactly("a", "b")
     }
 
+    /**
+     * PR-83's named device test (jakob, seam 199: "seen list is
+     * placement-only"): Show what you've already seen is a pure device
+     * re-partition of the held answer — never a fetch, never a re-sort. The
+     * held order m z a (newest z a m) disagrees with every sort the device
+     * could reach for — by id a m z, by score z a m — and each toggle reads
+     * that held permutation, split or whole.
+     */
     @Test
-    fun showSeenOnKeepsSeenRows() = runTest(dispatcher) {
+    fun togglingShowSeenRePartitionsWithoutAFetchOrASort() = runTest(dispatcher) {
+        records.records["u1"] = StoredSeenRecord(setOf("z"), watermark = null)
+        feed.answer = Outcome.Success(
+            FeedRanking(
+                asOfEpoch = 7,
+                entries = listOf(
+                    entry("m", newestIndex = 2, score = 0.1),
+                    entry("z", newestIndex = 0, score = 0.9),
+                    entry("a", newestIndex = 1, score = 0.5),
+                ),
+                settling = emptyList(),
+            ),
+        )
+        val vm = viewModel()
+        settle()
+        assertThat(vm.ids()).containsExactly("m", "a", "z").inOrder()
+        assertThat(vm.state.value.seenTail).containsExactly("z")
+
+        vm.applyFilter(FeedFilter(showSeen = true))
+        settle()
+        assertThat(vm.ids()).containsExactly("m", "z", "a").inOrder()
+        assertThat(vm.state.value.seenTail).isEmpty()
+
+        vm.applyFilter(FeedFilter(showSeen = false))
+        settle()
+        assertThat(vm.ids()).containsExactly("m", "a", "z").inOrder()
+        assertThat(vm.state.value.seenTail).containsExactly("z")
+
+        vm.applyFilter(FeedFilter(order = FeedOrder.NEWEST, showSeen = true))
+        settle()
+        assertThat(vm.ids()).containsExactly("z", "a", "m").inOrder()
+        vm.applyFilter(FeedFilter(order = FeedOrder.NEWEST))
+        settle()
+        assertThat(vm.ids()).containsExactly("a", "m", "z").inOrder()
+
+        // One ranking, the open's — and one window: the toggles re-read the
+        // rows already hydrated and asked the wire for nothing.
+        assertThat(feed.rankings).hasSize(1)
+        assertThat(feed.windows).hasSize(1)
+    }
+
+    /** Toggle on: one list, the seen rows ranked in among the rest, no separator (FeedSeenTail.md). */
+    @Test
+    fun showSeenOnStandsOneListWithNoSeparator() = runTest(dispatcher) {
         records.records["u1"] = StoredSeenRecord(setOf("a"), watermark = null)
         feed.answer = Outcome.Success(rankingOf("a", "b"))
         val vm = viewModel()
@@ -442,6 +544,7 @@ class FeedViewModelTest {
         settle()
 
         assertThat(vm.ids()).containsExactly("a", "b").inOrder()
+        assertThat(vm.state.value.seenTail).isEmpty()
         assertThat(feed.rankings).hasSize(1)
     }
 
@@ -461,6 +564,7 @@ class FeedViewModelTest {
 
         assertThat(feed.rankings.single().first).isEqualTo("genesis-id")
         assertThat(vm.ids()).containsExactly("b", "a").inOrder()
+        assertThat(vm.state.value.seenTail).isEmpty()
     }
 
     // ── VIEWER (CD-5) ────────────────────────────────────────────────────
@@ -475,9 +579,9 @@ class FeedViewModelTest {
         assertThat(feed.rankings.single().first).isEqualTo("mira-id")
     }
 
-    /** The record is the READER's: under a borrowed view the reader's own seeing is cut. */
+    /** The record is the READER's: under a borrowed view the reader's own seeing forms the tail. */
     @Test
-    fun aBorrowingReaderCutsTheirOwnSeeingFromTheLendersRanking() = runTest(dispatcher) {
+    fun aBorrowingReadersOwnSeeingFormsTheTailOfTheLendersRanking() = runTest(dispatcher) {
         records.records["u1"] = StoredSeenRecord(setOf("b"), watermark = null)
         records.records["mira-id"] = StoredSeenRecord(setOf("a"), watermark = null)
         account.lender = Outcome.Success(ActorRef("mira-id", "mira"))
@@ -485,7 +589,8 @@ class FeedViewModelTest {
         val vm = viewModel()
         settle()
 
-        assertThat(vm.ids()).containsExactly("a", "c").inOrder()
+        assertThat(vm.ids()).containsExactly("a", "c", "b").inOrder()
+        assertThat(vm.state.value.seenTail).containsExactly("b")
     }
 
     @Test

@@ -12,11 +12,13 @@
 //    filling the remaining slots in `newestIndex` order.
 // 2. PICK the list for the sheet's order.
 // 3. CUT — delete rows, never re-order them: Still settling off (W-1, CD-8),
-//    Show what you've already seen off (the device's record as it stands NOW,
-//    CD-10), Your people (by the pod's `mark`, CD-11). Deleting commutes with
-//    the weave and with each other (FP-1's argument, §4.10 W-2), which the
-//    property test pins.
-// 4. Hydration (CD-2) is the caller's; it windows the list this returns.
+//    Your people (by the pod's `mark`, CD-11).
+// 4. PARTITION at the seen line (PR-80, FeedSeenTail.md): with Show what
+//    you've already seen off, the rows the device's record holds (as it
+//    stands NOW, CD-10) move under `feed.seenSeparator`, both sides keeping
+//    their order. Deleting and splitting commute with the weave and with each
+//    other (FP-1's argument, §4.10 W-2), which the property test pins.
+// 5. Hydration (CD-2) is the caller's; it windows head-then-tail.
 //
 // The held answer itself is never cut: it stays the off-feed lookup source
 // (CD-9), so nothing here mutates it.
@@ -66,7 +68,7 @@ export type FeedPeopleSign = "for" | "against" | "either";
 /** The sheet's device-side axes — everything a derive needs that the pod does not. */
 export type DeviceCuts = {
   readonly order: FeedOrder;
-  /** Show what you've already seen: on keeps seen rows. */
+  /** Show what you've already seen: on ranks seen rows in; off stands them under the separator. */
   readonly showSeen: boolean;
   /** Also show: Still settling. Off is W-1's landed-only cut. */
   readonly showSettling: boolean;
@@ -171,22 +173,49 @@ export function admitsMark(sign: FeedPeopleSign, mark: PeopleMark | null): boole
   }
 }
 
-/** Step 3: the device's cuts. Deletes rows, never re-orders them. */
-export function cut(rows: readonly FeedRow[], cuts: DeviceCuts, seen: SeenLookup): FeedRow[] {
+/** Step 3: the device's cuts — Still settling and people. Deletes rows, never re-orders them. */
+export function cut(rows: readonly FeedRow[], cuts: DeviceCuts): FeedRow[] {
   return rows.filter(
     (row) =>
       (cuts.showSettling || !row.settling) &&
-      (cuts.showSeen || !seen.has(row.targetId)) &&
       (cuts.people === "everyone" || admitsMark(cuts.peopleSign, row.mark)),
   );
 }
 
 /**
- * The derived list: compose for the sheet's order, then cut. `seen` is read
- * as it stands at this call — "fresh at every derive, frozen between derives"
- * (§4.3): the caller holds the result, so a row seen while it is on screen
- * leaves only at the next derive (W-6).
+ * The derived list, split at `feed.seenSeparator` (FeedSeenTail.md): `head`
+ * the rows above it, `tail` the rows the reader has already seen, under it,
+ * each in the sheet's order. The separator stands only when `tail` does.
  */
-export function derive(answer: HeldAnswer, cuts: DeviceCuts, seen: SeenLookup): FeedRow[] {
-  return cut(compose(answer, cuts.order), cuts, seen);
+export type DerivedFeed = {
+  readonly head: readonly FeedRow[];
+  readonly tail: readonly FeedRow[];
+};
+
+/** Nothing derived: no answer held, or no viewer. */
+export const NOTHING_DERIVED: DerivedFeed = { head: [], tail: [] };
+
+/**
+ * Step 4: the seen partition (PR-80). With Show what you've already seen off,
+ * every row the record holds moves under the separator; on, every row stays
+ * above it, ranked in among the rest. Splits, never re-orders: each side
+ * keeps the order the rows came in.
+ */
+export function partition(rows: readonly FeedRow[], cuts: DeviceCuts, seen: SeenLookup): DerivedFeed {
+  if (cuts.showSeen) return { head: [...rows], tail: [] };
+  const head: FeedRow[] = [];
+  const tail: FeedRow[] = [];
+  for (const row of rows) (seen.has(row.targetId) ? tail : head).push(row);
+  return { head, tail };
+}
+
+/**
+ * The derived list: compose for the sheet's order, cut, then partition at the
+ * seen line. `seen` is read as it stands at this call — "fresh at every
+ * derive, frozen between derives" (§4.3): the caller holds the result, so a
+ * row seen while it is on screen moves only at the next derive (W-6), and
+ * neither it nor the separator moves before then (FeedSeenTail.md).
+ */
+export function derive(answer: HeldAnswer, cuts: DeviceCuts, seen: SeenLookup): DerivedFeed {
+  return partition(cut(compose(answer, cuts.order), cuts), cuts, seen);
 }

@@ -731,9 +731,10 @@ path can carry a score. Scope is a read-side filter:
 
 ### 9.4 The already-seen filter
 
-Per-viewer set of seen node keys that the reader's view excludes.
-The reference frontend ranks seen and unseen content alike and cuts
-seen content on the device: a reader's seen fraction of reachable
+Per-viewer set of seen node keys that the reader's view sets apart.
+The reference frontend ranks seen and unseen content alike and sets
+seen content apart on the device — under the feed's "Already seen"
+line, in the feed's own order: a reader's seen fraction of reachable
 content is small, so excluding first saves little. A calculator
 that is handed the list may still exclude it before ranking, with
 identical results. New stance activity on a seen node does not

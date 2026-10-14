@@ -10,6 +10,8 @@ import {
   cut,
   derive,
   NOTHING_SEEN,
+  partition,
+  type DerivedFeed,
   type DeviceCuts,
   type FeedOrder,
   type FeedPeopleSign,
@@ -44,7 +46,9 @@ function answer(entries: HeldEntry[], settlingRows: HeldSettling[] = []): HeldAn
   return { asOfEpoch: 7, entries, settling: settlingRows };
 }
 
-const ids = (rows: readonly { targetId: string }[]) => rows.map((row) => row.targetId);
+/** The ids of a composed list, or of a derived one top to bottom — above the seen line, then under it. */
+const ids = (rows: readonly { targetId: string }[] | DerivedFeed) =>
+  ("head" in rows ? [...rows.head, ...rows.tail] : rows).map((row) => row.targetId);
 const seenOf = (...seen: string[]) => new Set(seen);
 
 describe("the device derive: order (CD-7)", () => {
@@ -104,13 +108,15 @@ describe("the device derive: Still settling (CD-8)", () => {
   });
 });
 
-describe("the device derive: seen (CD-10)", () => {
-  it("the_seen_cut_reads_the_devices_record_fresh_at_every_derive", () => {
+describe("the device derive: seen (CD-10, PR-80's seen tail)", () => {
+  it("the_seen_partition_reads_the_devices_record_fresh_at_every_derive", () => {
     const held = answer([entry("a", 0), entry("b", 1), entry("c", 2)]);
     const record = seenOf();
     expect(ids(derive(held, EVERYONE, record))).toEqual(["a", "b", "c"]);
     record.add("b");
-    expect(ids(derive(held, EVERYONE, record))).toEqual(["a", "c"]);
+    const derived = derive(held, EVERYONE, record);
+    expect(ids(derived.head)).toEqual(["a", "c"]);
+    expect(ids(derived.tail)).toEqual(["b"]);
   });
 
   it("a_row_seen_while_held_stays_until_the_next_derive", () => {
@@ -118,21 +124,62 @@ describe("the device derive: seen (CD-10)", () => {
     const record = seenOf();
     const onScreen = derive(held, EVERYONE, record);
     record.add("a");
-    // The derived list the reader is looking at is a value, not a view.
+    // The derived list the reader is looking at is a value, not a view: the
+    // row seen on screen does not move, nor does the line (FeedSeenTail.md).
     expect(ids(onScreen)).toEqual(["a", "b"]);
-    expect(ids(derive(held, EVERYONE, record))).toEqual(["b"]);
+    expect(onScreen.tail).toEqual([]);
+    expect(ids(derive(held, EVERYONE, record))).toEqual(["b", "a"]);
   });
 
-  it("show_seen_on_keeps_seen_rows", () => {
+  // PR-80's named device test (FeedSeenTail.md): the seen rows leave the
+  // unseen run for the tail under the separator, and each side keeps the
+  // feed's own order — ranked under Ranked, by time under Newest.
+  it("the_seen_tail_keeps_the_feeds_own_order_below_the_separator", () => {
+    const held = answer(
+      [entry("a", 1), entry("b", 2), entry("c", 0)],
+      [settling("s", 1, 0), settling("t", 4, 2)],
+    );
+    // RANKED a s b c t; NEWEST s c t a b.
+    const record = seenOf("a", "s", "b");
+    const ranked = derive(held, EVERYONE, record);
+    expect(ids(ranked.head)).toEqual(["c", "t"]);
+    expect(ids(ranked.tail)).toEqual(["a", "s", "b"]);
+    const newest = derive(held, { ...EVERYONE, order: "newest" }, record);
+    expect(ids(newest.head)).toEqual(["c", "t"]);
+    expect(ids(newest.tail)).toEqual(["s", "a", "b"]);
+  });
+
+  it("the_filter_cuts_the_tail_exactly_as_it_cuts_the_rows_above_it", () => {
+    const held = answer([entry("f", 0, "FOR"), entry("n", 1, null)], [settling("s", 2, 2, "FOR")]);
+    const record = seenOf("f", "n", "s");
+    const forOnly: DeviceCuts = { ...EVERYONE, people: "yourPeople", peopleSign: "for" };
+    expect(ids(derive(held, forOnly, record).tail)).toEqual(["f", "s"]);
+    expect(ids(derive(held, { ...EVERYONE, showSettling: false }, record).tail)).toEqual(["f", "n"]);
+  });
+
+  it("nothing_unseen_leaves_every_admitted_row_in_the_tail", () => {
+    const held = answer([entry("a", 0), entry("b", 1)]);
+    const derived = derive(held, EVERYONE, seenOf("a", "b"));
+    expect(derived.head).toEqual([]);
+    expect(ids(derived.tail)).toEqual(["a", "b"]);
+  });
+
+  it("show_seen_on_stands_one_list_with_the_seen_rows_ranked_in_and_no_tail", () => {
     const held = answer([entry("a", 0), entry("b", 1)], [settling("s", 0, 0)]);
     const record = seenOf("a", "s");
-    expect(ids(derive(held, { ...EVERYONE, showSeen: true }, record))).toEqual(["s", "a", "b"]);
-    expect(ids(derive(held, EVERYONE, record))).toEqual(["b"]);
+    const on = derive(held, { ...EVERYONE, showSeen: true }, record);
+    expect(ids(on.head)).toEqual(["s", "a", "b"]);
+    expect(on.tail).toEqual([]);
+    const off = derive(held, EVERYONE, record);
+    expect(ids(off.head)).toEqual(["b"]);
+    expect(ids(off.tail)).toEqual(["s", "a"]);
   });
 
   it("a_session_less_reader_cuts_nothing_for_seen", () => {
     const held = answer([entry("a", 0), entry("b", 1)]);
-    expect(ids(derive(held, EVERYONE, NOTHING_SEEN))).toEqual(["a", "b"]);
+    const derived = derive(held, EVERYONE, NOTHING_SEEN);
+    expect(ids(derived)).toEqual(["a", "b"]);
+    expect(derived.tail).toEqual([]);
   });
 });
 
@@ -207,7 +254,7 @@ describe("the device derive: people (CD-11)", () => {
   it("a_device_cut_never_reorders_the_derived_list", () => {
     for (const order of ["ranked", "newest"] as const) {
       const whole = ids(compose(marked, order));
-      const kept = ids(derive(marked, { ...people("either"), order }, seenOf("against")));
+      const kept = ids(derive(marked, { ...people("either"), order }, seenOf("against")).head);
       expect(kept).toEqual(whole.filter((id) => kept.includes(id)));
     }
   });
@@ -275,7 +322,10 @@ function cutAnswer(held: HeldAnswer, keep: (id: string) => boolean, order: FeedO
 describe("the device derive: commutation", () => {
   // FP-1's argument (§4.10 W-2): deleting rows from the composed list equals
   // composing over the answer with those rows already gone — for every
-  // combination of the people, seen and settling cuts, under both orders.
+  // combination of the people, seen and settling axes, under both orders. The
+  // seen axis splits rather than deletes (PR-80), so the property holds on
+  // each side of the separator: the head is the composition of the unseen
+  // survivors, the tail the composition of the seen ones.
   it("cut_then_compose_equals_compose_then_cut", () => {
     const random = mulberry32(20261013);
     const signs: FeedPeopleSign[] = ["for", "against", "either"];
@@ -289,12 +339,15 @@ describe("the device derive: commutation", () => {
             for (const people of ["everyone", "yourPeople"] as const) {
               for (const peopleSign of signs) {
                 const cuts: DeviceCuts = { order, showSeen, showSettling, people, peopleSign };
-                const composedThenCut = ids(cut(compose(held, order), cuts, seen));
-                const survivors = new Set(composedThenCut);
-                const cutThenComposed = ids(
-                  compose(cutAnswer(held, (id) => survivors.has(id), order), order),
-                );
-                expect(cutThenComposed).toEqual(composedThenCut);
+                const split = partition(cut(compose(held, order), cuts), cuts, seen);
+                for (const side of [split.head, split.tail]) {
+                  const composedThenCut = ids(side);
+                  const survivors = new Set(composedThenCut);
+                  const cutThenComposed = ids(
+                    compose(cutAnswer(held, (id) => survivors.has(id), order), order),
+                  );
+                  expect(cutThenComposed).toEqual(composedThenCut);
+                }
               }
             }
           }
