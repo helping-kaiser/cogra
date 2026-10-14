@@ -94,9 +94,9 @@ impl Served {
         self
     }
 
+    /// A payload opaque to this check: only presence is compared until the
+    /// envelope decoder lands on the clients.
     fn payload(mut self) -> Self {
-        // Opaque to this check: only presence is compared until the
-        // envelope decoder lands on the clients.
         self.payload = vec![0xd9, 0xd9, 0xf7, 0xa0];
         self
     }
@@ -196,8 +196,6 @@ fn case(name: &str, writes: Vec<Value>, nets: Vec<Value>, batch: &[Served], acce
         "verdict": if accept { "accept" } else { "refuse" },
     })
 }
-
-// ---- the gestures ------------------------------------------------------------
 
 /// A post with one topic and one citation: what the composer ordered.
 fn post_expectation() -> Vec<Value> {
@@ -531,6 +529,8 @@ fn body_cases() -> Vec<Value> {
     cases
 }
 
+/// An edit's cases, ending on its whole acts card: the record, one revised tag,
+/// and a citation withdrawal whose bundle needs two counter-records.
 fn edit_cases() -> Vec<Value> {
     let mut cases = vec![];
     cases.push(case(
@@ -566,8 +566,6 @@ fn edit_cases() -> Vec<Value> {
         false,
     ));
 
-    // An edit's whole acts card: the record, one revised tag, and a
-    // citation withdrawal whose bundle needs two counter-records.
     let cited = BundleSum {
         p_d: 1.4,
         p_i: 0.25,

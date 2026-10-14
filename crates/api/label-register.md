@@ -784,6 +784,7 @@ label.
 | `test:integration:the-corpora-carry-the-operations-they-are-read-for`                         | the_corpora_carry_the_operations_they_are_read_for                         |
 | `test:integration:the-current-side-code-is-six-digits`                                        | the_current_side_code_is_six_digits                                        |
 | `test:integration:the-daily-backstop-trips-across-families`                                   | the_daily_backstop_trips_across_families                                   |
+| `test:integration:the-dead-pre-digest-fields-are-gone-from-the-schema`                        | the_dead_pre_digest_fields_are_gone_from_the_schema                        |
 | `test:integration:the-deletion-mail-carries-the-link-url`                                     | the_deletion_mail_carries_the_link_url                                     |
 | `test:integration:the-deletion-path-is-viewer-only`                                           | the_deletion_path_is_viewer_only                                           |
 | `test:integration:the-deletion-path-names-the-one-verb-that-answers`                          | the_deletion_path_names_the_one_verb_that_answers                          |
