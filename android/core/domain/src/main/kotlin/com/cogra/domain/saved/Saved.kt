@@ -5,9 +5,12 @@
 
 package com.cogra.domain.saved
 
+import com.cogra.domain.CommentView
 import com.cogra.domain.ModeratedField
 import com.cogra.domain.ModerationState
 import com.cogra.domain.Outcome
+import com.cogra.domain.PostView
+import com.cogra.domain.ProfileView
 import java.time.Instant
 
 /** The Saved list over the contract. */
@@ -35,12 +38,66 @@ data class SavedPage(
     val hasNextPage: Boolean,
 )
 
-/** One kept thing, and when the reader kept it — the list's order and the row's age. */
-data class SavedEntry(val node: SavedNode, val bookmarkedAt: Instant) {
-    val id: String get() = node.id
+/** One kept thing, and when the reader kept it — the list's order and Undo's restore time. */
+data class SavedEntry(val card: SavedCard, val bookmarkedAt: Instant) {
+    val id: String get() = card.id
 }
 
-/** What a Saved row draws from. */
+/**
+ * SAVED IS A FEED (Saved.md, round 12): each kept thing as its kind's own
+ * live feed card reads it — a post as the feed card's [PostView], a comment as
+ * the thread's [CommentView] plus what its head row names, a person as the
+ * profile's [ProfileView].
+ */
+sealed interface SavedCard {
+    val id: String
+
+    data class Post(val post: PostView) : SavedCard {
+        override val id: String get() = post.id
+    }
+
+    data class Comment(
+        val comment: CommentView,
+        /** What the comment answers — its head row; null when nothing resolves. */
+        val target: CommentTarget?,
+        /** The thread's root post: where the card's doors land. */
+        val threadPostId: String?,
+        /** That post's title — what a search reads the comment through. */
+        val threadPostTitle: ModeratedField?,
+    ) : SavedCard {
+        override val id: String get() = comment.id
+    }
+
+    data class Person(val profile: ProfileView) : SavedCard {
+        override val id: String get() = profile.id
+    }
+}
+
+/** What a comment answers, as its card's head row names it. */
+sealed interface CommentTarget {
+    val id: String
+
+    data class Post(
+        override val id: String,
+        val title: ModeratedField,
+        val content: ModeratedField,
+        val mimeTypes: List<String>,
+        /** The cover, or a clip's still; null with none to show. */
+        val coverUrl: String?,
+        val authorHandle: String?,
+        val moderation: ModerationState,
+        /** Any of the payload's fields went: the post was removed. */
+        val removed: Boolean,
+    ) : CommentTarget
+
+    data class Comment(
+        override val id: String,
+        val content: ModeratedField,
+        val authorHandle: String?,
+    ) : CommentTarget
+}
+
+/** A minimal kept node — what a notification row draws from. */
 sealed interface SavedNode {
     val id: String
 
