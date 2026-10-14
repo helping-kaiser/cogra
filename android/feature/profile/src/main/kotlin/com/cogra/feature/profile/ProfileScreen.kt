@@ -57,6 +57,8 @@ import com.cogra.core.designsystem.RowLineState
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
+import com.cogra.core.designsystem.v2.atom.BandBell
+import com.cogra.core.designsystem.v2.atom.CograBandBell
 import com.cogra.core.designsystem.v2.media.CograAvatar
 import com.cogra.crypto.Family
 import com.cogra.domain.ProfileView
@@ -98,6 +100,8 @@ fun ProfileRoute(
     onRequireAccount: (() -> Unit)? = null,
     /** Where the reader came from, which the back arrow names (`saved`). */
     from: String? = null,
+    /** The bell, on the own profile ROOT only (Profile.md:3, :41); null elsewhere. */
+    bell: BandBell? = null,
     viewModel: ProfileViewModel = hiltViewModel(),
     shareModel: ProfileShareViewModel = hiltViewModel(),
 ) {
@@ -157,12 +161,20 @@ fun ProfileRoute(
         onRequireAccount = onRequireAccount,
         onOpenSaved = onOpenSaved,
         onShareProfile = { profileHandle -> context.shareProfile(shareModel.urlFor(profileHandle)) },
-        backDescription = if (from == SAVED_ORIGIN) stringResource(R.string.profile_back_saved) else null,
+        backDescription = when (from) {
+            SAVED_ORIGIN -> stringResource(R.string.profile_back_saved)
+            NOTIFICATIONS_ORIGIN -> stringResource(R.string.profile_back_notifications)
+            else -> null
+        },
+        bell = bell,
     )
 }
 
 /** The `from` a Saved row's person is opened with. */
 const val SAVED_ORIGIN = "saved"
+
+/** The `from` a notification's person or post is opened with (`Back to Notifications`). */
+const val NOTIFICATIONS_ORIGIN = "notifications"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -193,6 +205,8 @@ fun ProfileScreen(
     onShareProfile: (String) -> Unit = {},
     /** The back arrow's spoken name, by where the reader came from (`Back to Saved`). */
     backDescription: String? = null,
+    /** The bell, right-most on the own profile root; the header is not yet the drawn band (N3). */
+    bell: BandBell? = null,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     // THE ⋮'S AFTERMATH READS ON THE PAGE'S OWN SNACKBAR (`profile.snackbar`):
@@ -260,6 +274,7 @@ fun ProfileScreen(
                                     contentDescription = stringResource(R.string.profile_open_settings),
                                 )
                             }
+                            bell?.let { CograBandBell(it, testTag = "profile") }
                         }
                     },
                     colors = surfaceTopAppBarColors(),

@@ -206,7 +206,11 @@ fun PostDetailRoute(
         },
         saved = rememberSavedWrites(),
         onRequireAccount = onRequireAccount,
-        backDescription = if (from == "saved") stringResource(R.string.content_back_saved) else null,
+        backDescription = when (from) {
+            "saved" -> stringResource(R.string.content_back_saved)
+            "notifications" -> stringResource(R.string.content_back_notifications)
+            else -> null
+        },
         landOn = landOn,
     )
 }
