@@ -1,0 +1,29 @@
+# The live trace read's operation against the ranker pod (ranker-schema.graphql;
+# ranked-feed-api §4.11): `rankSearch` over the one target, with its paths.
+# It selects what the trace answer carries and the relay hydrates — the
+# paths' node ids, sign, contribution and the spot-check figures, and each
+# hop's folded pair, factor and member record ids. The NEWEST permutation,
+# the mark and the tie-breakers answer other questions and are never
+# fetched here; `feedRanking`'s own document selects no paths at all.
+query Trace($viewer: UUID!, $candidates: [UUID!]!, $params: RankParams!, $asOfEpoch: Int) {
+  rankSearch(viewer: $viewer, candidates: $candidates, params: $params, asOfEpoch: $asOfEpoch) {
+    asOfEpoch
+    entries {
+      targetId
+      score
+      paths {
+        nodeIds
+        sign
+        magnitude
+        recency
+        contribution
+        hops {
+          recordIds
+          pDirected
+          pInterest
+          weight
+        }
+      }
+    }
+  }
+}

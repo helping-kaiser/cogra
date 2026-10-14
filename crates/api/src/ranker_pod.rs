@@ -8,8 +8,9 @@
 //!
 //! The client is generated at compile time from the pod's checked-in
 //! `ranker-schema.graphql` and the relay's documents — `ranker_pod.graphql`
-//! for the feed, `ranker_pod_search.graphql` for ranked search — so a pod
-//! schema change that breaks the relay fails this crate's build. The `ranker` crate itself is never a
+//! for the feed, `ranker_pod_search.graphql` for ranked search,
+//! `ranker_pod_trace.graphql` for the live trace — so a pod schema change
+//! that breaks the relay fails this crate's build. The `ranker` crate itself is never a
 //! dependency of the api (PR-9).
 //!
 //! Backpressure is technical, never a rate-limit scope (ranked-feed-api
@@ -71,6 +72,23 @@ pub use rank_search::{
     FriendAuthorReorder as SearchFriendAuthorReorder, RankParams as SearchRankParams,
     RankSearchRankSearch as PodSearchRanking, RankSearchRankSearchEntries as PodSearchEntry,
     Variables as RankSearchVariables,
+};
+
+/// The live trace read's `rankSearch` document, with paths (ranked-feed-api
+/// §4.11).
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "../../ranker-schema.graphql",
+    query_path = "src/ranker_pod_trace.graphql",
+    response_derives = "Debug, Clone, PartialEq",
+    variables_derives = "Debug, Clone"
+)]
+pub struct Trace;
+
+pub use trace::{
+    FriendAuthorReorder as TraceFriendAuthorReorder, RankParams as TraceRankParams,
+    TraceRankSearch as PodTrace, TraceRankSearchEntriesPaths as PodTracePath,
+    Variables as TraceVariables,
 };
 
 /// Where the pod is and how hard the relay may lean on it (ranked-feed-api
@@ -183,6 +201,14 @@ impl RankerClient {
         variables: RankSearchVariables,
     ) -> Result<PodSearchRanking, PodError> {
         self.call::<RankSearch>(variables)
+            .await
+            .map(|data| data.rank_search)
+    }
+
+    /// One `rankSearch` call over a single target, with its paths — the
+    /// live trace read (ranked-feed-api §4.11).
+    pub async fn trace(&self, variables: TraceVariables) -> Result<PodTrace, PodError> {
+        self.call::<Trace>(variables)
             .await
             .map(|data| data.rank_search)
     }
