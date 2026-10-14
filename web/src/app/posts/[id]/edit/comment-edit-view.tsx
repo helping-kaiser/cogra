@@ -55,6 +55,9 @@ import { COMMENT_BODY_MAX_CHARS, commentBodyProblem } from "@/lib/compose/reply-
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
 
+/** The header X's accessible name: the edit keeps no draft (CommentEditVideo, WizardHeader boards). */
+export const COMMENT_EDIT_LEAVE_LABEL = "Leave — the edit is discarded";
+
 /** A group's caption — the board's own label rung. */
 function FieldLabel({ children }: { children: string }) {
   return <span className="text-label-large">{children}</span>;
@@ -164,7 +167,7 @@ export function CommentEditView({
         backLabel="Back to the thread"
         onBack={onLeave}
         onLeave={onLeave}
-        leaveLabel="Leave — this edit is discarded"
+        leaveLabel={COMMENT_EDIT_LEAVE_LABEL}
         help={<HelpButton label="Editing" onOpen={onHelp} />}
       />
 
