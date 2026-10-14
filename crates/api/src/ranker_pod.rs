@@ -67,13 +67,11 @@ pub use rank::{
 )]
 pub struct RankSearch;
 
-pub mod search {
-    //! The `rankSearch` document's generated types, under the relay's names.
-    pub use super::rank_search::{
-        FriendAuthorReorder, RankParams, RankSearchRankSearch as PodSearchRanking,
-        RankSearchRankSearchEntries as PodSearchEntry, Variables as RankSearchVariables,
-    };
-}
+pub use rank_search::{
+    FriendAuthorReorder as SearchFriendAuthorReorder, RankParams as SearchRankParams,
+    RankSearchRankSearch as PodSearchRanking, RankSearchRankSearchEntries as PodSearchEntry,
+    Variables as RankSearchVariables,
+};
 
 /// Where the pod is and how hard the relay may lean on it (ranked-feed-api
 /// §4.6; production-deploy.md names `RANKER_URL` as this packet's).
@@ -182,8 +180,8 @@ impl RankerClient {
     /// One `rankSearch` call (ranked-feed-api §4.8).
     pub async fn rank_search(
         &self,
-        variables: search::RankSearchVariables,
-    ) -> Result<search::PodSearchRanking, PodError> {
+        variables: RankSearchVariables,
+    ) -> Result<PodSearchRanking, PodError> {
         self.call::<RankSearch>(variables)
             .await
             .map(|data| data.rank_search)
@@ -216,9 +214,8 @@ impl RankerClient {
         let (status, bytes) = tokio::time::timeout(self.timeout, call)
             .await
             .map_err(|_| PodError::Timeout(self.timeout))??;
-        let answer: graphql_client::Response<Q::ResponseData> =
-            serde_json::from_slice(&bytes)
-                .map_err(|e| PodError::Undecodable(format!("HTTP {status}: {e}")))?;
+        let answer: graphql_client::Response<Q::ResponseData> = serde_json::from_slice(&bytes)
+            .map_err(|e| PodError::Undecodable(format!("HTTP {status}: {e}")))?;
         if let Some(error) = answer.errors.as_deref().and_then(<[_]>::first) {
             let code = error
                 .extensions

@@ -2734,11 +2734,8 @@ fn no_query_reaches_session_material() {
     );
 }
 
-// ---------------------------------------------------------------------------
-// Ranked search (RF-4; ranked-feed-api §4.8): the in-slice candidate bound,
-// the pod's order, the seam, and the pin the cursor carries.
-// ---------------------------------------------------------------------------
-
+/// Ranked search (RF-4; ranked-feed-api §4.8): the in-slice candidate
+/// bound, the pod's order, the seam, and the pin the cursor carries.
 const SEARCH: &str = r#"query($q: String!, $order: ReadOrder, $viewer: UUID,
                           $first: Int, $after: String, $last: Int, $before: String) {
   search(query: $q, order: $order, viewer: $viewer,
@@ -2927,7 +2924,9 @@ async fn ranked_search_with_the_ranker_down_is_internal(pool: PgPool) {
 async fn ranked_search_sends_only_the_matches_inside_the_viewers_slice(pool: PgPool) {
     let (rig, pod) = pod_rig(pool, Mode::Answer(search_ranking(&[]))).await;
     let f = search_fixture(&rig.pool).await;
-    let pin = mirror::last_ingested_epoch(&rig.pool).await.expect("cursor");
+    let pin = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
     search(
         &rig,
         json!({ "q": "salt", "order": "RANKED", "viewer": f.viewer }),
@@ -2943,7 +2942,8 @@ async fn ranked_search_sends_only_the_matches_inside_the_viewers_slice(pool: PgP
 
 /// The pod's order is the head's order, scores carried as the pod gave
 /// them; every match the ranker cannot score follows behind, newest first,
-/// with no score.
+/// with no score. "sal" equals no title, so every match is a partial
+/// match and the head is one tier.
 ///
 /// Ranked search serves the pod's order, then the unscored matches behind the seam, newest first.
 /// ´claim:search:the-pods-order-then-the-seam´
@@ -2951,7 +2951,6 @@ async fn ranked_search_sends_only_the_matches_inside_the_viewers_slice(pool: PgP
 async fn ranked_search_orders_the_head_by_the_pod_and_the_rest_behind_the_seam(pool: PgPool) {
     let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
     let f = search_fixture(&rig.pool).await;
-    // "sal" equals no title, so every match is a partial match: one tier.
     pod.set(Mode::Answer(search_ranking(&[
         (f.near, "POST", 0.2),
         (f.near_exact, "POST", 0.9),
@@ -3037,10 +3036,10 @@ async fn ranked_search_pages_reuse_the_pin(pool: PgPool) {
         (f.near_exact, "POST", 0.9),
         (f.near, "POST", 0.2),
     ])));
-    let pin = mirror::last_ingested_epoch(&rig.pool).await.expect("cursor");
-    let variables = |after: Value| {
-        json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer, "first": 1, "after": after })
-    };
+    let pin = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
+    let variables = |after: Value| json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer, "first": 1, "after": after });
     let first = search(&rig, variables(Value::Null)).await;
     land(&rig.pool, vec![binary("v", 9, Family::Opinion, prof("b"))]).await;
     let second = search(&rig, variables(first["pageInfo"]["endCursor"].clone())).await;
@@ -3122,7 +3121,9 @@ async fn ranked_search_for_an_unrankable_viewer_lists_every_match_past_the_seam(
 async fn a_malformed_pod_search_answer_is_internal_and_logged(pool: PgPool) {
     let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
     let f = search_fixture(&rig.pool).await;
-    let pin = mirror::last_ingested_epoch(&rig.pool).await.expect("cursor");
+    let pin = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
     let mut wrong_epoch = search_ranking(&[(f.near, "POST", 0.5)]);
     wrong_epoch["asOfEpoch"] = json!(pin - 1);
     for answer in [

@@ -39,10 +39,10 @@ use uuid::Uuid;
 
 use super::query::bad_input;
 use super::types::{SearchConnection, SearchConnectionFields, SearchEdgeFields};
-use crate::ranker_pod::search::{
-    FriendAuthorReorder, PodSearchRanking, RankParams, RankSearchVariables,
+use crate::ranker_pod::{
+    PodError, PodSearchRanking, RankSearchVariables, RankerClient,
+    SearchFriendAuthorReorder as FriendAuthorReorder, SearchRankParams as RankParams,
 };
-use crate::ranker_pod::{PodError, RankerClient};
 
 /// How a read orders what it serves: by the viewer's ranker, or by time.
 #[derive(Enum, Copy, Clone, Debug, PartialEq, Eq, Default)]
@@ -111,9 +111,7 @@ impl RankedCursor {
                     epoch: epoch.parse().ok().filter(|e: &i64| *e >= 0)?,
                     at: SearchCursor {
                         tier,
-                        created_at: chrono::DateTime::from_timestamp_micros(
-                            micros.parse().ok()?,
-                        )?,
+                        created_at: chrono::DateTime::from_timestamp_micros(micros.parse().ok()?)?,
                         node_id: Uuid::parse_str(id).ok()?,
                     },
                 })
@@ -133,6 +131,10 @@ struct Row {
 
 /// One page of `search(order: RANKED)` for `viewer`. `cursor` is the
 /// decoded `after` (forward) or `before` (backward).
+///
+/// The result is the head, then the tail: a walk runs inside one part and
+/// crosses into the other when its page has room left. It reads one row
+/// past the page, which tells whether another page exists.
 pub async fn page(
     ctx: &Context<'_>,
     request: SearchRequest,
@@ -155,7 +157,6 @@ pub async fn page(
         within: None,
         excluding: &head_ids,
     };
-    // One row past the page tells whether another page exists.
     let take = usize::try_from(limit).unwrap_or(0) + 1;
     let store_limit = |n: usize| i64::try_from(n).unwrap_or(i64::MAX);
     let head_row = |slot: usize| {
@@ -170,8 +171,6 @@ pub async fn page(
         tail_rows(&request, pool, tail, pin, at, backward, limit)
     };
 
-    // The result is the head, then the tail. A walk runs inside one part
-    // and crosses into the other when its page has room left.
     let mut rows: Vec<Row> = Vec::new();
     if backward {
         let head_end = match cursor {
@@ -306,9 +305,7 @@ async fn ranked_head(
     else {
         return Ok(Vec::new());
     };
-    let reach = slice::reach(pool, &address, pin)
-        .await
-        .map_err(storage)?;
+    let reach = slice::reach(pool, &address, pin).await.map_err(storage)?;
     let mut in_slice: Vec<Uuid> = slice::node_rows(pool, &reach)
         .await
         .map_err(storage)?

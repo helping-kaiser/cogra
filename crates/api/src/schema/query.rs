@@ -16,17 +16,16 @@ use postgres_store::search as search_store;
 use postgres_store::{PgPool, auth as store, content as content_store, genesis, mirror, staged};
 use uuid::Uuid;
 
+use super::ranked_search::{self, ReadOrder};
 use super::types::{
     Actor, AskLinkCheck, CommentType, DEFAULT_PAGE_SIZE, EmailChangeLinkCheck,
     EmailChangeLinkState, HashtagType, InviteLinkCheck, KeysetConnection, MediaAttachmentType,
     Node, NodeKind, PostType, Record, RecordConnection, RecordFamily, RecordId, ReferenceCandidate,
     ReferenceTarget, SearchConnection, SearchConnectionFields, SearchEdgeFields, SearchResult,
-    StagedWriteType, User,
-    borrowed_vantage, connection_cost, content_cursor, content_cursor_key, keyset_connection,
-    keyset_page, list_cost, list_limit, record_connection, resolve_reference_target,
-    validate_page_args, viewer_address,
+    StagedWriteType, User, borrowed_vantage, connection_cost, content_cursor, content_cursor_key,
+    keyset_connection, keyset_page, list_cost, list_limit, record_connection,
+    resolve_reference_target, validate_page_args, viewer_address,
 };
-use super::ranked_search::{self, ReadOrder};
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
 use crate::search::{self, IndexKind, ScopedKind};
@@ -683,8 +682,7 @@ impl Query {
             }
         };
         if let Some(viewer) = ranked_for {
-            return ranked_search::page(ctx, request, viewer, ranked_cursor, backward, limit)
-                .await;
+            return ranked_search::page(ctx, request, viewer, ranked_cursor, backward, limit).await;
         }
         let mut hits = request
             .find(pool, cursor, backward, limit + 1)
