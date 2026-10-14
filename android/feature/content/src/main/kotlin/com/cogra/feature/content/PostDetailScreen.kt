@@ -1009,7 +1009,7 @@ private fun DetailCardFoot(
  * `design/designs/canonical/nodes.json`): every element the board names
  * wears its `postDetail.…` path.
  */
-private val POST_DETAIL = DataNode("postDetail")
+internal val POST_DETAIL = DataNode("postDetail")
 
 /**
  * The post, as the composer's target card reads it (`ReplyEntry` 7).

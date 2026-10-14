@@ -29,6 +29,14 @@ describe("LicenseTerms — the reader's block", () => {
     expect(screen.getByText("Not logged")).toBeInTheDocument();
   });
 
+  it("wears the registered publicDomain part where the block is a registered node", () => {
+    render(<LicenseTerms license={PUBLIC_DOMAIN} testId="terms" node={{ path: "postDetail.licenseSheet.terms" }} />);
+    expect(screen.getByTestId("postDetail.licenseSheet.terms.publicDomain")).toHaveTextContent(
+      "Public domain",
+    );
+    expect(screen.queryByTestId("terms-public-domain")).not.toBeInTheDocument();
+  });
+
   it("keys each row by the axis name lowercased, runs of other characters one dash", () => {
     render(
       <LicenseTerms

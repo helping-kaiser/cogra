@@ -180,7 +180,13 @@ fun CommentsSheetRoute(
         onLanded = viewModel.landing::done,
     )
     licenseShown?.let { license ->
-        LicenseSheet(license = license, onDismiss = { licenseShown = null }, stacked = true)
+        // `CommentLicense` registers under `postDetail`, over the thread.
+        LicenseSheet(
+            license = license,
+            onDismiss = { licenseShown = null },
+            stacked = true,
+            node = POST_DETAIL / "licenseSheet",
+        )
     }
 }
 

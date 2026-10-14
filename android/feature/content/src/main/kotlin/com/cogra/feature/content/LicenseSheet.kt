@@ -85,7 +85,11 @@ internal fun LicenseTerms(license: LicenseChoice, testTag: String, node: DataNod
                 Text(
                     stringResource(R.string.content_license_terms_public_domain),
                     style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.testTag("${testTag}_public_domain"),
+                    modifier = if (node == null) {
+                        Modifier.testTag("${testTag}_public_domain")
+                    } else {
+                        Modifier.dataNode(node.div("publicDomain"))
+                    },
                 )
             }
         }

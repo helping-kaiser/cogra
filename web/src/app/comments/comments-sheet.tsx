@@ -73,6 +73,7 @@ import { useWriteSigner } from "@/lib/signing/provider";
 import { ActorChip } from "@/lib/ui/actor-chip";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
+import type { DataNode } from "@/lib/ui/data-node";
 import { PUBLIC_DOMAIN, type License } from "@/lib/license";
 import { PendingMarker } from "@/lib/ui/pending-marker";
 import { useMeasureEffect } from "@/lib/ui/measure-effect";
@@ -153,6 +154,13 @@ type ReplyThread = {
  * 26 tracks that lag).
  */
 const MAX_INDENT_DEPTH = 1;
+
+/**
+ * The comment's stacked terms sheet: `CommentLicense` registers under
+ * `postDetail`, over the thread (design/readme.md round 10), whichever
+ * surface raised the thread.
+ */
+const COMMENT_LICENSE_SHEET: DataNode = { path: "postDetail.licenseSheet" };
 
 /** How many pages a landing reads, of the thread or of one branch, before it settles. */
 const LANDING_PAGES = 10;
@@ -1460,7 +1468,8 @@ export function CommentsSheet({
           open={licenseOpen}
           onClose={() => setLicenseOpen(false)}
           license={licenseShown}
-          testId="license-sheet"
+          testId="postDetail.licenseSheet"
+          node={COMMENT_LICENSE_SHEET}
           stacked
         />
       )}
