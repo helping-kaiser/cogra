@@ -66,6 +66,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -407,7 +408,7 @@ fun StanceControl(
     //
     // A VARIANT PAD CARRIES NO WALK IT BACK (VouchBackPad.md:11): the
     // vouch-back opens a relationship, it is never the place to leave one.
-    val severable = state.standing != null && variant == null
+    val severable = rememberSeverableAtRest(state.standing != null && variant == null, state.busy)
 
     StanceConfirmation(state.confirmation, standingLabel, axes, onConfirmationShown)
     // THE PAD AND THE SEVERANCE DIALOG SAY THEY ARE UP, wherever the control
@@ -554,6 +555,22 @@ fun StanceControl(
             )
         }
     }
+}
+
+/**
+ * THE PAD HOLDS ITS SHAPE WHILE SET IS ANSWERING (PR-57's reflow law,
+ * `StancePadReflowTest`). Set shows the pending fold as the standing at
+ * once, so a FIRST stance turns no standing into one while the pad is
+ * still up — and the walk-away appearing then grows the bottom-anchored
+ * card, lifting the whole pad. While [busy], the answer stays the one the
+ * control had at rest; a signed stance closes the pad, and the next open
+ * offers the walk-away.
+ */
+@Composable
+private fun rememberSeverableAtRest(severable: Boolean, busy: Boolean): Boolean {
+    val atRest = remember { mutableStateOf(severable) }
+    SideEffect { atRest.value = if (busy) atRest.value else severable }
+    return if (busy) atRest.value else severable
 }
 
 /**
