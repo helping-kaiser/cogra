@@ -72,6 +72,7 @@ class NotificationRowsTest {
             NotificationKind.INVITE_LANDED to "@ada landed through your invite",
             NotificationKind.APPLICATION_APPROVED to "@ada approved your application",
             NotificationKind.APPLICATION_REJECTED to "@ada closed your application",
+            NotificationKind.PROFILE_OPINION_WITHDRAWN to "@ada walked back their opinion on you",
         )
         sentences.forEach { (kind, sentence) -> assertThat(notificationRow(row(kind)).title).isEqualTo(sentence) }
         // NT-G3(b): a citation of the reader's comment.
@@ -118,6 +119,23 @@ class NotificationRowsTest {
         assertThat(opinion.title).doesNotContainMatch("\\d")
     }
 
+    // Notifications.md:21: 🤷 where a picture would go, no digits, no second line —
+    // even for an actor with a picture, and whatever pair the record says.
+    @Test
+    fun `the withdrawal row wears the walked back face with no digits and no second line`() {
+        val withdrawn = notificationRow(
+            row(
+                NotificationKind.PROFILE_OPINION_WITHDRAWN,
+                pair = NotificationPair(-0.4, -0.5),
+                actor = NotificationActor("a1", "sol", text("Sol"), "https://media/sol.jpg"),
+            ),
+        )
+        assertThat(withdrawn.title).isEqualTo("@sol walked back their opinion on you")
+        assertThat(withdrawn.disc).isEqualTo(NotificationDisc.WalkedBack)
+        assertThat(withdrawn.second).isNull()
+        assertThat(withdrawn.title).doesNotContainMatch("\\d")
+    }
+
     @Test
     fun `the approvable row wears the monogram never a picture`() {
         val ready = notificationRow(
@@ -147,6 +165,8 @@ class NotificationRowsTest {
             .isEqualTo(NotificationTarget.Post("p2"))
         val people = listOf(
             NotificationKind.PROFILE_OPINION,
+            // Notifications.md:43: the profile of the person who walked it back.
+            NotificationKind.PROFILE_OPINION_WITHDRAWN,
             NotificationKind.INVITE_LANDED,
             NotificationKind.APPLICATION_APPROVED,
         )
