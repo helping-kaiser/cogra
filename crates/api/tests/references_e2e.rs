@@ -526,7 +526,7 @@ async fn tags_and_citations_batch_into_one_gesture(pool: PgPool) {
                 "content": "a body",
                 "license": { "attribution": 1.0, "provenance": 0.0 },
                 "pDirected": 0.1,
-                "tags": [{ "name": "rust" }, { "name": "graphs" }],
+                "tags": [{ "name": "rust", "pDirected": 0.1, "pInterest": 1.0 }, { "name": "graphs", "pDirected": 0.1, "pInterest": 1.0 }],
                 "references": [{ "target": cited, "relevance": 0.1, "support": 0.1 }, { "target": bob, "relevance": 0.1, "support": 0.1 }],
             }}),
         )
@@ -1010,7 +1010,7 @@ async fn a_topic_is_refused_as_a_citation_target(pool: PgPool) {
                 "content": "a body",
                 "license": { "attribution": 1.0, "provenance": 0.0 },
                 "pDirected": 0.1,
-                "tags": [{ "name": "rust" }],
+                "tags": [{ "name": "rust", "pDirected": 0.1, "pInterest": 1.0 }],
             }}),
         )
         .await;
@@ -1416,7 +1416,7 @@ async fn the_finder_never_offers_a_topic(pool: PgPool) {
                 "content": "a body",
                 "license": { "attribution": 1.0, "provenance": 0.0 },
                 "pDirected": 0.1,
-                "tags": [{ "name": "rust" }],
+                "tags": [{ "name": "rust", "pDirected": 0.1, "pInterest": 1.0 }],
             }}),
         )
         .await;
