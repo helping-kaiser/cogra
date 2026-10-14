@@ -111,9 +111,10 @@ wide anchor on a profile and on a tag page, beside the hollow face — a
 guest reads `@genesismod's opinion`, never `Your opinion`. The wide
 anchor has no overflow law of its own, and on a profile it leaves its
 words about 134px, which `@genesismod's opinion` already outgrows (150px
-measured); a name that outgrows the anchor falls back to `Their
-opinion`. That fallback is a flagged exception at jakob's review: on a
-profile, *their* can read as the profile owner's.
+measured); a name that outgrows the anchor ellipsizes, the handle
+truncating before its `'s opinion` — `@genesismo…'s opinion` — so the
+words always name whose view it is (jakob 2026-10-14). The ellipsis is
+print only: the anchor's accessible name keeps the full handle.
 
 **The vouch card's empty face wears full ink** (jakob 2026-10-13). The
 resting treatment — the muted, translucent 🫥 — stacks three layers of

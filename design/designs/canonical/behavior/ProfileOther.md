@@ -38,7 +38,9 @@ WHEN an opinion on the person is signed GIVEN the person vouched the reader in a
 
 WHEN a guest taps the wide anchor -> the guest gate opens
 
-ALWAYS the wide anchor's words beside the hollow face name the borrowed view, as @genesismod's opinion, and read Their opinion where the name outgrows the anchor GIVEN the reader is a guest and the borrowed view holds no opinion on the person
+ALWAYS the wide anchor's words beside the hollow face name the borrowed view, as @genesismod's opinion, its handle ellipsized before 's opinion where the name outgrows the anchor, as @genesismo…'s opinion, GIVEN the reader is a guest and the borrowed view holds no opinion on the person
+
+ALWAYS the wide anchor's accessible name keeps the borrowed view's full handle, never ellipsized GIVEN the reader is a guest
 
 WHEN tap the wide anchor GIVEN the reader is an applicant whose application is live and an opinion is already staged -> the snackbar reads Your opinion waits with your application — it arrives with you. AND NEVER the pad opens
 

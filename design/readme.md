@@ -9913,9 +9913,10 @@ drafted and wait for his review (copy-voice marks each).
   reach`, Ranked's `closest to @mira first — the view you're browsing
   from`, the topics `@mira holds` — and the trigger's extra collapses to
   the count past its 154px like any other. A guest's wide anchor reads
-  `@genesismod's opinion` beside the hollow face, falling back to
-  `Their opinion` where the name outgrows it: a flagged exception, and
-  on a profile it fires for most handles (backlog item 139).
+  `@genesismod's opinion` beside the hollow face, its handle ellipsized
+  before `'s opinion` where the name outgrows it — `@genesismo…'s
+  opinion` (jakob 2026-10-14, backlog item 139) — and its accessible
+  name keeps the full handle.
 - **The sweep.** Already third person under a borrowed view: the trace,
   its steps, folds and records, and a guest anchor's spoken name. The
   reader's own, so first person by the law: the seen toggle, the kinds'

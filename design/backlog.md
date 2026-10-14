@@ -4927,7 +4927,9 @@ Round 9 (readme §13) wrote the vantage law and moved the vouch card's
 act onto the stance face. These are the drawing-level calls it could not
 make alone:
 
-- **The wide anchor's fallback.** A guest's wide anchor names the
+- ~~**The wide anchor's fallback.**~~ Ruled 2026-10-14 (PR-78): the
+  handle ellipsizes before `'s opinion`, `@genesismo…'s opinion`; the
+  accessible name keeps the full handle. A guest's wide anchor names the
   viewpoint, `@genesismod's opinion`. On a profile it leaves its words
   about 134px and that string measures 150px, so the flagged `Their
   opinion` fallback already fires for the illustrative handle — and on a
