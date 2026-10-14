@@ -716,6 +716,11 @@ type Record {
   "The epoch in which the record landed — the graph's own clock;
    epoch ages read against the public epoch certificates."
   landingEpoch: Int!
+  "When the record landed: its epoch's attested boundary timestamp
+   (layer1-interface.md, the Host Contract). Wall-clock time for
+   display — the ages ladder reads it; `landingEpoch` and the causal
+   key carry the order."
+  landedAt: DateTime!
   "True when the record is payload-marked — folds then read it
    individually, never through the author's netted bundle (ballots,
    edits, membership records — substrate.md §9)."
@@ -2510,6 +2515,16 @@ type Query {
    epoch). Null if `viewer` resolves to no rankable actor."
   feedRanking(viewer: UUID!, asOfEpoch: Int, filter: FeedRankFilter): FeedRanking
 
+  "The live trace of one thing in `viewer`'s view: its score and the
+   paths behind it, computed now by the server's standalone ranker
+   container and relayed (miner-api.md). Paths are never stored, so
+   every call is a real fetch at the newest ingested epoch; the read
+   takes no pin and reports none, and its figure may differ from a held
+   feed's — the reader adopts what the trace finds, and a feed never
+   re-orders for it. A target no live path reaches answers with a null
+   score and no paths. Null if `viewer` resolves to no rankable actor."
+  feedTrace(viewer: UUID!, target: UUID!): FeedTrace
+
   "Global search across nodes; returns a `SearchResult` per edge. Recall is
    lexical over the indexed name-class fields and post titles — an
    untitled post is never matched by its words. Order is exact-match
@@ -2722,6 +2737,51 @@ type SettlingEntry {
  the folded p̄_d of the viewer's own Opinion → Profile bundle toward
  them. SIGNLESS is a held bundle with p̄_d = 0 and p̄_i ≠ 0."
 enum PeopleMark { FOR AGAINST SIGNLESS }
+
+"One thing's standing in a viewer's view, as this read found it."
+type FeedTrace {
+  "S(viewer, target) — the signed greedy disjoint-sum (feed-ranking.md
+   §6.1) — as this read found it. Null when no live path reaches the
+   target: unreached, unknown, or moved on."
+  score: Float
+  "The extracted paths behind `score`, in extraction order (strongest
+   first); their contributions add up to it. Empty when `score` is
+   null."
+  paths: [RankPath!]!
+}
+
+"One extracted path from the viewer to the target."
+type RankPath {
+  "The path's nodes, viewer → … → target, persons as one node under
+   their profile identifier."
+  nodes: [SliceNode!]!
+  "The path's hops: hop `i` crosses `nodes[i]` → `nodes[i + 1]`."
+  hops: [RankHop!]!
+  "σ(π): +1 or −1."
+  sign: Int!
+  "σ(π)·m(π)·f(Δt): this path's term of the score."
+  contribution: Float!
+  "m(π) = ∏ γ·w̃ over the hops. For spot-checks; never drawn."
+  magnitude: Float!
+  "f(Δt) of the path's terminal stance record. For spot-checks; never
+   drawn."
+  recency: Float!
+}
+
+"One folded hop: a per-author bundle netted into an effective edge
+ (feed-ranking.md §3.2)."
+type RankHop {
+  "The bundle's folded directed parameter p̄_d."
+  pDirected: Float!
+  "The bundle's folded interest parameter p̄_i."
+  pInterest: Float!
+  "This hop's factor γ·w̃. For spot-checks; never drawn."
+  weight: Float!
+  "Exactly the fold's member records, in the causal order. The leg a
+   member contributes is the one in its `legs` whose ends are the
+   hop's, persons folded (`addr:a` is `prof:a`)."
+  records: [Record!]!
+}
 
 "A generic page of nodes — any mixed-type node list."
 type NodeConnection {

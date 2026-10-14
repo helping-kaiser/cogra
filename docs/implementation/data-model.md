@@ -60,6 +60,10 @@ adds nothing. Conventions:
 - **An epoch cursor** records the last fully-ingested epoch;
   ingestion appends records and advances it
   ([architecture.md "Record ingestion"](architecture.md#record-ingestion-the-mirror-contract)).
+- **Per epoch, the attested boundary timestamp** the package
+  publishes (layer1-interface.md, the Host Contract) — when the
+  epoch's records landed, the wall-clock instant a record's display
+  reads (`Record.landedAt`). The stand-in attests its own close time.
 
 The contract is the mirror's whole identity: it may lag L1, it
 must never diverge, and it can be rebuilt from the published
