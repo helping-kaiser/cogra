@@ -1615,11 +1615,11 @@ card form everywhere; only license and sensitive present as sheets.
 nothing is signed; the draft stays on the device, and the state
 wears `tertiary` — a waiting state, never `error`. Leaving mid-write
 keeps one local draft per target, on-device only, on the surfaces
-that keep drafts — the post wizard, the post edit, the profile
-picture; there the draft is the safety, so nothing asks on the way
-out. The reply wizard and the comment edit keep no draft: leaving
-them discards, so a non-empty composer, or an edit changed since it
-opened, is asked first — one shared dialog (the *DiscardConfirm* board)
+that keep drafts — the post wizard and the profile picture; there
+the draft is the safety, so nothing asks on the way out. The reply
+wizard, the comment edit and the post edit keep no draft (the post
+edit's, jakob 2026-10-14): leaving them discards, so a non-empty
+composer, or an edit changed since it opened, is asked first — one shared dialog (the *DiscardConfirm* board)
 reading "Discard this reply?" or, from an edit, "Discard the changes?"
 (jakob 2026-10-02), body "Nothing is kept.", a quiet *Discard* beside a
 filled *Keep writing* — the safe answer carries the weight, as it does

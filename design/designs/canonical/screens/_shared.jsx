@@ -2239,7 +2239,7 @@ function editFootSign({ unchanged, faultHoles }) {
 function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes } = {}) {
   return (
     <>
-      <WizardHeader title="Edit post" leaveLabel="Leave — your draft is kept" help="Editing" />
+      <WizardHeader title="Edit post" leaveLabel="Leave — the edit is discarded" help="Editing" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         {/* The fields scroll under the pinned foot, the wizard reading: a
             form taller than the phone runs on under it, and the foot stays

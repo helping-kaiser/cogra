@@ -36,9 +36,13 @@ WHEN the signing has not answered 5s after the press -> the line Still signing â
 
 WHEN the signing answers GIVEN the slow line stands under the acts footer -> the slow line goes
 
-WHEN press the header back arrow -> the edit is left toward where it began AND the draft is kept AND NEVER a dialog asks
+WHEN press the header back arrow or the header X GIVEN the batch holds an act -> the dialog Discard the changes? opens over the edit with Nothing is kept. AND NEVER the changes are discarded unasked
 
-WHEN press the header X -> the edit is left AND the draft is kept AND NEVER a dialog asks
+WHEN press the header back arrow GIVEN the batch is empty -> the edit is left toward where it began AND NEVER a dialog asks
+
+WHEN press the header X GIVEN the batch is empty -> the edit is left AND nothing is kept or discarded AND NEVER a dialog asks
+
+WHEN tap Discard in the dialog Discard the changes? -> the changes are discarded AND the edit is left toward where it began with the post as it was AND NEVER a draft is kept
 
 WHEN the words stage opens -> the body takes focus with its caret at the end AND the keyboard rises
 

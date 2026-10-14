@@ -869,7 +869,7 @@ boards already speak, recorded so the registry is whole:
 - **The wizard's two ends** — `Back a step`, the arrow on every wizard
   stage; the X says what leaving keeps: `Leave — your
   draft is kept` (the post), `Leave — the reply is discarded`, `Leave —
-  the edit is discarded` (a comment edit), and a bare `Leave` on the
+  the edit is discarded` (a comment edit and a post edit), and a bare `Leave` on the
   profile's and the picture's seals and the picture's crop.
 - **The overflow doors and their sheets** — `More on this post` · `More
   on this comment` · `More on your profile` · `More about @ada` (another's
@@ -3759,7 +3759,9 @@ tap on it used to reach nothing, and now it raises this:
 **The comment edit's ask** (`DiscardConfirm`, jakob 2026-10-02). The
 edit asks only when it changed since it opened, and its title says what
 goes: `Discard the changes?`, over the shared dialog's `Nothing is
-kept.`, `Discard` and `Keep writing`. *Blessed, jakob 2026-10-02.*
+kept.`, `Discard` and `Keep writing`. *Blessed, jakob 2026-10-02.* The
+post edit asks the same, in the same words, when its batch holds an act
+(jakob 2026-10-14).
 
 **The body fork's ask** (`ComposeBodyDiscard`, jakob 2026-10-02, the
 fix-fix round's ruling 14). Switching halves with something in the body
