@@ -4,6 +4,8 @@ WHEN the edit opens GIVEN the post's body is words -> the words edit stands with
 
 WHEN the last picture or the clip leaves a media post's edit -> the words edit stands AND the words field arrives empty
 
+WHEN the last picture leaves a media post's edit GIVEN the post carries a description -> the media-to-words flip drops the standing description with the last picture AND NEVER the signed edit carries a description
+
 ALWAYS the words edit carries a title field and no description field
 
 ALWAYS the line A post's body is words or media, never both. stands under + Add pictures or a video

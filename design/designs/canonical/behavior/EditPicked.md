@@ -30,6 +30,8 @@ WHEN tap a picture's remove control GIVEN more than one picture is in the body -
 
 WHEN tap the last picture's remove control -> the sheet closes onto the words edit AND the body becomes words AND the words field arrives empty AND NEVER the removal is refused
 
+WHEN tap the last picture's remove control GIVEN the post carries a description -> the media-to-words flip drops the standing description with the last picture AND NEVER the signed edit carries a description
+
 WHEN tap a picture's Describe -> the describe sheet opens for that picture
 
 WHEN press Done -> the sheet closes to the edit AND everything already applied stands
