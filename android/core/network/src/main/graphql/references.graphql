@@ -92,6 +92,11 @@ fragment ReferenceClaimFields on ReferenceClaim {
   # already lost. An editing surface confirms against this BEFORE it
   # prepares anything.
   withdrawalCost
+  # The sums that cost is read off: a withdrawal's counter-records must
+  # net exactly these to (0, 0), and the device checks that before it
+  # signs one (Intent.kt).
+  rawRelevance
+  rawSupport
   pending
 }
 

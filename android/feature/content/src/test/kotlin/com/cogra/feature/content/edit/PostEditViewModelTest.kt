@@ -7,7 +7,6 @@
 package com.cogra.feature.content.edit
 
 import com.cogra.crypto.ActorKey
-import com.cogra.crypto.Family
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
@@ -22,17 +21,24 @@ import com.cogra.domain.ReferenceClaimView
 import com.cogra.domain.SelfMarkView
 import com.cogra.domain.TopicClaimView
 import com.cogra.domain.UserError
+import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.node
+import com.cogra.domain.signing.postEdit
+import com.cogra.domain.signing.referenceWithdrawal
+import com.cogra.domain.signing.tagClaim
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingTopicRepository
+import com.cogra.domain.testing.testGraphId
 import com.cogra.domain.testing.testMentionTarget
 import com.cogra.domain.testing.testPost
 import com.cogra.domain.testing.testReferenceClaim
 import com.cogra.domain.testing.testTopicClaim
 import com.cogra.feature.content.TagCall
+import com.cogra.feature.content.editableRow
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -108,7 +114,12 @@ class PostEditViewModelTest {
             lastEditAttachments = attachments
             lastEditMark = sensitive to sensitiveReason
             return editOutcome ?: Outcome.Success(
-                PreparedContentView(id, List(editWrites) { sealer.stage(Family.PUBLISH) }),
+                PreparedContentView(
+                    id,
+                    List(editWrites) {
+                        sealer.stageFaithful(Expectation(listOf(postEdit(testGraphId(id)))))
+                    }.flatten(),
+                ),
             )
         }
     }
@@ -123,7 +134,11 @@ class PostEditViewModelTest {
             pInterest: Double,
         ): Outcome<List<PreparedWriteView>> {
             calls += TagCall(target, name, pDirected, pInterest)
-            return Outcome.Success(listOf(sealer.stage(Family.TAG)))
+            return Outcome.Success(
+                sealer.stageFaithful(
+                    Expectation(listOf(tagClaim(node(testGraphId(target)), name, pDirected, pInterest))),
+                ),
+            )
         }
     }
 
@@ -136,7 +151,17 @@ class PostEditViewModelTest {
             target: String,
         ): Outcome<List<PreparedWriteView>> {
             withdrawn += target
-            return Outcome.Success(List(withdrawalRecords) { sealer.stage(Family.REFERENCE) })
+            // A faithful walk-back: the loaded claim's raw sums, netted in the
+            // records the test scripts.
+            val claim = content.loadedReferences.first { it.editableRow()?.targetId == target }
+            val walkBack = referenceWithdrawal(
+                testGraphId(artifact),
+                testGraphId(target),
+                claim.rawRelevance,
+                claim.rawSupport,
+                withdrawalRecords,
+            )
+            return Outcome.Success(sealer.stageFaithful(Expectation(emptyList(), listOf(walkBack))))
         }
     }
 

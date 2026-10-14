@@ -13,9 +13,13 @@ import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
+import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.commentEdit
+import com.cogra.domain.signing.editExpectation
+import com.cogra.domain.topics.TagClaim
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.SectionsEditor
@@ -26,18 +30,18 @@ import com.cogra.feature.content.editableRow
 import com.cogra.feature.content.referenceFieldIndex
 import com.cogra.feature.content.tagFieldIndex
 import com.cogra.feature.content.wizard.AssetUpload
-import com.cogra.feature.content.wizard.UploadFailure
-import com.cogra.feature.content.wizard.uploadPicture
 import com.cogra.feature.content.wizard.PickedAsset
+import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.attachmentFieldIndex
+import com.cogra.feature.content.wizard.uploadPicture
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * `CommentEdit`.
@@ -289,6 +293,7 @@ class CommentEditViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
+            val expected = expectation(current) ?: return@launch
             val writes = mutableListOf<PreparedWriteView>()
 
             // The edit record only when its payload moved: an edit that
@@ -368,7 +373,7 @@ class CommentEditViewModel @Inject constructor(
             }
 
             val results = try {
-                signer.sign(writes)
+                signer.sign(writes, expected)
             } catch (_: NoActorKeyException) {
                 _state.update { it.copy(submitting = false, keyAbsent = true) }
                 return@launch
@@ -380,6 +385,37 @@ class CommentEditViewModel @Inject constructor(
                 _state.update { it.copy(submitting = false, signingFailed = true) }
             }
         }
+    }
+
+    /**
+     * The acts card as the intent check reads it (Intent.kt): the L1 ids of
+     * the comment, the node it answers, and every cited node the edit
+     * touches are read first, before anything is staged. Null once a read
+     * failed — already reported.
+     */
+    private suspend fun expectation(current: CommentEditState): Expectation? {
+        val parent = when (val read = content.commentAnswers(current.commentId)) {
+            is Outcome.Success -> read.value ?: return null.also { failTransport() }
+            is Outcome.Refused -> return null.also { refuse(read.errors) }
+            is Outcome.Failed -> return null.also { failTransport() }
+        }
+        val refs = current.referenceSection
+        val ids = listOf(current.commentId, parent) + (refs.adds + refs.removes).map { it.targetId }
+        val graphIds = when (val read = content.graphIds(ids)) {
+            is Outcome.Success -> read.value
+            is Outcome.Refused -> return null.also { refuse(read.errors) }
+            is Outcome.Failed -> return null.also { failTransport() }
+        }
+        val commentGraphId = graphIds.getValue(current.commentId)
+        return editExpectation(
+            nodeGraphId = commentGraphId,
+            record = commentEdit(graphIds.getValue(parent), commentGraphId).takeIf { current.contentChanged },
+            tags = current.tagSection.adds.map { it.toClaim() } +
+                current.tagSection.removes.map { TagClaim(it.name, WITHDRAWN, it.confidence) },
+            references = refs.adds.map { it.toClaim() },
+            withdrawals = refs.removes.map { it.toWithdrawn() },
+            graphIds = graphIds,
+        )
     }
 
     fun onSavedConsumed() = _state.update { it.copy(saved = false) }

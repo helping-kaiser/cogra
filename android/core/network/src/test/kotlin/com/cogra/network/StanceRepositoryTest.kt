@@ -7,27 +7,29 @@
 package com.cogra.network
 
 import com.apollographql.apollo.ApolloClient
+import com.cogra.crypto.Family
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
+import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.ThrowingWriteRepository
-import com.cogra.crypto.Family
-import com.cogra.domain.PreparedWriteView
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.auth.SessionRefresher
 import com.cogra.network.repo.StanceRepositoryImpl
 import com.google.common.truth.Truth.assertThat
-import javax.inject.Provider
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import javax.inject.Provider
+
+private const val TARGET_GRAPH_ID = "mint:act:b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0:3:publish"
 
 class StanceRepositoryTest {
 
@@ -94,6 +96,17 @@ class StanceRepositoryTest {
         writes,
     )
 
+    @Test
+    fun theNodeABundleReadNamedIsWhatAGestureTowardItMustName() = runTest {
+        enqueue(answerJson("post", bundleJson()))
+        val repo = repo()
+        repo.standing(node("p1"))
+        // Remembered from the read that rendered the control: no second
+        // request is made (the server has nothing more enqueued).
+        assertThat(repo.targetGraphId(node("p1"))).isEqualTo(Outcome.Success(TARGET_GRAPH_ID))
+        assertThat(server.requestCount).isEqualTo(1)
+    }
+
     private fun bundleJson(
         pDirected: Double = 0.4,
         pInterest: Double = 0.2,
@@ -105,6 +118,7 @@ class StanceRepositoryTest {
         projected: String? = null,
     ) = """
         {"__typename":"StanceBundle",
+         "targetGraphId":"$TARGET_GRAPH_ID",
          "pDirected":$pDirected,"pInterest":$pInterest,
          "rawPDirected":$rawPDirected,"rawPInterest":$rawPInterest,
          "recordCount":$recordCount,

@@ -10,8 +10,10 @@ import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.overPictureCap
 import com.cogra.domain.repo.ProfileRepository
+import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.profileUpdate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -178,7 +180,9 @@ class AvatarFlowViewModel @Inject constructor(
                     return@launch
                 }
             }
-            val results = signer.sign(prepared)
+            // One profile update on this device's own profile; its fields are the
+            // envelope's, checked once the device decodes it (Intent.kt).
+            val results = signer.sign(prepared, Expectation(listOf(profileUpdate())))
             if (results.all { it is WriteResult.Done }) {
                 _state.update { it.copy(submitting = false, saved = true) }
             } else {

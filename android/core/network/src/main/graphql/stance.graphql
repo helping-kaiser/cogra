@@ -29,6 +29,9 @@
 # this read never probes: it is the one document, always.
 
 fragment StanceBundleFields on StanceBundle {
+  # The node the bundle points at — what a stance or severance signed from
+  # this read must name (Intent.kt).
+  targetGraphId
   pDirected
   pInterest
   # The sums before the clip. The landing line folds them locally so it

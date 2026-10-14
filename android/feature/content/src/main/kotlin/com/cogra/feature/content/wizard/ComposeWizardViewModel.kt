@@ -3,6 +3,7 @@ package com.cogra.feature.content.wizard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.core.designsystem.v2.compose.HelpTopic
+import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
@@ -16,18 +17,21 @@ import com.cogra.domain.compose.fateOf
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.MediaProcessor
+import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.PICTURE_MAX_BYTES
 import com.cogra.domain.media.VideoProcessor
-import com.cogra.domain.media.MediaRepository
+import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.settings.SettingsRepository
+import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.postExpectation
+import com.cogra.domain.topics.TagClaim
 import com.cogra.domain.valueOrNull
-import com.cogra.domain.AttachmentClaim
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.SectionsEditor
@@ -36,14 +40,14 @@ import com.cogra.feature.content.candidateRows
 import com.cogra.feature.content.referenceFieldIndex
 import com.cogra.feature.content.tagFieldIndex
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.io.IOException
-import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.IOException
+import javax.inject.Inject
 
 /**
  * The compose wizard (design/readme.md §13; canonical `Compose*`
@@ -716,6 +720,24 @@ class ComposeWizardViewModel @Inject constructor(
     // -- The seal (`ComposeSeal`) --
 
     /**
+     * What the post orders, as the intent check reads it (Intent.kt): the
+     * cited nodes' L1 ids are read first, before anything is staged. Null
+     * once the read failed — already reported.
+     */
+    private suspend fun expectation(
+        current: ComposeWizardState,
+        tags: List<TagClaim>,
+        references: List<ReferenceClaim>,
+    ): Expectation? {
+        val graphIds = when (val read = content.graphIds(references.map { it.targetId })) {
+            is Outcome.Success -> read.value
+            is Outcome.Refused -> return null.also { refuse(read.errors) }
+            is Outcome.Failed -> return null.also { failTransport() }
+        }
+        return postExpectation(current.pDirected, current.license, tags, references, graphIds)
+    }
+
+    /**
      * Stages the batch and signs it. A refusal from the prepare stops
      * before any signature: nothing was signed, so nothing may claim
      * signing failed.
@@ -736,6 +758,9 @@ class ComposeWizardViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
+            val tags = current.tagSection.tags.map { it.toClaim() }
+            val references = current.referenceSection.references.map { it.toClaim() }
+            val expected = expectation(current, tags, references) ?: return@launch
             val prepared = when (
                 val outcome = content.preparePost(
                     title = current.title.ifBlank { null },
@@ -744,8 +769,8 @@ class ComposeWizardViewModel @Inject constructor(
                     // content at all, and a words post no gallery.
                     content = current.body.takeIf { current.mode == BodyMode.Words },
                     license = current.license,
-                    tags = current.tagSection.tags.map { it.toClaim() },
-                    references = current.referenceSection.references.map { it.toClaim() },
+                    tags = tags,
+                    references = references,
                     // The poster rides the clip's own placement, never a
                     // gallery entry of its own — which is what keeps "ten
                     // pictures or one video" one counting rule.
@@ -785,7 +810,7 @@ class ComposeWizardViewModel @Inject constructor(
             }
 
             val results = try {
-                signer.sign(prepared.writes)
+                signer.sign(prepared.writes, expected)
             } catch (_: NoActorKeyException) {
                 // `ComposeKeyAbsent`: the write waits on the reader
                 // restoring the key, not on time passing. The draft is

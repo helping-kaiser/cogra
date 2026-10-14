@@ -1,7 +1,6 @@
 package com.cogra.feature.content.wizard
 
 import com.cogra.crypto.ActorKey
-import com.cogra.crypto.Family
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
@@ -28,8 +27,9 @@ import com.cogra.domain.media.UploadProgress
 import com.cogra.domain.media.VideoFrame
 import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.references.ReferenceClaim
-import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.repo.WriteRepository
+import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.postExpectation
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.InMemoryComposeDraftStore
 import com.cogra.domain.testing.InMemorySealedDraftStore
@@ -37,12 +37,12 @@ import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.ThrowingMediaProcessor
 import com.cogra.domain.testing.ThrowingMediaRepository
+import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingSettingsRepository
 import com.cogra.domain.testing.ThrowingVideoProcessor
-import com.cogra.domain.testing.ThrowingReferenceRepository
+import com.cogra.domain.testing.testGraphIds
 import com.cogra.domain.topics.TagClaim
 import com.google.common.truth.Truth.assertThat
-import java.io.IOException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -53,6 +53,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 
 /**
  * The wizard's flow: what reaches the wire, what the uploads do, and
@@ -93,9 +94,15 @@ class ComposeWizardViewModelTest {
             lastAttachments = attachments
             lastSensitive = sensitive
             lastSensitiveReason = sensitiveReason
-            return outcome ?: Outcome.Success(
-                PreparedContentView("node-1", listOf(sealer.stage(Family.PUBLISH))),
+            // A faithful prepare: exactly the batch the view model ordered.
+            val ordered = postExpectation(
+                pDirected,
+                license,
+                tags,
+                references,
+                testGraphIds(references.map { it.targetId }),
             )
+            return outcome ?: Outcome.Success(PreparedContentView("node-1", sealer.stageFaithful(ordered)))
         }
     }
 

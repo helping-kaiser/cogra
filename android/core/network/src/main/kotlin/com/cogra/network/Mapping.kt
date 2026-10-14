@@ -35,10 +35,10 @@ import com.cogra.domain.MediaAssetState
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.ModeratedField
 import com.cogra.domain.ModerationState
-import com.cogra.domain.PostView
-import com.cogra.domain.ProfileView
 import com.cogra.domain.Outcome
+import com.cogra.domain.PostView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ProfileView
 import com.cogra.domain.ReferenceCandidateView
 import com.cogra.domain.ReferenceClaimView
 import com.cogra.domain.ReferenceContentKind
@@ -61,10 +61,10 @@ import com.cogra.network.graphql.fragment.CommentFields
 import com.cogra.network.graphql.fragment.HashtagFields
 import com.cogra.network.graphql.fragment.MediaFields
 import com.cogra.network.graphql.fragment.PostFields
+import com.cogra.network.graphql.fragment.PreparedWriteFields
+import com.cogra.network.graphql.fragment.ProfileFields
 import com.cogra.network.graphql.fragment.ReferenceClaimFields
 import com.cogra.network.graphql.fragment.ReferenceTargetFields
-import com.cogra.network.graphql.fragment.ProfileFields
-import com.cogra.network.graphql.fragment.PreparedWriteFields
 import com.cogra.network.graphql.fragment.StagedWriteFields
 import com.cogra.network.graphql.fragment.UserErrorFields
 import com.cogra.network.graphql.type.LicenseInput
@@ -202,6 +202,7 @@ internal fun ApplicationFields.toInfo(): ApplicationInfo = ApplicationInfo(
     keyAttached = keyAttached,
     approvedAt = approvedAt,
     landedAt = landedAt,
+    graphId = graphId,
 )
 
 /** An unknown status hides the value, like REDACTED. */
@@ -385,6 +386,8 @@ internal fun ReferenceClaimFields.toDomain(): ReferenceClaimView = ReferenceClai
     relevance = relevance,
     support = support,
     withdrawalCost = withdrawalCost,
+    rawRelevance = rawRelevance,
+    rawSupport = rawSupport,
     pending = pending,
 )
 

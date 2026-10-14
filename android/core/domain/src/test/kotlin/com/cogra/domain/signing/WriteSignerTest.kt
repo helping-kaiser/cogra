@@ -1,22 +1,26 @@
 package com.cogra.domain.signing
 
 import com.cogra.crypto.ActorKey
+import com.cogra.crypto.Proposal
+import com.cogra.crypto.StructuralBody
+import com.cogra.crypto.decodeProposal
+import com.cogra.crypto.encodeProposal
 import com.cogra.domain.ErrorCode
-import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.StagedWriteView
-import com.cogra.domain.testing.TestHost
 import com.cogra.domain.UserError
 import com.cogra.domain.WriteState
 import com.cogra.domain.repo.WriteRepository
+import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.TestHost
 import com.cogra.domain.testing.testProposalBytes
 import com.google.common.truth.Truth.assertThat
-import java.io.IOException
-import java.util.Base64
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertThrows
 import org.junit.Test
+import java.io.IOException
+import java.util.Base64
 
 /**
  * A scriptable WriteRepository over the real crypto chain: submit seals
@@ -93,10 +97,25 @@ class WriteSignerTest {
         gcAfterEpochs = 8,
     )
 
+    /** What the gesture behind [testProposalBytes] ordered: that Opinion, exactly. */
+    private val ordered = Expectation(listOf(stanceRecord("prof:bob", 0.5, 0.1)))
+
+    /** A prepare that serves an Opinion of its own making, authored by this device. */
+    private fun served(id: String, body: (StructuralBody) -> StructuralBody, payload: ByteArray = ByteArray(0)) =
+        PreparedWriteView(
+            id = id,
+            family = com.cogra.crypto.Family.OPINION,
+            canonicalProposal = run {
+                val faithful = decodeProposal(testProposalBytes(actor))
+                encodeProposal(Proposal(body(faithful.body), payload, faithful.deps))
+            },
+            gcAfterEpochs = 8,
+        )
+
     @Test
     fun signsEndToEndAndClearsMaterial() = runTest {
         val repo = FakeWriteRepository(actor)
-        val results = WriteSigner(repo, identity).sign(listOf(prepared("w1")))
+        val results = WriteSigner(repo, identity).sign(listOf(prepared("w1")), ordered)
         assertThat(results).containsExactly(WriteResult.Done("w1", WriteState.RELAYING))
         assertThat(identity.handshakes).isEmpty()
         assertThat(repo.approveCount).isEqualTo(1)
@@ -105,7 +124,7 @@ class WriteSignerTest {
     @Test
     fun awaitsAnAsynchronousSealThenApproves() = runTest {
         val repo = FakeWriteRepository(actor).apply { sealLater = true }
-        val results = WriteSigner(repo, identity).sign(listOf(prepared("w1")))
+        val results = WriteSigner(repo, identity).sign(listOf(prepared("w1")), ordered)
         assertThat(results).containsExactly(WriteResult.Done("w1", WriteState.RELAYING))
     }
 
@@ -114,7 +133,7 @@ class WriteSignerTest {
         val repo = FakeWriteRepository(actor).apply {
             refuseSubmit = listOf(UserError(ErrorCode.WRITE_RULE_FAILED, "wall"))
         }
-        val results = WriteSigner(repo, identity).sign(listOf(prepared("w1")))
+        val results = WriteSigner(repo, identity).sign(listOf(prepared("w1")), ordered)
         val refused = results.single() as WriteResult.Refused
         assertThat(refused.errors.single().code).isEqualTo(ErrorCode.WRITE_RULE_FAILED)
         assertThat(identity.handshakes).isEmpty()
@@ -126,7 +145,7 @@ class WriteSignerTest {
             refuseApprove = listOf(UserError(ErrorCode.RATE_LIMITED, "slow down"))
         }
         val signer = WriteSigner(repo, identity)
-        val first = signer.sign(listOf(prepared("w1"))).single() as WriteResult.Refused
+        val first = signer.sign(listOf(prepared("w1")), ordered).single() as WriteResult.Refused
         assertThat(first.errors.single().code).isEqualTo(ErrorCode.RATE_LIMITED)
         assertThat(identity.handshakes.keys).containsExactly("w1")
 
@@ -141,7 +160,7 @@ class WriteSignerTest {
     fun aRefusedReadLegKeepsMaterial() = runTest {
         val repo = FakeWriteRepository(actor).apply { failApprove = true }
         val signer = WriteSigner(repo, identity)
-        signer.sign(listOf(prepared("w1")))
+        signer.sign(listOf(prepared("w1")), ordered)
         assertThat(identity.handshakes.keys).containsExactly("w1")
 
         repo.failApprove = false
@@ -159,7 +178,7 @@ class WriteSignerTest {
                 sealed.copyOf().also { it[it.size - 1] = (it[it.size - 1].toInt() xor 1).toByte() }
             }
         }
-        val results = WriteSigner(repo, identity).sign(listOf(prepared("w1")))
+        val results = WriteSigner(repo, identity).sign(listOf(prepared("w1")), ordered)
         assertThat(results.single()).isInstanceOf(WriteResult.RejectedByDevice::class.java)
         assertThat(repo.approveCount).isEqualTo(0)
         assertThat(identity.handshakes).isEmpty()
@@ -168,7 +187,7 @@ class WriteSignerTest {
     @Test
     fun aLostSubmitKeepsMaterialForResume() = runTest {
         val repo = FakeWriteRepository(actor).apply { failSubmit = true }
-        val results = WriteSigner(repo, identity).sign(listOf(prepared("w1")))
+        val results = WriteSigner(repo, identity).sign(listOf(prepared("w1")), ordered)
         assertThat(results.single()).isInstanceOf(WriteResult.Failed::class.java)
         assertThat(identity.handshakes.keys).containsExactly("w1")
 
@@ -185,7 +204,7 @@ class WriteSignerTest {
     fun aLostApproveResumesFromAwaitingApproval() = runTest {
         val repo = FakeWriteRepository(actor).apply { failApprove = true }
         val signer = WriteSigner(repo, identity)
-        val first = signer.sign(listOf(prepared("w1")))
+        val first = signer.sign(listOf(prepared("w1")), ordered)
         assertThat(first.single()).isInstanceOf(WriteResult.Failed::class.java)
         assertThat(identity.handshakes.keys).containsExactly("w1")
 
@@ -199,7 +218,7 @@ class WriteSignerTest {
     fun resumeClearsLandedAndExpiredWrites() = runTest {
         val repo = FakeWriteRepository(actor)
         val signer = WriteSigner(repo, identity)
-        signer.sign(listOf(prepared("w1")))
+        signer.sign(listOf(prepared("w1")), ordered)
 
         // Simulate stale material for a write that landed and one that expired.
         val pre = actor.preSign(com.cogra.crypto.decodeProposal(testProposalBytes(actor)))
@@ -228,7 +247,7 @@ class WriteSignerTest {
             verifiedAct = null,
             recordId = null,
         )
-        val result = WriteSigner(repo, identity).signStaged(staged)
+        val result = WriteSigner(repo, identity).signStaged(staged, ordered)
         assertThat(result).isEqualTo(WriteResult.Done("reg-1", WriteState.RELAYING))
         assertThat(identity.handshakes).isEmpty()
     }
@@ -249,7 +268,7 @@ class WriteSignerTest {
             verifiedAct = null,
             recordId = null,
         )
-        val result = WriteSigner(repo, identity).signStaged(staged)
+        val result = WriteSigner(repo, identity).signStaged(staged, ordered)
         assertThat(result).isEqualTo(WriteResult.Done("reg-1", WriteState.RELAYING))
         assertThat(identity.handshakes).isEmpty()
     }
@@ -266,11 +285,11 @@ class WriteSignerTest {
             verifiedAct = null,
             recordId = null,
         )
-        assertThat(signer.signStaged(fresh)).isInstanceOf(WriteResult.Failed::class.java)
+        assertThat(signer.signStaged(fresh, ordered)).isInstanceOf(WriteResult.Failed::class.java)
         assertThat(identity.handshakes.keys).containsExactly("reg-1")
 
         repo.failApprove = false
-        val result = signer.signStaged(repo.staged.getValue("reg-1"))
+        val result = signer.signStaged(repo.staged.getValue("reg-1"), ordered)
         assertThat(result).isEqualTo(WriteResult.Done("reg-1", WriteState.RELAYING))
         assertThat(identity.handshakes).isEmpty()
     }
@@ -288,7 +307,7 @@ class WriteSignerTest {
             verifiedAct = byteArrayOf(1),
             recordId = null,
         )
-        val result = WriteSigner(repo, identity).signStaged(staged) as WriteResult.Refused
+        val result = WriteSigner(repo, identity).signStaged(staged, ordered) as WriteResult.Refused
         assertThat(result.errors.single().code).isEqualTo(ErrorCode.INTERNAL)
     }
 
@@ -306,12 +325,12 @@ class WriteSignerTest {
             verifiedAct = null,
             recordId = null,
         )
-        assertThat(signer.signStaged(relaying)).isEqualTo(WriteResult.Done("reg-1", WriteState.RELAYING))
+        assertThat(signer.signStaged(relaying, ordered)).isEqualTo(WriteResult.Done("reg-1", WriteState.RELAYING))
         assertThat(identity.handshakes).isEmpty()
 
         identity.saveHandshake("reg-2", pre)
         val expired = relaying.copy(id = "reg-2", state = WriteState.EXPIRED)
-        val refused = signer.signStaged(expired) as WriteResult.Refused
+        val refused = signer.signStaged(expired, ordered) as WriteResult.Refused
         assertThat(refused.errors.single().code).isEqualTo(ErrorCode.STAGED_WRITE_EXPIRED)
         assertThat(identity.handshakes).isEmpty()
     }
@@ -332,7 +351,7 @@ class WriteSignerTest {
             verifiedAct = null,
             recordId = null,
         )
-        val refused = signer.signStaged(staged) as WriteResult.Refused
+        val refused = signer.signStaged(staged, ordered) as WriteResult.Refused
         assertThat(refused.errors.single().code).isEqualTo(ErrorCode.UNKNOWN)
         assertThat(identity.handshakes.keys).containsExactly("reg-1")
 
@@ -347,6 +366,7 @@ class WriteSignerTest {
         val repo = FakeWriteRepository(actor)
         val results = WriteSigner(repo, identity).sign(
             listOf(prepared("w1").copy(family = com.cogra.crypto.Family.UNKNOWN)),
+            ordered,
         )
         val refused = results.single() as WriteResult.Refused
         assertThat(refused.errors.single().code).isEqualTo(ErrorCode.UNKNOWN)
@@ -355,12 +375,90 @@ class WriteSignerTest {
         assertThat(repo.staged).isEmpty()
     }
 
+    // ---- the intent check (Intent.kt), against a prepare that lies ----------
+
+    @Test
+    fun aWriteWhoseBodyDisagreesWithItsFormIsRefusedOnDevice() = runTest {
+        // The pad picked (0.5, 0.1); the prepare served a subtly different
+        // valence — the stance the user never chose.
+        val repo = FakeWriteRepository(actor)
+        val results = WriteSigner(repo, identity).sign(listOf(served("w1", { it.copy(pD = 0.55) })), ordered)
+        assertThat(results.single()).isInstanceOf(WriteResult.RejectedByDevice::class.java)
+        assertThat(repo.staged).isEmpty()
+        assertThat(identity.handshakes).isEmpty()
+    }
+
+    @Test
+    fun aBatchWithOneMismatchedWriteSignsNoneOfItsWrites() = runTest {
+        // The intent check runs before the first pre-signature of the
+        // batch: the faithful first write is not pre-signed either.
+        val repo = FakeWriteRepository(actor)
+        val results = WriteSigner(repo, identity).sign(
+            listOf(prepared("w1"), served("w2", { it.copy(pI = -0.1) })),
+            Expectation(listOf(stanceRecord("prof:bob", 0.5, 0.1), stanceRecord("prof:bob", 0.5, 0.1))),
+        )
+        assertThat(results.map { it::class }).containsExactly(
+            WriteResult.RejectedByDevice::class,
+            WriteResult.RejectedByDevice::class,
+        )
+        assertThat(repo.staged).isEmpty()
+        assertThat(identity.handshakes).isEmpty()
+    }
+
+    @Test
+    fun aWriteCarryingAnInjectedFieldIsRefusedOnDevice() = runTest {
+        val repo = FakeWriteRepository(actor)
+        val injected = listOf(
+            served("w1", { it }, payload = byteArrayOf(1)),
+            served("w2", { it.copy(license = "a=1;o=1") }),
+            served("w3", { it.copy(target = com.cogra.crypto.NodeId.parse("prof:eve")) }),
+        )
+        for (write in injected) {
+            val result = WriteSigner(repo, identity).sign(listOf(write), ordered).single()
+            assertThat(result).isInstanceOf(WriteResult.RejectedByDevice::class.java)
+        }
+        assertThat(repo.staged).isEmpty()
+    }
+
+    @Test
+    fun theStagedRegistrationIsTheOneNamedExemptionFromTheIntentCheck() = runTest {
+        // An Opinion served where a Registration was expected: the
+        // exemption holds for a Registration and nothing else.
+        val repo = FakeWriteRepository(actor)
+        val staged = StagedWriteView(
+            id = "reg-1",
+            state = WriteState.AWAITING_PRE_SIGN,
+            family = com.cogra.crypto.Family.OPINION,
+            canonicalProposal = testProposalBytes(actor),
+            verifiedAct = null,
+            recordId = null,
+        )
+        val result = WriteSigner(repo, identity).signStaged(staged, RegistrationExemption)
+        assertThat(result).isInstanceOf(WriteResult.RejectedByDevice::class.java)
+        assertThat(repo.staged).isEmpty()
+    }
+
+    @Test
+    fun theCarriedBatchSignsAtTheLandingOnTheTransportChecksAlone() = runTest {
+        val repo = FakeWriteRepository(actor)
+        val carried = StagedWriteView(
+            id = "c1",
+            state = WriteState.AWAITING_PRE_SIGN,
+            family = com.cogra.crypto.Family.OPINION,
+            canonicalProposal = testProposalBytes(actor),
+            verifiedAct = null,
+            recordId = null,
+        )
+        val results = WriteSigner(repo, identity).signCarriedAtLanding(listOf(carried))
+        assertThat(results).containsExactly(WriteResult.Done("c1", WriteState.RELAYING))
+    }
+
     @Test
     fun signingWithoutAKeyThrows() = runTest {
         val bare = FakeIdentityStore()
         assertThrows(NoActorKeyException::class.java) {
             kotlinx.coroutines.runBlocking {
-                WriteSigner(FakeWriteRepository(actor), bare).sign(listOf(prepared("w1")))
+                WriteSigner(FakeWriteRepository(actor), bare).sign(listOf(prepared("w1")), ordered)
             }
         }
     }

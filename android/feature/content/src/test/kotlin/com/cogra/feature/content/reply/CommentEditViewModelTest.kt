@@ -1,7 +1,6 @@
 package com.cogra.feature.content.reply
 
 import com.cogra.crypto.ActorKey
-import com.cogra.crypto.Family
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.CommentForEdit
 import com.cogra.domain.ErrorCode
@@ -15,7 +14,11 @@ import com.cogra.domain.TopicClaimView
 import com.cogra.domain.UserError
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.ProcessedPicture
+import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.commentEdit
+import com.cogra.domain.signing.node
+import com.cogra.domain.signing.tagClaim
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingContentRepository
@@ -24,11 +27,12 @@ import com.cogra.domain.testing.ThrowingMediaRepository
 import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingTopicRepository
 import com.cogra.domain.testing.testComment
+import com.cogra.domain.testing.testGraphId
 import com.cogra.domain.testing.testHashtag
+import com.cogra.domain.testing.testParentOf
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.UploadFailure
 import com.google.common.truth.Truth.assertThat
-import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -38,6 +42,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 
 /**
  * `CommentEdit`'s flow.
@@ -87,7 +92,14 @@ class CommentEditViewModelTest {
             lastSensitiveReason = sensitiveReason
             return editOutcome
                 ?: Outcome.Success(
-                    PreparedContentView(id, listOf(sealer.stage(Family.REGISTRATION))),
+                    PreparedContentView(
+                        id,
+                        // A faithful prepare: the edit record, its A leg at
+                        // the node the comment answers.
+                        sealer.stageFaithful(
+                            Expectation(listOf(commentEdit(testGraphId(testParentOf(id)), testGraphId(id)))),
+                        ),
+                    ),
                 )
         }
     }
@@ -106,7 +118,11 @@ class CommentEditViewModelTest {
         ): Outcome<List<PreparedWriteView>> {
             staged += Triple(target, name, pDirected)
             interests += pInterest
-            return outcome ?: Outcome.Success(listOf(sealer.stage(Family.REGISTRATION)))
+            return outcome ?: Outcome.Success(
+                sealer.stageFaithful(
+                    Expectation(listOf(tagClaim(node(testGraphId(target)), name, pDirected, pInterest))),
+                ),
+            )
         }
     }
 

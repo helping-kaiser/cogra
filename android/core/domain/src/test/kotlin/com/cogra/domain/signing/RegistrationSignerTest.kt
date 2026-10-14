@@ -16,13 +16,13 @@ import com.cogra.domain.testing.TestHost
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingOnboardingRepository
 import com.cogra.domain.testing.ThrowingWriteRepository
-import com.cogra.domain.testing.testProposalBytes
+import com.cogra.domain.testing.testRegistrationBytes
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.test.runTest
+import org.junit.Test
 import java.io.IOException
 import java.time.Instant
 import java.util.Base64
-import kotlinx.coroutines.test.runTest
-import org.junit.Test
 
 /** The me-driven status, scripted: the test moves the server-side state. */
 private class FakeOnboarding : ThrowingOnboardingRepository() {
@@ -94,7 +94,7 @@ class RegistrationSignerTest {
     private val actor = ActorKey.generate()
     private val host = TestHost()
     private val onboarding = FakeOnboarding()
-    private val writes = RegistrationWrites(actor, host, testProposalBytes(actor, seq = 0u))
+    private val writes = RegistrationWrites(actor, host, testRegistrationBytes(actor))
     private val identity = FakeIdentityStore().apply { seed = actor.seed() }
     private val account = FakeAccount()
     private val ceremony = KeyCeremony(identity, onboarding, account)

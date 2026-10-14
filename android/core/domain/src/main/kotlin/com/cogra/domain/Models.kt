@@ -219,6 +219,13 @@ data class ApplicationInfo(
     val keyAttached: Boolean,
     val approvedAt: Instant?,
     val landedAt: Instant?,
+    /**
+     * The applicant's raw L1 identifier, `prof:<address>` — the node an
+     * approval's vouch points at, which the device checks the vouch it
+     * signs against (signing/Intent.kt). Null before the key is attached,
+     * when nothing is approvable.
+     */
+    val graphId: String? = null,
 )
 
 /** Client mirror of the server's minimum handle length (auth.md "Application"). */
@@ -597,6 +604,15 @@ data class ReferenceClaimView(
      */
     val withdrawalCost: Int,
     val pending: Boolean,
+    /**
+     * The raw sums that cost is read off — what a withdrawal's
+     * counter-records must net to `(0, 0)`, and so what the device checks
+     * them against (signing/Intent.kt). The clipped pair is the raw pair
+     * for any bundle inside the census range, which is what the defaults
+     * state.
+     */
+    val rawRelevance: Double = relevance,
+    val rawSupport: Double = support,
 )
 
 /**

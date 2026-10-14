@@ -5,6 +5,7 @@
 
 package com.cogra.domain.testing
 
+import com.cogra.crypto.ActId
 import com.cogra.crypto.ActorKey
 import com.cogra.crypto.EDITION
 import com.cogra.crypto.Family
@@ -17,11 +18,11 @@ import com.cogra.crypto.Tags
 import com.cogra.crypto.VerifiedAct
 import com.cogra.crypto.contentCommitment
 import com.cogra.crypto.decodePreCommitment
-import com.cogra.crypto.depsCommitment
-import com.cogra.crypto.preCommitment
 import com.cogra.crypto.decodeProposal
+import com.cogra.crypto.depsCommitment
 import com.cogra.crypto.encodeProposal
 import com.cogra.crypto.encodeVerifiedAct
+import com.cogra.crypto.preCommitment
 import com.cogra.domain.ActorRef
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AttachmentClaim
@@ -29,9 +30,36 @@ import com.cogra.domain.AuthTokens
 import com.cogra.domain.CommentForEdit
 import com.cogra.domain.CommentPage
 import com.cogra.domain.CommentView
+import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
+import com.cogra.domain.HashtagView
+import com.cogra.domain.InviteCheck
+import com.cogra.domain.InviteLinkInfo
+import com.cogra.domain.Landing
+import com.cogra.domain.LicenseChoice
+import com.cogra.domain.LoginGrant
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.MediaFieldUpdate
+import com.cogra.domain.ModeratedField
+import com.cogra.domain.Outcome
+import com.cogra.domain.Page
+import com.cogra.domain.PostDetail
+import com.cogra.domain.PostView
+import com.cogra.domain.PreparedContentView
+import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ProfileView
+import com.cogra.domain.RecordRow
+import com.cogra.domain.ReferenceCandidateView
+import com.cogra.domain.ReferenceClaimView
+import com.cogra.domain.ReferenceContentKind
+import com.cogra.domain.ReferenceTargetView
+import com.cogra.domain.SelfMarkView
+import com.cogra.domain.StagedWriteView
+import com.cogra.domain.TaggedContentKind
+import com.cogra.domain.TaggedContentView
+import com.cogra.domain.TopicClaimView
+import com.cogra.domain.UserError
+import com.cogra.domain.UserProfile
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaDestination
 import com.cogra.domain.media.MediaProcessor
@@ -43,49 +71,29 @@ import com.cogra.domain.media.UploadProgress
 import com.cogra.domain.media.VideoFrame
 import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
-import com.cogra.domain.HashtagView
-import com.cogra.domain.InviteCheck
-import com.cogra.domain.InviteLinkInfo
-import com.cogra.domain.Landing
-import com.cogra.domain.LicenseChoice
-import com.cogra.domain.LoginGrant
-import com.cogra.domain.ModeratedField
-import com.cogra.domain.ErrorCode
-import com.cogra.domain.Outcome
-import com.cogra.domain.UserError
-import com.cogra.domain.Page
-import com.cogra.domain.PostDetail
-import com.cogra.domain.PostView
-import com.cogra.domain.ReferenceCandidateView
-import com.cogra.domain.ReferenceClaimView
-import com.cogra.domain.ReferenceContentKind
-import com.cogra.domain.ReferenceTargetView
-import com.cogra.domain.ProfileView
-import com.cogra.domain.RecordRow
-import com.cogra.domain.PreparedContentView
-import com.cogra.domain.PreparedWriteView
-import com.cogra.domain.SelfMarkView
+import com.cogra.domain.references.ReferenceClaim
+import com.cogra.domain.repo.AccountRepository
+import com.cogra.domain.repo.ContentRepository
+import com.cogra.domain.repo.DeviceLockRepository
+import com.cogra.domain.repo.IssuedLock
+import com.cogra.domain.repo.OnboardingRepository
+import com.cogra.domain.repo.ProfileRepository
+import com.cogra.domain.repo.ReferenceRepository
+import com.cogra.domain.repo.SessionRepository
+import com.cogra.domain.repo.StanceRepository
+import com.cogra.domain.repo.TopicRepository
+import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.settings.AccountEmail
 import com.cogra.domain.settings.EmailChangeLinkCheck
 import com.cogra.domain.settings.PendingEmailChange
 import com.cogra.domain.settings.SettingsAccount
 import com.cogra.domain.settings.SettingsRepository
-import com.cogra.domain.StagedWriteView
-import com.cogra.domain.TaggedContentKind
-import com.cogra.domain.TaggedContentView
-import com.cogra.domain.TopicClaimView
-import com.cogra.domain.UserProfile
-import com.cogra.domain.repo.AccountRepository
-import com.cogra.domain.repo.DeviceLockRepository
-import com.cogra.domain.repo.IssuedLock
-import com.cogra.domain.repo.ContentRepository
-import com.cogra.domain.repo.ProfileRepository
-import com.cogra.domain.repo.OnboardingRepository
-import com.cogra.domain.repo.SessionRepository
-import com.cogra.domain.repo.StanceRepository
-import com.cogra.domain.repo.ReferenceRepository
-import com.cogra.domain.repo.TopicRepository
-import com.cogra.domain.repo.WriteRepository
+import com.cogra.domain.signing.Expectation
+import com.cogra.domain.signing.ExpectedNetting
+import com.cogra.domain.signing.NodeExpectation
+import com.cogra.domain.signing.Parents
+import com.cogra.domain.signing.PayloadPresence
+import com.cogra.domain.signing.stanceRecord
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
@@ -100,11 +108,10 @@ import com.cogra.domain.store.LockCustodyStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.ThemeChoice
 import com.cogra.domain.store.TokenStore
-import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.topics.TagClaim
-import java.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.time.Instant
 
 class FakeTokenStore : TokenStore {
     override val tokens = MutableStateFlow<AuthTokens?>(null)
@@ -462,6 +469,23 @@ fun testProposalBytes(author: ActorKey, seq: ULong = 1u): ByteArray {
     return encodeProposal(Proposal(body, ByteArray(0), emptyList()))
 }
 
+/** The admission Registration the backend stages for [author], in its wire form. */
+fun testRegistrationBytes(author: ActorKey): ByteArray {
+    val body = StructuralBody(
+        author = author.address(),
+        seq = 0u,
+        family = Family.REGISTRATION,
+        middle = null,
+        target = NodeId.Prof(author.address()),
+        pD = 1.0,
+        pI = 1.0,
+        settlementRef = null,
+        license = null,
+        assertedParents = emptyList(),
+    )
+    return encodeProposal(Proposal(body, byteArrayOf(1), emptyList()))
+}
+
 /** Every method throws; tests override what they script. */
 open class ThrowingAccountRepository : AccountRepository {
     override suspend fun me(): Outcome<UserProfile?> = throw UnsupportedOperationException()
@@ -561,20 +585,114 @@ class SealingWriteRepository(private val actor: ActorKey) : ThrowingWriteReposit
     val staged = mutableMapOf<String, StagedWriteView>()
     private var nextSeq = 1uL
 
+    /** The proposal each staged id was served with, when it is not the canonical test one. */
+    private val proposals = mutableMapOf<String, ByteArray>()
+
+    /**
+     * Stages the batch a FAITHFUL prepare would stage for [expected],
+     * authored by this device: every value the expectation names, an edit
+     * chained behind an own head, a payload where one is ordered, and each
+     * walk-back as the server computes it (whole steps, remainder last). A
+     * view-model test hands its fake prepare's answer through here so the
+     * real signer's intent check passes exactly when the view model ordered
+     * what the test says it did.
+     */
+    fun stageFaithful(expected: Expectation): List<PreparedWriteView> {
+        val address = actor.address()
+        val minted = arrayOfNulls<NodeId>(expected.writes.size)
+        val views = mutableListOf<PreparedWriteView>()
+        fun nodeOf(node: NodeExpectation, family: Family, seq: ULong): NodeId = when (node) {
+            is NodeExpectation.Node -> NodeId.parse(node.id)
+            NodeExpectation.OwnMint -> NodeId.Mint(ActId(address, seq, family))
+            is NodeExpectation.MintedBy -> checkNotNull(minted[node.write]) { "mint ${node.write} not staged yet" }
+            NodeExpectation.OwnProfile -> NodeId.Prof(address)
+        }
+        expected.writes.forEachIndexed { i, e ->
+            val seq = nextSeq
+            val body = StructuralBody(
+                author = address,
+                seq = seq,
+                family = e.family,
+                middle = e.middle?.let { nodeOf(it, e.family, seq) },
+                target = nodeOf(e.target, e.family, seq),
+                pD = e.pDirected,
+                pI = e.pInterest,
+                settlementRef = null,
+                license = e.license,
+                assertedParents = when (e.parents) {
+                    Parents.NONE -> emptyList()
+                    Parents.OWN_CHAIN_HEAD -> listOf(ActId(address, 0u, e.family))
+                },
+            )
+            minted[i] = body.target
+            val payload = when (e.payload) {
+                PayloadPresence.EMPTY -> ByteArray(0)
+                PayloadPresence.PRESENT -> byteArrayOf(1)
+            }
+            views += stageProposal(e.family, Proposal(body, payload, emptyList()))
+        }
+        for (n in expected.netting) {
+            // As many records as the cost the server quoted — a quote past
+            // the walk-back's own reach pads with zero steps, which net.
+            val count = maxOf(walkBackSteps(n), n.cost)
+            for ((pD, pI) in walkBack(n.rawPDirected, count).zip(walkBack(n.rawPInterest, count))) {
+                val body = StructuralBody(
+                    author = address,
+                    seq = nextSeq,
+                    family = n.family,
+                    middle = n.middle?.let { NodeId.parse(it) },
+                    target = NodeId.parse(n.target),
+                    pD = pD,
+                    pI = pI,
+                    settlementRef = null,
+                    license = null,
+                    assertedParents = emptyList(),
+                )
+                views += stageProposal(n.family, Proposal(body, ByteArray(0), emptyList()))
+            }
+        }
+        return views
+    }
+
+    private fun walkBackSteps(n: ExpectedNetting): Int =
+        kotlin.math.ceil(maxOf(kotlin.math.abs(n.rawPDirected), kotlin.math.abs(n.rawPInterest))).toInt()
+
+    /** One axis walked back in whole steps, remainder last — `BundleSum::severance_batch`. */
+    private fun walkBack(total: Double, steps: Int): List<Double> {
+        val sign = if (total > 0.0) -1.0 else 1.0
+        var remaining = kotlin.math.abs(total)
+        return List(maxOf(steps, 0)) {
+            val step = minOf(remaining, 1.0)
+            remaining -= step
+            sign * step
+        }
+    }
+
+    private fun stageProposal(family: Family, proposal: Proposal): PreparedWriteView {
+        val id = "w$nextSeq"
+        val bytes = encodeProposal(proposal)
+        proposals[id] = bytes
+        nextSeq += 1u
+        return PreparedWriteView(id = id, family = family, canonicalProposal = bytes, gcAfterEpochs = 8)
+    }
+
     override suspend fun hostPublicKey(): Outcome<ByteArray> = Outcome.Success(host.key.publicKeyBytes())
 
+    /** A faithful stance prepare: exactly the pick, toward the node [testGraphId] names. */
     override suspend fun prepareStance(
         targetId: String,
         pDirected: Double,
         pInterest: Double,
-    ): Outcome<List<PreparedWriteView>> = Outcome.Success(listOf(stage()))
+    ): Outcome<List<PreparedWriteView>> =
+        Outcome.Success(stageFaithful(Expectation(listOf(stanceRecord(testGraphId(targetId), pDirected, pInterest)))))
 
-    /** The topic leg stages the same signable write: the address differs, the act does not. */
+    /** The topic leg: the same pick, toward the topic's Type. */
     override suspend fun prepareTopicStance(
         topicName: String,
         pDirected: Double,
         pInterest: Double,
-    ): Outcome<List<PreparedWriteView>> = Outcome.Success(listOf(stage()))
+    ): Outcome<List<PreparedWriteView>> =
+        Outcome.Success(stageFaithful(Expectation(listOf(stanceRecord("name:$topicName", pDirected, pInterest)))))
 
     /**
      * Stages one signable write — the generic entry content fakes
@@ -603,7 +721,7 @@ class SealingWriteRepository(private val actor: ActorKey) : ThrowingWriteReposit
 
     override suspend fun submitProposal(stagedWriteId: String, signatureBase64: String): Outcome<StagedWriteView> {
         val seq = stagedWriteId.removePrefix("w").toULong()
-        val proposal = testProposalBytes(actor, seq)
+        val proposal = proposals[stagedWriteId] ?: testProposalBytes(actor, seq)
         if (expireOnSubmit) {
             // No verified act: the signer sees EXPIRED and stops before
             // any second signature, which is the real sequence.
@@ -659,10 +777,48 @@ open class ThrowingStanceRepository : StanceRepository {
         throw UnsupportedOperationException()
     override suspend fun prepareSeverance(target: StanceTarget): Outcome<List<PreparedWriteView>> =
         throw UnsupportedOperationException()
+
+    /**
+     * Answers rather than throws: every stance signing asks it, and a test
+     * about something else need not know the intent check exists. A topic
+     * is its Type; any other node is [testGraphId] of its id.
+     */
+    override suspend fun targetGraphId(target: StanceTarget): Outcome<String> = Outcome.Success(
+        when (target) {
+            is StanceTarget.Node -> testGraphId(target.id)
+            is StanceTarget.Topic -> "name:${target.name}"
+        },
+    )
 }
+
+/**
+ * The L1 identifier the fakes serve for an L2 id — a test pinning an
+ * expectation computes the same. A parseable identifier, so a faithful
+ * fake prepare ([SealingWriteRepository.stageFaithful]) can put it in a
+ * proposal; the class says nothing about the node's.
+ */
+fun testGraphId(id: String): String = "prof:$id"
+
+/** [testGraphId] of every id — what the fakes' graph-id read answers. */
+fun testGraphIds(ids: List<String>): Map<String, String> = ids.associateWith { testGraphId(it) }
+
+/** The node the fakes say a comment answers. */
+fun testParentOf(commentId: String): String = "parent-of-$commentId"
 
 /** Content-repository base: every call throws until overridden. */
 open class ThrowingContentRepository : ContentRepository {
+    /**
+     * Answers rather than throws: every authoring gesture reads it before
+     * it prepares, and a test about something else need not know the
+     * intent check exists. Every id is [testGraphId] of itself.
+     */
+    override suspend fun graphIds(ids: List<String>): Outcome<Map<String, String>> =
+        Outcome.Success(ids.associateWith { testGraphId(it) })
+
+    /** Answers rather than throws, for the reason [graphIds] does: [testParentOf] the comment. */
+    override suspend fun commentAnswers(commentId: String): Outcome<String?> =
+        Outcome.Success(testParentOf(commentId))
+
     override suspend fun post(
         id: String,
         commentsFirst: Int,

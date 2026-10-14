@@ -49,6 +49,9 @@ fragment ApplicationFields on Application {
   handle
   emailVerified
   keyAttached
+  # The node an approval's vouch points at — what the device checks the
+  # vouch it signs against (Intent.kt).
+  graphId
   approvedAt
   landedAt
   createdAt

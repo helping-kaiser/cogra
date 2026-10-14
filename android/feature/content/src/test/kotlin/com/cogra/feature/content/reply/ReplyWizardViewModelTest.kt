@@ -1,7 +1,6 @@
 package com.cogra.feature.content.reply
 
 import com.cogra.crypto.ActorKey
-import com.cogra.crypto.Family
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
@@ -21,6 +20,7 @@ import com.cogra.domain.media.VideoFrame
 import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.commentExpectation
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingContentRepository
@@ -28,12 +28,13 @@ import com.cogra.domain.testing.ThrowingMediaProcessor
 import com.cogra.domain.testing.ThrowingMediaRepository
 import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingVideoProcessor
+import com.cogra.domain.testing.testGraphId
+import com.cogra.domain.testing.testGraphIds
 import com.cogra.domain.topics.TagClaim
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.CoverChoice
 import com.cogra.feature.content.wizard.UploadFailure
 import com.google.common.truth.Truth.assertThat
-import java.io.IOException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -44,6 +45,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 
 /**
  * The reply wizard's flow: what a pick becomes, what reaches the wire,
@@ -91,10 +93,17 @@ class ReplyWizardViewModelTest {
             lastReferences = references
             lastStance = pDirected to pInterest
             lastMark = sensitive to sensitiveReason
-            return outcome
-                ?: Outcome.Success(
-                    PreparedContentView("c1", listOf(sealer.stage(Family.REGISTRATION))),
-                )
+            // A faithful prepare: exactly the batch the view model ordered.
+            val ordered = commentExpectation(
+                parentGraphId = testGraphId(target),
+                pDirected = pDirected,
+                pInterest = pInterest,
+                license = license,
+                tags = tags,
+                references = references,
+                graphIds = testGraphIds(listOf(target) + references.map { it.targetId }),
+            )
+            return outcome ?: Outcome.Success(PreparedContentView("c1", sealer.stageFaithful(ordered)))
         }
     }
 

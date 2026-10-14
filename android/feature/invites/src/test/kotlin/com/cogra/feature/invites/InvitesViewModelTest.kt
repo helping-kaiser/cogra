@@ -1,6 +1,7 @@
 package com.cogra.feature.invites
 
 import com.cogra.crypto.ActorKey
+import com.cogra.domain.ApplicationInfo
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.Outcome
@@ -13,8 +14,8 @@ import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingWriteRepository
+import com.cogra.domain.testing.testGraphId
 import com.google.common.truth.Truth.assertThat
-import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -24,6 +25,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class InvitesViewModelTest {
@@ -76,6 +78,26 @@ class InvitesViewModelTest {
         }
     }
 
+    /** A queue holding the applicant every approval test approves, key attached. */
+    private fun applicantLink() = InviteLinkInfo(
+        "link-applicant",
+        true,
+        Instant.EPOCH,
+        Instant.EPOCH,
+        null,
+        listOf(
+            ApplicationInfo(
+                id = "application-1",
+                handle = "ada",
+                emailVerified = true,
+                keyAttached = true,
+                approvedAt = null,
+                landedAt = null,
+                graphId = testGraphId("application-1"),
+            ),
+        ),
+    )
+
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
@@ -112,6 +134,7 @@ class InvitesViewModelTest {
 
     @Test
     fun approvingSignsTheVouchOnDevice() = runTest(dispatcher) {
+        account.links += applicantLink()
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
         vm.onApprove("application-1", 0.4, 0.2)
@@ -126,6 +149,7 @@ class InvitesViewModelTest {
 
     @Test
     fun theVouchConfirmationIsConsumedAfterShowing() = runTest(dispatcher) {
+        account.links += applicantLink()
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
         vm.onApprove("application-1", 0.4, 0.2)
@@ -184,6 +208,7 @@ class InvitesViewModelTest {
 
     @Test
     fun aRefusedApprovalSurfaces() = runTest(dispatcher) {
+        account.links += applicantLink()
         account.approveOutcome =
             Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "already approved")))
         val vm = viewModel()
@@ -196,6 +221,7 @@ class InvitesViewModelTest {
 
     @Test
     fun anUnfinishedVouchSigningSurfacesInsteadOfSilence() = runTest(dispatcher) {
+        account.links += applicantLink()
         // The approval landed but the vouch's handshake died on
         // transport: a priced act must not end in silence.
         val offline = object : ThrowingWriteRepository() {
@@ -227,6 +253,7 @@ class InvitesViewModelTest {
 
     @Test
     fun approvingWithoutTheActorKeyIsGatedBeforeThePricedAct() = runTest(dispatcher) {
+        account.links += applicantLink()
         // The husk state (signed in, key not restored): the priced
         // approval must not land only to strand the unsigned vouch —
         // and the process must not die (audit android M3).
