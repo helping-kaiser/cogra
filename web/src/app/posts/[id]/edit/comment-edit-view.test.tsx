@@ -243,7 +243,7 @@ describe("CommentEdit", () => {
       draw();
       expect(screen.getByTestId("header-leave")).toHaveAttribute(
         "aria-label",
-        "Leave — this edit is discarded",
+        "Leave — the edit is discarded",
       );
     });
 

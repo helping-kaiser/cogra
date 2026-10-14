@@ -1080,6 +1080,99 @@ describe("PostView", () => {
     expect(screen.getByTestId("comment-signed")).toBeInTheDocument();
   });
 
+  describe("leaving a comment edit (CommentEdit, DiscardConfirm): the edit keeps no draft", () => {
+    const ask = () => screen.getByTestId("comment-edit-discard-confirm");
+
+    async function openEdit() {
+      let prepared = false;
+      server.use(
+        ...threadFrom(() =>
+          detail("author-1", [{ id: "c1", body: "old words", authorId: "acct-1" }]),
+        ),
+        graphql.mutation("PrepareCommentEdit", () => {
+          prepared = true;
+          return HttpResponse.json({ data: { prepareCommentEdit: null } });
+        }),
+      );
+      const signer = fakeWriteSigner();
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: signer,
+      });
+      await openComments();
+      fireEvent.click(await screen.findByTestId("comment-edit-c1"));
+      return { signer, wasPrepared: () => prepared };
+    }
+
+    it("the_x_is_named_leave_the_edit_is_discarded", async () => {
+      await openEdit();
+      expect(screen.getByRole("button", { name: "Leave — the edit is discarded" })).toBeVisible();
+      expect(screen.queryByRole("button", { name: "Leave — this edit is discarded" })).toBeNull();
+    });
+
+    it("an_unchanged_edit_leaves_at_once_by_the_x_and_the_back_arrow", async () => {
+      await openEdit();
+      fireEvent.click(screen.getByTestId("header-leave"));
+      expect(screen.queryByTestId("comment-edit")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("comment-edit-discard-confirm")).not.toBeInTheDocument();
+      fireEvent.click(await screen.findByTestId("comment-edit-c1"));
+      fireEvent.click(screen.getByTestId("header-back"));
+      expect(screen.queryByTestId("comment-edit")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("comment-edit-discard-confirm")).not.toBeInTheDocument();
+    });
+
+    it("a_changed_edit_asks_discard_the_changes_before_the_x_leaves", async () => {
+      await openEdit();
+      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+        target: { value: "better words" },
+      });
+      fireEvent.click(screen.getByTestId("header-leave"));
+      expect(screen.getByTestId("comment-edit")).toBeInTheDocument();
+      expect(ask()).toHaveAttribute("open");
+      expect(ask()).toHaveTextContent("Discard the changes?");
+      expect(ask()).toHaveTextContent("Nothing is kept.");
+    });
+
+    it("a_changed_edit_asks_the_same_before_the_back_arrow_leaves", async () => {
+      await openEdit();
+      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+        target: { value: "better words" },
+      });
+      fireEvent.click(screen.getByTestId("header-back"));
+      expect(screen.getByTestId("comment-edit")).toBeInTheDocument();
+      expect(ask()).toHaveAttribute("open");
+    });
+
+    it("keep_writing_closes_the_ask_onto_the_edit_as_it_was", async () => {
+      await openEdit();
+      const input = screen.getByTestId("comment-edit-input");
+      fireEvent.change(input, { target: { value: "better words" } });
+      fireEvent.click(screen.getByTestId("header-leave"));
+      fireEvent.click(screen.getByTestId("comment-edit-discard-confirm-keep"));
+      expect(ask()).not.toHaveAttribute("open");
+      expect(screen.getByTestId("comment-edit")).toBeInTheDocument();
+      expect(input).toHaveValue("better words");
+    });
+
+    it("discard_returns_to_the_thread_and_keeps_and_signs_nothing", async () => {
+      const { signer, wasPrepared } = await openEdit();
+      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+        target: { value: "better words" },
+      });
+      fireEvent.click(screen.getByTestId("header-leave"));
+      fireEvent.click(screen.getByTestId("comment-edit-discard-confirm-discard"));
+      expect(screen.queryByTestId("comment-edit")).not.toBeInTheDocument();
+      expect(await screen.findByTestId("comment-edit-c1")).toBeInTheDocument();
+      expect(screen.getByText("old words")).toBeInTheDocument();
+      expect(screen.queryByTestId("comment-signed")).not.toBeInTheDocument();
+      expect(wasPrepared()).toBe(false);
+      expect(signer.signStaged).not.toHaveBeenCalled();
+      // Reopening starts from the comment, not from the discarded words.
+      fireEvent.click(screen.getByTestId("comment-edit-c1"));
+      expect(screen.getByTestId("comment-edit-input")).toHaveValue("old words");
+    });
+  });
+
   // Q49: the thread read carries no replies at all. A branch is a count, and
   // the nodes arrive only for the reader who unfolds one.
   it("collapses a branch behind its count and unfolds it on request", async () => {

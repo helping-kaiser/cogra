@@ -110,6 +110,7 @@ import { usePreviewUrls } from "@/lib/compose/previews";
 import { sensitiveReasonProblem } from "@/lib/compose/wizard";
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
+import { DiscardConfirm } from "@/lib/ui2/compose/discard-confirm";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { CitedBySheet } from "@/lib/ui2/cited-by-sheet";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
@@ -339,6 +340,8 @@ export function CommentsSheet({
   } | null>(null);
   const [editDescribing, setEditDescribing] = useState<string | null>(null);
   const [editActsOpen, setEditActsOpen] = useState(false);
+  // `Discard the changes?` stands over the edit (DiscardConfirm.md).
+  const [editConfirmingDiscard, setEditConfirmingDiscard] = useState(false);
   // The editor has two help doors — the header's "Editing" and the mark
   // sheet's "?" — so the state is which topic is open, not whether one is.
   const [editHelp, setEditHelp] = useState<HelpTopic | null>(null);
@@ -891,6 +894,15 @@ export function CommentsSheet({
     }
   };
 
+  // THE EDIT KEEPS NO DRAFT, so the way out reads the acts batch — the same
+  // count the sign guard reads: an empty batch leaves at once, and a batch
+  // holding an act is asked before anything is discarded (DiscardConfirm.md).
+  const leaveEdit = () => {
+    if (editSubmitting) return;
+    if (editActions === 0) backToThread({ place: place.current, unfolding: null });
+    else setEditConfirmingDiscard(true);
+  };
+
   const onSubmitEdit = async () => {
     if (editing === null || editSubmitting || editing.draft.trim() === "") return;
     if (editActions === 0) return;
@@ -939,6 +951,7 @@ export function CommentsSheet({
   const backToThread = (returned: Return) => {
     setReplying(null);
     setEditing(null);
+    setEditConfirmingDiscard(false);
     setRestoring(returned);
     onOpenChange(true);
   };
@@ -1521,7 +1534,16 @@ export function CommentsSheet({
             onActs={setEditActsOpen}
             onHelp={() => setEditHelp(HELP_TOPICS.editing)}
             onSign={() => void onSubmitEdit()}
-            onLeave={() => backToThread({ place: place.current, unfolding: null })}
+            onLeave={leaveEdit}
+          />
+          {/* Discard keeps nothing: the edit's state lives in this sheet alone,
+              and leaving drops it — the comment stands as it was. */}
+          <DiscardConfirm
+            open={editConfirmingDiscard}
+            subject="edit"
+            onKeepWriting={() => setEditConfirmingDiscard(false)}
+            onDiscard={() => backToThread({ place: place.current, unfolding: null })}
+            testId="comment-edit-discard-confirm"
           />
           {/* One picture at a time, keyed by id: comments have no in-sheet
               stepping, on the editor as on the composer. */}
