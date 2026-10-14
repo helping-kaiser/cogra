@@ -26,7 +26,7 @@ import {
   StructuralBody,
   VerifiedAct,
 } from "@/lib/crypto/handshake";
-import { ActId, AddrId } from "@/lib/crypto/identifiers";
+import { ActId, AddrId, NodeId } from "@/lib/crypto/identifiers";
 import {
   decodePreCommitment,
   encodeProposal,
@@ -35,6 +35,7 @@ import {
 import { createIdentityStore, type IdentityStore } from "@/lib/identity/store";
 import type { AuthGuard } from "@/lib/session/guard";
 import { startMswServer } from "@/test/msw";
+import { expectation, REGISTRATION_EXEMPTION, stanceRecord } from "./intent";
 import { createWriteSigner, type WriteSigner } from "./write-signer";
 
 const server = startMswServer();
@@ -217,7 +218,7 @@ describe("write signer", () => {
       }),
     );
 
-    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result).toEqual({ kind: "done", id: ID, state: "RELAYING" });
     expect(await store.handshake(ID)).toBeNull();
   });
@@ -265,7 +266,7 @@ describe("write signer", () => {
       ),
     );
 
-    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result).toEqual({ kind: "done", id: ID, state: "RELAYING" });
     expect(polls).toBe(2);
   });
@@ -289,7 +290,7 @@ describe("write signer", () => {
       ),
     );
 
-    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result).toEqual({ kind: "awaitingSeal", id: ID });
     expect(await store.handshake(ID)).not.toBeNull();
   });
@@ -310,7 +311,7 @@ describe("write signer", () => {
         }),
       ),
     );
-    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("refused");
     expect(await store.handshake(ID)).toBeNull();
   });
@@ -352,7 +353,7 @@ describe("write signer", () => {
       ),
     );
 
-    const first = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const first = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(first.kind).toBe("refused");
     if (first.kind === "refused") expect(first.errors[0].code).toBe("RATE_LIMITED");
     expect(await store.handshake(ID)).not.toBeNull();
@@ -383,7 +384,7 @@ describe("write signer", () => {
       ),
     );
 
-    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("refused");
     if (result.kind === "refused") expect(result.errors[0].code).toBe("RATE_LIMITED");
     expect(await store.handshake(ID)).not.toBeNull();
@@ -394,7 +395,7 @@ describe("write signer", () => {
     if (key === null) throw new Error("expected a key");
     await store.saveHandshake(ID, await key.preSign(PROPOSAL));
 
-    const result = await signer.signStaged(view(ID, "SOMETHING_NEW" as StagedWriteState, null));
+    const result = await signer.signStaged(view(ID, "SOMETHING_NEW" as StagedWriteState, null), REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("refused");
     if (result.kind === "refused") expect(result.errors[0].message).toMatch(/does not know/);
     expect(await store.handshake(ID)).not.toBeNull();
@@ -402,7 +403,7 @@ describe("write signer", () => {
 
   it("a transport fault keeps the material and resume re-sends the same nonce", async () => {
     server.use(graphql.mutation("SubmitProposals", () => HttpResponse.error()));
-    const first = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const first = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(first.kind).toBe("failed");
     const parked = await store.handshake(ID);
     expect(parked).not.toBeNull();
@@ -470,7 +471,7 @@ describe("write signer", () => {
         });
       }),
     );
-    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("rejectedByDevice");
     if (result.kind === "rejectedByDevice") expect(result.reason).toMatch(/different act/);
     expect(await store.handshake(ID)).toBeNull();
@@ -497,7 +498,7 @@ describe("write signer", () => {
         });
       }),
     );
-    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("rejectedByDevice");
     if (result.kind === "rejectedByDevice") expect(result.reason).toMatch(/host seal/);
   });
@@ -517,14 +518,14 @@ describe("write signer", () => {
       canonicalProposal: toBase64(new Uint8Array([0x00])),
       verifiedAct: null,
     };
-    const result = await signer.signStaged(malformed);
+    const result = await signer.signStaged(malformed, REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("rejectedByDevice");
     expect(submits).toBe(0);
     expect(await store.handshake(ID)).toBeNull();
   });
 
   it("refuses a sealing staged write when the material is lost", async () => {
-    const result = await signer.signStaged(view(ID, "AWAITING_APPROVAL", null));
+    const result = await signer.signStaged(view(ID, "AWAITING_APPROVAL", null), REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("refused");
     if (result.kind === "refused") {
       expect(result.errors[0].code).toBe("INTERNAL");
@@ -549,7 +550,7 @@ describe("write signer", () => {
         HttpResponse.json({ data: { stagedWrite: stagedJson(ID, "EXPIRED", null) } }),
       ),
     );
-    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("refused");
     if (result.kind === "refused") expect(result.errors[0].code).toBe("STAGED_WRITE_EXPIRED");
     expect(await store.handshake(ID)).toBeNull();
@@ -559,20 +560,20 @@ describe("write signer", () => {
     const key = await store.actorKey();
     if (key === null) throw new Error("expected a key");
 
-    expect(await signer.signStaged(view(ID, "RELAYING", null))).toEqual({
+    expect(await signer.signStaged(view(ID, "RELAYING", null), REGISTRATION_EXEMPTION)).toEqual({
       kind: "done",
       id: ID,
       state: "RELAYING",
     });
 
-    const expired = await signer.signStaged(view(ID, "EXPIRED", null));
+    const expired = await signer.signStaged(view(ID, "EXPIRED", null), REGISTRATION_EXEMPTION);
     expect(expired.kind).toBe("refused");
     if (expired.kind === "refused") expect(expired.errors[0].code).toBe("STAGED_WRITE_EXPIRED");
   });
 
   it("resume refuses a vanished staged write and clears the material", async () => {
     server.use(graphql.mutation("SubmitProposals", () => HttpResponse.error()));
-    await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     server.use(
       graphql.query("StagedWrite", () => HttpResponse.json({ data: { stagedWrite: null } })),
     );
@@ -592,7 +593,7 @@ describe("write signer", () => {
       store: emptyStore,
       sleep: () => Promise.resolve(),
     });
-    const result = await keyless.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const result = await keyless.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("failed");
   });
 
@@ -604,7 +605,7 @@ describe("write signer", () => {
     const other = await ActorKey.generate();
     server.use(meAnswering(toBase64(other.publicKeyBytes())));
 
-    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("refused");
     if (result.kind === "refused") expect(result.errors[0].code).toBe("FORBIDDEN");
     // Not spent: a restore of the account's own key finishes this write.
@@ -615,19 +616,20 @@ describe("write signer", () => {
     const other = await ActorKey.generate();
     server.use(meAnswering(toBase64(other.publicKeyBytes())));
 
-    const results = await signer.sign([
-      view("sw-a", "AWAITING_PRE_SIGN", null),
-      view("sw-b", "AWAITING_PRE_SIGN", null),
-    ]);
+    const pick = stanceRecord(PERSON, 0.4, 0.2);
+    const results = await signer.sign(
+      [await stanceView("sw-a", "AWAITING_PRE_SIGN", 0.4, 0.2), await stanceView("sw-b", "AWAITING_PRE_SIGN", 0.4, 0.2)],
+      expectation([pick, pick]),
+    );
     expect(results.map((r) => r.kind)).toEqual(["refused", "refused"]);
     expect(results.map((r) => r.id)).toEqual(["sw-a", "sw-b"]);
   });
 
   it("signs a batch in order, one result per write", async () => {
-    const results = await signer.sign([
-      view("sw-a", "RELAYING", null),
-      view("sw-b", "LANDED", null),
-    ]);
+    const results = await signer.sign(
+      [await stanceView("sw-a", "RELAYING", 0.4, 0.2), await stanceView("sw-b", "LANDED", 0.1, 0.1)],
+      expectation([stanceRecord(PERSON, 0.4, 0.2), stanceRecord(PERSON, 0.1, 0.1)]),
+    );
     expect(results).toEqual([
       { kind: "done", id: "sw-a", state: "RELAYING" },
       { kind: "done", id: "sw-b", state: "LANDED" },
@@ -635,6 +637,123 @@ describe("write signer", () => {
   });
 
   it("signs nothing, and asks the account nothing, for an empty batch", async () => {
-    expect(await signer.sign([])).toEqual([]);
+    expect(await signer.sign([], expectation([]))).toEqual([]);
+  });
+
+  it("no batch signer entry point accepts a batch without an expectation", async () => {
+    // The type is the guard: a call site that builds no expectation does
+    // not compile. tsc fails this file if the directive ever goes unused.
+    // @ts-expect-error — `sign` has no overload without an expectation.
+    await expect(signer.sign([])).resolves.toEqual([]);
+  });
+
+  // ---- the intent check (intent.ts), against a prepare that lies ----------
+
+  /** Counts every submit, so a test can prove nothing was pre-signed. */
+  function countingSubmits(): { count: () => number } {
+    let submits = 0;
+    server.use(
+      graphql.mutation("SubmitProposals", () => {
+        submits += 1;
+        return HttpResponse.json({ data: {} });
+      }),
+    );
+    return { count: () => submits };
+  }
+
+  it("a write whose body disagrees with its form is refused on device", async () => {
+    const submits = countingSubmits();
+    // The pad picked (0.4, 0.2); the prepare served a subtly different
+    // valence — the stance the user never chose.
+    const results = await signer.sign(
+      [await stanceView("sw-a", "AWAITING_PRE_SIGN", 0.4, 0.25)],
+      expectation([stanceRecord(PERSON, 0.4, 0.2)]),
+    );
+    expect(results.map((r) => r.kind)).toEqual(["rejectedByDevice"]);
+    expect(submits.count()).toBe(0);
+    expect(await store.handshakeIds()).toEqual([]);
+  });
+
+  it("a batch with one mismatched write signs none of its writes", async () => {
+    const submits = countingSubmits();
+    const results = await signer.sign(
+      [
+        await stanceView("sw-a", "AWAITING_PRE_SIGN", 0.4, 0.2),
+        await stanceView("sw-b", "AWAITING_PRE_SIGN", -0.3, 0.2),
+      ],
+      expectation([stanceRecord(PERSON, 0.4, 0.2), stanceRecord(PERSON, 0.3, 0.2)]),
+    );
+    expect(results.map((r) => r.kind)).toEqual(["rejectedByDevice", "rejectedByDevice"]);
+    // The intent check runs before the first pre-signature of the batch:
+    // the matching first write was not pre-signed either.
+    expect(submits.count()).toBe(0);
+    expect(await store.handshakeIds()).toEqual([]);
+  });
+
+  it("a write carrying an injected payload is refused on device", async () => {
+    const submits = countingSubmits();
+    const results = await signer.sign(
+      [await stanceView("sw-a", "AWAITING_PRE_SIGN", 0.4, 0.2, new Uint8Array([1]))],
+      expectation([stanceRecord(PERSON, 0.4, 0.2)]),
+    );
+    expect(results.map((r) => r.kind)).toEqual(["rejectedByDevice"]);
+    expect(submits.count()).toBe(0);
+  });
+
+  it("the staged registration is the one named exemption from the intent check", async () => {
+    const submits = countingSubmits();
+    // A stance served where a Registration was expected: the exemption
+    // holds for a Registration and nothing else.
+    const result = await signer.signStaged(
+      await stanceView("sw-a", "AWAITING_PRE_SIGN", 0.4, 0.2),
+      REGISTRATION_EXEMPTION,
+    );
+    expect(result.kind).toBe("rejectedByDevice");
+    expect(submits.count()).toBe(0);
+  });
+
+  it("a staged write served with its form expectation signs through the same leg", async () => {
+    const result = await signer.signStaged(
+      await stanceView("sw-a", "RELAYING", 0.4, 0.2),
+      expectation([stanceRecord(PERSON, 0.4, 0.2)]),
+    );
+    expect(result).toEqual({ kind: "done", id: "sw-a", state: "RELAYING" });
   });
 });
+
+const PERSON = `prof:${"bb".repeat(20)}`;
+
+/**
+ * A stance the prepare serves, authored by this device's own address —
+ * the shape a faithful prepare stages for a pick of `(pD, pI)`.
+ */
+async function stanceView(
+  id: string,
+  state: StagedWriteState,
+  pD: number,
+  pI: number,
+  payload: Uint8Array = new Uint8Array(),
+): Promise<StagedWriteView> {
+  const key = await createIdentityStore({ activeAccountId: () => "acct-1" }).actorKey();
+  if (key === null) throw new Error("expected the device key");
+  const body = new StructuralBody({
+    author: await key.address(),
+    seq: 5n,
+    family: "opinion",
+    middle: null,
+    target: NodeId.parse(PERSON),
+    pD,
+    pI,
+    settlementRef: null,
+    license: null,
+    assertedParents: [],
+  });
+  const proposal = new Proposal(body, payload, []);
+  return {
+    id,
+    state,
+    family: "OPINION",
+    canonicalProposal: toBase64(encodeProposal(proposal)),
+    verifiedAct: null,
+  };
+}

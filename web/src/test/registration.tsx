@@ -6,6 +6,7 @@ import { vi } from "vitest";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import type { KeyCeremony } from "@/lib/identity/key-ceremony";
 import type { RegistrationFlow } from "@/lib/signing/registration-flow";
+import { REGISTRATION_EXEMPTION, type Expectation } from "@/lib/signing/intent";
 import type { RegistrationProgress } from "@/lib/signing/registration-signer";
 import type { WriteSigner } from "@/lib/signing/write-signer";
 
@@ -53,9 +54,16 @@ export function fakeWriteSigner(overrides: Partial<WriteSigner> = {}): WriteSign
     // write, in order — and it reads `signer.signStaged` rather than
     // closing over the default, so a test that scripts the single-write
     // leg has scripted the batch too.
-    sign: vi.fn(async (writes: readonly StagedWriteView[]) => {
+    sign: vi.fn(async (writes: readonly StagedWriteView[], expected: Expectation) => {
       const results = [];
-      for (const staged of writes) results.push(await signer.signStaged(staged));
+      for (const staged of writes) results.push(await signer.signStaged(staged, expected));
+      return results;
+    }),
+    signCarriedAtLanding: vi.fn(async (writes: readonly StagedWriteView[]) => {
+      const results = [];
+      for (const staged of writes) {
+        results.push(await signer.signStaged(staged, REGISTRATION_EXEMPTION));
+      }
       return results;
     }),
     resume: vi.fn(() => Promise.resolve([])),

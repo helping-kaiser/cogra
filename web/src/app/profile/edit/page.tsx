@@ -41,6 +41,7 @@ import {
 } from "@/lib/profile/caps";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useAuthPhase } from "@/lib/session/provider";
+import { expectation, profileUpdate } from "@/lib/signing/intent";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
 import { PageHeader } from "@/lib/ui/page-header";
@@ -173,7 +174,9 @@ export default function ProfileEditPage() {
       setTransportFailed(true);
       return;
     }
-    const results = await signer.sign(prepared.value);
+    // One profile update on this device's own profile; its fields are the
+    // envelope's, checked once the device decodes it (intent.ts).
+    const results = await signer.sign(prepared.value, expectation([profileUpdate()]));
     setSubmitting(false);
     if (results.every((result) => result.kind === "done")) {
       router.push("/profile");

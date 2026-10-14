@@ -11,6 +11,7 @@ import { toBase64 } from "@/lib/crypto/bytes";
 import type { KeyCeremony } from "@/lib/identity/key-ceremony";
 import type { IdentityStore } from "@/lib/identity/store";
 import type { AuthGuard } from "@/lib/session/guard";
+import { REGISTRATION_EXEMPTION } from "./intent";
 import { keyUsable } from "./key-usable";
 import type { WriteSigner } from "./write-signer";
 
@@ -80,7 +81,7 @@ export function createRegistrationSigner(deps: {
         // material for resume(), and one never started is still
         // AWAITING_PRE_SIGN on the next pass.
         if (carriedBatch.length > 0 && keyUsable(await devicePubkey(), actorPubkey)) {
-          await writeSigner.sign(carriedBatch);
+          await writeSigner.signCarriedAtLanding(carriedBatch);
         }
         return { kind: "member" };
       }
@@ -93,7 +94,10 @@ export function createRegistrationSigner(deps: {
         if (!keyUsable(await devicePubkey(), actorPubkey)) {
           return { kind: "awaitingSigningKey" };
         }
-        const result = await writeSigner.signStaged(stagedRegistration);
+        // No form stands behind the staged Registration — the backend
+        // staged it at approval — so it is the one named exemption from
+        // the intent check (intent.ts), and still runs every transport check.
+        const result = await writeSigner.signStaged(stagedRegistration, REGISTRATION_EXEMPTION);
         switch (result.kind) {
           case "done":
           case "awaitingSeal":

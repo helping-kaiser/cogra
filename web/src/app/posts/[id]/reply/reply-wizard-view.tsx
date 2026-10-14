@@ -33,6 +33,9 @@ import { prepareComment } from "@/lib/api/content-api";
 import { hasFieldErrors, partitionFieldErrors } from "@/lib/api/field-errors";
 import { firstRefusalMessage, writeRefusalMessage } from "@/lib/ui/error-messages";
 import type { StagedWriteView } from "@/lib/api/writes-api";
+import { fetchGraphIds, graphIdOf } from "@/lib/api/graph-ids-api";
+import { commentExpectation } from "@/lib/compose/intent";
+import type { Expectation } from "@/lib/signing/intent";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthGuard } from "@/lib/session/runtime";
@@ -403,6 +406,26 @@ export function ReplyWizard({
     setReferenceErrors({});
     setTransportFailed(false);
 
+    // The L1 ids of the node answered and of every cited node, read before
+    // anything is staged: the batch is checked against them before its
+    // first pre-signature (intent.ts).
+    const graphIds = await guard.run(() =>
+      fetchGraphIds(client, [
+        state.target.id,
+        ...state.references.map((reference) => reference.targetId),
+      ]),
+    );
+    if (graphIds.kind !== "success") {
+      setBusy(false);
+      setTransportFailed(true);
+      return;
+    }
+    const expected = commentExpectation(
+      graphIdOf(graphIds.value, state.target.id),
+      state,
+      graphIds.value,
+    );
+
     const prepared = await guard.run(() =>
       prepareComment(client, {
         target: state.target.id,
@@ -442,11 +465,15 @@ export function ReplyWizard({
       return;
     }
 
-    await finish(prepared.value.node, prepared.value.writes);
+    await finish(prepared.value.node, prepared.value.writes, expected);
   };
 
-  const finish = async (node: string, writes: readonly StagedWriteView[]) => {
-    const results = await signer.sign(writes);
+  const finish = async (
+    node: string,
+    writes: readonly StagedWriteView[],
+    expected: Expectation,
+  ) => {
+    const results = await signer.sign(writes, expected);
     setBusy(false);
 
     if (results.every((result) => result.kind === "done")) {

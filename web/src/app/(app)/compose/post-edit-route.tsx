@@ -20,6 +20,9 @@ import {
 import { prepareTag } from "@/lib/api/topics-api";
 import { prepareReference, prepareReferenceWithdrawal } from "@/lib/api/references-api";
 import type { StagedWriteView } from "@/lib/api/writes-api";
+import { fetchGraphIds, graphIdOf } from "@/lib/api/graph-ids-api";
+import { editExpectation } from "@/lib/compose/intent";
+import { postEdit } from "@/lib/signing/intent";
 import { firstRefusalMessage } from "@/lib/ui/error-messages";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
@@ -198,6 +201,36 @@ export function PostEditRoute({
     setBusy(true);
     slowTimer.current = setTimeout(() => setSlow(true), SLOW_SIGNING_MS);
 
+    // The L1 ids of the post and of every cited node the edit touches,
+    // read before anything is staged: the batch is checked against them,
+    // and against the acts card, before its first pre-signature (intent.ts).
+    const touched = stagedChanges({
+      recordStaged: state.recordStaged,
+      recordName: "",
+      loadedTags: state.loadedTags,
+      tags: state.tags,
+      loadedReferences: state.loadedReferences,
+      references: state.references,
+    });
+    const graphIds = await guard.run(() =>
+      fetchGraphIds(client, [
+        postId,
+        ...touched.references.map((change) => change.reference.targetId),
+      ]),
+    );
+    if (graphIds.kind !== "success") {
+      endSigning();
+      setFailed(true);
+      return;
+    }
+    const postGraphId = graphIdOf(graphIds.value, postId);
+    const expected = editExpectation(
+      postGraphId,
+      state.recordStaged ? postEdit(postGraphId) : null,
+      touched,
+      graphIds.value,
+    );
+
     const writes: StagedWriteView[] = [];
     const perTag: Record<number, string> = {};
     const perReference: Record<number, string> = {};
@@ -219,14 +252,7 @@ export function PostEditRoute({
       else writes.push(...prepared.value.writes);
     }
 
-    const changes = stagedChanges({
-      recordStaged: state.recordStaged,
-      recordName: "",
-      loadedTags: state.loadedTags,
-      tags: state.tags,
-      loadedReferences: state.loadedReferences,
-      references: state.references,
-    });
+    const changes = touched;
     for (const change of changes.tags) {
       const prepared = await guard.run(() =>
         prepareTag(client, {
@@ -307,7 +333,7 @@ export function PostEditRoute({
       return;
     }
 
-    const results = await signer.sign(writes);
+    const results = await signer.sign(writes, expected);
     endSigning();
     if (results.every((result) => result.kind === "done")) {
       // The post opens with the edit settling.

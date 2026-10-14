@@ -445,8 +445,11 @@ export function StanceControl({
 
   /** Signs the whole counter-record batch. Reports whether it completed. */
   const runSever = async (): Promise<boolean> => {
+    // The walk-back is checked against the standing the reader confirmed;
+    // with none known there is nothing it could be checked against.
+    if (bundle === null || bundle === undefined) return false;
     setBusy(true);
-    const outcome = await data.sever(seamTarget);
+    const outcome = await data.sever(seamTarget, bundle);
     setBusy(false);
     if (outcome.kind !== "success") return false;
     announceStanceSigned();
