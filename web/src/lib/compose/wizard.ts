@@ -15,6 +15,8 @@
 // lose their paragraphs to a mis-tap — but only the active side is ever sent.
 
 import type { GalleryEntryDraft } from "@/lib/api/content-api";
+import type { KnownMedia } from "@/lib/api/media-api";
+import { ledgerEntry, type MediaLedger } from "@/lib/compose/payload-expectation";
 import type { Crop } from "@/lib/ui2/media/crop";
 import { CENTERED } from "@/lib/ui2/media/crop";
 import { POST_SHAPES, type PostShape } from "@/lib/ui2/media/aspect";
@@ -126,7 +128,19 @@ export type AssetUpload =
   | { readonly kind: "encoding" }
   | { readonly kind: "uploading" }
   | { readonly kind: "processing"; readonly mediaId: string }
-  | { readonly kind: "done"; readonly mediaId: string }
+  | {
+      readonly kind: "done";
+      readonly mediaId: string;
+      /**
+       * The digests the intent check holds this asset's manifest entry to:
+       * the upload digest this device computed and the server echoed, and
+       * the rendition digest it read at READY. It persists with the draft,
+       * so a restored draft is checked as it was uploaded. Absent only on a
+       * draft saved before the upload digest existed, which is re-sent on
+       * restore (`draft-store.ts`) rather than signed blind.
+       */
+      readonly media?: KnownMedia;
+    }
   | { readonly kind: "failed"; readonly message: string; readonly retryable: boolean };
 
 export type PickedAsset = {
@@ -492,6 +506,19 @@ export function attachmentClaims(state: WizardState): readonly GalleryEntryDraft
     });
   }
   return claims;
+}
+
+/**
+ * Every asset this draft uploaded and can state the digests of — the
+ * pictures, the clip, and either cover — for the payload expectation
+ * (payload-expectation.ts).
+ */
+export function wizardLedger(state: WizardState): MediaLedger {
+  return new Map([
+    ...state.assets.flatMap((asset) => ledgerEntry(asset.upload)),
+    ...(state.cover === null ? [] : ledgerEntry(state.cover.upload)),
+    ...(state.autoCover === null ? [] : ledgerEntry(state.autoCover.upload)),
+  ]);
 }
 
 /** The words half, or null on a media post — the XOR, as the input wants it. */

@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTokenStore } from "@/lib/session/token-store";
 import { captureFrameZero } from "@/lib/ui2/media/video";
 import { fakeIdentityStore } from "@/test/identity";
+import { echoedMedia } from "@/test/media-echo";
 import { fakeWriteSigner } from "@/test/registration";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
@@ -69,19 +70,19 @@ const uploadOk = (id = "m1") =>
       data: {
         uploadMedia: {
           __typename: "UploadMediaPayload",
-          media: {
-            __typename: "MediaAttachment",
-            id,
-            url: "https://media.test/x.webp",
-            altText: null,
-            status: "NORMAL",
-            options: { __typename: "MediaOptions", aspectRatio: "1:1" },
-          },
+          media: echoedMedia(id),
           userErrors: [],
         },
       },
     }),
   );
+
+// The device's upload digest, pinned so the server above can echo it
+// (test/media-echo.ts).
+vi.mock("@/lib/api/media-api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api/media-api")>()),
+  uploadDigestOf: async () => "ee".repeat(32),
+}));
 
 const target = {
   id: "post-1",
@@ -399,14 +400,7 @@ describe("a comment's video", () => {
             data: {
               uploadMedia: {
                 __typename: "UploadMediaPayload",
-                media: {
-                  __typename: "MediaAttachment",
-                  id: `m${calls}`,
-                  url: "https://media.test/x.webp",
-                  altText: null,
-                  status: "NORMAL",
-                  options: { __typename: "MediaOptions", aspectRatio: "1:1" },
-                },
+                media: echoedMedia(`m${calls}`),
                 userErrors: [],
               },
             },
@@ -444,14 +438,7 @@ describe("a comment's video", () => {
             data: {
               uploadMedia: {
                 __typename: "UploadMediaPayload",
-                media: {
-                  __typename: "MediaAttachment",
-                  id: `m${calls}`,
-                  url: "https://media.test/x.mp4",
-                  altText: null,
-                  status: "NORMAL",
-                  options: { __typename: "MediaOptions", aspectRatio: "1:1" },
-                },
+                media: echoedMedia(`m${calls}`, { mimeType: "video/mp4" }),
                 userErrors: [],
               },
             },

@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
+import { echoedMedia } from "@/test/media-echo";
 import { fakeWriteSigner } from "@/test/registration";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
@@ -111,20 +112,20 @@ const uploadOk = (ids: string[]) => {
       data: {
         uploadMedia: {
           __typename: "UploadMediaPayload",
-          media: {
-            __typename: "MediaAttachment",
-            id: ids[Math.min(next++, ids.length - 1)],
-            url: "https://media.test/x.webp",
-            altText: null,
-            status: "NORMAL",
-            options: { __typename: "MediaOptions", aspectRatio: "4:5" },
-          },
+          media: echoedMedia(ids[Math.min(next++, ids.length - 1)]!),
           userErrors: [],
         },
       },
     }),
   );
 };
+
+// The device's upload digest, pinned so the server above can echo it
+// (test/media-echo.ts).
+vi.mock("@/lib/api/media-api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api/media-api")>()),
+  uploadDigestOf: async () => "ee".repeat(32),
+}));
 
 async function pick(names: string[]) {
   // The screen is behind the draft lookup, so the picker exists only once that
@@ -409,14 +410,7 @@ describe("the compose wizard", () => {
           data: {
             uploadMedia: {
               __typename: "UploadMediaPayload",
-              media: {
-                __typename: "MediaAttachment",
-                id: "m-retried",
-                url: "https://media.test/x.webp",
-                altText: null,
-                status: "NORMAL",
-                options: { __typename: "MediaOptions", aspectRatio: "4:5" },
-              },
+              media: echoedMedia("m-retried"),
               userErrors: [],
             },
           },

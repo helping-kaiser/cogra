@@ -45,8 +45,10 @@ import { firstRefusalMessage } from "@/lib/ui/error-messages";
 import { appendDeduped } from "@/lib/api/pagination";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { fetchGraphIds, graphIdOf } from "@/lib/api/graph-ids-api";
+import { fetchKnownMedia } from "@/lib/api/media-api";
 import { editExpectation } from "@/lib/compose/intent";
-import { commentEdit, type Expectation } from "@/lib/signing/intent";
+import { contentExpectation } from "@/lib/compose/payload-expectation";
+import { commentEdit, type Expectation, type ExpectedWrite } from "@/lib/signing/intent";
 import { prepareTag } from "@/lib/api/topics-api";
 import {
   fetchCitedBy,
@@ -98,9 +100,11 @@ import type { ReplyTarget } from "@/lib/compose/reply-wizard";
 import {
   addTo,
   addedAssets,
+  addedLedger,
   editBlocked,
   editClaims,
   galleryOf,
+  keptMediaIds,
   keptPreviews,
   pictureAltText,
   pictureId,
@@ -804,25 +808,42 @@ export function CommentsSheet({
       return;
     }
     const commentGraphId = graphIdOf(graphIds.value, editing.id);
+    const sent = {
+      id: editing.id,
+      content: editing.draft,
+      // Re-stated, never omitted: the edit carries the whole state — the
+      // gallery for the same reason as the mark.
+      attachments: editClaims(editing.gallery) ?? undefined,
+      sensitive: editing.sensitive,
+      sensitiveReason: editing.sensitiveReason,
+    };
+    // The record's payload is complete state: the pictures added here are
+    // held to the digests this device computed, the kept ones to the
+    // digests of the asset each names, read back by id (payload-expectation.ts).
+    let record: ExpectedWrite | null = null;
+    if (editTextChanged) {
+      const kept = await guard.run(() => fetchKnownMedia(client, keptMediaIds(editing.gallery)));
+      if (kept.kind !== "success") {
+        setEditSubmitting(false);
+        setEditFailed(true);
+        return;
+      }
+      const ledger = new Map([...kept.value, ...addedLedger(editing.gallery)]);
+      record = commentEdit(
+        graphIdOf(graphIds.value, parentUuid),
+        commentGraphId,
+        contentExpectation(editing.id, sent, "comment", ledger),
+      );
+    }
     const expected = editExpectation(
       commentGraphId,
-      editTextChanged ? commentEdit(graphIdOf(graphIds.value, parentUuid), commentGraphId) : null,
+      record,
       { tags: editChanges, references: editReferenceChanges },
       graphIds.value,
     );
 
     if (editTextChanged) {
-      const prepared = await guard.run(() =>
-        prepareCommentEdit(client, {
-          id: editing.id,
-          content: editing.draft,
-          // Re-stated, never omitted: the edit carries the whole state — the
-          // gallery for the same reason as the mark.
-          attachments: editClaims(editing.gallery) ?? undefined,
-          sensitive: editing.sensitive,
-          sensitiveReason: editing.sensitiveReason,
-        }),
-      );
+      const prepared = await guard.run(() => prepareCommentEdit(client, sent));
       if (prepared.kind === "failed") {
         setEditSubmitting(false);
         setEditFailed(true);

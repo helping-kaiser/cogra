@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -77,7 +79,11 @@ function capturingUpdate(seen: { input?: Record<string, unknown> }) {
 }
 
 /** The one asset id a picked avatar is expected to come back as. */
-function uploadHandler(id: string) {
+/** The digest of what `installEncoder`'s canvas encodes to, by Node's own crypto. */
+const ENCODED_DIGEST = createHash("sha256").update(new Uint8Array(8)).digest("hex");
+
+/** An upload the server records faithfully: it echoes the digest of the bytes sent. */
+function uploadHandler(id: string, uploadDigest: string = ENCODED_DIGEST) {
   return graphql.mutation("UploadMedia", () =>
     HttpResponse.json({
       data: {
@@ -89,7 +95,14 @@ function uploadHandler(id: string) {
             url: `https://media.test/${id}.webp`,
             altText: null,
             status: "NORMAL",
-            options: { __typename: "MediaOptions", aspectRatio: "1:1" },
+            mimeType: "image/webp",
+            options: { __typename: "MediaOptions", aspectRatio: "1:1", durationMs: null },
+            coverMedia: null,
+            coverTaken: false,
+            state: "READY",
+            failureReason: null,
+            digest: ENCODED_DIGEST,
+            uploadDigest,
           },
           userErrors: [],
         },
@@ -420,6 +433,29 @@ describe("ProfileEditPage", () => {
 
       await waitFor(() => expect(seen.input).toHaveProperty("avatarMediaId", "m-9"));
       await waitFor(() => expect(push).toHaveBeenCalledWith("/profile"));
+    });
+
+    it("refuses an avatar whose echo is not the bytes it sent, naming nothing", async () => {
+      installEncoder();
+      const seen: { input?: Record<string, unknown> } = {};
+      server.use(myProfileHandler(), uploadHandler("m-9", "ab".repeat(32)), capturingUpdate(seen));
+      renderWithProviders(<ProfileEditPage />, {
+        store: signedInStore(),
+        writeSigner: fakeWriteSigner(),
+      });
+
+      const input = await screen.findByTestId("profile-edit-avatar-input");
+      fireEvent.change(input, {
+        target: {
+          files: [
+            new File([new Uint8Array([1, 2, 3]) as BlobPart], "face.jpg", { type: "image/jpeg" }),
+          ],
+        },
+      });
+      fireEvent.click(screen.getByTestId("profile-edit-save"));
+
+      expect(await screen.findByText("The server couldn't finish that upload.")).toBeInTheDocument();
+      expect(seen.input).toBeUndefined();
     });
 
     // HT-19, ruled: the avatar takes the SAME cap post media takes, in the same

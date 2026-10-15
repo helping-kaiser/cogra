@@ -21,8 +21,10 @@ import { prepareTag } from "@/lib/api/topics-api";
 import { prepareReference, prepareReferenceWithdrawal } from "@/lib/api/references-api";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { fetchGraphIds, graphIdOf } from "@/lib/api/graph-ids-api";
+import { fetchKnownMedia } from "@/lib/api/media-api";
 import { editExpectation } from "@/lib/compose/intent";
-import { postEdit } from "@/lib/signing/intent";
+import { contentExpectation, galleryMediaIds } from "@/lib/compose/payload-expectation";
+import { postEdit, type ExpectedWrite } from "@/lib/signing/intent";
 import { firstRefusalMessage } from "@/lib/ui/error-messages";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
@@ -224,12 +226,23 @@ export function PostEditRoute({
       return;
     }
     const postGraphId = graphIdOf(graphIds.value, postId);
-    const expected = editExpectation(
-      postGraphId,
-      state.recordStaged ? postEdit(postGraphId) : null,
-      touched,
-      graphIds.value,
-    );
+    // The record's payload is complete state: every carried-over placement
+    // is held to the digests of the asset it names, read back by id, since
+    // no gallery read selects them (payload-expectation.ts).
+    const sent = postEditInput(state);
+    let record: ExpectedWrite | null = null;
+    if (state.recordStaged) {
+      const known = await guard.run(() =>
+        fetchKnownMedia(client, galleryMediaIds(sent.attachments)),
+      );
+      if (known.kind !== "success") {
+        endSigning();
+        setFailed(true);
+        return;
+      }
+      record = postEdit(postGraphId, contentExpectation(postId, sent, "post", known.value));
+    }
+    const expected = editExpectation(postGraphId, record, touched, graphIds.value);
 
     const writes: StagedWriteView[] = [];
     const perTag: Record<number, string> = {};
@@ -242,7 +255,7 @@ export function PostEditRoute({
     };
 
     if (state.recordStaged) {
-      const prepared = await guard.run(() => preparePostEdit(client, postEditInput(state)));
+      const prepared = await guard.run(() => preparePostEdit(client, sent));
       if (prepared.kind === "failed") {
         endSigning();
         setFailed(true);
