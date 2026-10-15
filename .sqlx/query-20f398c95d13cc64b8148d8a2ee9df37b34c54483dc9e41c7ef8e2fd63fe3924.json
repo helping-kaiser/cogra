@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT a.id, a.original_id, a.original_type, a.original_data,\n                  a.redaction_reason, a.redacted_by, a.redacted_at, a.legal_hold_until,\n                  COALESCE(ARRAY_AGG(r.media_id ORDER BY r.media_id)\n                           FILTER (WHERE r.media_id IS NOT NULL), '{}') AS \"media!\"\n           FROM retention_archive a\n           LEFT JOIN retention_archive_media r ON r.archive_id = a.id\n           WHERE a.original_id = $1\n           GROUP BY a.id\n           ORDER BY a.redacted_at, a.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "original_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "original_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "original_data",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 4,
+        "name": "redaction_reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "redacted_by",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "redacted_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "legal_hold_until",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "media!",
+        "type_info": "UuidArray"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      null
+    ]
+  },
+  "hash": "20f398c95d13cc64b8148d8a2ee9df37b34c54483dc9e41c7ef8e2fd63fe3924"
+}

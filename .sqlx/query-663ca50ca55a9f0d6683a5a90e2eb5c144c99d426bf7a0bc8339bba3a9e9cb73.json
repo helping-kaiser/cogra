@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE media_attachments\n           SET held_at = NOW()\n           WHERE id = ANY($1) AND held_at IS NULL AND NOT media_live_placed(id)\n           RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "663ca50ca55a9f0d6683a5a90e2eb5c144c99d426bf7a0bc8339bba3a9e9cb73"
+}

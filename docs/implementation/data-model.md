@@ -291,26 +291,134 @@ stays, because an ordering fraud proof opens it. From acceptance on,
 
 At confirm, promotion moves the envelope and the seal's private
 value from the staged row into `act_payloads`, keyed by the L1 act
-identifier verbatim. A genesis act has no staged row, so the genesis
+identifier verbatim — every landed payload, the admission
+Registration's handle included, so the staged row is never a
+payload's last home. A genesis act has no staged row, so the genesis
 bootstrap writes the carriage of each genesis payload the moment the
 seal returns its salt:
 
 ```sql
 CREATE TABLE act_payloads (
     act_id        TEXT        PRIMARY KEY,  -- L1 act identifier, verbatim
-    payload       BYTEA       NOT NULL,     -- the envelope bytes
-    content_salt  BYTEA       NOT NULL,     -- the commitment's private value
+    payload       BYTEA,                    -- the envelope bytes; NULL once reduced
+    content_salt  BYTEA,                    -- the commitment's private value; NULL with it
     payload_state TEXT        NOT NULL DEFAULT 'full'
         CHECK (payload_state IN ('full', 'reduced')),
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    reduced_at    TIMESTAMPTZ,              -- the reduction's moment
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CHECK ((payload IS NULL) = (content_salt IS NULL)),
+    CHECK ((payload IS NULL) = (payload_state = 'reduced')),
+    CHECK ((reduced_at IS NULL) = (payload_state = 'full'))
 );
 ```
 
 Anyone holding a row can verify it against the record's published
-witness. `payload_state` moves toward `'reduced'` only; removal
-(the erasure slice) empties `payload` and `content_salt`
-atomically and the row itself is never deleted. A full-empty
-payload (an act with no bytes) has no carriage row.
+witness. `payload_state` moves toward `'reduced'` only. A reduction
+sets `payload` and `content_salt` to NULL together and stamps
+`reduced_at`; the row itself is never deleted. NULL is never the
+zero-length string: zero bytes is the canonical empty payload
+(`crates/common/src/l1/handshake.rs`), so an emptied row would
+claim the act carried nothing. A full-empty payload (an act with no
+bytes) has no carriage row. A promotion over a reduced row keeps it
+reduced, and a record landing after a redaction reaped its staged
+copy lands reduced: a carriage row in `reduced` holding nothing, and
+no display row built.
+
+### Redacting an act
+
+A redaction of one act (the erasure engines decide which acts;
+`crates/api/src/redaction.rs` does each one) is **one transaction**:
+
+1. **Promote first.** If the act landed but its carriage row is
+   missing, the landed staged row's payload is promoted before
+   anything is reaped, so nothing is erased without an archive unit.
+2. **Archive** the unit (below) — from the carriage while it is full,
+   else from a sealed staged copy of an act that has not landed. A
+   copy never sealed has no witness and is not archived.
+3. **Reduce** the carriage row.
+4. **Reap** the staged row: `payload`, `content_salt` and `nonce` to
+   NULL. The nonce goes with them, because the public pre-commitment
+   is formed over nonce and payload.
+5. **Hold** each asset the envelope names whose last live placement
+   is now gone.
+
+Because all five commit together, no committed state holds an
+archive unit without its reduction or a reduction without its unit.
+Once the transaction commits, the stand-in's own copy — the
+custody of an act that never reached acceptance — is dropped across
+the seam (`L1Boundary::drop_carriage`); a crash between the two
+leaves that residue for the retry, and every step is idempotent. A
+carried act is never redacted: it never reached Layer 1 or a
+reader, and is deleted with its account.
+
+### The retention archive
+
+The store a redacted act's content outlives its carriage in
+([retention-archive.md](../primitive/retention-archive.md)):
+
+```sql
+CREATE TABLE retention_archive (
+    id               UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    original_id      TEXT        NOT NULL,
+    original_type    TEXT        NOT NULL,
+    original_data    JSONB       NOT NULL,   -- schema-on-read
+    redaction_reason TEXT        NOT NULL,
+    redacted_by      TEXT        NOT NULL,
+    redacted_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    legal_hold_until TIMESTAMPTZ,            -- NULL: held until a manual act
+    UNIQUE (original_id, original_type, redacted_by)
+);
+
+-- The media a unit references; the foreign key keeps every asset a
+-- held unit names from being deleted.
+CREATE TABLE retention_archive_media (
+    archive_id UUID NOT NULL REFERENCES retention_archive(id) ON DELETE CASCADE,
+    media_id   UUID NOT NULL REFERENCES media_attachments(id),
+    PRIMARY KEY (archive_id, media_id)
+);
+CREATE INDEX retention_archive_media_media_idx ON retention_archive_media (media_id);
+```
+
+A graph-side redaction writes one row per act, `original_type =
+'act_payload'` and `original_id` the act identifier. Its
+`original_data` is the **unit**, bytes hex-encoded:
+
+```json
+{
+  "unit": 1,
+  "act_id": "act:<author>:<seq>:<family>",
+  "envelope": "<the full payload>",
+  "content_salt": "<hex>",
+  "nonce": "<hex, or null when no copy still held it>",
+  "witness": "<the content commitment>",
+  "media": [
+    { "role": "asset", "rendition_digest": "<R>", "upload_digest": "<U>",
+      "media_id": "<uuid>", "storage_key": "<object key>" },
+    { "role": "cover", "rendition_digest": "<R>", "upload_digest": null,
+      "media_id": "<uuid>", "storage_key": "<object key>" }
+  ]
+}
+```
+
+The unit re-verifies against the public record on its own: salt and
+envelope open the content commitment over the act identifier and
+the record's pre-commitment, the nonce reproduces that
+pre-commitment, and each media entry names the bytes by both
+manifest digests. A unit **references** media; it never copies blob
+bytes. One asset can sit in several placements, so it is held
+(`media_attachments.held_at`) only when its **last** live placement
+is redacted, and until then it keeps serving the others. A live
+placement is the orphan sweep's placement set, where a post,
+comment or profile version stops counting once it is tombstoned or
+its act's carriage is reduced (the SQL function
+`media_live_placed`).
+
+The MVP runs no hard-delete job: `legal_hold_until` is NULL and a
+unit is held until a manual operator act. That act deletes the row
+and its references in one transaction, together with exactly the
+objects no other held unit references and no live placement shows
+(`retention::hard_delete_unit`). The orphan sweep never takes a
+held asset or one a unit references.
 
 ## Staged writes
 
@@ -361,7 +469,10 @@ CREATE TABLE staged_writes (
     license          TEXT,
     asserted_parents TEXT[]           NOT NULL DEFAULT '{}',
     deps             TEXT[]           NOT NULL DEFAULT '{}',
-    payload          BYTEA            NOT NULL,
+    -- NULL only once a redaction reaped it ("Redacting an act"),
+    -- with the content salt and the nonce, at payload_reaped_at.
+    payload          BYTEA,
+    payload_reaped_at TIMESTAMPTZ,
 
     state          TEXT        NOT NULL DEFAULT 'awaiting_pre_sign'
         CHECK (state IN ('carried', 'awaiting_pre_sign', 'sealing',
@@ -400,7 +511,10 @@ CREATE TABLE staged_writes (
     prepared_epoch BIGINT      NOT NULL,
     expired_epoch  BIGINT,
     created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CHECK ((payload IS NULL) = (payload_reaped_at IS NOT NULL)),
+    CHECK (payload IS NOT NULL OR (nonce IS NULL AND content_salt IS NULL)),
+    CHECK (payload IS NOT NULL OR state <> 'carried')
 );
 ```
 
@@ -408,14 +522,19 @@ Lifecycle rules, driven off the ingestion pass:
 
 - **Promotion matches by act identifier.** Every epoch's ingestion
   marks the staged writes whose records landed. The mirror
-  governs: a record landing after its staged write was collected
-  still promotes — though its staged payload is already gone.
+  governs: a record landing after its staged write expired still
+  promotes, and one landing after a redaction reaped its payload
+  lands reduced.
 - **GC is two-phase and epoch-denominated.** A write that has not
   landed within `STAGED_WRITE_GC_EPOCHS` epochs of its
   preparation ([development.md](development.md)) is **expired** —
-  payload dropped, state observable, so a device polling a lost
-  handshake sees the terminal state rather than a vanished id.
-  One further window later the row is deleted. A lost host seal
+  its pending display rows dropped, state observable, so a device
+  polling a lost handshake sees the terminal state rather than a
+  vanished id. One further window later the row is deleted.
+- **A redaction reaps every copy.** A landed row keeps the bytes
+  its carriage was promoted from, so a redaction reaps it too
+  ("Redacting an act"). A reaped row is no longer listed to its
+  author or signable; only its landing still reads it. A lost host seal
   (a relay crash between seal and store) expires the write
   immediately: the salts cannot be re-fetched, so no approval can
   ever be produced — the device re-prepares under a fresh
@@ -590,6 +709,10 @@ CREATE TABLE media_attachments (
     -- the bytes and leaves the mark (primitive/layers.md §5).
     redaction_reason TEXT,
     redacted_at      TIMESTAMPTZ,
+    -- When the asset's last live placement was redacted: from then on
+    -- it belongs to the retention archive ("The retention archive"
+    -- below). NULL while any live placement still shows it.
+    held_at          TIMESTAMPTZ,
     created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     CHECK ((state = 'failed') = (failure_reason IS NOT NULL)),
     CHECK ((state = 'merged') = (merged_into IS NOT NULL)),

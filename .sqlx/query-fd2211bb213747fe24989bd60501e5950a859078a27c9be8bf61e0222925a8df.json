@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO retention_archive_media (archive_id, media_id)\n             SELECT $1, m FROM UNNEST($2::UUID[]) AS m\n             ON CONFLICT DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fd2211bb213747fe24989bd60501e5950a859078a27c9be8bf61e0222925a8df"
+}

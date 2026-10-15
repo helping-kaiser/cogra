@@ -655,20 +655,87 @@ pub async fn put_genesis_act_payload(
     Ok(())
 }
 
-/// One act's carriage as stored: the payload bytes, the private value
-/// behind its content commitment, and whether the controller has reduced
-/// it (layers.md §5).
+/// Records the carriage of an act whose payload was reduced before its
+/// record landed: the row exists, in `reduced`, holding nothing.
+///
+/// A redaction reaps the staged copy of an act that has not landed yet;
+/// when its record lands after that, the landing has no bytes to promote
+/// and must not invent any — zero bytes is the canonical empty payload,
+/// so an empty row would claim the act carried nothing. Idempotent on the
+/// act id, like the full promotion: a row already there is kept.
+pub async fn insert_reduced_act_payload(
+    tx: &mut Transaction<'_, Postgres>,
+    act_id: &str,
+) -> Result<(), ContentError> {
+    sqlx::query!(
+        "INSERT INTO act_payloads (act_id, payload, content_salt, payload_state, reduced_at)
+         VALUES ($1, NULL, NULL, 'reduced', NOW())
+         ON CONFLICT (act_id) DO NOTHING",
+        act_id,
+    )
+    .execute(&mut **tx)
+    .await?;
+    Ok(())
+}
+
+/// Locks one act's carriage row for a redaction and reads it.
+pub async fn lock_act_payload(
+    conn: &mut sqlx::PgConnection,
+    act_id: &str,
+) -> Result<Option<ActPayload>, ContentError> {
+    Ok(sqlx::query!(
+        "SELECT payload, content_salt, payload_state, reduced_at
+         FROM act_payloads WHERE act_id = $1
+         FOR UPDATE",
+        act_id,
+    )
+    .fetch_optional(conn)
+    .await?
+    .map(|row| ActPayload {
+        payload: row.payload,
+        content_salt: row.content_salt,
+        reduced: row.payload_state == "reduced",
+        reduced_at: row.reduced_at,
+    }))
+}
+
+/// Reduces one act's carriage: payload and content salt go to NULL
+/// together, the state moves to `reduced` and the moment is kept
+/// (layers.md §5). The row is never deleted. Returns whether this call
+/// reduced it — a row already reduced is left exactly as it is.
+pub async fn reduce_act_payload(
+    conn: &mut sqlx::PgConnection,
+    act_id: &str,
+) -> Result<bool, ContentError> {
+    Ok(sqlx::query!(
+        "UPDATE act_payloads
+         SET payload = NULL, content_salt = NULL,
+             payload_state = 'reduced', reduced_at = NOW()
+         WHERE act_id = $1 AND payload_state = 'full'",
+        act_id,
+    )
+    .execute(conn)
+    .await?
+    .rows_affected()
+        == 1)
+}
+
+/// One act's carriage as stored: the payload bytes and the private value
+/// behind its content commitment — both absent once the controller has
+/// reduced it (layers.md §5), never emptied.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ActPayload {
-    pub payload: Vec<u8>,
-    pub content_salt: Vec<u8>,
+    pub payload: Option<Vec<u8>>,
+    pub content_salt: Option<Vec<u8>>,
     pub reduced: bool,
+    pub reduced_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 /// The carriage of one act, if any row holds it.
 pub async fn act_payload(pool: &PgPool, act_id: &str) -> Result<Option<ActPayload>, ContentError> {
     Ok(sqlx::query!(
-        "SELECT payload, content_salt, payload_state FROM act_payloads WHERE act_id = $1",
+        "SELECT payload, content_salt, payload_state, reduced_at
+         FROM act_payloads WHERE act_id = $1",
         act_id,
     )
     .fetch_optional(pool)
@@ -677,6 +744,7 @@ pub async fn act_payload(pool: &PgPool, act_id: &str) -> Result<Option<ActPayloa
         payload: row.payload,
         content_salt: row.content_salt,
         reduced: row.payload_state == "reduced",
+        reduced_at: row.reduced_at,
     }))
 }
 

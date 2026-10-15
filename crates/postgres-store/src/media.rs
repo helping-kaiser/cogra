@@ -1323,12 +1323,16 @@ pub async fn expired_upload_sessions(
 ///   carried it. That is the correct answer rather than an accident: the
 ///   old bytes' digests stay committed on the superseded record (post.md
 ///   §4), so the bytes have to stay too.
+/// - A **held** asset, or one any retention-archive unit references,
+///   belongs to the archive: only a manual hard delete removes it
+///   (`retention::hard_delete_unit`), never the sweep.
 ///
 /// Each `NOT EXISTS` is an index probe of the referencing column — the
 /// four junctions' reverse index on `attachment_id`, the two version
 /// tables' partial index on the picture column, the post and comment
 /// junctions' partial index on `cover_media_id`, the session table's
-/// `media_id`, and the asset table's partial index on `merged_into`.
+/// `media_id`, the asset table's partial index on `merged_into`, and the
+/// archive references' index on `media_id`.
 /// Postgres creates
 /// no index behind a foreign key, so without them each probe is a
 /// sequential scan and so is the delete's own integrity re-check. A new
@@ -1376,6 +1380,9 @@ pub async fn sweep_orphans(
                     SELECT 1 FROM media_upload_sessions s WHERE s.media_id = m.id)
               AND NOT EXISTS (
                     SELECT 1 FROM media_attachments merged WHERE merged.merged_into = m.id)
+              AND m.held_at IS NULL
+              AND NOT EXISTS (
+                    SELECT 1 FROM retention_archive_media r WHERE r.media_id = m.id)
             ORDER BY m.created_at
             LIMIT $2
         )

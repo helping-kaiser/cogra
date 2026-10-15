@@ -21,6 +21,7 @@ pub mod rate_limit;
 pub mod references;
 pub mod registry;
 pub mod report;
+pub mod retention;
 pub mod search;
 pub mod settling;
 pub mod slice;

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, actor_id, author, seq, family, middle,\n                target, p_d, p_i, settlement_ref, license, asserted_parents,\n                deps, payload, state, author_pubkey, nonce, pre_signature,\n                content_salt, deps_salt, content_commitment, deps_commitment,\n                host_seal, prepared_epoch, node_id, pre_signed_at, carried\n         FROM staged_writes WHERE id = $1",
+  "query": "SELECT id, actor_id, author, seq, family, middle,\n                target, p_d, p_i, settlement_ref, license, asserted_parents,\n                deps, payload, state, author_pubkey, nonce, pre_signature,\n                content_salt, deps_salt, content_commitment, deps_commitment,\n                host_seal, prepared_epoch, node_id, pre_signed_at, carried,\n                payload_reaped_at\n         FROM staged_writes WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -137,6 +137,11 @@
         "ordinal": 26,
         "name": "carried",
         "type_info": "Bool"
+      },
+      {
+        "ordinal": 27,
+        "name": "payload_reaped_at",
+        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
@@ -158,21 +163,22 @@
       true,
       false,
       false,
-      false,
-      false,
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
       true,
       false,
       true,
       true,
-      false
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      false,
+      true
     ]
   },
-  "hash": "cfa788ee13bba2b5a0efbaa5cbd815816da876496cb103fb93e3494dc9f5f571"
+  "hash": "0be12e0346823a25098508ee91b9da3c1e457f8f2094e0d812b6f96d88a20079"
 }

@@ -132,6 +132,18 @@ pub trait L1Boundary: Send + Sync {
         &self,
         ticket: &BurnTicket,
     ) -> impl Future<Output = Result<BurnSettlement, BoundaryError>> + Send;
+
+    /// A redaction's reach into the substrate: drop whatever payload,
+    /// content salt and proposal nonce the substrate still holds for the
+    /// listed acts, returning how many it emptied. The host is
+    /// witness-only from acceptance (data-model.md "Act payload
+    /// carriage"), so only acts that never reached acceptance can still
+    /// hold any; for every other act this is a no-op, and a repeat is too.
+    /// It leaves at the swap: the real Layer 1 never holds carriage.
+    fn drop_carriage(
+        &self,
+        act_ids: &[String],
+    ) -> impl Future<Output = Result<u64, BoundaryError>> + Send;
 }
 
 /// The stand-in behind the seam.
@@ -181,5 +193,9 @@ impl L1Boundary for StandInBoundary {
 
     async fn burn_settlement(&self, ticket: &BurnTicket) -> Result<BurnSettlement, BoundaryError> {
         Ok(self.0.burn_settlement(ticket).await?)
+    }
+
+    async fn drop_carriage(&self, act_ids: &[String]) -> Result<u64, BoundaryError> {
+        Ok(self.0.drop_carriage(act_ids).await?)
     }
 }

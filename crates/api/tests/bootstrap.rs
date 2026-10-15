@@ -508,15 +508,11 @@ async fn every_genesis_act_lands_witness_only_with_its_carriage_beside_it(pool: 
         }
         carried += 1;
         let carriage = carriage.unwrap_or_else(|| panic!("{id} has no carriage"));
-        assert_eq!(carriage.payload.len() as u64, stored.payload_len);
+        let payload = carriage.payload.expect("full carriage holds its payload");
+        let salt = carriage.content_salt.expect("full carriage holds its salt");
+        assert_eq!(payload.len() as u64, stored.payload_len);
         assert_eq!(
-            content_commitment(
-                &act_id,
-                &stored.pre_commitment,
-                &carriage.content_salt,
-                &carriage.payload
-            )
-            .to_vec(),
+            content_commitment(&act_id, &stored.pre_commitment, &salt, &payload).to_vec(),
             stored.content_commitment,
             "the carriage of {id} opens its witness"
         );
