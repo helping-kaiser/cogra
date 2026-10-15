@@ -179,30 +179,30 @@ async fn landed_post(rig: &WireRig, author: &Member, content: &str) -> String {
         .to_string()
 }
 
-/// The shipped post window is ten an hour — jakob's own example figure —
-/// so ten posts prepare and the eleventh is refused.
+/// The shipped table is the budget a deployment gets when no
+/// `RATE_LIMIT_SIGN_*` knob is set; the whole of it is pinned here so a
+/// recalibration is a conscious edit of this test.
 ///
-/// A member's eleventh post inside an hour is refused as a write-rule failure, the shipped post budget being ten.
-/// ´claim:ratelimit:the-shipped-post-budget-is-ten-an-hour´
-#[sqlx::test(migrations = "../../migrations")]
-async fn the_eleventh_post_in_an_hour_is_write_rule_failed(pool: PgPool) {
-    let rig = WireRig::new(pool, budget(|b| b.post = SigningBudget::default().post));
-    let author = member(&rig, "prolific").await;
-
-    for n in 0..10 {
-        let data = rig
-            .gql(
-                Some(&author.token),
-                PREPARE_POST,
-                post(&format!("post {n}")),
-            )
-            .await;
-        accepted(&data, "preparePost");
+/// The shipped signing budget is the pinned table of per-class windows and the daily backstop.
+/// ´claim:ratelimit:the-shipped-table-is-pinned´
+#[test]
+fn the_shipped_signing_budget_table_is_pinned() {
+    const DAY: f64 = 86_400.0;
+    let shipped = SigningBudget::default();
+    let table = [
+        ("post", shipped.post, 200, HOUR),
+        ("comment", shipped.comment, 300, HOUR),
+        ("edit", shipped.edit, 200, HOUR),
+        ("stance", shipped.stance, 1000, HOUR),
+        ("claim", shipped.claim, 1000, HOUR),
+        ("approval", shipped.approval, 200, DAY),
+        ("any", shipped.any, 10_000, DAY),
+        ("admission_funding", shipped.admission_funding, 20, DAY),
+    ];
+    for (name, window, limit, window_secs) in table {
+        assert_eq!(window.limit, limit, "{name} limit");
+        assert_eq!(window.window_secs, window_secs, "{name} window_secs");
     }
-    let data = rig
-        .gql(Some(&author.token), PREPARE_POST, post("one too many"))
-        .await;
-    assert_budget_refusal(&data, "preparePost");
 }
 
 /// The budget tiers as a write-rule refusal: no transport fault, the one
