@@ -126,7 +126,11 @@ fn envelope(body: &str, extensions: BTreeMap<u64, Value>) -> Envelope {
 /// specification's bytes, exported with what the reference decodes.
 fn value(name: &str, body: &str, ext: Vec<(u64, Value)>, spec_hex: &str) -> Json {
     let bytes = envelope(body, ext.into_iter().collect()).encode();
-    assert_eq!(hex(&bytes), hex(&unhex(spec_hex)), "{name} is the spec's bytes");
+    assert_eq!(
+        hex(&bytes),
+        hex(&unhex(spec_hex)),
+        "{name} is the spec's bytes"
+    );
     let decoded = Envelope::decode(&bytes).expect("a value vector decodes");
     json!({ "name": name, "hex": hex(&bytes), "envelope": envelope_json(&decoded) })
 }
@@ -289,7 +293,13 @@ fn content_cases() -> Json {
     Json::Array(vec![
         content_case(
             "a words post",
-            content(Some("A title"), None, Some("The body, in words."), vec![], None),
+            content(
+                Some("A title"),
+                None,
+                Some("The body, in words."),
+                vec![],
+                None,
+            ),
             true,
         ),
         content_case(
@@ -298,7 +308,11 @@ fn content_cases() -> Json {
                 Some("Look"),
                 Some("Words beside it"),
                 Some(""),
-                vec![still(0x11, Some("First")), still(0x12, None), still(0x13, Some("Third"))],
+                vec![
+                    still(0x11, Some("First")),
+                    still(0x12, None),
+                    still(0x13, Some("Third")),
+                ],
                 None,
             ),
             true,
@@ -323,12 +337,24 @@ fn content_cases() -> Json {
         ),
         content_case(
             "a self-marked comment without a reason",
-            content(None, None, Some("a reply"), vec![], Some(SensitiveMark { reason: None })),
+            content(
+                None,
+                None,
+                Some("a reply"),
+                vec![],
+                Some(SensitiveMark { reason: None }),
+            ),
             true,
         ),
         content_case(
             "a comment: body only",
-            content(None, None, Some("a reply with \u{00A0}spaces\u{2028}kept"), vec![], None),
+            content(
+                None,
+                None,
+                Some("a reply with \u{00A0}spaces\u{2028}kept"),
+                vec![],
+                None,
+            ),
             true,
         ),
         content_case(
@@ -360,16 +386,18 @@ fn profile_cases() -> Json {
     Json::Array(vec![
         profile_case(
             "every text field, the avatar untouched",
-            profile(Some("Ada"), Some("Curious."), Some("https://ada.example"), None),
+            profile(
+                Some("Ada"),
+                Some("Curious."),
+                Some("https://ada.example"),
+                None,
+            ),
         ),
         profile_case(
             "the avatar set, both digests",
             profile(None, None, None, Some(Some(still(0x51, None)))),
         ),
-        profile_case(
-            "the avatar cleared",
-            profile(None, None, None, Some(None)),
-        ),
+        profile_case("the avatar cleared", profile(None, None, None, Some(None))),
         profile_case(
             "bio and website cleared by present-and-empty",
             profile(None, Some(""), Some(""), None),
@@ -428,7 +456,11 @@ fn refusals() -> Json {
     Json::Array(vec![
         refused("missing magic", Pce, no_magic),
         refused("scalar version", Pce, unhex("D9D9F7 A2 00 01 01 60")),
-        refused("three-axis version", Pce, unhex("D9D9F7 A2 00 83 010101 01 60")),
+        refused(
+            "three-axis version",
+            Pce,
+            unhex("D9D9F7 A2 00 83 010101 01 60"),
+        ),
         refused(
             "top-level key 7",
             Pce,
@@ -472,58 +504,44 @@ fn refusals() -> Json {
         refused(
             "unsorted extension keys",
             Pce,
-            unhex("D9D9F7 A3 00 84 01010101 01 60 02 A2 02 62 6465 00 6E 68747470733A2F2F652E636F6D2F"),
+            unhex(
+                "D9D9F7 A3 00 84 01010101 01 60 02 A2 02 62 6465 00 6E 68747470733A2F2F652E636F6D2F",
+            ),
         ),
         refused("a trailing byte", Pce, trailing),
-        refused(
-            "a non-empty package body beside the guild map",
-            Content,
-            {
-                let mut inner = BTreeMap::new();
-                inner.insert(0, Value::Uint(1));
-                inner.insert(1, Value::Bytes(NODE.to_vec()));
-                let mut ext = BTreeMap::new();
-                ext.insert(COGRA_GUILD_KEY, Value::Map(inner));
-                envelope("hi", ext).encode()
-            },
-        ),
-        refused(
-            "a second guild key",
-            Content,
-            {
-                let mut inner = BTreeMap::new();
-                inner.insert(0, Value::Uint(1));
-                inner.insert(1, Value::Bytes(NODE.to_vec()));
-                let mut ext = BTreeMap::new();
-                ext.insert(100, Value::Text("other".into()));
-                ext.insert(COGRA_GUILD_KEY, Value::Map(inner));
-                envelope("", ext).encode()
-            },
-        ),
-        refused(
-            "guild schema version 2",
-            Content,
-            {
-                let mut inner = BTreeMap::new();
-                inner.insert(0, Value::Uint(2));
-                inner.insert(1, Value::Bytes(NODE.to_vec()));
-                let mut ext = BTreeMap::new();
-                ext.insert(COGRA_GUILD_KEY, Value::Map(inner));
-                envelope("", ext).encode()
-            },
-        ),
-        refused(
-            "a short node id",
-            Content,
-            {
-                let mut inner = BTreeMap::new();
-                inner.insert(0, Value::Uint(1));
-                inner.insert(1, Value::Bytes(vec![7; 4]));
-                let mut ext = BTreeMap::new();
-                ext.insert(COGRA_GUILD_KEY, Value::Map(inner));
-                envelope("", ext).encode()
-            },
-        ),
+        refused("a non-empty package body beside the guild map", Content, {
+            let mut inner = BTreeMap::new();
+            inner.insert(0, Value::Uint(1));
+            inner.insert(1, Value::Bytes(NODE.to_vec()));
+            let mut ext = BTreeMap::new();
+            ext.insert(COGRA_GUILD_KEY, Value::Map(inner));
+            envelope("hi", ext).encode()
+        }),
+        refused("a second guild key", Content, {
+            let mut inner = BTreeMap::new();
+            inner.insert(0, Value::Uint(1));
+            inner.insert(1, Value::Bytes(NODE.to_vec()));
+            let mut ext = BTreeMap::new();
+            ext.insert(100, Value::Text("other".into()));
+            ext.insert(COGRA_GUILD_KEY, Value::Map(inner));
+            envelope("", ext).encode()
+        }),
+        refused("guild schema version 2", Content, {
+            let mut inner = BTreeMap::new();
+            inner.insert(0, Value::Uint(2));
+            inner.insert(1, Value::Bytes(NODE.to_vec()));
+            let mut ext = BTreeMap::new();
+            ext.insert(COGRA_GUILD_KEY, Value::Map(inner));
+            envelope("", ext).encode()
+        }),
+        refused("a short node id", Content, {
+            let mut inner = BTreeMap::new();
+            inner.insert(0, Value::Uint(1));
+            inner.insert(1, Value::Bytes(vec![7; 4]));
+            let mut ext = BTreeMap::new();
+            ext.insert(COGRA_GUILD_KEY, Value::Map(inner));
+            envelope("", ext).encode()
+        }),
         refused(
             "the unbuilt provenance key",
             Content,
@@ -599,7 +617,10 @@ fn refusals() -> Json {
         refused(
             "two avatars",
             Profile,
-            guild(vec![(11, Value::Array(vec![ok_entry(vec![]), ok_entry(vec![])]))]),
+            guild(vec![(
+                11,
+                Value::Array(vec![ok_entry(vec![]), ok_entry(vec![])]),
+            )]),
         ),
         refused(
             "an avatar that is a bare map",
