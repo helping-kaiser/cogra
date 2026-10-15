@@ -172,12 +172,9 @@ pub async fn hold_unplaced(
 
 /// Whether a live placement still shows the asset (`media_live_placed`).
 pub async fn is_live_placed(conn: &mut PgConnection, media_id: Uuid) -> Result<bool, sqlx::Error> {
-    sqlx::query_scalar!(
-        r#"SELECT media_live_placed($1) AS "placed!""#,
-        media_id
-    )
-    .fetch_one(conn)
-    .await
+    sqlx::query_scalar!(r#"SELECT media_live_placed($1) AS "placed!""#, media_id)
+        .fetch_one(conn)
+        .await
 }
 
 /// An object a hard delete leaves with no reference: its asset row and

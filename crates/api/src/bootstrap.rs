@@ -533,7 +533,10 @@ async fn resume_act(
     let carriage = content_store::act_payload(pool, &act_id.to_string())
         .await
         .map_err(carriage_error)?;
-    match carriage.as_ref().and_then(|c| c.payload.as_ref().zip(c.content_salt.as_ref())) {
+    match carriage
+        .as_ref()
+        .and_then(|c| c.payload.as_ref().zip(c.content_salt.as_ref()))
+    {
         Some((payload, salt)) => {
             let opens = content_commitment(&act_id, &stored.pre_commitment, salt, payload);
             if opens.as_slice() != stored.content_commitment.as_slice() {

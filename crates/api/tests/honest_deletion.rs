@@ -307,7 +307,9 @@ async fn after_redaction_no_copy_of_a_reduced_payload_remains_anywhere(pool: PgP
 async fn an_archived_unit_reproduces_its_records_witness(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let (actor, key) = rig.funded_actor("ada").await;
-    let (_, act_id) = rig.landed_post(actor, &key, "Kept for the record.", &[]).await;
+    let (_, act_id) = rig
+        .landed_post(actor, &key, "Kept for the record.", &[])
+        .await;
     rig.redact(actor, &act_id).await;
 
     let units = rig.units(&act_id).await;
@@ -351,7 +353,11 @@ async fn an_archived_unit_reproduces_its_records_witness(pool: PgPool) {
         "the archived nonce reproduces the pre-commitment"
     );
     let opened = content_commitment(&id, &stored.pre_commitment, &salt, &envelope);
-    assert_eq!(opened.to_vec(), record.payload_witness, "salt + envelope open the witness");
+    assert_eq!(
+        opened.to_vec(),
+        record.payload_witness,
+        "salt + envelope open the witness"
+    );
     assert_eq!(unhex(&data["witness"]), record.payload_witness);
 }
 
@@ -377,7 +383,9 @@ async fn an_archived_unit_verifies_its_media_against_both_digests(pool: PgPool) 
         ids
     });
     let envelope = unhex(&unit.original_data["envelope"]);
-    let manifest = CograContent::decode_payload(&envelope).expect("envelope").media;
+    let manifest = CograContent::decode_payload(&envelope)
+        .expect("envelope")
+        .media;
     let listed = unit.original_data["media"].as_array().expect("a list");
     assert_eq!(listed.len(), 2);
     let rows = media_store::assets_by_ids(&rig.pool, &[a, b])
@@ -393,8 +401,16 @@ async fn an_archived_unit_verifies_its_media_against_both_digests(pool: PgPool) 
             .iter()
             .find(|r| r.id.to_string() == entry["media_id"].as_str().expect("id"))
             .expect("the named asset");
-        assert_eq!(row.digest, unhex(&entry["rendition_digest"]), "R is the bytes served");
-        assert_eq!(row.upload_digest, unhex(&entry["upload_digest"]), "U is the upload echo");
+        assert_eq!(
+            row.digest,
+            unhex(&entry["rendition_digest"]),
+            "R is the bytes served"
+        );
+        assert_eq!(
+            row.upload_digest,
+            unhex(&entry["upload_digest"]),
+            "U is the upload echo"
+        );
         assert_eq!(entry["storage_key"], row.storage_key.as_str());
     }
 }
@@ -434,7 +450,10 @@ async fn the_archive_unit_and_the_reduction_commit_together_or_not_at_all(pool: 
         matches!(refused, Err(RedactionError::Storage(ref m)) if m.contains("injected")),
         "{refused:?}"
     );
-    assert!(rig.units(&act_id).await.is_empty(), "no unit without the reduction");
+    assert!(
+        rig.units(&act_id).await.is_empty(),
+        "no unit without the reduction"
+    );
     assert_eq!(
         rig.copies(&act_id).await.carriage,
         Some((true, true, "full".into())),
@@ -509,7 +528,10 @@ async fn a_write_promoting_after_its_payload_was_reaped_lands_reduced_rather_tha
     assert_eq!(rig.copies(&act_id).await.l1, Some((true, true, true)));
 
     let done = rig.redact(actor, &act_id).await;
-    assert!(done.archived.is_some(), "a sealed copy has a witness to archive against");
+    assert!(
+        done.archived.is_some(),
+        "a sealed copy has a witness to archive against"
+    );
     assert!(!done.reduced, "no carriage before the landing");
     assert!(done.staged_reaped);
     let (status, dropped): (String, bool) = sqlx::query_as(
@@ -615,7 +637,10 @@ async fn a_handle_left_only_on_its_staged_row_is_promoted_before_the_reap(pool: 
     let done = rig.redact(actor, &act_id).await;
     assert!(done.promoted_first && done.reduced && done.staged_reaped);
     let unit = rig.units(&act_id).await.remove(0);
-    assert_eq!(unhex(&unit.original_data["envelope"]), handle_payload("ada"));
+    assert_eq!(
+        unhex(&unit.original_data["envelope"]),
+        handle_payload("ada")
+    );
     assert_eq!(
         rig.copies(&act_id).await,
         Copies {
@@ -642,7 +667,11 @@ async fn a_shared_asset_stays_live_until_its_last_placement_is_redacted(pool: Pg
     let (_, second) = rig.landed_post(actor, &key, "Second.", &[shared]).await;
 
     let done = rig.redact(actor, &first).await;
-    assert_eq!(done.held_media, vec![own], "only the asset nothing else shows");
+    assert_eq!(
+        done.held_media,
+        vec![own],
+        "only the asset nothing else shows"
+    );
     assert!(!rig.held(shared).await, "the second post still shows it");
     assert!(rig.units(&first).await[0].media.contains(&shared));
 
@@ -679,7 +708,10 @@ async fn a_manual_hard_delete_removes_only_media_no_other_held_unit_references(p
     tx.commit().await.expect("commits");
     assert_eq!(gone.original_id, first);
     assert_eq!(
-        gone.last_references.iter().map(|r| r.media_id).collect::<Vec<_>>(),
+        gone.last_references
+            .iter()
+            .map(|r| r.media_id)
+            .collect::<Vec<_>>(),
         vec![own],
         "the shared asset is still held under the second unit"
     );
@@ -692,7 +724,10 @@ async fn a_manual_hard_delete_removes_only_media_no_other_held_unit_references(p
         .expect("a unit");
     tx.commit().await.expect("commits");
     assert_eq!(
-        gone.last_references.iter().map(|r| r.media_id).collect::<Vec<_>>(),
+        gone.last_references
+            .iter()
+            .map(|r| r.media_id)
+            .collect::<Vec<_>>(),
         vec![shared]
     );
 }
@@ -757,7 +792,9 @@ async fn a_carried_act_is_refused_rather_than_redacted(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let (actor, _) = rig.funded_actor("ada").await;
     let (staged_id, act_id) = rig.prepare_post(actor, "Carried.", &[]).await;
-    staged::carry(&rig.pool, &[staged_id]).await.expect("carries");
+    staged::carry(&rig.pool, &[staged_id])
+        .await
+        .expect("carries");
 
     let redacted_by = actor.to_string();
     let refused = redaction::redact_act(
@@ -770,7 +807,10 @@ async fn a_carried_act_is_refused_rather_than_redacted(pool: PgPool) {
         },
     )
     .await;
-    assert!(matches!(refused, Err(RedactionError::Carried(_))), "{refused:?}");
+    assert!(
+        matches!(refused, Err(RedactionError::Carried(_))),
+        "{refused:?}"
+    );
     assert_eq!(rig.copies(&act_id).await.staged.map(|s| s.0), Some(true));
 }
 

@@ -1461,7 +1461,7 @@ async fn land_one(
     family: ContentFamily,
 ) -> Result<(), ContentError> {
     let staged_row = match staged::load_promotable(pool, write.id).await? {
-        staged::Promotable::Full(row) => row,
+        staged::Promotable::Full(row) => *row,
         staged::Promotable::Reaped(reaped) => {
             return land_reduced(pool, write, family, &reaped).await;
         }
@@ -1625,8 +1625,7 @@ async fn land_reduced(
             }
             (ContentFamily::Comment, true, Some(node), _) => {
                 if content_store::land_comment(&mut tx, node, order).await? {
-                    content_store::land_comment_version(&mut tx, node, created_at, order)
-                        .await?;
+                    content_store::land_comment_version(&mut tx, node, created_at, order).await?;
                 }
             }
             (ContentFamily::Post, false, _, Some(post)) => {

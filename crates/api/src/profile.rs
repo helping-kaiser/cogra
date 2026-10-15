@@ -291,7 +291,7 @@ pub async fn land_promoted(
 /// version row, since there is no update left to apply.
 async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), ProfileError> {
     let staged_row = match staged::load_promotable(pool, write.id).await? {
-        staged::Promotable::Full(row) => row,
+        staged::Promotable::Full(row) => *row,
         staged::Promotable::Reaped(_) => {
             let mut tx = pool
                 .begin()

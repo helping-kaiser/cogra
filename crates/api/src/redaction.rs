@@ -262,37 +262,48 @@ async fn unit_media(
     } else {
         Vec::new()
     };
-    let mut wanted: Vec<(&'static str, Vec<u8>, Option<Vec<u8>>)> = Vec::new();
+    let mut wanted: Vec<Named> = Vec::new();
     for asset in &named {
-        wanted.push((
-            "asset",
-            asset.digest.to_vec(),
-            asset.upload_digest.map(|u| u.to_vec()),
-        ));
+        wanted.push(Named {
+            role: "asset",
+            rendition: asset.digest.to_vec(),
+            upload: asset.upload_digest.map(|u| u.to_vec()),
+        });
         if let Some(cover) = asset.cover {
-            wanted.push(("cover", cover.to_vec(), None));
+            wanted.push(Named {
+                role: "cover",
+                rendition: cover.to_vec(),
+                upload: None,
+            });
         }
     }
     if wanted.is_empty() {
         return Ok(Vec::new());
     }
-    let digests: Vec<Vec<u8>> = wanted.iter().map(|(_, r, _)| r.clone()).collect();
+    let digests: Vec<Vec<u8>> = wanted.iter().map(|n| n.rendition.clone()).collect();
     let rows = media_store::assets_by_digests(pool, author, &digests).await?;
     let mut media: Vec<UnitMedia> = Vec::new();
-    for (role, r, u) in wanted {
-        let Some(row) = rows.iter().find(|row| row.digest == r) else {
+    for n in wanted {
+        let Some(row) = rows.iter().find(|row| row.digest == n.rendition) else {
             continue;
         };
         if media.iter().any(|m| m.media_id == row.id) {
             continue;
         }
         media.push(UnitMedia {
-            role,
-            rendition_digest: r,
-            upload_digest: u,
+            role: n.role,
+            rendition_digest: n.rendition,
+            upload_digest: n.upload,
             media_id: row.id,
             storage_key: row.storage_key.clone(),
         });
     }
     Ok(media)
+}
+
+/// One digest an envelope names, before it is resolved to an asset.
+struct Named {
+    role: &'static str,
+    rendition: Vec<u8>,
+    upload: Option<Vec<u8>>,
 }

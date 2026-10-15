@@ -262,7 +262,7 @@ pub async fn insert(
 /// proposal left to reconstruct.
 pub async fn load(pool: &PgPool, id: Uuid) -> Result<StagedWrite, StagedError> {
     match load_promotable(pool, id).await? {
-        Promotable::Full(write) => Ok(write),
+        Promotable::Full(write) => Ok(*write),
         Promotable::Reaped(_) => Err(StagedError::Reaped(id)),
     }
 }
@@ -271,8 +271,8 @@ pub async fn load(pool: &PgPool, id: Uuid) -> Result<StagedWrite, StagedError> {
 /// redaction before its record landed.
 #[derive(Debug, Clone)]
 pub enum Promotable {
-    Full(StagedWrite),
-    Reaped(ReapedWrite),
+    Full(Box<StagedWrite>),
+    Reaped(Box<ReapedWrite>),
 }
 
 /// What a reaped write keeps: the structure of the act and the display
@@ -340,13 +340,13 @@ pub async fn load_promotable(pool: &PgPool, id: Uuid) -> Result<Promotable, Stag
     let payload = match (row.payload, row.payload_reaped_at) {
         (Some(payload), None) => payload,
         (None, Some(_)) => {
-            return Ok(Promotable::Reaped(ReapedWrite {
+            return Ok(Promotable::Reaped(Box::new(ReapedWrite {
                 id: row.id,
                 actor_id: row.actor_id,
                 body,
                 node_id: row.node_id,
                 pre_signed_at: row.pre_signed_at,
-            }));
+            })));
         }
         _ => return Err(corrupt("payload")),
     };
@@ -387,7 +387,7 @@ pub async fn load_promotable(pool: &PgPool, id: Uuid) -> Result<Promotable, Stag
         (None, None, None, None, None) => None,
         _ => return Err(corrupt("seal leg")),
     };
-    Ok(Promotable::Full(StagedWrite {
+    Ok(Promotable::Full(Box::new(StagedWrite {
         id: row.id,
         actor_id: row.actor_id,
         state: StagedState::parse(&row.state).ok_or_else(|| corrupt("state"))?,
@@ -398,7 +398,7 @@ pub async fn load_promotable(pool: &PgPool, id: Uuid) -> Result<Promotable, Stag
         pre_signed_at: row.pre_signed_at,
         pre_signed,
         sealed,
-    }))
+    })))
 }
 
 /// Whether the actor has a live staged write of the family toward the
