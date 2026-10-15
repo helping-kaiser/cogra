@@ -403,6 +403,30 @@ impl StandIn {
         seal::sealed_act(self, act_id).await
     }
 
+    /// Drops the transient custody — payload, content salt and proposal
+    /// nonce — of every listed act that still holds it, returning how many
+    /// acts this call emptied.
+    ///
+    /// Acceptance already empties an act (the host is witness-only from
+    /// then on), so what a redaction finds here is the residue that never
+    /// reached acceptance: a sealed act, or an approved one deferred for a
+    /// missing dependency or an insolvent author. The drop is recorded on
+    /// the row, and the act stays exactly as orderable as it was — nothing
+    /// after the seal reads those three values. Idempotent: an accepted or
+    /// already-dropped act is not touched.
+    pub async fn drop_carriage(&self, act_ids: &[String]) -> Result<u64, StandInError> {
+        Ok(sqlx::query!(
+            "UPDATE l1_acts
+             SET payload = NULL, content_salt = NULL, nonce = NULL,
+                 carriage_dropped_at = NOW()
+             WHERE act_id = ANY($1) AND payload IS NOT NULL",
+            act_ids,
+        )
+        .execute(&self.pool)
+        .await?
+        .rows_affected())
+    }
+
     /// Relay leg 2 — approve: verify the approval witness; the act becomes
     /// orderable.
     ///

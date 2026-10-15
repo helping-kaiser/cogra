@@ -161,6 +161,10 @@ impl<B: L1Boundary> L1Boundary for Carrying<'_, B> {
     ) -> Result<common::l1::handshake::BurnSettlement, BoundaryError> {
         self.0.burn_settlement(ticket).await
     }
+
+    async fn drop_carriage(&self, act_ids: &[String]) -> Result<u64, BoundaryError> {
+        self.0.drop_carriage(act_ids).await
+    }
 }
 
 /// A prepared staged write: the handle for the whole handshake plus the
