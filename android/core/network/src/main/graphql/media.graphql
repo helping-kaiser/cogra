@@ -68,6 +68,11 @@ mutation UploadMedia($input: UploadMediaInput!) {
       # anything else (schema.graphql `MediaAttachment.state`).
       state
       failureReason
+      # The intent check's two digests: the server's echo of the digest
+      # this device computed over the bytes it sent, and the rendition
+      # digest a manifest entry is held to (signing/Intent.kt).
+      digest
+      uploadDigest
     }
     userErrors {
       ...UserErrorFields
@@ -106,6 +111,8 @@ mutation CompleteMediaUpload($uploadId: UUID!) {
       # See `UploadMedia`'s own comment: not on the shared fragment.
       state
       failureReason
+      digest
+      uploadDigest
     }
     userErrors {
       ...UserErrorFields
@@ -115,14 +122,20 @@ mutation CompleteMediaUpload($uploadId: UUID!) {
 
 # Polls one of the viewer's own uploads the way `stagedWrite` is polled
 # (writes.graphql `StagedWrite`) — whether a PROCESSING asset has settled.
-# Selects nothing beyond the gate's own question: the wizard never shows
-# the server's rendition before the seal, so `url`/`options` would only
-# spend budget nothing here reads.
+# Selects nothing beyond the gate's own question and the intent check's:
+# the wizard never shows the server's rendition before the seal, so
+# `url`/`options` would only spend budget nothing here reads. The digests
+# and type are what a manifest entry is held to — the READY rendition, the
+# upload digest of the id asked by — and the same read is how an edit
+# learns them for the assets it carries over, which no gallery read selects.
 query MediaAttachment($id: UUID!) {
   mediaAttachment(id: $id) {
     id
     state
     failureReason
+    digest
+    uploadDigest
+    mimeType
   }
 }
 

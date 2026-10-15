@@ -14,6 +14,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -44,6 +46,50 @@ private fun nodeOf(json: JsonElement): NodeExpectation? {
     }
 }
 
+private fun assetOf(json: JsonElement): AssetExpectation = AssetExpectation.Asset(
+    digest = json.str("digest"),
+    mime = json.str("mime"),
+    altText = json.strOrNull("altText"),
+    cover = json.strOrNull("cover"),
+    coverTaken = json.jsonObject.getValue("coverTaken").jsonPrimitive.boolean,
+    uploadDigest = json.str("uploadDigest"),
+)
+
+private fun avatarOf(json: JsonElement): AvatarExpectation = when (json.str("state")) {
+    "untouched" -> AvatarExpectation.Untouched
+    "cleared" -> AvatarExpectation.Cleared
+    else -> AvatarExpectation.Replaced(assetOf(json.jsonObject.getValue("asset")))
+}
+
+/** "empty", or the content or profile fields the payload must decode to. */
+private fun payloadOf(json: JsonElement): PayloadExpectation {
+    if (json is JsonPrimitive) return PayloadExpectation.Empty
+    val fields = json.jsonObject
+    fields["content"]?.let { c ->
+        val sensitive = c.jsonObject.getValue("sensitive")
+        return PayloadExpectation.Content(
+            ExpectedContent(
+                node = c.str("node"),
+                title = c.strOrNull("title"),
+                description = c.strOrNull("description"),
+                body = c.strOrNull("body"),
+                media = c.jsonObject.getValue("media").jsonArray.map { assetOf(it) },
+                sensitive = if (sensitive is JsonNull) null else ExpectedMark(sensitive.strOrNull("reason")),
+            ),
+        )
+    }
+    val p = fields.getValue("profile")
+    return PayloadExpectation.Profile(
+        ExpectedProfile(
+            node = p.str("node"),
+            displayName = p.strOrNull("displayName"),
+            bio = p.strOrNull("bio"),
+            websiteUrl = p.strOrNull("websiteUrl"),
+            avatar = avatarOf(p.jsonObject.getValue("avatar")),
+        ),
+    )
+}
+
 private fun writeOf(json: JsonElement): ExpectedWrite = ExpectedWrite(
     family = Family.parse(json.str("family")),
     middle = nodeOf(json.jsonObject.getValue("middle")),
@@ -52,7 +98,7 @@ private fun writeOf(json: JsonElement): ExpectedWrite = ExpectedWrite(
     pInterest = doubleOfBits(json.str("pInterestBits")),
     license = json.strOrNull("license"),
     parents = if (json.str("parents") == "ownChainHead") Parents.OWN_CHAIN_HEAD else Parents.NONE,
-    payload = if (json.str("payload") == "present") PayloadPresence.PRESENT else PayloadPresence.EMPTY,
+    payload = payloadOf(json.jsonObject.getValue("payload")),
 )
 
 private fun nettingOf(json: JsonElement): ExpectedNetting = ExpectedNetting(
@@ -85,8 +131,29 @@ class IntentVectorsTest {
 
     @Test
     fun `the file is the contract version this client reads`() {
-        assertThat(vectors.getValue("version").jsonPrimitive.content).isEqualTo("1")
+        assertThat(vectors.getValue("version").jsonPrimitive.content).isEqualTo("2")
         assertThat(vectors.getValue("cases").jsonArray).isNotEmpty()
+    }
+
+    @Test
+    fun `the device trims exactly as the server does`() {
+        val trims = vectors.getValue("trims").jsonArray
+        assertThat(trims).isNotEmpty()
+        for (t in trims) {
+            val input = t.str("input")
+            val blank = t.jsonObject.getValue("blank").jsonPrimitive.boolean
+            assertWithMessage(input).that(serverTrim(input)).isEqualTo(t.str("trimmed"))
+            assertWithMessage(input).that(serverChecked(input)).isEqualTo(if (blank) null else t.str("trimmed"))
+            assertWithMessage(input).that(serverBlankFolded(input)).isEqualTo(if (blank) null else input)
+        }
+    }
+
+    @Test
+    fun `the server's trim parts from Kotlin's exactly where the platforms do`() {
+        assertThat(serverTrim("\u001Cx")).isEqualTo("\u001Cx")
+        assertThat("\u001Cx".trim()).isEqualTo("x")
+        assertThat(serverTrim("\u0085x")).isEqualTo("x")
+        assertThat("\u0085x".trim()).isEqualTo("\u0085x")
     }
 
     @Test
@@ -115,7 +182,7 @@ class IntentVectorsTest {
                 Expectation(listOf(stanceRecord("prof:ab", 0.1, 0.1))),
                 Expectation(
                     listOf(
-                        postGenesis(0.1, "a=0;o=0"),
+                        postGenesis(0.1, "a=0;o=0", ExpectedContent("n", null, null, "w", emptyList(), null)),
                         tagClaim(NodeExpectation.MintedBy(0), "x", 0.1, 1.0),
                     ),
                 ),

@@ -19,18 +19,25 @@ import com.cogra.domain.media.UploadProgress
 import com.cogra.domain.media.VideoFrame
 import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.references.ReferenceClaim
+import com.cogra.domain.signing.ContentShape
+import com.cogra.domain.signing.SentContent
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.signing.commentExpectation
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
+import com.cogra.domain.testing.TEST_NODE_ID
 import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.ThrowingMediaProcessor
 import com.cogra.domain.testing.ThrowingMediaRepository
 import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingVideoProcessor
+import com.cogra.domain.testing.faithfulContent
+import com.cogra.domain.testing.fakeReadiness
+import com.cogra.domain.testing.fakeUpload
 import com.cogra.domain.testing.testGraphId
 import com.cogra.domain.testing.testGraphIds
 import com.cogra.domain.topics.TagClaim
+import com.cogra.domain.signing.known
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.CoverChoice
 import com.cogra.feature.content.wizard.UploadFailure
@@ -99,11 +106,21 @@ class ReplyWizardViewModelTest {
                 pDirected = pDirected,
                 pInterest = pInterest,
                 license = license,
+                content = faithfulContent(
+                    TEST_NODE_ID,
+                    SentContent(
+                        content = content,
+                        attachments = attachments,
+                        sensitive = sensitive,
+                        sensitiveReason = sensitiveReason,
+                    ),
+                    ContentShape.COMMENT,
+                ),
                 tags = tags,
                 references = references,
                 graphIds = testGraphIds(listOf(target) + references.map { it.targetId }),
             )
-            return outcome ?: Outcome.Success(PreparedContentView("c1", sealer.stageFaithful(ordered)))
+            return outcome ?: Outcome.Success(PreparedContentView(TEST_NODE_ID, sealer.stageFaithful(ordered)))
         }
     }
 
@@ -147,12 +164,12 @@ class ReplyWizardViewModelTest {
         override suspend fun mediaAttachment(id: String): Outcome<MediaReadiness?> {
             pollCalls += 1
             val (state, reason) = pollAnswers[id] ?: (MediaAssetState.READY to null)
-            return Outcome.Success(MediaReadiness(id, state, reason))
+            return Outcome.Success(fakeReadiness(id, state, reason))
         }
 
         companion object {
             fun asset(id: String, state: MediaAssetState = MediaAssetState.READY) =
-                MediaAssetView(id, "https://media/$id", null, FieldStatus.NORMAL, 1f, state = state)
+                fakeUpload(id, state)
         }
     }
 
@@ -240,7 +257,7 @@ class ReplyWizardViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         val asset = vm.state.value.picked.single()
-        assertThat(asset.upload).isEqualTo(AssetUpload.Done("m1"))
+        assertThat(asset.upload).isEqualTo(AssetUpload.Done("m1", fakeUpload("m1").known()))
         assertThat(asset.sourceRatio).isEqualTo(0.5f)
         assertThat(media.order).containsExactly("still")
         // THE READY-AT-ONCE PATH COSTS NOTHING EXTRA: no poll at all.
@@ -263,7 +280,7 @@ class ReplyWizardViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(media.pollCalls).isEqualTo(1)
-        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("m1"))
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("m1", fakeUpload("m1").known()))
         assertThat(vm.state.value.uploadsComplete).isTrue()
     }
 
@@ -352,7 +369,7 @@ class ReplyWizardViewModelTest {
         vm.onRetryUpload("a.jpg")
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("m9"))
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("m9", fakeUpload("m9").known()))
     }
 
     @Test
@@ -439,7 +456,7 @@ class ReplyWizardViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(media.order).containsExactly("still", "clip").inOrder()
-        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1", fakeUpload("v1").known()))
     }
 
     /**
@@ -630,7 +647,7 @@ class ReplyWizardViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(media.order).containsExactly("still", "clip", "still").inOrder()
-        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1", fakeUpload("v1").known()))
         assertThat(vm.state.value.coverMediaId).isEqualTo("m1")
         assertThat(vm.state.value.uploadsComplete).isTrue()
     }
@@ -699,7 +716,7 @@ class ReplyWizardViewModelTest {
 
         assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.NoStill)
         assertThat(media.order).containsExactly("clip")
-        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1", fakeUpload("v1").known()))
         assertThat(vm.state.value.uploadsComplete).isTrue()
     }
 
@@ -766,7 +783,7 @@ class ReplyWizardViewModelTest {
         vm.onRetryUpload("clip.mp4")
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1", fakeUpload("v1").known()))
         // Its first frame landed the first time and is not sent again.
         assertThat(media.order).containsExactly("still", "clip", "clip").inOrder()
     }
@@ -794,7 +811,7 @@ class ReplyWizardViewModelTest {
 
         assertThat(video.firstFrameAsks).isEqualTo(2)
         assertThat(vm.state.value.coverMediaId).isEqualTo("m1")
-        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1", fakeUpload("v1").known()))
     }
 
     @Test
@@ -833,7 +850,7 @@ class ReplyWizardViewModelTest {
         assertThat(content.lastAttachments)
             .containsExactly(AttachmentClaim("m1", "A picture"))
         assertThat(content.lastStance).isEqualTo(0.4 to -0.2)
-        assertThat(vm.state.value.outcome).isEqualTo(ReplyOutcome.Signed("c1"))
+        assertThat(vm.state.value.outcome).isEqualTo(ReplyOutcome.Signed(TEST_NODE_ID))
     }
 
     @Test
@@ -978,7 +995,7 @@ class ReplyWizardViewModelTest {
 
         vm.onLeaveRequested()
 
-        assertThat(vm.state.value.outcome).isEqualTo(ReplyOutcome.Signed("c1"))
+        assertThat(vm.state.value.outcome).isEqualTo(ReplyOutcome.Signed(TEST_NODE_ID))
     }
 
     private companion object {

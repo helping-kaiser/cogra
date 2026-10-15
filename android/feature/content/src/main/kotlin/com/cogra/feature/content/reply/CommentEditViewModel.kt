@@ -13,12 +13,17 @@ import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
+import com.cogra.domain.signing.ContentShape
 import com.cogra.domain.signing.Expectation
+import com.cogra.domain.signing.ExpectedContent
 import com.cogra.domain.signing.NoActorKeyException
+import com.cogra.domain.signing.SentContent
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.signing.commentEdit
+import com.cogra.domain.signing.contentExpectation
 import com.cogra.domain.signing.editExpectation
+import com.cogra.domain.signing.ledgerFor
 import com.cogra.domain.topics.TagClaim
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceSectionState
@@ -303,16 +308,7 @@ class CommentEditViewModel @Inject constructor(
                     val outcome = content.prepareCommentEdit(
                         id = current.commentId,
                         content = current.body,
-                        attachments = current.picked.mapNotNull { asset ->
-                            asset.mediaId?.let {
-                                AttachmentClaim(
-                                    it,
-                                    asset.altText.ifBlank { null },
-                                    asset.coverMediaId,
-                                    asset.coverTaken,
-                                )
-                            }
-                        },
+                        attachments = sentContent(current).attachments,
                         // Complete state: whatever the Mark row leaves
                         // standing, touched or not. An edit that omitted
                         // it would unveil a comment its author marked.
@@ -394,11 +390,7 @@ class CommentEditViewModel @Inject constructor(
      * failed — already reported.
      */
     private suspend fun expectation(current: CommentEditState): Expectation? {
-        val parent = when (val read = content.commentAnswers(current.commentId)) {
-            is Outcome.Success -> read.value ?: return null.also { failTransport() }
-            is Outcome.Refused -> return null.also { refuse(read.errors) }
-            is Outcome.Failed -> return null.also { failTransport() }
-        }
+        val parent = parentOf(current.commentId) ?: return null
         val refs = current.referenceSection
         val ids = listOf(current.commentId, parent) + (refs.adds + refs.removes).map { it.targetId }
         val graphIds = when (val read = content.graphIds(ids)) {
@@ -407,9 +399,15 @@ class CommentEditViewModel @Inject constructor(
             is Outcome.Failed -> return null.also { failTransport() }
         }
         val commentGraphId = graphIds.getValue(current.commentId)
+        val record = if (current.contentChanged) {
+            val content = contentExpected(current) ?: return null
+            commentEdit(graphIds.getValue(parent), commentGraphId, content)
+        } else {
+            null
+        }
         return editExpectation(
             nodeGraphId = commentGraphId,
-            record = commentEdit(graphIds.getValue(parent), commentGraphId).takeIf { current.contentChanged },
+            record = record,
             tags = current.tagSection.adds.map { it.toClaim() } +
                 current.tagSection.removes.map { TagClaim(it.name, WITHDRAWN, it.confidence) },
             references = refs.adds.map { it.toClaim() },
@@ -417,6 +415,50 @@ class CommentEditViewModel @Inject constructor(
             graphIds = graphIds,
         )
     }
+
+    /** The node the comment answers. Null once the read failed — already reported. */
+    private suspend fun parentOf(commentId: String): String? = when (val read = content.commentAnswers(commentId)) {
+        is Outcome.Success -> read.value ?: null.also { failTransport() }
+        is Outcome.Refused -> null.also { refuse(read.errors) }
+        is Outcome.Failed -> null.also { failTransport() }
+    }
+
+    /**
+     * The record's payload as complete state: the pictures added here are
+     * held to the digests this device computed, the kept ones to the
+     * digests of the asset each names, read back by id
+     * (PayloadExpectation.kt). Null once the read-back failed — already
+     * reported.
+     */
+    private suspend fun contentExpected(current: CommentEditState): ExpectedContent? {
+        val sent = sentContent(current)
+        val own = current.picked.mapNotNull { asset ->
+            (asset.upload as? AssetUpload.Done)?.let { done -> done.known?.let { done.mediaId to it } }
+        }.toMap()
+        val ledger = when (val read = media.ledgerFor(sent.attachments, own)) {
+            is Outcome.Success -> read.value
+            is Outcome.Refused -> return null.also { refuse(read.errors) }
+            is Outcome.Failed -> return null.also { failTransport() }
+        }
+        return contentExpectation(current.commentId, sent, ContentShape.COMMENT, ledger)
+    }
+
+    /**
+     * The edit record's request, read by the prepare and by the payload
+     * expectation alike: the words, the whole gallery the edit leaves
+     * standing, and the mark as the transport sends it for an edit — the
+     * reason untouched (RepositoryImpls `prepareCommentEdit`).
+     */
+    private fun sentContent(current: CommentEditState): SentContent = SentContent(
+        content = current.body,
+        attachments = current.picked.mapNotNull { asset ->
+            asset.mediaId?.let {
+                AttachmentClaim(it, asset.altText.ifBlank { null }, asset.coverMediaId, asset.coverTaken)
+            }
+        },
+        sensitive = current.sensitive,
+        sensitiveReason = current.sensitiveReason,
+    )
 
     fun onSavedConsumed() = _state.update { it.copy(saved = false) }
 

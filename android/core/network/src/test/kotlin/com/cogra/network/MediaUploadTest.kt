@@ -6,6 +6,7 @@ import com.cogra.domain.MediaAssetState
 import com.cogra.domain.Outcome
 import com.cogra.domain.media.MediaDestination
 import com.cogra.domain.media.ProcessedVideo
+import com.cogra.domain.media.UploadEchoMismatchException
 import com.cogra.domain.media.UploadProgress
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.auth.BearerInterceptor
@@ -18,6 +19,7 @@ import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.google.common.truth.Truth.assertThat
 import java.io.File
+import java.security.MessageDigest
 import kotlin.random.Random
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -65,6 +67,12 @@ class MediaUploadTest {
 
     /** What the next (and every subsequent) `mediaAttachment` poll answers. */
     private var mediaAttachmentResponse = """{"data":{"mediaAttachment":null}}"""
+
+    /**
+     * The upload digest the server echoes: the clip's own bytes hashed by the
+     * JDK — a faithful server — unless a test makes it record other bytes.
+     */
+    private var echoedDigest = ""
 
     @Before
     fun setUp() {
@@ -148,13 +156,15 @@ class MediaUploadTest {
         {"__typename":"MediaAttachment","id":"v1","url":"https://media/v1","altText":null,
          "status":"NORMAL","mimeType":"video/mp4",
          "options":{"__typename":"MediaOptions","aspectRatio":"9:16","durationMs":1000},
-         "coverMedia":null,"coverTaken":false,"state":"$state","failureReason":${failureReason?.let { "\"$it\"" }}}
+         "coverMedia":null,"coverTaken":false,"state":"$state","failureReason":${failureReason?.let { "\"$it\"" }},
+         "digest":"$echoedDigest","uploadDigest":"$echoedDigest"}
     """.trimIndent()
 
     /** A clip of [bytes] bytes on disk, and the repository that sends it. */
     private fun TestScope.repositoryFor(bytes: Int): Pair<MediaRepositoryImpl, ProcessedVideo> {
         val file = temp.newFile("clip.mp4")
         file.writeBytes(ByteArray(bytes) { it.toByte() })
+        echoedDigest = sha256Hex(file.readBytes())
         val uploader = PartUploader(
             tokens = tokens,
             endpoint = server.url("/graphql").toString(),
@@ -332,7 +342,8 @@ class MediaUploadTest {
         tokens.save(AuthTokens("access", "refresh", "acct"))
         val (repo, _) = repositoryFor(PART_SIZE - 1)
         mediaAttachmentResponse = """{"data":{"mediaAttachment":
-            {"__typename":"MediaAttachment","id":"v1","state":"READY","failureReason":null}}}"""
+            {"__typename":"MediaAttachment","id":"v1","state":"READY","failureReason":null,
+             "digest":"${"cd".repeat(32)}","uploadDigest":"$echoedDigest","mimeType":"video/mp4"}}}"""
 
         val outcome = repo.mediaAttachment("v1")
 
@@ -341,6 +352,37 @@ class MediaUploadTest {
         assertThat(readiness?.id).isEqualTo("v1")
         assertThat(readiness?.state).isEqualTo(MediaAssetState.READY)
         assertThat(readiness?.failureReason).isNull()
+        // The rendition at READY, beside the upload digest of the id asked by.
+        assertThat(readiness?.digest).isEqualTo("cd".repeat(32))
+        assertThat(readiness?.uploadDigest).isEqualTo(echoedDigest)
+        assertThat(readiness?.mimeType).isEqualTo("video/mp4")
+    }
+
+    @Test
+    fun theUploadEchoReturnsTheUploadDigestTheDeviceComputed() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, clip) = repositoryFor(PART_SIZE - 1)
+
+        val outcome = repo.uploadVideo(clip, MediaDestination.POST)
+
+        // The digest the asset now carries is the JDK's hash of the clip on
+        // disk — exactly the bytes that went.
+        val media = (outcome as Outcome.Success).value
+        assertThat(media.uploadDigest).isEqualTo(sha256Hex(File(clip.path).readBytes()))
+    }
+
+    @Test
+    fun anUploadWhoseEchoDiffersFromTheDeviceDigestIsRefusedBeforeAnyAttach() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, clip) = repositoryFor(PART_SIZE + 10)
+        // The server recorded other bytes — its strip repaired these, or
+        // something between the two changed them.
+        echoedDigest = "ab".repeat(32)
+
+        val outcome = repo.uploadVideo(clip, MediaDestination.POST)
+
+        assertThat(outcome).isInstanceOf(Outcome.Failed::class.java)
+        assertThat((outcome as Outcome.Failed).cause).isInstanceOf(UploadEchoMismatchException::class.java)
     }
 
     @Test
@@ -349,7 +391,8 @@ class MediaUploadTest {
         val (repo, _) = repositoryFor(PART_SIZE - 1)
         mediaAttachmentResponse = """{"data":{"mediaAttachment":
             {"__typename":"MediaAttachment","id":"v1","state":"FAILED",
-             "failureReason":"not H.264"}}}"""
+             "failureReason":"not H.264","digest":"$echoedDigest","uploadDigest":"$echoedDigest",
+             "mimeType":"video/mp4"}}}"""
 
         val outcome = repo.mediaAttachment("v1")
 
@@ -386,6 +429,9 @@ class MediaUploadTest {
         val media = (outcome as Outcome.Success).value
         assertThat(media.state).isEqualTo(MediaAssetState.PROCESSING)
     }
+
+    private fun sha256Hex(bytes: ByteArray): String =
+        MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
 
     private companion object {
         const val SESSION = "11111111-1111-1111-1111-111111111111"

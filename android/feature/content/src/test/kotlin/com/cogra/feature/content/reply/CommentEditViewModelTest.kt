@@ -14,18 +14,24 @@ import com.cogra.domain.TopicClaimView
 import com.cogra.domain.UserError
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.ProcessedPicture
+import com.cogra.domain.signing.ContentShape
 import com.cogra.domain.signing.Expectation
+import com.cogra.domain.signing.SentContent
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.signing.commentEdit
 import com.cogra.domain.signing.node
 import com.cogra.domain.signing.tagClaim
+import com.cogra.domain.testing.FaithfulMediaRepository
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
+import com.cogra.domain.testing.TEST_COMMENT_ID
 import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.ThrowingMediaProcessor
 import com.cogra.domain.testing.ThrowingMediaRepository
 import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingTopicRepository
+import com.cogra.domain.testing.faithfulContent
+import com.cogra.domain.testing.fakeUpload
 import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testGraphId
 import com.cogra.domain.testing.testHashtag
@@ -65,7 +71,7 @@ class CommentEditViewModelTest {
         ThrowingContentRepository() {
         var loaded: Outcome<CommentForEdit?> = Outcome.Success(
             CommentForEdit(
-                comment = testComment("c1", body = "As it stands"),
+                comment = testComment(TEST_COMMENT_ID, body = "As it stands"),
                 selfMark = SelfMarkView(sensitive = false, reason = null),
             ),
         )
@@ -97,7 +103,24 @@ class CommentEditViewModelTest {
                         // A faithful prepare: the edit record, its A leg at
                         // the node the comment answers.
                         sealer.stageFaithful(
-                            Expectation(listOf(commentEdit(testGraphId(testParentOf(id)), testGraphId(id)))),
+                            Expectation(
+                                listOf(
+                                    commentEdit(
+                                        testGraphId(testParentOf(id)),
+                                        testGraphId(id),
+                                        faithfulContent(
+                                            id,
+                                            SentContent(
+                                                content = content,
+                                                attachments = attachments,
+                                                sensitive = sensitive,
+                                                sensitiveReason = sensitiveReason,
+                                            ),
+                                            ContentShape.COMMENT,
+                                        ),
+                                    ),
+                                ),
+                            ),
                         ),
                     ),
                 )
@@ -126,9 +149,9 @@ class CommentEditViewModelTest {
         }
     }
 
-    private class ScriptedMedia : ThrowingMediaRepository() {
+    private class ScriptedMedia : FaithfulMediaRepository() {
         var outcome: Outcome<MediaAssetView> = Outcome.Success(
-            MediaAssetView("m1", "https://media/m1", null, FieldStatus.NORMAL, 1f),
+            fakeUpload("m1"),
         )
         var calls = 0
 
@@ -161,7 +184,7 @@ class CommentEditViewModelTest {
             WriteSigner(sealer, identity),
             topics,
         )
-        vm.start("c1", "A post")
+        vm.start(TEST_COMMENT_ID, "A post")
         dispatcher.scheduler.advanceUntilIdle()
         return vm
     }
@@ -192,7 +215,7 @@ class CommentEditViewModelTest {
     fun standingTopicsOpenAtTheirOwnParameters() = runTest(dispatcher) {
         content.loaded = Outcome.Success(
             CommentForEdit(
-                comment = testComment("c1").copy(
+                comment = testComment(TEST_COMMENT_ID).copy(
                     topics = listOf(
                         TopicClaimView(testHashtag("rust"), relevance = 0.8, confidence = 0.6, pending = false),
                     ),
@@ -235,7 +258,7 @@ class CommentEditViewModelTest {
     fun theStandingSensitiveMarkRidesBackUntouched() = runTest(dispatcher) {
         content.loaded = Outcome.Success(
             CommentForEdit(
-                comment = testComment("c1", body = "As it stands"),
+                comment = testComment(TEST_COMMENT_ID, body = "As it stands"),
                 selfMark = SelfMarkView(sensitive = true, reason = "graphic"),
             ),
         )
@@ -288,7 +311,7 @@ class CommentEditViewModelTest {
     fun unmarkingAMarkedCommentDropsItsReasonWithIt() = runTest(dispatcher) {
         content.loaded = Outcome.Success(
             CommentForEdit(
-                comment = testComment("c1", body = "As it stands"),
+                comment = testComment(TEST_COMMENT_ID, body = "As it stands"),
                 selfMark = SelfMarkView(sensitive = true, reason = "graphic"),
             ),
         )
@@ -321,7 +344,7 @@ class CommentEditViewModelTest {
     fun aRemovedTopicIsStagedAsAWithdrawalRatherThanADeletion() = runTest(dispatcher) {
         content.loaded = Outcome.Success(
             CommentForEdit(
-                comment = testComment("c1").copy(
+                comment = testComment(TEST_COMMENT_ID).copy(
                     topics = listOf(
                         TopicClaimView(testHashtag("rust"), relevance = 0.8, confidence = 0.6, pending = false),
                     ),
@@ -378,7 +401,7 @@ class CommentEditViewModelTest {
     fun anEditKeepsTheClipsCoverThrough() = runTest(dispatcher) {
         content.loaded = Outcome.Success(
             CommentForEdit(
-                comment = testComment("c1").copy(
+                comment = testComment(TEST_COMMENT_ID).copy(
                     attachments = listOf(
                         MediaAssetView(
                             id = "m1",
@@ -419,7 +442,7 @@ class CommentEditViewModelTest {
     fun anEditKeepsAChosenCoversNotTakenFlagThrough() = runTest(dispatcher) {
         content.loaded = Outcome.Success(
             CommentForEdit(
-                comment = testComment("c1").copy(
+                comment = testComment(TEST_COMMENT_ID).copy(
                     attachments = listOf(
                         MediaAssetView(
                             id = "m1",
@@ -457,7 +480,7 @@ class CommentEditViewModelTest {
     fun anEditOfAnUncoveredClipSendsNoCover() = runTest(dispatcher) {
         content.loaded = Outcome.Success(
             CommentForEdit(
-                comment = testComment("c1").copy(
+                comment = testComment(TEST_COMMENT_ID).copy(
                     attachments = listOf(
                         MediaAssetView(
                             id = "m1",

@@ -92,7 +92,6 @@ import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.ExpectedNetting
 import com.cogra.domain.signing.NodeExpectation
 import com.cogra.domain.signing.Parents
-import com.cogra.domain.signing.PayloadPresence
 import com.cogra.domain.signing.stanceRecord
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StanceInputMode
@@ -625,11 +624,7 @@ class SealingWriteRepository(private val actor: ActorKey) : ThrowingWriteReposit
                 },
             )
             minted[i] = body.target
-            val payload = when (e.payload) {
-                PayloadPresence.EMPTY -> ByteArray(0)
-                PayloadPresence.PRESENT -> byteArrayOf(1)
-            }
-            views += stageProposal(e.family, Proposal(body, payload, emptyList()))
+            views += stageProposal(e.family, Proposal(body, faithfulPayload(e.payload), emptyList()))
         }
         for (n in expected.netting) {
             // As many records as the cost the server quoted — a quote past

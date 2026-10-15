@@ -43,10 +43,6 @@ private fun matches(e: ExpectedWrite, p: Proposal, author: String, minted: Array
     // `==` on two Doubles is the IEEE comparison: false for NaN, true
     // across the two zeros — exactly the equality the header states.
     val valuesMatch = body.pD == e.pDirected && body.pI == e.pInterest
-    val payloadMatches = when (e.payload) {
-        PayloadPresence.EMPTY -> p.payload.isEmpty()
-        PayloadPresence.PRESENT -> p.payload.isNotEmpty()
-    }
     return body.family == e.family &&
         target != null &&
         body.target.toString() == target &&
@@ -54,7 +50,7 @@ private fun matches(e: ExpectedWrite, p: Proposal, author: String, minted: Array
         valuesMatch &&
         body.license == e.license &&
         parentsMatch(e.parents, p, author) &&
-        payloadMatches
+        payloadMatches(e.payload, p.payload)
 }
 
 private fun dependsOnAnother(e: ExpectedWrite): Boolean =

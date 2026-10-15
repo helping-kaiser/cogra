@@ -21,17 +21,22 @@ import com.cogra.domain.ReferenceClaimView
 import com.cogra.domain.SelfMarkView
 import com.cogra.domain.TopicClaimView
 import com.cogra.domain.UserError
+import com.cogra.domain.signing.ContentShape
 import com.cogra.domain.signing.Expectation
+import com.cogra.domain.signing.SentContent
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.signing.node
 import com.cogra.domain.signing.postEdit
 import com.cogra.domain.signing.referenceWithdrawal
 import com.cogra.domain.signing.tagClaim
+import com.cogra.domain.testing.FaithfulMediaRepository
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
+import com.cogra.domain.testing.TEST_POST_ID
 import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingTopicRepository
+import com.cogra.domain.testing.faithfulContent
 import com.cogra.domain.testing.testGraphId
 import com.cogra.domain.testing.testMentionTarget
 import com.cogra.domain.testing.testPost
@@ -117,7 +122,27 @@ class PostEditViewModelTest {
                 PreparedContentView(
                     id,
                     List(editWrites) {
-                        sealer.stageFaithful(Expectation(listOf(postEdit(testGraphId(id)))))
+                        sealer.stageFaithful(
+                            Expectation(
+                                listOf(
+                                    postEdit(
+                                        testGraphId(id),
+                                        faithfulContent(
+                                            id,
+                                            SentContent(
+                                                title,
+                                                description,
+                                                content,
+                                                attachments,
+                                                sensitive,
+                                                sensitiveReason,
+                                            ),
+                                            ContentShape.POST,
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        )
                     }.flatten(),
                 ),
             )
@@ -175,8 +200,16 @@ class PostEditViewModelTest {
     )
 
     private fun opened(): PostEditViewModel {
-        val vm = PostEditViewModel(content, topics, references, WriteSigner(sealer, identity), identity)
-        vm.start("p1")
+        val vm =
+            PostEditViewModel(
+                content,
+                topics,
+                references,
+                WriteSigner(sealer, identity),
+                identity,
+                FaithfulMediaRepository(),
+            )
+        vm.start(TEST_POST_ID)
         dispatcher.scheduler.advanceUntilIdle()
         return vm
     }
@@ -217,7 +250,7 @@ class PostEditViewModelTest {
         assertThat(vm.state.value.title).isEqualTo("Loaded title")
         assertThat(vm.state.value.signedActionCount).isEqualTo(1)
         vm.signed()
-        assertThat(content.lastEdit).containsExactly("p1", "Loaded title", null, "Loaded body").inOrder()
+        assertThat(content.lastEdit).containsExactly(TEST_POST_ID, "Loaded title", null, "Loaded body").inOrder()
         assertThat(vm.state.value.saved).isTrue()
     }
 
@@ -279,7 +312,7 @@ class PostEditViewModelTest {
         assertThat(content.editCalls).isEqualTo(1)
         // The un-tag signs the confidence the removed chip showed (0.6) —
         // relevance is the only value a removal moves; the wire fills nothing.
-        assertThat(topics.calls).containsExactly(TagCall("p1", "wasm", PostEditViewModel.WITHDRAWN, 0.6))
+        assertThat(topics.calls).containsExactly(TagCall(TEST_POST_ID, "wasm", PostEditViewModel.WITHDRAWN, 0.6))
         assertThat(vm.state.value.saved).isTrue()
     }
 
@@ -291,7 +324,7 @@ class PostEditViewModelTest {
         val vm = opened()
         vm.onBodyChange("Reworded")
         vm.signed()
-        assertThat(content.lastEdit).containsExactly("p1", "Loaded title", null, "Reworded").inOrder()
+        assertThat(content.lastEdit).containsExactly(TEST_POST_ID, "Loaded title", null, "Reworded").inOrder()
     }
 
     @Test
@@ -302,7 +335,9 @@ class PostEditViewModelTest {
         vm.onMovePicture(1, 0)
         assertThat(vm.state.value.signedActionCount).isEqualTo(1)
         vm.signed()
-        assertThat(content.lastEdit).containsExactly("p1", "Loaded title", "Beside the pictures", null).inOrder()
+        assertThat(
+            content.lastEdit,
+        ).containsExactly(TEST_POST_ID, "Loaded title", "Beside the pictures", null).inOrder()
         assertThat(content.lastEditAttachments.map { it.mediaId }).containsExactly("m2", "m1").inOrder()
     }
 
@@ -321,7 +356,7 @@ class PostEditViewModelTest {
         assertThat(s.pickedOpen).isFalse()
         vm.onBodyChange("Now it is words.")
         vm.signed()
-        assertThat(content.lastEdit).containsExactly("p1", "Loaded title", null, "Now it is words.").inOrder()
+        assertThat(content.lastEdit).containsExactly(TEST_POST_ID, "Loaded title", null, "Now it is words.").inOrder()
         assertThat(content.lastEditAttachments).isEmpty()
     }
 
@@ -341,7 +376,7 @@ class PostEditViewModelTest {
         assertThat(vm.state.value.description).isEmpty()
         vm.onBodyChange("Now it is words.")
         vm.signed()
-        assertThat(content.lastEdit).containsExactly("p1", "Loaded title", null, "Now it is words.").inOrder()
+        assertThat(content.lastEdit).containsExactly(TEST_POST_ID, "Loaded title", null, "Now it is words.").inOrder()
         assertThat(content.lastEditAttachments).isEmpty()
     }
 

@@ -15,6 +15,7 @@ import com.cogra.domain.content.isTitleTooLong
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceMedia
 import com.cogra.domain.media.VideoFrame
+import com.cogra.domain.signing.KnownMedia
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagSectionState
 
@@ -146,7 +147,14 @@ sealed interface AssetUpload {
 
     data object Running : AssetUpload
 
-    data class Done(val mediaId: String) : AssetUpload
+    /**
+     * On the server and READY. [known] is what the intent check holds this
+     * asset's manifest entry to — the upload digest this device computed and
+     * the server echoed, and the rendition digest at READY. Null on an asset
+     * the load found standing (an edit's kept picture), which the sign path
+     * reads back by id instead (`ledgerFor`).
+     */
+    data class Done(val mediaId: String, val known: KnownMedia? = null) : AssetUpload
 
     /**
      * The upload failed or was refused.

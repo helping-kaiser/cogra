@@ -13,15 +13,21 @@ import com.cogra.domain.content.isDescriptionTooLong
 import com.cogra.domain.content.isPostBodyTooLong
 import com.cogra.domain.content.isSensitiveReasonTooLong
 import com.cogra.domain.content.isTitleTooLong
+import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
+import com.cogra.domain.signing.ContentShape
 import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.NoActorKeyException
+import com.cogra.domain.signing.SentContent
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.contentExpectation
 import com.cogra.domain.signing.editExpectation
+import com.cogra.domain.signing.ledgerFor
 import com.cogra.domain.signing.postEdit
+import com.cogra.domain.signing.wireReason
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.topics.TagClaim
 import com.cogra.feature.content.ReferenceCandidateRow
@@ -154,6 +160,7 @@ class PostEditViewModel @Inject constructor(
     private val references: ReferenceRepository,
     private val signer: WriteSigner,
     private val identity: IdentityStore,
+    private val media: MediaRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(PostEditUiState())
@@ -390,9 +397,23 @@ class PostEditViewModel @Inject constructor(
             is Outcome.Failed -> return null.also { failTransport() }
         }
         val postGraphId = graphIds.getValue(postId)
+        // The record's payload is complete state: every placement it keeps
+        // is held to the digests of the asset it names, read back by id,
+        // since no gallery read selects them (PayloadExpectation.kt).
+        val record = if (s.recordStaged) {
+            val sent = sentContent(s)
+            val ledger = when (val read = media.ledgerFor(sent.attachments, emptyMap())) {
+                is Outcome.Success -> read.value
+                is Outcome.Refused -> return null.also { refuse(read.errors) }
+                is Outcome.Failed -> return null.also { failTransport() }
+            }
+            postEdit(postGraphId, contentExpectation(postId, sent, ContentShape.POST, ledger))
+        } else {
+            null
+        }
         return editExpectation(
             nodeGraphId = postGraphId,
-            record = postEdit(postGraphId).takeIf { s.recordStaged },
+            record = record,
             tags = s.tagSection.adds.map { it.toClaim() } +
                 s.tagSection.removes.map { TagClaim(it.name, WITHDRAWN, it.confidence) },
             references = refs.adds.map { it.toClaim() },
@@ -459,20 +480,34 @@ class PostEditViewModel @Inject constructor(
         return writes
     }
 
+    /**
+     * The edit record's request: the post's complete new content state —
+     * read by the prepare and by the payload expectation alike.
+     */
+    private fun sentContent(s: PostEditUiState): SentContent = SentContent(
+        title = s.title.ifBlank { null },
+        // The words path carries no description (K8.1/D4).
+        description = s.description.ifBlank { null }.takeIf { s.mediaBody },
+        // Words XOR media: a media post sends no words at all.
+        content = s.body.takeIf { !s.mediaBody },
+        // The whole gallery the edit leaves standing, in its order, each
+        // placement re-stating the cover it names.
+        attachments = s.attachments.map { AttachmentClaim(it.id, it.altText, it.cover?.id, it.coverTaken) },
+        sensitive = s.sensitive,
+        sensitiveReason = wireReason(s.sensitive, s.sensitiveReason),
+    )
+
     /** The edit record: the post's complete new content state. */
     private suspend fun prepareRecord(s: PostEditUiState, postId: String): List<PreparedWriteView>? {
+        val sent = sentContent(s)
         val outcome = content.preparePostEdit(
             id = postId,
-            title = s.title.ifBlank { null },
-            // The words path carries no description (K8.1/D4).
-            description = s.description.ifBlank { null }.takeIf { s.mediaBody },
-            // Words XOR media: a media post sends no words at all.
-            content = s.body.takeIf { !s.mediaBody },
-            // The whole gallery the edit leaves standing, in its order, each
-            // placement re-stating the cover it names.
-            attachments = s.attachments.map { AttachmentClaim(it.id, it.altText, it.cover?.id, it.coverTaken) },
-            sensitive = s.sensitive,
-            sensitiveReason = s.sensitiveReason,
+            title = sent.title,
+            description = sent.description,
+            content = sent.content,
+            attachments = sent.attachments,
+            sensitive = sent.sensitive,
+            sensitiveReason = sent.sensitiveReason,
         )
         return when (outcome) {
             is Outcome.Success -> outcome.value.writes

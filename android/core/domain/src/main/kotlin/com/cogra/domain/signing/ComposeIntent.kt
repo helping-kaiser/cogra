@@ -26,30 +26,37 @@ private fun claims(
     tags.map { tagClaim(middle, it.name, it.relevance, it.confidence) } +
         references.map { referenceClaim(middle, graphIds.graphIdOf(it.targetId), it.relevance, it.support) }
 
-/** A new post: its genesis Publish, then one act per topic and per citation. */
+/**
+ * A new post: its genesis Publish carrying [content] — the payload its
+ * request must decode to (PayloadExpectation.kt) — then one act per topic
+ * and per citation.
+ */
+@Suppress("LongParameterList") // one parameter per thing the compose seal holds
 fun postExpectation(
     pDirected: Double,
     license: LicenseChoice,
+    content: ExpectedContent,
     tags: List<TagClaim>,
     references: List<ReferenceClaim>,
     graphIds: Map<String, String>,
 ): Expectation = Expectation(
-    listOf(postGenesis(pDirected, license.canonical())) +
+    listOf(postGenesis(pDirected, license.canonical(), content)) +
         claims(NodeExpectation.MintedBy(0), tags, references, graphIds),
 )
 
-/** A new comment: its genesis Review at the parent, then its topics and citations. */
+/** A new comment: its genesis Review at the parent carrying [content], then its topics and citations. */
 @Suppress("LongParameterList") // one parameter per thing the reply seal holds
 fun commentExpectation(
     parentGraphId: String,
     pDirected: Double,
     pInterest: Double,
     license: LicenseChoice,
+    content: ExpectedContent,
     tags: List<TagClaim>,
     references: List<ReferenceClaim>,
     graphIds: Map<String, String>,
 ): Expectation = Expectation(
-    listOf(commentGenesis(parentGraphId, pDirected, pInterest, license.canonical())) +
+    listOf(commentGenesis(parentGraphId, pDirected, pInterest, license.canonical(), content)) +
         claims(NodeExpectation.MintedBy(0), tags, references, graphIds),
 )
 

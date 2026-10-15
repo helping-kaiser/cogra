@@ -40,6 +40,7 @@ import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.WriteRepository
+import com.cogra.domain.signing.wireReason
 import com.cogra.domain.topics.TagClaim
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
@@ -658,7 +659,7 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
                     // A reason only rides a mark: the server refuses one
                     // without it, and a blank counts as none.
                     sensitiveReason = Optional.presentIfNotNull(
-                        sensitiveReason?.takeIf { sensitive && it.isNotBlank() },
+                        wireReason(sensitive, sensitiveReason),
                     ),
                 ),
             ),
@@ -709,7 +710,7 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
                     // switch is refused on `["sensitiveReason"]` — so the
                     // reason rides only under its own mark.
                     sensitiveReason = Optional.present(
-                        sensitiveReason?.takeIf { sensitive && it.isNotBlank() },
+                        wireReason(sensitive, sensitiveReason),
                     ),
                 ),
             ),
@@ -751,7 +752,7 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
                     // switch is refused on `["sensitiveReason"]` — so the
                     // reason rides only under its own mark.
                     sensitiveReason = Optional.present(
-                        sensitiveReason?.takeIf { sensitive && it.isNotBlank() },
+                        wireReason(sensitive, sensitiveReason),
                     ),
                 ),
             ),

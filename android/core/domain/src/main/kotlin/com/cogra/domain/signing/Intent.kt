@@ -8,11 +8,23 @@
 //
 // WHAT IS COMPARED, AND WHAT IS NOT. Every author-meaning field of the
 // structural body: family, author, middle, target, both parameters, the
-// settlement reference, the license, the asserted parents, and whether a
-// payload rides at all (the payload's fields wait for the envelope
-// decoder). The sequence value and the dependency list are not: the seq is
-// allocated by the backend, and dependencies are server-completed ordering
-// facts the author never chose — L1 refuses an unsatisfiable one.
+// settlement reference, the license, the asserted parents — and the
+// payload's FIELDS, read by the device's own envelope decoder
+// (core:crypto Envelope.kt): the node the payload binds to, the title,
+// description and words, the gallery in order with each picture's
+// description, poster and both digests, the self-mark, and a profile's
+// name, bio, website and avatar. The sequence value and the dependency
+// list are not: the seq is allocated by the backend, and dependencies are
+// server-completed ordering facts the author never chose — L1 refuses an
+// unsatisfiable one.
+//
+// THE SERVER'S NORMALIZATION IS PART OF THE EXPECTATION (ServerText.kt):
+// Rust's `str::trim`, whose whitespace set Kotlin's `trim` does not share.
+//
+// BOTH DIGESTS, ALWAYS. Every manifest entry carries the rendition digest
+// the device read for the asset at READY and the upload digest the device
+// computed over the bytes it sent. A placement the device can state
+// neither of is refused: there is nothing to check it against.
 //
 // EXACT, NEVER APPROXIMATE. Parameters compare as numbers with no
 // tolerance: no server default stands in for a value the form did not
@@ -54,8 +66,66 @@ sealed interface NodeExpectation {
 /** None, or exactly one parent: the head of the author's own chain on this node. */
 enum class Parents { NONE, OWN_CHAIN_HEAD }
 
-/** Whether a payload rides the act at all. */
-enum class PayloadPresence { EMPTY, PRESENT }
+/** One manifest entry the gesture ordered — or one it cannot state. */
+sealed interface AssetExpectation {
+    /** Every key the envelope carries; digests in lowercase hex. */
+    data class Asset(
+        /** The rendition digest the device read for the asset at READY. */
+        val digest: String,
+        val mime: String,
+        val altText: String?,
+        /** The poster's rendition digest. */
+        val cover: String?,
+        val coverTaken: Boolean,
+        /** The upload digest the device computed over the bytes it sent. */
+        val uploadDigest: String,
+    ) : AssetExpectation
+
+    /** A placement the device can state nothing about: it never matches. */
+    data class Unknown(val mediaId: String) : AssetExpectation
+}
+
+/** What a content payload must decode to. */
+data class ExpectedContent(
+    /** The L2 node id the prepare named for this content. */
+    val node: String,
+    val title: String?,
+    val description: String?,
+    val body: String?,
+    val media: List<AssetExpectation>,
+    /** Null when unmarked; otherwise the mark, its reason possibly absent. */
+    val sensitive: ExpectedMark?,
+)
+
+/** The author's own self-mark, as the payload must carry it. */
+data class ExpectedMark(val reason: String?)
+
+/** The avatar slot: three-valued, each value one encoding. */
+sealed interface AvatarExpectation {
+    data object Untouched : AvatarExpectation
+
+    data object Cleared : AvatarExpectation
+
+    data class Replaced(val asset: AssetExpectation) : AvatarExpectation
+}
+
+/** What a profile payload must decode to. */
+data class ExpectedProfile(
+    val node: String,
+    val displayName: String?,
+    val bio: String?,
+    val websiteUrl: String?,
+    val avatar: AvatarExpectation,
+)
+
+/** A write's payload: none at all, or an envelope whose fields are stated. */
+sealed interface PayloadExpectation {
+    data object Empty : PayloadExpectation
+
+    data class Content(val content: ExpectedContent) : PayloadExpectation
+
+    data class Profile(val profile: ExpectedProfile) : PayloadExpectation
+}
 
 /** One write the gesture ordered, field by field. */
 data class ExpectedWrite(
@@ -66,7 +136,7 @@ data class ExpectedWrite(
     val pInterest: Double,
     val license: String?,
     val parents: Parents,
-    val payload: PayloadPresence,
+    val payload: PayloadExpectation,
 )
 
 /** A walk-back the server computes: checked as a net-to-zero property. */

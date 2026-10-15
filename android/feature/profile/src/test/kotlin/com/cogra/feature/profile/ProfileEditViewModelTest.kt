@@ -13,13 +13,16 @@ import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.PICTURE_MAX_BYTES
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.signing.Expectation
+import com.cogra.domain.signing.SentProfile
 import com.cogra.domain.signing.WriteSigner
-import com.cogra.domain.signing.profileUpdate
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
+import com.cogra.domain.testing.TEST_PROFILE_ID
 import com.cogra.domain.testing.ThrowingMediaProcessor
 import com.cogra.domain.testing.ThrowingMediaRepository
 import com.cogra.domain.testing.ThrowingProfileRepository
+import com.cogra.domain.testing.faithfulProfileUpdate
+import com.cogra.domain.testing.fakeUpload
 import com.cogra.domain.testing.testProfile
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.Dispatchers
@@ -44,7 +47,7 @@ class ProfileEditViewModelTest {
     private class ScriptedProfiles(private val sealer: SealingWriteRepository) :
         ThrowingProfileRepository() {
         var mine: Outcome<ProfileView?> = Outcome.Success(
-            testProfile(id = "u1", handle = "jakob", displayName = "Jakob", bio = "Old bio"),
+            testProfile(id = TEST_PROFILE_ID, handle = "jakob", displayName = "Jakob", bio = "Old bio"),
         )
         var prepareOutcome: Outcome<List<PreparedWriteView>>? = null
         var lastUpdate: Triple<String, String?, String?>? = null
@@ -61,14 +64,18 @@ class ProfileEditViewModelTest {
         ): Outcome<List<PreparedWriteView>> {
             lastUpdate = Triple(displayName, bio, websiteUrl)
             lastAvatar = avatar
-            return prepareOutcome ?: Outcome.Success(sealer.stageFaithful(Expectation(listOf(profileUpdate()))))
+            return prepareOutcome ?: Outcome.Success(
+                sealer.stageFaithful(
+                    faithfulProfileUpdate(TEST_PROFILE_ID, SentProfile(displayName, bio, websiteUrl, avatar)),
+                ),
+            )
         }
     }
 
     /** The upload half of the avatar path, scripted per test. */
     private class ScriptedMedia : ThrowingMediaRepository() {
         var outcome: Outcome<MediaAssetView> = Outcome.Success(
-            MediaAssetView("m1", "https://media/m1", null, FieldStatus.NORMAL, 1f),
+            fakeUpload("m1"),
         )
         var calls = 0
 
