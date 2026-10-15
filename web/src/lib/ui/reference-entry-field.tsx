@@ -15,11 +15,19 @@
 // the composer batches them onto the minting record under the D7 cap,
 // the edit surfaces stage each change as its own act — and a REMOVAL
 // there is a withdrawal batch, not a deletion.
+//
+// TWO WAYS A STAGED CITATION'S PAIR IS SET, BY HOST (`pairs`), the tag
+// section's split: the composer's details stage draws `RefPair`
+// (ComposeDetails.md: "WHEN tap composeDetails.references.stagedReference
+// -> the citation's pair opens in a sheet over the stage"), committed on
+// Done and discarded on every other way out; the edit surfaces keep their
+// inline sliders until their own sheet (`RefPairEdit`) is built.
 
 import { useState } from "react";
 
 import { type ReferenceDraft } from "@/lib/references/draft";
 import { REFERENCE_BATCH_CAP } from "@/lib/references/normalize";
+import { CITATION_FAMILY, PairSheet } from "@/lib/ui2/compose/pair-sheet";
 import { Button } from "./button";
 import { instance, part, testAttributes, type DataNode } from "./data-node";
 import { ReferenceChip } from "./reference-chip";
@@ -34,6 +42,7 @@ export function ReferenceEntryField({
   testIdPrefix,
   finderDebounceMs,
   node,
+  pairs = "inline",
 }: {
   /**
    * The registered section node on a registered screen
@@ -41,6 +50,12 @@ export function ReferenceEntryField({
    * `stagedReference` (keyed by position, counted from 1), and its `add`.
    */
   node?: DataNode;
+  /**
+   * Where a staged citation's pair is set: `"sheet"` is the composer's
+   * `RefPair` (tap the citation, set the pair, Done); `"inline"` is the
+   * edit surfaces' sliders.
+   */
+  pairs?: "sheet" | "inline";
   references: readonly ReferenceDraft[];
   onChange: (references: readonly ReferenceDraft[]) => void;
   /** Per-index refusal, keyed by the server's `["references", i, …]` path. */
@@ -55,8 +70,22 @@ export function ReferenceEntryField({
   finderDebounceMs?: number;
 }) {
   const [finding, setFinding] = useState(false);
-  // Which chip has its sliders open; a chip is tapped to adjust it.
+  // Which chip has its pair open — its inline sliders, or its sheet; a chip
+  // is tapped to adjust it.
   const [adjusting, setAdjusting] = useState<number | null>(null);
+  // The citation the sheet last showed, kept past its close so the title
+  // holds through the sheet's exit.
+  const [sheetIndex, setSheetIndex] = useState(0);
+  const sheetReference = pairs === "sheet" ? references[sheetIndex] : undefined;
+
+  const select = (index: number) => {
+    if (pairs === "sheet") {
+      setSheetIndex(index);
+      setAdjusting(index);
+      return;
+    }
+    setAdjusting(adjusting === index ? null : index);
+  };
 
   const atCap = cap !== null && references.length >= cap;
 
@@ -96,13 +125,13 @@ export function ReferenceEntryField({
                 target={reference.target}
                 onRemove={() => removeAt(index)}
                 removeLabel={`Remove the reference to ${reference.target.label}`}
-                onSelect={() => setAdjusting(adjusting === index ? null : index)}
+                onSelect={() => select(index)}
                 selectLabel={`Adjust the reference to ${reference.target.label}`}
                 expanded={adjusting === index}
                 testId={`${testIdPrefix}-reference-${index}`}
                 node={instance(node, "stagedReference", String(index + 1))}
               />
-              {adjusting === index && (
+              {pairs === "inline" && adjusting === index && (
                 <ReferenceParamSliders
                   relevance={reference.relevance}
                   support={reference.support}
@@ -149,6 +178,22 @@ export function ReferenceEntryField({
           alreadyDrafted={references.map((reference) => reference.targetId)}
           testIdPrefix={testIdPrefix}
           debounceMs={finderDebounceMs}
+        />
+      )}
+      {sheetReference !== undefined && (
+        <PairSheet
+          open={adjusting !== null}
+          title={sheetReference.target.label}
+          value={{ pDirected: sheetReference.relevance, pInterest: sheetReference.support }}
+          family={CITATION_FAMILY}
+          // Done is the one way the sheet's pair reaches the staged citation.
+          onDone={(pair) => {
+            adjustAt(sheetIndex, { relevance: pair.pDirected, support: pair.pInterest });
+            setAdjusting(null);
+          }}
+          // Scrim, swipe down, Back, Escape: the citation keeps what it had.
+          onDiscard={() => setAdjusting(null)}
+          testId={`${testIdPrefix}-reference-pair`}
         />
       )}
     </div>
