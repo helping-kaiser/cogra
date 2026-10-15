@@ -128,8 +128,9 @@ pub async fn redact<B: L1Boundary>(
 ///    anything is reaped, or the reap would erase it with no archive.
 /// 2. **Archive** the unit: envelope, content salt, proposal nonce, the
 ///    witness, and the media the envelope names (data-model.md "The
-///    retention archive"). An act that never landed is archived from its
-///    staged copy, since it can still land later.
+///    retention archive"). An act that has not landed is archived from
+///    its staged copy once sealed, since it can still land later; a copy
+///    never sealed has no witness and is not archived.
 /// 3. **Reduce** the carriage row: payload and salt to NULL, state
 ///    `reduced`.
 /// 4. **Reap** the staged row: payload, content salt and nonce to NULL.
