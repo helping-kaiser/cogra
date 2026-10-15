@@ -1451,6 +1451,9 @@ async fn an_asset_is_not_swept_while_a_merged_upload_names_it(pool: PgPool) {
 /// clip under its own id and upload digest, a retry of its file handed
 /// that clip without another encode — and a post attaching it is accepted,
 /// witnessing the first clip's rendition beside the second upload's bytes.
+/// The second upload's digest is read off its own echo — the bytes as they
+/// arrived after the server's strip, since ffmpeg's remux writes tags a
+/// device strip would have dropped first.
 ///
 /// A re-encode whose rendition is a clip its author already holds merges into that clip.
 /// ´claim:media:a-matching-re-encode-merges´
@@ -1489,9 +1492,6 @@ async fn a_re_encode_that_matches_a_held_clip_merges_into_it(pool: PgPool) {
         "the merged upload's original is released"
     );
 
-    // The upload digest the second upload echoed: the bytes as they
-    // arrived after the server's strip (ffmpeg's remux writes its own
-    // tags, which a device strip would have dropped first).
     let sent = second["uploadDigest"]
         .as_str()
         .expect("the echo")
