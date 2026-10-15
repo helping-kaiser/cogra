@@ -167,31 +167,31 @@ impl Default for SigningBudget {
         const DAY: f64 = 86_400.0;
         Self {
             post: Window {
-                limit: 10,
+                limit: 200,
                 window_secs: HOUR,
             },
             comment: Window {
-                limit: 60,
+                limit: 300,
                 window_secs: HOUR,
             },
             edit: Window {
-                limit: 30,
+                limit: 200,
                 window_secs: HOUR,
             },
             stance: Window {
-                limit: 300,
+                limit: 1000,
                 window_secs: HOUR,
             },
             claim: Window {
-                limit: 300,
+                limit: 1000,
                 window_secs: HOUR,
             },
             approval: Window {
-                limit: 50,
+                limit: 200,
                 window_secs: DAY,
             },
             any: Window {
-                limit: 2000,
+                limit: 10000,
                 window_secs: DAY,
             },
             admission_funding: Window {
