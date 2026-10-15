@@ -144,7 +144,10 @@ fn genesis_parameters(input: &GenesisInput) -> Vec<(&'static str, serde_json::Va
         ("k", json!(8)),
         ("gamma", json!(1.0)),
         ("dust_floor", json!(0.0)),
-        ("recency_half_life_epochs", json!(30)),
+        // ~1 week of wall time at the dev substrate's 3-second epoch
+        // clock (jakob's recalibration, 2026-10-16: the first tested
+        // value, 30 epochs = 90 seconds, decayed content in minutes).
+        ("recency_half_life_epochs", json!(200_000)),
         ("recency_shape", json!("exponential")),
         ("tie_breaker_composition", json!(["recency"])),
         ("reserve_share", json!(0.01)),
