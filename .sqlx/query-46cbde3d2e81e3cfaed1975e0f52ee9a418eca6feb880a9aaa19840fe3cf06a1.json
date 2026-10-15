@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE act_payloads\n         SET payload = NULL, content_salt = NULL,\n             payload_state = 'reduced', reduced_at = NOW()\n         WHERE act_id = $1 AND payload_state = 'full'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "46cbde3d2e81e3cfaed1975e0f52ee9a418eca6feb880a9aaa19840fe3cf06a1"
+}

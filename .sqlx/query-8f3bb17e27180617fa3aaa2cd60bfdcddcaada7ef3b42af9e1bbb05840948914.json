@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE l1_acts\n             SET payload = NULL, content_salt = NULL, nonce = NULL,\n                 carriage_dropped_at = NOW()\n             WHERE act_id = ANY($1) AND payload IS NOT NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8f3bb17e27180617fa3aaa2cd60bfdcddcaada7ef3b42af9e1bbb05840948914"
+}
