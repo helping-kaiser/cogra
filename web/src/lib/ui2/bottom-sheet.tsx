@@ -88,6 +88,7 @@ export function BottomSheet({
   coverHeld = false,
   node,
   focusTitle = false,
+  initialFocus,
 }: {
   /**
    * Focus lands on the TITLE when the sheet opens, rather than on its first
@@ -95,6 +96,14 @@ export function BottomSheet({
    * moves to its title"), so a listener hears what opened before any choice.
    */
   focusTitle?: boolean;
+  /**
+   * The control focus lands on when the sheet opens — the dialog pattern's
+   * default (WAI-ARIA APG: the first focusable control), named explicitly for
+   * a sheet whose first control is one the platform's own pick would skip: a
+   * visually-hidden route (the pair sheets' `Set exact values for …`). Focused
+   * after `showModal()`, since a control inside a closed dialog takes none.
+   */
+  initialFocus?: RefObject<HTMLElement | null>;
   /**
    * The registered sheet node on a registered screen
    * (`settings.licenseSheet`): the sheet is the node, its grip `dragHandle`
@@ -206,6 +215,7 @@ export function BottomSheet({
     if (open) {
       if (!dialog.open) dialog.showModal();
       if (focusTitle) titleRef.current?.focus();
+      else initialFocus?.current?.focus();
       return;
     }
     if (!dialog.open) return;
@@ -214,7 +224,7 @@ export function BottomSheet({
       dialog.close();
     }, exitDuration(SHEET_OUT_MS));
     return () => clearTimeout(timer);
-  }, [open, focusTitle]);
+  }, [open, focusTitle, initialFocus]);
 
   // PULLING DOWN IS HOW A DRAWER IS DROPPED (design/readme.md: "pulling down
   // already means dismiss and one gesture may not mean two things"). The
