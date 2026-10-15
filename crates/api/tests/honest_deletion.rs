@@ -126,15 +126,14 @@ impl Rig {
     }
 
     /// Prepares a post with the gallery, returning its staged write id
-    /// and its act id. Nothing is signed.
+    /// and its act id. Nothing is signed. A post's body is words or
+    /// media, so beside media the words go in the description.
     async fn prepare_post(&self, actor: Uuid, body: &str, media: &[Uuid]) -> (Uuid, String) {
         let prepared = content::prepare_post(
             &self.pool,
             &self.boundary,
             STAGING,
             actor,
-            // A post's body is words or media: beside media the words go
-            // in the description.
             PostDraft {
                 title: Some("Title".into()),
                 description: (!media.is_empty()).then(|| body.into()),

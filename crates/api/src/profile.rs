@@ -288,7 +288,9 @@ pub async fn land_promoted(
 ///
 /// A Registration whose staged payload a redaction reaped before the
 /// record arrived lands reduced: a carriage row holding nothing, and no
-/// version row, since there is no update left to apply.
+/// version row, since there is no update left to apply. A redaction that
+/// reduced the act while it was being promoted has the last word the same
+/// way: no version row is built from bytes it removed.
 async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), ProfileError> {
     let staged_row = match staged::load_promotable(pool, write.id).await? {
         staged::Promotable::Full(row) => *row,
@@ -363,8 +365,6 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
         .map_err(|e| ProfileError::Internal(e.to_string()))?;
     content_store::insert_act_payload(&mut tx, &write.act_id, payload, &sealed.content_salt)
         .await?;
-    // A redaction that reduced this act while it was being promoted has
-    // the last word: no version row is built from bytes it removed.
     if content_store::lock_act_payload(&mut tx, &write.act_id)
         .await?
         .is_some_and(|carriage| carriage.reduced)

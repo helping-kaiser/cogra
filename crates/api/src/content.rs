@@ -1455,6 +1455,13 @@ pub async fn land_promoted(
 /// landed write missing it is the same internal fault its sibling is:
 /// substituting `Utc::now()` would stamp the content with its promotion
 /// time and leave no mark that it did.
+///
+/// A write a redaction reaped lands reduced ([`land_reduced`]), and so
+/// does one a redaction reached between the load and the carriage insert:
+/// that redaction already promoted, archived and reduced the carriage, and
+/// building display rows from the bytes loaded before it would re-publish
+/// what it removed. The insert keeps the reduced row, and the read after
+/// it is what notices.
 async fn land_one(
     pool: &PgPool,
     write: &staged::PromotedWrite,
@@ -1495,10 +1502,6 @@ async fn land_one(
         .map_err(|e| ContentError::Internal(e.to_string()))?;
     content_store::insert_act_payload(&mut tx, &write.act_id, payload, &sealed.content_salt)
         .await?;
-    // A redaction that ran between the load above and this insert has
-    // already promoted, archived and reduced the carriage; building
-    // display rows from the bytes loaded before it would re-publish what
-    // it removed.
     if content_store::lock_act_payload(&mut tx, &write.act_id)
         .await?
         .is_some_and(|carriage| carriage.reduced)
