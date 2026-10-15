@@ -6,7 +6,9 @@
 // The topic and citation sections are the SHIPPED ones, embedded unchanged.
 // They carry their own caps, their own field errors and their own finder; a
 // second copy restyled for this screen would be two implementations of one
-// gesture, and the batch caps are the same caps either way.
+// gesture, and the batch caps are the same caps either way. Here they set a
+// staged pair in its sheet (`pairs="sheet"`: TagPadCompose, RefPair), and the
+// wizard's state moves only when that sheet's Done hands the pair out.
 //
 // THE UPLOAD STATE IS BOARDED (ComposeUploading, 2026-08-31): rings on the
 // thumbnails, one failure with its words and ways out, and the describe counter
@@ -150,6 +152,7 @@ export function DetailsStep({
         cap={TAG_BATCH_CAP}
         testIdPrefix="wizard"
         node={{ path: "composeDetails.tags" }}
+        pairs="sheet"
       />
       <ReferenceEntryField
         references={references}
@@ -158,6 +161,7 @@ export function DetailsStep({
         cap={REFERENCE_BATCH_CAP}
         testIdPrefix="wizard"
         node={{ path: "composeDetails.references" }}
+        pairs="sheet"
       />
 
       <div className="flex-1" />

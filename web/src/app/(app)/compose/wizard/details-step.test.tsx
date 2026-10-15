@@ -1,9 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { DetailsStep } from "./details-step";
 import type { PickedAsset } from "@/lib/compose/wizard";
 import { byNode } from "@/test/data-node";
+import { newReferenceDraft } from "@/lib/references/draft";
+import type { TagDraft } from "@/lib/topics/draft";
 
 const VIDEO_ASSET: PickedAsset = {
   id: "v0",
@@ -208,5 +210,92 @@ describe("DetailsStep", () => {
       screen.getByLabelText("Remove this video").click();
       expect(onRemove).toHaveBeenCalledWith(VIDEO_ASSET.id);
     });
+  });
+});
+
+// THE STAGED PAIRS (ComposeDetails.md, TagPadCompose.md, RefPair.md). The
+// wizard's reducer holds the staged tags and citations; a pair sheet holds its
+// own copy until Done, so the stage hears exactly one change per Done and none
+// from any other way out.
+describe("DetailsStep — the staged pairs", () => {
+  const rust: TagDraft = { name: "rust", relevance: 0.1, confidence: 1 };
+  const ada = newReferenceDraft("u-ada", { kind: "User", label: "@ada", href: "/u/ada" });
+
+  it("stages a typed tag at +0.1 / 1 and draws no loose pair beside the entry", () => {
+    const { onTags } = renderStep();
+    expect(screen.queryByRole("slider")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByTestId("wizard-tag-input"), { target: { value: "rust" } });
+    fireEvent.click(screen.getByTestId(byNode("composeDetails.tags.add")));
+    expect(onTags).toHaveBeenCalledWith([rust]);
+  });
+
+  it("opens a tag chip's pair in a sheet over the stage, and dispatches only on Done", () => {
+    const { onTags } = renderStep({ tags: [rust] });
+    const chip = screen.getByTestId(byNode("composeDetails.tags.tag", "rust"));
+    fireEvent.click(within(chip).getByTestId("wizard-tag-0-select"));
+    const sheet = screen.getByTestId("wizard-tag-pair") as HTMLDialogElement;
+    expect(sheet.open).toBe(true);
+    expect(sheet).toHaveAttribute("aria-label", "#rust");
+
+    fireEvent.click(screen.getByTestId("wizard-tag-pair-exact-route"));
+    fireEvent.change(screen.getByTestId("wizard-tag-pair-tracks-interest"), {
+      target: { value: "0.3" },
+    });
+    expect(onTags).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId("wizard-tag-pair-done"));
+    expect(onTags).toHaveBeenCalledTimes(1);
+    expect(onTags).toHaveBeenCalledWith([{ name: "rust", relevance: 0.1, confidence: 0.3 }]);
+  });
+
+  it("dispatches nothing when the tag's sheet is dropped", () => {
+    const { onTags } = renderStep({ tags: [rust] });
+    fireEvent.click(screen.getByTestId("wizard-tag-0-select"));
+    fireEvent.click(screen.getByTestId("wizard-tag-pair-exact-route"));
+    fireEvent.change(screen.getByTestId("wizard-tag-pair-tracks-directed"), {
+      target: { value: "0.8" },
+    });
+    fireEvent.click(screen.getByTestId("wizard-tag-pair"));
+    expect(onTags).not.toHaveBeenCalled();
+  });
+
+  it("removes a tag on the spot, with no dialog", () => {
+    const { onTags } = renderStep({ tags: [rust] });
+    fireEvent.click(screen.getByTestId(byNode("composeDetails.tags.tag.remove", "rust")));
+    expect(onTags).toHaveBeenCalledWith([]);
+    expect((screen.getByTestId("wizard-tag-pair") as HTMLDialogElement).open).toBe(false);
+  });
+
+  it("opens a staged citation's pair in a sheet over the stage, and dispatches only on Done", () => {
+    const { onReferences } = renderStep({ references: [ada] });
+    fireEvent.click(screen.getByTestId(byNode("composeDetails.references.stagedReference.name", "1")));
+    const sheet = screen.getByTestId("wizard-reference-pair") as HTMLDialogElement;
+    expect(sheet.open).toBe(true);
+    expect(sheet).toHaveAttribute("aria-label", "@ada");
+    expect(screen.getByTestId("wizard-reference-pair-exact")).toHaveTextContent("+0.10 / +0.10");
+
+    fireEvent.click(screen.getByTestId("wizard-reference-pair-exact-route"));
+    fireEvent.change(screen.getByTestId("wizard-reference-pair-tracks-directed"), {
+      target: { value: "-0.4" },
+    });
+    fireEvent.click(sheet);
+    expect(onReferences).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByTestId(byNode("composeDetails.references.stagedReference.name", "1")));
+    fireEvent.click(screen.getByTestId("wizard-reference-pair-exact-route"));
+    fireEvent.change(screen.getByTestId("wizard-reference-pair-tracks-directed"), {
+      target: { value: "-0.4" },
+    });
+    fireEvent.click(screen.getByTestId("wizard-reference-pair-done"));
+    expect(onReferences).toHaveBeenCalledTimes(1);
+    expect(onReferences).toHaveBeenCalledWith([{ ...ada, relevance: -0.4 }]);
+  });
+
+  it("removes a staged citation on the spot, with no dialog", () => {
+    const { onReferences } = renderStep({ references: [ada] });
+    fireEvent.click(
+      screen.getByTestId(byNode("composeDetails.references.stagedReference.remove", "1")),
+    );
+    expect(onReferences).toHaveBeenCalledWith([]);
+    expect((screen.getByTestId("wizard-reference-pair") as HTMLDialogElement).open).toBe(false);
   });
 });
