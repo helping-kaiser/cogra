@@ -189,10 +189,12 @@ on a video shown without a poster), key 4 the **cover-taken** mark
 (bool, present only alongside key 3, refused otherwise) recording
 that the cover is the system's own first frame rather than one the
 author chose — absent means chosen, and the only legal in-band
-value is `true`. That is what a reader needs to render honestly —
+value is `true` — and key 5 the **upload digest** (32-byte bstr,
+SHA-256): the device's own hash of the bytes it sent, after its
+metadata strip. That is what a reader needs to render honestly —
 which bytes, what type, what the picture is of, which still stands
 in for a clip that is not playing, and whether that still was
-chosen or taken. The cover
+chosen or taken — and what the author handed over. The cover
 is witnessed because it is the face the post wears at rest: an
 author signs the face as they sign the body, and an edit that
 changes it is a new version saying so. Alt text is witnessed
@@ -205,9 +207,25 @@ order it is stored in. The nested map runs the same reserved-key
 discipline the outer envelope runs: an unknown key is refused
 rather than ignored.
 
+The two digests are one witness in two halves. Key 0 is the
+**rendition digest**, the server's hash of the bytes the asset
+serves, so a reader can check what it was shown; key 5 is the
+**upload digest**, so the record also says what the author's
+device sent. They are equal for an asset stored as it arrived and
+differ for a clip the server re-encoded — and since the server
+keeps no raw original, key 5 is the only trace of the author's own
+bytes a re-encode leaves. Both always ride: a prepare refuses an
+entry without key 5. A reader tolerates its absence, because
+payloads landed before the key existed carry none. Key 5 names the
+upload the entry's media id names — the row a merged or retried
+upload resolved *from* — while key 0 names the asset it resolved
+*to*. A cover carries no upload digest of its own: it is an
+uploaded still, stored as it arrived, so its upload digest is the
+rendition digest key 3 already carries.
+
 That refusal is what lets both maps grow additively. A new field
-is a new key assigned under schema version 1 — manifest keys 3
-and 4 each arrived that way — and every reader refuses a key above
+is a new key assigned under schema version 1 — manifest keys 3, 4
+and 5 each arrived that way — and every reader refuses a key above
 the highest it knows, so a reader older than a field refuses the
 payload rather than dropping the field and rendering an asset it
 did not fully understand.
@@ -603,6 +621,18 @@ CREATE INDEX media_attachments_processing_idx
 CREATE INDEX media_attachments_merged_into_idx
     ON media_attachments (merged_into) WHERE merged_into IS NOT NULL;
 ```
+
+A row's **upload digest** is `COALESCE(source_digest, digest)`:
+the digest of the bytes as they arrived, after the metadata
+strip. The server keeps no raw original — the ingest worker deletes
+it once the rendition is stored — so this is all that remains of
+the bytes an author sent. It is what the upload echoes back
+(`MediaAttachment.uploadDigest`), which the device holds to its own
+hash of the bytes it sent before it attaches anything, and what a
+manifest entry naming the row witnesses as key 5. Read through a
+named id, it is always the NAMED row's, never the asset a merge
+resolved it to: two uploads that re-encoded to one rendition are
+two uploads of one asset.
 
 The author-digest index leads with `author_id`, so it serves every
 author-keyed lookup — the account-redaction sweep of
