@@ -274,7 +274,7 @@ impl Query {
         let pool = ctx.data::<PgPool>()?;
         match staged::load(pool, id).await {
             Ok(w) if w.actor_id == viewer.user_id => Ok(Some(StagedWriteType(w))),
-            Ok(_) | Err(staged::StagedError::NotFound(_)) => Ok(None),
+            Ok(_) | Err(staged::StagedError::NotFound(_) | staged::StagedError::Reaped(_)) => Ok(None),
             Err(e) => Err(async_graphql::Error::new(e.to_string())),
         }
     }

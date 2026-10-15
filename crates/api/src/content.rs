@@ -1460,7 +1460,12 @@ async fn land_one(
     write: &staged::PromotedWrite,
     family: ContentFamily,
 ) -> Result<(), ContentError> {
-    let staged_row = staged::load(pool, write.id).await?;
+    let staged_row = match staged::load_promotable(pool, write.id).await? {
+        staged::Promotable::Full(row) => row,
+        staged::Promotable::Reaped(reaped) => {
+            return land_reduced(pool, write, family, &reaped).await;
+        }
+    };
     let payload = &staged_row.proposal.payload;
     let sealed = staged_row
         .sealed
@@ -1490,6 +1495,24 @@ async fn land_one(
         .map_err(|e| ContentError::Internal(e.to_string()))?;
     content_store::insert_act_payload(&mut tx, &write.act_id, payload, &sealed.content_salt)
         .await?;
+    // A redaction that ran between the load above and this insert has
+    // already promoted, archived and reduced the carriage; building
+    // display rows from the bytes loaded before it would re-publish what
+    // it removed.
+    if content_store::lock_act_payload(&mut tx, &write.act_id)
+        .await?
+        .is_some_and(|carriage| carriage.reduced)
+    {
+        drop(tx);
+        let reaped = staged::ReapedWrite {
+            id: staged_row.id,
+            actor_id: staged_row.actor_id,
+            body: staged_row.proposal.body.clone(),
+            node_id: staged_row.node_id,
+            pre_signed_at: staged_row.pre_signed_at,
+        };
+        return land_reduced(pool, write, family, &reaped).await;
+    }
 
     let shape = match (family, is_genesis) {
         (ContentFamily::Post, true) => {
@@ -1548,6 +1571,72 @@ async fn land_one(
             },
         )
         .await?;
+    }
+    tx.commit()
+        .await
+        .map_err(|e| ContentError::Internal(e.to_string()))?;
+    Ok(())
+}
+
+/// Lands a content record whose staged payload a redaction reaped before
+/// the record arrived (data-model.md "Act payload carriage").
+///
+/// The record is ordered fact and lands whatever became of the bytes, but
+/// there are none to promote and none to decode, so it lands **reduced**:
+/// a carriage row in `reduced` holding nothing, and the landing order
+/// written onto whatever display rows the write still owns. No display
+/// row is built — there is no content to build one from — and the rows
+/// that exist show what the redaction's own tombstones made of them.
+async fn land_reduced(
+    pool: &PgPool,
+    write: &staged::PromotedWrite,
+    family: ContentFamily,
+    reaped: &staged::ReapedWrite,
+) -> Result<(), ContentError> {
+    let meta = mirror::record_meta(pool, &write.act_id)
+        .await?
+        .ok_or_else(|| ContentError::Internal("promoted record missing from mirror".into()))?;
+    let order = LandingOrder {
+        landed_epoch: meta.epoch,
+        act_time: meta.act_time,
+        position: meta.position,
+    };
+    let (target, is_genesis) = genesis_shape(&reaped.body);
+    let edited = match (family, is_genesis) {
+        (_, true) => None,
+        (ContentFamily::Post, false) => content_store::post_by_node(pool, &target)
+            .await?
+            .map(|p| p.id),
+        (ContentFamily::Comment, false) => content_store::comment_by_node(pool, &target)
+            .await?
+            .map(|c| c.id),
+    };
+    let mut tx = pool
+        .begin()
+        .await
+        .map_err(|e| ContentError::Internal(e.to_string()))?;
+    content_store::insert_reduced_act_payload(&mut tx, &write.act_id).await?;
+    if let Some(created_at) = reaped.pre_signed_at {
+        match (family, is_genesis, reaped.node_id, edited) {
+            (ContentFamily::Post, true, Some(node), _) => {
+                if content_store::land_post(&mut tx, node, order).await? {
+                    content_store::land_post_version(&mut tx, node, created_at, order).await?;
+                }
+            }
+            (ContentFamily::Comment, true, Some(node), _) => {
+                if content_store::land_comment(&mut tx, node, order).await? {
+                    content_store::land_comment_version(&mut tx, node, created_at, order)
+                        .await?;
+                }
+            }
+            (ContentFamily::Post, false, _, Some(post)) => {
+                content_store::land_post_version(&mut tx, post, created_at, order).await?;
+            }
+            (ContentFamily::Comment, false, _, Some(comment)) => {
+                content_store::land_comment_version(&mut tx, comment, created_at, order).await?;
+            }
+            _ => {}
+        }
     }
     tx.commit()
         .await

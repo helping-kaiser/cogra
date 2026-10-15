@@ -280,16 +280,50 @@ pub async fn land_promoted(
 /// re-assert `common::envelope`'s wire framing here, and a change to that
 /// framing would silently reclassify every profile update as an admission
 /// payload and return `Ok(())` for all of them.
+///
+/// An unchained Registration writes no profile version, but its payload —
+/// the admission Registration carries the handle — still moves into
+/// carriage like any landed payload: the staged row is not a payload's
+/// permanent home, and a redaction reaps it.
+///
+/// A Registration whose staged payload a redaction reaped before the
+/// record arrived lands reduced: a carriage row holding nothing, and no
+/// version row, since there is no update left to apply.
 async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), ProfileError> {
-    let staged_row = staged::load(pool, write.id).await?;
+    let staged_row = match staged::load_promotable(pool, write.id).await? {
+        staged::Promotable::Full(row) => row,
+        staged::Promotable::Reaped(_) => {
+            let mut tx = pool
+                .begin()
+                .await
+                .map_err(|e| ProfileError::Internal(e.to_string()))?;
+            content_store::insert_reduced_act_payload(&mut tx, &write.act_id).await?;
+            tx.commit()
+                .await
+                .map_err(|e| ProfileError::Internal(e.to_string()))?;
+            return Ok(());
+        }
+    };
     let payload = &staged_row.proposal.payload;
-    if staged_row.proposal.body.asserted_parents.is_empty() {
-        return Ok(());
-    }
     let sealed = staged_row
         .sealed
         .as_ref()
         .ok_or_else(|| ProfileError::Internal("landed write without sealed parts".into()))?;
+    if staged_row.proposal.body.asserted_parents.is_empty() {
+        if payload.is_empty() {
+            return Ok(());
+        }
+        let mut tx = pool
+            .begin()
+            .await
+            .map_err(|e| ProfileError::Internal(e.to_string()))?;
+        content_store::insert_act_payload(&mut tx, &write.act_id, payload, &sealed.content_salt)
+            .await?;
+        tx.commit()
+            .await
+            .map_err(|e| ProfileError::Internal(e.to_string()))?;
+        return Ok(());
+    }
     let update = CograProfile::decode_payload(payload)
         .map_err(|e| ProfileError::Internal(format!("landed payload not admissible: {e}")))?;
     if update.node != write.actor_id {
@@ -329,6 +363,17 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
         .map_err(|e| ProfileError::Internal(e.to_string()))?;
     content_store::insert_act_payload(&mut tx, &write.act_id, payload, &sealed.content_salt)
         .await?;
+    // A redaction that reduced this act while it was being promoted has
+    // the last word: no version row is built from bytes it removed.
+    if content_store::lock_act_payload(&mut tx, &write.act_id)
+        .await?
+        .is_some_and(|carriage| carriage.reduced)
+    {
+        tx.commit()
+            .await
+            .map_err(|e| ProfileError::Internal(e.to_string()))?;
+        return Ok(());
+    }
     profile::insert_profile_version(
         &mut tx,
         write.actor_id,

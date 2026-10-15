@@ -439,7 +439,7 @@ fn relay_error(e: RelayError, index: usize) -> UserError {
             "resubmission does not match the sealed pre-commitment",
             path,
         ),
-        RelayError::Staged(staged::StagedError::NotFound(_)) => {
+        RelayError::Staged(staged::StagedError::NotFound(_) | staged::StagedError::Reaped(_)) => {
             UserError::at(ErrorCode::NotFound, "unknown staged write", path)
         }
         RelayError::Staged(staged::StagedError::WrongState { actual, .. })
@@ -4127,7 +4127,7 @@ impl Mutation {
         for (i, proposal) in input.proposals.iter().enumerate() {
             let owned = match staged::load(pool, proposal.staged_write_id).await {
                 Ok(w) if w.actor_id == v.user_id => w,
-                Ok(_) | Err(staged::StagedError::NotFound(_)) => {
+                Ok(_) | Err(staged::StagedError::NotFound(_) | staged::StagedError::Reaped(_)) => {
                     user_errors.push(UserError::at(
                         ErrorCode::NotFound,
                         "unknown staged write",
@@ -4204,7 +4204,7 @@ impl Mutation {
         for (i, approval) in input.approvals.iter().enumerate() {
             let owned = match staged::load(pool, approval.staged_write_id).await {
                 Ok(w) if w.actor_id == v.user_id => w,
-                Ok(_) | Err(staged::StagedError::NotFound(_)) => {
+                Ok(_) | Err(staged::StagedError::NotFound(_) | staged::StagedError::Reaped(_)) => {
                     user_errors.push(UserError::at(
                         ErrorCode::NotFound,
                         "unknown staged write",
