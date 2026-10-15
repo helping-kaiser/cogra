@@ -1447,6 +1447,20 @@ type MediaAttachment {
 	the digest so a reader never infers it from a length.
 	"""
 	digestAlgo: String!
+	"""
+	The upload digest, lowercase hex under `digestAlgo`: the digest of
+	the bytes as they arrived, after the metadata strip. It is the
+	server's echo of the hash the uploading device took of the bytes it
+	sent, and what a placement's manifest witnesses beside `digest`
+	(manifest key 5). Equal to `digest` for an asset stored as it
+	arrived; the bytes before a re-encode for one that was not.
+	
+	It belongs to the id this value answers under. Read through
+	`uploadMedia`, `completeMediaUpload` or `mediaAttachment(id)`, that
+	is the upload the caller named — never the asset a merge resolved
+	it to, whose own upload sent other bytes.
+	"""
+	uploadDigest: String!
 	mimeType: String!
 	"""
 	Whether the bytes are final. An upload the server has to re-encode
@@ -3113,7 +3127,9 @@ type Query {
 	asset it uploaded as PROCESSING has become READY (or FAILED).
 	Polled the way `stagedWrite` is. An upload whose re-encode came
 	out as bytes the viewer already holds answers as that asset,
-	READY under its own id; attaching either id attaches it. Null for
+	READY, under the id it was asked by and with its own
+	`uploadDigest`; attaching either id attaches the asset, and the
+	manifest witnesses the upload digest of the id attached. Null for
 	an unknown id, for somebody else's asset, and without a session:
 	an upload is nobody else's business until a parent carries it.
 	"""

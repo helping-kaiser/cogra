@@ -289,8 +289,13 @@ steps:
    before the first pre-signature of a batch: it rebuilds, from the
    form state of the gesture, what every act's structural body must
    be — family, author, endpoints, the picked parameters, license,
-   asserted parents, payload presence — and refuses the whole batch
-   on any extra, missing, or differing write. A severance-shaped
+   asserted parents — and what its payload envelope must decode to,
+   read by the device's own decoder: the node it binds to, every
+   text field after the server's own normalization, the gallery in
+   order with each entry's description, poster and both digests
+   (the rendition read at READY, the upload digest the device
+   computed), the self-mark, and a profile's fields. It refuses the
+   whole batch on any extra, missing, or differing write. A severance-shaped
    batch, whose counter-records the server computes, is checked as a
    property instead: every record toward the shown target, each
    value in range, as many records as the cost shown, and the shown

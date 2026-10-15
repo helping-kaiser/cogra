@@ -272,17 +272,30 @@ internal fun MediaFields.CoverMedia.toDomain(): MediaAssetView = MediaAssetView(
  * they are not on [MediaFields] itself).
  */
 internal fun UploadMediaMutation.Media.toDomain(): MediaAssetView =
-    mediaFields.toDomain().copy(state = state.toDomain(), failureReason = failureReason)
+    mediaFields.toDomain().copy(
+        state = state.toDomain(),
+        failureReason = failureReason,
+        digest = digest,
+        uploadDigest = uploadDigest,
+    )
 
 /** See [UploadMediaMutation.Media.toDomain] — same shape, the resumable path's payload. */
 internal fun CompleteMediaUploadMutation.Media.toDomain(): MediaAssetView =
-    mediaFields.toDomain().copy(state = state.toDomain(), failureReason = failureReason)
+    mediaFields.toDomain().copy(
+        state = state.toDomain(),
+        failureReason = failureReason,
+        digest = digest,
+        uploadDigest = uploadDigest,
+    )
 
-/** The poll's own lean answer — just the gate's question, per `media.graphql`'s comment on the query. */
+/** The poll's own lean answer — the gate's question and the intent check's, per `media.graphql`. */
 internal fun MediaAttachmentQuery.MediaAttachment.toDomain(): MediaReadiness = MediaReadiness(
     id = id,
     state = state.toDomain(),
     failureReason = failureReason,
+    digest = digest,
+    uploadDigest = uploadDigest,
+    mimeType = mimeType,
 )
 
 internal fun PostFields.Title.toDomain() = ModeratedField(value, status.toDomain())

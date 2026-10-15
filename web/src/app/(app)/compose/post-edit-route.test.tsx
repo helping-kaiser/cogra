@@ -133,7 +133,24 @@ function editablePost({
 }
 
 function serve(data: ReturnType<typeof editablePost>) {
-  server.use(graphql.query("PostDetail", () => HttpResponse.json({ data })));
+  server.use(
+    graphql.query("PostDetail", () => HttpResponse.json({ data })),
+    // The kept placements' digests, read back by id at sign time — no
+    // gallery read selects them (payload-expectation.ts).
+    graphql.query("MediaAttachmentStatus", ({ variables }) =>
+      HttpResponse.json({
+        data: {
+          mediaAttachment: {
+            ...attachment(variables.id as string),
+            state: "READY",
+            failureReason: null,
+            digest: "11".repeat(32),
+            uploadDigest: "11".repeat(32),
+          },
+        },
+      }),
+    ),
+  );
 }
 
 function draw(

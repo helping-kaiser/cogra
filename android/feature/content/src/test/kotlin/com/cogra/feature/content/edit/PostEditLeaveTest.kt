@@ -19,8 +19,10 @@ import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
 import com.cogra.domain.SelfMarkView
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.testing.FaithfulMediaRepository
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
+import com.cogra.domain.testing.TEST_POST_ID
 import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingTopicRepository
@@ -63,13 +65,14 @@ class PostEditLeaveTest {
         ThrowingReferenceRepository(),
         WriteSigner(SealingWriteRepository(actor), identity),
         identity,
+        FaithfulMediaRepository(),
     )
 
     private var leaves = 0
 
     private fun open() {
         compose.setContent {
-            PostEditRoute(postId = "p1", onSaved = {}, onBack = { leaves += 1 }, viewModel = viewModel)
+            PostEditRoute(postId = TEST_POST_ID, onSaved = {}, onBack = { leaves += 1 }, viewModel = viewModel)
         }
         compose.waitForIdle()
     }
@@ -146,7 +149,7 @@ class PostEditLeaveTest {
     fun whileTheSigningHoldsTheXAndTheBackArrowRefuse() {
         compose.setContent {
             PostEditScreen(
-                state = PostEditUiState(postId = "p1", body = "b", recordStaged = true, submitting = true),
+                state = PostEditUiState(postId = TEST_POST_ID, body = "b", recordStaged = true, submitting = true),
                 actions = PostEditActions(onLeave = { leaves += 1 }),
             )
         }

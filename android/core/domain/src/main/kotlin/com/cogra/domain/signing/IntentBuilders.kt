@@ -6,8 +6,8 @@ package com.cogra.domain.signing
 
 import com.cogra.crypto.Family
 
-/** A new post's genesis Publish: `p_i` is census-fixed at 1. */
-fun postGenesis(pDirected: Double, license: String): ExpectedWrite = ExpectedWrite(
+/** A new post's genesis Publish carrying [content]: `p_i` is census-fixed at 1. */
+fun postGenesis(pDirected: Double, license: String, content: ExpectedContent): ExpectedWrite = ExpectedWrite(
     family = Family.PUBLISH,
     middle = null,
     target = NodeExpectation.OwnMint,
@@ -15,11 +15,17 @@ fun postGenesis(pDirected: Double, license: String): ExpectedWrite = ExpectedWri
     pInterest = 1.0,
     license = license,
     parents = Parents.NONE,
-    payload = PayloadPresence.PRESENT,
+    payload = PayloadExpectation.Content(content),
 )
 
-/** A new comment's genesis Review, its A leg at the parent on screen. */
-fun commentGenesis(parentGraphId: String, pDirected: Double, pInterest: Double, license: String): ExpectedWrite =
+/** A new comment's genesis Review carrying [content], its A leg at the parent on screen. */
+fun commentGenesis(
+    parentGraphId: String,
+    pDirected: Double,
+    pInterest: Double,
+    license: String,
+    content: ExpectedContent,
+): ExpectedWrite =
     ExpectedWrite(
         family = Family.REVIEW,
         middle = node(parentGraphId),
@@ -28,11 +34,11 @@ fun commentGenesis(parentGraphId: String, pDirected: Double, pInterest: Double, 
         pInterest = pInterest,
         license = license,
         parents = Parents.NONE,
-        payload = PayloadPresence.PRESENT,
+        payload = PayloadExpectation.Content(content),
     )
 
-/** A post edit: an ordinary-role Publish at (0, 1) chained behind its own head. */
-fun postEdit(postGraphId: String): ExpectedWrite = ExpectedWrite(
+/** A post edit carrying [content]: an ordinary-role Publish at (0, 1) chained behind its own head. */
+fun postEdit(postGraphId: String, content: ExpectedContent): ExpectedWrite = ExpectedWrite(
     family = Family.PUBLISH,
     middle = null,
     target = node(postGraphId),
@@ -40,11 +46,11 @@ fun postEdit(postGraphId: String): ExpectedWrite = ExpectedWrite(
     pInterest = 1.0,
     license = null,
     parents = Parents.OWN_CHAIN_HEAD,
-    payload = PayloadPresence.PRESENT,
+    payload = PayloadExpectation.Content(content),
 )
 
-/** A comment edit: an ordinary-role Review at (0, 0) chained behind its own head. */
-fun commentEdit(parentGraphId: String, commentGraphId: String): ExpectedWrite = ExpectedWrite(
+/** A comment edit carrying [content]: an ordinary-role Review at (0, 0) chained behind its own head. */
+fun commentEdit(parentGraphId: String, commentGraphId: String, content: ExpectedContent): ExpectedWrite = ExpectedWrite(
     family = Family.REVIEW,
     middle = node(parentGraphId),
     target = node(commentGraphId),
@@ -52,7 +58,7 @@ fun commentEdit(parentGraphId: String, commentGraphId: String): ExpectedWrite = 
     pInterest = 0.0,
     license = null,
     parents = Parents.OWN_CHAIN_HEAD,
-    payload = PayloadPresence.PRESENT,
+    payload = PayloadExpectation.Content(content),
 )
 
 /** One Tag act: relevance and confidence, exactly as picked. */
@@ -65,7 +71,7 @@ fun tagClaim(middle: NodeExpectation, name: String, relevance: Double, confidenc
         pInterest = confidence,
         license = null,
         parents = Parents.NONE,
-        payload = PayloadPresence.EMPTY,
+        payload = PayloadExpectation.Empty,
     )
 
 /** One Reference act: relevance and support, exactly as picked. */
@@ -78,7 +84,7 @@ fun referenceClaim(middle: NodeExpectation, targetGraphId: String, relevance: Do
         pInterest = support,
         license = null,
         parents = Parents.NONE,
-        payload = PayloadPresence.EMPTY,
+        payload = PayloadExpectation.Empty,
     )
 
 /** One stance record: the picked pair, never a delta (design.md §8.1). */
@@ -90,11 +96,11 @@ fun stanceRecord(targetGraphId: String, pDirected: Double, pInterest: Double): E
     pInterest = pInterest,
     license = null,
     parents = Parents.NONE,
-    payload = PayloadPresence.EMPTY,
+    payload = PayloadExpectation.Empty,
 )
 
-/** A profile update: the carrier Registration at (1, 1), chained on the own profile. */
-fun profileUpdate(): ExpectedWrite = ExpectedWrite(
+/** A profile update carrying [profile]: the carrier Registration at (1, 1), chained on the own profile. */
+fun profileUpdate(profile: ExpectedProfile): ExpectedWrite = ExpectedWrite(
     family = Family.REGISTRATION,
     middle = null,
     target = NodeExpectation.OwnProfile,
@@ -102,7 +108,7 @@ fun profileUpdate(): ExpectedWrite = ExpectedWrite(
     pInterest = 1.0,
     license = null,
     parents = Parents.OWN_CHAIN_HEAD,
-    payload = PayloadPresence.PRESENT,
+    payload = PayloadExpectation.Profile(profile),
 )
 
 /** Severance: the counter-records netting the shown bundle toward a target. */

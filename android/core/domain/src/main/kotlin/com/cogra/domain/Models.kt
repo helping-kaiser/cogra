@@ -351,6 +351,17 @@ data class MediaAssetView(
     val coverTaken: Boolean = false,
     val state: MediaAssetState = MediaAssetState.READY,
     val failureReason: String? = null,
+    /**
+     * The rendition digest, lowercase hex — selected only on the upload legs
+     * (schema.graphql `MediaAttachment.digest`); empty on a gallery read.
+     */
+    val digest: String = "",
+    /**
+     * The upload digest this device computed over the bytes it sent, once the
+     * server's echo matched it (`MediaRepository.uploadMedia`) — what the
+     * intent check holds the manifest's key 5 to. Empty outside an upload.
+     */
+    val uploadDigest: String = "",
 ) {
     /**
      * Whether this asset plays rather than being drawn once.

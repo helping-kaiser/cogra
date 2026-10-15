@@ -970,6 +970,15 @@ type MediaAttachment {
   digest: String!
   "The algorithm `digest` is under — `sha256` today."
   digestAlgo: String!
+  "The upload digest, lowercase hex under `digestAlgo`: the bytes as
+   they arrived, after the metadata strip — the server's echo of the
+   hash the uploading device took of what it sent, and what a
+   placement's manifest witnesses beside `digest` (per-asset map
+   key 5). Equal to `digest` for an asset stored as it arrived. It
+   belongs to the id this value answers under: read through an upload
+   or `mediaAttachment(id)`, the upload the caller named, never the
+   asset a merge resolved it to."
+  uploadDigest: String!
   mimeType: String!
   "Whether the bytes are final. PROCESSING while the server re-encodes
    an upload to the served target, READY once the stored bytes are the
@@ -1030,6 +1039,22 @@ type MediaOptions {
 was served and compares them against the record that carries
 them. The algorithm rides beside the digest so a reader never
 infers it from a length.
+
+`uploadDigest` is the **upload echo**. The device hashes exactly
+the bytes it is about to send — after its own strip and encode —
+and holds the upload's answer to that hash before the asset may be
+attached: a mismatch means the server recorded other bytes than
+were sent (its strip repaired them, or something between changed
+them), and the upload fails, retryably, without the asset ever
+being named. Every manifest entry then carries both digests, and
+the device's intent check holds key 0 to the `digest` it read at
+READY and key 5 to its own hash. It is a field rather than a reuse
+of `digest` because a retried upload resolves to an existing row
+whose `digest` is already the rendition: echoing `digest` would
+make a legitimate retry look like a server that kept other bytes.
+An upload or `mediaAttachment(id)` read therefore answers under
+the id it was asked by — a merged upload reads as the asset it
+merged into, under its own id and with its own `uploadDigest`.
 
 `url` is absolute because the bytes come from the media store's
 own origin rather than the API's. It is minted per read from a
@@ -2450,7 +2475,9 @@ type Query {
   "One of the viewer's own uploads, polled like stagedWrite until a
    PROCESSING asset reads READY or FAILED. An upload whose re-encode
    came out as bytes the viewer already holds answers as that asset,
-   READY under its own id; attaching either id attaches it. Null for
+   READY, under the id it was asked by and with its own
+   uploadDigest; attaching either id attaches the asset, and the
+   manifest witnesses the upload digest of the id attached. Null for
    an unknown id, another account's asset, and without a session."
   mediaAttachment(id: UUID!): MediaAttachment
 
@@ -4099,8 +4126,10 @@ says so.
   same clip picked twice on a phone that re-encodes every pick —
   resolves to that asset once the re-encode finishes:
   `mediaAttachment` on the upload's id then reads the held asset,
-  `READY` under its own id, and prepare accepts either id as that
-  asset. An asset is reusable across its author's own parents, so
+  `READY`, under the upload's own id and with that upload's
+  `uploadDigest`, and prepare accepts either id as that asset — the
+  manifest witnessing the held asset's rendition beside the upload
+  digest of the id named. An asset is reusable across its author's own parents, so
   attaching one that already sits in an earlier post is a second
   placement of it, never a refusal; only the same asset twice in
   one gallery is refused, at `["attachments", "<i>", "mediaId"]`.

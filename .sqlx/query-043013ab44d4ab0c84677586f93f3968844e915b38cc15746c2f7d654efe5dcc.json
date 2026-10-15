@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT id, author_id, digest, digest_algo, storage_key,\n               mime_type, size_bytes,\n               options AS \"options!: serde_json::Value\",\n               state AS \"state: AssetState\", failure_reason,\n               redaction_reason, redacted_at, created_at\n        FROM media_attachments\n        WHERE id = (SELECT COALESCE(merged_into, id) FROM media_attachments WHERE id = $1)\n        ",
+  "query": "\n        UPDATE media_attachments\n        SET state       = 'ready',\n            digest      = $2,\n            storage_key = $3,\n            size_bytes  = $4,\n            options     = $5,\n            lease_until = NULL\n        WHERE id = $1 AND state = 'processing'\n        RETURNING id, author_id, digest, digest_algo, storage_key,\n                  mime_type, size_bytes,\n                  options AS \"options!: serde_json::Value\",\n                  state AS \"state: AssetState\", failure_reason,\n                  redaction_reason, redacted_at, created_at,\n                  COALESCE(source_digest, digest) AS \"upload_digest!\"\n        ",
   "describe": {
     "columns": [
       {
@@ -67,11 +67,20 @@
         "ordinal": 12,
         "name": "created_at",
         "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 13,
+        "name": "upload_digest!",
+        "type_info": "Bytea"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Uuid",
+        "Bytea",
+        "Text",
+        "Int8",
+        "Jsonb"
       ]
     },
     "nullable": [
@@ -87,8 +96,9 @@
       true,
       true,
       true,
-      false
+      false,
+      null
     ]
   },
-  "hash": "3e26cb2507a6bde51dfb56e4172a527091c8f3d229eb852ea0a27d06c210a3b9"
+  "hash": "043013ab44d4ab0c84677586f93f3968844e915b38cc15746c2f7d654efe5dcc"
 }

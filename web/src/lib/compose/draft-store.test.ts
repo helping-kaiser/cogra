@@ -11,6 +11,9 @@ import {
 } from "./draft-store";
 import { emptyWizard, wizardReducer, type WizardState } from "./wizard";
 
+/** The digests a finished upload is held to — custody of the draft it belongs to. */
+const KNOWN = { digest: "11".repeat(32), uploadDigest: "22".repeat(32), mime: "image/webp" };
+
 const ACCOUNT_A = "11111111-1111-4111-8111-111111111111";
 const ACCOUNT_B = "22222222-2222-4222-8222-222222222222";
 
@@ -76,13 +79,45 @@ describe("the local draft", () => {
 
   it("keeps an id an upload already earned, because the asset row is immutable", async () => {
     const state = draft(picked("a0"), (s) =>
-      wizardReducer(s, { type: "upload", id: "a0", upload: { kind: "done", mediaId: "m-1" } }),
+      wizardReducer(s, { type: "upload", id: "a0", upload: { kind: "done", mediaId: "m-1", media: KNOWN } }),
     );
     await composeDraftStore.save(state);
     expect((await composeDraftStore.load())!.assets[0]!.upload).toEqual({
       kind: "done",
       mediaId: "m-1",
+      media: KNOWN,
     });
+  });
+
+  // The intent check holds a restored draft's pictures to the digests they
+  // were uploaded with, so those digests are custody of the draft: they come
+  // back with it, and they leave with it on sign-out (the draft's own fate).
+  it("the_upload_digest_survives_a_restart_with_the_draft", async () => {
+    const state = draft(picked("a0"), (s) =>
+      wizardReducer(s, { type: "upload", id: "a0", upload: { kind: "done", mediaId: "m-1", media: KNOWN } }),
+    );
+    await composeDraftStore.save(state);
+    const restored = (await composeDraftStore.load())!.assets[0]!.upload;
+    expect(restored.kind === "done" ? restored.media?.uploadDigest : null).toBe(KNOWN.uploadDigest);
+  });
+
+  // Sign-out clears the draft through this store (draft-custody.ts); the
+  // digests ride inside the draft record, so nothing of them outlives it.
+  it("the_upload_digest_leaves_with_the_draft_on_sign_out", async () => {
+    const state = draft(picked("a0"), (s) =>
+      wizardReducer(s, { type: "upload", id: "a0", upload: { kind: "done", mediaId: "m-1", media: KNOWN } }),
+    );
+    await composeDraftStore.save(state);
+    await composeDraftStore.clear();
+    expect(await composeDraftStore.load()).toBeNull();
+  });
+
+  it("re-sends an upload saved before the upload digest existed rather than signing it blind", async () => {
+    const state = draft(picked("a0"), (s) =>
+      wizardReducer(s, { type: "upload", id: "a0", upload: { kind: "done", mediaId: "m-1" } }),
+    );
+    await composeDraftStore.save(state);
+    expect((await composeDraftStore.load())!.assets[0]!.upload).toEqual({ kind: "waiting" });
   });
 
   // `autoCover` carries a Blob exactly like `cover` does, and needs the same
@@ -112,12 +147,16 @@ describe("the local draft", () => {
     const done = draft(
       () => state,
       (s) =>
-        wizardReducer(s, { type: "autoCoverUpload", upload: { kind: "done", mediaId: "m-auto0" } }),
+        wizardReducer(s, {
+          type: "autoCoverUpload",
+          upload: { kind: "done", mediaId: "m-auto0", media: KNOWN },
+        }),
     );
     await composeDraftStore.save(done);
     expect((await composeDraftStore.load())!.autoCover!.upload).toEqual({
       kind: "done",
       mediaId: "m-auto0",
+      media: KNOWN,
     });
   });
 

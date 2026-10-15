@@ -13,8 +13,12 @@ import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.overPictureCap
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.signing.Expectation
+import com.cogra.domain.signing.KnownMedia
+import com.cogra.domain.signing.SentProfile
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.known
+import com.cogra.domain.signing.profileExpectation
 import com.cogra.domain.signing.profileUpdate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,7 +45,12 @@ sealed interface ProfileImageState {
 
     data class Picked(val uri: String) : ProfileImageState
 
-    data class Uploaded(val mediaId: String, val url: String) : ProfileImageState
+    /**
+     * On the server. [known] is what the intent check holds the avatar
+     * entry to: the upload digest this device computed and the server
+     * echoed, and the rendition digest.
+     */
+    data class Uploaded(val mediaId: String, val url: String, val known: KnownMedia? = null) : ProfileImageState
 
     data class Failed(val uri: String, val message: String) : ProfileImageState
 
@@ -68,6 +77,8 @@ sealed interface ProfileImageState {
 }
 
 data class ProfileEditUiState(
+    /** The account's own id: the node a profile payload binds to. */
+    val profileId: String = "",
     val loading: Boolean = true,
     val transportFailed: Boolean = false,
     val displayName: String = "",
@@ -126,6 +137,7 @@ class ProfileEditViewModel @Inject constructor(
                     } else {
                         _state.update {
                             it.copy(
+                                profileId = profile.id,
                                 loading = false,
                                 displayName = profile.displayName.value.orEmpty(),
                                 bio = profile.bio.value.orEmpty(),
@@ -182,7 +194,7 @@ class ProfileEditViewModel @Inject constructor(
             } else {
                 when (val outcome = media.uploadMedia(processed)) {
                     is Outcome.Success ->
-                        ProfileImageState.Uploaded(outcome.value.id, outcome.value.url)
+                        ProfileImageState.Uploaded(outcome.value.id, outcome.value.url, outcome.value.known())
                     is Outcome.Refused ->
                         ProfileImageState.Failed(uri, outcome.errors.firstOrNull()?.message ?: REFUSED)
                     is Outcome.Failed -> ProfileImageState.Failed(uri, TRANSPORT)
@@ -202,12 +214,18 @@ class ProfileEditViewModel @Inject constructor(
         if (s.displayNameTooLong || s.bioTooLong || s.websiteUrlTooLong) return
         _state.update { it.copy(submitting = true, refused = false, signingFailed = false) }
         viewModelScope.launch {
+            val sent = SentProfile(
+                displayName = s.displayName.trim(),
+                bio = s.bio.ifBlank { null },
+                websiteUrl = s.websiteUrl.trim().ifBlank { null },
+                avatar = s.avatar.toUpdate(),
+            )
             val prepared = when (
                 val outcome = profiles.prepareProfileUpdate(
-                    displayName = s.displayName.trim(),
-                    bio = s.bio.ifBlank { null },
-                    websiteUrl = s.websiteUrl.trim().ifBlank { null },
-                    avatar = s.avatar.toUpdate(),
+                    displayName = sent.displayName,
+                    bio = sent.bio,
+                    websiteUrl = sent.websiteUrl,
+                    avatar = sent.avatar,
                 )
             ) {
                 is Outcome.Success -> outcome.value
@@ -220,9 +238,13 @@ class ProfileEditViewModel @Inject constructor(
                     return@launch
                 }
             }
-            // One profile update on this device's own profile; its fields are the
-            // envelope's, checked once the device decodes it (Intent.kt).
-            val results = signer.sign(prepared, Expectation(listOf(profileUpdate())))
+            // One profile update on this device's own profile, its payload held
+            // to the fields this form sent and the avatar this device uploaded
+            // (PayloadExpectation.kt).
+            val avatar = s.avatar as? ProfileImageState.Uploaded
+            val ledger = avatar?.known?.let { mapOf(avatar.mediaId to it) }.orEmpty()
+            val profile = profileExpectation(s.profileId, sent, ledger)
+            val results = signer.sign(prepared, Expectation(listOf(profileUpdate(profile))))
             if (results.all { it is WriteResult.Done }) {
                 _state.update { it.copy(submitting = false, saved = true) }
             } else {

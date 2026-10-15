@@ -20,6 +20,9 @@ import {
 } from "./sealed-draft";
 import { emptyWizard, wizardReducer, type WizardState } from "./wizard";
 
+/** The digests a finished upload holds: its rendition and the bytes this device sent. */
+const KNOWN = { digest: "11".repeat(32), uploadDigest: "22".repeat(32), mime: "image/webp" };
+
 const ACCOUNT_A = "11111111-1111-4111-8111-111111111111";
 const ACCOUNT_B = "22222222-2222-4222-8222-222222222222";
 
@@ -40,7 +43,11 @@ function composed(title = "Salt maps"): WizardState {
     type: "pick",
     assets: [{ id: "a0", file: new Blob([new Uint8Array([7, 8, 9]) as BlobPart], { type: "image/webp" }) }],
   });
-  state = wizardReducer(state, { type: "upload", id: "a0", upload: { kind: "done", mediaId: "m-1" } });
+  state = wizardReducer(state, {
+    type: "upload",
+    id: "a0",
+    upload: { kind: "done", mediaId: "m-1", media: KNOWN },
+  });
   state = wizardReducer(state, { type: "title", title });
   state = wizardReducer(state, { type: "description", description: "Three weekends at low tide." });
   state = wizardReducer(state, { type: "tags", tags: [newTagDraft("tides")] });
@@ -103,7 +110,7 @@ describe("the sealed copy", () => {
     expect(draft!.references.map((reference) => reference.targetId)).toEqual(["node-9"]);
     // The picture itself, and the upload it already earned.
     expect(await draft!.assets[0]!.file.text()).toBe("\u0007\u0008\u0009");
-    expect(draft!.assets[0]!.upload).toEqual({ kind: "done", mediaId: "m-1" });
+    expect(draft!.assets[0]!.upload).toEqual({ kind: "done", mediaId: "m-1", media: KNOWN });
     // It resumes where it was sealed.
     expect(draft!.step).toBe("seal");
   });

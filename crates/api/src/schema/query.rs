@@ -283,7 +283,9 @@ impl Query {
     /// asset it uploaded as PROCESSING has become READY (or FAILED).
     /// Polled the way `stagedWrite` is. An upload whose re-encode came
     /// out as bytes the viewer already holds answers as that asset,
-    /// READY under its own id; attaching either id attaches it. Null for
+    /// READY, under the id it was asked by and with its own
+    /// `uploadDigest`; attaching either id attaches the asset, and the
+    /// manifest witnesses the upload digest of the id attached. Null for
     /// an unknown id, for somebody else's asset, and without a session:
     /// an upload is nobody else's business until a parent carries it.
     async fn media_attachment(

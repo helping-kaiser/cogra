@@ -43,7 +43,8 @@ import { useWriteSigner } from "@/lib/signing/provider";
 import { useStageHistory } from "@/lib/compose/stage-history";
 import { runUpload, runVideoUpload } from "@/lib/compose/uploads";
 import { useObjectUrl, usePreviewUrls, useRevokeOnChange } from "@/lib/compose/previews";
-import { commentAttachmentClaims } from "@/lib/compose/comment-media";
+import { commentAttachmentClaims, commentMediaLedger } from "@/lib/compose/comment-media";
+import { contentExpectation } from "@/lib/compose/payload-expectation";
 import { COMMENT_SCALE, screenPick, type PickRefusal } from "@/lib/compose/pick";
 import { captureFrames, captureFrameZero, probeVideo } from "@/lib/ui2/media/video";
 import {
@@ -420,25 +421,20 @@ export function ReplyWizard({
       setTransportFailed(true);
       return;
     }
-    const expected = commentExpectation(
-      graphIdOf(graphIds.value, state.target.id),
-      state,
-      graphIds.value,
-    );
-
-    const prepared = await guard.run(() =>
-      prepareComment(client, {
-        target: state.target.id,
-        content: state.words,
-        license: state.license,
-        tags: state.tags,
-        references: state.references,
-        attachments: commentAttachmentClaims(state.media, state.cover, state.autoCover) ?? undefined,
-        stance: state.stance,
-        sensitive: state.sensitive,
-        sensitiveReason: state.sensitiveReason,
-      }),
-    );
+    // One request, read twice: once by the API layer and once by the payload
+    // expectation (payload-expectation.ts).
+    const sent = {
+      target: state.target.id,
+      content: state.words,
+      license: state.license,
+      tags: state.tags,
+      references: state.references,
+      attachments: commentAttachmentClaims(state.media, state.cover, state.autoCover) ?? undefined,
+      stance: state.stance,
+      sensitive: state.sensitive,
+      sensitiveReason: state.sensitiveReason,
+    };
+    const prepared = await guard.run(() => prepareComment(client, sent));
 
     if (prepared.kind === "failed") {
       setBusy(false);
@@ -465,7 +461,19 @@ export function ReplyWizard({
       return;
     }
 
-    await finish(prepared.value.node, prepared.value.writes, expected);
+    const node = prepared.value.node;
+    const expected = commentExpectation(
+      graphIdOf(graphIds.value, state.target.id),
+      state,
+      contentExpectation(
+        node,
+        sent,
+        "comment",
+        commentMediaLedger(state.media, state.cover, state.autoCover),
+      ),
+      graphIds.value,
+    );
+    await finish(node, prepared.value.writes, expected);
   };
 
   const finish = async (

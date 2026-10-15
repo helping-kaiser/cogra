@@ -27,6 +27,9 @@ tasks.withType<Test>().configureEach {
     inputs.file(file("../../../client-crypto-vectors.json"))
         .withPropertyName("clientCryptoVectors")
         .withPathSensitivity(PathSensitivity.NONE)
+    inputs.file(file("../../../envelope-vectors.json"))
+        .withPropertyName("envelopeVectors")
+        .withPathSensitivity(PathSensitivity.NONE)
 }
 
 dependencies {

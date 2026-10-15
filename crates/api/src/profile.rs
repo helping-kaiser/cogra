@@ -195,7 +195,8 @@ pub async fn prepare_profile_update<B: L1Boundary>(
         website_url,
         avatar,
     }
-    .encode_payload();
+    .encode_for_prepare()
+    .map_err(|e| ProfileError::Internal(format!("payload not admissible: {e}")))?;
     prepare::check_write_rule(
         boundary,
         pool,

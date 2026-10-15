@@ -34,6 +34,7 @@ import { useWriteSigner } from "@/lib/signing/provider";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { fetchGraphIds } from "@/lib/api/graph-ids-api";
 import { postExpectation } from "@/lib/compose/intent";
+import { contentExpectation } from "@/lib/compose/payload-expectation";
 import type { Expectation } from "@/lib/signing/intent";
 import { TransportError } from "@/lib/ui/transport-error";
 import {
@@ -48,6 +49,7 @@ import {
   sealGate,
   shapeRatio,
   stepIndex,
+  wizardLedger,
   wizardReducer,
   type PickedAsset,
   type WizardAction,
@@ -638,20 +640,22 @@ export function ComposeWizard({
       return;
     }
 
-    const prepared = await guard.run(() =>
-      preparePost(client, {
-        title: state.title.trim() === "" ? null : state.title,
-        description: descriptionContent(state),
-        content: bodyContent(state),
-        sensitive: state.sensitive,
-        sensitiveReason: state.sensitiveReason,
-        license: state.license,
-        pDirected: state.pDirected,
-        tags: state.tags,
-        references: state.references,
-        attachments: attachmentClaims(state) ?? undefined,
-      }),
-    );
+    // One request, read twice: once by the API layer and once by the payload
+    // expectation, so the device checks the envelope against exactly what it
+    // asked for (payload-expectation.ts).
+    const sent = {
+      title: state.title.trim() === "" ? null : state.title,
+      description: descriptionContent(state),
+      content: bodyContent(state),
+      sensitive: state.sensitive,
+      sensitiveReason: state.sensitiveReason,
+      license: state.license,
+      pDirected: state.pDirected,
+      tags: state.tags,
+      references: state.references,
+      attachments: attachmentClaims(state) ?? undefined,
+    };
+    const prepared = await guard.run(() => preparePost(client, sent));
 
     if (prepared.kind === "failed") {
       setBusy(false);
@@ -679,7 +683,9 @@ export function ComposeWizard({
       return;
     }
 
-    await finish(prepared.value.node, prepared.value.writes, postExpectation(state, graphIds.value));
+    const node = prepared.value.node;
+    const content = contentExpectation(node, sent, "post", wizardLedger(state));
+    await finish(node, prepared.value.writes, postExpectation(state, content, graphIds.value));
   };
 
   const finish = async (

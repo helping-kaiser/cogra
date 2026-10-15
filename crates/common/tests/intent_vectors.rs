@@ -13,17 +13,26 @@
 //! the check compares with no tolerance, so a document that rounded would
 //! pin nothing.
 //!
+//! A payload-bearing write's expectation names the payload's FIELDS, as the
+//! envelope decoder reads them (`envelope-vectors.json`): the served payloads
+//! are real envelopes, encoded here by the reference. The `trims` group pins
+//! the one server normalization the clients mirror by hand — Rust's
+//! `str::trim`, whose whitespace set neither JavaScript's nor Kotlin's
+//! `trim` matches.
+//!
 //! The default run asserts the committed file matches this crate;
 //! `make intent-vectors` (UPDATE_INTENT_VECTORS=1) rewrites it.
 
 use std::path::Path;
 
+use common::envelope::{CograContent, CograProfile, MediaAsset, SensitiveMark};
 use common::l1::census::Family;
 use common::l1::fold::BundleSum;
 use common::l1::identifier::{ActId, NodeId};
 use common::l1::wire::encode_proposal;
 use common::l1::{Proposal, StructuralBody};
 use serde_json::{Value, json};
+use uuid::Uuid;
 
 /// This device's address atom in every case.
 const ME: &str = "c0ffee00c0ffee00c0ffee00c0ffee00c0ffee00";
@@ -94,10 +103,21 @@ impl Served {
         self
     }
 
-    /// A payload opaque to this check: only presence is compared until the
-    /// envelope decoder lands on the clients.
+    /// A payload no envelope decoder admits: four bytes past the magic.
     fn payload(mut self) -> Self {
         self.payload = vec![0xd9, 0xd9, 0xf7, 0xa0];
+        self
+    }
+
+    /// A content payload, encoded by the reference exactly as a prepare
+    /// would stage it.
+    fn content(mut self, content: CograContent) -> Self {
+        self.payload = content.encode_payload();
+        self
+    }
+
+    fn profile(mut self, profile: CograProfile) -> Self {
+        self.payload = profile.encode_payload();
         self
     }
 
@@ -151,6 +171,155 @@ fn own_profile() -> Value {
     json!({"kind": "ownProfile"})
 }
 
+/// The L2 node ids the payloads bind to.
+const POST_NODE: &str = "1c0a0000-0000-4000-8000-000000000001";
+const REPLY_NODE: &str = "1c0a0000-0000-4000-8000-000000000002";
+const MY_NODE: &str = "1c0a0000-0000-4000-8000-000000000003";
+const OTHER_NODE: &str = "1c0a0000-0000-4000-8000-0000000000ff";
+
+fn uuid(s: &str) -> Uuid {
+    Uuid::parse_str(s).expect("a node id")
+}
+
+fn empty() -> Value {
+    json!("empty")
+}
+
+fn opt(s: &Option<String>) -> Value {
+    s.as_ref().map_or(Value::Null, |s| json!(s))
+}
+
+/// One manifest entry as the expectation states it — the fields the
+/// envelope decoder reads, digests in lowercase hex.
+fn asset_json(a: &MediaAsset) -> Value {
+    json!({
+        "digest": hex::encode(a.digest),
+        "mime": a.mime,
+        "altText": opt(&a.alt_text),
+        "cover": a.cover.map(hex::encode),
+        "coverTaken": a.cover_taken,
+        "uploadDigest": a.upload_digest.map(hex::encode),
+    })
+}
+
+/// What a content payload must decode to.
+fn content_expectation(c: &CograContent) -> Value {
+    json!({"content": {
+        "node": c.node.to_string(),
+        "title": opt(&c.title),
+        "description": opt(&c.description),
+        "body": opt(&c.body),
+        "media": c.media.iter().map(asset_json).collect::<Vec<_>>(),
+        "sensitive": c.sensitive.as_ref().map(|m| json!({"reason": opt(&m.reason)})),
+    }})
+}
+
+/// What a profile payload must decode to.
+fn profile_expectation(p: &CograProfile) -> Value {
+    let avatar = match &p.avatar {
+        None => json!({"state": "untouched"}),
+        Some(None) => json!({"state": "cleared"}),
+        Some(Some(asset)) => json!({"state": "set", "asset": asset_json(asset)}),
+    };
+    json!({"profile": {
+        "node": p.node.to_string(),
+        "displayName": opt(&p.display_name),
+        "bio": opt(&p.bio),
+        "websiteUrl": opt(&p.website_url),
+        "avatar": avatar,
+    }})
+}
+
+/// A still stored as it arrived: its rendition and upload digests are one.
+fn still(fill: u8, alt: Option<&str>) -> MediaAsset {
+    MediaAsset {
+        digest: [fill; 32],
+        mime: "image/webp".into(),
+        alt_text: alt.map(Into::into),
+        cover: None,
+        cover_taken: false,
+        upload_digest: Some([fill; 32]),
+    }
+}
+
+/// A gallery post: two pictures, words beside them, a self-mark.
+fn post_content() -> CograContent {
+    CograContent {
+        node: uuid(POST_NODE),
+        title: Some("A title".into()),
+        description: Some("Beside the pictures".into()),
+        body: Some(String::new()),
+        media: vec![still(0x11, Some("First")), still(0x12, None)],
+        sensitive: Some(SensitiveMark {
+            reason: Some("Spoilers ahead".into()),
+        }),
+    }
+}
+
+/// A words post.
+fn words_post() -> CograContent {
+    CograContent {
+        title: Some("A title".into()),
+        description: None,
+        body: Some("The typed words".into()),
+        media: vec![],
+        sensitive: None,
+        ..post_content()
+    }
+}
+
+/// A clip the server re-encoded: rendition and upload digests differ, and a
+/// taken cover fronts it.
+fn clip_post() -> CograContent {
+    CograContent {
+        title: None,
+        description: None,
+        media: vec![MediaAsset {
+            digest: [0x31; 32],
+            mime: "video/mp4".into(),
+            alt_text: Some("The river".into()),
+            cover: Some([0x32; 32]),
+            cover_taken: true,
+            upload_digest: Some([0x33; 32]),
+        }],
+        sensitive: None,
+        ..post_content()
+    }
+}
+
+fn reply_content() -> CograContent {
+    CograContent {
+        node: uuid(REPLY_NODE),
+        title: None,
+        description: None,
+        body: Some("A reply".into()),
+        media: vec![],
+        sensitive: None,
+    }
+}
+
+/// An edit of the post this device authored: the complete new state.
+fn edit_content() -> CograContent {
+    CograContent {
+        node: uuid(POST_NODE),
+        title: Some("Edited".into()),
+        description: Some("Kept beside the picture".into()),
+        body: Some(String::new()),
+        media: vec![still(0x21, Some("Kept"))],
+        sensitive: None,
+    }
+}
+
+fn profile_update() -> CograProfile {
+    CograProfile {
+        node: uuid(MY_NODE),
+        display_name: Some("Ada".into()),
+        bio: Some("Curious.".into()),
+        website_url: None,
+        avatar: Some(Some(still(0x51, None))),
+    }
+}
+
 #[expect(
     clippy::too_many_arguments,
     reason = "one argument per field of the expectation the vector states; a builder would hide which field a case varies"
@@ -163,7 +332,7 @@ fn expected(
     p_i: f64,
     license: Option<&str>,
     parents: &str,
-    payload: &str,
+    payload: Value,
 ) -> Value {
     json!({
         "family": family,
@@ -208,7 +377,7 @@ fn post_expectation() -> Vec<Value> {
             1.0,
             Some(LICENSE),
             "none",
-            "present",
+            content_expectation(&post_content()),
         ),
         expected(
             "tag",
@@ -218,7 +387,7 @@ fn post_expectation() -> Vec<Value> {
             1.0,
             None,
             "none",
-            "empty",
+            empty(),
         ),
         expected(
             "reference",
@@ -228,7 +397,7 @@ fn post_expectation() -> Vec<Value> {
             0.2,
             None,
             "none",
-            "empty",
+            empty(),
         ),
     ]
 }
@@ -240,7 +409,7 @@ fn post_batch() -> Vec<Served> {
     vec![
         Served::new(7, Family::Publish, &mint, 0.1, 1.0)
             .license(LICENSE)
-            .payload(),
+            .content(post_content()),
         Served::new(8, Family::Tag, "name:rust", 0.3, 1.0)
             .middle(&mint)
             .dep(minting.clone()),
@@ -264,7 +433,7 @@ fn stance_expectation(target: &str, p_d: f64, p_i: f64) -> Vec<Value> {
         p_i,
         None,
         "none",
-        "empty",
+        empty(),
     )]
 }
 
@@ -286,13 +455,13 @@ fn post_edit_expectation() -> Value {
         1.0,
         None,
         "ownChainHead",
-        "present",
+        content_expectation(&edit_content()),
     )
 }
 
 fn post_edit() -> Served {
     Served::new(20, Family::Publish, MY_POST, 0.0, 1.0)
-        .payload()
+        .content(edit_content())
         .parent(act(ME, 15, Family::Publish))
 }
 
@@ -505,12 +674,12 @@ fn body_cases() -> Vec<Value> {
         0.6,
         Some(LICENSE),
         "none",
-        "present",
+        content_expectation(&reply_content()),
     )];
     let served_reply = Served::new(30, Family::Review, &own_mint(30, Family::Review), 0.2, 0.6)
         .middle(POST)
         .license(LICENSE)
-        .payload();
+        .content(reply_content());
     cases.push(case(
         "a reply to the parent on screen, as ordered",
         reply.clone(),
@@ -589,7 +758,7 @@ fn edit_cases() -> Vec<Value> {
             0.7,
             None,
             "none",
-            "empty",
+            empty(),
         ),
     ];
     let card_netting = vec![netting("reference", Some(MY_POST), PERSON, cited)];
@@ -703,11 +872,11 @@ fn other_cases() -> Vec<Value> {
         1.0,
         None,
         "ownChainHead",
-        "present",
+        profile_expectation(&profile_update()),
     )];
     let my_profile = format!("prof:{ME}");
     let update = Served::new(50, Family::Registration, &my_profile, 1.0, 1.0)
-        .payload()
+        .profile(profile_update())
         .parent(act(ME, 0, Family::Registration));
     cases.push(case(
         "a profile update on this device's own profile",
@@ -733,7 +902,7 @@ fn other_cases() -> Vec<Value> {
             0.4,
             None,
             "none",
-            "empty",
+            empty(),
         ),
         expected(
             "opinion",
@@ -743,7 +912,7 @@ fn other_cases() -> Vec<Value> {
             0.1,
             None,
             "none",
-            "empty",
+            empty(),
         ),
     ];
     let served = [
@@ -777,15 +946,337 @@ impl Served {
     }
 }
 
+/// One genesis Publish carrying `ordered`, served carrying `served`.
+fn post_case(name: &str, ordered: &CograContent, served: CograContent, accept: bool) -> Value {
+    let expectation = vec![expected(
+        "publish",
+        Value::Null,
+        own_mint_node(),
+        0.1,
+        1.0,
+        Some(LICENSE),
+        "none",
+        content_expectation(ordered),
+    )];
+    let batch = [
+        Served::new(7, Family::Publish, &own_mint(7, Family::Publish), 0.1, 1.0)
+            .license(LICENSE)
+            .content(served),
+    ];
+    case(name, expectation, vec![], &batch, accept)
+}
+
+fn edit_case(name: &str, served: CograContent, accept: bool) -> Value {
+    case(
+        name,
+        vec![post_edit_expectation()],
+        vec![],
+        &[Served::new(20, Family::Publish, MY_POST, 0.0, 1.0)
+            .content(served)
+            .parent(act(ME, 15, Family::Publish))],
+        accept,
+    )
+}
+
+fn profile_case(name: &str, served: CograProfile, accept: bool) -> Value {
+    let my_profile = format!("prof:{ME}");
+    case(
+        name,
+        vec![expected(
+            "registration",
+            Value::Null,
+            own_profile(),
+            1.0,
+            1.0,
+            None,
+            "ownChainHead",
+            profile_expectation(&profile_update()),
+        )],
+        vec![],
+        &[Served::new(50, Family::Registration, &my_profile, 1.0, 1.0)
+            .profile(served)
+            .parent(act(ME, 0, Family::Registration))],
+        accept,
+    )
+}
+
+/// The payload's fields against the form: every field the envelope carries,
+/// one way to get each wrong.
+fn payload_cases() -> Vec<Value> {
+    let mut cases = vec![];
+    let words = words_post();
+    cases.push(post_case(
+        "a words post, as typed",
+        &words,
+        words.clone(),
+        true,
+    ));
+    cases.push(post_case(
+        "a post whose envelope body differs from the typed words is refused on device",
+        &words,
+        CograContent {
+            body: Some("The typed word".into()),
+            ..words.clone()
+        },
+        false,
+    ));
+    let post = post_content();
+    cases.push(post_case(
+        "a post whose title differs from the form is refused on device",
+        &post,
+        CograContent {
+            title: Some("A tit1e".into()),
+            ..post.clone()
+        },
+        false,
+    ));
+    cases.push(post_case(
+        "a post whose description differs from the form is refused on device",
+        &post,
+        CograContent {
+            description: None,
+            ..post.clone()
+        },
+        false,
+    ));
+    let mut swapped = post.clone();
+    swapped.media.reverse();
+    cases.push(post_case(
+        "a post whose manifest order differs from the form is refused on device",
+        &post,
+        swapped,
+        false,
+    ));
+    let mut described = post.clone();
+    described.media[1].alt_text = Some("A description nobody wrote".into());
+    cases.push(post_case(
+        "a post whose alt text differs from the form is refused on device",
+        &post,
+        described,
+        false,
+    ));
+    let mut other_bytes = post.clone();
+    other_bytes.media[0].digest = [0x99; 32];
+    cases.push(post_case(
+        "an entry whose rendition differs from the asset read at READY is refused on device",
+        &post,
+        other_bytes,
+        false,
+    ));
+    let mut other_upload = post.clone();
+    other_upload.media[0].upload_digest = Some([0x98; 32]);
+    cases.push(post_case(
+        "an entry whose upload digest is not the device's own is refused on device",
+        &post,
+        other_upload,
+        false,
+    ));
+    let mut no_upload = post.clone();
+    no_upload.media[0].upload_digest = None;
+    cases.push(post_case(
+        "a served entry without an upload digest is refused on device",
+        &post,
+        no_upload,
+        false,
+    ));
+    cases.push(post_case(
+        "a post whose sensitive mark differs from the form is refused on device",
+        &post,
+        CograContent {
+            sensitive: None,
+            ..post.clone()
+        },
+        false,
+    ));
+    cases.push(post_case(
+        "a post whose sensitive reason differs from the form is refused on device",
+        &post,
+        CograContent {
+            sensitive: Some(SensitiveMark { reason: None }),
+            ..post.clone()
+        },
+        false,
+    ));
+    cases.push(post_case(
+        "an envelope naming another node than the prepared content is refused",
+        &post,
+        CograContent {
+            node: uuid(OTHER_NODE),
+            ..post.clone()
+        },
+        false,
+    ));
+    let clip = clip_post();
+    cases.push(post_case(
+        "a transcoded clip carries its rendition digest beside the upload digest of the bytes sent",
+        &clip,
+        clip.clone(),
+        true,
+    ));
+    let mut other_cover = clip.clone();
+    other_cover.media[0].cover = Some([0x34; 32]);
+    cases.push(post_case(
+        "a post whose cover differs from the form is refused on device",
+        &clip,
+        other_cover,
+        false,
+    ));
+    let mut chosen = clip.clone();
+    chosen.media[0].cover_taken = false;
+    cases.push(post_case(
+        "a post whose cover-taken mark differs from the form is refused on device",
+        &clip,
+        chosen,
+        false,
+    ));
+    let ordered = vec![expected(
+        "publish",
+        Value::Null,
+        own_mint_node(),
+        0.1,
+        1.0,
+        Some(LICENSE),
+        "none",
+        content_expectation(&post),
+    )];
+    let opaque = Served::new(7, Family::Publish, &own_mint(7, Family::Publish), 0.1, 1.0)
+        .license(LICENSE)
+        .payload();
+    cases.push(case(
+        "a payload no envelope decoder admits is refused",
+        ordered.clone(),
+        vec![],
+        std::slice::from_ref(&opaque),
+        false,
+    ));
+    cases.push(case(
+        "a profile payload where a post was ordered is refused",
+        ordered,
+        vec![],
+        &[opaque.profile(profile_update())],
+        false,
+    ));
+
+    let edit = edit_content();
+    cases.push(edit_case(
+        "an edit keeps unchanged manifest entries byte-identical to the prior version",
+        edit.clone(),
+        true,
+    ));
+    cases.push(edit_case(
+        "an edit whose unchanged field was altered is refused on device",
+        CograContent {
+            description: Some("Altered beside the picture".into()),
+            ..edit.clone()
+        },
+        false,
+    ));
+    let mut extra = edit;
+    extra.media.push(still(0x22, None));
+    cases.push(edit_case(
+        "a new placement this device never uploaded is refused",
+        extra,
+        false,
+    ));
+
+    let ordered = profile_update();
+    cases.push(profile_case(
+        "a profile update whose name differs from the form is refused on device",
+        CograProfile {
+            display_name: Some("Eve".into()),
+            ..ordered.clone()
+        },
+        false,
+    ));
+    cases.push(profile_case(
+        "a profile update whose bio differs from the form is refused on device",
+        CograProfile {
+            bio: Some(String::new()),
+            ..ordered.clone()
+        },
+        false,
+    ));
+    cases.push(profile_case(
+        "a profile update whose website differs from the form is refused on device",
+        CograProfile {
+            website_url: Some("https://elsewhere.example".into()),
+            ..ordered.clone()
+        },
+        false,
+    ));
+    cases.push(profile_case(
+        "a profile update whose avatar differs from the form is refused on device",
+        CograProfile {
+            avatar: Some(None),
+            ..ordered.clone()
+        },
+        false,
+    ));
+    cases.push(profile_case(
+        "an avatar whose upload digest is not the device's own is refused on device",
+        CograProfile {
+            avatar: Some(Some(MediaAsset {
+                upload_digest: Some([0x52; 32]),
+                ..still(0x51, None)
+            })),
+            ..ordered
+        },
+        false,
+    ));
+    cases
+}
+
+/// Rust's `str::trim` over the code points where the three platforms'
+/// whitespace sets part: U+FEFF (JavaScript trims it, Rust does not),
+/// U+0085 (Rust trims it, JavaScript and Kotlin do not), U+001C–U+001F
+/// (Kotlin trims them, Rust does not), and the spaces all three agree on.
+/// A title, a description and alt text are trimmed this way and folded to
+/// absent when blank; a post's words and a self-mark's reason are only
+/// blank-checked.
+fn trims() -> Value {
+    let inputs = [
+        "  plain  ",
+        "\u{FEFF}bom\u{FEFF}",
+        "\u{00A0}nbsp\u{00A0}",
+        "\u{2028}separators\u{2029}",
+        "\u{3000}ideographic\u{3000}",
+        "\u{0085}next line\u{0085}",
+        "\u{001C}info\u{001F}",
+        "\u{180E}mongolian\u{180E}",
+        "\u{200B}zero width\u{200B}",
+        "\u{2007}figure\u{202F}",
+        "\t\n\u{000B}\u{000C}\r controls \r\n",
+        "inner  \u{00A0} kept",
+        "\u{FEFF}",
+        "\u{0085}",
+        "\u{001C}",
+        "\u{00A0}\u{3000}",
+        "",
+    ];
+    Value::Array(
+        inputs
+            .iter()
+            .map(|s| json!({"input": s, "trimmed": s.trim(), "blank": s.trim().is_empty()}))
+            .collect(),
+    )
+}
+
+/// The vectors themselves.
+///
+/// `version` is 2 since a payload-bearing write's expectation names the
+/// payload's fields rather than its presence: a version-1 reader would
+/// meet an object where it reads `present`.
 fn build_vectors() -> Value {
     let mut cases = body_cases();
     cases.extend(edit_cases());
     cases.extend(severance_cases());
     cases.extend(other_cases());
+    cases.extend(payload_cases());
     json!({
-        "version": 1,
+        "version": 2,
         "author": ME,
         "cases": cases,
+        "trims": trims(),
     })
 }
 

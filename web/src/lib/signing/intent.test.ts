@@ -17,12 +17,18 @@ import {
   IntentMismatch,
   joinExpectations,
   postGenesis,
+  serverBlankFolded,
+  serverChecked,
+  serverTrim,
   stanceRecord,
   tagClaim,
   topicNode,
+  type ExpectedAsset,
+  type ExpectedContent,
   type ExpectedNetting,
   type ExpectedWrite,
   type NodeExpectation,
+  type PayloadExpectation,
 } from "./intent";
 
 type VectorWrite = {
@@ -33,7 +39,33 @@ type VectorWrite = {
   pInterestBits: string;
   license: string | null;
   parents: "none" | "ownChainHead";
-  payload: "empty" | "present";
+  payload: "empty" | { content: VectorContent } | { profile: VectorProfile };
+};
+
+type VectorAsset = {
+  digest: string;
+  mime: string;
+  altText: string | null;
+  cover: string | null;
+  coverTaken: boolean;
+  uploadDigest: string;
+};
+
+type VectorContent = {
+  node: string;
+  title: string | null;
+  description: string | null;
+  body: string | null;
+  media: VectorAsset[];
+  sensitive: { reason: string | null } | null;
+};
+
+type VectorProfile = {
+  node: string;
+  displayName: string | null;
+  bio: string | null;
+  websiteUrl: string | null;
+  avatar: { state: "untouched" } | { state: "cleared" } | { state: "set"; asset: VectorAsset };
 };
 
 type VectorNetting = {
@@ -54,7 +86,27 @@ type IntentVectors = {
     batch: string[];
     verdict: "accept" | "refuse";
   }[];
+  trims: { input: string; trimmed: string; blank: boolean }[];
 };
+
+function asset(v: VectorAsset): ExpectedAsset {
+  return { kind: "asset", ...v };
+}
+
+function payload(v: VectorWrite["payload"]): PayloadExpectation {
+  if (v === "empty") return "empty";
+  if ("content" in v) {
+    return { kind: "content", content: { ...v.content, media: v.content.media.map(asset) } };
+  }
+  const avatar = v.profile.avatar;
+  return {
+    kind: "profile",
+    profile: {
+      ...v.profile,
+      avatar: avatar.state === "set" ? { state: "set", asset: asset(avatar.asset) } : avatar,
+    },
+  };
+}
 
 const vectors = JSON.parse(
   readFileSync(new URL("../../../../intent-vectors.json", import.meta.url), "utf-8"),
@@ -75,7 +127,7 @@ function write(v: VectorWrite): ExpectedWrite {
     pInterest: fromBits(v.pInterestBits),
     license: v.license,
     parents: v.parents,
-    payload: v.payload,
+    payload: payload(v.payload),
   };
 }
 
@@ -107,7 +159,7 @@ function verdict(c: IntentVectors["cases"][number]): "accept" | "refuse" {
 
 describe("the device reaches every intent verdict the vectors state", () => {
   it("reads a vector file it knows", () => {
-    expect(vectors.version).toBe(1);
+    expect(vectors.version).toBe(2);
     expect(vectors.cases.length).toBeGreaterThan(0);
   });
 
@@ -116,6 +168,25 @@ describe("the device reaches every intent verdict the vectors state", () => {
       expect(verdict(c)).toBe(c.verdict);
     });
   }
+});
+
+describe("the server's normalization", () => {
+  it("the_device_trims_exactly_as_the_server_does", () => {
+    expect(vectors.trims.length).toBeGreaterThan(0);
+    for (const t of vectors.trims) {
+      expect(serverTrim(t.input), JSON.stringify(t.input)).toBe(t.trimmed);
+      expect(serverChecked(t.input), JSON.stringify(t.input)).toBe(t.blank ? null : t.trimmed);
+      expect(serverBlankFolded(t.input), JSON.stringify(t.input)).toBe(t.blank ? null : t.input);
+    }
+  });
+
+  it("parts from JavaScript's own trim exactly where the platforms do", () => {
+    // The two divergences the vectors carry, named so a regression reads as one.
+    expect(serverTrim("\u{FEFF}x")).toBe("\u{FEFF}x");
+    expect("\u{FEFF}x".trim()).toBe("x");
+    expect(serverTrim("\u{0085}x")).toBe("x");
+    expect("\u{0085}x".trim()).toBe("\u{0085}x");
+  });
 });
 
 describe("the expectation builders", () => {
@@ -135,9 +206,20 @@ describe("the expectation builders", () => {
   });
 
   it("re-points a joined part's minted references at its own writes", () => {
+    const content: ExpectedContent = {
+      node: "00000000-0000-4000-8000-000000000000",
+      title: null,
+      description: null,
+      body: "words",
+      media: [],
+      sensitive: null,
+    };
     const joined = joinExpectations([
       expectation([stanceRecord("prof:ab", 0.1, 0.1)]),
-      expectation([postGenesis(0.1, "a=0;o=0"), tagClaim({ kind: "mintedBy", write: 0 }, "x", 0.1, 1)]),
+      expectation([
+        postGenesis(0.1, "a=0;o=0", content),
+        tagClaim({ kind: "mintedBy", write: 0 }, "x", 0.1, 1),
+      ]),
     ]);
     expect(joined.writes[2].middle).toEqual({ kind: "mintedBy", write: 1 });
   });

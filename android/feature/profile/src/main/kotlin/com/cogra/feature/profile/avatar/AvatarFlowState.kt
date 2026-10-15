@@ -1,6 +1,7 @@
 package com.cogra.feature.profile.avatar
 
 import com.cogra.domain.media.CropSpec
+import com.cogra.domain.signing.KnownMedia
 
 /**
  * The profile-picture flow's two stages (`AvatarCrop`, `AvatarSeal`).
@@ -18,7 +19,12 @@ sealed interface AvatarUpload {
 
     data object Running : AvatarUpload
 
-    data class Done(val mediaId: String) : AvatarUpload
+    /**
+     * On the server. [known] is what the intent check holds the avatar
+     * entry to: the upload digest this device computed and the server
+     * echoed, and the rendition digest.
+     */
+    data class Done(val mediaId: String, val known: KnownMedia? = null) : AvatarUpload
 
     data class Failed(val message: String) : AvatarUpload
 }

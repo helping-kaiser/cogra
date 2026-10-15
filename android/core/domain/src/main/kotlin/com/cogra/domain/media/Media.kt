@@ -364,7 +364,19 @@ data class MediaReadiness(
     val id: String,
     val state: MediaAssetState,
     val failureReason: String?,
+    /** The rendition digest, hex: the bytes the asset serves once READY. */
+    val digest: String = "",
+    /** The upload digest the server recorded for the id asked by, hex. */
+    val uploadDigest: String = "",
+    val mimeType: String = "",
 )
+
+/**
+ * The server recorded other bytes than this device sent: its echo of the
+ * upload digest is not the device's own (`MediaRepository.uploadMedia`).
+ * The asset is never attached; the upload fails retryably.
+ */
+class UploadEchoMismatchException(message: String) : Exception(message)
 
 /**
  * Waits out a PROCESSING asset the way `WriteSigner.approveFrom` waits
@@ -402,7 +414,18 @@ suspend fun MediaRepository.awaitReady(uploaded: Outcome<MediaAssetView>): Outco
                 val readiness = read.value ?: return Outcome.Failed(
                     IllegalStateException("media ${current.id} vanished while processing"),
                 )
-                current = current.copy(state = readiness.state, failureReason = readiness.failureReason)
+                // The id the upload was handed stays the asset's name — the
+                // poll answers under it — and the rendition digest is the
+                // READY one, the only bytes it will serve from now on. The
+                // echo is held to the device's own digest again.
+                if (readiness.uploadDigest != current.uploadDigest) {
+                    return Outcome.Failed(UploadEchoMismatchException("media ${current.id} echoes other bytes"))
+                }
+                current = current.copy(
+                    state = readiness.state,
+                    failureReason = readiness.failureReason,
+                    digest = readiness.digest,
+                )
             }
             is Outcome.Refused -> return read
             is Outcome.Failed -> return read

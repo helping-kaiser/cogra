@@ -1777,6 +1777,33 @@ mod galleries {
         assert_eq!(entries[1].1.display_order, 1);
     }
 
+    /// A still is stored as it arrived, so its rendition and upload digests
+    /// are one value — and both are carried anyway: "always both" is a
+    /// rule about the entry's shape, so a reader never has to know which
+    /// assets were re-encoded to know which key to read.
+    ///
+    /// A still carries its rendition and upload digests both, equal because it was stored as it arrived.
+    /// ´claim:content:a-still-carries-equal-digests´
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn a_still_carries_equal_rendition_and_upload_digests(pool: PgPool) {
+        let rig = Rig::new(pool).await;
+        let (actor, _key) = rig.funded_actor("alice").await;
+        let a = asset(&rig.pool, actor, 4).await;
+        let prepared = content::prepare_post(
+            &rig.pool,
+            &rig.boundary,
+            STAGING,
+            actor,
+            media_post(placements(&[a])),
+        )
+        .await
+        .expect("prepares");
+        let decoded =
+            CograContent::decode_payload(&prepared.writes[0].proposal.payload).expect("decodes");
+        assert_eq!(decoded.media[0].digest, [4; 32]);
+        assert_eq!(decoded.media[0].upload_digest, Some([4; 32]));
+    }
+
     /// **The D7 scenario.** A post lands with pictures A and B; an edit
     /// changes its words and its gallery to B and C; the edit never lands
     /// and expires. Both halves roll back together — before the gallery

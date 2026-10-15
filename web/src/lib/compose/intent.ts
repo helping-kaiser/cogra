@@ -1,7 +1,8 @@
 // What each authoring gesture ordered, rebuilt from its form state for the
 // intent check (lib/signing/intent.ts; Android twin: ComposeIntent.kt).
 // Every value here is one the form holds — the picked pairs, the drafted
-// topics and citations, the license — and every node is named by the L1
+// topics and citations, the license, and the payload its request must
+// decode to (payload-expectation.ts) — and every node is named by the L1
 // id the read surface served for it (graph-ids-api.ts).
 
 import { graphIdOf, type GraphIds } from "@/lib/api/graph-ids-api";
@@ -16,6 +17,7 @@ import {
   referenceWithdrawal,
   tagClaim,
   type Expectation,
+  type ExpectedContent,
   type ExpectedWrite,
   type NodeExpectation,
 } from "@/lib/signing/intent";
@@ -44,7 +46,11 @@ function claims(
   ];
 }
 
-/** A new post: its genesis Publish, then one act per topic and per citation. */
+/**
+ * A new post: its genesis Publish carrying `content` — the payload the
+ * request must decode to (payload-expectation.ts) — then one act per topic
+ * and per citation.
+ */
 export function postExpectation(
   form: {
     readonly pDirected: number;
@@ -52,16 +58,17 @@ export function postExpectation(
     readonly tags: readonly TagDraft[];
     readonly references: readonly ReferenceDraft[];
   },
+  content: ExpectedContent,
   graphIds: GraphIds,
 ): Expectation {
   const minted: NodeExpectation = { kind: "mintedBy", write: 0 };
   return expectation([
-    postGenesis(form.pDirected, canonicalLicense(form.license)),
+    postGenesis(form.pDirected, canonicalLicense(form.license), content),
     ...claims(minted, form.tags, form.references, graphIds),
   ]);
 }
 
-/** A new comment: its genesis Review at the parent, then its topics and citations. */
+/** A new comment: its genesis Review at the parent carrying `content`, then its topics and citations. */
 export function commentExpectation(
   parentGraphId: string,
   form: {
@@ -70,6 +77,7 @@ export function commentExpectation(
     readonly tags: readonly TagDraft[];
     readonly references: readonly ReferenceDraft[];
   },
+  content: ExpectedContent,
   graphIds: GraphIds,
 ): Expectation {
   const minted: NodeExpectation = { kind: "mintedBy", write: 0 };
@@ -79,6 +87,7 @@ export function commentExpectation(
       form.stance.pDirected,
       form.stance.pInterest,
       canonicalLicense(form.license),
+      content,
     ),
     ...claims(minted, form.tags, form.references, graphIds),
   ]);

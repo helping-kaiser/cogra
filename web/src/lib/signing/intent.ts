@@ -8,11 +8,28 @@
 //
 // WHAT IS COMPARED, AND WHAT IS NOT. Every author-meaning field of the
 // structural body: family, author, middle, target, both parameters, the
-// settlement reference, the license, the asserted parents, and whether a
-// payload rides at all (the payload's fields wait for the envelope
-// decoder). The sequence value and the dependency list are not: the seq is
-// allocated by the backend, and dependencies are server-completed ordering
-// facts the author never chose — L1 refuses an unsatisfiable one.
+// settlement reference, the license, the asserted parents — and the
+// payload's FIELDS, read by the device's own envelope decoder
+// (crypto/envelope.ts): the node the payload binds to, the title,
+// description and words, the gallery in order with each picture's
+// description, poster and both digests, the self-mark, and a profile's
+// name, bio, website and avatar. The sequence value and the dependency
+// list are not: the seq is allocated by the backend, and dependencies are
+// server-completed ordering facts the author never chose — L1 refuses an
+// unsatisfiable one.
+//
+// THE SERVER'S NORMALIZATION IS PART OF THE EXPECTATION. The server trims a
+// title, a description and alt text with Rust's `str::trim`, whose
+// whitespace set is Unicode's White_Space property — not JavaScript's
+// (which adds U+FEFF and drops U+0085). `serverTrim` is that set, pinned by
+// the vectors' `trims` group; a naive `trim()` here would refuse lawful
+// writes or accept altered ones.
+//
+// BOTH DIGESTS, ALWAYS. Every manifest entry carries the rendition digest
+// the device read for the asset at READY and the upload digest the device
+// computed over the bytes it sent. A placement the device neither uploaded
+// nor read from the version it is editing has neither, and is refused: there
+// is nothing to check it against.
 //
 // EXACT, NEVER APPROXIMATE. Parameters compare as numbers with no
 // tolerance: no server default stands in for a value the form did not
@@ -32,6 +49,15 @@
 // The shared `intent-vectors.json` pins this file and Intent.kt to the
 // same verdicts over the same canonical bytes.
 
+import { toHex } from "@/lib/crypto/bytes";
+import {
+  decodeContent,
+  decodeProfile,
+  EnvelopeError,
+  type CograContent,
+  type CograProfile,
+  type MediaAsset,
+} from "@/lib/crypto/envelope";
 import type { Proposal } from "@/lib/crypto/handshake";
 import type { Family } from "@/lib/crypto/identifiers";
 import { previewTagName } from "@/lib/topics/normalize";
@@ -47,6 +73,52 @@ export type NodeExpectation =
   /** The author's own profile, `prof:<author>`. */
   | { readonly kind: "ownProfile" };
 
+/** One manifest entry the gesture ordered — every key the envelope carries. */
+export type ExpectedAsset = {
+  readonly kind: "asset";
+  /** The rendition digest the device read for the asset at READY, hex. */
+  readonly digest: string;
+  readonly mime: string;
+  readonly altText: string | null;
+  /** The poster's rendition digest, hex. */
+  readonly cover: string | null;
+  readonly coverTaken: boolean;
+  /** The upload digest the device computed over the bytes it sent, hex. */
+  readonly uploadDigest: string;
+};
+
+/** A placement the device can state nothing about: it never matches. */
+export type UnknownAsset = { readonly kind: "unknown"; readonly mediaId: string };
+
+/** What a content payload must decode to. */
+export type ExpectedContent = {
+  /** The L2 node id the prepare named for this content. */
+  readonly node: string;
+  readonly title: string | null;
+  readonly description: string | null;
+  readonly body: string | null;
+  readonly media: readonly (ExpectedAsset | UnknownAsset)[];
+  readonly sensitive: { readonly reason: string | null } | null;
+};
+
+/** What a profile payload must decode to; the avatar three-valued. */
+export type ExpectedProfile = {
+  readonly node: string;
+  readonly displayName: string | null;
+  readonly bio: string | null;
+  readonly websiteUrl: string | null;
+  readonly avatar:
+    | { readonly state: "untouched" }
+    | { readonly state: "cleared" }
+    | { readonly state: "set"; readonly asset: ExpectedAsset | UnknownAsset };
+};
+
+/** A write's payload: none at all, or an envelope whose fields are stated. */
+export type PayloadExpectation =
+  | "empty"
+  | { readonly kind: "content"; readonly content: ExpectedContent }
+  | { readonly kind: "profile"; readonly profile: ExpectedProfile };
+
 /** One write the gesture ordered, field by field. */
 export type ExpectedWrite = {
   readonly family: Family;
@@ -57,7 +129,7 @@ export type ExpectedWrite = {
   readonly license: string | null;
   /** None, or exactly one parent: the head of the author's own chain on this node. */
   readonly parents: "none" | "ownChainHead";
-  readonly payload: "empty" | "present";
+  readonly payload: PayloadExpectation;
 };
 
 /** A walk-back the server computes: checked as a net-to-zero property. */
@@ -125,7 +197,107 @@ function shifted(node: NodeExpectation | null, offset: number): NodeExpectation 
   return node?.kind === "mintedBy" ? { kind: "mintedBy", write: node.write + offset } : node;
 }
 
+// ---- the server's normalization ---------------------------------------------
+
+/**
+ * Unicode's White_Space property — the set Rust's `char::is_whitespace`,
+ * and so `str::trim`, reads.
+ */
+function isServerWhitespace(code: number): boolean {
+  return (
+    (code >= 0x09 && code <= 0x0d) ||
+    code === 0x20 ||
+    code === 0x85 ||
+    code === 0xa0 ||
+    code === 0x1680 ||
+    (code >= 0x2000 && code <= 0x200a) ||
+    code === 0x2028 ||
+    code === 0x2029 ||
+    code === 0x202f ||
+    code === 0x205f ||
+    code === 0x3000
+  );
+}
+
+/** Rust's `str::trim`: White_Space off both ends, nothing else. */
+export function serverTrim(s: string): string {
+  const chars = Array.from(s);
+  let start = 0;
+  let end = chars.length;
+  while (start < end && isServerWhitespace(chars[start].codePointAt(0) ?? 0)) start++;
+  while (end > start && isServerWhitespace(chars[end - 1].codePointAt(0) ?? 0)) end--;
+  return chars.slice(start, end).join("");
+}
+
+/** A title, description or alt text as the server carries it: trimmed, blank folded to absent. */
+export function serverChecked(s: string | null | undefined): string | null {
+  if (s === null || s === undefined) return null;
+  const trimmed = serverTrim(s);
+  return trimmed === "" ? null : trimmed;
+}
+
+/** Words or a reason as the server carries them: untouched, blank folded to absent. */
+export function serverBlankFolded(s: string | null | undefined): string | null {
+  if (s === null || s === undefined) return null;
+  return serverTrim(s) === "" ? null : s;
+}
+
 // ---- the check -------------------------------------------------------------
+
+function assetMatches(e: ExpectedAsset | UnknownAsset, a: MediaAsset): boolean {
+  if (e.kind === "unknown") return false;
+  return (
+    toHex(a.digest) === e.digest &&
+    a.mime === e.mime &&
+    a.altText === e.altText &&
+    (a.cover === null ? null : toHex(a.cover)) === e.cover &&
+    a.coverTaken === e.coverTaken &&
+    a.uploadDigest !== null &&
+    toHex(a.uploadDigest) === e.uploadDigest
+  );
+}
+
+function contentMatches(e: ExpectedContent, c: CograContent): boolean {
+  return (
+    c.node === e.node &&
+    c.title === e.title &&
+    c.description === e.description &&
+    c.body === e.body &&
+    c.media.length === e.media.length &&
+    c.media.every((asset, i) => assetMatches(e.media[i], asset)) &&
+    (c.sensitive === null
+      ? e.sensitive === null
+      : e.sensitive !== null && c.sensitive.reason === e.sensitive.reason)
+  );
+}
+
+function profileMatches(e: ExpectedProfile, p: CograProfile): boolean {
+  if (
+    p.node !== e.node ||
+    p.displayName !== e.displayName ||
+    p.bio !== e.bio ||
+    p.websiteUrl !== e.websiteUrl ||
+    p.avatar.state !== e.avatar.state
+  ) {
+    return false;
+  }
+  if (p.avatar.state !== "set" || e.avatar.state !== "set") return true;
+  return assetMatches(e.avatar.asset, p.avatar.asset);
+}
+
+/** The payload against its expectation, through the device's own decoder. */
+function payloadMatches(e: PayloadExpectation, payload: Uint8Array): boolean {
+  if (e === "empty") return payload.length === 0;
+  try {
+    return e.kind === "content"
+      ? contentMatches(e.content, decodeContent(payload))
+      : profileMatches(e.profile, decodeProfile(payload));
+  } catch (err) {
+    // A payload the decoder refuses is not the gesture ordered.
+    if (err instanceof EnvelopeError) return false;
+    throw err;
+  }
+}
 
 function sameValue(a: number, b: number): boolean {
   // `===` is false for NaN and true across the two zeros — exactly the
@@ -178,7 +350,7 @@ function matches(
   if (!sameValue(body.pD, e.pDirected) || !sameValue(body.pI, e.pInterest)) return false;
   if (body.license !== e.license) return false;
   if (!parentsMatch(e.parents, p, author)) return false;
-  return e.payload === "empty" ? p.payload.length === 0 : p.payload.length > 0;
+  return payloadMatches(e.payload, p.payload);
 }
 
 function parentsMatch(parents: ExpectedWrite["parents"], p: Proposal, author: string): boolean {
@@ -293,7 +465,11 @@ export function canonicalLicense(license: { attribution: number; provenance: num
 }
 
 /** A new post's genesis Publish: `p_i` is census-fixed at 1. */
-export function postGenesis(pDirected: number, license: string): ExpectedWrite {
+export function postGenesis(
+  pDirected: number,
+  license: string,
+  content: ExpectedContent,
+): ExpectedWrite {
   return {
     family: "publish",
     middle: null,
@@ -302,7 +478,7 @@ export function postGenesis(pDirected: number, license: string): ExpectedWrite {
     pInterest: 1,
     license,
     parents: "none",
-    payload: "present",
+    payload: { kind: "content", content },
   };
 }
 
@@ -312,6 +488,7 @@ export function commentGenesis(
   pDirected: number,
   pInterest: number,
   license: string,
+  content: ExpectedContent,
 ): ExpectedWrite {
   return {
     family: "review",
@@ -321,12 +498,12 @@ export function commentGenesis(
     pInterest,
     license,
     parents: "none",
-    payload: "present",
+    payload: { kind: "content", content },
   };
 }
 
 /** A post edit: an ordinary-role Publish at (0, 1) chained behind its own head. */
-export function postEdit(postGraphId: string): ExpectedWrite {
+export function postEdit(postGraphId: string, content: ExpectedContent): ExpectedWrite {
   return {
     family: "publish",
     middle: null,
@@ -335,12 +512,16 @@ export function postEdit(postGraphId: string): ExpectedWrite {
     pInterest: 1,
     license: null,
     parents: "ownChainHead",
-    payload: "present",
+    payload: { kind: "content", content },
   };
 }
 
 /** A comment edit: an ordinary-role Review at (0, 0) chained behind its own head. */
-export function commentEdit(parentGraphId: string, commentGraphId: string): ExpectedWrite {
+export function commentEdit(
+  parentGraphId: string,
+  commentGraphId: string,
+  content: ExpectedContent,
+): ExpectedWrite {
   return {
     family: "review",
     middle: node(parentGraphId),
@@ -349,7 +530,7 @@ export function commentEdit(parentGraphId: string, commentGraphId: string): Expe
     pInterest: 0,
     license: null,
     parents: "ownChainHead",
-    payload: "present",
+    payload: { kind: "content", content },
   };
 }
 
@@ -410,7 +591,7 @@ export function stanceRecord(
 }
 
 /** A profile update: the carrier Registration at (1, 1), chained on the own profile. */
-export function profileUpdate(): ExpectedWrite {
+export function profileUpdate(profile: ExpectedProfile): ExpectedWrite {
   return {
     family: "registration",
     middle: null,
@@ -419,7 +600,7 @@ export function profileUpdate(): ExpectedWrite {
     pInterest: 1,
     license: null,
     parents: "ownChainHead",
-    payload: "present",
+    payload: { kind: "profile", profile },
   };
 }
 

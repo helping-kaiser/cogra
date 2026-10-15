@@ -25,11 +25,16 @@ import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.settings.SettingsRepository
+import com.cogra.domain.signing.ContentShape
 import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.NoActorKeyException
+import com.cogra.domain.signing.SentContent
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.contentExpectation
+import com.cogra.domain.signing.ledgerFor
 import com.cogra.domain.signing.postExpectation
+import com.cogra.domain.signing.wireReason
 import com.cogra.domain.topics.TagClaim
 import com.cogra.domain.valueOrNull
 import com.cogra.feature.content.ReferenceCandidateRow
@@ -720,21 +725,84 @@ class ComposeWizardViewModel @Inject constructor(
     // -- The seal (`ComposeSeal`) --
 
     /**
-     * What the post orders, as the intent check reads it (Intent.kt): the
-     * cited nodes' L1 ids are read first, before anything is staged. Null
-     * once the read failed — already reported.
+     * The cited nodes' L1 ids, read before anything is staged: the intent
+     * check (Intent.kt) binds every citation to them. Null once the read
+     * failed — already reported.
      */
+    private suspend fun citedGraphIds(references: List<ReferenceClaim>): Map<String, String>? =
+        when (val read = content.graphIds(references.map { it.targetId })) {
+            is Outcome.Success -> read.value
+            is Outcome.Refused -> null.also { refuse(read.errors) }
+            is Outcome.Failed -> null.also { failTransport() }
+        }
+
+    /**
+     * The request the seal sends — read twice: once by the prepare and once
+     * by the payload expectation, so the device checks the envelope against
+     * exactly what it asked for (PayloadExpectation.kt).
+     */
+    private fun sentContent(current: ComposeWizardState): SentContent = SentContent(
+        title = current.title.ifBlank { null },
+        description = current.descriptionContent,
+        // The XOR, structurally: a media post sends no content at all, and
+        // a words post no gallery.
+        content = current.body.takeIf { current.mode == BodyMode.Words },
+        // The poster rides the clip's own placement, never a gallery entry
+        // of its own — which is what keeps "ten pictures or one video" one
+        // counting rule.
+        attachments = if (current.mode == BodyMode.Media) {
+            current.picked.mapNotNull { asset ->
+                asset.mediaId?.let {
+                    AttachmentClaim(
+                        mediaId = it,
+                        altText = asset.altText.ifBlank { null },
+                        coverMediaId = current.coverMediaId.takeIf { _ -> asset.isVideo },
+                        // TAKEN (frame 1, silently) vs CHOSEN — the fact
+                        // `storesFirstFrame` already names, gated the same way
+                        // as the id itself so a picture post never claims it.
+                        coverTaken = current.coverChoice.storesFirstFrame.takeIf { asset.isVideo } ?: false,
+                    )
+                }
+            }
+        } else {
+            emptyList()
+        },
+        // Always sent explicitly, never omitted: an edit payload is the
+        // complete state, so an omitted mark UNMARKS. Sending the switch's
+        // current value is what keeps create and edit the same code.
+        sensitive = current.sensitive,
+        // Blank counts as none, said here rather than left to the transport:
+        // an empty string is a value, and "no reason" is what the author
+        // actually chose.
+        sensitiveReason = wireReason(current.sensitive, current.sensitiveReason.ifBlank { null }),
+    )
+
+    /**
+     * What the post orders, as the intent check reads it (Intent.kt), once
+     * the prepare named the node: the payload [sent] must decode to — its
+     * pictures held to the digests this device computed, the poster read
+     * back by id — then the topics and citations. Null once a read failed —
+     * already reported.
+     */
+    @Suppress("LongParameterList") // one parameter per thing the seal holds
     private suspend fun expectation(
         current: ComposeWizardState,
+        node: String,
+        sent: SentContent,
         tags: List<TagClaim>,
         references: List<ReferenceClaim>,
+        graphIds: Map<String, String>,
     ): Expectation? {
-        val graphIds = when (val read = content.graphIds(references.map { it.targetId })) {
+        val own = current.picked.mapNotNull { asset ->
+            (asset.upload as? AssetUpload.Done)?.let { done -> done.known?.let { done.mediaId to it } }
+        }.toMap()
+        val ledger = when (val read = media.ledgerFor(sent.attachments, own)) {
             is Outcome.Success -> read.value
             is Outcome.Refused -> return null.also { refuse(read.errors) }
             is Outcome.Failed -> return null.also { failTransport() }
         }
-        return postExpectation(current.pDirected, current.license, tags, references, graphIds)
+        val payload = contentExpectation(node, sent, ContentShape.POST, ledger)
+        return postExpectation(current.pDirected, current.license, payload, tags, references, graphIds)
     }
 
     /**
@@ -760,47 +828,19 @@ class ComposeWizardViewModel @Inject constructor(
         viewModelScope.launch {
             val tags = current.tagSection.tags.map { it.toClaim() }
             val references = current.referenceSection.references.map { it.toClaim() }
-            val expected = expectation(current, tags, references) ?: return@launch
+            val graphIds = citedGraphIds(references) ?: return@launch
+            val sent = sentContent(current)
             val prepared = when (
                 val outcome = content.preparePost(
-                    title = current.title.ifBlank { null },
-                    description = current.descriptionContent,
-                    // The XOR, structurally: a media post sends no
-                    // content at all, and a words post no gallery.
-                    content = current.body.takeIf { current.mode == BodyMode.Words },
+                    title = sent.title,
+                    description = sent.description,
+                    content = sent.content,
                     license = current.license,
                     tags = tags,
                     references = references,
-                    // The poster rides the clip's own placement, never a
-                    // gallery entry of its own — which is what keeps "ten
-                    // pictures or one video" one counting rule.
-                    attachments = if (current.mode == BodyMode.Media) {
-                        current.picked.mapNotNull { asset ->
-                            asset.mediaId?.let {
-                                AttachmentClaim(
-                                    mediaId = it,
-                                    altText = asset.altText.ifBlank { null },
-                                    coverMediaId = current.coverMediaId.takeIf { _ -> asset.isVideo },
-                                    // TAKEN (frame 1, silently) vs CHOSEN —
-                                    // the fact `storesFirstFrame` already
-                                    // names, gated the same way as the id
-                                    // itself so a picture post never claims it.
-                                    coverTaken = current.coverChoice.storesFirstFrame.takeIf { asset.isVideo } ?: false,
-                                )
-                            }
-                        }
-                    } else {
-                        emptyList()
-                    },
-                    // Always sent explicitly, never omitted: an edit
-                    // payload is the complete state, so an omitted mark
-                    // UNMARKS. Sending the switch's current value is what
-                    // keeps create and edit the same code.
-                    sensitive = current.sensitive,
-                    // Blank counts as none, said here rather than left to
-                    // the transport: an empty string is a value, and "no
-                    // reason" is what the author actually chose.
-                    sensitiveReason = current.sensitiveReason.ifBlank { null },
+                    attachments = sent.attachments,
+                    sensitive = sent.sensitive,
+                    sensitiveReason = sent.sensitiveReason,
                     pDirected = current.pDirected,
                 )
             ) {
@@ -808,6 +848,8 @@ class ComposeWizardViewModel @Inject constructor(
                 is Outcome.Refused -> return@launch refuse(outcome.errors)
                 is Outcome.Failed -> return@launch failTransport()
             }
+            val expected = expectation(current, prepared.node, sent, tags, references, graphIds)
+                ?: return@launch
 
             val results = try {
                 signer.sign(prepared.writes, expected)

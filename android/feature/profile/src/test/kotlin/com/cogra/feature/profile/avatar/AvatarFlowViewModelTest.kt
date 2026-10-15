@@ -14,14 +14,18 @@ import com.cogra.domain.media.CropWindow
 import com.cogra.domain.media.PICTURE_MAX_BYTES
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.signing.Expectation
+import com.cogra.domain.signing.SentProfile
 import com.cogra.domain.signing.WriteSigner
-import com.cogra.domain.signing.profileUpdate
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
+import com.cogra.domain.testing.TEST_PROFILE_ID
 import com.cogra.domain.testing.ThrowingMediaProcessor
 import com.cogra.domain.testing.ThrowingMediaRepository
 import com.cogra.domain.testing.ThrowingProfileRepository
+import com.cogra.domain.testing.faithfulProfileUpdate
+import com.cogra.domain.testing.fakeUpload
 import com.cogra.domain.testing.testProfile
+import com.cogra.domain.signing.known
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -53,7 +57,7 @@ class AvatarFlowViewModelTest {
         ThrowingProfileRepository() {
         var mine: Outcome<ProfileView?> = Outcome.Success(
             testProfile(
-                id = "u1",
+                id = TEST_PROFILE_ID,
                 handle = "jakob",
                 displayName = "Jakob",
                 bio = "Old bio",
@@ -76,13 +80,17 @@ class AvatarFlowViewModelTest {
             prepareCalls += 1
             lastUpdate = Triple(displayName, bio, websiteUrl)
             lastAvatar = avatar
-            return prepareOutcome ?: Outcome.Success(sealer.stageFaithful(Expectation(listOf(profileUpdate()))))
+            return prepareOutcome ?: Outcome.Success(
+                sealer.stageFaithful(
+                    faithfulProfileUpdate(TEST_PROFILE_ID, SentProfile(displayName, bio, websiteUrl, avatar)),
+                ),
+            )
         }
     }
 
     private class ScriptedMedia : ThrowingMediaRepository() {
         var outcome: Outcome<MediaAssetView> = Outcome.Success(
-            MediaAssetView("m1", "https://media/m1", null, FieldStatus.NORMAL, 1f),
+            fakeUpload("m1"),
         )
         var calls = 0
 
@@ -182,7 +190,7 @@ class AvatarFlowViewModelTest {
 
         assertThat(media.calls).isEqualTo(1)
         assertThat(processor.lastCrop?.window).isEqualTo(window)
-        assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Done("m1"))
+        assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Done("m1", fakeUpload("m1").known()))
         assertThat(vm.state.value.canSign).isTrue()
     }
 
@@ -238,12 +246,12 @@ class AvatarFlowViewModelTest {
         assertThat(vm.state.value.upload).isInstanceOf(AvatarUpload.Failed::class.java)
 
         media.outcome = Outcome.Success(
-            MediaAssetView("m2", "https://media/m2", null, FieldStatus.NORMAL, 1f),
+            fakeUpload("m2"),
         )
         vm.onRetryUpload()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Done("m2"))
+        assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Done("m2", fakeUpload("m2").known()))
     }
 
     @Test

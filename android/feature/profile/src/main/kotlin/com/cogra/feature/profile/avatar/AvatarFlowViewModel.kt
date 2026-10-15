@@ -11,8 +11,11 @@ import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.overPictureCap
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.signing.Expectation
+import com.cogra.domain.signing.SentProfile
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.known
+import com.cogra.domain.signing.profileExpectation
 import com.cogra.domain.signing.profileUpdate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -134,7 +137,7 @@ class AvatarFlowViewModel @Inject constructor(
             // A profile picture carries no description: it is not content
             // a reader reads, and the monogram is its stated fallback.
             val next = when (val outcome = media.uploadMedia(picture)) {
-                is Outcome.Success -> AvatarUpload.Done(outcome.value.id)
+                is Outcome.Success -> AvatarUpload.Done(outcome.value.id, outcome.value.known())
                 is Outcome.Refused ->
                     AvatarUpload.Failed(outcome.errors.firstOrNull()?.message ?: REFUSED)
                 is Outcome.Failed -> AvatarUpload.Failed(TRANSPORT)
@@ -158,11 +161,17 @@ class AvatarFlowViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
-            val outcome = profiles.prepareProfileUpdate(
+            val sent = SentProfile(
                 displayName = profile.displayName.value.orEmpty(),
                 bio = profile.bio.value,
                 websiteUrl = profile.websiteUrl.value,
                 avatar = MediaFieldUpdate.Set(mediaId),
+            )
+            val outcome = profiles.prepareProfileUpdate(
+                displayName = sent.displayName,
+                bio = sent.bio,
+                websiteUrl = sent.websiteUrl,
+                avatar = sent.avatar,
             )
             val prepared = when (outcome) {
                 is Outcome.Success -> outcome.value
@@ -180,9 +189,13 @@ class AvatarFlowViewModel @Inject constructor(
                     return@launch
                 }
             }
-            // One profile update on this device's own profile; its fields are the
-            // envelope's, checked once the device decodes it (Intent.kt).
-            val results = signer.sign(prepared, Expectation(listOf(profileUpdate())))
+            // One profile update on this device's own profile, its payload held
+            // to the fields it re-states and the avatar this device uploaded
+            // (PayloadExpectation.kt).
+            val known = (flow.upload as? AvatarUpload.Done)?.known
+            val ledger = known?.let { mapOf(mediaId to it) }.orEmpty()
+            val expected = profileExpectation(profile.id, sent, ledger)
+            val results = signer.sign(prepared, Expectation(listOf(profileUpdate(expected))))
             if (results.all { it is WriteResult.Done }) {
                 _state.update { it.copy(submitting = false, saved = true) }
             } else {

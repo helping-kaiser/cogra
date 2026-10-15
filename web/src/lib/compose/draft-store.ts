@@ -166,7 +166,10 @@ export type StoredDraft = {
  * still there under the same id and re-uploading them would only orphan a copy.
  */
 function afterReload(upload: PickedAsset["upload"]): PickedAsset["upload"] {
-  return upload.kind === "done" ? upload : { kind: "waiting" };
+  // A done upload saved before the upload digest existed carries no digests
+  // for the intent check to hold its manifest entry to; it goes up again
+  // rather than being signed against nothing.
+  return upload.kind === "done" && upload.media !== undefined ? upload : { kind: "waiting" };
 }
 
 /**

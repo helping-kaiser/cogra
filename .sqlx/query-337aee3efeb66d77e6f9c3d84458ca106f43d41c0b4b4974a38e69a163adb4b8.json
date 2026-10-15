@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT id, author_id, digest, digest_algo, storage_key,\n               mime_type, size_bytes,\n               options AS \"options!: serde_json::Value\",\n               state AS \"state: AssetState\", failure_reason,\n               redaction_reason, redacted_at, created_at\n        FROM media_attachments\n        WHERE id = (\n            SELECT COALESCE(merged_into, id)\n            FROM media_attachments\n            WHERE author_id = $1\n              AND state <> 'failed'\n              AND (digest = $2 OR source_digest = $2)\n            ORDER BY created_at\n            LIMIT 1\n        )\n        ",
+  "query": "\n        SELECT named.id, m.author_id, m.digest, m.digest_algo, m.storage_key,\n               m.mime_type, m.size_bytes,\n               m.options AS \"options!: serde_json::Value\",\n               m.state AS \"state: AssetState\", m.failure_reason,\n               m.redaction_reason, m.redacted_at, m.created_at,\n               COALESCE(named.source_digest, named.digest) AS \"upload_digest!\"\n        FROM media_attachments named\n        JOIN media_attachments m ON m.id = COALESCE(named.merged_into, named.id)\n        WHERE named.id = (\n            SELECT id\n            FROM media_attachments\n            WHERE author_id = $1\n              AND state <> 'failed'\n              AND (digest = $2 OR source_digest = $2)\n            ORDER BY created_at\n            LIMIT 1\n        )\n        ",
   "describe": {
     "columns": [
       {
@@ -67,6 +67,11 @@
         "ordinal": 12,
         "name": "created_at",
         "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 13,
+        "name": "upload_digest!",
+        "type_info": "Bytea"
       }
     ],
     "parameters": {
@@ -88,8 +93,9 @@
       true,
       true,
       true,
-      false
+      false,
+      null
     ]
   },
-  "hash": "7a31c25e73f6718615e9ec11c3743584188c53d4a3f93bd5564a1e0123f7f8bd"
+  "hash": "337aee3efeb66d77e6f9c3d84458ca106f43d41c0b4b4974a38e69a163adb4b8"
 }
