@@ -85,3 +85,53 @@ CREATE INDEX retention_archive_media_media_idx ON retention_archive_media (media
 -- while any placement still shows it — one asset can sit in several
 -- placements, and the redaction of one leaves it serving the others.
 ALTER TABLE media_attachments ADD COLUMN held_at TIMESTAMPTZ;
+
+-- Whether any live placement still shows an asset — the one rule both the
+-- hold and the manual hard delete ask, kept in one place so the two can
+-- never disagree about it.
+--
+-- The placements are the set the orphan sweep probes. A post, comment or
+-- profile version stops being live when it is tombstoned
+-- (`redaction_reason`) or when the act that wrote it — found by the
+-- version's landing coordinates, the record's causal key — has had its
+-- carriage reduced; a pending version, which has no landing yet, is live.
+-- Chat and item placements have no reduction path and always count, which
+-- errs toward keeping an asset rather than releasing it early.
+CREATE FUNCTION media_live_placed(asset UUID) RETURNS BOOLEAN
+LANGUAGE sql STABLE AS $$
+    SELECT EXISTS (
+               SELECT 1
+               FROM post_attachments a
+               JOIN post_versions v ON v.version_id = a.post_version_id
+               WHERE (a.attachment_id = asset OR a.cover_media_id = asset)
+                 AND v.redaction_reason IS NULL
+                 AND NOT EXISTS (
+                       SELECT 1 FROM mirror_records r
+                       JOIN act_payloads c ON c.act_id = r.record_id
+                       WHERE r.epoch = v.landed_epoch AND r.act_time = v.act_time
+                         AND r.position = v.position AND c.payload_state = 'reduced'))
+        OR EXISTS (
+               SELECT 1
+               FROM comment_attachments a
+               JOIN comment_versions v ON v.version_id = a.comment_version_id
+               WHERE (a.attachment_id = asset OR a.cover_media_id = asset)
+                 AND v.redaction_reason IS NULL
+                 AND NOT EXISTS (
+                       SELECT 1 FROM mirror_records r
+                       JOIN act_payloads c ON c.act_id = r.record_id
+                       WHERE r.epoch = v.landed_epoch AND r.act_time = v.act_time
+                         AND r.position = v.position AND c.payload_state = 'reduced'))
+        OR EXISTS (
+               SELECT 1
+               FROM actor_profile_versions p
+               WHERE p.avatar_id = asset
+                 AND p.redaction_reason IS NULL
+                 AND NOT EXISTS (
+                       SELECT 1 FROM mirror_records r
+                       JOIN act_payloads c ON c.act_id = r.record_id
+                       WHERE r.epoch = p.landed_epoch AND r.act_time = p.act_time
+                         AND r.position = p.position AND c.payload_state = 'reduced'))
+        OR EXISTS (SELECT 1 FROM chat_message_attachments a WHERE a.attachment_id = asset)
+        OR EXISTS (SELECT 1 FROM item_attachments         a WHERE a.attachment_id = asset)
+        OR EXISTS (SELECT 1 FROM chat_versions            c WHERE c.image_id = asset)
+$$;

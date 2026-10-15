@@ -28,6 +28,11 @@ pub enum StagedError {
     /// impossible unless the row was edited out-of-band.
     #[error("staged write {0} is corrupt: {1}")]
     Corrupt(Uuid, String),
+    /// The write's payload was reaped by a redaction: the row keeps its
+    /// structure, but nothing that reopens the content, so it can no
+    /// longer be signed, relayed or read back as a proposal.
+    #[error("staged write {0} was reaped by a redaction")]
+    Reaped(Uuid),
     #[error(transparent)]
     Storage(#[from] sqlx::Error),
 }
@@ -252,14 +257,48 @@ pub async fn insert(
     Ok(())
 }
 
-/// Loads one staged write, reconstructed into seam types.
+/// Loads one staged write, reconstructed into seam types. A write a
+/// redaction reaped is refused as [`StagedError::Reaped`]: it has no
+/// proposal left to reconstruct.
 pub async fn load(pool: &PgPool, id: Uuid) -> Result<StagedWrite, StagedError> {
+    match load_promotable(pool, id).await? {
+        Promotable::Full(write) => Ok(write),
+        Promotable::Reaped(_) => Err(StagedError::Reaped(id)),
+    }
+}
+
+/// A staged write as its landing reads it: whole, or reaped by a
+/// redaction before its record landed.
+#[derive(Debug, Clone)]
+pub enum Promotable {
+    Full(StagedWrite),
+    Reaped(ReapedWrite),
+}
+
+/// What a reaped write keeps: the structure of the act and the display
+/// rows it owned, and none of the payload, its content salt or its nonce.
+/// A record landing over it lands reduced (data-model.md "Act payload
+/// carriage").
+#[derive(Debug, Clone)]
+pub struct ReapedWrite {
+    pub id: Uuid,
+    pub actor_id: Uuid,
+    pub body: StructuralBody,
+    pub node_id: Option<Uuid>,
+    pub pre_signed_at: Option<chrono::DateTime<chrono::Utc>>,
+}
+
+/// Loads one staged write for its landing, which is the one reader a
+/// reaped write still answers: the record is ordered fact whatever became
+/// of the payload, so it has to land, and it lands reduced.
+pub async fn load_promotable(pool: &PgPool, id: Uuid) -> Result<Promotable, StagedError> {
     let row = sqlx::query!(
         "SELECT id, actor_id, author, seq, family, middle,
                 target, p_d, p_i, settlement_ref, license, asserted_parents,
                 deps, payload, state, author_pubkey, nonce, pre_signature,
                 content_salt, deps_salt, content_commitment, deps_commitment,
-                host_seal, prepared_epoch, node_id, pre_signed_at, carried
+                host_seal, prepared_epoch, node_id, pre_signed_at, carried,
+                payload_reaped_at
          FROM staged_writes WHERE id = $1",
         id,
     )
@@ -281,25 +320,39 @@ pub async fn load(pool: &PgPool, id: Uuid) -> Result<StagedWrite, StagedError> {
             .map(|s| ActId::parse(s).map_err(|e| StagedError::Corrupt(id, e.to_string())))
             .collect()
     };
+    let body = StructuralBody {
+        author: row.author,
+        seq: u64::try_from(row.seq).map_err(|_| corrupt("seq"))?,
+        family,
+        middle,
+        target,
+        p_d: row.p_d,
+        p_i: row.p_i,
+        settlement_ref: row
+            .settlement_ref
+            .as_deref()
+            .map(ActId::parse)
+            .transpose()
+            .map_err(|e| StagedError::Corrupt(id, e.to_string()))?,
+        license: row.license,
+        asserted_parents: parse_ids(&row.asserted_parents)?,
+    };
+    let payload = match (row.payload, row.payload_reaped_at) {
+        (Some(payload), None) => payload,
+        (None, Some(_)) => {
+            return Ok(Promotable::Reaped(ReapedWrite {
+                id: row.id,
+                actor_id: row.actor_id,
+                body,
+                node_id: row.node_id,
+                pre_signed_at: row.pre_signed_at,
+            }));
+        }
+        _ => return Err(corrupt("payload")),
+    };
     let proposal = Proposal {
-        body: StructuralBody {
-            author: row.author,
-            seq: u64::try_from(row.seq).map_err(|_| corrupt("seq"))?,
-            family,
-            middle,
-            target,
-            p_d: row.p_d,
-            p_i: row.p_i,
-            settlement_ref: row
-                .settlement_ref
-                .as_deref()
-                .map(ActId::parse)
-                .transpose()
-                .map_err(|e| StagedError::Corrupt(id, e.to_string()))?,
-            license: row.license,
-            asserted_parents: parse_ids(&row.asserted_parents)?,
-        },
-        payload: row.payload,
+        body,
+        payload,
         deps: parse_ids(&row.deps)?,
     };
     let pre_signed = match (row.author_pubkey, row.nonce, row.pre_signature) {
@@ -334,7 +387,7 @@ pub async fn load(pool: &PgPool, id: Uuid) -> Result<StagedWrite, StagedError> {
         (None, None, None, None, None) => None,
         _ => return Err(corrupt("seal leg")),
     };
-    Ok(StagedWrite {
+    Ok(Promotable::Full(StagedWrite {
         id: row.id,
         actor_id: row.actor_id,
         state: StagedState::parse(&row.state).ok_or_else(|| corrupt("state"))?,
@@ -345,7 +398,7 @@ pub async fn load(pool: &PgPool, id: Uuid) -> Result<StagedWrite, StagedError> {
         pre_signed_at: row.pre_signed_at,
         pre_signed,
         sealed,
-    })
+    }))
 }
 
 /// Whether the actor has a live staged write of the family toward the
@@ -430,12 +483,18 @@ pub async fn has_pending_targeting(
 /// An actor's staged writes, newest first (api-spec `User.stagedWrites`).
 /// Loads one by one — N+1 by choice: an actor holds a handful of live
 /// stagings at slice-1 scale, and `load` owns the row-to-seam parse.
+///
+/// A write a redaction reaped is not listed: it has no proposal left to
+/// sign or show, and the content it carried is exactly what the
+/// redaction took out of every reader's reach.
 pub async fn list_for_actor(
     pool: &PgPool,
     actor_id: Uuid,
 ) -> Result<Vec<StagedWrite>, StagedError> {
     let ids = sqlx::query_scalar!(
-        "SELECT id FROM staged_writes WHERE actor_id = $1 ORDER BY created_at DESC",
+        "SELECT id FROM staged_writes
+         WHERE actor_id = $1 AND payload_reaped_at IS NULL
+         ORDER BY created_at DESC",
         actor_id,
     )
     .fetch_all(pool)
@@ -823,6 +882,60 @@ async fn discard_pending_content(
 struct StagedRows {
     node_id: Option<Uuid>,
     pre_signed_at: Option<chrono::DateTime<chrono::Utc>>,
+}
+
+/// The staged copy of an act's payload, as a redaction finds it: locked,
+/// so nothing promotes or relays it while the redaction archives and
+/// reaps it.
+#[derive(Debug, Clone)]
+pub struct StagedCopy {
+    pub id: Uuid,
+    pub state: String,
+    pub carried: bool,
+    /// None once reaped.
+    pub payload: Option<Vec<u8>>,
+    pub nonce: Option<Vec<u8>>,
+    pub content_salt: Option<Vec<u8>>,
+    pub content_commitment: Option<Vec<u8>>,
+}
+
+/// Locks and reads the staged write of one act, if any row stages it.
+pub async fn lock_copy(
+    conn: &mut PgConnection,
+    act_id: &str,
+) -> Result<Option<StagedCopy>, StagedError> {
+    Ok(sqlx::query_as!(
+        StagedCopy,
+        "SELECT id, state, carried, payload, nonce, content_salt, content_commitment
+         FROM staged_writes WHERE act_id = $1
+         FOR UPDATE",
+        act_id,
+    )
+    .fetch_optional(conn)
+    .await?)
+}
+
+/// The redaction reap: the staged row of `act_id` keeps its structure and
+/// loses the payload, its content salt and the proposal nonce — the three
+/// values that would reopen the content (data-model.md "Staged writes").
+///
+/// Every state but `carried` is reaped, landed rows included: promotion
+/// only flips the state, so a landed row still holds the bytes the
+/// carriage row was promoted from, and leaving them would make the
+/// reduction a lie. A carried act is never reaped; it is deleted outright
+/// with its account. Idempotent: a reaped row is not touched again, so
+/// the reap moment stays the first one.
+pub async fn reap_payload(conn: &mut PgConnection, act_id: &str) -> Result<u64, StagedError> {
+    Ok(sqlx::query!(
+        "UPDATE staged_writes
+         SET payload = NULL, content_salt = NULL, nonce = NULL,
+             payload_reaped_at = NOW(), updated_at = NOW()
+         WHERE act_id = $1 AND state <> 'carried' AND payload IS NOT NULL",
+        act_id,
+    )
+    .execute(conn)
+    .await?
+    .rows_affected())
 }
 
 /// GC, second phase: deletes expired rows another `gc_after_epochs` epochs

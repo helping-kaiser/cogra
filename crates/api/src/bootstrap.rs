@@ -530,23 +530,18 @@ async fn resume_act(
     if stored.payload_len != proposal.payload.len() as u64 {
         return Err(diverged());
     }
-    match content_store::act_payload(pool, &act_id.to_string())
+    let carriage = content_store::act_payload(pool, &act_id.to_string())
         .await
-        .map_err(carriage_error)?
-    {
-        Some(carriage) if !carriage.reduced => {
-            let opens = content_commitment(
-                &act_id,
-                &stored.pre_commitment,
-                &carriage.content_salt,
-                &carriage.payload,
-            );
+        .map_err(carriage_error)?;
+    match carriage.as_ref().and_then(|c| c.payload.as_ref().zip(c.content_salt.as_ref())) {
+        Some((payload, salt)) => {
+            let opens = content_commitment(&act_id, &stored.pre_commitment, salt, payload);
             if opens.as_slice() != stored.content_commitment.as_slice() {
                 return Err(BootstrapError::Unrepairable(format!(
                     "the carriage of {act_id} does not open its witness"
                 )));
             }
-            if carriage.payload != proposal.payload {
+            if *payload != proposal.payload {
                 return Err(diverged());
             }
         }
