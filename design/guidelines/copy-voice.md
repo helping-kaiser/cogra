@@ -425,14 +425,16 @@ noun):
   and your edit is still here. Try again in a little while.` (the edit's
   blessed ending in the reply's sentence, jakob 2026-10-05).
   Payer-neutral by the v1.0.0 scope cut.)*
-- **Your opinion on your post** (the post's one-axis pad): Publishing
-  also signs your opinion on your own post — for or against, from a
-  gentle 🙂 *(+0.10)* by default. / Your own post always reaches you in
-  full, so only for-or-against is yours to set. The face is the
-  reading: six of them run from 😠 at one end to 😍 at the other, and
-  the one you see is wherever your number lands. Nothing is signed
-  until Set. Prefer sliders or exact numbers? Swap the input in
-  settings.
+- **Your opinion on your post** (the full pad on your own post — the
+  seal's and a post edit's): Publishing also signs your opinion on your
+  own post — for or against it, and how far it reaches people through
+  you. It starts at a gentle 🙂 *(+0.10 / +0.10)* and rides the same
+  signature as your post. / An edit carries your opinion too, starting
+  at nothing, so an edit you don't adjust leaves it as it is. Nothing is
+  signed until Set. Swap the input in settings if you prefer sliders or
+  numbers. *(Blessed jakob 2026-10-16. "How far it
+  reaches people through you" names the second number on one's own
+  post, where the pad's axis word stays `How much reaches you`.)*
 - **Toward what you answer** (the reply's two-axis pad): Replying also
   signs an opinion on what you answer — for or against, and
   how much of it reaches you. It starts at a gentle 🙂 *(+0.10 / +0.10)*
@@ -2614,7 +2616,7 @@ the registry is whole:
   own.
 - **The pad's name** — `Opinion pad for this post`; the targets read
   `this comment`, `@mira`, `#saltmaps`, and on the seal-scale pads `your
-  own post` (`ComposePad`) and `what you answer` (`ReplyPad`).
+  own post` (`ComposePad`, `EditPad`) and `what you answer` (`ReplyPad`).
 - **The pad's poles** — `Against` · `For` across, `Less` · `More` up;
   the Affinity pad's `Dislike` · `Like` and `Far away` · `Close to me`
   (*Topics*).
@@ -2628,8 +2630,6 @@ the registry is whole:
   row's readout is spoken as the word and the pair, `Like this, +0.55 /
   +0.20` (`PostOpinions`, `ProfileStances`, `YourTopics`, the trace's
   boards).
-- `Your own post always reaches you in full.` — the post's one-axis
-  pad, under its one track (`ComposePad`).
 - `Everything you've said about this post adds up to +1.00 / +1.00, and
   that is what this walks back.` — the walk-back's total, the person
   family's twin of the topic's (`SeveranceConfirm`), over `Your pick:` and

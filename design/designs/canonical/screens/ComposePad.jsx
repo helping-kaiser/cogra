@@ -1,24 +1,24 @@
-/* THE OPINION PAD ON YOUR OWN POST (legacy conversion, the conformance round):
-   what the seal's "Adjust" opens. The wash covers the seal; only the parked
-   pad is live, which is what the board's `scanExempt` line says.
+/* THE OPINION PAD ON YOUR OWN POST: what the seal's "Adjust" opens. The wash
+   covers the seal; only the parked pad is live, which is what the board's
+   `scanExempt` line says.
 
-   THE FIELD IS ONE AXIS, and that is why `StancePad` is not here. The master
-   is the square where the drawn field IS the value space — Against/For across,
-   Less/More up — because both parameters are the author's to choose. On one's
-   OWN post the second is not: your own post always reaches you in full, so
-   `pInterest` is not a thing to pick and a square offering it would offer a
-   choice that is not one. What is left is a line, and a line is drawn as one.
-   The system has no one-axis pad; this board is the only surface that wants
-   one, so it draws its own and the gap is reported rather than filled in
-   passing.
+   THE FIELD IS THE MASTER, both axes (jakob 2026-10-16). An opinion on one's
+   own post is an opinion like any other: for or against it, and how much of
+   it reaches you, both the author's to choose — so the value space is the
+   square `StancePad` draws, and the pad reads from it rather than drawing its
+   own. It is the reply pad's drawing (`ReplyPadBody`) over this seal: the
+   hand board's 240px field centred, the four named directions outside it, the
+   knob where +0.10 / +0.10 puts it — the pad's universal default, the gentle
+   one every stance starts from.
 
-   EVERYTHING AROUND THE FIELD IS THE PAD'S OWN GRAMMAR, kept: the "?" in the
-   top-right corner out of the readouts' reading order (`HelpDot`, at the
-   master's geometry), the pick's readout ABOVE the field where a thumb cannot
-   cover it, the note, and Cancel · Set — release never commits, Set does. The
-   readout's number carries `cg-exact` exactly as the master's does, so a
-   hand-drawn readout follows the reading mode instead of diverging from it
-   (readme §13).
+   EVERYTHING AROUND THE FIELD IS THE SEAL-SCALE PAD'S GRAMMAR: the "?" in the
+   top-right corner out of the readouts' reading order (`HelpDot`), opening the
+   pad's named dialog over the seal; the pick's readout ABOVE the field where a
+   thumb cannot cover it, reading `Your pick` — on your own post there is one
+   thing a pick could be about; and Cancel · Set — release never commits, Set
+   puts the pick back on the seal's row, and Sign and publish signs it with the
+   post. The readout is the master's polite live region: the pick speaks once
+   it rests.
 
    THE SEAL BENEATH IS THE SEAL — `ComposeSealBody`, the same body
    `ComposeSeal` draws. What a wash covers is inert, not shortened. */
@@ -35,7 +35,7 @@ export function Screen() {
           position: "absolute",
           left: 30,
           right: 30,
-          bottom: 24,
+          bottom: 16,
           display: "flex",
           flexDirection: "column",
           gap: 12,
@@ -50,59 +50,24 @@ export function Screen() {
           <HelpDot ariaLabel="Your opinion on your post" />
         </span>
 
-        {/* The pick's readout, in the pad's own block shape: the name of the
-            quantity, then the face and the number under it. */}
-        {/* The readout clears the corner the "?" sits in, the way the master's
-            own `StanceStanding` block does. */}
-        <div style={{ display: "flex", flexDirection: "column", paddingRight: 40 }}>
+        {/* The pick's readout: the name of the quantity, then the face and the
+            pair under it, clearing the corner the "?" sits in. */}
+        <div aria-live="polite" style={{ display: "flex", flexDirection: "column", paddingRight: 40 }}>
           <span aria-hidden="true" style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
             Your pick
           </span>
-          {/* THE FACE AND THE WORD COME FROM `VALENCE_SIX`, the one-axis table:
-              `nearestValenceAnchor(+0.10)` is 🙂 "Nice", the first band above
-              zero. They are spelled here because the lookup is not among the
-              names the bundle exposes to screens — the value is the table's,
-              not this board's, and the pad must never name a face the system
-              has no band for. */}
           <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}>
             <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🙂</span>
-            <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", whiteSpace: "nowrap" }}>+0.10</span>
+            <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", whiteSpace: "nowrap" }}>+0.10 / +0.10</span>
           </span>
           <span style={SR_ONLY}>
-            Nice, For or against +0.10
+            Nice, For or against +0.10, How much reaches you +0.10
           </span>
         </div>
 
-        {/* THE POLE WORDS SIT OUTSIDE THE TRACK — the master's ruling (jakob
-            2026-09-15, `StancePad`), which this one-axis field takes rather
-            than patching locally. They were drawn ON the line, which is the
-            one place the dot goes when the value reaches that pole: the word
-            the reader most needs at that moment was the word the dot covered.
-            The gutters hold the words, the track holds the value, and the two
-            never share a pixel. The track narrows by what the words take, so
-            the pad keeps the footprint the sheet was drawn around. */}
-        <div
-          role="group"
-          aria-label="Opinion pad for your own post"
-          style={{ alignSelf: "center", display: "flex", alignItems: "center", gap: 6 }}
-        >
-          <span aria-hidden="true" style={{ flex: "none", width: 50, textAlign: "right", whiteSpace: "nowrap", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
-            Against
-          </span>
-          {/* 192, not the earlier 148 — jakob (2026-09-15): the one-axis track
-              was "quite small"; it takes the row's slack, stopping short of
-              pushing the gutter words into the card's sides. */}
-          <span style={{ position: "relative", width: 192, height: 72, borderRadius: "var(--radius-large)", background: "var(--surface-container-highest)", touchAction: "none" }}>
-            <span aria-hidden="true" style={{ position: "absolute", left: 8, right: 8, top: "50%", height: 1, background: "var(--border-hairline)" }} />
-            <span aria-hidden="true" style={{ position: "absolute", left: "50%", top: 8, bottom: 8, width: 1, background: "var(--border-hairline)" }} />
-            <span aria-hidden="true" style={{ position: "absolute", left: "55%", top: "50%", width: 24, height: 24, margin: "-12px 0 0 -12px", borderRadius: "var(--radius-full)", background: "var(--surface-loud)", border: "1px solid var(--on-surface-loud)" }} />
-          </span>
-          <span aria-hidden="true" style={{ flex: "none", width: 50, textAlign: "left", whiteSpace: "nowrap", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
-            For
-          </span>
+        <div role="group" aria-label="Opinion pad for your own post" style={{ alignSelf: "stretch" }}>
+          <StancePad value={{ pDirected: 0.1, pInterest: 0.1 }} />
         </div>
-
-        <QuietNote>Your own post always reaches you in full.</QuietNote>
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
           <Button variant="text" size="sm">Cancel</Button>

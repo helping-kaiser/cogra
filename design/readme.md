@@ -823,7 +823,7 @@ is a different thing from a piece the apps have not reached yet.
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader`, `StanceRow` |
 | `components/states/` | `EmptyState`, `LoadingState`, `ComingSoonCard` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending`, `NoticePanel`, `NoticeLine`, `RedactedContent`, `SensitiveVeil`, `SensitiveScope` |
-| `components/stance/` | `StanceControl`, `StancePad`, `StanceReadout`, `OwnStanceReadout`, `StanceValue`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `HelpLine`, `SeveranceConfirm` |
+| `components/stance/` | `StanceControl`, `StancePad`, `StanceReadout`, `StanceValue`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `HelpLine`, `SeveranceConfirm` |
 | `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `PagerDots`, `MediaViewer`, `VideoTransport`, `Timeline`, `SeekLine`, `DetailClip`, `ReelRail`, `ReelRailItem`, `ReelRailScore`, `ReelPlate`, `ReelCaption` |
 | `components/proposed/` | `ExplainableNumber` — **not shipped**, see §7.1 |
 
@@ -1031,11 +1031,14 @@ own (§3). All four quadrants are legitimate.
   anchors by Euclidean distance — dense in the for-it-and-want-it
   quadrant, sparse at the extremes. `(0, 0)` never speaks through the
   table: it gets 🤷.
-- **A pick with only one axis reads through `VALENCE_SIX`**, the
-  pure-valence spine of the twenty — six ruled bands over `pDirected`
-  alone, for the own-post pad and the seal row that states what it
-  picked. A nearest-of-twenty lookup cannot answer for a value that
-  names no pair.
+- **An opinion on one's own content is an opinion like any other**
+  (jakob 2026-10-16): the full pad, both axes, wherever the author
+  gives it — the seal's `Your opinion` row, a post edit's, and the
+  anchor on their own post, whose opinions fold into one bundle with
+  the post's own records. Severance there is severance anywhere:
+  explained and confirmed, never prevented. What the author's own
+  stance never decides is whether their post reaches them: their own
+  posts always show in their own feed.
 - **Where the anchors sit is recorded on the anchor-map card**
   (`components/stance/anchor-map.card.html`) — the twenty on the
   two-axis field and the six pure-valence ones on the strip, each at its
@@ -1608,9 +1611,9 @@ signing. Sensitive self-marking is one switch opening a bottom
 sheet: it veils the body and the description; the title and tags
 stay readable so choosing to look is informed; an optional reason is
 shown on the veil. Every stance a write signs is disclosed and
-adjustable: the post's own attachment on a one-axis pad (For/Against
-only — your own post always reaches you in full), a reply's stance
-on its parent on the full two-axis pad. The pad keeps its floating
+adjustable on the full two-axis pad: the post's own attachment,
++0.10 / +0.10 until the author moves it, and a reply's stance on its
+parent. The pad keeps its floating
 card form everywhere; only license and sensitive present as sheets.
 
 **Key absent is restore-first.** Nothing is staged server-side and
@@ -2226,7 +2229,7 @@ entry first". What stands:
   lookups stay off the bundle's namespace. The check reads each pad's
   own `value` and asks the masters what it reads as —
   `formatStancePair` / `formatTagPair`, `nearestAnchor` /
-  `nearestTagAnchor`, `padPercentOf` — so a moved value, a hyphen
+  `nearestTagAnchor` — so a moved value, a hyphen
   where §3 rules U+2212, or a spoken reading left behind is a
   failure. A seventh hand-spelled readout anywhere in `screens/` fails
   too: unchecked is not a state a literal gets to be in.
@@ -7109,7 +7112,10 @@ slots.
   micro-fix): a first connection has nothing to walk back, so the pad omits
   the walk-away; the message's pad keeps the full control, an opinion on a
   message being a real, revisitable stance. The message's own seal keeps the
-  compose seal's one-axis grammar, `OwnStanceReadout` with `Adjust`.
+  compose seal's grammar: the pair, `StanceReadout`, with `Adjust` opening
+  the ordinary full pad — an opinion on one's own content has no one-axis
+  form (*Round 13, the own-stance round*); the pad over the chat seal is
+  drawn when the chat round comes.
 - **Pending and didn't-land (design.md §9).** A message still settling shows
   whole with `Still settling ·` before its clock; one that expires leaves
   every reader's view and its author gets a calm notice where it stood —
@@ -10049,6 +10055,56 @@ chronicle-row shape.
   `saved.list` row paths (eight on each board) and the `saved.list.entry`
   key rule leave the registry by hand, the breaking change proposed for
   blessing.
+
+### Round 13, the own-stance round — 2026-10-16
+
+jakob's rulings (2026-10-16) on an author's stance on their own content.
+They supersede the valence-six round's "the second number isn't yours
+to set on your own post". The words he did not write himself are
+drafted and wait for his review (copy-voice marks them).
+
+- **An opinion on your own post is the full pair.** The seal's `Your
+  opinion` row draws `StanceReadout`, +0.10 / +0.10 at rest — the pad's
+  universal default (jakob 2026-10-05) and authorship.md's "defaulted
+  low like every stance", drawn pending jakob's word (backlog 140).
+  `Adjust` opens `ComposePad`, the ordinary full pad at seal scale: the
+  reply pad's drawing over this seal, `Your pick` above the master
+  square, Set staging and `Sign and publish` signing. The pick rides the
+  post's own record. `OwnStanceReadout` leaves the stance masters;
+  `VALENCE_SIX` and `nearestValenceAnchor` stand on the anchor-map card
+  alone, their retirement jakob's call.
+- **Every post edit carries the pair, inert at (0, 0).** `EditCompose`,
+  `EditWords` and `EditComposeVideo` draw `Your opinion` under the
+  License row, reading the author's standing opinion on the post;
+  `Adjust` opens `EditPad`, the ordinary full pad over the edit —
+  `Current opinion`, `Your pick` and `Resulting opinion` the masters'
+  own, the pick opening at the edit's, (0, 0) until moved. A (0, 0)
+  record carries w̃ = 0 and crosses neither channel, so an edit nobody
+  adjusts moves the author's opinion by exactly nothing. Set stages,
+  `Sign the edit` signs; the pick rides the edit's own record, so the
+  acts card adds no row and no count (`EditActs`). The boards that draw
+  the edit beneath an overlay carry the row with it. The comment edits
+  draw none: a comment's revision carries its stance toward what it
+  answers (backlog 140).
+- **The own-post anchor is the ordinary pad.** The stance face on the
+  reader's own post opens `PadStanding`'s pad as on anyone's, its
+  current opinion one bundle of the post's own records and the opinions
+  given through its face; walking it back follows the generic severance
+  law (stance-control, *Your own content*).
+- **Your own posts always show in your own feed**, whatever your opinion
+  on them reads — a feed law (`Feed`), and the one place "your own"
+  still differs. The one-axis pad's note goes with the pad, and its
+  "?" text is replaced by a draft for the full pad.
+- **The chat seal** keeps the compose seal's grammar: `ChatSignSheet`
+  reads the pair, and the pad over it is drawn when the chat round
+  comes.
+- **The gate**: edges **2076 → 2085** — the four edits' `Adjust` and
+  `EditPad`'s five; flows **226 → 227**
+  (`adjust-your-opinion-with-an-edit`; `set-your-own-stance-on-your-post`
+  re-described); `EditPad` ("Edit post · your opinion on it") takes
+  the compose page's edit row at x 5280. The registry holds at **98 /
+  3878**: none of the boards this round touched is registered, and
+  nothing is removed.
 
 ---
 

@@ -74,7 +74,6 @@ const {
   StancePad,
   SeveranceConfirm,
   StanceReadout,
-  OwnStanceReadout,
   StanceValue,
   StanceSlider,
   StanceStanding,
@@ -1638,11 +1637,12 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <FactRow label="License" value={<LicenseSummary />} action="Change" />
-          {/* One number: what reaches you about your own post is not a choice,
-              so the row states the one value the author set. */}
+          {/* The pair, as every stance reads: the author's opinion on their
+              own post is an opinion like any other, both numbers theirs to
+              set (jakob 2026-10-16), and it starts at the pad's default. */}
           <FactRow
             label="Your opinion"
-            value={<OwnStanceReadout pDirected={0.1} />}
+            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
             action="Adjust"
           />
           <FactRow label="Sensitive" value="Not marked" action="Mark" last />
@@ -2229,6 +2229,22 @@ function editFootSign({ unchanged, faultHoles }) {
   );
 }
 
+/* THE POST EDIT'S OPINION ROW (jakob 2026-10-16). Every edit's record carries
+   the pair, the uniform grammar, and the author may adjust it with the ordinary
+   full pad (`EditPad`). The pick starts at (0, 0) — inert: a (0, 0) record
+   carries w̃ = 0 and crosses neither channel, so an edit nobody adjusts moves
+   the author's opinion by exactly nothing. The row therefore reads where the
+   author's opinion stands with the edit: the standing fold on the post, at
+   rest; after a Set, the fold the pick lands it on. The pair rides the edit's
+   own record, so it adds no act to the batch. It stands under the License
+   row, the seal's order. The fixture's fold is the one the post was published
+   with, the compose default +0.10 / +0.10. */
+const EDIT_STANDING = { pDirected: 0.1, pInterest: 0.1 };
+
+function EditOpinionRow() {
+  return <FactRow label="Your opinion" value={<StanceReadout pair={EDIT_STANDING} kind="standing" />} action="Adjust" />;
+}
+
 function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes } = {}) {
   return (
     <>
@@ -2295,6 +2311,7 @@ function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes
                 </span>
               }
             />
+            <EditOpinionRow />
             <FactRow label="Sensitive" value="Not marked" action="Mark" last />
           </div>
         </div>

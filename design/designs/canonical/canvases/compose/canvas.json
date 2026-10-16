@@ -551,10 +551,10 @@
     },
     {
       "file": "MapCompose.dc.html",
-      "x": -3610,
+      "x": -3900,
       "y": 0,
-      "w": 3190,
-      "h": 4827,
+      "w": 3480,
+      "h": 4883,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -563,7 +563,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 4743,
+      "h": 4799,
       "page": "media",
       "title": "Media · flow map"
     },
@@ -613,6 +613,15 @@
       "page": "compose"
     },
     {
+      "file": "EditPad.dc.html",
+      "title": "Edit post · your opinion on it",
+      "x": 5280,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
       "file": "RefPairEdit.dc.html",
       "title": "A standing citation's pair · editing",
       "x": 4800,
@@ -654,7 +663,7 @@
       "x": -340,
       "y": 1060,
       "w": 290,
-      "text": "COMPOSE · The seal\n\n'What you sign' is a place, not a popup — no 'don't ask again'. The manifest lists every act with its cost; the batch lands whole or not at all (resolves Q43). The three row-openers present ONE way (decided 2026-08-27): license and sensitive rise as BOTTOM SHEETS; the stance keeps the pad's own floating card, which is deliberately the same pad as everywhere else. License reads your default (a settings entry — new ruling), immutable after signing. Every stance the write signs is shown and adjustable: the post's own attachment is a ONE-AXIS pad (For/Against only — your own post always reaches you fully). Sensitive is one switch with a fixed per-field policy: it veils the BODY and the DESCRIPTION; the title and topics stay readable so choosing to look is informed. Optional reason, shown on the veil (new product decision — API field to add). Key absent = restore first: nothing staged, the draft stays on device, tertiary colouring — a waiting state, never error.",
+      "text": "COMPOSE · The seal\n\n'What you sign' is a place, not a popup — no 'don't ask again'. The manifest lists every act with its cost; the batch lands whole or not at all (resolves Q43). The three row-openers present ONE way (decided 2026-08-27): license and sensitive rise as BOTTOM SHEETS; the stance keeps the pad's own floating card, which is deliberately the same pad as everywhere else. License reads your default (a settings entry — new ruling), immutable after signing. Every stance the write signs is shown and adjustable on the full two-axis pad: the post's own attachment starts at +0.10 / +0.10, both numbers the author's to set. Sensitive is one switch with a fixed per-field policy: it veils the BODY and the DESCRIPTION; the title and topics stay readable so choosing to look is informed. Optional reason, shown on the veil (new product decision — API field to add). Key absent = restore first: nothing staged, the draft stays on device, tertiary colouring — a waiting state, never error.",
       "page": "compose"
     },
     {

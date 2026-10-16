@@ -8,6 +8,8 @@ ALWAYS the acts card lists every act in the batch, a withdrawal counted as an ac
 
 ALWAYS each row of the acts card counts the records its kind signs, a citation's withdrawal at its counter-records
 
+ALWAYS the opinion the edit carries rides the Edit row's one record, adding no row of its own and nothing to any count
+
 ALWAYS the acts card carries the line They land together, or none does. GIVEN the batch holds more than one act
 
 WHEN press Done -> the sheet closes to the edit

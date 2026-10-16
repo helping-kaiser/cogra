@@ -577,11 +577,10 @@ Two follow-ups the round surfaces, still open:
   - **`PickPrompt` requires an escape.** The draft board's
     fresh-start line is the same caption with nothing to escape to;
     it is spelled at the master's values instead of taking it.
-  - **No one-axis stance pad exists.** `ComposePad` draws its own,
-    and it is the only board that wants one — `ReplyPad` reads the
-    master square. Its readout reads `VALENCE_SIX`, so what is left
-    is the field itself: a master for the line, or one board
-    drawing it.
+  - ~~**No one-axis stance pad exists.**~~ Ruled 2026-10-16 (round 13):
+    an opinion on one's own post is the full pair, so no board wants a
+    one-axis pad — `ComposePad` reads the master square, as `ReplyPad`
+    does.
   - **A flow badge on a field never paints.** The badge's `::after`
     generates no box on a replaced element, and the composer boards
     stamp the `<input>`/`<textarea>` itself (`ComposeCited`,
@@ -4971,3 +4970,54 @@ make alone:
   and an off-feed score looks its thing up in the feed's last fetch.
   Whose read a guest's tag page or profile shows is two readings until
   ruled.
+
+### 140 · What the own-stance round left for jakob · *design + contract* · **filed 2026-10-16**
+
+Round 13 (readme §13) drew jakob's own-stance rulings: the full pad on
+one's own post, the post edits' opinion row inert at (0, 0), and the
+own-post anchor as the ordinary pad. These are the calls it could not
+make alone:
+
+- **The compose default pair.** Drawn at +0.10 / +0.10, the pad's
+  universal default and authorship.md's "defaulted low like every
+  stance". It gentles a new post's reach-through against the built
+  apps, which pin the second number in full. Keep, or pin `p_i`
+  differently.
+- **An edit whose only change is the opinion.** Moving the edit's pick
+  off (0, 0) and changing nothing else: does that fill the batch — a new
+  version identical in content, marked `Edited` — or does an
+  opinion-only change belong to the post's own anchor, the edit's
+  `Sign the edit` staying disabled? `EditComposeUnchanged`'s gate reads
+  the batch, so the answer decides what it counts.
+- **`Walk it back` on the edit's pad.** The ordinary pad carries the
+  walk-away wherever an opinion stands, and on one's own post one
+  always does. `EditPad` draws the seal-scale pad's two controls only:
+  what walking back inside an edit's batch stages — its counter-records
+  are records of their own, while the edit's pair rides one — is
+  unruled. The same question asks the severance dialog's cost line when
+  an edit's pick nets the bundle to (0, 0): `1 thing` over a pick that
+  adds no record.
+- **The acts card's reading of a moved pick.** The opinion rides the
+  `Edit` row's record and adds no row (`EditActs`). Proposed: once the
+  pick leaves (0, 0), the `Edit` row reads the post's name over the
+  pick's pair, the seal's References row's shape, and the name alone at
+  (0, 0).
+- **The comment edit.** A comment's revision is an ordinary-role Review,
+  its A-leg to the same parent, so the pair a comment edit carries is
+  the stance toward what the comment answers — the reply pad's
+  territory, not an own-stance. `CommentEdit` and `CommentEditVideo`
+  draw no opinion row until that is ruled.
+- **The compose pad at an inert pick.** The pad on a new post shows
+  only `Your pick` — nothing stands, so the pick is the landing. A pick
+  with an axis at zero carries nothing on that axis; the generic law
+  says so on the landing line, and the seal-scale pads draw none. Draw
+  the inert line under the field, or leave it to the readout.
+- **The own-post feed law and the docs.** "Your own posts always show
+  in your own feed" stands in the design as a feed law; feed-ranking.md
+  has no such rule, and a viewer-rooted walk over a severed own-post
+  bundle reaches nothing. The docs need the rule, or the design drops it.
+- **`VALENCE_SIX` and `nearestValenceAnchor`.** No surface draws a
+  one-axis pick now; the table stands on the anchor-map card alone and
+  both apps still carry it. Retire it from the contract, or keep it.
+- **The pad help's draft.** copy-voice's `Your opinion on your post`
+  text is drafted and waits for jakob's word.
