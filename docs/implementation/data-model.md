@@ -142,6 +142,17 @@ keys ≥ 100 belong to guilds. The envelope never carries the node's
 type (the L1 act fixes it) and conformance is a binary L2 admission
 gate at prepare, never a scoring input.
 
+The reserved range (keys 4–99, PCE §4.2) is read two ways. A payload
+CoGra authors — the one a device checks before it signs — carries no
+reserved key at any declared version: an unordered key in one's own
+proposal is a smuggle. On the read/ingest path (a landing, a
+redaction reading a carriage) a reserved key is tolerated only when
+the envelope declares an `extension_ver` newer than the reader's
+(PCE §6 Xceil): the carriage keeps it byte-exact, nothing renders or
+re-authors it, and the reading is marked newer-format. At a version
+the reader implements, the key is refused as on the signing path —
+malformed, not future.
+
 CoGra's fields ride **guild key 49258** (`0xC06A`) as a nested
 integer-keyed map — the guild schema:
 
