@@ -948,9 +948,9 @@ jakob 2026-10-16). jakob's own words, picked 2026-10-02 (F7) and
 A guest gets the join prompt at the same controls instead. The acting doors answer in the same register — *drafted 2026-10-16,
 pending jakob's blessing*:
 
-- `You can post once you're in.` — `New post` on every applicant bar, and
-  the menus' `Cite in a new post` and `Mention in a new post`. The wizard
-  never opens.
+- `You can post once you're in.` — the bar's `New post` wherever an
+  applicant meets it, and the menus' `Cite in a new post` and `Mention in
+  a new post`. The wizard never opens.
 - `You can give your opinion once you're in.` — every stance face an
   applicant meets, a topic's included, by a tap or a press-and-hold, after
   the face's own name (`Give your opinion on this post`). The pad never

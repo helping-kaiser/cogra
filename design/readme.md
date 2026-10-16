@@ -10260,9 +10260,9 @@ applicant remainder, ruled*'s waiting opinion and topic, *The 134 and
 135 residue*'s waiting post and chronicle line.
 
 - **Every acting door answers in place**, in the applicant-foot family's
-  register. `New post` on every applicant bar (`ApplicantFeed` and its
-  family, `ProfileApplicant`, `WalletComingSoon` for an applicant) and
-  the menus' `Cite in a new post` and `Mention in a new post` answer
+  register. The bar's `New post` wherever an applicant meets it (wired on
+  `ApplicantFeed` and its family, `ProfileApplicant` and
+  `WalletComingSoon`) and the menus' `Cite in a new post` and `Mention in a new post` answer
   `You can post once you're in.`; the wizard never opens. A stance face —
   every one an applicant meets, a topic's and a profile's wide anchor
   included — answers a tap or a press-and-hold with `You can give your
