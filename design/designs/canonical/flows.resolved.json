@@ -1246,7 +1246,7 @@
       "status": "resolved",
       "steps": [
         "start · ComposeSeal · 5 «Adjust (your backing)» → ComposePad",
-        "end · ComposePad · 4 «Set» → ComposeSeal — the adjusted stance on the seal"
+        "end · ComposePad · 4 «Set» → ComposeSeal — the adjusted backing on the seal"
       ],
       "boards": [
         "ComposeSeal",

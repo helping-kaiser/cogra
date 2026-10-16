@@ -84,7 +84,7 @@ ALWAYS a veiled clip has no playback and no sound-disc presence
 
 ALWAYS history.searchField reads Search your history at rest
 
-WHEN the reader types in history.searchField -> History narrows to what matches AND the matches stand in sections, the people first and then the content, each section ordered by the time the reader first saw each thing, newest first
+WHEN the reader types in history.searchField -> History narrows to what matches AND the matches stand in sections, the people first, then the tags, and then the content, each section ordered by the time the reader first saw each thing, newest first
 
 ALWAYS history.searchField matches by the one search rule Explore uses: names and titles, and never a body, a description or a bio
 
