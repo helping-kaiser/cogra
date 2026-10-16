@@ -7,7 +7,7 @@
    the fact rows a reader checks before putting their name to it, then the one
    committing act. The facts are the record's own shape (chats.md §3): where
    the message goes, whether its body rides encrypted, the license every
-   content flow declares, and the low-default opinion it carries, which follows
+   content flow declares, and the low-default backing it carries, which follows
    the post's own rule (post.md §1 — the frontend defaults it to +0.1) and
    reads one number, `AttachmentReadout`, exactly as the post seal's does.
 
@@ -17,18 +17,19 @@
    over the thread and goes back down. `Sign and send` at the foot is the arrow
    said in words — sending from here is the same act as a tap on the arrow.
 
-   THE OPINION IS ADJUSTABLE HERE; THE LICENSE READS (the integration round's
-   fix pass, jakob's seal ruling: the opinion a reader signs must be one they
+   THE BACKING IS ADJUSTABLE HERE; THE LICENSE READS (the integration round's
+   fix pass, jakob's seal ruling: what a reader signs must be something they
    can set where they sign). A message is the reader's own content, and its
    Send carries one free number on its first leg, the second pinned at 1 by
    the census (jakob 2026-10-16, PR-101), so the row takes the compose seal's
-   own grammar, canonical `ComposeSeal`'s exactly: `AttachmentReadout` with
-   `Adjust`, which opens the one-axis pad. The pad over this sheet is drawn
+   own grammar, canonical `ComposeSeal`'s exactly: `Your backing`,
+   `AttachmentReadout` with `Adjust`, which opens the one-axis pad. A
+   message's edit is the chat round's, banked with it. The pad over this sheet is drawn
    when the chat round comes. The license stays a plain fact — the lock toggle is the message's
    one per-message choice (jakob) and the license is the account's default;
    whether one message's license may be retuned here stays open.
 
-   ONE MARKUP, TWO PAINTINGS (the geek-mode round). The opinion row is the one
+   ONE MARKUP, TWO PAINTINGS (the geek-mode round). The backing row is the one
    numeric fact, and `AttachmentReadout` already draws the face AND the
    exact value in a `cg-exact` span, with a spoken twin — so the board draws
    once and the reading mode decides whether the digits paint. Every other
@@ -48,7 +49,7 @@ export function Screen() {
             <FactRow label="Into" value="Coast walkers" />
             <FactRow label="Encrypted" value="No — anyone can read it" />
             <FactRow label="License" value="Public domain — your default" />
-            <FactRow label="Your opinion" value={<AttachmentReadout pDirected={0.1} />} action="Adjust" last />
+            <FactRow label="Your backing" value={<AttachmentReadout pDirected={0.1} />} action="Adjust" last />
           </div>
           <Button style={{ width: "100%" }}>Sign and send</Button>
         </div>

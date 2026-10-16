@@ -4,16 +4,18 @@
 
    THE FIELD IS ONE AXIS, the master `AttachmentPad` (jakob 2026-10-16,
    PR-101). Publishing signs one record toward the post, a Publish, and the
-   census gives it one free parameter: the author's attachment, For or
-   Against, with the second number pinned at 1 — never a choice, so never
-   drawn as one. The strip is the square's own language cut to that one axis,
-   at the width the square would take here, the knob where +0.10 puts it — the
-   gentle default every post starts from (post.md §1).
+   census gives it one free parameter: the author's attachment — their
+   BACKING — For or Against, with the second number pinned at 1, never a
+   choice, so never drawn as one. The strip is the square's own language cut
+   to that one axis, at the width the square would take here, the knob where
+   +0.10 puts it — the gentle default every post starts from (post.md §1).
+   The pick is the record; with nothing standing yet it is also the result,
+   so one readout suffices.
 
    WHAT THE AUTHOR THINKS OF THE POST IS ANOTHER RECORD. Once the post is out,
    its face takes an ordinary opinion like anyone's — both numbers, a bundle
    of its own that never nets with this one (`PadStanding`). This pad is the
-   authoring gesture alone.
+   authoring gesture alone: backing, never opinion.
 
    EVERYTHING AROUND THE FIELD IS THE SEAL-SCALE PAD'S GRAMMAR: the "?" in the
    top-right corner out of the readouts' reading order (`HelpDot`), opening the
@@ -51,13 +53,13 @@ export function Screen() {
         }}
       >
         <span style={{ position: "absolute", top: 4, right: 4 }}>
-          <HelpDot ariaLabel="Your opinion on your post" />
+          <HelpDot ariaLabel="Your backing on your post" />
         </span>
 
         {/* The pick's readout, clearing the corner the "?" sits in. */}
         <AttachmentStanding pick={0.1} style={{ paddingRight: 40 }} />
 
-        <div role="group" aria-label="Opinion pad for your own post" style={{ alignSelf: "stretch" }}>
+        <div role="group" aria-label="Backing pad for your own post" style={{ alignSelf: "stretch" }}>
           <AttachmentPad value={0.1} />
         </div>
 

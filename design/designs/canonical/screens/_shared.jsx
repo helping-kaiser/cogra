@@ -77,6 +77,7 @@ const {
   StanceReadout,
   AttachmentReadout,
   AttachmentStanding,
+  AttachmentLandingLine,
   StanceValue,
   StanceSlider,
   StanceStanding,
@@ -1641,10 +1642,12 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
         <div style={{ display: "flex", flexDirection: "column" }}>
           <FactRow label="License" value={<LicenseSummary />} action="Change" />
           {/* One number: the post's own record is a Publish, whose one free
-              parameter is the author's attachment — the second is pinned by
-              the census (jakob 2026-10-16, PR-101). It starts at +0.10. */}
+              parameter is the author's attachment — their backing; the second
+              is pinned by the census (jakob 2026-10-16, PR-101). It starts at
+              +0.10. Backing is the authoring bundle; the author's opinion is
+              the one the post's face takes once it is out. */}
           <FactRow
-            label="Your opinion"
+            label="Your backing"
             value={<AttachmentReadout pDirected={0.1} />}
             action="Adjust"
           />
@@ -2232,23 +2235,20 @@ function editFootSign({ unchanged, faultHoles }) {
   );
 }
 
-/* THE POST EDIT'S OPINION ROW (jakob 2026-10-16, PR-101). An edit is an
+/* THE POST EDIT'S BACKING ROW (jakob 2026-10-16, PR-101). An edit is an
    ordinary-role Publish toward the post — the family that minted it — so it
-   carries the same one free parameter, the author's attachment, and the row
-   reads one number. Parallel Publish records sum then clip within the one
-   bundle, so what an edit's record carries is a DELTA; the row and the pad
-   speak in the resulting value instead (set semantics): the row reads the
-   attachment as it stands with the edit, `Adjust` opens the one-axis pad
-   (`EditPad`) at that value, and the client signs the difference — the value
-   picked less the bundle's raw sum. An edit nobody adjusts signs 0.00 and
-   moves the attachment by exactly nothing. The record rides the edit itself,
-   so it adds no act to the batch. It stands under the License row, the seal's
-   order. The fixture's value is the one the post was published with, the
-   compose default +0.10. */
-const EDIT_ATTACHMENT = 0.1;
+   carries the same one free parameter, the author's backing, and the row
+   reads one number: where the backing stands with the edit. The edit's own
+   record is a pick added to the bundle — 0.00 by default, which changes
+   nothing — so at rest the row reads the backing as it stands, and after a
+   Set on `EditPad` it reads the backing after. The record rides the edit
+   itself, so it adds no act to the batch. It stands under the License row,
+   the seal's order. The fixture's backing is the one the post was published
+   with, the compose default +0.10. */
+const EDIT_BACKING = 0.1;
 
-function EditOpinionRow() {
-  return <FactRow label="Your opinion" value={<AttachmentReadout pDirected={EDIT_ATTACHMENT} />} action="Adjust" />;
+function EditBackingRow() {
+  return <FactRow label="Your backing" value={<AttachmentReadout pDirected={EDIT_BACKING} />} action="Adjust" />;
 }
 
 function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes } = {}) {
@@ -2317,7 +2317,7 @@ function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes
                 </span>
               }
             />
-            <EditOpinionRow />
+            <EditBackingRow />
             <FactRow label="Sensitive" value="Not marked" action="Mark" last />
           </div>
         </div>

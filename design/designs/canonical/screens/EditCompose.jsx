@@ -75,13 +75,13 @@
    draws it; with `upload` at `failed` it draws nothing, because a failed
    upload drops the held press.
 
-   THE AUTHOR'S ATTACHMENT RIDES THE EDIT (jakob 2026-10-16, PR-101). `Your
-   opinion` stands under the License row, as on the seal: one number, where
-   the post's own records stand, and `Adjust` opens the one-axis pad
-   (`EditPad`) at that value. The client signs the difference, so an edit
-   nobody adjusts moves it by exactly nothing. The pick rides the edit's own
-   record, so the foot's count does not move (`EditOpinionRow`). `EditWords`
-   and `EditComposeVideo` draw the same row.
+   THE AUTHOR'S BACKING RIDES THE EDIT (jakob 2026-10-16, PR-101). `Your
+   backing` stands under the License row, as on the seal: one number, where
+   the backing stands with the edit, and `Adjust` opens the one-axis pad
+   (`EditPad`), whose pick is the edit's own record — 0.00 until moved, so an
+   edit nobody adjusts moves the backing by exactly nothing. The pick rides
+   the edit's own record, so the foot's count does not move
+   (`EditBackingRow`). `EditWords` and `EditComposeVideo` draw the same row.
 
    THE BODY IS `_shared.jsx`'s `EditComposeBody`, because the acts sheet stands
    on this edit and draws it whole. */

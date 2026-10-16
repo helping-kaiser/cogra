@@ -54,7 +54,7 @@ export function Screen() {
         <div style={{ display: "flex", flexDirection: "column" }}>
           <FactRow label="License" value={<LicenseSummary />} action="Change" />
           <FactRow
-            label="Your opinion"
+            label="Your backing"
             value={<AttachmentReadout pDirected={0.1} />}
             action="Adjust"
           />

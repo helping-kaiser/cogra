@@ -3080,7 +3080,7 @@ function BubbleCitation({ kind = "post", name, src, sub }) {
    the walk-away.
 
    THE READER'S OWN MESSAGE IS THE OTHER CASE: `ChatSignSheet` keeps the
-   compose seal's own grammar — `AttachmentReadout`'s one number with
+   compose seal's own grammar — `Your backing`, `AttachmentReadout`'s one number with
    `Adjust`, opening the one-axis pad — canonical's `ComposeSeal` row
    exactly. */
 const STAGED_STANCE = {

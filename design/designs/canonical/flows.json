@@ -304,15 +304,15 @@
     },
     {
       "name": "set-your-own-stance-on-your-post",
-      "description": "Adjust on the seal blooms the one-axis pad — the post's own record carries one free number, the author's For or Against, and it is declared before signing, never assumed.",
+      "description": "Adjust on the seal's Your backing row blooms the one-axis pad — the post's own record carries one free number, the author's backing, For or Against, and it is declared before signing, never assumed.",
       "start": { "board": "ComposeSeal", "via": 5 },
       "end": { "board": "ComposePad", "via": 4 }
     },
     {
       "name": "adjust-your-opinion-with-an-edit",
-      "description": "Adjust on a post edit's opinion row blooms the one-axis pad at where the post's own records stand; Set stages the pick on the edit's own record — the client signs the difference — and Sign the edit signs it with the rest. An edit nobody adjusts moves it by nothing.",
+      "description": "Adjust on a post edit's Your backing row blooms the one-axis pad, its pick the edit's own record at 0.00; the pad reads the current backing, the pick and the backing after, Set stages the pick and Sign the edit signs it with the rest. An edit nobody adjusts moves the backing by nothing.",
       "start": { "board": "EditCompose", "via": 21 },
-      "end": { "board": "EditPad", "via": 4, "case": "the pick stages on the edit's own record — the row reads the pick, the count does not move, and nothing signs until Sign the edit" }
+      "end": { "board": "EditPad", "via": 4, "case": "the pick stages on the edit's own record — the row reads the backing after, the count does not move, and nothing signs until Sign the edit" }
     },
     {
       "name": "pick-a-kept-draft-back-up",
