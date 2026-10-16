@@ -17,5 +17,6 @@ Never redesign this control. The rules it encodes:
 - A statically rendered board shows the parked pad via `defaultOpen`/`defaultPick` (never a hand copy of the card), lifts it above a bottom bar with `padInset`, and may speak once through `padNote` (the first vouch's coaching lines).
 - **`Choose your opinion on {targetLabel}`** is always in the DOM beside the target — visually hidden until focused, so keyboard, switch, and screen-reader users reach the non-drag equivalent in one tab without it being printed beside every stance control in a feed. It names its target from the same `targetLabel` the face's aria-label reads, so a page carrying more than one stance control never repeats the same unnamed link.
 - It never refuses a choice, and it never lets its touches reach the card behind it.
+- An applicant's anchor is **locked, not gone** (auth.md's locked look): pass `anchorOpacity="var(--state-disabled)"` and the anchor stands visibly inactive yet still tappable; the host answers a tap or a press-and-hold with `You can give your opinion once you're in.`, and the pad never blooms.
 
 Do not add a second loud surface to a screen that carries this control: the knob and the compose action already own `primaryContainer`.

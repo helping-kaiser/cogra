@@ -157,6 +157,7 @@ The instantiation of the node-value update rule
   Each edit carries the author's attachment pick, summed into the
   bundle like any parallel record: `0` by default — routing-inert,
   vouch-inert — and the author's to change.
+  A moved pick alone is a legal edit — a content-identical version.
 - **Eligible author:** the creator, alone — an eligibility read
   rule, never a write restriction.
 - **Chain root:** the genesis Publish. The current value is the

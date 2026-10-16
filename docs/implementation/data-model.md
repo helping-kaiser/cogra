@@ -431,6 +431,54 @@ objects no other held unit references and no live placement shows
 (`retention::hard_delete_unit`). The orphan sweep never takes a
 held asset or one a unit references.
 
+### Media areas
+
+Where an asset's bytes physically sit is its **area**
+(`media_attachments.area`), one of three stores of the media
+service:
+
+- **live** — the bucket every `MediaAttachment.url` is minted into,
+  world-readable by design. Every piece of content carries a
+  license, and the license is the evidence against misuse, not an
+  access control.
+- **held** — the operator-only bucket a deleted asset's bytes leave
+  the live one for: no anonymous policy and no serving route, reached
+  by the operator from the host alone. Once deleted, the bytes are
+  out of every reader's reach — no old link, no guessed key, no
+  crawl reaches them.
+- **carried** — the non-public bucket an applicant's carried media
+  waits in for the whole application-to-admission window, served to
+  its author alone. At the landing the bytes move to the live
+  bucket, and the move is confirmed good **before** the carried
+  batch signs: a failed move refuses the sign, retryably, so a post
+  never lands naming bytes nobody can fetch.
+
+Every move is the same verified copy: the bytes are written to the
+destination, read back, and hashed against the rendition digest R
+the record witnesses; only then does the row's area change. A copy
+that does not verify is deleted and the asset stays where it was.
+Each move is retryable and resumes from wherever a crash left it,
+since a destination already holding R counts as moved.
+
+The **held move** follows the hold, after the redaction commits —
+a blob write and a Postgres commit are not one transaction. Under
+the asset's row lock it re-checks that no live placement shows the
+asset (`media_live_placed`), because the hold can go stale between
+the redaction and the move; it deletes the live copy before the row
+reads `held`, so no committed state says held while a public copy
+remains. A move that fails leaves the asset held in the live area,
+and the media reaper's every tick retries it. The manual hard
+delete names each released object's area, which is where the
+operator act deletes it from.
+
+The **carried move** is `media::areas::publish_carried`, and the
+carried batch's sign gate reads
+`media::areas::carried_media_published`: true exactly when every
+asset the carried write names resolves to a ready asset of its
+author's whose bytes are live. A name that resolves to no asset
+fails closed. The orphan sweep takes only live-area assets: carried
+media has no placement until its landing writes one.
+
 ## Staged writes
 
 The write path stages before it lands
@@ -724,7 +772,14 @@ CREATE TABLE media_attachments (
     -- it belongs to the retention archive ("The retention archive"
     -- below). NULL while any live placement still shows it.
     held_at          TIMESTAMPTZ,
+    -- Which store holds the bytes ("Media areas" above): the
+    -- world-readable live bucket, the carried bucket, or the
+    -- operator-only held bucket. Changes only once the bytes have
+    -- moved and verified; only a held asset can sit in the held area.
+    area             TEXT         NOT NULL DEFAULT 'live'
+        CHECK (area IN ('live', 'carried', 'held')),
     created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    CHECK (area <> 'held' OR held_at IS NOT NULL),
     CHECK ((state = 'failed') = (failure_reason IS NOT NULL)),
     CHECK ((state = 'merged') = (merged_into IS NOT NULL)),
     CHECK (merged_into <> id)
@@ -754,6 +809,11 @@ CREATE INDEX media_attachments_processing_idx
 -- every delete checks it as a foreign key.
 CREATE INDEX media_attachments_merged_into_idx
     ON media_attachments (merged_into) WHERE merged_into IS NOT NULL;
+
+-- The held assets whose bytes have not left the live bucket yet — the
+-- media reaper's retry list. Empty at rest.
+CREATE INDEX media_attachments_held_unmoved_idx
+    ON media_attachments (held_at) WHERE held_at IS NOT NULL AND area = 'live';
 ```
 
 A row's **upload digest** is `COALESCE(source_digest, digest)`:

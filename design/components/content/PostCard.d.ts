@@ -108,6 +108,8 @@ export interface PostCardProps {
   stanceHoldProgress?: number;
   /** Forwarded to `StanceControl`'s `knobHeld`: the pad's knob drawn under the finger, its pressed layer around it, for a board. */
   stanceKnobHeld?: boolean;
+  /** Forwarded to `StanceControl`'s `anchorOpacity`: the locked look on an applicant's anchor (auth.md), `var(--state-disabled)`, still tappable. */
+  stanceOpacity?: string | number;
   /**
    * The Feed score, already formatted. Uncapped and possibly negative: render a
    * minus sign, never a colour. Renders `ExplainableNumber`; its four-screen

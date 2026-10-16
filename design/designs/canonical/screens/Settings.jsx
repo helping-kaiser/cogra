@@ -69,10 +69,10 @@
    settings; the board is the member's, and this table names what each row is
    for an applicant. Back goes to `ProfileApplicant`.
 
-     Theme · Giving an opinion  as for a member — device choices; the opinion
-                                input is how their one staged opinion is taken
-     Writing                    as for a member; the staged post starts from
-                                the default license
+     Theme · Giving an opinion  as for a member — device choices, kept for
+                                the first opinion after the landing
+     Writing                    as for a member; the first post after the
+                                landing starts from the default license
      Reading                    as for a member; the borrowed feed wears the
                                 same filter
      Hidden accounts            as for a member — hiding is a reading comfort,

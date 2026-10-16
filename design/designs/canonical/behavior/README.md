@@ -47,11 +47,7 @@ Where each sidecar's words come from:
   the two refusals of one staged act, the citation that never
   landed and the bug (copy-voice, *Faults by code*); and the ways out
   locked while it signs, the slow line past 5s and the outcome after a
-  kill (readme §13, *The curate rulings*); and an applicant's exit,
-  onto their own feed with the staged-act line, or with the turned-down
-  shell's own line when no application is live (readme §13, *The
-  applicant's life round* and *The applicant fix round*; copy-voice,
-  *The staged-act snackbar*).
+  kill (readme §13, *The curate rulings*).
 - `ReplyEntry.md` — the comments thread (*Comments · the thread*): the
   stage law's hard top, at the thread's own hard top and in thread
   order, in the same words; thread order itself (readme §13,

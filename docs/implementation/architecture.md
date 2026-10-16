@@ -300,10 +300,16 @@ steps:
    property instead: every record toward the shown target, each
    value in range, as many records as the cost shown, and the shown
    raw sums plus the batch netting to exactly `(0, 0)`. The staged
-   admission Registration is the one exemption: the backend stages
+   admission Registration is the first named exemption: the backend stages
    it at approval and the device holds no form for it, so it runs
-   the transport checks alone. The acts carried with an application
-   sign at the landing without an intent check. Then the device
+   the transport checks alone. An act carried with an application
+   is checked at its prepare, where its form exists, and the device
+   keeps the verified proposal's digest, dependencies excluded; at
+   the landing it signs only a proposal that still digests to it,
+   the landing's appended dependencies aside. A landing seen on a
+   device that holds no such digest — the act was prepared on
+   another — signs under the second named exemption, on the
+   transport checks alone. Then the device
    signs the proposal pre-commitment; the key never leaves it.
 3. **Relay and seal** (backend ↔ L1). Submit the pre-signed
    proposal through the L1 boundary; the L1 host verifies it,
@@ -465,6 +471,12 @@ traversal is unrepresentable rather than defended against.
 Readers fetch bytes from the media origin directly, never through
 the API; in development the web dev server proxies `/media/*` to
 it so a phone loads media from the same origin it already trusts.
+That origin serves one bucket of three: the live bucket,
+world-readable by design. Deleted media leaves it for an
+operator-only bucket with no anonymous policy and no serving
+route, and an applicant's carried media waits in a non-public
+bucket until the landing publishes it, verified, before the
+carried batch signs ([data-model.md "Media areas"](data-model.md#media-areas)).
 
 The trait carries the store's **multipart upload** beside its
 whole-object put, which is what lets a large upload survive a

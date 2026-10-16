@@ -1341,6 +1341,7 @@ async fn an_unsigned_edit_is_superseded_by_the_next(pool: PgPool) {
         content: Some("Body".into()),
         attachments: vec![],
         sensitive: Default::default(),
+        p_directed: 0.0,
     };
 
     let abandoned =

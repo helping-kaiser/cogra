@@ -3,14 +3,17 @@
 // every other account's. A device lock reads them out, encrypts them into the
 // identity database, and removes the plaintext; an unlock puts them back.
 //
-// THE SEALED COPIES JOIN THE DRAFT. A sealed copy is the draft a staged post
-// was written from (`sealed-draft.ts`), cleared with the draft by a
-// don't-remember sign-out (Settings.md:145) — so what that sign-out clears, a
-// lock locks.
+// THE SEALED COPIES AND THE CARRIED EXPECTATIONS JOIN THE DRAFT. A sealed copy
+// is the draft a staged post was written from (`sealed-draft.ts`), cleared
+// with the draft by a don't-remember sign-out (Settings.md:145) — so what that
+// sign-out clears, a lock locks. A carried write's prepare-time expectation
+// (`signing/carried.ts`) is the same tier by ruling (content-integrity §9:
+// "locked or purged with the draft"), so it rides the same reads.
 //
 // Every call names its account: a lock runs after the tokens were cleared,
 // an unlock before the fresh session is committed.
 
+import { carriedRange } from "@/lib/signing/carried";
 import { accountRange } from "./sealed-draft";
 import { open, STORE } from "./draft-store";
 
@@ -44,7 +47,7 @@ function transact<T>(
   );
 }
 
-/** The account's draft row and sealed copies, raw, in one read. */
+/** The account's draft row, sealed copies and carried expectations, raw, in one read. */
 export function readDraftCustody(idb: IDBFactory, account: string): Promise<DraftRow[]> {
   return transact(idb, "readonly", (store) => {
     const rows: DraftRow[] = [];
@@ -52,13 +55,15 @@ export function readDraftCustody(idb: IDBFactory, account: string): Promise<Draf
     draft.onsuccess = () => {
       if (draft.result !== undefined) rows.unshift({ key: account, value: draft.result });
     };
-    const cursor = store.openCursor(accountRange(account));
-    cursor.onsuccess = () => {
-      const at = cursor.result;
-      if (at === null) return;
-      rows.push({ key: String(at.primaryKey), value: at.value });
-      at.continue();
-    };
+    for (const range of [accountRange(account), carriedRange(account)]) {
+      const cursor = store.openCursor(range);
+      cursor.onsuccess = () => {
+        const at = cursor.result;
+        if (at === null) return;
+        rows.push({ key: String(at.primaryKey), value: at.value });
+        at.continue();
+      };
+    }
     return () => rows;
   });
 }
@@ -68,29 +73,32 @@ export async function hasDraftCustody(idb: IDBFactory, account: string): Promise
   return (await readDraftCustody(idb, account)).length > 0;
 }
 
-/** Removes the account's draft and sealed copies in one transaction. */
+/** Removes the account's draft, sealed copies and carried expectations in one transaction. */
 export function removeDraftCustody(idb: IDBFactory, account: string): Promise<void> {
   return transact(idb, "readwrite", (store) => {
     store.delete(account);
     store.delete(accountRange(account));
+    store.delete(carriedRange(account));
     return () => undefined;
   });
 }
 
 /**
  * Puts the rows back in one transaction. Only rows that belong to the account
- * are written — the draft's own key or a sealed copy's — so an unlock can never
- * plant a row in another account's place.
+ * are written — the draft's own key, a sealed copy's or a carried
+ * expectation's — so an unlock can never plant a row in another account's
+ * place.
  */
 export function restoreDraftCustody(
   idb: IDBFactory,
   account: string,
   rows: readonly DraftRow[],
 ): Promise<void> {
-  const range = accountRange(account);
+  const ranges = [accountRange(account), carriedRange(account)];
   return transact(idb, "readwrite", (store) => {
     for (const row of rows) {
-      if (row.key === account || range.includes(row.key)) store.put(row.value, row.key);
+      const owned = row.key === account || ranges.some((range) => range.includes(row.key));
+      if (owned) store.put(row.value, row.key);
     }
     return () => undefined;
   });
