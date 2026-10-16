@@ -29,12 +29,19 @@ import {
 import { ActId, AddrId, NodeId } from "@/lib/crypto/identifiers";
 import {
   decodePreCommitment,
+  decodeProposal,
   encodeProposal,
   encodeVerifiedAct,
 } from "@/lib/crypto/wire";
 import { createIdentityStore, type IdentityStore } from "@/lib/identity/store";
 import type { AuthGuard } from "@/lib/session/guard";
 import { startMswServer } from "@/test/msw";
+import {
+  carriedDigest,
+  createCarriedExpectationStore,
+  type CarriedExpectationStore,
+  type CarriedLandingGate,
+} from "./carried";
 import { expectation, REGISTRATION_EXEMPTION, stanceRecord } from "./intent";
 import { createWriteSigner, type WriteSigner } from "./write-signer";
 
@@ -149,6 +156,7 @@ function submittedPre(signature: string, actorPub: Uint8Array): PreSignedProposa
 
 describe("write signer", () => {
   let store: IdentityStore;
+  let carried: CarriedExpectationStore;
   let signer: WriteSigner;
   let actorPub: Uint8Array;
   let host: ActorKey;
@@ -157,6 +165,7 @@ describe("write signer", () => {
   beforeEach(async () => {
     globalThis.indexedDB = new IDBFactory();
     store = createIdentityStore({ activeAccountId: () => "acct-1" });
+    carried = createCarriedExpectationStore({ activeAccountId: () => "acct-1" });
     const seed = randomBytes(32);
     const saved = await store.saveActor(seed, true);
     actorPub = saved.publicKeyBytes();
@@ -173,6 +182,7 @@ describe("write signer", () => {
       client: client(),
       guard: passthroughGuard,
       store,
+      carried,
       sleep: () => Promise.resolve(),
     });
   });
@@ -591,6 +601,7 @@ describe("write signer", () => {
       client: client(),
       guard: passthroughGuard,
       store: emptyStore,
+      carried,
       sleep: () => Promise.resolve(),
     });
     const result = await keyless.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
@@ -719,9 +730,202 @@ describe("write signer", () => {
     );
     expect(result).toEqual({ kind: "done", id: "sw-a", state: "RELAYING" });
   });
+  // ---- the carried branch (PR-88: CI-G5 ruled (a)+(a1)) -------------------
+
+  /** The ruled dependency completion the landing appends. */
+  const COMPLETION = [
+    new ActId("dd".repeat(20), 1n, "registration"),
+    new ActId("ee".repeat(20), 4n, "opinion"),
+  ];
+
+  /**
+   * The host for one released write: seals exactly what `served` carries
+   * and relays the approval — the whole handshake, counting the submits.
+   */
+  function sealingHost(served: StagedWriteView): { count: () => number } {
+    let submits = 0;
+    const proposal = decoded(served);
+    const node = (state: StagedWriteState, verifiedAct: string | null) => ({
+      ...stagedJson(served.id, state, verifiedAct),
+      family: served.family,
+      canonicalProposal: served.canonicalProposal,
+    });
+    server.use(
+      hostHandler,
+      graphql.mutation("SubmitProposals", async ({ variables }) => {
+        submits += 1;
+        const input = (variables as { input: { proposals: { signature: string }[] } }).input;
+        const blob = decodePreCommitment(fromBase64(input.proposals[0].signature));
+        const pre = new PreSignedProposal({
+          proposal,
+          authorPubkey: actorPub,
+          nonce: blob.nonce,
+          preSignature: blob.preSignature,
+        });
+        const sealed = await sealOver(host, pre);
+        return HttpResponse.json({
+          data: {
+            submitProposals: {
+              __typename: "SubmitProposalsPayload",
+              stagedWrites: [node("AWAITING_APPROVAL", toBase64(encodeVerifiedAct(sealed)))],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+      graphql.mutation("ApproveActs", () =>
+        HttpResponse.json({
+          data: {
+            approveActs: {
+              __typename: "ApproveActsPayload",
+              stagedWrites: [node("RELAYING", null)],
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+    );
+    return { count: () => submits };
+  }
+
+  /** The applicant's prepare: the stance, checked and kept for the landing. */
+  async function preparedCarried(): Promise<void> {
+    const results = await signer.sign(
+      [await stanceView("sw-c", "CARRIED", 0.4, 0.2)],
+      expectation([stanceRecord(PERSON, 0.4, 0.2)]),
+    );
+    expect(results).toEqual([{ kind: "carried", id: "sw-c" }]);
+  }
+
+  it("a_carried_write_is_intent_checked_at_its_prepare_and_kept_not_signed", async () => {
+    const submits = countingSubmits();
+    const staged = await stanceView("sw-c", "CARRIED", 0.4, 0.2);
+    const results = await signer.sign([staged], expectation([stanceRecord(PERSON, 0.4, 0.2)]));
+    expect(results).toEqual([{ kind: "carried", id: "sw-c" }]);
+    // Nothing pre-signed, nothing spent — and what was verified is kept.
+    expect(submits.count()).toBe(0);
+    expect(await store.handshakeIds()).toEqual([]);
+    expect(await carried.get("sw-c")).toEqual(await carriedDigest(decoded(staged)));
+  });
+
+  it("a_carried_write_that_disagrees_with_its_form_is_refused_at_its_prepare_and_nothing_is_kept", async () => {
+    const submits = countingSubmits();
+    const results = await signer.sign(
+      [await stanceView("sw-c", "CARRIED", 0.4, 0.25)],
+      expectation([stanceRecord(PERSON, 0.4, 0.2)]),
+    );
+    expect(results.map((r) => r.kind)).toEqual(["rejectedByDevice"]);
+    expect(submits.count()).toBe(0);
+    expect(await carried.get("sw-c")).toBeNull();
+  });
+
+  it("the_landing_signs_a_carried_write_equal_to_its_kept_expectation_modulo_the_dependency_completion", async () => {
+    await preparedCarried();
+    const released = await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.4, 0.2, new Uint8Array(), COMPLETION);
+    const submits = sealingHost(released);
+    const results = await signer.signCarriedAtLanding([released]);
+    expect(submits.count()).toBe(1);
+    expect(results).toEqual([{ kind: "done", id: "sw-c", state: "RELAYING" }]);
+    // Pre-signed and handed to the backend: the expectation has done its job.
+    expect(await carried.get("sw-c")).toBeNull();
+  });
+
+  it("a_released_carried_write_that_differs_from_its_kept_expectation_refuses_the_whole_batch", async () => {
+    await preparedCarried();
+    const submits = countingSubmits();
+    const results = await signer.signCarriedAtLanding([
+      // Prepared on another device: it would sign under the exemption alone…
+      await stanceView("sw-other", "AWAITING_PRE_SIGN", 0.1, 0.1, new Uint8Array(), COMPLETION),
+      // …but the served value is not the one this device verified.
+      await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.9, 0.2, new Uint8Array(), COMPLETION),
+    ]);
+    expect(results.map((r) => r.kind)).toEqual(["rejectedByDevice", "rejectedByDevice"]);
+    expect(submits.count()).toBe(0);
+    // KEPT through the refusal: the next poll must refuse again, never find
+    // the expectation gone and sign under the exemption.
+    expect(await carried.get("sw-c")).not.toBeNull();
+  });
+
+  it("a_released_carried_write_with_an_injected_payload_is_refused", async () => {
+    await preparedCarried();
+    const submits = countingSubmits();
+    const results = await signer.signCarriedAtLanding([
+      await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.4, 0.2, Uint8Array.of(1), COMPLETION),
+    ]);
+    expect(results.map((r) => r.kind)).toEqual(["rejectedByDevice"]);
+    expect(submits.count()).toBe(0);
+  });
+
+  it("a_carried_write_this_device_never_prepared_signs_under_the_carried_at_landing_exemption", async () => {
+    const released = await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.4, 0.2, new Uint8Array(), COMPLETION);
+    const submits = sealingHost(released);
+    const results = await signer.signCarriedAtLanding([released]);
+    expect(submits.count()).toBe(1);
+    expect(results).toEqual([{ kind: "done", id: "sw-c", state: "RELAYING" }]);
+  });
+
+  it("the_carried_at_landing_exemption_still_runs_the_transport_check", async () => {
+    const submits = countingSubmits();
+    const results = await signer.signCarriedAtLanding([
+      { ...view("sw-c", "AWAITING_PRE_SIGN", null), canonicalProposal: toBase64(Uint8Array.of(1, 2)) },
+    ]);
+    expect(results.map((r) => r.kind)).toEqual(["rejectedByDevice"]);
+    expect(submits.count()).toBe(0);
+  });
+
+  it("the_landing_gate_holds_the_carried_batch_back_without_spending_anything", async () => {
+    await preparedCarried();
+    const asked: string[][] = [];
+    const gate: CarriedLandingGate = async (batch) => {
+      asked.push(batch.map((write) => write.id));
+      return { kind: "notReady", reason: "the media move is not confirmed yet" };
+    };
+    const gated = createWriteSigner({
+      client: client(),
+      guard: passthroughGuard,
+      store,
+      carried,
+      carriedGate: gate,
+      sleep: () => Promise.resolve(),
+    });
+    const submits = countingSubmits();
+    const results = await gated.signCarriedAtLanding([
+      await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.4, 0.2, new Uint8Array(), COMPLETION),
+    ]);
+    expect(asked).toEqual([["sw-c"]]);
+    expect(results.map((r) => r.kind)).toEqual(["failed"]);
+    expect(submits.count()).toBe(0);
+    expect(await carried.get("sw-c")).not.toBeNull();
+  });
+
+  it("the_landing_gate_is_never_asked_for_a_batch_the_intent_check_refused", async () => {
+    await preparedCarried();
+    let asked = 0;
+    const gated = createWriteSigner({
+      client: client(),
+      guard: passthroughGuard,
+      store,
+      carried,
+      carriedGate: async () => {
+        asked += 1;
+        return { kind: "ready" };
+      },
+      sleep: () => Promise.resolve(),
+    });
+    await gated.signCarriedAtLanding([
+      await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.9, 0.2, new Uint8Array(), COMPLETION),
+    ]);
+    expect(asked).toBe(0);
+  });
+
 });
 
 const PERSON = `prof:${"bb".repeat(20)}`;
+
+/** The proposal a staged view serves. */
+function decoded(staged: StagedWriteView): Proposal {
+  return decodeProposal(fromBase64(staged.canonicalProposal));
+}
 
 /**
  * A stance the prepare serves, authored by this device's own address —
@@ -733,6 +937,7 @@ async function stanceView(
   pD: number,
   pI: number,
   payload: Uint8Array = new Uint8Array(),
+  deps: readonly ActId[] = [],
 ): Promise<StagedWriteView> {
   const key = await createIdentityStore({ activeAccountId: () => "acct-1" }).actorKey();
   if (key === null) throw new Error("expected the device key");
@@ -748,7 +953,7 @@ async function stanceView(
     license: null,
     assertedParents: [],
   });
-  const proposal = new Proposal(body, payload, []);
+  const proposal = new Proposal(body, payload, [...deps]);
   return {
     id,
     state,

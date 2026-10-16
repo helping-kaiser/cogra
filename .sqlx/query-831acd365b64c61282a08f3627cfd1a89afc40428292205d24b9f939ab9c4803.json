@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id FROM media_attachments\n         WHERE held_at IS NOT NULL AND area = 'live' AND state = 'ready'\n         ORDER BY held_at, id\n         LIMIT $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "831acd365b64c61282a08f3627cfd1a89afc40428292205d24b9f939ab9c4803"
+}
