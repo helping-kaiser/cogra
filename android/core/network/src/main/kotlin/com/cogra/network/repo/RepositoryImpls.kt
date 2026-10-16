@@ -686,6 +686,7 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
         attachments: List<AttachmentClaim>,
         sensitive: Boolean,
         sensitiveReason: String?,
+        pDirected: Double,
     ): Outcome<PreparedContentView> = guard.run {
         client.mutation(
             PreparePostEditMutation(
@@ -712,6 +713,10 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
                     sensitiveReason = Optional.present(
                         wireReason(sensitive, sensitiveReason),
                     ),
+                    // The author's attachment pick, the record's own value —
+                    // sent explicitly, as the pad shows it, 0 when unmoved
+                    // (the intent check holds the record to it).
+                    pDirected = Optional.present(pDirected),
                 ),
             ),
         ).payloadOutcome({ it.preparePostEdit.userErrors.map { e -> e.userErrorFields } }) { data ->

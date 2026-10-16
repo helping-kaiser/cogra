@@ -2,11 +2,15 @@ package com.cogra.feature.content.edit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cogra.core.designsystem.BackingValue
+import com.cogra.core.designsystem.attachmentLanding
+import com.cogra.core.designsystem.walkBackPick
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
+import com.cogra.domain.PostBacking
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.UserError
 import com.cogra.domain.content.isDescriptionTooLong
@@ -73,6 +77,24 @@ data class PostEditUiState(
     /** The author's own mark — never the OR a reader sees (round 4). */
     val sensitive: Boolean = false,
     val sensitiveReason: String? = null,
+    /**
+     * The edit record's own attachment pick — the value it ADDS to the
+     * post's backing, never a value the backing is set to (EditPad.md;
+     * PICK-IS-THE-EDGE, seam 233). 0.00 until the backing pad's Set moves
+     * it, which changes the backing by exactly nothing.
+     */
+    val pick: Double = 0.0,
+    /** What the open backing pad has under the finger — staged, not set, until Set. */
+    val stagedPick: Double = 0.0,
+    /** The backing pad stands parked over the edit (`EditPad`). */
+    val backingPadOpen: Boolean = false,
+    /**
+     * The post's backing as its author's Publish bundle folds it, or null
+     * while nothing serves it ([ContentRepository.postBacking]: a server
+     * gap today) — the readouts then draw it unread, and the walk-back
+     * stays greyed, rather than guess.
+     */
+    val backing: PostBacking? = null,
     /**
      * Whether the edit record is in the batch. STICKY: set by the first
      * change to a field the record carries and never cleared by typing it
@@ -147,6 +169,28 @@ data class PostEditUiState(
 
     val anySheetOpen: Boolean get() = sensitiveOpen || actsOpen || pickedOpen || describingIndex != null
 
+    /** `Current backing` — the bundle's net now, or unread. */
+    val backingCurrent: BackingValue get() = backing?.let { BackingValue.Read(it.net) } ?: BackingValue.Unread
+
+    /** The raw sum `Backing after` and the walk-back fold from, or unread. */
+    val backingRaw: BackingValue get() = backing?.let { BackingValue.Read(it.rawSum) } ?: BackingValue.Unread
+
+    /**
+     * The `Your backing` row: where the backing stands WITH the edit — the
+     * fold of the raw sum plus the set pick, which at an unmoved pick is
+     * the backing as it stands (EditCompose.md). Unread while unserved.
+     */
+    val backingWithEdit: BackingValue
+        get() = backing?.let { BackingValue.Read(attachmentLanding(it.rawSum, pick).landing) } ?: BackingValue.Unread
+
+    /**
+     * `Walk it all back` answers only while the backing nets other than
+     * 0.00 — greyed once it already does (net 0 iff raw sum 0), and while
+     * nothing served the backing, since the walk-back aims at a result
+     * nobody read.
+     */
+    val canWalkBack: Boolean get() = backing != null && backing.net != 0.0
+
     companion object {
         /** How much of the words the acts card's Edit row names when there is no title. */
         const val RECORD_NAME_CHARS = 60
@@ -212,9 +256,14 @@ class PostEditViewModel @Inject constructor(
                             it.copy(loading = false, transportFailed = true)
                         }
                     }
+                    // The backing is read beside the post, never in its way:
+                    // a read that fails or serves nothing leaves it unread,
+                    // and the edit stands without it.
+                    val backing = (content.postBacking(postId) as? Outcome.Success)?.value
                     _state.update {
                         it.copy(
                             loading = false,
+                            backing = backing,
                             title = post.title.value.orEmpty(),
                             description = post.description.value.orEmpty(),
                             body = post.content.value.orEmpty(),
@@ -275,6 +324,41 @@ class PostEditViewModel @Inject constructor(
     fun onSensitiveReasonChange(reason: String) = _state.update {
         it.copy(sensitiveReason = reason.ifBlank { null }, recordStaged = it.recordStaged || it.sensitive)
     }
+
+    // -- The backing (`EditPad`) --
+
+    /** `Adjust` on the Your backing row: the pad opens at the edit's pick, staging nothing. */
+    fun onOpenBackingPad() = _state.update { it.copy(backingPadOpen = true, stagedPick = it.pick) }
+
+    /** A drag on the strip: staged, never committed. */
+    fun onBackingPickChange(value: Double) = _state.update { it.copy(stagedPick = value) }
+
+    /**
+     * `Walk it all back`: the pick parks at the raw sum's opposite, clipped
+     * to the strip — nothing staged, no dialog. Does nothing while greyed.
+     */
+    fun onWalkBack() = _state.update { st ->
+        val backing = st.backing
+        if (backing == null || !st.canWalkBack) st else st.copy(stagedPick = walkBackPick(backing.rawSum))
+    }
+
+    /**
+     * Set: the pad closes and the edit's record carries the pick. A moved
+     * pick fills the batch on its own — a content-identical version whose
+     * only change is the pick. At 0.00 no record is ADDED to the batch and
+     * no dialog asks: an inert pick on an edit is a perfectly ordinary one
+     * (EditPad.md). The count never moves for the pick itself.
+     */
+    fun onSetBacking() = _state.update {
+        it.copy(
+            pick = it.stagedPick,
+            recordStaged = it.recordStaged || it.stagedPick != 0.0,
+            backingPadOpen = false,
+        )
+    }
+
+    /** Cancel, the scrim, the system's Back: the pad closes and the pick is what it was. */
+    fun onCancelBackingPad() = _state.update { it.copy(backingPadOpen = false, stagedPick = it.pick) }
 
     // -- The pictures (`EditPicked`) --
 
@@ -407,7 +491,7 @@ class PostEditViewModel @Inject constructor(
                 is Outcome.Refused -> return null.also { refuse(read.errors) }
                 is Outcome.Failed -> return null.also { failTransport() }
             }
-            postEdit(postGraphId, contentExpectation(postId, sent, ContentShape.POST, ledger))
+            postEdit(postGraphId, contentExpectation(postId, sent, ContentShape.POST, ledger), s.pick)
         } else {
             null
         }
@@ -508,6 +592,7 @@ class PostEditViewModel @Inject constructor(
             attachments = sent.attachments,
             sensitive = sent.sensitive,
             sensitiveReason = sent.sensitiveReason,
+            pDirected = s.pick,
         )
         return when (outcome) {
             is Outcome.Success -> outcome.value.writes

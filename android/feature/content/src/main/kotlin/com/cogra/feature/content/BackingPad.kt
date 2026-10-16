@@ -1,8 +1,11 @@
 package com.cogra.feature.content
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +16,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -177,6 +181,44 @@ const val UNREACHABLE_BODY =
     "Your backing is your post's own path into anyone's feed. At 0.00 that path carries " +
         "nothing — your post will live on your profile, reached only through the tags and " +
         "citations you sign with it, until someone gives it an opinion."
+
+/**
+ * The wash a parked pad stands over: the surface beneath goes inert, and a
+ * press on it is the outside press — it stages nothing ([onDismiss]).
+ */
+@Composable
+fun BoxScope.ParkedPadWash(onDismiss: () -> Unit, testTag: String) {
+    Box(
+        modifier = Modifier
+            .matchParentSize()
+            .background(MaterialTheme.colorScheme.scrim.copy(alpha = PARKED_PAD_WASH_ALPHA))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onDismiss,
+            )
+            .testTag(testTag),
+    )
+}
+
+/** Where every pad parks: the lower centre of the viewport, at the board's insets. */
+fun BoxScope.parkedPadPlacement(): Modifier = Modifier
+    .align(Alignment.BottomCenter)
+    .padding(horizontal = PARKED_PAD_SIDE_INSET)
+    .padding(bottom = PARKED_PAD_BOTTOM_INSET)
+
+/**
+ * How far the wash dims the surface under a parked pad — the same 50%
+ * `--scrim-dialog` the boards wash with, and the value the seals' pads
+ * already park over.
+ */
+private const val PARKED_PAD_WASH_ALPHA = 0.5f
+
+/** The board's inset from each edge (`ComposePad.jsx`, `EditPad.jsx`: left and right 30). */
+private val PARKED_PAD_SIDE_INSET = 30.dp
+
+/** And its standoff from the bottom — the compose seal's, so both pads park alike. */
+private val PARKED_PAD_BOTTOM_INSET = 24.dp
 
 /** `--radius-extra-large`, the rung every parked pad and sheet wears. */
 private val PAD_CORNER = 28.dp

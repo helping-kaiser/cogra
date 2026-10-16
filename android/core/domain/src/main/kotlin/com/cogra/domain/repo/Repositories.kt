@@ -20,6 +20,7 @@ import com.cogra.domain.LoginGrant
 import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
+import com.cogra.domain.PostBacking
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
@@ -277,6 +278,13 @@ interface ContentRepository {
      * content state, so a mark the edit does not re-state is a mark the
      * edit removes. The caller passes what it read from [postSelfMark],
      * unchanged, unless the author moved the switch.
+     *
+     * [pDirected] is the author's attachment pick riding the edit's own
+     * record — THE RECORD'S OWN VALUE, `0` (inert) unless the backing pad
+     * moved it; it adds to the post's backing bundle, and the client never
+     * computes it as a delta toward a target (PICK-IS-THE-EDGE, seam 233).
+     * `pInterest` stays census-fixed at 1 for Publish, so it is no
+     * parameter.
      */
     suspend fun preparePostEdit(
         id: String,
@@ -286,7 +294,20 @@ interface ContentRepository {
         attachments: List<AttachmentClaim>,
         sensitive: Boolean = false,
         sensitiveReason: String? = null,
+        pDirected: Double = 0.0,
     ): Outcome<PreparedContentView>
+
+    /**
+     * The post's BACKING — the author's own Publish bundle toward it (the
+     * mint and every edit's pick, summed then clipped) — for the edit pad's
+     * `Current backing`, `Backing after` and `Walk it all back` (EditPad.md).
+     *
+     * SERVER GAP (seam 233): no read serves it yet — `viewerStance` folds the
+     * Opinion bundle only, which is the face's, never the backing. Until one
+     * exists every implementation answers null and the pad draws the
+     * backing as unread; nothing here estimates it.
+     */
+    suspend fun postBacking(id: String): Outcome<PostBacking?> = Outcome.Success(null)
 
     /**
      * [tags] are the topics declared at creation, exactly as on a post
