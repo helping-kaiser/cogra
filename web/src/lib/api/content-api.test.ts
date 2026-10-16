@@ -3,6 +3,7 @@ import { graphql, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 
 import {
+  fetchPostBacking,
   fetchPostDetail,
   prepareComment,
   preparePost,
@@ -355,6 +356,7 @@ describe("preparePostEdit", () => {
       content: "B",
       attachments: [],
       sensitive: true,
+      pDirected: 0.3,
     });
     expect(variables).toEqual({
       input: {
@@ -367,6 +369,8 @@ describe("preparePostEdit", () => {
         // An edit re-states the mark rather than dropping it.
         sensitive: true,
         sensitiveReason: null,
+        // The edit's own pick, stated as picked (round 15).
+        pDirected: 0.3,
       },
     });
   });
@@ -400,6 +404,7 @@ describe("preparePostEdit", () => {
         { mediaId: "m-2", altText: null },
       ],
       sensitive: false,
+      pDirected: 0,
     });
     expect((variables as unknown as { input: { attachments: unknown } }).input.attachments).toEqual([
       {
@@ -445,6 +450,7 @@ describe("preparePostEdit", () => {
       content: "",
       attachments: [{ mediaId: "m-v", altText: null, coverMediaId: "m-c", coverTaken: true }],
       sensitive: false,
+      pDirected: 0,
     });
     expect(variables!.input.attachments).toEqual([
       {
@@ -456,6 +462,15 @@ describe("preparePostEdit", () => {
         coverTaken: true,
       },
     ]);
+  });
+});
+
+// THE SERVER GAP, pinned so its closing is a visible change: no field serves
+// the author's Publish bundle toward their own post (EditPad's Current
+// backing), so the read answers "not served" rather than a guessed number.
+describe("fetchPostBacking", () => {
+  it("answers not served until the server grows the read", async () => {
+    expect(await fetchPostBacking()).toEqual({ kind: "success", value: null });
   });
 });
 

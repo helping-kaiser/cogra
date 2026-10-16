@@ -4,9 +4,6 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -20,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.testTag
@@ -50,10 +46,13 @@ import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MAX_ALT_TEXT_CHARS
 import com.cogra.domain.media.isAltTextTooLong
 import com.cogra.feature.content.CitedSheet
+import com.cogra.feature.content.ParkedPadWash
 import com.cogra.feature.content.R
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceEntry
 import com.cogra.feature.content.TopicEntry
+import com.cogra.feature.content.UnreachableStartConfirm
+import com.cogra.feature.content.parkedPadPlacement
 
 /**
  * The compose wizard's route: one destination, four stages, and the
@@ -166,6 +165,8 @@ fun ComposeWizardRoute(
         onLicenseChange = viewModel::onLicenseChange,
         onPDirectedChange = viewModel::onPDirectedChange,
         onSetStance = viewModel::onSetStance,
+        onKeepAdjusting = viewModel::onKeepAdjusting,
+        onSetUnreachable = viewModel::onSetUnreachable,
         onSensitiveChange = viewModel::onSensitiveChange,
         onSensitiveReasonChange = viewModel::onSensitiveReasonChange,
         onNext = viewModel::onNext,
@@ -239,6 +240,8 @@ internal fun ComposeWizardScreen(
     onLicenseChange: (LicenseChoice) -> Unit,
     onPDirectedChange: (Double) -> Unit,
     onSetStance: () -> Unit,
+    onKeepAdjusting: () -> Unit,
+    onSetUnreachable: () -> Unit,
     onSensitiveChange: (Boolean) -> Unit,
     onSensitiveReasonChange: (String) -> Unit,
     onNext: () -> Unit,
@@ -412,6 +415,8 @@ internal fun ComposeWizardScreen(
                                     onDoneTuningTag = onDoneTuningTag,
                                     onTagRelevanceChange = onTagRelevanceChange,
                                     onTagConfidenceChange = onTagConfidenceChange,
+                                    // A chip opens `TagPadCompose`'s sheet (ComposeDetails.md).
+                                    pairSheet = true,
                                     node = COMPOSE_DETAILS / "tags",
                                 )
                             },
@@ -428,6 +433,8 @@ internal fun ComposeWizardScreen(
                                     onDoneTuningReference = onDoneTuningReference,
                                     onReferenceRelevanceChange = onReferenceRelevanceChange,
                                     onReferenceSupportChange = onReferenceSupportChange,
+                                    // A staged citation opens `RefPair`'s sheet.
+                                    pairSheet = true,
                                     node = COMPOSE_DETAILS / "references",
                                 )
                             },
@@ -482,29 +489,24 @@ internal fun ComposeWizardScreen(
         // the drawer happened to stop. The reply seal's pad already works
         // this way.
         if (state.padOpen) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = PAD_WASH_ALPHA))
-                    // The wash is the outside press: it stages nothing.
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = onCloseSheet,
-                    )
-                    .testTag("wizard_pad_wash"),
-            )
+            // The wash is the outside press: it stages nothing.
+            ParkedPadWash(onDismiss = onCloseSheet, testTag = "wizard_pad_wash")
             ComposePad(
                 pDirected = state.stagedPDirected,
                 onChange = onPDirectedChange,
                 onSet = onSetStance,
                 onCancel = onCloseSheet,
-                onHelp = { onOpenHelp(HelpTopic.YourOpinionOnYourPost) },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(horizontal = PAD_SIDE_INSET)
-                    .padding(bottom = PAD_BOTTOM_INSET),
+                onHelp = { onOpenHelp(HelpTopic.YourBackingOnYourPost) },
+                modifier = parkedPadPlacement(),
             )
+            // Set at exactly 0.00 asks first; the pad stays parked beneath.
+            if (state.confirmingUnreachable) {
+                UnreachableStartConfirm(
+                    onKeepAdjusting = onKeepAdjusting,
+                    onSetAnyway = onSetUnreachable,
+                    testTag = "wizard_unreachable",
+                )
+            }
         }
     }
 
@@ -704,19 +706,6 @@ internal fun ComposeWizardState.forwardEnabled(): Boolean = when (step) {
     WizardStep.Details -> !titleTooLong && !descriptionTooLong
     else -> true
 }
-
-/**
- * How far the wash dims the seal under the parked pad — the same 50%
- * `--scrim-dialog` the boards wash with, and the value the reply seal's
- * pad already parks over.
- */
-private const val PAD_WASH_ALPHA = 0.5f
-
-/** The board's inset from each edge (`ComposePad.jsx:35`). */
-private val PAD_SIDE_INSET = 30.dp
-
-/** And its standoff from the bottom, which is the thumb's reach. */
-private val PAD_BOTTOM_INSET = 24.dp
 
 /**
  * The one problem line the stage shows, if any. A refusal that named a

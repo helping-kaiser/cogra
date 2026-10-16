@@ -2,6 +2,7 @@ package com.cogra.feature.content.edit
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +26,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.AttachmentReadout
+import com.cogra.core.designsystem.BACKING_UNREAD_MARK
+import com.cogra.core.designsystem.BackingValue
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetHost
 import com.cogra.core.designsystem.v2.atom.CograTextField
@@ -45,10 +49,14 @@ import com.cogra.domain.content.MAX_DESCRIPTION_CHARS
 import com.cogra.domain.content.MAX_POST_BODY_CHARS
 import com.cogra.domain.content.MAX_TITLE_CHARS
 import com.cogra.domain.media.MAX_ALT_TEXT_CHARS
+import com.cogra.feature.content.BackingEdit
+import com.cogra.feature.content.BackingPad
+import com.cogra.feature.content.ParkedPadWash
 import com.cogra.feature.content.R
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceEntry
 import com.cogra.feature.content.TopicEntry
+import com.cogra.feature.content.parkedPadPlacement
 import com.cogra.feature.content.toItem
 import com.cogra.feature.content.wizard.SensitiveSheet
 import com.cogra.feature.content.wizard.WizardBody
@@ -142,6 +150,11 @@ fun PostEditRoute(
             onReferenceRelevanceChange = viewModel::onReferenceRelevanceChange,
             onReferenceSupportChange = viewModel::onReferenceSupportChange,
             onUndoReferenceWithdrawal = viewModel::onUndoReferenceWithdrawal,
+            onOpenBackingPad = viewModel::onOpenBackingPad,
+            onBackingPickChange = viewModel::onBackingPickChange,
+            onWalkBack = viewModel::onWalkBack,
+            onSetBacking = viewModel::onSetBacking,
+            onCancelBackingPad = viewModel::onCancelBackingPad,
         ),
         keyCard = keyCard,
         deletionBand = deletionBand,
@@ -186,6 +199,11 @@ data class PostEditActions(
     val onReferenceRelevanceChange: (String, Double) -> Unit = { _, _ -> },
     val onReferenceSupportChange: (String, Double) -> Unit = { _, _ -> },
     val onUndoReferenceWithdrawal: (String) -> Unit = {},
+    val onOpenBackingPad: () -> Unit = {},
+    val onBackingPickChange: (Double) -> Unit = {},
+    val onWalkBack: () -> Unit = {},
+    val onSetBacking: () -> Unit = {},
+    val onCancelBackingPad: () -> Unit = {},
 )
 
 /**
@@ -209,6 +227,9 @@ fun PostEditScreen(
     // press and never dim (EditCompose.md).
     val leave = { if (!slowAnswer) actions.onLeave() }
     BackHandler(onBack = leave)
+    // The system's Back over the parked pad closes it and stages nothing
+    // (EditPad.md); composed after the leave handler, so it answers first.
+    BackHandler(enabled = state.backingPadOpen, onBack = actions.onCancelBackingPad)
 
     if (state.confirmingDiscard) {
         DiscardConfirm(
@@ -219,8 +240,56 @@ fun PostEditScreen(
         )
     }
 
+    Box(modifier = modifier.fillMaxSize()) {
+        PostEditColumn(state, actions, slowAnswer, leave, keyCard, deletionBand, onHelp = { help = it })
+
+        // THE BACKING PAD PARKS OVER THE EDIT (`EditPad`): the wash covers the
+        // edit, which goes inert; only the pad is live.
+        if (state.backingPadOpen) {
+            ParkedPadWash(onDismiss = actions.onCancelBackingPad, testTag = "post_edit_pad_wash")
+            BackingPad(
+                pick = state.stagedPick,
+                onPickChange = actions.onBackingPickChange,
+                onSet = actions.onSetBacking,
+                onCancel = actions.onCancelBackingPad,
+                onHelp = { help = HelpTopic.YourBackingOnYourPost },
+                testTagPrefix = "post_edit_backing",
+                modifier = parkedPadPlacement(),
+                edit = BackingEdit(
+                    current = state.backingCurrent,
+                    rawSum = state.backingRaw,
+                    canWalkBack = state.canWalkBack,
+                    onWalkBack = actions.onWalkBack,
+                ),
+            )
+        }
+    }
+
+    PostEditSheets(state, actions, onHelp = { help = it })
+
+    help?.let { topic ->
+        HelpDialog(
+            title = topic.title,
+            paragraphs = topic.paragraphs,
+            onClose = { help = null },
+            testTag = "post_edit_help_dialog",
+        )
+    }
+}
+
+/** The edit itself: the header, the fields, and the foot. */
+@Composable
+private fun PostEditColumn(
+    state: PostEditUiState,
+    actions: PostEditActions,
+    slowAnswer: Boolean,
+    leave: () -> Unit,
+    keyCard: @Composable () -> Unit,
+    deletionBand: @Composable () -> Unit,
+    onHelp: (HelpTopic) -> Unit,
+) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .testTag("post_edit"),
     ) {
@@ -230,7 +299,7 @@ fun PostEditScreen(
             backContentDescription = "Back to the post",
             onLeave = leave,
             leaveContentDescription = EDIT_LEAVE_LABEL,
-            onHelp = { help = HelpTopic.Editing },
+            onHelp = { onHelp(HelpTopic.Editing) },
             helpContentDescription = HelpTopic.Editing.title,
             testTag = "post_edit_header",
         )
@@ -255,17 +324,6 @@ fun PostEditScreen(
         }
 
         WizardFooter { EditFoot(state, actions, slowAnswer, keyCard) }
-    }
-
-    PostEditSheets(state, actions, onHelp = { help = it })
-
-    help?.let { topic ->
-        HelpDialog(
-            title = topic.title,
-            paragraphs = topic.paragraphs,
-            onClose = { help = null },
-            testTag = "post_edit_help_dialog",
-        )
     }
 }
 
@@ -421,13 +479,39 @@ private fun TagsAndReferences(state: PostEditUiState, actions: PostEditActions) 
     }
 }
 
-/** The two terms rows: the license, shown and locked, then the author's own mark. */
+/**
+ * The terms rows, in the seal's order: the license, shown and locked; the
+ * author's backing (`EditBackingRow`); then the author's own mark.
+ */
 @Composable
 private fun Terms(state: PostEditUiState, actions: PostEditActions) {
     LockedLicenseRow(
         name = licenseName(state.license.attribution, state.license.provenance),
         testTag = "post_edit_license",
     )
+    // `Your backing` — one number: where the post's backing stands WITH the
+    // edit (EditCompose.md). The edit's record is an ordinary-role Publish,
+    // the family that minted the post, so it carries the same one free
+    // parameter; its pick adds to the backing, 0.00 until moved, and rides
+    // the edit's own record — no row in the acts, nothing on the count.
+    SettingRow(
+        label = "Your backing",
+        actionText = "Adjust",
+        onAction = actions.onOpenBackingPad,
+        testTag = "post_edit_backing",
+    ) {
+        when (val withEdit = state.backingWithEdit) {
+            is BackingValue.Read -> AttachmentReadout(pDirected = withEdit.value, testTag = "post_edit_backing_value")
+            // SERVER GAP (seam 233): nothing serves the Publish bundle's net
+            // yet, so the row draws it unread rather than guess.
+            BackingValue.Unread -> Text(
+                text = BACKING_UNREAD_MARK,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.testTag("post_edit_backing_unread"),
+            )
+        }
+    }
     SettingRow(
         label = "Sensitive",
         value = if (state.sensitive) "Marked" else "Not marked",

@@ -4659,16 +4659,26 @@ type User implements Node & Actor {
 	ranked feed filters by, and History's feed. Re-seeing never moves
 	an entry. `kinds` narrows (null or empty = every kind History
 	serves: POST, COMMENT, USER, HASHTAG; a kind outside the served
-	set is BAD_INPUT, and later slices widen the set). A hidden
-	actor's posts and comments stay out while the actor is hidden,
-	and their own profile stays; a removed thing keeps its place and
-	reads its removal mark; a thing whose node no longer resolves — a
-	pending write that never landed — is skipped. Paging is keyset on
-	`(firstSeenAt, node id)`, so a thing first seen while the reader
-	scrolls sorts above the open page and never shifts the next one.
-	Field-level: viewer-only.
+	set is BAD_INPUT, and later slices widen the set), with or without
+	a query. `query` narrows the list by the one search law (Search
+	section) over the seen set alone — the matcher runs on the server,
+	so a match is found wherever it stands in the list. Narrowed, the
+	list is sectioned as search is — people, then topics, then content
+	— newest first seeing first inside a section, and paged on its
+	own cursors; a blank or null `query` narrows nothing. While the
+	narrowed list can stand another kind beside its people, the people
+	section serves only the three people first seen most recently, and
+	`hasMorePeople` says whether more match — the "See all profiles"
+	door, which is the same query with `kinds: [USER]`. A query past
+	the search length cap is BAD_INPUT. A hidden actor's posts and
+	comments stay out while the actor is hidden, and their own profile
+	stays; a removed thing keeps its place and reads its removal mark;
+	a thing whose node no longer resolves — a pending write that never
+	landed — is skipped. Paging is keyset on `(firstSeenAt, node id)`,
+	so a thing first seen while the reader scrolls sorts above the
+	open page and never shifts the next one. Field-level: viewer-only.
 	"""
-	viewHistory(kinds: [NodeKind!], first: Int, after: String, last: Int, before: String): ViewHistoryConnection
+	viewHistory(kinds: [NodeKind!], query: String, first: Int, after: String, last: Int, before: String): ViewHistoryConnection
 	"""
 	Acts other actors made that reached this user's content, profile or
 	application — newest first, one row per act (notifications.md). A
@@ -4897,11 +4907,21 @@ type ViewHistoryConnection {
 	"""
 	edges: [ViewHistoryEdge!]!
 	"""
-	How many things the viewer's seen-list serves under these kinds,
-	across every page. Priced at zero like every connection count;
-	saturates at [`i32::MAX`].
+	How many things the viewer's seen-list serves, across every page —
+	narrowed by `query` and `kinds` when given, less the people a
+	capped people section leaves behind its door. Priced at zero like
+	every connection count; saturates at [`i32::MAX`].
 	"""
 	totalCount: Int
+	"""
+	Whether more seen people match than the people section serves —
+	the "See all profiles" door. While a narrowed list can stand
+	another kind beside its people, the people section serves the
+	three people first seen most recently; the same query with
+	`kinds: [USER]` serves every match, uncapped. False when the
+	section is not capped, and on a list no query narrows.
+	"""
+	hasMorePeople: Boolean!
 }
 
 """

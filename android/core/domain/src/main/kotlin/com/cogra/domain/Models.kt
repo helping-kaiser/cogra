@@ -778,6 +778,19 @@ data class SelfMarkView(
     val reason: String?,
 )
 
+/**
+ * The post's BACKING as its author's own Publish bundle folds it: the
+ * mint's attachment plus every edit's pick, summed then clipped (post.md
+ * §4). One number — the census pins `p_i` at 1. Never the face's opinion,
+ * which is a bundle of its own.
+ */
+data class PostBacking(
+    /** The bundle's net, clipped to the axis — `Current backing`. */
+    val net: Double,
+    /** The raw sum, unclipped — what `Backing after` and the walk-back fold from. */
+    val rawSum: Double,
+)
+
 /** A post with its first page of comments — the detail read. */
 data class PostDetail(
     val post: PostView,

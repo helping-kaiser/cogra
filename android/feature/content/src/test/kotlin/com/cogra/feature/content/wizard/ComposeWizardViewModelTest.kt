@@ -2025,6 +2025,60 @@ class ComposeWizardViewModelTest {
         assertThat(content.lastPDirected).isEqualTo(ComposeWizardState.DEFAULT_P_DIRECTED)
     }
 
+    // ComposePad.md: "WHEN press Set GIVEN the pick reads 0.00 -> the dialog
+    // Start it unreachable? opens over the pad, which stays parked beneath it
+    // AND NEVER the pick is refused".
+    @Test
+    fun setAtExactlyZeroAsksBeforeTheRowMoves() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onOpenSheet(SealSheet.Stance)
+        vm.onPDirectedChange(0.0)
+        vm.onSetStance()
+
+        assertThat(vm.state.value.confirmingUnreachable).isTrue()
+        assertThat(vm.state.value.padOpen).isTrue()
+        assertThat(vm.state.value.pDirected).isEqualTo(ComposeWizardState.DEFAULT_P_DIRECTED)
+    }
+
+    @Test
+    fun keepAdjustingLeavesThePadStandingAtThePick() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onOpenSheet(SealSheet.Stance)
+        vm.onPDirectedChange(0.0)
+        vm.onSetStance()
+        vm.onKeepAdjusting()
+
+        assertThat(vm.state.value.confirmingUnreachable).isFalse()
+        assertThat(vm.state.value.padOpen).isTrue()
+        assertThat(vm.state.value.stagedPDirected).isEqualTo(0.0)
+    }
+
+    @Test
+    fun setItAnywayCarriesZeroOnThePreparePost() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.signWords {
+            vm.onOpenSheet(SealSheet.Stance)
+            vm.onPDirectedChange(0.0)
+            vm.onSetStance()
+            vm.onSetUnreachable()
+            assertThat(vm.state.value.padOpen).isFalse()
+            assertThat(vm.state.value.confirmingUnreachable).isFalse()
+        }
+
+        assertThat(content.lastPDirected).isEqualTo(0.0)
+    }
+
+    @Test
+    fun aNonZeroSetNeverAsks() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onOpenSheet(SealSheet.Stance)
+        vm.onPDirectedChange(0.01)
+        vm.onSetStance()
+
+        assertThat(vm.state.value.confirmingUnreachable).isFalse()
+        assertThat(vm.state.value.pDirected).isEqualTo(0.01)
+    }
+
     @Test
     fun cancellingThePadStagesNothing() = runTest(dispatcher) {
         val vm = viewModel()
