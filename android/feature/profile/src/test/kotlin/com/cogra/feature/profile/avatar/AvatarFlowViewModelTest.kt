@@ -282,6 +282,25 @@ class AvatarFlowViewModelTest {
     }
 
     /**
+     * A profile with no bio or website re-states them as cleared, which the
+     * server stages as the empty string; the device must sign that rather
+     * than refuse its own gesture (jakob's hand test: the refusal left the
+     * update staged and every later one "already in flight").
+     */
+    @Test
+    fun aProfileWithoutBioOrWebsiteStillSigns() = runTest(dispatcher) {
+        profiles.mine = Outcome.Success(testProfile(id = TEST_PROFILE_ID, handle = "jakob", displayName = "Jakob"))
+        val vm = startedAtSeal()
+
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(profiles.lastUpdate).isEqualTo(Triple("Jakob", null, null))
+        assertThat(vm.state.value.signingFailed).isFalse()
+        assertThat(vm.state.value.saved).isTrue()
+    }
+
+    /**
      * Without the held profile there is nothing safe to send: a bare
      * picture would clear the bio the author never touched.
      */

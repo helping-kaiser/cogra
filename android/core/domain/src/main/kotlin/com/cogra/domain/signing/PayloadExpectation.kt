@@ -6,7 +6,8 @@
 // ([wireReason]) and then the server's normalization (ServerText.kt): the
 // title, description and alt text trimmed with Rust's `str::trim` and folded
 // to absent when blank, a post's words and a self-mark's reason only
-// blank-folded, a comment's words and a profile's fields carried untouched.
+// blank-folded, a comment's words and a profile's fields carried untouched —
+// a profile field's clear, sent as a present null, as the empty string.
 //
 // EVERY ASSET IS ONE THIS DEVICE CAN STATE. A gallery entry's digests come
 // from the device's own ledger: the uploads it made (each with the upload
@@ -115,7 +116,12 @@ data class SentProfile(
     val avatar: MediaFieldUpdate = MediaFieldUpdate.Untouched,
 )
 
-/** What a profile update's payload must decode to: the fields untouched, the avatar three-valued. */
+/**
+ * What a profile update's payload must decode to: the fields untouched, the
+ * avatar three-valued. The form sends every text field present, so a null is
+ * the clear, and the server carries a clear as the empty string — never as an
+ * absent field, which would leave the old value standing (api `edit_field`).
+ */
 fun profileExpectation(
     node: String,
     sent: SentProfile,
@@ -123,8 +129,8 @@ fun profileExpectation(
 ): ExpectedProfile = ExpectedProfile(
     node = node,
     displayName = sent.displayName,
-    bio = sent.bio,
-    websiteUrl = sent.websiteUrl,
+    bio = sent.bio ?: "",
+    websiteUrl = sent.websiteUrl ?: "",
     avatar = when (val avatar = sent.avatar) {
         MediaFieldUpdate.Untouched -> AvatarExpectation.Untouched
         MediaFieldUpdate.Clear -> AvatarExpectation.Cleared
