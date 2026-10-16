@@ -1233,7 +1233,7 @@
     { "from": "ComposePad", "via": 1, "kind": "detour", "label": "? — your backing on your post", "to": [{ "board": "HelpDialog", "case": "the Your backing on your post text" }] },
     { "from": "ComposePad", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "the one-axis pad — For or Against only, the pick following the drag; release parks it and nothing is staged" }] },
     { "from": "ComposePad", "via": 3, "kind": "cancel", "label": "Cancel", "to": [{ "board": "ComposeSeal", "case": "nothing staged" }] },
-    { "from": "ComposePad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "ComposeSeal", "case": "the adjusted stance on the seal" }] },
+    { "from": "ComposePad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "ComposeSeal", "case": "the adjusted backing on the seal" }] },
     { "from": "ComposePad", "via": 5, "kind": "cancel", "label": "scrim — press outside", "to": [{ "board": "ComposeSeal", "case": "stages nothing" }] },
 
     { "from": "ComposeSensitive", "via": 1, "kind": "detour", "label": "? — Sensitive", "to": [{ "board": "HelpDialog", "case": "the Sensitive text" }] },
