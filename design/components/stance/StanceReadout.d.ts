@@ -47,6 +47,17 @@ export interface StanceReadoutProps {
 
 export declare function StanceReadout(props: StanceReadoutProps): JSX.Element;
 
+/** The attachment an author signs with their own content: one number, because
+ *  Publish and Owner carry one free parameter — `p_i` is census-pinned at 1.
+ *  The face reads through `VALENCE_SIX`. The author's opinion on their own
+ *  content is an ordinary Opinion, read by `StanceReadout`. */
+export interface AttachmentReadoutProps {
+  pDirected: number;
+  style?: React.CSSProperties;
+}
+
+export declare function AttachmentReadout(props: AttachmentReadoutProps): JSX.Element;
+
 /** A stance RECORD's face and pair, drawn plainly wherever a stance is data
  *  rather than a control — the opinions page's rows, the chronicle's opinion
  *  entries. Never interactive. */

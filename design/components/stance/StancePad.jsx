@@ -1,5 +1,5 @@
 import React from "react";
-import { clampPair, ORIGIN, DIRECTED_POLES, INTEREST_POLES, STANCE_AXIS_NAMES, STANCE_RANGES } from "./StanceReadout.jsx";
+import { clampPair, clampDimension, ORIGIN, DIRECTED_POLES, INTEREST_POLES, STANCE_AXIS_NAMES, STANCE_RANGES } from "./StanceReadout.jsx";
 
 /* The pad's field: a SOFT ROUNDED SQUARE, and THE DRAWN FIELD IS THE VALUE SPACE
    (readme §8). The knob travels exactly the field, the corners are the two
@@ -272,6 +272,153 @@ export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true,
               position: "absolute",
               left: `${knob.x}%`,
               top: `${knob.y}%`,
+              height: `${KNOB_DIAMETER_PX}px`,
+              width: `${KNOB_DIAMETER_PX}px`,
+              transform: "translate(-50%, -50%)",
+              borderRadius: "var(--radius-full)",
+              background: "var(--surface-loud)",
+            }}
+            data-node={node && "knob"}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* THE ONE-AXIS FIELD (jakob 2026-10-16, PR-101): the pad an author meets when
+   they sign their own content. Publish — and Owner for a listing — is a
+   single-parameter family: the author's attachment `a` rides `p_d`, and the
+   census pins `p_i` at 1, never a choice. So the value space is a line, and
+   the line is drawn as one: offering the square here would offer a second
+   axis the record cannot carry.
+
+   IT IS THE SQUARE'S OWN LANGUAGE, CUT TO ONE AXIS — not a slider and not a
+   second drawing. The same field (`surfaceContainerHighest` at the large
+   rung), the same 20px knob and its pressed layer, the same dead-ground
+   hairline at zero, the same pole words held OUTSIDE the field in the same
+   gutters (the 2026-09-15 ruling: a word inside the value space is a word the
+   knob covers). The strip is as wide as the square would be at that width, so
+   the two pads read as one family. What it leaves out is everything the
+   second axis owned: no vertical travel, no `Less`/`More`, and no hairline
+   across — a crossing line would draw a zero for an axis that is not there.
+
+   THE PICK IS ACCUMULATED TRAVEL, as on the square: the knob starts where the
+   value is, wherever the press lands, and only horizontal travel moves it.
+   The knob's centre travels the strip inset by the square's own inset, so it
+   never leaves the drawn shape. */
+export const ATTACHMENT_FIELD_HEIGHT_PX = 56;
+
+/** Where the knob sits on the strip, as a percentage of its travel. */
+export function attachmentPercentOf(value) {
+  return percent(fractionOf(clampDimension(value), STANCE_RANGES.pDirected));
+}
+
+/** The attachment this much horizontal travel picks, starting from `base`. Clamped once, on the sum. */
+export function attachmentFrom(base, rect, dx, inset = KNOB_TRAVEL_INSET_PX) {
+  const halfExtent = Math.max(0, rect.width / 2 - inset);
+  if (halfExtent === 0) return clampDimension(base);
+  return clampDimension(base + dx * perPixel(STANCE_RANGES.pDirected, halfExtent));
+}
+
+/* NAMED ONLY WHERE ITS PLACER NAMES IT, the square's rule: the whole field
+   with its words is the placer's name, the pole words `left` and `right`, and
+   the `strip` — the value space — holds the dead-ground line `zeroDown`, the
+   `knob`, and its pressed `knobLayer`. */
+export function AttachmentPad({ value = 0, onChange, fieldRef, showAxes = true, axes = STANCE_AXES, held = false, node }) {
+  const localRef = React.useRef(null);
+  const ref = fieldRef ?? localRef;
+  const drag = React.useRef(null);
+  const [dragging, setDragging] = React.useState(false);
+  const knobX = attachmentPercentOf(value);
+  const zeroDown = zeroPercentOf(STANCE_RANGES.pDirected);
+  const layered = held || dragging;
+
+  const onPointerDown = (event) => {
+    if (!onChange) return;
+    drag.current = { x: event.clientX, base: value };
+    setDragging(true);
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  };
+  const onPointerMove = (event) => {
+    const from = drag.current;
+    const field = ref.current;
+    if (!from || !field || !onChange) return;
+    onChange(attachmentFrom(from.base, field.getBoundingClientRect(), event.clientX - from.x));
+  };
+  const endDrag = () => {
+    drag.current = null;
+    setDragging(false);
+  };
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        boxSizing: "border-box",
+        padding: showAxes ? `0 ${AXIS_GUTTER_X_PX}px` : 0,
+      }}
+      data-node={node}
+    >
+      {showAxes && (
+        <div
+          aria-hidden="true"
+          style={{ position: "absolute", inset: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}
+        >
+          <span style={{ position: "absolute", left: 0, top: "50%", width: `${AXIS_GUTTER_X_PX - 6}px`, transform: "translateY(-50%)", textAlign: "right", whiteSpace: "nowrap" }} data-node={node && "left"}>
+            {axes.left}
+          </span>
+          <span style={{ position: "absolute", right: 0, top: "50%", width: `${AXIS_GUTTER_X_PX - 6}px`, transform: "translateY(-50%)", textAlign: "left", whiteSpace: "nowrap" }} data-node={node && "right"}>
+            {axes.right}
+          </span>
+        </div>
+      )}
+      <div
+        ref={ref}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        style={{
+          position: "relative",
+          height: `${ATTACHMENT_FIELD_HEIGHT_PX}px`,
+          width: "100%",
+          touchAction: "none",
+          borderRadius: "var(--radius-large)",
+          background: "var(--surface-container-highest)",
+        }}
+        data-node={node && "strip"}
+      >
+        {zeroDown !== null && (
+          <div
+            aria-hidden="true"
+            style={{ position: "absolute", left: `${zeroDown}%`, top: 0, width: "1px", height: "100%", background: "var(--border-hairline)" }}
+            data-node={node && "zeroDown"}
+          />
+        )}
+        <div aria-hidden="true" style={{ position: "absolute", top: "50%", left: `${KNOB_TRAVEL_INSET_PX}px`, right: `${KNOB_TRAVEL_INSET_PX}px`, height: 0 }}>
+          {layered && (
+            <div
+              style={{
+                position: "absolute",
+                left: `${knobX}%`,
+                top: 0,
+                height: `${KNOB_LAYER_PX}px`,
+                width: `${KNOB_LAYER_PX}px`,
+                transform: "translate(-50%, -50%)",
+                borderRadius: "var(--radius-full)",
+                background: "var(--surface-loud)",
+                opacity: "var(--state-press)",
+              }}
+              data-node={node && "knobLayer"}
+            />
+          )}
+          <div
+            style={{
+              position: "absolute",
+              left: `${knobX}%`,
+              top: 0,
               height: `${KNOB_DIAMETER_PX}px`,
               width: `${KNOB_DIAMETER_PX}px`,
               transform: "translate(-50%, -50%)",

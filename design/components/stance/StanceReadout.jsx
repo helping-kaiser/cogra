@@ -194,10 +194,11 @@ export const STANCE_ANCHORS = [
 ];
 
 /* THE ONE-AXIS TABLE (jakob's ruling, 2026-09-14). It answers for a value
-   that names no pair, which `nearestAnchor` cannot. No surface draws such a
-   pick: an opinion on one's own content is the full pair like any other
-   (jakob 2026-10-16), so the table stands on the anchor-map card alone, its
-   retirement jakob's call (backlog). These six are the twenty's pure-valence
+   that names no pair, which `nearestAnchor` cannot: the attachment an author
+   signs with their own content (`AttachmentReadout`). The authoring families
+   are census-pinned to one free parameter — Publish and Owner carry `p_d = a`
+   with `p_i = 1`, never a choice (jakob 2026-10-16, PR-101) — so the pick is
+   one number and its face reads here. These six are the twenty's pure-valence
    spine, the mild, middle and far face on each side, at ±0.15, ±0.55 and
    ±0.90. Glyph, word and position are READ from `STANCE_ANCHORS`, so the six
    are six OF the twenty and cannot drift from them.
@@ -541,8 +542,9 @@ export function signedLine(standing, records, severed, targetLabel, names = STAN
 }
 
 /* ONE LINE, WHATEVER IT READS: face, then the exact figure, then the spoken
-   twin. An opinion on one's own content reads here like any other (jakob
-   2026-10-16): the pair, both numbers the author's. */
+   twin. A one-axis readout draws a shorter number, not a different shape — so
+   the markup is written once and the two readouts differ only in what they
+   hand it. */
 function ReadoutLine({ emoji, exact, spoken, style }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)", flex: "none", ...style }}>
@@ -571,6 +573,20 @@ export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, 
       style={style}
     />
   );
+}
+
+/* THE ATTACHMENT AN AUTHOR SIGNS WITH THEIR OWN CONTENT IS ONE NUMBER (jakob
+   2026-10-16, PR-101). Publish — and Owner for a listing — is a
+   single-parameter family: `p_d` is the author's attachment, `p_i` is pinned
+   at 1 by the census, so a pair would draw a second figure nobody can choose.
+   The face comes from `VALENCE_SIX`, the table built for exactly this reading,
+   and the spoken twin names the one axis there is. The author's OPINION on
+   their own content is a different record — an ordinary Opinion through the
+   content's face, read by `StanceReadout` like any other. */
+export function AttachmentReadout({ pDirected, style }) {
+  const band = nearestValenceAnchor(pDirected);
+  const exact = formatDimension(pDirected);
+  return <ReadoutLine emoji={band.emoji} exact={exact} spoken={`${band.label}, ${DIRECTED_LABEL} ${exact}`} style={style} />;
 }
 
 /** The bundle, split for rendering: either a sentence, or a readout to lay out. */
