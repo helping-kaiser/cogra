@@ -84,15 +84,21 @@ ALWAYS a veiled clip has no playback and no sound-disc presence
 
 ALWAYS history.searchField reads Search your history at rest
 
-WHEN the reader types in history.searchField -> History narrows to what matches AND the matches stand ordered by the time the reader first saw each thing, newest first
+WHEN the reader types in history.searchField -> History narrows to what matches AND the matches stand in sections, the people first and then the content, each section ordered by the time the reader first saw each thing, newest first
 
 ALWAYS history.searchField matches by the one search rule Explore uses: names and titles, and never a body, a description or a bio
 
-WHEN the query starts with @handle -> the remainder matches that person's own things in History, a comment through the title of what it answers and a reply through its thread's root post's title
+ALWAYS plain text in history.searchField matches a person when any word of their display name starts with what is typed, and a thing by its title or when any word of its author's display name starts with what is typed
+
+ALWAYS a query reaches everything the reader has seen, never only the cards already loaded
+
+WHEN the query starts with @handle -> the remainder matches the own things in History of every person whose handle starts with what is typed, a comment through the title of what it answers and a reply through its thread's root post's title AND NEVER the full handle is needed
 
 WHEN the query starts with #tag -> the remainder matches the things in History that carry that tag, a carried post through its title and a carried comment through its target's title
 
-WHEN the query is a bare @handle or #tag with no text after it -> History narrows to the profiles or tags in it whose name starts with what is typed AND NEVER anyone's contents are listed
+WHEN the query is a bare @handle with no text after it -> the people in History whose handle starts with what is typed stand first AND the things in History those people authored follow them AND NEVER the full handle is needed
+
+WHEN the query is a bare #tag with no text after it -> the tags in History whose name starts with what is typed stand first AND the things in History that carry those tags follow them
 
 WHEN the reader types a query nothing in History carries -> History stands narrowed to nothing, with Show everything
 

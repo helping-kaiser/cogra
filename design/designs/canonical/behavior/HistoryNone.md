@@ -12,7 +12,7 @@ ALWAYS the empty state wears no error colour
 
 WHEN tap Show everything -> the query clears AND no kind is narrowed AND History stands whole, reading Everything, ordered by the time the reader first saw each thing, newest first
 
-WHEN the reader types a query something in History carries -> the matches replace the empty state, ordered by the time the reader first saw each thing, newest first
+WHEN the reader types a query something in History carries -> the matches replace the empty state, in sections, the people first and then the content, each section ordered by the time the reader first saw each thing, newest first
 
 WHEN tap history.filterTrigger -> the history's filter sheet opens over History
 

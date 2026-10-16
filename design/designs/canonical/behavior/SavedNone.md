@@ -10,7 +10,7 @@ ALWAYS the empty state wears no error colour
 
 WHEN tap Show everything -> the query clears AND Saved stands whole, newest first, by when the reader saved each thing
 
-WHEN the reader types a query something in Saved carries -> the matches replace the empty state, newest first, by when the reader saved each thing
+WHEN the reader types a query something in Saved carries -> the matches replace the empty state, in sections, the people first and then the content, each section newest first by when the reader saved each thing
 
 WHEN tap the back arrow -> the reader's own profile comes back, in the state it was left
 

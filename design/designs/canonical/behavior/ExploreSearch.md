@@ -22,15 +22,21 @@ ALWAYS a result the reader has already seen stays out GIVEN Show what you've alr
 
 ALWAYS search matches names and titles, and never a body, a description or a bio
 
+ALWAYS plain text matches a person when any word of their display name starts with what is typed, as Mod finds Genesis Moderator and enesis finds nobody, and never matches a handle
+
+ALWAYS plain text matches a thing by its title, or when any word of its author's display name starts with what is typed
+
 ALWAYS a comment result appears only for a query scoped by @handle or #tag
 
 ALWAYS an indirect result's second line names the target it was found through
 
 ALWAYS search returns no item, offer or message rows
 
-WHEN the query is a bare @handle with no text after it -> the results propose the people whose handle starts with what is typed, as @sol surfaces @solarium AND NEVER anyone's contents are listed
+WHEN the query is a bare @handle with no text after it -> the people whose handle starts with what is typed stand first, as @sol surfaces @solarium, AND the things those people authored follow them AND NEVER the full handle is needed
 
-WHEN the query is a bare #tag with no text after it -> the results propose the tags whose name starts with what is typed AND NEVER a tag's contents are listed
+WHEN the query is a bare #tag with no text after it -> the tags whose name starts with what is typed stand first AND the things that carry those tags follow them
+
+ALWAYS a query scoped by @handle reaches every person whose handle starts with what is typed, and never needs the full handle
 
 ALWAYS a query scoped by #tag reaches the things that carry the tag, the tag page's own set, its text matching a carried post's title and a carried comment's target's title
 

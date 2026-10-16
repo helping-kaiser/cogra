@@ -16,7 +16,9 @@ ALWAYS every card's row reads the opinion, then the score, then the kind's own a
 
 ALWAYS a saved.commentCard carries no view-replies line
 
-ALWAYS Saved carries no kind filter, no kind label and no section headings
+ALWAYS Saved carries no kind filter and no kind label
+
+ALWAYS Saved carries no section caption GIVEN saved.searchField holds no query
 
 ALWAYS the first row of every card's ⋮ in Saved reads Unsave, the card's own Save standing in its kept state
 
@@ -84,17 +86,21 @@ ALWAYS a veiled clip has no playback and no sound-disc presence
 
 ALWAYS saved.searchField reads Search what you saved at rest
 
-WHEN the reader types in saved.searchField -> Saved narrows to what matches AND the matches stand newest first, by when the reader saved each thing
+WHEN the reader types in saved.searchField -> Saved narrows to what matches AND the matches stand in sections, the people first and then the content, each section newest first by when the reader saved each thing
 
 ALWAYS saved.searchField matches by the one search rule Explore uses: names and titles, and never a body, a description or a bio
 
-WHEN the query starts with @handle -> the remainder matches that person's own things in Saved, a comment through the title of what it answers and a reply through its thread's root post's title
+ALWAYS plain text in saved.searchField matches a person when any word of their display name starts with what is typed, and a thing by its title or when any word of its author's display name starts with what is typed
+
+ALWAYS a query reaches everything the reader saved, never only the cards already loaded
+
+WHEN the query starts with @handle -> the remainder matches the own things in Saved of every person whose handle starts with what is typed, a comment through the title of what it answers and a reply through its thread's root post's title AND NEVER the full handle is needed
 
 WHEN the query starts with #tag -> the remainder matches the things in Saved that carry that tag, a carried post through its title and a carried comment through its target's title
 
-WHEN the query is a bare @handle with no text after it -> Saved narrows to the people in it whose name starts with what is typed AND NEVER anyone's contents are listed
+WHEN the query is a bare @handle with no text after it -> the saved people whose handle starts with what is typed stand first AND the saved things those people authored follow them AND NEVER the full handle is needed
 
-WHEN the query is a bare #tag with no text after it -> Saved stands narrowed to nothing, with Show everything AND NEVER anyone's contents are listed
+WHEN the query is a bare #tag with no text after it -> Saved narrows to the saved things that carry a tag whose name starts with what is typed
 
 WHEN the reader types a query nothing in Saved carries -> Saved stands narrowed to nothing, with Show everything
 
