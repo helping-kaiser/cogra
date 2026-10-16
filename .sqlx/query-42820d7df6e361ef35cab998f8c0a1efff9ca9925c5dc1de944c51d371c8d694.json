@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(DISTINCT s.node_id) AS \"count!\"\n           FROM search_index s\n           WHERE s.kind = ANY($3)\n             AND ((s.field IN ('handle', 'name')\n                   AND s.folded LIKE '%' || lower($1) || '%')\n               OR (s.field = 'title' AND s.words @@ to_tsquery('simple', $2))\n               OR (s.field = 'display_name' AND s.words @@ to_tsquery('simple', $2))\n               OR (s.kind = 'post' AND s.author_id IN (\n                   SELECT d.node_id FROM search_index d\n                   WHERE d.field = 'display_name'\n                     AND d.words @@ to_tsquery('simple', $2))))\n             AND ($4::uuid IS NULL OR NOT EXISTS (\n                 SELECT 1 FROM user_view_log l\n                 WHERE l.user_id = $4 AND l.content_id = s.node_id))\n             AND (NOT $5 OR s.kind <> 'user' OR EXISTS (\n                 SELECT 1 FROM actors a\n                 WHERE a.id = s.node_id AND a.realization_address IS NOT NULL))",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "TextArray",
+        "Uuid",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "42820d7df6e361ef35cab998f8c0a1efff9ca9925c5dc1de944c51d371c8d694"
+}

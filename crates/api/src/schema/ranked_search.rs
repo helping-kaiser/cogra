@@ -14,11 +14,16 @@
 //! stands behind the seam with the out-of-slice matches.
 //!
 //! **The relay computes nothing.** The ranked head is the pod's order. The
-//! one rearrangement here is the query's own: exact-match tier first
-//! (ExploreSearch.md:5, "each tier ordered by the reader's ranker"), a
-//! stable partition that keeps the pod's order inside each tier and
-//! compares no score. Past the seam the rows are the matcher's — tier,
-//! then newest first — minus what the head holds.
+//! one rearrangement here is the query's own: its tiers — sections, and
+//! the exact match first inside each (ExploreSearch.md:5, "each tier
+//! ordered by the reader's ranker") — a stable partition that keeps the
+//! pod's order inside each tier and compares no score.
+//!
+//! **One seam per section.** A result is people, then topics, then
+//! content, under ranking too: each section is its ranked head, then its
+//! own rest behind the seam in the matcher's order — tier, then newest
+//! first — minus what the head holds. An out-of-slice person still
+//! stands before any content.
 //!
 //! **Paging reuses the pin.** The first page pins the mirror cursor; the
 //! opaque cursor carries that epoch, and every later page recomputes the
@@ -33,7 +38,9 @@ use async_graphql::{Context, Enum, ErrorExtensions};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use common::hashtag_uuid;
-use postgres_store::search::{SearchCursor, SearchHit, SearchRequest, Window};
+use postgres_store::search::{
+    SECTIONS, SearchCursor, SearchHit, SearchRequest, Window, section_of,
+};
 use postgres_store::{PgPool, auth as store, mirror, slice};
 use uuid::Uuid;
 
@@ -104,7 +111,7 @@ impl RankedCursor {
             }),
             ["ranked", epoch, "t", tier, micros, id] => {
                 let tier: i32 = tier.parse().ok()?;
-                if !(0..=1).contains(&tier) {
+                if !crate::search::tier_ok(tier) {
                     return None;
                 }
                 Some(Self::Tail {
@@ -129,12 +136,27 @@ struct Row {
     score: Option<f64>,
 }
 
+/// Where a ranked walk stands: inside a section's head, from or up to a
+/// slot, or inside a section's tail, past or before a keyset position.
+#[derive(Debug, Clone, Copy)]
+enum Stand {
+    Head {
+        section: i32,
+        slot: usize,
+    },
+    Tail {
+        section: i32,
+        at: Option<SearchCursor>,
+    },
+}
+
 /// One page of `search(order: RANKED)` for `viewer`. `cursor` is the
 /// decoded `after` (forward) or `before` (backward).
 ///
-/// The result is the head, then the tail: a walk runs inside one part and
-/// crosses into the other when its page has room left. It reads one row
-/// past the page, which tells whether another page exists.
+/// The result is, section by section, the section's head, then its tail:
+/// a walk runs inside one part and crosses into the next when its page
+/// has room left. It reads one row past the page, which tells whether
+/// another page exists.
 pub async fn page(
     ctx: &Context<'_>,
     request: SearchRequest,
@@ -153,10 +175,6 @@ pub async fn page(
     };
     let head = ranked_head(pool, ranker, &request, viewer, pin).await?;
     let head_ids: Vec<Uuid> = head.iter().map(|(hit, _)| hit.node_id).collect();
-    let tail = Window {
-        within: None,
-        excluding: &head_ids,
-    };
     let take = usize::try_from(limit).unwrap_or(0) + 1;
     let store_limit = |n: usize| i64::try_from(n).unwrap_or(i64::MAX);
     let head_row = |slot: usize| {
@@ -167,46 +185,111 @@ pub async fn page(
             score: Some(*score),
         }
     };
-    let tail_page = |at: Option<SearchCursor>, backward: bool, limit: i64| {
-        tail_rows(&request, pool, tail, pin, at, backward, limit)
+    let head_bounds = |section: i32| {
+        (
+            head.partition_point(|(hit, _)| section_of(hit.tier) < section),
+            head.partition_point(|(hit, _)| section_of(hit.tier) <= section),
+        )
+    };
+    let tail_page = |section: i32, at: Option<SearchCursor>, backward: bool, limit: i64| {
+        let window = Window {
+            within: None,
+            excluding: &head_ids,
+            section: Some(section),
+        };
+        tail_rows(&request, pool, window, pin, at, backward, limit)
+    };
+    let slot_section = |slot: usize| {
+        head.get(slot)
+            .or(head.last())
+            .map_or(0, |(hit, _)| section_of(hit.tier))
     };
 
     let mut rows: Vec<Row> = Vec::new();
     if backward {
-        let head_end = match cursor {
-            Some(RankedCursor::Head { slot, .. }) => slot.min(head.len()),
-            Some(RankedCursor::Tail { at, .. }) => {
-                rows = tail_page(Some(at), true, store_limit(take)).await?;
-                head.len()
-            }
-            None => {
-                rows = tail_page(None, true, store_limit(take)).await?;
-                head.len()
-            }
+        let mut stand = match cursor {
+            None => Stand::Tail {
+                section: SECTIONS - 1,
+                at: None,
+            },
+            Some(RankedCursor::Head { slot, .. }) => Stand::Head {
+                section: slot_section(slot),
+                slot: slot.min(head.len()),
+            },
+            Some(RankedCursor::Tail { at, .. }) => Stand::Tail {
+                section: section_of(at.tier),
+                at: Some(at),
+            },
         };
-        let room = take.saturating_sub(rows.len());
-        let mut page: Vec<Row> = (head_end.saturating_sub(room)..head_end)
-            .map(head_row)
-            .collect();
-        page.append(&mut rows);
-        rows = page;
+        let mut reversed: Vec<Row> = Vec::new();
+        while reversed.len() < take {
+            match stand {
+                Stand::Tail { section, at } => {
+                    let room = store_limit(take - reversed.len());
+                    let mut got = tail_page(section, at, true, room).await?;
+                    got.reverse();
+                    reversed.extend(got);
+                    stand = Stand::Head {
+                        section,
+                        slot: head_bounds(section).1,
+                    };
+                }
+                Stand::Head { section, slot } => {
+                    let start = head_bounds(section).0;
+                    let room = take - reversed.len();
+                    reversed.extend(
+                        (start.max(slot.saturating_sub(room))..slot.max(start))
+                            .rev()
+                            .map(head_row),
+                    );
+                    if section == 0 {
+                        break;
+                    }
+                    stand = Stand::Tail {
+                        section: section - 1,
+                        at: None,
+                    };
+                }
+            }
+        }
+        reversed.reverse();
+        rows = reversed;
     } else {
-        let tail_from = match cursor {
-            Some(RankedCursor::Tail { at, .. }) => Some(Some(at)),
-            Some(RankedCursor::Head { slot, .. }) => {
-                rows = head_slots(slot + 1, take, head.len())
-                    .map(head_row)
-                    .collect();
-                (rows.len() < take).then_some(None)
-            }
-            None => {
-                rows = head_slots(0, take, head.len()).map(head_row).collect();
-                (rows.len() < take).then_some(None)
-            }
+        let mut stand = match cursor {
+            None => Stand::Head {
+                section: 0,
+                slot: 0,
+            },
+            Some(RankedCursor::Head { slot, .. }) => Stand::Head {
+                section: slot_section(slot),
+                slot: slot.saturating_add(1),
+            },
+            Some(RankedCursor::Tail { at, .. }) => Stand::Tail {
+                section: section_of(at.tier),
+                at: Some(at),
+            },
         };
-        if let Some(at) = tail_from {
-            let room = store_limit(take - rows.len());
-            rows.extend(tail_page(at, false, room).await?);
+        while rows.len() < take {
+            match stand {
+                Stand::Head { section, slot } => {
+                    let (start, end) = head_bounds(section);
+                    let room = take - rows.len();
+                    let from = slot.clamp(start, end);
+                    rows.extend((from..end.min(from.saturating_add(room))).map(head_row));
+                    stand = Stand::Tail { section, at: None };
+                }
+                Stand::Tail { section, at } => {
+                    let room = store_limit(take - rows.len());
+                    rows.extend(tail_page(section, at, false, room).await?);
+                    if section + 1 >= SECTIONS {
+                        break;
+                    }
+                    stand = Stand::Head {
+                        section: section + 1,
+                        slot: 0,
+                    };
+                }
+            }
         }
     }
 
@@ -249,15 +332,8 @@ pub async fn page(
     Ok(connection)
 }
 
-/// The head slots a forward page reads from `start`: at most `take`, never
-/// past the head's end.
-fn head_slots(start: usize, take: usize, len: usize) -> std::ops::Range<usize> {
-    let start = start.min(len);
-    start..len.min(start.saturating_add(take))
-}
-
-/// One walk of the tail behind the seam: the matcher's order minus the
-/// head, at `pin`.
+/// One walk of a section's tail behind its seam: the matcher's order
+/// minus the head, at `pin`.
 async fn tail_rows(
     request: &SearchRequest,
     pool: &PgPool,
@@ -324,6 +400,7 @@ async fn ranked_head(
     let window = Window {
         within: Some(&in_slice),
         excluding: &[],
+        section: None,
     };
     let candidates = request
         .find_in(pool, window, None, false, i64::MAX)
@@ -436,7 +513,7 @@ mod tests {
             "not base64!",
             &B64.encode("ranked:-1:h:0"),
             &B64.encode("ranked:2:h:x"),
-            &B64.encode("ranked:2:t:2:0:00000000-0000-0000-0000-000000000000"),
+            &B64.encode("ranked:2:t:6:0:00000000-0000-0000-0000-000000000000"),
             &B64.encode("search:0:0:00000000-0000-0000-0000-000000000000"),
         ] {
             assert_eq!(RankedCursor::decode(foreign), None, "{foreign}");

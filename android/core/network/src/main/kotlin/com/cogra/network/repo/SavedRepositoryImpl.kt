@@ -46,8 +46,8 @@ class SavedRepositoryImpl @Inject constructor(
             }
     }
 
-    override suspend fun savedPage(after: String?): Outcome<SavedPage?> = guard.run {
-        client.query(SavedPageQuery(after = Optional.presentIfNotNull(after)))
+    override suspend fun savedPage(query: String?, after: String?): Outcome<SavedPage?> = guard.run {
+        client.query(SavedPageQuery(query = Optional.presentIfNotNull(query), after = Optional.presentIfNotNull(after)))
             .fetch()
             .map { data ->
                 val bookmarks = data.me?.bookmarks ?: return@map null

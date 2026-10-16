@@ -152,7 +152,11 @@ async fn a_raw_rename_or_retitle_replaces_the_old_value(pool: PgPool) {
         maps,
     )
     .await;
-    assert_eq!(indexed(&pool, maps).await, Vec::new(), "an untitled post");
+    assert_eq!(
+        indexed(&pool, maps).await,
+        vec![row("title", "")],
+        "an untitled post keeps its row, with the empty title"
+    );
 }
 
 /// Redaction appended as a tombstone, or set in place on the current

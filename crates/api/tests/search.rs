@@ -169,23 +169,63 @@ fn codes(response: &Value) -> Vec<String> {
         .unwrap_or_default()
 }
 
-/// A person is found by their handle and by their display name, by
-/// prefix and by substring, whatever the case typed.
+/// A person is found by their handle by prefix and by substring, and by
+/// their display name by word — every word, the last as a prefix —
+/// whatever the case typed. A fragment from inside a display-name word
+/// finds no one.
 ///
-/// Handles and display names match case-insensitively by prefix and by substring.
-/// ´claim:search:names-match-by-prefix-and-substring´
+/// A handle matches by substring and a display name by word prefix, case-insensitively.
+/// ´claim:search:a-handle-matches-by-substring-a-display-name-by-word-prefix´
 #[sqlx::test(migrations = "../../migrations")]
-async fn search_matches_a_handle_and_a_display_name_by_prefix_and_substring(pool: PgPool) {
+async fn search_matches_a_handle_by_substring_and_a_display_name_by_word_prefix(pool: PgPool) {
     let rig = rig(pool);
     person(&rig.pool, "solarium", Some("Mira Coastline")).await;
     person(&rig.pool, "kel", None).await;
 
-    for typed in ["sol", "SOL", "lariu", "um", "mira", "COAST", "line"] {
+    for typed in ["sol", "SOL", "lariu", "um", "mira", "COAST", "mira coa"] {
         let found = search(&rig, None, json!({ "query": typed })).await;
-        assert_eq!(names(&found), vec!["User:solarium"], "for {typed}");
+        assert_eq!(names(&found), vec!["User:solarium"], "for {typed:?}");
     }
-    let miss = search(&rig, None, json!({ "query": "solx" })).await;
-    assert_eq!(names(&miss), Vec::<String>::new());
+    for missing in ["solx", "line", "ira", "coast mir"] {
+        let found = search(&rig, None, json!({ "query": missing })).await;
+        assert_eq!(names(&found), Vec::<String>::new(), "for {missing:?}");
+    }
+}
+
+/// Plain text matches an author's display name by word prefix — no `@`
+/// needed — and brings that person's posts, titled or untitled, after
+/// the people section. A fragment inside a word finds neither.
+///
+/// A display-name word prefix finds the person and then every post they authored.
+/// ´claim:search:a-display-name-match-brings-the-authors-posts´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_display_name_match_brings_the_authors_posts(pool: PgPool) {
+    let rig = rig(pool);
+    let genesis = person(&rig.pool, "founder", Some("Genesis Moderator")).await;
+    let kel = person(&rig.pool, "kel", None).await;
+    post(&rig.pool, genesis, 1, Some("Rules of the road"), None, "x").await;
+    let untitled = post(&rig.pool, genesis, 2, None, None, "Welcome, all").await;
+    post(&rig.pool, kel, 3, Some("Salt maps"), None, "x").await;
+
+    let found = search(&rig, None, json!({ "query": "Mod" })).await;
+    let kinds: Vec<&str> = found["edges"]
+        .as_array()
+        .expect("edges")
+        .iter()
+        .map(|e| e["node"]["__typename"].as_str().expect("typename"))
+        .collect();
+    assert_eq!(kinds, vec!["User", "Post", "Post"]);
+    assert_eq!(found["edges"][0]["node"]["handle"], "founder");
+    assert_eq!(found["edges"][1]["node"]["id"], json!(untitled));
+    assert_eq!(
+        names(&found)[2],
+        "Post:Rules of the road",
+        "the content section reads newest first"
+    );
+    assert_eq!(found["totalCount"], 3);
+
+    let missing = search(&rig, None, json!({ "query": "enesis" })).await;
+    assert_eq!(names(&missing), Vec::<String>::new());
 }
 
 /// A topic is found by its name and served as the union's `Hashtag`
@@ -405,37 +445,42 @@ async fn a_removed_posts_title_never_matches(pool: PgPool) {
     }
 }
 
-/// Exact matches lead, newest first among them; partial matches follow,
-/// newest first. Kinds interleave by recency inside a tier: the posts are
-/// dated ahead of the registry rows (written now), so they lead each tier.
+/// A result is sectioned — people, then topics, then content — for every
+/// query, so an exact-title post follows a partial-match person. Inside
+/// a section exact matches lead, newest first among them; partial
+/// matches follow, newest first.
 ///
-/// Exact matches precede partial ones, and each tier reads newest first.
-/// ´claim:search:exact-then-partial-then-newest´
+/// Sections lead — people, topics, content — and inside each, exact matches precede partial ones, newest first.
+/// ´claim:search:sections-then-exact-then-newest´
 #[sqlx::test(migrations = "../../migrations")]
-async fn exact_matches_precede_partial_then_newest_first(pool: PgPool) {
+async fn sections_lead_then_exact_matches_then_newest_first(pool: PgPool) {
     let rig = rig(pool);
     let sol = person(&rig.pool, "sol", None).await;
+    person(&rig.pool, "saltwife", None).await;
+    person(&rig.pool, "salt", None).await;
     post(&rig.pool, sol, 1, Some("Salt"), None, "x").await;
     post(&rig.pool, sol, 2, Some("Salt maps"), None, "x").await;
     post(&rig.pool, sol, 3, Some("SALT"), None, "x").await;
     post(&rig.pool, sol, 4, Some("Coarse salt"), None, "x").await;
-    tag(&rig.pool, "salt").await;
     tag(&rig.pool, "saltmarsh").await;
+    tag(&rig.pool, "salt").await;
 
     let found = search(&rig, None, json!({ "query": "salt" })).await;
     let order = names(&found);
     assert_eq!(
         order,
         vec![
+            "User:salt",
+            "User:saltwife",
+            "Hashtag:salt",
+            "Hashtag:saltmarsh",
             "Post:SALT",
             "Post:Salt",
-            "Hashtag:salt",
             "Post:Coarse salt",
             "Post:Salt maps",
-            "Hashtag:saltmarsh",
         ]
     );
-    assert_eq!(found["totalCount"], 6);
+    assert_eq!(found["totalCount"], 8);
 }
 
 /// Walking every page forward, and every page backward from the end,
@@ -562,7 +607,7 @@ async fn an_empty_kind_list_narrows_nothing(pool: PgPool) {
     tag(&rig.pool, "saltmaps").await;
 
     let all = names(&search(&rig, None, json!({ "query": "salt" })).await);
-    assert_eq!(all.len(), 3);
+    assert_eq!(all, vec!["User:saltor", "Hashtag:saltmaps", "Post:Salt"]);
     let empty = names(&search(&rig, None, json!({ "query": "salt", "kinds": [] })).await);
     assert_eq!(empty, all);
     let users = names(&search(&rig, None, json!({ "query": "salt", "kinds": ["USER"] })).await);
@@ -575,7 +620,28 @@ async fn an_empty_kind_list_narrows_nothing(pool: PgPool) {
         )
         .await,
     );
-    assert_eq!(tags, vec!["Post:Salt", "Hashtag:saltmaps"]);
+    assert_eq!(tags, vec!["Hashtag:saltmaps", "Post:Salt"]);
+}
+
+/// A kind filter subtracts sections and keeps the rest's semantics: with
+/// people filtered out, a display-name match still brings the authored
+/// posts; with only people, just the profiles stand.
+///
+/// A kind filter drops sections and keeps the authored-content semantics.
+/// ´claim:search:a-kind-filter-subtracts-sections´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_kind_filter_subtracts_sections_and_keeps_the_rest(pool: PgPool) {
+    let rig = rig(pool);
+    let mira = person(&rig.pool, "mira", Some("Mira Coastline")).await;
+    post(&rig.pool, mira, 1, Some("Rubbings"), None, "x").await;
+
+    let content = search(&rig, None, json!({ "query": "coast", "kinds": ["POST"] })).await;
+    assert_eq!(names(&content), vec!["Post:Rubbings"]);
+    assert_eq!(content["totalCount"], 1);
+    let people = search(&rig, None, json!({ "query": "coast", "kinds": ["USER"] })).await;
+    assert_eq!(names(&people), vec!["User:mira"]);
+    let both = search(&rig, None, json!({ "query": "coast" })).await;
+    assert_eq!(names(&both), vec!["User:mira", "Post:Rubbings"]);
 }
 
 /// Mark `content` seen through History's `markSeen`, in the session
@@ -610,7 +676,7 @@ async fn include_seen_false_drops_seen_nodes(pool: PgPool) {
     let kept = search(&rig, Some(&token), json!({ "query": "salt" })).await;
     assert_eq!(
         names(&kept),
-        vec!["Post:Salt fresh", "Post:Salt read", "User:saltine"]
+        vec!["User:saltine", "Post:Salt fresh", "Post:Salt read"]
     );
     let dropped = search(
         &rig,
@@ -1101,7 +1167,7 @@ async fn a_handle_scoped_query_finds_their_comments_through_the_post_title(pool:
     assert_eq!(only_comments["totalCount"], 1);
 }
 
-/// An untitled post has no indexed field, so a comment answering it has
+/// An untitled post holds no title word, so a comment answering it has
 /// nothing to be found through — under any text, its body's included.
 ///
 /// A comment on an untitled post is never found through it.
@@ -1282,16 +1348,16 @@ async fn a_handle_scoped_query_returns_the_tags_they_tagged_with(pool: PgPool) {
     );
 }
 
-/// A bare `@x` is a lookup in progress: it proposes people whose handle
-/// starts with what was typed — by handle alone, never by a display
-/// name or a substring — and lists nothing of theirs. The exact handle
-/// leads. A lone `@` proposes no one, and a filter that excludes people
-/// leaves nothing to propose.
+/// A bare `@x` names the people whose handle starts with what was typed
+/// — by handle alone, never by a display name or a substring, and never
+/// needing the full handle. The exact handle leads. A lone `@` names no
+/// one; with nothing they authored, the profiles are the whole result,
+/// and a filter that excludes people leaves nothing.
 ///
-/// A bare handle scope proposes people by handle prefix.
-/// ´claim:search:a-bare-handle-scope-proposes-users-by-handle-prefix´
+/// A bare person cue lists the profiles whose handle starts with the cue.
+/// ´claim:search:a-bare-person-cue-lists-profiles-by-handle-prefix´
 #[sqlx::test(migrations = "../../migrations")]
-async fn a_bare_handle_scope_proposes_users_by_handle_prefix(pool: PgPool) {
+async fn a_bare_person_cue_lists_profiles_by_handle_prefix(pool: PgPool) {
     let rig = rig(pool);
     person(&rig.pool, "solarium", None).await;
     person(&rig.pool, "sol", None).await;
@@ -1327,13 +1393,13 @@ async fn a_bare_handle_scope_proposes_users_by_handle_prefix(pool: PgPool) {
     assert_eq!(hits(&people).len(), 3);
 }
 
-/// A bare `#x` proposes topics whose name starts with what was typed —
+/// A bare `#x` names the topics whose name starts with what was typed —
 /// by prefix only, the exact name first.
 ///
-/// A bare tag scope proposes topics by name prefix.
-/// ´claim:search:a-bare-tag-scope-proposes-tags-by-name-prefix´
+/// A bare topic cue lists the topics whose name starts with the cue.
+/// ´claim:search:a-bare-topic-cue-lists-topics-by-name-prefix´
 #[sqlx::test(migrations = "../../migrations")]
-async fn a_bare_tag_scope_proposes_tags_by_name_prefix(pool: PgPool) {
+async fn a_bare_topic_cue_lists_topics_by_name_prefix(pool: PgPool) {
     let rig = rig(pool);
     tag(&rig.pool, "saltmaps").await;
     tag(&rig.pool, "salt").await;
@@ -1351,33 +1417,111 @@ async fn a_bare_tag_scope_proposes_tags_by_name_prefix(pool: PgPool) {
     assert_eq!(hits(&filtered), Vec::<String>::new());
 }
 
-/// A bare scope never lists anyone's content: not the named person's
-/// posts or comments, not what carries the named topic — even when
-/// every kind is asked for and the names would match those titles.
+/// A bare `@x` lists the matching profiles first, then everything the
+/// matches reach — the topics they tagged their own content with, then
+/// their posts (untitled ones included) and comments, newest first — no
+/// second word required, and a prefix of the handle is enough. Another
+/// person's content stays out. A filter that excludes people keeps the
+/// authored content; one that keeps only people keeps just the profiles.
 ///
-/// A bare scope never lists anyone's content.
-/// ´claim:search:a-bare-scope-never-lists-content´
+/// A bare person cue lists the matching profiles, then everything they authored.
+/// ´claim:search:a-bare-person-cue-lists-profiles-then-their-content´
 #[sqlx::test(migrations = "../../migrations")]
-async fn a_bare_scope_never_lists_anyones_content(pool: PgPool) {
+async fn a_bare_person_cue_lists_profiles_then_their_content(pool: PgPool) {
     let rig = rig(pool);
-    let sol = person(&rig.pool, "sol", None).await;
-    let carried = minted("sol", 1);
-    let post_id = post_as(&rig.pool, sol, &carried, 1, Some("sol saltmaps")).await;
-    comment_as(&rig.pool, sol, &minted("sol", 2), (post_id, "post"), 2).await;
-    claim(&rig.pool, 0, "sol", 10, &carried, "saltmaps", 0.9).await;
+    let sol = person(&rig.pool, "solarium", None).await;
+    let kel = person(&rig.pool, "kel", None).await;
+    let carried = minted("solarium", 1);
+    let titled = post_as(&rig.pool, sol, &carried, 1, Some("Rubbings")).await;
+    let comment = comment_as(&rig.pool, sol, &minted("solarium", 2), (titled, "post"), 2).await;
+    let untitled = post_as(&rig.pool, sol, &minted("solarium", 3), 3, None).await;
+    post_as(&rig.pool, kel, &minted("kel", 1), 4, Some("Solar charts")).await;
+    claim(&rig.pool, 0, "solarium", 10, &carried, "saltmaps", 0.9).await;
 
-    let every = json!(["POST", "COMMENT", "USER", "HASHTAG"]);
-    let person_only = scoped(&rig, None, json!({ "query": "@sol", "kinds": every })).await;
-    assert_eq!(hits(&person_only), vec!["User:sol"]);
-    let topic_only = scoped(&rig, None, json!({ "query": "#saltmaps", "kinds": every })).await;
-    assert_eq!(hits(&topic_only), vec!["Hashtag:saltmaps"]);
-    let content_only = scoped(
+    let ids = |connection: &Value| -> Vec<String> {
+        connection["edges"]
+            .as_array()
+            .expect("edges")
+            .iter()
+            .map(|e| {
+                let node = &e["node"];
+                match node["__typename"].as_str().expect("typename") {
+                    "Hashtag" => {
+                        format!("Hashtag:{}", node["name"]["value"].as_str().expect("name"))
+                    }
+                    kind => format!("{kind}:{}", node["id"].as_str().expect("id")),
+                }
+            })
+            .collect()
+    };
+    let everything = vec![
+        format!("User:{sol}"),
+        "Hashtag:saltmaps".to_string(),
+        format!("Post:{untitled}"),
+        format!("Comment:{comment}"),
+        format!("Post:{titled}"),
+    ];
+    let found = scoped(&rig, None, json!({ "query": "@sol" })).await;
+    assert_eq!(ids(&found), everything);
+    assert_eq!(found["totalCount"], 5);
+
+    let content = scoped(
         &rig,
         None,
-        json!({ "query": "@sol", "kinds": ["POST", "COMMENT"] }),
+        json!({ "query": "@so", "kinds": ["POST", "COMMENT"] }),
     )
     .await;
-    assert_eq!(hits(&content_only), Vec::<String>::new());
+    assert_eq!(ids(&content), everything[2..].to_vec());
+    let people = scoped(&rig, None, json!({ "query": "@SO", "kinds": ["USER"] })).await;
+    assert_eq!(ids(&people), vec![format!("User:{sol}")]);
+}
+
+/// A bare `#x` lists the matching topics first, then the posts and
+/// comments that carry any of them — by the content's own author's
+/// current claim — newest first. Content carrying another topic stays
+/// out.
+///
+/// A bare topic cue lists the matching topics, then what carries them.
+/// ´claim:search:a-bare-topic-cue-lists-topics-then-what-carries-them´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_bare_topic_cue_lists_topics_then_what_carries_them(pool: PgPool) {
+    let rig = rig(pool);
+    let sol = person(&rig.pool, "sol", None).await;
+    let kel = person(&rig.pool, "kel", None).await;
+    let maps = minted("sol", 1);
+    post_as(&rig.pool, sol, &maps, 1, Some("Rubbings")).await;
+    let pans = minted("kel", 1);
+    post_as(&rig.pool, kel, &pans, 2, None).await;
+    let tides = minted("kel", 2);
+    post_as(&rig.pool, kel, &tides, 3, Some("Salt tides")).await;
+    claim(&rig.pool, 0, "sol", 10, &maps, "saltmaps", 0.9).await;
+    claim(&rig.pool, 1, "kel", 10, &pans, "saltpans", 0.9).await;
+    claim(&rig.pool, 2, "kel", 11, &tides, "tides", 0.9).await;
+
+    let found = scoped(&rig, None, json!({ "query": "#salt" })).await;
+    let mut order = hits(&found);
+    assert_eq!(order.len(), 4, "{order:?}");
+    order[..2].sort();
+    assert_eq!(order[..2], ["Hashtag:saltmaps", "Hashtag:saltpans"]);
+    let content_ids: Vec<&Value> = found["edges"].as_array().expect("edges")[2..]
+        .iter()
+        .map(|e| &e["node"]["id"])
+        .collect();
+    let pans_id: Uuid = sqlx::query_scalar("SELECT id FROM posts WHERE l1_node_id = $1")
+        .bind(pans.to_string())
+        .fetch_one(&rig.pool)
+        .await
+        .expect("pans");
+    assert_eq!(
+        content_ids[0],
+        &json!(pans_id),
+        "newest first: the untitled post"
+    );
+    assert_eq!(order[3], "Post:Rubbings");
+    assert_eq!(found["totalCount"], 4);
+    let content = scoped(&rig, None, json!({ "query": "#salt", "kinds": ["POST"] })).await;
+    assert_eq!(hits(&content).len(), 2);
+    assert_eq!(content["totalCount"], 2);
 }
 
 /// A reply has no title and answers a comment that has none either: it
@@ -1414,8 +1558,9 @@ async fn a_reply_under_a_handle_scope_is_found_through_its_thread_roots_title(po
     );
 }
 
-/// A handle that names no one — unregistered, illegal, or redacted —
-/// scopes to nothing: the search reads empty, never an error.
+/// A cue that names no one — no handle starts with it, it holds a
+/// character no handle can, or the only handles it would name are
+/// redacted — reaches nothing: the search reads empty, never an error.
 ///
 /// An unknown handle scope with text reads empty.
 /// ´claim:search:an-unknown-handle-scope-reads-empty´
@@ -1484,10 +1629,11 @@ async fn a_handle_scope_with_text_returns_no_profile_row(pool: PgPool) {
     assert_eq!(hits(&users), Vec::<String>::new());
 }
 
-/// A scoped search keeps the matcher's order and keyset: exact title
-/// first, then newest first across posts, comments and topics alike;
-/// every page forward and backward yields the one-shot order; the seen
-/// exclusion applies inside a scope too.
+/// A cue search keeps the matcher's order and keyset: the topics
+/// section first, then content — exact title first, then newest first
+/// across posts and comments alike; every page forward and backward
+/// yields the one-shot order; the seen exclusion applies inside a cue
+/// too.
 ///
 /// Scoped pages keep the matcher's order and are stable in both directions.
 /// ´claim:search:scoped-pages-are-stable-and-complete´
@@ -1521,9 +1667,10 @@ async fn scoped_pages_are_stable_and_complete(pool: PgPool) {
     let whole = scoped(&rig, None, json!({ "query": "@sol salt", "first": 100 })).await;
     let expected = hits(&whole);
     assert_eq!(expected.len(), 15);
+    assert_eq!(expected[0], "Hashtag:saltmaps", "the topics section leads");
     assert!(
-        expected[..7].iter().all(|h| h.starts_with("Comment:")),
-        "exact-title comments lead: {expected:?}"
+        expected[1..8].iter().all(|h| h.starts_with("Comment:")),
+        "exact-title comments lead the content: {expected:?}"
     );
     assert_eq!(whole["totalCount"], 15);
 

@@ -1259,9 +1259,13 @@ index over them would match superseded titles; this table carries
 only what a read serves now. It is a cache over display content and
 the registry, rebuildable from them at any time.
 
-An untitled post has no row, and neither has a redacted value — a
-node whose current version carries a non-null `redaction_reason`
-(the explicit skip api-spec.md "Moderation" names).
+Every post whose current version is unredacted has a row; an
+untitled post's row carries the empty title, which holds no word and
+equals no query, so it is reached only through its author or a topic
+it carries — the index, not each read, decides what is findable. A
+redacted value has no row — a node whose current version carries a
+non-null `redaction_reason` (the explicit skip api-spec.md
+"Moderation" names).
 
 **The database maintains the table, by trigger.** Every source of an
 indexed value — `actors`, `actor_profile_versions`, `posts`,
@@ -1292,23 +1296,27 @@ CREATE TABLE search_index (
     value      TEXT        NOT NULL,
     folded     TEXT        GENERATED ALWAYS AS (lower(value)) STORED,
     words      TSVECTOR    GENERATED ALWAYS AS (
-                   CASE WHEN field = 'title'
+                   CASE WHEN field IN ('title', 'display_name')
                         THEN to_tsvector('simple'::regconfig, value)
                    END
                ) STORED,
-    author_id  UUID,                   -- posts: the @-scope join
+    author_id  UUID,                   -- posts: the @-cue join
     created_at TIMESTAMPTZ NOT NULL,   -- the node's createdAt; a topic's registry age
     PRIMARY KEY (node_id, field)
 );
--- Name-class fields: case-insensitive substring (which takes in the
--- prefix) through the trigram operator class's LIKE support.
+-- Handles and topic names: case-insensitive substring and prefix
+-- through the trigram operator class's LIKE support.
 CREATE INDEX search_index_names_trgm
     ON search_index USING gin (folded gin_trgm_ops)
     WHERE field <> 'title';
--- Titles: word-level full text, no stemming, last word as a prefix.
+-- Titles and display names: word-level full text, no stemming, last
+-- word as a prefix.
 CREATE INDEX search_index_titles_fts
     ON search_index USING gin (words)
     WHERE field = 'title';
+CREATE INDEX search_index_display_names_fts
+    ON search_index USING gin (words)
+    WHERE field = 'display_name';
 CREATE INDEX search_index_author_recency
     ON search_index (author_id, created_at DESC)
     WHERE author_id IS NOT NULL;

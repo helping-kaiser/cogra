@@ -2753,7 +2753,7 @@ const SEARCH: &str = r#"query($q: String!, $order: ReadOrder, $viewer: UUID,
   search(query: $q, order: $order, viewer: $viewer,
          first: $first, after: $after, last: $last, before: $before) {
     totalCount
-    edges { cursor score node { __typename ... on Post { id } } }
+    edges { cursor score node { __typename ... on Post { id } ... on User { id } } }
     pageInfo { hasNextPage hasPreviousPage startCursor endCursor }
   }
 }"#;
@@ -3010,6 +3010,73 @@ async fn ranked_search_keeps_the_exact_match_tier_first(pool: PgPool) {
             (f.far, None)
         ]
     );
+}
+
+/// Ranking keeps the result sectioned: each section is its ranked head,
+/// then its own rest behind the seam. A person no path of the viewer's
+/// reaches still stands before the ranked content — the seam is drawn
+/// per section, never once across the whole result — and every walk,
+/// forward page by page and backward from the end, keeps that order.
+///
+/// Under ranked search an unranked person still precedes ranked content: one seam per section.
+/// ´claim:search:ranked-search-draws-a-seam-per-section´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_draws_a_seam_per_section(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = search_fixture(&rig.pool).await;
+    let salter = person(&rig.pool, "salter", "user").await;
+    pod.set(Mode::Answer(search_ranking(&[
+        (f.near, "POST", 0.9),
+        (f.near_exact, "POST", 0.2),
+    ])));
+    let whole = vec![
+        (salter, None),
+        (f.near, Some(0.9)),
+        (f.near_exact, Some(0.2)),
+        (f.far, None),
+    ];
+    let page = search(
+        &rig,
+        json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer }),
+    )
+    .await;
+    assert_eq!(scored(&page), whole);
+    assert_eq!(page["totalCount"], json!(4));
+
+    let mut walked = Vec::new();
+    let mut after = Value::Null;
+    loop {
+        let page = search(
+            &rig,
+            json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer,
+                    "first": 1, "after": after }),
+        )
+        .await;
+        walked.extend(scored(&page));
+        if page["pageInfo"]["hasNextPage"] != json!(true) {
+            break;
+        }
+        after = page["pageInfo"]["endCursor"].clone();
+    }
+    assert_eq!(walked, whole, "forward");
+    let mut back = Vec::new();
+    let mut before = Value::Null;
+    loop {
+        let page = search(
+            &rig,
+            json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer,
+                    "last": 1, "before": before }),
+        )
+        .await;
+        let mut chunk = scored(&page);
+        chunk.append(&mut back);
+        back = chunk;
+        if page["pageInfo"]["hasPreviousPage"] != json!(true) {
+            break;
+        }
+        before = page["pageInfo"]["startCursor"].clone();
+    }
+    assert_eq!(back, whole, "backward");
 }
 
 /// An in-slice match no live path reaches is absent from the pod's

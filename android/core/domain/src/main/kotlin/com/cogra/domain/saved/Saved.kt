@@ -27,8 +27,13 @@ interface SavedRepository {
     /**
      * The page of the reader's own Saved list after [after], newest first by
      * save time. Success(null) when there is no signed-in reader.
+     *
+     * A non-null [query] narrows the list on the server by the one search law
+     * — sectioned, people then content, newest save first inside a section —
+     * and pages it on cursors of its own: [after] must come from a page read
+     * with the same [query].
      */
-    suspend fun savedPage(after: String?): Outcome<SavedPage?>
+    suspend fun savedPage(query: String?, after: String?): Outcome<SavedPage?>
 }
 
 /** One page of the Saved list. */
