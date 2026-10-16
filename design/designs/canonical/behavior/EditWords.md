@@ -14,6 +14,18 @@ ALWAYS every change the edit makes signs together in one batch
 
 ALWAYS the License row shows the license as signed, with the lock and no action
 
+ALWAYS the Your opinion row stands under the License row and reads the author's opinion on the post as it stands with the edit, its face and both numbers
+
+ALWAYS the Your opinion row reads the author's standing opinion on the post GIVEN the edit's pick was never moved
+
+ALWAYS the edit's record carries the pick as its pair, (0, 0) GIVEN the author never moved it
+
+ALWAYS an edit whose pick was never moved changes the author's opinion on the post by exactly nothing
+
+WHEN tap Adjust on the Your opinion row -> the ordinary full pad opens over the edit at the edit's pick AND NEVER anything is staged
+
+ALWAYS the pick rides the edit's own record and adds nothing to the footer's count
+
 ALWAYS no count stands under the body GIVEN more than 500 of its 5,000 characters remain
 
 WHEN typing passes the body's 5,000 characters -> the body takes the error outline AND the line A post's words are at most 5,000 characters. stands under it AND Sign the edit goes inert

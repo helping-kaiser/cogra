@@ -2306,6 +2306,15 @@
       "page": "compose"
     },
     {
+      "file": "EditPad.dc.html",
+      "title": "Edit post · your opinion on it",
+      "x": 5280,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
       "file": "RefPairEdit.dc.html",
       "title": "A standing citation's pair · editing",
       "x": 4800,

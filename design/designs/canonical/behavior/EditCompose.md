@@ -8,7 +8,19 @@ WHEN tap the footer GIVEN the batch holds an act -> the acts sheet opens over th
 
 ALWAYS the License row shows the license as signed, with the lock and no action
 
-ALWAYS the Sensitive row stands beside the License row and opens the sensitive sheet
+ALWAYS the Your opinion row stands under the License row and reads the author's opinion on the post as it stands with the edit, its face and both numbers
+
+ALWAYS the Your opinion row reads the author's standing opinion on the post GIVEN the edit's pick was never moved
+
+ALWAYS the edit's record carries the pick as its pair, (0, 0) GIVEN the author never moved it
+
+ALWAYS an edit whose pick was never moved changes the author's opinion on the post by exactly nothing
+
+WHEN tap Adjust on the Your opinion row -> the ordinary full pad opens over the edit at the edit's pick AND NEVER anything is staged
+
+ALWAYS the pick rides the edit's own record and adds nothing to the footer's count
+
+ALWAYS the Sensitive row stands under the Your opinion row and opens the sensitive sheet
 
 ALWAYS the line A post's body is words or media, never both. stands under the gallery
 

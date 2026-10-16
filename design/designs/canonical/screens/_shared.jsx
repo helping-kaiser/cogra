@@ -2229,6 +2229,22 @@ function editFootSign({ unchanged, faultHoles }) {
   );
 }
 
+/* THE POST EDIT'S OPINION ROW (jakob 2026-10-16). Every edit's record carries
+   the pair, the uniform grammar, and the author may adjust it with the ordinary
+   full pad (`EditPad`). The pick starts at (0, 0) — inert: a (0, 0) record
+   carries w̃ = 0 and crosses neither channel, so an edit nobody adjusts moves
+   the author's opinion by exactly nothing. The row therefore reads where the
+   author's opinion stands with the edit: the standing fold on the post, at
+   rest; after a Set, the fold the pick lands it on. The pair rides the edit's
+   own record, so it adds no act to the batch. It stands under the License
+   row, the seal's order. The fixture's fold is the one the post was published
+   with, the compose default +0.10 / +0.10. */
+const EDIT_STANDING = { pDirected: 0.1, pInterest: 0.1 };
+
+function EditOpinionRow() {
+  return <FactRow label="Your opinion" value={<StanceReadout pair={EDIT_STANDING} kind="standing" />} action="Adjust" />;
+}
+
 function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes } = {}) {
   return (
     <>
@@ -2295,6 +2311,7 @@ function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes
                 </span>
               }
             />
+            <EditOpinionRow />
             <FactRow label="Sensitive" value="Not marked" action="Mark" last />
           </div>
         </div>

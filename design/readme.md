@@ -823,7 +823,7 @@ is a different thing from a piece the apps have not reached yet.
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader`, `StanceRow` |
 | `components/states/` | `EmptyState`, `LoadingState`, `ComingSoonCard` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending`, `NoticePanel`, `NoticeLine`, `RedactedContent`, `SensitiveVeil`, `SensitiveScope` |
-| `components/stance/` | `StanceControl`, `StancePad`, `StanceReadout`, `OwnStanceReadout`, `StanceValue`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `HelpLine`, `SeveranceConfirm` |
+| `components/stance/` | `StanceControl`, `StancePad`, `StanceReadout`, `StanceValue`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `HelpLine`, `SeveranceConfirm` |
 | `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `PagerDots`, `MediaViewer`, `VideoTransport`, `Timeline`, `SeekLine`, `DetailClip`, `ReelRail`, `ReelRailItem`, `ReelRailScore`, `ReelPlate`, `ReelCaption` |
 | `components/proposed/` | `ExplainableNumber` — **not shipped**, see §7.1 |
 
@@ -1031,11 +1031,14 @@ own (§3). All four quadrants are legitimate.
   anchors by Euclidean distance — dense in the for-it-and-want-it
   quadrant, sparse at the extremes. `(0, 0)` never speaks through the
   table: it gets 🤷.
-- **A pick with only one axis reads through `VALENCE_SIX`**, the
-  pure-valence spine of the twenty — six ruled bands over `pDirected`
-  alone, for the own-post pad and the seal row that states what it
-  picked. A nearest-of-twenty lookup cannot answer for a value that
-  names no pair.
+- **An opinion on one's own content is an opinion like any other**
+  (jakob 2026-10-16): the full pad, both axes, wherever the author
+  gives it — the seal's `Your opinion` row, a post edit's, and the
+  anchor on their own post, whose opinions fold into one bundle with
+  the post's own records. Severance there is severance anywhere:
+  explained and confirmed, never prevented. What the author's own
+  stance never decides is whether their post reaches them: their own
+  posts always show in their own feed.
 - **Where the anchors sit is recorded on the anchor-map card**
   (`components/stance/anchor-map.card.html`) — the twenty on the
   two-axis field and the six pure-valence ones on the strip, each at its
@@ -1608,9 +1611,9 @@ signing. Sensitive self-marking is one switch opening a bottom
 sheet: it veils the body and the description; the title and tags
 stay readable so choosing to look is informed; an optional reason is
 shown on the veil. Every stance a write signs is disclosed and
-adjustable: the post's own attachment on a one-axis pad (For/Against
-only — your own post always reaches you in full), a reply's stance
-on its parent on the full two-axis pad. The pad keeps its floating
+adjustable on the full two-axis pad: the post's own attachment,
++0.10 / +0.10 until the author moves it, and a reply's stance on its
+parent. The pad keeps its floating
 card form everywhere; only license and sensitive present as sheets.
 
 **Key absent is restore-first.** Nothing is staged server-side and
@@ -2226,7 +2229,7 @@ entry first". What stands:
   lookups stay off the bundle's namespace. The check reads each pad's
   own `value` and asks the masters what it reads as —
   `formatStancePair` / `formatTagPair`, `nearestAnchor` /
-  `nearestTagAnchor`, `padPercentOf` — so a moved value, a hyphen
+  `nearestTagAnchor` — so a moved value, a hyphen
   where §3 rules U+2212, or a spoken reading left behind is a
   failure. A seventh hand-spelled readout anywhere in `screens/` fails
   too: unchecked is not a state a literal gets to be in.

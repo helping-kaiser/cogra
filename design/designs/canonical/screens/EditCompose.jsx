@@ -75,6 +75,14 @@
    draws it; with `upload` at `failed` it draws nothing, because a failed
    upload drops the held press.
 
+   THE AUTHOR'S OPINION RIDES THE EDIT (jakob 2026-10-16). `Your opinion`
+   stands under the License row, as on the seal: it reads the author's
+   standing opinion on the post, and `Adjust` opens the ordinary full pad
+   (`EditPad`) at the edit's own pick, (0, 0) until moved — so an edit nobody
+   adjusts moves the opinion by exactly nothing. The pick rides the edit's own
+   record, so the foot's count does not move (`EditOpinionRow`). `EditWords`
+   and `EditComposeVideo` draw the same row.
+
    THE BODY IS `_shared.jsx`'s `EditComposeBody`, because the acts sheet stands
    on this edit and draws it whole. */
 export const PROPS = {
