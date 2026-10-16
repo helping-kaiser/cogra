@@ -10243,6 +10243,64 @@ authoring does not. jakob's answers to the round's questions (backlog
   holds at **100 / 3971**: no board this round touched is registered,
   and nothing is removed.
 
+### Round 16, the applicant-acting cut — 2026-10-16
+
+jakob's ruling (RULINGS PR-103; seams 234 and 235): applicant acting is
+post-MVP whole — no act staged with the application, no applicant
+uploads, no applicant compose or stance seal. The MVP keeps the
+application→vouch→landing flow and the vouched-in member's first
+opinion, the vouch-back or toward anyone else. jakob left the shapes to
+design. The canonical boards are cut down to that truth rather than
+annotated, and the package is banked whole (backlog 143). The round
+supersedes the staging the earlier applicant records draw: *The
+applicant once-each round*, the topic round's once-each Affinity, *The
+v1.0.0 scope cut*'s staging bullet, *The applicant's life round*'s seal
+and topic line, *The applicant fix round*'s turned-down seal exit, *The
+applicant remainder, ruled*'s waiting opinion and topic, *The 134 and
+135 residue*'s waiting post and chronicle line.
+
+- **Every acting door answers in place**, in the applicant-foot family's
+  register. `New post` on every applicant bar (`ApplicantFeed` and its
+  family, `ProfileApplicant`, `WalletComingSoon` for an applicant) and
+  the menus' `Cite in a new post` and `Mention in a new post` answer
+  `You can post once you're in.`; the wizard never opens. A stance face —
+  every one an applicant meets, a topic's and a profile's wide anchor
+  included — answers a tap or a press-and-hold with `You can give your
+  opinion once you're in.`; the pad never blooms and nothing is signed
+  or staged (stance-control, *An applicant's anchor answers in place*).
+  The comment foot and `Reply` keep their line. One line per door, the
+  same on every applicant shell, the turned-down one included.
+- **The seal has no applicant branch.** No applicant reaches it, so
+  `ComposeSeal`'s two applicant exits leave its sidecar and the three
+  seals' `Sign and publish` lose their `ApplicantWaiting` outcome.
+  `post-while-an-applicant` now ends on `New post`'s answer.
+- **The applicant's own profile is honest.** The open card reads `Their
+  approval brings you in. Until then, you can read everything.`; the
+  chronicle is empty, at `EmptyState`, `Nothing here yet. Your posts and
+  opinions show up here once you're in.`, and the figures read zero. The
+  staged rows, their closing lines and the staged row's door go.
+- **`ApplicantWaiting`'s snackbar is `New post`'s answer**, drawn once
+  for every shell. About's `Getting in, and being let in` drops its
+  once-each paragraph. `VouchBack`'s two lines about acts staged during
+  the application go; the landing, the vouch card and the vouch-back
+  stand as drawn.
+- **Drawn at full strength, pending jakob's word**: `New post` and the
+  stance faces. copy-voice gives the locked look to the foot, `Reply`
+  and `Invites` alone; whether the new doors take it is his call.
+- **Flagged for blessing** (copy-voice, *The applicant-foot family* and
+  *About*): `You can post once you're in.`, `You can give your opinion
+  once you're in.`, the profile card's second sentence, the empty
+  chronicle's line, and About's new first-paragraph tail.
+- **The gate**: edges **2120 → 2119** (`ProfileApplicant`'s staged row);
+  the five shells' stance faces turn `detour`, every outcome now an
+  answer. Flows hold at **227**, `post-while-an-applicant` re-blessed.
+  The registry goes **100 / 3971 → 100 / 3965**: `ProfileApplicant`'s
+  eight staged-chronicle paths (`profile.chronicle.act` and its six
+  children, `.pending` among them, and `profile.chronicle.stagedLine`)
+  and the `profile.chronicle.act` key rule leave by hand, the breaking
+  change proposed for blessing; `profile.chronicle.empty` and its
+  `title` join.
+
 ---
 
 ## 14. The canvases
