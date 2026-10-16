@@ -1431,11 +1431,18 @@ impl User {
     /// removed, redacted, a deleted account, or an actor the viewer hid —
     /// and read through their own status; hiding never narrows it. A kept
     /// node that no longer resolves — a pending write that never landed —
-    /// is skipped. Field-level: viewer-only.
+    /// is skipped. `query` narrows the list by the one search law
+    /// (Search section) over the saved set alone — the matcher runs on
+    /// the server, so a match is found wherever it stands in the list.
+    /// Narrowed, the list is sectioned as search is — people, then
+    /// content — newest save first inside a section, and paged on its own
+    /// cursors; a blank or null `query` narrows nothing. A query past the
+    /// search length cap is BAD_INPUT. Field-level: viewer-only.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
     async fn bookmarks(
         &self,
         ctx: &Context<'_>,
+        query: Option<String>,
         first: Option<i32>,
         after: Option<String>,
         last: Option<i32>,
@@ -1447,6 +1454,18 @@ impl User {
         let pool = ctx.data::<PgPool>()?;
         validate_page_args(first, last, after.as_deref(), before.as_deref())
             .map_err(|e| super::query::bad_input(e.message))?;
+        let parsed = crate::search::parse(query.as_deref().unwrap_or("")).map_err(|_| {
+            super::query::bad_input(format!(
+                "query may be at most {} characters",
+                crate::search::MAX_QUERY_CHARS
+            ))
+        })?;
+        if parsed != crate::search::Parsed::Blank {
+            return self
+                .narrowed_bookmarks(ctx, parsed, first, after, last, before)
+                .await
+                .map(Some);
+        }
         let backward = last.is_some() || before.is_some();
         let cursor = match if backward { &before } else { &after } {
             Some(raw) => Some(
@@ -1483,6 +1502,7 @@ impl User {
             has_next,
             BookmarkConnectionFields {
                 viewer: self.identity.id,
+                matched: None,
             },
         );
         connection
@@ -4229,23 +4249,132 @@ pub type BookmarkConnection = Connection<
 >;
 
 /// `BookmarkConnection`'s connection-level fields: the viewer whose list
-/// served the edges, so the count runs only when asked.
+/// served the edges, and — on a narrowed list — the nodes the matcher
+/// matched, so the count runs only when asked and under exactly the
+/// predicate the pages ran.
 pub struct BookmarkConnectionFields {
     viewer: Uuid,
+    matched: Option<Vec<Uuid>>,
 }
 
 #[Object]
 impl BookmarkConnectionFields {
-    /// How many things the viewer's Saved list serves, across every page.
-    /// Priced at zero like every connection count; saturates at
-    /// [`i32::MAX`].
+    /// How many things the viewer's Saved list serves, across every page
+    /// — narrowed by `query` when one was given. Priced at zero like
+    /// every connection count; saturates at [`i32::MAX`].
     #[graphql(complexity = 0)]
     async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
         let pool = ctx.data::<PgPool>()?;
-        let total = postgres_store::bookmarks::count_bookmarks(pool, self.viewer)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let total = match &self.matched {
+            None => postgres_store::bookmarks::count_bookmarks(pool, self.viewer).await,
+            Some(ids) => {
+                postgres_store::bookmarks::count_bookmarks_among(pool, self.viewer, ids).await
+            }
+        }
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
+    }
+}
+
+impl User {
+    /// `bookmarks(query:)` with a query that is not blank: the search
+    /// request the query makes — the one `search` builds, over the kinds
+    /// Saved holds — read inside the viewer's saved set, then paged by
+    /// section and save time.
+    async fn narrowed_bookmarks(
+        &self,
+        ctx: &Context<'_>,
+        parsed: crate::search::Parsed<'_>,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<BookmarkConnection> {
+        let pool = ctx.data::<PgPool>()?;
+        let backward = last.is_some() || before.is_some();
+        let cursor = match if backward { &before } else { &after } {
+            Some(raw) => Some(
+                crate::bookmarks::decode_match_cursor(raw)
+                    .ok_or_else(|| super::query::bad_input("invalid cursor"))?,
+            ),
+            None => None,
+        };
+        let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
+        let saved_kinds = [NodeKind::User, NodeKind::Post, NodeKind::Comment];
+        let request = super::query::search_request(ctx, parsed, Some(&saved_kinds), None).await?;
+        let saved = match &request {
+            Some(_) => postgres_store::bookmarks::saved_ids(pool, self.identity.id)
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?,
+            None => Vec::new(),
+        };
+        let hits = match &request {
+            Some(request) if !saved.is_empty() => request
+                .find_in(
+                    pool,
+                    postgres_store::search::Window {
+                        within: Some(&saved),
+                        excluding: &[],
+                        section: None,
+                    },
+                    None,
+                    false,
+                    i64::MAX,
+                )
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?,
+            _ => Vec::new(),
+        };
+        let ids: Vec<Uuid> = hits.iter().map(|hit| hit.node_id).collect();
+        let sections: Vec<i32> = hits
+            .iter()
+            .map(|hit| postgres_store::search::section_of(hit.tier))
+            .collect();
+        let mut kept = postgres_store::bookmarks::bookmarks_among(
+            pool,
+            self.identity.id,
+            &ids,
+            &sections,
+            cursor,
+            backward,
+            limit + 1,
+        )
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let has_more = kept.len() as i64 > limit;
+        if has_more {
+            if backward {
+                kept.remove(0);
+            } else {
+                kept.pop();
+            }
+        }
+        let (has_previous, has_next) = if backward {
+            (has_more, cursor.is_some())
+        } else {
+            (cursor.is_some(), has_more)
+        };
+        let mut connection = BookmarkConnection::with_additional_fields(
+            has_previous,
+            has_next,
+            BookmarkConnectionFields {
+                viewer: self.identity.id,
+                matched: Some(ids),
+            },
+        );
+        connection.edges.extend(
+            hydrate_bookmarks_with(
+                pool,
+                kept.into_iter()
+                    .map(|m| {
+                        let cursor = crate::bookmarks::encode_match_cursor(m.cursor());
+                        (m.bookmark, cursor)
+                    })
+                    .collect(),
+            )
+            .await?,
+        );
+        Ok(connection)
     }
 }
 
@@ -4256,8 +4385,27 @@ pub(crate) async fn hydrate_bookmarks(
     pool: &PgPool,
     kept: Vec<postgres_store::bookmarks::Bookmark>,
 ) -> async_graphql::Result<Vec<BookmarkEdge>> {
+    hydrate_bookmarks_with(
+        pool,
+        kept.into_iter()
+            .map(|bookmark| {
+                let cursor = crate::bookmarks::encode_cursor(bookmark.cursor());
+                (bookmark, cursor)
+            })
+            .collect(),
+    )
+    .await
+}
+
+/// [`hydrate_bookmarks`] with each edge's cursor given: a narrowed list
+/// pages on cursors of its own.
+async fn hydrate_bookmarks_with(
+    pool: &PgPool,
+    kept: Vec<(postgres_store::bookmarks::Bookmark, String)>,
+) -> async_graphql::Result<Vec<BookmarkEdge>> {
     let ids_of = |kinds: &[&str]| -> Vec<Uuid> {
         kept.iter()
+            .map(|(b, _)| b)
             .filter(|b| kinds.contains(&b.kind.as_str()))
             .map(|b| b.content_id)
             .collect()
@@ -4273,7 +4421,7 @@ pub(crate) async fn hydrate_bookmarks(
             .collect();
     Ok(kept
         .into_iter()
-        .filter_map(|bookmark| {
+        .filter_map(|(bookmark, cursor)| {
             let node = match bookmark.kind.as_str() {
                 "post" => match content.get(&bookmark.content_id) {
                     Some(crate::nodes::ContentNode::Post(post)) => {
@@ -4294,7 +4442,7 @@ pub(crate) async fn hydrate_bookmarks(
                 _ => return None,
             };
             Some(Edge::with_additional_fields(
-                crate::bookmarks::encode_cursor(bookmark.cursor()),
+                cursor,
                 node,
                 BookmarkEdgeFields {
                     bookmarked_at: bookmark.bookmarked_at,
