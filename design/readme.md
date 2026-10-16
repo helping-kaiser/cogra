@@ -10106,6 +10106,58 @@ drafted and wait for his review (copy-voice marks them).
   3878**: none of the boards this round touched is registered, and
   nothing is removed.
 
+### Round 14, the search-law round — 2026-10-16
+
+jakob's stamped search law (seam 220, with his 2026-10-16 extension to
+handles, seam 226) and his search-section ruling (a), drawn on every
+search surface that draws results. The law is one for global search,
+Saved and History:
+
+- **`@prefix` is a person cue.** The people whose handle starts with
+  what is typed stand first, then what they authored; no second word
+  and no full handle is needed. `@handle text` keeps its scoped
+  reading — the matched people's own work, and no profile row.
+- **`#prefix` is a topic cue.** The tags whose name starts with what is
+  typed stand first, then what carries them; `#tag text` stays the
+  intersection. On Saved, where a tag is never saved, a bare `#tag`
+  lists the saved things carrying a matching tag.
+- **Plain text matches by word prefix**: any word of a title, a
+  display name or a handle — a person's own, or the author's of a
+  thing — with no sigil. `Mod` finds Genesis Moderator; `enesis` finds
+  nobody. Bodies, descriptions and bios are still never read, so
+  `ExploreNone`'s, `SavedNone`'s and `HistoryNone`'s "Search reads names
+  and titles, never bodies" stands verbatim — a handle is a name.
+- **Kind filters subtract.** A filter that leaves Profiles out drops
+  the people section and keeps the authored-content reading; Profiles
+  alone keeps only the people.
+- **Saved and History search everything kept or seen**, never only the
+  cards already loaded — the one place the server-side matcher shows.
+- **The results are sectioned.** The people stand first under
+  `SectionLabel`'s `People` (the caption Explore's `Recent` wears),
+  capped at **three**; `See all people`, a text button on its own line,
+  closes the section when more match, and the content follows by the
+  surface's own order with no caption of its own. The door opens the
+  narrowing that already exists — the filter at Profiles alone
+  (`ExplorePerson`, `HistorySearch`); Saved has no kind filter, so its
+  door opens Saved's own people-only narrowing, the query kept.
+  `ExplorePerson` is redrawn sectioned (`sal`: Sal Torres, Ines Salas
+  by her second word, Salome Ward, the door, then the post and the
+  tag); `SavedSearch` and `HistorySearch` are new (`@m`: three profile
+  cards, the door, then Mira's words post).
+- **Saved and History cap too — the orchestrator's rec, drawn pending
+  jakob's word** (backlog 141): one law for every sectioned surface.
+- **The gate**: edges **2085 → 2119** (`ExplorePerson`'s door; the two
+  new boards' own; Saved's, SavedUndo's, SavedNone's, History's,
+  HistoryHidden's and HistoryNone's fields reaching them); flows hold
+  at **227**, `search-and-open-a-person` re-described and the shared
+  starts' board counts re-blessed. The new boards stand on the profile
+  page's Saved/History row at x 5760 and 6240. The registry goes **98 /
+  3878 → 100 / 3971**: `explore.peopleLabel` and `explore.peopleDoor`
+  on `ExplorePerson` (its `result` keys grow to 1–5), the two new
+  screens' 45 and 46 paths (`peopleLabel`, `peopleDoor`, and the cards
+  under their existing key rules). No key rule is added, and nothing
+  is removed.
+
 ---
 
 ## 14. The canvases

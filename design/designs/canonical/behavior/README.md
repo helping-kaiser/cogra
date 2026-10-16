@@ -198,11 +198,13 @@ And it checks nodes, against `nodes.json`:
 - on a registered screen (`Feed`, `PostDetail` and `ComposeDetails`, the
   calibration screens, `FeedCover`, the feed's clip, and
   `FeedCommentShapes`, a comment card's clip; then the Saved and Hide
-  packets' boards — `Saved`, `SavedEmpty`, `SavedUndo`, `SavedNone`, the three
+  packets' boards — `Saved`, `SavedEmpty`, `SavedUndo`, `SavedNone`,
+  `SavedSearch` (round 14), the three
   profiles and their three menus, `FeedHidden`, `ReaderPostMenu`,
   `Settings` and `SettingsHidden`, and the hide's three other landings,
   `PostDetailHidden`, `ProfileOtherHidden` and `SettingsUnhidden`; then the History and Search packets'
-  boards — `History`, `HistoryEmpty`, `HistoryFilter`, `HistoryNone` and
+  boards — `History`, `HistoryEmpty`, `HistoryFilter`, `HistoryNone`,
+  `HistorySearch` (round 14) and
   the `Explore` boards, `ExplorePerson` among them; then the invites and deletion packets' boards —
   `Invites`, `RejectConfirm`, `RejectAllConfirm`, the four `VouchAsk`
   boards, `ApplicantRejected`, `ProfileApplicant`, the five `DeleteAccount`
