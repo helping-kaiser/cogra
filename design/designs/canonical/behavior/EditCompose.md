@@ -2,6 +2,8 @@
 
 ALWAYS every change the edit makes signs together in one batch
 
+ALWAYS a moved pick alone fills the batch, the edit signing a new version whose words and media stand unchanged
+
 ALWAYS the footer reads the live count of the batch, You're signing N things
 
 WHEN tap the footer GIVEN the batch holds an act -> the acts sheet opens over the edit

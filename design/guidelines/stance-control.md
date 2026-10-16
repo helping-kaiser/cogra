@@ -157,9 +157,16 @@ given through its face. **Severance is the generic law** (*Severance*,
 below): a pick that nets the author's own bundle to `(0, 0)` is
 explained and confirmed, never prevented.
 
-**What your own stance never decides is whether your post reaches you.**
-Your own posts always show in your own feed, whatever your opinion on
-them reads — a feed law, not a pad law.
+**Your own stance is the only path a feed has to your new post** (jakob
+2026-10-16). The ranking walks reach a fresh post through its author's
+creating edge alone, so a post published at `(0, 0)` starts unreachable
+— no feed carries it, the author's included; it lives on the profile
+until someone gives it an opinion. The pad warns and never prevents:
+Set at `(0, 0)` on the compose pad opens the dialog `Start it
+unreachable?` — the severance confirm's sibling, re-worded for a post
+with no history — and `Set it anyway` is always there. A standing post
+walked back to `(0, 0)` keeps whatever other paths its readers' own
+opinions built.
 
 ## Severance
 

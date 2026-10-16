@@ -16,7 +16,15 @@ WHEN tap the pad field without dragging -> NEVER the pick moves
 
 WHEN release a drag on the field -> NEVER the pick is staged
 
-WHEN press Set -> the pad closes AND the seal's Your opinion row reads the pick AND NEVER anything is signed
+WHEN press Set GIVEN the pick reads other than (0, 0) -> the pad closes AND the seal's Your opinion row reads the pick AND NEVER anything is signed
+
+WHEN press Set GIVEN the pick reads (0, 0) -> the dialog Start it unreachable? opens over the pad, which stays parked beneath it AND NEVER the pick is refused
+
+ALWAYS the dialog Start it unreachable? reads Your opinion is the only path anyone's feed has to a new post. At (0, 0) that path carries nothing — your post will live on your profile, and nowhere else, until someone gives it an opinion. with Keep adjusting filled and Set it anyway quiet
+
+WHEN tap Keep adjusting -> the dialog closes AND the pad stands at the pick
+
+WHEN tap Set it anyway -> the dialog closes AND the pad closes AND the seal's Your opinion row reads (0, 0) AND NEVER anything is signed
 
 WHEN press Cancel -> the pad closes AND nothing is staged
 

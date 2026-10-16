@@ -432,8 +432,7 @@ noun):
   signature as your post. / An edit carries your opinion too, starting
   at nothing, so an edit you don't adjust leaves it as it is. Nothing is
   signed until Set. Swap the input in settings if you prefer sliders or
-  numbers. *(DRAFT-AWAITING-JAKOB'S-WORD, 2026-10-16 — the round-13
-  draft for the full pad; nothing of it is blessed. "How far it
+  numbers. *(Blessed jakob 2026-10-16. "How far it
   reaches people through you" names the second number on one's own
   post, where the pad's axis word stays `How much reaches you`.)*
 - **Toward what you answer** (the reply's two-axis pad): Replying also
