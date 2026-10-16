@@ -143,6 +143,8 @@ mutation PreparePost($input: PreparePostInput!) {
     node
     writes {
       ...PreparedWriteFields
+      # Carried with an applicant's application: checked, kept, signed at the landing.
+      carried
     }
     userErrors {
       ...UserErrorFields

@@ -927,20 +927,22 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   ComposePad: [
-    { n: 1, find: 'aria-label="Your opinion on your post"', tag: "button" },
-    { n: 2, find: 'aria-label="Opinion pad', tag: "div" },
+    { n: 1, find: 'aria-label="Your backing on your post"', tag: "button" },
+    { n: 2, find: 'aria-label="Backing pad', tag: "div" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
-  // The ordinary full pad over a post edit (jakob 2026-10-16) — `ComposePad`'s
-  // five numbers, the edit beneath inert under the wash.
+  // The one-axis pad over a post edit (jakob 2026-10-16, PR-101) —
+  // `ComposePad`'s five numbers, the edit beneath inert under the wash, and
+  // the walk-back that parks the pick at the raw sum's opposite.
   EditPad: [
-    { n: 1, find: 'aria-label="Your opinion on your post"', tag: "button" },
-    { n: 2, find: 'aria-label="Opinion pad for your own post"', tag: "div" },
+    { n: 1, find: 'aria-label="Your backing on your post"', tag: "button" },
+    { n: 2, find: 'aria-label="Backing pad for your own post"', tag: "div" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
+    { n: 6, find: ">Walk it all back</button>", tag: "button" },
   ],
 });
 
@@ -2245,7 +2247,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 16, find: "+ Add pictures · 2 of 10", tag: "button" },
     { n: 17, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
     { n: 18, find: 'aria-label="Undo withdrawing Tide tables and the third headland — @juno"', tag: "button" },
-    // The opinion row's Adjust (jakob 2026-10-16): the ordinary full pad over the edit.
+    // The opinion row's Adjust (jakob 2026-10-16, PR-101): the one-axis pad over the edit.
     { n: 21, find: ">Adjust</button>", tag: "button" },
   ],
   /* The same edit with an empty batch — `EditCompose`'s markers, minus the one

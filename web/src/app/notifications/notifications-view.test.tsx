@@ -289,6 +289,52 @@ describe("NotificationsScreen", () => {
     scroller.remove();
   });
 
+  it("the_tail_watch_survives_a_render_that_landed_no_page", async () => {
+    // The watch is rebuilt only when a page lands (`infinite-list.ts`): a
+    // render that changed nothing — here, a tap marking a row opened — keeps
+    // the observer that watches the approaching tail.
+    server.use(
+      graphql.query("Notifications", () =>
+        HttpResponse.json({ data: page(THREE, { hasNextPage: true, endCursor: "c2" }) }),
+      ),
+      graphql.mutation("MarkNotificationsSeen", () =>
+        HttpResponse.json({ data: { markNotificationsSeen: { hasUnreadNotifications: false, userErrors: [] } } }),
+      ),
+    );
+    const Base = globalThis.IntersectionObserver;
+    const made: IntersectionObserver[] = [];
+    globalThis.IntersectionObserver = class extends Base {
+      constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
+        super(callback, options);
+        made.push(this);
+      }
+    };
+    const scroller = document.createElement("div");
+    document.body.append(scroller);
+    try {
+      renderWithProviders(
+        <ScrollHostProvider value={{ current: scroller }}>
+          <NotificationsScreen from="feed" />
+        </ScrollHostProvider>,
+        { store: signedIn() },
+      );
+      const list = await screen.findByTestId("notifications.list");
+      const items = Array.from(list.querySelectorAll("li"));
+      const watching = () =>
+        made.filter((observer) =>
+          items.some((item) => (observer as unknown as { targets: Set<Element> }).targets.has(item)),
+        );
+      expect(watching()).toHaveLength(1);
+      const observer = watching()[0];
+      // n3 is already read: the tap changes only what the row wears.
+      fireEvent.click(screen.getByTestId("notification-n3-open"));
+      expect(watching()).toEqual([observer]);
+    } finally {
+      globalThis.IntersectionObserver = Base;
+      scroller.remove();
+    }
+  });
+
   it("back_returns_to_the_bell_s_root_with_its_label", async () => {
     serve(THREE);
     const cases: [string, string, string][] = [

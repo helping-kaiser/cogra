@@ -47,6 +47,52 @@ export interface StanceReadoutProps {
 
 export declare function StanceReadout(props: StanceReadoutProps): JSX.Element;
 
+/** The attachment an author signs with their own content: one number, because
+ *  Publish and Owner carry one free parameter — `p_i` is census-pinned at 1.
+ *  The face reads through `VALENCE_SIX`. The author's opinion on their own
+ *  content is an ordinary Opinion, read by `StanceReadout`. */
+export interface AttachmentReadoutProps {
+  pDirected: number;
+  style?: React.CSSProperties;
+}
+
+export declare function AttachmentReadout(props: AttachmentReadoutProps): JSX.Element;
+
+/** The one-axis pad's readouts, above its strip: `Your pick` — the record's
+ *  own value — alone on a new post's pad, `Current backing` over it on an
+ *  edit's, where `AttachmentLandingLine` follows the strip. Faces read
+ *  `VALENCE_SIX`, 🤷 at exactly 0.00. */
+export interface AttachmentStandingProps {
+  pick: number;
+  /** The backing bundle's net now; omit where nothing stands yet. */
+  current?: number;
+  style?: React.CSSProperties;
+  /** Given one, the blocks are named `current` and `pick`, each with its `label`, `face` and `exact`. */
+  node?: string;
+}
+
+export declare function AttachmentStanding(props: AttachmentStandingProps): JSX.Element;
+
+/** `Backing after`, beneath an edit's strip: `clip` of the bundle's RAW sum
+ *  plus the pick. When the sum passes ±1, a quiet line states the total and
+ *  the cap — clipped is not hidden. */
+export interface AttachmentLandingLineProps {
+  /** The backing bundle's raw sum, unclipped. */
+  rawSum: number;
+  pick: number;
+  style?: React.CSSProperties;
+  /** Given one, the readout carries it, with its `label`, `face`, `exact`, and `cap` while capped. */
+  node?: string;
+}
+
+export declare function AttachmentLandingLine(props: AttachmentLandingLineProps): JSX.Element;
+/** Where a pick lands the backing: the raw total, its fold, and whether the fold clipped it. */
+export declare function attachmentLanding(rawSum: number, pick: number): { raw: number; landing: number; capped: boolean };
+export declare const CURRENT_BACKING_LABEL: string;
+export declare const BACKING_AFTER_LABEL: string;
+/** The spoken word for a one-axis value of exactly 0.00, which wears 🤷. */
+export declare const ZERO_BACKING_LABEL: string;
+
 /** A stance RECORD's face and pair, drawn plainly wherever a stance is data
  *  rather than a control — the opinions page's rows, the chronicle's opinion
  *  entries. Never interactive. */
@@ -114,7 +160,8 @@ export declare const TAG_ANCHORS: readonly (StancePair & { emoji: string; label:
 /** One band of the one-axis table: the face it wears, the anchor's own position
  *  and word, and where the band stops. `to` is the band's upper edge and
  *  `toInclusive` says whether the edge belongs to it — at a midpoint the milder
- *  face wins, and exactly 0.00 reads 🙂. */
+ *  face wins. Exactly 0.00 never reaches the table: `nearestValenceAnchor`
+ *  answers it with 🤷. */
 export interface ValenceBand {
   emoji: string;
   label: string;

@@ -154,10 +154,10 @@ The instantiation of the node-value update rule
   history is its Publish bundle and any L2 identifies each edit
   from act fields alone
   ([nodes.md §1](../primitive/nodes.md#1-l1-node-types-the-shared-graph)).
-  Each edit carries the author's attachment pick, `0` unless
-  moved: at `0` routing-inert and vouch-inert, moved a stance that
-  nets into the author's Publish bundle. A moved pick alone is a
-  legal edit — a content-identical version.
+  Each edit carries the author's attachment pick, summed into the
+  bundle like any parallel record: `0` by default — routing-inert,
+  vouch-inert — and the author's to change.
+  A moved pick alone is a legal edit — a content-identical version.
 - **Eligible author:** the creator, alone — an eligibility read
   rule, never a write restriction.
 - **Chain root:** the genesis Publish. The current value is the

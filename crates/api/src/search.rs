@@ -11,15 +11,17 @@
 //!   is never an error; past [`MAX_QUERY_CHARS`] it is refused. Only a
 //!   LEADING `@prefix` or `#prefix` is a cue — anywhere else those
 //!   characters are text.
-//! - **Plain text** matches a person's handle and a topic's name
+//! - **Plain text** matches a post's title and a person's handle and
+//!   display name by word: full text under the `simple` configuration,
+//!   every word required, the last as a prefix, so "Mod" finds "Genesis
+//!   Moderator", "gen" finds @genesis, and "enesis" finds neither
+//!   (PostgreSQL docs §12.3.2, prefix matching in `to_tsquery`). A
+//!   handle's words are what the parser splits it into: `pixel_joiner`
+//!   holds `pixel` and `joiner`. A person whose display name matches
+//!   brings their posts, titled or not; a handle match brings only the
+//!   person — `@` is the deliberate handle cue. A topic's name matches
 //!   case-insensitively by substring: the index's trigram operator class
-//!   serves `LIKE` (PostgreSQL docs, *pg_trgm*, "Index Support"). It
-//!   matches a post's title and a person's display name by word: full
-//!   text under the `simple` configuration, every word required, the last
-//!   as a prefix, so "Mod" finds "Genesis Moderator" and "enesis" finds
-//!   nothing (PostgreSQL docs §12.3.2, prefix matching in `to_tsquery`).
-//!   A person whose display name matches brings their posts, titled or
-//!   not; a handle is matched only by `@`.
+//!   serves `LIKE` (PostgreSQL docs, *pg_trgm*, "Index Support").
 //! - **Cues** ([`cue`]). `@prefix` names every person whose handle starts
 //!   with it; `#prefix` every topic whose name does. A bare cue lists the
 //!   matches, then what they reach: a person's posts, comments and the
@@ -36,6 +38,13 @@
 //! - **Kinds subtract.** A `kinds` filter drops sections and keeps the
 //!   rest's semantics: without people, a person cue or a display-name
 //!   match still lists the authored content.
+//! - **The people section is capped** ([`PEOPLE_SECTION_CAP`]). Where a
+//!   result can stand people beside another section, the people section
+//!   serves its first three by the result's own order, and the rest stand
+//!   behind the "See all profiles" door — the same query with people
+//!   alone as its kind, which serves every match. A cue that names many
+//!   handles would otherwise put an endless people list before any
+//!   content (seam 220, ruled (a) in seam 223).
 
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
@@ -46,6 +55,11 @@ use uuid::Uuid;
 /// title (500), a separator and a cue of a full-length handle or tag,
 /// with headroom. Longer is a malformed argument, not a miss.
 pub const MAX_QUERY_CHARS: usize = 640;
+
+/// The most people a people section serves while the result can stand
+/// another section beside it (ExplorePerson.md, SavedSearch.md,
+/// HistorySearch.md: "the people section holds at most three people").
+pub const PEOPLE_SECTION_CAP: usize = 3;
 
 /// A kind the plain-text matcher serves.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -255,7 +269,8 @@ fn like_body(text: &str) -> String {
 }
 
 /// The words of `text` as a `to_tsquery` expression: every word
-/// required, the last matched as a prefix. A word is a maximal run of
+/// required, the last matched as a prefix — the one word query titles,
+/// handles and display names match. A word is a maximal run of
 /// alphanumeric characters, so every word is a single quoted lexeme with
 /// nothing in it the query syntax could read as an operator. None when
 /// `text` carries no word.

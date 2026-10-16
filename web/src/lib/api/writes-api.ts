@@ -27,19 +27,23 @@ export type StagedWriteView = {
 };
 
 /**
- * A PreparePayload write, lifted into the signer's staged-write shape:
- * a fresh prepare is by definition awaiting its pre-signature.
+ * A PreparePayload write, lifted into the signer's staged-write shape: a
+ * fresh prepare is awaiting its pre-signature — unless it came back carried
+ * with the author's application (`PreparedWrite.carried`), which the signer
+ * checks and keeps for the landing rather than signs (carried.ts). Only the
+ * post and stance prepares can carry, so only they select the flag.
  */
 export function stagedFromPrepared(prepared: {
   id: string;
   family: RecordFamily;
   canonicalProposal: string;
+  carried?: boolean;
 }): StagedWriteView {
   return {
     id: prepared.id,
     family: prepared.family,
     canonicalProposal: prepared.canonicalProposal,
-    state: "AWAITING_PRE_SIGN",
+    state: prepared.carried === true ? "CARRIED" : "AWAITING_PRE_SIGN",
     verifiedAct: null,
   };
 }

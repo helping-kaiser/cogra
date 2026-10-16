@@ -120,9 +120,11 @@ export function NotificationsScreen({ from }: { from: string | null }) {
 
   const visible = rows.filter((row) => !hidden.has(row.actor.id));
 
+  // The watch is rebuilt only when `loadMore` changes — a page landed, a fresh
+  // cursor — never on a render that changed nothing (`infinite-list.ts`).
   const tailRef = useApproachingTail({
     root: host,
-    onReach: () => void loadMore(),
+    onReach: loadMore,
     enabled: hasNextPage && !moreFailed,
   });
   const tailIndex = tailIndexOf(visible.length);

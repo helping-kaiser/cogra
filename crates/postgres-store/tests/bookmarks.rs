@@ -68,7 +68,7 @@ async fn kept(pool: &PgPool, viewer: Uuid, id: Uuid, when: Option<Timestamp>) ->
 }
 
 async fn list(pool: &PgPool, viewer: Uuid) -> Vec<Uuid> {
-    bookmarks::bookmarks(pool, viewer, None, false, 100)
+    bookmarks::bookmarks(pool, viewer, &bookmarks::every_kind(), None, false, 100)
         .await
         .expect("read")
         .into_iter()
@@ -91,7 +91,7 @@ async fn bookmarks_read_newest_first_by_save_time(pool: PgPool) {
     kept(&pool, viewer, sol, Some(at(15))).await;
     assert_eq!(list(&pool, viewer).await, vec![a, sol, b]);
     assert_eq!(
-        bookmarks::count_bookmarks(&pool, viewer)
+        bookmarks::count_bookmarks(&pool, viewer, &bookmarks::every_kind())
             .await
             .expect("count"),
         3
@@ -197,13 +197,20 @@ async fn equal_save_times_page_by_node_id(pool: PgPool) {
     }
     ids.sort();
     ids.reverse();
-    let first = bookmarks::bookmarks(&pool, viewer, None, false, 2)
+    let first = bookmarks::bookmarks(&pool, viewer, &bookmarks::every_kind(), None, false, 2)
         .await
         .expect("page");
     let cursor: BookmarkCursor = first.last().expect("row").cursor();
-    let second = bookmarks::bookmarks(&pool, viewer, Some(cursor), false, 2)
-        .await
-        .expect("page");
+    let second = bookmarks::bookmarks(
+        &pool,
+        viewer,
+        &bookmarks::every_kind(),
+        Some(cursor),
+        false,
+        2,
+    )
+    .await
+    .expect("page");
     let walked: Vec<Uuid> = first
         .iter()
         .chain(second.iter())

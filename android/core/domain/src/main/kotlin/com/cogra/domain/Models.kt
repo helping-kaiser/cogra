@@ -195,6 +195,12 @@ data class PreparedWriteView(
     /** The canonical proposal wire bytes, decoded from base64. */
     val canonicalProposal: ByteArray,
     val gcAfterEpochs: Int,
+    /**
+     * Carried with the author's application (`PreparedWrite.carried`): the
+     * signer checks it against its form and keeps the verified digest for
+     * the landing instead of signing it now (signing/Carried.kt).
+     */
+    val carried: Boolean = false,
 ) {
     override fun equals(other: Any?): Boolean = other is PreparedWriteView && other.id == id
     override fun hashCode(): Int = id.hashCode()
