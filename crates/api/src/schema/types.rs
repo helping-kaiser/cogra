@@ -167,6 +167,36 @@ impl StanceBundle {
     }
 }
 
+/// The author's own Publish bundle toward their post: the sum of every
+/// Publish-family record they wrote toward it — the genesis record and
+/// each edit — before and after the clip. A post's creator authors this
+/// bundle and nobody else reads it; it is the Publish sibling of
+/// [`StanceBundle`] and counts the payload-marked records that bundle
+/// excludes, because every Publish is payload-marked.
+pub struct BackingBundle {
+    sum: common::l1::fold::BundleSum,
+}
+
+#[Object]
+impl BackingBundle {
+    /// The raw valence sum, before the clip — beyond `±1` where the
+    /// records carry more than the fold shows. Not a `Dimension`: the sum
+    /// is unbounded by construction.
+    async fn raw_p_directed(&self) -> f64 {
+        self.sum.p_d
+    }
+
+    /// The folded valence: the raw sum clipped to `[-1, 1]`.
+    async fn p_directed(&self) -> Dimension {
+        Dimension(self.sum.fold().p_d)
+    }
+
+    /// How many Publish records the sum folds.
+    async fn record_count(&self) -> i32 {
+        self.sum.records.try_into().unwrap_or(i32::MAX)
+    }
+}
+
 /// The actor whose view this account still borrows (`design/readme.md`
 /// §13, api-spec.md `Query.borrowedView`): the issuer of the invite link
 /// the account registered through, until the member's first Opinion is
@@ -3000,6 +3030,38 @@ impl PostType {
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<Option<StanceBundle>> {
         viewer_stance(ctx, self.0.id, pick, include_pending).await
+    }
+
+    /// The viewer's own Publish bundle toward this post — the raw sum of
+    /// the records they authored it with, and the clip of that sum.
+    /// Answers only the post's creator; null for every other viewer and
+    /// for no session. Unlike `viewerStance`, it counts payload-marked
+    /// records, since every Publish is one. `includePending: false`
+    /// folds only what has landed on L1.
+    async fn viewer_backing(
+        &self,
+        ctx: &Context<'_>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<Option<BackingBundle>> {
+        let Some(Some(viewer)) = ctx.data_opt::<Option<Viewer>>() else {
+            return Ok(None);
+        };
+        if viewer.user_id != self.0.author_id {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        let read = crate::stance::publish_backing(
+            pool,
+            viewer.user_id,
+            &self.0.l1_node_id,
+            include_pending,
+        )
+        .await;
+        match read {
+            Ok(sum) => Ok(Some(BackingBundle { sum })),
+            Err(crate::stance::StanceError::Internal(_)) => Ok(None),
+            Err(e) => Err(e.into()),
+        }
     }
 
     /// When the viewer saved this post; null when not kept, or with no
