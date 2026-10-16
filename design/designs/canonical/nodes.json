@@ -4738,8 +4738,7 @@
     "ProfileApplicant": {
       "prefix": "profile",
       "keys": {
-        "profile.application": "the application chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
-        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)"
+        "profile.application": "the application chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "profile.application": [
@@ -4787,6 +4786,8 @@
         "profile.bottomBar.searchSlot": [],
         "profile.bottomBar.walletSlot": [],
         "profile.chronicle": [],
+        "profile.chronicle.empty": [],
+        "profile.chronicle.empty.title": [],
         "profile.identity": [],
         "profile.identity.actionRow": [],
         "profile.identity.actionRow.edit": [],
