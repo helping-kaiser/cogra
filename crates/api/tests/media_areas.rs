@@ -2,23 +2,33 @@
 //! stand-in with in-process stores: a deleted asset's bytes leave the
 //! world-readable store for the operator-only one once nothing live shows
 //! them, and a carried post's media reaches the live store — verified —
-//! before the predicate the carried batch's sign gate reads ever holds.
+//! before the predicate the carried batch's sign gate reads ever holds,
+//! which `submitProposals` requires of a released carried write.
 
 use std::pin::Pin;
 use std::sync::Arc;
 
+use api::auth::Viewer;
 use api::content::{self, License, PostDraft};
 use api::l1::StandInBoundary;
 use api::media::areas::{self, Held, MoveError};
 use api::media::{AttachmentDraft, BlobError, BlobStore, MediaAreas};
 use api::redaction::{self, Redaction};
+use api::schema::types::{ErrorCode, TERMINAL_WRITE_REFUSALS};
+use base64::Engine;
+use base64::engine::general_purpose::STANDARD as B64;
 use common::l1::client::ActorKey;
+use common::l1::handshake::PreSignedProposal;
+use common::l1::wire;
 use l1_standin::{StandIn, StandInConfig};
-use postgres_store::staged::{self, PreSignedParts};
+use postgres_store::staged::{self, PreSignedParts, StagedState};
 use postgres_store::{genesis, media as media_store};
+use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use sqlx::PgPool;
 use uuid::Uuid;
+
+mod rig;
 
 const GC: i64 = 8;
 const STAGING: api::prepare::Staging = api::prepare::Staging::unbudgeted(GC);
@@ -206,6 +216,56 @@ impl Rig {
         let (id, _) = self.prepare_post(actor, "Waits.", media).await;
         staged::carry(&self.pool, &[id]).await.expect("carries");
         id
+    }
+
+    /// What the landing does to a carried write (`auth::land`): back to
+    /// `awaiting_pre_sign`, still marked carried, for the device to sign.
+    async fn release(&self, staged_id: Uuid) {
+        let released = sqlx::query(
+            "UPDATE staged_writes SET state = 'awaiting_pre_sign'
+             WHERE id = $1 AND state = 'carried' AND carried",
+        )
+        .bind(staged_id)
+        .execute(&self.pool)
+        .await
+        .expect("releases");
+        assert_eq!(released.rows_affected(), 1);
+    }
+
+    /// The device's seal leg through `submitProposals`, as `actor`, over
+    /// the schema built on this rig's stand-in and media areas.
+    async fn submit(&self, actor: Uuid, staged_id: Uuid, pre: &PreSignedProposal) -> Value {
+        let (mut ctx, _) = rig::api_context(
+            self.pool.clone(),
+            Arc::new(api::mailer::DevMailer::new(None)),
+            api::ratelimit::RateLimitConfig::unlimited(),
+        );
+        ctx.boundary = self.boundary.clone();
+        ctx.areas = self.areas.clone();
+        let schema = api::schema::build_with(ctx, api::schema::QueryBudgets::release());
+        let response = schema
+            .execute(
+                async_graphql::Request::new(
+                    "mutation($input: SubmitProposalsInput!) {
+                       submitProposals(input: $input) {
+                         stagedWrites { id state } userErrors { code message }
+                       }
+                     }",
+                )
+                .variables(async_graphql::Variables::from_json(json!({ "input": {
+                    "proposals": [{
+                        "stagedWriteId": staged_id,
+                        "signature": B64.encode(wire::encode_pre_commitment_of(pre)),
+                    }]
+                }})))
+                .data(Some(Viewer {
+                    user_id: actor,
+                    session_id: Uuid::new_v4(),
+                })),
+            )
+            .await;
+        assert!(response.errors.is_empty(), "{:?}", response.errors);
+        response.data.into_json().expect("json")["submitProposals"].clone()
     }
 }
 
@@ -579,4 +639,95 @@ async fn the_carried_gate_fails_closed_on_a_name_no_asset_answers(pool: PgPool) 
             .await
             .expect("nothing to move")
     );
+}
+
+/// The gate at the seal leg: a released carried post whose media cannot
+/// move yet — its bytes have not reached the carried store — is refused
+/// with a code the clients do not treat as terminal, and nothing is
+/// recorded. Once the bytes are there, the device's same material, sent
+/// again, moves them to the live store and signs.
+///
+/// A released carried write signs only once its media is live, and is refused retryably until then.
+/// ´claim:media:a-released-carried-write-signs-only-once-its-media-is-live´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_released_carried_post_signs_only_once_its_media_is_live(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.funded_actor("ada").await;
+    let picture = rig.asset_in(actor, "carried", 0xB1).await;
+    rig.areas
+        .carried
+        .delete(&picture.key)
+        .await
+        .expect("the bytes have not arrived");
+    let staged_id = rig.carried_post(actor, &[picture.id]).await;
+    rig.release(staged_id).await;
+    let write = staged::load(&rig.pool, staged_id).await.expect("loads");
+    let pre = key.pre_sign(write.proposal);
+
+    let refused = rig.submit(actor, staged_id, &pre).await;
+    assert_eq!(
+        refused["userErrors"][0]["code"], "CARRIED_MEDIA_UNPUBLISHED",
+        "{refused}"
+    );
+    assert!(refused["stagedWrites"].is_null(), "{refused}");
+    assert!(
+        !TERMINAL_WRITE_REFUSALS.contains(&ErrorCode::CarriedMediaUnpublished),
+        "the clients must keep the material and re-send"
+    );
+    let waiting = staged::load(&rig.pool, staged_id).await.expect("loads");
+    assert_eq!(waiting.state, StagedState::AwaitingPreSign);
+    assert!(waiting.pre_signed.is_none(), "nothing was recorded");
+    assert_eq!(rig.area(picture.id).await, "carried");
+
+    rig.areas
+        .carried
+        .put(&picture.key, picture.bytes.clone(), "image/webp")
+        .await
+        .expect("the bytes arrive");
+    let sealed = rig.submit(actor, staged_id, &pre).await;
+    assert_eq!(sealed["userErrors"], json!([]), "{sealed}");
+    assert_eq!(sealed["stagedWrites"][0]["state"], "AWAITING_APPROVAL");
+    assert_eq!(rig.area(picture.id).await, "live");
+    assert!(holds(rig.areas.live.as_ref(), &picture).await);
+}
+
+/// A released carried write naming no media has nothing to move and
+/// signs at once.
+///
+/// A released carried write naming no media passes the gate at once.
+/// ´claim:media:a-carried-write-naming-no-media-passes-the-gate´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_released_carried_write_naming_no_media_signs_at_once(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.funded_actor("ada").await;
+    let staged_id = rig.carried_post(actor, &[]).await;
+    rig.release(staged_id).await;
+    let write = staged::load(&rig.pool, staged_id).await.expect("loads");
+    let pre = key.pre_sign(write.proposal);
+
+    let sealed = rig.submit(actor, staged_id, &pre).await;
+    assert_eq!(sealed["userErrors"], json!([]), "{sealed}");
+    assert_eq!(sealed["stagedWrites"][0]["state"], "AWAITING_APPROVAL");
+}
+
+/// Before the landing releases it, a carried write is not the device's to
+/// sign, and the seal leg moves nothing: the media stays in the carried
+/// store until the landing.
+///
+/// An unreleased carried write's media never moves at the seal leg.
+/// ´claim:media:an-unreleased-carried-writes-media-never-moves´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_unreleased_carried_writes_media_stays_carried(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.funded_actor("ada").await;
+    let picture = rig.asset_in(actor, "carried", 0xB2).await;
+    let staged_id = rig.carried_post(actor, &[picture.id]).await;
+    let write = staged::load(&rig.pool, staged_id).await.expect("loads");
+    let pre = key.pre_sign(write.proposal);
+
+    let refused = rig.submit(actor, staged_id, &pre).await;
+    assert_eq!(refused["userErrors"][0]["code"], "BAD_INPUT", "{refused}");
+    assert_eq!(rig.area(picture.id).await, "carried");
+    assert!(!holds(rig.areas.live.as_ref(), &picture).await);
+    assert!(holds(rig.areas.carried.as_ref(), &picture).await);
 }
