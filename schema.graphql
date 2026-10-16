@@ -446,9 +446,9 @@ type BookmarkConnection {
 	"""
 	edges: [BookmarkEdge!]!
 	"""
-	How many things the viewer's Saved list serves, across every page.
-	Priced at zero like every connection count; saturates at
-	[`i32::MAX`].
+	How many things the viewer's Saved list serves, across every page
+	— narrowed by `query` when one was given. Priced at zero like
+	every connection count; saturates at [`i32::MAX`].
 	"""
 	totalCount: Int
 }
@@ -3206,19 +3206,25 @@ type Query {
 	referenceCandidates(query: String!, limit: Int): [ReferenceCandidate!]!
 	"""
 	Global search across nodes; returns a `SearchResult` per edge.
-	Recall is lexical over the indexed name-class fields and post
-	titles — an untitled post is never matched by its words. Order is
-	exact-match tier first, then newest first — viewer-independent —
-	unless `order: RANKED`, where the server's ranker container orders
-	the matches inside `viewer`'s slice, each tier by its ranker, and
-	the rest follow behind the seam, newest first; ranking never runs
-	in the backend process (feed-ranking.md §11). `order: RANKED`
-	needs `viewer`. Served kinds grow with the slices: USER, POST,
-	HASHTAG unscoped; COMMENT is always a valid kind but is served
-	only under a scope operator (`@handle`, `#tag`) — unscoped, it
-	contributes no rows, never an error. COLLECTIVE, CHAT,
-	CHAT_MESSAGE, ITEM and OFFER join with their slices and read empty
-	until then. An empty `kinds` list means the same as null (no
+	Recall is lexical: plain text matches handles and topic names by
+	substring, post titles and display names by word (the last word a
+	prefix), and brings the posts of every person whose display name
+	matches; `@prefix` names people by handle prefix and `#prefix`
+	topics by name prefix — bare, the matches lead and everything they
+	reach follows; with text, the text searches what they reach. The
+	result is sectioned — people, then topics, then content — and
+	inside a section an exact match leads, then newest first,
+	viewer-independent — unless `order: RANKED`, where the server's
+	ranker container orders each section's matches inside `viewer`'s
+	slice, exact matches first, and the section's rest follow behind
+	the seam, newest first; ranking never runs in the backend process
+	(feed-ranking.md §11). `order: RANKED` needs `viewer`. Served
+	kinds grow with the slices: USER, POST, HASHTAG for plain text;
+	COMMENT is always a valid kind but is served only under a cue —
+	for plain text it contributes no rows, never an error. A `kinds`
+	filter drops sections and keeps the rest's semantics. COLLECTIVE,
+	CHAT, CHAT_MESSAGE, ITEM and OFFER join with their slices and read
+	empty until then. An empty `kinds` list means the same as null (no
 	narrowing). `includeSeen: false` drops nodes on the reader's
 	seen-list (`User.viewHistory`); it needs a session and is ignored
 	without one. Full semantics in the Search section.
@@ -4561,9 +4567,15 @@ type User implements Node & Actor {
 	removed, redacted, a deleted account, or an actor the viewer hid —
 	and read through their own status; hiding never narrows it. A kept
 	node that no longer resolves — a pending write that never landed —
-	is skipped. Field-level: viewer-only.
+	is skipped. `query` narrows the list by the one search law
+	(Search section) over the saved set alone — the matcher runs on
+	the server, so a match is found wherever it stands in the list.
+	Narrowed, the list is sectioned as search is — people, then
+	content — newest save first inside a section, and paged on its own
+	cursors; a blank or null `query` narrows nothing. A query past the
+	search length cap is BAD_INPUT. Field-level: viewer-only.
 	"""
-	bookmarks(first: Int, after: String, last: Int, before: String): BookmarkConnection
+	bookmarks(query: String, first: Int, after: String, last: Int, before: String): BookmarkConnection
 	"""
 	Actors this user has hidden from their own feed — a read-side
 	comfort applied post-rank on the viewer's side (feed-ranking.md

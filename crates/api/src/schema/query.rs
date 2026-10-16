@@ -543,19 +543,25 @@ impl Query {
     }
 
     /// Global search across nodes; returns a `SearchResult` per edge.
-    /// Recall is lexical over the indexed name-class fields and post
-    /// titles — an untitled post is never matched by its words. Order is
-    /// exact-match tier first, then newest first — viewer-independent —
-    /// unless `order: RANKED`, where the server's ranker container orders
-    /// the matches inside `viewer`'s slice, each tier by its ranker, and
-    /// the rest follow behind the seam, newest first; ranking never runs
-    /// in the backend process (feed-ranking.md §11). `order: RANKED`
-    /// needs `viewer`. Served kinds grow with the slices: USER, POST,
-    /// HASHTAG unscoped; COMMENT is always a valid kind but is served
-    /// only under a scope operator (`@handle`, `#tag`) — unscoped, it
-    /// contributes no rows, never an error. COLLECTIVE, CHAT,
-    /// CHAT_MESSAGE, ITEM and OFFER join with their slices and read empty
-    /// until then. An empty `kinds` list means the same as null (no
+    /// Recall is lexical: plain text matches handles and topic names by
+    /// substring, post titles and display names by word (the last word a
+    /// prefix), and brings the posts of every person whose display name
+    /// matches; `@prefix` names people by handle prefix and `#prefix`
+    /// topics by name prefix — bare, the matches lead and everything they
+    /// reach follows; with text, the text searches what they reach. The
+    /// result is sectioned — people, then topics, then content — and
+    /// inside a section an exact match leads, then newest first,
+    /// viewer-independent — unless `order: RANKED`, where the server's
+    /// ranker container orders each section's matches inside `viewer`'s
+    /// slice, exact matches first, and the section's rest follow behind
+    /// the seam, newest first; ranking never runs in the backend process
+    /// (feed-ranking.md §11). `order: RANKED` needs `viewer`. Served
+    /// kinds grow with the slices: USER, POST, HASHTAG for plain text;
+    /// COMMENT is always a valid kind but is served only under a cue —
+    /// for plain text it contributes no rows, never an error. A `kinds`
+    /// filter drops sections and keeps the rest's semantics. COLLECTIVE,
+    /// CHAT, CHAT_MESSAGE, ITEM and OFFER join with their slices and read
+    /// empty until then. An empty `kinds` list means the same as null (no
     /// narrowing). `includeSeen: false` drops nodes on the reader's
     /// seen-list (`User.viewHistory`); it needs a session and is ignored
     /// without one. Full semantics in the Search section.
@@ -618,72 +624,9 @@ impl Query {
             _ => None,
         };
         let exclude_seen_by = reader.filter(|_| include_seen == Some(false));
-        let request = match parsed {
-            search::Parsed::Blank => return Ok(empty()),
-            search::Parsed::Unscoped(text) => {
-                let kinds = served_kinds(kinds.as_deref());
-                if kinds.is_empty() {
-                    return Ok(empty());
-                }
-                search_store::SearchRequest::Match(search::unscoped(
-                    text,
-                    &kinds,
-                    exclude_seen_by,
-                    false,
-                ))
-            }
-            search::Parsed::Scoped {
-                scope,
-                name,
-                remainder: None,
-            } => {
-                let kind = scope.lookup_kind();
-                if !served_kinds(kinds.as_deref()).contains(&kind) {
-                    return Ok(empty());
-                }
-                match search::lookup(name, kind, exclude_seen_by) {
-                    Some(request) => search_store::SearchRequest::Match(request),
-                    None => return Ok(empty()),
-                }
-            }
-            search::Parsed::Scoped {
-                scope,
-                name,
-                remainder: Some(remainder),
-            } => {
-                let kinds = scoped_kinds(kinds.as_deref(), scope);
-                if kinds.is_empty() {
-                    return Ok(empty());
-                }
-                let within = match scope {
-                    search::Scope::Handle => {
-                        let Ok(folded) = crate::auth::normalize_handle(name) else {
-                            return Ok(empty());
-                        };
-                        let Some(author) = search_store::scoped_author(pool, &folded)
-                            .await
-                            .map_err(|e| async_graphql::Error::new(e.to_string()))?
-                        else {
-                            return Ok(empty());
-                        };
-                        search_store::Scope::Author {
-                            id: author.id,
-                            address: author.address,
-                        }
-                    }
-                    search::Scope::Tag => match search::scoped_topic(name) {
-                        Some(name) => search_store::Scope::Topic { name },
-                        None => return Ok(empty()),
-                    },
-                };
-                search_store::SearchRequest::Scoped(search::scoped(
-                    within,
-                    remainder,
-                    &kinds,
-                    exclude_seen_by,
-                    viewer_address(ctx).await?,
-                ))
-            }
+        let Some(request) = search_request(ctx, parsed, kinds.as_deref(), exclude_seen_by).await?
+        else {
+            return Ok(empty());
         };
         if let Some(viewer) = ranked_for {
             return ranked_search::page(ctx, request, viewer, ranked_cursor, backward, limit).await;
@@ -907,9 +850,52 @@ pub(super) fn bad_input(message: impl Into<String>) -> async_graphql::Error {
     async_graphql::Error::new(message).extend_with(|_, e| e.set("code", "BAD_INPUT"))
 }
 
-/// The index kinds a `kinds` argument serves unscoped. Null or empty
-/// narrows nothing; COMMENT is served only under a scope, and the kinds
-/// whose slices have not shipped read empty.
+/// The match request a parsed query makes over `kinds` — the one path
+/// `search` and `User.bookmarks(query:)` share, so no surface grows a
+/// second matcher. None when the request can match nothing: a blank
+/// query, a cue that names nothing, or kinds that leave nothing served.
+pub(super) async fn search_request(
+    ctx: &Context<'_>,
+    parsed: search::Parsed<'_>,
+    kinds: Option<&[NodeKind]>,
+    exclude_seen_by: Option<Uuid>,
+) -> async_graphql::Result<Option<search_store::SearchRequest>> {
+    Ok(match parsed {
+        search::Parsed::Blank => None,
+        search::Parsed::Unscoped(text) => {
+            let kinds = served_kinds(kinds);
+            (!kinds.is_empty()).then(|| {
+                search_store::SearchRequest::Match(search::unscoped(
+                    text,
+                    &kinds,
+                    exclude_seen_by,
+                    false,
+                ))
+            })
+        }
+        search::Parsed::Scoped {
+            scope,
+            name,
+            remainder,
+        } => {
+            let kinds = scoped_kinds(kinds, scope, remainder.is_none());
+            let Some(named) = search::cue(scope, name).filter(|_| !kinds.is_empty()) else {
+                return Ok(None);
+            };
+            Some(search_store::SearchRequest::Scoped(search::scoped(
+                named,
+                remainder,
+                &kinds,
+                exclude_seen_by,
+                viewer_address(ctx).await?,
+            )))
+        }
+    })
+}
+
+/// The index kinds a `kinds` argument serves to plain text. Null or
+/// empty narrows nothing; COMMENT is served only under a cue, and the
+/// kinds whose slices have not shipped read empty.
 fn served_kinds(kinds: Option<&[NodeKind]>) -> Vec<IndexKind> {
     match kinds {
         None | Some([]) => IndexKind::ALL.to_vec(),
@@ -926,10 +912,11 @@ fn served_kinds(kinds: Option<&[NodeKind]>) -> Vec<IndexKind> {
     }
 }
 
-/// The kinds a `kinds` argument serves inside `scope`: null or empty
-/// narrows nothing, and USER is never a scoped content result.
-fn scoped_kinds(kinds: Option<&[NodeKind]>, scope: search::Scope) -> Vec<ScopedKind> {
-    let served = scope.content_kinds();
+/// The kinds a `kinds` argument serves under a cue: null or empty
+/// narrows nothing, and the cue decides the rest — its matches lead only
+/// when it is bare ([`search::Scope::kinds`]).
+fn scoped_kinds(kinds: Option<&[NodeKind]>, scope: search::Scope, bare: bool) -> Vec<ScopedKind> {
+    let served = scope.kinds(bare);
     match kinds {
         None | Some([]) => served.to_vec(),
         Some(kinds) => served
@@ -937,6 +924,7 @@ fn scoped_kinds(kinds: Option<&[NodeKind]>, scope: search::Scope) -> Vec<ScopedK
             .copied()
             .filter(|served| {
                 kinds.iter().any(|kind| match served {
+                    ScopedKind::User => *kind == NodeKind::User,
                     ScopedKind::Post => *kind == NodeKind::Post,
                     ScopedKind::Comment => *kind == NodeKind::Comment,
                     ScopedKind::Hashtag => *kind == NodeKind::Hashtag,

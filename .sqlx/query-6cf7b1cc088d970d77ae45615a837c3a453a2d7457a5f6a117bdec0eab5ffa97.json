@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH hits AS (\n                   SELECT s.node_id, s.kind, s.created_at,\n                          MIN(CASE s.kind WHEN 'user' THEN 0 WHEN 'hashtag' THEN 2 ELSE 4 END\n                              + CASE WHEN s.folded = lower($1) THEN 0 ELSE 1 END) AS tier,\n                          MIN(s.value) FILTER (WHERE s.kind = 'hashtag') AS name\n                   FROM search_index s\n                   WHERE s.kind = ANY($4)\n                     AND ((s.field IN ('handle', 'name')\n                           AND s.folded LIKE '%' || lower($2) || '%')\n                       OR (s.field = 'title' AND s.words @@ to_tsquery('simple', $3))\n                       OR (s.field = 'display_name' AND s.words @@ to_tsquery('simple', $3))\n                       OR (s.kind = 'post' AND s.author_id IN (\n                           SELECT d.node_id FROM search_index d\n                           WHERE d.field = 'display_name'\n                             AND d.words @@ to_tsquery('simple', $3))))\n                     AND ($5::uuid IS NULL OR NOT EXISTS (\n                         SELECT 1 FROM user_view_log l\n                         WHERE l.user_id = $5 AND l.content_id = s.node_id))\n                     AND (NOT $6 OR s.kind <> 'user' OR EXISTS (\n                         SELECT 1 FROM actors a\n                         WHERE a.id = s.node_id AND a.realization_address IS NOT NULL))\n                     AND ($11::uuid[] IS NULL OR s.node_id = ANY($11))\n                     AND NOT (s.node_id = ANY($12::uuid[]))\n                   GROUP BY s.node_id, s.kind, s.created_at\n               )\n               SELECT node_id AS \"node_id!\", kind AS \"kind!\",\n                      tier AS \"tier!\", created_at AS \"created_at!\", name\n               FROM hits\n               WHERE ($13::int IS NULL OR tier / 2 = $13)\n                 AND ($7::int IS NULL\n                      OR tier < $7\n                      OR (tier = $7 AND (created_at, node_id) > ($8::timestamptz, $9::uuid)))\n               ORDER BY tier DESC, created_at ASC, node_id ASC\n               LIMIT $10",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "node_id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "kind!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "tier!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "created_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "TextArray",
+        "Uuid",
+        "Bool",
+        "Int4",
+        "Timestamptz",
+        "Uuid",
+        "Int8",
+        "UuidArray",
+        "UuidArray",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      false,
+      null
+    ]
+  },
+  "hash": "6cf7b1cc088d970d77ae45615a837c3a453a2d7457a5f6a117bdec0eab5ffa97"
+}

@@ -821,3 +821,167 @@ async fn a_hidden_actors_kept_things_stay_in_saved(pool: PgPool) {
     assert_eq!(ids(&page), vec![sol, c, p]);
     assert_eq!(page["totalCount"], 3);
 }
+
+const SAVED_QUERY: &str = r#"query($query: String, $first: Int, $after: String,
+                                  $last: Int, $before: String) {
+  me {
+    bookmarks(query: $query, first: $first, after: $after, last: $last, before: $before) {
+      edges { cursor node { __typename id } }
+      pageInfo { hasNextPage hasPreviousPage startCursor endCursor }
+      totalCount
+    }
+  }
+}"#;
+
+async fn saved_query_raw(rig: &WireRig, token: &str, variables: Value) -> Value {
+    rig.gql_raw(Some(token), SAVED_QUERY, variables).await
+}
+
+async fn saved_query(rig: &WireRig, token: &str, variables: Value) -> Value {
+    let response = saved_query_raw(rig, token, variables.clone()).await;
+    assert!(response.get("errors").is_none(), "{variables}: {response}");
+    response["data"]["me"]["bookmarks"].clone()
+}
+
+/// The narrowing runs on the server over the whole saved set: a match
+/// saved long before the first page reaches is found on the first page,
+/// counted alone, and a match the reader never saved is not.
+///
+/// A Saved query finds a match wherever it stands in the list, never only within the loaded window.
+/// ´claim:bookmarks:a-saved-query-runs-over-the-whole-list´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_saved_query_finds_a_match_beyond_the_loaded_window(pool: PgPool) {
+    let rig = rig(pool);
+    let (_, token) = reader(&rig, "reader").await;
+    let kel = person(&rig.pool, "kel").await;
+    let old = post(&rig.pool, kel, 0, "Salt maps of the coast road").await;
+    save(&rig, &token, old).await;
+    for n in 1..=30 {
+        let p = post(&rig.pool, kel, n, &format!("Rubbing {n}")).await;
+        save(&rig, &token, p).await;
+    }
+    post(&rig.pool, kel, 40, "Salt flats").await;
+
+    let window = saved(&rig, &token, json!({ "first": 5 })).await;
+    assert!(!ids(&window).contains(&old), "beyond the plain first page");
+    let found = saved_query(&rig, &token, json!({ "query": "salt", "first": 5 })).await;
+    assert_eq!(ids(&found), vec![old]);
+    assert_eq!(found["totalCount"], 1);
+    assert_eq!(found["pageInfo"]["hasNextPage"], false);
+    for blank in [json!(null), json!(""), json!("   ")] {
+        let plain = saved_query(&rig, &token, json!({ "query": blank, "first": 5 })).await;
+        assert_eq!(ids(&plain), ids(&window), "a blank query narrows nothing");
+        assert_eq!(plain["totalCount"], 31);
+    }
+}
+
+/// Saved runs the one search law over the saved set: a narrowed list is
+/// sectioned — people, then content — newest save first inside each. A
+/// person cue lists the saved profiles it names, then the saved things
+/// they authored; plain text reaches a person's saved posts through
+/// their display name. A topic is never saved, so a topic cue lists only
+/// saved content.
+///
+/// A narrowed Saved list follows the search law: people first, then content, newest save first.
+/// ´claim:bookmarks:a-narrowed-saved-list-follows-the-search-law´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_narrowed_saved_list_follows_the_search_law(pool: PgPool) {
+    let rig = rig(pool);
+    let (_, token) = reader(&rig, "reader").await;
+    let solarium = person(&rig.pool, "solarium").await;
+    let kel = person(&rig.pool, "kel").await;
+    let theirs = post(&rig.pool, solarium, 1, "Rubbings").await;
+    let their_comment = comment(&rig.pool, solarium, theirs).await;
+    let unsaved = post(&rig.pool, solarium, 2, "Wax charts").await;
+    let kels = post(&rig.pool, kel, 3, "Solar charts").await;
+    for id in [theirs, solarium, their_comment, kels] {
+        save(&rig, &token, id).await;
+    }
+
+    let cue = saved_query(&rig, &token, json!({ "query": "@sol" })).await;
+    assert_eq!(ids(&cue), vec![solarium, their_comment, theirs]);
+    assert!(!ids(&cue).contains(&unsaved));
+    assert_eq!(cue["totalCount"], 3);
+    let text = saved_query(&rig, &token, json!({ "query": "sol" })).await;
+    assert_eq!(
+        ids(&text),
+        vec![solarium, kels, theirs],
+        "the handle and display name, then the title match and the display-name author's post"
+    );
+    let topics = saved_query(&rig, &token, json!({ "query": "#sol" })).await;
+    assert_eq!(ids(&topics), Vec::<Uuid>::new());
+    assert_eq!(topics["totalCount"], 0);
+}
+
+/// A narrowed list pages on its own keyset: every page forward and every
+/// page backward yields the one-shot order, sections included. Its
+/// cursors and the plain list's never pass for each other, and a query
+/// past the search cap is refused.
+///
+/// A narrowed Saved list pages stably both ways, on cursors of its own.
+/// ´claim:bookmarks:a-narrowed-list-pages-on-its-own-keyset´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_narrowed_saved_list_pages_on_its_own_keyset(pool: PgPool) {
+    let rig = rig(pool);
+    let (_, token) = reader(&rig, "reader").await;
+    let salter = person(&rig.pool, "salter").await;
+    let kel = person(&rig.pool, "kel").await;
+    for n in 0..7 {
+        let p = post(&rig.pool, kel, n, &format!("Salt study {n}")).await;
+        save(&rig, &token, p).await;
+        if n == 3 {
+            save(&rig, &token, salter).await;
+        }
+    }
+    let whole = saved_query(&rig, &token, json!({ "query": "salt", "first": 100 })).await;
+    let expected = ids(&whole);
+    assert_eq!(expected.len(), 8);
+    assert_eq!(expected[0], salter, "the people section leads");
+
+    let mut walked = Vec::new();
+    let mut after = Value::Null;
+    loop {
+        let page = saved_query(
+            &rig,
+            &token,
+            json!({ "query": "salt", "first": 3, "after": after }),
+        )
+        .await;
+        walked.extend(ids(&page));
+        if page["pageInfo"]["hasNextPage"] != true {
+            break;
+        }
+        after = page["pageInfo"]["endCursor"].clone();
+    }
+    assert_eq!(walked, expected, "forward");
+    let mut back = Vec::new();
+    let mut before = Value::Null;
+    loop {
+        let page = saved_query(
+            &rig,
+            &token,
+            json!({ "query": "salt", "last": 3, "before": before }),
+        )
+        .await;
+        let mut chunk = ids(&page);
+        chunk.append(&mut back);
+        back = chunk;
+        if page["pageInfo"]["hasPreviousPage"] != true {
+            break;
+        }
+        before = page["pageInfo"]["startCursor"].clone();
+    }
+    assert_eq!(back, expected, "backward");
+
+    let narrowed_cursor = whole["edges"][0]["cursor"].clone();
+    let plain = saved(&rig, &token, json!({ "first": 1 })).await;
+    let plain_cursor = plain["edges"][0]["cursor"].clone();
+    for variables in [
+        json!({ "query": "salt", "after": plain_cursor }),
+        json!({ "after": narrowed_cursor }),
+        json!({ "query": "s".repeat(api::search::MAX_QUERY_CHARS + 1) }),
+    ] {
+        let refused = saved_query_raw(&rig, &token, variables.clone()).await;
+        assert_eq!(first_error_code(&refused), Some("BAD_INPUT"), "{variables}");
+    }
+}

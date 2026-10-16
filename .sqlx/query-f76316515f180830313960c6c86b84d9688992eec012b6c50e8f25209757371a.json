@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT b.content_id, b.kind, b.bookmarked_at, m.section AS \"section!\"\n               FROM user_bookmarks b\n               JOIN unnest($2::uuid[], $3::int[]) AS m(content_id, section)\n                 ON m.content_id = b.content_id\n               WHERE b.user_id = $1\n                 AND ($4::int IS NULL\n                      OR m.section < $4\n                      OR (m.section = $4\n                          AND (b.bookmarked_at, b.content_id) > ($5::timestamptz, $6::uuid)))\n                 AND CASE b.kind\n                     WHEN 'post' THEN EXISTS (\n                         SELECT 1 FROM posts p WHERE p.id = b.content_id)\n                     WHEN 'comment' THEN EXISTS (\n                         SELECT 1 FROM comments c WHERE c.id = b.content_id)\n                     WHEN 'user' THEN EXISTS (\n                         SELECT 1 FROM actors a WHERE a.id = b.content_id)\n                     ELSE FALSE\n                 END\n               ORDER BY m.section DESC, b.bookmarked_at ASC, b.content_id ASC\n               LIMIT $7",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "content_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "kind",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "bookmarked_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "section!",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray",
+        "Int4Array",
+        "Int4",
+        "Timestamptz",
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "f76316515f180830313960c6c86b84d9688992eec012b6c50e8f25209757371a"
+}
