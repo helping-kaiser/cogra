@@ -4296,9 +4296,9 @@ impl User {
             None => None,
         };
         let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
+        let node_kinds = history_node_kinds(kinds);
         let request =
-            super::query::search_request(ctx, parsed, Some(&history_node_kinds(kinds)), None)
-                .await?;
+            super::query::search_request(ctx, parsed, Some(node_kinds.as_slice()), None).await?;
         let list = Some(postgres_store::search::ReaderList::History(
             self.identity.id,
         ));
