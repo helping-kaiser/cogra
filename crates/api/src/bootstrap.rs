@@ -126,7 +126,10 @@ impl From<common::l1::ClientError> for BootstrapError {
 /// The genesis values of every governed parameter (network.md §3 catalog).
 /// These are the operator's genesis choices — the docs deliberately pin
 /// only a few ("defaults bootstrap; they are not fixed"); every value is
-/// readable and governable from the schedule afterwards.
+/// readable and governable from the schedule afterwards. The recency
+/// half-life is sized for the dev substrate's 3-second epoch clock
+/// (~1 week of wall time; the first tested value, 30 epochs, was 90
+/// seconds and decayed content in minutes).
 fn genesis_parameters(input: &GenesisInput) -> Vec<(&'static str, serde_json::Value)> {
     use serde_json::json;
     vec![
@@ -144,7 +147,7 @@ fn genesis_parameters(input: &GenesisInput) -> Vec<(&'static str, serde_json::Va
         ("k", json!(8)),
         ("gamma", json!(1.0)),
         ("dust_floor", json!(0.0)),
-        ("recency_half_life_epochs", json!(30)),
+        ("recency_half_life_epochs", json!(200_000)),
         ("recency_shape", json!("exponential")),
         ("tie_breaker_composition", json!(["recency"])),
         ("reserve_share", json!(0.01)),
