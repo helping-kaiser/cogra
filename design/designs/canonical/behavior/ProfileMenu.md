@@ -16,9 +16,7 @@ WHEN tap Unsave -> the sheet closes AND profile.snackbar reads Removed from Save
 
 WHEN tap Mention in a new post -> the post wizard opens fresh at its first stage AND the person rides along as a staged reference, unseen until the details stage
 
-WHEN tap Mention in a new post GIVEN the reader is an applicant whose application is live and a post is already staged -> the menu closes AND the snackbar reads Your post waits with your application — it arrives with you. AND NEVER the wizard opens
-
-WHEN tap Mention in a new post GIVEN the reader is an applicant whose application was closed and a post already waits -> the menu closes AND the snackbar reads Your post waits — it arrives when someone vouches you in. AND NEVER the wizard opens
+WHEN tap Mention in a new post GIVEN the reader is an applicant -> the menu closes AND the snackbar reads You can post once you're in. AND NEVER the wizard opens
 
 WHEN tap Share this profile -> the platform's own share sheet opens
 

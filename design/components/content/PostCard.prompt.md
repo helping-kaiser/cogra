@@ -27,4 +27,6 @@ Everything a post grows beyond its content goes in the **affordance row**: **one
 
 **Other feed kinds ride this shell** (`lead`, `main`, `menuLabel`, `stanceAxes`, all additive). A profile or a tag in the feed is `PostCard`, mounted: its lead stands where the author chip stands, its body inside the same door, and its ⋮ and opinion say what they act on — `More about @mira`, and a tag's Affinity with its own four ends. Given none of them, the card is the post card.
 
+**An applicant's anchor is locked, not gone.** The applicant shells pass `stanceOpacity="var(--state-disabled)"`, forwarded to `StanceControl`'s `anchorOpacity` (auth.md's locked look): visibly inactive, still tappable.
+
 **A row flag can fuse with the card.** `attach` squares the top-left corner so `TaggedRow`'s claim flag (the tag page) and the card paint as one folder-tab silhouette; every other surface leaves it off.

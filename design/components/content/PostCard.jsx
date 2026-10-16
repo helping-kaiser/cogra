@@ -100,6 +100,10 @@ export function PostCard({
   stanceSigning,
   stanceHoldProgress,
   stanceKnobHeld,
+  /* AN APPLICANT'S ANCHOR IS LOCKED, NOT GONE (PR-103, round 16): forwarded
+     to `StanceControl`'s `anchorOpacity`, the shell's fact about its reader
+     as `signedIn` is. */
+  stanceOpacity,
   score,
   onOpenScore,
   comments,
@@ -533,6 +537,7 @@ export function PostCard({
               signing={stanceSigning}
               holdProgress={stanceHoldProgress}
               knobHeld={stanceKnobHeld}
+              anchorOpacity={stanceOpacity}
               {...(stanceAxes ? { axes: stanceAxes } : null)}
               node={node && "stance"}
             />

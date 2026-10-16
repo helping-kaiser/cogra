@@ -20,4 +20,14 @@ WHEN tap Copy your ask link -> the ask link lands on the clipboard AND the snack
 
 WHEN a member vouches the reader in again -> the landing card stands where the fall-through card stood, flipped where the reader stands AND it stands whether or not the fall-through card was put away
 
+WHEN tap New post on the bar -> the snackbar reads You can post once you're in. AND NEVER the wizard opens
+
+WHEN tap a stance face -> the snackbar reads You can give your opinion once you're in. AND NEVER the pad blooms
+
+WHEN press-and-hold a stance face -> the snackbar reads You can give your opinion once you're in. AND NEVER anything is signed or staged
+
+ALWAYS feed.bottomBar.composeSlot wears the locked look, visibly inactive at the disabled opacity and still tappable
+
+ALWAYS every feed.card.actionRow.stance.anchor wears the locked look, visibly inactive at the disabled opacity and still tappable
+
 WHEN tap Profile on the bar -> the applicant's own profile opens
