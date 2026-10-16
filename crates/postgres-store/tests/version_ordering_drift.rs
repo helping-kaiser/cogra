@@ -114,7 +114,10 @@ fn the_search_index_derivation_orders_versions_the_same_way() {
             path.display()
         );
     }
-    assert!(definitions > 0, "the derivation vanished from the migrations");
+    assert!(
+        definitions > 0,
+        "the derivation vanished from the migrations"
+    );
 }
 
 /// The indexes that serve the rule encode it again. Each `*_current_idx`
