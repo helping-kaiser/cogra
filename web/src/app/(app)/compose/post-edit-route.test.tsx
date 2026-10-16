@@ -260,7 +260,7 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
     fireEvent.click(sign());
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
     expect(sent).toMatchObject({ pDirected: 0 });
-    const expected = vi.mocked(signer.sign).mock.calls[0]![1] as { writes: { pDirected: number; pInterest: number }[] };
+    const expected = vi.mocked(signer.sign).mock.calls[0]![1] as unknown as { writes: { pDirected: number; pInterest: number }[] };
     expect(expected.writes[0]).toMatchObject({ pDirected: 0, pInterest: 1 });
   });
 
@@ -296,7 +296,7 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
     // Content-identical, the pick riding the edit's own record.
     expect(sent).toMatchObject({ id: "p1", title: "Old title", content: "Old body", pDirected: 0.2 });
-    const expected = vi.mocked(signer.sign).mock.calls[0]![1] as { writes: { family: string; pDirected: number; pInterest: number }[] };
+    const expected = vi.mocked(signer.sign).mock.calls[0]![1] as unknown as { writes: { family: string; pDirected: number; pInterest: number }[] };
     expect(expected.writes).toHaveLength(1);
     expect(expected.writes[0]).toMatchObject({ family: "publish", pDirected: 0.2, pInterest: 1 });
   });

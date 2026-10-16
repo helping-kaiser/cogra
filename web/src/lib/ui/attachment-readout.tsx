@@ -107,7 +107,7 @@ function ReadoutBlock({
         </span>
       ) : (
         <span aria-hidden="true" className="inline-flex items-baseline gap-2">
-          <span data-testid={`${testId}-face`} className={`leading-[1.2] ${big ? "text-title-large" : "text-title-medium"}`}>
+          <span data-testid={`${testId}-face`} className={big ? "text-title-large" : "text-title-medium"}>
             {band.emoji}
           </span>
           <span
