@@ -488,6 +488,60 @@ class AtomsTest {
         assertThat(changed).isTrue()
     }
 
+    /**
+     * F3 (jakob's round-4 hand test): on a 360dp seal, the license's whole
+     * reading left the weighted label no width and "License" stood one
+     * letter per line. The label keeps its own word's width; the value
+     * wraps beside it.
+     */
+    @Test
+    fun aLongValueNeverCollapsesTheLabel() {
+        val long = "Credit always · Log every use — anyone reusing this names you, and every use is logged."
+        compose.setContent {
+            Cogra2PreviewTheme {
+                Column(Modifier.width(360.dp)) {
+                    SettingRow(label = "License", value = "x", testTag = "short")
+                    SettingRow(
+                        label = "License",
+                        value = long,
+                        actionText = "Change",
+                        onAction = {},
+                        testTag = "long",
+                    )
+                }
+            }
+        }
+
+        val alone = compose.onNodeWithTag("short_label").getUnclippedBoundsInRoot()
+        val squeezed = compose.onNodeWithTag("long_label").getUnclippedBoundsInRoot()
+        // The label is one line tall in both rows — never a column of letters.
+        assertThat(squeezed.height).isEqualTo(alone.height)
+        assertThat(squeezed.width).isAtLeast(20.dp)
+        val value = compose.onNodeWithTag("long_value").getUnclippedBoundsInRoot()
+        val action = compose.onNodeWithTag("long_action").getUnclippedBoundsInRoot()
+        // Label, value, action, in that order, none overlapping.
+        assertThat(value.left).isAtLeast(squeezed.right)
+        assertThat(action.left).isAtLeast(value.right)
+        compose.onNodeWithTag("long_value").assertTextEquals(long)
+    }
+
+    @Test
+    fun aShortValueSitsBesideItsActionAsDrawn() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                Column(Modifier.width(360.dp)) {
+                    SettingRow(label = "Sensitive", value = "Not marked", actionText = "Mark", onAction = {}, testTag = "row")
+                }
+            }
+        }
+
+        val value = compose.onNodeWithTag("row_value").getUnclippedBoundsInRoot()
+        val action = compose.onNodeWithTag("row_action").getUnclippedBoundsInRoot()
+        // The label grows into the slack, so the value hugs the action:
+        // just the one gap between them.
+        assertThat(action.left - value.right).isEqualTo(8.dp)
+    }
+
     @Test
     fun anInlineActionIsReachableAtTheMinimumTarget() {
         var clicked = false
