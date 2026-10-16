@@ -4293,7 +4293,12 @@ impl BookmarkConnectionFields {
             }
             Some(None) => Ok(0),
             Some(Some(request)) => {
-                super::query::served_count(pool, request, Some(self.viewer)).await
+                super::query::served_count(
+                    pool,
+                    request,
+                    Some(postgres_store::search::ReaderList::Saved(self.viewer)),
+                )
+                .await
             }
         }
         .map_err(|e| async_graphql::Error::new(e.to_string()))?;
@@ -4314,10 +4319,14 @@ impl BookmarkConnectionFields {
             return Ok(false);
         };
         let pool = ctx.data::<PgPool>()?;
-        Ok(super::query::people_cap(pool, request, Some(self.viewer))
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?
-            .is_some_and(|cap| cap.more))
+        Ok(super::query::people_cap(
+            pool,
+            request,
+            Some(postgres_store::search::ReaderList::Saved(self.viewer)),
+        )
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        .is_some_and(|cap| cap.more))
     }
 }
 
@@ -4362,7 +4371,7 @@ impl User {
     /// `kinds` asked of Saved — served from the viewer's Saved list by
     /// the matcher's own statement, which joins the list, orders by
     /// section and save time and stops at the page
-    /// (`search::Window::saved_by`). The people section is capped as
+    /// (`search::ReaderList::Saved`). The people section is capped as
     /// search's is ([`super::query::people_cap`]), by newest save.
     #[expect(
         clippy::too_many_arguments,
@@ -4389,17 +4398,17 @@ impl User {
         };
         let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
         let request = super::query::search_request(ctx, parsed, Some(kinds), None).await?;
-        let saved_by = Some(self.identity.id);
+        let list = Some(postgres_store::search::ReaderList::Saved(self.identity.id));
         let past_people =
             !backward && cursor.is_some_and(|c| c.section > postgres_store::search::SECTION_PEOPLE);
         let cap = match &request {
-            Some(request) if !past_people => super::query::people_cap(pool, request, saved_by)
+            Some(request) if !past_people => super::query::people_cap(pool, request, list)
                 .await
                 .map_err(|e| async_graphql::Error::new(e.to_string()))?,
             _ => None,
         };
         let window = postgres_store::search::Window {
-            saved_by,
+            list,
             people: cap.as_ref().map(|cap| cap.served.as_slice()),
             ..postgres_store::search::Window::default()
         };
