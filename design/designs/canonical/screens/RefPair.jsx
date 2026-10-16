@@ -30,7 +30,7 @@
    citation's two axes fill the two slots the contract assigns — relevance
    `pDirected`, support `pInterest` — so the lookup is `STANCE_ANCHORS`
    unchanged, and at +0.10 / +0.10 the nearest row is 🙂 (0.15 / 0.15). It is
-   spelled here for `ComposePad`'s reason: `nearestAnchor` is not among the
+   spelled here for `ReplyPadBody`'s reason: `nearestAnchor` is not among the
    names the bundle exposes to screens, and a board must never name a face the
    system has no row for. The numbers carry `cg-exact` exactly as the master's
    do, so a hand-drawn readout follows the reading mode instead of diverging

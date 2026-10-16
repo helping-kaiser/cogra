@@ -312,7 +312,7 @@
       "name": "adjust-your-opinion-with-an-edit",
       "description": "Adjust on a post edit's opinion row blooms the ordinary full pad at the edit's pick, (0, 0) until moved; Set stages the pick on the edit's own record and Sign the edit signs it with the rest — an edit nobody adjusts moves the author's opinion by nothing.",
       "start": { "board": "EditCompose", "via": 21 },
-      "end": { "board": "EditPad", "via": 4 }
+      "end": { "board": "EditPad", "via": 4, "case": "the pick stages on the edit's own record — the row reads the resulting opinion, the count does not move, and nothing signs until Sign the edit" }
     },
     {
       "name": "pick-a-kept-draft-back-up",

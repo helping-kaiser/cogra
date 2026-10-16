@@ -2,6 +2,12 @@
 
 WHEN tap a stance face GIVEN the reader already has an opinion standing on the target -> the pad blooms at the lower centre of the viewport AND NEVER anything is staged
 
+WHEN tap the stance face on the reader's own post -> this pad blooms, as on anyone's post AND NEVER a pad with one axis opens
+
+ALWAYS Current opinion on the reader's own post reads one bundle, the post's own records and the opinions given through its face summed together
+
+ALWAYS Walk it back and the severance confirm hold on the reader's own post exactly as on any target
+
 ALWAYS the pad opens with the pick at the default +0.10 / +0.10, the hold's own pick, wherever it blooms
 
 WHEN tap Set GIVEN the pick was never moved -> the default +0.10 / +0.10 is signed, as the hold signs it

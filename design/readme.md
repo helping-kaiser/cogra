@@ -7112,7 +7112,10 @@ slots.
   micro-fix): a first connection has nothing to walk back, so the pad omits
   the walk-away; the message's pad keeps the full control, an opinion on a
   message being a real, revisitable stance. The message's own seal keeps the
-  compose seal's one-axis grammar, `OwnStanceReadout` with `Adjust`.
+  compose seal's grammar: the pair, `StanceReadout`, with `Adjust` opening
+  the ordinary full pad — an opinion on one's own content has no one-axis
+  form (*Round 13, the own-stance round*); the pad over the chat seal is
+  drawn when the chat round comes.
 - **Pending and didn't-land (design.md §9).** A message still settling shows
   whole with `Still settling ·` before its clock; one that expires leaves
   every reader's view and its author gets a calm notice where it stood —

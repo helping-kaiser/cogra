@@ -99,3 +99,5 @@ WHEN the reader comes back to the feed GIVEN a sheet or a dialog was up over it 
 WHEN the app cold-launches -> the feed's root arrives fresh
 
 WHEN press Android Back GIVEN the feed's root is showing -> the app leaves
+
+ALWAYS the reader's own posts stay in the reader's own feed whatever the reader's opinion on them reads, the filter cutting them as it cuts any other card

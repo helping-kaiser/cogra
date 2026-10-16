@@ -62,7 +62,7 @@ looking like a bug.
 | Release | parks the pick; the pad stays open; **nothing is signed** |
 | Set | signs the pick |
 | Cancel, outside press, Esc | dismisses and stages nothing |
-| `?` | replaces the pad's body with four lines of help, and disables Set while it shows — on the seal-scale compose and reply pads it opens their named dialog instead (copy-voice, *The "?" dialogs*) |
+| `?` | replaces the pad's body with four lines of help, and disables Set while it shows — on the seal-scale pads (compose, reply, and the post edit's) it opens their named dialog instead (copy-voice, *The "?" dialogs*) |
 | Walk it back | the explicit route to `(0, 0)` |
 
 **The light gesture costs nothing and the held one spends.** A tap is
@@ -74,7 +74,8 @@ half a second by mistake.
 The pad opens **at the default, +0.10 / +0.10** (jakob 2026-10-05) — the
 shortcut's own modest positive, so `Set` on a pick never moved signs
 exactly what the hold would, and never a `(0, 0)` that asks to walk back
-nothing.
+nothing. The seal-scale pads open at their row's staged pick, which a
+post edit starts at `(0, 0)` (*Your own content*).
 
 **The control owns its touches.** No interaction with it — tap, hold,
 drag, release, or the open pad itself — may also trigger the surface
@@ -134,6 +135,31 @@ a vantage point*), but their anchors are their own — hollow wherever
 they hold nothing — because a borrowed stance on an anchor you can act
 on could feel like your own. The guest alone sees the lender's stances,
 because the guest is nobody yet.
+
+## Your own content
+
+**An opinion on your own post is an opinion like any other** (jakob
+2026-10-16). The full pad, both axes, wherever the author gives it:
+
+- **the seal's `Your opinion` row** — the pick starts at the default,
+  +0.10 / +0.10, and rides the post's own record;
+- **a post edit's `Your opinion` row** — every edit's record carries
+  the pair, and its pick starts at `(0, 0)`: a `(0, 0)` record carries
+  `w̃ = 0` and crosses neither channel, so an edit nobody adjusts moves
+  the author's opinion by exactly nothing. The row reads the standing
+  opinion, `Adjust` opens the ordinary full pad at the edit's pick, and
+  the pick lands by *Two numbers, never one* like any other;
+- **the stance anchor on the post itself** — the ordinary pad, exactly
+  as on anyone's post.
+
+All three fold into one bundle: the post's own records and the opinions
+given through its face. **Severance is the generic law** (*Severance*,
+below): a pick that nets the author's own bundle to `(0, 0)` is
+explained and confirmed, never prevented.
+
+**What your own stance never decides is whether your post reaches you.**
+Your own posts always show in your own feed, whatever your opinion on
+them reads — a feed law, not a pad law.
 
 ## Severance
 
