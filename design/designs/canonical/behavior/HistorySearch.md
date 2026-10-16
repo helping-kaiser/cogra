@@ -8,11 +8,11 @@ ALWAYS history.profilesDoor reads See all profiles and closes the people section
 
 ALWAYS no history.profilesDoor stands GIVEN three people in History or fewer match
 
-ALWAYS the tags stand in a section of their own under history.tagsLabel reading Tags, after the people and before the content, GIVEN the query reaches a tag in History
+ALWAYS the tags stand in a section of their own under a caption reading Tags, after the people and before the content, GIVEN the query reaches a tag in History
 
 ALWAYS the tags section holds every tag in History the query matches, ordered by the time the reader first saw each, newest first, with no door of its own
 
-ALWAYS only the tags stand, every one the query matches, with no history.tagsLabel, GIVEN Tags alone is the history's filter kind
+ALWAYS only the tags stand, every one the query matches, with no caption, GIVEN Tags alone is the history's filter kind
 
 ALWAYS the content section stands after the people and the tags, ordered by the time the reader first saw each thing, newest first, and never under a caption of its own
 
