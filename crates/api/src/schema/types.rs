@@ -1436,13 +1436,25 @@ impl User {
     /// the server, so a match is found wherever it stands in the list.
     /// Narrowed, the list is sectioned as search is — people, then
     /// content — newest save first inside a section, and paged on its own
-    /// cursors; a blank or null `query` narrows nothing. A query past the
-    /// search length cap is BAD_INPUT. Field-level: viewer-only.
+    /// cursors; a blank or null `query` narrows nothing. While the
+    /// narrowed list can stand content beside its people, the people
+    /// section serves only its three newest saves, and
+    /// `hasMorePeople` says whether more match — the "See all profiles"
+    /// door, which is the same query with `kinds: [USER]`. `kinds`
+    /// narrows the list to those kinds, with or without a query (null or
+    /// empty = every kind Saved holds: USER, POST, COMMENT; another kind
+    /// is BAD_INPUT). A query past the search length cap is BAD_INPUT.
+    /// Field-level: viewer-only.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "each argument is a GraphQL field argument the schema declares; grouping them into a struct would change the published contract"
+    )]
     async fn bookmarks(
         &self,
         ctx: &Context<'_>,
         query: Option<String>,
+        kinds: Option<Vec<NodeKind>>,
         first: Option<i32>,
         after: Option<String>,
         last: Option<i32>,
@@ -1454,6 +1466,7 @@ impl User {
         let pool = ctx.data::<PgPool>()?;
         validate_page_args(first, last, after.as_deref(), before.as_deref())
             .map_err(|e| super::query::bad_input(e.message))?;
+        let kinds = saved_kinds(kinds.as_deref())?;
         let parsed = crate::search::parse(query.as_deref().unwrap_or("")).map_err(|_| {
             super::query::bad_input(format!(
                 "query may be at most {} characters",
@@ -1462,10 +1475,11 @@ impl User {
         })?;
         if parsed != crate::search::Parsed::Blank {
             return self
-                .narrowed_bookmarks(ctx, parsed, first, after, last, before)
+                .narrowed_bookmarks(ctx, parsed, &kinds, first, after, last, before)
                 .await
                 .map(Some);
         }
+        let store_kinds = saved_store_kinds(&kinds);
         let backward = last.is_some() || before.is_some();
         let cursor = match if backward { &before } else { &after } {
             Some(raw) => Some(
@@ -1478,6 +1492,7 @@ impl User {
         let mut kept = postgres_store::bookmarks::bookmarks(
             pool,
             self.identity.id,
+            &store_kinds,
             cursor,
             backward,
             limit + 1,
@@ -1502,7 +1517,9 @@ impl User {
             has_next,
             BookmarkConnectionFields {
                 viewer: self.identity.id,
-                matched: None,
+                kinds: store_kinds,
+                narrowed: None,
+                more_people: Some(false),
             },
         );
         connection
@@ -4249,42 +4266,113 @@ pub type BookmarkConnection = Connection<
 >;
 
 /// `BookmarkConnection`'s connection-level fields: the viewer whose list
-/// served the edges, and — on a narrowed list — the nodes the matcher
-/// matched, so the count runs only when asked and under exactly the
-/// predicate the pages ran.
+/// served the edges and the kinds it was narrowed to, and — on a list
+/// narrowed by a query — the search request it was narrowed by (None
+/// when that request could match nothing), so the count runs only when
+/// asked and under exactly the predicate the pages ran. `more_people` is
+/// the people cap's answer when the page already read it.
 pub struct BookmarkConnectionFields {
     viewer: Uuid,
-    matched: Option<Vec<Uuid>>,
+    kinds: Vec<String>,
+    narrowed: Option<Option<postgres_store::search::SearchRequest>>,
+    more_people: Option<bool>,
 }
 
 #[Object]
 impl BookmarkConnectionFields {
     /// How many things the viewer's Saved list serves, across every page
-    /// — narrowed by `query` when one was given. Priced at zero like
+    /// — narrowed by `query` and `kinds` when given, less the people a
+    /// capped people section leaves behind its door. Priced at zero like
     /// every connection count; saturates at [`i32::MAX`].
     #[graphql(complexity = 0)]
     async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
         let pool = ctx.data::<PgPool>()?;
-        let total = match &self.matched {
-            None => postgres_store::bookmarks::count_bookmarks(pool, self.viewer).await,
-            Some(ids) => {
-                postgres_store::bookmarks::count_bookmarks_among(pool, self.viewer, ids).await
+        let total = match &self.narrowed {
+            None => {
+                postgres_store::bookmarks::count_bookmarks(pool, self.viewer, &self.kinds).await
+            }
+            Some(None) => Ok(0),
+            Some(Some(request)) => {
+                super::query::served_count(pool, request, Some(self.viewer)).await
             }
         }
         .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
     }
+
+    /// Whether more saved people match than the people section serves —
+    /// the "See all profiles" door. While a narrowed list can stand
+    /// content beside its people, the people section serves its three
+    /// newest saves; the same query with `kinds: [USER]` serves every
+    /// match, uncapped. False when the section is not capped, and on a
+    /// list no query narrows.
+    async fn has_more_people(&self, ctx: &Context<'_>) -> async_graphql::Result<bool> {
+        if let Some(more) = self.more_people {
+            return Ok(more);
+        }
+        let Some(Some(request)) = &self.narrowed else {
+            return Ok(false);
+        };
+        let pool = ctx.data::<PgPool>()?;
+        Ok(super::query::people_cap(pool, request, Some(self.viewer))
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?
+            .is_some_and(|cap| cap.more))
+    }
+}
+
+/// The kinds a `kinds` argument narrows Saved to, in the list's own
+/// order: null or empty narrows nothing; a kind Saved never holds is
+/// BAD_INPUT.
+fn saved_kinds(kinds: Option<&[NodeKind]>) -> async_graphql::Result<Vec<NodeKind>> {
+    const HELD: [NodeKind; 3] = [NodeKind::User, NodeKind::Post, NodeKind::Comment];
+    match kinds {
+        None | Some([]) => Ok(HELD.to_vec()),
+        Some(kinds) => {
+            if kinds.iter().any(|kind| !HELD.contains(kind)) {
+                return Err(super::query::bad_input(
+                    "Saved holds USER, POST and COMMENT only",
+                ));
+            }
+            Ok(HELD
+                .into_iter()
+                .filter(|held| kinds.contains(held))
+                .collect())
+        }
+    }
+}
+
+/// Saved kinds as the list's rows name them.
+fn saved_store_kinds(kinds: &[NodeKind]) -> Vec<String> {
+    kinds
+        .iter()
+        .filter_map(|kind| match kind {
+            NodeKind::User => Some("user"),
+            NodeKind::Post => Some("post"),
+            NodeKind::Comment => Some("comment"),
+            _ => None,
+        })
+        .map(str::to_string)
+        .collect()
 }
 
 impl User {
     /// `bookmarks(query:)` with a query that is not blank: the search
-    /// request the query makes — the one `search` builds, over the kinds
-    /// Saved holds — read inside the viewer's saved set, then paged by
-    /// section and save time.
+    /// request the query makes — the one `search` builds, over the
+    /// `kinds` asked of Saved — served from the viewer's Saved list by
+    /// the matcher's own statement, which joins the list, orders by
+    /// section and save time and stops at the page
+    /// (`search::Window::saved_by`). The people section is capped as
+    /// search's is ([`super::query::people_cap`]), by newest save.
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "the resolver's own page arguments, passed through as it received them"
+    )]
     async fn narrowed_bookmarks(
         &self,
         ctx: &Context<'_>,
         parsed: crate::search::Parsed<'_>,
+        kinds: &[NodeKind],
         first: Option<i32>,
         after: Option<String>,
         last: Option<i32>,
@@ -4300,53 +4388,40 @@ impl User {
             None => None,
         };
         let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
-        let saved_kinds = [NodeKind::User, NodeKind::Post, NodeKind::Comment];
-        let request = super::query::search_request(ctx, parsed, Some(&saved_kinds), None).await?;
-        let saved = match &request {
-            Some(_) => postgres_store::bookmarks::saved_ids(pool, self.identity.id)
+        let request = super::query::search_request(ctx, parsed, Some(kinds), None).await?;
+        let saved_by = Some(self.identity.id);
+        let past_people =
+            !backward && cursor.is_some_and(|c| c.section > postgres_store::search::SECTION_PEOPLE);
+        let cap = match &request {
+            Some(request) if !past_people => super::query::people_cap(pool, request, saved_by)
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?,
+            _ => None,
+        };
+        let window = postgres_store::search::Window {
+            saved_by,
+            people: cap.as_ref().map(|cap| cap.served.as_slice()),
+            ..postgres_store::search::Window::default()
+        };
+        let mut hits = match &request {
+            Some(request) => request
+                .find_in(
+                    pool,
+                    window,
+                    cursor.map(postgres_store::bookmarks::SavedMatchCursor::as_search_cursor),
+                    backward,
+                    limit + 1,
+                )
                 .await
                 .map_err(|e| async_graphql::Error::new(e.to_string()))?,
             None => Vec::new(),
         };
-        let hits = match &request {
-            Some(request) if !saved.is_empty() => request
-                .find_in(
-                    pool,
-                    postgres_store::search::Window {
-                        within: Some(&saved),
-                        excluding: &[],
-                        section: None,
-                    },
-                    None,
-                    false,
-                    i64::MAX,
-                )
-                .await
-                .map_err(|e| async_graphql::Error::new(e.to_string()))?,
-            _ => Vec::new(),
-        };
-        let ids: Vec<Uuid> = hits.iter().map(|hit| hit.node_id).collect();
-        let sections: Vec<i32> = hits
-            .iter()
-            .map(|hit| postgres_store::search::section_of(hit.tier))
-            .collect();
-        let mut kept = postgres_store::bookmarks::bookmarks_among(
-            pool,
-            self.identity.id,
-            &ids,
-            &sections,
-            cursor,
-            backward,
-            limit + 1,
-        )
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
-        let has_more = kept.len() as i64 > limit;
+        let has_more = hits.len() as i64 > limit;
         if has_more {
             if backward {
-                kept.remove(0);
+                hits.remove(0);
             } else {
-                kept.pop();
+                hits.pop();
             }
         }
         let (has_previous, has_next) = if backward {
@@ -4359,16 +4434,25 @@ impl User {
             has_next,
             BookmarkConnectionFields {
                 viewer: self.identity.id,
-                matched: Some(ids),
+                kinds: saved_store_kinds(kinds),
+                more_people: cap.as_ref().map(|cap| cap.more),
+                narrowed: Some(request),
             },
         );
         connection.edges.extend(
             hydrate_bookmarks_with(
                 pool,
-                kept.into_iter()
-                    .map(|m| {
-                        let cursor = crate::bookmarks::encode_match_cursor(m.cursor());
-                        (m.bookmark, cursor)
+                hits.into_iter()
+                    .map(|hit| {
+                        let cursor = crate::bookmarks::encode_match_cursor(
+                            postgres_store::bookmarks::SavedMatchCursor::of_hit(&hit),
+                        );
+                        let bookmark = postgres_store::bookmarks::Bookmark {
+                            content_id: hit.node_id,
+                            kind: hit.kind,
+                            bookmarked_at: hit.created_at,
+                        };
+                        (bookmark, cursor)
                     })
                     .collect(),
             )
@@ -4591,27 +4675,48 @@ pub struct SearchEdgeFields {
 /// that predicate and only when asked. `None` is a request that matched
 /// nothing without asking the store — a blank query, a scope naming no
 /// one, a kind filter naming no served kind — whose count is zero
-/// without a query.
+/// without a query. `more_people` is the people cap's answer when the
+/// page already read it; otherwise it is read when asked.
 pub struct SearchConnectionFields {
     pub(crate) request: Option<postgres_store::search::SearchRequest>,
+    pub(crate) more_people: Option<bool>,
 }
 
 #[Object]
 impl SearchConnectionFields {
-    /// How many nodes the query matches in total, across every page,
-    /// independent of the cursor. Priced at zero like every connection
-    /// count; saturates at [`i32::MAX`].
+    /// How many nodes the query serves in total, across every page,
+    /// independent of the cursor: every match, less the people a capped
+    /// people section leaves behind its door. Priced at zero like every
+    /// connection count; saturates at [`i32::MAX`].
     #[graphql(complexity = 0)]
     async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
         let Some(request) = &self.request else {
             return Ok(Some(0));
         };
         let pool = ctx.data::<PgPool>()?;
-        let total = request
-            .count(pool)
+        let total = super::query::served_count(pool, request, None)
             .await
             .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
+    }
+
+    /// Whether more people match than the people section serves — the
+    /// "See all profiles" door. Where the result can stand people beside
+    /// another section, the people section serves its first three by the
+    /// result's own order; the same query with `kinds: [USER]` serves
+    /// every match, uncapped. False when the section is not capped.
+    async fn has_more_people(&self, ctx: &Context<'_>) -> async_graphql::Result<bool> {
+        if let Some(more) = self.more_people {
+            return Ok(more);
+        }
+        let Some(request) = &self.request else {
+            return Ok(false);
+        };
+        let pool = ctx.data::<PgPool>()?;
+        Ok(super::query::people_cap(pool, request, None)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?
+            .is_some_and(|cap| cap.more))
     }
 }
 

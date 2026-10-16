@@ -447,10 +447,20 @@ type BookmarkConnection {
 	edges: [BookmarkEdge!]!
 	"""
 	How many things the viewer's Saved list serves, across every page
-	— narrowed by `query` when one was given. Priced at zero like
+	— narrowed by `query` and `kinds` when given, less the people a
+	capped people section leaves behind its door. Priced at zero like
 	every connection count; saturates at [`i32::MAX`].
 	"""
 	totalCount: Int
+	"""
+	Whether more saved people match than the people section serves —
+	the "See all profiles" door. While a narrowed list can stand
+	content beside its people, the people section serves its three
+	newest saves; the same query with `kinds: [USER]` serves every
+	match, uncapped. False when the section is not capped, and on a
+	list no query narrows.
+	"""
+	hasMorePeople: Boolean!
 }
 
 """
@@ -3206,8 +3216,8 @@ type Query {
 	referenceCandidates(query: String!, limit: Int): [ReferenceCandidate!]!
 	"""
 	Global search across nodes; returns a `SearchResult` per edge.
-	Recall is lexical: plain text matches handles and topic names by
-	substring, post titles and display names by word (the last word a
+	Recall is lexical: plain text matches topic names by substring,
+	post titles, handles and display names by word (the last word a
 	prefix), and brings the posts of every person whose display name
 	matches; `@prefix` names people by handle prefix and `#prefix`
 	topics by name prefix — bare, the matches lead and everything they
@@ -3218,7 +3228,10 @@ type Query {
 	ranker container orders each section's matches inside `viewer`'s
 	slice, exact matches first, and the section's rest follow behind
 	the seam, newest first; ranking never runs in the backend process
-	(feed-ranking.md §11). `order: RANKED` needs `viewer`. Served
+	(feed-ranking.md §11). `order: RANKED` needs `viewer`. While the
+	served kinds stand people beside another kind, the people section
+	serves its first three in that order, and `hasMorePeople` says
+	whether more match; `kinds: [USER]` serves them all. Served
 	kinds grow with the slices: USER, POST, HASHTAG for plain text;
 	COMMENT is always a valid kind but is served only under a cue —
 	for plain text it contributes no rows, never an error. A `kinds`
@@ -3937,11 +3950,20 @@ type SearchConnection {
 	"""
 	edges: [SearchEdge!]!
 	"""
-	How many nodes the query matches in total, across every page,
-	independent of the cursor. Priced at zero like every connection
-	count; saturates at [`i32::MAX`].
+	How many nodes the query serves in total, across every page,
+	independent of the cursor: every match, less the people a capped
+	people section leaves behind its door. Priced at zero like every
+	connection count; saturates at [`i32::MAX`].
 	"""
 	totalCount: Int
+	"""
+	Whether more people match than the people section serves — the
+	"See all profiles" door. Where the result can stand people beside
+	another section, the people section serves its first three by the
+	result's own order; the same query with `kinds: [USER]` serves
+	every match, uncapped. False when the section is not capped.
+	"""
+	hasMorePeople: Boolean!
 }
 
 """
@@ -4572,10 +4594,17 @@ type User implements Node & Actor {
 	the server, so a match is found wherever it stands in the list.
 	Narrowed, the list is sectioned as search is — people, then
 	content — newest save first inside a section, and paged on its own
-	cursors; a blank or null `query` narrows nothing. A query past the
-	search length cap is BAD_INPUT. Field-level: viewer-only.
+	cursors; a blank or null `query` narrows nothing. While the
+	narrowed list can stand content beside its people, the people
+	section serves only its three newest saves, and
+	`hasMorePeople` says whether more match — the "See all profiles"
+	door, which is the same query with `kinds: [USER]`. `kinds`
+	narrows the list to those kinds, with or without a query (null or
+	empty = every kind Saved holds: USER, POST, COMMENT; another kind
+	is BAD_INPUT). A query past the search length cap is BAD_INPUT.
+	Field-level: viewer-only.
 	"""
-	bookmarks(query: String, first: Int, after: String, last: Int, before: String): BookmarkConnection
+	bookmarks(query: String, kinds: [NodeKind!], first: Int, after: String, last: Int, before: String): BookmarkConnection
 	"""
 	Actors this user has hidden from their own feed — a read-side
 	comfort applied post-rank on the viewer's side (feed-ranking.md

@@ -1307,7 +1307,7 @@ CREATE TABLE search_index (
     value      TEXT        NOT NULL,
     folded     TEXT        GENERATED ALWAYS AS (lower(value)) STORED,
     words      TSVECTOR    GENERATED ALWAYS AS (
-                   CASE WHEN field IN ('title', 'display_name')
+                   CASE WHEN field IN ('title', 'display_name', 'handle')
                         THEN to_tsvector('simple'::regconfig, value)
                    END
                ) STORED,
@@ -1315,19 +1315,23 @@ CREATE TABLE search_index (
     created_at TIMESTAMPTZ NOT NULL,   -- the node's createdAt; a topic's registry age
     PRIMARY KEY (node_id, field)
 );
--- Handles and topic names: case-insensitive substring and prefix
--- through the trigram operator class's LIKE support.
+-- Topic names by substring, and handles and topic names by a cue's
+-- prefix: case-insensitive, through the trigram operator class's LIKE
+-- support.
 CREATE INDEX search_index_names_trgm
     ON search_index USING gin (folded gin_trgm_ops)
     WHERE field <> 'title';
--- Titles and display names: word-level full text, no stemming, last
--- word as a prefix.
+-- Titles, display names and handles under plain text: word-level full
+-- text, no stemming, last word as a prefix.
 CREATE INDEX search_index_titles_fts
     ON search_index USING gin (words)
     WHERE field = 'title';
 CREATE INDEX search_index_display_names_fts
     ON search_index USING gin (words)
     WHERE field = 'display_name';
+CREATE INDEX search_index_handles_fts
+    ON search_index USING gin (words)
+    WHERE field = 'handle';
 CREATE INDEX search_index_author_recency
     ON search_index (author_id, created_at DESC)
     WHERE author_id IS NOT NULL;
