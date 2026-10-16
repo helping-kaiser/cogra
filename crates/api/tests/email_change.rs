@@ -105,13 +105,13 @@ impl Rig {
             rate_limits,
             breach: Arc::new(api::breach::DisabledCorpus),
             media: api::media::MediaConfig::default(),
-            blobs: Arc::new(api::media::blob::in_memory()),
+            areas: api::media::MediaAreas::in_memory(),
             ranker: api::ranker_pod::RankerClient::new(&Default::default()).expect("ranker client"),
             slice_reads: Default::default(),
         };
         let uploads = api::UploadRouting {
             pool: ctx.pool.clone(),
-            blobs: ctx.blobs.clone(),
+            blobs: ctx.areas.live.clone(),
             media: ctx.media.clone(),
         };
         let schema = api::schema::build(ctx);
