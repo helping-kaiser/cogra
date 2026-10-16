@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertContentDescriptionEquals
@@ -1095,8 +1096,14 @@ class ComposeWizardScreenTest {
     fun thePadsHelpDotOpensTheBackingTopic() {
         val state = ComposeWizardState(body = "x", step = WizardStep.Seal, sheet = SealSheet.Stance)
         compose.setContent { Wizard(state) }
+        // The "?" is heard by what it opens (copy-voice: the pad's "?" is
+        // `Your backing on your post`).
         compose.onNodeWithTag("wizard_stance_help")
-            .assertContentDescriptionEquals("Your backing on your post")
+            .assert(
+                SemanticsMatcher("its click is labelled Your backing on your post") {
+                    it.config[SemanticsActions.OnClick].label == "Your backing on your post"
+                },
+            )
             .performClick()
         assertThat(helps).containsExactly(HelpTopic.YourBackingOnYourPost)
     }

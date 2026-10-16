@@ -35,6 +35,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import com.cogra.core.designsystem.v2.token.Space
 
@@ -229,8 +230,7 @@ private fun BackingBlock(label: String, value: BackingValue, big: Boolean, testT
                         maxLines = 1,
                         softWrap = false,
                         modifier = Modifier
-                            .clearAndSetSemantics { }
-                            .testTag("${testTag}_exact"),
+                            .clearAndSetSemantics { this.testTag = "${testTag}_exact" },
                     )
                 }
                 BackingValue.Unread -> Text(
@@ -238,8 +238,7 @@ private fun BackingBlock(label: String, value: BackingValue, big: Boolean, testT
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier
-                        .clearAndSetSemantics { }
-                        .testTag("${testTag}_unread"),
+                        .clearAndSetSemantics { this.testTag = "${testTag}_unread" },
                 )
             }
         }

@@ -103,8 +103,12 @@ class AttachmentPadTest {
     @Test
     fun onlyAgainstAndForAreDrawn() {
         compose.setContent { AttachmentPad(value = 0.1, onValueChange = {}) }
-        compose.onNodeWithText("Against", useUnmergedTree = true).assertExists()
-        compose.onNodeWithText("For", useUnmergedTree = true).assertExists()
+        // The words are drawn and kept out of the reading — the strip names its axis.
+        compose.onNodeWithTag("attachment_pad_against", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("attachment_pad_for", useUnmergedTree = true).assertExists()
+        val strings = File("src/main/res/values/strings.xml").readText()
+        assertThat(strings).contains("<string name=\"valence_pole_against\">Against</string>")
+        assertThat(strings).contains("<string name=\"valence_pole_for\">For</string>")
         compose.onNodeWithText("Less", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithText("More", useUnmergedTree = true).assertDoesNotExist()
     }

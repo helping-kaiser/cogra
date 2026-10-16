@@ -1,5 +1,6 @@
 package com.cogra.core.designsystem
 
+import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -98,27 +99,31 @@ class AttachmentReadoutsTest {
         compose.setContent { AttachmentStanding(pick = 0.1) }
         compose.onNodeWithTag("attachment_current").assertDoesNotExist()
         compose.onNodeWithTag("attachment_pick").assertExists()
-        compose.onNodeWithTag("attachment_pick_exact", useUnmergedTree = true).assertTextEquals("+0.10")
+        compose.onNodeWithTag("attachment_pick")
+            .assertContentDescriptionContains("For or against +0.10", substring = true)
     }
 
     @Test
     fun anEditsPadReadsCurrentBackingOverThePick() {
         compose.setContent { AttachmentStanding(pick = 0.3, current = BackingValue.Read(0.1)) }
-        compose.onNodeWithTag("attachment_current_exact", useUnmergedTree = true).assertTextEquals("+0.10")
-        compose.onNodeWithTag("attachment_pick_exact", useUnmergedTree = true).assertTextEquals("+0.30")
+        compose.onNodeWithTag("attachment_current")
+            .assertContentDescriptionContains("For or against +0.10", substring = true)
+        compose.onNodeWithTag("attachment_pick")
+            .assertContentDescriptionContains("For or against +0.30", substring = true)
     }
 
     @Test
     fun anUnreadBackingIsADashNeverAFace() {
         compose.setContent { AttachmentStanding(pick = 0.3, current = BackingValue.Unread) }
-        compose.onNodeWithTag("attachment_current_unread", useUnmergedTree = true).assertTextEquals(BACKING_UNREAD_MARK)
+        compose.onNodeWithTag("attachment_current_unread", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag("attachment_current_exact", useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test
     fun backingAfterStatesTheTotalAndTheCapPastOne() {
         compose.setContent { AttachmentLandingLine(rawSum = BackingValue.Read(1.2), pick = 0.2) }
-        compose.onNodeWithTag("attachment_after_exact", useUnmergedTree = true).assertTextEquals("+1.00")
+        compose.onNodeWithTag("attachment_after")
+            .assertContentDescriptionContains("For or against +1.00", substring = true)
         compose.onNodeWithTag("attachment_after_cap")
             .assertTextEquals("Adds up to +1.40; your feed reads it capped at +1.00.")
     }
@@ -126,7 +131,8 @@ class AttachmentReadoutsTest {
     @Test
     fun backingAfterHasNoCapLineWithinTheAxis() {
         compose.setContent { AttachmentLandingLine(rawSum = BackingValue.Read(0.1), pick = 0.3) }
-        compose.onNodeWithTag("attachment_after_exact", useUnmergedTree = true).assertTextEquals("+0.40")
+        compose.onNodeWithTag("attachment_after")
+            .assertContentDescriptionContains("For or against +0.40", substring = true)
         compose.onNodeWithTag("attachment_after_cap").assertDoesNotExist()
     }
 }

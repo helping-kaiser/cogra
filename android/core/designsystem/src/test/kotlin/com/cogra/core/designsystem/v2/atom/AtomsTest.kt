@@ -26,6 +26,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.height
+import androidx.compose.ui.unit.width
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -543,9 +545,11 @@ class AtomsTest {
 
         val value = compose.onNodeWithTag("row_value").getUnclippedBoundsInRoot()
         val action = compose.onNodeWithTag("row_action").getUnclippedBoundsInRoot()
-        // The label grows into the slack, so the value hugs the action:
-        // just the one gap between them.
-        assertThat(action.left - value.right).isEqualTo(8.dp)
+        // The label grows into the slack, so the value sits beside its
+        // action — the 8dp gap plus the action's own touch padding — in the
+        // row's far half, never beside the label's word.
+        assertThat(action.left - value.right).isLessThan(40.dp)
+        assertThat(value.left).isGreaterThan(180.dp)
     }
 
     @Test

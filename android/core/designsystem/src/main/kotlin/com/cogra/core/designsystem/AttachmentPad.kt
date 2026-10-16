@@ -61,6 +61,7 @@ import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -134,8 +135,10 @@ fun AttachmentPad(
             .fillMaxWidth()
             .height(ATTACHMENT_FIELD_HEIGHT),
     ) {
-        AttachmentPole(stringResource(R.string.valence_pole_against), Alignment.CenterStart, TextAlign.End)
-        AttachmentPole(stringResource(R.string.valence_pole_for), Alignment.CenterEnd, TextAlign.Start)
+        val against = stringResource(R.string.valence_pole_against)
+        val forIt = stringResource(R.string.valence_pole_for)
+        AttachmentPole(against, Alignment.CenterStart, TextAlign.End, "${testTag}_against")
+        AttachmentPole(forIt, Alignment.CenterEnd, TextAlign.Start, "${testTag}_for")
         AttachmentStrip(
             value = value,
             onValueChange = onValueChange,
@@ -147,7 +150,7 @@ fun AttachmentPad(
 }
 
 @Composable
-private fun BoxScope.AttachmentPole(text: String, at: Alignment, align: TextAlign) {
+private fun BoxScope.AttachmentPole(text: String, at: Alignment, align: TextAlign, tag: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.labelSmall,
@@ -158,7 +161,8 @@ private fun BoxScope.AttachmentPole(text: String, at: Alignment, align: TextAlig
         modifier = Modifier
             .align(at)
             .width(ATTACHMENT_POLE_WIDTH)
-            .clearAndSetSemantics { },
+            // Out of the reading: the strip already names its axis.
+            .clearAndSetSemantics { testTag = tag },
     )
 }
 

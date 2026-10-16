@@ -40,6 +40,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.PairAxes
 import com.cogra.core.designsystem.PairField
@@ -225,8 +226,7 @@ private fun PairReadout(reading: PairReading, testTag: String) {
                 maxLines = 1,
                 softWrap = false,
                 modifier = Modifier
-                    .clearAndSetSemantics { }
-                    .testTag("${testTag}_pair"),
+                    .clearAndSetSemantics { this.testTag = "${testTag}_pair" },
             )
         }
     }

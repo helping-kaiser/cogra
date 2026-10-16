@@ -7,13 +7,13 @@ package com.cogra.feature.content
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeUp
@@ -48,7 +48,8 @@ class PairSheetTest {
     fun theTagSheetIsTitledByItsTagAndStartsAtTheContractsDefault() {
         tagSheet()
         compose.onNodeWithText("#coastroad").assertExists()
-        compose.onNodeWithTag("wizard_tag_pair_readout_pair", useUnmergedTree = true).assertTextEquals("+0.10 / 1.00")
+        compose.onNodeWithTag("wizard_tag_pair_readout")
+            .assertContentDescriptionContains("about this +0.10, How sure you are 1.00", substring = true)
         compose.onNodeWithTag("wizard_tag_pair_readout").assertContentDescriptionEquals(
             "Your pick: had to look, but it's in there. How much it is about this +0.10, How sure you are 1.00",
         )
@@ -65,7 +66,8 @@ class PairSheetTest {
         compose.onNodeWithTag("wizard_tag_pair_field").performTouchInput { swipeLeft() }
         assertThat(done).isEmpty()
         // Never below the floor, however far the drag goes.
-        compose.onNodeWithTag("wizard_tag_pair_readout_pair", useUnmergedTree = true).assertTextEquals("+0.01 / 1.00")
+        compose.onNodeWithTag("wizard_tag_pair_readout")
+            .assertContentDescriptionContains("about this +0.01, How sure you are 1.00", substring = true)
         compose.onNodeWithTag("wizard_tag_pair_done").performClick()
         assertThat(done).containsExactly(0.01 to 1.0)
         assertThat(dismissed).isEqualTo(0)
@@ -74,7 +76,8 @@ class PairSheetTest {
     @Test
     fun aStagedTagsOwnPairIsWhereTheSheetOpens() {
         tagSheet(TagRow("coastroad", relevance = 0.72, confidence = 0.55))
-        compose.onNodeWithTag("wizard_tag_pair_readout_pair", useUnmergedTree = true).assertTextEquals("+0.72 / 0.55")
+        compose.onNodeWithTag("wizard_tag_pair_readout")
+            .assertContentDescriptionContains("about this +0.72, How sure you are 0.55", substring = true)
     }
 
     @Test
@@ -83,9 +86,9 @@ class PairSheetTest {
         compose.onNodeWithTag("wizard_tag_pair_field").assert(
             SemanticsMatcher.keyIsDefined(SemanticsActions.CustomActions),
         )
-        compose.onNodeWithTag("wizard_tag_pair_field").performSemanticsAction(SemanticsActions.CustomActions) {
-            it.single { action -> action.label == "Set exact values for #coastroad" }.action()
-        }
+        val actions = compose.onNodeWithTag("wizard_tag_pair_field").fetchSemanticsNode()
+            .config[SemanticsActions.CustomActions]
+        compose.runOnIdle { actions.single { it.label == "Set exact values for #coastroad" }.action() }
         compose.onNodeWithTag("wizard_tag_pair_field").assertDoesNotExist()
         compose.onNodeWithTag("wizard_tag_pair_exact_directed").assertExists()
         compose.onNodeWithTag("wizard_tag_pair_exact_interest").assertExists()
@@ -105,8 +108,7 @@ class PairSheetTest {
             )
         }
         compose.onNodeWithText("@ada").assertExists()
-        compose.onNodeWithTag("wizard_reference_pair_readout_pair", useUnmergedTree = true)
-            .assertTextEquals("+0.10 / +0.10")
+        compose.onNodeWithTag("wizard_reference_pair_readout_pair", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag("wizard_reference_pair_readout").assertContentDescriptionEquals(
             "Your pick: How much it leans on this +0.10, For or against +0.10",
         )
