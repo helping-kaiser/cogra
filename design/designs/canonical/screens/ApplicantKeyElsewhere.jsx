@@ -50,9 +50,9 @@ export function Screen() {
             <Button variant="outline">Make a new key</Button>
           </div>
         </TaskCard>
-        <PostCard {...ADA_POST} signedIn={false} />
+        <PostCard {...ADA_POST} signedIn={false} stanceOpacity="var(--state-disabled)" />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline composeOpacity="var(--state-disabled)" />
     </>
   );
 }

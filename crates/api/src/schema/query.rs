@@ -869,8 +869,8 @@ pub(super) fn bad_input(message: impl Into<String>) -> async_graphql::Error {
 }
 
 /// The match request a parsed query makes over `kinds` — the one path
-/// `search` and `User.bookmarks(query:)` share, so no surface grows a
-/// second matcher. None when the request can match nothing: a blank
+/// `search`, `User.bookmarks(query:)` and `User.viewHistory(query:)`
+/// share, so no surface grows a second matcher. None when the request can match nothing: a blank
 /// query, a cue that names nothing, or kinds that leave nothing served.
 pub(super) async fn search_request(
     ctx: &Context<'_>,
@@ -960,14 +960,14 @@ pub(super) struct PeopleCap {
 }
 
 /// The capped people section of `request` in the matcher's own order —
-/// with `saved_by`, the Saved list's: its first
-/// [`search::PEOPLE_SECTION_CAP`] people, and whether more match. None
-/// when the cap does not apply: the request serves no people, or nothing
-/// beside them.
+/// with `list`, that reader's list's (newest save, or newest first
+/// seeing): its first [`search::PEOPLE_SECTION_CAP`] people, and whether
+/// more match. None when the cap does not apply: the request serves no
+/// people, or nothing beside them.
 pub(super) async fn people_cap(
     pool: &PgPool,
     request: &search_store::SearchRequest,
-    saved_by: Option<Uuid>,
+    list: Option<search_store::ReaderList>,
 ) -> Result<Option<PeopleCap>, sqlx::Error> {
     if !request.serves_people_beside_others() {
         return Ok(None);
@@ -976,7 +976,7 @@ pub(super) async fn people_cap(
         return Ok(None);
     };
     let window = search_store::Window {
-        saved_by,
+        list,
         ..search_store::Window::default()
     };
     let hits = people
@@ -1004,16 +1004,16 @@ pub(super) async fn people_cap(
 pub(super) async fn served_count(
     pool: &PgPool,
     request: &search_store::SearchRequest,
-    saved_by: Option<Uuid>,
+    list: Option<search_store::ReaderList>,
 ) -> Result<i64, sqlx::Error> {
-    let all = request.count(pool, saved_by).await?;
+    let all = request.count(pool, list).await?;
     let Some(people) = request
         .people_only()
         .filter(|_| request.serves_people_beside_others())
     else {
         return Ok(all);
     };
-    let matched = people.count(pool, saved_by).await?;
+    let matched = people.count(pool, list).await?;
     Ok(all - (matched - search::PEOPLE_SECTION_CAP as i64).max(0))
 }
 

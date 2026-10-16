@@ -133,9 +133,20 @@ a fresh member borrow a *walk*, never the faces: an applicant's feed
 grows from their inviter's vantage, and the vouch-back window browses
 from the voucher's view (readme §13, *Guest and applicant feeds borrow
 a vantage point*), but their anchors are their own — hollow wherever
-they hold nothing — because a borrowed stance on an anchor you can act
-on could feel like your own. The guest alone sees the lender's stances,
-because the guest is nobody yet.
+they hold nothing, which for an applicant is everywhere — because a
+borrowed stance on an anchor that is yours to act on could feel like
+your own. The guest alone sees the lender's stances, because the guest
+is nobody yet.
+
+**An applicant's anchor answers in place** (PR-103, jakob 2026-10-16:
+applicant acting is post-MVP). The anchor wears auth.md's locked look —
+the disabled opacity, still tappable (`anchorOpacity`) — and a tap or a
+press-and-hold on any stance face an applicant meets, a topic's
+included, says `You can give your
+opinion once you're in.` (copy-voice, *The applicant-foot family*): the
+pad never blooms, and nothing is signed or staged. Stances open at the
+landing, where the vouched-in member's first opinion — the vouch-back,
+or toward anyone else — is the account's first.
 
 ## Your own content
 

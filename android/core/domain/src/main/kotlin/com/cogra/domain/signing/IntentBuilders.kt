@@ -37,12 +37,17 @@ fun commentGenesis(
         payload = PayloadExpectation.Content(content),
     )
 
-/** A post edit carrying [content]: an ordinary-role Publish at (0, 1) chained behind its own head. */
-fun postEdit(postGraphId: String, content: ExpectedContent): ExpectedWrite = ExpectedWrite(
+/**
+ * A post edit carrying [content]: an ordinary-role Publish at the author's
+ * attachment pick [pDirected] — the record's own value, `0` (inert) unless
+ * moved; never a delta the client computed (PICK-IS-THE-EDGE, seam 233) — with
+ * `p_i` census-fixed at 1, chained behind its own head.
+ */
+fun postEdit(postGraphId: String, content: ExpectedContent, pDirected: Double): ExpectedWrite = ExpectedWrite(
     family = Family.PUBLISH,
     middle = null,
     target = node(postGraphId),
-    pDirected = 0.0,
+    pDirected = pDirected,
     pInterest = 1.0,
     license = null,
     parents = Parents.OWN_CHAIN_HEAD,

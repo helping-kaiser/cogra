@@ -34,6 +34,19 @@ describe("HelpDialog", () => {
     ).toBeInTheDocument();
   });
 
+  // Round 15 (copy-voice, *Your backing on your post*, blessed 2026-10-16):
+  // the authoring number is BACKING, title included; "opinion" is the face's.
+  it("names the one-axis pad's help Your backing on your post, in backing's words", () => {
+    render(<HelpDialog open onClose={vi.fn()} topic={HELP_TOPICS.yourBackingOnYourPost} />);
+    expect(screen.getByTestId("help-dialog")).toHaveAttribute("aria-label", "Your backing on your post");
+    expect(
+      screen.getByText(/^Publishing also signs your backing of your own post — for or against/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/An edit adds to it, starting at nothing/)).toBeInTheDocument();
+    expect(screen.getByText(/give it an opinion on its face, like anyone's/)).toBeInTheDocument();
+    expect(screen.queryByText(/signs your opinion on your own post/)).not.toBeInTheDocument();
+  });
+
   it("says at most two things, per the copy rule", () => {
     for (const topic of Object.values(HELP_TOPICS)) {
       expect(topic.paragraphs.length).toBeLessThanOrEqual(2);

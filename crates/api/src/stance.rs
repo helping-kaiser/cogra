@@ -188,6 +188,27 @@ pub async fn topic_bundle(
     })
 }
 
+/// The author's Publish bundle toward their own post: the sums of every
+/// Publish record the viewer wrote toward `node`, genesis and edits
+/// alike, unclipped. The caller has already established that the viewer
+/// is the post's creator; this is the store question only.
+pub async fn publish_backing(
+    pool: &PgPool,
+    viewer: Uuid,
+    node: &str,
+    include_pending: bool,
+) -> Result<BundleSum, StanceError> {
+    let author = author_address(pool, viewer).await?;
+    stance_store::publish_bundle(
+        pool,
+        &author,
+        node,
+        BundleView::from_include_pending(include_pending),
+    )
+    .await
+    .map_err(StanceError::Storage)
+}
+
 async fn read_bundle(
     pool: &PgPool,
     author: &str,

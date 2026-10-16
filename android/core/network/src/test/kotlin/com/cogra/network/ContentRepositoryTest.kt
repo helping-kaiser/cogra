@@ -438,6 +438,32 @@ class ContentRepositoryTest {
         // absent one is an empty one on the wire, so a words post says
         // what it means instead of relying on the server's default.
         assertThat(body).contains("\"attachments\":[]")
+        // The pick rides explicitly even unmoved: the record carries 0, as
+        // the edit pad shows it (EditCompose.md; #249's field).
+        assertThat(body).contains("\"pDirected\":0.0")
+    }
+
+    /** PICK-IS-THE-EDGE (seam 233): the record's own value travels, never a delta toward a target. */
+    @Test
+    fun anEditCarriesTheAuthorsBackingPick() = runTest {
+        enqueue(
+            """{"data":{"preparePostEdit":{"__typename":"PrepareContentPayload",
+               "node":"p1",
+               "writes":[{"__typename":"PreparedWrite","id":"w1","family":"PUBLISH",
+                          "canonicalProposal":"AA==","gcAfterEpochs":8}],
+               "userErrors":[]}}}""",
+        )
+        repo().preparePostEdit(
+            "p1",
+            title = null,
+            description = null,
+            content = "B",
+            attachments = emptyList(),
+            pDirected = -0.4,
+        )
+        val body = server.takeRequest().body.readUtf8()
+        assertThat(body).contains("\"pDirected\":-0.4")
+        assertThat(body).doesNotContain("pInterest")
     }
 
     /**

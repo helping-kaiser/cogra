@@ -254,6 +254,34 @@ class AvatarFlowViewModelTest {
         assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Done("m2", fakeUpload("m2").known()))
     }
 
+    /** The seal opens on the upload already running, not on a copy taken before it started. */
+    @Test
+    fun theSealOpensOnTheUploadInFlight() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onPicked("content://pick/1")
+
+        vm.onNext()
+
+        assertThat(vm.state.value.step).isEqualTo(AvatarStep.Seal)
+        assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Running)
+    }
+
+    /** A new framing after the upload finished sends the picture now framed. */
+    @Test
+    fun aNewFramingAfterTheUploadSendsTheNewPicture() = runTest(dispatcher) {
+        val vm = startedAtSeal(CropSpec(targetRatio = 1f, window = CropWindow(0.1f, 0.1f, 0.9f, 0.9f)))
+        assertThat(media.calls).isEqualTo(1)
+
+        vm.onBack()
+        val reframed = CropSpec(targetRatio = 1f, window = CropWindow(0.3f, 0.3f, 0.7f, 0.7f))
+        vm.onCropCommitted(reframed)
+        vm.onNext()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(media.calls).isEqualTo(2)
+        assertThat(processor.lastCrop).isEqualTo(reframed)
+    }
+
     @Test
     fun anAlreadyLandedPictureIsNotUploadedTwice() = runTest(dispatcher) {
         val vm = startedAtSeal()
