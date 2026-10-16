@@ -31,6 +31,8 @@ use serde_json::json;
 use uuid::Uuid;
 
 use crate::l1::{BoundaryError, L1Boundary};
+use crate::media::MediaAreas;
+use crate::media::areas as media_areas;
 
 /// Why a redaction could not run.
 #[derive(Debug, thiserror::Error)]
@@ -98,17 +100,29 @@ pub struct Redacted {
     pub staged_reaped: bool,
     /// The assets whose last live placement this redaction removed.
     pub held_media: Vec<Uuid>,
+    /// The held assets whose bytes this call moved out of the live store
+    /// into the operator-only one. One missing from here is retried by
+    /// the reconciler (`media::areas::settle_held`).
+    pub held_moved: Vec<Uuid>,
 }
 
-/// Redacts every listed act, then drops the substrate's residue for all
-/// of them in one call.
+/// Redacts every listed act, drops the substrate's residue for all of
+/// them in one call, then moves the bytes of every asset the redactions
+/// held out of the live store.
 ///
 /// Each act is its own transaction, so a failure part-way leaves every
 /// earlier act fully redacted and every later one untouched; re-running
 /// the same list completes it, because each step is idempotent.
+///
+/// **The bytes go last.** A blob move and a Postgres commit are not one
+/// transaction, so the hold commits first and the move follows (data-model.md
+/// "Media areas"). A move that fails leaves the asset held with its bytes
+/// still in the live store, which the reconciler retries; it never fails
+/// the redaction, which has already committed.
 pub async fn redact<B: L1Boundary>(
     boundary: &B,
     pool: &PgPool,
+    areas: &MediaAreas,
     redactions: &[Redaction<'_>],
 ) -> Result<Vec<Redacted>, RedactionError> {
     let mut done = Vec::with_capacity(redactions.len());
@@ -117,6 +131,9 @@ pub async fn redact<B: L1Boundary>(
     }
     let act_ids: Vec<String> = redactions.iter().map(|r| r.act_id.to_string()).collect();
     boundary.drop_carriage(&act_ids).await?;
+    for act in &mut done {
+        act.held_moved = media_areas::hold_all(pool, areas, &act.held_media).await;
+    }
     Ok(done)
 }
 
@@ -139,7 +156,8 @@ pub async fn redact<B: L1Boundary>(
 /// 4. **Reap** the staged row: payload, content salt and nonce to NULL.
 /// 5. **Hold** each named asset whose last live placement is now gone.
 ///
-/// The `l1_acts` copy is dropped separately ([`redact`]).
+/// The `l1_acts` copy is dropped, and the held bytes moved, separately
+/// ([`redact`]).
 pub async fn redact_act(pool: &PgPool, r: &Redaction<'_>) -> Result<Redacted, RedactionError> {
     let mut tx = pool.begin().await?;
     let carriage = content_store::lock_act_payload(&mut tx, r.act_id).await?;
@@ -247,16 +265,18 @@ impl UnitMedia {
 /// rendition digest alone. A digest that resolves to no asset is left out
 /// — the unit references objects, and there is none to reference — and a
 /// payload that is not a content or profile envelope (the admission
-/// Registration's handle) names none.
+/// Registration's handle) names none. The carriage is read under the
+/// read/ingest admission, so a payload a newer format wrote still names
+/// the media it carries.
 async fn unit_media(
     pool: &PgPool,
     author: Uuid,
     envelope: &[u8],
 ) -> Result<Vec<UnitMedia>, RedactionError> {
-    let named: Vec<MediaAsset> = if let Ok(content) = CograContent::decode_payload(envelope) {
-        content.media
-    } else if let Ok(profile) = CograProfile::decode_payload(envelope) {
-        profile.avatar.flatten().into_iter().collect()
+    let named: Vec<MediaAsset> = if let Ok(content) = CograContent::read_payload(envelope) {
+        content.fields.media
+    } else if let Ok(profile) = CograProfile::read_payload(envelope) {
+        profile.fields.avatar.flatten().into_iter().collect()
     } else {
         Vec::new()
     };

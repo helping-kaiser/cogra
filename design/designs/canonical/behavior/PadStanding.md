@@ -2,9 +2,9 @@
 
 WHEN tap a stance face GIVEN the reader already has an opinion standing on the target -> the pad blooms at the lower centre of the viewport AND NEVER anything is staged
 
-WHEN tap the stance face on the reader's own post -> this pad blooms, as on anyone's post AND NEVER a pad with one axis opens
+WHEN tap the stance face on the reader's own post -> this pad blooms, as on anyone's post, and Set signs an ordinary opinion on it AND NEVER the post's own one-axis pad opens
 
-ALWAYS Current opinion on the reader's own post reads one bundle, the post's own records and the opinions given through its face summed together
+ALWAYS Current opinion on the reader's own post reads the opinions given through its face alone, a bundle of their own that the post's own records never join
 
 ALWAYS Walk it back and the severance confirm hold on the reader's own post exactly as on any target
 

@@ -29,7 +29,9 @@
 // EXACT, NEVER APPROXIMATE. Parameters compare as numbers with no
 // tolerance: no server default stands in for a value the form did not
 // hold, so a server that rounds has changed the order. The two zeros are
-// one value, as on web, whose JSON cannot carry the sign of zero.
+// one value, as on web, whose JSON cannot carry the sign of zero — and a
+// zero this device authors leaves it as the positive one
+// (core:network's DimensionAdapter).
 //
 // A NETTING BATCH IS CHECKED AS A PROPERTY. Severance and citation
 // withdrawal stage counter-records the server computes from the bundle, so

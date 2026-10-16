@@ -7,7 +7,14 @@
 
 The field is `surfaceContainerHighest` at the **large (16px)** rung; the knob is 20px of `primaryContainer` — the loudest surface, which belongs to a committed opinion. The centre-lines are `outlineVariant` hairlines and must stay visible: they are drawn dead ground, not decoration. Never clamp by radius — each axis clamps on its own, so all four corners are reachable.
 
-**The four pole words sit OUTSIDE the field, in gutters the component reserves** (jakob's ruling 2026-09-15). Nothing but dead ground and the knob is drawn inside the field: the knob travels every point the field has, so a word placed in there is a word the knob eventually covers — at the top pole it disappeared under the disc entirely. Size the whole assembly, not the square: the component is `width: 100%` and the field takes what the gutters leave, so a caller passing a fixed width shrinks the field rather than the ring. A one-axis field drawn by hand (`ComposePad`) follows the same rule.
+**The four pole words sit OUTSIDE the field, in gutters the component reserves** (jakob's ruling 2026-09-15). Nothing but dead ground and the knob is drawn inside the field: the knob travels every point the field has, so a word placed in there is a word the knob eventually covers — at the top pole it disappeared under the disc entirely. Size the whole assembly, not the square: the component is `width: 100%` and the field takes what the gutters leave, so a caller passing a fixed width shrinks the field rather than the ring.
+
+**`AttachmentPad` is the same field cut to one axis** — the pad an author meets when they sign their own content (jakob 2026-10-16, PR-101). Publish and Owner are single-parameter families: the attachment rides `p_d` and the census pins `p_i` at 1, so the value is one number and the field is a 56px strip, as wide as the square would be. Same surface, rung, knob, pressed layer and gutters; one dead-ground hairline, at zero, and only `Against` · `For` outside it. Never draw the square where the record has one free parameter, and never draw the strip where it has two.
+
+```jsx
+<AttachmentPad value={0.1} />
+<AttachmentPad value={a} onChange={setA} />
+```
 
 For the real interaction use `StanceControl`, which owns the tap, the hold, the parking, and the confirmations.
 

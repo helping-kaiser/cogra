@@ -2748,11 +2748,12 @@ fn no_query_reaches_session_material() {
 
 /// Ranked search (RF-4; ranked-feed-api §4.8): the in-slice candidate
 /// bound, the pod's order, the seam, and the pin the cursor carries.
-const SEARCH: &str = r#"query($q: String!, $order: ReadOrder, $viewer: UUID,
+const SEARCH: &str = r#"query($q: String!, $order: ReadOrder, $viewer: UUID, $kinds: [NodeKind!],
                           $first: Int, $after: String, $last: Int, $before: String) {
-  search(query: $q, order: $order, viewer: $viewer,
+  search(query: $q, order: $order, viewer: $viewer, kinds: $kinds,
          first: $first, after: $after, last: $last, before: $before) {
     totalCount
+    hasMorePeople
     edges { cursor score node { __typename ... on Post { id } ... on User { id } } }
     pageInfo { hasNextPage hasPreviousPage startCursor endCursor }
   }
@@ -3042,6 +3043,99 @@ async fn ranked_search_draws_a_seam_per_section(pool: PgPool) {
     .await;
     assert_eq!(scored(&page), whole);
     assert_eq!(page["totalCount"], json!(4));
+
+    let mut walked = Vec::new();
+    let mut after = Value::Null;
+    loop {
+        let page = search(
+            &rig,
+            json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer,
+                    "first": 1, "after": after }),
+        )
+        .await;
+        walked.extend(scored(&page));
+        if page["pageInfo"]["hasNextPage"] != json!(true) {
+            break;
+        }
+        after = page["pageInfo"]["endCursor"].clone();
+    }
+    assert_eq!(walked, whole, "forward");
+    let mut back = Vec::new();
+    let mut before = Value::Null;
+    loop {
+        let page = search(
+            &rig,
+            json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer,
+                    "last": 1, "before": before }),
+        )
+        .await;
+        let mut chunk = scored(&page);
+        chunk.append(&mut back);
+        back = chunk;
+        if page["pageInfo"]["hasPreviousPage"] != json!(true) {
+            break;
+        }
+        before = page["pageInfo"]["startCursor"].clone();
+    }
+    assert_eq!(back, whole, "backward");
+}
+
+/// Under ranking the people section is capped in the ranked result's own
+/// order: the ranked people first, then the rest behind the seam, newest
+/// first — three in all — before the content's own head and seam. A
+/// person past the cap never reappears behind the seam; the count and
+/// the door follow what the pages serve, and every walk, forward page by
+/// page and backward from the end, keeps the cap.
+///
+/// Under ranked search the people section serves its first three: ranked people first, then the rest behind the seam.
+/// ´claim:search:ranked-search-caps-the-people-section´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_caps_the_people_section(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = search_fixture(&rig.pool).await;
+    let reached = person(&rig.pool, "saltnear", "user").await;
+    land(
+        &rig.pool,
+        vec![
+            binary("saltnear", 0, Family::Registration, prof("saltnear")),
+            binary("v", 2, Family::Opinion, prof("saltnear")),
+        ],
+    )
+    .await;
+    for handle in ["saltb", "saltc", "saltd", "salte"] {
+        person(&rig.pool, handle, "user").await;
+    }
+    pod.set(Mode::Answer(search_ranking(&[
+        (reached, "USER", 0.7),
+        (f.near, "POST", 0.9),
+        (f.near_exact, "POST", 0.2),
+    ])));
+
+    let people = search(&rig, json!({ "q": "sal", "kinds": ["USER"] })).await;
+    let unreached: Vec<Uuid> = scored(&people)
+        .into_iter()
+        .map(|(id, _)| id)
+        .filter(|id| *id != reached)
+        .collect();
+    assert_eq!(unreached.len(), 4);
+    assert_eq!(people["hasMorePeople"], json!(false));
+
+    let whole = vec![
+        (reached, Some(0.7)),
+        (unreached[0], None),
+        (unreached[1], None),
+        (f.near, Some(0.9)),
+        (f.near_exact, Some(0.2)),
+        (f.far, None),
+    ];
+    let page = search(
+        &rig,
+        json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer }),
+    )
+    .await;
+    assert_eq!(scored(&page), whole);
+    assert_eq!(page["totalCount"], json!(6));
+    assert_eq!(page["hasMorePeople"], json!(true));
 
     let mut walked = Vec::new();
     let mut after = Value::Null;

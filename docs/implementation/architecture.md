@@ -471,6 +471,12 @@ traversal is unrepresentable rather than defended against.
 Readers fetch bytes from the media origin directly, never through
 the API; in development the web dev server proxies `/media/*` to
 it so a phone loads media from the same origin it already trusts.
+That origin serves one bucket of three: the live bucket,
+world-readable by design. Deleted media leaves it for an
+operator-only bucket with no anonymous policy and no serving
+route, and an applicant's carried media waits in a non-public
+bucket until the landing publishes it, verified, before the
+carried batch signs ([data-model.md "Media areas"](data-model.md#media-areas)).
 
 The trait carries the store's **multipart upload** beside its
 whole-object put, which is what lets a large upload survive a
