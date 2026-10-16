@@ -480,6 +480,55 @@ pub async fn has_pending_targeting(
     .await?)
 }
 
+/// Expires the actor's unsigned chained writes of the family toward the
+/// target, returning how many — what the edit-serialization guard runs
+/// before it asks [`has_pending_targeting`], so a staging nobody signed
+/// does not hold the next edit until GC.
+///
+/// Unsigned means the pre-commitment never reached the server: the write
+/// carries no signature of the author's, as [`has_signed_of_family`] reads
+/// it, so it is no edit in flight — it is one a device refused to sign, or
+/// a prepare whose response was lost. Expiring it is what keeps the
+/// serialization whole: the pre-sign leg moves only a row still in
+/// `awaiting_pre_sign`, so a superseded staging can never be signed beside
+/// its successor, and the chain never branches. GC expires by epochs, and
+/// epochs close only as acts land, so on a quiet network an abandoned
+/// staging would otherwise hold the author's next edit for hours.
+///
+/// Only chained writes (an asserted parent) are touched — the edits and
+/// profile updates this guard serializes — and never a carried act, which
+/// the server holds for its author until the landing signs it. A write
+/// handed back to `awaiting_pre_sign` after a failed seal may hold pending
+/// display rows; they leave with it, exactly as at GC.
+pub async fn supersede_unsigned_targeting(
+    pool: &PgPool,
+    actor_id: Uuid,
+    family: Family,
+    target: &str,
+    current_epoch: i64,
+) -> Result<u64, StagedError> {
+    let mut tx = pool.begin().await?;
+    let expired = sqlx::query_as!(
+        StagedRows,
+        "UPDATE staged_writes
+         SET state = 'expired', expired_epoch = $4, updated_at = NOW()
+         WHERE actor_id = $1 AND family = $2 AND target = $3
+           AND state = 'awaiting_pre_sign' AND NOT carried
+           AND cardinality(asserted_parents) > 0
+         RETURNING node_id, pre_signed_at",
+        actor_id,
+        family.as_str(),
+        target,
+        current_epoch,
+    )
+    .fetch_all(&mut *tx)
+    .await?;
+    let count = expired.len() as u64;
+    discard_pending_content(&mut tx, expired.into_iter()).await?;
+    tx.commit().await?;
+    Ok(count)
+}
+
 /// An actor's staged writes, newest first (api-spec `User.stagedWrites`).
 /// Loads one by one — N+1 by choice: an actor holds a handful of live
 /// stagings at slice-1 scale, and `load` owns the row-to-seam parse.
