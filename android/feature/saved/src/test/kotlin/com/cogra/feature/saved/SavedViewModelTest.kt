@@ -16,6 +16,7 @@ import com.cogra.domain.saved.SavedPage
 import com.cogra.domain.saved.SavedWrites
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.RecordingSavedRepository
+import com.cogra.domain.testing.SavedRead
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -66,9 +67,9 @@ class SavedViewModelTest {
 
     @Test
     fun `a search reads the whole saved set across pages`() {
-        repository.pages[null] = Outcome.Success(SavedPage(listOf(person("u1", "ada")), "c1", hasNextPage = true))
-        repository.pages["c1"] = Outcome.Success(SavedPage(listOf(person("u2", "mira")), "c2", hasNextPage = true))
-        repository.pages["c2"] = Outcome.Success(SavedPage(listOf(person("u3", "sol")), null, hasNextPage = false))
+        repository.pages[SavedRead(null, null)] = Outcome.Success(SavedPage(listOf(person("u1", "ada")), "c1", hasNextPage = true))
+        repository.pages[SavedRead(null, "c1")] = Outcome.Success(SavedPage(listOf(person("u2", "mira")), "c2", hasNextPage = true))
+        repository.pages[SavedRead(null, "c2")] = Outcome.Success(SavedPage(listOf(person("u3", "sol")), null, hasNextPage = false))
         val vm = viewModel()
         assertThat(vm.state.value.entries.map { it.id }).containsExactly("u1")
         vm.search("sol")
@@ -79,7 +80,7 @@ class SavedViewModelTest {
 
     @Test
     fun `a blank query walks nothing in`() {
-        repository.pages[null] = Outcome.Success(SavedPage(listOf(person("u1", "ada")), "c1", hasNextPage = true))
+        repository.pages[SavedRead(null, null)] = Outcome.Success(SavedPage(listOf(person("u1", "ada")), "c1", hasNextPage = true))
         val vm = viewModel()
         vm.search("   ")
         assertThat(vm.state.value.entries.map { it.id }).containsExactly("u1")
@@ -88,13 +89,13 @@ class SavedViewModelTest {
 
     @Test
     fun `a failed page during a search ends the list with its fault and retry walks on`() {
-        repository.pages[null] = Outcome.Success(SavedPage(listOf(person("u1", "ada")), "c1", hasNextPage = true))
-        repository.pages["c1"] = Outcome.Failed(IOException("down"))
+        repository.pages[SavedRead(null, null)] = Outcome.Success(SavedPage(listOf(person("u1", "ada")), "c1", hasNextPage = true))
+        repository.pages[SavedRead(null, "c1")] = Outcome.Failed(IOException("down"))
         val vm = viewModel()
         vm.search("sol")
         assertThat(vm.state.value.moreFailed).isTrue()
         assertThat(vm.state.value.entries.map { it.id }).containsExactly("u1")
-        repository.pages["c1"] = Outcome.Success(SavedPage(listOf(person("u3", "sol")), null, hasNextPage = false))
+        repository.pages[SavedRead(null, "c1")] = Outcome.Success(SavedPage(listOf(person("u3", "sol")), null, hasNextPage = false))
         vm.retryMore()
         assertThat(vm.state.value.moreFailed).isFalse()
         assertThat(vm.state.value.entries.map { it.id }).containsExactly("u1", "u3").inOrder()
@@ -102,8 +103,8 @@ class SavedViewModelTest {
 
     @Test
     fun `a pull keeps the query and walks the set in again`() {
-        repository.pages[null] = Outcome.Success(SavedPage(listOf(person("u1", "ada")), "c1", hasNextPage = true))
-        repository.pages["c1"] = Outcome.Success(SavedPage(listOf(person("u2", "mira")), null, hasNextPage = false))
+        repository.pages[SavedRead(null, null)] = Outcome.Success(SavedPage(listOf(person("u1", "ada")), "c1", hasNextPage = true))
+        repository.pages[SavedRead(null, "c1")] = Outcome.Success(SavedPage(listOf(person("u2", "mira")), null, hasNextPage = false))
         val vm = viewModel()
         vm.search("mira")
         vm.refresh()

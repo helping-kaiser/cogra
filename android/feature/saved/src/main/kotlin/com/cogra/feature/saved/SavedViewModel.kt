@@ -88,7 +88,7 @@ class SavedViewModel @Inject constructor(
         val asked = ++request
         _state.update { it.copy(loading = true) }
         viewModelScope.launch {
-            val outcome = repository.savedPage(after = null)
+            val outcome = repository.savedPage(query = null, after = null)
             if (asked != request) return@launch
             val page = (outcome as? Outcome.Success)?.value
             if (page == null) {
@@ -152,7 +152,7 @@ class SavedViewModel @Inject constructor(
 
     /** One page after [cursor]; false when it did not arrive, and the fault ends the list. */
     private suspend fun nextPage(cursor: String): Boolean {
-        val page = (repository.savedPage(after = cursor) as? Outcome.Success)?.value
+        val page = (repository.savedPage(query = null, after = cursor) as? Outcome.Success)?.value
         if (page == null) {
             // THE CARDS ON SCREEN STAY, and the fault ends the list (Saved.md).
             _state.update { it.copy(moreFailed = true) }
