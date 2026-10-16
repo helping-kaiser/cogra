@@ -194,7 +194,7 @@ export const STANCE_ANCHORS = [
 ];
 
 /* THE ONE-AXIS TABLE (jakob's ruling, 2026-09-14). It answers for a value
-   that names no pair, which `nearestAnchor` cannot: the attachment an author
+   that names no pair, which `nearestAnchor` cannot: the backing an author
    signs with their own content (`AttachmentReadout`). The authoring families
    are census-pinned to one free parameter — Publish and Owner carry `p_d = a`
    with `p_i = 1`, never a choice (jakob 2026-10-16, PR-101) — so the pick is
@@ -213,14 +213,13 @@ export const STANCE_ANCHORS = [
    EACH ROW OWNS THE AXIS UP TO ITS `to`, and `toInclusive` says whether the
    edge itself belongs to it. Away from the edges this is the nearest anchor by
    distance; the asymmetry in `toInclusive` is where the two ruled tie-breaks
-   live, and it is the same rule stated twice:
-     · AT A MIDPOINT THE MILDER FACE WINS — the one nearer zero. On the
-       negative side that is the band above, so a negative row stops short of
-       its edge; on the positive side it is the band below, so a positive row
-       keeps it.
-     · EXACTLY 0.00 READS 🙂 — the 😕 row stops short of zero, so zero falls
-       into the first band above it.
-   Six monotone bands covering the closed axis, and the same face everywhere. */
+   live: AT A MIDPOINT THE MILDER FACE WINS — the one nearer zero. On the
+   negative side that is the band above, so a negative row stops short of its
+   edge; on the positive side it is the band below, so a positive row keeps
+   it. The 😕 row stops short of zero and the 🙂 row would take it, but
+   `nearestValenceAnchor` answers exactly 0.00 before the table is read: it
+   wears 🤷 (jakob 2026-10-16), the zero face. Six monotone bands covering the
+   closed axis, and the same face everywhere. */
 export const VALENCE_SIX = [
   { emoji: "😠", to: -0.725, toInclusive: false },
   { emoji: "🙁", to: -0.35, toInclusive: false },
@@ -320,12 +319,18 @@ export function nearestTagAnchor(pair) {
   return best;
 }
 
-/** The face a ONE-AXIS pick wears — the first `VALENCE_SIX` band the value
- *  falls inside. The bands cover the closed axis, so every value has exactly
- *  one; out of range is clamped in rather than refused, the way the pad
- *  clamps. */
+/* EXACTLY 0.00 SHRUGS on the one axis (jakob 2026-10-16): a backing of zero
+   carries nothing, so it wears the zero face, 🤷, never a band's smile. Only
+   the exact value — the bands keep the rest of the axis as ruled. */
+export const ZERO_BACKING_LABEL = "Nothing";
+
+/** The face a ONE-AXIS pick wears — 🤷 at exactly 0.00, otherwise the first
+ *  `VALENCE_SIX` band the value falls inside. The bands cover the closed axis,
+ *  so every value has exactly one; out of range is clamped in rather than
+ *  refused, the way the pad clamps. */
 export function nearestValenceAnchor(pDirected) {
   const value = clampDimension(pDirected);
+  if (value === 0) return { emoji: ZERO_BUNDLE_EMOJI, label: ZERO_BACKING_LABEL, pDirected: 0, to: 0, toInclusive: true };
   for (const band of VALENCE_SIX) {
     if (value < band.to || (band.toInclusive && value === band.to)) return band;
   }
@@ -575,14 +580,15 @@ export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, 
   );
 }
 
-/* THE ATTACHMENT AN AUTHOR SIGNS WITH THEIR OWN CONTENT IS ONE NUMBER (jakob
-   2026-10-16, PR-101). Publish — and Owner for a listing — is a
-   single-parameter family: `p_d` is the author's attachment, `p_i` is pinned
-   at 1 by the census, so a pair would draw a second figure nobody can choose.
-   The face comes from `VALENCE_SIX`, the table built for exactly this reading,
-   and the spoken twin names the one axis there is. The author's OPINION on
-   their own content is a different record — an ordinary Opinion through the
-   content's face, read by `StanceReadout` like any other. */
+/* THE BACKING AN AUTHOR SIGNS WITH THEIR OWN CONTENT IS ONE NUMBER (jakob
+   2026-10-16, PR-101). Publish — Owner for a listing, Send for a message — is
+   a single-parameter family: `p_d` is the author's attachment, their
+   BACKING, and `p_i` is pinned at 1 by the census, so a pair would draw a
+   second figure nobody can choose. The face comes from `VALENCE_SIX` (🤷 at
+   exactly 0.00), and the spoken twin names the one axis there is. The
+   author's OPINION on their own content is a different record — an ordinary
+   Opinion through the content's face, read by `StanceReadout` like any
+   other. Backing is the authoring bundle; opinion is the face's. */
 export function AttachmentReadout({ pDirected, style }) {
   const band = nearestValenceAnchor(pDirected);
   const exact = formatDimension(pDirected);
@@ -720,23 +726,52 @@ export function StanceStanding({ pick, bundle, targetLabel, names = STANCE_AXIS_
   );
 }
 
-/* THE ONE-AXIS PAD'S READOUTS (jakob 2026-10-16, PR-101): `StanceStanding`'s
-   blocks, one number each. The compose pad has nothing standing yet, so it
-   reads `Your pick` alone; an edit's pad reads `Current opinion` over it —
-   where the post's own records stand — and the pick IS the resulting value
-   (the edit signs the difference), so there is no landing line beneath the
-   field. Both faces read through `VALENCE_SIX`. Given a `node`, the blocks are
-   its `current` and `pick`. */
+/* THE ONE-AXIS PAD'S READOUTS (jakob 2026-10-16, PR-101): the stance pad's
+   grammar, one number each. The pick IS the record — the pad never works in
+   results — so the readouts say what is newly set and what it comes to. The
+   compose pad has nothing standing, so its pick is its result and `Your pick`
+   reads alone. An edit's pad reads `Current backing` (the bundle's net now)
+   over `Your pick`, and `Backing after` beneath the field
+   (`AttachmentLandingLine`). Faces read through `VALENCE_SIX`, 🤷 at exactly
+   0.00. Given a `node`, the blocks are its `current` and `pick`. */
+export const CURRENT_BACKING_LABEL = "Current backing";
+export const BACKING_AFTER_LABEL = "Backing after";
+
+function backingBlock(label, value) {
+  const band = nearestValenceAnchor(value);
+  const exact = formatDimension(value);
+  return { label, emoji: band.emoji, pair: exact, spoken: `${label}: ${band.label}, ${DIRECTED_LABEL} ${exact}` };
+}
+
 export function AttachmentStanding({ pick, current, style, node }) {
-  const block = (label, value) => {
-    const band = nearestValenceAnchor(value);
-    const exact = formatDimension(value);
-    return { label, emoji: band.emoji, pair: exact, spoken: `${label}: ${band.label}, ${DIRECTED_LABEL} ${exact}` };
-  };
   return (
     <div aria-live="polite" style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", ...style }} data-node={node}>
-      {current !== undefined && <ReadoutBlock {...block("Current opinion", current)} node={node && "current"} />}
-      <ReadoutBlock big {...block(PICK_LABEL, pick)} node={node && "pick"} />
+      {current !== undefined && <ReadoutBlock {...backingBlock(CURRENT_BACKING_LABEL, current)} node={node && "current"} />}
+      <ReadoutBlock big {...backingBlock(PICK_LABEL, pick)} node={node && "pick"} />
+    </div>
+  );
+}
+
+/* WHERE THE PICK LANDS THE BACKING — beneath an edit's strip. The fold is the
+   stance pad's: `clip` of the RAW SUM plus the pick, so a bundle that has
+   summed past ±1 lands where the graph will put it, not where the clipped
+   net suggests. And clipped is not hidden (*Two numbers, never one*): when
+   the sum passes the cap, a quiet line says the total and the cap. */
+export function attachmentLanding(rawSum, pick) {
+  const raw = rawSum + pick;
+  return { raw, landing: clampDimension(raw), capped: raw > DIMENSION_MAX || raw < DIMENSION_MIN };
+}
+
+export function AttachmentLandingLine({ rawSum, pick, style, node }) {
+  const { raw, landing, capped } = attachmentLanding(rawSum, pick);
+  return (
+    <div aria-live="polite" style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)", ...style }}>
+      <ReadoutBlock {...backingBlock(BACKING_AFTER_LABEL, landing)} node={node} />
+      {capped && (
+        <p style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }} data-node={node && "cap"}>
+          {`Adds up to ${formatDimension(raw)}; your feed reads it capped at ${formatDimension(landing)}.`}
+        </p>
+      )}
     </div>
   );
 }
