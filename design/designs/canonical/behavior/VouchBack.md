@@ -33,10 +33,6 @@ WHEN the member's first opinion, toward any target, expires instead of landing G
 
 WHEN the member signs an Affinity GIVEN no opinion of theirs is signed -> NEVER the borrowed view ends
 
-WHEN the account lands, its registration and the approving vouch both confirmed GIVEN an opinion staged during the application signs with it -> NEVER the band stands AND NEVER the feed reloads at the flip AND the feed reads the member's own view from its next refresh
-
-ALWAYS acts staged during the application sign at the landing, one automatic batch, and never at the registration
-
 WHEN tap feed.vouchCard.stance.anchor GIVEN no vouch-back is kept -> the vouch-back pad blooms at the gentle default +0.10 / +0.10
 
 WHEN tap feed.vouchCard.stance.anchor GIVEN a vouch-back is kept on this device -> the vouch-back pad blooms holding the kept pick

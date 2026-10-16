@@ -1249,7 +1249,8 @@ type Collective implements Node & Actor {
 "Text and/or media authored by an actor — the primary public
  surface and the canonical feed-ranking target. Minted by a Publish
  record; edits are ordinary-role Publish + payload records at
- attachment 0, read by the chain-ordered fold — the newest
+ the author's attachment pick (0 unless moved), read by the
+ chain-ordered fold — the newest
  record's payload is the whole content state
  (substrate.md §9, post.md §4)."
 type Post implements Node {
@@ -3199,8 +3200,9 @@ These bind every mutation below.
   An edit prepare stages the concept's declared carrier — parallel
   Registration for profiles; elsewhere the node's own minting
   family in its inert setting: Publish at attachment `0` for
-  posts, Review at `(0,0)` for comments, Owner at attachment `0`
-  for items
+  posts — unless the author sends an attachment pick, which the
+  record then carries — Review at `(0,0)` for comments, Owner at
+  attachment `0` for items
   ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
   L1 would accept anyone's update-shaped record and let the fold
   ignore it; CoGra's own API refuses to prepare a record its
@@ -3851,7 +3853,8 @@ input PreparePostInput {
 }
 
 "Edit a Post — stages one ordinary-role Publish + payload record
- at attachment 0 carrying the Post's complete new content state;
+ at the author's attachment pick carrying the Post's complete new
+ content state;
  an omitted title, description, or gallery is a Post without one.
  Only the eligible author's edit is prepared. A tag or a citation
  is its own record rather than a field of this input — which is a
@@ -3870,6 +3873,12 @@ input PreparePostEditInput {
    body, so omitting it unmarks the post."
   sensitive: Boolean
   sensitiveReason: String
+  "The author's stance pick riding the edit's own record — its
+   attachment. Omitted is 0, the inert setting: an unadjusted edit
+   moves no stance. A moved pick alone is a legal edit — a
+   content-identical new version. pInterest stays census-fixed at 1
+   for Publish, so it is no field."
+  pDirected: Dimension
 }
 
 "Author a Comment — stages the Review (targeting whatever it

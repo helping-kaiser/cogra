@@ -1,20 +1,27 @@
 /* Your own profile in applicant days (profile round, item 23). The same
    header — applicant versus member is cards and states, never a different
    layout (the ProfileHeader rule). The application card rides above the
-   header; the chronicle holds the acts already staged, each marked as still
-   settling (the ruling: an applicant stages each kind of act once). Invites
-   are the one locked control: the tap answers with the snackbar, drawn here —
-   an informational line, never a gate screen (jakob 2026-09-01). The button
-   wears auth.md's locked look, the comment foot's pattern (jakob
-   2026-10-02): visibly inactive at the disabled opacity, still tappable,
-   answering `You can invite once you're in.`
+   header. Invites wears auth.md's locked look, the comment foot's pattern
+   (jakob 2026-10-02): visibly inactive at the disabled opacity, still
+   tappable, answering with the snackbar drawn here — `You can invite once
+   you're in.`, an informational line, never a gate screen (jakob
+   2026-09-01).
+
+   NOTHING IS STAGED, SO THE CHRONICLE IS EMPTY (PR-103, round 16).
+   Applicant acting is post-MVP: nothing an applicant does waits with the
+   application, and nothing has landed, so the figures read zero and the
+   chronicle stands at `EmptyState`, saying what fills it and when — the
+   applicant-foot family's `once you're in`. `New post` on the bar wears the
+   same locked look as Invites (`composeOpacity`, jakob 2026-10-16) and
+   answers in place with `You can post once you're in.`, as the shells' bar
+   does.
 
    THE CARD NAMES THE APPROVER (the approver sweep, 2026-09-15). "Waiting on
    your inviter" named a person this reader does not have — the inviter is
-   fixed at the vouch-back — so the title names whoever's approval is in play,
-   and the sentence that repeated it under a second verb is gone rather than
-   rewritten. What is left is the fact the title cannot carry: acts staged now
-   arrive with the reader.
+   fixed at the vouch-back — so the title names whoever's approval is in play.
+   Its body takes `ApplicantWaiting`'s first sentence and adds what the reader
+   can do meanwhile: `Their approval brings you in. Until then, you can read
+   everything.`
 
    THE ASK LINK LIVES HERE FOR GOOD (jakob 2026-10-02). The waiting card on the
    feed carries it until `Got it` puts that card away; this card is never put
@@ -27,21 +34,21 @@
    Settings carries no ask link.
 
    TURNED DOWN, THE CARD SAYS SO (jakob 2026-10-05, D9; the `application`
-   chip). Once @mira closes the application, `Waiting on @mira` and the
-   chronicle's `with your application` are false, and the profile is still the ask link's home. So the card takes
+   chip). Once @mira closes the application, `Waiting on @mira` is false, and
+   the profile is still the ask link's home. So the card takes
    `ApplicantRejected`'s blessed words and its olive (the card now asks for
-   the reader's action), the ask link takes that card's label and caption,
-   and the chronicle's line says what the staged acts wait for: `These wait
-   — they arrive when someone vouches you in.`
+   the reader's action), and the ask link takes that card's label and
+   caption. The chronicle reads the same either way.
 
    REGISTERED under the `profile` prefix (design ⇄ impl seam 078), named as
    `Profile` names your own page; the card is `application`, its ask link
-   `link`. The `application` chip draws the card once per value, one shown at
-   a time, so both copies take the card's one path, keyed by the chip's value
-   (the chip-drawn duplicate rule). */
+   `link`, the chronicle's empty line `empty`, `HistoryEmpty`'s name. The
+   `application` chip draws the card once per value, one shown at a time, so
+   both copies take the card's one path, keyed by the chip's value (the
+   chip-drawn duplicate rule). */
 export const NODE = "profile";
 export const PROPS = { application: { editor: "enum", options: ["waiting", "closed"], default: "waiting" } };
-export const VALS = `waitingShown: this.props.application === "closed" ? "none" : "block", closedShown: this.props.application === "closed" ? "block" : "none", stagedLine: this.props.application === "closed" ? "These wait — they arrive when someone vouches you in." : "These wait with your application and arrive with you."`;
+export const VALS = `waitingShown: this.props.application === "closed" ? "none" : "block", closedShown: this.props.application === "closed" ? "block" : "none"`;
 
 export function Screen() {
   return (
@@ -49,7 +56,7 @@ export function Screen() {
       <ProfileBand node="band" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "8px 16px 0", display: "{{waitingShown}}" }} data-node-chip="application" data-node-key="waiting">
-          <TaskCard title="Waiting on @mira" body="What you post now arrives with you." node="application">
+          <TaskCard title="Waiting on @mira" body="Their approval brings you in. Until then, you can read everything." node="application">
             <PayoutAddress
               bare
               label="Your ask link"
@@ -84,9 +91,9 @@ export function Screen() {
             node="identity"
             handle="juno"
             displayName="Juno Baptiste"
-            posts={1}
+            posts={0}
             stancesOn={0}
-            stancesTaken={1}
+            stancesTaken={0}
             own
             onEdit={() => {}}
             onInvites={() => {}}
@@ -98,15 +105,11 @@ export function Screen() {
         </div>
         <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
         <ChronicleList node="chronicle">
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="1h" second="First light over the flats — brought the wrong lens, kept the picture anyway." pending onOpen={() => {}} node="act" nodeKey="1" />
-          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.1, pInterest: 0.1 }} title="Gave an opinion" titleAside="on @mira" trailing="2h" pending inert node="act" nodeKey="2" />
-          <p style={{ margin: 0, padding: "4px 0", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }} data-node="stagedLine">
-            {"{{stagedLine}}"}
-          </p>
+          <EmptyState title="Nothing here yet. Your posts and opinions show up here once you're in." node="empty" />
         </ChronicleList>
       </div>
       <Snackbar message="You can invite once you're in." node="snackbar" />
-      <BottomNav active="profile" slots={ALL_SLOTS} inline node="bottomBar" />
+      <BottomNav active="profile" slots={ALL_SLOTS} inline composeOpacity="var(--state-disabled)" node="bottomBar" />
     </>
   );
 }
