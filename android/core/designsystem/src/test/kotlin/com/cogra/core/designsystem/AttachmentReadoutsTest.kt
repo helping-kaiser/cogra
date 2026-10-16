@@ -33,15 +33,20 @@ class AttachmentReadoutsTest {
 
     @Test
     fun theLabelsAreTheMasters() {
-        assertThat(strings).contains("<string name=\"backing_current\">${masterLabel("CURRENT_BACKING_LABEL")}</string>")
-        assertThat(strings).contains("<string name=\"backing_after\">${masterLabel("BACKING_AFTER_LABEL")}</string>")
-        assertThat(strings).contains("<string name=\"backing_pick\">${masterLabel("PICK_LABEL")}</string>")
+        fun entry(name: String, master: String) = "<string name=\"$name\">${masterLabel(master)}</string>"
+        assertThat(strings).contains(entry("backing_current", "CURRENT_BACKING_LABEL"))
+        assertThat(strings).contains(entry("backing_after", "BACKING_AFTER_LABEL"))
+        assertThat(strings).contains(entry("backing_pick", "PICK_LABEL"))
     }
 
     @Test
     fun theCapLineIsTheMasters() {
-        assertThat(master).contains("`Adds up to \${formatDimension(raw)}; your feed reads it capped at \${formatDimension(landing)}.`")
-        assertThat(strings).contains("<string name=\"backing_capped\">Adds up to %1\$s; your feed reads it capped at %2\$s.</string>")
+        assertThat(master).contains(
+            "`Adds up to \${formatDimension(raw)}; your feed reads it capped at \${formatDimension(landing)}.`",
+        )
+        assertThat(strings).contains(
+            "<string name=\"backing_capped\">Adds up to %1\$s; your feed reads it capped at %2\$s.</string>",
+        )
     }
 
     @Test

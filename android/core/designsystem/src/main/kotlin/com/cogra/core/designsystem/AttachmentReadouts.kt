@@ -175,7 +175,11 @@ fun AttachmentLandingLine(
         )
         if (landing != null && landing.capped) {
             Text(
-                text = stringResource(R.string.backing_capped, valenceExact(landing.raw), valenceExact(landing.landing)),
+                text = stringResource(
+                    R.string.backing_capped,
+                    valenceExact(landing.raw),
+                    valenceExact(landing.landing),
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag("${testTagPrefix}_after_cap"),
@@ -217,7 +221,11 @@ private fun BackingBlock(label: String, value: BackingValue, big: Boolean, testT
                     Text(
                         text = valenceExact(value.value),
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (big) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (big) {
+                            MaterialTheme.colorScheme.onSurface
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
                         maxLines = 1,
                         softWrap = false,
                         modifier = Modifier

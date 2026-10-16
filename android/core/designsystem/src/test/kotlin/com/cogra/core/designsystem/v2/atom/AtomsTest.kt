@@ -530,7 +530,13 @@ class AtomsTest {
         compose.setContent {
             Cogra2PreviewTheme {
                 Column(Modifier.width(360.dp)) {
-                    SettingRow(label = "Sensitive", value = "Not marked", actionText = "Mark", onAction = {}, testTag = "row")
+                    SettingRow(
+                        label = "Sensitive",
+                        value = "Not marked",
+                        actionText = "Mark",
+                        onAction = {},
+                        testTag = "row",
+                    )
                 }
             }
         }
