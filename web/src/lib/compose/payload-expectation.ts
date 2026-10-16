@@ -7,7 +7,8 @@
 // and then through the server's own normalization — the title, description
 // and alt text trimmed with Rust's `str::trim` and folded to absent when
 // blank, a post's words and a self-mark's reason only blank-folded, a
-// comment's words and a profile's fields carried untouched. Anything else
+// comment's words and a profile's fields carried untouched — a profile field's
+// clear, sent as a present null, as the empty string. Anything else
 // the server would do to a value is a finding, not a tolerance.
 //
 // EVERY ASSET IS ONE THIS DEVICE CAN STATE. A gallery entry's digests come
@@ -126,7 +127,12 @@ export function contentExpectation(
   };
 }
 
-/** What a profile update's payload must decode to: the fields untouched, the avatar three-valued. */
+/**
+ * What a profile update's payload must decode to: the fields untouched, the
+ * avatar three-valued. The form sends every text field present, so a null is
+ * the clear, and the server carries a clear as the empty string — never as an
+ * absent field, which would leave the old value standing (api `edit_field`).
+ */
 export function profileExpectation(
   node: string,
   sent: {
@@ -141,8 +147,8 @@ export function profileExpectation(
   return {
     node,
     displayName: sent.displayName,
-    bio: sent.bio,
-    websiteUrl: sent.websiteUrl,
+    bio: sent.bio ?? "",
+    websiteUrl: sent.websiteUrl ?? "",
     avatar:
       avatarId === undefined
         ? { state: "untouched" }

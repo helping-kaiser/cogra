@@ -543,8 +543,8 @@ impl Query {
     }
 
     /// Global search across nodes; returns a `SearchResult` per edge.
-    /// Recall is lexical: plain text matches handles and topic names by
-    /// substring, post titles and display names by word (the last word a
+    /// Recall is lexical: plain text matches topic names by substring,
+    /// post titles, handles and display names by word (the last word a
     /// prefix), and brings the posts of every person whose display name
     /// matches; `@prefix` names people by handle prefix and `#prefix`
     /// topics by name prefix — bare, the matches lead and everything they
@@ -555,7 +555,10 @@ impl Query {
     /// ranker container orders each section's matches inside `viewer`'s
     /// slice, exact matches first, and the section's rest follow behind
     /// the seam, newest first; ranking never runs in the backend process
-    /// (feed-ranking.md §11). `order: RANKED` needs `viewer`. Served
+    /// (feed-ranking.md §11). `order: RANKED` needs `viewer`. While the
+    /// served kinds stand people beside another kind, the people section
+    /// serves its first three in that order, and `hasMorePeople` says
+    /// whether more match; `kinds: [USER]` serves them all. Served
     /// kinds grow with the slices: USER, POST, HASHTAG for plain text;
     /// COMMENT is always a valid kind but is served only under a cue —
     /// for plain text it contributes no rows, never an error. A `kinds`
@@ -618,7 +621,7 @@ impl Query {
                 search::MAX_QUERY_CHARS
             ))
         })?;
-        let empty = || search_page(Vec::new(), had_cursor, backward, false, None);
+        let empty = || search_page(Vec::new(), had_cursor, backward, false, None, None);
         let reader = match ctx.data_opt::<Option<Viewer>>() {
             Some(Some(v)) => Some(v.user_id),
             _ => None,
@@ -631,8 +634,22 @@ impl Query {
         if let Some(viewer) = ranked_for {
             return ranked_search::page(ctx, request, viewer, ranked_cursor, backward, limit).await;
         }
+        let past_people = !backward
+            && cursor
+                .is_some_and(|c| search_store::section_of(c.tier) > search_store::SECTION_PEOPLE);
+        let cap = if past_people {
+            None
+        } else {
+            people_cap(pool, &request, None)
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        };
+        let window = search_store::Window {
+            people: cap.as_ref().map(|cap| cap.served.as_slice()),
+            ..search_store::Window::default()
+        };
         let mut hits = request
-            .find(pool, cursor, backward, limit + 1)
+            .find_in(pool, window, cursor, backward, limit + 1)
             .await
             .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         let has_more = hits.len() as i64 > limit;
@@ -650,6 +667,7 @@ impl Query {
             backward,
             has_more,
             Some(request),
+            cap.map(|cap| cap.more),
         ))
     }
 
@@ -934,6 +952,71 @@ fn scoped_kinds(kinds: Option<&[NodeKind]>, scope: search::Scope, bare: bool) ->
     }
 }
 
+/// A capped people section: the people it serves, in order, and whether
+/// more match behind its "See all profiles" door.
+pub(super) struct PeopleCap {
+    pub(super) served: Vec<Uuid>,
+    pub(super) more: bool,
+}
+
+/// The capped people section of `request` in the matcher's own order —
+/// with `saved_by`, the Saved list's: its first
+/// [`search::PEOPLE_SECTION_CAP`] people, and whether more match. None
+/// when the cap does not apply: the request serves no people, or nothing
+/// beside them.
+pub(super) async fn people_cap(
+    pool: &PgPool,
+    request: &search_store::SearchRequest,
+    saved_by: Option<Uuid>,
+) -> Result<Option<PeopleCap>, sqlx::Error> {
+    if !request.serves_people_beside_others() {
+        return Ok(None);
+    }
+    let Some(people) = request.people_only() else {
+        return Ok(None);
+    };
+    let window = search_store::Window {
+        saved_by,
+        ..search_store::Window::default()
+    };
+    let hits = people
+        .find_in(
+            pool,
+            window,
+            None,
+            false,
+            search::PEOPLE_SECTION_CAP as i64 + 1,
+        )
+        .await?;
+    Ok(Some(PeopleCap {
+        more: hits.len() > search::PEOPLE_SECTION_CAP,
+        served: hits
+            .into_iter()
+            .take(search::PEOPLE_SECTION_CAP)
+            .map(|hit| hit.node_id)
+            .collect(),
+    }))
+}
+
+/// How many nodes `request` serves across every page: every match, less
+/// the people a capped people section leaves behind its door — the count
+/// under exactly the predicate the pages ran.
+pub(super) async fn served_count(
+    pool: &PgPool,
+    request: &search_store::SearchRequest,
+    saved_by: Option<Uuid>,
+) -> Result<i64, sqlx::Error> {
+    let all = request.count(pool, saved_by).await?;
+    let Some(people) = request
+        .people_only()
+        .filter(|_| request.serves_people_beside_others())
+    else {
+        return Ok(all);
+    };
+    let matched = people.count(pool, saved_by).await?;
+    Ok(all - (matched - search::PEOPLE_SECTION_CAP as i64).max(0))
+}
+
 /// The matched nodes, typed, in match order. A hit whose node vanished
 /// between the match and the load is dropped rather than served empty.
 pub(super) async fn hydrate(
@@ -991,13 +1074,15 @@ pub(super) async fn hydrate(
 /// A search page from hydrated hits. `had_cursor` and `has_more` decide
 /// the page flags the way every keyset connection does: walking forward,
 /// a cursor means a previous page and the extra row a next one; walking
-/// backward, the other way round.
+/// backward, the other way round. `more_people` is the people cap's
+/// answer when the page already read it.
 fn search_page(
     page: Vec<(search_store::SearchHit, SearchResult)>,
     had_cursor: bool,
     backward: bool,
     has_more: bool,
     request: Option<search_store::SearchRequest>,
+    more_people: Option<bool>,
 ) -> SearchConnection {
     let (has_previous, has_next) = if backward {
         (has_more, had_cursor)
@@ -1007,7 +1092,10 @@ fn search_page(
     let mut connection = SearchConnection::with_additional_fields(
         has_previous,
         has_next,
-        SearchConnectionFields { request },
+        SearchConnectionFields {
+            request,
+            more_people,
+        },
     );
     connection
         .edges
