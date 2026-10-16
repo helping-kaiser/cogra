@@ -661,7 +661,7 @@ export function StanceControl({
                 out of the reading order of the three readouts. 48px target, 32px
                 ring. Its name is `helpLabel` (jakob's ruling A7) — the dialog's
                 own title, not a generic one, wherever a board draws a named
-                pad (`ComposePad`'s "Your opinion on your post", `ReplyPad`'s
+                pad (`ComposePad`'s "Your backing on your post", `ReplyPad`'s
                 "Toward what you answer", `VouchBackPad`'s "Your first
                 opinion"); the ordinary feed-card control keeps the default. */}
             <button
