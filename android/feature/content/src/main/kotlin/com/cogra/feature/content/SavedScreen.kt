@@ -24,7 +24,9 @@
 // brings the card back carrying `That didn't go through.` with Retry; a failed
 // Undo's card stays on screen carrying that line.
 //
-// SEARCH ON TOP: the one search rule over the saved set (`SavedSearch.kt`). A
+// SEARCH ON TOP: the one search law, run by the server over the whole saved
+// set (`bookmarks(query:)`, seam 220) — the screen never narrows or re-sorts
+// what it holds, so a narrowed list stands as served: people, then content. A
 // search that finds nothing is SavedNone; a reader who has kept nothing meets
 // SavedEmpty, which draws no field.
 //
@@ -99,10 +101,7 @@ import com.cogra.domain.saved.CommentTarget
 import com.cogra.domain.saved.SavedCard
 import com.cogra.domain.saved.SavedEntry
 import com.cogra.domain.saved.SavedOverlay
-import com.cogra.domain.saved.SavedQuery
 import com.cogra.domain.saved.SavedWrites
-import com.cogra.domain.saved.matches
-import com.cogra.domain.saved.searchable
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.saved.LocalSavedHost
@@ -251,29 +250,30 @@ private fun SavedUiState.postOf(id: String): PostView? =
 fun keptEntries(entries: List<SavedEntry>, overlay: SavedOverlay): List<SavedEntry> =
     entries.filter { overlay.kept(it.id, it.bookmarkedAt) != null || overlay.failure(it.id) == ComfortKind.RESTORE }
 
-/** What Saved stands as: the kept cards, the ones a query leaves, and which state the page is in. */
+/** What Saved stands as: the cards, in the order served, and which state the page is in. */
 internal data class SavedView(
-    val kept: List<SavedEntry>,
+    /** The held list less the reader's own unsaves — the server's order, never re-sorted. */
     val shown: List<SavedEntry>,
     /** SAVEDEMPTY: nothing kept and no query standing. */
     val empty: Boolean,
-    /** SAVEDNONE: a query that finds nothing in what is kept. */
+    /** SAVEDNONE: the server's narrowed list holds nothing (or nothing the reader still keeps). */
     val none: Boolean,
     /** The field stands wherever something is kept or a query still stands. */
     val fielded: Boolean,
 )
 
 internal fun savedView(state: SavedUiState, overlay: SavedOverlay): SavedView {
-    val kept = keptEntries(state.entries, overlay)
-    val parsed = state.parsed
-    val searching = parsed != SavedQuery.Blank
-    val shown = kept.filter { matches(it.card.searchable(), parsed) }
+    val shown = keptEntries(state.entries, overlay)
+    val narrowed = state.narrowedBy != null
+    // A query typed but not yet read still keeps the field: the reader is
+    // mid-word, and the list under it is the last one read.
+    val searching = narrowed || state.query.isNotBlank()
     val settled = !state.loading && !state.failed && !state.hasNextPage
     // SAVEDEMPTY draws no field: it arrives with the first thing saved. A
     // query still standing keeps it, so `Show everything` is the way back.
-    val empty = settled && kept.isEmpty() && !searching
-    val none = settled && searching && shown.isEmpty() && !state.loadingMore
-    return SavedView(kept, shown, empty, none, fielded = !empty && (kept.isNotEmpty() || searching))
+    val empty = settled && shown.isEmpty() && !searching
+    val none = settled && narrowed && shown.isEmpty() && !state.loadingMore
+    return SavedView(shown, empty, none, fielded = !empty && (shown.isNotEmpty() || searching))
 }
 
 /**

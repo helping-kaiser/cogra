@@ -1222,7 +1222,7 @@
     },
     {
       "name": "set-your-own-stance-on-your-post",
-      "description": "Adjust on the seal blooms the one-axis pad — your own post always reaches you in full, so the stance is declared before signing, never assumed.",
+      "description": "Adjust on the seal blooms the ordinary full pad — both numbers of the author's opinion on their own post are theirs to set, and the stance is declared before signing, never assumed.",
       "status": "resolved",
       "steps": [
         "start · ComposeSeal · 5 «Adjust (your stance)» → ComposePad",
@@ -1231,6 +1231,19 @@
       "boards": [
         "ComposeSeal",
         "ComposePad"
+      ]
+    },
+    {
+      "name": "adjust-your-opinion-with-an-edit",
+      "description": "Adjust on a post edit's opinion row blooms the ordinary full pad at the edit's pick, (0, 0) until moved; Set stages the pick on the edit's own record and Sign the edit signs it with the rest — an edit nobody adjusts moves the author's opinion by nothing.",
+      "status": "resolved",
+      "steps": [
+        "start · EditCompose · 21 «Adjust (your opinion)» → EditPad — the ordinary full pad over the edit, at the edit's pick — (0, 0) until the author moves it",
+        "end · EditPad · 4 «Set» → EditCompose — the pick stages on the edit's own record — the row reads the resulting opinion, the count does not move, and nothing signs until Sign the edit"
+      ],
+      "boards": [
+        "EditCompose",
+        "EditPad"
       ]
     },
     {
@@ -4999,6 +5012,7 @@
     },
     "EditCompose": {
       "flows": [
+        "adjust-your-opinion-with-an-edit",
         "cite-something",
         "edit-a-post-down-to-words",
         "edit-your-post",
@@ -5008,6 +5022,7 @@
         "untag-a-post-in-its-edit"
       ],
       "endpoint": [
+        "adjust-your-opinion-with-an-edit",
         "edit-a-post-down-to-words",
         "edit-your-post",
         "reorder-an-edits-pictures",
@@ -5032,6 +5047,12 @@
       "endpoint": [
         "edit-a-video-post"
       ]
+    },
+    "EditPad": {
+      "flows": [
+        "adjust-your-opinion-with-an-edit"
+      ],
+      "endpoint": []
     },
     "EditPicked": {
       "flows": [

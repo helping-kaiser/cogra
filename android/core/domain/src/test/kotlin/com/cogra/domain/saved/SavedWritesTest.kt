@@ -45,7 +45,7 @@ class SavedWritesTest {
             return if (next()) Outcome.Success(Unit) else Outcome.Failed(IOException("down"))
         }
 
-        override suspend fun savedPage(after: String?) = Outcome.Success<SavedPage?>(null)
+        override suspend fun savedPage(query: String?, after: String?) = Outcome.Success<SavedPage?>(null)
 
         fun answer(ok: Boolean) {
             answers.removeFirst().complete(ok)

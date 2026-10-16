@@ -928,6 +928,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Set</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
+  // The ordinary full pad over a post edit (jakob 2026-10-16) — `ComposePad`'s
+  // five numbers, the edit beneath inert under the wash.
+  EditPad: [
+    { n: 1, find: 'aria-label="Your opinion on your post"', tag: "button" },
+    { n: 2, find: 'aria-label="Opinion pad for your own post"', tag: "div" },
+    { n: 3, find: ">Cancel</button>", tag: "button" },
+    { n: 4, find: ">Set</button>", tag: "button" },
+    { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
 });
 
 // The Media page.
@@ -1071,6 +1080,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 13, find: ">Mark</button>", tag: "button" },
     // The withdrawn tag's Undo (the readme's edit-withdrawal law), as on EditCompose.
     { n: 15, find: 'aria-label="Undo withdrawing #photography"', tag: "button" },
+    { n: 16, find: ">Adjust</button>", tag: "button" },
   ],
   ComposeUploading: [
     { n: 12, find: "aria-label=\"#tidemarket — set how it relates\"", tag: "button" },
@@ -2182,6 +2192,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 16, find: "+ Add pictures · 2 of 10", tag: "button" },
     { n: 17, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
     { n: 18, find: 'aria-label="Undo withdrawing Tide tables and the third headland — @juno"', tag: "button" },
+    // The opinion row's Adjust (jakob 2026-10-16): the ordinary full pad over the edit.
+    { n: 21, find: ">Adjust</button>", tag: "button" },
   ],
   /* The same edit with an empty batch — `EditCompose`'s markers, minus the one
      control that stops being one. The acts footer is a plain span at zero, so
@@ -2205,6 +2217,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 13, find: ">Mark</button>", tag: "button" },
     { n: 15, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
     { n: 16, find: "+ Add pictures · 2 of 10", tag: "button" },
+    { n: 17, find: ">Adjust</button>", tag: "button" },
   ],
   // Show all over the edit. The sheet is the same `PickedSheet` ComposePicked
   // draws, so the markers are its markers — but the REMOVE anchors are spelled
@@ -2241,6 +2254,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 10, find: ">Sign the edit</button>", tag: "button" },
     { n: 11, find: ">Mark</button>", tag: "button" },
     { n: 13, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
+    { n: 14, find: ">Adjust</button>", tag: "button" },
   ],
   EditActs: [
     { n: 1, find: ">Done</button>", tag: "button" },
