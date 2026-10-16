@@ -34,6 +34,7 @@ import com.cogra.domain.hidden.HiddenRepository
 import com.cogra.domain.notifications.NotificationsRepository
 import com.cogra.domain.saved.SavedRepository
 import com.cogra.domain.settings.SettingsRepository
+import com.cogra.domain.signing.CarriedLandingGate
 import com.cogra.domain.store.DeviceData
 import com.cogra.domain.store.DevicePreferences
 import com.cogra.domain.store.IdentityStore
@@ -132,6 +133,14 @@ internal object NetworkProvidesModule {
     @Singleton
     fun encryptedStore(dataStore: DataStore<Preferences>, cipher: StoreCipher): EncryptedStore =
         EncryptedStore(dataStore, cipher)
+
+    /**
+     * THE CARRIED LANDING GATE (PR-89(iii)'s precondition seam, Carried.kt):
+     * what the landing confirms before a carried batch signs. Ready until the
+     * verified media move is wired in here.
+     */
+    @Provides
+    fun carriedLandingGate(): CarriedLandingGate = CarriedLandingGate.AlwaysReady
 }
 
 // Public, not internal: test code replaces this module wholesale via
