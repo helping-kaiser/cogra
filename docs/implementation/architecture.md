@@ -308,8 +308,9 @@ steps:
    the landing it signs only a proposal that still digests to it,
    the landing's appended dependencies aside. A landing seen on a
    device that holds no such digest — the act was prepared on
-   another — signs under the second named exemption, on the
-   transport checks alone. Then the device
+   another — signs an Opinion under the second named exemption, on
+   the transport checks alone; any other family without a digest
+   refuses the whole released batch. Then the device
    signs the proposal pre-commitment; the key never leaves it.
 3. **Relay and seal** (backend ↔ L1). Submit the pre-signed
    proposal through the L1 boundary; the L1 host verifies it,
