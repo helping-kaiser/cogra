@@ -99,33 +99,36 @@ enum class HelpTopic(val title: String, val paragraphs: List<String>) {
     ),
 
     /**
-     * The post's one-axis pad.
+     * The backing pad — the one-axis pad on one's own post, the seal's and
+     * a post edit's (`ComposePad`, `EditPad`).
      *
-     * Transcribed from copy-voice.md's own entry, the parenthesised
-     * number and the two faces included: the guideline italicises
-     * `(+0.10)` as a `cg-exact` span, and this app draws no geek mode
-     * yet, so the text carries it as written.
+     * Transcribed from copy-voice.md's entry *Your backing on your post*
+     * (blessed jakob 2026-10-16, round 15), its two paragraphs split where
+     * the guideline's `/` splits them. The guideline italicises `(+0.10)`
+     * as a `cg-exact` span, and this app draws no geek mode yet, so the
+     * text carries it as written. BACKING is the authoring number; the
+     * opinion is the one the post's face takes — the two words never
+     * trade places.
      */
-    YourOpinionOnYourPost(
-        title = "Your opinion on your post",
+    YourBackingOnYourPost(
+        title = "Your backing on your post",
         paragraphs = listOf(
-            "Publishing also signs your opinion on your own post — for or " +
-                "against, from a gentle 🙂 (+0.10) by default.",
-            "Your own post always reaches you in full, so only for-or-against is " +
-                "yours to set. The face is the reading: six of them run from 😠 at " +
-                "one end to 😍 at the other, and the one you see is wherever your " +
-                "number lands. Nothing is signed until Set. Prefer sliders or exact " +
-                "numbers? Swap the input in settings.",
+            "Publishing also signs your backing of your own post — for or " +
+                "against, from a gentle 🙂 (+0.10) by default. An edit adds to it, " +
+                "starting at nothing, so an edit you don't adjust leaves it as it is.",
+            "How much of it reaches you isn't part of publishing: once the post is " +
+                "out, give it an opinion on its face, like anyone's. Nothing is signed " +
+                "until Set. Swap the input in settings if you prefer sliders or numbers.",
         ),
     ),
 
     /**
      * The reply's two-axis pad — its own topic, not
-     * [YourOpinionOnYourPost].
+     * [YourBackingOnYourPost].
      *
      * A reply's stance is toward somebody else's post, so both axes are
-     * the author's to pick; the post pad's text says the opposite
-     * ("only for-or-against is yours to set") and would be false here
+     * the author's to pick; the backing pad's text speaks of one number
+     * and would be false here
      * (`design/designs/canonical/screens/ReplyPadHelp.jsx`).
      */
     TowardWhatYouAnswer(

@@ -217,6 +217,117 @@ describe("PostEditRoute — the guard is the acts batch (EditComposeUnchanged)",
   });
 });
 
+// Round 15 (PR-101): the edit's record carries THE AUTHOR'S PICK — its own
+// attachment, 0.00 unless moved (PICK-IS-THE-EDGE; EditCompose.md, EditPad.md).
+describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
+  beforeEach(() => push.mockClear());
+
+  it("stands Your backing under the License row, with Adjust", async () => {
+    serve(editablePost());
+    draw();
+    await screen.findByTestId("post-edit");
+    const row = screen.getByTestId("post-edit-open-backing").parentElement!;
+    expect(within(row).getByText("Your backing")).toBeInTheDocument();
+    expect(screen.getByTestId("post-edit-open-backing")).toHaveTextContent("Adjust");
+    const license = screen.getByTestId("post-edit-license").parentElement!;
+    expect(license.nextElementSibling).toBe(row);
+    // "opinion" is the face record's word, never the authoring row's.
+    expect(screen.queryByText(/your opinion/i)).not.toBeInTheDocument();
+  });
+
+  // THE SERVER GAP (`fetchPostBacking`): no read serves the author's Publish
+  // bundle, so the row's reading stops at the flagged placeholder.
+  it("stops the row's reading at the placeholder while the backing is unread", async () => {
+    serve(editablePost());
+    draw();
+    await screen.findByTestId("post-edit");
+    expect(screen.getByTestId("post-edit-backing-unread")).toHaveTextContent("Not readable yet");
+  });
+
+  it("an unmoved pick leaves the batch empty and travels as 0 with any change", async () => {
+    let sent: Record<string, unknown> | null = null;
+    serve(editablePost());
+    server.use(
+      graphql.mutation("PreparePostEdit", ({ variables }) => {
+        sent = variables.input as Record<string, unknown>;
+        return HttpResponse.json({ data: editPrepared() });
+      }),
+    );
+    const signer = draw();
+    await screen.findByTestId("post-edit");
+    expect(footer()).toHaveTextContent("Nothing to sign yet");
+    fireEvent.change(screen.getByTestId("post-edit-title"), { target: { value: "New title" } });
+    fireEvent.click(sign());
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
+    expect(sent).toMatchObject({ pDirected: 0 });
+    const expected = vi.mocked(signer.sign).mock.calls[0]![1] as unknown as { writes: { pDirected: number; pInterest: number }[] };
+    expect(expected.writes[0]).toMatchObject({ pDirected: 0, pInterest: 1 });
+  });
+
+  it("a moved pick alone fills the batch and signs the edit at the pick, never a delta", async () => {
+    let sent: Record<string, unknown> | null = null;
+    serve(editablePost());
+    server.use(
+      graphql.mutation("PreparePostEdit", ({ variables }) => {
+        sent = variables.input as Record<string, unknown>;
+        return HttpResponse.json({ data: editPrepared() });
+      }),
+    );
+    const signer = draw();
+    await screen.findByTestId("post-edit");
+
+    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    const pad = await screen.findByTestId("post-edit-backing-pad");
+    expect(pad).toHaveAttribute("open");
+    // The pad opens at the edit's own pick: 0.00.
+    expect(screen.getByTestId("post-edit-backing-pad-pick-exact")).toHaveTextContent("+0.00");
+    // Moving the strip stages nothing: the footer holds until Set.
+    fireEvent.keyDown(screen.getByTestId("post-edit-backing-pad-field-strip"), {
+      key: "ArrowRight",
+      shiftKey: true,
+    });
+    expect(footer()).toHaveTextContent("Nothing to sign yet");
+    fireEvent.click(screen.getByTestId("post-edit-backing-pad-set"));
+    expect(screen.queryByTestId("post-edit-backing-pad")).not.toBeInTheDocument();
+
+    // A moved pick alone is a legal edit: one record, the count unmoved by the pick.
+    expect(footer()).toHaveTextContent("You're signing 1 thing");
+    fireEvent.click(sign());
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
+    // Content-identical, the pick riding the edit's own record.
+    expect(sent).toMatchObject({ id: "p1", title: "Old title", content: "Old body", pDirected: 0.2 });
+    const expected = vi.mocked(signer.sign).mock.calls[0]![1] as unknown as { writes: { family: string; pDirected: number; pInterest: number }[] };
+    expect(expected.writes).toHaveLength(1);
+    expect(expected.writes[0]).toMatchObject({ family: "publish", pDirected: 0.2, pInterest: 1 });
+  });
+
+  it("re-opens at the pick as set, and Cancel puts nothing back", async () => {
+    serve(editablePost());
+    draw();
+    await screen.findByTestId("post-edit");
+    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    fireEvent.keyDown(await screen.findByTestId("post-edit-backing-pad-field-strip"), { key: "ArrowLeft" });
+    fireEvent.click(screen.getByTestId("post-edit-backing-pad-set"));
+    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    expect(await screen.findByTestId("post-edit-backing-pad-pick-exact")).toHaveTextContent("-0.05");
+    fireEvent.keyDown(screen.getByTestId("post-edit-backing-pad-field-strip"), { key: "ArrowLeft" });
+    fireEvent.click(screen.getByTestId("post-edit-backing-pad-cancel"));
+    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    expect(await screen.findByTestId("post-edit-backing-pad-pick-exact")).toHaveTextContent("-0.05");
+  });
+
+  it("a Set at 0.00 asks nothing and adds no record", async () => {
+    serve(editablePost());
+    draw();
+    await screen.findByTestId("post-edit");
+    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    fireEvent.click(await screen.findByTestId("post-edit-backing-pad-set"));
+    expect(screen.queryByText("Start it unreachable?")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("post-edit-backing-pad")).not.toBeInTheDocument();
+    expect(footer()).toHaveTextContent("Nothing to sign yet");
+  });
+});
+
 describe("PostEditRoute — leaving (EditCompose, EditWords, DiscardConfirm): the edit keeps no draft", () => {
   beforeEach(() => push.mockClear());
 

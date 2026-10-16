@@ -26,6 +26,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.height
+import androidx.compose.ui.unit.width
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -486,6 +488,68 @@ class AtomsTest {
         compose.onNodeWithTag("license_action").performClick()
 
         assertThat(changed).isTrue()
+    }
+
+    /**
+     * F3 (jakob's round-4 hand test): on a 360dp seal, the license's whole
+     * reading left the weighted label no width and "License" stood one
+     * letter per line. The label keeps its own word's width; the value
+     * wraps beside it.
+     */
+    @Test
+    fun aLongValueNeverCollapsesTheLabel() {
+        val long = "Credit always · Log every use — anyone reusing this names you, and every use is logged."
+        compose.setContent {
+            Cogra2PreviewTheme {
+                Column(Modifier.width(360.dp)) {
+                    SettingRow(label = "License", value = "x", testTag = "short")
+                    SettingRow(
+                        label = "License",
+                        value = long,
+                        actionText = "Change",
+                        onAction = {},
+                        testTag = "long",
+                    )
+                }
+            }
+        }
+
+        val alone = compose.onNodeWithTag("short_label").getUnclippedBoundsInRoot()
+        val squeezed = compose.onNodeWithTag("long_label").getUnclippedBoundsInRoot()
+        // The label is one line tall in both rows — never a column of letters.
+        assertThat(squeezed.height).isEqualTo(alone.height)
+        assertThat(squeezed.width).isAtLeast(20.dp)
+        val value = compose.onNodeWithTag("long_value").getUnclippedBoundsInRoot()
+        val action = compose.onNodeWithTag("long_action").getUnclippedBoundsInRoot()
+        // Label, value, action, in that order, none overlapping.
+        assertThat(value.left).isAtLeast(squeezed.right)
+        assertThat(action.left).isAtLeast(value.right)
+        compose.onNodeWithTag("long_value").assertTextEquals(long)
+    }
+
+    @Test
+    fun aShortValueSitsBesideItsActionAsDrawn() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                Column(Modifier.width(360.dp)) {
+                    SettingRow(
+                        label = "Sensitive",
+                        value = "Not marked",
+                        actionText = "Mark",
+                        onAction = {},
+                        testTag = "row",
+                    )
+                }
+            }
+        }
+
+        val value = compose.onNodeWithTag("row_value").getUnclippedBoundsInRoot()
+        val action = compose.onNodeWithTag("row_action").getUnclippedBoundsInRoot()
+        // The label grows into the slack, so the value sits beside its
+        // action — the 8dp gap plus the action's own touch padding — in the
+        // row's far half, never beside the label's word.
+        assertThat(action.left - value.right).isLessThan(40.dp)
+        assertThat(value.left).isGreaterThan(180.dp)
     }
 
     @Test

@@ -688,8 +688,25 @@ class ComposeWizardViewModel @Inject constructor(
     /** A drag on the pad's field: staged, not set (`ComposePad`). */
     fun onPDirectedChange(value: Double) = _state.update { it.copy(stagedPDirected = value) }
 
-    /** The pad's Set — the one gesture that moves the stance the seal reads. */
-    fun onSetStance() = _state.update { it.copy(pDirected = it.stagedPDirected).closedSheets() }
+    /**
+     * The pad's Set — the one gesture that moves the backing the seal reads.
+     * At exactly 0.00 it asks `Start it unreachable?` first, the pad parked
+     * beneath: a Publish at zero carries nothing on the post's own path
+     * (ComposePad.md). It warns, never refuses.
+     */
+    fun onSetStance() = _state.update {
+        if (it.stagedPDirected == 0.0) {
+            it.copy(confirmingUnreachable = true)
+        } else {
+            it.copy(pDirected = it.stagedPDirected).closedSheets()
+        }
+    }
+
+    /** `Keep adjusting`: the dialog closes and the pad stands at the pick. */
+    fun onKeepAdjusting() = _state.update { it.copy(confirmingUnreachable = false) }
+
+    /** `Set it anyway`: the dialog and the pad close, the row reads 0.00 — nothing is signed. */
+    fun onSetUnreachable() = _state.update { it.copy(pDirected = 0.0).closedSheets() }
 
     // -- Uploads (D5: one call per asset, concurrent, retryable) --
 

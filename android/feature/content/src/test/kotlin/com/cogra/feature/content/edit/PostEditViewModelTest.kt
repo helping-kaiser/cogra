@@ -6,6 +6,7 @@
 
 package com.cogra.feature.content.edit
 
+import com.cogra.core.designsystem.BackingValue
 import com.cogra.crypto.ActorKey
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
@@ -14,6 +15,7 @@ import com.cogra.domain.LicenseChoice
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
+import com.cogra.domain.PostBacking
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
@@ -78,6 +80,10 @@ class PostEditViewModelTest {
         var loadedReferences: List<ReferenceClaimView> = emptyList()
         var selfMarkOutcome: Outcome<SelfMarkView?> = Outcome.Success(SelfMarkView(sensitive = false, reason = null))
         var postOutcome: Outcome<PostDetail?>? = null
+        var lastEditPick: Double? = null
+        var backingOutcome: Outcome<PostBacking?> = Outcome.Success(null)
+
+        override suspend fun postBacking(id: String): Outcome<PostBacking?> = backingOutcome
 
         override suspend fun post(
             id: String,
@@ -113,8 +119,10 @@ class PostEditViewModelTest {
             attachments: List<AttachmentClaim>,
             sensitive: Boolean,
             sensitiveReason: String?,
+            pDirected: Double,
         ): Outcome<PreparedContentView> {
             editCalls += 1
+            lastEditPick = pDirected
             lastEdit = listOf(id, title, description, content)
             lastEditAttachments = attachments
             lastEditMark = sensitive to sensitiveReason
@@ -139,6 +147,7 @@ class PostEditViewModelTest {
                                             ),
                                             ContentShape.POST,
                                         ),
+                                        pDirected,
                                     ),
                                 ),
                             ),
@@ -518,5 +527,157 @@ class PostEditViewModelTest {
         assertThat(next.state.value.body).isEqualTo("Loaded body")
         assertThat(next.state.value.signedActionCount).isEqualTo(0)
         assertThat(content.editCalls).isEqualTo(0)
+    }
+
+    // -- The backing (EditPad.md, EditCompose.md; round 15) --
+
+    @Test
+    fun anUnmovedPickIsZeroAndRidesTheEditExplicitly() = runTest(dispatcher) {
+        val vm = opened()
+        assertThat(vm.state.value.pick).isEqualTo(0.0)
+        vm.onTitleChange("Retitled")
+        vm.signed()
+        // The record carries 0.00 — the edit changes the backing by exactly
+        // nothing — and the intent check held it to that.
+        assertThat(content.lastEditPick).isEqualTo(0.0)
+        assertThat(vm.state.value.saved).isTrue()
+    }
+
+    @Test
+    fun thePadOpensAtTheEditsPickAndStagesNothing() = runTest(dispatcher) {
+        val vm = opened()
+        vm.onOpenBackingPad()
+        assertThat(vm.state.value.backingPadOpen).isTrue()
+        assertThat(vm.state.value.stagedPick).isEqualTo(0.0)
+        vm.onBackingPickChange(0.3)
+        assertThat(vm.state.value.pick).isEqualTo(0.0)
+        assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+    }
+
+    // "a moved pick alone fills the batch, the edit signing a new version
+    // whose words and media stand unchanged" — PICK-IS-THE-EDGE: the record
+    // carries the pick itself, never a delta toward a target.
+    @Test
+    fun aMovedPickAloneSignsAContentIdenticalVersion() = runTest(dispatcher) {
+        content.backingOutcome = Outcome.Success(PostBacking(net = 0.1, rawSum = 0.1))
+        val vm = opened()
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(0.3)
+        vm.onSetBacking()
+
+        assertThat(vm.state.value.backingPadOpen).isFalse()
+        assertThat(vm.state.value.pick).isEqualTo(0.3)
+        assertThat(vm.state.value.signedActionCount).isEqualTo(1)
+        vm.signed()
+        assertThat(content.lastEditPick).isEqualTo(0.3)
+        assertThat(content.lastEdit).containsExactly(TEST_POST_ID, "Loaded title", null, "Loaded body").inOrder()
+        assertThat(vm.state.value.saved).isTrue()
+    }
+
+    @Test
+    fun thePickRidesTheEditsOwnRecordAndAddsNothingToTheCount() = runTest(dispatcher) {
+        val vm = opened()
+        vm.onTitleChange("Retitled")
+        assertThat(vm.state.value.signedActionCount).isEqualTo(1)
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(-0.5)
+        vm.onSetBacking()
+        assertThat(vm.state.value.signedActionCount).isEqualTo(1)
+        assertThat(vm.state.value.actRows.map { it.count }.sum()).isEqualTo(1)
+    }
+
+    @Test
+    fun setAtZeroAddsNoRecordAndAsksNothing() = runTest(dispatcher) {
+        val vm = opened()
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(0.0)
+        vm.onSetBacking()
+        assertThat(vm.state.value.backingPadOpen).isFalse()
+        assertThat(vm.state.value.pick).isEqualTo(0.0)
+        assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+    }
+
+    @Test
+    fun cancelLeavesThePickAsItWas() = runTest(dispatcher) {
+        val vm = opened()
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(0.3)
+        vm.onSetBacking()
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(-0.9)
+        vm.onCancelBackingPad()
+        assertThat(vm.state.value.pick).isEqualTo(0.3)
+        assertThat(vm.state.value.stagedPick).isEqualTo(0.3)
+        assertThat(vm.state.value.backingPadOpen).isFalse()
+    }
+
+    @Test
+    fun theRowReadsTheBackingAsItStandsThenAfterTheSetPick() = runTest(dispatcher) {
+        content.backingOutcome = Outcome.Success(PostBacking(net = 0.1, rawSum = 0.1))
+        val vm = opened()
+        assertThat(vm.state.value.backingWithEdit).isEqualTo(BackingValue.Read(0.1))
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(0.3)
+        // Staged, not set: the row still reads the backing as it stands.
+        assertThat(vm.state.value.backingWithEdit).isEqualTo(BackingValue.Read(0.1))
+        vm.onSetBacking()
+        val after = vm.state.value.backingWithEdit as BackingValue.Read
+        assertThat(after.value).isWithin(1e-9).of(0.4)
+    }
+
+    @Test
+    fun walkItAllBackParksTheRawSumsOppositeAndStagesNothing() = runTest(dispatcher) {
+        content.backingOutcome = Outcome.Success(PostBacking(net = 0.4, rawSum = 0.4))
+        val vm = opened()
+        vm.onOpenBackingPad()
+        assertThat(vm.state.value.canWalkBack).isTrue()
+        vm.onWalkBack()
+        assertThat(vm.state.value.stagedPick).isEqualTo(-0.4)
+        assertThat(vm.state.value.pick).isEqualTo(0.0)
+        assertThat(vm.state.value.backingPadOpen).isTrue()
+        assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+    }
+
+    @Test
+    fun walkItAllBackPastTheAxisParksAsFarAsOneRecordReaches() = runTest(dispatcher) {
+        content.backingOutcome = Outcome.Success(PostBacking(net = 1.0, rawSum = 1.6))
+        val vm = opened()
+        vm.onOpenBackingPad()
+        vm.onWalkBack()
+        assertThat(vm.state.value.stagedPick).isEqualTo(-1.0)
+    }
+
+    @Test
+    fun walkItAllBackIsGreyedAtANetOfZero() = runTest(dispatcher) {
+        content.backingOutcome = Outcome.Success(PostBacking(net = 0.0, rawSum = 0.0))
+        val vm = opened()
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(0.2)
+        assertThat(vm.state.value.canWalkBack).isFalse()
+        vm.onWalkBack()
+        assertThat(vm.state.value.stagedPick).isEqualTo(0.2)
+    }
+
+    // SERVER GAP (seam 233): nothing serves the backing yet. The edit stands
+    // without it — unread readouts, a greyed walk-back — and never guesses.
+    @Test
+    fun anUnservedBackingReadsUnreadAndGreysTheWalkBack() = runTest(dispatcher) {
+        val vm = opened()
+        assertThat(vm.state.value.backing).isNull()
+        assertThat(vm.state.value.backingCurrent).isEqualTo(BackingValue.Unread)
+        assertThat(vm.state.value.backingWithEdit).isEqualTo(BackingValue.Unread)
+        assertThat(vm.state.value.canWalkBack).isFalse()
+        assertThat(vm.state.value.loading).isFalse()
+    }
+
+    @Test
+    fun aFailedBackingReadNeverBlocksTheEdit() = runTest(dispatcher) {
+        content.backingOutcome = Outcome.Failed(IOException("down"))
+        val vm = opened()
+        assertThat(vm.state.value.transportFailed).isFalse()
+        assertThat(vm.state.value.backingCurrent).isEqualTo(BackingValue.Unread)
+        vm.onTitleChange("Retitled")
+        vm.signed()
+        assertThat(vm.state.value.saved).isTrue()
     }
 }

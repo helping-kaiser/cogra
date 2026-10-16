@@ -90,14 +90,22 @@ class AvatarFlowViewModel @Inject constructor(
      * (jakob 2026-09-01).
      */
     fun onCropCommitted(spec: CropSpec) = _state.update {
-        if (it.crop == spec) it else it.copy(crop = spec)
+        when {
+            it.crop == spec -> it
+            // A new framing makes the finished upload the wrong picture:
+            // leaving the crop again has to send the one now framed.
+            it.upload is AvatarUpload.Done -> it.copy(crop = spec, upload = AvatarUpload.Idle)
+            else -> it.copy(crop = spec)
+        }
     }
 
     fun onNext() {
-        val current = _state.value
-        val next = current.advanced() ?: return
-        startUpload()
+        val next = _state.value.advanced() ?: return
+        // The stage moves first, so the upload's own Running is the state
+        // the seal opens on rather than being overwritten by a copy taken
+        // before it started.
         _state.value = next
+        startUpload()
     }
 
     /**
