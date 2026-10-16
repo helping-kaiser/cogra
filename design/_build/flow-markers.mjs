@@ -234,9 +234,14 @@ Object.assign(FLOW_MARKERS, {
      other has not. */
   ExplorePerson: [
     { n: 11, find: ">saltmaps<", tag: "button" },
-    ...searchShell("salt", 6),
+    ...searchShell(">sal<", 6),
     { n: 4, find: "Salt maps of the coast road", tag: "button" },
     { n: 5, find: ">Sal Torres<", tag: "button" },
+    { n: 5, find: ">Ines Salas<", tag: "button" },
+    { n: 5, find: ">Salome Ward<", tag: "button" },
+    /* The people section's door (round 14, sectioned search (a)) takes the
+       board's next free number — the numbering is append-only. */
+    { n: 12, find: ">See all people</button>", tag: "button" },
   ],
   ExploreFilter: [
     { n: 1, find: 'aria-label="How the filter works"', tag: "button" },

@@ -1919,28 +1919,40 @@
         "explore.bottomBar.walletSlot": [],
         "explore.filterTrigger": [],
         "explore.help": [],
+        "explore.peopleDoor": [],
+        "explore.peopleLabel": [],
         "explore.result": [
           "1",
           "2",
-          "3"
+          "3",
+          "4",
+          "5"
         ],
         "explore.result.mark": [
           "1",
           "2",
-          "3"
+          "3",
+          "4",
+          "5"
         ],
         "explore.result.name": [
           "1",
           "2",
-          "3"
+          "3",
+          "4",
+          "5"
         ],
         "explore.result.rank": [
           "1",
           "2",
-          "3"
+          "3",
+          "4",
+          "5"
         ],
         "explore.result.sub": [
-          "2"
+          "1",
+          "2",
+          "3"
         ],
         "explore.searchField": [],
         "explore.searchField.glyph": [],
