@@ -38,7 +38,7 @@
    door `profilesDoor`, as `ExplorePerson` names them; the tags' are `tagsLabel`
    and `tagsDoor`. */
 export const NODE = "history";
-export const FRAME = { width: 390, height: 1900 };
+export const FRAME = { width: 390, height: 1740 };
 
 const MAREN = { handle: "maren", displayName: "Maren Holt" };
 const MATEO = { handle: "mateo", displayName: "Mateo Ruiz" };
