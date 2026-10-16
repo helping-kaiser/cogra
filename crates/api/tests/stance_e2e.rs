@@ -1168,7 +1168,10 @@ async fn the_publish_bundle_serves_the_raw_sum_beside_its_clip(pool: PgPool) {
     let backing = rig.post_backing(Some(&token), &post, false).await;
     assert_eq!(backing["recordCount"], 3);
     let raw = f(&backing["rawPDirected"]);
-    assert!((raw - 1.4).abs() < 1e-9, "raw sum 0.1 + 0.7 + 0.6, got {raw}");
+    assert!(
+        (raw - 1.4).abs() < 1e-9,
+        "raw sum 0.1 + 0.7 + 0.6, got {raw}"
+    );
     assert_eq!(f(&backing["pDirected"]), 1.0, "the fold clips at 1");
 }
 
