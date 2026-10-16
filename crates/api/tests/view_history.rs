@@ -878,7 +878,12 @@ async fn a_narrowed_history_follows_the_search_law(pool: PgPool) {
     let kels = post(&rig.pool, kel, 3, "Solar charts").await;
     let flare = tag(&rig.pool, "solarflare").await;
     tag(&rig.pool, "solstice").await;
-    mark(&rig, &token, &[theirs, solarium, their_comment, kels, flare]).await;
+    mark(
+        &rig,
+        &token,
+        &[theirs, solarium, their_comment, kels, flare],
+    )
+    .await;
 
     let cue = history_query(&rig, &token, json!({ "query": "@sol" })).await;
     assert_eq!(ids(&cue), vec![solarium, their_comment, theirs]);

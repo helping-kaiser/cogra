@@ -278,11 +278,7 @@ impl SearchRequest {
 
     /// The total match count — see [`count`]. `list` counts only what
     /// stands on that reader's list, as [`Window::list`] serves.
-    pub async fn count(
-        &self,
-        pool: &PgPool,
-        list: Option<ReaderList>,
-    ) -> Result<i64, sqlx::Error> {
+    pub async fn count(&self, pool: &PgPool, list: Option<ReaderList>) -> Result<i64, sqlx::Error> {
         match self {
             Self::Match(q) => count(pool, q, list).await,
             Self::Scoped(q) => count_scoped(pool, q, list).await,
