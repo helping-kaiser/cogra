@@ -1326,6 +1326,9 @@ pub async fn expired_upload_sessions(
 /// - A **held** asset, or one any retention-archive unit references,
 ///   belongs to the archive: only a manual hard delete removes it
 ///   (`retention::hard_delete_unit`), never the sweep.
+/// - Only an asset whose bytes are in the **live** area is swept: the
+///   caller deletes from the live store, and an asset waiting in the
+///   carried area has no placement until its landing writes one.
 ///
 /// Each `NOT EXISTS` is an index probe of the referencing column — the
 /// four junctions' reverse index on `attachment_id`, the two version
@@ -1381,6 +1384,7 @@ pub async fn sweep_orphans(
               AND NOT EXISTS (
                     SELECT 1 FROM media_attachments merged WHERE merged.merged_into = m.id)
               AND m.held_at IS NULL
+              AND m.area = 'live'
               AND NOT EXISTS (
                     SELECT 1 FROM retention_archive_media r WHERE r.media_id = m.id)
             ORDER BY m.created_at
@@ -1392,6 +1396,155 @@ pub async fn sweep_orphans(
         RETURNING m.id, m.storage_key
         "#,
         max_age_secs,
+        limit,
+    )
+    .fetch_all(pool)
+    .await
+}
+
+/// Which store an asset's bytes sit in (data-model.md "Media areas").
+///
+/// Where the bytes are, not whether anything shows them: `held_at` says an
+/// asset's last live placement is gone, and this says whether its bytes
+/// have left the live store yet. The column moves only once the bytes have.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MediaArea {
+    /// The world-readable store every `MediaAttachment.url` points into.
+    Live,
+    /// The non-public store an applicant's carried media waits in until
+    /// the landing publishes it.
+    Carried,
+    /// The operator-only store a deleted asset's bytes leave the internet
+    /// for: no public policy, no serving route.
+    Held,
+}
+
+impl MediaArea {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Live => "live",
+            Self::Carried => "carried",
+            Self::Held => "held",
+        }
+    }
+
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "live" => Self::Live,
+            "carried" => Self::Carried,
+            "held" => Self::Held,
+            _ => return None,
+        })
+    }
+}
+
+impl sqlx::Type<Postgres> for MediaArea {
+    fn type_info() -> PgTypeInfo {
+        <&str as sqlx::Type<Postgres>>::type_info()
+    }
+
+    fn compatible(ty: &PgTypeInfo) -> bool {
+        <&str as sqlx::Type<Postgres>>::compatible(ty)
+    }
+}
+
+impl<'r> sqlx::Decode<'r, Postgres> for MediaArea {
+    fn decode(value: PgValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
+        let raw = <&str as sqlx::Decode<Postgres>>::decode(value)?;
+        Self::parse(raw).ok_or_else(|| format!("unknown media area {raw:?}").into())
+    }
+}
+
+/// What moving an asset's bytes between areas needs to know about it.
+#[derive(Debug, Clone)]
+pub struct AreaAsset {
+    pub id: Uuid,
+    pub author_id: Uuid,
+    /// The rendition digest R — what a moved copy is verified against.
+    pub digest: Vec<u8>,
+    pub digest_algo: String,
+    pub storage_key: String,
+    pub mime_type: String,
+    pub area: MediaArea,
+    pub held_at: Option<DateTime<Utc>>,
+    /// Whether a live placement still shows the asset (`media_live_placed`).
+    pub placed: bool,
+}
+
+/// One asset's area facts, locked for the move that reads them.
+///
+/// The lock is held across the byte copy on purpose: a placement takes a
+/// `FOR KEY SHARE` lock on the asset as its foreign-key check, so no
+/// placement can be written between this read of `placed` and the area
+/// flip, and two movers of one asset serialize instead of racing.
+pub async fn lock_area_asset(
+    tx: &mut Transaction<'_, Postgres>,
+    id: Uuid,
+) -> Result<Option<AreaAsset>, sqlx::Error> {
+    sqlx::query_as!(
+        AreaAsset,
+        r#"SELECT id, author_id, digest, digest_algo, storage_key, mime_type,
+                  area AS "area: MediaArea", held_at,
+                  media_live_placed(id) AS "placed!"
+           FROM media_attachments
+           WHERE id = $1 AND state = 'ready'
+           FOR UPDATE"#,
+        id,
+    )
+    .fetch_optional(&mut **tx)
+    .await
+}
+
+/// The author's ready assets for a set of rendition digests, with their
+/// areas — how a staged manifest is turned back into the bytes it names.
+/// Scoped to the author for the reason [`assets_by_digests`] is.
+pub async fn area_assets_by_digests(
+    pool: &PgPool,
+    author_id: Uuid,
+    digests: &[Vec<u8>],
+) -> Result<Vec<AreaAsset>, sqlx::Error> {
+    sqlx::query_as!(
+        AreaAsset,
+        r#"SELECT id, author_id, digest, digest_algo, storage_key, mime_type,
+                  area AS "area: MediaArea", held_at,
+                  media_live_placed(id) AS "placed!"
+           FROM media_attachments
+           WHERE author_id = $1 AND digest = ANY($2) AND state = 'ready'"#,
+        author_id,
+        digests,
+    )
+    .fetch_all(pool)
+    .await
+}
+
+/// Records that the asset's bytes now sit in `to`. Runs inside the
+/// mover's transaction, after the bytes are verified there; false when
+/// the row is no longer in `from`.
+pub async fn set_area(
+    tx: &mut Transaction<'_, Postgres>,
+    id: Uuid,
+    from: MediaArea,
+    to: MediaArea,
+) -> Result<bool, sqlx::Error> {
+    let moved = sqlx::query!(
+        "UPDATE media_attachments SET area = $3 WHERE id = $1 AND area = $2",
+        id,
+        from.as_str(),
+        to.as_str(),
+    )
+    .execute(&mut **tx)
+    .await?;
+    Ok(moved.rows_affected() == 1)
+}
+
+/// Held assets whose bytes are still in the live store, oldest hold
+/// first — the reconciler's work list.
+pub async fn held_unmoved(pool: &PgPool, limit: i64) -> Result<Vec<Uuid>, sqlx::Error> {
+    sqlx::query_scalar!(
+        "SELECT id FROM media_attachments
+         WHERE held_at IS NOT NULL AND area = 'live' AND state = 'ready'
+         ORDER BY held_at, id
+         LIMIT $1",
         limit,
     )
     .fetch_all(pool)
