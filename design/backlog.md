@@ -5021,3 +5021,56 @@ make alone:
   both apps still carry it. Retire it from the contract, or keep it.
 - **The pad help's draft.** copy-voice's `Your opinion on your post`
   text is drafted and waits for jakob's word.
+
+### 141 · What the search-law round left for jakob · *design + contract* · **filed 2026-10-16**
+
+Round 14 (readme §13) drew the unified search law and the sectioned
+results, people first, capped at three. These are the calls it could
+not make alone:
+
+- **Does the cap reach Saved and History?** Drawn yes, as recommended:
+  one law for every sectioned surface (`SavedSearch`, `HistorySearch`).
+  Carving them out returns them to an uncapped people section, which is
+  what the web client serves today. If the cap stays, the server may
+  need a per-section `first` (seam 224).
+- **Saved's own people-only narrowing.** Saved has no kind filter, so
+  `See all profiles` there opens a state of Saved's own — the query kept,
+  the people alone. It is described in `SavedSearch.md`, not drawn, and
+  nothing on it says how to get back to the sections short of editing
+  the query. Draw it, or give Saved the kind filter it was ruled
+  without.
+- **The way back from the door.** On Explore, Back clears the whole
+  search (`Explore.md`), and on History the filter's Reset undoes the
+  narrowing. Whether Back after `See all profiles` first returns to the
+  sections is unruled.
+- **The section copy.** `Profiles` (the caption) and `See all profiles` (the
+  door, jakob's own words in the ruling) are drawn. copy-voice refuses
+  `See all` for the trace's in-place expand row; the door opens a
+  narrowing rather than unfolding rows, which is why it stands here.
+  The content after the people takes no caption. Confirm the words,
+  and whether the content wants a caption (`Posts`, per kind, or none).
+- **Where the door stands.** Drawn as a text button on its own line
+  under the third person. The other common place is the trailing end of
+  the `People` caption's line.
+- **The topics section.** A bare `#prefix` lists the matching tags
+  first (Explore, History). Whether that section takes a caption and the
+  same cap is unruled and undrawn.
+- **History's day dividers under a query.** Sections split the
+  first-seen column in two; `HistorySearch` draws no dividers. Dividers
+  in the content section only, in both, or none under a query.
+- **The people section under Newest.** Its order under the search's
+  Newest order (a person carries no age) is unruled; the law says "the
+  first three by the search's order".
+- **`@handle text` and profiles.** The law speaks to bare cues; the
+  standing line "a query scoped by @handle with text after it returns
+  no profile row" is kept. Confirm.
+- **Plain text and comments.** Plain text now matches an author's
+  display name and handle; a comment result still appears only under
+  `@` or `#` (`ExploreUnscoped`). Confirm plain text never lists a
+  comment by its author's name.
+- **The Searching help text.** copy-voice's "Start with @handle to
+  search one person's work" no longer says what `@` does. DRAFT —
+  AWAITING JAKOB'S WORD: "Search reads names, handles and titles, never
+  bodies. Start with @ to find people by their handle — what they made
+  follows them. Start with # to find tags and what carries them." The
+  blessed text stands until he rules.

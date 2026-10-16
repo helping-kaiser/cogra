@@ -466,13 +466,14 @@ noun):
   and choose "Cite in a new post". *(Trimmed to v1.0.0's citable kinds,
   jakob 2026-09-25; the end-state wording returns with its kinds. An
   opinion, never "your opinion" — jakob 2026-09-30, see Naming.)*
-- **Searching** (the Explore tab's results): Search reads names and
-  titles, never bodies. Start with @handle to search one person's
-  work — including their comments, found through what
-  they point at. Start with #tag to search inside a tag. /
+- **Searching** (the Explore tab's results): Search reads names,
+  handles and titles, never bodies. Start with @ to find people by
+  their handle — what they made follows them. Start with # to find
+  tags and what carries them. /
   Results put what's closest to you first — the numbers are your
   view, no one else's. Below the line, what's still beyond your
   reach, newest first. Your searches stay on this device.
+  *(Re-voiced for the unified sigil law, blessed jakob 2026-10-16.)*
 - **What is CGT?** (the wallet's balance headline): CGT is CoGra's
   own money. Advertisers fund campaigns with it, and it pays the
   people whose posts and stances carried real reach — the small coin
@@ -1353,6 +1354,18 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   Retry signs again.
 - `STAGED_WRITE_EXPIRED` — the did-not-land notice in the shell: `Your
   post didn't land` (`ComposeExpired`).
+- `SIGNING_BUDGET` — the budget refusal's own code and sentence (jakob
+  2026-10-16, PR-97; it names the hourly budget and its reset, never a
+  balance): `That's this hour's signing budget used. Try again in
+  about {n} minutes — nothing was signed or spent, and your draft is
+  kept.` — the `{n}` from the wire's retry-after; while the wire
+  carries none, the timeless fallback `That's this hour's signing
+  budget used. Try again in a little while — nothing was signed or
+  spent, and your draft is kept.` The last clause swaps per surface
+  exactly as `WRITE_RULE_FAILED`'s does (a reply's, an edit's and a
+  pad's truths). Same vehicle as `WRITE_RULE_FAILED`: a notice, never
+  the failure voice, no Retry. *(Both sentences blessed jakob
+  2026-10-16.)*
 - `WRITE_RULE_FAILED` — a notice. On a seal it is `You can't sign
   right now` over `Each signing is paid for, and there's only so much
   to go around at a time. Nothing was signed or spent — your draft is
@@ -1369,7 +1382,10 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   which keeps no draft either, the reply's mirror: `Nothing was signed or
   spent — your edit is still here.` and `Not now`, back to the edit with
   the changes as they were (jakob 2026-10-05; the ending *blessed (jakob
-  2026-10-05)*). The words name no payer (the v1.0.0 scope cut). On a pad the same panel stands where the
+  2026-10-05)*). Reached from a post edit — which keeps no draft since
+  the discard round — the same mirror: `Nothing was signed or spent —
+  your edit is still here.` and `Not now`, back to the edit with the
+  batch as it was (*blessed (jakob 2026-10-16)*). The words name no payer (the v1.0.0 scope cut). On a pad the same panel stands where the
   landing line and Set were, in `PadKeyAbsent`'s shape: `You can't sign
   right now` over `Each signing is paid for, and there's only so much
   to go around at a time. Nothing was signed or spent.` — a pad has no

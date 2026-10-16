@@ -90,9 +90,9 @@ WHEN the last upload lands GIVEN Sign the edit was not pressed -> the upload lin
 
 WHEN press Sign the edit GIVEN the signing is taken -> the post opens with the edit settling
 
-WHEN press Sign the edit GIVEN the signing key is not on this device -> the key-absent seal stands AND nothing is staged or signed
+WHEN press Sign the edit GIVEN the signing key is not on this device -> the key-absent seal stands, its way out reading Not now, back to the edit with the batch as it was AND nothing is staged or signed AND NEVER Keep the draft, restore later stands
 
-WHEN press Sign the edit GIVEN the signing is refused by the write rule -> the notice You can't sign right now takes the commit's place AND NEVER the notice says a draft is kept AND NEVER Retry appears
+WHEN press Sign the edit GIVEN the signing is refused by the write rule -> the notice You can't sign right now takes the commit's place AND the notice's fact ends Nothing was signed or spent — your edit is still here. AND the way out under the notice reads Not now AND NEVER the notice says a draft is kept AND NEVER Retry appears
 
 WHEN press the header back arrow or the header X GIVEN the batch holds an act -> the dialog Discard the changes? opens over the edit with Nothing is kept. AND NEVER the changes are discarded unasked
 

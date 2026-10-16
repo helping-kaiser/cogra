@@ -234,9 +234,14 @@ Object.assign(FLOW_MARKERS, {
      other has not. */
   ExplorePerson: [
     { n: 11, find: ">saltmaps<", tag: "button" },
-    ...searchShell("salt", 6),
+    ...searchShell(">sal<", 6),
     { n: 4, find: "Salt maps of the coast road", tag: "button" },
     { n: 5, find: ">Sal Torres<", tag: "button" },
+    { n: 5, find: ">Ines Salas<", tag: "button" },
+    { n: 5, find: ">Salome Ward<", tag: "button" },
+    /* The people section's door (round 14, sectioned search (a)) takes the
+       board's next free number — the numbering is append-only. */
+    { n: 12, find: ">See all profiles</button>", tag: "button" },
   ],
   ExploreFilter: [
     { n: 1, find: 'aria-label="How the filter works"', tag: "button" },
@@ -1637,6 +1642,30 @@ Object.assign(FLOW_MARKERS, {
     { n: 16, find: ">Undo</button>", tag: "button" },
     ...nav(17),
   ],
+  /* Saved searched to people (round 14, sectioned search): the arrow, the
+     field, then the people section top-down — each card's own controls one
+     number each across the three (`all`) — the door, the post, the bar. */
+  SavedSearch: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">@m<", tag: "div" },
+    { n: 3, find: '<a href="/u/', tag: "a", all: true },
+    { n: 4, find: 'aria-label="More about @mira"', tag: "button" },
+    { n: 4, find: 'aria-label="More about @maren"', tag: "button" },
+    { n: 4, find: 'aria-label="More about @mateo"', tag: "button" },
+    { n: 5, find: ">Runs the stand by the sea wall", tag: "a" },
+    { n: 5, find: ">Charts the tide pools", tag: "a" },
+    { n: 5, find: ">Boat repairs, mostly", tag: "a" },
+    { n: 6, find: 'aria-label="Give your opinion on @', tag: "button", all: true },
+    { n: 6, find: ">Choose your opinion on @", tag: "button", all: true },
+    { n: 6, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
+    { n: 6, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
+    { n: 7, find: ">Feed score</span>", tag: "button", all: true },
+    { n: 8, find: 'aria-label="Share ', tag: "button", all: true },
+    { n: 9, find: ">See all profiles</button>", tag: "button" },
+    { n: 10, find: 'aria-label="More on this post"', tag: "button" },
+    { n: 11, find: 'aria-label="1 comment"', tag: "button" },
+    ...nav(12),
+  ],
   SavedEmpty: [{ n: 1, find: 'aria-label="Back to your profile"', tag: "a" }, ...nav(2)],
   /* Saved searched to nothing (the Saved redesign): the arrow, the field
      holding the query, the empty state's one action, the bar. */
@@ -1711,6 +1740,30 @@ Object.assign(FLOW_MARKERS, {
     { n: 17, find: 'aria-label="3 comments"', tag: "button" },
     { n: 18, find: ">Undo</button>", tag: "button" },
     ...nav(19),
+  ],
+  /* History searched to people (round 14, sectioned search): `SavedSearch`'s
+     construction, the trigger taking 3 after the field. */
+  HistorySearch: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">@m<", tag: "div" },
+    { n: 3, find: 'what your history shows"', tag: "button" },
+    { n: 4, find: '<a href="/u/', tag: "a", all: true },
+    { n: 5, find: 'aria-label="More about @mira"', tag: "button" },
+    { n: 5, find: 'aria-label="More about @maren"', tag: "button" },
+    { n: 5, find: 'aria-label="More about @mateo"', tag: "button" },
+    { n: 6, find: ">Runs the stand by the sea wall", tag: "a" },
+    { n: 6, find: ">Charts the tide pools", tag: "a" },
+    { n: 6, find: ">Boat repairs, mostly", tag: "a" },
+    { n: 7, find: 'aria-label="Give your opinion on @', tag: "button", all: true },
+    { n: 7, find: ">Choose your opinion on @", tag: "button", all: true },
+    { n: 7, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
+    { n: 7, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
+    { n: 8, find: ">Feed score</span>", tag: "button", all: true },
+    { n: 9, find: 'aria-label="Share ', tag: "button", all: true },
+    { n: 10, find: ">See all profiles</button>", tag: "button" },
+    { n: 11, find: 'aria-label="More on this post"', tag: "button" },
+    { n: 12, find: 'aria-label="1 comment"', tag: "button" },
+    ...nav(13),
   ],
   HistoryEmpty: [{ n: 1, find: 'aria-label="Back to your profile"', tag: "a" }, ...nav(2)],
   /* History narrowed to nothing (the final brief, 2026-10-05). The `cause`

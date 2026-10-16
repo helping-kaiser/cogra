@@ -95,7 +95,7 @@
       "x": -5640,
       "y": 0,
       "w": 5220,
-      "h": 7995,
+      "h": 8034,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -511,6 +511,24 @@
       "y": 5037,
       "w": 390,
       "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SavedSearch.dc.html",
+      "title": "Saved · a search, people first",
+      "x": 5760,
+      "y": 5037,
+      "w": 390,
+      "h": 1110,
+      "page": "profile"
+    },
+    {
+      "file": "HistorySearch.dc.html",
+      "title": "History · a search, people first",
+      "x": 6240,
+      "y": 5037,
+      "w": 390,
+      "h": 1150,
       "page": "profile"
     },
     {
