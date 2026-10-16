@@ -577,10 +577,8 @@ Two follow-ups the round surfaces, still open:
   - **`PickPrompt` requires an escape.** The draft board's
     fresh-start line is the same caption with nothing to escape to;
     it is spelled at the master's values instead of taking it.
-  - ~~**No one-axis stance pad exists.**~~ Ruled 2026-10-16 (round 13):
-    an opinion on one's own post is the full pair, so no board wants a
-    one-axis pad — `ComposePad` reads the master square, as `ReplyPad`
-    does.
+  - ~~**No one-axis stance pad exists.**~~ Done 2026-10-16 (round 15):
+    the master `AttachmentPad`, which `ComposePad` and `EditPad` read.
   - **A flow badge on a field never paints.** The badge's `::after`
     generates no box on a replaced element, and the composer boards
     stamp the `<input>`/`<textarea>` itself (`ComposeCited`,
@@ -4978,49 +4976,39 @@ one's own post, the post edits' opinion row inert at (0, 0), and the
 own-post anchor as the ordinary pad. These are the calls it could not
 make alone:
 
-- **The compose default pair.** Drawn at +0.10 / +0.10, the pad's
-  universal default and authorship.md's "defaulted low like every
-  stance". It gentles a new post's reach-through against the built
-  apps, which pin the second number in full. Keep, or pin `p_i`
-  differently.
+- ~~**The compose default pair.**~~ Ruled 2026-10-16 (PR-101, round
+  15): the census pins `p_i` at 1; the one axis starts at +0.10.
 - **An edit whose only change is the opinion.** Moving the edit's pick
   off (0, 0) and changing nothing else: does that fill the batch — a new
   version identical in content, marked `Edited` — or does an
   opinion-only change belong to the post's own anchor, the edit's
   `Sign the edit` staying disabled? `EditComposeUnchanged`'s gate reads
-  the batch, so the answer decides what it counts.
-- **`Walk it back` on the edit's pad.** The ordinary pad carries the
-  walk-away wherever an opinion stands, and on one's own post one
-  always does. `EditPad` draws the seal-scale pad's two controls only:
-  what walking back inside an edit's batch stages — its counter-records
-  are records of their own, while the edit's pair rides one — is
-  unruled. The same question asks the severance dialog's cost line when
-  an edit's pick nets the bundle to (0, 0): `1 thing` over a pick that
-  adds no record.
-- **The acts card's reading of a moved pick.** The opinion rides the
+  the batch, so the answer decides what it counts. (Impl's server signs
+  and versions an opinion-only edit, built and standing — seam 230; the
+  design draws the same. Awaiting jakob's word only.)
+- ~~**`Walk it back` on the edit's pad.**~~ Reframed by round 15 (item
+  142): the edit's pad is one axis with no standing opinion to walk
+  away from; what stays open is the confirm's reading at `0.00`.
+- **The acts card's reading of a moved pick.** The pick rides the
   `Edit` row's record and adds no row (`EditActs`). Proposed: once the
-  pick leaves (0, 0), the `Edit` row reads the post's name over the
-  pick's pair, the seal's References row's shape, and the name alone at
-  (0, 0).
+  pick moves, the `Edit` row reads the post's name over the resulting
+  number, the seal's References row's shape, and the name alone when
+  it does not.
 - **The comment edit.** A comment's revision is an ordinary-role Review,
   its A-leg to the same parent, so the pair a comment edit carries is
   the stance toward what the comment answers — the reply pad's
   territory, not an own-stance. `CommentEdit` and `CommentEditVideo`
   draw no opinion row until that is ruled.
-- **The compose pad at an inert pick.** The pad on a new post shows
-  only `Your pick` — nothing stands, so the pick is the landing. A pick
-  with an axis at zero carries nothing on that axis; the generic law
-  says so on the landing line, and the seal-scale pads draw none. Draw
-  the inert line under the field, or leave it to the readout.
+- ~~**The compose pad at an inert pick.**~~ Closed by round 15: the one
+  axis has one zero, and Set there opens `Start it unreachable?`.
 - **The own-post feed law and the docs.** "Your own posts always show
   in your own feed" stands in the design as a feed law; feed-ranking.md
   has no such rule, and a viewer-rooted walk over a severed own-post
   bundle reaches nothing. The docs need the rule, or the design drops it.
-- **`VALENCE_SIX` and `nearestValenceAnchor`.** No surface draws a
-  one-axis pick now; the table stands on the anchor-map card alone and
-  both apps still carry it. Retire it from the contract, or keep it.
-- **The pad help's draft.** copy-voice's `Your opinion on your post`
-  text is drafted and waits for jakob's word.
+- ~~**`VALENCE_SIX` and `nearestValenceAnchor`.**~~ Live again (round
+  15): the one-axis pads and rows read through them.
+- ~~**The pad help's draft.**~~ Superseded by round 15's draft (item
+  142).
 
 ### 141 · What the search-law round left for jakob · *design + contract* · **filed 2026-10-16**
 
@@ -5074,3 +5062,43 @@ not make alone:
   bodies. Start with @ to find people by their handle — what they made
   follows them. Start with # to find tags and what carries them." The
   blessed text stands until he rules.
+
+### 142 · What the census revert left for jakob · *design + contract + docs* · **filed 2026-10-16**
+
+Round 15 (readme §13) drew PR-101: the authoring pad one axis again
+(`AttachmentPad`), the face stance an Opinion of its own. These are the
+calls it could not make alone:
+
+- **Set semantics on the edit's pad** — the orchestrator's rec, drawn.
+  The pad collects where the post's own records will stand and the
+  client signs the pick less the bundle's raw sum. Confirm, or ask for
+  the honest-delta reading (`Adjust by`) instead.
+- **What one edit can reach.** An edit is one record, its pick in
+  `[−1, +1]`, so from a raw sum `r` it lands only in
+  `[max(−1, r − 1), min(+1, r + 1)]` — from the +0.10 default, `−1.00`
+  is out of one edit's reach (`−0.90` is the floor). The strip draws
+  the whole axis. Clamp the knob's travel to the reachable stretch, draw
+  the rest as dead ground, or let Set explain the shortfall.
+- **The edit's confirm at `0.00`.** `EditPad` opens `Walk it all back?`
+  when the pick sets a standing post's attachment to `0.00`, but that
+  dialog speaks in pairs (`adds up to +x / +y`) and counts `1 thing`
+  over a pick that adds no record. A one-axis reading of it, or a
+  standing-post sibling of `Start it unreachable?`.
+- **The row's word.** jakob's ruling names the face stance "the authors
+  opinion on his post"; the seal's and an edit's row that sets the
+  authoring number still reads `Your opinion`, the edit's pad `Current
+  opinion`, and the pads' names `Opinion pad for your own post`. Keep
+  the blessed words, or rename the authoring row.
+- **`0.00` reads 🙂.** The one-axis table's ruled tie-break (2026-09-14)
+  gives the inert value a smile, the value `Start it unreachable?`
+  warns about. Keep, or give `0.00` its own reading.
+- **The drafts.** copy-voice's `Your opinion on your post` help text and
+  *The unreachable start* body are drafted and wait for jakob's word.
+- **Docs: an edit's attachment.** post.md §4 and items.md §7 say edits
+  are "authored at attachment `0`: routing-inert"; PR-101 and impl's
+  built server subset give the edit a pick (default `0`). The docs need
+  the pick, or the design drops it.
+- **Messages and listings.** A Send's one free number is its first
+  leg's, toward the Chat; the chat sign sheet calls it `Your opinion`,
+  for the chat round to word. Owner listings take the one-axis law; no
+  listing surface is drawn.

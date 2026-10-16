@@ -823,7 +823,7 @@ is a different thing from a piece the apps have not reached yet.
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader`, `StanceRow` |
 | `components/states/` | `EmptyState`, `LoadingState`, `ComingSoonCard` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending`, `NoticePanel`, `NoticeLine`, `RedactedContent`, `SensitiveVeil`, `SensitiveScope` |
-| `components/stance/` | `StanceControl`, `StancePad`, `StanceReadout`, `StanceValue`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `HelpLine`, `SeveranceConfirm` |
+| `components/stance/` | `StanceControl`, `StancePad`, `AttachmentPad`, `StanceReadout`, `AttachmentReadout`, `AttachmentStanding`, `StanceValue`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `HelpLine`, `SeveranceConfirm` |
 | `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `PagerDots`, `MediaViewer`, `VideoTransport`, `Timeline`, `SeekLine`, `DetailClip`, `ReelRail`, `ReelRailItem`, `ReelRailScore`, `ReelPlate`, `ReelCaption` |
 | `components/proposed/` | `ExplainableNumber` — **not shipped**, see §7.1 |
 
@@ -1031,14 +1031,23 @@ own (§3). All four quadrants are legitimate.
   anchors by Euclidean distance — dense in the for-it-and-want-it
   quadrant, sparse at the extremes. `(0, 0)` never speaks through the
   table: it gets 🤷.
-- **An opinion on one's own content is an opinion like any other**
-  (jakob 2026-10-16): the full pad, both axes, wherever the author
-  gives it — the seal's `Your opinion` row, a post edit's, and the
-  anchor on their own post, whose opinions fold into one bundle with
-  the post's own records. Severance there is severance anywhere:
-  explained and confirmed, never prevented. What the author's own
-  stance never decides is whether their post reaches them: their own
-  posts always show in their own feed.
+- **An author reaches their own content by two records** (jakob
+  2026-10-16, PR-101). The authoring gesture — the Publish, Owner or
+  Send that creates or edits it — carries one free parameter, the
+  attachment, with the second census-pinned at 1: the seal's and an
+  edit's `Your opinion` row read one number (`AttachmentReadout`) and
+  `Adjust` opens the one-axis pad (`AttachmentPad`). The anchor on
+  their own content is the ordinary pad, an ordinary Opinion — its own
+  bundle, never netting with the authoring one. An edit's pad speaks
+  in the resulting value and the client signs the difference
+  (stance-control, *Your own content*). What the author's records never
+  decide is whether their post reaches them: their own posts always
+  show in their own feed.
+- **A pick with only one axis reads through `VALENCE_SIX`**, the
+  pure-valence spine of the twenty — six ruled bands over `pDirected`
+  alone, for the one-axis pad and the rows that state what it picked.
+  A nearest-of-twenty lookup cannot answer for a value that names no
+  pair.
 - **Where the anchors sit is recorded on the anchor-map card**
   (`components/stance/anchor-map.card.html`) — the twenty on the
   two-axis field and the six pure-valence ones on the strip, each at its
@@ -1611,9 +1620,10 @@ signing. Sensitive self-marking is one switch opening a bottom
 sheet: it veils the body and the description; the title and tags
 stay readable so choosing to look is informed; an optional reason is
 shown on the veil. Every stance a write signs is disclosed and
-adjustable on the full two-axis pad: the post's own attachment,
-+0.10 / +0.10 until the author moves it, and a reply's stance on its
-parent. The pad keeps its floating
+adjustable: the post's own attachment on the one-axis pad (For/Against
+only — a Publish carries one free number), +0.10 until the author
+moves it, and a reply's stance on its parent on the full two-axis
+pad. The pad keeps its floating
 card form everywhere; only license and sensitive present as sheets.
 
 **Key absent is restore-first.** Nothing is staged server-side and
@@ -2222,8 +2232,8 @@ entry first". What stands:
   number without an edge, an edge without its number, an untagged
   semantic element on a wired page, a screen nothing reaches — and
   reports gaps without failing.
-- **`_build/check-readouts.mjs` is the gate's second half**: the six
-  pads that draw their own readout (`RefPair`, `ComposePad`, `TagPad`,
+- **`_build/check-readouts.mjs` is the gate's second half**: the five
+  pads that draw their own readout (`RefPair`, `TagPad`,
   `TagPadCompose`, `PadKeyAbsent`, the shared `ReplyPadBody`) spell
   face and pair as literals, because the formatters and the anchor
   lookups stay off the bundle's namespace. The check reads each pad's
@@ -2231,8 +2241,9 @@ entry first". What stands:
   `formatStancePair` / `formatTagPair`, `nearestAnchor` /
   `nearestTagAnchor` — so a moved value, a hyphen
   where §3 rules U+2212, or a spoken reading left behind is a
-  failure. A seventh hand-spelled readout anywhere in `screens/` fails
-  too: unchecked is not a state a literal gets to be in.
+  failure. A sixth hand-spelled readout anywhere in `screens/` fails
+  too: unchecked is not a state a literal gets to be in. The one-axis
+  pads read through `AttachmentStanding` and spell nothing.
 - **`_build/report-summaries.mjs` is the gate's third half** (items 60
   + 64): it enumerates the feed-filter trigger's reachable summary
   strings (`feedFilterSummary`, `FeedFilter.jsx`), measures each with
@@ -7112,9 +7123,9 @@ slots.
   micro-fix): a first connection has nothing to walk back, so the pad omits
   the walk-away; the message's pad keeps the full control, an opinion on a
   message being a real, revisitable stance. The message's own seal keeps the
-  compose seal's grammar: the pair, `StanceReadout`, with `Adjust` opening
-  the ordinary full pad — an opinion on one's own content has no one-axis
-  form (*Round 13, the own-stance round*); the pad over the chat seal is
+  compose seal's grammar: one number, `AttachmentReadout`, with `Adjust`
+  opening the one-axis pad — a Send carries one free number, as a Publish
+  does (*Round 15, the census revert*); the pad over the chat seal is
   drawn when the chat round comes.
 - **Pending and didn't-land (design.md §9).** A message still settling shows
   whole with `Still settling ·` before its clock; one that expires leaves
@@ -10157,6 +10168,52 @@ Saved and History:
   screens' 45 and 46 paths (`profilesLabel`, `profilesDoor`, and the cards
   under their existing key rules). No key rule is added, and nothing
   is removed.
+
+### Round 15, the census revert — 2026-10-16
+
+jakob's ruling (PR-101, verified against the L1 original): the census
+stands — Publish, create and edit alike, is pinned `p_d = a`, `p_i = 1`,
+and the pin is deliberate L1 design: "the face stance is for the
+authors opinion on his post and one path and the authoring gestures are
+the other edge bundle that he writes whenever he creates or edits
+contents". It holds for every authored kind, not only posts. Round 13 is partly reverted:
+its own-post anchor stands; its full pad at authoring does not.
+
+- **The authoring pad is one axis again, drawn fresh.** `AttachmentPad`
+  is the square's own language cut to a strip — the same field, rung,
+  knob, pressed layer, zero hairline and gutters, `Against` · `For`
+  alone — rather than the retired hand-drawn track (jakob did not like
+  its look; the drawing was design's call, the orchestrator's).
+  `AttachmentReadout` reads the seal's and an edit's `Your opinion` row
+  as one number through `VALENCE_SIX`; `AttachmentStanding` draws the
+  pad's readouts, so `ComposePad` and `EditPad` spell no literal and
+  check-readouts holds five sites. The compose default is `+0.10`
+  (post.md §1).
+- **The face stance is an Opinion.** `PadStanding` on one's own post is
+  the ordinary pad, now read as what it signs: an Opinion, its own
+  bundle — bundles key by family, so it never nets with the post's
+  Publish records — and a second path to the post. Its `Current
+  opinion` reads the face's opinions alone.
+- **An edit's pick is a delta; the pad speaks in the result** — the
+  orchestrator's rec, drawn pending jakob's word (backlog 142).
+  `EditPad` opens at where the post's own records stand (`Current
+  opinion`), the pick is where they will stand (`Your pick`), and the
+  client signs the pick less the bundle's raw sum, so an edit nobody
+  adjusts signs `0.00`. No landing line: the pick is the landing.
+- **`Start it unreachable?` re-derived.** At `0.00` a Publish folds to
+  `(0, 1)` and carries `w̃ = 0`; the post's own path is gone, but the
+  first legs of its author's own tags and citations still reach it, so
+  the round-13 body's "the only path" overclaimed. The body is
+  re-drafted (copy-voice, *The unreachable start*).
+- **Every authored kind.** The chat sign sheet reads one number (a Send
+  carries one free number on its first leg). Item listings (Owner) take
+  the same law; no listing surface is drawn yet. Replies, chat joins and
+  foundings keep the full pad: their first legs carry two free numbers.
+- **The gate**: edges hold at **2119** and flows at **227** — the
+  own-stance edges' cases and two flow descriptions re-worded, the flows
+  re-blessed.
+  The registry holds at **100 / 3971**: no board this round touched is
+  registered, and nothing is removed.
 
 ---
 
