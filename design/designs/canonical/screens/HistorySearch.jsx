@@ -1,10 +1,11 @@
-/* HISTORY · a search that reaches people — the matches SECTIONED (jakob
-   2026-10-16: the stamped search law, seam 220, and the search-section
-   ruling (a); round 14). `Saved`'s sibling search, over the seen-list
-   alone, reading the one law every search surface reads: a bare `@m` is a
-   person cue, so the people the reader has seen whose handle starts with it
-   stand first, and the things those people authored follow them. No full
-   handle is needed.
+/* HISTORY · a search that reaches people, tags and things — the matches
+   SECTIONED (jakob 2026-10-16: the stamped search law, seam 220, and the
+   search-section ruling (a); round 14; the tags section, round 17).
+   `Saved`'s sibling search, over the seen-list alone, reading the one law
+   every search surface reads: plain `m` matches a name or title by the
+   start of any word, so the people the reader has seen, the tags and the
+   things whose words start with it all answer — the people first, then the
+   tags, then the content. No full name is needed.
 
    PEOPLE FIRST, CAPPED AT THREE — THE CAP IS THE ORCHESTRATOR'S REC, NOT YET
    JAKOB'S WORD (one law for every sectioned surface; he may carve History
@@ -14,6 +15,13 @@
    History HAS a kind filter, so its door opens the narrowing that already
    exists: the history's filter at Profiles alone, the trigger reading
    `Profiles`, the query kept (law rule 4).
+
+   THE TAGS FOLLOW, THE PEOPLE SECTION'S EXACT MIRROR (jakob 2026-10-16,
+   round 17: "all as rec"). Under the same quiet caption (`Tags`), at most
+   three, the most recently first seen among the matches, closed by
+   `See all tags`, whose narrowing is the filter at Tags alone, the trigger
+   reading `Tags`, the query kept. The cards are History's own `TagFeedCard`.
+   The tag names are the board's own to picture the section with.
 
    NO DAY DIVIDERS ARE DRAWN HERE, AND THAT IS FLAGGED. History's dividers
    mark the first-seen day down one chronological column; sections break
@@ -27,9 +35,10 @@
 
    REGISTERED under the `history` prefix (design ⇄ impl seam 062/063), every
    node named as `History` names it; the caption is `profilesLabel` and the
-   door `profilesDoor`, as `ExplorePerson` names them. */
+   door `profilesDoor`, as `ExplorePerson` names them; the tags' are `tagsLabel`
+   and `tagsDoor`. */
 export const NODE = "history";
-export const FRAME = { width: 390, height: 1150 };
+export const FRAME = { width: 390, height: 1900 };
 
 const MAREN = { handle: "maren", displayName: "Maren Holt" };
 const MATEO = { handle: "mateo", displayName: "Mateo Ruiz" };
@@ -49,7 +58,7 @@ export function Screen() {
     <>
       <PageHeader title="History" backHref="#" backLabel="Back to your profile" node="header" />
       <div style={{ flex: "none" }}>
-        <SearchBar query="@m" ariaLabel="Search your history" node="searchField" />
+        <SearchBar query="m" ariaLabel="Search your history" node="searchField" />
         <div style={{ display: "flex", alignItems: "center", padding: "0 16px 8px 16px" }}>
           <FilterTrigger reading="Everything" ariaLabel="What your history shows" node="filterTrigger" />
         </div>
@@ -68,6 +77,15 @@ export function Screen() {
         <div style={{ display: "flex", padding: "0 8px" }}>
           <Button variant="text" size="sm" node="profilesDoor">
             See all profiles
+          </Button>
+        </div>
+        <SectionLabel node="tagsLabel">Tags</SectionLabel>
+        <TagFeedCard name="#moorings" through={["ada", "tobias"]} tagged={SALTMAPS_TAGGED} score="7.40" node="tagCard" />
+        <TagFeedCard name="#mudflats" through={["mira"]} tagged={[SALTMAPS_TAGGED[0]]} score="5.20" node="tagCard" />
+        <TagFeedCard name="#midsummer" through={["sol", "ada"]} tagged={NEWEST_PICTURE} score="3.60" node="tagCard" />
+        <div style={{ display: "flex", padding: "0 8px" }}>
+          <Button variant="text" size="sm" node="tagsDoor">
+            See all tags
           </Button>
         </div>
         <PostCard {...MIRA_WORDS_POST} bundle={mkBundle(0.3, 0.1)} node="card" />
