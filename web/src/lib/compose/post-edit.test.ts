@@ -40,6 +40,7 @@ function base(overrides: Partial<PostEditState> = {}): PostEditState {
     sensitiveReason: "",
     loadedTags: [],
     loadedReferences: [],
+    pick: 0,
     recordStaged: false,
     ...overrides,
   };
@@ -124,6 +125,39 @@ describe("the post edit", () => {
   it("reads one clip as the video body", () => {
     expect(isClipBody(base({ words: "", gallery: [kept("v1")], durations: { v1: 4000 } }))).toBe(true);
     expect(isClipBody(media())).toBe(false);
+  });
+
+  // PICK-IS-THE-EDGE (round 15, EditCompose.md + EditPad.md): the edit's
+  // record carries its OWN value, 0.00 unless moved, and the client never
+  // computes a delta against the backing.
+  describe("the edit's own pick", () => {
+    it("opens at 0.00 and travels as stated — never left for the server to fill", () => {
+      expect(base().pick).toBe(0);
+      expect(postEditInput(base()).pDirected).toBe(0);
+    });
+
+    it("carries the pick exactly as set, whatever the backing stands at", () => {
+      const moved = run(base(), { type: "pick", pick: 0.3 });
+      expect(moved.pick).toBe(0.3);
+      expect(postEditInput(moved).pDirected).toBe(0.3);
+    });
+
+    it("a moved pick alone fills the batch", () => {
+      expect(run(base(), { type: "pick", pick: -0.25 }).recordStaged).toBe(true);
+    });
+
+    it("a Set at 0.00 adds no record to the batch, and never clears one staged", () => {
+      expect(run(base(), { type: "pick", pick: 0 }).recordStaged).toBe(false);
+      const typed = run(base(), { type: "title", title: "Salt maps!" }, { type: "pick", pick: 0 });
+      expect(typed.recordStaged).toBe(true);
+      // Sticky, as every field is: moving it back to 0.00 keeps the record.
+      expect(run(base(), { type: "pick", pick: 0.4 }, { type: "pick", pick: 0 }).recordStaged).toBe(true);
+    });
+
+    it("authors +0 for a −0 (PR-91's normalization) and clamps to the strip", () => {
+      expect(Object.is(run(base(), { type: "pick", pick: -0 }).pick, 0)).toBe(true);
+      expect(run(base(), { type: "pick", pick: 3 }).pick).toBe(1);
+    });
   });
 
   it("holds the sign on a words body past its cap", () => {

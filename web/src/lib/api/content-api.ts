@@ -448,9 +448,10 @@ export async function preparePost(
     sensitive?: boolean;
     sensitiveReason?: string;
     /**
-     * Where the author stands on their own post — the genesis Publish's
-     * `pDirected`, exactly as the seal shows it (the wizard pre-fills +0.1;
-     * Adjust moves it). Required on the wire: the server never fills it in.
+     * The author's backing of their own post — the genesis Publish's
+     * `pDirected`, exactly as the seal's Your backing row shows it (the
+     * wizard pre-fills +0.1; Adjust moves it). Required on the wire: the
+     * server never fills it in. `pInterest` is census-fixed, so no field.
      */
     pDirected: number;
   },
@@ -507,6 +508,14 @@ export async function preparePostEdit(
      * an image post's body with the words in the form and destroy the media.
      */
     attachments: readonly GalleryEntryDraft[];
+    /**
+     * The edit's own pick — the attachment its Publish carries, the value it
+     * ADDS to the post's backing (round 15, PICK-IS-THE-EDGE; post.md §4).
+     * Required here although the wire defaults it to the inert 0: the
+     * required-stance wire says a stance is always stated, never filled in.
+     * `pInterest` is census-fixed at 1 for Publish, so it is no field.
+     */
+    pDirected: number;
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -521,12 +530,40 @@ export async function preparePostEdit(
             content: fields.content,
             attachments: attachmentInputs(fields.attachments),
             ...sensitiveInput(fields.sensitive, fields.sensitiveReason),
+            pDirected: fields.pDirected,
           },
         },
       }),
     (data) => data.preparePostEdit.userErrors,
     (data) => liftPrepared(data.preparePostEdit),
   );
+}
+
+/**
+ * The author's BACKING of their own post: the RAW sum of their Publish
+ * records toward it — the genesis and every edit — the bundle the edit pad's
+ * `Current backing`, `Backing after` and `Walk it all back` read (EditPad.md).
+ * Raw, not clipped: Backing after is `clip(raw sum + pick)`.
+ */
+export type PostBacking = { readonly rawSum: number };
+
+/**
+ * SERVER GAP — THE READ IS MISSING (lane r13web, 2026-10-16). No field serves
+ * the author's Publish bundle toward their own post: `viewerStance` folds the
+ * family the target's class fixes, which for a post is Opinion — rightly, it
+ * is the face's read (PadStanding.md) — and the store's bundle fold excludes
+ * payload-marked records, which every Publish is. The public chronicle
+ * (`records(author:, target:, family: PUBLISH)`) lists landed records but no
+ * pending ones and no fold, so summing it here would be a second, divergent
+ * fold on the client.
+ *
+ * The edit pad is built against this read and answers `null` — "not served" —
+ * until the server grows it; the readouts it feeds stop at a flagged
+ * placeholder rather than guess. When it lands, this takes the client and the
+ * post's id and asks for the field.
+ */
+export async function fetchPostBacking(): Promise<Outcome<PostBacking | null>> {
+  return { kind: "success", value: null };
 }
 
 export async function prepareComment(

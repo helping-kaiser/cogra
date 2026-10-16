@@ -121,13 +121,13 @@ export function padPairFrom(
 }
 
 /**
- * THE SAME TRAVEL RULE WITH ONE AXIS IN IT — the one-axis field an
- * author's opinion on their own post is picked on (`ComposePad.jsx`).
+ * THE SAME TRAVEL RULE WITH ONE AXIS IN IT — the one-axis strip an
+ * author's backing of their own post is picked on (`AttachmentPad`).
  *
- * Half the span the knob's centre can travel, measured across the field
- * rather than on its shorter side: a 260×72 line has no second axis to
- * be limited by, and taking the minimum would scale the whole pick to
- * the field's height.
+ * Half the span the knob's centre can travel, measured across the strip
+ * rather than on its shorter side: a line has no second axis to be
+ * limited by, and taking the minimum would scale the whole pick to the
+ * strip's height.
  */
 export function valenceTravelHalfExtent(rect: PadRect, inset: number): number {
   return Math.max(0, rect.width / 2 - inset);

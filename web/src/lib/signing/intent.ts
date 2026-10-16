@@ -512,13 +512,17 @@ export function commentGenesis(
   };
 }
 
-/** A post edit: an ordinary-role Publish at (0, 1) chained behind its own head. */
-export function postEdit(postGraphId: string, content: ExpectedContent): ExpectedWrite {
+/**
+ * A post edit: an ordinary-role Publish at the author's pick — the edit's
+ * own attachment, 0 unless moved (post.md §4, round 15) — with `p_i`
+ * census-fixed at 1, chained behind its own head.
+ */
+export function postEdit(postGraphId: string, content: ExpectedContent, pick: number): ExpectedWrite {
   return {
     family: "publish",
     middle: null,
     target: node(postGraphId),
-    pDirected: 0,
+    pDirected: pick,
     pInterest: 1,
     license: null,
     parents: "ownChainHead",
