@@ -124,9 +124,11 @@ class WriteSigner @Inject constructor(
      * this device holds an expectation for signs only if the served proposal
      * digests to it, its dependencies aside — the landing appends the ruled
      * completion, `[admission Registration, winning vouch]`; a write it holds
-     * none for was prepared on another device and signs under the second
-     * named exemption, [CarriedAtLandingExemption], on the transport checks.
-     * One mismatch refuses the whole batch before its first pre-signature.
+     * none for was prepared on another device and, when it is an Opinion,
+     * signs under the second named exemption, [CarriedAtLandingExemption], on
+     * the transport checks. Any other family without a kept expectation is a
+     * mismatch, and one mismatch refuses the whole batch before its first
+     * pre-signature.
      * Then the [CarriedLandingGate] is asked; a batch it holds back is not
      * signed and nothing of it is spent.
      */
@@ -175,8 +177,8 @@ class WriteSigner @Inject constructor(
     /**
      * Why the released carried batch is not what this device verified at its
      * prepare, or null when every write either matches its kept expectation
-     * or has none here (the named exemption). Dependencies are never
-     * compared: the landing completes them.
+     * or is an Opinion with none here (the named exemption). Dependencies are
+     * never compared: the landing completes them.
      */
     private suspend fun carriedRefusal(author: String, batch: List<StagedWriteView>): String? {
         for (staged in batch) {
@@ -444,14 +446,20 @@ internal fun intentRefusal(author: String, proposals: List<ByteArray>, intent: I
         }
         // The landing's two carried intents (Carried.kt): the digest kept at
         // the prepare, dependencies excluded — or, prepared elsewhere, the
-        // second named exemption and the transport checks alone.
+        // second named exemption and the transport checks alone, which holds
+        // only for an Opinion (PR-105).
         is CarriedExpectation ->
             if (batch.all { carriedDigest(it).contentEquals(intent.digest) }) {
                 null
             } else {
                 "the released carried write is not the one this device verified at its prepare"
             }
-        CarriedAtLandingExemption -> null
+        CarriedAtLandingExemption ->
+            if (batch.all { it.body.family == Family.OPINION }) {
+                null
+            } else {
+                "only an Opinion is exempt from the carried check at the landing"
+            }
     }
 } catch (e: IntentMismatchException) {
     e.message ?: "the batch is not the gesture ordered"

@@ -2,6 +2,7 @@ package com.cogra.domain.signing
 
 import com.cogra.crypto.ActId
 import com.cogra.crypto.ActorKey
+import com.cogra.crypto.Family
 import com.cogra.crypto.Proposal
 import com.cogra.crypto.StructuralBody
 import com.cogra.crypto.decodeProposal
@@ -468,18 +469,23 @@ class WriteSignerTest {
     /** The applicant's prepare served it: [testProposalBytes], carried. */
     private fun carriedAtPrepare(id: String = "c1") = prepared(id).copy(carried = true)
 
-    /** The landing's release of [testProposalBytes] — [body] and [payload] as served, the completion appended. */
+    /**
+     * The landing's release of [testProposalBytes] — [body] and [payload] as
+     * served, the completion appended; [family] re-serves the same shape as
+     * another family, for the checks that read the family alone.
+     */
     private fun released(
         id: String = "c1",
         body: (StructuralBody) -> StructuralBody = { it },
         payload: ByteArray = ByteArray(0),
+        family: Family = Family.OPINION,
     ) = StagedWriteView(
         id = id,
         state = WriteState.AWAITING_PRE_SIGN,
-        family = com.cogra.crypto.Family.OPINION,
+        family = family,
         canonicalProposal = run {
             val faithful = decodeProposal(testProposalBytes(actor))
-            encodeProposal(Proposal(body(faithful.body), payload, completion))
+            encodeProposal(Proposal(body(faithful.body.copy(family = family)), payload, completion))
         },
         verifiedAct = null,
         recordId = null,
@@ -560,6 +566,70 @@ class WriteSignerTest {
         val results = WriteSigner(repo, identity).signCarriedAtLanding(listOf(malformed))
         assertThat(results.single()).isInstanceOf(WriteResult.RejectedByDevice::class.java)
         assertThat(repo.staged).isEmpty()
+    }
+
+    // ---- the exemption holds for an Opinion alone (PR-105) -----------------
+
+    @Test
+    fun aReleasedNonOpinionWriteThisDeviceNeverPreparedIsRefusedNotExempt() = runTest {
+        for (family in listOf(Family.PUBLISH, Family.TAG, Family.REFERENCE, Family.AFFINITY)) {
+            val repo = FakeWriteRepository(actor)
+            val results = WriteSigner(repo, identity).signCarriedAtLanding(listOf(released(family = family)))
+            assertThat(results).containsExactly(
+                WriteResult.RejectedByDevice("c1", "only an Opinion is exempt from the carried check at the landing"),
+            )
+            assertThat(repo.staged).isEmpty()
+        }
+    }
+
+    @Test
+    fun oneDigestLessNonOpinionWriteRefusesTheWholeReleasedBatch() = runTest {
+        val repo = FakeWriteRepository(actor)
+        val results = WriteSigner(repo, identity).signCarriedAtLanding(
+            listOf(
+                // Exempt on its own…
+                released("op"),
+                // …but the batch also releases a Tag nothing on this device verified.
+                released("tag", family = Family.TAG),
+            ),
+        )
+        assertThat(results.map { it::class }).containsExactly(
+            WriteResult.RejectedByDevice::class,
+            WriteResult.RejectedByDevice::class,
+        )
+        assertThat(repo.staged).isEmpty()
+        assertThat(identity.handshakes).isEmpty()
+    }
+
+    @Test
+    fun aNonOpinionWriteWithItsKeptExpectationStillSignsAtTheLanding() = runTest {
+        // The narrowing is the exemption's alone: a family checked at its
+        // prepare on this device signs against its kept digest as before.
+        val repo = FakeWriteRepository(actor)
+        val release = released(family = Family.TAG)
+        identity.saveCarriedExpectation("c1", carriedDigest(decodeProposal(release.canonicalProposal)))
+        repo.sealedProposal = release.canonicalProposal
+        val results = WriteSigner(repo, identity).signCarriedAtLanding(listOf(release))
+        assertThat(results).containsExactly(WriteResult.Done("c1", WriteState.RELAYING))
+    }
+
+    @Test
+    fun anExemptOpinionStillRunsTheApproveChecks() = runTest {
+        // Exempt from the carried check, not from the handshake: a host seal
+        // that fails verification is refused at the approve step.
+        val release = released()
+        val repo = FakeWriteRepository(actor).apply {
+            sealedProposal = release.canonicalProposal
+            tamperSeal = { sealed ->
+                sealed.copyOf().also { it[it.size - 1] = (it[it.size - 1].toInt() xor 1).toByte() }
+            }
+        }
+        val results = WriteSigner(repo, identity).signCarriedAtLanding(listOf(release))
+        assertThat(results.single()).isInstanceOf(WriteResult.RejectedByDevice::class.java)
+        // Pre-signed and submitted, never approved.
+        assertThat(repo.staged.keys).containsExactly("c1")
+        assertThat(repo.approveCount).isEqualTo(0)
+        assertThat(identity.handshakes).isEmpty()
     }
 
     @Test

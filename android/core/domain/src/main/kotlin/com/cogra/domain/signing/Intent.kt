@@ -174,8 +174,9 @@ data object RegistrationExemption : Intent
  * The second named exemption (PR-88): a carried write released by the landing
  * on a device that holds no prepare-time expectation for it — the write was
  * prepared, and intent-checked, on another device (Carried.kt). It still runs
- * every transport check. Internal: chosen only by the signer's landing path
- * (WriteSigner.signCarriedAtLanding), never by a surface.
+ * every transport check, and it holds only for an Opinion (PR-105). Internal:
+ * chosen only by the signer's landing path (WriteSigner.signCarriedAtLanding),
+ * never by a surface.
  */
 internal data object CarriedAtLandingExemption : Intent
 
