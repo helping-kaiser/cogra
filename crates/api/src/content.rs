@@ -441,6 +441,10 @@ pub struct PostEditDraft {
     /// The self-mark the edit leaves standing. Complete state like the
     /// rest: an edit that sends `sensitive: false` unmarks the post.
     pub sensitive: SelfMarkDraft,
+    /// The author's stance pick riding the edit's own record: its
+    /// attachment, `0` (inert) unless the author moved it. `p_i` is
+    /// census-fixed at 1, as on the genesis.
+    pub p_directed: f64,
 }
 
 pub struct CommentDraft {
@@ -839,11 +843,15 @@ async fn stage_references<B: L1Boundary>(
 }
 
 /// Prepares a Post edit: an ordinary-role Publish toward the existing
-/// Content node at attachment 0, chained behind the current head
-/// (post.md §4; substrate.md §9). Eligibility (creator only) and
-/// serialization (one in-flight edit per node and author) are enforced
-/// here — the API refuses to prepare a record its fold would never
-/// read (api-spec.md "Conventions").
+/// Content node at the author's picked attachment — `0`, inert, unless
+/// moved — chained behind the current head (post.md §4; substrate.md
+/// §9). Eligibility (creator only) and serialization (one in-flight edit
+/// per node and author) are enforced here — the API refuses to prepare a
+/// record its fold would never read (api-spec.md "Conventions").
+///
+/// Nothing compares the new state with the standing one: a
+/// content-identical edit whose only change is the pick is a real
+/// version like any other.
 pub async fn prepare_post_edit<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -851,6 +859,8 @@ pub async fn prepare_post_edit<B: L1Boundary>(
     viewer: Uuid,
     draft: PostEditDraft,
 ) -> Result<PreparedContent, ContentError> {
+    let p_d = draft.p_directed;
+    stance_range("pDirected", p_d)?;
     let post = content_store::post(pool, draft.id)
         .await?
         .ok_or(ContentError::NotFound)?;
@@ -895,7 +905,7 @@ pub async fn prepare_post_edit<B: L1Boundary>(
             family: Family::Publish,
             middle: None,
             target: Target::Node(node.target),
-            p_d: 0.0,
+            p_d,
             p_i: 1.0,
             settlement_ref: None,
             license: None,
