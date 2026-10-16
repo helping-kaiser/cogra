@@ -931,42 +931,13 @@ boards already speak, recorded so the registry is whole:
   `Back to the paths` · `Back to the path` · `Back to the step`
   (`RankPath`, `RankHop`, `RankRecords`).
 
-## The staged-act snackbar
+## The applicant-foot family
 
-An applicant's second tap of a kind already staged answers here instead
-of opening the real surface again; one line per kind, same shape:
-
-- `Your post waits with your application — it arrives with you.`
-- `Your opinion waits with your application — it arrives with you.`
-- `Your topic waits with your application — it arrives with you.` — the
-  Affinity on a tag page, its own once-each kind. Drafted from the
-  audit's recommendation (jakob 2026-10-01, "as recommended"); **blessed (jakob 2026-10-02)**.
-
-The post's line is also the seal's answer for an applicant: `Sign and
-publish` stages the post rather than landing it, so the wizard closes onto
-the applicant's own feed with this line, never with `Signed — it's in the
-thread now, still settling.` (jakob 2026-10-01). On the turned-down shell
-no application is live for the post to wait with, so the seal's exit
-says what it waits for instead: `Your post waits — it arrives when
-someone vouches you in.` (jakob 2026-10-02, the tail his; the opening
-kept from the staged-act line — *new 2026-10-02, blessed (jakob 2026-10-02)*).
-The same line answers the post's second tap there, wherever it is made —
-`New post` on the bar, and the menus' `Cite in a new post` and `Mention in
-a new post` (jakob 2026-10-05).
-The other two kinds answer a second tap on the turned-down shell in the
-same grammar (jakob 2026-10-02, **blessed**):
-
-- `Your opinion waits — it arrives when someone vouches you in.`
-- `Your topic waits — it arrives when someone vouches you in.`
-
-**Comments are not a kind that stages** (jakob 2026-10-01: applicants do
-not comment in v1.0.0). A staged comment would wear `Still settling` for a
-reply that cannot wait as pending, so the comment sheet's foot answers an
-applicant in place. A guest gets the join prompt there instead.
-
-**The applicant-foot family** — jakob's own words, picked 2026-10-02
-(F7) and **blessed**: an applicant's locked control answers its tap with
-what becomes possible, and when.
+An applicant's locked control answers its tap where it was pressed, with
+what becomes possible, and when — never a gate screen, and never an act
+that waits with the application: applicant acting is post-MVP (PR-103,
+jakob 2026-10-16). jakob's own words, picked 2026-10-02 (F7) and
+**blessed**:
 
 - `You can comment once you're in.` — the comment sheet's foot and a
   comment's `Reply`.
@@ -974,9 +945,28 @@ what becomes possible, and when.
 - `You can vouch once you're in.` — an applicant who opens someone's ask
   link, where app-open lands for them (jakob 2026-10-02, **blessed**).
 
-Every control the family answers wears the locked look (auth.md):
-visibly inactive, still tappable — the foot, `Reply` and `Invites` alike
-(jakob 2026-10-02).
+A guest gets the join prompt at the same controls instead. The acting doors answer in the same register — *drafted 2026-10-16,
+pending jakob's blessing*:
+
+- `You can post once you're in.` — `New post` on every applicant bar, and
+  the menus' `Cite in a new post` and `Mention in a new post`. The wizard
+  never opens.
+- `You can give your opinion once you're in.` — every stance face an
+  applicant meets, a topic's included, by a tap or a press-and-hold, after
+  the face's own name (`Give your opinion on this post`). The pad never
+  blooms, and nothing is signed or staged.
+
+The foot, `Reply` and `Invites` wear the locked look (auth.md): visibly
+inactive, still tappable (jakob 2026-10-02). `New post` and the stance
+faces are drawn at full strength, pending jakob's word on the look.
+
+The applicant's own profile (`ProfileApplicant`) says the same in its
+own places, *drafted 2026-10-16, pending jakob's blessing*: the open
+application's card reads `Their approval brings you in. Until then, you
+can read everything.` under `Waiting on @mira` — `ApplicantWaiting`'s
+first sentence, then what is open meanwhile — and the empty chronicle
+reads `Nothing here yet. Your posts and opinions show up here once you're
+in.`, `HistoryEmpty`'s shape.
 
 ## In-flight labels
 
@@ -1569,8 +1559,7 @@ round*; every one blessed (jakob 2026-10-02).
   turned-down card's blessed words, the handle the approver's:
   `@mira closed your application` over its body, and the ask link
   labelled `Ask someone you know to vouch for you` with that card's
-  caption. The chronicle's closing line reads `These wait — they arrive
-  when someone vouches you in.` *Blessed (jakob 2026-10-05).*
+  caption. *Blessed (jakob 2026-10-05).*
 - `Key made and backed up.` — the snackbar the ceremony's typed-back
   confirm answers with where the ceremony began (`RecoveryCode`), for
   the reason `KeyDecline`'s line exists: the task card leaves, and a
@@ -1604,10 +1593,6 @@ round*; every one blessed (jakob 2026-10-02).
 - `Resend the link` on the verify card answers in `Wrong address?`'s
   blessed sent shape, naming the address the card prints: `Sent — the
   link is on its way to noor@fieldmail.org.` (jakob 2026-10-05).
-- An applicant's first staged opinion, by `Set` or by a press-and-hold,
-  answers with the opinion's staged-act line (*The staged-act snackbar*),
-  the turned-down shell's on that shell, and the face takes the staged
-  pick (jakob 2026-10-05).
 - `ApplicantKeyElsewhere` with no backup (the `backup` chip at `none`)
   drops `Restore the key` and reads `Your application's key was made on
   another device and has no backup, so it can't be brought here yet. Make
@@ -2624,9 +2609,7 @@ default) · `When it settles`.
 section · `Your feed is showing nothing — everything is switched off.`
 (its action, `Show posts again`, carried over — blessed by use, jakob
 2026-10-06; `FeedNothing`)
-· `Your sky — every account a star, sized by your own paths to it.` ·
-`These wait with your application and arrive with you.` ·
-`What you post now arrives with you.`
+· `Your sky — every account a star, sized by your own paths to it.`
 
 **Carried over unchanged, blessed (jakob 2026-10-06)** — drawn by the
 tag round: `Un-tag`, the edit body's `Withdrawn: #coastroad`, and the
@@ -3465,14 +3448,14 @@ lines*), recorded so the registry is whole:
   it, down to the record that paid it.`
 - `Getting in, and being let in` — `CoGra is invite-only. Somebody already
   here vouches for you, and until they have, you are an applicant: you
-  can read everything, write one post, give one opinion and say how you
-  feel about one topic.` / `These wait with your application and arrive
-  with you. Until then only you can see them, and they are signed
-  together with the vouch that lets you in. If your application is
-  closed, your account stays — anyone can still vouch you in.` / `That is
-  not a waiting period for its own sake. The first link to you is a real
-  one, given by a person who stands behind it — which is the thing that
-  keeps this place small enough to be honest.`
+  can read everything, and you can post and give opinions once you're
+  in.` / `If your application is closed, your account stays — anyone can
+  still vouch you in.` / `That is not a waiting period for its own sake.
+  The first link to you is a real one, given by a person who stands
+  behind it — which is the thing that keeps this place small enough to be
+  honest.` The first paragraph's tail is *drafted 2026-10-16 in the
+  applicant-foot family's register, pending jakob's blessing*; the second
+  keeps its blessed closing sentence alone.
 - `Your key is yours` — `Everything you publish is signed by a key only
   you hold. We cannot sign for you, and we cannot recover it for you —
   your recovery code is the only way back.`
