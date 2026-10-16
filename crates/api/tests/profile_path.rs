@@ -403,8 +403,7 @@ async fn an_unsigned_update_is_superseded_by_the_next(pool: PgPool) {
         .await
         .expect("an unsigned update holds nothing");
     assert_eq!(
-        next.proposal.body.asserted_parents,
-        abandoned.proposal.body.asserted_parents,
+        next.proposal.body.asserted_parents, abandoned.proposal.body.asserted_parents,
         "the successor chains behind the same head"
     );
     let write = staged::load(&rig.pool, abandoned.id).await.expect("loads");
