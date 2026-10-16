@@ -43,14 +43,13 @@
 //! bytes a digest is committed over are the only bytes the asset ever
 //! serves.
 
+pub mod areas;
 pub mod blob;
 pub mod ingest_queue;
 pub mod resumable;
 pub mod transcode;
 pub mod video;
 pub mod webp;
-
-use std::sync::Arc;
 
 use postgres_store::PgPool;
 use postgres_store::media as store;
@@ -59,6 +58,7 @@ use uuid::Uuid;
 
 use crate::env_or;
 
+pub use areas::MediaAreas;
 pub use blob::{BlobError, BlobStore, ObjectBlobStore, S3Config};
 
 /// The widest canvas the pipeline admits, per axis.
@@ -129,7 +129,14 @@ pub enum MediaError {
 /// How to reach the media service and what to allow through it.
 #[derive(Debug, Clone)]
 pub struct MediaConfig {
+    /// The live store: the world-readable bucket `base_url` serves.
     pub s3: S3Config,
+    /// The bucket an applicant's carried media waits in — no public
+    /// policy; served to its author alone (data-model.md "Media areas").
+    pub carried_bucket: String,
+    /// The operator-only bucket a deleted asset's bytes leave the live
+    /// store for — no public policy and no serving route.
+    pub held_bucket: String,
     /// The origin every `MediaAttachment.url` is minted against — the
     /// media service's own, never the API's. Bytes leave through the
     /// store, so a CDN can sit in front of it without the contract
@@ -244,6 +251,8 @@ impl Default for MediaConfig {
                 secret_access_key: "cogra_media_secret".into(),
                 region: "us-east-1".into(),
             },
+            carried_bucket: "cogra-media-carried".into(),
+            held_bucket: "cogra-media-held".into(),
             base_url: "http://localhost:3000/media".into(),
             max_upload_bytes: DEFAULT_MAX_UPLOAD_BYTES,
             max_video_upload_bytes: DEFAULT_MAX_VIDEO_UPLOAD_BYTES,
@@ -273,6 +282,8 @@ impl MediaConfig {
                 secret_access_key: env_or("MEDIA_SECRET_ACCESS_KEY", &base.s3.secret_access_key),
                 region: env_or("MEDIA_REGION", &base.s3.region),
             },
+            carried_bucket: env_or("MEDIA_CARRIED_BUCKET", &base.carried_bucket),
+            held_bucket: env_or("MEDIA_HELD_BUCKET", &base.held_bucket),
             base_url: env_or("MEDIA_BASE_URL", &base.base_url)
                 .trim_end_matches('/')
                 .to_string(),
@@ -1425,16 +1436,26 @@ const ORPHAN_SWEEP_BATCH: i64 = 200;
 /// would be a second interval to configure for no gain. It runs first
 /// because a session it finishes collecting can leave an asset behind
 /// for the orphan sweep to see on this very pass.
+///
+/// The held-media reconciler rides it too: a held asset whose bytes did
+/// not leave the live store when its redaction committed is moved to the
+/// operator store here ([`areas::settle_held`]), so a failed move is
+/// retried every tick rather than left public.
 pub async fn orphan_reaper_loop(
     pool: PgPool,
-    blobs: Arc<dyn BlobStore>,
+    areas: MediaAreas,
     interval_secs: u64,
     max_age_secs: f64,
 ) {
+    let blobs = areas.live.clone();
     let mut ticker = tokio::time::interval(std::time::Duration::from_secs(interval_secs));
     ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
     loop {
         ticker.tick().await;
+        let moved = areas::settle_held(&pool, &areas).await;
+        if !moved.is_empty() {
+            tracing::info!(assets = moved.len(), "held media left the live store");
+        }
         resumable::sweep_expired(&pool, &blobs).await;
         match store::sweep_orphans(&pool, max_age_secs, ORPHAN_SWEEP_BATCH).await {
             Ok(swept) if swept.is_empty() => {}

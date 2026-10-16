@@ -1,11 +1,11 @@
 // THE ONE-AXIS TABLE — the face a pick that names no pair wears.
 //
-// An opinion on one's own post is ONE number (jakob's ruling, 2026-09-14:
-// "the second number isn't yours to set on your own post"). A post always
-// reaches its author in full, so `pInterest` is not a value the author
-// picks, and `nearestAnchor` cannot answer for a value that names no
-// pair: asked for the nearest of twenty points to a value with only an
-// x, it would have to invent a y.
+// The BACKING an author signs with their own content is ONE number (jakob
+// 2026-10-16, PR-101): Publish carries `p_d = a` and the census pins
+// `p_i = 1`, never a choice, so `nearestAnchor` cannot answer for it —
+// asked for the nearest of twenty points to a value with only an x, it
+// would have to invent a y. The author's OPINION on their own post is a
+// different record, the ordinary pair the post's face takes.
 //
 // So the six here are the twenty's pure-valence spine — the mild, middle
 // and far face on each side, at ±0.15, ±0.55 and ±0.90. Glyph, word and
@@ -67,8 +67,9 @@ export type ValenceBand = {
  *     negative side that is the band above, so a negative row stops
  *     short of its edge; on the positive side it is the band below, so a
  *     positive row keeps it.
- *   - EXACTLY 0.00 READS 🙂 — the 😕 row stops short of zero, so zero
- *     falls into the first band above it.
+ *   - The 😕 row stops short of zero and the 🙂 row would take it, but
+ *     `nearestValenceAnchor` answers EXACTLY 0.00 before the table is
+ *     read: it wears 🤷 (jakob 2026-10-16, round 15), the zero face.
  */
 const BANDS: readonly Omit<ValenceBand, "label" | "pDirected">[] = [
   { emoji: "😠", to: -0.725, toInclusive: false },
@@ -99,16 +100,35 @@ export const VALENCE_SIX: readonly ValenceBand[] = BANDS.map((band) => {
 });
 
 /**
- * The face a ONE-AXIS pick wears — the first band the value falls
- * inside. The bands cover the closed axis, so every value has exactly
- * one; out of range is clamped in rather than refused, the way the pad
- * clamps.
+ * EXACTLY 0.00 SHRUGS on the one axis (jakob 2026-10-16, "yes the shrug
+ * should be the icon for exactly 0"): a backing of zero carries nothing,
+ * so it wears the zero face, 🤷, spoken `Nothing` — never a band's smile.
+ * Only the exact value; the bands keep the rest of the axis as ruled
+ * (`StanceReadout.jsx`'s `ZERO_BACKING_LABEL`).
+ */
+export const ZERO_BACKING_EMOJI = "🤷";
+export const ZERO_BACKING_LABEL = "Nothing";
+
+const ZERO_BACKING: ValenceBand = {
+  emoji: ZERO_BACKING_EMOJI,
+  label: ZERO_BACKING_LABEL,
+  pDirected: 0,
+  to: 0,
+  toInclusive: true,
+};
+
+/**
+ * The face a ONE-AXIS pick wears — 🤷 at exactly 0.00, otherwise the
+ * first band the value falls inside. The bands cover the closed axis, so
+ * every value has exactly one; out of range is clamped in rather than
+ * refused, the way the pad clamps.
  *
  * Interval comparison only: no distance is computed, so there is no
  * float arithmetic here for two platforms to round differently.
  */
 export function nearestValenceAnchor(pDirected: number): ValenceBand {
   const value = clampDimension(pDirected);
+  if (value === 0) return ZERO_BACKING;
   for (const band of VALENCE_SIX) {
     if (value < band.to || (band.toInclusive && value === band.to)) return band;
   }

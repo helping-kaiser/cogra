@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT m.id AS media_id, m.storage_key, m.area AS \"area: MediaArea\"\n           FROM media_attachments m\n           WHERE m.id = ANY($1)\n             AND NOT EXISTS (SELECT 1 FROM retention_archive_media r WHERE r.media_id = m.id)\n             AND NOT media_live_placed(m.id)\n           ORDER BY m.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "media_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "storage_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "area: MediaArea",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "fe0fe6fa90adbfd33bc7b8b0a9ff63564d0995c91cb7e7c059c370498d61140e"
+}

@@ -1,0 +1,71 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, author_id, digest, digest_algo, storage_key, mime_type,\n                  area AS \"area: MediaArea\", held_at,\n                  media_live_placed(id) AS \"placed!\"\n           FROM media_attachments\n           WHERE author_id = $1 AND digest = ANY($2) AND state = 'ready'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "author_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "digest",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 3,
+        "name": "digest_algo",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "storage_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "mime_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "area: MediaArea",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "held_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "placed!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "ByteaArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      null
+    ]
+  },
+  "hash": "9a6905c5ddc16e0d62c71d61e9eccbc7d8bb0f1278a61f235dfe049d3377f40b"
+}

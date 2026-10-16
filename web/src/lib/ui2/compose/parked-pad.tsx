@@ -28,11 +28,11 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { useCoversSurface } from "../covering-layer";
 
 /**
- * The standoff from the bottom edge, which the two boards draw
- * differently: `ComposePad.jsx` parks at 24px, `ReplyPadBody` at 16.
- * Written as whole classes so the scanner can see them.
+ * The standoff from the bottom edge, per board: `ComposePad.jsx` and
+ * `EditPad.jsx` park at 16px, as `ReplyPadBody` does. Written as whole
+ * classes so the scanner can see them.
  */
-const STANDOFF = { compose: "mb-6", reply: "mb-4" } as const;
+const STANDOFF = { compose: "mb-4", reply: "mb-4" } as const;
 
 export function ParkedPad({
   open,

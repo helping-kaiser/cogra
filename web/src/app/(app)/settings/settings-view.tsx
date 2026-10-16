@@ -62,6 +62,10 @@ import {
   UNVEIL_LEVEL,
   useAlwaysUnveil,
 } from "@/lib/settings/sensitive-content";
+import {
+  carriedExpectationStore,
+  type CarriedExpectationStore,
+} from "@/lib/signing/carried";
 import { useConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
 import { useStanceInputMode, type StanceInputMode } from "@/lib/stance/input-mode";
 import { instance, part, type DataNode } from "@/lib/ui/data-node";
@@ -152,6 +156,7 @@ export function SettingsView({
   store = identityStore,
   drafts = composeDraftStore,
   seals = sealedDraftStore,
+  carried = carriedExpectationStore,
   forgetSeenRecord = (account: string) => forgetSeen(seenRecord, account),
   erase = eraseEverything,
   leave = hardNavigate,
@@ -161,6 +166,7 @@ export function SettingsView({
   store?: IdentityStore;
   drafts?: Pick<ComposeDraftStore, "clear">;
   seals?: Pick<SealedDraftStore, "forget">;
+  carried?: Pick<CarriedExpectationStore, "forget">;
   /** Drops one account's seen record and watermark from this browser. */
   forgetSeenRecord?: (account: string) => Promise<void>;
   erase?: () => Promise<void>;
@@ -386,6 +392,13 @@ export function SettingsView({
     // write lands or expires — so it goes with the draft (Settings.md:145).
     try {
       await seals.forget();
+    } catch {
+      // sign-out proceeds regardless
+    }
+    // A carried write's prepare-time expectation is the draft's tier, and goes
+    // with it (signing/carried.ts).
+    try {
+      await carried.forget();
     } catch {
       // sign-out proceeds regardless
     }

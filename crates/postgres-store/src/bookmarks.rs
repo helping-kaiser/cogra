@@ -266,7 +266,7 @@ pub async fn bookmarks(
 
 /// A keyset position on a narrowed Saved list: section ascending, then
 /// `(bookmarked_at, content_id)` descending — the order the search
-/// matcher serves a Saved list in (`search::Window::saved_by`).
+/// matcher serves a Saved list in (`search::Window::list`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SavedMatchCursor {
     pub section: i32,

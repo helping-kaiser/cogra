@@ -26,6 +26,7 @@ import { createComposeDraftStore, type ComposeDraftStore } from "@/lib/compose/d
 import { hasDraftCustody } from "@/lib/compose/draft-custody";
 import { createSealedDraftStore, type SealedDraftStore } from "@/lib/compose/sealed-draft";
 import { emptyWizard, type WizardState } from "@/lib/compose/wizard";
+import { createCarriedExpectationStore } from "@/lib/signing/carried";
 import { createDeviceLockEngine, type DeviceLockEngine } from "./device-lock";
 import { createIdentityStore, type IdentityStore } from "./store";
 
@@ -547,5 +548,39 @@ describe("UNLOCK (§3.5)", () => {
     expect(w.server.locks.has(id)).toBe(true);
     expect(await w.identity.lockIdOf(A)).toBe(id);
     expect(await w.engine.ensureHeld(A)).toBe("failed");
+  });
+});
+
+describe("the carried expectation rides the draft (PR-88)", () => {
+  function carriedOf(world: World) {
+    return createCarriedExpectationStore({
+      activeAccountId: () => world.active.account,
+      idb: () => world.idb,
+    });
+  }
+
+  it("a_carried_expectation_is_locked_with_the_draft_and_put_back_by_the_unlock", async () => {
+    await signedInForget(w);
+    const carried = carriedOf(w);
+    await carried.save("carried-1", Uint8Array.of(7, 7, 7));
+    expect(await w.engine.lock(A, clearTokens(w))).toBe(true);
+    const keys = (await w.identity.lockedSet(A))!.map((r) => `${r.kind}/${r.key}`);
+    expect(keys).toContain(`draft/carried:${A}:carried-1`);
+    // No plaintext left behind, even read as the account.
+    w.active.account = A;
+    expect(await carried.get("carried-1")).toBeNull();
+    w.active.account = null;
+    expect((await signInAgain(w, A, true)).ready).toBe(true);
+    expect(await carried.get("carried-1")).toEqual(Uint8Array.of(7, 7, 7));
+  });
+
+  it("a_backed_remote_end_purges_the_key_but_locks_the_carried_expectation_with_the_draft", async () => {
+    await signedInForget(w, { backed: true });
+    await carriedOf(w).save("carried-1", Uint8Array.of(7, 7, 7));
+    expect(await w.engine.endLocalSession(A, clearTokens(w))).toBe("locked");
+    const keys = (await w.identity.lockedSet(A))!.map((r) => `${r.kind}/${r.key}`);
+    expect(keys).toContain(`draft/carried:${A}:carried-1`);
+    expect((await signInAgain(w, A, true)).ready).toBe(true);
+    expect(await carriedOf(w).get("carried-1")).toEqual(Uint8Array.of(7, 7, 7));
   });
 });

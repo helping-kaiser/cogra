@@ -101,6 +101,17 @@ interface IdentityStore {
     suspend fun handshakeIds(): Set<String>
 
     /**
+     * The digest a carried write was verified to at its prepare, or null when
+     * this device holds none (signing/Carried.kt). Part of the account's
+     * slot, so it follows the draft's fate through a lock or a purge.
+     */
+    suspend fun carriedExpectation(stagedWriteId: String): ByteArray?
+
+    suspend fun saveCarriedExpectation(stagedWriteId: String, digest: ByteArray)
+
+    suspend fun clearCarriedExpectation(stagedWriteId: String)
+
+    /**
      * Device-local UX state: whether the tap that teaches the held
      * gesture has been spent. Set when the coach mark opens, so a
      * restart cannot swallow a second priced tap in silence

@@ -7,7 +7,7 @@
 
 use api::content::{self, License, PostDraft};
 use api::l1::{L1Boundary, StandInBoundary};
-use api::media::AttachmentDraft;
+use api::media::{AttachmentDraft, MediaAreas};
 use api::prepare::{Gesture, Target};
 use api::redaction::{self, Redaction, RedactionError};
 use common::envelope::CograContent;
@@ -30,6 +30,7 @@ struct Rig {
     pool: PgPool,
     standin: StandIn,
     boundary: StandInBoundary,
+    areas: MediaAreas,
 }
 
 /// Every place a payload, its content salt or its nonce can sit, for one
@@ -50,6 +51,7 @@ impl Rig {
             pool,
             standin,
             boundary,
+            areas: MediaAreas::in_memory(),
         }
     }
 
@@ -184,6 +186,7 @@ impl Rig {
         let done = redaction::redact(
             &self.boundary,
             &self.pool,
+            &self.areas,
             &[Redaction {
                 actor_id: actor,
                 act_id,
