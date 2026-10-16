@@ -1502,7 +1502,7 @@ impl User {
             has_next,
             BookmarkConnectionFields {
                 viewer: self.identity.id,
-                matched: None,
+                narrowed: None,
             },
         );
         connection
@@ -4249,12 +4249,13 @@ pub type BookmarkConnection = Connection<
 >;
 
 /// `BookmarkConnection`'s connection-level fields: the viewer whose list
-/// served the edges, and — on a narrowed list — the nodes the matcher
-/// matched, so the count runs only when asked and under exactly the
-/// predicate the pages ran.
+/// served the edges, and — on a narrowed list — the search request it
+/// was narrowed by (None when that request could match nothing), so the
+/// count runs only when asked and under exactly the predicate the pages
+/// ran.
 pub struct BookmarkConnectionFields {
     viewer: Uuid,
-    matched: Option<Vec<Uuid>>,
+    narrowed: Option<Option<postgres_store::search::SearchRequest>>,
 }
 
 #[Object]
@@ -4265,11 +4266,10 @@ impl BookmarkConnectionFields {
     #[graphql(complexity = 0)]
     async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
         let pool = ctx.data::<PgPool>()?;
-        let total = match &self.matched {
+        let total = match &self.narrowed {
             None => postgres_store::bookmarks::count_bookmarks(pool, self.viewer).await,
-            Some(ids) => {
-                postgres_store::bookmarks::count_bookmarks_among(pool, self.viewer, ids).await
-            }
+            Some(None) => Ok(0),
+            Some(Some(request)) => request.count(pool, Some(self.viewer)).await,
         }
         .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
@@ -4279,8 +4279,9 @@ impl BookmarkConnectionFields {
 impl User {
     /// `bookmarks(query:)` with a query that is not blank: the search
     /// request the query makes — the one `search` builds, over the kinds
-    /// Saved holds — read inside the viewer's saved set, then paged by
-    /// section and save time.
+    /// Saved holds — served from the viewer's Saved list by the matcher's
+    /// own statement, which joins the list, orders by section and save
+    /// time and stops at the page (`search::Window::saved_by`).
     async fn narrowed_bookmarks(
         &self,
         ctx: &Context<'_>,
@@ -4302,51 +4303,29 @@ impl User {
         let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
         let saved_kinds = [NodeKind::User, NodeKind::Post, NodeKind::Comment];
         let request = super::query::search_request(ctx, parsed, Some(&saved_kinds), None).await?;
-        let saved = match &request {
-            Some(_) => postgres_store::bookmarks::saved_ids(pool, self.identity.id)
+        let window = postgres_store::search::Window {
+            saved_by: Some(self.identity.id),
+            ..postgres_store::search::Window::default()
+        };
+        let mut hits = match &request {
+            Some(request) => request
+                .find_in(
+                    pool,
+                    window,
+                    cursor.map(postgres_store::bookmarks::SavedMatchCursor::as_search_cursor),
+                    backward,
+                    limit + 1,
+                )
                 .await
                 .map_err(|e| async_graphql::Error::new(e.to_string()))?,
             None => Vec::new(),
         };
-        let hits = match &request {
-            Some(request) if !saved.is_empty() => request
-                .find_in(
-                    pool,
-                    postgres_store::search::Window {
-                        within: Some(&saved),
-                        excluding: &[],
-                        section: None,
-                    },
-                    None,
-                    false,
-                    i64::MAX,
-                )
-                .await
-                .map_err(|e| async_graphql::Error::new(e.to_string()))?,
-            _ => Vec::new(),
-        };
-        let ids: Vec<Uuid> = hits.iter().map(|hit| hit.node_id).collect();
-        let sections: Vec<i32> = hits
-            .iter()
-            .map(|hit| postgres_store::search::section_of(hit.tier))
-            .collect();
-        let mut kept = postgres_store::bookmarks::bookmarks_among(
-            pool,
-            self.identity.id,
-            &ids,
-            &sections,
-            cursor,
-            backward,
-            limit + 1,
-        )
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
-        let has_more = kept.len() as i64 > limit;
+        let has_more = hits.len() as i64 > limit;
         if has_more {
             if backward {
-                kept.remove(0);
+                hits.remove(0);
             } else {
-                kept.pop();
+                hits.pop();
             }
         }
         let (has_previous, has_next) = if backward {
@@ -4359,16 +4338,24 @@ impl User {
             has_next,
             BookmarkConnectionFields {
                 viewer: self.identity.id,
-                matched: Some(ids),
+                narrowed: Some(request),
             },
         );
         connection.edges.extend(
             hydrate_bookmarks_with(
                 pool,
-                kept.into_iter()
-                    .map(|m| {
-                        let cursor = crate::bookmarks::encode_match_cursor(m.cursor());
-                        (m.bookmark, cursor)
+                hits.into_iter()
+                    .map(|hit| {
+                        let cursor =
+                            crate::bookmarks::encode_match_cursor(
+                            postgres_store::bookmarks::SavedMatchCursor::of_hit(&hit),
+                        );
+                        let bookmark = postgres_store::bookmarks::Bookmark {
+                            content_id: hit.node_id,
+                            kind: hit.kind,
+                            bookmarked_at: hit.created_at,
+                        };
+                        (bookmark, cursor)
                     })
                     .collect(),
             )
@@ -4608,7 +4595,7 @@ impl SearchConnectionFields {
         };
         let pool = ctx.data::<PgPool>()?;
         let total = request
-            .count(pool)
+            .count(pool, None)
             .await
             .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))

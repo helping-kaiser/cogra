@@ -193,9 +193,9 @@ pub async fn page(
     };
     let tail_page = |section: i32, at: Option<SearchCursor>, backward: bool, limit: i64| {
         let window = Window {
-            within: None,
             excluding: &head_ids,
             section: Some(section),
+            ..Window::default()
         };
         tail_rows(&request, pool, window, pin, at, backward, limit)
     };
@@ -399,8 +399,7 @@ async fn ranked_head(
     }
     let window = Window {
         within: Some(&in_slice),
-        excluding: &[],
-        section: None,
+        ..Window::default()
     };
     let candidates = request
         .find_in(pool, window, None, false, i64::MAX)
