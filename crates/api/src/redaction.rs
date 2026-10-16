@@ -265,16 +265,18 @@ impl UnitMedia {
 /// rendition digest alone. A digest that resolves to no asset is left out
 /// — the unit references objects, and there is none to reference — and a
 /// payload that is not a content or profile envelope (the admission
-/// Registration's handle) names none.
+/// Registration's handle) names none. The carriage is read under the
+/// read/ingest admission, so a payload a newer format wrote still names
+/// the media it carries.
 async fn unit_media(
     pool: &PgPool,
     author: Uuid,
     envelope: &[u8],
 ) -> Result<Vec<UnitMedia>, RedactionError> {
-    let named: Vec<MediaAsset> = if let Ok(content) = CograContent::decode_payload(envelope) {
-        content.media
-    } else if let Ok(profile) = CograProfile::decode_payload(envelope) {
-        profile.avatar.flatten().into_iter().collect()
+    let named: Vec<MediaAsset> = if let Ok(content) = CograContent::read_payload(envelope) {
+        content.fields.media
+    } else if let Ok(profile) = CograProfile::read_payload(envelope) {
+        profile.fields.avatar.flatten().into_iter().collect()
     } else {
         Vec::new()
     };

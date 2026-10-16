@@ -23,7 +23,9 @@
 //! content, under ranking too: each section is its ranked head, then its
 //! own rest behind the seam in the matcher's order — tier, then newest
 //! first — minus what the head holds. An out-of-slice person still
-//! stands before any content.
+//! stands before any content. A capped people section
+//! ([`crate::search::PEOPLE_SECTION_CAP`]) serves its first few in that
+//! same order: ranked people first, then the rest behind the seam.
 //!
 //! **Paging reuses the pin.** The first page pins the mirror cursor; the
 //! opaque cursor carries that epoch, and every later page recomputes the
@@ -173,8 +175,9 @@ pub async fn page(
         Some(c) => c.epoch(),
         None => mirror_cursor,
     };
-    let head = ranked_head(pool, ranker, &request, viewer, pin).await?;
+    let mut head = ranked_head(pool, ranker, &request, viewer, pin).await?;
     let head_ids: Vec<Uuid> = head.iter().map(|(hit, _)| hit.node_id).collect();
+    let people = people_cap(pool, &request, &mut head, &head_ids).await?;
     let take = usize::try_from(limit).unwrap_or(0) + 1;
     let store_limit = |n: usize| i64::try_from(n).unwrap_or(i64::MAX);
     let head_row = |slot: usize| {
@@ -193,9 +196,10 @@ pub async fn page(
     };
     let tail_page = |section: i32, at: Option<SearchCursor>, backward: bool, limit: i64| {
         let window = Window {
-            within: None,
             excluding: &head_ids,
             section: Some(section),
+            people: people.as_deref(),
+            ..Window::default()
         };
         tail_rows(&request, pool, window, pin, at, backward, limit)
     };
@@ -317,6 +321,7 @@ pub async fn page(
         has_next,
         SearchConnectionFields {
             request: Some(request),
+            more_people: None,
         },
     );
     connection
@@ -330,6 +335,47 @@ pub async fn page(
             ))
         }));
     Ok(connection)
+}
+
+/// The people a capped people section serves under ranking
+/// ([`crate::search::PEOPLE_SECTION_CAP`]): the section's first few in the
+/// ranked result's own order — its ranked head, then its rest behind the
+/// seam. The head keeps only those people, and the tail reads them
+/// through its window. None, with the head untouched, when the cap does
+/// not apply. `head_ids` is the whole head before the cap: a capped-away
+/// person must not reappear behind the seam.
+async fn people_cap(
+    pool: &PgPool,
+    request: &SearchRequest,
+    head: &mut Vec<(SearchHit, f64)>,
+    head_ids: &[Uuid],
+) -> async_graphql::Result<Option<Vec<Uuid>>> {
+    use crate::search::PEOPLE_SECTION_CAP;
+    use postgres_store::search::SECTION_PEOPLE;
+    if !request.serves_people_beside_others() {
+        return Ok(None);
+    }
+    let mut served: Vec<Uuid> = head
+        .iter()
+        .filter(|(hit, _)| section_of(hit.tier) == SECTION_PEOPLE)
+        .map(|(hit, _)| hit.node_id)
+        .take(PEOPLE_SECTION_CAP)
+        .collect();
+    if served.len() < PEOPLE_SECTION_CAP {
+        let window = Window {
+            excluding: head_ids,
+            section: Some(SECTION_PEOPLE),
+            ..Window::default()
+        };
+        let room = (PEOPLE_SECTION_CAP - served.len()) as i64;
+        let rest = request
+            .find_in(pool, window, None, false, room)
+            .await
+            .map_err(storage)?;
+        served.extend(rest.into_iter().map(|hit| hit.node_id));
+    }
+    head.retain(|(hit, _)| section_of(hit.tier) != SECTION_PEOPLE || served.contains(&hit.node_id));
+    Ok(Some(served))
 }
 
 /// One walk of a section's tail behind its seam: the matcher's order
@@ -399,8 +445,7 @@ async fn ranked_head(
     }
     let window = Window {
         within: Some(&in_slice),
-        excluding: &[],
-        section: None,
+        ..Window::default()
     };
     let candidates = request
         .find_in(pool, window, None, false, i64::MAX)

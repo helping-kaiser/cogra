@@ -303,6 +303,9 @@ pub async fn land_promoted(
 /// version row, since there is no update left to apply. A redaction that
 /// reduced the act while it was being promoted has the last word the same
 /// way: no version row is built from bytes it removed.
+///
+/// The update is read under the read/ingest admission
+/// ([`CograProfile::read_payload`]), as content's landing reads its payload.
 async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), ProfileError> {
     let staged_row = match staged::load_promotable(pool, write.id).await? {
         staged::Promotable::Full(row) => *row,
@@ -338,8 +341,9 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
             .map_err(|e| ProfileError::Internal(e.to_string()))?;
         return Ok(());
     }
-    let update = CograProfile::decode_payload(payload)
-        .map_err(|e| ProfileError::Internal(format!("landed payload not admissible: {e}")))?;
+    let update = CograProfile::read_payload(payload)
+        .map_err(|e| ProfileError::Internal(format!("landed payload not admissible: {e}")))?
+        .fields;
     if update.node != write.actor_id {
         return Err(ProfileError::Internal(
             "profile payload names a different actor".into(),

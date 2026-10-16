@@ -269,6 +269,37 @@ describe("preparePost", () => {
     expect((variables as unknown as { input: { pDirected: unknown } }).input.pDirected).toBe(0.7);
   });
 
+  // A zero leaves the device as the positive one (PR-91 rider). On web the
+  // JSON body is what normalises it — `JSON.stringify(-0)` is "0" — so a
+  // pad's `-0` reaches the server as `0`; `toBe` compares with Object.is,
+  // so a `-0` that survived the wire would fail here.
+  it("sends a picked negative zero as the positive zero", async () => {
+    let variables: Record<string, unknown> | null = null;
+    server.use(
+      graphql.mutation("PreparePost", ({ variables: v }) => {
+        variables = v;
+        return HttpResponse.json({
+          data: {
+            preparePost: {
+              __typename: "PrepareContentPayload",
+              node: "node-1",
+              writes: [],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    await preparePost(client(), {
+      title: "T",
+      description: null,
+      content: "B",
+      license,
+      pDirected: -0,
+    });
+    expect((variables as unknown as { input: { pDirected: unknown } }).input.pDirected).toBe(0);
+  });
+
   it("refuses with the payload's userErrors", async () => {
     server.use(
       graphql.mutation("PreparePost", () =>

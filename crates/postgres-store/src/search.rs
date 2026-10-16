@@ -21,7 +21,10 @@
 //! [`SearchRequest`]; none grows a second predicate. What differs between
 //! them is passed in: the kinds served, the seen-list exclusion, the
 //! finder's narrowing to what `prepareReference` accepts, and the
-//! [`Window`] a read is confined to — Saved's is the reader's saved set.
+//! [`Window`] a read is confined to. Saved's is the reader's Saved list
+//! ([`Window::saved_by`]): the statement itself joins the list, orders by
+//! save time and stops at the page, so a narrowed Saved page costs one
+//! statement bounded by the reader's own saves, whatever page it is.
 //!
 //! # Sections and tiers
 //!
@@ -74,13 +77,12 @@ pub struct MatchQuery {
     /// the exact-match tier.
     pub text: String,
     /// The text as a `LIKE` pattern body — metacharacters escaped with
-    /// `\`, no wildcards — matched as a substring of a handle or a
-    /// topic's name.
+    /// `\`, no wildcards — matched as a substring of a topic's name.
     pub like_body: String,
     /// The text's words in `to_tsquery` syntax over the `simple`
     /// configuration, the last as a prefix — matched against a post's
-    /// title and a person's display name. None when the text carries no
-    /// word.
+    /// title and a person's handle and display name. None when the text
+    /// carries no word.
     pub title_query: Option<String>,
     /// The index kinds served (`user`, `post`, `hashtag`). Never empty:
     /// a request that serves nothing does not reach the store.
@@ -159,12 +161,14 @@ pub enum SearchRequest {
     Scoped(ScopedQuery),
 }
 
-/// A restriction of one page read to part of the request's matches. It
-/// narrows what a page may hold, never what the request matches, so
-/// [`count`] never sees it: ranked search reads its in-slice candidates
-/// `within` the viewer's slice and pages the rest `excluding` what the
-/// ranker ordered, one `section` at a time (ranked-feed-api §4.8); Saved
-/// reads `within` the reader's saved set.
+/// A restriction of one page read to part of the request's matches.
+/// `within`, `excluding`, `section` and `people` narrow what a page may
+/// hold, never what the request matches, so a count never sees them:
+/// ranked search reads its in-slice candidates `within` the viewer's slice
+/// and pages the rest `excluding` what the ranker ordered, one `section`
+/// at a time (ranked-feed-api §4.8); a capped people section serves only
+/// its first few, the API's cap. `saved_by` is Saved's: it confines the
+/// request itself, so [`SearchRequest::count`] takes it too.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Window<'a> {
     /// Only these nodes may be served; None restricts nothing.
@@ -173,9 +177,53 @@ pub struct Window<'a> {
     pub excluding: &'a [Uuid],
     /// Only this section's matches may be served; None restricts nothing.
     pub section: Option<i32>,
+    /// In the people section, only these people may be served — the other
+    /// sections are untouched; None restricts nothing.
+    pub people: Option<&'a [Uuid]>,
+    /// Only what this account kept on its Saved list may be served, in the
+    /// narrowed list's order (api-spec.md `User.bookmarks`): section, then
+    /// newest save first, then id. A hit's `tier` is then its section's
+    /// own (`2 · section` — a narrowed Saved list has no exact-match tier)
+    /// and its `created_at` the save time, so a [`SearchCursor`] walks the
+    /// narrowed list. None serves the matcher's own order.
+    pub saved_by: Option<Uuid>,
 }
 
 impl SearchRequest {
+    /// The index kinds the request serves.
+    pub fn kinds(&self) -> &[String] {
+        match self {
+            Self::Match(q) => &q.kinds,
+            Self::Scoped(q) => &q.kinds,
+        }
+    }
+
+    /// Whether a result can stand people beside another section: the
+    /// request serves people and some other kind.
+    pub fn serves_people_beside_others(&self) -> bool {
+        let kinds = self.kinds();
+        kinds.iter().any(|k| k == "user") && kinds.iter().any(|k| k != "user")
+    }
+
+    /// The same request serving its people section alone — the same
+    /// people, in the same order. None when it serves no people.
+    pub fn people_only(&self) -> Option<Self> {
+        if !self.kinds().iter().any(|k| k == "user") {
+            return None;
+        }
+        let people = vec!["user".to_string()];
+        Some(match self {
+            Self::Match(q) => Self::Match(MatchQuery {
+                kinds: people,
+                ..q.clone()
+            }),
+            Self::Scoped(q) => Self::Scoped(ScopedQuery {
+                kinds: people,
+                ..q.clone()
+            }),
+        })
+    }
+
     /// One page of matches — see [`find`].
     pub async fn find(
         &self,
@@ -203,11 +251,12 @@ impl SearchRequest {
         }
     }
 
-    /// The total match count — see [`count`].
-    pub async fn count(&self, pool: &PgPool) -> Result<i64, sqlx::Error> {
+    /// The total match count — see [`count`]. `saved_by` counts only what
+    /// that account kept on its Saved list, as [`Window::saved_by`] serves.
+    pub async fn count(&self, pool: &PgPool, saved_by: Option<Uuid>) -> Result<i64, sqlx::Error> {
         match self {
-            Self::Match(q) => count(pool, q).await,
-            Self::Scoped(q) => count_scoped(pool, q).await,
+            Self::Match(q) => count(pool, q, saved_by).await,
+            Self::Scoped(q) => count_scoped(pool, q, saved_by).await,
         }
     }
 }
@@ -252,8 +301,10 @@ impl SearchHit {
 ///
 /// What matches, by kind:
 ///
-/// - **user** — the handle contains the text, or the display name
-///   matches it by word: every word, the last as a prefix.
+/// - **user** — the handle or the display name matches the text by
+///   word: every word, the last as a prefix. A handle's words are what
+///   the `simple` parser splits it into (`pixel_joiner` holds `pixel`
+///   and `joiner`); a fragment from inside a word matches nothing.
 /// - **hashtag** — the name contains the text.
 /// - **post** — the title matches the text by word, or the author's
 ///   display name does; an untitled post is reached only through its
@@ -296,8 +347,8 @@ pub async fn find_in(
                           MIN(s.value) FILTER (WHERE s.kind = 'hashtag') AS name
                    FROM search_index s
                    WHERE s.kind = ANY($4)
-                     AND ((s.field IN ('handle', 'name')
-                           AND s.folded LIKE '%' || lower($2) || '%')
+                     AND ((s.field = 'name' AND s.folded LIKE '%' || lower($2) || '%')
+                       OR (s.field = 'handle' AND s.words @@ to_tsquery('simple', $3))
                        OR (s.field = 'title' AND s.words @@ to_tsquery('simple', $3))
                        OR (s.field = 'display_name' AND s.words @@ to_tsquery('simple', $3))
                        OR (s.kind = 'post' AND s.author_id IN (
@@ -312,13 +363,27 @@ pub async fn find_in(
                          WHERE a.id = s.node_id AND a.realization_address IS NOT NULL))
                      AND ($11::uuid[] IS NULL OR s.node_id = ANY($11))
                      AND NOT (s.node_id = ANY($12::uuid[]))
+                     AND ($14::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                         SELECT b.content_id FROM user_bookmarks b
+                         WHERE b.user_id = $14)))
                    GROUP BY s.node_id, s.kind, s.created_at
+               ),
+               placed AS (
+                   SELECT h.node_id, h.kind, h.name,
+                          CASE WHEN $14::uuid IS NULL THEN h.tier
+                               ELSE h.tier / 2 * 2 END AS tier,
+                          CASE WHEN $14::uuid IS NULL THEN h.created_at
+                               ELSE b.bookmarked_at END AS created_at
+                   FROM hits h
+                   LEFT JOIN user_bookmarks b
+                     ON b.user_id = $14 AND b.content_id = h.node_id
+                   WHERE ($13::int IS NULL OR h.tier / 2 = $13)
+                     AND ($15::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($15))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
-               FROM hits
-               WHERE ($13::int IS NULL OR tier / 2 = $13)
-                 AND ($7::int IS NULL
+               FROM placed
+               WHERE ($7::int IS NULL
                       OR tier < $7
                       OR (tier = $7 AND (created_at, node_id) > ($8::timestamptz, $9::uuid)))
                ORDER BY tier DESC, created_at ASC, node_id ASC
@@ -336,6 +401,8 @@ pub async fn find_in(
             window.within,
             window.excluding,
             window.section,
+            window.saved_by,
+            window.people,
         )
         .fetch_all(pool)
         .await?;
@@ -351,8 +418,8 @@ pub async fn find_in(
                           MIN(s.value) FILTER (WHERE s.kind = 'hashtag') AS name
                    FROM search_index s
                    WHERE s.kind = ANY($4)
-                     AND ((s.field IN ('handle', 'name')
-                           AND s.folded LIKE '%' || lower($2) || '%')
+                     AND ((s.field = 'name' AND s.folded LIKE '%' || lower($2) || '%')
+                       OR (s.field = 'handle' AND s.words @@ to_tsquery('simple', $3))
                        OR (s.field = 'title' AND s.words @@ to_tsquery('simple', $3))
                        OR (s.field = 'display_name' AND s.words @@ to_tsquery('simple', $3))
                        OR (s.kind = 'post' AND s.author_id IN (
@@ -367,13 +434,27 @@ pub async fn find_in(
                          WHERE a.id = s.node_id AND a.realization_address IS NOT NULL))
                      AND ($11::uuid[] IS NULL OR s.node_id = ANY($11))
                      AND NOT (s.node_id = ANY($12::uuid[]))
+                     AND ($14::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                         SELECT b.content_id FROM user_bookmarks b
+                         WHERE b.user_id = $14)))
                    GROUP BY s.node_id, s.kind, s.created_at
+               ),
+               placed AS (
+                   SELECT h.node_id, h.kind, h.name,
+                          CASE WHEN $14::uuid IS NULL THEN h.tier
+                               ELSE h.tier / 2 * 2 END AS tier,
+                          CASE WHEN $14::uuid IS NULL THEN h.created_at
+                               ELSE b.bookmarked_at END AS created_at
+                   FROM hits h
+                   LEFT JOIN user_bookmarks b
+                     ON b.user_id = $14 AND b.content_id = h.node_id
+                   WHERE ($13::int IS NULL OR h.tier / 2 = $13)
+                     AND ($15::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($15))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
-               FROM hits
-               WHERE ($13::int IS NULL OR tier / 2 = $13)
-                 AND ($7::int IS NULL
+               FROM placed
+               WHERE ($7::int IS NULL
                       OR tier > $7
                       OR (tier = $7 AND (created_at, node_id) < ($8::timestamptz, $9::uuid)))
                ORDER BY tier ASC, created_at DESC, node_id DESC
@@ -391,6 +472,8 @@ pub async fn find_in(
             window.within,
             window.excluding,
             window.section,
+            window.saved_by,
+            window.people,
         )
         .fetch_all(pool)
         .await
@@ -398,14 +481,20 @@ pub async fn find_in(
 }
 
 /// How many nodes the request matches in total, across every page —
-/// counted under exactly the predicate [`find`] pages over.
-pub async fn count(pool: &PgPool, q: &MatchQuery) -> Result<i64, sqlx::Error> {
+/// counted under exactly the predicate [`find`] pages over; with
+/// `saved_by`, only what that account kept, as [`Window::saved_by`]
+/// serves.
+pub async fn count(
+    pool: &PgPool,
+    q: &MatchQuery,
+    saved_by: Option<Uuid>,
+) -> Result<i64, sqlx::Error> {
     sqlx::query_scalar!(
         r#"SELECT COUNT(DISTINCT s.node_id) AS "count!"
            FROM search_index s
            WHERE s.kind = ANY($3)
-             AND ((s.field IN ('handle', 'name')
-                   AND s.folded LIKE '%' || lower($1) || '%')
+             AND ((s.field = 'name' AND s.folded LIKE '%' || lower($1) || '%')
+               OR (s.field = 'handle' AND s.words @@ to_tsquery('simple', $2))
                OR (s.field = 'title' AND s.words @@ to_tsquery('simple', $2))
                OR (s.field = 'display_name' AND s.words @@ to_tsquery('simple', $2))
                OR (s.kind = 'post' AND s.author_id IN (
@@ -417,12 +506,16 @@ pub async fn count(pool: &PgPool, q: &MatchQuery) -> Result<i64, sqlx::Error> {
                  WHERE l.user_id = $4 AND l.content_id = s.node_id))
              AND (NOT $5 OR s.kind <> 'user' OR EXISTS (
                  SELECT 1 FROM actors a
-                 WHERE a.id = s.node_id AND a.realization_address IS NOT NULL))"#,
+                 WHERE a.id = s.node_id AND a.realization_address IS NOT NULL))
+             AND ($6::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                 SELECT b.content_id FROM user_bookmarks b
+                 WHERE b.user_id = $6)))"#,
         q.like_body,
         q.title_query,
         &q.kinds,
         q.exclude_seen_by,
         q.keyed_users_only,
+        saved_by,
     )
     .fetch_one(pool)
     .await
@@ -528,6 +621,9 @@ pub async fn find_scoped(
                      AND (c.author_id IN (SELECT au.id FROM authors au)
                           OR ($7::text IS NOT NULL
                               AND c.l1_node_id IN (SELECT node FROM carried)))
+                     AND ($18::uuid IS NULL OR c.id = ANY(ARRAY(
+                         SELECT b.content_id FROM user_bookmarks b
+                         WHERE b.user_id = $18)))
                      AND (SELECT v.redaction_reason IS NULL
                           FROM comment_versions v WHERE v.comment_id = c.id
                           ORDER BY pending DESC,
@@ -564,6 +660,9 @@ pub async fn find_scoped(
                    WHERE 'post' = ANY($4)
                      AND s.kind = 'post' AND s.field = 'title'
                      AND ($10 OR s.words @@ to_tsquery('simple', $3))
+                     AND ($18::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                         SELECT b.content_id FROM user_bookmarks b
+                         WHERE b.user_id = $18)))
                      AND (s.author_id IN (SELECT au.id FROM authors au)
                           OR ($7::text IS NOT NULL AND EXISTS (
                               SELECT 1 FROM posts p
@@ -589,17 +688,29 @@ pub async fn find_scoped(
                      AND s.kind = 'hashtag' AND s.field = 'name'
                      AND ($10 OR s.folded LIKE '%' || lower($2) || '%')
                      AND EXISTS (SELECT 1 FROM carried k WHERE k.target = 'name:' || s.value)
+               ),
+               placed AS (
+                   SELECT h.node_id, h.kind, h.name,
+                          CASE WHEN $18::uuid IS NULL THEN h.tier
+                               ELSE h.tier / 2 * 2 END AS tier,
+                          CASE WHEN $18::uuid IS NULL THEN h.created_at
+                               ELSE b.bookmarked_at END AS created_at
+                   FROM hits h
+                   LEFT JOIN user_bookmarks b
+                     ON b.user_id = $18 AND b.content_id = h.node_id
+                   WHERE ($18::uuid IS NULL OR b.user_id IS NOT NULL)
+                     AND ($5::uuid IS NULL OR NOT EXISTS (
+                         SELECT 1 FROM user_view_log l
+                         WHERE l.user_id = $5 AND l.content_id = h.node_id))
+                     AND ($15::uuid[] IS NULL OR h.node_id = ANY($15))
+                     AND NOT (h.node_id = ANY($16::uuid[]))
+                     AND ($17::int IS NULL OR h.tier / 2 = $17)
+                     AND ($19::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($19))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
-               FROM hits h
-               WHERE ($5::uuid IS NULL OR NOT EXISTS (
-                         SELECT 1 FROM user_view_log l
-                         WHERE l.user_id = $5 AND l.content_id = h.node_id))
-                 AND ($15::uuid[] IS NULL OR h.node_id = ANY($15))
-                 AND NOT (h.node_id = ANY($16::uuid[]))
-                 AND ($17::int IS NULL OR tier / 2 = $17)
-                 AND ($11::int IS NULL
+               FROM placed
+               WHERE ($11::int IS NULL
                       OR tier < $11
                       OR (tier = $11 AND (created_at, node_id) > ($12::timestamptz, $13::uuid)))
                ORDER BY tier DESC, created_at ASC, node_id ASC
@@ -621,6 +732,8 @@ pub async fn find_scoped(
             window.within,
             window.excluding,
             window.section,
+            window.saved_by,
+            window.people,
         )
         .fetch_all(pool)
         .await?;
@@ -691,6 +804,9 @@ pub async fn find_scoped(
                      AND (c.author_id IN (SELECT au.id FROM authors au)
                           OR ($7::text IS NOT NULL
                               AND c.l1_node_id IN (SELECT node FROM carried)))
+                     AND ($18::uuid IS NULL OR c.id = ANY(ARRAY(
+                         SELECT b.content_id FROM user_bookmarks b
+                         WHERE b.user_id = $18)))
                      AND (SELECT v.redaction_reason IS NULL
                           FROM comment_versions v WHERE v.comment_id = c.id
                           ORDER BY pending DESC,
@@ -727,6 +843,9 @@ pub async fn find_scoped(
                    WHERE 'post' = ANY($4)
                      AND s.kind = 'post' AND s.field = 'title'
                      AND ($10 OR s.words @@ to_tsquery('simple', $3))
+                     AND ($18::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                         SELECT b.content_id FROM user_bookmarks b
+                         WHERE b.user_id = $18)))
                      AND (s.author_id IN (SELECT au.id FROM authors au)
                           OR ($7::text IS NOT NULL AND EXISTS (
                               SELECT 1 FROM posts p
@@ -752,17 +871,29 @@ pub async fn find_scoped(
                      AND s.kind = 'hashtag' AND s.field = 'name'
                      AND ($10 OR s.folded LIKE '%' || lower($2) || '%')
                      AND EXISTS (SELECT 1 FROM carried k WHERE k.target = 'name:' || s.value)
+               ),
+               placed AS (
+                   SELECT h.node_id, h.kind, h.name,
+                          CASE WHEN $18::uuid IS NULL THEN h.tier
+                               ELSE h.tier / 2 * 2 END AS tier,
+                          CASE WHEN $18::uuid IS NULL THEN h.created_at
+                               ELSE b.bookmarked_at END AS created_at
+                   FROM hits h
+                   LEFT JOIN user_bookmarks b
+                     ON b.user_id = $18 AND b.content_id = h.node_id
+                   WHERE ($18::uuid IS NULL OR b.user_id IS NOT NULL)
+                     AND ($5::uuid IS NULL OR NOT EXISTS (
+                         SELECT 1 FROM user_view_log l
+                         WHERE l.user_id = $5 AND l.content_id = h.node_id))
+                     AND ($15::uuid[] IS NULL OR h.node_id = ANY($15))
+                     AND NOT (h.node_id = ANY($16::uuid[]))
+                     AND ($17::int IS NULL OR h.tier / 2 = $17)
+                     AND ($19::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($19))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
-               FROM hits h
-               WHERE ($5::uuid IS NULL OR NOT EXISTS (
-                         SELECT 1 FROM user_view_log l
-                         WHERE l.user_id = $5 AND l.content_id = h.node_id))
-                 AND ($15::uuid[] IS NULL OR h.node_id = ANY($15))
-                 AND NOT (h.node_id = ANY($16::uuid[]))
-                 AND ($17::int IS NULL OR tier / 2 = $17)
-                 AND ($11::int IS NULL
+               FROM placed
+               WHERE ($11::int IS NULL
                       OR tier > $11
                       OR (tier = $11 AND (created_at, node_id) < ($12::timestamptz, $13::uuid)))
                ORDER BY tier ASC, created_at DESC, node_id DESC
@@ -784,6 +915,8 @@ pub async fn find_scoped(
             window.within,
             window.excluding,
             window.section,
+            window.saved_by,
+            window.people,
         )
         .fetch_all(pool)
         .await
@@ -791,8 +924,14 @@ pub async fn find_scoped(
 }
 
 /// How many nodes a cue request matches in total, across every page —
-/// counted under exactly the predicate [`find_scoped`] pages over.
-pub async fn count_scoped(pool: &PgPool, q: &ScopedQuery) -> Result<i64, sqlx::Error> {
+/// counted under exactly the predicate [`find_scoped`] pages over; with
+/// `saved_by`, only what that account kept, as [`Window::saved_by`]
+/// serves.
+pub async fn count_scoped(
+    pool: &PgPool,
+    q: &ScopedQuery,
+    saved_by: Option<Uuid>,
+) -> Result<i64, sqlx::Error> {
     let (handle_prefix, topic_prefix, _) = q.binds();
     sqlx::query_scalar!(
         r#"WITH RECURSIVE
@@ -856,6 +995,9 @@ pub async fn count_scoped(pool: &PgPool, q: &ScopedQuery) -> Result<i64, sqlx::E
                  AND (c.author_id IN (SELECT au.id FROM authors au)
                       OR ($6::text IS NOT NULL
                           AND c.l1_node_id IN (SELECT node FROM carried)))
+                 AND ($9::uuid IS NULL OR c.id = ANY(ARRAY(
+                     SELECT b.content_id FROM user_bookmarks b
+                     WHERE b.user_id = $9)))
                  AND (SELECT v.redaction_reason IS NULL
                       FROM comment_versions v WHERE v.comment_id = c.id
                       ORDER BY pending DESC,
@@ -886,6 +1028,9 @@ pub async fn count_scoped(pool: &PgPool, q: &ScopedQuery) -> Result<i64, sqlx::E
                WHERE 'post' = ANY($3)
                  AND s.kind = 'post' AND s.field = 'title'
                  AND ($8 OR s.words @@ to_tsquery('simple', $2))
+                 AND ($9::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                     SELECT b.content_id FROM user_bookmarks b
+                     WHERE b.user_id = $9)))
                  AND (s.author_id IN (SELECT au.id FROM authors au)
                       OR ($6::text IS NOT NULL AND EXISTS (
                           SELECT 1 FROM posts p
@@ -912,7 +1057,10 @@ pub async fn count_scoped(pool: &PgPool, q: &ScopedQuery) -> Result<i64, sqlx::E
            FROM hits h
            WHERE ($4::uuid IS NULL OR NOT EXISTS (
                      SELECT 1 FROM user_view_log l
-                     WHERE l.user_id = $4 AND l.content_id = h.node_id))"#,
+                     WHERE l.user_id = $4 AND l.content_id = h.node_id))
+             AND ($9::uuid IS NULL OR h.node_id = ANY(ARRAY(
+                     SELECT b.content_id FROM user_bookmarks b
+                     WHERE b.user_id = $9)))"#,
         q.like_body,
         q.title_query,
         &q.kinds,
@@ -921,6 +1069,7 @@ pub async fn count_scoped(pool: &PgPool, q: &ScopedQuery) -> Result<i64, sqlx::E
         topic_prefix,
         q.pending_actor,
         q.bare(),
+        saved_by,
     )
     .fetch_one(pool)
     .await
