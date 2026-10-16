@@ -1669,7 +1669,7 @@
     { "from": "HistoryHidden", "via": 23, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
 
     { "from": "HistorySearch", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Profile", "case": "back where the menu was" }, { "board": "ProfileApplicant", "case": "applicant days" }] },
-    { "from": "HistorySearch", "via": 2, "kind": "advance", "label": "search field", "to": [{ "terminal": "self", "case": "typing refines — still sectioned while the query reaches people seen" }, { "board": "History", "case": "the field emptied — the whole history as the filter has it, newest first by first seeing, no caption" }, { "board": "HistoryNone", "case": "nothing seen carries the query (the cause chip at search)" }] },
+    { "from": "HistorySearch", "via": 2, "kind": "advance", "label": "search field", "to": [{ "terminal": "self", "case": "typing refines — still sectioned while the query reaches what was seen" }, { "board": "History", "case": "the field emptied — the whole history as the filter has it, newest first by first seeing, no caption" }, { "board": "HistoryNone", "case": "nothing seen carries the query (the cause chip at search)" }] },
     { "from": "HistorySearch", "via": 3, "kind": "advance", "label": "Everything (filter trigger)", "to": [{ "board": "HistoryFilter" }] },
     { "from": "HistorySearch", "via": 4, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
     { "from": "HistorySearch", "via": 5, "kind": "detour", "label": "profile card overflow ⋮", "to": [{ "board": "ProfileMenu", "case": "another's profile sheet (master) — on the card less its share row, which the card's action row carries" }] },
