@@ -23,6 +23,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.LocalSnackbarHostState
 import com.cogra.domain.ActorRef
@@ -207,6 +209,23 @@ class SavedScreenTest {
     private val postCard = "saved.card:p1"
     private val commentCard = "saved.commentCard:c1"
     private val personCard = "saved.profileCard:u3"
+
+    // The suite's window is tall so every card composes; a phone's is not, and
+    // the band's scroll behaviour has no TopAppBar here to bound it. The cards
+    // must move under the reader's swipe, past the band that collapses.
+    @Test
+    @Config(qualifiers = "w411dp-h891dp")
+    fun `a swipe on a phone sized window scrolls the cards past the collapsed band`() {
+        val posts = (1..12).map { i ->
+            val view = (post.card as SavedCard.Post).post.copy(id = "p$i")
+            SavedEntry(SavedCard.Post(view), daysAgo(2))
+        }
+        render(posts)
+        assertThat(shown("saved.card:p1")).isTrue()
+        repeat(4) { compose.onNodeWithTag("saved_list").performTouchInput { swipeUp() } }
+        compose.waitForIdle()
+        assertThat(shown("saved.card:p1")).isFalse()
+    }
 
     @Test
     fun `saved stands each kind as its own feed card`() {
