@@ -82,7 +82,7 @@ export function Screen() {
         <SectionLabel node="tagsLabel">Tags</SectionLabel>
         <TagFeedCard name="#moorings" through={["ada", "tobias"]} tagged={SALTMAPS_TAGGED} score="7.40" node="tagCard" />
         <TagFeedCard name="#mudflats" through={["mira"]} tagged={[SALTMAPS_TAGGED[0]]} score="5.20" node="tagCard" />
-        <TagFeedCard name="#midsummer" through={["sol", "ada"]} tagged={NEWEST_PICTURE} score="3.60" node="tagCard" />
+        <TagFeedCard name="#midsummer" through={["sol", "ada"]} tagged={[SALTMAPS_TAGGED[1], SALTMAPS_TAGGED[2]]} score="3.60" node="tagCard" />
         <div style={{ display: "flex", padding: "0 8px" }}>
           <Button variant="text" size="sm" node="tagsDoor">
             See all tags
