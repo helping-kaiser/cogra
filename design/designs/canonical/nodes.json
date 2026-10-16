@@ -4787,33 +4787,6 @@
         "profile.bottomBar.searchSlot": [],
         "profile.bottomBar.walletSlot": [],
         "profile.chronicle": [],
-        "profile.chronicle.act": [
-          "1",
-          "2"
-        ],
-        "profile.chronicle.act.aside": [
-          "2"
-        ],
-        "profile.chronicle.act.disc": [
-          "1",
-          "2"
-        ],
-        "profile.chronicle.act.pending": [
-          "1",
-          "2"
-        ],
-        "profile.chronicle.act.second": [
-          "1"
-        ],
-        "profile.chronicle.act.title": [
-          "1",
-          "2"
-        ],
-        "profile.chronicle.act.trailing": [
-          "1",
-          "2"
-        ],
-        "profile.chronicle.stagedLine": [],
         "profile.identity": [],
         "profile.identity.actionRow": [],
         "profile.identity.actionRow.edit": [],
