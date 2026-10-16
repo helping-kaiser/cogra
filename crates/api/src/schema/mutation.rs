@@ -34,7 +34,7 @@ use crate::auth::{self, AuthConfig, RefreshError, Viewer};
 use crate::breach::BreachCorpus;
 use crate::l1::StandInBoundary;
 use crate::mailer::{Mail, Mailer, WebOrigin};
-use crate::media::{self, BlobStore, MediaConfig, resumable};
+use crate::media::{self, BlobStore, MediaAreas, MediaConfig, resumable};
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 use crate::prepare::Staging;
 use crate::profile::ProfileError;
@@ -456,6 +456,14 @@ fn relay_error(e: RelayError, index: usize) -> UserError {
             format!("staged write is {actual}"),
             path,
         ),
+        RelayError::CarriedMediaUnpublished { reason, .. } => {
+            tracing::warn!(reason = %reason, "a released carried write waits on its media");
+            UserError::at(
+                ErrorCode::CarriedMediaUnpublished,
+                "the write's media is not published yet; retry",
+                path,
+            )
+        }
         other => internal(other),
     }
 }
@@ -4107,6 +4115,12 @@ impl Mutation {
     /// Resubmitting a sealed proposal is idempotent only for the exact
     /// signature that was sealed; differing bytes refuse as BAD_INPUT.
     ///
+    /// A carried write the landing released signs only once every asset
+    /// it names is published to the live store; the submit runs that
+    /// move. One whose move has not landed refuses as
+    /// CARRIED_MEDIA_UNPUBLISHED, which is retryable: nothing was
+    /// recorded, and the next submit resumes the move.
+    ///
     /// A keyless account is refused rather than rendered: no staged write
     /// can exist for one, because the Registration stages only after the
     /// attach proof, so a missing key here is a client bug.
@@ -4118,6 +4132,7 @@ impl Mutation {
         let v = viewer(ctx)?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
+        let areas = ctx.data::<MediaAreas>()?;
         let identity = store::actor_identity(pool, v.user_id)
             .await?
             .ok_or_else(unauthenticated)?;
@@ -4156,6 +4171,10 @@ impl Mutation {
                     continue;
                 }
             };
+            if let Err(e) = relay::gate_carried_media(pool, areas, &owned).await {
+                user_errors.push(relay_error(e, i));
+                continue;
+            }
             match relay::submit_pre_signed(
                 boundary,
                 pool,
