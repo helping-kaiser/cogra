@@ -1167,7 +1167,7 @@ async fn a_handle_scoped_query_finds_their_comments_through_the_post_title(pool:
     assert_eq!(only_comments["totalCount"], 1);
 }
 
-/// An untitled post has no indexed field, so a comment answering it has
+/// An untitled post holds no title word, so a comment answering it has
 /// nothing to be found through — under any text, its body's included.
 ///
 /// A comment on an untitled post is never found through it.

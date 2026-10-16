@@ -1096,8 +1096,14 @@ type User implements Node & Actor {
    redacted, a deleted account, or an actor the viewer hid — and read
    through their own status; hiding never narrows it. A kept node that
    no longer resolves — a pending write that never landed — is
-   skipped. Field-level: viewer-only."
-  bookmarks(first: Int, after: String, last: Int, before: String): BookmarkConnection
+   skipped. `query` narrows the list by the one search law (Search
+   section) over the saved set alone — the matcher runs on the server,
+   so a match is found wherever it stands in the list. Narrowed, the
+   list is sectioned as search is — people, then content — newest save
+   first inside a section, and paged on its own cursors; a blank or null
+   `query` narrows nothing. A query past the search length cap is
+   BAD_INPUT. Field-level: viewer-only."
+  bookmarks(query: String, first: Int, after: String, last: Int, before: String): BookmarkConnection
   "The seen-list (feed-ranking.md §9.4): every node the viewer has
    seen, once each, newest first by first seeing — the list the
    ranked feed filters by, and History's feed. Re-seeing never moves
@@ -2582,21 +2588,27 @@ type Query {
   feedTrace(viewer: UUID!, target: UUID!): FeedTrace
 
   "Global search across nodes; returns a `SearchResult` per edge. Recall is
-   lexical over the indexed name-class fields and post titles — an
-   untitled post is never matched by its words. Order is exact-match
-   tier first, then newest first — viewer-independent — unless
-   `order: RANKED`, where the server's ranker container orders the
-   matches inside `viewer`'s slice, each tier by its ranker, and the
-   rest follow behind the seam, newest first; ranking never runs in the
-   backend process (feed-ranking.md §11). `order: RANKED` needs
-   `viewer`. Served kinds grow with the slices: USER, POST, HASHTAG
-   unscoped; COMMENT is always a valid kind but is served only under a
-   scope operator (`@handle`, `#tag`) — unscoped, it contributes no
-   rows, never an error. COLLECTIVE, CHAT, CHAT_MESSAGE, ITEM and OFFER
-   join with their slices and read empty until then. An empty `kinds`
-   list means the same as null (no narrowing). `includeSeen: false`
-   drops nodes on the reader's seen-list (`User.viewHistory`); it needs
-   a session and is ignored without one. Full semantics in the Search
+   lexical: plain text matches handles and topic names by substring,
+   post titles and display names by word (the last word a prefix), and
+   brings the posts of every person whose display name matches;
+   `@prefix` names people by handle prefix and `#prefix` topics by name
+   prefix — bare, the matches lead and everything they reach follows;
+   with text, the text searches what they reach. The result is
+   sectioned — people, then topics, then content — and inside a section
+   an exact match leads, then newest first, viewer-independent — unless
+   `order: RANKED`, where the server's ranker container orders each
+   section's matches inside `viewer`'s slice, exact matches first, and
+   the section's rest follow behind the seam, newest first; ranking
+   never runs in the backend process (feed-ranking.md §11).
+   `order: RANKED` needs `viewer`. Served kinds grow with the slices:
+   USER, POST, HASHTAG for plain text; COMMENT is always a valid kind
+   but is served only under a cue — for plain text it contributes no
+   rows, never an error. A `kinds` filter drops sections and keeps the
+   rest's semantics. COLLECTIVE, CHAT, CHAT_MESSAGE, ITEM and OFFER join
+   with their slices and read empty until then. An empty `kinds` list
+   means the same as null (no narrowing). `includeSeen: false` drops
+   nodes on the reader's seen-list (`User.viewHistory`); it needs a
+   session and is ignored without one. Full semantics in the Search
    section."
   search(
     query: String!
@@ -2858,73 +2870,95 @@ type NodeEdge {
 Search is two surfaces: a global `search` over names and titles,
 and a per-chat `chatSearch` over plaintext message bodies.
 
+**One law, every surface.** The global `search`, Saved's
+`User.bookmarks(query:)` and the reference finder all run the one
+matcher below; Saved runs it over the reader's saved set alone. The
+matcher runs on the server, so a match is found wherever it stands
+in a list, never only within what a client has loaded.
+
 **What is indexed.** The global index covers the current value of
 the name-class fields and post titles: actor `handle` +
 `displayName`, Hashtag `name` (served by the naming-service
 registry — [hashtag.md §1](../instances/hashtag.md#1-identity-and-the-naming-service)),
 Chat `name`, Item `name`, and Post `title`. Bodies, descriptions,
-bios, and attachments are not indexed. An untitled post has no
-indexed field: it is never matched by its words, and the name it
-wears in place of a title (its first line, or its kind and author
-for a media post) is display only, never indexed — so a comment
-answering it cannot be found through it either. A comment, a chat message
-and an offer carry no indexed field of their own and never appear
-in an unscoped result — casual conversation doesn't surface to
-strangers by keyword; per-chat body search is `chatSearch`'s, and
-only plaintext bodies are searchable there — encrypted content
-never is, since the backend only ever holds ciphertext
+bios, and attachments are not indexed. An untitled post is never
+matched by its words: the name it wears in place of a title (its
+first line, or its kind and author for a media post) is display
+only, never indexed — so a comment answering it cannot be found
+through it either. It is reached only through its author or a topic
+it carries. A comment, a chat message and an offer carry no indexed
+field of their own and never appear in a plain-text result — casual
+conversation doesn't surface to strangers by keyword; per-chat body
+search is `chatSearch`'s, and only plaintext bodies are searchable
+there — encrypted content never is, since the backend only ever
+holds ciphertext
 ([chats.md §7](../instances/chats.md#7-encryption-as-the-privacy-mechanism)).
 
-**Scoped queries serve the indirect kinds.** A query starting with
-a scope operator and carrying text after it searches inside the
-scope. `@handle <text>` searches one person's work: their posts by
-title; their comments, chat messages and offers, matched through
-the indexed fields alone — the remainder is matched against the
-names and titles of the acts' targets, a comment through the title
-of the post its thread answers (a reply through its thread's root
-post), a message through its chat's name, an offer through its
-item's name, joined through authorship; and the Hashtags they
-tagged their own content with, by name. It returns no User row for
-the person it names. `#tag <text>` searches what carries the tag —
-the posts and comments whose own author's current claim names it,
-the tag page's own set
-([hashtag.md §4](../instances/hashtag.md#4-the-current-topics-fold)),
-the viewer's own in-flight claims included — the remainder matched
-against a carried post's title or a carried comment's thread root's
-title. No body index exists; every join runs against the same
-global index above. A scoped message result reaches any plaintext
-chat regardless of the viewer's membership — chats are public reads
-(the design record: readme §13, "The indirect kinds are
-scope-served"). An indirect result carries no extra field: it is a
-Comment, or a Hashtag reached through the scoped person's tags (in
-the MVP's kind set); the title a comment was found through is its
-thread root's, reached through `Comment.target`, and the scope is
-the caller's own query.
+**Plain text.** A query with no leading cue matches a handle and a
+Hashtag name by substring, and a post title and a display name by
+word. A display-name match needs no `@` — `@` is only for handles —
+and brings the person's posts, titled or not: "Mod" finds "Genesis
+Moderator" and everything they posted, while "enesis" matches no
+display name.
 
-**A bare scope is a lookup.** A scope operator with nothing after
-it (`@sol`, `#salt`) proposes Users whose handle, or Hashtags whose
-name, starts with what was typed — the exact name first — and lists
-no content: the remainder is what makes a query a content search.
-A handle or tag that names no one reads empty, never an error.
+**Cues.** A leading `@prefix` is a person cue: it names every User
+whose handle starts with what was typed — never needing the full
+handle, never by a display name or a substring. A leading `#prefix`
+is a topic cue: it names every Hashtag whose name starts with what
+was typed. A bare cue lists its matches first — the exact name
+leading — then everything they reach, with no second word required:
+under `@`, the Hashtags the matched people tagged their own content
+with, then their posts (untitled ones included), comments, chat
+messages and offers; under `#`, the posts and comments that carry a
+matched topic — whose own author's current claim names it, the tag
+page's own set
+([hashtag.md §4](../instances/hashtag.md#4-the-current-topics-fold)),
+the viewer's own in-flight claims included. A cue with text after it
+is a content search inside what its matches reach, and lists no
+match itself: `#tag <text>` is the intersection — what carries the
+topic, narrowed by the text — and `@handle <text>` is the matched
+people's work narrowed by the text. The text matches through the
+indexed fields alone: a post by its title; a comment through the
+title of the post its thread answers (a reply through its thread's
+root post), a message through its chat's name, an offer through its
+item's name, joined through authorship; a Hashtag the person tagged
+their content with, by name. No body index exists; every join runs
+against the same global index above. A scoped message result
+reaches any plaintext chat regardless of the viewer's membership —
+chats are public reads (the design record: readme §13, "The
+indirect kinds are scope-served"). An indirect result carries no
+extra field: it is a Comment, or a Hashtag reached through a matched
+person's tags (in the MVP's kind set); the title a comment was found
+through is its thread root's, reached through `Comment.target`, and
+the cue is the caller's own query. A lone `@` or `#`, or a cue that
+no handle or topic can begin, reads empty, never an error.
+
+**Kinds subtract.** A `kinds` filter drops sections and keeps the
+rest's semantics: a filter that excludes people drops the profiles
+and keeps the authored content a person cue or a display-name match
+brings; one that keeps only people keeps just the profiles.
 
 `includeSeen` defaults to `true`, which keeps the anonymous read
 stable; the client passes the reader's "Show what you've already
 seen" filter, which is off by default.
 
-**Match semantics.** Name-class fields match case-insensitively
-by prefix and substring; Post titles and chat-message bodies
-match by word-level full-text. The index technology behind those
-semantics is an implementation choice.
+**Match semantics.** Handles and Hashtag names match
+case-insensitively by substring under plain text and by prefix under
+a cue. Post titles and display names match by word: every typed
+word is required, the last as a prefix, so a title refines as it is
+typed. Chat-message bodies match by word-level full-text. The index
+technology behind those semantics is an implementation choice.
 
 A blank query returns an empty connection, never an error. A query
-longer than 640 characters is BAD_INPUT. Only a leading `@handle`
-or `#tag` scopes; elsewhere those characters are text.
+longer than 640 characters is BAD_INPUT. Only a leading `@` or `#`
+is a cue; elsewhere those characters are text.
 
-**Order.** `NEWEST`, the default, is exact-match tier first — a
-result whose indexed field equals the query case-insensitively —
-then newest first, by the node's `createdAt`; a Hashtag, which
-carries no date, by its registry entry's age (not served). Both keys
-are viewer-independent.
+**Order.** A result is sectioned — people, then topics, then
+content — for every query. `NEWEST`, the default, orders each
+section exact match first — a result whose matched field equals the
+query, or the cue's name, case-insensitively — then newest first,
+by the node's `createdAt`; a Hashtag, which carries no date, by its
+registry entry's age (not served). Every key is viewer-independent.
 
 `RANKED` orders by `viewer`'s feed score, and ranking never runs in
 the backend process
@@ -2933,17 +2967,25 @@ The candidates are the matches inside `viewer`'s slice: a globally
 ranked tier cannot come from re-ranking page by page, and the slice
 is viewer-bounded, so the candidate set is too, however many matches
 the query has. The server's ranker container orders them through its
-`rankSearch` operation ([miner-api.md](miner-api.md)); each tier
-keeps the ranker's order, the exact-match tier first, and every
-ranked edge carries its `score`. What the ranker cannot score — a
-match outside the slice, or one no live path reaches — follows
-behind the seam in the `NEWEST` order, `score` null. A `viewer` that
-resolves to no rankable actor ranks nothing, so every match stands
-behind the seam; with the ranker container unreachable the read is
+`rankSearch` operation ([miner-api.md](miner-api.md)). The sections
+stand under ranking too: each section is its ranked head — the
+ranker's order, the exact match first — then its own rest behind
+the seam in the `NEWEST` order, `score` null; every ranked edge
+carries its `score`. What the ranker cannot score is a match outside
+the slice, or one no live path reaches. A `viewer` that resolves to
+no rankable actor ranks nothing, so every match stands behind its
+section's seam; with the ranker container unreachable the read is
 `INTERNAL`, never an all-seam list. Paging reuses the first page's
 pinned epoch, carried inside the opaque cursor, so the order never
 reshuffles across pages. The no-AI rule applies to search ranking as
 much as to feeds. `chatSearch` is always newest first.
+
+**Saved.** `User.bookmarks(query:)` narrows the reader's Saved list
+by the same law over the saved set: people, then content, newest
+save first inside a section. A topic is never saved, so a topic cue
+narrows Saved to the saved content carrying a matched topic. A
+narrowed list pages on cursors of its own, and its `totalCount`
+counts the narrowed list.
 
 **Moderation.** `sensitive`-classified fields stay indexed and
 matchable; a result carries its per-field status and the frontend
