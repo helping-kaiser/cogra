@@ -40,19 +40,24 @@ export type SavedPage = {
 };
 
 /**
- * A page of the reader's own Saved list. A null `me` is the shared
- * UNAUTHENTICATED refusal, so the auth guard refreshes a stale token and
- * replays.
+ * A page of the reader's own Saved list, narrowed by `query` on the server —
+ * the one search law over the saved set (api-spec.md "Search", **Saved**). A
+ * blank query narrows nothing and is sent as null, the whole list's own read.
+ * A narrowed list pages on cursors of its own, so `after` must come from a
+ * page read with the same `query`. A null `me` is the shared UNAUTHENTICATED
+ * refusal, so the auth guard refreshes a stale token and replays.
  */
 export async function fetchSavedPage(
   client: ApolloClient,
   after: string | null,
+  query: string = "",
 ): Promise<Outcome<SavedPage>> {
+  const narrowed = query.trim();
   const fetched = await viewerField(
     () =>
       client.query({
         query: SavedPageDocument,
-        variables: { after },
+        variables: { after, query: narrowed === "" ? null : narrowed },
         fetchPolicy: "network-only",
       }),
     (data) => data.me?.bookmarks,

@@ -1,6 +1,9 @@
 # Search (api-spec.md "Search"; slice 2.7): the Explore surface's one
-# read. Recall is names and titles only — a handle, a display name, a
-# topic's name, a post's title — exact matches first, then newest.
+# read, under the one search law. Recall is names and titles only — a
+# handle, a display name, a topic's name, a post's title; a leading
+# `@prefix` or `#prefix` is a cue. The answer is SECTIONED — people,
+# then topics, then content, each exact match first, then newest — and
+# a surface draws it in the order served, never re-sorted.
 #
 # The node is the `SearchResult` UNION, so every selection below is
 # inline: a fragment whose type condition is the union cannot be matched
