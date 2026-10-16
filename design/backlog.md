@@ -5116,3 +5116,16 @@ by default:
 - **The words that described it** — About's `Getting in, and being let
   in` once-each paragraph, and `ProfileApplicant`'s `What you post now
   arrives with you.`
+
+### 144 · The `AttachmentPad` master does not yet snap on release · *system* · **filed 2026-10-16**
+
+Round 17 ruled (jakob 2026-10-16) that the one-axis backing pads park
+their pick on hundredths at release — the board line on `ComposePad` and
+`EditPad`: "the pick parks on a hundredth: the knob follows the drag
+wherever the finger is, and release lands the pick on the nearest
+hundredth". The docs state it (`StancePad.prompt.md`, `stance-control.md`),
+and the clients build it from the seam, but the master itself —
+`components/stance/StancePad.jsx`'s `AttachmentPad` — does not implement
+it yet: it reports the continuous value and has no release hook. Snapping
+the master would serve as the conformance reference. The two-axis
+square's value stays continuous.

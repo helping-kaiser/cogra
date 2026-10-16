@@ -26,6 +26,8 @@ WHEN tap the field without dragging -> NEVER the pick moves
 
 WHEN release a drag on the field -> the pick is parked AND NEVER the pick is staged
 
+ALWAYS the pick parks on a hundredth: the knob follows the drag wherever the finger is, and release lands the pick on the nearest hundredth, so the number a readout prints is the pick itself
+
 ALWAYS Walk it all back stands on the left of the commit row, pushed away from Cancel and Set
 
 WHEN tap Walk it all back GIVEN the backing nets other than 0.00 -> the pick parks at the opposite of the post's own records' raw sum, clipped to the axis AND NEVER anything is staged AND NEVER a dialog opens

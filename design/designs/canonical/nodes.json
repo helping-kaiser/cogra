@@ -3996,7 +3996,8 @@
       "prefix": "history",
       "keys": {
         "history.card": "the author's handle, without @ (PostCard)",
-        "history.profileCard": "the person's handle, without @ (the profile feed card)"
+        "history.profileCard": "the person's handle, without @ (the profile feed card)",
+        "history.tagCard": "the tag's name, without # (the tag feed card)"
       },
       "nodes": {
         "history.bottomBar": [],
@@ -4132,7 +4133,89 @@
         "history.profilesLabel": [],
         "history.searchField": [],
         "history.searchField.glyph": [],
-        "history.searchField.input": []
+        "history.searchField.input": [],
+        "history.tagCard": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.compose": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.score": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.score.value": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.share": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.stance": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.stance.anchor": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.stance.anchor.face": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.glimpse": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.glimpse.by": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.glimpse.newest": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.mark": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.name": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.through": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.timestamp": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagsDoor": [],
+        "history.tagsLabel": []
       }
     },
     "Invites": {

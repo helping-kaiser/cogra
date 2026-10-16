@@ -246,6 +246,10 @@ joins. Decoupling the readout from the value is what lets the value stay
 continuous while the feedback stays legible; anchor count controls
 readability only, never precision.
 
+**One-axis aside.** The continuous law is the square's. The one-axis
+attachment pads print the pick as a two-place number, so their pick parks
+on hundredths at release (jakob 2026-10-16, round 17).
+
 The readout sits **just above the pad**, never under the knob: a thumb on
 the control covers exactly the spot where feedback would otherwise
 appear.
