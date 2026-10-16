@@ -125,7 +125,10 @@ fn checked_profile_len(
 /// author's own Profile at the census-fixed `(1, 1)` (edges.md §2),
 /// chained behind the current head — the backend populates the causal
 /// parent and serializes updates per (node, author), so CoGra's own
-/// clients never author a branch (substrate.md §9).
+/// clients never author a branch (substrate.md §9). An earlier update the
+/// author never signed is superseded rather than serialized behind: it can
+/// no longer be signed, so the chain stays unbranched without it holding
+/// the profile until GC.
 ///
 /// That chain roots in the anchoring admission Registration, which landed
 /// before the account became a member — so a missing head is not an empty
@@ -172,6 +175,15 @@ pub async fn prepare_profile_update<B: L1Boundary>(
         .map_err(|e| ProfileError::Internal(e.to_string()))?;
     let prof = NodeId::Prof(address.clone());
     let prof_string = prof.to_string();
+    let current_epoch = mirror::last_ingested_epoch(pool).await?;
+    staged::supersede_unsigned_targeting(
+        pool,
+        viewer,
+        Family::Registration,
+        &prof_string,
+        current_epoch,
+    )
+    .await?;
     if staged::has_pending_targeting(pool, viewer, Family::Registration, &prof_string).await? {
         return Err(ProfileError::BadInput {
             field: "input",

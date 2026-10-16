@@ -1087,7 +1087,10 @@ struct ChainedTarget {
 /// second in-flight edit per (node, author), and assert the current
 /// chain head as the causal parent (substrate.md §9 "Chain root" — the
 /// backend populates the parent and serializes edits, so CoGra's own
-/// clients never author a branch).
+/// clients never author a branch). An earlier edit the author never
+/// signed is superseded rather than serialized behind: it can no longer be
+/// signed, so the chain stays unbranched without it holding the node
+/// until GC.
 ///
 /// The display row exists, so the genesis record landed: a missing chain
 /// head is therefore a diverged mirror — an operational fault, not user
@@ -1099,6 +1102,8 @@ async fn chained_edit_target(
     l1_node_id: &str,
     author: &str,
 ) -> Result<ChainedTarget, ContentError> {
+    let current_epoch = mirror::last_ingested_epoch(pool).await?;
+    staged::supersede_unsigned_targeting(pool, viewer, family, l1_node_id, current_epoch).await?;
     if staged::has_pending_targeting(pool, viewer, family, l1_node_id).await? {
         return Err(ContentError::BadInput {
             field: "id",
