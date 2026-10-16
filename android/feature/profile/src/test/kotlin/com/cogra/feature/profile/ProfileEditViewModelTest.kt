@@ -147,6 +147,24 @@ class ProfileEditViewModelTest {
         assertThat(sealer.staged.values.single().state.name).isEqualTo("RELAYING")
     }
 
+    /**
+     * jakob's hand test: adding a bio to a profile with no website. The
+     * website rides as the clear, which the server stages as the empty
+     * string, and the device signs it rather than refusing its own gesture.
+     */
+    @Test
+    fun addingABioBesideAnEmptyWebsiteSigns() = runTest(dispatcher) {
+        profiles.mine = Outcome.Success(testProfile(id = TEST_PROFILE_ID, handle = "jakob", displayName = "Jakob"))
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(profiles.lastUpdate).isEqualTo(Triple("Jakob", "Hello", null))
+        assertThat(vm.state.value.signingFailed).isFalse()
+        assertThat(vm.state.value.saved).isTrue()
+    }
+
     @Test
     fun aRefusedPrepareSurfaces() = runTest(dispatcher) {
         profiles.prepareOutcome =

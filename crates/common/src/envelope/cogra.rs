@@ -7,7 +7,9 @@
 //! implemented — it arrives if CoGra ever emits a non-empty key-1 body.
 //! Everything else is enforced: the magic, Gate P's key-set rule, CDE
 //! canonicality (decode re-encodes and compares), the §4.4 empty-value
-//! rules, and the reserved-range rejection.
+//! rules, and the reserved-range rule — refused outright on the signing
+//! path, and on the read path refused only at a version this reader
+//! implements, preserved under a newer one ([`Reading`]).
 //!
 //!
 //! Inside the guild map, keys 2–6 and 13–14 ride Publish/Review payloads
@@ -32,7 +34,19 @@ use uuid::Uuid;
 
 use crate::envelope::EnvelopeError;
 use crate::envelope::media::MediaAsset;
-use crate::envelope::pce::{COGRA_GUILD_KEY, Envelope, VERSION_V1, Value};
+use crate::envelope::pce::{COGRA_GUILD_KEY, Discipline, Envelope, VERSION_V1, Value};
+
+/// What a reader makes of a payload someone authored: the fields it
+/// renders, and whether the payload also carries parts a newer format
+/// added that this reader preserves but does not render — so a surface
+/// can show what it has and mark the rest as newer-format rather than
+/// refusing the act. The parts themselves stay in the stored carriage,
+/// byte-exact; nothing here re-authors them.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Reading<T> {
+    pub fields: T,
+    pub newer_format: bool,
+}
 
 /// CoGra's guild-map schema version (key 0 of the nested map).
 pub const COGRA_SCHEMA_V1: u64 = 1;
@@ -122,8 +136,23 @@ fn guild_profile_image(
 /// (a tightening of the PCE gates, permitted by PCE §10): version
 /// `[1,1,1,1]`, empty key-1 body, exactly the CoGra guild key, and
 /// schema version 1. Returns the inner guild map.
-fn cogra_guild_map(envelope: &Envelope) -> Result<&BTreeMap<u64, Value>, EnvelopeError> {
-    if envelope.version != VERSION_V1 {
+///
+/// On the read path the version may also declare a newer
+/// `extension_ver` — the one axis whose unknown values a reader tolerates
+/// (PCE §2.1, fail-open) — with the first three axes still the ones this
+/// reader implements. The guild-key count looks at the rendered extension
+/// map only: preserved reserved keys are not a second guild.
+fn cogra_guild_map(
+    envelope: &Envelope,
+    discipline: Discipline,
+) -> Result<&BTreeMap<u64, Value>, EnvelopeError> {
+    let version_known = match discipline {
+        Discipline::Signing => envelope.version == VERSION_V1,
+        Discipline::Reading => {
+            envelope.version[..3] == VERSION_V1[..3] && envelope.version[3] >= VERSION_V1[3]
+        }
+    };
+    if !version_known {
         return Err(EnvelopeError::Guild("unsupported version vector"));
     }
     if !envelope.body.is_empty() {
@@ -248,6 +277,7 @@ impl CograContent {
             version: VERSION_V1,
             body: String::new(),
             extensions,
+            preserved: BTreeMap::new(),
         }
     }
 
@@ -272,7 +302,11 @@ impl CograContent {
     /// content keys — the still-unbuilt provenance key and the profile
     /// keys are rejected.
     pub fn from_envelope(envelope: &Envelope) -> Result<Self, EnvelopeError> {
-        let cogra = cogra_guild_map(envelope)?;
+        Self::admit(envelope, Discipline::Signing)
+    }
+
+    fn admit(envelope: &Envelope, discipline: Discipline) -> Result<Self, EnvelopeError> {
+        let cogra = cogra_guild_map(envelope, discipline)?;
         for key in cogra.keys() {
             if !matches!(
                 *key,
@@ -298,11 +332,24 @@ impl CograContent {
         })
     }
 
-    /// Decode + guild admission in one step — the read used at prepare
-    /// (self-check of our own construction) and at confirm (promotion
-    /// parses the staged payload back out).
+    /// Decode + guild admission in one step under the signing discipline —
+    /// the read of a payload CoGra itself authored: the prepare's
+    /// self-check and the pre-sign leg's staging.
     pub fn decode_payload(bytes: &[u8]) -> Result<Self, EnvelopeError> {
         Self::from_envelope(&Envelope::decode(bytes)?)
+    }
+
+    /// Decode + guild admission on the read/ingest path — a landing
+    /// promoting a record, a redaction reading a carriage. A newer
+    /// `extension_ver`'s unknown reserved keys are preserved and reported
+    /// as [`Reading::newer_format`]; at a version this reader implements
+    /// the admission is [`Self::decode_payload`]'s exactly.
+    pub fn read_payload(bytes: &[u8]) -> Result<Reading<Self>, EnvelopeError> {
+        let envelope = Envelope::decode_for_read(bytes)?;
+        Ok(Reading {
+            fields: Self::admit(&envelope, Discipline::Reading)?,
+            newer_format: !envelope.preserved.is_empty(),
+        })
     }
 }
 
@@ -354,6 +401,7 @@ impl CograProfile {
             version: VERSION_V1,
             body: String::new(),
             extensions,
+            preserved: BTreeMap::new(),
         }
     }
 
@@ -377,7 +425,11 @@ impl CograProfile {
     /// keys — content keys, reserved keys, the assigned-but-unbuilt
     /// payout key, and the retired cover key are rejected.
     pub fn from_envelope(envelope: &Envelope) -> Result<Self, EnvelopeError> {
-        let cogra = cogra_guild_map(envelope)?;
+        Self::admit(envelope, Discipline::Signing)
+    }
+
+    fn admit(envelope: &Envelope, discipline: Discipline) -> Result<Self, EnvelopeError> {
+        let cogra = cogra_guild_map(envelope, discipline)?;
         for key in cogra.keys() {
             if *key == COGRA_KEY_RETIRED_COVER {
                 return Err(EnvelopeError::Guild("retired cogra profile field"));
@@ -404,10 +456,19 @@ impl CograProfile {
         })
     }
 
-    /// Decode + guild admission in one step — the read used at prepare
-    /// (self-check of our own construction) and at confirm (promotion
-    /// parses the staged payload back out).
+    /// Decode + guild admission in one step under the signing discipline —
+    /// the read of a payload CoGra itself authored.
     pub fn decode_payload(bytes: &[u8]) -> Result<Self, EnvelopeError> {
         Self::from_envelope(&Envelope::decode(bytes)?)
+    }
+
+    /// Decode + guild admission on the read/ingest path, as
+    /// [`CograContent::read_payload`] runs it for content.
+    pub fn read_payload(bytes: &[u8]) -> Result<Reading<Self>, EnvelopeError> {
+        let envelope = Envelope::decode_for_read(bytes)?;
+        Ok(Reading {
+            fields: Self::admit(&envelope, Discipline::Reading)?,
+            newer_format: !envelope.preserved.is_empty(),
+        })
     }
 }

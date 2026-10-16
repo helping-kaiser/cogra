@@ -26,10 +26,11 @@ apollo {
         packageName.set("com.cogra.network.graphql")
         schemaFiles.from(file("../../../schema.graphql"))
         // The API's custom scalars: ids stay strings (the wire form),
-        // Dimension is a bounded Double, DateTime parses to Instant.
+        // Dimension is a bounded Double that leaves the device with a
+        // positive zero (DimensionAdapter), DateTime parses to Instant.
         mapScalar("UUID", "kotlin.String", "com.apollographql.apollo.api.StringAdapter")
         mapScalar("RecordId", "kotlin.String", "com.apollographql.apollo.api.StringAdapter")
-        mapScalar("Dimension", "kotlin.Double", "com.apollographql.apollo.api.DoubleAdapter")
+        mapScalar("Dimension", "kotlin.Double", "com.cogra.network.DimensionAdapter")
         mapScalar("DateTime", "java.time.Instant", "com.cogra.network.InstantAdapter")
         // `uploadMedia` is the one operation carrying binary, and the
         // binary rides the GraphQL multipart request (api-spec.md).

@@ -115,7 +115,9 @@ describe("a profile payload's expectation", () => {
       state: "cleared",
     });
     const set = profileExpectation(NODE, { ...base, avatar: { mediaId: "still" } }, LEDGER);
-    expect(set).toMatchObject({ node: NODE, displayName: "Ada", bio: "Curious.", websiteUrl: null });
+    // The form sends every field present, so the null website is the clear,
+    // which the server stages as the empty string rather than leaving out.
+    expect(set).toMatchObject({ node: NODE, displayName: "Ada", bio: "Curious.", websiteUrl: "" });
     expect(set.avatar).toEqual({
       state: "set",
       asset: {

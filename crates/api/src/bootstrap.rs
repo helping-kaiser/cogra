@@ -129,11 +129,13 @@ impl From<common::l1::ClientError> for BootstrapError {
 /// readable and governable from the schedule afterwards. The recency
 /// half-life is sized for the dev substrate's 3-second epoch clock
 /// (~1 week of wall time; the first tested value, 30 epochs, was 90
-/// seconds and decayed content in minutes).
+/// seconds and decayed content in minutes). Likewise the active
+/// threshold is 864,000 epochs (~30 days) and the evaluation window
+/// 1,200 epochs (~1 hour) at that clock (jakob's PR-96 ruling).
 fn genesis_parameters(input: &GenesisInput) -> Vec<(&'static str, serde_json::Value)> {
     use serde_json::json;
     vec![
-        ("active_threshold_epochs", json!(30)),
+        ("active_threshold_epochs", json!(864_000)),
         ("mod_role_change_quorum_fraction", json!(0.5)),
         ("mod_role_change_quorum_count", json!(3)),
         ("moderation_sensitive_quorum_fraction", json!(0.5)),
@@ -151,7 +153,7 @@ fn genesis_parameters(input: &GenesisInput) -> Vec<(&'static str, serde_json::Va
         ("recency_shape", json!("exponential")),
         ("tie_breaker_composition", json!(["recency"])),
         ("reserve_share", json!(0.01)),
-        ("n_eval_epochs", json!(10)),
+        ("n_eval_epochs", json!(1_200)),
         ("subsidy_generosity", json!(0.5)),
         ("subsidy_cap_per_member", json!(100)),
         ("support_transform", json!("identity")),

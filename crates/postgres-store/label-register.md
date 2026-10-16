@@ -78,6 +78,7 @@ label.
 | `test:integration:saving-a-kept-node-keeps-its-first-time`                           | saving_a_kept_node_keeps_its_first_time                           |
 | `test:integration:seq-allocation-is-monotone-and-catches-up-with-the-mirror`         | seq_allocation_is_monotone_and_catches_up_with_the_mirror         |
 | `test:integration:seq-catch-up-agrees-with-the-rust-parser-and-survives-a-stray-row` | seq_catch_up_agrees_with_the_rust_parser_and_survives_a_stray_row |
+| `test:integration:superseding-expires-only-unsigned-chained-writes`                  | superseding_expires_only_unsigned_chained_writes                  |
 | `test:integration:the-comment-edit-whose-record-landed-last-renders-the-comment`     | the_comment_edit_whose_record_landed_last_renders_the_comment     |
 | `test:integration:the-current-version-indexes-carry-the-same-rule`                   | the_current_version_indexes_carry_the_same_rule                   |
 | `test:integration:the-edit-whose-record-landed-last-renders-the-post`                | the_edit_whose_record_landed_last_renders_the_post                |
