@@ -164,8 +164,9 @@ export type RegistrationExemption = typeof REGISTRATION_EXEMPTION;
  * The second named exemption (PR-88): a carried write released by the landing
  * on a device that holds no prepare-time expectation for it — the write was
  * prepared, and intent-checked, on another device (carried.ts). It still runs
- * every transport check. Chosen only by the signer's landing path
- * (`WriteSigner.signCarriedAtLanding`), never by a surface.
+ * every transport check, and it holds only for an Opinion (PR-105). Chosen
+ * only by the signer's landing path (`WriteSigner.signCarriedAtLanding`),
+ * never by a surface.
  */
 export const CARRIED_AT_LANDING_EXEMPTION = { kind: "carriedAtLandingExemption" } as const;
 export type CarriedAtLandingExemption = typeof CARRIED_AT_LANDING_EXEMPTION;

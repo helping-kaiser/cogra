@@ -13,12 +13,14 @@
 // the payload alone is what stays equal; the device signs the released write
 // only when the served proposal still digests to it.
 //
-// A landing seen on a device that holds no expectation for a write — the
-// write was prepared on another device — signs under the second named
+// A landing seen on a device that holds no expectation for an Opinion — the
+// write was prepared on another device — signs it under the second named
 // exemption, `CARRIED_AT_LANDING_EXEMPTION` (intent.ts): the act WAS checked
 // once, where it was ordered. That is also what a device that held the
 // expectation and lost it (purged with the draft at a don't-remember
-// sign-out) does: custody absent is custody absent.
+// sign-out) does: custody absent is custody absent. The exemption holds for
+// an Opinion alone (PR-105); any other family without an expectation refuses
+// the whole released batch.
 //
 // THE SAME TIER AS THE DRAFT (content-integrity §9, "join the draft/handshake
 // custody set … locked or purged with the draft"). The record rides the
