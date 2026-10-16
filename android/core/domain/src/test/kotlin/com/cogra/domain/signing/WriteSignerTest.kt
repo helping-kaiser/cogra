@@ -1,5 +1,6 @@
 package com.cogra.domain.signing
 
+import com.cogra.crypto.ActId
 import com.cogra.crypto.ActorKey
 import com.cogra.crypto.Proposal
 import com.cogra.crypto.StructuralBody
@@ -39,6 +40,9 @@ private class FakeWriteRepository(val actor: ActorKey) : WriteRepository {
     var tamperSeal: ((ByteArray) -> ByteArray)? = null
     var approveCount = 0
 
+    /** What the host seals; [testProposalBytes] unless a test serves another. */
+    var sealedProposal: ByteArray? = null
+
     override suspend fun hostPublicKey(): Outcome<ByteArray> = Outcome.Success(host.key.publicKeyBytes())
 
     override suspend fun prepareStance(targetId: String, pDirected: Double, pInterest: Double) =
@@ -50,7 +54,7 @@ private class FakeWriteRepository(val actor: ActorKey) : WriteRepository {
     override suspend fun submitProposal(stagedWriteId: String, signatureBase64: String): Outcome<StagedWriteView> {
         refuseSubmit?.let { return Outcome.Refused(it) }
         if (failSubmit) return Outcome.Failed(IOException("submit lost"))
-        val proposal = testProposalBytes(actor)
+        val proposal = sealedProposal ?: testProposalBytes(actor)
         val sealed = host.seal(proposal, Base64.getDecoder().decode(signatureBase64), actor.publicKeyBytes())
         val act = tamperSeal?.invoke(sealed) ?: sealed
         val view = StagedWriteView(
@@ -439,7 +443,7 @@ class WriteSignerTest {
     }
 
     @Test
-    fun theCarriedBatchSignsAtTheLandingOnTheTransportChecksAlone() = runTest {
+    fun aCarriedWriteThisDeviceNeverPreparedSignsUnderTheCarriedAtLandingExemption() = runTest {
         val repo = FakeWriteRepository(actor)
         val carried = StagedWriteView(
             id = "c1",
@@ -451,6 +455,149 @@ class WriteSignerTest {
         )
         val results = WriteSigner(repo, identity).signCarriedAtLanding(listOf(carried))
         assertThat(results).containsExactly(WriteResult.Done("c1", WriteState.RELAYING))
+    }
+
+    // ---- the carried branch (PR-88: CI-G5 ruled (a)+(a1)) -----------------
+
+    /** The ruled dependency completion the landing appends. */
+    private val completion = listOf(
+        ActId(actor.address(), 0u, com.cogra.crypto.Family.REGISTRATION),
+        ActId(ActorKey.generate().address(), 4u, com.cogra.crypto.Family.OPINION),
+    )
+
+    /** The applicant's prepare served it: [testProposalBytes], carried. */
+    private fun carriedAtPrepare(id: String = "c1") = prepared(id).copy(carried = true)
+
+    /** The landing's release of [testProposalBytes] — [body] and [payload] as served, the completion appended. */
+    private fun released(
+        id: String = "c1",
+        body: (StructuralBody) -> StructuralBody = { it },
+        payload: ByteArray = ByteArray(0),
+    ) = StagedWriteView(
+        id = id,
+        state = WriteState.AWAITING_PRE_SIGN,
+        family = com.cogra.crypto.Family.OPINION,
+        canonicalProposal = run {
+            val faithful = decodeProposal(testProposalBytes(actor))
+            encodeProposal(Proposal(body(faithful.body), payload, completion))
+        },
+        verifiedAct = null,
+        recordId = null,
+    )
+
+    @Test
+    fun aCarriedWriteIsIntentCheckedAtItsPrepareAndKeptNotSigned() = runTest {
+        val repo = FakeWriteRepository(actor)
+        val results = WriteSigner(repo, identity).sign(listOf(carriedAtPrepare()), ordered)
+        assertThat(results).containsExactly(WriteResult.Carried("c1"))
+        // Nothing pre-signed, nothing spent — and what was verified is kept.
+        assertThat(repo.staged).isEmpty()
+        assertThat(identity.handshakes).isEmpty()
+        assertThat(identity.carriedExpectations.getValue("c1"))
+            .isEqualTo(carriedDigest(decodeProposal(testProposalBytes(actor))))
+    }
+
+    @Test
+    fun aCarriedWriteThatDisagreesWithItsFormIsRefusedAtItsPrepareAndNothingIsKept() = runTest {
+        val repo = FakeWriteRepository(actor)
+        val served = served("c1", { it.copy(pD = 0.55) }).copy(carried = true)
+        val results = WriteSigner(repo, identity).sign(listOf(served), ordered)
+        assertThat(results.single()).isInstanceOf(WriteResult.RejectedByDevice::class.java)
+        assertThat(repo.staged).isEmpty()
+        assertThat(identity.carriedExpectations).isEmpty()
+    }
+
+    @Test
+    fun theLandingSignsACarriedWriteEqualToItsKeptExpectationModuloTheDependencyCompletion() = runTest {
+        val repo = FakeWriteRepository(actor)
+        val signer = WriteSigner(repo, identity)
+        signer.sign(listOf(carriedAtPrepare()), ordered)
+        val release = released()
+        repo.sealedProposal = release.canonicalProposal
+        val results = signer.signCarriedAtLanding(listOf(release))
+        assertThat(results).containsExactly(WriteResult.Done("c1", WriteState.RELAYING))
+        // Pre-signed and handed to the backend: the expectation has done its job.
+        assertThat(identity.carriedExpectations).isEmpty()
+    }
+
+    @Test
+    fun aReleasedCarriedWriteThatDiffersFromItsKeptExpectationRefusesTheWholeBatch() = runTest {
+        val repo = FakeWriteRepository(actor)
+        val signer = WriteSigner(repo, identity)
+        signer.sign(listOf(carriedAtPrepare()), ordered)
+        val results = signer.signCarriedAtLanding(
+            listOf(
+                // Prepared on another device: it would sign under the exemption alone…
+                released("other"),
+                // …but the served value is not the one this device verified.
+                released(body = { it.copy(pD = 0.9) }),
+            ),
+        )
+        assertThat(results.map { it::class }).containsExactly(
+            WriteResult.RejectedByDevice::class,
+            WriteResult.RejectedByDevice::class,
+        )
+        assertThat(repo.staged).isEmpty()
+        // KEPT through the refusal: the next poll must refuse again, never find
+        // the expectation gone and sign under the exemption.
+        assertThat(identity.carriedExpectations.keys).containsExactly("c1")
+    }
+
+    @Test
+    fun aReleasedCarriedWriteWithAnInjectedPayloadIsRefused() = runTest {
+        val repo = FakeWriteRepository(actor)
+        val signer = WriteSigner(repo, identity)
+        signer.sign(listOf(carriedAtPrepare()), ordered)
+        val results = signer.signCarriedAtLanding(listOf(released(payload = byteArrayOf(1))))
+        assertThat(results.single()).isInstanceOf(WriteResult.RejectedByDevice::class.java)
+        assertThat(repo.staged).isEmpty()
+    }
+
+    @Test
+    fun theCarriedAtLandingExemptionStillRunsTheTransportCheck() = runTest {
+        val repo = FakeWriteRepository(actor)
+        val malformed = released().copy(canonicalProposal = byteArrayOf(1, 2))
+        val results = WriteSigner(repo, identity).signCarriedAtLanding(listOf(malformed))
+        assertThat(results.single()).isInstanceOf(WriteResult.RejectedByDevice::class.java)
+        assertThat(repo.staged).isEmpty()
+    }
+
+    @Test
+    fun theLandingGateHoldsTheCarriedBatchBackWithoutSpendingAnything() = runTest {
+        val repo = FakeWriteRepository(actor)
+        WriteSigner(repo, identity).sign(listOf(carriedAtPrepare()), ordered)
+        val asked = mutableListOf<List<String>>()
+        val gate = CarriedLandingGate { batch ->
+            asked += batch.map { it.id }
+            CarriedLandingReadiness.NotReady("the media move is not confirmed yet")
+        }
+        val results = WriteSigner(repo, identity, gate).signCarriedAtLanding(listOf(released()))
+        assertThat(asked).containsExactly(listOf("c1"))
+        assertThat(results.single()).isInstanceOf(WriteResult.Failed::class.java)
+        assertThat(repo.staged).isEmpty()
+        assertThat(identity.carriedExpectations.keys).containsExactly("c1")
+    }
+
+    @Test
+    fun theLandingGateIsNeverAskedForABatchTheIntentCheckRefused() = runTest {
+        val repo = FakeWriteRepository(actor)
+        WriteSigner(repo, identity).sign(listOf(carriedAtPrepare()), ordered)
+        var asked = 0
+        val gate = CarriedLandingGate {
+            asked += 1
+            CarriedLandingReadiness.Ready
+        }
+        WriteSigner(repo, identity, gate).signCarriedAtLanding(listOf(released(body = { it.copy(pD = 0.9) })))
+        assertThat(asked).isEqualTo(0)
+    }
+
+    @Test
+    fun theDependencyCompletionNeverChangesTheCarriedDigest() {
+        val faithful = decodeProposal(testProposalBytes(actor))
+        val completed = Proposal(faithful.body, faithful.payload, completion)
+        assertThat(carriedDigest(completed)).isEqualTo(carriedDigest(faithful))
+        val changed = Proposal(faithful.body.copy(pI = 0.11), faithful.payload, faithful.deps)
+        assertThat(carriedDigest(changed)).isNotEqualTo(carriedDigest(faithful))
     }
 
     @Test

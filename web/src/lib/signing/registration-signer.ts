@@ -76,7 +76,10 @@ export function createRegistrationSigner(deps: {
         status.value;
       if (accountState === "MEMBER") {
         // The landing released what the applicant carried: sign it now,
-        // without a prompt, with the vouch-in (auth.md "Application").
+        // without a prompt, with the vouch-in (auth.md "Application") —
+        // checked against what was verified at its prepare, or under the
+        // carried-at-landing exemption where it was prepared elsewhere
+        // (write-signer.ts `signCarriedAtLanding`).
         // Best-effort by design — a write left mid-handshake keeps its
         // material for resume(), and one never started is still
         // AWAITING_PRE_SIGN on the next pass.
@@ -95,7 +98,7 @@ export function createRegistrationSigner(deps: {
           return { kind: "awaitingSigningKey" };
         }
         // No form stands behind the staged Registration — the backend
-        // staged it at approval — so it is the one named exemption from
+        // staged it at approval — so it is the first named exemption from
         // the intent check (intent.ts), and still runs every transport check.
         const result = await writeSigner.signStaged(stagedRegistration, REGISTRATION_EXEMPTION);
         switch (result.kind) {
@@ -108,6 +111,10 @@ export function createRegistrationSigner(deps: {
             return { kind: "rejectedByDevice", reason: result.reason };
           case "failed":
             return { kind: "failed", cause: result.cause };
+          case "carried":
+            // signStaged never keeps a write for the landing: only a checked
+            // batch does (write-signer.ts `sign`).
+            return { kind: "failed", cause: new Error("a staged Registration is never carried") };
         }
       }
 

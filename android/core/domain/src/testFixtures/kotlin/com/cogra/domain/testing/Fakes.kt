@@ -162,6 +162,18 @@ class FakeIdentityStore : IdentityStore {
 
     override suspend fun handshakeIds(): Set<String> = handshakes.keys.toSet()
 
+    val carriedExpectations = mutableMapOf<String, ByteArray>()
+
+    override suspend fun carriedExpectation(stagedWriteId: String): ByteArray? = carriedExpectations[stagedWriteId]
+
+    override suspend fun saveCarriedExpectation(stagedWriteId: String, digest: ByteArray) {
+        carriedExpectations[stagedWriteId] = digest
+    }
+
+    override suspend fun clearCarriedExpectation(stagedWriteId: String) {
+        carriedExpectations.remove(stagedWriteId)
+    }
+
     override suspend fun stancePadTaught(): Boolean = stancePadTaught
 
     override suspend fun markStancePadTaught() {

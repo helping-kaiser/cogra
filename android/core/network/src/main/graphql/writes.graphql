@@ -35,6 +35,8 @@ mutation PrepareStance($input: PrepareStanceInput!) {
   prepareStance(input: $input) {
     writes {
       ...PreparedWriteFields
+      # Carried with an applicant's application: checked, kept, signed at the landing.
+      carried
     }
     userErrors {
       ...UserErrorFields
