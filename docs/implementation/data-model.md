@@ -476,8 +476,15 @@ carried batch's sign gate reads
 `media::areas::carried_media_published`: true exactly when every
 asset the carried write names resolves to a ready asset of its
 author's whose bytes are live. A name that resolves to no asset
-fails closed. The orphan sweep takes only live-area assets: carried
-media has no placement until its landing writes one.
+fails closed. The gate runs at the seal leg (`submitProposals`,
+`relay::gate_carried_media`): before a released carried write
+records its pre-commitment, the submit runs the move and reads the
+predicate back, and anything short of true refuses as
+`CARRIED_MEDIA_UNPUBLISHED`, a refusal the clients do not treat as
+terminal, so they keep the handshake material and re-send. A write
+naming no media passes at once. The orphan sweep takes only
+live-area assets: carried media has no placement until its landing
+writes one.
 
 ## Staged writes
 

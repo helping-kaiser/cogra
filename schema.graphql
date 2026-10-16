@@ -956,6 +956,12 @@ enum ErrorCode {
 	The key-backup upload challenge is unknown, expired, or spent.
 	"""
 	CHALLENGE_EXPIRED
+	"""
+	A carried write the landing released names media not yet
+	published to the live store. Retryable: nothing was recorded, and
+	the next submit resumes the move.
+	"""
+	CARRIED_MEDIA_UNPUBLISHED
 }
 
 type FeedConnection {
@@ -2233,6 +2239,12 @@ type Mutation {
 	failures surface as SIGNATURE_INVALID userErrors per proposal.
 	Resubmitting a sealed proposal is idempotent only for the exact
 	signature that was sealed; differing bytes refuse as BAD_INPUT.
+	
+	A carried write the landing released signs only once every asset
+	it names is published to the live store; the submit runs that
+	move. One whose move has not landed refuses as
+	CARRIED_MEDIA_UNPUBLISHED, which is retryable: nothing was
+	recorded, and the next submit resumes the move.
 	
 	A keyless account is refused rather than rendered: no staged write
 	can exist for one, because the Registration stages only after the

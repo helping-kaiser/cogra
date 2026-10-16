@@ -538,6 +538,7 @@ enum ErrorCode {
   STAGED_WRITE_EXPIRED         # the staged write was garbage-collected unlanded
   SIGNATURE_INVALID            # a submitted signature does not verify the record
   CHALLENGE_EXPIRED            # the key-backup upload challenge is unknown, expired, or spent
+  CARRIED_MEDIA_UNPUBLISHED    # a released carried write names media not yet published to the live store; retryable
 }
 ```
 
@@ -3446,7 +3447,11 @@ extend type Mutation {
    staged writes are already AWAITING_APPROVAL, verified act
    included; otherwise observe via stagedWrite. Resubmitting a
    sealed proposal is idempotent only for the exact signature that
-   was sealed; differing bytes refuse as BAD_INPUT."
+   was sealed; differing bytes refuse as BAD_INPUT. A carried write
+   the landing released signs only once every asset it names is
+   published to the live store; the submit runs that move, and one
+   whose move has not landed refuses as CARRIED_MEDIA_UNPUBLISHED —
+   retryable: nothing is recorded, the next submit resumes the move."
   submitProposals(input: SubmitProposalsInput!): SubmitProposalsPayload!
   "Relay approval witnesses — only an approved act is orderable.
    Landing stays asynchronous; observe via stagedWrite."

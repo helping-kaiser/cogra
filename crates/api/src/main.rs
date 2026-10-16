@@ -160,7 +160,7 @@ async fn main() -> anyhow::Result<()> {
     );
     tokio::spawn(api::media::orphan_reaper_loop(
         pool.clone(),
-        areas,
+        areas.clone(),
         media.orphan_reaper_interval_secs,
         media.orphan_max_age_secs,
     ));
@@ -212,7 +212,7 @@ async fn main() -> anyhow::Result<()> {
     let auth = auth_config()?;
     let uploads = api::UploadRouting {
         pool: pool.clone(),
-        blobs: blobs.clone(),
+        blobs,
         media: media.clone(),
     };
     let schema = api::schema::build(ApiContext {
@@ -230,7 +230,7 @@ async fn main() -> anyhow::Result<()> {
         rate_limits: RateLimitConfig::from_env()?,
         breach,
         media: media.clone(),
-        blobs,
+        areas,
         ranker,
         slice_reads: Default::default(),
     });

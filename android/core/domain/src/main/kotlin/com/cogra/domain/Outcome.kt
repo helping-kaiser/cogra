@@ -35,6 +35,9 @@ enum class ErrorCode {
     SIGNATURE_INVALID,
     CHALLENGE_EXPIRED,
 
+    /** Retryable: a released carried write's media is not yet live; the handshake material is kept. */
+    CARRIED_MEDIA_UNPUBLISHED,
+
     /** A code this client version does not know — treat as INTERNAL. */
     UNKNOWN,
 }

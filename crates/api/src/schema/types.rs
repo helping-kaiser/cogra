@@ -401,6 +401,10 @@ pub enum ErrorCode {
     SignatureInvalid,
     /// The key-backup upload challenge is unknown, expired, or spent.
     ChallengeExpired,
+    /// A carried write the landing released names media not yet
+    /// published to the live store. Retryable: nothing was recorded, and
+    /// the next submit resumes the move.
+    CarriedMediaUnpublished,
 }
 
 /// The refusals that end a two-signature handshake for good, so the

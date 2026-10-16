@@ -54,7 +54,7 @@ pub fn api_context_with_ranker(
             rate_limits,
             breach: Arc::new(api::breach::DisabledCorpus),
             media: MediaConfig::default(),
-            blobs: Arc::new(api::media::blob::in_memory()),
+            areas: api::media::MediaAreas::in_memory(),
             ranker: RankerClient::new(ranker).expect("ranker client"),
             slice_reads: SliceReadLog::default(),
         },
@@ -115,7 +115,7 @@ pub fn connect_info_app_with_ranker(
 pub fn upload_routing(ctx: &api::schema::ApiContext) -> api::UploadRouting {
     api::UploadRouting {
         pool: ctx.pool.clone(),
-        blobs: ctx.blobs.clone(),
+        blobs: ctx.areas.live.clone(),
         media: ctx.media.clone(),
     }
 }
