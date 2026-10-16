@@ -337,29 +337,29 @@ export function SealStep({
         standoff="compose"
         testId="wizard-stance-pad"
       >
-        {/* The `?` sits in the corner, out of the readout's reading order,
-            and the readout keeps clear of it (`ComposePad.jsx`, `paddingRight:
-            40`). */}
-        <div className="relative">
-          <span className="absolute top-0 right-0">
-            <HelpDot
-              ariaLabel="Your backing on your post"
-              onOpen={onStanceHelp}
-              testId="wizard-stance-help"
-            />
-          </span>
-          <div className="pr-10">
-            <AttachmentStanding pick={stagedPDirected} testIdPrefix="wizard-stance" />
-          </div>
+        {/* The `?` sits in the card's corner, 4px in, out of the readout's
+            reading order, and the readout keeps clear of it (`ComposePad.jsx`:
+            `top: 4, right: 4`, `paddingRight: 40`). The parked dialog is the
+            positioned box it is placed against. */}
+        <span className="absolute top-1 right-1">
+          <HelpDot
+            ariaLabel="Your backing on your post"
+            onOpen={onStanceHelp}
+            testId="wizard-stance-help"
+          />
+        </span>
+        <div className="pr-10">
+          <AttachmentStanding pick={stagedPDirected} testIdPrefix="wizard-stance" />
         </div>
         <div role="group" aria-label="Backing pad for your own post" className="self-stretch">
           <AttachmentPad value={stagedPDirected} onChange={onStagedPDirected} testId="wizard-stance-field" />
         </div>
         <div className="flex justify-end gap-2">
-          <PillButton variant="text" testId="wizard-stance-cancel" onClick={() => onSheet("none")}>
+          {/* The board's compact pair (`ComposePad.jsx`: `size="sm"`). */}
+          <PillButton variant="text" size="sm" testId="wizard-stance-cancel" onClick={() => onSheet("none")}>
             Cancel
           </PillButton>
-          <PillButton testId="wizard-stance-set" onClick={onSetStance}>
+          <PillButton size="sm" testId="wizard-stance-set" onClick={onSetStance}>
             Set
           </PillButton>
         </div>
