@@ -199,6 +199,7 @@ async fn a_self_mark_rides_the_signed_payload_into_the_display_row(pool: PgPool)
             content: Some("Softened".into()),
             attachments: vec![],
             sensitive: Default::default(),
+            p_directed: 0.0,
         },
     )
     .await
@@ -360,6 +361,7 @@ async fn a_post_title_is_capped_at_a_hundred_characters(pool: PgPool) {
             content: Some("Words".into()),
             attachments: vec![],
             sensitive: Default::default(),
+            p_directed: 0.0,
         },
     )
     .await;
@@ -431,6 +433,7 @@ async fn a_post_description_is_capped_at_five_hundred_characters(pool: PgPool) {
             content: Some("Words".into()),
             attachments: vec![],
             sensitive: Default::default(),
+            p_directed: 0.0,
         },
     )
     .await;
@@ -539,6 +542,7 @@ async fn a_words_edit_with_a_description_is_bad_input(pool: PgPool) {
             content: Some("Three weekends at low tide.".into()),
             attachments: vec![],
             sensitive: Default::default(),
+            p_directed: 0.0,
         },
     )
     .await;
@@ -585,6 +589,7 @@ async fn an_unchanged_post_edit_is_accepted_and_priced(pool: PgPool) {
             content: Some(before.content.clone()),
             attachments: vec![],
             sensitive: Default::default(),
+            p_directed: 0.0,
         },
     )
     .await
@@ -614,6 +619,199 @@ async fn an_unchanged_post_edit_is_accepted_and_priced(pool: PgPool) {
             .await
             .expect("counts");
     assert_eq!(versions, 2, "the no-op landed as its own version");
+}
+
+/// The landed record's binding leg — the binary leg of a Publish, the
+/// A-leg of a Review — as the mirror holds it.
+async fn landed_leg(pool: &PgPool, prepared: &content::PreparedContent) -> mirror::RecordLeg {
+    let act = prepared.writes[0].proposal.body.act_id().to_string();
+    mirror::record_full(pool, &act)
+        .await
+        .expect("reads record")
+        .expect("record landed")
+        .target()
+        .expect("leg")
+        .clone()
+}
+
+/// Round 13: every post edit's record carries the author's stance pick,
+/// and a moved pick alone fills the batch. The content-identical edit below
+/// signs, lands with the pick on its record, and is a real version — the
+/// post reads as edited. `p_i` stays census-fixed at 1 on a Publish.
+///
+/// A post edit whose only change is the stance pick signs and lands as a new version carrying that pick, the content as it stood.
+/// ´claim:content:a-pick-only-edit-is-a-version´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_pick_only_post_edit_lands_as_a_version_carrying_the_pick(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.funded_actor("alice").await;
+    let post_id = rig
+        .post(actor, &key, "Salt maps", "Three weekends at low tide.")
+        .await;
+    let before = content_store::post(&rig.pool, post_id)
+        .await
+        .expect("reads")
+        .expect("post");
+    assert_eq!(
+        before.version_created_at, before.created_at,
+        "a fresh post reads unedited"
+    );
+
+    let picked = content::prepare_post_edit(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        actor,
+        PostEditDraft {
+            id: post_id,
+            title: before.title.clone(),
+            description: before.description.clone(),
+            content: Some(before.content.clone()),
+            attachments: vec![],
+            sensitive: Default::default(),
+            p_directed: 0.4,
+        },
+    )
+    .await
+    .expect("a pick-only edit prepares");
+    let body = &picked.writes[0].proposal.body;
+    assert_eq!(body.family, common::l1::Family::Publish);
+    assert_eq!(
+        (body.p_d, body.p_i),
+        (0.4, 1.0),
+        "the signed body carries the pick"
+    );
+    rig.land(&picked, &key).await;
+
+    let leg = landed_leg(&rig.pool, &picked).await;
+    assert_eq!((leg.p_d, leg.p_i), (0.4, 1.0), "the landed record keeps it");
+    let after = content_store::post(&rig.pool, post_id)
+        .await
+        .expect("reads")
+        .expect("post");
+    assert_eq!(after.title, before.title);
+    assert_eq!(after.content, before.content);
+    assert!(
+        after.version_created_at > after.created_at,
+        "the pick-only edit is a real version, so the post reads as edited"
+    );
+    let versions =
+        sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM post_versions WHERE post_id = $1")
+            .bind(post_id)
+            .fetch_one(&rig.pool)
+            .await
+            .expect("counts");
+    assert_eq!(versions, 2);
+}
+
+/// A post edit's pick obeys the stance range a create's attachment does.
+///
+/// A post edit's stance pick outside [-1, 1] is refused at pDirected.
+/// ´claim:content:an-edit-pick-keeps-the-stance-range´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_edit_pick_out_of_range_is_bad_input(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.funded_actor("alice").await;
+    let post_id = rig.post(actor, &key, "Title", "Body").await;
+
+    let post_edit = content::prepare_post_edit(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        actor,
+        PostEditDraft {
+            id: post_id,
+            title: Some("Title".into()),
+            description: None,
+            content: Some("Body".into()),
+            attachments: vec![],
+            sensitive: Default::default(),
+            p_directed: 1.5,
+        },
+    )
+    .await;
+    assert!(
+        matches!(
+            post_edit,
+            Err(ContentError::BadInput {
+                field: "pDirected",
+                ..
+            })
+        ),
+        "a post edit's attachment stays in [-1, 1]"
+    );
+}
+
+/// Round 13's "Start it unreachable?" is a client warning that never
+/// stops: creating at the zero stance is legal, so the server prepares
+/// and lands it — a post at attachment 0, a comment at `(0, 0)`.
+///
+/// Creating at the zero stance is legal: a post at attachment zero and a comment at the zero pair both prepare and land.
+/// ´claim:content:a-zero-stance-creation-is-legal´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_creation_at_the_zero_stance_prepares_and_lands(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.funded_actor("alice").await;
+
+    let post = content::prepare_post(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        actor,
+        PostDraft {
+            title: Some("Quiet".into()),
+            description: None,
+            content: Some("Unreachable on purpose.".into()),
+            license: license(),
+            p_directed: 0.0,
+            tags: vec![],
+            references: vec![],
+            attachments: vec![],
+            sensitive: Default::default(),
+        },
+    )
+    .await
+    .expect("a zero-attachment post prepares");
+    rig.land(&post, &key).await;
+    let leg = landed_leg(&rig.pool, &post).await;
+    assert_eq!((leg.p_d, leg.p_i), (0.0, 1.0));
+    assert!(
+        content_store::post(&rig.pool, post.node)
+            .await
+            .expect("reads")
+            .is_some(),
+        "the zero-stance post landed"
+    );
+
+    let comment = content::prepare_comment(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        actor,
+        CommentDraft {
+            target: post.node,
+            content: "Also quiet.".into(),
+            license: license(),
+            p_directed: 0.0,
+            p_interest: 0.0,
+            tags: vec![],
+            references: vec![],
+            attachments: vec![],
+            sensitive: Default::default(),
+        },
+    )
+    .await
+    .expect("a zero-pair comment prepares");
+    rig.land(&comment, &key).await;
+    let leg = landed_leg(&rig.pool, &comment).await;
+    assert_eq!((leg.p_d, leg.p_i), (0.0, 0.0));
+    assert!(
+        content_store::comment(&rig.pool, comment.node)
+            .await
+            .expect("reads")
+            .is_some(),
+        "the zero-stance comment landed"
+    );
 }
 
 /// The words-body's own cap: a post's body when it carries words rather
@@ -676,6 +874,7 @@ async fn a_post_body_is_capped_at_five_thousand_characters(pool: PgPool) {
             content: Some(over),
             attachments: vec![],
             sensitive: Default::default(),
+            p_directed: 0.0,
         },
     )
     .await;
@@ -933,6 +1132,7 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
             content: Some("Old body".into()),
             attachments: vec![],
             sensitive: Default::default(),
+            p_directed: 0.0,
         },
     )
     .await
@@ -962,6 +1162,7 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
             content: Some("New body".into()),
             attachments: vec![],
             sensitive: Default::default(),
+            p_directed: 0.0,
         },
     )
     .await
@@ -991,6 +1192,7 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
             content: Some("Newer body".into()),
             attachments: vec![],
             sensitive: Default::default(),
+            p_directed: 0.0,
         },
     )
     .await
@@ -1041,6 +1243,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
             content: Some("Body".into()),
             attachments: vec![],
             sensitive: Default::default(),
+            p_directed: 0.0,
         },
     )
     .await;
@@ -1058,6 +1261,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
             content: Some("Body".into()),
             attachments: vec![],
             sensitive: Default::default(),
+            p_directed: 0.0,
         },
     )
     .await;
@@ -1075,6 +1279,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
             content: Some("Body".into()),
             attachments: vec![],
             sensitive: Default::default(),
+            p_directed: 0.0,
         },
     )
     .await
@@ -1092,6 +1297,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
             content: Some("Body".into()),
             attachments: vec![],
             sensitive: Default::default(),
+            p_directed: 0.0,
         },
     )
     .await;
@@ -1110,6 +1316,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
             content: Some("Body".into()),
             attachments: vec![],
             sensitive: Default::default(),
+            p_directed: 0.0,
         },
     )
     .await
@@ -1414,6 +1621,7 @@ async fn the_chain_head_tracks_the_newest_landed_edit(pool: PgPool) {
             content: Some("B".into()),
             attachments: vec![],
             sensitive: Default::default(),
+            p_directed: 0.0,
         },
     )
     .await
@@ -1908,6 +2116,7 @@ mod galleries {
                 content: None,
                 attachments: placements(&[b, c]),
                 sensitive: Default::default(),
+                p_directed: 0.0,
             },
         )
         .await
@@ -2003,6 +2212,7 @@ mod galleries {
                 content: None,
                 attachments: placements(&[b]),
                 sensitive: Default::default(),
+                p_directed: 0.0,
             },
         )
         .await
@@ -2397,6 +2607,7 @@ mod galleries {
                 content: None,
                 attachments: placement(second),
                 sensitive: Default::default(),
+                p_directed: 0.0,
             },
         )
         .await
@@ -2532,6 +2743,7 @@ mod galleries {
                     content: Some("Words".into()),
                     attachments: placements(&[a]),
                     sensitive: Default::default(),
+                    p_directed: 0.0,
                 },
             )
             .await,
