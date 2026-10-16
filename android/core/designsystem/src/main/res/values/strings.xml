@@ -178,6 +178,9 @@
     <!-- The one-axis reading: the anchor's word, then the axis and the
          one number — `Nice, For or against +0.10`. -->
     <string name="valence_reading">%1$s, %2$s %3$s</string>
+    <!-- Exactly 0.00 on the one axis wears 🤷 and is spoken this
+         (copy-voice "The backing pad's own words", jakob 2026-10-16). -->
+    <string name="valence_zero">Nothing</string>
     <string name="stance_carries_nothing">This would carry nothing.</string>
     <string name="stance_carries_nothing_directed">Where you stand would carry nothing.</string>
     <string name="stance_carries_nothing_interest">What reaches you would carry nothing.</string>
