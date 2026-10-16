@@ -98,3 +98,32 @@ export declare function padPairFrom(
   inset?: number,
   ranges?: PadRanges,
 ): StancePair;
+
+/**
+ * The one-axis field: the pad an author meets when they sign their own
+ * content. Publish and Owner carry one free parameter — the attachment, on
+ * `p_d`; the census pins `p_i` at 1 — so the value is one number on
+ * `[−1, +1]` and the field is the square's language cut to a strip.
+ */
+export interface AttachmentPadProps {
+  value?: number;
+  /** Omit for a static specimen; pass to make the strip draggable. */
+  onChange?: (value: number) => void;
+  fieldRef?: React.RefObject<HTMLDivElement | null>;
+  /** The two pole words, drawn in the square's gutters beside the strip. On by default. */
+  showAxes?: boolean;
+  /** What the poles are called — reads `left` and `right` only. Defaults to `STANCE_AXES`, Against / For. */
+  axes?: PadAxes;
+  /** Draws the knob's pressed layer for a board, as on the square. */
+  held?: boolean;
+  /** The data-node name its placer gives this field. Given one, it also names the pole words `left` and `right`, and the `strip` — the value space — with its dead-ground line `zeroDown`, the `knob`, and the knob's pressed `knobLayer` while it is held. */
+  node?: string;
+}
+
+export declare function AttachmentPad(props: AttachmentPadProps): JSX.Element;
+/** The strip's height: the knob's pressed layer with the square's breathing room. */
+export declare const ATTACHMENT_FIELD_HEIGHT_PX: number;
+/** Where the knob sits on the strip, as a percentage of its travel. */
+export declare function attachmentPercentOf(value: number): number;
+/** The attachment this much horizontal travel picks, starting from `base`. */
+export declare function attachmentFrom(base: number, rect: { width: number }, dx: number, inset?: number): number;

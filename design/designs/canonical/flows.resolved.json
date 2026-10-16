@@ -1242,10 +1242,10 @@
     },
     {
       "name": "set-your-own-stance-on-your-post",
-      "description": "Adjust on the seal blooms the ordinary full pad — both numbers of the author's opinion on their own post are theirs to set, and the stance is declared before signing, never assumed.",
+      "description": "Adjust on the seal's Your backing row blooms the one-axis pad — the post's own record carries one free number, the author's backing, For or Against, and it is declared before signing, never assumed.",
       "status": "resolved",
       "steps": [
-        "start · ComposeSeal · 5 «Adjust (your stance)» → ComposePad",
+        "start · ComposeSeal · 5 «Adjust (your backing)» → ComposePad",
         "end · ComposePad · 4 «Set» → ComposeSeal — the adjusted stance on the seal"
       ],
       "boards": [
@@ -1255,11 +1255,11 @@
     },
     {
       "name": "adjust-your-opinion-with-an-edit",
-      "description": "Adjust on a post edit's opinion row blooms the ordinary full pad at the edit's pick, (0, 0) until moved; Set stages the pick on the edit's own record and Sign the edit signs it with the rest — an edit nobody adjusts moves the author's opinion by nothing.",
+      "description": "Adjust on a post edit's Your backing row blooms the one-axis pad, its pick the edit's own record at 0.00; the pad reads the current backing, the pick and the backing after, Set stages the pick and Sign the edit signs it with the rest. An edit nobody adjusts moves the backing by nothing.",
       "status": "resolved",
       "steps": [
-        "start · EditCompose · 21 «Adjust (your opinion)» → EditPad — the ordinary full pad over the edit, at the edit's pick — (0, 0) until the author moves it",
-        "end · EditPad · 4 «Set» → EditCompose — the pick stages on the edit's own record — the row reads the resulting opinion, the count does not move, and nothing signs until Sign the edit"
+        "start · EditCompose · 21 «Adjust (your backing)» → EditPad — the one-axis pad over the edit, its pick the edit's own record — 0.00 until the author moves it",
+        "end · EditPad · 4 «Set» → EditCompose — the pick stages on the edit's own record — the row reads the backing after, the count does not move, and nothing signs until Sign the edit"
       ],
       "boards": [
         "EditCompose",

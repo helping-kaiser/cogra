@@ -2696,8 +2696,8 @@
       "from": "ChatSignSheet",
       "via": 4,
       "kind": "advance",
-      "label": "Adjust — on Your opinion",
-      "to": [{ "terminal": "canonical", "case": "the ordinary full pad over the sheet — an opinion on your own content is the pair like any other; canonical's own-post pad, ComposeSeal's Adjust, the chat seal's own drawing waiting for the chat round" }]
+      "label": "Adjust — on Your backing",
+      "to": [{ "terminal": "canonical", "case": "the one-axis pad over the sheet — a message's own record carries one free number, as a post's does; canonical's own-post pad, ComposeSeal's Adjust, the chat seal's own drawing waiting for the chat round" }]
     },
     {
       "from": "ChatJoinSealPad",
