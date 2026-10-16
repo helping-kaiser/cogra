@@ -45,6 +45,8 @@ A kind list or row set shows only served kinds, never a dead chip
 | History doors (the change-histories round, post-MVP) | every door into a version history | the `Edited` marker is a plain marker, the stance readout carries no built-tail, a `StanceRow` value opens nothing |
 | ~~The reader's menus (`ReaderPostMenu`, `ProfileMenu`, `CommentMenu`)~~ | ~~a content report row (readme §13, *The menus round*)~~ | ~~no Report row~~ — lifted 2026-10-09 by *The fabric-2 draws* (item 75): `Report` ships at every other-person menu's tail, its confirm's commit sending a mail |
 | An applicant's comment foot and `Reply` (`ReplyEntry`, `ProfileComments`) | commenting before approval (readme §13, *The applicant's life round*) | both stay drawn and answer in place: `You can comment once you're in.` |
+| An applicant's `New post` — every applicant bar (`ApplicantFeed` and its family, `ProfileApplicant`, `WalletComingSoon`) and the menus' `Cite in a new post` and `Mention in a new post` | posting before approval (PR-103; readme §13, *Round 16, the applicant-acting cut*) | each stays drawn and answers in place: `You can post once you're in.`; the wizard never opens |
+| An applicant's stance faces — every face an applicant meets, a topic's and a profile's wide anchor included | opinions and Affinities before approval (PR-103; readme §13, *Round 16, the applicant-acting cut*) | each stays drawn, hollow, and answers a tap or a press-and-hold in place: `You can give your opinion once you're in.`; the pad never blooms |
 
 ## Copy held to what CoGra v1.0.0 does
 
