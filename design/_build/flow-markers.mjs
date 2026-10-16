@@ -1360,7 +1360,6 @@ Object.assign(FLOW_MARKERS, {
   ],
   ProfileApplicant: [
     ...ownProfile(),
-    { n: 9, find: "First light over the flats", tag: "button" },
     ...nav(10),
     // The ask link's permanent home (jakob 2026-10-02): the next free number
     // after the bell's 15. The `application` chip draws the card twice, open

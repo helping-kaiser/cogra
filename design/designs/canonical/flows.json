@@ -629,14 +629,9 @@
     },
     {
       "name": "post-while-an-applicant",
-      "description": "An applicant's first post runs the same wizard and the same seal; signing stages it with the application, the wizard closing onto the applicant's own feed, and the post waits in their chronicle, seen by them alone.",
-      "start": { "board": "ApplicantWaiting", "via": 12, "to": "ComposePick" },
-      "waypoints": [
-        { "board": "ComposePick", "via": 4, "to": "ComposeWords" },
-        { "board": "ComposeWords", "via": 3, "to": "ComposeDetailsWords" },
-        { "board": "ComposeDetailsWords", "via": 8, "to": "ComposeSeal" }
-      ],
-      "end": { "board": "ComposeSeal", "via": 7, "to": "ApplicantWaiting" }
+      "description": "New post in the applicant days answers where it was pressed — You can post once you're in. — and the wizard never opens; posting starts once the vouch lets the reader in.",
+      "start": { "board": "ApplicantWaiting" },
+      "end": { "board": "ApplicantWaiting", "via": 12 }
     },
     {
       "name": "watch-the-registration-land",
