@@ -374,9 +374,7 @@ async fn people_cap(
             .map_err(storage)?;
         served.extend(rest.into_iter().map(|hit| hit.node_id));
     }
-    head.retain(|(hit, _)| {
-        section_of(hit.tier) != SECTION_PEOPLE || served.contains(&hit.node_id)
-    });
+    head.retain(|(hit, _)| section_of(hit.tier) != SECTION_PEOPLE || served.contains(&hit.node_id));
     Ok(Some(served))
 }
 

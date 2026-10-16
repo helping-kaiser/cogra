@@ -201,9 +201,16 @@ async fn equal_save_times_page_by_node_id(pool: PgPool) {
         .await
         .expect("page");
     let cursor: BookmarkCursor = first.last().expect("row").cursor();
-    let second = bookmarks::bookmarks(&pool, viewer, &bookmarks::every_kind(), Some(cursor), false, 2)
-        .await
-        .expect("page");
+    let second = bookmarks::bookmarks(
+        &pool,
+        viewer,
+        &bookmarks::every_kind(),
+        Some(cursor),
+        false,
+        2,
+    )
+    .await
+    .expect("page");
     let walked: Vec<Uuid> = first
         .iter()
         .chain(second.iter())

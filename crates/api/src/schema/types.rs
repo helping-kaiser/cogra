@@ -4288,7 +4288,9 @@ impl BookmarkConnectionFields {
     async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
         let pool = ctx.data::<PgPool>()?;
         let total = match &self.narrowed {
-            None => postgres_store::bookmarks::count_bookmarks(pool, self.viewer, &self.kinds).await,
+            None => {
+                postgres_store::bookmarks::count_bookmarks(pool, self.viewer, &self.kinds).await
+            }
             Some(None) => Ok(0),
             Some(Some(request)) => {
                 super::query::served_count(pool, request, Some(self.viewer)).await
@@ -4332,7 +4334,10 @@ fn saved_kinds(kinds: Option<&[NodeKind]>) -> async_graphql::Result<Vec<NodeKind
                     "Saved holds USER, POST and COMMENT only",
                 ));
             }
-            Ok(HELD.into_iter().filter(|held| kinds.contains(held)).collect())
+            Ok(HELD
+                .into_iter()
+                .filter(|held| kinds.contains(held))
+                .collect())
         }
     }
 }
@@ -4385,10 +4390,8 @@ impl User {
         let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
         let request = super::query::search_request(ctx, parsed, Some(kinds), None).await?;
         let saved_by = Some(self.identity.id);
-        // A forward walk already past the people section serves no
-        // people, so it needs no cap.
-        let past_people = !backward
-            && cursor.is_some_and(|c| c.section > postgres_store::search::SECTION_PEOPLE);
+        let past_people =
+            !backward && cursor.is_some_and(|c| c.section > postgres_store::search::SECTION_PEOPLE);
         let cap = match &request {
             Some(request) if !past_people => super::query::people_cap(pool, request, saved_by)
                 .await

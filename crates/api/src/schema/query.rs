@@ -634,10 +634,9 @@ impl Query {
         if let Some(viewer) = ranked_for {
             return ranked_search::page(ctx, request, viewer, ranked_cursor, backward, limit).await;
         }
-        // A forward walk already past the people section serves no
-        // people, so it needs no cap.
         let past_people = !backward
-            && cursor.is_some_and(|c| search_store::section_of(c.tier) > search_store::SECTION_PEOPLE);
+            && cursor
+                .is_some_and(|c| search_store::section_of(c.tier) > search_store::SECTION_PEOPLE);
         let cap = if past_people {
             None
         } else {
@@ -981,7 +980,13 @@ pub(super) async fn people_cap(
         ..search_store::Window::default()
     };
     let hits = people
-        .find_in(pool, window, None, false, search::PEOPLE_SECTION_CAP as i64 + 1)
+        .find_in(
+            pool,
+            window,
+            None,
+            false,
+            search::PEOPLE_SECTION_CAP as i64 + 1,
+        )
         .await?;
     Ok(Some(PeopleCap {
         more: hits.len() > search::PEOPLE_SECTION_CAP,

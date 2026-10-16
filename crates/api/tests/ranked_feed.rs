@@ -3111,11 +3111,7 @@ async fn ranked_search_caps_the_people_section(pool: PgPool) {
         (f.near_exact, "POST", 0.2),
     ])));
 
-    let people = search(
-        &rig,
-        json!({ "q": "sal", "kinds": ["USER"] }),
-    )
-    .await;
+    let people = search(&rig, json!({ "q": "sal", "kinds": ["USER"] })).await;
     let unreached: Vec<Uuid> = scored(&people)
         .into_iter()
         .map(|(id, _)| id)

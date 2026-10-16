@@ -1103,8 +1103,8 @@ type User implements Node & Actor {
    first inside a section, and paged on its own cursors; a blank or null
    `query` narrows nothing. While the narrowed list can stand content
    beside its people, the people section serves only its three newest
-   saves, and `hasMorePeople` says whether more match — the "See all
-   profiles" door, which is the same query with `kinds: [USER]`.
+   saves, and `hasMorePeople` says whether more match — the See all
+   profiles door, which is the same query with only USER in `kinds`.
    `kinds` narrows the list to those kinds, with or without a query
    (null or empty = every kind Saved holds: USER, POST, COMMENT; another
    kind is BAD_INPUT). A query past the search length cap is BAD_INPUT.
@@ -3001,8 +3001,8 @@ another kind, the people section serves at most three people — the
 first three by the result's own order: exact match first, then newest
 under `NEWEST`; the ranked people first, then the rest behind the seam
 under `RANKED`. The connection's `hasMorePeople` says whether more
-match: the "See all profiles" door, which re-queries with
-`kinds: [USER]`, where every match is served, uncapped. `totalCount`
+match: the See all profiles door, which re-queries with only `USER`
+in `kinds`, where every match is served, uncapped. `totalCount`
 counts what the pages serve, so a capped section counts three. A cue
 naming many handles would otherwise stand an endless people list
 before any content.

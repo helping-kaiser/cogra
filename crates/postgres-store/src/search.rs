@@ -363,9 +363,9 @@ pub async fn find_in(
                          WHERE a.id = s.node_id AND a.realization_address IS NOT NULL))
                      AND ($11::uuid[] IS NULL OR s.node_id = ANY($11))
                      AND NOT (s.node_id = ANY($12::uuid[]))
-                     AND ($14::uuid IS NULL OR EXISTS (
-                         SELECT 1 FROM user_bookmarks b
-                         WHERE b.user_id = $14 AND b.content_id = s.node_id))
+                     AND ($14::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                         SELECT b.content_id FROM user_bookmarks b
+                         WHERE b.user_id = $14)))
                    GROUP BY s.node_id, s.kind, s.created_at
                ),
                placed AS (
@@ -434,9 +434,9 @@ pub async fn find_in(
                          WHERE a.id = s.node_id AND a.realization_address IS NOT NULL))
                      AND ($11::uuid[] IS NULL OR s.node_id = ANY($11))
                      AND NOT (s.node_id = ANY($12::uuid[]))
-                     AND ($14::uuid IS NULL OR EXISTS (
-                         SELECT 1 FROM user_bookmarks b
-                         WHERE b.user_id = $14 AND b.content_id = s.node_id))
+                     AND ($14::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                         SELECT b.content_id FROM user_bookmarks b
+                         WHERE b.user_id = $14)))
                    GROUP BY s.node_id, s.kind, s.created_at
                ),
                placed AS (
@@ -507,9 +507,9 @@ pub async fn count(
              AND (NOT $5 OR s.kind <> 'user' OR EXISTS (
                  SELECT 1 FROM actors a
                  WHERE a.id = s.node_id AND a.realization_address IS NOT NULL))
-             AND ($6::uuid IS NULL OR EXISTS (
-                 SELECT 1 FROM user_bookmarks b
-                 WHERE b.user_id = $6 AND b.content_id = s.node_id))"#,
+             AND ($6::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                 SELECT b.content_id FROM user_bookmarks b
+                 WHERE b.user_id = $6)))"#,
         q.like_body,
         q.title_query,
         &q.kinds,
@@ -621,9 +621,9 @@ pub async fn find_scoped(
                      AND (c.author_id IN (SELECT au.id FROM authors au)
                           OR ($7::text IS NOT NULL
                               AND c.l1_node_id IN (SELECT node FROM carried)))
-                     AND ($18::uuid IS NULL OR EXISTS (
-                         SELECT 1 FROM user_bookmarks b
-                         WHERE b.user_id = $18 AND b.content_id = c.id))
+                     AND ($18::uuid IS NULL OR c.id = ANY(ARRAY(
+                         SELECT b.content_id FROM user_bookmarks b
+                         WHERE b.user_id = $18)))
                      AND (SELECT v.redaction_reason IS NULL
                           FROM comment_versions v WHERE v.comment_id = c.id
                           ORDER BY pending DESC,
@@ -660,9 +660,9 @@ pub async fn find_scoped(
                    WHERE 'post' = ANY($4)
                      AND s.kind = 'post' AND s.field = 'title'
                      AND ($10 OR s.words @@ to_tsquery('simple', $3))
-                     AND ($18::uuid IS NULL OR EXISTS (
-                         SELECT 1 FROM user_bookmarks b
-                         WHERE b.user_id = $18 AND b.content_id = s.node_id))
+                     AND ($18::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                         SELECT b.content_id FROM user_bookmarks b
+                         WHERE b.user_id = $18)))
                      AND (s.author_id IN (SELECT au.id FROM authors au)
                           OR ($7::text IS NOT NULL AND EXISTS (
                               SELECT 1 FROM posts p
@@ -804,9 +804,9 @@ pub async fn find_scoped(
                      AND (c.author_id IN (SELECT au.id FROM authors au)
                           OR ($7::text IS NOT NULL
                               AND c.l1_node_id IN (SELECT node FROM carried)))
-                     AND ($18::uuid IS NULL OR EXISTS (
-                         SELECT 1 FROM user_bookmarks b
-                         WHERE b.user_id = $18 AND b.content_id = c.id))
+                     AND ($18::uuid IS NULL OR c.id = ANY(ARRAY(
+                         SELECT b.content_id FROM user_bookmarks b
+                         WHERE b.user_id = $18)))
                      AND (SELECT v.redaction_reason IS NULL
                           FROM comment_versions v WHERE v.comment_id = c.id
                           ORDER BY pending DESC,
@@ -843,9 +843,9 @@ pub async fn find_scoped(
                    WHERE 'post' = ANY($4)
                      AND s.kind = 'post' AND s.field = 'title'
                      AND ($10 OR s.words @@ to_tsquery('simple', $3))
-                     AND ($18::uuid IS NULL OR EXISTS (
-                         SELECT 1 FROM user_bookmarks b
-                         WHERE b.user_id = $18 AND b.content_id = s.node_id))
+                     AND ($18::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                         SELECT b.content_id FROM user_bookmarks b
+                         WHERE b.user_id = $18)))
                      AND (s.author_id IN (SELECT au.id FROM authors au)
                           OR ($7::text IS NOT NULL AND EXISTS (
                               SELECT 1 FROM posts p
@@ -995,9 +995,9 @@ pub async fn count_scoped(
                  AND (c.author_id IN (SELECT au.id FROM authors au)
                       OR ($6::text IS NOT NULL
                           AND c.l1_node_id IN (SELECT node FROM carried)))
-                 AND ($9::uuid IS NULL OR EXISTS (
-                     SELECT 1 FROM user_bookmarks b
-                     WHERE b.user_id = $9 AND b.content_id = c.id))
+                 AND ($9::uuid IS NULL OR c.id = ANY(ARRAY(
+                     SELECT b.content_id FROM user_bookmarks b
+                     WHERE b.user_id = $9)))
                  AND (SELECT v.redaction_reason IS NULL
                       FROM comment_versions v WHERE v.comment_id = c.id
                       ORDER BY pending DESC,
@@ -1028,9 +1028,9 @@ pub async fn count_scoped(
                WHERE 'post' = ANY($3)
                  AND s.kind = 'post' AND s.field = 'title'
                  AND ($8 OR s.words @@ to_tsquery('simple', $2))
-                 AND ($9::uuid IS NULL OR EXISTS (
-                     SELECT 1 FROM user_bookmarks b
-                     WHERE b.user_id = $9 AND b.content_id = s.node_id))
+                 AND ($9::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                     SELECT b.content_id FROM user_bookmarks b
+                     WHERE b.user_id = $9)))
                  AND (s.author_id IN (SELECT au.id FROM authors au)
                       OR ($6::text IS NOT NULL AND EXISTS (
                           SELECT 1 FROM posts p
@@ -1058,9 +1058,9 @@ pub async fn count_scoped(
            WHERE ($4::uuid IS NULL OR NOT EXISTS (
                      SELECT 1 FROM user_view_log l
                      WHERE l.user_id = $4 AND l.content_id = h.node_id))
-             AND ($9::uuid IS NULL OR EXISTS (
-                     SELECT 1 FROM user_bookmarks b
-                     WHERE b.user_id = $9 AND b.content_id = h.node_id))"#,
+             AND ($9::uuid IS NULL OR h.node_id = ANY(ARRAY(
+                     SELECT b.content_id FROM user_bookmarks b
+                     WHERE b.user_id = $9)))"#,
         q.like_body,
         q.title_query,
         &q.kinds,
