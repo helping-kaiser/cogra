@@ -246,11 +246,14 @@ private fun EditBackingPadPreview() {
             onHelp = {},
             testTagPrefix = "preview",
             edit = BackingEdit(
-                current = BackingValue.Read(0.1),
-                rawSum = BackingValue.Read(0.1),
+                current = BackingValue.Read(PREVIEW_BACKING),
+                rawSum = BackingValue.Read(PREVIEW_BACKING),
                 canWalkBack = true,
                 onWalkBack = {},
             ),
         )
     }
 }
+
+/** The preview's backing: the compose default the post was published with. */
+private const val PREVIEW_BACKING = 0.1

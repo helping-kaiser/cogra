@@ -217,7 +217,12 @@ private fun PairSquare(
                 .semantics {
                     contentDescription = "${axes.directed}, ${axes.interest}"
                     stateDescription = reading
-                    customActions = listOf(CustomAccessibilityAction(exactValuesLabel) { onExactValues(); true })
+                    customActions = listOf(
+                        CustomAccessibilityAction(exactValuesLabel) {
+                            onExactValues()
+                            true
+                        },
+                    )
                 }
                 .testTag(testTag),
         ) {
