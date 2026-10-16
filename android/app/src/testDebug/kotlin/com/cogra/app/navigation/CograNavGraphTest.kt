@@ -638,7 +638,7 @@ class CograNavGraphTest {
     }
 
     @Test
-    fun theCropOpenedFromTheEditBringsThePictureBackWithoutItsOwnSeal() {
+    fun aPictureTheCropBringsBackIsHeldByTheEditAndNothingIsSigned() {
         // AvatarCrop.md: opened from Change picture on the profile edit,
         // Next brings the edit back holding the new picture AND NEVER the
         // picture's own seal opens — the edit's one seal signs it with the
@@ -654,14 +654,23 @@ class CograNavGraphTest {
         compose.onNodeWithTag("profile_edit").performScrollTo().performClick()
         waitForTag("profile_edit_bio")
 
-        navController.navigate(AvatarFlow("content://picked", fromEdit = true))
-        waitForTag("avatar_crop_next")
-        compose.onNodeWithTag("avatar_crop_next").performScrollTo().performClick()
-
-        compose.waitUntil(timeoutMillis = 30_000) {
-            navController.currentBackStackEntry?.destination?.hasRoute<ProfileEdit>() == true
+        // The crop itself draws through GL, which Robolectric cannot host, so
+        // what its Next leaves behind is placed here as the graph's onFramed
+        // places it: the framing on the edit's own entry, the flow popped.
+        compose.runOnIdle {
+            val edit = navController.currentBackStackEntry!!
+            assertThat(edit.destination.hasRoute<ProfileEdit>()).isTrue()
+            edit.savedStateHandle["framed_picture_window"] = floatArrayOf(0.1f, 0.1f, 0.9f, 0.9f)
+            edit.savedStateHandle["framed_picture_uri"] = "content://picked"
         }
-        assertThat(compose.onAllNodesWithTag("avatar_seal_acts").fetchSemanticsNodes()).isEmpty()
+
+        // The edit holds the picture on its way up — sending, or refused as
+        // unreadable by the real pipeline — and nothing is signed before Save.
+        compose.waitUntil(timeoutMillis = 30_000) {
+            compose.onAllNodes(
+                hasTestTag("profile_edit_avatar_sending") or hasTestTag("profile_edit_avatar_failed"),
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
         assertThat(profiles.updates).isEmpty()
         // The result is taken, so a recomposition cannot hand it over twice.
         compose.waitUntil(timeoutMillis = 30_000) {

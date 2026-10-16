@@ -40,14 +40,6 @@ import com.cogra.core.designsystem.v2.media.CograAvatar
 import com.cogra.domain.content.MAX_BIO_CHARS
 import com.cogra.domain.content.MAX_DISPLAY_NAME_CHARS
 import com.cogra.domain.content.MAX_WEBSITE_URL_CHARS
-import com.cogra.domain.media.CropWindow
-
-/**
- * The picture `AvatarCrop` hands back: the picked URI and the framing the
- * author left the crop at, as fractions of the picture (null for one never
- * framed). A one-shot navigation result, consumed once taken.
- */
-data class FramedPicture(val uri: String, val window: CropWindow?)
 
 @Composable
 fun ProfileEditRoute(

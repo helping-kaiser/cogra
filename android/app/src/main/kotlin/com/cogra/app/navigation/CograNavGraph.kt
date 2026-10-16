@@ -442,7 +442,7 @@ private fun CropWindow.toFractions(): FloatArray = floatArrayOf(left, top, right
 
 /** The framing back from the handle; anything not four fractions is no framing. */
 private fun FloatArray.toCropWindow(): CropWindow? =
-    if (size == CROP_WINDOW_SIDES) CropWindow(this[0], this[1], this[2], this[3]) else null
+    if (size == CROP_WINDOW_SIDES) CropWindow(first(), this[1], this[2], last()) else null
 
 private const val CROP_WINDOW_SIDES = 4
 
