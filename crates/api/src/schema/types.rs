@@ -1604,19 +1604,34 @@ impl User {
     /// ranked feed filters by, and History's feed. Re-seeing never moves
     /// an entry. `kinds` narrows (null or empty = every kind History
     /// serves: POST, COMMENT, USER, HASHTAG; a kind outside the served
-    /// set is BAD_INPUT, and later slices widen the set). A hidden
-    /// actor's posts and comments stay out while the actor is hidden,
-    /// and their own profile stays; a removed thing keeps its place and
-    /// reads its removal mark; a thing whose node no longer resolves — a
-    /// pending write that never landed — is skipped. Paging is keyset on
-    /// `(firstSeenAt, node id)`, so a thing first seen while the reader
-    /// scrolls sorts above the open page and never shifts the next one.
-    /// Field-level: viewer-only.
+    /// set is BAD_INPUT, and later slices widen the set), with or without
+    /// a query. `query` narrows the list by the one search law (Search
+    /// section) over the seen set alone — the matcher runs on the server,
+    /// so a match is found wherever it stands in the list. Narrowed, the
+    /// list is sectioned as search is — people, then topics, then content
+    /// — newest first seeing first inside a section, and paged on its
+    /// own cursors; a blank or null `query` narrows nothing. While the
+    /// narrowed list can stand another kind beside its people, the people
+    /// section serves only the three people first seen most recently, and
+    /// `hasMorePeople` says whether more match — the "See all profiles"
+    /// door, which is the same query with `kinds: [USER]`. A query past
+    /// the search length cap is BAD_INPUT. A hidden actor's posts and
+    /// comments stay out while the actor is hidden, and their own profile
+    /// stays; a removed thing keeps its place and reads its removal mark;
+    /// a thing whose node no longer resolves — a pending write that never
+    /// landed — is skipped. Paging is keyset on `(firstSeenAt, node id)`,
+    /// so a thing first seen while the reader scrolls sorts above the
+    /// open page and never shifts the next one. Field-level: viewer-only.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "each argument is a GraphQL field argument the schema declares; grouping them into a struct would change the published contract"
+    )]
     async fn view_history(
         &self,
         ctx: &Context<'_>,
         kinds: Option<Vec<NodeKind>>,
+        query: Option<String>,
         first: Option<i32>,
         after: Option<String>,
         last: Option<i32>,
@@ -1628,7 +1643,20 @@ impl User {
         let pool = ctx.data::<PgPool>()?;
         validate_page_args(first, last, after.as_deref(), before.as_deref())
             .map_err(|e| super::query::bad_input(e.message))?;
-        let kinds = history_kinds(kinds.as_deref())?;
+        let served = history_kinds(kinds.as_deref())?;
+        let parsed = crate::search::parse(query.as_deref().unwrap_or("")).map_err(|_| {
+            super::query::bad_input(format!(
+                "query may be at most {} characters",
+                crate::search::MAX_QUERY_CHARS
+            ))
+        })?;
+        if parsed != crate::search::Parsed::Blank {
+            return self
+                .narrowed_history(ctx, parsed, &served, first, after, last, before)
+                .await
+                .map(Some);
+        }
+        let kinds = history_store_kinds(&served);
         let backward = last.is_some() || before.is_some();
         let cursor = match if backward { &before } else { &after } {
             Some(raw) => Some(
@@ -1667,24 +1695,23 @@ impl User {
             ViewHistoryConnectionFields {
                 viewer: self.identity.id,
                 kinds,
+                narrowed: None,
+                more_people: Some(false),
             },
         );
-        connection
-            .edges
-            .extend(
-                hydrate_history(pool, entries)
-                    .await?
+        connection.edges.extend(
+            hydrate_history(
+                pool,
+                entries
                     .into_iter()
-                    .map(|(entry, item)| {
-                        Edge::with_additional_fields(
-                            crate::history::encode_cursor(entry.cursor()),
-                            item,
-                            ViewHistoryEdgeFields {
-                                first_seen_at: entry.first_seen_at,
-                            },
-                        )
-                    }),
-            );
+                    .map(|entry| {
+                        let cursor = crate::history::encode_cursor(entry.cursor());
+                        (entry, cursor)
+                    })
+                    .collect(),
+            )
+            .await?,
+        );
         Ok(Some(connection))
     }
 
@@ -4112,6 +4139,10 @@ pub struct ViewHistoryEdgeFields {
     pub first_seen_at: DateTime<Utc>,
 }
 
+/// One thing on the seen-list.
+pub type ViewHistoryEdge =
+    Edge<String, ViewHistoryItem, ViewHistoryEdgeFields, ViewHistoryEdgeName>;
+
 /// A page of the viewer's seen-list.
 pub type ViewHistoryConnection = Connection<
     String,
@@ -4124,31 +4155,75 @@ pub type ViewHistoryConnection = Connection<
 >;
 
 /// `ViewHistoryConnection`'s connection-level fields: the viewer and the
-/// kinds that served the edges, so the count runs under exactly that
-/// predicate and only when asked.
+/// kinds that served the edges, and — on a list narrowed by a query —
+/// the search request it was narrowed by (None when that request could
+/// match nothing), so the count runs only when asked and under exactly
+/// the predicate the pages ran. `more_people` is the people cap's answer
+/// when the page already read it.
 pub struct ViewHistoryConnectionFields {
     viewer: Uuid,
     kinds: Vec<String>,
+    narrowed: Option<Option<postgres_store::search::SearchRequest>>,
+    more_people: Option<bool>,
 }
 
 #[Object]
 impl ViewHistoryConnectionFields {
-    /// How many things the viewer's seen-list serves under these kinds,
-    /// across every page. Priced at zero like every connection count;
-    /// saturates at [`i32::MAX`].
+    /// How many things the viewer's seen-list serves, across every page —
+    /// narrowed by `query` and `kinds` when given, less the people a
+    /// capped people section leaves behind its door. Priced at zero like
+    /// every connection count; saturates at [`i32::MAX`].
     #[graphql(complexity = 0)]
     async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
         let pool = ctx.data::<PgPool>()?;
-        let total = postgres_store::history::count_view_history(pool, self.viewer, &self.kinds)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let total = match &self.narrowed {
+            None => {
+                postgres_store::history::count_view_history(pool, self.viewer, &self.kinds).await
+            }
+            Some(None) => Ok(0),
+            Some(Some(request)) => {
+                super::query::served_count(
+                    pool,
+                    request,
+                    Some(postgres_store::search::ReaderList::History(self.viewer)),
+                )
+                .await
+            }
+        }
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
+    }
+
+    /// Whether more seen people match than the people section serves —
+    /// the "See all profiles" door. While a narrowed list can stand
+    /// another kind beside its people, the people section serves the
+    /// three people first seen most recently; the same query with
+    /// `kinds: [USER]` serves every match, uncapped. False when the
+    /// section is not capped, and on a list no query narrows.
+    async fn has_more_people(&self, ctx: &Context<'_>) -> async_graphql::Result<bool> {
+        if let Some(more) = self.more_people {
+            return Ok(more);
+        }
+        let Some(Some(request)) = &self.narrowed else {
+            return Ok(false);
+        };
+        let pool = ctx.data::<PgPool>()?;
+        Ok(super::query::people_cap(
+            pool,
+            request,
+            Some(postgres_store::search::ReaderList::History(self.viewer)),
+        )
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        .is_some_and(|cap| cap.more))
     }
 }
 
 /// The kinds a `viewHistory(kinds:)` argument serves: null or empty
 /// narrows nothing; a kind History does not serve is BAD_INPUT.
-fn history_kinds(kinds: Option<&[NodeKind]>) -> async_graphql::Result<Vec<String>> {
+fn history_kinds(
+    kinds: Option<&[NodeKind]>,
+) -> async_graphql::Result<Vec<crate::history::HistoryKind>> {
     use crate::history::HistoryKind;
     let served = |kind: NodeKind| match kind {
         NodeKind::Post => Some(HistoryKind::Post),
@@ -4157,8 +4232,8 @@ fn history_kinds(kinds: Option<&[NodeKind]>) -> async_graphql::Result<Vec<String
         NodeKind::Hashtag => Some(HistoryKind::Hashtag),
         _ => None,
     };
-    let kinds: Vec<HistoryKind> = match kinds {
-        None | Some([]) => HistoryKind::ALL.to_vec(),
+    match kinds {
+        None | Some([]) => Ok(HistoryKind::ALL.to_vec()),
         Some(kinds) => kinds
             .iter()
             .map(|kind| {
@@ -4166,21 +4241,152 @@ fn history_kinds(kinds: Option<&[NodeKind]>) -> async_graphql::Result<Vec<String
                     super::query::bad_input("History serves POST, COMMENT, USER and HASHTAG only")
                 })
             })
-            .collect::<async_graphql::Result<_>>()?,
-    };
-    Ok(kinds.iter().map(|k| k.as_store().to_string()).collect())
+            .collect(),
+    }
 }
 
-/// The seen-list entries, typed, in list order. An entry whose thing
-/// vanished between the read and the load is dropped rather than served
-/// empty.
+/// History kinds as the seen-list's rows name them.
+fn history_store_kinds(kinds: &[crate::history::HistoryKind]) -> Vec<String> {
+    kinds.iter().map(|k| k.as_store().to_string()).collect()
+}
+
+/// History kinds as the search request's `kinds` names them.
+fn history_node_kinds(kinds: &[crate::history::HistoryKind]) -> Vec<NodeKind> {
+    use crate::history::HistoryKind;
+    kinds
+        .iter()
+        .map(|kind| match kind {
+            HistoryKind::Post => NodeKind::Post,
+            HistoryKind::Comment => NodeKind::Comment,
+            HistoryKind::User => NodeKind::User,
+            HistoryKind::Hashtag => NodeKind::Hashtag,
+        })
+        .collect()
+}
+
+impl User {
+    /// `viewHistory(query:)` with a query that is not blank: the search
+    /// request the query makes — the one `search` builds, over the
+    /// `kinds` asked of History — served from the viewer's seen-list by
+    /// the matcher's own statement, which joins the list, orders by
+    /// section and first seeing and stops at the page
+    /// (`search::ReaderList::History`). The people section is capped as
+    /// search's is ([`super::query::people_cap`]), by newest first seeing.
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "the resolver's own page arguments, passed through as it received them"
+    )]
+    async fn narrowed_history(
+        &self,
+        ctx: &Context<'_>,
+        parsed: crate::search::Parsed<'_>,
+        kinds: &[crate::history::HistoryKind],
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<ViewHistoryConnection> {
+        let pool = ctx.data::<PgPool>()?;
+        let backward = last.is_some() || before.is_some();
+        let cursor = match if backward { &before } else { &after } {
+            Some(raw) => Some(
+                crate::history::decode_match_cursor(raw)
+                    .ok_or_else(|| super::query::bad_input("invalid cursor"))?,
+            ),
+            None => None,
+        };
+        let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
+        let request =
+            super::query::search_request(ctx, parsed, Some(&history_node_kinds(kinds)), None)
+                .await?;
+        let list = Some(postgres_store::search::ReaderList::History(
+            self.identity.id,
+        ));
+        let past_people =
+            !backward && cursor.is_some_and(|c| c.section > postgres_store::search::SECTION_PEOPLE);
+        let cap = match &request {
+            Some(request) if !past_people => super::query::people_cap(pool, request, list)
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?,
+            _ => None,
+        };
+        let window = postgres_store::search::Window {
+            list,
+            people: cap.as_ref().map(|cap| cap.served.as_slice()),
+            ..postgres_store::search::Window::default()
+        };
+        let mut hits = match &request {
+            Some(request) => request
+                .find_in(
+                    pool,
+                    window,
+                    cursor.map(postgres_store::history::HistoryMatchCursor::as_search_cursor),
+                    backward,
+                    limit + 1,
+                )
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?,
+            None => Vec::new(),
+        };
+        let has_more = hits.len() as i64 > limit;
+        if has_more {
+            if backward {
+                hits.remove(0);
+            } else {
+                hits.pop();
+            }
+        }
+        let (has_previous, has_next) = if backward {
+            (has_more, cursor.is_some())
+        } else {
+            (cursor.is_some(), has_more)
+        };
+        let mut connection = ViewHistoryConnection::with_additional_fields(
+            has_previous,
+            has_next,
+            ViewHistoryConnectionFields {
+                viewer: self.identity.id,
+                kinds: history_store_kinds(kinds),
+                more_people: cap.as_ref().map(|cap| cap.more),
+                narrowed: Some(request),
+            },
+        );
+        connection.edges.extend(
+            hydrate_history(
+                pool,
+                hits.into_iter()
+                    .map(|hit| {
+                        let cursor = crate::history::encode_match_cursor(
+                            postgres_store::history::HistoryMatchCursor::of_hit(&hit),
+                        );
+                        let entry = postgres_store::history::SeenEntry {
+                            content_id: hit.node_id,
+                            kind: hit.kind,
+                            first_seen_at: hit.created_at,
+                            name: hit.name,
+                        };
+                        (entry, cursor)
+                    })
+                    .collect(),
+            )
+            .await?,
+        );
+        Ok(connection)
+    }
+}
+
+/// The seen-list entries as edges, typed, in list order, each with its
+/// cursor given: a narrowed list pages on cursors of its own. An entry
+/// whose thing vanished between the read and the load is dropped rather
+/// than served empty.
 async fn hydrate_history(
     pool: &PgPool,
-    entries: Vec<postgres_store::history::SeenEntry>,
-) -> async_graphql::Result<Vec<(postgres_store::history::SeenEntry, ViewHistoryItem)>> {
+    entries: Vec<(postgres_store::history::SeenEntry, String)>,
+) -> async_graphql::Result<Vec<ViewHistoryEdge>> {
     let ids_of = |kinds: &[&str]| -> Vec<Uuid> {
         entries
             .iter()
+            .map(|(e, _)| e)
             .filter(|e| kinds.contains(&e.kind.as_str()))
             .map(|e| e.content_id)
             .collect()
@@ -4196,7 +4402,7 @@ async fn hydrate_history(
             .collect();
     Ok(entries
         .into_iter()
-        .filter_map(|entry| {
+        .filter_map(|(entry, cursor)| {
             let item = match entry.kind.as_str() {
                 "post" => match content.get(&entry.content_id) {
                     Some(crate::nodes::ContentNode::Post(post)) => {
@@ -4219,7 +4425,13 @@ async fn hydrate_history(
                 }),
                 _ => return None,
             };
-            Some((entry, item))
+            Some(Edge::with_additional_fields(
+                cursor,
+                item,
+                ViewHistoryEdgeFields {
+                    first_seen_at: entry.first_seen_at,
+                },
+            ))
         })
         .collect())
 }
