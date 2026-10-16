@@ -1101,9 +1101,15 @@ type User implements Node & Actor {
    so a match is found wherever it stands in the list. Narrowed, the
    list is sectioned as search is — people, then content — newest save
    first inside a section, and paged on its own cursors; a blank or null
-   `query` narrows nothing. A query past the search length cap is
-   BAD_INPUT. Field-level: viewer-only."
-  bookmarks(query: String, first: Int, after: String, last: Int, before: String): BookmarkConnection
+   `query` narrows nothing. While the narrowed list can stand content
+   beside its people, the people section serves only its three newest
+   saves, and `hasMorePeople` says whether more match — the "See all
+   profiles" door, which is the same query with `kinds: [USER]`.
+   `kinds` narrows the list to those kinds, with or without a query
+   (null or empty = every kind Saved holds: USER, POST, COMMENT; another
+   kind is BAD_INPUT). A query past the search length cap is BAD_INPUT.
+   Field-level: viewer-only."
+  bookmarks(query: String, kinds: [NodeKind!], first: Int, after: String, last: Int, before: String): BookmarkConnection
   "The seen-list (feed-ranking.md §9.4): every node the viewer has
    seen, once each, newest first by first seeing — the list the
    ranked feed filters by, and History's feed. Re-seeing never moves
@@ -1824,6 +1830,10 @@ type BookmarkConnection {
   edges: [BookmarkEdge!]!
   pageInfo: PageInfo!
   totalCount: Int
+  "Whether more saved people match than the people section serves —
+   the See all profiles door (Search, The people section). False on a
+   list no query narrows."
+  hasMorePeople: Boolean!
 }
 type BookmarkEdge {
   cursor: String!
@@ -2600,7 +2610,10 @@ type Query {
    section's matches inside `viewer`'s slice, exact matches first, and
    the section's rest follow behind the seam, newest first; ranking
    never runs in the backend process (feed-ranking.md §11).
-   `order: RANKED` needs `viewer`. Served kinds grow with the slices:
+   `order: RANKED` needs `viewer`. While the served kinds stand people
+   beside another kind, the people section serves its first three in
+   that order, and `hasMorePeople` says whether more match;
+   `kinds: [USER]` serves them all. Served kinds grow with the slices:
    USER, POST, HASHTAG for plain text; COMMENT is always a valid kind
    but is served only under a cue — for plain text it contributes no
    rows, never an error. A `kinds` filter drops sections and keeps the
@@ -2983,12 +2996,27 @@ pinned epoch, carried inside the opaque cursor, so the order never
 reshuffles across pages. The no-AI rule applies to search ranking as
 much as to feeds. `chatSearch` is always newest first.
 
+**The people section.** While the served kinds stand people beside
+another kind, the people section serves at most three people — the
+first three by the result's own order: exact match first, then newest
+under `NEWEST`; the ranked people first, then the rest behind the seam
+under `RANKED`. The connection's `hasMorePeople` says whether more
+match: the "See all profiles" door, which re-queries with
+`kinds: [USER]`, where every match is served, uncapped. `totalCount`
+counts what the pages serve, so a capped section counts three. A cue
+naming many handles would otherwise stand an endless people list
+before any content.
+
 **Saved.** `User.bookmarks(query:)` narrows the reader's Saved list
 by the same law over the saved set: people, then content, newest
-save first inside a section. A topic is never saved, so a topic cue
-narrows Saved to the saved content carrying a matched topic. A
-narrowed list pages on cursors of its own, and its `totalCount`
-counts the narrowed list.
+save first inside a section; the people section is capped as above,
+to its three newest saves, and `kinds` narrows as search's does. A
+topic is never saved, so a topic cue narrows Saved to the saved
+content carrying a matched topic. A narrowed list pages on cursors of
+its own, and its `totalCount` counts the narrowed list. The matcher's
+statement itself joins the reader's Saved list, orders by section and
+save time and stops at the page, so every narrowed page costs one
+statement bounded by the reader's own saves.
 
 **Moderation.** `sensitive`-classified fields stay indexed and
 matchable; a result carries its per-field status and the frontend
@@ -3013,6 +3041,9 @@ type SearchConnection {
   edges: [SearchEdge!]!
   pageInfo: PageInfo!
   totalCount: Int
+  "Whether more people match than the people section serves — the
+   See all profiles door (Search, The people section)."
+  hasMorePeople: Boolean!
 }
 type SearchEdge {
   cursor: String!
