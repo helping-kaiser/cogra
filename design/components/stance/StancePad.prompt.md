@@ -11,6 +11,8 @@ The field is `surfaceContainerHighest` at the **large (16px)** rung; the knob is
 
 **`AttachmentPad` is the same field cut to one axis** — the pad an author meets when they sign their own content (jakob 2026-10-16, PR-101). Publish and Owner are single-parameter families: the attachment rides `p_d` and the census pins `p_i` at 1, so the value is one number and the field is a 56px strip, as wide as the square would be. Same surface, rung, knob, pressed layer and gutters; one dead-ground hairline, at zero, and only `Against` · `For` outside it. Never draw the square where the record has one free parameter, and never draw the strip where it has two.
 
+The one-axis pick parks on hundredths at release — the knob follows the drag wherever the finger is, and release lands the pick on the nearest hundredth — while the two-axis square's value stays continuous (jakob 2026-10-16, round 17).
+
 ```jsx
 <AttachmentPad value={0.1} />
 <AttachmentPad value={a} onChange={setA} />

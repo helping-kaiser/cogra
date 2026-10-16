@@ -24,6 +24,8 @@ WHEN tap the field without dragging -> NEVER the pick moves
 
 WHEN release a drag on the field -> NEVER the pick is staged
 
+ALWAYS the pick parks on a hundredth: the knob follows the drag wherever the finger is, and release lands the pick on the nearest hundredth, so the number a readout prints is the pick itself
+
 WHEN press Set GIVEN the pick reads other than 0.00 -> the pad closes AND the seal's Your backing row reads the pick AND NEVER anything is signed
 
 WHEN press Set GIVEN the pick reads 0.00 -> the dialog Start it unreachable? opens over the pad, which stays parked beneath it AND NEVER the pick is refused
