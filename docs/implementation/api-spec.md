@@ -1115,13 +1115,22 @@ type User implements Node & Actor {
    ranked feed filters by, and History's feed. Re-seeing never moves
    an entry. `kinds` narrows (null or empty = every kind History
    serves: POST, COMMENT, USER, HASHTAG; a kind outside the served set
-   is BAD_INPUT, and later slices widen the set);
-   `query` matches by the one search rule (\"Search\"), narrowing the
-   seen-list instead of searching the graph. A hidden actor's posts
+   is BAD_INPUT, and later slices widen the set), with or without a
+   query. `query` narrows the list by the one search law (Search
+   section) over the seen set alone — the matcher runs on the server,
+   so a match is found wherever it stands in the list. Narrowed, the
+   list is sectioned as search is — people, then topics, then content
+   — newest first seeing first inside a section, and paged on its own
+   cursors; a blank or null `query` narrows nothing. While the
+   narrowed list can stand another kind beside its people, the people
+   section serves only the three people first seen most recently, and
+   `hasMorePeople` says whether more match — the See all profiles
+   door, which is the same query with only USER in `kinds`. A query
+   past the search length cap is BAD_INPUT. A hidden actor's posts
    and comments stay out while the actor is hidden, and their own
    profile stays; a removed thing keeps its place and reads its
    removal mark. A thing whose node no longer resolves — a pending
-   write that never landed — is skipped."
+   write that never landed — is skipped. Field-level: viewer-only."
   viewHistory(
     kinds: [NodeKind!]
     query: String
@@ -1249,7 +1258,8 @@ type Collective implements Node & Actor {
 "Text and/or media authored by an actor — the primary public
  surface and the canonical feed-ranking target. Minted by a Publish
  record; edits are ordinary-role Publish + payload records at
- attachment 0, read by the chain-ordered fold — the newest
+ the author's attachment pick (0 unless moved), read by the
+ chain-ordered fold — the newest
  record's payload is the whole content state
  (substrate.md §9, post.md §4)."
 type Post implements Node {
@@ -1851,6 +1861,10 @@ type ViewHistoryConnection {
   edges: [ViewHistoryEdge!]!
   pageInfo: PageInfo!
   totalCount: Int
+  "Whether more seen people match than the people section serves —
+   the See all profiles door (Search, The people section). False on a
+   list no query narrows."
+  hasMorePeople: Boolean!
 }
 "What the seen-list holds: the kinds History serves; later slices
  add members as their kinds join. A union, not `Node`: a Hashtag is
@@ -2884,8 +2898,9 @@ Search is two surfaces: a global `search` over names and titles,
 and a per-chat `chatSearch` over plaintext message bodies.
 
 **One law, every surface.** The global `search`, Saved's
-`User.bookmarks(query:)` and the reference finder all run the one
-matcher below; Saved runs it over the reader's saved set alone. The
+`User.bookmarks(query:)`, History's `User.viewHistory(query:)` and the
+reference finder all run the one matcher below; Saved runs it over the
+reader's saved set alone, History over the reader's seen set. The
 matcher runs on the server, so a match is found wherever it stands
 in a list, never only within what a client has loaded.
 
@@ -3017,6 +3032,17 @@ its own, and its `totalCount` counts the narrowed list. The matcher's
 statement itself joins the reader's Saved list, orders by section and
 save time and stops at the page, so every narrowed page costs one
 statement bounded by the reader's own saves.
+
+**History.** `User.viewHistory(query:)` narrows the reader's
+seen-list by the same law over the seen set: people, then topics,
+then content, newest first seeing first inside a section; the people
+section is capped as above, to the three people first seen most
+recently, and `kinds` narrows as search's does. The seen-list's own
+narrowing holds: a hidden actor's posts and comments match nothing
+while the actor is hidden, and their profile still does. A narrowed
+list pages on cursors of its own, its `totalCount` counts the
+narrowed list, and every narrowed page costs one statement bounded by
+the reader's own seen-list, as Saved's does.
 
 **Moderation.** `sensitive`-classified fields stay indexed and
 matchable; a result carries its per-field status and the frontend
@@ -3199,8 +3225,9 @@ These bind every mutation below.
   An edit prepare stages the concept's declared carrier — parallel
   Registration for profiles; elsewhere the node's own minting
   family in its inert setting: Publish at attachment `0` for
-  posts, Review at `(0,0)` for comments, Owner at attachment `0`
-  for items
+  posts — unless the author sends an attachment pick, which the
+  record then carries — Review at `(0,0)` for comments, Owner at
+  attachment `0` for items
   ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates)).
   L1 would accept anyone's update-shaped record and let the fold
   ignore it; CoGra's own API refuses to prepare a record its
@@ -3835,7 +3862,8 @@ input PreparePostInput {
 }
 
 "Edit a Post — stages one ordinary-role Publish + payload record
- at attachment 0 carrying the Post's complete new content state;
+ at the author's attachment pick carrying the Post's complete new
+ content state;
  an omitted title, description, or gallery is a Post without one.
  Only the eligible author's edit is prepared. A tag or a citation
  is its own record rather than a field of this input — which is a
@@ -3854,6 +3882,12 @@ input PreparePostEditInput {
    body, so omitting it unmarks the post."
   sensitive: Boolean
   sensitiveReason: String
+  "The author's stance pick riding the edit's own record — its
+   attachment. Omitted is 0, the inert setting: an unadjusted edit
+   moves no stance. A moved pick alone is a legal edit — a
+   content-identical new version. pInterest stays census-fixed at 1
+   for Publish, so it is no field."
+  pDirected: Dimension
 }
 
 "Author a Comment — stages the Review (targeting whatever it

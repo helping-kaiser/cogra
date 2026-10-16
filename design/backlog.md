@@ -5084,3 +5084,35 @@ section. What is left is banked, not open:
   listing surface.
 - **Drafts still at jakob's review** — copy-voice's *The unreachable
   start* body, and the backing pad's cap line and its spoken `Nothing`.
+
+### 143 · The applicant-acting package · *design + contract* · **banked 2026-10-16** · **post-MVP**
+
+jakob's ruling (RULINGS PR-103; seams 234 and 235): applicant acting is
+post-MVP whole. Round 16 (readme §13, *Round 16, the applicant-acting
+cut*) drew the MVP truth and banked the package here; the boards as
+they stood are in git history, the tree before the round's first commit.
+What the package holds, for the day it is re-opened — by ruling, never
+by default:
+
+- **The once-each staged acts** — one post, one Opinion and one Affinity
+  carried with the application, visible to their author alone in their
+  own chronicle (`Still settling` rows and the closing line), signed in
+  the landing's automatic batch; on the turned-down shell, a post waiting
+  on the device until someone vouches the reader in.
+- **The staged-act snackbar family** — `Your post / opinion / topic waits
+  with your application — it arrives with you.` and the turned-down
+  shell's `… waits — it arrives when someone vouches you in.`, all
+  blessed, and the first-tap pad bloom and press-and-hold staging they
+  answered.
+- **The seal's applicant branches** — `ComposeSeal`'s two applicant exits
+  and the three seals' `Sign and publish` landing on `ApplicantWaiting`,
+  with the `post-while-an-applicant` flow walking the wizard to them.
+- **The wizard-with-media waiting variant** — `ApplicantWaiting` drawn
+  as the seal's exit, its snackbar the staged post's line.
+- **Applicant uploads and their serving** (PR-103 (a) and (b)) — media in
+  a staged post, and the author-only route serving it; the accepted shape
+  for that day is the authenticated API streaming route (seam 234), not
+  presigned links.
+- **The words that described it** — About's `Getting in, and being let
+  in` once-each paragraph, and `ProfileApplicant`'s `What you post now
+  arrives with you.`

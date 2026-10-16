@@ -95,7 +95,9 @@ over file values.
 | `RATE_LIMIT_SIGN_ANY` | `2000` | The backstop: every staged act per account per day |
 | `RATE_LIMIT_ADMISSION_FUNDING` | `20` | Fresh admission fundings per voucher per day — approvals of an already-funded applicant spend none; refused with the approval batch as `WRITE_RULE_FAILED` ([auth.md "Rate limiting"](auth.md#rate-limiting)) |
 | `MEDIA_S3_ENDPOINT` | `http://localhost:9000` | The media service's S3 API endpoint. `stamp-net.sh` stamps it to the machine's LAN address like `DATABASE_URL` — the API and the store can live in separate WSL distros, where cross-distro localhost is dead — while the host firewall keeps the port closed to other devices; a phone reaches media through the web origin's `/media` proxy, never the store itself |
-| `MEDIA_BUCKET` | `cogra-media` | Bucket the media objects live in; created by the `media-init` one-shot |
+| `MEDIA_BUCKET` | `cogra-media` | The live bucket, world-readable by design; created by the `media-init` one-shot |
+| `MEDIA_CARRIED_BUCKET` | `cogra-media-carried` | The carried area's bucket — an applicant's media waits here until the landing publishes it; no anonymous policy, no proxy route ([data-model.md "Media areas"](data-model.md#media-areas)) |
+| `MEDIA_HELD_BUCKET` | `cogra-media-held` | The held area's bucket — the operator-only store a deleted asset's bytes leave the live bucket for; no anonymous policy, no proxy route, reached from the host alone |
 | `MEDIA_ACCESS_KEY_ID` | `cogra_media` | Media store access key (also the store's root user in compose) |
 | `MEDIA_SECRET_ACCESS_KEY` | `cogra_media_secret` | Media store secret key |
 | `MEDIA_REGION` | `us-east-1` | S3 region the requests are signed for; any value the store accepts |

@@ -269,7 +269,7 @@ class WriteRepositoryImpl @Inject constructor(private val client: ApolloClient, 
                 PrepareStanceInput(target = Optional.present(targetId), pDirected = pDirected, pInterest = pInterest),
             ),
         ).payloadOutcome({ it.prepareStance.userErrors.map { e -> e.userErrorFields } }) {
-            it.prepareStance.writes?.map { w -> w.preparedWriteFields.toDomain() }
+            it.prepareStance.writes?.map { w -> w.preparedWriteFields.toDomain(carried = w.carried) }
         }
     }
 
@@ -287,7 +287,7 @@ class WriteRepositoryImpl @Inject constructor(private val client: ApolloClient, 
                 ),
             ),
         ).payloadOutcome({ it.prepareStance.userErrors.map { e -> e.userErrorFields } }) {
-            it.prepareStance.writes?.map { w -> w.preparedWriteFields.toDomain() }
+            it.prepareStance.writes?.map { w -> w.preparedWriteFields.toDomain(carried = w.carried) }
         }
     }
 
@@ -666,7 +666,7 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
         ).payloadOutcome({ it.preparePost.userErrors.map { e -> e.userErrorFields } }) { data ->
             data.preparePost.node?.let { node ->
                 data.preparePost.writes?.let { writes ->
-                    PreparedContentView(node, writes.map { w -> w.preparedWriteFields.toDomain() })
+                    PreparedContentView(node, writes.map { w -> w.preparedWriteFields.toDomain(carried = w.carried) })
                 }
             }
         }

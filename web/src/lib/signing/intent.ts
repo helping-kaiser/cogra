@@ -152,13 +152,23 @@ export type Expectation = {
 };
 
 /**
- * The one named exemption: the admission Registration, which the backend
+ * The first named exemption: the admission Registration, which the backend
  * stages at approval and the device discovers on its status poll with no
  * form behind it. It still runs every transport check, and it holds only
  * for a Registration.
  */
 export const REGISTRATION_EXEMPTION = { kind: "registrationExemption" } as const;
 export type RegistrationExemption = typeof REGISTRATION_EXEMPTION;
+
+/**
+ * The second named exemption (PR-88): a carried write released by the landing
+ * on a device that holds no prepare-time expectation for it — the write was
+ * prepared, and intent-checked, on another device (carried.ts). It still runs
+ * every transport check. Chosen only by the signer's landing path
+ * (`WriteSigner.signCarriedAtLanding`), never by a surface.
+ */
+export const CARRIED_AT_LANDING_EXEMPTION = { kind: "carriedAtLandingExemption" } as const;
+export type CarriedAtLandingExemption = typeof CARRIED_AT_LANDING_EXEMPTION;
 
 /** The device found the batch is not what its user ordered. */
 export class IntentMismatch extends Error {
@@ -502,13 +512,17 @@ export function commentGenesis(
   };
 }
 
-/** A post edit: an ordinary-role Publish at (0, 1) chained behind its own head. */
-export function postEdit(postGraphId: string, content: ExpectedContent): ExpectedWrite {
+/**
+ * A post edit: an ordinary-role Publish at the author's pick — the edit's
+ * own attachment, 0 unless moved (post.md §4, round 15) — with `p_i`
+ * census-fixed at 1, chained behind its own head.
+ */
+export function postEdit(postGraphId: string, content: ExpectedContent, pick: number): ExpectedWrite {
   return {
     family: "publish",
     middle: null,
     target: node(postGraphId),
-    pDirected: 0,
+    pDirected: pick,
     pInterest: 1,
     license: null,
     parents: "ownChainHead",

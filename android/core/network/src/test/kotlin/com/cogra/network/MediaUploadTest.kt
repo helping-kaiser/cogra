@@ -1,10 +1,16 @@
 package com.cogra.network
 
 import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo.api.http.HttpRequest
+import com.apollographql.apollo.api.http.HttpResponse
+import com.apollographql.apollo.exception.ApolloNetworkException
+import com.apollographql.apollo.network.http.HttpInterceptor
+import com.apollographql.apollo.network.http.HttpInterceptorChain
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.MediaAssetState
 import com.cogra.domain.Outcome
 import com.cogra.domain.media.MediaDestination
+import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.ProcessedVideo
 import com.cogra.domain.media.UploadEchoMismatchException
 import com.cogra.domain.media.UploadProgress
@@ -19,6 +25,7 @@ import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.google.common.truth.Truth.assertThat
 import java.io.File
+import java.io.IOException
 import java.security.MessageDigest
 import kotlin.random.Random
 import kotlinx.coroutines.test.TestScope
@@ -90,7 +97,32 @@ class MediaUploadTest {
         client = ApolloClient.Builder()
             .serverUrl(server.url("/graphql").toString())
             .addHttpInterceptor(BearerInterceptor(sessionGate()))
+            .addHttpInterceptor(DroppingUploads())
             .build()
+    }
+
+    /** How many multipart sends left the device, dropped or not. */
+    private var multipartSends = 0
+
+    /** How many of the next multipart sends die in transport. */
+    private var multipartDrops = 0
+
+    /**
+     * A dead pooled connection, as Apollo reports it for an upload: OkHttp
+     * cannot replay a one-shot multipart body on a fresh connection, so the
+     * call fails with the network exception rather than healing silently.
+     */
+    private inner class DroppingUploads : HttpInterceptor {
+        override suspend fun intercept(request: HttpRequest, chain: HttpInterceptorChain): HttpResponse {
+            if (request.body?.contentType?.startsWith("multipart/") == true) {
+                multipartSends += 1
+                if (multipartDrops > 0) {
+                    multipartDrops -= 1
+                    throw ApolloNetworkException("unexpected end of stream", IOException("unexpected end of stream"))
+                }
+            }
+            return chain.proceed(request)
+        }
     }
 
     @After
@@ -428,6 +460,72 @@ class MediaUploadTest {
 
         val media = (outcome as Outcome.Success).value
         assertThat(media.state).isEqualTo(MediaAssetState.PROCESSING)
+    }
+
+    /** A picture and the repository that sends it, the server echoing its digest. */
+    private fun TestScope.pictureRepository(): Pair<MediaRepositoryImpl, ProcessedPicture> {
+        val (repo, _) = repositoryFor(PART_SIZE - 1)
+        val picture = ProcessedPicture(ByteArray(48) { (it * 7).toByte() }, 100, 100)
+        echoedDigest = sha256Hex(picture.bytes)
+        return repo to picture
+    }
+
+    /**
+     * The hand test's first-attempt failure: the upload is the first request
+     * after the picker sat idle, its pooled connection is dead, and OkHttp may
+     * not replay a one-shot body. The repository resends it once, as OkHttp
+     * does for every other request — safe, since the server answers a resent
+     * picture with the row it already has.
+     */
+    @Test
+    fun aPictureLostInTransportOnceIsSentAgainAndLands() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, picture) = pictureRepository()
+        multipartDrops = 1
+
+        val outcome = repo.uploadMedia(picture)
+
+        assertThat(outcome).isInstanceOf(Outcome.Success::class.java)
+        assertThat(multipartSends).isEqualTo(2)
+    }
+
+    @Test
+    fun aClipInOneRequestLostInTransportOnceIsSentAgainAndLands() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, clip) = repositoryFor(PART_SIZE - 1)
+        multipartDrops = 1
+
+        val outcome = repo.uploadVideo(clip, MediaDestination.POST)
+
+        assertThat(outcome).isInstanceOf(Outcome.Success::class.java)
+        assertThat(multipartSends).isEqualTo(2)
+    }
+
+    /** One resend, not a loop: a network that is really down is reported. */
+    @Test
+    fun aPictureLostInTransportTwiceFailsAfterOneResend() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, picture) = pictureRepository()
+        multipartDrops = 2
+
+        val outcome = repo.uploadMedia(picture)
+
+        assertThat(outcome).isInstanceOf(Outcome.Failed::class.java)
+        assertThat((outcome as Outcome.Failed).cause).isInstanceOf(ApolloNetworkException::class.java)
+        assertThat(multipartSends).isEqualTo(2)
+    }
+
+    /** An echo that differs is the server's answer about the bytes, never resent. */
+    @Test
+    fun aPictureWhoseEchoDiffersIsNotSentAgain() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, picture) = pictureRepository()
+        echoedDigest = "ab".repeat(32)
+
+        val outcome = repo.uploadMedia(picture)
+
+        assertThat((outcome as Outcome.Failed).cause).isInstanceOf(UploadEchoMismatchException::class.java)
+        assertThat(multipartSends).isEqualTo(1)
     }
 
     private fun sha256Hex(bytes: ByteArray): String =

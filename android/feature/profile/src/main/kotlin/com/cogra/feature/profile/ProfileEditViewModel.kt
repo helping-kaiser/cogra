@@ -8,6 +8,7 @@ import com.cogra.domain.content.isBioTooLong
 import com.cogra.domain.content.isDisplayNameTooLong
 import com.cogra.domain.content.isWebsiteUrlTooLong
 import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.CropWindow
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.overPictureCap
@@ -168,20 +169,28 @@ class ProfileEditViewModel @Inject constructor(
     /**
      * A picked avatar: cropped to its fixed shape, processed and
      * uploaded exactly as a post's pictures are — same pipeline, same
-     * `uploadMedia`, only the shape differs.
+     * `uploadMedia`, only the shape differs. With no framing the picture
+     * is taken from the middle of whatever was picked.
      */
-    fun onAvatarPicked(uri: String) = pick(uri)
+    fun onAvatarPicked(uri: String) = onAvatarFramed(uri, window = null)
+
+    /**
+     * The picture the crop handed back: `AvatarCrop`'s Next, opened from
+     * Change picture, returns here holding it, and this form's one Save
+     * signs it with the fields (ProfileEdit.md, AvatarCrop.md). It uploads
+     * at once, framed as the author left it, so Save waits only on bytes
+     * already on their way.
+     */
+    fun onAvatarFramed(uri: String, window: CropWindow?) =
+        pick(uri, CropSpec(targetRatio = AVATAR_RATIO, window = window))
 
     /** Back to the monogram, which is the designed placeholder. */
     fun onAvatarCleared() = _state.update { it.copy(avatar = ProfileImageState.Cleared) }
 
-    private fun pick(uri: String) {
+    private fun pick(uri: String, crop: CropSpec) {
         _state.update { it.copy(avatar = ProfileImageState.Picked(uri)) }
         viewModelScope.launch {
-            // The fixed crop is centred: the profile form has no
-            // framing step, so the picture is taken from the middle of
-            // whatever was picked rather than from a corner.
-            val processed = processor.process(uri, CropSpec(targetRatio = AVATAR_RATIO))
+            val processed = processor.process(uri, crop)
             val next = if (processed == null) {
                 ProfileImageState.Failed(uri, UNREADABLE)
             } else if (processed.overPictureCap()) {

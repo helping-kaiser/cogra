@@ -307,6 +307,14 @@ export function StanceControl({
      orange at 10 % (blessed as drawn, jakob 2026-10-05). Additive — absent, the pad renders
      exactly as before, and the live layer is the drag's own. */
   knobHeld = false,
+  /* AN APPLICANT'S ANCHOR IS LOCKED, NOT GONE (PR-103, round 16; auth.md's
+     locked look, the comment foot's twin): the anchor stands at the disabled
+     opacity and stays tappable, a tap or a press-and-hold answering `You can
+     give your opinion once you're in.` — the host wires that answer, and the
+     pad never blooms. The value is the opacity itself — `var(--state-disabled)`
+     — as `CommentCard`'s `replyOpacity`. Additive — absent, the control
+     renders exactly as before. */
+  anchorOpacity,
   node,
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
@@ -503,6 +511,7 @@ export function StanceControl({
             fontWeight: "var(--text-label-large--font-weight)",
             color: "var(--primary)",
             ...(overMedia ? OVER_MEDIA_ANCHOR : null),
+            ...(anchorOpacity !== undefined ? { opacity: anchorOpacity } : null),
           }}
           data-node={node && "anchor"}
         >

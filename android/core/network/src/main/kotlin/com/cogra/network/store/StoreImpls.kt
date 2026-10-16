@@ -202,6 +202,23 @@ class IdentityStoreImpl @Inject constructor(
         return store.names(prefix).map { it.removePrefix(prefix) }.toSet()
     }
 
+    // No adoption: carried expectations arrived after multi-account custody,
+    // so no flat legacy record can exist. The slot name is no key material
+    // (`LockCustodyStoreImpl.isKeyMaterial`), so a lock locks it with the
+    // draft even when the key itself is purged as backed.
+    override suspend fun carriedExpectation(stagedWriteId: String): ByteArray? =
+        account()?.let { store.get(scoped(it, CARRIED_PREFIX + stagedWriteId)) }
+
+    override suspend fun saveCarriedExpectation(stagedWriteId: String, digest: ByteArray) {
+        val account = account() ?: return
+        store.put(scoped(account, CARRIED_PREFIX + stagedWriteId), digest)
+    }
+
+    override suspend fun clearCarriedExpectation(stagedWriteId: String) {
+        val account = account() ?: return
+        store.remove(scoped(account, CARRIED_PREFIX + stagedWriteId))
+    }
+
     override suspend fun stancePadTaught(): Boolean =
         key(STANCE_PAD_TAUGHT)?.let { store.get(it) } != null
 
@@ -288,5 +305,6 @@ class IdentityStoreImpl @Inject constructor(
         const val FORGET = "forget_on_sign_out"
         const val ZERO: Byte = 0
         const val HS_PREFIX = "handshake:"
+        const val CARRIED_PREFIX = "carried:"
     }
 }

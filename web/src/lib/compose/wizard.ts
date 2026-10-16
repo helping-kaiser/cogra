@@ -244,9 +244,9 @@ export type WizardState = {
   /** Shown on the veil when it is given. Blank counts as none. */
   readonly sensitiveReason: string;
   /**
-   * Where the author stands on their own post — the Publish record's `pDirected`.
-   * `pInterest` is census-fixed at 1 for Publish, so there is one free number
-   * here and not a pair; the low-defaults policy value is +0.1.
+   * The author's BACKING of their own post — the Publish record's `pDirected`
+   * (PR-101). `pInterest` is census-fixed at 1 for Publish, so there is one
+   * free number here and not a pair; the low-defaults policy value is +0.1.
    */
   readonly pDirected: number;
 };

@@ -40,21 +40,17 @@ WHEN tap Create my key -> the key ceremony opens
 
 WHEN tap Create my key GIVEN a browser that cannot hold a key -> the ceremony says so before anything is minted
 
-ALWAYS every stance face wears the applicant's own stance — staged or held, never the inviter's — and the hollow face wherever they hold none, the feed's walk alone borrowing the inviter's vantage (stance-control, *Only a nobody borrows stances*)
+ALWAYS every stance face wears the hollow face, never the inviter's stance, the feed's walk alone borrowing the inviter's vantage (stance-control, *Only a nobody borrows stances*)
 
-WHEN tap a stance face for the first time as an applicant -> the pad blooms AND the opinion stages with the application once Set
+WHEN tap a stance face -> the snackbar reads You can give your opinion once you're in. AND NEVER the pad blooms
 
-WHEN the first opinion stages, by Set or by a press-and-hold -> the face takes the staged pick AND the snackbar reads Your opinion waits with your application — it arrives with you.
+WHEN press-and-hold a stance face -> the snackbar reads You can give your opinion once you're in. AND NEVER anything is signed or staged
 
-WHEN press-and-hold a stance face GIVEN no opinion is staged yet -> a positive opinion stages with the application
+WHEN tap New post on the bar -> the snackbar reads You can post once you're in. AND NEVER the wizard opens
 
-WHEN tap a stance face GIVEN an opinion is already staged -> the snackbar reads Your opinion waits with your application — it arrives with you. AND NEVER the pad opens
+ALWAYS feed.bottomBar.composeSlot wears the locked look, visibly inactive at the disabled opacity and still tappable
 
-WHEN tap New post on the bar GIVEN no post is staged yet -> the wizard opens AND the post stages with the application
-
-WHEN tap New post on the bar GIVEN a post is already staged -> the snackbar reads Your post waits with your application — it arrives with you. AND NEVER the wizard opens
-
-ALWAYS a staged act is seen by the applicant alone, in their own chronicle
+ALWAYS every feed.card.actionRow.stance.anchor wears the locked look, visibly inactive at the disabled opacity and still tappable
 
 WHEN tap Profile on the bar -> the applicant's own profile opens
 
