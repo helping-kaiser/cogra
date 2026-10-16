@@ -412,6 +412,23 @@ type AuthSession {
 	user: User
 }
 
+type BackingBundle {
+	"""
+	The raw valence sum, before the clip — beyond `±1` where the
+	records carry more than the fold shows. Not a `Dimension`: the sum
+	is unbounded by construction.
+	"""
+	rawPDirected: Float!
+	"""
+	The folded valence: the raw sum clipped to `[-1, 1]`.
+	"""
+	pDirected: Dimension!
+	"""
+	How many Publish records the sum folds.
+	"""
+	recordCount: Int!
+}
+
 """
 Opens a resumable upload for a file too large to risk in one request.
 """
@@ -2657,6 +2674,15 @@ type Post implements Node {
 	only what has landed on L1.
 	"""
 	viewerStance(pick: StancePickInput, includePending: Boolean! = true): StanceBundle
+	"""
+	The viewer's own Publish bundle toward this post — the raw sum of
+	the records they authored it with, and the clip of that sum.
+	Answers only the post's creator; null for every other viewer and
+	for no session. Unlike `viewerStance`, it counts payload-marked
+	records, since every Publish is one. `includePending: false`
+	folds only what has landed on L1.
+	"""
+	viewerBacking(includePending: Boolean! = true): BackingBundle
 	"""
 	When the viewer saved this post; null when not kept, or with no
 	session. What the menus' Save / Unsave row reads.

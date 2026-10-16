@@ -70,6 +70,13 @@ internal fun ReferenceEntry(
     /** The comment surfaces sit inside a card; the heading would only repeat. */
     showHeading: Boolean = true,
     /**
+     * A chip opens its pair in `RefPair`'s sheet, staged until Done, rather
+     * than the write-through dialog. The compose Details stage opts in
+     * (ComposeDetails.md); the other surfaces keep the dialog until their
+     * own boards are built.
+     */
+    pairSheet: Boolean = false,
+    /**
      * The section's data-node on a registered screen
      * (`composeDetails.references`): the section, its heading (`label`), each
      * staged chip (`stagedReference`, keyed by its position counted from 1)
@@ -136,13 +143,26 @@ internal fun ReferenceEntry(
         )
     }
     section.references.firstOrNull { it.targetId == section.tuning }?.let { row ->
-        ReferenceParametersDialog(
-            row = row,
-            testTagPrefix = testTagPrefix,
-            onRelevanceChange = { onReferenceRelevanceChange(row.targetId, it) },
-            onSupportChange = { onReferenceSupportChange(row.targetId, it) },
-            onDone = onDoneTuningReference,
-        )
+        if (pairSheet) {
+            ReferencePairSheet(
+                row = row,
+                testTagPrefix = testTagPrefix,
+                onDone = { relevance, support ->
+                    onReferenceRelevanceChange(row.targetId, relevance)
+                    onReferenceSupportChange(row.targetId, support)
+                    onDoneTuningReference()
+                },
+                onDismiss = onDoneTuningReference,
+            )
+        } else {
+            ReferenceParametersDialog(
+                row = row,
+                testTagPrefix = testTagPrefix,
+                onRelevanceChange = { onReferenceRelevanceChange(row.targetId, it) },
+                onSupportChange = { onReferenceSupportChange(row.targetId, it) },
+                onDone = onDoneTuningReference,
+            )
+        }
     }
 }
 

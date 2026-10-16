@@ -26,7 +26,7 @@ import {
   StructuralBody,
   VerifiedAct,
 } from "@/lib/crypto/handshake";
-import { ActId, AddrId, NodeId } from "@/lib/crypto/identifiers";
+import { ActId, AddrId, NodeId, type Family } from "@/lib/crypto/identifiers";
 import {
   decodePreCommitment,
   decodeProposal,
@@ -873,6 +873,95 @@ describe("write signer", () => {
     expect(submits.count()).toBe(0);
   });
 
+  // ---- the exemption holds for an Opinion alone (PR-105) -------------------
+
+  it.each(["publish", "tag", "reference", "affinity"] as const)(
+    "a_released_%s_this_device_never_prepared_is_refused_not_exempt",
+    async (family) => {
+      const submits = countingSubmits();
+      const results = await signer.signCarriedAtLanding([
+        await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.4, 0.2, new Uint8Array(), COMPLETION, family),
+      ]);
+      expect(results).toEqual([
+        {
+          kind: "rejectedByDevice",
+          id: "sw-c",
+          reason: "only an Opinion is exempt from the carried check at the landing",
+        },
+      ]);
+      expect(submits.count()).toBe(0);
+    },
+  );
+
+  it("one_digest_less_non_opinion_write_refuses_the_whole_released_batch", async () => {
+    const submits = countingSubmits();
+    const results = await signer.signCarriedAtLanding([
+      // Exempt on its own…
+      await stanceView("sw-op", "AWAITING_PRE_SIGN", 0.4, 0.2, new Uint8Array(), COMPLETION),
+      // …but the batch also releases a Tag nothing on this device verified.
+      await stanceView("sw-tag", "AWAITING_PRE_SIGN", 0.5, 0.5, new Uint8Array(), COMPLETION, "tag"),
+    ]);
+    expect(results.map((r) => r.kind)).toEqual(["rejectedByDevice", "rejectedByDevice"]);
+    expect(submits.count()).toBe(0);
+    expect(await store.handshakeIds()).toEqual([]);
+  });
+
+  it("a_non_opinion_write_with_its_kept_expectation_still_signs_at_the_landing", async () => {
+    // The narrowing is the exemption's alone: a family checked at its prepare
+    // on this device signs against its kept digest as before.
+    const prepared = await stanceView("sw-c", "CARRIED", 0.5, 0.5, new Uint8Array(), [], "tag");
+    await carried.save("sw-c", await carriedDigest(decoded(prepared)));
+    const released = await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.5, 0.5, new Uint8Array(), COMPLETION, "tag");
+    const submits = sealingHost(released);
+    const results = await signer.signCarriedAtLanding([released]);
+    expect(submits.count()).toBe(1);
+    expect(results).toEqual([{ kind: "done", id: "sw-c", state: "RELAYING" }]);
+  });
+
+  it("an_exempt_opinion_still_runs_the_approve_checks", async () => {
+    // Exempt from the carried check, not from the handshake: a seal over a
+    // body the device never pre-signed is refused at the approve step.
+    const released = await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.4, 0.2, new Uint8Array(), COMPLETION);
+    const proposal = decoded(released);
+    let submits = 0;
+    server.use(
+      hostHandler,
+      graphql.mutation("SubmitProposals", async ({ variables }) => {
+        submits += 1;
+        const input = (variables as { input: { proposals: { signature: string }[] } }).input;
+        const blob = decodePreCommitment(fromBase64(input.proposals[0].signature));
+        const pre = new PreSignedProposal({
+          proposal,
+          authorPubkey: actorPub,
+          nonce: blob.nonce,
+          preSignature: blob.preSignature,
+        });
+        const swapped = new Proposal(proposal.body, new TextEncoder().encode("swapped"), proposal.deps);
+        const sealed = await sealOver(host, pre, swapped);
+        return HttpResponse.json({
+          data: {
+            submitProposals: {
+              __typename: "SubmitProposalsPayload",
+              stagedWrites: [
+                {
+                  ...stagedJson("sw-c", "AWAITING_APPROVAL", toBase64(encodeVerifiedAct(sealed))),
+                  family: released.family,
+                  canonicalProposal: released.canonicalProposal,
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const [result] = await signer.signCarriedAtLanding([released]);
+    expect(submits).toBe(1);
+    expect(result.kind).toBe("rejectedByDevice");
+    if (result.kind === "rejectedByDevice") expect(result.reason).toMatch(/different act/);
+    expect(await store.handshake("sw-c")).toBeNull();
+  });
+
   it("the_landing_gate_holds_the_carried_batch_back_without_spending_anything", async () => {
     await preparedCarried();
     const asked: string[][] = [];
@@ -929,7 +1018,9 @@ function decoded(staged: StagedWriteView): Proposal {
 
 /**
  * A stance the prepare serves, authored by this device's own address —
- * the shape a faithful prepare stages for a pick of `(pD, pI)`.
+ * the shape a faithful prepare stages for a pick of `(pD, pI)`. `family`
+ * re-serves the same shape as another family, for the checks that read the
+ * family alone.
  */
 async function stanceView(
   id: string,
@@ -938,13 +1029,14 @@ async function stanceView(
   pI: number,
   payload: Uint8Array = new Uint8Array(),
   deps: readonly ActId[] = [],
+  family: Family = "opinion",
 ): Promise<StagedWriteView> {
   const key = await createIdentityStore({ activeAccountId: () => "acct-1" }).actorKey();
   if (key === null) throw new Error("expected the device key");
   const body = new StructuralBody({
     author: await key.address(),
     seq: 5n,
-    family: "opinion",
+    family,
     middle: null,
     target: NodeId.parse(PERSON),
     pD,
@@ -957,7 +1049,7 @@ async function stanceView(
   return {
     id,
     state,
-    family: "OPINION",
+    family: family.toUpperCase() as StagedWriteView["family"],
     canonicalProposal: toBase64(encodeProposal(proposal)),
     verifiedAct: null,
   };

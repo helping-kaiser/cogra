@@ -102,9 +102,11 @@ export type WriteSigner = {
    * this device holds an expectation for signs only if the served proposal
    * digests to it, its dependencies aside — the landing appends the ruled
    * completion, `[admission Registration, winning vouch]`; a write it holds
-   * none for was prepared on another device and signs under the second named
-   * exemption, `CARRIED_AT_LANDING_EXEMPTION`, on the transport checks.
-   * One mismatch refuses the whole batch before its first pre-signature.
+   * none for was prepared on another device and, when it is an Opinion, signs
+   * under the second named exemption, `CARRIED_AT_LANDING_EXEMPTION`, on the
+   * transport checks. Any other family without a kept expectation is a
+   * mismatch, and one mismatch refuses the whole batch before its first
+   * pre-signature.
    * Then the landing gate (`CarriedLandingGate`) is asked; a batch it holds
    * back is not signed and nothing of it is spent.
    */
@@ -469,8 +471,9 @@ export function createWriteSigner(deps: {
   /**
    * Why the released carried batch is not what this device verified at its
    * prepare, or null when every write either matches its kept expectation or
-   * has none here (the second named exemption: prepared on another device).
-   * Dependencies are never compared: the landing completes them.
+   * is an Opinion with none here (the second named exemption: prepared on
+   * another device). Dependencies are never compared: the landing completes
+   * them.
    */
   async function carriedRefusal(writes: readonly StagedWriteView[]): Promise<string | null> {
     for (const staged of writes) {
@@ -482,8 +485,14 @@ export function createWriteSigner(deps: {
         throw e;
       }
       const intent = await carriedIntentOf(staged.id);
-      // The exemption runs the transport checks alone (signOne, approveFrom).
-      if (intent.kind === "carriedAtLandingExemption") continue;
+      if (intent.kind === "carriedAtLandingExemption") {
+        // The exemption holds only for an Opinion (PR-105), and runs the
+        // transport checks alone (signOne, approveFrom).
+        if (proposal.body.family !== "opinion") {
+          return "only an Opinion is exempt from the carried check at the landing";
+        }
+        continue;
+      }
       if (!equalBytes(intent.digest, await carriedDigest(proposal))) {
         return "the released carried write is not the one this device verified at its prepare";
       }

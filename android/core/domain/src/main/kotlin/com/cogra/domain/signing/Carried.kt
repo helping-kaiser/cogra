@@ -13,11 +13,13 @@
 // equal; the device signs the released write only when the served proposal
 // still digests to it.
 //
-// A landing seen on a device that holds no expectation for a write — the
-// write was prepared on another device — signs under the second named
+// A landing seen on a device that holds no expectation for an Opinion — the
+// write was prepared on another device — signs it under the second named
 // exemption, [CarriedAtLandingExemption]: the act WAS checked once, where it
 // was ordered. A device that held the expectation and lost it with its
-// custody set does the same: custody absent is custody absent.
+// custody set does the same: custody absent is custody absent. The exemption
+// holds for an Opinion alone (PR-105); any other family without an
+// expectation refuses the whole released batch.
 //
 // The expectation lives in the account's identity slot (IdentityStore), so it
 // follows the draft's fate there: locked with it (it is no key material, so a

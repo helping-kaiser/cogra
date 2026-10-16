@@ -3610,6 +3610,22 @@ from the pre-commitment onward. Severance computes its batch
 against the L2 view, so severing and refetching reads `(0, 0)` at
 once rather than an epoch later.
 
+**The author's Publish bundle.** `Post.viewerBacking(includePending:
+Boolean! = true): BackingBundle` serves the sum of the Publish
+records the viewer authored toward their own post — the genesis
+record and every edit — as `{ rawPDirected: Float!, pDirected:
+Dimension!, recordCount: Int! }`. `rawPDirected` is the unclipped
+sum, `pDirected` the same sum clipped to `[-1, 1]`, `recordCount`
+how many records sum. It answers only the post's creator and is
+null for every other viewer and for no session. It is the Publish
+sibling of `viewerStance`, with the difference that makes it
+necessary: `viewerStance` excludes payload-marked records, and
+every Publish is payload-marked, so the authoring bundle is
+invisible to it. `includePending` carries the same meaning and
+default as on `viewerStance`: the L1 view folds only what has
+landed, the L2 view also counts the viewer's own Publish acts in
+flight from the pre-commitment onward.
+
 ### Content authoring
 
 Creating content stages a batch: the minting record (Publish for
