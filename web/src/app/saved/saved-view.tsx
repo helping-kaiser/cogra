@@ -26,9 +26,14 @@
 // the card back carrying `That didn't go through.` with Retry; a failed Undo's
 // card stays on screen carrying that line.
 //
-// SEARCH ON TOP: the one search rule, over the saved set (`saved-search.ts`).
-// A search that finds nothing is SavedNone; a reader who has kept nothing
-// meets SavedEmpty, which draws no field.
+// SEARCH ON TOP: the one search law, over the saved set, RUN ON THE SERVER
+// (`User.bookmarks(query:)`; api-spec.md "Search", **Saved**). The matcher has
+// to see the whole saved set, so a match is found wherever it stands, never
+// only within the pages this browser has loaded. The field narrows once typing
+// settles; the list on screen stands until the narrowed one arrives, and the
+// list is drawn in the order served — people, then content, newest save first
+// inside each. A search that finds nothing is SavedNone; a reader who has kept
+// nothing meets SavedEmpty, which draws no field.
 //
 // A HIDDEN ACCOUNT'S THINGS STAY: the hidden list is the feed's, not this
 // one's (ruling 49d), so nothing here reads the hidden set.
@@ -42,8 +47,6 @@ import { appendDeduped } from "@/lib/api/pagination";
 import { fetchSavedPage, type SavedEntry, type SavedPost } from "@/lib/api/saved-api";
 import { useSavedWrites } from "@/lib/saved/provider";
 import { useHostSnack } from "@/lib/saved/save-row";
-import { searchableOf } from "@/lib/saved/saved-node";
-import { matches, parseQuery } from "@/lib/saved/saved-search";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { Button } from "@/lib/ui/button";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
@@ -78,16 +81,30 @@ export const SEARCH_WHAT_YOU_SAVED = "Search what you saved";
 /** The chronicle's load-more fault (design digest item 57; Saved.md). */
 export const COULDNT_LOAD_MORE = "Couldn't load more";
 
+/** How long the field waits for typing to settle before Saved narrows. */
+export const SAVED_SEARCH_DEBOUNCE_MS = 250;
+
 /** Where a card's doors say the reader came from: `Back to Saved`. */
 const FROM = "saved";
 
 type Entry = SavedEntry & { readonly id: string };
 
-function entriesOf(items: readonly SavedEntry[]): Entry[] {
-  return items.map((entry) => ({ ...entry, id: entry.node.id }));
+/** The kinds Saved stands as cards; a kind a later slice adds waits for its card. */
+function isCardKind(entry: SavedEntry): boolean {
+  const kind = entry.node.__typename;
+  return kind === "Post" || kind === "Comment" || kind === "User";
 }
 
-export function SavedScreen() {
+function entriesOf(items: readonly SavedEntry[]): Entry[] {
+  return items.filter(isCardKind).map((entry) => ({ ...entry, id: entry.node.id }));
+}
+
+export function SavedScreen({
+  searchDebounceMs = SAVED_SEARCH_DEBOUNCE_MS,
+}: {
+  /** Test injection — how long the field waits for typing to settle. */
+  searchDebounceMs?: number;
+} = {}) {
   const client = useApolloClient();
   const guard = useAuthGuard();
   const host = useScrollHost();
@@ -101,7 +118,11 @@ export function SavedScreen() {
   const [failed, setFailed] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [moreFailed, setMoreFailed] = useState(false);
+  // What the reader typed, and the query the list on screen answers — null
+  // until the first read lands. They differ while typing settles and while
+  // the narrowed read is on its way.
   const [query, setQuery] = useState("");
+  const [listQuery, setListQuery] = useState<string | null>(null);
   // The feed's own two hosted sheets: a post card's menu, and the thread its
   // comment count raises — over this page, as over the feed.
   const [menuPost, setMenuPost] = useState<PostView | null>(null);
@@ -109,88 +130,84 @@ export function SavedScreen() {
   const [commentsPost, setCommentsPost] = useState<PostView | null>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [liveComments, setLiveComments] = useState<{ id: string; total: number } | null>(null);
-  // Which read is live: a pull fires a new one, and the old one resolving
-  // afterwards must not overwrite it.
+  // Which read is live: a pull or a new query fires a new one, and an older
+  // one — a first page or a next page — resolving afterwards must not
+  // overwrite it.
   const request = useRef(0);
+  // The query the list on screen answers, for the reads that continue it.
+  const listQueryRef = useRef<string | null>(null);
 
-  // A SEARCH READS THE WHOLE SAVED SET: the contract pages the list and takes
-  // no query, so a standing query walks the rest of it in, page by page —
-  // started by the query itself, and again by a fresh read while one stands.
-  const queryRef = useRef(query);
-  const walking = useRef(false);
-  const readRest = useCallback(
-    async (from: string | null, more: boolean) => {
-      if (walking.current || !more || from === null) return;
-      walking.current = true;
-      setLoadingMore(true);
-      setMoreFailed(false);
-      let cursor: string | null = from;
-      let next: boolean = more;
-      while (next && cursor !== null) {
-        const after: string = cursor;
-        const outcome = await guard.run(() => fetchSavedPage(client, after));
+  /** The first page of Saved narrowed by `asked` (blank: the whole list). */
+  const read = useCallback(
+    (asked: string) => {
+      const mine = (request.current += 1);
+      void (async () => {
+        const outcome = await guard.run(() => fetchSavedPage(client, null, asked));
+        if (mine !== request.current) return;
+        setLoading(false);
         if (outcome.kind !== "success") {
-          // THE CARDS ON SCREEN STAY, and the fault ends the list (Saved.md).
-          setMoreFailed(true);
-          break;
+          setFailed(true);
+          // A FAILED REFRESH keeps the cards on screen; a failed NEW QUERY
+          // must not leave another query's cards standing as its answer.
+          if (asked !== listQueryRef.current) {
+            listQueryRef.current = asked;
+            setListQuery(asked);
+            setEntries([]);
+            setEndCursor(null);
+            setHasNextPage(false);
+          }
+          return;
         }
-        setEntries((current) => appendDeduped(current, entriesOf(outcome.value.items)));
-        cursor = outcome.value.endCursor;
-        next = outcome.value.hasNextPage;
-        setEndCursor(cursor);
-        setHasNextPage(next);
-      }
-      setLoadingMore(false);
-      walking.current = false;
+        // A FRESH LOAD: the cards' lines go (RowSigning.md:17), and the overlay
+        // steps aside for what the read now says.
+        writes.settle();
+        listQueryRef.current = asked;
+        setListQuery(asked);
+        setFailed(false);
+        setMoreFailed(false);
+        setEntries(entriesOf(outcome.value.items));
+        setEndCursor(outcome.value.endCursor);
+        setHasNextPage(outcome.value.hasNextPage);
+      })();
     },
-    [client, guard],
+    [client, guard, writes],
   );
 
-  const read = useCallback(() => {
-    const asked = (request.current += 1);
-    void (async () => {
-      const outcome = await guard.run(() => fetchSavedPage(client, null));
-      if (asked !== request.current) return;
-      setLoading(false);
-      if (outcome.kind !== "success") {
-        setFailed(true);
-        return;
-      }
-      // A FRESH LOAD: the cards' lines go (RowSigning.md:17), and the overlay
-      // steps aside for what the read now says.
-      writes.settle();
-      setFailed(false);
-      setMoreFailed(false);
-      setEntries(entriesOf(outcome.value.items));
-      setEndCursor(outcome.value.endCursor);
-      setHasNextPage(outcome.value.hasNextPage);
-      if (parseQuery(queryRef.current).kind !== "blank") {
-        void readRest(outcome.value.endCursor, outcome.value.hasNextPage);
-      }
-    })();
-  }, [client, guard, writes, readRest]);
-
+  // THE FIELD NARROWS ONCE TYPING SETTLES — the finder's debounce shape
+  // (`reference-finder.tsx`): every keystroke would otherwise be a read, and
+  // only the last one's answer could ever stand. Clearing the field asks for
+  // the whole list at once. The first arrival is this same read, blank.
+  const asked = query.trim();
+  const arrived = useRef(false);
   useEffect(() => {
-    read();
+    const wait = !arrived.current || asked === "" ? 0 : searchDebounceMs;
+    arrived.current = true;
+    const timer = setTimeout(() => read(asked), wait);
     return () => {
+      clearTimeout(timer);
       request.current += 1;
     };
-  }, [read]);
+  }, [asked, read, searchDebounceMs]);
 
   // Saved pull-down on (Saved.md): the platform's own refresh, through the
-  // same read the first arrival takes.
+  // same read the first arrival takes, of the list the field asks for.
   const onPull = useCallback(() => {
     setLoading(true);
-    read();
-  }, [read]);
+    read(asked);
+  }, [read, asked]);
   usePullToRefresh({ host, onPull });
 
+  // THE NEXT PAGE OF THE SAME LIST: a narrowed list pages on cursors of its
+  // own, so the next page carries the query its first page answered.
   const loadMore = useCallback(async () => {
     if (loadingMore || !hasNextPage || endCursor === null) return;
+    const mine = request.current;
     setLoadingMore(true);
     setMoreFailed(false);
-    const outcome = await guard.run(() => fetchSavedPage(client, endCursor));
+    const outcome = await guard.run(() => fetchSavedPage(client, endCursor, listQueryRef.current ?? ""));
     setLoadingMore(false);
+    // A new read replaced the list this page continued.
+    if (mine !== request.current) return;
     if (outcome.kind !== "success") {
       // THE CARDS ON SCREEN STAY, and the fault ends the list (Saved.md).
       setMoreFailed(true);
@@ -201,24 +218,15 @@ export function SavedScreen() {
     setHasNextPage(outcome.value.hasNextPage);
   }, [client, guard, loadingMore, hasNextPage, endCursor]);
 
-  const parsed = parseQuery(query);
-  const searching = parsed.kind !== "blank";
-  const onQuery = (next: string) => {
-    queryRef.current = next;
-    setQuery(next);
-    if (parseQuery(next).kind !== "blank") void readRest(endCursor, hasNextPage);
-  };
+  const searching = asked !== "";
+  const narrowed = listQuery !== null && listQuery !== "";
 
   // What the reader still keeps, plus a card whose Undo did not go through,
-  // which stays carrying its line.
-  const kept = entries.filter(
+  // which stays carrying its line — in the order the server served them.
+  const shown = entries.filter(
     (entry) =>
       writes.kept(entry.id, entry.bookmarkedAt) !== null || writes.failure(entry.id)?.kind === "restore",
   );
-  const shown = kept.filter((entry) => {
-    const searchable = searchableOf(entry.node);
-    return searchable !== null && matches(searchable, parsed);
-  });
 
   const tailRef = useApproachingTail({
     root: host,
@@ -247,12 +255,16 @@ export function SavedScreen() {
     target?.focus();
   }, [shownIds, writes]);
 
-  const nothingKept = !loading && !failed && kept.length === 0 && !hasNextPage;
-  // SAVEDEMPTY draws no field: it arrives with the first thing saved. A query
-  // still standing keeps it, so `Show everything` is the way back.
-  const empty = nothingKept && !searching;
-  const none = !loading && !failed && searching && shown.length === 0 && !hasNextPage && !loadingMore;
-  const fielded = !empty && (kept.length > 0 || searching);
+  const nothingShown = !loading && !failed && shown.length === 0 && !hasNextPage && !loadingMore;
+  // SAVEDEMPTY is the whole list holding nothing, and draws no field: it
+  // arrives with the first thing saved. A query still standing keeps the
+  // field, so `Show everything` is the way back.
+  const empty = nothingShown && !narrowed && !searching;
+  // SAVEDNONE is the server's answer to a standing query holding nothing; it
+  // stands while the next keystroke's answer is on its way, and goes the
+  // moment the field is cleared.
+  const none = nothingShown && narrowed && searching;
+  const fielded = !empty && (shown.length > 0 || searching || narrowed);
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col">
@@ -271,7 +283,7 @@ export function SavedScreen() {
         {fielded && (
           <SearchBar
             query={query}
-            onChange={onQuery}
+            onChange={setQuery}
             placeholder={SEARCH_WHAT_YOU_SAVED}
             ariaLabel={SEARCH_WHAT_YOU_SAVED}
             node={{ path: "saved.searchField" }}
@@ -292,7 +304,7 @@ export function SavedScreen() {
             size="sm"
             onClick={() => {
               setLoading(true);
-              read();
+              read(asked);
             }}
           >
             Retry
@@ -331,7 +343,7 @@ export function SavedScreen() {
             variant="outline"
             size="sm"
             selfStart
-            onClick={() => onQuery("")}
+            onClick={() => setQuery("")}
           >
             {SHOW_EVERYTHING}
           </Button>
@@ -381,7 +393,7 @@ export function SavedScreen() {
             testId="saved-more-retry"
             variant="text"
             size="sm"
-            onClick={() => void (searching ? readRest(endCursor, hasNextPage) : loadMore())}
+            onClick={() => void loadMore()}
           >
             Retry
           </Button>
