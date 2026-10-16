@@ -4986,14 +4986,14 @@ make alone:
   the batch, so the answer decides what it counts. (Impl's server signs
   and versions an opinion-only edit, built and standing — seam 230; the
   design draws the same. Awaiting jakob's word only.)
-- ~~**`Walk it back` on the edit's pad.**~~ Reframed by round 15 (item
-  142): the edit's pad is one axis with no standing opinion to walk
-  away from; what stays open is the confirm's reading at `0.00`.
+- ~~**`Walk it back` on the edit's pad.**~~ Ruled 2026-10-16 (round 15,
+  item 142): `Walk it all back` is a row on the edit's pad that parks
+  the pick, greyed while the backing nets `0.00`; no dialog.
 - **The acts card's reading of a moved pick.** The pick rides the
   `Edit` row's record and adds no row (`EditActs`). Proposed: once the
-  pick moves, the `Edit` row reads the post's name over the resulting
-  number, the seal's References row's shape, and the name alone when
-  it does not.
+  pick moves, the `Edit` row reads the post's name over the backing
+  after, the seal's References row's shape, and the name alone when it
+  does not.
 - **The comment edit.** A comment's revision is an ordinary-role Review,
   its A-leg to the same parent, so the pair a comment edit carries is
   the stance toward what the comment answers — the reply pad's
@@ -5066,39 +5066,21 @@ not make alone:
 ### 142 · What the census revert left for jakob · *design + contract + docs* · **filed 2026-10-16**
 
 Round 15 (readme §13) drew PR-101: the authoring pad one axis again
-(`AttachmentPad`), the face stance an Opinion of its own. These are the
-calls it could not make alone:
+(`AttachmentPad`), the face stance an Opinion of its own. jakob ruled
+all eight of its questions on 2026-10-16 — the pick is the edge (no set
+semantics, so nothing is out of reach), `Walk it all back` as a greyable
+row instead of the edit's dialog, `Your backing` for the authoring row,
+🤷 at exactly `0.00`, the face's help text blessed, the docs given the
+edit's pick, and the scope below. The record is the round's readme
+section. What is left is banked, not open:
 
-- **Set semantics on the edit's pad** — the orchestrator's rec, drawn.
-  The pad collects where the post's own records will stand and the
-  client signs the pick less the bundle's raw sum. Confirm, or ask for
-  the honest-delta reading (`Adjust by`) instead.
-- **What one edit can reach.** An edit is one record, its pick in
-  `[−1, +1]`, so from a raw sum `r` it lands only in
-  `[max(−1, r − 1), min(+1, r + 1)]` — from the +0.10 default, `−1.00`
-  is out of one edit's reach (`−0.90` is the floor). The strip draws
-  the whole axis. Clamp the knob's travel to the reachable stretch, draw
-  the rest as dead ground, or let Set explain the shortfall.
-- **The edit's confirm at `0.00`.** `EditPad` opens `Walk it all back?`
-  when the pick sets a standing post's attachment to `0.00`, but that
-  dialog speaks in pairs (`adds up to +x / +y`) and counts `1 thing`
-  over a pick that adds no record. A one-axis reading of it, or a
-  standing-post sibling of `Start it unreachable?`.
-- **The row's word.** jakob's ruling names the face stance "the authors
-  opinion on his post"; the seal's and an edit's row that sets the
-  authoring number still reads `Your opinion`, the edit's pad `Current
-  opinion`, and the pads' names `Opinion pad for your own post`. Keep
-  the blessed words, or rename the authoring row.
-- **`0.00` reads 🙂.** The one-axis table's ruled tie-break (2026-09-14)
-  gives the inert value a smile, the value `Start it unreachable?`
-  warns about. Keep, or give `0.00` its own reading.
-- **The drafts.** copy-voice's `Your opinion on your post` help text and
-  *The unreachable start* body are drafted and wait for jakob's word.
-- **Docs: an edit's attachment.** post.md §4 and items.md §7 say edits
-  are "authored at attachment `0`: routing-inert"; PR-101 and impl's
-  built server subset give the edit a pick (default `0`). The docs need
-  the pick, or the design drops it.
-- **Messages and listings.** A Send's one free number is its first
-  leg's, toward the Chat; the chat sign sheet calls it `Your opinion`,
-  for the chat round to word. Owner listings take the one-axis law; no
-  listing surface is drawn.
+- **Message edits** — a message's backing on edit, and the pad over the
+  chat sheet, wait for the chat round.
+- **Comment edits** — a comment's revision carries its Review pair
+  toward the parent, so they stay `(0, 0)`, fixed, and the reply pad
+  keeps both numbers. Adjusting that pair would be a feature of its
+  own, not this one.
+- **Item listings** — the backing row and pad come with the first
+  listing surface.
+- **Drafts still at jakob's review** — copy-voice's *The unreachable
+  start* body, and the backing pad's cap line and its spoken `Nothing`.
