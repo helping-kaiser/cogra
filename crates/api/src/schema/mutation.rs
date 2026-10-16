@@ -790,6 +790,14 @@ fn self_mark_draft(
     }
 }
 
+/// A post edit's stance pick as the wire carries it: omitted is the inert
+/// attachment `0`, which is what every edit stood at before the pick
+/// existed — so a client that never sends one keeps authoring the same
+/// record.
+fn edit_pick(pick: Option<Dimension>) -> f64 {
+    pick.map_or(0.0, |d| d.0)
+}
+
 /// A new Post: one genesis Publish whose envelope carries the display
 /// fields (post.md §1), plus one Tag record per declared topic — each
 /// its own priced act. Fields are raw scalars; moderation is
@@ -852,6 +860,12 @@ struct PreparePostEditInput {
     sensitive: Option<bool>,
     /// The reason the edit leaves standing; same rules a create runs.
     sensitive_reason: Option<String>,
+    /// The author's stance pick riding the edit's own record — its
+    /// attachment. Omitted is `0`, the inert setting: an unadjusted edit
+    /// moves no stance. A moved pick alone is a legal edit — a
+    /// content-identical new version. `pInterest` stays census-fixed at
+    /// 1 for Publish, so it is no field.
+    p_directed: Option<Dimension>,
 }
 
 /// A new Comment: one genesis Review — A leg to the target, terminal
@@ -3852,8 +3866,9 @@ impl Mutation {
         }
     }
 
-    /// Prepares a Post edit: an ordinary-role Publish at attachment 0
-    /// toward the existing node, chained behind the current head.
+    /// Prepares a Post edit: an ordinary-role Publish at the author's
+    /// picked attachment (default 0, inert) toward the existing node,
+    /// chained behind the current head.
     /// Creator-only; one in-flight edit per post and author
     /// (post.md §4).
     async fn prepare_post_edit(
@@ -3872,6 +3887,7 @@ impl Mutation {
             content: input.content,
             attachments: attachment_drafts(&input.attachments),
             sensitive: self_mark_draft(input.sensitive, input.sensitive_reason),
+            p_directed: edit_pick(input.p_directed),
         };
         match crate::content::prepare_post_edit(pool, boundary, staging, v.user_id, draft).await {
             Ok(prepared) => Ok(PrepareContentPayload::ok(prepared)),

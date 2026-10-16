@@ -19,6 +19,10 @@ export interface BottomNavProps {
    * overridden here.
    */
   glyphs?: Partial<Record<"feed" | "search" | "wallet" | "profile", string>>;
+  /** The locked look on the centre slot for an applicant (auth.md):
+   *  `var(--state-disabled)`, the slot still tappable, its tap answering
+   *  `You can post once you're in.` */
+  composeOpacity?: string | number;
   /** The data-node name its placer gives this bar (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: each slot as `<slot>Slot` — `feedSlot`, `searchSlot`, `composeSlot`, `walletSlot`, `profileSlot`. */
   node?: string;
 }

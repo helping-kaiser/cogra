@@ -72,7 +72,10 @@ class RegistrationSigner @Inject constructor(
         ceremony.uploadPendingBackup()
         if (status.accountState == AccountState.MEMBER) {
             // The landing released what the applicant carried: sign it now,
-            // without a prompt, with the vouch-in (auth.md "Application").
+            // without a prompt, with the vouch-in (auth.md "Application") —
+            // checked against what was verified at its prepare, or under the
+            // carried-at-landing exemption where it was prepared elsewhere
+            // (WriteSigner.signCarriedAtLanding).
             // Best-effort by design — a write left mid-handshake keeps its
             // material for resume, and one never started is still
             // AWAITING_PRE_SIGN on the next pass.
@@ -92,13 +95,18 @@ class RegistrationSigner @Inject constructor(
             // mismatch reads as awaiting-the-key, i.e. the restore path.
             if (!keyOnDevice(status.actorPubkey)) return RegistrationProgress.AwaitingSigningKey
             // No form stands behind the staged Registration — the backend
-            // staged it at approval — so it is the one named exemption from
+            // staged it at approval — so it is the first named exemption from
             // the intent check (Intent.kt), and still runs every transport check.
             return when (val result = writeSigner.signStaged(staged, RegistrationExemption)) {
                 is WriteResult.Done, is WriteResult.AwaitingSeal -> RegistrationProgress.AwaitingLanding
                 is WriteResult.Refused -> RegistrationProgress.Refused(result.errors)
                 is WriteResult.RejectedByDevice -> RegistrationProgress.RejectedByDevice(result.reason)
                 is WriteResult.Failed -> RegistrationProgress.Failed(result.cause)
+                // signStaged never keeps a write for the landing: only a
+                // checked batch does (WriteSigner.sign).
+                is WriteResult.Carried -> RegistrationProgress.Failed(
+                    IllegalStateException("a staged Registration is never carried"),
+                )
             }
         }
         // Registration writes the application with the account, and an

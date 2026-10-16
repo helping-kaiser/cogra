@@ -378,7 +378,7 @@ class ContentRepositoryTest {
             """{"data":{"preparePost":{"__typename":"PrepareContentPayload",
                "node":"node-1",
                "writes":[{"__typename":"PreparedWrite","id":"w1","family":"PUBLISH",
-                          "canonicalProposal":"AAECAw==","gcAfterEpochs":8}],
+                          "canonicalProposal":"AAECAw==","gcAfterEpochs":8,"carried":false}],
                "userErrors":[]}}}""",
         )
         val license = LicenseChoice(attribution = 1.0, provenance = 0.0)
@@ -396,6 +396,20 @@ class ContentRepositoryTest {
         )
         val refused = repo().preparePost("T", null, "B", license, pDirected = DEFAULT_STANCE)
         assertThat((refused as Outcome.Refused).errors.single().code).isEqualTo(ErrorCode.FORBIDDEN)
+    }
+
+    @Test
+    fun anApplicantsCarriedPostComesBackCarriedForTheSignerToKeep() = runTest {
+        enqueue(
+            """{"data":{"preparePost":{"__typename":"PrepareContentPayload",
+               "node":"node-1",
+               "writes":[{"__typename":"PreparedWrite","id":"w1","family":"PUBLISH",
+                          "canonicalProposal":"AAECAw==","gcAfterEpochs":8,"carried":true}],
+               "userErrors":[]}}}""",
+        )
+        val license = LicenseChoice(attribution = 1.0, provenance = 0.0)
+        val prepared = repo().preparePost("T", null, "B", license, pDirected = DEFAULT_STANCE)
+        assertThat((prepared as Outcome.Success).value.writes.single().carried).isTrue()
     }
 
     @Test

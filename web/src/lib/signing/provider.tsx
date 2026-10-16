@@ -22,6 +22,7 @@ import { createKeyCeremony, type KeyCeremony } from "@/lib/identity/key-ceremony
 import { identityStore } from "@/lib/identity/store";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
+import { carriedExpectationStore } from "./carried";
 import { createRegistrationFlow, type RegistrationFlow } from "./registration-flow";
 import {
   createRegistrationSigner,
@@ -67,7 +68,12 @@ export function RegistrationProvider({
   // key material). The signer is shared app-wide because resume()
   // spans every persisted handshake, whichever surface started it.
   const [built] = useState(() => {
-    const writeSigner = createWriteSigner({ client, guard, store: identityStore });
+    const writeSigner = createWriteSigner({
+      client,
+      guard,
+      store: identityStore,
+      carried: carriedExpectationStore,
+    });
     const signer = createRegistrationSigner({
       client,
       guard,
