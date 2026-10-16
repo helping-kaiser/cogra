@@ -153,7 +153,7 @@ mod tests {
     /// A narrowed History cursor decodes back to its position, and neither list's cursor passes for the other's, nor for Saved's.
     /// ´claim:history:a-narrowed-cursor-round-trips´
     #[test]
-    fn a_narrowed_cursor_round_trips_and_the_lists_never_share_one() {
+    fn a_narrowed_history_cursor_round_trips_and_passes_for_no_other_lists() {
         let cursor = HistoryMatchCursor {
             section: 2,
             first_seen_at: chrono::DateTime::from_timestamp_micros(1_791_354_394_123_456)
