@@ -10,6 +10,9 @@ CARGO          = cargo
 # postcondition rather than a proxy for it. Same default as compose and
 # .env.example (development.md "Environment Variables").
 MEDIA_BUCKET ?= cogra-media
+# The operator-only bucket the one-shot provisions last (data-model.md
+# "Media areas"): its existence is the postcondition `wait-media` probes.
+MEDIA_HELD_BUCKET ?= cogra-media-held
 
 # How long a readiness wait may take before it fails with a message.
 # Generous against a cold image pull on a slow link; the point is that an
@@ -75,17 +78,19 @@ wait-db: ## Block until Postgres accepts connections
 		sleep 1; \
 	done
 
-# The postcondition, not a proxy for it: `mc stat` on the bucket succeeds
-# only after the media-init one-shot both created it and opened anonymous
-# download on it, which is the whole of what provisioning does. Waiting on
+# The postcondition, not a proxy for it: `mc stat` on the held bucket
+# succeeds only after the media-init one-shot created the live bucket and
+# opened anonymous download on it, then created the carried and held
+# buckets with no anonymous policy — the held one last, so its existence
+# is the whole of what provisioning does. Waiting on
 # the SERVER instead let `make dev` start the API in the window between a
 # ready store and a provisioned one — widest right after `reset-db`, which
 # destroys the volume and guarantees the one-shot has real work to do.
-wait-media: ## Block until the media object store has its bucket
-	@echo "Waiting for the media store's bucket to be provisioned..."
+wait-media: ## Block until the media object store has its buckets
+	@echo "Waiting for the media store's buckets to be provisioned..."
 	@deadline=$$(( $$(date +%s) + $(WAIT_TIMEOUT) )); \
-	until $(DOCKER_COMPOSE) exec -T media mc stat local/$(MEDIA_BUCKET) > /dev/null 2>&1; do \
-		[ $$(date +%s) -lt $$deadline ] || { echo "Error: the bucket $(MEDIA_BUCKET) was not provisioned within $(WAIT_TIMEOUT)s — see 'make logs' for the media-init one-shot"; exit 1; }; \
+	until $(DOCKER_COMPOSE) exec -T media mc stat local/$(MEDIA_HELD_BUCKET) > /dev/null 2>&1; do \
+		[ $$(date +%s) -lt $$deadline ] || { echo "Error: the bucket $(MEDIA_HELD_BUCKET) was not provisioned within $(WAIT_TIMEOUT)s — see 'make logs' for the media-init one-shot"; exit 1; }; \
 		sleep 1; \
 	done
 
