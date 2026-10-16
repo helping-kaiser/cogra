@@ -48,6 +48,10 @@ WHEN press-and-hold a stance face -> the snackbar reads You can give your opinio
 
 WHEN tap New post on the bar -> the snackbar reads You can post once you're in. AND NEVER the wizard opens
 
+ALWAYS feed.bottomBar.composeSlot wears the locked look, visibly inactive at the disabled opacity and still tappable
+
+ALWAYS every feed.card.actionRow.stance.anchor wears the locked look, visibly inactive at the disabled opacity and still tappable
+
 WHEN tap Profile on the bar -> the applicant's own profile opens
 
 WHEN the reader first enters this feed GIVEN the intro's seen flag is unset -> the intro opens over the feed at its first card

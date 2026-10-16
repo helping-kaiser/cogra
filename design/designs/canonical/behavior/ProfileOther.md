@@ -42,6 +42,8 @@ ALWAYS the wide anchor's words beside the hollow face name the borrowed view, as
 
 ALWAYS the wide anchor's accessible name keeps the borrowed view's full handle, never ellipsized GIVEN the reader is a guest
 
+ALWAYS the wide anchor wears the locked look, visibly inactive at the disabled opacity and still tappable GIVEN the reader is an applicant
+
 WHEN tap the wide anchor GIVEN the reader is an applicant -> the snackbar reads You can give your opinion once you're in. AND NEVER the pad blooms
 
 WHEN press-and-hold the wide anchor GIVEN the reader is an applicant -> the snackbar reads You can give your opinion once you're in. AND NEVER anything is signed or staged

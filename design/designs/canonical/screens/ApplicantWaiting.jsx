@@ -38,7 +38,10 @@
    applicant shell: it answers in place in the applicant-foot family's voice,
    `You can post once you're in.`, drawn once here. A stance face answers the
    same way with `You can give your opinion once you're in.`, and the pad
-   never blooms.
+   never blooms. Both wear auth.md's locked look (jakob 2026-10-16), the
+   comment foot's: `composeOpacity` on the bar and `stanceOpacity` on every
+   card, at the disabled opacity and still tappable — as on every applicant
+   shell and `ProfileApplicant`'s bar.
 
    REGISTERED under the feed's own prefix (round 7), named as
    `ApplicantRejected` names the same shell: the card is `application`, its ask
@@ -71,11 +74,11 @@ export function Screen() {
             Got it
           </Button>
         </TaskCard>
-        <PostCard {...ADA_POST} signedIn={false} node="card" />
-        <PostCard {...TOBIAS_POST} signedIn={false} node="card" />
+        <PostCard {...ADA_POST} signedIn={false} stanceOpacity="var(--state-disabled)" node="card" />
+        <PostCard {...TOBIAS_POST} signedIn={false} stanceOpacity="var(--state-disabled)" node="card" />
       </FeedList>
       <Snackbar message="You can post once you're in." node="snackbar" />
-      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline composeOpacity="var(--state-disabled)" node="bottomBar" />
     </>
   );
 }

@@ -90,10 +90,10 @@ export function Screen() {
             node="link"
           />
         </TaskCard>
-        <PostCard {...ADA_POST} signedIn={false} node="card" />
-        <PostCard {...TOBIAS_POST} signedIn={false} node="card" />
+        <PostCard {...ADA_POST} signedIn={false} stanceOpacity="var(--state-disabled)" node="card" />
+        <PostCard {...TOBIAS_POST} signedIn={false} stanceOpacity="var(--state-disabled)" node="card" />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline composeOpacity="var(--state-disabled)" node="bottomBar" />
     </>
   );
 }

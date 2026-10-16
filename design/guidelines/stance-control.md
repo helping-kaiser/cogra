@@ -139,8 +139,10 @@ your own. The guest alone sees the lender's stances, because the guest
 is nobody yet.
 
 **An applicant's anchor answers in place** (PR-103, jakob 2026-10-16:
-applicant acting is post-MVP). A tap or a press-and-hold on any stance
-face an applicant meets, a topic's included, says `You can give your
+applicant acting is post-MVP). The anchor wears auth.md's locked look —
+the disabled opacity, still tappable (`anchorOpacity`) — and a tap or a
+press-and-hold on any stance face an applicant meets, a topic's
+included, says `You can give your
 opinion once you're in.` (copy-voice, *The applicant-foot family*): the
 pad never blooms, and nothing is signed or staged. Stances open at the
 landing, where the vouched-in member's first opinion — the vouch-back,

@@ -24,6 +24,10 @@ WHEN tap a stance face -> the snackbar reads You can give your opinion once you'
 
 WHEN press-and-hold a stance face -> the snackbar reads You can give your opinion once you're in. AND NEVER anything is signed or staged
 
+ALWAYS feed.bottomBar.composeSlot wears the locked look, visibly inactive at the disabled opacity and still tappable
+
+ALWAYS every feed.card.actionRow.stance.anchor wears the locked look, visibly inactive at the disabled opacity and still tappable
+
 WHEN tap the closed application's notification -> this shell opens at the card where the ask link stands
 
 WHEN tap Profile on the bar -> the applicant's own profile opens

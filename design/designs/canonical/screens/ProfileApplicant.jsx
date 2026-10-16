@@ -11,8 +11,10 @@
    Applicant acting is post-MVP: nothing an applicant does waits with the
    application, and nothing has landed, so the figures read zero and the
    chronicle stands at `EmptyState`, saying what fills it and when — the
-   applicant-foot family's `once you're in`. `New post` on the bar answers in
-   place with `You can post once you're in.`, as the shells' bar does.
+   applicant-foot family's `once you're in`. `New post` on the bar wears the
+   same locked look as Invites (`composeOpacity`, jakob 2026-10-16) and
+   answers in place with `You can post once you're in.`, as the shells' bar
+   does.
 
    THE CARD NAMES THE APPROVER (the approver sweep, 2026-09-15). "Waiting on
    your inviter" named a person this reader does not have — the inviter is
@@ -107,7 +109,7 @@ export function Screen() {
         </ChronicleList>
       </div>
       <Snackbar message="You can invite once you're in." node="snackbar" />
-      <BottomNav active="profile" slots={ALL_SLOTS} inline node="bottomBar" />
+      <BottomNav active="profile" slots={ALL_SLOTS} inline composeOpacity="var(--state-disabled)" node="bottomBar" />
     </>
   );
 }

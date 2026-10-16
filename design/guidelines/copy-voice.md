@@ -945,8 +945,9 @@ jakob 2026-10-16). jakob's own words, picked 2026-10-02 (F7) and
 - `You can vouch once you're in.` — an applicant who opens someone's ask
   link, where app-open lands for them (jakob 2026-10-02, **blessed**).
 
-A guest gets the join prompt at the same controls instead. The acting doors answer in the same register — *drafted 2026-10-16,
-pending jakob's blessing*:
+A guest gets the join prompt at the same controls instead. The acting
+doors answer in the same register (PR-103, **blessed (jakob
+2026-10-16)**):
 
 - `You can post once you're in.` — the bar's `New post` wherever an
   applicant meets it, and the menus' `Cite in a new post` and `Mention in
@@ -956,12 +957,13 @@ pending jakob's blessing*:
   the face's own name (`Give your opinion on this post`). The pad never
   blooms, and nothing is signed or staged.
 
-The foot, `Reply` and `Invites` wear the locked look (auth.md): visibly
-inactive, still tappable (jakob 2026-10-02). `New post` and the stance
-faces are drawn at full strength, pending jakob's word on the look.
+Every control the family answers wears the locked look (auth.md):
+visibly inactive, still tappable — the foot, `Reply` and `Invites` (jakob
+2026-10-02), and `New post` and the stance faces alike (jakob
+2026-10-16).
 
 The applicant's own profile (`ProfileApplicant`) says the same in its
-own places, *drafted 2026-10-16, pending jakob's blessing*: the open
+own places, **blessed (jakob 2026-10-16)**: the open
 application's card reads `Their approval brings you in. Until then, you
 can read everything.` under `Waiting on @mira` — `ApplicantWaiting`'s
 first sentence, then what is open meanwhile — and the empty chronicle
@@ -3453,8 +3455,8 @@ lines*), recorded so the registry is whole:
   still vouch you in.` / `That is not a waiting period for its own sake.
   The first link to you is a real one, given by a person who stands
   behind it — which is the thing that keeps this place small enough to be
-  honest.` The first paragraph's tail is *drafted 2026-10-16 in the
-  applicant-foot family's register, pending jakob's blessing*; the second
+  honest.` The first paragraph's tail is in the applicant-foot family's
+  register, **blessed (jakob 2026-10-16)**; the second
   keeps its blessed closing sentence alone.
 - `Your key is yours` — `Everything you publish is signed by a key only
   you hold. We cannot sign for you, and we cannot recover it for you —

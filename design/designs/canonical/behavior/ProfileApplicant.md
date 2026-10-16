@@ -21,6 +21,8 @@ WHEN tap the ask link's copy control -> the ask link lands on the clipboard AND 
 
 ALWAYS profile.chronicle holds no act, and profile.chronicle.empty reads Nothing here yet. Your posts and opinions show up here once you're in.
 
+ALWAYS profile.bottomBar.composeSlot wears the locked look, visibly inactive at the disabled opacity and still tappable
+
 WHEN tap New post in profile.bottomBar -> the snackbar reads You can post once you're in. AND NEVER the wizard opens
 
 WHEN tap profile.bottomBar.feedSlot -> the applicant's own feed opens

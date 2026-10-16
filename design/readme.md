@@ -10284,12 +10284,18 @@ applicant remainder, ruled*'s waiting opinion and topic, *The 134 and
   once-each paragraph. `VouchBack`'s two lines about acts staged during
   the application go; the landing, the vouch card and the vouch-back
   stand as drawn.
-- **Drawn at full strength, pending jakob's word**: `New post` and the
-  stance faces. copy-voice gives the locked look to the foot, `Reply`
-  and `Invites` alone; whether the new doors take it is his call.
-- **Flagged for blessing** (copy-voice, *The applicant-foot family* and
-  *About*): `You can post once you're in.`, `You can give your opinion
-  once you're in.`, the profile card's second sentence, the empty
+- **The new doors wear the locked look** (jakob 2026-10-16, as
+  recommended — auth.md's "every other acting surface stays visible but
+  locked"): `New post` and every stance face an applicant meets stand at
+  the disabled opacity, still tappable, as the foot, `Reply` and
+  `Invites` do. `BottomNav` takes `composeOpacity` and `StanceControl`
+  `anchorOpacity` (`PostCard`'s `stanceOpacity`), the `replyOpacity`
+  pattern; the applicant shells and `ProfileApplicant` pass
+  `var(--state-disabled)`. The menus' `Cite` and `Mention` rows stay
+  drawn as they are — no menu row has a locked treatment to follow.
+- **Blessed (jakob 2026-10-16)** (copy-voice, *The applicant-foot family*
+  and *About*): `You can post once you're in.`, `You can give your
+  opinion once you're in.`, the profile card's second sentence, the empty
   chronicle's line, and About's new first-paragraph tail.
 - **The gate**: edges **2120 → 2119** (`ProfileApplicant`'s staged row);
   the five shells' stance faces turn `detour`, every outcome now an
@@ -10298,7 +10304,7 @@ applicant remainder, ruled*'s waiting opinion and topic, *The 134 and
   eight staged-chronicle paths (`profile.chronicle.act` and its six
   children, `.pending` among them, and `profile.chronicle.stagedLine`)
   and the `profile.chronicle.act` key rule leave by hand, the breaking
-  change proposed for blessing; `profile.chronicle.empty` and its
+  change accepted (jakob 2026-10-16); `profile.chronicle.empty` and its
   `title` join.
 
 ---
