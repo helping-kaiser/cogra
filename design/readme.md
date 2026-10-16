@@ -10056,6 +10056,56 @@ chronicle-row shape.
   key rule leave the registry by hand, the breaking change proposed for
   blessing.
 
+### Round 13, the own-stance round — 2026-10-16
+
+jakob's rulings (2026-10-16) on an author's stance on their own content.
+They supersede the valence-six round's "the second number isn't yours
+to set on your own post". The words he did not write himself are
+drafted and wait for his review (copy-voice marks them).
+
+- **An opinion on your own post is the full pair.** The seal's `Your
+  opinion` row draws `StanceReadout`, +0.10 / +0.10 at rest — the pad's
+  universal default (jakob 2026-10-05) and authorship.md's "defaulted
+  low like every stance", drawn pending jakob's word (backlog 140).
+  `Adjust` opens `ComposePad`, the ordinary full pad at seal scale: the
+  reply pad's drawing over this seal, `Your pick` above the master
+  square, Set staging and `Sign and publish` signing. The pick rides the
+  post's own record. `OwnStanceReadout` leaves the stance masters;
+  `VALENCE_SIX` and `nearestValenceAnchor` stand on the anchor-map card
+  alone, their retirement jakob's call.
+- **Every post edit carries the pair, inert at (0, 0).** `EditCompose`,
+  `EditWords` and `EditComposeVideo` draw `Your opinion` under the
+  License row, reading the author's standing opinion on the post;
+  `Adjust` opens `EditPad`, the ordinary full pad over the edit —
+  `Current opinion`, `Your pick` and `Resulting opinion` the masters'
+  own, the pick opening at the edit's, (0, 0) until moved. A (0, 0)
+  record carries w̃ = 0 and crosses neither channel, so an edit nobody
+  adjusts moves the author's opinion by exactly nothing. Set stages,
+  `Sign the edit` signs; the pick rides the edit's own record, so the
+  acts card adds no row and no count (`EditActs`). The boards that draw
+  the edit beneath an overlay carry the row with it. The comment edits
+  draw none: a comment's revision carries its stance toward what it
+  answers (backlog 140).
+- **The own-post anchor is the ordinary pad.** The stance face on the
+  reader's own post opens `PadStanding`'s pad as on anyone's, its
+  current opinion one bundle of the post's own records and the opinions
+  given through its face; walking it back follows the generic severance
+  law (stance-control, *Your own content*).
+- **Your own posts always show in your own feed**, whatever your opinion
+  on them reads — a feed law (`Feed`), and the one place "your own"
+  still differs. The one-axis pad's note goes with the pad, and its
+  "?" text is replaced by a draft for the full pad.
+- **The chat seal** keeps the compose seal's grammar: `ChatSignSheet`
+  reads the pair, and the pad over it is drawn when the chat round
+  comes.
+- **The gate**: edges **2076 → 2085** — the four edits' `Adjust` and
+  `EditPad`'s five; flows **226 → 227**
+  (`adjust-your-opinion-with-an-edit`; `set-your-own-stance-on-your-post`
+  re-described); `EditPad` ("Edit post · your opinion on it") takes
+  the compose page's edit row at x 5280. The registry holds at **98 /
+  3878**: none of the boards this round touched is registered, and
+  nothing is removed.
+
 ---
 
 ## 14. The canvases
