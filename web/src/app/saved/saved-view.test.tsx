@@ -1,11 +1,11 @@
 // Saved as a feed (Saved.md, SavedUndo.md, SavedEmpty.md, SavedNone.md; round
 // 12): every kept thing as its kind's own live card, newest by save time; the
 // unsave as the first row of each card's ⋮, Undo in place, the comfort line on
-// the returned card; the one search rule over the saved set; hidden accounts'
-// things staying.
+// the returned card; the one search law over the saved set, run on the server
+// (`bookmarks(query:)`); hidden accounts' things staying.
 
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { delay, graphql, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
 import { SavedProvider } from "@/lib/saved/provider";
@@ -170,6 +170,34 @@ function signedIn() {
 
 function serve(entries: readonly Entry[]) {
   server.use(graphql.query("SavedPage", () => HttpResponse.json({ data: page(entries) })));
+}
+
+/** One `SavedPage` read, as the screen sent it. */
+type Read = { query: string | null; after: string | null };
+
+/**
+ * Saved's server, narrowing by `query` the way the test says it answers —
+ * the law itself is the server's to test (`crates/api/tests/bookmarks.rs`);
+ * the screen's duty is to ask with the reader's query and draw the answer as
+ * served. Returns the log of every read.
+ */
+function serveSaved(answer: (read: Read) => ReturnType<typeof page> | null) {
+  const reads: Read[] = [];
+  server.use(
+    graphql.query("SavedPage", async ({ variables }) => {
+      const read = {
+        query: (variables.query as string | null | undefined) ?? null,
+        after: (variables.after as string | null | undefined) ?? null,
+      };
+      reads.push(read);
+      if (read.query === "slow") await delay(150);
+      const data = answer(read);
+      return data === null
+        ? HttpResponse.json({ data: null, errors: [{ message: "down", extensions: { code: "INTERNAL" } }] })
+        : HttpResponse.json({ data });
+    }),
+  );
+  return reads;
 }
 
 /** The cards on screen, in order, by the kind's name and key. */
@@ -376,12 +404,12 @@ describe("SavedScreen — the unsave is the card's own ⋮ first row", () => {
   });
 
   it("the_last_card_a_query_narrowed_to_leaves_saved_narrowed_to_nothing_under_the_snackbar", async () => {
-    serve(THREE);
+    serveSaved(({ query }) => page(query === "long" ? [THREE[0]!] : THREE));
     server.use(...bookmarkHandlers(bookmarkLog()));
-    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    renderWithProviders(<SavedScreen searchDebounceMs={0} />, { store: signedIn() });
     await screen.findByTestId("saved-list");
     search("long");
-    expect(cards()).toEqual(["saved.card:p1"]);
+    await waitFor(() => expect(cards()).toEqual(["saved.card:p1"]));
     fireEvent.click(postMenu()[0]!);
     expect(screen.getByTestId("saved.empty.title")).toHaveTextContent(SAVED_NONE);
     expect(screen.getByTestId("saved.empty.action")).toHaveTextContent(SHOW_EVERYTHING);
@@ -415,72 +443,142 @@ describe("SavedScreen — search what you saved", () => {
     expect(screen.getByTestId("saved.searchField")).toBeInTheDocument();
   });
 
-  it("a_query_narrows_by_names_and_titles_never_bodies_newest_by_save_time", async () => {
-    serve(THREE);
+  it("the_whole_list_is_read_with_no_query", async () => {
+    const reads = serveSaved(() => page(THREE));
     renderWithProviders(<SavedScreen />, { store: signedIn() });
     await screen.findByTestId("saved-list");
-    search("long way");
-    expect(cards()).toEqual(["saved.card:p1"]);
-    // A body is never matched: the comment's words carry "headland".
-    search("headland");
-    expect(screen.getByTestId("saved.empty.title")).toHaveTextContent(SAVED_NONE);
+    expect(cards()).toEqual(ALL);
+    expect(reads).toEqual([{ query: null, after: null }]);
+  });
+
+  it("the_query_goes_to_the_server_trimmed_once_typing_settles", async () => {
+    const reads = serveSaved(({ query }) => page(query === "long way" ? [THREE[0]!] : THREE));
+    renderWithProviders(<SavedScreen />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    // A burst of keystrokes is one read, of what the field holds when it settles.
+    search("l");
+    search("lo");
+    search("  long way ");
+    // The list on screen stands until the narrowed one arrives.
+    expect(cards()).toEqual(ALL);
+    await waitFor(() => expect(cards()).toEqual(["saved.card:p1"]));
+    expect(reads.map((read) => read.query)).toEqual([null, "long way"]);
+  });
+
+  it("the_narrowed_list_stands_in_the_order_served_people_then_content", async () => {
+    // Narrowed, Saved is sectioned: the person leads though the post was kept later.
+    serveSaved(({ query }) => page(query === "m" ? [THREE[2]!, THREE[0]!] : THREE));
+    renderWithProviders(<SavedScreen searchDebounceMs={0} />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    search("m");
+    await waitFor(() => expect(cards()).toEqual(["saved.profileCard:u3", "saved.card:p1"]));
+  });
+
+  it("what_the_server_matched_stands_never_re_filtered_on_the_client", async () => {
+    // A bare person cue brings what the matched people wrote (`@ad` → Ada's
+    // post); a bare topic cue brings what carries the topic; a display name
+    // matches by word. The screen draws each answer as the server gave it.
+    const answers: Record<string, Entry[]> = {
+      "@ad": [THREE[0]!],
+      "#coast": [THREE[0]!],
+      "#glovebox": [THREE[1]!],
+      voss: [THREE[2]!],
+    };
+    serveSaved(({ query }) => page(query === null ? THREE : (answers[query] ?? [])));
+    renderWithProviders(<SavedScreen searchDebounceMs={0} />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    search("@ad");
+    await waitFor(() => expect(cards()).toEqual(["saved.card:p1"]));
+    search("#glovebox");
+    await waitFor(() => expect(cards()).toEqual(["saved.commentCard:c1"]));
+    search("#coast");
+    await waitFor(() => expect(cards()).toEqual(["saved.card:p1"]));
     search("voss");
-    expect(cards()).toEqual(["saved.profileCard:u3"]);
+    await waitFor(() => expect(cards()).toEqual(["saved.profileCard:u3"]));
   });
 
-  it("an_at_handle_narrows_to_people_and_its_remainder_to_their_things", async () => {
-    serve(THREE);
-    renderWithProviders(<SavedScreen />, { store: signedIn() });
+  it("a_match_beyond_the_loaded_pages_is_found_without_walking_the_list", async () => {
+    const later = { node: postNode("p9", "Brackish cartography", at(9)), bookmarkedAt: at(9) };
+    const reads = serveSaved(({ query }) =>
+      query === "brackish" ? page([later]) : page(THREE, { hasNextPage: true, endCursor: "c2" }),
+    );
+    renderWithProviders(<SavedScreen searchDebounceMs={0} />, { store: signedIn() });
     await screen.findByTestId("saved-list");
-    // A bare @handle proposes people and never lists anyone's contents.
-    search("@mi");
-    expect(cards()).toEqual(["saved.profileCard:u3"]);
-    search("@ada");
-    expect(screen.getByTestId("saved.empty.title")).toHaveTextContent(SAVED_NONE);
-    // The remainder: a comment through the title of the post it answers.
-    search("@tobias long");
+    search("brackish");
+    await waitFor(() => expect(cards()).toEqual(["saved.card:p9"]));
+    // The server searched the whole saved set: no page of the list was walked in.
+    expect(reads.filter((read) => read.after !== null)).toEqual([]);
+  });
+
+  it("a_narrowed_list_pages_on_cursors_of_its_own_carrying_its_query", async () => {
+    const later = { node: postNode("p9", "Long shadows", at(9)), bookmarkedAt: at(9) };
+    const reads = serveSaved(({ query, after }) => {
+      if (query !== "long") return page(THREE);
+      return after === null ? page([THREE[0]!], { hasNextPage: true, endCursor: "n1" }) : page([later]);
+    });
+    const scroller = document.createElement("div");
+    document.body.append(scroller);
+    renderWithProviders(
+      <ScrollHostProvider value={{ current: scroller }}>
+        <SavedScreen searchDebounceMs={0} />
+      </ScrollHostProvider>,
+      { store: signedIn() },
+    );
+    await screen.findByTestId("saved-list");
+    search("long");
+    await waitFor(() => expect(cards()).toEqual(["saved.card:p1"]));
+    intersect(true);
+    await waitFor(() => expect(cards()).toEqual(["saved.card:p1", "saved.card:p9"]));
+    expect(reads.at(-1)).toEqual({ query: "long", after: "n1" });
+    scroller.remove();
+  });
+
+  it("an_older_querys_answer_never_overwrites_the_newer_one", async () => {
+    // "slow" answers 150 ms late; the reader has typed on by then.
+    const reads = serveSaved(({ query }) =>
+      page(query === "slow" ? [THREE[2]!] : query === "slower" ? [THREE[1]!] : THREE),
+    );
+    renderWithProviders(<SavedScreen searchDebounceMs={0} />, { store: signedIn() });
+    await screen.findByTestId("saved-list");
+    search("slow");
+    await waitFor(() => expect(reads.map((read) => read.query)).toContain("slow"));
+    search("slower");
+    await waitFor(() => expect(cards()).toEqual(["saved.commentCard:c1"]));
+    await new Promise((resolve) => setTimeout(resolve, 250));
     expect(cards()).toEqual(["saved.commentCard:c1"]);
   });
 
-  it("a_bare_hash_tag_matches_nothing_and_its_remainder_matches_what_carries_it", async () => {
-    serve(THREE);
-    renderWithProviders(<SavedScreen />, { store: signedIn() });
-    await screen.findByTestId("saved-list");
-    search("#coastroad");
-    expect(screen.getByTestId("saved.empty.title")).toHaveTextContent(SAVED_NONE);
-    search("#glovebox home");
-    expect(cards()).toEqual(["saved.commentCard:c1"]);
-  });
-
-  it("saved_none_keeps_the_query_wears_no_error_colour_and_show_everything_clears_it", async () => {
-    serve(THREE);
-    renderWithProviders(<SavedScreen />, { store: signedIn() });
+  it("saved_none_keeps_the_query_wears_no_error_colour_and_show_everything_reads_the_whole_list", async () => {
+    const reads = serveSaved(({ query }) => page(query === null ? THREE : []));
+    renderWithProviders(<SavedScreen searchDebounceMs={0} />, { store: signedIn() });
     await screen.findByTestId("saved-list");
     search("brackish cartography");
-    expect(screen.getByTestId("saved.empty.title")).toHaveTextContent(SAVED_NONE);
+    expect(await screen.findByTestId("saved.empty.title")).toHaveTextContent(SAVED_NONE);
     expect(screen.getByTestId("saved.empty.title").className).not.toContain("text-error");
     expect(screen.getByRole("searchbox", { name: SEARCH_WHAT_YOU_SAVED })).toHaveValue("brackish cartography");
     fireEvent.click(screen.getByTestId("saved.empty.action"));
     expect(screen.getByRole("searchbox", { name: SEARCH_WHAT_YOU_SAVED })).toHaveValue("");
-    expect(cards()).toEqual(ALL);
+    await waitFor(() => expect(cards()).toEqual(ALL));
+    expect(reads.map((read) => read.query)).toEqual([null, "brackish cartography", null]);
   });
 
-  it("a_search_reads_the_whole_saved_set_across_pages", async () => {
-    const later = postNode("p9", "Brackish cartography", at(9));
-    server.use(
-      graphql.query("SavedPage", ({ variables }) =>
-        HttpResponse.json({
-          data:
-            variables.after === null
-              ? page(THREE, { hasNextPage: true, endCursor: "c2" })
-              : page([{ node: later, bookmarkedAt: at(9) }]),
-        }),
-      ),
-    );
-    renderWithProviders(<SavedScreen />, { store: signedIn() });
+  it("a_query_whose_read_fails_stands_the_fault_and_retry_asks_it_again", async () => {
+    let failing = true;
+    const reads = serveSaved(({ query }) => {
+      if (query === null) return page(THREE);
+      return failing ? null : page([THREE[0]!]);
+    });
+    renderWithProviders(<SavedScreen searchDebounceMs={0} />, { store: signedIn() });
     await screen.findByTestId("saved-list");
-    search("brackish");
-    await waitFor(() => expect(cards()).toEqual(["saved.card:p9"]));
+    search("long");
+    // Another query's cards never stand as this one's answer.
+    expect(await screen.findByTestId("saved-transport-error")).toBeInTheDocument();
+    expect(screen.queryByTestId("saved-list")).not.toBeInTheDocument();
+    expect(screen.getByRole("searchbox", { name: SEARCH_WHAT_YOU_SAVED })).toHaveValue("long");
+    failing = false;
+    fireEvent.click(screen.getByTestId("saved-retry"));
+    await waitFor(() => expect(cards()).toEqual(["saved.card:p1"]));
+    expect(reads.map((read) => read.query)).toEqual([null, "long", "long"]);
   });
 });
 
@@ -523,6 +621,47 @@ describe("SavedScreen — states", () => {
     fireEvent.click(screen.getByTestId("saved-more-retry"));
     await waitFor(() => expect(reads).toBe(3));
     scroller.remove();
+  });
+
+  it("the_tail_watch_survives_a_render_that_landed_no_page", async () => {
+    // The watch is rebuilt only when a page lands (`infinite-list.ts`): a
+    // render that changed nothing — here, keystrokes still settling — keeps
+    // the observer that watches the approaching tail.
+    server.use(
+      graphql.query("SavedPage", () =>
+        HttpResponse.json({ data: page(THREE, { hasNextPage: true, endCursor: "c2" }) }),
+      ),
+    );
+    const Base = globalThis.IntersectionObserver;
+    const made: IntersectionObserver[] = [];
+    globalThis.IntersectionObserver = class extends Base {
+      constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
+        super(callback, options);
+        made.push(this);
+      }
+    };
+    const scroller = document.createElement("div");
+    document.body.append(scroller);
+    try {
+      renderWithProviders(
+        <ScrollHostProvider value={{ current: scroller }}>
+          <SavedScreen searchDebounceMs={60_000} />
+        </ScrollHostProvider>,
+        { store: signedIn() },
+      );
+      const list = await screen.findByTestId("saved-list");
+      const tail = list.querySelector("li")!;
+      const watching = () =>
+        made.filter((observer) => (observer as unknown as { targets: Set<Element> }).targets.has(tail));
+      expect(watching()).toHaveLength(1);
+      const observer = watching()[0];
+      search("l");
+      search("lo");
+      expect(watching()).toEqual([observer]);
+    } finally {
+      globalThis.IntersectionObserver = Base;
+      scroller.remove();
+    }
   });
 
   it("pull_down_refreshes_saved", async () => {
