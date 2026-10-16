@@ -111,6 +111,10 @@ export function createRegistrationSigner(deps: {
             return { kind: "rejectedByDevice", reason: result.reason };
           case "failed":
             return { kind: "failed", cause: result.cause };
+          case "carried":
+            // signStaged never keeps a write for the landing: only a checked
+            // batch does (write-signer.ts `sign`).
+            return { kind: "failed", cause: new Error("a staged Registration is never carried") };
         }
       }
 
