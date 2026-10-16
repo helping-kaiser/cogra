@@ -13,6 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
@@ -106,7 +107,12 @@ fun rememberCollapsingTop(): CollapsingTop {
             }
         }
     }
+    // The default state's limit is -Float.MAX_VALUE until a TopAppBar
+    // measures itself and overwrites it; a screen with no bar would
+    // otherwise have enterAlways consume every upward delta. A zero
+    // limit clamps the offset to [0, 0] so such a screen's list scrolls.
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
+        state = rememberTopAppBarState(initialHeightOffsetLimit = 0f),
         canScroll = { barMayMove.value },
     )
     return remember(scrollBehavior, gate) { CollapsingTop(scrollBehavior, gate, showTop) }
