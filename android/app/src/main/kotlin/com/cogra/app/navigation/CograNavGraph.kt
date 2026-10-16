@@ -62,6 +62,7 @@ import com.cogra.core.designsystem.StanceAxes
 import com.cogra.core.designsystem.StanceZeroWords
 import com.cogra.core.designsystem.v2.token.NavTransitions
 import com.cogra.domain.deletion.AccountDeletionState
+import com.cogra.domain.media.CropWindow
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.store.TokenStore
 import com.cogra.feature.auth.LoginRoute
@@ -92,6 +93,7 @@ import com.cogra.feature.invites.InvitesRoute
 import com.cogra.feature.onboarding.ApplyRoute
 import com.cogra.feature.onboarding.InviteEntryRoute
 import com.cogra.feature.onboarding.KeyCeremonyRoute
+import com.cogra.feature.profile.FramedPicture
 import com.cogra.feature.profile.ProfileEditRoute
 import com.cogra.feature.profile.ProfileRoute
 import com.cogra.feature.profile.SAVED_ORIGIN
@@ -225,14 +227,16 @@ data class Notifications(val from: String = "feed")
 data object ProfileEdit
 
 /**
- * The profile-picture flow (`AvatarCrop` → `AvatarSeal`).
+ * The profile-picture flow (`AvatarCrop`, then `AvatarSeal` or back).
  *
- * Its own destination rather than a step inside the edit form, because it
- * ends in **its own seal**: changing your picture is a signed act in its
- * own right (design/readme.md §13).
+ * The crop's Next has two outcomes (AvatarCrop.md). Off the avatar's change
+ * badge it opens the picture's own seal. Opened from Change picture on the
+ * edit form ([fromEdit]) it brings the picture back to that form, whose one
+ * seal signs it with the fields — and the picture's own seal never opens
+ * (design/readme.md §13).
  */
 @Serializable
-data class AvatarFlow(val uri: String)
+data class AvatarFlow(val uri: String, val fromEdit: Boolean)
 
 @Serializable
 data object Invites
@@ -426,6 +430,23 @@ private val contentExpiredKey = NavResultKey<String?>("content_expired", null)
 private val profileSavedKey = NavResultKey("profile_saved", false)
 
 /**
+ * The AvatarCrop→ProfileEdit result keys: the picture the crop brings back
+ * to the edit form, and the framing it was left at — `[left, top, right,
+ * bottom]` as fractions of the picture, absent for one never framed.
+ */
+private val framedPictureUriKey = NavResultKey<String?>("framed_picture_uri", null)
+private val framedPictureWindowKey = NavResultKey<FloatArray?>("framed_picture_window", null)
+
+/** A framing as the saved-state handle carries it. */
+private fun CropWindow.toFractions(): FloatArray = floatArrayOf(left, top, right, bottom)
+
+/** The framing back from the handle; anything not four fractions is no framing. */
+private fun FloatArray.toCropWindow(): CropWindow? =
+    if (size == CROP_WINDOW_SIDES) CropWindow(this[0], this[1], this[2], this[3]) else null
+
+private const val CROP_WINDOW_SIDES = 4
+
+/**
  * A destination's own view of one result: what it says, and the lambda
  * that marks it read.
  *
@@ -459,11 +480,10 @@ private fun <T> NavController.reportToCurrent(key: NavResultKey<T>, value: T) {
 /**
  * Reports [value] to the named destination further down the stack.
  *
- * The avatar flow needs this: it is pushed from the edit screen, so
- * [report] hands its result to that screen — which reads no results at
- * all, so a signed picture was answered by nothing. The news belongs to
- * the profile two entries down, whether the reader saves the rest of
- * the edit afterwards or simply walks back.
+ * The avatar flow's own seal answers the profile by name rather than
+ * whatever entry sits under the flow: a signed picture's news belongs to
+ * the profile, and [report] would hand it to whichever screen pushed the
+ * flow, which may read no such result at all.
  */
 private inline fun <reified R : Any, T> NavController.reportTo(key: NavResultKey<T>, value: T) {
     val entry = runCatching { getBackStackEntry<R>() }.getOrNull() ?: return
@@ -1342,24 +1362,41 @@ private fun CograNavGraphContent(
                     },
                 )
             }
-            composable<ProfileEdit> {
+            composable<ProfileEdit> { entry ->
+                val (framedUri, consumeFramedUri) = entry.navResult(framedPictureUriKey)
+                val (framedWindow, consumeFramedWindow) = entry.navResult(framedPictureWindowKey)
                 ProfileEditRoute(
                     onSaved = {
                         navController.report(profileSavedKey, true)
                         navController.popBackStack()
                     },
-                    onPicturePicked = { uri -> navController.navigate(AvatarFlow(uri)) },
+                    onPicturePicked = { uri -> navController.navigate(AvatarFlow(uri, fromEdit = true)) },
                     onBack = { navController.navigateUp() },
+                    framedPicture = framedUri?.let { FramedPicture(it, framedWindow?.toCropWindow()) },
+                    onFramedPictureConsumed = {
+                        consumeFramedUri()
+                        consumeFramedWindow()
+                    },
                 )
             }
             composable<AvatarFlow> { entry ->
+                val route = entry.toRoute<AvatarFlow>()
                 AvatarFlowRoute(
-                    uri = entry.toRoute<AvatarFlow>().uri,
+                    uri = route.uri,
                     onSigned = {
                         navController.reportTo<Profile, _>(profileSavedKey, true)
                         navController.popBackStack()
                     },
                     onLeave = { navController.popBackStack() },
+                    onFramed = if (route.fromEdit) {
+                        { window ->
+                            navController.report(framedPictureWindowKey, window?.toFractions())
+                            navController.report(framedPictureUriKey, route.uri)
+                            navController.popBackStack()
+                        }
+                    } else {
+                        null
+                    },
                 )
             }
             composable<Invites> {

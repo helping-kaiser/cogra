@@ -40,16 +40,37 @@ import com.cogra.core.designsystem.v2.media.CograAvatar
 import com.cogra.domain.content.MAX_BIO_CHARS
 import com.cogra.domain.content.MAX_DISPLAY_NAME_CHARS
 import com.cogra.domain.content.MAX_WEBSITE_URL_CHARS
+import com.cogra.domain.media.CropWindow
+
+/**
+ * The picture `AvatarCrop` hands back: the picked URI and the framing the
+ * author left the crop at, as fractions of the picture (null for one never
+ * framed). A one-shot navigation result, consumed once taken.
+ */
+data class FramedPicture(val uri: String, val window: CropWindow?)
 
 @Composable
 fun ProfileEditRoute(
     onSaved: () -> Unit,
-    /** A picked profile picture, handed to the crop-and-seal flow. */
+    /** A picked profile picture, handed to the crop. */
     onPicturePicked: (String) -> Unit,
     onBack: () -> Unit,
+    /** The crop's result on return, or null while there is none. */
+    framedPicture: FramedPicture? = null,
+    onFramedPictureConsumed: () -> Unit = {},
     viewModel: ProfileEditViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    // The crop's Next brings the picture back to this form, to be signed
+    // with the fields under its one seal (ProfileEdit.md, AvatarCrop.md):
+    // the form takes it and uploads it, and nothing is signed until Save.
+    LaunchedEffect(framedPicture) {
+        framedPicture?.let {
+            onFramedPictureConsumed()
+            viewModel.onAvatarFramed(it.uri, it.window)
+        }
+    }
 
     // A one-shot, in an effect rather than in the composition.
     //
@@ -68,9 +89,9 @@ fun ProfileEditRoute(
 
     // The system photo picker, so no media permission is ever requested
     // (developer.android.com/training/data-storage/shared/photopicker).
-    // The avatar's pick opens the profile-picture FLOW (`AvatarCrop` →
-    // `AvatarSeal`) rather than uploading in place: changing your picture
-    // is a signed act and gets its own seal (design/readme.md §13).
+    // The pick opens the crop (`AvatarCrop`), whose Next returns here: from
+    // this form the picture has no seal of its own — the form's one seal
+    // covers it with the fields (design/readme.md §13).
     val avatarPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia(),
     ) { uri -> uri?.let { onPicturePicked(it.toString()) } }

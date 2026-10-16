@@ -638,13 +638,12 @@ class CograNavGraphTest {
     }
 
     @Test
-    fun theAvatarFlowSitsTwoEntriesAboveTheProfileItAnswers() {
-        // The invariant the avatar fix rests on: the flow is pushed from
-        // the EDIT screen, so `previousBackStackEntry` is ProfileEdit —
-        // which reads no results at all, and reporting there dropped the
-        // signed picture entirely (HT-8). The result has to be aimed at
-        // the Profile entry by name. Re-parent this destination and this
-        // test is the thing that says the aim must move with it.
+    fun theCropOpenedFromTheEditBringsThePictureBackWithoutItsOwnSeal() {
+        // AvatarCrop.md: opened from Change picture on the profile edit,
+        // Next brings the edit back holding the new picture AND NEVER the
+        // picture's own seal opens — the edit's one seal signs it with the
+        // fields. A seal here signed a second act the edit's Save then
+        // raced, refused as already in flight (hand test, round 4).
         signIn()
         identity.seed = ActorKey.generate().seed()
         account.profile = member()
@@ -655,14 +654,19 @@ class CograNavGraphTest {
         compose.onNodeWithTag("profile_edit").performScrollTo().performClick()
         waitForTag("profile_edit_bio")
 
-        navController.navigate(AvatarFlow("content://picked"))
+        navController.navigate(AvatarFlow("content://picked", fromEdit = true))
+        waitForTag("avatar_crop_next")
+        compose.onNodeWithTag("avatar_crop_next").performScrollTo().performClick()
+
         compose.waitUntil(timeoutMillis = 30_000) {
-            navController.currentBackStackEntry?.destination?.hasRoute<AvatarFlow>() == true
+            navController.currentBackStackEntry?.destination?.hasRoute<ProfileEdit>() == true
         }
-        assertThat(navController.previousBackStackEntry?.destination?.hasRoute<ProfileEdit>())
-            .isTrue()
-        assertThat(navController.getBackStackEntry<Profile>().destination.hasRoute<Profile>())
-            .isTrue()
+        assertThat(compose.onAllNodesWithTag("avatar_seal_acts").fetchSemanticsNodes()).isEmpty()
+        assertThat(profiles.updates).isEmpty()
+        // The result is taken, so a recomposition cannot hand it over twice.
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.savedStateHandle?.get<String?>("framed_picture_uri") == null
+        }
     }
 
     // The guest read shell: Feed and PostDetail live on the signed-out
