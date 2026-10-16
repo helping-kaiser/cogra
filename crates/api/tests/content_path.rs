@@ -1079,6 +1079,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
     )
     .await
     .expect("first edit stages");
+    rig.sign_and_relay(first.writes[0].id, &alice_key).await;
     let second = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
@@ -1096,7 +1097,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
     .await;
     assert!(matches!(second, Err(ContentError::BadInput { .. })));
 
-    rig.land(&first, &alice_key).await;
+    rig.close_and_ingest().await;
     content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
@@ -1113,6 +1114,50 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
     )
     .await
     .expect("stages after landing");
+}
+
+/// An edit nobody signed — the device refused it, or the response never
+/// arrived — does not hold the post until GC: the next edit supersedes it,
+/// and it can no longer be signed, so the chain still never branches.
+///
+/// An unsigned edit is superseded by the next one and can no longer be signed, so the next edit lands without waiting for GC.
+/// ´claim:content:an-unsigned-edit-is-superseded´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_unsigned_edit_is_superseded_by_the_next(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let post_id = rig.post(alice, &alice_key, "Title", "Body").await;
+    let edit = |title: &'static str| PostEditDraft {
+        id: post_id,
+        title: Some(title.into()),
+        description: None,
+        content: Some("Body".into()),
+        attachments: vec![],
+        sensitive: Default::default(),
+    };
+
+    let abandoned =
+        content::prepare_post_edit(&rig.pool, &rig.boundary, STAGING, alice, edit("One"))
+            .await
+            .expect("first edit stages");
+    let next = content::prepare_post_edit(&rig.pool, &rig.boundary, STAGING, alice, edit("Two"))
+        .await
+        .expect("an unsigned edit holds nothing");
+    let abandoned_id = abandoned.writes[0].id;
+    assert_eq!(
+        staged::load(&rig.pool, abandoned_id)
+            .await
+            .expect("loads")
+            .state,
+        staged::StagedState::Expired
+    );
+
+    rig.land(&next, &alice_key).await;
+    let post = content_store::post(&rig.pool, post_id)
+        .await
+        .expect("reads")
+        .expect("post");
+    assert_eq!(post.title.as_deref(), Some("Two"));
 }
 
 /// Bob comments on Alice's post — a genesis Review minting the Comment on
