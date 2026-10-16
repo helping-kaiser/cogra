@@ -2147,8 +2147,9 @@ type Mutation {
 	"""
 	preparePost(input: PreparePostInput!): PrepareContentPayload!
 	"""
-	Prepares a Post edit: an ordinary-role Publish at attachment 0
-	toward the existing node, chained behind the current head.
+	Prepares a Post edit: an ordinary-role Publish at the author's
+	picked attachment (default 0, inert) toward the existing node,
+	chained behind the current head.
 	Creator-only; one in-flight edit per post and author
 	(post.md §4).
 	"""
@@ -2780,6 +2781,14 @@ input PreparePostEditInput {
 	The reason the edit leaves standing; same rules a create runs.
 	"""
 	sensitiveReason: String
+	"""
+	The author's stance pick riding the edit's own record — its
+	attachment. Omitted is `0`, the inert setting: an unadjusted edit
+	moves no stance. A moved pick alone is a legal edit — a
+	content-identical new version. `pInterest` stays census-fixed at
+	1 for Publish, so it is no field.
+	"""
+	pDirected: Dimension
 }
 
 """
