@@ -72,8 +72,11 @@ const {
   WizardHeader,
   PayoutAddress,
   StancePad,
+  AttachmentPad,
   SeveranceConfirm,
   StanceReadout,
+  AttachmentReadout,
+  AttachmentStanding,
   StanceValue,
   StanceSlider,
   StanceStanding,
@@ -1637,12 +1640,12 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <FactRow label="License" value={<LicenseSummary />} action="Change" />
-          {/* The pair, as every stance reads: the author's opinion on their
-              own post is an opinion like any other, both numbers theirs to
-              set (jakob 2026-10-16), and it starts at the pad's default. */}
+          {/* One number: the post's own record is a Publish, whose one free
+              parameter is the author's attachment — the second is pinned by
+              the census (jakob 2026-10-16, PR-101). It starts at +0.10. */}
           <FactRow
             label="Your opinion"
-            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
+            value={<AttachmentReadout pDirected={0.1} />}
             action="Adjust"
           />
           <FactRow label="Sensitive" value="Not marked" action="Mark" last />
@@ -2229,20 +2232,23 @@ function editFootSign({ unchanged, faultHoles }) {
   );
 }
 
-/* THE POST EDIT'S OPINION ROW (jakob 2026-10-16). Every edit's record carries
-   the pair, the uniform grammar, and the author may adjust it with the ordinary
-   full pad (`EditPad`). The pick starts at (0, 0) — inert: a (0, 0) record
-   carries w̃ = 0 and crosses neither channel, so an edit nobody adjusts moves
-   the author's opinion by exactly nothing. The row therefore reads where the
-   author's opinion stands with the edit: the standing fold on the post, at
-   rest; after a Set, the fold the pick lands it on. The pair rides the edit's
-   own record, so it adds no act to the batch. It stands under the License
-   row, the seal's order. The fixture's fold is the one the post was published
-   with, the compose default +0.10 / +0.10. */
-const EDIT_STANDING = { pDirected: 0.1, pInterest: 0.1 };
+/* THE POST EDIT'S OPINION ROW (jakob 2026-10-16, PR-101). An edit is an
+   ordinary-role Publish toward the post — the family that minted it — so it
+   carries the same one free parameter, the author's attachment, and the row
+   reads one number. Parallel Publish records sum then clip within the one
+   bundle, so what an edit's record carries is a DELTA; the row and the pad
+   speak in the resulting value instead (set semantics): the row reads the
+   attachment as it stands with the edit, `Adjust` opens the one-axis pad
+   (`EditPad`) at that value, and the client signs the difference — the value
+   picked less the bundle's raw sum. An edit nobody adjusts signs 0.00 and
+   moves the attachment by exactly nothing. The record rides the edit itself,
+   so it adds no act to the batch. It stands under the License row, the seal's
+   order. The fixture's value is the one the post was published with, the
+   compose default +0.10. */
+const EDIT_ATTACHMENT = 0.1;
 
 function EditOpinionRow() {
-  return <FactRow label="Your opinion" value={<StanceReadout pair={EDIT_STANDING} kind="standing" />} action="Adjust" />;
+  return <FactRow label="Your opinion" value={<AttachmentReadout pDirected={EDIT_ATTACHMENT} />} action="Adjust" />;
 }
 
 function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes } = {}) {

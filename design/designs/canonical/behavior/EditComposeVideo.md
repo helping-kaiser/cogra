@@ -12,15 +12,15 @@ ALWAYS every change the edit makes signs together in one batch
 
 ALWAYS the License row shows the license as signed, with the lock and no action
 
-ALWAYS the Your opinion row stands under the License row and reads the author's opinion on the post as it stands with the edit, its face and both numbers
+ALWAYS the Your opinion row stands under the License row and reads where the post's own records stand with the edit, its face and one number
 
-ALWAYS the Your opinion row reads the author's standing opinion on the post GIVEN the edit's pick was never moved
+ALWAYS the Your opinion row reads where the post's own records stand GIVEN the edit's pick was never moved
 
-ALWAYS the edit's record carries the pick as its pair, (0, 0) GIVEN the author never moved it
+ALWAYS the edit's record carries the pick less the raw sum of the post's own records, 0.00 GIVEN the author never moved it
 
-ALWAYS an edit whose pick was never moved changes the author's opinion on the post by exactly nothing
+ALWAYS an edit whose pick was never moved changes where the post's own records stand by exactly nothing
 
-WHEN tap Adjust on the Your opinion row -> the ordinary full pad opens over the edit at the edit's pick AND NEVER anything is staged
+WHEN tap Adjust on the Your opinion row -> the one-axis pad opens over the edit at the row's value AND NEVER anything is staged
 
 ALWAYS the pick rides the edit's own record and adds nothing to the footer's count
 

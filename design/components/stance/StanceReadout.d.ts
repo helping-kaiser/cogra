@@ -58,6 +58,20 @@ export interface AttachmentReadoutProps {
 
 export declare function AttachmentReadout(props: AttachmentReadoutProps): JSX.Element;
 
+/** The one-axis pad's readouts, above its strip: `Your pick` alone on a new
+ *  post's pad, `Current opinion` over it on an edit's — where the pick is the
+ *  resulting value, so no landing line follows. Faces read `VALENCE_SIX`. */
+export interface AttachmentStandingProps {
+  pick: number;
+  /** Where the content's own records stand; omit where nothing stands yet. */
+  current?: number;
+  style?: React.CSSProperties;
+  /** Given one, the blocks are named `current` and `pick`, each with its `label`, `face` and `exact`. */
+  node?: string;
+}
+
+export declare function AttachmentStanding(props: AttachmentStandingProps): JSX.Element;
+
 /** A stance RECORD's face and pair, drawn plainly wherever a stance is data
  *  rather than a control — the opinions page's rows, the chronicle's opinion
  *  entries. Never interactive. */

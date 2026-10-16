@@ -933,8 +933,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Set</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
-  // The ordinary full pad over a post edit (jakob 2026-10-16) — `ComposePad`'s
-  // five numbers, the edit beneath inert under the wash.
+  // The one-axis pad over a post edit (jakob 2026-10-16, PR-101) —
+  // `ComposePad`'s five numbers, the edit beneath inert under the wash.
   EditPad: [
     { n: 1, find: 'aria-label="Your opinion on your post"', tag: "button" },
     { n: 2, find: 'aria-label="Opinion pad for your own post"', tag: "div" },

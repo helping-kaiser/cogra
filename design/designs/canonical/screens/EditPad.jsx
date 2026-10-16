@@ -1,43 +1,34 @@
-/* THE OPINION PAD OVER A POST EDIT (jakob 2026-10-16): what the edit's `Your
+/* THE PAD OVER A POST EDIT (jakob 2026-10-16, PR-101): what the edit's `Your
    opinion` row's `Adjust` opens. The wash covers the edit; only the parked pad
    is live, which is what the board's `scanExempt` line says.
 
-   IT IS THE ORDINARY FULL PAD, the ruling's own words, at seal scale. Every
-   edit's record carries the pair — the uniform grammar — and the edit's pick
-   rides that record, so the pad here is the pad everywhere: the field is
-   `StancePad`, both axes, and the readouts are the masters' three —
-   `Current opinion` (the author's standing fold on the post, the bundle the
-   authoring records and their opinions sum to), `Your pick` (what the edit's
-   record will carry) and, under the field, `Resulting opinion` (where the pick
-   lands the fold: the pad's two-numbers law, unchanged).
+   IT IS THE COMPOSE PAD'S ONE AXIS. An edit is an ordinary-role Publish
+   toward the post — the family that minted it — so its record carries the
+   same one free parameter, the author's attachment, with the second pinned at
+   1 by the census. The field is `AttachmentPad`; what the author thinks of
+   the post is the ordinary opinion its face takes, a bundle of its own.
 
-   THE PICK OPENS AT THE EDIT'S OWN, which starts at (0, 0): an edit nobody
-   adjusts carries a (0, 0) pair, w̃ = 0, and crosses neither channel — the
-   author's opinion moves by exactly nothing. The board draws the pick moved,
-   `RefPairEdit`'s reason: at the origin the three readouts would say one thing
-   three times.
+   THE PAD SPEAKS IN THE RESULTING VALUE (set semantics). Parallel Publish
+   records sum then clip within the one bundle, so an edit's record is a
+   delta. Rather than ask the author for a delta, the pad opens at where the
+   post's own records stand — `Current opinion`, +0.10 here, the compose
+   default — and the pick is where they will stand once the edit lands. The
+   client signs the difference: the pick less the bundle's raw sum. So the
+   readouts are two, `Current opinion` over `Your pick` (`AttachmentStanding`),
+   and no landing line follows the field — the pick is the landing. An edit
+   nobody adjusts signs 0.00 and moves the attachment by exactly nothing. The
+   board draws the pick moved, `RefPairEdit`'s reason: unmoved, the two
+   readouts would say one thing twice.
 
    SET STAGES, IT NEVER SIGNS — the seal-scale pads' grammar (`ComposePad`,
-   `ReplyPad`). Set closes the pad onto the edit, the row reading the resulting
-   fold; `Sign the edit` signs it with the rest of the batch, inside the edit's
-   own record, so the count does not move. Cancel and the scrim stage nothing.
-
-   NO `Walk it back` HERE. An opinion stands on the post, so the ordinary pad
-   would carry the walk-away; what walking back inside an edit's batch would
-   stage is not ruled (the counter-records are records of their own, and an
-   edit's pair rides one), so this board draws the seal-scale pad's two
-   controls and the question waits in the backlog.
+   `ReplyPad`). Set closes the pad onto the edit, the row reading the pick;
+   `Sign the edit` signs it with the rest of the batch, inside the edit's own
+   record, so the count does not move. Cancel and the scrim stage nothing.
 
    THE SURFACE BENEATH IS DRAWN WHOLE (`EditComposeBody`), the overlay rule
    from 2026-09-08. */
-const STANDING = {
-  current: { pDirected: 0.1, pInterest: 0.1 },
-  rawSum: { pDirected: 0.1, pInterest: 0.1 },
-  records: 1,
-  severed: false,
-};
-const PICK = { pDirected: 0.3, pInterest: 0.2 };
-const RESULTING = { pDirected: 0.4, pInterest: 0.3 };
+const CURRENT = 0.1;
+const PICK = 0.4;
 
 export function Screen() {
   return (
@@ -67,13 +58,11 @@ export function Screen() {
           <HelpDot ariaLabel="Your opinion on your post" />
         </span>
 
-        <StanceStanding pick={PICK} bundle={STANDING} targetLabel="your post" style={{ paddingRight: 40 }} />
+        <AttachmentStanding current={CURRENT} pick={PICK} style={{ paddingRight: 40 }} />
 
         <div role="group" aria-label="Opinion pad for your own post" style={{ alignSelf: "stretch" }}>
-          <StancePad value={PICK} />
+          <AttachmentPad value={PICK} />
         </div>
-
-        <StanceLandingLine landing={{ landing: RESULTING, inert: false, severed: false }} />
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
           <Button variant="text" size="sm">Cancel</Button>

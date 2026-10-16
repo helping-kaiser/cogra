@@ -720,6 +720,27 @@ export function StanceStanding({ pick, bundle, targetLabel, names = STANCE_AXIS_
   );
 }
 
+/* THE ONE-AXIS PAD'S READOUTS (jakob 2026-10-16, PR-101): `StanceStanding`'s
+   blocks, one number each. The compose pad has nothing standing yet, so it
+   reads `Your pick` alone; an edit's pad reads `Current opinion` over it —
+   where the post's own records stand — and the pick IS the resulting value
+   (the edit signs the difference), so there is no landing line beneath the
+   field. Both faces read through `VALENCE_SIX`. Given a `node`, the blocks are
+   its `current` and `pick`. */
+export function AttachmentStanding({ pick, current, style, node }) {
+  const block = (label, value) => {
+    const band = nearestValenceAnchor(value);
+    const exact = formatDimension(value);
+    return { label, emoji: band.emoji, pair: exact, spoken: `${label}: ${band.label}, ${DIRECTED_LABEL} ${exact}` };
+  };
+  return (
+    <div aria-live="polite" style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", ...style }} data-node={node}>
+      {current !== undefined && <ReadoutBlock {...block("Current opinion", current)} node={node && "current"} />}
+      <ReadoutBlock big {...block(PICK_LABEL, pick)} node={node && "pick"} />
+    </div>
+  );
+}
+
 /** The landing — the one readout that sits below the field. Given a `node`,
  *  the readout itself carries it; the live region around it stays unnamed. */
 export function StanceLandingLine({ landing, names = STANCE_AXIS_NAMES, style, node }) {

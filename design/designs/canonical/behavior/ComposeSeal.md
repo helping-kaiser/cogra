@@ -54,15 +54,15 @@ WHEN tap the Tags row GIVEN it reads N tags -> the tags sheet opens over the sea
 
 ALWAYS the License row reads the author's default until the author changes it
 
-ALWAYS the Your opinion row reads the pair, its face and both numbers, as every stance reads
+ALWAYS the Your opinion row reads one number, never a pair
 
-ALWAYS the Your opinion row reads +0.10 / +0.10 GIVEN the author has not adjusted it
+ALWAYS the Your opinion row reads +0.10 GIVEN the author has not adjusted it
 
-WHEN tap Adjust on the Your opinion row -> the ordinary full pad opens over the seal at the row's pick AND NEVER a pad with one axis opens
+WHEN tap Adjust on the Your opinion row -> the one-axis pad opens over the seal at the row's pick AND NEVER a pad with a second axis opens
 
 WHEN tap Set on the pad over the seal -> the pad closes AND the Your opinion row reads the pick AND NEVER anything is signed before Sign and publish
 
-ALWAYS the opinion on the Your opinion row rides the post's own record, the one the Post row counts, and adds nothing to the acts card's total
+ALWAYS the number on the Your opinion row rides the post's own record, the one the Post row counts, and adds nothing to the acts card's total
 
 WHEN the sensitive sheet closes on Done GIVEN its switch is on -> the Sensitive row reads Marked with Change
 
