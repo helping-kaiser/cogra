@@ -181,6 +181,17 @@
     <!-- Exactly 0.00 on the one axis wears 🤷 and is spoken this
          (copy-voice "The backing pad's own words", jakob 2026-10-16). -->
     <string name="valence_zero">Nothing</string>
+    <!-- The one-axis pad's readouts (copy-voice "The backing pad's own
+         words", round 15): the pick is the record, Current backing the
+         bundle's net now, Backing after where the pick lands it. -->
+    <string name="backing_current">Current backing</string>
+    <string name="backing_pick">Your pick</string>
+    <string name="backing_after">Backing after</string>
+    <!-- The cap line under Backing after, when the raw sum passes ±1. -->
+    <string name="backing_capped">Adds up to %1$s; your feed reads it capped at %2$s.</string>
+    <!-- PLACEHOLDER, NOT DESIGN COPY: spoken for a backing the server does
+         not serve yet (the Publish bundle's net has no read; seam 233). -->
+    <string name="backing_unread">not read yet</string>
     <string name="stance_carries_nothing">This would carry nothing.</string>
     <string name="stance_carries_nothing_directed">Where you stand would carry nothing.</string>
     <string name="stance_carries_nothing_interest">What reaches you would carry nothing.</string>
