@@ -10,19 +10,19 @@ WHEN tap the footer GIVEN the batch holds an act -> the acts sheet opens over th
 
 ALWAYS the License row shows the license as signed, with the lock and no action
 
-ALWAYS the Your opinion row stands under the License row and reads where the post's own records stand with the edit, its face and one number
+ALWAYS the Your backing row stands under the License row and reads the post's backing as it stands with the edit, its face and one number
 
-ALWAYS the Your opinion row reads where the post's own records stand GIVEN the edit's pick was never moved
+ALWAYS the Your backing row reads the post's backing as it stands GIVEN the edit's pick was never moved
 
-ALWAYS the edit's record carries the pick less the raw sum of the post's own records, 0.00 GIVEN the author never moved it
+ALWAYS the edit's record carries the pick, the value it adds to the backing, 0.00 GIVEN the author never moved it
 
-ALWAYS an edit whose pick was never moved changes where the post's own records stand by exactly nothing
+ALWAYS an edit whose pick was never moved changes the post's backing by exactly nothing
 
-WHEN tap Adjust on the Your opinion row -> the one-axis pad opens over the edit at the row's value AND NEVER anything is staged
+WHEN tap Adjust on the Your backing row -> the one-axis pad opens over the edit at the edit's pick AND NEVER anything is staged
 
 ALWAYS the pick rides the edit's own record and adds nothing to the footer's count
 
-ALWAYS the Sensitive row stands under the Your opinion row and opens the sensitive sheet
+ALWAYS the Sensitive row stands under the Your backing row and opens the sensitive sheet
 
 ALWAYS the line A post's body is words or media, never both. stands under the gallery
 
