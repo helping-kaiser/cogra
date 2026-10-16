@@ -49,6 +49,13 @@ internal fun TopicEntry(
     /** The comment surfaces sit inside a card; the heading would only repeat. */
     showHeading: Boolean = true,
     /**
+     * A chip opens its pair in `TagPadCompose`'s sheet, staged until Done,
+     * rather than the write-through dialog. The compose Details stage opts in
+     * (ComposeDetails.md); the edit, reply and comment surfaces keep the
+     * dialog until their own boards (`TagPad`, `RefPairEdit`) are built.
+     */
+    pairSheet: Boolean = false,
+    /**
      * The section's data-node on a registered screen (`composeDetails.tags`):
      * the section, its heading (`label`), each chip (keyed by its name) and
      * the add action then wear the registered paths. The free-text field, the
@@ -137,13 +144,26 @@ internal fun TopicEntry(
         }
     }
     section.tags.firstOrNull { it.name == section.tuning }?.let { row ->
-        TagParametersDialog(
-            row = row,
-            testTagPrefix = testTagPrefix,
-            onRelevanceChange = { onTagRelevanceChange(row.name, it) },
-            onConfidenceChange = { onTagConfidenceChange(row.name, it) },
-            onDone = onDoneTuningTag,
-        )
+        if (pairSheet) {
+            TagPairSheet(
+                row = row,
+                testTagPrefix = testTagPrefix,
+                onDone = { relevance, confidence ->
+                    onTagRelevanceChange(row.name, relevance)
+                    onTagConfidenceChange(row.name, confidence)
+                    onDoneTuningTag()
+                },
+                onDismiss = onDoneTuningTag,
+            )
+        } else {
+            TagParametersDialog(
+                row = row,
+                testTagPrefix = testTagPrefix,
+                onRelevanceChange = { onTagRelevanceChange(row.name, it) },
+                onConfidenceChange = { onTagConfidenceChange(row.name, it) },
+                onDone = onDoneTuningTag,
+            )
+        }
     }
 }
 
