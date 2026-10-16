@@ -2245,7 +2245,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 16, find: "+ Add pictures · 2 of 10", tag: "button" },
     { n: 17, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
     { n: 18, find: 'aria-label="Undo withdrawing Tide tables and the third headland — @juno"', tag: "button" },
-    // The opinion row's Adjust (jakob 2026-10-16): the ordinary full pad over the edit.
+    // The opinion row's Adjust (jakob 2026-10-16, PR-101): the one-axis pad over the edit.
     { n: 21, find: ">Adjust</button>", tag: "button" },
   ],
   /* The same edit with an empty batch — `EditCompose`'s markers, minus the one
