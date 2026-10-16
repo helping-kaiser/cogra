@@ -1,23 +1,29 @@
-/* THE OPINION PAD ON YOUR OWN POST: what the seal's "Adjust" opens. The wash
+/* THE PAD ON YOUR OWN POST'S SEAL: what the seal's "Adjust" opens. The wash
    covers the seal; only the parked pad is live, which is what the board's
    `scanExempt` line says.
 
-   THE FIELD IS THE MASTER, both axes (jakob 2026-10-16). An opinion on one's
-   own post is an opinion like any other: for or against it, and how much of
-   it reaches you, both the author's to choose — so the value space is the
-   square `StancePad` draws, and the pad reads from it rather than drawing its
-   own. It is the reply pad's drawing (`ReplyPadBody`) over this seal: the
-   hand board's 240px field centred, the four named directions outside it, the
-   knob where +0.10 / +0.10 puts it — the pad's universal default, the gentle
-   one every stance starts from.
+   THE FIELD IS ONE AXIS, the master `AttachmentPad` (jakob 2026-10-16,
+   PR-101). Publishing signs one record toward the post, a Publish, and the
+   census gives it one free parameter: the author's attachment — their
+   BACKING — For or Against, with the second number pinned at 1, never a
+   choice, so never drawn as one. The strip is the square's own language cut
+   to that one axis, at the width the square would take here, the knob where
+   +0.10 puts it — the gentle default every post starts from (post.md §1).
+   The pick is the record; with nothing standing yet it is also the result,
+   so one readout suffices.
+
+   WHAT THE AUTHOR THINKS OF THE POST IS ANOTHER RECORD. Once the post is out,
+   its face takes an ordinary opinion like anyone's — both numbers, a bundle
+   of its own that never nets with this one (`PadStanding`). This pad is the
+   authoring gesture alone: backing, never opinion.
 
    EVERYTHING AROUND THE FIELD IS THE SEAL-SCALE PAD'S GRAMMAR: the "?" in the
    top-right corner out of the readouts' reading order (`HelpDot`), opening the
    pad's named dialog over the seal; the pick's readout ABOVE the field where a
-   thumb cannot cover it, reading `Your pick` — on your own post there is one
-   thing a pick could be about; and Cancel · Set — release never commits, Set
-   puts the pick back on the seal's row, and Sign and publish signs it with the
-   post. The readout is the master's polite live region: the pick speaks once
+   thumb cannot cover it, reading `Your pick`; and Cancel · Set — release never
+   commits, Set puts the pick back on the seal's row, and Sign and publish
+   signs it with the post. The readout is the master's (`AttachmentStanding`),
+   its face `VALENCE_SIX`'s, and its polite live region speaks the pick once
    it rests.
 
    THE SEAL BENEATH IS THE SEAL — `ComposeSealBody`, the same body
@@ -47,26 +53,14 @@ export function Screen() {
         }}
       >
         <span style={{ position: "absolute", top: 4, right: 4 }}>
-          <HelpDot ariaLabel="Your opinion on your post" />
+          <HelpDot ariaLabel="Your backing on your post" />
         </span>
 
-        {/* The pick's readout: the name of the quantity, then the face and the
-            pair under it, clearing the corner the "?" sits in. */}
-        <div aria-live="polite" style={{ display: "flex", flexDirection: "column", paddingRight: 40 }}>
-          <span aria-hidden="true" style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
-            Your pick
-          </span>
-          <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}>
-            <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🙂</span>
-            <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", whiteSpace: "nowrap" }}>+0.10 / +0.10</span>
-          </span>
-          <span style={SR_ONLY}>
-            Nice, For or against +0.10, How much reaches you +0.10
-          </span>
-        </div>
+        {/* The pick's readout, clearing the corner the "?" sits in. */}
+        <AttachmentStanding pick={0.1} style={{ paddingRight: 40 }} />
 
-        <div role="group" aria-label="Opinion pad for your own post" style={{ alignSelf: "stretch" }}>
-          <StancePad value={{ pDirected: 0.1, pInterest: 0.1 }} />
+        <div role="group" aria-label="Backing pad for your own post" style={{ alignSelf: "stretch" }}>
+          <AttachmentPad value={0.1} />
         </div>
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>

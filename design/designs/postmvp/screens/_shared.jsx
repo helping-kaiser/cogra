@@ -62,7 +62,7 @@ const {
   MediaAttachment,
   ActsCard,
   FactRow,
-  StanceReadout,
+  AttachmentReadout,
   SealFooter,
   WizardHeader,
   WizardFooter,
@@ -3080,8 +3080,9 @@ function BubbleCitation({ kind = "post", name, src, sub }) {
    the walk-away.
 
    THE READER'S OWN MESSAGE IS THE OTHER CASE: `ChatSignSheet` keeps the
-   compose seal's own grammar — `StanceReadout`'s pair with `Adjust`, opening
-   the ordinary full pad — canonical's `ComposeSeal` row exactly. */
+   compose seal's own grammar — `Your backing`, `AttachmentReadout`'s one number with
+   `Adjust`, opening the one-axis pad — canonical's `ComposeSeal` row
+   exactly. */
 const STAGED_STANCE = {
   current: { pDirected: 0.1, pInterest: 0.1 },
   rawSum: { pDirected: 0.1, pInterest: 0.1 },

@@ -74,8 +74,9 @@ half a second by mistake.
 The pad opens **at the default, +0.10 / +0.10** (jakob 2026-10-05) — the
 shortcut's own modest positive, so `Set` on a pick never moved signs
 exactly what the hold would, and never a `(0, 0)` that asks to walk back
-nothing. The seal-scale pads open at their row's staged pick, which a
-post edit starts at `(0, 0)` (*Your own content*).
+nothing. The one-axis pads on one's own content open at their own
+defaults instead — `+0.10` on a new post, `0.00` on an edit (*Your own
+content*).
 
 **The control owns its touches.** No interaction with it — tap, hold,
 drag, release, or the open pad itself — may also trigger the surface
@@ -138,35 +139,63 @@ because the guest is nobody yet.
 
 ## Your own content
 
-**An opinion on your own post is an opinion like any other** (jakob
-2026-10-16). The full pad, both axes, wherever the author gives it:
+**Backing and opinion are two records** (jakob 2026-10-16, PR-101).
+An author reaches their own content by two gestures, each its own
+bundle — bundles key by author, target and family, so the two never
+net. The words follow the records: **backing** is the authoring
+bundle, **opinion** is the face's.
 
-- **the seal's `Your opinion` row** — the pick starts at the default,
-  +0.10 / +0.10, and rides the post's own record;
-- **a post edit's `Your opinion` row** — every edit's record carries
-  the pair, and its pick starts at `(0, 0)`: a `(0, 0)` record carries
-  `w̃ = 0` and crosses neither channel, so an edit nobody adjusts moves
-  the author's opinion by exactly nothing. The row reads the standing
-  opinion, `Adjust` opens the ordinary full pad at the edit's pick, and
-  the pick lands by *Two numbers, never one* like any other;
-- **the stance anchor on the post itself** — the ordinary pad, exactly
-  as on anyone's post.
+- **Backing — the authoring gesture, one axis.** The record that
+  creates or edits the content: a Publish for a post or a proposal
+  text, an Owner for an Item listing, a Send for a message. Each
+  carries one free parameter, the author's attachment, For or Against;
+  the census pins the second at 1 — never a choice, so never drawn as
+  one. The seal's and a post edit's `Your backing` row read one number
+  (`AttachmentReadout`), and `Adjust` opens the one-axis pad
+  (`AttachmentPad`). A new post's starts at `+0.10` (post.md §1).
+- **Opinion — the ordinary pad.** The stance anchor on the content
+  itself is the pad exactly as on anyone's: an ordinary Opinion, both
+  numbers, a second path to the content, priced like any act. Its
+  `Current opinion` reads the opinions given through the face alone.
 
-All three fold into one bundle: the post's own records and the opinions
-given through its face. **Severance is the generic law** (*Severance*,
-below): a pick that nets the author's own bundle to `(0, 0)` is
-explained and confirmed, never prevented.
+The comment is not authored this way: a reply's pair aims at what it
+answers, so the reply pad keeps both numbers, and a comment edit
+carries `(0, 0)`, fixed.
 
-**Your own stance is the only path a feed has to your new post** (jakob
-2026-10-16). The ranking walks reach a fresh post through its author's
-creating edge alone, so a post published at `(0, 0)` starts unreachable
-— no feed carries it, the author's included; it lives on the profile
-until someone gives it an opinion. The pad warns and never prevents:
-Set at `(0, 0)` on the compose pad opens the dialog `Start it
-unreachable?` — the severance confirm's sibling, re-worded for a post
-with no history — and `Set it anyway` is always there. A standing post
-walked back to `(0, 0)` keeps whatever other paths its readers' own
-opinions built.
+**An edit's pick is its own record.** Parallel backing records sum then
+clip within their one bundle, and the pad works in that arithmetic,
+never in targets: the pick is what the edit adds, `0.00` by default —
+no change to the backing, a perfectly ordinary edit. The pad reads what
+is newly set and what it comes to, *Two numbers, never one*'s rule at
+one axis: `Current backing` (the bundle's net now) and `Your pick` above
+the strip, `Backing after` below it — `clip` of the raw sum plus the
+pick, the raw total and the cap stated when the sum passes ±1. Every
+pick on the strip is legal. On a new post nothing stands, so the pick
+is the result and `Your pick` reads alone.
+
+**Only the walk-back aims at a result.** The edit's pad carries `Walk it
+all back` where the ordinary pad keeps its walk-away. It parks the pick
+at the raw sum's opposite, clipped to the strip, so Set lands the
+backing at `0.00` — or, past ±1, as far as one record reaches, the rest
+another edit's (the fold's conviction inertia). It is greyed while the
+backing already nets `0.00` — the net is zero exactly when the raw sum
+is, since the clip bites only past ±1. It parks; Set still signs, and
+no dialog stands between them.
+
+**Exactly `0.00` shrugs.** On the one axis the value that carries
+nothing wears 🤷, spoken `Nothing`; every other value reads its
+`VALENCE_SIX` band.
+
+**Zero backing takes the content's own path away.** With
+the second parameter pinned at 1, a Publish at `0.00` folds to
+`(0, 1)`, and a record with either parameter at zero carries `w̃ = 0`
+(feed-ranking §3.1). A new post set there is reached only through the
+first legs of the tags and citations its author signs with it, and
+through the opinions it is given later — the author's own included. The
+pad warns and never prevents: Set at `0.00` on the compose pad opens
+`Start it unreachable?`, and `Set it anyway` is always there. The
+pinned parameter keeps the backing bundle at `(0, 1)`, never `(0, 0)` —
+routing-inert all the same.
 
 ## Severance
 
