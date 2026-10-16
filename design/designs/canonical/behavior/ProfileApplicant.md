@@ -2,7 +2,7 @@
 
 ALWAYS the applicant's profile wears the member's header and layout, and differs only in its card and its states
 
-ALWAYS the application card rides above the header, titled Waiting on with the handle of the member whose approval is in play, over What you post now arrives with you. GIVEN the application is open
+ALWAYS the application card rides above the header, titled Waiting on with the handle of the member whose approval is in play, over Their approval brings you in. Until then, you can read everything. GIVEN the application is open
 
 ALWAYS the application card never names the role inviter
 
@@ -19,21 +19,9 @@ WHEN tap Invites -> the snackbar reads You can invite once you're in. AND NEVER 
 
 WHEN tap the ask link's copy control -> the ask link lands on the clipboard AND the snackbar reads Link copied
 
-ALWAYS every act the applicant staged stands in the chronicle marked Still settling
+ALWAYS profile.chronicle holds no act, and profile.chronicle.empty reads Nothing here yet. Your posts and opinions show up here once you're in.
 
-ALWAYS the line These wait with your application and arrive with you. closes the staged acts GIVEN the application is open
-
-ALWAYS the line These wait — they arrive when someone vouches you in. closes the staged acts GIVEN the application was closed
-
-ALWAYS a staged opinion's card is inert
-
-WHEN tap a staged post's card -> the post's detail opens
-
-WHEN tap New post in profile.bottomBar GIVEN no post is staged yet -> the post wizard opens at its first stage
-
-WHEN tap New post in profile.bottomBar GIVEN a post is already staged and the application is open -> the snackbar reads Your post waits with your application — it arrives with you. AND NEVER the wizard opens
-
-WHEN tap New post in profile.bottomBar GIVEN a post is already staged and the application was closed -> the snackbar reads Your post waits — it arrives when someone vouches you in. AND NEVER the wizard opens
+WHEN tap New post in profile.bottomBar -> the snackbar reads You can post once you're in. AND NEVER the wizard opens
 
 WHEN tap profile.bottomBar.feedSlot -> the applicant's own feed opens
 

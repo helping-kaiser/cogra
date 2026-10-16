@@ -20,10 +20,10 @@ WHEN tap Restore the key GIVEN the key is on another device -> the restore opens
 
 WHEN the restore brings the key here -> the landing card reads its key-here body AND the registration lands from this device
 
-WHEN tap New post on the bar GIVEN a post is already staged -> the snackbar reads Your post waits with your application — it arrives with you. AND NEVER the wizard opens
+WHEN tap New post on the bar -> the snackbar reads You can post once you're in. AND NEVER the wizard opens
 
-WHEN tap a stance face GIVEN an opinion is already staged -> the snackbar reads Your opinion waits with your application — it arrives with you. AND NEVER the pad opens
+WHEN tap a stance face -> the snackbar reads You can give your opinion once you're in. AND NEVER the pad blooms
+
+WHEN press-and-hold a stance face -> the snackbar reads You can give your opinion once you're in. AND NEVER anything is signed or staged
 
 WHEN tap Profile on the bar -> the applicant's own profile opens
-
-WHEN the first opinion stages, by Set or by a press-and-hold -> the face takes the staged pick AND the snackbar reads Your opinion waits with your application — it arrives with you.
