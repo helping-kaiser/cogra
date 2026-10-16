@@ -3,8 +3,13 @@
 //! envelope"), which both clients implement so the intent check can read a
 //! payload's fields rather than trusting the server's rendering of them.
 //!
+//! Every case runs the signing discipline (`Envelope::decode`) — the one
+//! the devices mirror for the payloads they sign. The server's read/ingest
+//! admission (`Envelope::decode_for_read`) differs only under a newer
+//! `extension_ver`, which no device decodes, so it has no case here.
+//!
 //! Three groups, each decoded HERE, by the reference decoder, so a client
-//! is judged against exactly what the server reads:
+//! is judged against exactly what the reference admits on that path:
 //!
 //! - `values` — the PCE's own normative value vectors (PCE v0.1.0 §8.2),
 //!   each pinned to the specification's bytes before it is exported, with
@@ -119,6 +124,7 @@ fn envelope(body: &str, extensions: BTreeMap<u64, Value>) -> Envelope {
         version: VERSION_V1,
         body: body.into(),
         extensions,
+        preserved: BTreeMap::new(),
     }
 }
 

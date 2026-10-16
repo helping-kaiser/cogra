@@ -1456,6 +1456,11 @@ pub async fn land_promoted(
 /// substituting `Utc::now()` would stamp the content with its promotion
 /// time and leave no mark that it did.
 ///
+/// The payload is read under the read/ingest admission
+/// ([`CograContent::read_payload`]): a record a newer format wrote lands
+/// with the fields this reader knows, and its carriage keeps the rest
+/// byte-exact.
+///
 /// A write a redaction reaped lands reduced ([`land_reduced`]), and so
 /// does one a redaction reached between the load and the carriage insert:
 /// that redaction already promoted, archived and reduced the carriage, and
@@ -1478,8 +1483,9 @@ async fn land_one(
         .sealed
         .as_ref()
         .ok_or_else(|| ContentError::Internal("landed write without sealed parts".into()))?;
-    let content = CograContent::decode_payload(payload)
-        .map_err(|e| ContentError::Internal(format!("landed payload not admissible: {e}")))?;
+    let content = CograContent::read_payload(payload)
+        .map_err(|e| ContentError::Internal(format!("landed payload not admissible: {e}")))?
+        .fields;
     let meta = mirror::record_meta(pool, &write.act_id)
         .await?
         .ok_or_else(|| ContentError::Internal("promoted record missing from mirror".into()))?;
