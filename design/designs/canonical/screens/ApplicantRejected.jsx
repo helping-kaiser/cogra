@@ -38,18 +38,11 @@
    vouch comes from any member — the ask link is how the reader reaches one.
    The block and its reading are the whole of what the card offers.
 
-   A POST SIGNED HERE WAITS FOR THE VOUCH (jakob 2026-10-02). From this shell
-   New post still opens the wizard, and the seal stages the post on the
-   device; with no application live, the exit's snackbar says what it waits
-   for — `Your post waits — it arrives when someone vouches you in.` — never
-   that it waits with an application. The post's second tap answers with the
-   same line wherever it is made (jakob 2026-10-05): `New post` on this bar,
-   and the menus' `Cite in a new post` and `Mention in a new post`. A first
-   post waits on the device, never sent, until someone vouches the reader
-   in. The other kinds' second taps answer
-   in the same grammar: `Your opinion waits — it arrives when someone
-   vouches you in.` and `Your topic waits — it arrives when someone vouches
-   you in.`
+   ACTING WAITS FOR THE VOUCH, AS ON EVERY APPLICANT SHELL (PR-103, round
+   16). `New post` on this bar, and the menus' `Cite in a new post` and
+   `Mention in a new post`, answer in place with `You can post once you're
+   in.`; a stance face answers with `You can give your opinion once you're
+   in.` The wizard never opens and the pad never blooms.
 
    THE BAND NAMES @kel STILL. The vantage rule resolves to the most specific
    actor an arrival carries, and the arrival is unchanged: this reader came
