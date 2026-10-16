@@ -62,7 +62,7 @@ const {
   MediaAttachment,
   ActsCard,
   FactRow,
-  OwnStanceReadout,
+  StanceReadout,
   SealFooter,
   WizardHeader,
   WizardFooter,
@@ -3079,10 +3079,9 @@ function BubbleCitation({ kind = "post", name, src, sub }) {
    micro-fix): a first connection has nothing to walk back, so the pad omits
    the walk-away.
 
-   THE READER'S OWN MESSAGE IS THE OTHER CASE: an opinion on one's own content
-   names a valence only (the one-axis table), so `ChatSignSheet` keeps the
-   compose seal's own grammar — `OwnStanceReadout` with `Adjust` — canonical's
-   `ComposeSeal` row exactly. */
+   THE READER'S OWN MESSAGE IS THE OTHER CASE: `ChatSignSheet` keeps the
+   compose seal's own grammar — `StanceReadout`'s pair with `Adjust`, opening
+   the ordinary full pad — canonical's `ComposeSeal` row exactly. */
 const STAGED_STANCE = {
   current: { pDirected: 0.1, pInterest: 0.1 },
   rawSum: { pDirected: 0.1, pInterest: 0.1 },

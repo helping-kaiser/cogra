@@ -1229,7 +1229,7 @@
     { "from": "ComposeLicense", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "ComposeSeal", "case": "the sheet closes — the post's terms are what they were; swipe down, Back and Escape the same (the sheet law)" }] },
 
     { "from": "ComposePad", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
-    { "from": "ComposePad", "via": 2, "kind": "advance", "label": "the one-axis pad", "to": [{ "terminal": "self", "case": "For/Against only — your own post always reaches you in full" }] },
+    { "from": "ComposePad", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "the ordinary full pad — both axes, the pick following the drag; release parks it and nothing is staged" }] },
     { "from": "ComposePad", "via": 3, "kind": "cancel", "label": "Cancel", "to": [{ "board": "ComposeSeal", "case": "nothing staged" }] },
     { "from": "ComposePad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "ComposeSeal", "case": "the adjusted stance on the seal" }] },
     { "from": "ComposePad", "via": 5, "kind": "cancel", "label": "scrim — press outside", "to": [{ "board": "ComposeSeal", "case": "stages nothing" }] },

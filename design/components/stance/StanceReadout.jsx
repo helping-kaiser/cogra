@@ -193,10 +193,11 @@ export const STANCE_ANCHORS = [
   { pDirected: -0.9, pInterest: -0.9, emoji: "💀", label: "Absolutely not" },
 ];
 
-/* THE ONE-AXIS TABLE (jakob's ruling, 2026-09-14). A pick on one's own post
-   names a valence and nothing else — a post always reaches its author in full,
-   so `pInterest` is not a thing to choose — and `nearestAnchor` cannot answer
-   for a value that names no pair. These six are the twenty's pure-valence
+/* THE ONE-AXIS TABLE (jakob's ruling, 2026-09-14). It answers for a value
+   that names no pair, which `nearestAnchor` cannot. No surface draws such a
+   pick: an opinion on one's own content is the full pair like any other
+   (jakob 2026-10-16), so the table stands on the anchor-map card alone, its
+   retirement jakob's call (backlog). These six are the twenty's pure-valence
    spine, the mild, middle and far face on each side, at ±0.15, ±0.55 and
    ±0.90. Glyph, word and position are READ from `STANCE_ANCHORS`, so the six
    are six OF the twenty and cannot drift from them.
@@ -540,9 +541,8 @@ export function signedLine(standing, records, severed, targetLabel, names = STAN
 }
 
 /* ONE LINE, WHATEVER IT READS: face, then the exact figure, then the spoken
-   twin. A one-axis readout draws a shorter number, not a different shape — so
-   the markup is written once and the two readouts differ only in what they
-   hand it. */
+   twin. An opinion on one's own content reads here like any other (jakob
+   2026-10-16): the pair, both numbers the author's. */
 function ReadoutLine({ emoji, exact, spoken, style }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)", flex: "none", ...style }}>
@@ -571,18 +571,6 @@ export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, 
       style={style}
     />
   );
-}
-
-/* AN OPINION ON ONE'S OWN POST IS ONE NUMBER (jakob's ruling, 2026-09-14:
-   "the second number isn't yours to set on your own post"). A post always
-   reaches its author in full, so `pInterest` is not a value the author picks
-   and a pair would draw a second figure nobody chose. The face comes from
-   `VALENCE_SIX`, the table built for exactly this reading, and the spoken twin
-   names the one axis there is. */
-export function OwnStanceReadout({ pDirected, style }) {
-  const band = nearestValenceAnchor(pDirected);
-  const exact = formatDimension(pDirected);
-  return <ReadoutLine emoji={band.emoji} exact={exact} spoken={`${band.label}, ${DIRECTED_LABEL} ${exact}`} style={style} />;
 }
 
 /** The bundle, split for rendering: either a sentence, or a readout to lay out. */

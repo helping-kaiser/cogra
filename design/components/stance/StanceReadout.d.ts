@@ -47,16 +47,6 @@ export interface StanceReadoutProps {
 
 export declare function StanceReadout(props: StanceReadoutProps): JSX.Element;
 
-/** An opinion on one's OWN post: one number, because only one of the two is the
- *  author's to set — a post always reaches its author in full. The face reads
- *  through `VALENCE_SIX`. */
-export interface OwnStanceReadoutProps {
-  pDirected: number;
-  style?: React.CSSProperties;
-}
-
-export declare function OwnStanceReadout(props: OwnStanceReadoutProps): JSX.Element;
-
 /** A stance RECORD's face and pair, drawn plainly wherever a stance is data
  *  rather than a control — the opinions page's rows, the chronicle's opinion
  *  entries. Never interactive. */

@@ -9,7 +9,7 @@
    the message goes, whether its body rides encrypted, the license every
    content flow declares, and the low-default opinion it carries, which follows
    the post's own rule (post.md §1 — the frontend defaults it to +0.1) and
-   reads through `OwnStanceReadout` exactly as the post seal's does.
+   reads as the pair, `StanceReadout`, exactly as the post seal's does.
 
    IT IS A SHEET, NOT A PAGE. The post's seal is a place because a post is
    built in stages and the seal is the last one; a message is one line already
@@ -19,16 +19,17 @@
 
    THE OPINION IS ADJUSTABLE HERE; THE LICENSE READS (the integration round's
    fix pass, jakob's seal ruling: the opinion a reader signs must be one they
-   can set where they sign). A message is the reader's own content, so its
-   opinion names a valence only — the one-axis table — and the row takes the
-   compose seal's own grammar, canonical `ComposeSeal`'s exactly:
-   `OwnStanceReadout` with `Adjust`, which opens the one-axis pad over the
-   sheet. The license stays a plain fact — the lock toggle is the message's
+   can set where they sign). A message is the reader's own content, and an
+   opinion on one's own content is the full pair like any other (jakob
+   2026-10-16), so the row takes the compose seal's own grammar, canonical
+   `ComposeSeal`'s exactly: `StanceReadout` with `Adjust`, which opens the
+   ordinary full pad. The pad over this sheet is drawn when the chat round
+   comes. The license stays a plain fact — the lock toggle is the message's
    one per-message choice (jakob) and the license is the account's default;
    whether one message's license may be retuned here stays open.
 
    ONE MARKUP, TWO PAINTINGS (the geek-mode round). The opinion row is the one
-   pair-shaped fact, and `OwnStanceReadout` already draws the face AND the
+   pair-shaped fact, and `StanceReadout` already draws the face AND the
    exact value in a `cg-exact` span, with a spoken twin — so the board draws
    once and the reading mode decides whether the digits paint. Every other
    fact is words in both modes. No second board.
@@ -47,7 +48,7 @@ export function Screen() {
             <FactRow label="Into" value="Coast walkers" />
             <FactRow label="Encrypted" value="No — anyone can read it" />
             <FactRow label="License" value="Public domain — your default" />
-            <FactRow label="Your opinion" value={<OwnStanceReadout pDirected={0.1} />} action="Adjust" last />
+            <FactRow label="Your opinion" value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />} action="Adjust" last />
           </div>
           <Button style={{ width: "100%" }}>Sign and send</Button>
         </div>

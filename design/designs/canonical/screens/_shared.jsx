@@ -74,7 +74,6 @@ const {
   StancePad,
   SeveranceConfirm,
   StanceReadout,
-  OwnStanceReadout,
   StanceValue,
   StanceSlider,
   StanceStanding,
@@ -1638,11 +1637,12 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <FactRow label="License" value={<LicenseSummary />} action="Change" />
-          {/* One number: what reaches you about your own post is not a choice,
-              so the row states the one value the author set. */}
+          {/* The pair, as every stance reads: the author's opinion on their
+              own post is an opinion like any other, both numbers theirs to
+              set (jakob 2026-10-16), and it starts at the pad's default. */}
           <FactRow
             label="Your opinion"
-            value={<OwnStanceReadout pDirected={0.1} />}
+            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
             action="Adjust"
           />
           <FactRow label="Sensitive" value="Not marked" action="Mark" last />
