@@ -33,7 +33,7 @@ proc-macro2 = { version = "1.0.107", features = ["span-locations"] }
 # DEFAULT features, which is why no feature list appears here; tsx and dts
 # are per-file syntax settings rather than build-time ones. Verified
 # against docs.rs/swc_ecma_parser 45.0.0 on 2026-08-26.
-swc_ecma_parser = "45.0.0"
+swc_ecma_parser = "46.0.0"
 # The comments store the parser fills, the source map owning the file's
 # byte positions, and the span type those are keyed by. Verified against
 # docs.rs/swc_common 26.0.0 on 2026-08-26.
