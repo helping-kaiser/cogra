@@ -179,12 +179,22 @@ pub async fn bookmarked_at_many(
         .collect())
 }
 
-/// One page of `viewer`'s Saved list, newest first by save time. Walking
-/// forward reads past `cursor` toward older saves; walking backward reads
-/// toward newer ones and returns them in the same newest-first order.
+/// The kinds a Saved list holds, as its rows name them.
+pub const KINDS: [&str; 3] = ["user", "post", "comment"];
+
+/// Every kind a Saved list holds — the read that narrows by none.
+pub fn every_kind() -> Vec<String> {
+    KINDS.iter().map(|kind| kind.to_string()).collect()
+}
+
+/// One page of `viewer`'s Saved list, newest first by save time, of the
+/// `kinds` given ([`KINDS`] names them). Walking forward reads past
+/// `cursor` toward older saves; walking backward reads toward newer ones
+/// and returns them in the same newest-first order.
 pub async fn bookmarks(
     pool: &PgPool,
     viewer: Uuid,
+    kinds: &[String],
     cursor: Option<BookmarkCursor>,
     backward: bool,
     limit: i64,
@@ -199,6 +209,7 @@ pub async fn bookmarks(
             r#"SELECT b.content_id, b.kind, b.bookmarked_at
                FROM user_bookmarks b
                WHERE b.user_id = $1
+                 AND b.kind = ANY($5)
                  AND ($2::timestamptz IS NULL
                       OR (b.bookmarked_at, b.content_id) > ($2, $3::uuid))
                  AND CASE b.kind
@@ -216,6 +227,7 @@ pub async fn bookmarks(
             at,
             id,
             limit,
+            kinds,
         )
         .fetch_all(pool)
         .await?;
@@ -227,6 +239,7 @@ pub async fn bookmarks(
             r#"SELECT b.content_id, b.kind, b.bookmarked_at
                FROM user_bookmarks b
                WHERE b.user_id = $1
+                 AND b.kind = ANY($5)
                  AND ($2::timestamptz IS NULL
                       OR (b.bookmarked_at, b.content_id) < ($2, $3::uuid))
                  AND CASE b.kind
@@ -244,6 +257,7 @@ pub async fn bookmarks(
             at,
             id,
             limit,
+            kinds,
         )
         .fetch_all(pool)
         .await
@@ -283,11 +297,16 @@ impl SavedMatchCursor {
 
 /// How many entries [`bookmarks`] serves across every page — the same
 /// predicate, no cursor.
-pub async fn count_bookmarks(pool: &PgPool, viewer: Uuid) -> Result<i64, sqlx::Error> {
+pub async fn count_bookmarks(
+    pool: &PgPool,
+    viewer: Uuid,
+    kinds: &[String],
+) -> Result<i64, sqlx::Error> {
     sqlx::query_scalar!(
         r#"SELECT COUNT(*) AS "n!"
            FROM user_bookmarks b
            WHERE b.user_id = $1
+             AND b.kind = ANY($2)
              AND CASE b.kind
                  WHEN 'post' THEN EXISTS (
                      SELECT 1 FROM posts p WHERE p.id = b.content_id)
@@ -298,6 +317,7 @@ pub async fn count_bookmarks(pool: &PgPool, viewer: Uuid) -> Result<i64, sqlx::E
                  ELSE FALSE
              END"#,
         viewer,
+        kinds,
     )
     .fetch_one(pool)
     .await

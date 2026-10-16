@@ -162,12 +162,13 @@ pub enum SearchRequest {
 }
 
 /// A restriction of one page read to part of the request's matches.
-/// `within`, `excluding` and `section` narrow what a page may hold, never
-/// what the request matches, so a count never sees them: ranked search
-/// reads its in-slice candidates `within` the viewer's slice and pages the
-/// rest `excluding` what the ranker ordered, one `section` at a time
-/// (ranked-feed-api §4.8). `saved_by` is Saved's: it confines the request
-/// itself, so [`SearchRequest::count`] takes it too.
+/// `within`, `excluding`, `section` and `people` narrow what a page may
+/// hold, never what the request matches, so a count never sees them:
+/// ranked search reads its in-slice candidates `within` the viewer's slice
+/// and pages the rest `excluding` what the ranker ordered, one `section`
+/// at a time (ranked-feed-api §4.8); a capped people section serves only
+/// its first few, the API's cap. `saved_by` is Saved's: it confines the
+/// request itself, so [`SearchRequest::count`] takes it too.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Window<'a> {
     /// Only these nodes may be served; None restricts nothing.
@@ -176,6 +177,9 @@ pub struct Window<'a> {
     pub excluding: &'a [Uuid],
     /// Only this section's matches may be served; None restricts nothing.
     pub section: Option<i32>,
+    /// In the people section, only these people may be served — the other
+    /// sections are untouched; None restricts nothing.
+    pub people: Option<&'a [Uuid]>,
     /// Only what this account kept on its Saved list may be served, in the
     /// narrowed list's order (api-spec.md `User.bookmarks`): section, then
     /// newest save first, then id. A hit's `tier` is then its section's
@@ -186,6 +190,40 @@ pub struct Window<'a> {
 }
 
 impl SearchRequest {
+    /// The index kinds the request serves.
+    pub fn kinds(&self) -> &[String] {
+        match self {
+            Self::Match(q) => &q.kinds,
+            Self::Scoped(q) => &q.kinds,
+        }
+    }
+
+    /// Whether a result can stand people beside another section: the
+    /// request serves people and some other kind.
+    pub fn serves_people_beside_others(&self) -> bool {
+        let kinds = self.kinds();
+        kinds.iter().any(|k| k == "user") && kinds.iter().any(|k| k != "user")
+    }
+
+    /// The same request serving its people section alone — the same
+    /// people, in the same order. None when it serves no people.
+    pub fn people_only(&self) -> Option<Self> {
+        if !self.kinds().iter().any(|k| k == "user") {
+            return None;
+        }
+        let people = vec!["user".to_string()];
+        Some(match self {
+            Self::Match(q) => Self::Match(MatchQuery {
+                kinds: people,
+                ..q.clone()
+            }),
+            Self::Scoped(q) => Self::Scoped(ScopedQuery {
+                kinds: people,
+                ..q.clone()
+            }),
+        })
+    }
+
     /// One page of matches — see [`find`].
     pub async fn find(
         &self,
@@ -340,6 +378,7 @@ pub async fn find_in(
                    LEFT JOIN user_bookmarks b
                      ON b.user_id = $14 AND b.content_id = h.node_id
                    WHERE ($13::int IS NULL OR h.tier / 2 = $13)
+                     AND ($15::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($15))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
@@ -363,6 +402,7 @@ pub async fn find_in(
             window.excluding,
             window.section,
             window.saved_by,
+            window.people,
         )
         .fetch_all(pool)
         .await?;
@@ -409,6 +449,7 @@ pub async fn find_in(
                    LEFT JOIN user_bookmarks b
                      ON b.user_id = $14 AND b.content_id = h.node_id
                    WHERE ($13::int IS NULL OR h.tier / 2 = $13)
+                     AND ($15::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($15))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
@@ -432,6 +473,7 @@ pub async fn find_in(
             window.excluding,
             window.section,
             window.saved_by,
+            window.people,
         )
         .fetch_all(pool)
         .await
@@ -663,6 +705,7 @@ pub async fn find_scoped(
                      AND ($15::uuid[] IS NULL OR h.node_id = ANY($15))
                      AND NOT (h.node_id = ANY($16::uuid[]))
                      AND ($17::int IS NULL OR h.tier / 2 = $17)
+                     AND ($19::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($19))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
@@ -690,6 +733,7 @@ pub async fn find_scoped(
             window.excluding,
             window.section,
             window.saved_by,
+            window.people,
         )
         .fetch_all(pool)
         .await?;
@@ -844,6 +888,7 @@ pub async fn find_scoped(
                      AND ($15::uuid[] IS NULL OR h.node_id = ANY($15))
                      AND NOT (h.node_id = ANY($16::uuid[]))
                      AND ($17::int IS NULL OR h.tier / 2 = $17)
+                     AND ($19::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($19))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
@@ -871,6 +916,7 @@ pub async fn find_scoped(
             window.excluding,
             window.section,
             window.saved_by,
+            window.people,
         )
         .fetch_all(pool)
         .await

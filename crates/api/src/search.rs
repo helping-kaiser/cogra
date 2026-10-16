@@ -38,6 +38,13 @@
 //! - **Kinds subtract.** A `kinds` filter drops sections and keeps the
 //!   rest's semantics: without people, a person cue or a display-name
 //!   match still lists the authored content.
+//! - **The people section is capped** ([`PEOPLE_SECTION_CAP`]). Where a
+//!   result can stand people beside another section, the people section
+//!   serves its first three by the result's own order, and the rest stand
+//!   behind the "See all profiles" door — the same query with people
+//!   alone as its kind, which serves every match. A cue that names many
+//!   handles would otherwise put an endless people list before any
+//!   content (seam 220, ruled (a) in seam 223).
 
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
@@ -48,6 +55,11 @@ use uuid::Uuid;
 /// title (500), a separator and a cue of a full-length handle or tag,
 /// with headroom. Longer is a malformed argument, not a miss.
 pub const MAX_QUERY_CHARS: usize = 640;
+
+/// The most people a people section serves while the result can stand
+/// another section beside it (ExplorePerson.md, SavedSearch.md,
+/// HistorySearch.md: "the people section holds at most three people").
+pub const PEOPLE_SECTION_CAP: usize = 3;
 
 /// A kind the plain-text matcher serves.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
