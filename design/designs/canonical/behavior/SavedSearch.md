@@ -1,20 +1,20 @@
 # SavedSearch · `spec:design:behavior-saved-search`
 
-ALWAYS the matches stand in sections, the people first under saved.peopleLabel reading People and then the content, GIVEN the query reaches a saved person
+ALWAYS the matches stand in sections, the people first under saved.profilesLabel reading Profiles and then the content, GIVEN the query reaches a saved person
 
 ALWAYS the people section holds at most three people, the newest saves among the people the query matches
 
-ALWAYS saved.peopleDoor reads See all people and closes the people section GIVEN more than three saved people match
+ALWAYS saved.profilesDoor reads See all profiles and closes the people section GIVEN more than three saved people match
 
-ALWAYS no saved.peopleDoor stands GIVEN three saved people or fewer match
+ALWAYS no saved.profilesDoor stands GIVEN three saved people or fewer match
 
 ALWAYS the content section stands after the people section, newest first by when the reader saved each thing, and never under a caption of its own
 
 ALWAYS every card in the sections is the same card Saved draws, fully live, and the first row of each one's ⋮ reads Unsave
 
-WHEN tap saved.peopleDoor -> Saved narrows to the people the query matches alone, every one, newest save first AND the content section stands away AND saved.searchField keeps the query
+WHEN tap saved.profilesDoor -> Saved narrows to the people the query matches alone, every one, newest save first AND the content section stands away AND saved.searchField keeps the query
 
-ALWAYS no saved.peopleLabel and no saved.peopleDoor stands GIVEN Saved stands narrowed to the people alone
+ALWAYS no saved.profilesLabel and no saved.profilesDoor stands GIVEN Saved stands narrowed to the people alone
 
 WHEN the reader empties saved.searchField -> Saved stands whole, newest first, by when the reader saved each thing, with no section caption
 

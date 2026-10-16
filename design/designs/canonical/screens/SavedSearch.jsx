@@ -12,7 +12,7 @@
    law for every sectioned surface). So the people take a section under the
    house's quiet caption (`SectionLabel`, `People`, the caption Explore's
    recents wear), at most three — the newest saves among the matches — and
-   `See all people` closes it when more match. Saved has no kind filter, so
+   `See all profiles` closes it when more match. Saved has no kind filter, so
    its door opens Saved's OWN people-only narrowing: the query kept, the
    people alone, every one. That narrowing is not drawn; it is the bare
    @handle state Saved drew before the law changed, now reached by the door.
@@ -23,8 +23,8 @@
    people section's end — and stands newest first by when it was saved.
 
    REGISTERED under the `saved` prefix (design ⇄ impl seam 059/061), every
-   node named as `Saved` names it; the caption is `peopleLabel` and the door
-   `peopleDoor`, as `ExplorePerson` names them. */
+   node named as `Saved` names it; the caption is `profilesLabel` and the door
+   `profilesDoor`, as `ExplorePerson` names them. */
 export const NODE = "saved";
 export const FRAME = { width: 390, height: 1110 };
 
@@ -48,7 +48,7 @@ export function Screen() {
       <div style={{ flex: "none" }}>
         <SearchBar query="@m" ariaLabel="Search what you saved" node="searchField" />
       </div>
-      <SectionLabel node="peopleLabel">People</SectionLabel>
+      <SectionLabel node="profilesLabel">Profiles</SectionLabel>
       <FeedList>
         <ProfileFeedCard
           person={MIRA}
@@ -60,8 +60,8 @@ export function Screen() {
         <ProfileFeedCard person={MAREN} bio="Charts the tide pools north of the harbour, one notebook a season." score="8.20" node="profileCard" />
         <ProfileFeedCard person={MATEO} bio="Boat repairs, mostly. Sometimes the boats are mine." score="5.10" node="profileCard" />
         <div style={{ display: "flex", padding: "0 8px" }}>
-          <Button variant="text" size="sm" node="peopleDoor">
-            See all people
+          <Button variant="text" size="sm" node="profilesDoor">
+            See all profiles
           </Button>
         </div>
         <PostCard {...MIRA_WORDS_POST} bundle={mkBundle(0.3, 0.1)} node="card" />

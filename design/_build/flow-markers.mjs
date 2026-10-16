@@ -241,7 +241,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Salome Ward<", tag: "button" },
     /* The people section's door (round 14, sectioned search (a)) takes the
        board's next free number — the numbering is append-only. */
-    { n: 12, find: ">See all people</button>", tag: "button" },
+    { n: 12, find: ">See all profiles</button>", tag: "button" },
   ],
   ExploreFilter: [
     { n: 1, find: 'aria-label="How the filter works"', tag: "button" },
@@ -1661,7 +1661,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
     { n: 7, find: ">Feed score</span>", tag: "button", all: true },
     { n: 8, find: 'aria-label="Share ', tag: "button", all: true },
-    { n: 9, find: ">See all people</button>", tag: "button" },
+    { n: 9, find: ">See all profiles</button>", tag: "button" },
     { n: 10, find: 'aria-label="More on this post"', tag: "button" },
     { n: 11, find: 'aria-label="1 comment"', tag: "button" },
     ...nav(12),
@@ -1760,7 +1760,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
     { n: 8, find: ">Feed score</span>", tag: "button", all: true },
     { n: 9, find: 'aria-label="Share ', tag: "button", all: true },
-    { n: 10, find: ">See all people</button>", tag: "button" },
+    { n: 10, find: ">See all profiles</button>", tag: "button" },
     { n: 11, find: 'aria-label="More on this post"', tag: "button" },
     { n: 12, find: 'aria-label="1 comment"', tag: "button" },
     ...nav(13),

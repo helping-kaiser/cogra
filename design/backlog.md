@@ -5034,16 +5034,16 @@ not make alone:
   what the web client serves today. If the cap stays, the server may
   need a per-section `first` (seam 224).
 - **Saved's own people-only narrowing.** Saved has no kind filter, so
-  `See all people` there opens a state of Saved's own — the query kept,
+  `See all profiles` there opens a state of Saved's own — the query kept,
   the people alone. It is described in `SavedSearch.md`, not drawn, and
   nothing on it says how to get back to the sections short of editing
   the query. Draw it, or give Saved the kind filter it was ruled
   without.
 - **The way back from the door.** On Explore, Back clears the whole
   search (`Explore.md`), and on History the filter's Reset undoes the
-  narrowing. Whether Back after `See all people` first returns to the
+  narrowing. Whether Back after `See all profiles` first returns to the
   sections is unruled.
-- **The section copy.** `People` (the caption) and `See all people` (the
+- **The section copy.** `Profiles` (the caption) and `See all profiles` (the
   door, jakob's own words in the ruling) are drawn. copy-voice refuses
   `See all` for the trace's in-place expand row; the door opens a
   narrowing rather than unfolding rows, which is why it stands here.

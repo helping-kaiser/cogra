@@ -1919,8 +1919,8 @@
         "explore.bottomBar.walletSlot": [],
         "explore.filterTrigger": [],
         "explore.help": [],
-        "explore.peopleDoor": [],
-        "explore.peopleLabel": [],
+        "explore.profilesDoor": [],
+        "explore.profilesLabel": [],
         "explore.result": [
           "1",
           "2",
@@ -4063,8 +4063,6 @@
         "history.header": [],
         "history.header.back": [],
         "history.header.title": [],
-        "history.peopleDoor": [],
-        "history.peopleLabel": [],
         "history.profileCard": [
           "mateo",
           "mira",
@@ -4130,6 +4128,8 @@
           "mira",
           "maren"
         ],
+        "history.profilesDoor": [],
+        "history.profilesLabel": [],
         "history.searchField": [],
         "history.searchField.glyph": [],
         "history.searchField.input": []
@@ -6228,8 +6228,6 @@
         "saved.header": [],
         "saved.header.back": [],
         "saved.header.title": [],
-        "saved.peopleDoor": [],
-        "saved.peopleLabel": [],
         "saved.profileCard": [
           "mira",
           "maren",
@@ -6295,6 +6293,8 @@
           "maren",
           "mateo"
         ],
+        "saved.profilesDoor": [],
+        "saved.profilesLabel": [],
         "saved.searchField": [],
         "saved.searchField.glyph": [],
         "saved.searchField.input": []

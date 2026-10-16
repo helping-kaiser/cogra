@@ -10134,7 +10134,7 @@ Saved and History:
   cards already loaded — the one place the server-side matcher shows.
 - **The results are sectioned.** The people stand first under
   `SectionLabel`'s `People` (the caption Explore's `Recent` wears),
-  capped at **three**; `See all people`, a text button on its own line,
+  capped at **three**; `See all profiles`, a text button on its own line,
   closes the section when more match, and the content follows by the
   surface's own order with no caption of its own. The door opens the
   narrowing that already exists — the filter at Profiles alone
@@ -10152,9 +10152,9 @@ Saved and History:
   at **227**, `search-and-open-a-person` re-described and the shared
   starts' board counts re-blessed. The new boards stand on the profile
   page's Saved/History row at x 5760 and 6240. The registry goes **98 /
-  3878 → 100 / 3971**: `explore.peopleLabel` and `explore.peopleDoor`
+  3878 → 100 / 3971**: `explore.profilesLabel` and `explore.profilesDoor`
   on `ExplorePerson` (its `result` keys grow to 1–5), the two new
-  screens' 45 and 46 paths (`peopleLabel`, `peopleDoor`, and the cards
+  screens' 45 and 46 paths (`profilesLabel`, `profilesDoor`, and the cards
   under their existing key rules). No key rule is added, and nothing
   is removed.
 

@@ -18,7 +18,7 @@
    a query that many handles or names answer would otherwise become a list of
    people before any content at all — jakob's own find. So the people take a
    section of their own, at most three of them (the first three by the
-   search's order), and `See all people` closes the section when more match.
+   search's order), and `See all profiles` closes the section when more match.
    The door opens the narrowing that already exists: the search filter at
    Profiles alone (ExploreFilter's kinds, law rule 4) — every matched person,
    the trigger reading `Profiles`. No new state is drawn for it.
@@ -41,8 +41,8 @@
    REGISTERED under the `explore` prefix (design ⇄ impl seam 062/063), named
    as `ExploreSearch` names its rows: each is a `result`, keyed by its position
    in the results, the content counting on after the people. The caption is
-   `peopleLabel`, as Explore's recents' is `recentLabel`; the door is
-   `peopleDoor`. */
+   `profilesLabel`, as Explore's recents' is `recentLabel`; the door is
+   `profilesDoor`. */
 export const NODE = "explore";
 export function Screen() {
   return (
@@ -52,13 +52,13 @@ export function Screen() {
         <SearchTriggerRow reading="Everything" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <SectionLabel node="peopleLabel">People</SectionLabel>
+        <SectionLabel node="profilesLabel">Profiles</SectionLabel>
         <ReferenceRow kind="person" name="Sal Torres" sub="@saltorres" rank="4.20" onOpen={() => {}} node="result" nodeKey="1" />
         <ReferenceRow kind="person" name="Ines Salas" sub="@inesalas" rank="3.10" onOpen={() => {}} node="result" nodeKey="2" />
         <ReferenceRow kind="person" name="Salome Ward" sub="@salome" rank="2.60" onOpen={() => {}} node="result" nodeKey="3" />
         <div style={{ display: "flex", padding: "0 8px 8px" }}>
-          <Button variant="text" size="sm" node="peopleDoor">
-            See all people
+          <Button variant="text" size="sm" node="profilesDoor">
+            See all profiles
           </Button>
         </div>
         <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" rank="9.10" onOpen={() => {}} node="result" nodeKey="4" />

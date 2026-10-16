@@ -10,7 +10,7 @@
    JAKOB'S WORD (one law for every sectioned surface; he may carve History
    out). The people take a section under the house's quiet caption
    (`SectionLabel`, `People`), at most three — the most recently first seen
-   among the matches — and `See all people` closes it when more match.
+   among the matches — and `See all profiles` closes it when more match.
    History HAS a kind filter, so its door opens the narrowing that already
    exists: the history's filter at Profiles alone, the trigger reading
    `Profiles`, the query kept (law rule 4).
@@ -26,8 +26,8 @@
    section takes no caption — the door is the people section's end.
 
    REGISTERED under the `history` prefix (design ⇄ impl seam 062/063), every
-   node named as `History` names it; the caption is `peopleLabel` and the
-   door `peopleDoor`, as `ExplorePerson` names them. */
+   node named as `History` names it; the caption is `profilesLabel` and the
+   door `profilesDoor`, as `ExplorePerson` names them. */
 export const NODE = "history";
 export const FRAME = { width: 390, height: 1150 };
 
@@ -54,7 +54,7 @@ export function Screen() {
           <FilterTrigger reading="Everything" ariaLabel="What your history shows" node="filterTrigger" />
         </div>
       </div>
-      <SectionLabel node="peopleLabel">People</SectionLabel>
+      <SectionLabel node="profilesLabel">Profiles</SectionLabel>
       <FeedList>
         <ProfileFeedCard person={MATEO} bio="Boat repairs, mostly. Sometimes the boats are mine." score="5.10" node="profileCard" />
         <ProfileFeedCard
@@ -66,8 +66,8 @@ export function Screen() {
         />
         <ProfileFeedCard person={MAREN} bio="Charts the tide pools north of the harbour, one notebook a season." score="8.20" node="profileCard" />
         <div style={{ display: "flex", padding: "0 8px" }}>
-          <Button variant="text" size="sm" node="peopleDoor">
-            See all people
+          <Button variant="text" size="sm" node="profilesDoor">
+            See all profiles
           </Button>
         </div>
         <PostCard {...MIRA_WORDS_POST} bundle={mkBundle(0.3, 0.1)} node="card" />
