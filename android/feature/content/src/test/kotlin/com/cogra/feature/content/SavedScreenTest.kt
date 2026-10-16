@@ -1,8 +1,9 @@
 // Saved as a feed (Saved.md, SavedUndo.md, SavedEmpty.md, SavedNone.md; round
 // 12): every kept thing as its kind's own live card, newest by save time; the
 // unsave as the first row of each card's ⋮, Undo in place, the comfort line on
-// the returned card; the one search rule over the saved set; hidden accounts'
-// things staying. web's twin is `saved-view.test.tsx`.
+// the returned card; the search field handing the query to the server's
+// matcher and the narrowed list standing as served; hidden accounts' things
+// staying. web's twin is `saved-view.test.tsx`.
 
 package com.cogra.feature.content
 
@@ -157,18 +158,36 @@ class SavedScreenTest {
         onOpenTopic = { opened += "topic:$it" },
     )
 
-    private fun render(entries: List<SavedEntry>, hasNextPage: Boolean = false) {
+    /** Every query the field handed to the read, in order. */
+    private val searched = mutableListOf<String>()
+
+    /** [narrowedBy] is the search the held [entries] answer — the server's narrowing, as read. */
+    private fun render(
+        entries: List<SavedEntry>,
+        hasNextPage: Boolean = false,
+        typed: String = "",
+        narrowedBy: String? = null,
+    ) {
         val host = SnackbarHostState()
         compose.setContent {
-            var query by mutableStateOf("")
+            var query by mutableStateOf(typed)
             CompositionLocalProvider(LocalSnackbarHostState provides host) {
                 SavedScreen(
-                    state = SavedUiState(entries = entries, loading = false, hasNextPage = hasNextPage, query = query),
+                    state = SavedUiState(
+                        entries = entries,
+                        loading = false,
+                        hasNextPage = hasNextPage,
+                        query = query,
+                        narrowedBy = narrowedBy,
+                    ),
                     writes = writes,
                     onRefresh = {},
                     onLoadMore = {},
                     onRetryMore = {},
-                    onSearch = { query = it },
+                    onSearch = {
+                        searched += it
+                        query = it
+                    },
                     onBack = {},
                     doors = doors,
                 )
@@ -294,51 +313,60 @@ class SavedScreenTest {
         assertThat(opened).containsExactly("post:p1", "comment:p1/c1+reply", "actor:mira").inOrder()
     }
 
+    private fun top(tag: String): Float = compose.onAllNodesWithTag(tag).fetchSemanticsNodes().first().boundsInRoot.top
+
     @Test
-    fun `the field reads search what you saved and a query narrows by names and titles`() {
+    fun `the field reads search what you saved and hands the query to the read`() {
         render(all)
         compose.onNodeWithText("Search what you saved").assertIsDisplayed()
         search("long way")
+        assertThat(searched.last()).isEqualTo("long way")
+        // The screen never narrows by itself: the server's matcher does, so
+        // until its narrowed list is read, the held list stands whole.
         assertThat(shown(postCard)).isTrue()
-        assertThat(shown(commentCard)).isFalse()
-        assertThat(shown(personCard)).isFalse()
-        // A body is never matched: the comment's words carry "headland".
-        search("headland")
-        compose.onNodeWithTag("saved.empty.title").assertIsDisplayed()
-    }
-
-    @Test
-    fun `an at handle narrows to people and its remainder to their things`() {
-        render(all)
-        search("@mi")
+        assertThat(shown(commentCard)).isTrue()
         assertThat(shown(personCard)).isTrue()
-        assertThat(shown(postCard)).isFalse()
-        search("@tobias long")
-        assertThat(shown(commentCard)).isTrue()
-        assertThat(shown(personCard)).isFalse()
+        assertThat(shown("saved.empty")).isFalse()
     }
 
     @Test
-    fun `a bare hash tag matches nothing and its remainder matches what carries it`() {
-        render(all)
-        search("#coastroad")
-        compose.onNodeWithTag("saved.empty.action").assertIsDisplayed()
-        search("#glovebox home")
-        assertThat(shown(commentCard)).isTrue()
-        assertThat(shown(postCard)).isFalse()
+    fun `a narrowed list stands in the order served - people first, then content`() {
+        // The person was kept before the post and the comment; served
+        // sectioned, people lead anyway, and the screen does not re-sort.
+        render(listOf(person(), post, comment), typed = "@ad", narrowedBy = "@ad")
+        assertThat(top(personCard)).isLessThan(top(postCard))
+        assertThat(top(postCard)).isLessThan(top(commentCard))
+        compose.onNodeWithTag("saved.searchField.input").assertIsDisplayed()
     }
 
     @Test
-    fun `saved none keeps the query and show everything clears it`() {
-        render(all)
-        search("brackish cartography")
+    fun `saved none stands when the narrowed list holds nothing and show everything clears the query`() {
+        render(emptyList(), typed = "brackish cartography", narrowedBy = "brackish cartography")
         compose.onNodeWithText("Nothing you've saved carries that name.", substring = true).assertIsDisplayed()
         compose.onNodeWithText("fewer words reach further.", substring = true).assertIsDisplayed()
+        // The field keeps the reader's query.
+        compose.onNodeWithTag("saved.searchField.input").assertIsDisplayed()
         compose.onNodeWithTag("saved.empty.action").performClick()
         compose.waitForIdle()
+        assertThat(searched.last()).isEmpty()
+    }
+
+    @Test
+    fun `unsaving the last card a query narrowed to stands saved none`() {
+        render(listOf(post), typed = "long", narrowedBy = "long")
+        compose.onNodeWithTag("saved.card.menu").performClick()
+        compose.onNodeWithTag("saved_p1_menu_save").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithTag("saved.empty.action").assertIsDisplayed()
+        compose.onNodeWithText("Removed from Saved.").assertIsDisplayed()
+    }
+
+    @Test
+    fun `a query typed but not yet read keeps the field over the list last read`() {
+        render(all, typed = "lo")
+        compose.onNodeWithTag("saved.searchField.input").assertIsDisplayed()
         assertThat(shown(postCard)).isTrue()
-        assertThat(shown(commentCard)).isTrue()
-        assertThat(shown(personCard)).isTrue()
+        assertThat(shown("saved.empty")).isFalse()
     }
 
     @Test

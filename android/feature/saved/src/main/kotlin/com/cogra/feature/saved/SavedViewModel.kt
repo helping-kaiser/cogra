@@ -7,11 +7,12 @@ import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.SensitiveReveals
 import com.cogra.domain.di.WebOrigin
 import com.cogra.domain.saved.SavedEntry
-import com.cogra.domain.saved.SavedQuery
+import com.cogra.domain.saved.SavedPage
 import com.cogra.domain.saved.SavedRepository
 import com.cogra.domain.saved.SavedWrites
-import com.cogra.domain.saved.parseSavedQuery
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,12 +33,27 @@ data class SavedUiState(
     val hasNextPage: Boolean = false,
     /** What the reader typed in the search field, as typed. */
     val query: String = "",
+    /**
+     * The search the held list answers, as sent; null when it is the whole
+     * list. The cursor pages on this search alone.
+     */
+    val narrowedBy: String? = null,
     /** Each veiled body the reader chose to look at, against its mark. */
     val reveals: Map<String, SensitiveMark> = emptyMap(),
-) {
-    /** The query as the one search rule reads it. */
-    val parsed: SavedQuery get() = parseSavedQuery(query)
-}
+)
+
+/** How long typing rests before a search is read — the reference finder's own pause. */
+const val SAVED_SEARCH_DEBOUNCE_MILLIS = 250L
+
+/**
+ * The longest search the server reads (api-spec.md "Search": past 640
+ * characters is BAD_INPUT), counted as the server counts — characters of the
+ * trimmed query.
+ */
+const val SAVED_SEARCH_MAX_CHARS = 640
+
+/** The search a typed query sends: trimmed, and null when it narrows nothing. */
+fun savedNarrowing(query: String): String? = query.trim().ifEmpty { null }
 
 /**
  * The Saved list's reads. The list on screen is the last read with the
@@ -45,10 +61,12 @@ data class SavedUiState(
  * overlay, so an unsave here, an Undo, and an unsave made elsewhere are all
  * applied in place without a refetch.
  *
- * A SEARCH READS THE WHOLE SAVED SET: the contract pages the list and takes no
- * query (the bookmarks contract stands untouched, round 12), so a standing
- * query walks the rest of the list in, page by page, and the screen narrows
- * the held set by the one search rule.
+ * THE SEARCH RUNS ON THE SERVER (seam 220, law 5): `bookmarks(query:)`
+ * narrows the whole saved set by the one search law, so a match is found
+ * wherever it stands in the list, never only in what is loaded. The field's
+ * typing rests [SAVED_SEARCH_DEBOUNCE_MILLIS] before the narrowed first page
+ * is read; clearing it reads the whole list at once. The narrowed list comes
+ * sectioned — people, then content — and stands in the order it is served.
  */
 @HiltViewModel
 class SavedViewModel @Inject constructor(
@@ -60,8 +78,14 @@ class SavedViewModel @Inject constructor(
     private val _state = MutableStateFlow(SavedUiState())
     val state: StateFlow<SavedUiState> = _state.asStateFlow()
 
-    /** Which read is live: a pull fires a new one, and the old one must not overwrite it. */
+    /** Which read is live: a newer one fires, and an older one's pages must not land. */
     private var request = 0
+
+    /** The search the live read asks — what a new keystroke is compared against. */
+    private var wanted: String? = null
+
+    /** The typing's pending read, cancelled by the next keystroke. */
+    private var pendingSearch: Job? = null
 
     init {
         refresh()
@@ -83,89 +107,116 @@ class SavedViewModel @Inject constructor(
 
     fun profileShareUrl(handle: String): String = "$webOrigin/u/$handle"
 
-    /** The first page — on arrival, and on the reader's pull (Saved.md). */
+    /** The first page — on arrival, and on the reader's pull (Saved.md), under the query standing. */
     fun refresh() {
-        val asked = ++request
         _state.update { it.copy(loading = true) }
+        read(savedNarrowing(_state.value.query), fresh = true)
+    }
+
+    /**
+     * The reader typed in the field. The field shows it at once; the read
+     * follows once typing rests, and a cleared field reads the whole list
+     * without waiting. A query that asks what is already asked reads nothing.
+     */
+    fun search(query: String) {
+        _state.update { it.copy(query = query) }
+        pendingSearch?.cancel()
+        val narrowing = savedNarrowing(query)
+        if (narrowing == wanted) return
+        if (narrowing == null) {
+            read(null, fresh = false)
+            return
+        }
+        pendingSearch = viewModelScope.launch {
+            delay(SAVED_SEARCH_DEBOUNCE_MILLIS)
+            read(narrowing, fresh = false)
+        }
+    }
+
+    /**
+     * The first page of [narrowing]'s list. A [fresh] read — arrival or the
+     * pull — also lets the overlay step aside for what the read now says
+     * (RowSigning.md:17); a search's read only replaces the list.
+     */
+    private fun read(narrowing: String?, fresh: Boolean) {
+        pendingSearch?.cancel()
+        wanted = narrowing
+        val asked = ++request
+        if (narrowing != null && narrowing.codePointCount(0, narrowing.length) > SAVED_SEARCH_MAX_CHARS) {
+            // PAST THE SERVER'S CAP NOTHING CAN MATCH: the list stands narrowed
+            // to nothing rather than asking for a BAD_INPUT.
+            land(asked, narrowing, SavedPage(emptyList(), endCursor = null, hasNextPage = false), fresh)
+            return
+        }
         viewModelScope.launch {
-            val outcome = repository.savedPage(query = null, after = null)
+            val outcome = repository.savedPage(query = narrowing, after = null)
             if (asked != request) return@launch
             val page = (outcome as? Outcome.Success)?.value
             if (page == null) {
-                _state.update { it.copy(loading = false, failed = true) }
+                // A search's list that did not arrive holds no stale matches:
+                // the transport line stands, and Retry reads it again.
+                _state.update {
+                    it.copy(
+                        entries = if (narrowing == it.narrowedBy) it.entries else emptyList(),
+                        loading = false,
+                        failed = true,
+                        loadingMore = false,
+                        moreFailed = false,
+                        narrowedBy = narrowing,
+                    )
+                }
                 return@launch
             }
-            // A FRESH LOAD: the cards' lines go (RowSigning.md:17), and the
-            // overlay steps aside for what the read now says.
-            writes.settle()
-            _state.update {
-                SavedUiState(
-                    entries = page.entries,
-                    loading = false,
-                    endCursor = page.endCursor,
-                    hasNextPage = page.hasNextPage,
-                    query = it.query,
-                    reveals = it.reveals,
-                )
-            }
-            if (_state.value.parsed != SavedQuery.Blank) readRest()
+            land(asked, narrowing, page, fresh)
         }
     }
 
-    /** The reader typed in the field. A query that narrows reads the whole set in. */
-    fun search(query: String) {
-        _state.update { it.copy(query = query) }
-        if (parseSavedQuery(query) != SavedQuery.Blank) readRest()
-    }
-
-    /** The next page, as the reader nears the tail. */
-    fun loadMore() {
-        val current = _state.value
-        if (current.loadingMore || !current.hasNextPage || current.endCursor == null) return
-        _state.update { it.copy(loadingMore = true, moreFailed = false) }
-        viewModelScope.launch {
-            val fetched = nextPage(current.endCursor)
-            _state.update { it.copy(loadingMore = false) }
-            // A search's walk goes on from where the reader's paging stopped.
-            if (fetched && _state.value.parsed != SavedQuery.Blank) readRest()
-        }
-    }
-
-    /** The fault's Retry: the page asked again — and, while a query narrows, the rest of the set. */
-    fun retryMore() {
-        if (_state.value.parsed != SavedQuery.Blank) readRest() else loadMore()
-    }
-
-    /** Every page past the held ones, in turn — what a narrowing query needs to search. */
-    private fun readRest() {
-        val current = _state.value
-        if (current.loadingMore || !current.hasNextPage || current.endCursor == null) return
-        _state.update { it.copy(loadingMore = true, moreFailed = false) }
-        viewModelScope.launch {
-            while (true) {
-                val cursor = _state.value.endCursor
-                if (!_state.value.hasNextPage || cursor == null || !nextPage(cursor)) break
-            }
-            _state.update { it.copy(loadingMore = false) }
-        }
-    }
-
-    /** One page after [cursor]; false when it did not arrive, and the fault ends the list. */
-    private suspend fun nextPage(cursor: String): Boolean {
-        val page = (repository.savedPage(query = null, after = cursor) as? Outcome.Success)?.value
-        if (page == null) {
-            // THE CARDS ON SCREEN STAY, and the fault ends the list (Saved.md).
-            _state.update { it.copy(moreFailed = true) }
-            return false
-        }
-        _state.update { state ->
-            val held = state.entries.map { it.id }.toSet()
-            state.copy(
-                entries = state.entries + page.entries.filterNot { it.id in held },
+    private fun land(asked: Int, narrowing: String?, page: SavedPage, fresh: Boolean) {
+        if (asked != request) return
+        // A FRESH LOAD: the cards' lines go (RowSigning.md:17), and the
+        // overlay steps aside for what the read now says.
+        if (fresh) writes.settle()
+        _state.update {
+            SavedUiState(
+                entries = page.entries,
+                loading = false,
                 endCursor = page.endCursor,
                 hasNextPage = page.hasNextPage,
+                query = it.query,
+                narrowedBy = narrowing,
+                reveals = it.reveals,
             )
         }
-        return true
     }
+
+    /** The next page of the list on screen, as the reader nears the tail — on that list's own cursor. */
+    fun loadMore() {
+        val current = _state.value
+        val cursor = current.endCursor
+        if (current.loadingMore || !current.hasNextPage || cursor == null) return
+        val asked = request
+        _state.update { it.copy(loadingMore = true, moreFailed = false) }
+        viewModelScope.launch {
+            val page = (repository.savedPage(query = current.narrowedBy, after = cursor) as? Outcome.Success)?.value
+            // A newer read replaced the list: this page belongs to none on screen.
+            if (asked != request) return@launch
+            if (page == null) {
+                // THE CARDS ON SCREEN STAY, and the fault ends the list (Saved.md).
+                _state.update { it.copy(loadingMore = false, moreFailed = true) }
+                return@launch
+            }
+            _state.update { state ->
+                val held = state.entries.map { it.id }.toSet()
+                state.copy(
+                    entries = state.entries + page.entries.filterNot { it.id in held },
+                    endCursor = page.endCursor,
+                    hasNextPage = page.hasNextPage,
+                    loadingMore = false,
+                )
+            }
+        }
+    }
+
+    /** The fault's Retry: the page asked again. */
+    fun retryMore() = loadMore()
 }
