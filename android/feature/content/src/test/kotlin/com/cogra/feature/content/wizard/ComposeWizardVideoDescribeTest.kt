@@ -67,6 +67,8 @@ class ComposeWizardVideoDescribeTest {
             onLicenseChange = {},
             onPDirectedChange = {},
             onSetStance = {},
+            onKeepAdjusting = {},
+            onSetUnreachable = {},
             onSensitiveChange = {},
             onSensitiveReasonChange = {},
             onNext = {},

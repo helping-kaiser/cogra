@@ -54,6 +54,7 @@ import com.cogra.feature.content.R
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceEntry
 import com.cogra.feature.content.TopicEntry
+import com.cogra.feature.content.UnreachableStartConfirm
 
 /**
  * The compose wizard's route: one destination, four stages, and the
@@ -166,6 +167,8 @@ fun ComposeWizardRoute(
         onLicenseChange = viewModel::onLicenseChange,
         onPDirectedChange = viewModel::onPDirectedChange,
         onSetStance = viewModel::onSetStance,
+        onKeepAdjusting = viewModel::onKeepAdjusting,
+        onSetUnreachable = viewModel::onSetUnreachable,
         onSensitiveChange = viewModel::onSensitiveChange,
         onSensitiveReasonChange = viewModel::onSensitiveReasonChange,
         onNext = viewModel::onNext,
@@ -239,6 +242,8 @@ internal fun ComposeWizardScreen(
     onLicenseChange: (LicenseChoice) -> Unit,
     onPDirectedChange: (Double) -> Unit,
     onSetStance: () -> Unit,
+    onKeepAdjusting: () -> Unit,
+    onSetUnreachable: () -> Unit,
     onSensitiveChange: (Boolean) -> Unit,
     onSensitiveReasonChange: (String) -> Unit,
     onNext: () -> Unit,
@@ -499,12 +504,20 @@ internal fun ComposeWizardScreen(
                 onChange = onPDirectedChange,
                 onSet = onSetStance,
                 onCancel = onCloseSheet,
-                onHelp = { onOpenHelp(HelpTopic.YourOpinionOnYourPost) },
+                onHelp = { onOpenHelp(HelpTopic.YourBackingOnYourPost) },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(horizontal = PAD_SIDE_INSET)
                     .padding(bottom = PAD_BOTTOM_INSET),
             )
+            // Set at exactly 0.00 asks first; the pad stays parked beneath.
+            if (state.confirmingUnreachable) {
+                UnreachableStartConfirm(
+                    onKeepAdjusting = onKeepAdjusting,
+                    onSetAnyway = onSetUnreachable,
+                    testTag = "wizard_unreachable",
+                )
+            }
         }
     }
 
