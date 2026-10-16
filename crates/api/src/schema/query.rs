@@ -543,8 +543,8 @@ impl Query {
     }
 
     /// Global search across nodes; returns a `SearchResult` per edge.
-    /// Recall is lexical: plain text matches handles and topic names by
-    /// substring, post titles and display names by word (the last word a
+    /// Recall is lexical: plain text matches topic names by substring,
+    /// post titles, handles and display names by word (the last word a
     /// prefix), and brings the posts of every person whose display name
     /// matches; `@prefix` names people by handle prefix and `#prefix`
     /// topics by name prefix — bare, the matches lead and everything they

@@ -74,13 +74,12 @@ pub struct MatchQuery {
     /// the exact-match tier.
     pub text: String,
     /// The text as a `LIKE` pattern body — metacharacters escaped with
-    /// `\`, no wildcards — matched as a substring of a handle or a
-    /// topic's name.
+    /// `\`, no wildcards — matched as a substring of a topic's name.
     pub like_body: String,
     /// The text's words in `to_tsquery` syntax over the `simple`
     /// configuration, the last as a prefix — matched against a post's
-    /// title and a person's display name. None when the text carries no
-    /// word.
+    /// title and a person's handle and display name. None when the text
+    /// carries no word.
     pub title_query: Option<String>,
     /// The index kinds served (`user`, `post`, `hashtag`). Never empty:
     /// a request that serves nothing does not reach the store.
@@ -252,8 +251,10 @@ impl SearchHit {
 ///
 /// What matches, by kind:
 ///
-/// - **user** — the handle contains the text, or the display name
-///   matches it by word: every word, the last as a prefix.
+/// - **user** — the handle or the display name matches the text by
+///   word: every word, the last as a prefix. A handle's words are what
+///   the `simple` parser splits it into (`pixel_joiner` holds `pixel`
+///   and `joiner`); a fragment from inside a word matches nothing.
 /// - **hashtag** — the name contains the text.
 /// - **post** — the title matches the text by word, or the author's
 ///   display name does; an untitled post is reached only through its
@@ -296,8 +297,8 @@ pub async fn find_in(
                           MIN(s.value) FILTER (WHERE s.kind = 'hashtag') AS name
                    FROM search_index s
                    WHERE s.kind = ANY($4)
-                     AND ((s.field IN ('handle', 'name')
-                           AND s.folded LIKE '%' || lower($2) || '%')
+                     AND ((s.field = 'name' AND s.folded LIKE '%' || lower($2) || '%')
+                       OR (s.field = 'handle' AND s.words @@ to_tsquery('simple', $3))
                        OR (s.field = 'title' AND s.words @@ to_tsquery('simple', $3))
                        OR (s.field = 'display_name' AND s.words @@ to_tsquery('simple', $3))
                        OR (s.kind = 'post' AND s.author_id IN (
@@ -351,8 +352,8 @@ pub async fn find_in(
                           MIN(s.value) FILTER (WHERE s.kind = 'hashtag') AS name
                    FROM search_index s
                    WHERE s.kind = ANY($4)
-                     AND ((s.field IN ('handle', 'name')
-                           AND s.folded LIKE '%' || lower($2) || '%')
+                     AND ((s.field = 'name' AND s.folded LIKE '%' || lower($2) || '%')
+                       OR (s.field = 'handle' AND s.words @@ to_tsquery('simple', $3))
                        OR (s.field = 'title' AND s.words @@ to_tsquery('simple', $3))
                        OR (s.field = 'display_name' AND s.words @@ to_tsquery('simple', $3))
                        OR (s.kind = 'post' AND s.author_id IN (
@@ -404,8 +405,8 @@ pub async fn count(pool: &PgPool, q: &MatchQuery) -> Result<i64, sqlx::Error> {
         r#"SELECT COUNT(DISTINCT s.node_id) AS "count!"
            FROM search_index s
            WHERE s.kind = ANY($3)
-             AND ((s.field IN ('handle', 'name')
-                   AND s.folded LIKE '%' || lower($1) || '%')
+             AND ((s.field = 'name' AND s.folded LIKE '%' || lower($1) || '%')
+               OR (s.field = 'handle' AND s.words @@ to_tsquery('simple', $2))
                OR (s.field = 'title' AND s.words @@ to_tsquery('simple', $2))
                OR (s.field = 'display_name' AND s.words @@ to_tsquery('simple', $2))
                OR (s.kind = 'post' AND s.author_id IN (

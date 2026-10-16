@@ -2588,8 +2588,8 @@ type Query {
   feedTrace(viewer: UUID!, target: UUID!): FeedTrace
 
   "Global search across nodes; returns a `SearchResult` per edge. Recall is
-   lexical: plain text matches handles and topic names by substring,
-   post titles and display names by word (the last word a prefix), and
+   lexical: plain text matches topic names by substring, post titles,
+   handles and display names by word (the last word a prefix), and
    brings the posts of every person whose display name matches;
    `@prefix` names people by handle prefix and `#prefix` topics by name
    prefix — bare, the matches lead and everything they reach follows;
@@ -2894,11 +2894,12 @@ there — encrypted content never is, since the backend only ever
 holds ciphertext
 ([chats.md §7](../instances/chats.md#7-encryption-as-the-privacy-mechanism)).
 
-**Plain text.** A query with no leading cue matches a handle and a
-Hashtag name by substring, and a post title and a display name by
-word. A display-name match needs no `@` — `@` is only for handles —
-and brings the person's posts, titled or not: "Mod" finds "Genesis
-Moderator" and everything they posted, while "enesis" matches no
+**Plain text.** A query with no leading cue matches a Hashtag name by
+substring, and a post title, a handle and a display name by word. A
+display-name match needs no `@` and brings the person's posts, titled
+or not: "Mod" finds "Genesis Moderator" and everything they posted. A
+handle match brings only the person — `@` stays the deliberate handle
+cue: "gen" finds @genesis, while "enesis" matches no handle and no
 display name.
 
 **Cues.** A leading `@prefix` is a person cue: it names every User
@@ -2942,11 +2943,13 @@ brings; one that keeps only people keeps just the profiles.
 stable; the client passes the reader's "Show what you've already
 seen" filter, which is off by default.
 
-**Match semantics.** Handles and Hashtag names match
-case-insensitively by substring under plain text and by prefix under
-a cue. Post titles and display names match by word: every typed
-word is required, the last as a prefix, so a title refines as it is
-typed. Chat-message bodies match by word-level full-text. The index
+**Match semantics.** Hashtag names match case-insensitively by
+substring under plain text; handles and Hashtag names match by prefix
+under a cue. Post titles, handles and display names match by word
+under plain text: every typed word is required, the last as a prefix,
+so a title refines as it is typed; a handle's words are split at its
+underscores (`pixel_joiner` holds `pixel` and `joiner`). Chat-message
+bodies match by word-level full-text. The index
 technology behind those semantics is an implementation choice.
 
 A blank query returns an empty connection, never an error. A query
@@ -2998,8 +3001,8 @@ the visible marker
 — e.g. the `redacted-user-{uuid}` handle sentinel — so a current
 value still exists to match. The index skips redacted values (a
 version row carrying a non-null redaction reason); without that
-rule, a substring query for "redacted" would surface every
-redacted handle and title.
+rule, a query for "redacted" would surface every redacted handle
+and title.
 
 ```graphql
 "What search returns: the kinds it serves; later slices add members

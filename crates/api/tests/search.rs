@@ -169,24 +169,51 @@ fn codes(response: &Value) -> Vec<String> {
         .unwrap_or_default()
 }
 
-/// A person is found by their handle by prefix and by substring, and by
-/// their display name by word — every word, the last as a prefix —
-/// whatever the case typed. A fragment from inside a display-name word
-/// finds no one.
+/// A person is found by their handle and by their display name by word —
+/// every word, the last as a prefix — whatever the case typed. A
+/// handle's words are split at its underscores. A fragment from inside a
+/// word, of a handle or of a display name, finds no one: plain "enesis"
+/// never finds @genesis, and `@` stays the deliberate handle cue (PR-93).
 ///
-/// A handle matches by substring and a display name by word prefix, case-insensitively.
-/// ´claim:search:a-handle-matches-by-substring-a-display-name-by-word-prefix´
+/// A handle and a display name match by word prefix, case-insensitively; a fragment inside a word finds no one.
+/// ´claim:search:a-handle-and-a-display-name-match-by-word-prefix´
 #[sqlx::test(migrations = "../../migrations")]
-async fn search_matches_a_handle_by_substring_and_a_display_name_by_word_prefix(pool: PgPool) {
+async fn search_matches_a_handle_and_a_display_name_by_word_prefix(pool: PgPool) {
     let rig = rig(pool);
     person(&rig.pool, "solarium", Some("Mira Coastline")).await;
+    person(&rig.pool, "genesis", None).await;
+    person(&rig.pool, "pixel_joiner", None).await;
     person(&rig.pool, "kel", None).await;
 
-    for typed in ["sol", "SOL", "lariu", "um", "mira", "COAST", "mira coa"] {
+    for (typed, who) in [
+        ("sol", "solarium"),
+        ("SOL", "solarium"),
+        ("Solarium", "solarium"),
+        ("mira", "solarium"),
+        ("COAST", "solarium"),
+        ("mira coa", "solarium"),
+        ("gen", "genesis"),
+        ("GENESIS", "genesis"),
+        ("pixel", "pixel_joiner"),
+        ("joiner", "pixel_joiner"),
+        ("pixel_jo", "pixel_joiner"),
+        ("pixel jo", "pixel_joiner"),
+    ] {
         let found = search(&rig, None, json!({ "query": typed })).await;
-        assert_eq!(names(&found), vec!["User:solarium"], "for {typed:?}");
+        assert_eq!(names(&found), vec![format!("User:{who}")], "for {typed:?}");
     }
-    for missing in ["solx", "line", "ira", "coast mir"] {
+    for missing in [
+        "enesis",
+        "nesis",
+        "lariu",
+        "um",
+        "oiner",
+        "xel",
+        "solx",
+        "line",
+        "ira",
+        "coast mir",
+    ] {
         let found = search(&rig, None, json!({ "query": missing })).await;
         assert_eq!(names(&found), Vec::<String>::new(), "for {missing:?}");
     }
@@ -383,8 +410,7 @@ async fn a_superseded_title_no_longer_matches(pool: PgPool) {
 
 /// A redacted account keeps a current value — the `redacted-user-…`
 /// sentinel — so the index skips it by rule: neither its old names nor
-/// the sentinel match, and a substring query for "redacted" surfaces
-/// nothing.
+/// the sentinel match, and a query for "redacted" surfaces nothing.
 ///
 /// A redacted handle or name never matches, the sentinel included.
 /// ´claim:search:redacted-values-never-match´

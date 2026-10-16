@@ -11,15 +11,17 @@
 //!   is never an error; past [`MAX_QUERY_CHARS`] it is refused. Only a
 //!   LEADING `@prefix` or `#prefix` is a cue — anywhere else those
 //!   characters are text.
-//! - **Plain text** matches a person's handle and a topic's name
+//! - **Plain text** matches a post's title and a person's handle and
+//!   display name by word: full text under the `simple` configuration,
+//!   every word required, the last as a prefix, so "Mod" finds "Genesis
+//!   Moderator", "gen" finds @genesis, and "enesis" finds neither
+//!   (PostgreSQL docs §12.3.2, prefix matching in `to_tsquery`). A
+//!   handle's words are what the parser splits it into: `pixel_joiner`
+//!   holds `pixel` and `joiner`. A person whose display name matches
+//!   brings their posts, titled or not; a handle match brings only the
+//!   person — `@` is the deliberate handle cue. A topic's name matches
 //!   case-insensitively by substring: the index's trigram operator class
-//!   serves `LIKE` (PostgreSQL docs, *pg_trgm*, "Index Support"). It
-//!   matches a post's title and a person's display name by word: full
-//!   text under the `simple` configuration, every word required, the last
-//!   as a prefix, so "Mod" finds "Genesis Moderator" and "enesis" finds
-//!   nothing (PostgreSQL docs §12.3.2, prefix matching in `to_tsquery`).
-//!   A person whose display name matches brings their posts, titled or
-//!   not; a handle is matched only by `@`.
+//!   serves `LIKE` (PostgreSQL docs, *pg_trgm*, "Index Support").
 //! - **Cues** ([`cue`]). `@prefix` names every person whose handle starts
 //!   with it; `#prefix` every topic whose name does. A bare cue lists the
 //!   matches, then what they reach: a person's posts, comments and the
@@ -255,7 +257,8 @@ fn like_body(text: &str) -> String {
 }
 
 /// The words of `text` as a `to_tsquery` expression: every word
-/// required, the last matched as a prefix. A word is a maximal run of
+/// required, the last matched as a prefix — the one word query titles,
+/// handles and display names match. A word is a maximal run of
 /// alphanumeric characters, so every word is a single quoted lexeme with
 /// nothing in it the query syntax could read as an operator. None when
 /// `text` carries no word.
