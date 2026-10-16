@@ -425,16 +425,18 @@ noun):
   and your edit is still here. Try again in a little while.` (the edit's
   blessed ending in the reply's sentence, jakob 2026-10-05).
   Payer-neutral by the v1.0.0 scope cut.)*
-- **Your opinion on your post** (the full pad on your own post — the
-  seal's and a post edit's): Publishing also signs your opinion on your
-  own post — for or against it, and how far it reaches people through
-  you. It starts at a gentle 🙂 *(+0.10 / +0.10)* and rides the same
-  signature as your post. / An edit carries your opinion too, starting
-  at nothing, so an edit you don't adjust leaves it as it is. Nothing is
-  signed until Set. Swap the input in settings if you prefer sliders or
-  numbers. *(Blessed jakob 2026-10-16. "How far it
-  reaches people through you" names the second number on one's own
-  post, where the pad's axis word stays `How much reaches you`.)*
+- **Your opinion on your post** (the one-axis pad on your own post —
+  the seal's and a post edit's): Publishing also signs your opinion on
+  your own post — for or against, from a gentle 🙂 *(+0.10)* by
+  default. An edit opens where it stands, and an edit you don't adjust
+  leaves it as it is. / How much of it reaches you isn't part of
+  publishing: once the post is out, give it an opinion on its face,
+  like anyone's. Nothing is signed until Set. Swap the input in
+  settings if you prefer sliders or numbers. *(Drafted 2026-10-16,
+  round 15 — its wording jakob's at review. The first sentence and the
+  last are the blessed pads' own; the rest names the census revert
+  (PR-101): publishing carries one number, and the author's opinion of
+  the post is the ordinary one its face takes.)*
 - **Toward what you answer** (the reply's two-axis pad): Replying also
   signs an opinion on what you answer — for or against, and
   how much of it reaches you. It starts at a gentle 🙂 *(+0.10 / +0.10)*
@@ -2576,6 +2578,15 @@ paid on its own.` in the singular), and the cap aside trimmed to
 `Your feed reads it capped at +1.00 / +0.85.` **These are the PERSON
 family's words** — see *the topic disconnects* below.
 
+**The unreachable start** (`ComposePad`, Set at `0.00`). Dialog
+`Start it unreachable?`, body `Your pick is your post's own path into
+anyone's feed. At 0.00 that path carries nothing — your post will live
+on your profile, reached only through the tags and citations you sign
+with it, until someone gives it an opinion.`, with `Keep adjusting`
+filled and `Set it anyway` quiet (*drafted 2026-10-16, round 15 — the
+body's wording jakob's at review; the title and both buttons are
+round 13's*).
+
 **What one signature commits is counted in things.** The footer reads
 `You're signing 2 things`, the total `2 things, signed together`
 (`1 thing, signed` in the singular), the rows carry bare counts, and
@@ -2635,7 +2646,8 @@ the registry is whole:
   own post` (`ComposePad`, `EditPad`) and `what you answer` (`ReplyPad`).
 - **The pad's poles** — `Against` · `For` across, `Less` · `More` up;
   the Affinity pad's `Dislike` · `Like` and `Far away` · `Close to me`
-  (*Topics*).
+  (*Topics*); the one-axis pads' `Against` · `For` alone (`ComposePad`,
+  `EditPad`).
 - **The readouts, spoken.** `Current opinion: All in, For or against
   +1.00, How much reaches you +1.00`, `Your pick: Dislike, keep away,
   For or against −0.55, How much reaches you −0.15` and `Resulting
