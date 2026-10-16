@@ -218,8 +218,18 @@ not the opinion the reader's face shows on that post; `your opinion`
 there reads as that one, or as overwriting it. So the reply's note,
 its pad's "?" and the citing "?" say `an opinion`. *Your opinion*
 stays where it IS the reader's own: the face and its control, the
-opinion a vouch or an approval signs, one's own post or message, the
+opinion a vouch or an approval signs, the face on one's own post, the
 chat seals' pad, and every readout of an opinion already signed.
+
+**What an author signs with their own content is their BACKING** (jakob
+2026-10-16: "'your backing' sounds nice"). The authoring record — the
+post's Publish, an edit's, a message's Send — carries one number of its
+own, and it is not the opinion the post's face takes. So the seal's, an
+edit's and the chat sheet's row reads `Your backing`, its pad is the
+`Backing pad for your own post` with the "?" `Your backing on your
+post`, and an edit's pad reads `Current backing` and `Backing after`
+around `Your pick`. **Backing** is the authoring bundle; **opinion** is
+the face's record — the two words never trade places.
 
 **"Standing" leaves the screen entirely.** `Current opinion` and
 `Resulting opinion` say what it said, in the word a reader owns.
@@ -425,18 +435,18 @@ noun):
   and your edit is still here. Try again in a little while.` (the edit's
   blessed ending in the reply's sentence, jakob 2026-10-05).
   Payer-neutral by the v1.0.0 scope cut.)*
-- **Your opinion on your post** (the one-axis pad on your own post —
-  the seal's and a post edit's): Publishing also signs your opinion on
+- **Your backing on your post** (the one-axis pad on your own post —
+  the seal's and a post edit's): Publishing also signs your backing of
   your own post — for or against, from a gentle 🙂 *(+0.10)* by
-  default. An edit opens where it stands, and an edit you don't adjust
-  leaves it as it is. / How much of it reaches you isn't part of
-  publishing: once the post is out, give it an opinion on its face,
-  like anyone's. Nothing is signed until Set. Swap the input in
-  settings if you prefer sliders or numbers. *(Drafted 2026-10-16,
-  round 15 — its wording jakob's at review. The first sentence and the
-  last are the blessed pads' own; the rest names the census revert
-  (PR-101): publishing carries one number, and the author's opinion of
-  the post is the ordinary one its face takes.)*
+  default. An edit adds to it, starting at nothing, so an edit you
+  don't adjust leaves it as it is. / How much of it reaches you isn't
+  part of publishing: once the post is out, give it an opinion on its
+  face, like anyone's. Nothing is signed until Set. Swap the input in
+  settings if you prefer sliders or numbers. *(Blessed jakob
+  2026-10-16, as drafted in round 15. The same ruling moved two places:
+  `backing` for the authoring number, title included, and the edit
+  sentence to the pick-is-the-edge model, in round 13's blessed
+  `starting at nothing`.)*
 - **Toward what you answer** (the reply's two-axis pad): Replying also
   signs an opinion on what you answer — for or against, and
   how much of it reaches you. It starts at a gentle 🙂 *(+0.10 / +0.10)*
@@ -513,7 +523,7 @@ noun):
 dialog's own subject, so a listener hears which explanation the tap
 brings: `Your key`, `License`, `Sensitive`, `How the filter works`,
 `What is CGT?`. The three stance pads take theirs the same way —
-`Your opinion on your post`, `Toward what you answer`, `Your vouch back`
+`Your backing on your post`, `Toward what you answer`, `Your vouch back`
 — because one name across three surfaces says only that a dialog
 exists. `How opinions work` is the opinion control's own help, where the
 control itself is the subject.
@@ -2579,13 +2589,24 @@ paid on its own.` in the singular), and the cap aside trimmed to
 family's words** — see *the topic disconnects* below.
 
 **The unreachable start** (`ComposePad`, Set at `0.00`). Dialog
-`Start it unreachable?`, body `Your pick is your post's own path into
+`Start it unreachable?`, body `Your backing is your post's own path into
 anyone's feed. At 0.00 that path carries nothing — your post will live
 on your profile, reached only through the tags and citations you sign
 with it, until someone gives it an opinion.`, with `Keep adjusting`
 filled and `Set it anyway` quiet (*drafted 2026-10-16, round 15 — the
 body's wording jakob's at review; the title and both buttons are
 round 13's*).
+
+**The backing pad's own words** (`ComposePad`, `EditPad`, round 15):
+the readouts `Current backing` · `Your pick` · `Backing after`, the
+walk-back `Walk it all back` — the ordinary pad's walk-away word, with
+`all` because it parks the whole raw sum's opposite — and the cap line
+under `Backing after` when the sum passes ±1, `Adds up to +1.40; your
+feed reads it capped at +1.00.` (the severance aside's shape at one
+axis). Exactly `0.00` is spoken `Nothing` beside its 🤷. (*`Current
+backing`, `Backing after` and `Walk it all back` are the ruling's own
+words, jakob 2026-10-16; the cap line and `Nothing` drafted — their
+wording jakob's at review.*)
 
 **What one signature commits is counted in things.** The footer reads
 `You're signing 2 things`, the total `2 things, signed together`
@@ -2642,8 +2663,9 @@ the registry is whole:
   hidden-until-focused control beside every face, its target the face's
   own.
 - **The pad's name** — `Opinion pad for this post`; the targets read
-  `this comment`, `@mira`, `#saltmaps`, and on the seal-scale pads `your
-  own post` (`ComposePad`, `EditPad`) and `what you answer` (`ReplyPad`).
+  `this comment`, `@mira`, `#saltmaps`, and on the seal-scale pad `what
+  you answer` (`ReplyPad`); the one-axis pads are the `Backing pad for
+  your own post` (`ComposePad`, `EditPad`).
 - **The pad's poles** — `Against` · `For` across, `Less` · `More` up;
   the Affinity pad's `Dislike` · `Like` and `Far away` · `Close to me`
   (*Topics*); the one-axis pads' `Against` · `For` alone (`ComposePad`,
