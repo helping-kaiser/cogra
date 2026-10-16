@@ -623,6 +623,47 @@ describe("SavedScreen — states", () => {
     scroller.remove();
   });
 
+  it("the_tail_watch_survives_a_render_that_landed_no_page", async () => {
+    // The watch is rebuilt only when a page lands (`infinite-list.ts`): a
+    // render that changed nothing — here, keystrokes still settling — keeps
+    // the observer that watches the approaching tail.
+    server.use(
+      graphql.query("SavedPage", () =>
+        HttpResponse.json({ data: page(THREE, { hasNextPage: true, endCursor: "c2" }) }),
+      ),
+    );
+    const Base = globalThis.IntersectionObserver;
+    const made: IntersectionObserver[] = [];
+    globalThis.IntersectionObserver = class extends Base {
+      constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
+        super(callback, options);
+        made.push(this);
+      }
+    };
+    const scroller = document.createElement("div");
+    document.body.append(scroller);
+    try {
+      renderWithProviders(
+        <ScrollHostProvider value={{ current: scroller }}>
+          <SavedScreen searchDebounceMs={60_000} />
+        </ScrollHostProvider>,
+        { store: signedIn() },
+      );
+      const list = await screen.findByTestId("saved-list");
+      const tail = list.querySelector("li")!;
+      const watching = () =>
+        made.filter((observer) => (observer as unknown as { targets: Set<Element> }).targets.has(tail));
+      expect(watching()).toHaveLength(1);
+      const observer = watching()[0];
+      search("l");
+      search("lo");
+      expect(watching()).toEqual([observer]);
+    } finally {
+      globalThis.IntersectionObserver = Base;
+      scroller.remove();
+    }
+  });
+
   it("pull_down_refreshes_saved", async () => {
     let reads = 0;
     server.use(

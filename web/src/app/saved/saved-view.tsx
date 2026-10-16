@@ -228,9 +228,11 @@ export function SavedScreen({
       writes.kept(entry.id, entry.bookmarkedAt) !== null || writes.failure(entry.id)?.kind === "restore",
   );
 
+  // The watch is rebuilt only when `loadMore` changes — a page landed, a fresh
+  // cursor — never on a render that changed nothing (`infinite-list.ts`).
   const tailRef = useApproachingTail({
     root: host,
-    onReach: () => void loadMore(),
+    onReach: loadMore,
     enabled: hasNextPage && !moreFailed,
   });
   const tailIndex = tailIndexOf(shown.length);
