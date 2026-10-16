@@ -7,6 +7,7 @@ package com.cogra.network.repo
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.DefaultUpload
 import com.apollographql.apollo.api.Optional
+import com.apollographql.apollo.exception.ApolloNetworkException
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
 import com.cogra.domain.map
@@ -70,7 +71,8 @@ class MediaRepositoryImpl @Inject constructor(
 
     override suspend fun uploadMedia(
         picture: ProcessedPicture,
-    ): Outcome<MediaAssetView> = sendPicture(picture).echoing(uploadDigestOf(picture.bytes))
+    ): Outcome<MediaAssetView> = resentOnceIfLostInTransport { sendPicture(picture) }
+        .echoing(uploadDigestOf(picture.bytes))
 
     private suspend fun sendPicture(
         picture: ProcessedPicture,
@@ -120,7 +122,7 @@ class MediaRepositoryImpl @Inject constructor(
         val scale = destination.toScale()
         val device = uploadDigestOf(file)
         if (video.byteCount < resumableThresholdBytes) {
-            return sendWhole(file, video.byteCount, scale).echoing(device)
+            return resentOnceIfLostInTransport { sendWhole(file, video.byteCount, scale) }.echoing(device)
         }
         return sendInParts(file, video.byteCount, scale, onProgress).echoing(device)
     }
@@ -224,6 +226,30 @@ class MediaRepositoryImpl @Inject constructor(
     override suspend fun mediaAttachment(id: String): Outcome<MediaReadiness?> = guard.run {
         client.query(MediaAttachmentQuery(id = id)).fetch().map { it.mediaAttachment?.toDomain() }
     }
+}
+
+/**
+ * A single-shot upload, sent once more when the first try died in transport.
+ *
+ * Apollo hands OkHttp a multipart body marked one-shot (`isOneShot` is "the
+ * body is an upload"), and OkHttp never replays a one-shot request once it
+ * has started sending it (`RetryAndFollowUpInterceptor`). Every JSON request
+ * is replayed on a fresh connection when the pooled one it was given turns
+ * out dead; an upload is not, so the first request after the picker and the
+ * crop sat idle — which is the upload — failed while every other one healed
+ * silently, and the author's retry always worked (hand test, round 4).
+ *
+ * The resend is the one OkHttp would have made, and it is safe: the server
+ * answers a retried upload of the same bytes by the same author with the row
+ * it already holds (`store_asset`), so a first try that did arrive costs
+ * nothing twice. Only a transport fault is resent — a refusal is an answer,
+ * and a GraphQL error is the server's own word on the request.
+ */
+private suspend fun resentOnceIfLostInTransport(
+    send: suspend () -> Outcome<MediaAssetView>,
+): Outcome<MediaAssetView> {
+    val first = send()
+    return if (first is Outcome.Failed && first.cause is ApolloNetworkException) send() else first
 }
 
 /**

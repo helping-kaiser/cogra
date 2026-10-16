@@ -16,6 +16,7 @@ import {
   expectation,
   IntentMismatch,
   joinExpectations,
+  postEdit,
   postGenesis,
   serverBlankFolded,
   serverChecked,
@@ -203,6 +204,28 @@ describe("the expectation builders", () => {
   it("follows a Type with an Affinity and anything else with an Opinion", () => {
     expect(stanceRecord("name:rust", 0.1, 0.1).family).toBe("affinity");
     expect(stanceRecord("prof:ab", 0.1, 0.1).family).toBe("opinion");
+  });
+
+  // PR-101 (round 15): the face on one's own post signs an ordinary OPINION —
+  // both numbers, its own bundle — never a Publish; the authoring backing is
+  // the Publish bundle, one axis, `p_i` pinned at 1.
+  it("signs the face on one's own post as an ordinary Opinion, both numbers free", () => {
+    const face = stanceRecord("mint:own-post", -0.4, 0.7);
+    expect(face).toMatchObject({ family: "opinion", pDirected: -0.4, pInterest: 0.7, payload: "empty" });
+  });
+
+  it("carries a post edit's own pick, p_i census-fixed — PICK-IS-THE-EDGE, never a delta", () => {
+    const content: ExpectedContent = {
+      node: "00000000-0000-4000-8000-000000000000",
+      title: null,
+      description: null,
+      body: "words",
+      media: [],
+      sensitive: null,
+    };
+    expect(postEdit("mint:own-post", content, 0)).toMatchObject({ family: "publish", pDirected: 0, pInterest: 1 });
+    expect(postEdit("mint:own-post", content, -0.3)).toMatchObject({ pDirected: -0.3, pInterest: 1 });
+    expect(postGenesis(0.1, "a=0;o=0", content)).toMatchObject({ pDirected: 0.1, pInterest: 1 });
   });
 
   it("re-points a joined part's minted references at its own writes", () => {

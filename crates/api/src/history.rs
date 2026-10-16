@@ -2,7 +2,8 @@
 //!
 //! The seen-list's API half (api-spec.md `User.viewHistory`, `markSeen`;
 //! feed-ranking.md §9.4): which kinds History serves, the batch rule a
-//! `markSeen` call obeys, and the keyset cursor over the list.
+//! `markSeen` call obeys, and the keyset cursors over the list — plain,
+//! and narrowed by a query through the one search matcher.
 //!
 //! The store holds the law that matters most — the primary key makes the
 //! list append-once, and the registries decide what is seeable
@@ -13,7 +14,7 @@ use std::collections::HashSet;
 
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
-use postgres_store::history::HistoryCursor;
+use postgres_store::history::{HistoryCursor, HistoryMatchCursor};
 use uuid::Uuid;
 
 /// The most ids one `markSeen` call carries: the page budget
@@ -78,6 +79,43 @@ pub fn decode_cursor(cursor: &str) -> Option<HistoryCursor> {
     })
 }
 
+/// A narrowed list's cursor as the wire carries it. Its own prefix keeps
+/// it from ever passing for a plain list's: a page narrowed by a query
+/// and one that is not are two orders.
+pub fn encode_match_cursor(cursor: HistoryMatchCursor) -> String {
+    B64.encode(format!(
+        "historyq:{}:{}:{}",
+        cursor.section,
+        cursor.first_seen_at.timestamp_micros(),
+        cursor.content_id
+    ))
+}
+
+/// A narrowed list's wire cursor back to its position; None for anything
+/// a narrowed History read did not issue.
+pub fn decode_match_cursor(cursor: &str) -> Option<HistoryMatchCursor> {
+    let text = String::from_utf8(B64.decode(cursor).ok()?).ok()?;
+    let mut parts = text.split(':');
+    let (Some("historyq"), Some(section), Some(micros), Some(id), None) = (
+        parts.next(),
+        parts.next(),
+        parts.next(),
+        parts.next(),
+        parts.next(),
+    ) else {
+        return None;
+    };
+    let section: i32 = section.parse().ok()?;
+    if !(0..postgres_store::search::SECTIONS).contains(&section) {
+        return None;
+    }
+    Some(HistoryMatchCursor {
+        section,
+        first_seen_at: chrono::DateTime::from_timestamp_micros(micros.parse().ok()?)?,
+        content_id: Uuid::parse_str(id).ok()?,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -109,6 +147,36 @@ mod tests {
             &B64.encode("history:0:00000000-0000-0000-0000-000000000000:extra"),
         ] {
             assert_eq!(decode_cursor(foreign), None, "{foreign}");
+        }
+    }
+
+    /// A narrowed History cursor decodes back to its position, and neither list's cursor passes for the other's, nor for Saved's.
+    /// ´claim:history:a-narrowed-cursor-round-trips´
+    #[test]
+    fn a_narrowed_history_cursor_round_trips_and_passes_for_no_other_lists() {
+        let cursor = HistoryMatchCursor {
+            section: 2,
+            first_seen_at: chrono::DateTime::from_timestamp_micros(1_791_354_394_123_456)
+                .expect("instant"),
+            content_id: Uuid::new_v4(),
+        };
+        assert_eq!(
+            decode_match_cursor(&encode_match_cursor(cursor)),
+            Some(cursor)
+        );
+        let plain = HistoryCursor {
+            first_seen_at: cursor.first_seen_at,
+            content_id: cursor.content_id,
+        };
+        assert_eq!(decode_match_cursor(&encode_cursor(plain)), None);
+        assert_eq!(decode_cursor(&encode_match_cursor(cursor)), None);
+        for foreign in [
+            &B64.encode("savedq:2:0:00000000-0000-0000-0000-000000000000"),
+            &B64.encode("historyq:3:0:00000000-0000-0000-0000-000000000000"),
+            &B64.encode("historyq:x:0:00000000-0000-0000-0000-000000000000"),
+            &B64.encode("historyq:0:0:not-a-uuid"),
+        ] {
+            assert_eq!(decode_match_cursor(foreign), None, "{foreign}");
         }
     }
 }

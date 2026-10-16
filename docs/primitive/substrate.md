@@ -437,11 +437,17 @@ per-concept table: [substrate-map.md](substrate-map.md)):
 
 Discipline for update records:
 
-- **Inert parameters, read individually.** An update is not a
-  stance: each carrier is authored at its inert setting — Publish
-  and Owner at attachment `0`, Review at `(0,0)` — so the record
-  is routing-inert and vouch-inert (zero is inert,
+- **Inert by default, read individually.** Each carrier stands at
+  its inert setting — Publish and Owner at attachment `0`, Review at
+  `(0,0)` — so an update nobody adjusts is routing-inert and
+  vouch-inert (zero is inert,
   [edges.md §1](edges.md#1-the-edge-record-and-cogras-two-axes)).
+  A Post edit carries its author's attachment pick instead when the
+  author moves it: a stance riding the edit's own record, netting
+  into the author's Publish bundle like any record
+  ([feed-ranking.md §3.2](feed-ranking.md#32-the-fold--per-author-net-stance)),
+  and a moved pick alone is a legal update — a content-identical
+  version ([post.md §4](../instances/post.md#4-editing)).
   Folds read update records **individually** — never the author's
   netted bundle — the same discipline ballots use
   ([governance.md](governance.md)).
