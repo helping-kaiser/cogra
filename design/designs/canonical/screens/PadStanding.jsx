@@ -55,9 +55,21 @@
    a 40px disc in its own orange at 10 %, and nothing scales. Release lifts the
    layer and parks the pick — the `parked` state this board draws by default.
    On Android the drag ticks once where the knob crosses a zero line or meets
-   the field's edge (readme §4, *Haptics*); the drawing has no tick to show. */
-export const PROPS = { knob: { editor: "enum", options: ["parked", "held"], default: "parked" } };
-export const VALS = `parkedShown: this.props.knob === "held" ? "none" : "block", heldShown: this.props.knob === "held" ? "block" : "none"`;
+   the field's edge (readme §4, *Haptics*); the drawing has no tick to show.
+
+   THE `landing` CHIP DRAWS THE PICK THAT TAKES NO SIDE (jakob 2026-10-20,
+   seam 240). −1.00 / −0.15 against the same +1.00 / +1.00 lands at
+   +0.00 / +0.85: interested, no side taken — held, unreachable, and not
+   severance, so Set signs it like any other pick and no dialog asks.
+   `noSide` draws the landing reading the state under 🤔; `explained` draws
+   the 🤔 tapped, its three lines in the pad's body, the "?"'s grammar. */
+export const PROPS = {
+  knob: { editor: "enum", options: ["parked", "held"], default: "parked" },
+  landing: { editor: "enum", options: ["pulledBack", "noSide", "explained"], default: "pulledBack" },
+};
+export const VALS = `parkedShown: this.props.landing === "pulledBack" && this.props.knob !== "held" ? "block" : "none", heldShown: this.props.landing === "pulledBack" && this.props.knob === "held" ? "block" : "none", noSideShown: this.props.landing === "noSide" ? "block" : "none", explainedShown: this.props.landing === "explained" ? "block" : "none"`;
+
+const NO_SIDE_PICK = { pDirected: -1, pInterest: -0.15 };
 
 export function Screen() {
   return (
@@ -69,6 +81,12 @@ export function Screen() {
         </div>
         <div style={{ display: "{{heldShown}}" }}>
           <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={{ pDirected: -0.55, pInterest: -0.15 }} stanceKnobHeld />
+        </div>
+        <div style={{ display: "{{noSideShown}}" }}>
+          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={NO_SIDE_PICK} />
+        </div>
+        <div style={{ display: "{{explainedShown}}" }}>
+          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={NO_SIDE_PICK} stanceExplaining="zero" />
         </div>
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />

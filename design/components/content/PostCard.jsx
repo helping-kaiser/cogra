@@ -100,6 +100,11 @@ export function PostCard({
   stanceSigning,
   stanceHoldProgress,
   stanceKnobHeld,
+  /* Pass-throughs to `StanceControl`'s `defaultExplaining` (a board's pad
+     body already explaining) and `borrowed` (the reader still borrows a view
+     — the shell's fact, as `signedIn` is). */
+  stanceExplaining,
+  stanceBorrowed,
   /* AN APPLICANT'S ANCHOR IS LOCKED, NOT GONE (PR-103, round 16): forwarded
      to `StanceControl`'s `anchorOpacity`, the shell's fact about its reader
      as `signedIn` is. */
@@ -537,6 +542,8 @@ export function PostCard({
               signing={stanceSigning}
               holdProgress={stanceHoldProgress}
               knobHeld={stanceKnobHeld}
+              defaultExplaining={stanceExplaining}
+              borrowed={stanceBorrowed}
               anchorOpacity={stanceOpacity}
               {...(stanceAxes ? { axes: stanceAxes } : null)}
               node={node && "stance"}

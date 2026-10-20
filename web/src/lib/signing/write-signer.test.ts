@@ -834,15 +834,14 @@ describe("write signer", () => {
     await preparedCarried();
     const submits = countingSubmits();
     const results = await signer.signCarriedAtLanding([
-      // Prepared on another device: it would sign under the exemption alone…
+      // Prepared on another device: nothing kept for it…
       await stanceView("sw-other", "AWAITING_PRE_SIGN", 0.1, 0.1, new Uint8Array(), COMPLETION),
       // …but the served value is not the one this device verified.
       await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.9, 0.2, new Uint8Array(), COMPLETION),
     ]);
     expect(results.map((r) => r.kind)).toEqual(["rejectedByDevice", "rejectedByDevice"]);
     expect(submits.count()).toBe(0);
-    // KEPT through the refusal: the next poll must refuse again, never find
-    // the expectation gone and sign under the exemption.
+    // KEPT through the refusal: the next poll checks against it again.
     expect(await carried.get("sw-c")).not.toBeNull();
   });
 
@@ -856,15 +855,7 @@ describe("write signer", () => {
     expect(submits.count()).toBe(0);
   });
 
-  it("a_carried_write_this_device_never_prepared_signs_under_the_carried_at_landing_exemption", async () => {
-    const released = await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.4, 0.2, new Uint8Array(), COMPLETION);
-    const submits = sealingHost(released);
-    const results = await signer.signCarriedAtLanding([released]);
-    expect(submits.count()).toBe(1);
-    expect(results).toEqual([{ kind: "done", id: "sw-c", state: "RELAYING" }]);
-  });
-
-  it("the_carried_at_landing_exemption_still_runs_the_transport_check", async () => {
+  it("a_released_write_that_does_not_parse_is_refused", async () => {
     const submits = countingSubmits();
     const results = await signer.signCarriedAtLanding([
       { ...view("sw-c", "AWAITING_PRE_SIGN", null), canonicalProposal: toBase64(Uint8Array.of(1, 2)) },
@@ -873,9 +864,9 @@ describe("write signer", () => {
     expect(submits.count()).toBe(0);
   });
 
-  // ---- the exemption holds for an Opinion alone (PR-105) -------------------
+  // ---- no family is exempt from the carried check at the landing ----------
 
-  it.each(["publish", "tag", "reference", "affinity"] as const)(
+  it.each(["opinion", "publish", "tag", "reference", "affinity"] as const)(
     "a_released_%s_this_device_never_prepared_is_refused_not_exempt",
     async (family) => {
       const submits = countingSubmits();
@@ -886,29 +877,31 @@ describe("write signer", () => {
         {
           kind: "rejectedByDevice",
           id: "sw-c",
-          reason: "only an Opinion is exempt from the carried check at the landing",
+          reason: "this device holds no prepare-time check for the released carried write",
         },
       ]);
       expect(submits.count()).toBe(0);
     },
   );
 
-  it("one_digest_less_non_opinion_write_refuses_the_whole_released_batch", async () => {
+  it("one_digest_less_write_refuses_the_whole_released_batch", async () => {
+    await preparedCarried();
     const submits = countingSubmits();
     const results = await signer.signCarriedAtLanding([
-      // Exempt on its own…
-      await stanceView("sw-op", "AWAITING_PRE_SIGN", 0.4, 0.2, new Uint8Array(), COMPLETION),
+      // Verified at its prepare on this device…
+      await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.4, 0.2, new Uint8Array(), COMPLETION),
       // …but the batch also releases a Tag nothing on this device verified.
       await stanceView("sw-tag", "AWAITING_PRE_SIGN", 0.5, 0.5, new Uint8Array(), COMPLETION, "tag"),
     ]);
     expect(results.map((r) => r.kind)).toEqual(["rejectedByDevice", "rejectedByDevice"]);
     expect(submits.count()).toBe(0);
     expect(await store.handshakeIds()).toEqual([]);
+    expect(await carried.get("sw-c")).not.toBeNull();
   });
 
   it("a_non_opinion_write_with_its_kept_expectation_still_signs_at_the_landing", async () => {
-    // The narrowing is the exemption's alone: a family checked at its prepare
-    // on this device signs against its kept digest as before.
+    // A family checked at its prepare on this device signs against its kept
+    // digest.
     const prepared = await stanceView("sw-c", "CARRIED", 0.5, 0.5, new Uint8Array(), [], "tag");
     await carried.save("sw-c", await carriedDigest(decoded(prepared)));
     const released = await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.5, 0.5, new Uint8Array(), COMPLETION, "tag");
@@ -918,11 +911,12 @@ describe("write signer", () => {
     expect(results).toEqual([{ kind: "done", id: "sw-c", state: "RELAYING" }]);
   });
 
-  it("an_exempt_opinion_still_runs_the_approve_checks", async () => {
-    // Exempt from the carried check, not from the handshake: a seal over a
+  it("a_released_write_with_its_kept_expectation_still_runs_the_approve_checks", async () => {
+    // Passing the carried check does not skip the handshake: a seal over a
     // body the device never pre-signed is refused at the approve step.
     const released = await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.4, 0.2, new Uint8Array(), COMPLETION);
     const proposal = decoded(released);
+    await carried.save("sw-c", await carriedDigest(proposal));
     let submits = 0;
     server.use(
       hostHandler,
