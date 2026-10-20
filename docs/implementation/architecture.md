@@ -300,17 +300,15 @@ steps:
    property instead: every record toward the shown target, each
    value in range, as many records as the cost shown, and the shown
    raw sums plus the batch netting to exactly `(0, 0)`. The staged
-   admission Registration is the first named exemption: the backend stages
+   admission Registration is the one named exemption: the backend stages
    it at approval and the device holds no form for it, so it runs
    the transport checks alone. An act carried with an application
    is checked at its prepare, where its form exists, and the device
    keeps the verified proposal's digest, dependencies excluded; at
    the landing it signs only a proposal that still digests to it,
    the landing's appended dependencies aside. A landing seen on a
-   device that holds no such digest — the act was prepared on
-   another — signs an Opinion under the second named exemption, on
-   the transport checks alone; any other family without a digest
-   refuses the whole released batch. Then the device
+   device that holds no such digest refuses the whole released
+   batch; no family is exempt. Then the device
    signs the proposal pre-commitment; the key never leaves it.
 3. **Relay and seal** (backend ↔ L1). Submit the pre-signed
    proposal through the L1 boundary; the L1 host verifies it,

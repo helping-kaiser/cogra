@@ -106,7 +106,7 @@ The rule behind the split: the shared graph holds what the Post
 
 - **Topic tagging** — a **Tag** hyper-edge (Actor → Post → Type),
   at creation or later; each tag is its own priced act. Un-tagging
-  is a further tag at relevance `0`, which the current-topics fold
+  is a further tag at `(0,0)`, which the current-topics fold
   reads as withdrawn
   ([hashtag.md §4](hashtag.md#4-the-current-topics-fold)).
 - **Quoting, embedding, mentioning** — a **Reference** hyper-edge
