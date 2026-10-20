@@ -13,16 +13,17 @@ import org.bouncycastle.math.ec.rfc8032.Ed25519
 
 /**
  * Domain-separation tags. Every signed or hashed object is prefixed so
- * no artifact of one role verifies in another.
+ * no artifact of one role verifies in another. A tag's version names its
+ * formula, so no artifact of an earlier formula verifies under a later one.
  */
 object Tags {
-    const val PRE_DIGEST_CONTENT = "cogra-l1:pre-digest:content:v1"
-    const val PRE_DIGEST_DEPS = "cogra-l1:pre-digest:deps:v1"
+    const val PRE_DIGEST_CONTENT = "cogra-l1:pre-digest:content:v2"
+    const val PRE_DIGEST_DEPS = "cogra-l1:pre-digest:deps:v2"
     const val PRE_COMMITMENT = "cogra-l1:pre-commitment:v1"
-    const val COMMIT_CONTENT = "cogra-l1:commitment:content:v1"
-    const val COMMIT_DEPS = "cogra-l1:commitment:deps:v1"
-    const val HOST_SEAL = "cogra-l1:host-seal:v1"
-    const val APPROVAL = "cogra-l1:approval:v1"
+    const val COMMIT_CONTENT = "cogra-l1:commitment:content:v2"
+    const val COMMIT_DEPS = "cogra-l1:commitment:deps:v2"
+    const val HOST_SEAL = "cogra-l1:host-seal:v2"
+    const val APPROVAL = "cogra-l1:approval:v2"
 }
 
 /** Salt / nonce length — the published entropy floor of the stand-in. */
@@ -54,30 +55,51 @@ fun sha256Tagged(tag: String, parts: List<ByteArray>): ByteArray {
 }
 
 /**
- * The actor-side pre-digest of a removable projection: binds the exact
- * bytes under the actor's private nonce, before any host salt exists.
+ * The actor-side pre-digest of a removable projection: SHA-256 over (tag,
+ * act identifier, the actor's private nonce, bytes) — the exact bytes
+ * bound to the one act they were proposed for, before any host salt
+ * exists.
  */
-fun preDigest(tag: String, nonce: ByteArray, bytes: ByteArray): ByteArray =
-    sha256Tagged(tag, listOf(nonce, bytes))
+fun preDigest(tag: String, actId: ByteArray, nonce: ByteArray, bytes: ByteArray): ByteArray =
+    sha256Tagged(tag, listOf(actId, nonce, bytes))
 
 /**
  * The host-side binding, concealing commitment over a removable
- * projection: SHA-256 over (tag, host salt, bytes).
+ * projection: SHA-256 over (tag, act identifier, pre-commitment, host
+ * salt, bytes).
  */
-fun commitment(tag: String, salt: ByteArray, bytes: ByteArray): ByteArray =
-    sha256Tagged(tag, listOf(salt, bytes))
+fun commitment(
+    tag: String,
+    actId: ByteArray,
+    preCommitment: ByteArray,
+    salt: ByteArray,
+    bytes: ByteArray,
+): ByteArray = sha256Tagged(tag, listOf(actId, preCommitment, salt, bytes))
 
-/** Ed25519 over the tagged digest — the interim signing primitive. */
-internal fun sign(key: Ed25519PrivateKeyParameters, tag: String, msg: ByteArray): ByteArray {
-    val framed = sha256Tagged(tag, listOf(msg))
+/**
+ * Ed25519 over a digest the caller already formed — the pre-signature
+ * over the pre-commitment, and the approval over its tagged digest.
+ */
+internal fun signDigest(key: Ed25519PrivateKeyParameters, digest: ByteArray): ByteArray {
     val signer = Ed25519Signer()
     signer.init(true, key)
-    signer.update(framed, 0, framed.size)
+    signer.update(digest, 0, digest.size)
     return signer.generateSignature()
 }
 
+/** Ed25519 over the tagged digest of one message. */
+internal fun sign(key: Ed25519PrivateKeyParameters, tag: String, msg: ByteArray): ByteArray =
+    signDigest(key, sha256Tagged(tag, listOf(msg)))
+
 /** Verifies a tagged signature; malformed keys or signatures just fail. */
-fun verify(publicKey: ByteArray, tag: String, msg: ByteArray, signature: ByteArray): Boolean {
+fun verify(publicKey: ByteArray, tag: String, msg: ByteArray, signature: ByteArray): Boolean =
+    verifyDigest(publicKey, sha256Tagged(tag, listOf(msg)), signature)
+
+/**
+ * Verifies a signature made by [signDigest]; the strict rules [verify]
+ * relies on are checked here, where both verifications meet.
+ */
+fun verifyDigest(publicKey: ByteArray, digest: ByteArray, signature: ByteArray): Boolean {
     if (publicKey.size != Ed25519PublicKeyParameters.KEY_SIZE) return false
     if (signature.size != Ed25519PrivateKeyParameters.SIGNATURE_SIZE) return false
     // RFC 8032 leaves the small-order check to the caller, and the two
@@ -88,11 +110,10 @@ fun verify(publicKey: ByteArray, tag: String, msg: ByteArray, signature: ByteArr
     // validation costs one scalar multiplication, paid on a path that
     // runs once per write.
     if (!Ed25519.validatePublicKeyFull(publicKey, 0)) return false
-    val framed = sha256Tagged(tag, listOf(msg))
     val verifier = Ed25519Signer()
     return try {
         verifier.init(false, Ed25519PublicKeyParameters(publicKey, 0))
-        verifier.update(framed, 0, framed.size)
+        verifier.update(digest, 0, digest.size)
         verifier.verifySignature(signature)
     } catch (_: IllegalArgumentException) {
         false

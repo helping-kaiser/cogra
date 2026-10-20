@@ -5,11 +5,14 @@ import "./globals.css";
 import { ApolloWrapper } from "@/lib/apollo-wrapper";
 import { AccountDeletionProvider } from "@/lib/deletion/deletion-status";
 import { SeenRecordSync } from "@/lib/history/seen-record-sync";
+import { DeviceLockKeeper } from "@/lib/identity/device-lock-keeper";
 import { AccountPreferencesSync } from "@/lib/settings/account-preferences-sync";
 import { THEME_BOOT_SCRIPT } from "@/lib/settings/theme-boot";
 import { SessionProvider } from "@/lib/session/provider";
 import { AuthRuntimeProvider } from "@/lib/session/runtime";
 import { RegistrationProvider } from "@/lib/signing/provider";
+import { HiddenProvider } from "@/lib/hidden/provider";
+import { SavedProvider } from "@/lib/saved/provider";
 import { StanceDataProvider } from "@/lib/stance/provider";
 
 import { AppShell } from "./shell";
@@ -63,10 +66,15 @@ export default function RootLayout({
             <AuthRuntimeProvider>
               <AccountPreferencesSync />
               <SeenRecordSync />
+              <DeviceLockKeeper />
               <AccountDeletionProvider>
                 <RegistrationProvider>
                   <StanceDataProvider>
-                    <AppShell>{children}</AppShell>
+                    <SavedProvider>
+                      <HiddenProvider>
+                        <AppShell>{children}</AppShell>
+                      </HiddenProvider>
+                    </SavedProvider>
                   </StanceDataProvider>
                 </RegistrationProvider>
               </AccountDeletionProvider>

@@ -125,7 +125,10 @@ fn checked_profile_len(
 /// author's own Profile at the census-fixed `(1, 1)` (edges.md §2),
 /// chained behind the current head — the backend populates the causal
 /// parent and serializes updates per (node, author), so CoGra's own
-/// clients never author a branch (substrate.md §9).
+/// clients never author a branch (substrate.md §9). An earlier update the
+/// author never signed is superseded rather than serialized behind: it can
+/// no longer be signed, so the chain stays unbranched without it holding
+/// the profile until GC.
 ///
 /// That chain roots in the anchoring admission Registration, which landed
 /// before the account became a member — so a missing head is not an empty
@@ -172,6 +175,15 @@ pub async fn prepare_profile_update<B: L1Boundary>(
         .map_err(|e| ProfileError::Internal(e.to_string()))?;
     let prof = NodeId::Prof(address.clone());
     let prof_string = prof.to_string();
+    let current_epoch = mirror::last_ingested_epoch(pool).await?;
+    staged::supersede_unsigned_targeting(
+        pool,
+        viewer,
+        Family::Registration,
+        &prof_string,
+        current_epoch,
+    )
+    .await?;
     if staged::has_pending_targeting(pool, viewer, Family::Registration, &prof_string).await? {
         return Err(ProfileError::BadInput {
             field: "input",
@@ -195,7 +207,8 @@ pub async fn prepare_profile_update<B: L1Boundary>(
         website_url,
         avatar,
     }
-    .encode_payload();
+    .encode_for_prepare()
+    .map_err(|e| ProfileError::Internal(format!("payload not admissible: {e}")))?;
     prepare::check_write_rule(
         boundary,
         pool,
@@ -279,18 +292,58 @@ pub async fn land_promoted(
 /// re-assert `common::envelope`'s wire framing here, and a change to that
 /// framing would silently reclassify every profile update as an admission
 /// payload and return `Ok(())` for all of them.
+///
+/// An unchained Registration writes no profile version, but its payload —
+/// the admission Registration carries the handle — still moves into
+/// carriage like any landed payload: the staged row is not a payload's
+/// permanent home, and a redaction reaps it.
+///
+/// A Registration whose staged payload a redaction reaped before the
+/// record arrived lands reduced: a carriage row holding nothing, and no
+/// version row, since there is no update left to apply. A redaction that
+/// reduced the act while it was being promoted has the last word the same
+/// way: no version row is built from bytes it removed.
+///
+/// The update is read under the read/ingest admission
+/// ([`CograProfile::read_payload`]), as content's landing reads its payload.
 async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), ProfileError> {
-    let staged_row = staged::load(pool, write.id).await?;
+    let staged_row = match staged::load_promotable(pool, write.id).await? {
+        staged::Promotable::Full(row) => *row,
+        staged::Promotable::Reaped(_) => {
+            let mut tx = pool
+                .begin()
+                .await
+                .map_err(|e| ProfileError::Internal(e.to_string()))?;
+            content_store::insert_reduced_act_payload(&mut tx, &write.act_id).await?;
+            tx.commit()
+                .await
+                .map_err(|e| ProfileError::Internal(e.to_string()))?;
+            return Ok(());
+        }
+    };
     let payload = &staged_row.proposal.payload;
-    if staged_row.proposal.body.asserted_parents.is_empty() {
-        return Ok(());
-    }
     let sealed = staged_row
         .sealed
         .as_ref()
         .ok_or_else(|| ProfileError::Internal("landed write without sealed parts".into()))?;
-    let update = CograProfile::decode_payload(payload)
-        .map_err(|e| ProfileError::Internal(format!("landed payload not admissible: {e}")))?;
+    if staged_row.proposal.body.asserted_parents.is_empty() {
+        if payload.is_empty() {
+            return Ok(());
+        }
+        let mut tx = pool
+            .begin()
+            .await
+            .map_err(|e| ProfileError::Internal(e.to_string()))?;
+        content_store::insert_act_payload(&mut tx, &write.act_id, payload, &sealed.content_salt)
+            .await?;
+        tx.commit()
+            .await
+            .map_err(|e| ProfileError::Internal(e.to_string()))?;
+        return Ok(());
+    }
+    let update = CograProfile::read_payload(payload)
+        .map_err(|e| ProfileError::Internal(format!("landed payload not admissible: {e}")))?
+        .fields;
     if update.node != write.actor_id {
         return Err(ProfileError::Internal(
             "profile payload names a different actor".into(),
@@ -328,6 +381,15 @@ async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), Pr
         .map_err(|e| ProfileError::Internal(e.to_string()))?;
     content_store::insert_act_payload(&mut tx, &write.act_id, payload, &sealed.content_salt)
         .await?;
+    if content_store::lock_act_payload(&mut tx, &write.act_id)
+        .await?
+        .is_some_and(|carriage| carriage.reduced)
+    {
+        tx.commit()
+            .await
+            .map_err(|e| ProfileError::Internal(e.to_string()))?;
+        return Ok(());
+    }
     profile::insert_profile_version(
         &mut tx,
         write.actor_id,

@@ -1,12 +1,26 @@
 // Canonical serialization for seam objects — the deterministic subset of
 // CBOR (RFC 8949) the deployment fixed: definite lengths only,
 // shortest-form integer heads, IEEE 754 double-precision floats, field
-// order fixed by the encoder, no maps. Byte-for-byte the encoding of
+// order fixed by the encoder. Byte-for-byte the encoding of
 // crates/common/src/l1/encoding.rs; the golden vectors pin the layout.
+//
+// Maps, tags and booleans exist for one reader: the payload envelope
+// (Envelope.kt), a tag-55799 integer-keyed map the device decodes and
+// never produces. The encoder half of them serves that decoder's
+// canonicality check — re-serializing what was read and comparing — and
+// nothing on the device writes an envelope.
 
 package com.cogra.crypto
 
 import java.io.ByteArrayOutputStream
+
+private const val MAJOR_MAP = 5
+private const val MAJOR_TAG = 6
+private const val SIMPLE_FALSE = 0xF4
+private const val SIMPLE_TRUE = 0xF5
+private const val MAJOR_SIMPLE = 7
+private const val INFO_FALSE = 20uL
+private const val INFO_TRUE = 21uL
 
 /** A decode failure over the deterministic subset. */
 class CborDecodeException(message: String) : Exception(message)
@@ -79,6 +93,22 @@ class CborEncoder {
         out.write(0xF6)
         return this
     }
+
+    fun map(len: ULong): CborEncoder {
+        head(MAJOR_MAP, len)
+        return this
+    }
+
+    /** A tag head (major type 6); the caller writes the tagged item next. */
+    fun tag(value: ULong): CborEncoder {
+        head(MAJOR_TAG, value)
+        return this
+    }
+
+    fun bool(v: Boolean): CborEncoder {
+        out.write(if (v) SIMPLE_TRUE else SIMPLE_FALSE)
+        return this
+    }
 }
 
 /**
@@ -104,7 +134,7 @@ class CborDecoder(private val input: ByteArray) {
         return slice
     }
 
-    private fun head(major: Int, expected: String): ULong {
+    internal fun head(major: Int, expected: String): ULong {
         val at = pos
         val b = byte()
         if (b shr 5 != major) {
@@ -124,12 +154,12 @@ class CborDecoder(private val input: ByteArray) {
 
     fun bytes(): ByteArray {
         val len = head(2, "bytes")
-        return take(lengthToInt(len))
+        return take(lengthToInt(len, pos))
     }
 
     fun text(): String {
         val len = head(3, "text")
-        val raw = take(lengthToInt(len))
+        val raw = take(lengthToInt(len, pos))
         val decoded = String(raw, Charsets.UTF_8)
         // String() replaces malformed sequences; re-encoding detects them.
         if (!decoded.toByteArray(Charsets.UTF_8).contentEquals(raw)) {
@@ -139,6 +169,9 @@ class CborDecoder(private val input: ByteArray) {
     }
 
     fun array(): ULong = head(4, "array")
+
+    /** Major type of the next item, without consuming it; null at end of input. */
+    fun peekMajor(): Int? = if (pos < input.size) (input[pos].toInt() and 0xFF) shr 5 else null
 
     fun float(): Double {
         val at = pos
@@ -164,11 +197,31 @@ class CborDecoder(private val input: ByteArray) {
         val rest = input.size - pos
         if (rest != 0) throw CborDecodeException("$rest bytes of trailing input")
     }
-
-    private fun lengthToInt(len: ULong): Int {
-        if (len > Int.MAX_VALUE.toULong()) {
-            throw CborDecodeException("unexpected end of input at byte $pos")
-        }
-        return len.toInt()
-    }
 }
+
+private fun lengthToInt(
+    len: ULong,
+    pos: Int,
+): Int {
+    if (len > Int.MAX_VALUE.toULong()) {
+        throw CborDecodeException("unexpected end of input at byte $pos")
+    }
+    return len.toInt()
+}
+
+// The envelope-only reads, as extensions over the class's own head reader:
+// the seam objects never meet a map, a tag or a boolean, so the decoder the
+// seam reads through stays exactly the size it was.
+
+fun CborDecoder.map(): ULong = head(MAJOR_MAP, "map")
+
+/** A tag head; returns the tag value. */
+fun CborDecoder.tag(): ULong = head(MAJOR_TAG, "tag")
+
+/** A boolean: the simple values 20 and 21, nothing else of major type 7. */
+fun CborDecoder.bool(): Boolean =
+    when (head(MAJOR_SIMPLE, "bool")) {
+        INFO_FALSE -> false
+        INFO_TRUE -> true
+        else -> throw CborDecodeException("expected bool, found another simple value")
+    }

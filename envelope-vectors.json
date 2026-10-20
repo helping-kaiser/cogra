@@ -1,0 +1,615 @@
+{
+  "content": [
+    {
+      "admittedAtPrepare": true,
+      "content": {
+        "body": "The body, in words.",
+        "description": null,
+        "media": [],
+        "node": "0c06a001-2345-4678-89ab-cdef01234567",
+        "sensitive": null,
+        "title": "A title"
+      },
+      "hex": "d9d9f7a3008401010101016002a119c06aa4000101500c06a0012345467889abcdef01234567026741207469746c65047354686520626f64792c20696e20776f7264732e",
+      "name": "a words post"
+    },
+    {
+      "admittedAtPrepare": true,
+      "content": {
+        "body": "",
+        "description": "Words beside it",
+        "media": [
+          {
+            "altText": "First",
+            "cover": null,
+            "coverTaken": false,
+            "digest": "1111111111111111111111111111111111111111111111111111111111111111",
+            "mime": "image/webp",
+            "uploadDigest": "1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          {
+            "altText": null,
+            "cover": null,
+            "coverTaken": false,
+            "digest": "1212121212121212121212121212121212121212121212121212121212121212",
+            "mime": "image/webp",
+            "uploadDigest": "1212121212121212121212121212121212121212121212121212121212121212"
+          },
+          {
+            "altText": "Third",
+            "cover": null,
+            "coverTaken": false,
+            "digest": "1313131313131313131313131313131313131313131313131313131313131313",
+            "mime": "image/webp",
+            "uploadDigest": "1313131313131313131313131313131313131313131313131313131313131313"
+          }
+        ],
+        "node": "0c06a001-2345-4678-89ab-cdef01234567",
+        "sensitive": null,
+        "title": "Look"
+      },
+      "hex": "d9d9f7a3008401010101016002a119c06aa6000101500c06a0012345467889abcdef0123456702644c6f6f6b036f576f7264732062657369646520697404600583a40058201111111111111111111111111111111111111111111111111111111111111111016a696d6167652f77656270026546697273740558201111111111111111111111111111111111111111111111111111111111111111a30058201212121212121212121212121212121212121212121212121212121212121212016a696d6167652f776562700558201212121212121212121212121212121212121212121212121212121212121212a40058201313131313131313131313131313131313131313131313131313131313131313016a696d6167652f77656270026554686972640558201313131313131313131313131313131313131313131313131313131313131313",
+      "name": "a gallery post: order, alt text present and absent, both digests"
+    },
+    {
+      "admittedAtPrepare": true,
+      "content": {
+        "body": "",
+        "description": null,
+        "media": [
+          {
+            "altText": "A clip of the river",
+            "cover": "3232323232323232323232323232323232323232323232323232323232323232",
+            "coverTaken": true,
+            "digest": "3131313131313131313131313131313131313131313131313131313131313131",
+            "mime": "video/mp4",
+            "uploadDigest": "3333333333333333333333333333333333333333333333333333333333333333"
+          }
+        ],
+        "node": "0c06a001-2345-4678-89ab-cdef01234567",
+        "sensitive": null,
+        "title": null
+      },
+      "hex": "d9d9f7a3008401010101016002a119c06aa4000101500c06a0012345467889abcdef0123456704600581a600582031313131313131313131313131313131313131313131313131313131313131310169766964656f2f6d703402734120636c6970206f6620746865207269766572035820323232323232323232323232323232323232323232323232323232323232323204f50558203333333333333333333333333333333333333333333333333333333333333333",
+      "name": "a re-encoded clip: rendition and upload digests differ, a taken cover"
+    },
+    {
+      "admittedAtPrepare": true,
+      "content": {
+        "body": "Behind the veil",
+        "description": null,
+        "media": [],
+        "node": "0c06a001-2345-4678-89ab-cdef01234567",
+        "sensitive": {
+          "reason": "Depicts an injury"
+        },
+        "title": "Marked"
+      },
+      "hex": "d9d9f7a3008401010101016002a119c06aa6000101500c06a0012345467889abcdef0123456702664d61726b6564046f426568696e6420746865207665696c0d010e714465706963747320616e20696e6a757279",
+      "name": "a self-marked post with a reason"
+    },
+    {
+      "admittedAtPrepare": true,
+      "content": {
+        "body": "a reply",
+        "description": null,
+        "media": [],
+        "node": "0c06a001-2345-4678-89ab-cdef01234567",
+        "sensitive": {
+          "reason": null
+        },
+        "title": null
+      },
+      "hex": "d9d9f7a3008401010101016002a119c06aa4000101500c06a0012345467889abcdef01234567046761207265706c790d01",
+      "name": "a self-marked comment without a reason"
+    },
+    {
+      "admittedAtPrepare": true,
+      "content": {
+        "body": "a reply with  spaces kept",
+        "description": null,
+        "media": [],
+        "node": "0c06a001-2345-4678-89ab-cdef01234567",
+        "sensitive": null,
+        "title": null
+      },
+      "hex": "d9d9f7a3008401010101016002a119c06aa3000101500c06a0012345467889abcdef0123456704781c61207265706c79207769746820c2a0737061636573e280a86b657074",
+      "name": "a comment: body only"
+    },
+    {
+      "admittedAtPrepare": false,
+      "content": {
+        "body": "",
+        "description": null,
+        "media": [
+          {
+            "altText": "Landed before the upload digest",
+            "cover": null,
+            "coverTaken": false,
+            "digest": "4141414141414141414141414141414141414141414141414141414141414141",
+            "mime": "image/webp",
+            "uploadDigest": null
+          }
+        ],
+        "node": "0c06a001-2345-4678-89ab-cdef01234567",
+        "sensitive": null,
+        "title": null
+      },
+      "hex": "d9d9f7a3008401010101016002a119c06aa4000101500c06a0012345467889abcdef0123456704600581a30058204141414141414141414141414141414141414141414141414141414141414141016a696d6167652f7765627002781f4c616e646564206265666f7265207468652075706c6f616420646967657374",
+      "name": "landed history: a manifest entry without an upload digest"
+    }
+  ],
+  "profile": [
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa5000101500c06a0012345467889abcdef0123456707634164610868437572696f75732e097368747470733a2f2f6164612e6578616d706c65",
+      "name": "every text field, the avatar untouched",
+      "profile": {
+        "avatar": {
+          "state": "untouched"
+        },
+        "bio": "Curious.",
+        "displayName": "Ada",
+        "node": "0c06a001-2345-4678-89ab-cdef01234567",
+        "websiteUrl": "https://ada.example"
+      }
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa3000101500c06a0012345467889abcdef012345670b81a30058205151515151515151515151515151515151515151515151515151515151515151016a696d6167652f776562700558205151515151515151515151515151515151515151515151515151515151515151",
+      "name": "the avatar set, both digests",
+      "profile": {
+        "avatar": {
+          "asset": {
+            "altText": null,
+            "cover": null,
+            "coverTaken": false,
+            "digest": "5151515151515151515151515151515151515151515151515151515151515151",
+            "mime": "image/webp",
+            "uploadDigest": "5151515151515151515151515151515151515151515151515151515151515151"
+          },
+          "state": "set"
+        },
+        "bio": null,
+        "displayName": null,
+        "node": "0c06a001-2345-4678-89ab-cdef01234567",
+        "websiteUrl": null
+      }
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa3000101500c06a0012345467889abcdef012345670b80",
+      "name": "the avatar cleared",
+      "profile": {
+        "avatar": {
+          "state": "cleared"
+        },
+        "bio": null,
+        "displayName": null,
+        "node": "0c06a001-2345-4678-89ab-cdef01234567",
+        "websiteUrl": null
+      }
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa4000101500c06a0012345467889abcdef0123456708600960",
+      "name": "bio and website cleared by present-and-empty",
+      "profile": {
+        "avatar": {
+          "state": "untouched"
+        },
+        "bio": "",
+        "displayName": null,
+        "node": "0c06a001-2345-4678-89ab-cdef01234567",
+        "websiteUrl": ""
+      }
+    }
+  ],
+  "refusals": [
+    {
+      "hex": "a20084010101010160",
+      "layer": "envelope",
+      "name": "missing magic",
+      "refusal": "not a content envelope (missing magic tag)"
+    },
+    {
+      "hex": "d9d9f7a200010160",
+      "layer": "envelope",
+      "name": "scalar version",
+      "refusal": "decode"
+    },
+    {
+      "hex": "d9d9f7a200830101010160",
+      "layer": "envelope",
+      "name": "three-axis version",
+      "refusal": "malformed envelope: version vector must have 4 axes"
+    },
+    {
+      "hex": "d9d9f7a300840101010101617807182a",
+      "layer": "envelope",
+      "name": "top-level key 7",
+      "refusal": "top-level key 7 is not allowed at package version 1"
+    },
+    {
+      "hex": "d9d9f7a300840101010101617802a1054100",
+      "layer": "envelope",
+      "name": "unallocated reserved key 5",
+      "refusal": "reserved extension key 5 is not allocated"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a10060",
+      "layer": "envelope",
+      "name": "empty link",
+      "refusal": "empty value for optional key 0 must be omitted"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a10160",
+      "layer": "envelope",
+      "name": "empty alt text",
+      "refusal": "empty value for optional key 1 must be omitted"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a10340",
+      "layer": "envelope",
+      "name": "empty usr",
+      "refusal": "empty value for optional key 3 must be omitted"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a0",
+      "layer": "envelope",
+      "name": "empty extension map",
+      "refusal": "empty value for optional key 2 must be omitted"
+    },
+    {
+      "hex": "d9d9f7a200840201010101626869",
+      "layer": "envelope",
+      "name": "unknown package version",
+      "refusal": "unknown package version 2"
+    },
+    {
+      "hex": "d9d9f7a2008401010101017800",
+      "layer": "envelope",
+      "name": "non-canonical length",
+      "refusal": "non-canonical envelope encoding"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a202626465006e68747470733a2f2f652e636f6d2f",
+      "layer": "envelope",
+      "name": "unsorted extension keys",
+      "refusal": "non-canonical envelope encoding"
+    },
+    {
+      "hex": "d9d9f7a2008401010101016000",
+      "layer": "envelope",
+      "name": "a trailing byte",
+      "refusal": "decode"
+    },
+    {
+      "hex": "d9d9f7a30084010101010162686902a119c06aa2000101500c06a0012345467889abcdef01234567",
+      "layer": "content",
+      "name": "a non-empty package body beside the guild map",
+      "refusal": "cogra guild schema: key-1 body must be empty"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a21864656f7468657219c06aa2000101500c06a0012345467889abcdef01234567",
+      "layer": "content",
+      "name": "a second guild key",
+      "refusal": "cogra guild schema: exactly one guild key expected"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa2000201500c06a0012345467889abcdef01234567",
+      "layer": "content",
+      "name": "guild schema version 2",
+      "refusal": "cogra guild schema: unsupported cogra schema version"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa20001014407070707",
+      "layer": "content",
+      "name": "a short node id",
+      "refusal": "cogra guild schema: node id must be 16 bytes"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa3000101500c06a0012345467889abcdef01234567066a70726f76656e616e6365",
+      "layer": "content",
+      "name": "the unbuilt provenance key",
+      "refusal": "cogra guild schema: unknown cogra field"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa3000101500c06a0012345467889abcdef012345670763416461",
+      "layer": "content",
+      "name": "a profile key on content",
+      "refusal": "cogra guild schema: unknown cogra field"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa3000101500c06a0012345467889abcdef012345670e63776879",
+      "layer": "content",
+      "name": "a reason without the mark",
+      "refusal": "cogra guild schema: sensitive reason without the mark"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa3000101500c06a0012345467889abcdef012345670d02",
+      "layer": "content",
+      "name": "a mark that is not 1",
+      "refusal": "cogra guild schema: sensitive mark with an unexpected value"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa3000101500c06a0012345467889abcdef012345670580",
+      "layer": "content",
+      "name": "an in-band empty manifest",
+      "refusal": "cogra guild schema: empty media manifest must be omitted"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa3000101500c06a0012345467889abcdef012345670581a30058200101010101010101010101010101010101010101010101010101010101010101016a696d6167652f7765627006190438",
+      "layer": "content",
+      "name": "a manifest entry with an unknown key",
+      "refusal": "cogra guild schema: unknown media entry field"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa3000101500c06a0012345467889abcdef012345670581a200581f01010101010101010101010101010101010101010101010101010101010101016a696d6167652f77656270",
+      "layer": "content",
+      "name": "a mis-sized rendition digest",
+      "refusal": "cogra guild schema: media digest must be 32 bytes"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa3000101500c06a0012345467889abcdef012345670581a30058200101010101010101010101010101010101010101010101010101010101010101016a696d6167652f77656270055821020202020202020202020202020202020202020202020202020202020202020202",
+      "layer": "content",
+      "name": "a mis-sized upload digest",
+      "refusal": "cogra guild schema: media upload digest must be 32 bytes"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa3000101500c06a0012345467889abcdef012345670581a30058200101010101010101010101010101010101010101010101010101010101010101016a696d6167652f77656270056175",
+      "layer": "content",
+      "name": "an upload digest that is text",
+      "refusal": "cogra guild schema: media upload digest must be a digest"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa3000101500c06a0012345467889abcdef012345670581a30058200101010101010101010101010101010101010101010101010101010101010101016a696d6167652f776562700260",
+      "layer": "content",
+      "name": "empty alt text in an entry",
+      "refusal": "cogra guild schema: empty media alt text must be omitted"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa3000101500c06a0012345467889abcdef012345670581a30058200101010101010101010101010101010101010101010101010101010101010101016a696d6167652f7765627004f5",
+      "layer": "content",
+      "name": "a taken mark without a cover",
+      "refusal": "cogra guild schema: media cover-taken requires a cover"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa3000101500c06a0012345467889abcdef012345670581a40058200101010101010101010101010101010101010101010101010101010101010101016a696d6167652f77656270035820090909090909090909090909090909090909090909090909090909090909090904f4",
+      "layer": "content",
+      "name": "a taken mark that is false",
+      "refusal": "cogra guild schema: media cover-taken must be omitted rather than false"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa3000101500c06a0012345467889abcdef012345670c81a20058200101010101010101010101010101010101010101010101010101010101010101016a696d6167652f77656270",
+      "layer": "profile",
+      "name": "the retired cover key",
+      "refusal": "cogra guild schema: retired cogra profile field"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa3000101500c06a0012345467889abcdef0123456702655469746c65",
+      "layer": "profile",
+      "name": "a content key on a profile",
+      "refusal": "cogra guild schema: unknown cogra profile field"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa3000101500c06a0012345467889abcdef012345670b82a20058200101010101010101010101010101010101010101010101010101010101010101016a696d6167652f77656270a20058200101010101010101010101010101010101010101010101010101010101010101016a696d6167652f77656270",
+      "layer": "profile",
+      "name": "two avatars",
+      "refusal": "cogra guild schema: a profile image is a single asset"
+    },
+    {
+      "hex": "d9d9f7a3008401010101016002a119c06aa3000101500c06a0012345467889abcdef012345670ba20058200101010101010101010101010101010101010101010101010101010101010101016a696d6167652f77656270",
+      "layer": "profile",
+      "name": "an avatar that is a bare map",
+      "refusal": "cogra guild schema: a profile image must be an array"
+    }
+  ],
+  "values": [
+    {
+      "envelope": {
+        "body": "hello 🌍",
+        "extensions": [],
+        "version": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "hex": "d9d9f7a2008401010101016a68656c6c6f20f09f8c8d",
+      "name": "vector 1: minimal body"
+    },
+    {
+      "envelope": {
+        "body": "sunset over Berlin",
+        "extensions": [
+          [
+            0,
+            {
+              "text": "https://example.com/img/sunset.jpg"
+            }
+          ]
+        ],
+        "version": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "hex": "d9d9f7a3008401010101017273756e736574206f766572204265726c696e02a100782268747470733a2f2f6578616d706c652e636f6d2f696d672f73756e7365742e6a7067",
+      "name": "vector 2: body and link"
+    },
+    {
+      "envelope": {
+        "body": "tagged",
+        "extensions": [
+          [
+            3,
+            {
+              "bytes": "deadbeef"
+            }
+          ]
+        ],
+        "version": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "hex": "d9d9f7a3008401010101016674616767656402a10344deadbeef",
+      "name": "vector 3: usr binary"
+    },
+    {
+      "envelope": {
+        "body": "test",
+        "extensions": [
+          [
+            100,
+            {
+              "text": "guild-data"
+            }
+          ]
+        ],
+        "version": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "hex": "d9d9f7a300840101010101647465737402a118646a6775696c642d64617461",
+      "name": "vector 4: guild key"
+    },
+    {
+      "envelope": {
+        "body": "café",
+        "extensions": [],
+        "version": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "hex": "d9d9f7a20084010101010165636166c3a9",
+      "name": "vector 5: NFC form"
+    },
+    {
+      "envelope": {
+        "body": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "extensions": [],
+        "version": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "hex": "d9d9f7a200840101010101788c6161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161",
+      "name": "vector 6: max body"
+    },
+    {
+      "envelope": {
+        "body": "sunset",
+        "extensions": [
+          [
+            0,
+            {
+              "text": "https://example.com/img.jpg"
+            }
+          ],
+          [
+            2,
+            {
+              "text": "de"
+            }
+          ],
+          [
+            3,
+            {
+              "bytes": "c0ffee"
+            }
+          ]
+        ],
+        "version": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "hex": "d9d9f7a3008401010101016673756e73657402a300781b68747470733a2f2f6578616d706c652e636f6d2f696d672e6a7067026264650343c0ffee",
+      "name": "vector 7: multiple extensions"
+    },
+    {
+      "envelope": {
+        "body": "photographer 🇩🇪",
+        "extensions": [],
+        "version": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "hex": "d9d9f7a2008401010101017570686f746f6772617068657220f09f87a9f09f87aa",
+      "name": "vector 8: multi-byte cluster"
+    },
+    {
+      "envelope": {
+        "body": "a  b\n\nc",
+        "extensions": [],
+        "version": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "hex": "d9d9f7a20084010101010167612020620a0a63",
+      "name": "vector 9: whitespace preservation"
+    },
+    {
+      "envelope": {
+        "body": "",
+        "extensions": [],
+        "version": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "hex": "d9d9f7a20084010101010160",
+      "name": "vector 10: empty body"
+    },
+    {
+      "envelope": {
+        "body": "a\n\nb",
+        "extensions": [],
+        "version": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "hex": "d9d9f7a20084010101010164610a0a62",
+      "name": "vector 16: per-line trim output"
+    },
+    {
+      "envelope": {
+        "body": "السلام عليكم world",
+        "extensions": [],
+        "version": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "hex": "d9d9f7a200840101010101781dd8a7d984d8b3d984d8a7d98520d8b9d984d98ad983d98520776f726c64",
+      "name": "vector 17: mixed-direction body"
+    }
+  ],
+  "version": 1
+}

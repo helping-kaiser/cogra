@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT hidden_id AS actor_id, hidden_at FROM user_hidden_actors\n               WHERE viewer_id = $1\n                 AND ($2::timestamptz IS NULL OR (hidden_at, hidden_id) < ($2, $3::uuid))\n               ORDER BY hidden_at DESC, hidden_id DESC\n               LIMIT $4",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "actor_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "hidden_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "60b7b3424a962331da0b90711d6b74f3064d8cbb7c2a6ea5aa8d9da1be168615"
+}

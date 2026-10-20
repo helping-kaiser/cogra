@@ -33,6 +33,9 @@ import { prepareComment } from "@/lib/api/content-api";
 import { hasFieldErrors, partitionFieldErrors } from "@/lib/api/field-errors";
 import { firstRefusalMessage, writeRefusalMessage } from "@/lib/ui/error-messages";
 import type { StagedWriteView } from "@/lib/api/writes-api";
+import { fetchGraphIds, graphIdOf } from "@/lib/api/graph-ids-api";
+import { commentExpectation } from "@/lib/compose/intent";
+import type { Expectation } from "@/lib/signing/intent";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthGuard } from "@/lib/session/runtime";
@@ -40,7 +43,8 @@ import { useWriteSigner } from "@/lib/signing/provider";
 import { useStageHistory } from "@/lib/compose/stage-history";
 import { runUpload, runVideoUpload } from "@/lib/compose/uploads";
 import { useObjectUrl, usePreviewUrls, useRevokeOnChange } from "@/lib/compose/previews";
-import { commentAttachmentClaims } from "@/lib/compose/comment-media";
+import { commentAttachmentClaims, commentMediaLedger } from "@/lib/compose/comment-media";
+import { contentExpectation } from "@/lib/compose/payload-expectation";
 import { COMMENT_SCALE, screenPick, type PickRefusal } from "@/lib/compose/pick";
 import { captureFrames, captureFrameZero, probeVideo } from "@/lib/ui2/media/video";
 import {
@@ -403,19 +407,34 @@ export function ReplyWizard({
     setReferenceErrors({});
     setTransportFailed(false);
 
-    const prepared = await guard.run(() =>
-      prepareComment(client, {
-        target: state.target.id,
-        content: state.words,
-        license: state.license,
-        tags: state.tags,
-        references: state.references,
-        attachments: commentAttachmentClaims(state.media, state.cover, state.autoCover) ?? undefined,
-        stance: state.stance,
-        sensitive: state.sensitive,
-        sensitiveReason: state.sensitiveReason,
-      }),
+    // The L1 ids of the node answered and of every cited node, read before
+    // anything is staged: the batch is checked against them before its
+    // first pre-signature (intent.ts).
+    const graphIds = await guard.run(() =>
+      fetchGraphIds(client, [
+        state.target.id,
+        ...state.references.map((reference) => reference.targetId),
+      ]),
     );
+    if (graphIds.kind !== "success") {
+      setBusy(false);
+      setTransportFailed(true);
+      return;
+    }
+    // One request, read twice: once by the API layer and once by the payload
+    // expectation (payload-expectation.ts).
+    const sent = {
+      target: state.target.id,
+      content: state.words,
+      license: state.license,
+      tags: state.tags,
+      references: state.references,
+      attachments: commentAttachmentClaims(state.media, state.cover, state.autoCover) ?? undefined,
+      stance: state.stance,
+      sensitive: state.sensitive,
+      sensitiveReason: state.sensitiveReason,
+    };
+    const prepared = await guard.run(() => prepareComment(client, sent));
 
     if (prepared.kind === "failed") {
       setBusy(false);
@@ -442,11 +461,27 @@ export function ReplyWizard({
       return;
     }
 
-    await finish(prepared.value.node, prepared.value.writes);
+    const node = prepared.value.node;
+    const expected = commentExpectation(
+      graphIdOf(graphIds.value, state.target.id),
+      state,
+      contentExpectation(
+        node,
+        sent,
+        "comment",
+        commentMediaLedger(state.media, state.cover, state.autoCover),
+      ),
+      graphIds.value,
+    );
+    await finish(node, prepared.value.writes, expected);
   };
 
-  const finish = async (node: string, writes: readonly StagedWriteView[]) => {
-    const results = await signer.sign(writes);
+  const finish = async (
+    node: string,
+    writes: readonly StagedWriteView[],
+    expected: Expectation,
+  ) => {
+    const results = await signer.sign(writes, expected);
     setBusy(false);
 
     if (results.every((result) => result.kind === "done")) {

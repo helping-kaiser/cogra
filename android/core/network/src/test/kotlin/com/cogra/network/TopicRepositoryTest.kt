@@ -9,7 +9,7 @@ import com.apollographql.apollo.ApolloClient
 import com.cogra.domain.Outcome
 import com.cogra.domain.TaggedContentKind
 import com.cogra.domain.identity.EndLocalSession
-import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.auth.SessionRefresher
@@ -50,7 +50,7 @@ class TopicRepositoryTest {
         client,
         AuthGuard(
             tokenStore,
-            SessionRefresher(tokenStore, EndLocalSession(FakeIdentityStore(), tokenStore), Provider { client }),
+            SessionRefresher(tokenStore, EndLocalSession(FakeLockCustodyStore(), tokenStore), Provider { client }),
         ),
     )
 
@@ -115,12 +115,15 @@ class TopicRepositoryTest {
                           "canonicalProposal":"AA==","gcAfterEpochs":8}],
                "userErrors":[]}}}""",
         )
-        val outcome = repo().prepareTag("post-1", "rust", pDirected = 0.0)
+        // An un-tag: relevance 0, and the confidence the removed chip showed
+        // rides explicitly — the wire requires it and fills nothing in.
+        val outcome = repo().prepareTag("post-1", "rust", pDirected = 0.0, pInterest = 0.6)
         assertThat(outcome).isInstanceOf(Outcome.Success::class.java)
         val body = server.takeRequest().body.readUtf8()
         assertThat(body).contains("\"target\":\"post-1\"")
         assertThat(body).contains("\"name\":\"rust\"")
         assertThat(body).contains("\"pDirected\":0.0")
+        assertThat(body).contains("\"pInterest\":0.6")
     }
 
     @Test

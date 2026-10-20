@@ -7,6 +7,7 @@ package com.cogra.network.repo
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.DefaultUpload
 import com.apollographql.apollo.api.Optional
+import com.apollographql.apollo.exception.ApolloNetworkException
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
 import com.cogra.domain.map
@@ -17,6 +18,7 @@ import com.cogra.domain.media.PartFailure
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.ProcessedVideo
 import com.cogra.domain.media.RESUMABLE_THRESHOLD_BYTES
+import com.cogra.domain.media.UploadEchoMismatchException
 import com.cogra.domain.media.UploadProgress
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
@@ -30,10 +32,11 @@ import com.cogra.network.graphql.type.MediaUploadKind
 import com.cogra.network.graphql.type.UploadMediaInput
 import com.cogra.network.payloadOutcome
 import com.cogra.network.toDomain
+import okio.source
 import java.io.File
+import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
-import okio.source
 
 /** What a still sends, always — clients re-encode to WebP (D9, D11). */
 private const val UPLOAD_MIME = "image/webp"
@@ -67,6 +70,11 @@ class MediaRepositoryImpl @Inject constructor(
     internal var resumableThresholdBytes: Long = RESUMABLE_THRESHOLD_BYTES
 
     override suspend fun uploadMedia(
+        picture: ProcessedPicture,
+    ): Outcome<MediaAssetView> = resentOnceIfLostInTransport { sendPicture(picture) }
+        .echoing(uploadDigestOf(picture.bytes))
+
+    private suspend fun sendPicture(
         picture: ProcessedPicture,
     ): Outcome<MediaAssetView> = guard.run {
         // `DefaultUpload` is Apollo's multiplatform upload body; the
@@ -112,10 +120,11 @@ class MediaRepositoryImpl @Inject constructor(
     ): Outcome<MediaAssetView> {
         val file = File(video.path)
         val scale = destination.toScale()
+        val device = uploadDigestOf(file)
         if (video.byteCount < resumableThresholdBytes) {
-            return sendWhole(file, video.byteCount, scale)
+            return resentOnceIfLostInTransport { sendWhole(file, video.byteCount, scale) }.echoing(device)
         }
-        return sendInParts(file, video.byteCount, scale, onProgress)
+        return sendInParts(file, video.byteCount, scale, onProgress).echoing(device)
     }
 
     /**
@@ -218,6 +227,75 @@ class MediaRepositoryImpl @Inject constructor(
         client.query(MediaAttachmentQuery(id = id)).fetch().map { it.mediaAttachment?.toDomain() }
     }
 }
+
+/**
+ * A single-shot upload, sent once more when the first try died in transport.
+ *
+ * Apollo hands OkHttp a multipart body marked one-shot (`isOneShot` is "the
+ * body is an upload"), and OkHttp never replays a one-shot request once it
+ * has started sending it (`RetryAndFollowUpInterceptor`). Every JSON request
+ * is replayed on a fresh connection when the pooled one it was given turns
+ * out dead; an upload is not, so the first request after the picker and the
+ * crop sat idle — which is the upload — failed while every other one healed
+ * silently, and the author's retry always worked (hand test, round 4).
+ *
+ * The resend is the one OkHttp would have made, and it is safe: the server
+ * answers a retried upload of the same bytes by the same author with the row
+ * it already holds (`store_asset`), so a first try that did arrive costs
+ * nothing twice. Only a transport fault is resent — a refusal is an answer,
+ * and a GraphQL error is the server's own word on the request.
+ */
+private suspend fun resentOnceIfLostInTransport(
+    send: suspend () -> Outcome<MediaAssetView>,
+): Outcome<MediaAssetView> {
+    val first = send()
+    return if (first is Outcome.Failed && first.cause is ApolloNetworkException) send() else first
+}
+
+/**
+ * The upload digest: SHA-256 over exactly the bytes about to be sent, after
+ * the device's own strip and encode, as lowercase hex. The server keeps no
+ * raw original, so this is the only trace of the author's bytes a re-encode
+ * leaves (data-model.md "Media attachments").
+ */
+internal fun uploadDigestOf(bytes: ByteArray): String = MessageDigest.getInstance(SHA_256).digest(bytes).hex()
+
+/** The same digest over a file, streamed: a clip never has to sit in memory. */
+internal fun uploadDigestOf(file: File): String {
+    val digest = MessageDigest.getInstance(SHA_256)
+    file.inputStream().use { input ->
+        val buffer = ByteArray(HASH_BUFFER_BYTES)
+        var read = input.read(buffer)
+        while (read >= 0) {
+            digest.update(buffer, 0, read)
+            read = input.read(buffer)
+        }
+    }
+    return digest.digest().hex()
+}
+
+private const val SHA_256 = "SHA-256"
+private const val HASH_BUFFER_BYTES = 64 * 1024
+
+private fun ByteArray.hex(): String = joinToString("") { "%02x".format(it) }
+
+/**
+ * Holds the server's echo to the device's own digest. A mismatch means the
+ * bytes the server recorded are not the bytes this device sent — its strip
+ * changed them, or something between the two did — and the asset is never
+ * attached: the upload fails retryably. With the device strip a fixed point
+ * of the server's, that is a defect report rather than a path.
+ */
+private fun Outcome<MediaAssetView>.echoing(device: String): Outcome<MediaAssetView> =
+    when (this) {
+        is Outcome.Success ->
+            if (value.uploadDigest == device) {
+                this
+            } else {
+                Outcome.Failed(UploadEchoMismatchException("the server recorded other bytes than were sent"))
+            }
+        is Outcome.Refused, is Outcome.Failed -> this
+    }
 
 /** The destination as the contract names it. */
 private fun MediaDestination.toScale(): MediaScale = when (this) {

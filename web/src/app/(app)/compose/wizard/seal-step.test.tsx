@@ -28,6 +28,7 @@ function renderStep(
   sheet: SealSheet = "none",
   keyOnDevice: boolean | null = true,
   staged = 0.1,
+  confirmingUnreachable = false,
 ) {
   const props = {
     state: baseState(overrides),
@@ -37,11 +38,14 @@ function renderStep(
     keyOnDevice,
     refusal: null,
     stagedPDirected: staged,
+    confirmingUnreachable,
     onSheet: vi.fn(),
     onLicense: vi.fn(),
     onReferences: vi.fn(),
     onStagedPDirected: vi.fn(),
     onSetStance: vi.fn(),
+    onKeepAdjusting: vi.fn(),
+    onSetAnyway: vi.fn(),
     onStanceHelp: vi.fn(),
     onSensitive: vi.fn(),
     onSensitiveReason: vi.fn(),
@@ -197,16 +201,27 @@ describe("SealStep", () => {
     });
   });
 
-  // An opinion on one's own post is ONE number (jakob, 2026-09-14): the
-  // second is census-fixed rather than picked, so the row that read back a
-  // pair was showing a figure nobody chose. The face comes from the
-  // one-axis table, and the spoken twin names the one axis there is.
-  it("reads where the author stands as one number, not a pair", () => {
+  // The BACKING an author signs with their own post is ONE number (jakob
+  // 2026-10-16, PR-101): Publish's second parameter is census-pinned, so a
+  // pair would show a figure nobody chose. The row reads `Your backing`
+  // (ComposeSeal.md), its face from the one-axis table.
+  it("reads the author's backing as one number, not a pair, under Your backing", () => {
     renderStep({ pDirected: 0.1 });
     const readout = screen.getByTestId("wizard-stance-value");
     expect(readout.textContent).toContain("+0.10");
     expect(screen.queryByText("+0.10 / +1.00")).not.toBeInTheDocument();
     expect(within(readout).getByText("Nice, For or against +0.10")).toBeInTheDocument();
+    expect(screen.getByText("Your backing")).toBeInTheDocument();
+    // "opinion" is the face record's word only; the authoring row never wears it.
+    expect(screen.queryByText("Where you stand on it")).not.toBeInTheDocument();
+    expect(screen.queryByText(/your opinion/i)).not.toBeInTheDocument();
+  });
+
+  it("reads a backing of exactly 0.00 as 🤷, spoken Nothing", () => {
+    renderStep({ pDirected: 0 });
+    const readout = screen.getByTestId("wizard-stance-value");
+    expect(readout.textContent).toContain("🤷");
+    expect(within(readout).getByText("Nothing, For or against +0.00")).toBeInTheDocument();
   });
 
   it("reads the row's face off the one-axis table, both signs", () => {
@@ -236,10 +251,10 @@ describe("SealStep", () => {
     ).toBeInTheDocument();
   });
 
-  // CW-31/CW-32/CW-33/CW-34/CW-35 + backlog item 30: the pad is a parked
-  // card carrying its own "?", a labelled "Your pick" readout above a drawn
-  // one-axis field with its ends named, and Cancel · Set.
-  describe("the opinion pad", () => {
+  // ComposePad (round 15): a parked card carrying its own "?", the `Your
+  // pick` readout alone above the master `AttachmentPad` strip, and
+  // Cancel · Set.
+  describe("the backing pad", () => {
     it("parks as its own panel rather than riding a bottom sheet", () => {
       renderStep({ pDirected: 0.1 }, "stance");
       const pad = screen.getByTestId("wizard-stance-pad");
@@ -251,38 +266,79 @@ describe("SealStep", () => {
       expect(screen.queryByTestId("wizard-stance-sheet")).not.toBeInTheDocument();
     });
 
-    it("carries the blessed help topic on its own dot", () => {
+    it("is named the backing pad, its dot Your backing on your post", () => {
       const { onStanceHelp } = renderStep({}, "stance");
-      screen.getByTestId("wizard-stance-help").click();
+      expect(screen.getByTestId("wizard-stance-pad")).toHaveAttribute(
+        "aria-label",
+        "Backing pad for your own post",
+      );
+      const help = screen.getByTestId("wizard-stance-help");
+      expect(help).toHaveAttribute("aria-label", "Your backing on your post");
+      help.click();
       expect(onStanceHelp).toHaveBeenCalledOnce();
     });
 
-    it("labels the pick and reads the staged value, not the standing one", () => {
+    it("reads Your pick alone — nothing stands yet, so the pick is the result", () => {
       renderStep({ pDirected: 0.1 }, "stance", true, 0.6);
       expect(screen.getByText("Your pick")).toBeInTheDocument();
       const pick = screen.getByTestId("wizard-stance-pick");
       expect(pick.textContent).toContain("😊");
       expect(pick.textContent).toContain("+0.60");
+      expect(screen.queryByText("Current backing")).not.toBeInTheDocument();
+      expect(screen.queryByText("Backing after")).not.toBeInTheDocument();
     });
 
-    it("draws the one-axis field with its ends named, never a slider", () => {
+    it("reads the pick at exactly 0.00 as 🤷", () => {
+      renderStep({}, "stance", true, 0);
+      expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤷");
+    });
+
+    it("draws the master's one-axis strip: its ends outside, one zero line, no second axis", () => {
       renderStep({}, "stance");
-      const field = screen.getByTestId("wizard-stance-field");
-      expect(field).toHaveAttribute("aria-label", "For or against");
-      expect(field).not.toHaveAttribute("type", "range");
-      expect(screen.getByText("Against")).toBeInTheDocument();
-      expect(screen.getByText("For")).toBeInTheDocument();
-      // The pre-rename wording is not on this surface.
-      expect(screen.queryByText("How you stand")).not.toBeInTheDocument();
+      const strip = screen.getByTestId("wizard-stance-field-strip");
+      expect(strip).toHaveAttribute("aria-label", "For or against");
+      expect(strip).toHaveStyle({ height: "56px" });
+      expect(strip).not.toHaveAttribute("type", "range");
+      // The pole words stand in the gutters, never inside the value space.
+      expect(strip).not.toContainElement(screen.getByText("Against"));
+      expect(strip).not.toContainElement(screen.getByText("For"));
+      expect(screen.getByTestId("wizard-stance-field-zero-down")).toBeInTheDocument();
+      expect(screen.queryByText("Less")).not.toBeInTheDocument();
+      expect(screen.queryByText("More")).not.toBeInTheDocument();
+      // The retired control's caption is not drawn on the round-15 board.
+      expect(screen.queryByText("Your own post always reaches you in full.")).not.toBeInTheDocument();
+    });
+
+    it("parks the knob where +0.10 puts it", () => {
+      renderStep({}, "stance", true, 0.1);
+      expect(screen.getByTestId("wizard-stance-field-knob")).toHaveStyle({ left: "55%" });
+    });
+
+    it("stands Start it unreachable? over the parked pad when the host asks", () => {
+      const { onKeepAdjusting, onSetAnyway } = renderStep({}, "stance", true, 0, true);
+      const confirm = screen.getByTestId("wizard-unreachable");
+      expect(confirm).toHaveAttribute("open");
+      expect(screen.getByTestId("wizard-stance-pad")).toHaveAttribute("open");
+      expect(within(confirm).getByText("Start it unreachable?")).toBeInTheDocument();
+      expect(
+        within(confirm).getByText(/^Your backing is your post's own path into anyone's feed\./),
+      ).toBeInTheDocument();
+      // Keep adjusting is filled; Set it anyway is quiet.
+      expect(screen.getByTestId("wizard-unreachable-keep").className).not.toBe(
+        screen.getByTestId("wizard-unreachable-anyway").className,
+      );
+      screen.getByTestId("wizard-unreachable-keep").click();
+      expect(onKeepAdjusting).toHaveBeenCalledOnce();
+      screen.getByTestId("wizard-unreachable-anyway").click();
+      expect(onSetAnyway).toHaveBeenCalledOnce();
     });
 
     it("stages a drag and commits only on Set", () => {
       const { onStagedPDirected, onSetStance, onSheet } = renderStep({}, "stance");
-      const field = screen.getByTestId("wizard-stance-field");
+      const field = screen.getByTestId("wizard-stance-field-strip");
       fireEvent.keyDown(field, { key: "ArrowRight" });
-      // One arrow press is a twentieth of the axis, carried by ordinary
-      // float addition — the same arithmetic the two-axis pad's arrows do.
-      expect(onStagedPDirected).toHaveBeenCalledWith(expect.closeTo(0.15, 10));
+      // One arrow press is a twentieth of the axis, landing on a hundredth.
+      expect(onStagedPDirected).toHaveBeenCalledWith(0.15);
       expect(onSetStance).not.toHaveBeenCalled();
 
       screen.getByTestId("wizard-stance-set").click();
@@ -376,6 +432,25 @@ describe("SealStep", () => {
     expect(screen.queryByTestId("wizard-open-sensitive")).not.toBeInTheDocument();
   });
 
+  // FC-8b (copy-voice "The license block"; seam 106.5): the seal's License row
+  // reads the author's reading of the pair — its name, then the two hints by
+  // the one joining rule — and never `your default`, wherever the terms came
+  // from. The sheet's foot reads the same sentence.
+  it("the_seal_license_summary_reads_license_name_and_reading", () => {
+    renderStep({}, "none", true);
+    const row = screen.getByTestId("wizard-open-license").parentElement!;
+    expect(row).toHaveTextContent("Public domain — nobody owes you a name, and uses go unlogged.");
+    expect(row).not.toHaveTextContent("your default");
+  });
+
+  it("names a non-zero pair by its tier names before the reading", () => {
+    renderStep({ license: { attribution: 1, provenance: 0 } }, "none", true);
+    const row = screen.getByTestId("wizard-open-license").parentElement!;
+    expect(row).toHaveTextContent(
+      "Credit always · Not logged — every use credits you, and uses go unlogged.",
+    );
+  });
+
   it("shows all three terms on a live seal", () => {
     renderStep({}, "none", true);
     expect(screen.getByTestId("wizard-open-license")).toBeInTheDocument();
@@ -433,11 +508,14 @@ describe("SealStep", () => {
       keyOnDevice: true,
       refusal: null,
       stagedPDirected: 0.1,
+      confirmingUnreachable: false,
       onSheet: vi.fn(),
       onLicense: vi.fn(),
       onReferences: vi.fn(),
       onStagedPDirected: vi.fn(),
       onSetStance: vi.fn(),
+      onKeepAdjusting: vi.fn(),
+      onSetAnyway: vi.fn(),
       onStanceHelp: vi.fn(),
       onSensitive: vi.fn(),
       onSensitiveReason: vi.fn(),

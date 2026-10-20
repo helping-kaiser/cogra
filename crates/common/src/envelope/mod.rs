@@ -12,9 +12,9 @@ mod cogra;
 mod media;
 mod pce;
 
-pub use cogra::{COGRA_SCHEMA_V1, CograContent, CograProfile, SensitiveMark};
+pub use cogra::{COGRA_SCHEMA_V1, CograContent, CograProfile, Reading, SensitiveMark};
 pub use media::{MEDIA_DIGEST_LEN, MediaAsset};
-pub use pce::{COGRA_GUILD_KEY, Envelope, MAGIC_TAG, VERSION_V1, Value};
+pub use pce::{COGRA_GUILD_KEY, Envelope, MAGIC_TAG, READER_EXTENSION_VER, VERSION_V1, Value};
 
 use crate::l1::encoding::DecodeError;
 
@@ -43,7 +43,9 @@ pub enum EnvelopeError {
     #[error("empty value for optional key {0} must be omitted")]
     ForbiddenEmpty(u64),
     /// §4.2: a reserved key (4–99) with no allocation at (floor 1,
-    /// ceiling 1).
+    /// ceiling 1) — on the signing path at any declared version, on the
+    /// read path when the envelope's `extension_ver` is not newer than
+    /// this reader's.
     #[error("reserved extension key {0} is not allocated")]
     ReservedKey(u64),
     /// CoGra guild admission (our tightening per PCE §10).
@@ -81,6 +83,7 @@ mod tests {
             version: VERSION_V1,
             body: body.into(),
             extensions,
+            preserved: BTreeMap::new(),
         }
     }
 
@@ -296,6 +299,84 @@ mod tests {
         assert_eq!(Envelope::decode(&bytes), Err(EnvelopeError::ReservedKey(5)));
     }
 
+    /// PCE §8.5 vector 13's envelope: `[1,1,1,2]`, body "hi", `{50: h'00'}`
+    /// — a reserved key some `extension_ver` 2 allocated and this reader,
+    /// at `extension_ver` 1, does not know.
+    fn vector_13_bytes() -> Vec<u8> {
+        hex("D9D9F7 A3 00 84 01010102 01 62 6869 02 A1 18 32 41 00")
+    }
+
+    /// Vector 13: on the read path a newer `extension_ver` keeps the
+    /// unknown reserved key, renders nothing from it, and gives back the
+    /// exact bytes it read.
+    ///
+    /// On read, a newer extension ceiling preserves an unknown reserved key byte-exact and renders nothing from it.
+    /// ´claim:envelope:a-newer-ceiling-preserves-an-unknown-reserved-key-on-read´
+    #[test]
+    fn vector_13_a_newer_ceiling_preserves_an_unknown_reserved_key_on_read() {
+        let bytes = vector_13_bytes();
+        let read = Envelope::decode_for_read(&bytes).expect("a newer ceiling is not refused");
+        assert_eq!(read.version, [1, 1, 1, 2]);
+        assert_eq!(read.body, "hi");
+        assert!(read.extensions.is_empty(), "nothing preserved is rendered");
+        assert_eq!(read.preserved.get(&50), Some(&Value::Bytes(vec![0x00])));
+        assert_eq!(read.encode(), bytes, "preserved byte-exact");
+    }
+
+    /// The same bytes on the signing path: an envelope CoGra signs carries
+    /// nothing its reader does not know, whatever version it declares.
+    ///
+    /// The signing discipline refuses a reserved key at any declared version, a newer ceiling included.
+    /// ´claim:envelope:the-signing-discipline-refuses-a-reserved-key-at-any-version´
+    #[test]
+    fn the_signing_discipline_refuses_a_reserved_key_under_a_newer_ceiling() {
+        assert_eq!(
+            Envelope::decode(&vector_13_bytes()),
+            Err(EnvelopeError::ReservedKey(50))
+        );
+    }
+
+    /// The bound: at an `extension_ver` this reader implements, an unknown
+    /// reserved key is malformed or smuggled, not future — refused on read
+    /// exactly as on the signing path.
+    ///
+    /// On read, a reserved key at a version the reader implements in full stays refused.
+    /// ´claim:envelope:a-reserved-key-at-a-known-version-stays-refused-on-read´
+    #[test]
+    fn a_reserved_key_at_a_known_ceiling_stays_refused_on_read() {
+        let bytes = hex("D9D9F7 A3 00 84 01010101 01 61 78 02 A1 05 41 00");
+        assert_eq!(
+            Envelope::decode_for_read(&bytes),
+            Err(EnvelopeError::ReservedKey(5))
+        );
+    }
+
+    /// A newer ceiling relaxes the reserved range and nothing else: the
+    /// empty rules, the package gate, and canonical form still refuse —
+    /// the last one inside a preserved value too (`58 01 00` is h'00' with
+    /// a two-byte length head), which is what keeps "preserved" byte-exact.
+    ///
+    /// A newer ceiling relaxes the reserved-range rule alone; every other gate still refuses on read.
+    /// ´claim:envelope:a-newer-ceiling-relaxes-the-reserved-range-alone´
+    #[test]
+    fn a_newer_ceiling_relaxes_the_reserved_range_alone() {
+        let empty_link = hex("D9D9F7 A3 00 84 01010102 01 60 02 A1 00 60");
+        assert_eq!(
+            Envelope::decode_for_read(&empty_link),
+            Err(EnvelopeError::ForbiddenEmpty(0))
+        );
+        let future_package = hex("D9D9F7 A3 00 84 02010102 01 60 02 A1 18 32 41 00");
+        assert_eq!(
+            Envelope::decode_for_read(&future_package),
+            Err(EnvelopeError::UnknownPackage(2))
+        );
+        let non_canonical_preserved = hex("D9D9F7 A3 00 84 01010102 01 60 02 A1 18 32 58 01 00");
+        assert_eq!(
+            Envelope::decode_for_read(&non_canonical_preserved),
+            Err(EnvelopeError::NonCanonical)
+        );
+    }
+
     /// Three in-band empties, each of which must have been an omission
     /// instead: an empty link at key 0, empty usr bytes at key 3, and the
     /// empty extension map, which must drop key 2 altogether.
@@ -390,6 +471,7 @@ mod tests {
             alt_text: alt_text.map(Into::into),
             cover: None,
             cover_taken: false,
+            upload_digest: Some([!fill; MEDIA_DIGEST_LEN]),
         }
     }
 
@@ -604,6 +686,119 @@ mod tests {
         );
     }
 
+    /// A payload as a newer producer writes it: the CoGra guild map beside
+    /// a reserved key its `extension_ver` allocated.
+    fn with_newer_part(guild: Envelope, ceiling: u64) -> Vec<u8> {
+        let mut env = guild;
+        env.version = [1, 1, 1, ceiling];
+        env.preserved
+            .insert(50, Value::Text("from a newer format".into()));
+        env.encode()
+    }
+
+    /// A landing reads what it knows of a newer-format payload — every
+    /// guild field — and is told the rest is there, preserved and not
+    /// rendered; the bytes survive the read unchanged. The signing path
+    /// still refuses the same payload.
+    ///
+    /// A newer-format payload reads its known fields and is marked newer-format, where the signing path refuses it.
+    /// ´claim:envelope:a-newer-format-payload-reads-its-known-fields-and-is-marked´
+    #[test]
+    fn a_newer_format_content_payload_reads_its_known_fields_marked_newer() {
+        let content = CograContent {
+            media: vec![asset(1, "image/webp", Some("A sunset"))],
+            ..cogra(Some("Title"), None, Some("body"))
+        };
+        let bytes = with_newer_part(content.clone().into_envelope(), 2);
+        assert_eq!(
+            CograContent::read_payload(&bytes),
+            Ok(Reading {
+                fields: content,
+                newer_format: true,
+            })
+        );
+        assert_eq!(
+            Envelope::decode_for_read(&bytes).expect("read").encode(),
+            bytes
+        );
+        assert_eq!(
+            CograContent::decode_payload(&bytes),
+            Err(EnvelopeError::ReservedKey(50))
+        );
+    }
+
+    /// The profile family reads the same way.
+    ///
+    /// (´claim:envelope:a-newer-format-payload-reads-its-known-fields-and-is-marked´)
+    #[test]
+    fn a_newer_format_profile_payload_reads_its_known_fields_marked_newer() {
+        let update = CograProfile {
+            avatar: Some(Some(asset(4, "image/webp", None))),
+            ..profile(Some("Ada"), Some("Curious."), None)
+        };
+        let bytes = with_newer_part(update.clone().into_envelope(), 2);
+        assert_eq!(
+            CograProfile::read_payload(&bytes),
+            Ok(Reading {
+                fields: update,
+                newer_format: true,
+            })
+        );
+        assert_eq!(
+            CograProfile::decode_payload(&bytes),
+            Err(EnvelopeError::ReservedKey(50))
+        );
+    }
+
+    /// The read path's bound at the guild: a reserved key at the version
+    /// this reader implements still refuses; a payload this reader's own
+    /// version wrote reads unmarked, and a newer ceiling that carries
+    /// nothing new reads unmarked too. Only the ceiling is tolerated — a
+    /// newer floor, and an unknown key inside CoGra's own guild map, still
+    /// refuse.
+    ///
+    /// (´claim:envelope:a-reserved-key-at-a-known-version-stays-refused-on-read´)
+    #[test]
+    fn the_read_path_tolerates_the_newer_ceiling_and_nothing_else() {
+        let content = cogra(Some("Title"), None, Some("body"));
+        assert_eq!(
+            CograContent::read_payload(&with_newer_part(content.clone().into_envelope(), 1)),
+            Err(EnvelopeError::ReservedKey(50))
+        );
+        assert_eq!(
+            CograContent::read_payload(&content.clone().encode_payload()),
+            Ok(Reading {
+                fields: content.clone(),
+                newer_format: false,
+            })
+        );
+        let mut quiet = content.clone().into_envelope();
+        quiet.version = [1, 1, 1, 2];
+        assert_eq!(
+            CograContent::read_payload(&quiet.encode()),
+            Ok(Reading {
+                fields: content.clone(),
+                newer_format: false,
+            })
+        );
+        let mut floor = content.into_envelope();
+        floor.version = [1, 1, 2, 2];
+        assert_eq!(
+            CograContent::read_payload(&floor.encode()),
+            Err(EnvelopeError::Guild("unsupported version vector"))
+        );
+        let mut inner = BTreeMap::new();
+        inner.insert(COGRA_KEY_VERSION, Value::Uint(1));
+        inner.insert(COGRA_KEY_NODE, Value::Bytes(vec![7; 16]));
+        inner.insert(6, Value::Text("provenance".into()));
+        let mut guild = envelope("", BTreeMap::from([(COGRA_GUILD_KEY, Value::Map(inner))]));
+        guild.version = [1, 1, 1, 2];
+        assert_eq!(
+            CograContent::read_payload(&guild.encode()),
+            Err(EnvelopeError::Guild("unknown cogra field"))
+        );
+    }
+
     /// Every manifest shape that carries meaning: a lone asset, a gallery
     /// whose order is its array position, alt text present and absent on
     /// the same manifest, and a media post — an empty body beside a
@@ -698,10 +893,129 @@ mod tests {
             Value::Array(vec![media_entry(vec![
                 (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
                 (ASSET_KEY_MIME, Value::Text("image/webp".into())),
-                (5, Value::Uint(1080)),
+                (6, Value::Uint(1080)),
             ])]),
             "unknown media entry field",
         );
+    }
+
+    /// Both digests ride every entry a prepare stages: the rendition the
+    /// asset serves and the bytes the author's device sent. For a still
+    /// they are one value carried twice; for a re-encoded clip they differ,
+    /// and both survive the round trip in their own keys.
+    ///
+    /// Every manifest entry carries both the rendition digest and the upload digest, each in its own key.
+    /// ´claim:envelope:every-entry-carries-both-digests´
+    #[test]
+    fn every_manifest_entry_carries_both_the_rendition_and_the_upload_digest() {
+        let still = MediaAsset {
+            upload_digest: Some([1; MEDIA_DIGEST_LEN]),
+            ..asset(1, "image/webp", None)
+        };
+        let clip = MediaAsset {
+            upload_digest: Some([8; MEDIA_DIGEST_LEN]),
+            ..asset(3, "video/mp4", Some("A clip"))
+        };
+        let mut content = cogra(None, Some("beside"), None);
+        content.media = vec![still, clip];
+        let bytes = content.clone().encode_for_prepare().expect("admitted");
+        assert_eq!(
+            CograContent::decode_payload(&bytes).expect("valid"),
+            content
+        );
+        let Some(Value::Map(guild)) = Envelope::decode(&bytes)
+            .expect("valid")
+            .extensions
+            .get(&COGRA_GUILD_KEY)
+            .cloned()
+        else {
+            panic!("the guild map");
+        };
+        let Some(Value::Array(entries)) = guild.get(&COGRA_KEY_MEDIA) else {
+            panic!("a manifest array");
+        };
+        for entry in entries {
+            let Value::Map(entry) = entry else {
+                panic!("an entry map")
+            };
+            assert!(entry.contains_key(&ASSET_KEY_DIGEST));
+            assert!(entry.contains_key(&ASSET_KEY_UPLOAD_DIGEST));
+        }
+    }
+
+    /// The prepare-side admission refuses an entry that would witness a
+    /// rendition without the bytes the author sent, in a gallery and in
+    /// the avatar slot alike.
+    ///
+    /// A prepare refuses a manifest entry without an upload digest, in a gallery and in the avatar slot alike.
+    /// ´claim:envelope:a-prepare-refuses-an-entry-without-an-upload-digest´
+    #[test]
+    fn a_manifest_entry_without_an_upload_digest_is_refused_at_prepare() {
+        let bare = MediaAsset {
+            upload_digest: None,
+            ..asset(1, "image/webp", None)
+        };
+        let mut content = cogra(None, None, None);
+        content.media = vec![asset(2, "image/webp", None), bare.clone()];
+        assert_eq!(
+            content.encode_for_prepare(),
+            Err(EnvelopeError::Guild("media entry without an upload digest"))
+        );
+        let mut update = profile(None, None, None);
+        update.avatar = Some(Some(bare));
+        assert_eq!(
+            update.encode_for_prepare(),
+            Err(EnvelopeError::Guild("media entry without an upload digest"))
+        );
+        let mut cleared = profile(None, None, None);
+        cleared.avatar = Some(None);
+        assert!(
+            cleared.encode_for_prepare().is_ok(),
+            "a cleared slot names no asset"
+        );
+    }
+
+    /// A payload landed before the upload digest existed carries an entry
+    /// with keys 0–4 only. The reader still reads it — it renders no
+    /// upload digest rather than refusing the record — because the
+    /// refusal is the prepare's, not the decoder's.
+    ///
+    /// Landed history without an upload digest still reads, with no upload digest to render.
+    /// ´claim:envelope:landed-history-without-an-upload-digest-reads´
+    #[test]
+    fn landed_history_without_an_upload_digest_still_reads() {
+        let bytes = with_media_value(Value::Array(vec![media_entry(vec![
+            (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
+            (ASSET_KEY_MIME, Value::Text("image/webp".into())),
+        ])]));
+        let decoded = CograContent::decode_payload(&bytes).expect("landed history reads");
+        assert_eq!(decoded.media[0].upload_digest, None);
+    }
+
+    /// The upload digest is a digest or nothing: a wrong type or a wrong
+    /// length refuses the entry rather than being read as some other value.
+    ///
+    /// An upload digest is a well-sized digest or the entry is refused.
+    /// ´claim:envelope:an-upload-digest-is-a-well-sized-digest´
+    #[test]
+    fn manifest_rejects_an_upload_digest_that_is_not_a_digest() {
+        let entry = |upload: Value| {
+            Value::Array(vec![media_entry(vec![
+                (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
+                (ASSET_KEY_MIME, Value::Text("image/webp".into())),
+                (ASSET_KEY_UPLOAD_DIGEST, upload),
+            ])])
+        };
+        refuses_media(
+            entry(Value::Text("not bytes".into())),
+            "media upload digest must be a digest",
+        );
+        for length in [0, 16, 31, 33, 64] {
+            refuses_media(
+                entry(Value::Bytes(vec![2; length])),
+                "media upload digest must be 32 bytes",
+            );
+        }
     }
 
     /// The poster is witnessed as a digest, so a value that is not one —
@@ -749,6 +1063,7 @@ mod tests {
                     alt_text: None,
                     cover,
                     cover_taken: false,
+                    upload_digest: Some([2; MEDIA_DIGEST_LEN]),
                 }],
                 ..cogra(None, None, Some("a clip"))
             };
@@ -792,6 +1107,7 @@ mod tests {
                     alt_text: None,
                     cover: Some([9; MEDIA_DIGEST_LEN]),
                     cover_taken,
+                    upload_digest: Some([2; MEDIA_DIGEST_LEN]),
                 }],
                 ..cogra(None, None, Some("a clip"))
             };
@@ -1107,7 +1423,7 @@ mod tests {
             Value::Array(vec![media_entry(vec![
                 (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
                 (ASSET_KEY_MIME, Value::Text("image/webp".into())),
-                (5, Value::Uint(1)),
+                (6, Value::Uint(1)),
             ])]),
             "unknown media entry field",
         );

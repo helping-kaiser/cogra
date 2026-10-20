@@ -17,11 +17,20 @@ import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.media.awaitReady
 import com.cogra.domain.media.overPictureCap
+import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
+import com.cogra.domain.signing.ContentShape
+import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.NoActorKeyException
+import com.cogra.domain.signing.SentContent
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.commentExpectation
+import com.cogra.domain.signing.contentExpectation
+import com.cogra.domain.signing.ledgerFor
+import com.cogra.domain.signing.wireReason
+import com.cogra.domain.topics.TagClaim
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.SectionsEditor
@@ -31,26 +40,26 @@ import com.cogra.feature.content.tagFieldIndex
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.COMMENT_SCALE
 import com.cogra.feature.content.wizard.COMMENT_VIDEO_MAX_BYTES
-import com.cogra.feature.content.wizard.UploadFailure
-import com.cogra.feature.content.wizard.uploadPicture
 import com.cogra.feature.content.wizard.CoverChoice
 import com.cogra.feature.content.wizard.FirstFrameStill
 import com.cogra.feature.content.wizard.RefusedPick
+import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.attachmentFieldIndex
 import com.cogra.feature.content.wizard.refusesVideo
 import com.cogra.feature.content.wizard.screenPicture
 import com.cogra.feature.content.wizard.storesFirstFrame
 import com.cogra.feature.content.wizard.toResolvedUpload
 import com.cogra.feature.content.wizard.uploadFirstFrame
-import java.io.File
+import com.cogra.feature.content.wizard.uploadPicture
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
+import javax.inject.Inject
 
 /**
  * The reply wizard.
@@ -554,6 +563,83 @@ class ReplyWizardViewModel @Inject constructor(
     // -- Signing --
 
     /**
+     * The L1 ids of the node answered and of every cited node, read before
+     * anything is staged: the intent check (Intent.kt) binds the reply and
+     * its citations to them. Null once the read failed — already reported.
+     */
+    private suspend fun graphIdsFor(
+        parentId: String,
+        references: List<ReferenceClaim>,
+    ): Map<String, String>? =
+        when (val read = content.graphIds(listOf(parentId) + references.map { it.targetId })) {
+            is Outcome.Success -> read.value
+            is Outcome.Refused -> null.also { refuse(read.errors) }
+            is Outcome.Failed -> null.also { failTransport() }
+        }
+
+    /**
+     * The request the seal sends — read by the prepare and by the payload
+     * expectation alike (PayloadExpectation.kt). The poster rides the clip's
+     * own placement, the same way a post's does, so it never enters the
+     * gallery.
+     */
+    private fun sentContent(current: ReplyWizardState): SentContent = SentContent(
+        content = current.body,
+        attachments = current.picked.mapNotNull { asset ->
+            asset.mediaId?.let {
+                AttachmentClaim(
+                    mediaId = it,
+                    altText = asset.altText.ifBlank { null },
+                    coverMediaId = current.coverMediaId.takeIf { _ -> asset.isVideo },
+                    // TAKEN (frame 1, silently) vs CHOSEN — the fact
+                    // `storesFirstFrame` already names, gated the same way as
+                    // the id itself so a picture post never claims it.
+                    coverTaken = current.coverChoice.storesFirstFrame.takeIf { asset.isVideo } ?: false,
+                )
+            }
+        },
+        sensitive = current.sensitive,
+        sensitiveReason = wireReason(current.sensitive, current.sensitiveReason.ifBlank { null }),
+    )
+
+    /**
+     * What the reply orders, as the intent check reads it (Intent.kt), once
+     * the prepare named the node: the payload [sent] must decode to — its
+     * pictures held to the digests this device computed, the poster read
+     * back by id — then the topics and citations. Null once a read failed —
+     * already reported.
+     */
+    @Suppress("LongParameterList") // one parameter per thing the reply seal holds
+    private suspend fun expectation(
+        current: ReplyWizardState,
+        node: String,
+        sent: SentContent,
+        parentGraphId: String,
+        tags: List<TagClaim>,
+        references: List<ReferenceClaim>,
+        graphIds: Map<String, String>,
+    ): Expectation? {
+        val own = current.picked.mapNotNull { asset ->
+            (asset.upload as? AssetUpload.Done)?.let { done -> done.known?.let { done.mediaId to it } }
+        }.toMap()
+        val ledger = when (val read = media.ledgerFor(sent.attachments, own)) {
+            is Outcome.Success -> read.value
+            is Outcome.Refused -> return null.also { refuse(read.errors) }
+            is Outcome.Failed -> return null.also { failTransport() }
+        }
+        return commentExpectation(
+            parentGraphId = parentGraphId,
+            pDirected = current.pDirected,
+            pInterest = current.pInterest,
+            license = current.license,
+            content = contentExpectation(node, sent, ContentShape.COMMENT, ledger),
+            tags = tags,
+            references = references,
+            graphIds = graphIds,
+        )
+    }
+
+    /**
      * Stages the batch and signs it. A refusal from the prepare stops
      * before any signature: nothing was signed, so nothing may claim
      * signing failed.
@@ -572,42 +658,34 @@ class ReplyWizardViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
+            val tags = current.tagSection.tags.map { it.toClaim() }
+            val references = current.referenceSection.references.map { it.toClaim() }
+            val graphIds = graphIdsFor(target.id, references) ?: return@launch
+            val sent = sentContent(current)
             val prepared = when (
                 val outcome = content.prepareComment(
                     target = target.id,
                     content = current.body,
                     license = current.license,
-                    tags = current.tagSection.tags.map { it.toClaim() },
-                    references = current.referenceSection.references.map { it.toClaim() },
-                    // The poster rides the clip's own placement, the same
-                    // way a post's does, so it never enters the gallery.
-                    attachments = current.picked.mapNotNull { asset ->
-                        asset.mediaId?.let {
-                            AttachmentClaim(
-                                mediaId = it,
-                                altText = asset.altText.ifBlank { null },
-                                coverMediaId = current.coverMediaId.takeIf { _ -> asset.isVideo },
-                                // TAKEN (frame 1, silently) vs CHOSEN —
-                                // the fact `storesFirstFrame` already
-                                // names, gated the same way as the id
-                                // itself so a picture post never claims it.
-                                coverTaken = current.coverChoice.storesFirstFrame.takeIf { asset.isVideo } ?: false,
-                            )
-                        }
-                    },
+                    tags = tags,
+                    references = references,
+                    attachments = sent.attachments,
                     pDirected = current.pDirected,
                     pInterest = current.pInterest,
-                    sensitive = current.sensitive,
-                    sensitiveReason = current.sensitiveReason.ifBlank { null },
+                    sensitive = sent.sensitive,
+                    sensitiveReason = sent.sensitiveReason,
                 )
             ) {
                 is Outcome.Success -> outcome.value
                 is Outcome.Refused -> return@launch refuse(outcome.errors)
                 is Outcome.Failed -> return@launch failTransport()
             }
+            val parentGraphId = graphIds.getValue(target.id)
+            val expected = expectation(current, prepared.node, sent, parentGraphId, tags, references, graphIds)
+                ?: return@launch
 
             val results = try {
-                signer.sign(prepared.writes)
+                signer.sign(prepared.writes, expected)
             } catch (_: NoActorKeyException) {
                 // `ComposeKeyAbsent`: the write waits on the reader
                 // restoring the key. There is no draft to keep, so the

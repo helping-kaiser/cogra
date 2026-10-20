@@ -20,7 +20,15 @@
 
 import { failed, success, type Outcome } from "@/lib/api/outcome";
 import type { FeedItemView, FeedPostView } from "@/lib/api/feed-api";
-import { derive, type FeedRow, type HeldAnswer, type HeldEntry, type SeenLookup } from "./derive";
+import {
+  derive,
+  NOTHING_DERIVED,
+  type DerivedFeed,
+  type FeedRow,
+  type HeldAnswer,
+  type HeldEntry,
+  type SeenLookup,
+} from "./derive";
 import {
   deviceCutsOf,
   doneEffectOf,
@@ -55,6 +63,13 @@ export type FeedIo = {
    * pages remembered beside it. Absent means always.
    */
   wanted?(): boolean;
+  /**
+   * Whether the reader has hidden this post's author (hidden-actors packet
+   * §4.4): a post-rank view filter the screen applies at render, so a window
+   * still carries the hidden rows — Undo puts them back where they stood —
+   * but only a visible row ends the fill. Absent hides nobody.
+   */
+  hides?(item: FeedPostView): boolean;
 };
 
 /** A hydrated stretch of the derived list. */
@@ -63,6 +78,12 @@ export type FeedWindow = {
   /** Where the next window starts in the derived list. */
   readonly next: number;
   readonly hasMore: boolean;
+  /**
+   * The ids under `feed.seenSeparator` in the list this window was cut from
+   * (FeedSeenTail.md): they stand after every unseen row, and reading them
+   * records nothing.
+   */
+  readonly seenTail: ReadonlySet<string>;
 };
 
 /** What every kind switched off answers, without asking (FeedNothing.md:3-5). */
@@ -75,7 +96,10 @@ function isPost(item: FeedItemView | null | undefined): item is FeedPostView {
 export class RankedFeed {
   private applied: FeedFilterValue;
   private held: HeldAnswer | null = null;
+  private split: DerivedFeed = NOTHING_DERIVED;
+  // Head then tail: the one list hydration windows over.
   private rows: readonly FeedRow[] = [];
+  private tailIds: ReadonlySet<string> = new Set();
   // Null: asked for, and the server could not hydrate it (skipped, §4.4).
   private hydrated = new Map<string, FeedItemView | null>();
 
@@ -97,9 +121,20 @@ export class RankedFeed {
     return this.held;
   }
 
-  /** The derived list, as of the last derive. */
-  get derived(): readonly FeedRow[] {
-    return this.rows;
+  /** The derived list, as of the last derive: above the seen line, then under it. */
+  get derived(): DerivedFeed {
+    return this.split;
+  }
+
+  /** The ids under `feed.seenSeparator`, as of the last derive. */
+  get seenTail(): ReadonlySet<string> {
+    return this.tailIds;
+  }
+
+  private adopt(split: DerivedFeed): void {
+    this.split = split;
+    this.rows = [...split.head, ...split.tail];
+    this.tailIds = new Set(split.tail.map((row) => row.targetId));
   }
 
   /**
@@ -136,14 +171,14 @@ export class RankedFeed {
     if (io.wanted?.() === false) return failed(new Error("the ranking landed after its screen left"));
     this.held = answer;
     this.hydrated = new Map();
-    this.rows = answer === null ? [] : derive(answer, deviceCutsOf(this.applied), seen);
+    this.adopt(answer === null ? NOTHING_DERIVED : derive(answer, deviceCutsOf(this.applied), seen));
     return success(undefined);
   }
 
   /** The derive again, from the held answer and the record as it stands now. */
   private async rederive(io: FeedIo): Promise<void> {
     const seen = await io.seen();
-    this.rows = this.held === null ? [] : derive(this.held, deviceCutsOf(this.applied), seen);
+    this.adopt(this.held === null ? NOTHING_DERIVED : derive(this.held, deviceCutsOf(this.applied), seen));
   }
 
   /**
@@ -170,13 +205,15 @@ export class RankedFeed {
 
   /**
    * Hydrates the derived list from `from` on, a window at a time, until a
-   * window carries a row the card draws or the list ends — the shared fill
-   * rule (§5.1). Rows already hydrated for this answer are not asked again.
+   * window carries a row the card draws and the reader has not hidden, or the
+   * list ends — the shared fill rule (§5.1; hidden-actors §4.4 "over-fetch to
+   * fill"). Rows already hydrated for this answer are not asked again.
    */
   async window(from: number, io: FeedIo): Promise<Outcome<FeedWindow>> {
     let at = Math.max(0, from);
-    let items: FeedPostView[] = [];
-    while (at < this.rows.length && items.length === 0) {
+    const items: FeedPostView[] = [];
+    const visible = (item: FeedPostView) => io.hides?.(item) !== true;
+    while (at < this.rows.length && !items.some(visible)) {
       const ids = this.rows.slice(at, at + FEED_WINDOW).map((row) => row.targetId);
       const missing = ids.filter((id) => !this.hydrated.has(id));
       if (missing.length > 0) {
@@ -185,9 +222,9 @@ export class RankedFeed {
         const answered = new Map(fetched.value.map((item) => [item.id, item]));
         for (const id of missing) this.hydrated.set(id, answered.get(id) ?? null);
       }
-      items = ids.map((id) => this.hydrated.get(id)).filter(isPost);
+      items.push(...ids.map((id) => this.hydrated.get(id)).filter(isPost));
       at += ids.length;
     }
-    return success({ items, next: at, hasMore: at < this.rows.length });
+    return success({ items, next: at, hasMore: at < this.rows.length, seenTail: this.tailIds });
   }
 }

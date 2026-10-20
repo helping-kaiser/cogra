@@ -38,11 +38,17 @@ import { composeDraftStore, type ComposeDraftStore } from "@/lib/compose/draft-s
 import { LOCKED_ROW, settingsRowStatus } from "@/lib/deletion/deletion-copy";
 import { useAccountDeletion } from "@/lib/deletion/deletion-status";
 import { sealedDraftStore, type SealedDraftStore } from "@/lib/compose/sealed-draft";
+import type { DeviceLockEngine } from "@/lib/identity/device-lock";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
+import { useHiddenSet } from "@/lib/hidden/provider";
+import { seenRecord } from "@/lib/history/seen-record";
+import { forgetSeen } from "@/lib/history/seen-sync";
 import { useKeyOnDeviceState } from "@/lib/identity/use-key-on-device";
 import { licenseName, PUBLIC_DOMAIN, type License } from "@/lib/license";
+import { useHostSnack } from "@/lib/saved/save-row";
 import { useTokenStore } from "@/lib/session/provider";
-import { useAuthGuard } from "@/lib/session/runtime";
+import { useAuthGuard, useDeviceLock } from "@/lib/session/runtime";
+import { RUNNING_VERSION } from "@/lib/release/running-version";
 import { eraseEverything } from "@/lib/settings/erase-everything";
 import {
   applyTheme,
@@ -56,6 +62,10 @@ import {
   UNVEIL_LEVEL,
   useAlwaysUnveil,
 } from "@/lib/settings/sensitive-content";
+import {
+  carriedExpectationStore,
+  type CarriedExpectationStore,
+} from "@/lib/signing/carried";
 import { useConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
 import { useStanceInputMode, type StanceInputMode } from "@/lib/stance/input-mode";
 import { instance, part, type DataNode } from "@/lib/ui/data-node";
@@ -69,6 +79,7 @@ import { SettingsGroup, SettingsRow } from "@/lib/ui2/settings-row";
 import { useSlowAnswer } from "@/lib/ui2/waiting-commit";
 
 import { EraseConfirm } from "./erase-confirm";
+import { SettingsHiddenSheet } from "./settings-hidden-sheet";
 import { SettingsLicenseSheet } from "./settings-license-sheet";
 import {
   EMAIL_ROUTES,
@@ -88,8 +99,6 @@ const node = (tail: string): DataNode => part(NODE, tail);
 /** The contact door's address — a placeholder until CoGra is on a server. */
 export const CONTACT_ADDRESS = "hello@cogra.local";
 
-/** The version running here — `web/package.json`, inlined by the build (`next.config.ts`). */
-export const RUNNING_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "";
 
 /** The registry's spelling of each stance input's row. */
 const STANCE_ROWS: readonly { mode: StanceInputMode; key: string; label: string; status: string }[] = [
@@ -147,19 +156,43 @@ export function SettingsView({
   store = identityStore,
   drafts = composeDraftStore,
   seals = sealedDraftStore,
+  carried = carriedExpectationStore,
+  forgetSeenRecord = (account: string) => forgetSeen(seenRecord, account),
   erase = eraseEverything,
   leave = hardNavigate,
+  deviceLock,
 }: {
   /** Test injection. */
   store?: IdentityStore;
   drafts?: Pick<ComposeDraftStore, "clear">;
   seals?: Pick<SealedDraftStore, "forget">;
+  carried?: Pick<CarriedExpectationStore, "forget">;
+  /** Drops one account's seen record and watermark from this browser. */
+  forgetSeenRecord?: (account: string) => Promise<void>;
   erase?: () => Promise<void>;
   leave?: (url: string) => void;
+  deviceLock?: Pick<DeviceLockEngine, "ensureHeld" | "discard">;
 } = {}) {
   const client = useApolloClient();
   const guard = useAuthGuard();
   const tokens = useTokenStore();
+  const clientLock = useDeviceLock();
+  const lock = deviceLock ?? clientLock;
+
+  /**
+   * The opt-in's lock ends with it (sign-out-custody §3.3: discarded when
+   * the switch turns off, the slot is erased, or purged). Best effort, and
+   * never in the way of what the reader asked for.
+   */
+  const discardLock = async () => {
+    const account = tokens.activeAccountId();
+    if (account === null) return;
+    try {
+      await lock.discard(account);
+    } catch {
+      // an orphaned server half opens nothing, and dies with the account
+    }
+  };
   const router = useRouter();
   const notice = settingsNoticeOf(useSearchParams().get("done"));
   const keyOnDevice = useKeyOnDeviceState(store);
@@ -169,7 +202,24 @@ export function SettingsView({
   const [account, setAccount] = useState<SettingsAccount | null>(null);
   const [readFailed, setReadFailed] = useState(false);
   const [forget, setForget] = useState(false);
-  const [snackbar, setSnackbar] = useState<string | null>(null);
+  // THE PAGE'S ONE SNACKBAR: the page's own confirmations, and the unhide's
+  // aftermath with its `Undo` — cleared if the unhide it announced reverts.
+  const { snack, notify, dismiss: dismissSnackbar } = useHostSnack();
+  const setSnackbar = useCallback(
+    (message: string | null) => (message === null ? dismissSnackbar() : notify(message)),
+    [dismissSnackbar, notify],
+  );
+  // HIDDEN ACCOUNTS (SettingsHidden.md): the count, the sheet and its way back.
+  const hidden = useHiddenSet();
+  const hiddenCount = hidden.count;
+  const [hiddenOpen, setHiddenOpen] = useState(false);
+  const hiddenRow = useRef<HTMLButtonElement | null>(null);
+  const hiddenFailures = hiddenOpen ? [] : [...hidden.failed().values()];
+  const hiddenRowFailure = hiddenFailures.find((failure) => failure.kind === "undoUnhide") ?? null;
+  const closeHidden = useCallback(() => {
+    setHiddenOpen(false);
+    queueMicrotask(() => hiddenRow.current?.focus());
+  }, []);
   const [revoking, setRevoking] = useState<string | null>(null);
   const [elsewhereBusy, setElsewhereBusy] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -223,7 +273,6 @@ export function SettingsView({
     if (noticeSaid && notice !== null) router.replace("/settings");
   }, [noticeSaid, notice, router]);
 
-  const dismissSnackbar = useCallback(() => setSnackbar(null), []);
 
   const onTheme = (next: ThemeChoice) => {
     setTheme(next);
@@ -326,6 +375,9 @@ export function SettingsView({
    * exit. Kept picks join the set when they exist (sign-out-custody §3.2).
    */
   const purgeCustody = async () => {
+    // Named before the key goes: the record to drop is this account's, read
+    // while it is still the active one.
+    const accountId = tokens.activeAccountId();
     try {
       await store.purgeIfEphemeral();
     } catch {
@@ -343,12 +395,30 @@ export function SettingsView({
     } catch {
       // sign-out proceeds regardless
     }
+    // A carried write's prepare-time expectation is the draft's tier, and goes
+    // with it (signing/carried.ts).
+    try {
+      await carried.forget();
+    } catch {
+      // sign-out proceeds regardless
+    }
+    // What this account has seen on this browser — the ids and the sync
+    // watermark — is dropped with it and no other account's; the server's
+    // view log survives and a later sign-in re-seeds from it.
+    if (accountId !== null) {
+      try {
+        await forgetSeenRecord(accountId);
+      } catch {
+        // sign-out proceeds regardless
+      }
+    }
   };
 
   const endSession = async (purge: boolean) => {
     setSigningOut(true);
     // Best-effort self-revocation: an unreachable server never blocks signing
     // out (auth.md "Sign-out").
+    if (purge) await discardLock();
     await guard.run(() => revokeSession(client, null));
     if (purge) await purgeCustody();
     // Clearing the tokens flips the phase; the (app) gate replaces the
@@ -381,6 +451,19 @@ export function SettingsView({
       await store.setEphemeral(next);
     } catch {
       setForget(!next);
+      return;
+    }
+    // The switch flips with no dialog and never waits on the network
+    // (Settings.md:119): the lock follows behind, best effort — obtained
+    // when on (retried at the next start if it did not arrive), discarded
+    // when off (sign-out-custody §3.4).
+    const account = tokens.activeAccountId();
+    if (account === null) return;
+    try {
+      if (next) await lock.ensureHeld(account);
+      else await lock.discard(account);
+    } catch {
+      // the next start retries the hold; a stale server half opens nothing
     }
   };
 
@@ -394,6 +477,9 @@ export function SettingsView({
   const onEraseEverything = async () => {
     setEraseOpen(false);
     setSigningOut(true);
+    // The erase gains one step (sign-out-custody §3.5 ERASE): the lock's
+    // server half is discarded while a session still exists to name it.
+    await discardLock();
     await guard.run(() => revokeSession(client, null));
     try {
       await erase();
@@ -527,9 +613,36 @@ export function SettingsView({
           footnote="Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking."
           node={node("people")}
         >
-          {/* Nobody can be hidden yet (the Hide packet), so the row is the
-              drawn empty state: inert, `None`. */}
-          <SettingsRow label="Hidden accounts" value="None" inert node={node("people.hidden")} />
+          {/* THE COUNT IS THE HIDDEN SET'S (hidden-actors §5.1). With nobody
+              hidden the row is inert and reads `None` — a tap that could only
+              open an empty sheet is a tap spent on nothing (Settings.md). An
+              Undo of an unhide that did not go through after the sheet closed
+              is said here, with Retry (SettingsHidden.md:33). */}
+          {hiddenRowFailure === null ? (
+            <SettingsRow
+              label="Hidden accounts"
+              value={hiddenCount === 0 ? "None" : String(hiddenCount)}
+              inert={hiddenCount === 0}
+              onOpen={hiddenCount === 0 ? undefined : () => setHiddenOpen(true)}
+              rowRef={hiddenRow}
+              node={node("people.hidden")}
+            />
+          ) : (
+            <SettingsRow
+              label="Hidden accounts"
+              status="That didn't go through."
+              statusTone="error"
+              value={hiddenCount === 0 ? "None" : String(hiddenCount)}
+              inert
+              trailing={
+                <InlineAction onClick={hiddenRowFailure.retry} testId="settings-hidden-retry">
+                  Retry
+                </InlineAction>
+              }
+              rowRef={hiddenRow}
+              node={node("people.hidden")}
+            />
+          )}
         </SettingsGroup>
 
         {/* THE VEIL IS THE ACCOUNT'S CHOICE, NOT THIS DEVICE'S (#141): its own
@@ -655,16 +768,21 @@ export function SettingsView({
         </SettingsGroup>
 
         <SettingsGroup label="About" node={node("about")}>
-          {/* DRIFT (the intro, What's new, Report a problem packets; Privacy
-              and Terms await their documents): rows whose destination is not
-              built yet open nothing. */}
+          {/* DRIFT (the intro, Report a problem packets; Privacy and Terms
+              await their documents): rows whose destination is not built yet
+              open nothing. */}
           <SettingsRow label="Watch the intro again" onOpen={() => {}} node={node("about.intro")} />
           <SettingsRow
             label="About CoGra"
             onOpen={() => router.push("/about?from=settings")}
             node={node("about.aboutCogra")}
           />
-          <SettingsRow label="What's new" value={RUNNING_VERSION} onOpen={() => {}} node={node("about.whatsNew")} />
+          <SettingsRow
+            label="What's new"
+            value={RUNNING_VERSION}
+            onOpen={() => router.push("/settings/whats-new")}
+            node={node("about.whatsNew")}
+          />
           <SettingsRow label="Report a problem" onOpen={() => {}} node={node("about.report")} />
           <SettingsRow
             label="Contact"
@@ -682,7 +800,7 @@ export function SettingsView({
           <SettingsRow
             checked={forget}
             label="Don't remember this account on this device"
-            status="Your key, your draft and any kept picks are cleared from this browser when you sign out."
+            status="Your key, your draft, any kept picks and what you've seen are cleared from this browser when you sign out."
             onOpen={() => void onForget()}
             node={node("leaving.forget")}
           />
@@ -769,7 +887,14 @@ export function SettingsView({
         />
       )}
 
-      <Snackbar testId="settings-snackbar" message={snackbar} onDismiss={dismissSnackbar} />
+      <SettingsHiddenSheet open={hiddenOpen} set={hidden} notify={notify} onClose={closeHidden} />
+      <Snackbar
+        testId="settings-snackbar"
+        message={snack?.message ?? null}
+        action={snack?.action}
+        token={snack?.token}
+        onDismiss={dismissSnackbar}
+      />
     </main>
   );
 }

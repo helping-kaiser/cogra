@@ -153,6 +153,12 @@ export function severanceWords(names) {
 }
 /** What a bundle at exactly (0, 0) reads as. */
 export const ZERO_BUNDLE_EMOJI = "🤷";
+/* ONE NUMBER AT ZERO THINKS; BOTH AT ZERO SHRUG (jakob 2026-10-20: "shrug
+   should be the 0,0 only"). A state with exactly one number at zero —
+   interested, no side taken, and its siblings; the one-axis 0.00, which is
+   `(0, 1)` with the pin — wears 🤔, outside both tables like 🤷 and 🫥, so
+   the held, unreachable state never reads as severance's face. */
+export const UNREACHABLE_EMOJI = "🤔";
 /** The face an unauthored target wears at rest — the dotted-line face, deliberately
     outside the table so an empty control cannot read as an opinion already given. */
 export const RESTING_FACE_EMOJI = "🫥";
@@ -193,10 +199,12 @@ export const STANCE_ANCHORS = [
   { pDirected: -0.9, pInterest: -0.9, emoji: "💀", label: "Absolutely not" },
 ];
 
-/* THE ONE-AXIS TABLE (jakob's ruling, 2026-09-14). A pick on one's own post
-   names a valence and nothing else — a post always reaches its author in full,
-   so `pInterest` is not a thing to choose — and `nearestAnchor` cannot answer
-   for a value that names no pair. These six are the twenty's pure-valence
+/* THE ONE-AXIS TABLE (jakob's ruling, 2026-09-14). It answers for a value
+   that names no pair, which `nearestAnchor` cannot: the backing an author
+   signs with their own content (`AttachmentReadout`). The authoring families
+   are census-pinned to one free parameter — Publish and Owner carry `p_d = a`
+   with `p_i = 1`, never a choice (jakob 2026-10-16, PR-101) — so the pick is
+   one number and its face reads here. These six are the twenty's pure-valence
    spine, the mild, middle and far face on each side, at ±0.15, ±0.55 and
    ±0.90. Glyph, word and position are READ from `STANCE_ANCHORS`, so the six
    are six OF the twenty and cannot drift from them.
@@ -211,14 +219,13 @@ export const STANCE_ANCHORS = [
    EACH ROW OWNS THE AXIS UP TO ITS `to`, and `toInclusive` says whether the
    edge itself belongs to it. Away from the edges this is the nearest anchor by
    distance; the asymmetry in `toInclusive` is where the two ruled tie-breaks
-   live, and it is the same rule stated twice:
-     · AT A MIDPOINT THE MILDER FACE WINS — the one nearer zero. On the
-       negative side that is the band above, so a negative row stops short of
-       its edge; on the positive side it is the band below, so a positive row
-       keeps it.
-     · EXACTLY 0.00 READS 🙂 — the 😕 row stops short of zero, so zero falls
-       into the first band above it.
-   Six monotone bands covering the closed axis, and the same face everywhere. */
+   live: AT A MIDPOINT THE MILDER FACE WINS — the one nearer zero. On the
+   negative side that is the band above, so a negative row stops short of its
+   edge; on the positive side it is the band below, so a positive row keeps
+   it. The 😕 row stops short of zero and the 🙂 row would take it, but
+   `nearestValenceAnchor` answers exactly 0.00 before the table is read: it
+   wears 🤔 (jakob 2026-10-20), the one-zero face. Six monotone bands covering the
+   closed axis, and the same face everywhere. */
 export const VALENCE_SIX = [
   { emoji: "😠", to: -0.725, toInclusive: false },
   { emoji: "🙁", to: -0.35, toInclusive: false },
@@ -318,12 +325,20 @@ export function nearestTagAnchor(pair) {
   return best;
 }
 
-/** The face a ONE-AXIS pick wears — the first `VALENCE_SIX` band the value
- *  falls inside. The bands cover the closed axis, so every value has exactly
- *  one; out of range is clamped in rather than refused, the way the pad
- *  clamps. */
+/* EXACTLY 0.00 THINKS on the one axis (jakob 2026-10-16, its face 🤔 since
+   2026-10-20): a backing of zero takes no side — with the second number
+   pinned at 1 it folds to `(0, 1)`, unreachable on its own path — so it
+   wears the one-zero face, never a band's smile. Only the exact value — the
+   bands keep the rest of the axis as ruled. */
+export const ZERO_BACKING_LABEL = "No side taken";
+
+/** The face a ONE-AXIS pick wears — 🤔 at exactly 0.00, otherwise the first
+ *  `VALENCE_SIX` band the value falls inside. The bands cover the closed axis,
+ *  so every value has exactly one; out of range is clamped in rather than
+ *  refused, the way the pad clamps. */
 export function nearestValenceAnchor(pDirected) {
   const value = clampDimension(pDirected);
+  if (value === 0) return { emoji: UNREACHABLE_EMOJI, label: ZERO_BACKING_LABEL, pDirected: 0, to: 0, toInclusive: true };
   for (const band of VALENCE_SIX) {
     if (value < band.to || (band.toInclusive && value === band.to)) return band;
   }
@@ -495,17 +510,31 @@ function readoutWords(names) {
   };
 }
 
+/* ONE ZERO IS A DELIBERATE STATE, NOT A LOSS (jakob 2026-10-20, seam 240).
+   A landing with exactly one number at zero — `(0, x)` or `(y, 0)` — is a
+   stance someone can mean: interested, no side taken; or a side taken with
+   nothing asked of what reaches them. The fold gives it `w̃ = 0`, so it shapes
+   no feed — the docs call it UNREACHABLE — but it is held, and it is not
+   severance: only `(0, 0)` is, and that keeps its own named, confirmed act and
+   its own line (`severanceWords(names).landing`).
+
+   So the landing reads the state, wearing the one-zero face 🤔 — the one-axis
+   pads' face for exactly 0.00, the same fact at two axes — and says once what
+   it costs. The sign of the other number decides the words: "interested" is
+   false of a pick that keeps the thing away. The head names the state; the
+   tail is the one consequence worth saying. */
+export const UNREACHABLE_TAIL = "this won't shape anyone's feed.";
+
+export function unreachableHead(pair) {
+  if (pair.pDirected === 0) return pair.pInterest > 0 ? "Interested, no side taken" : "Rather not see it, no side taken";
+  return pair.pDirected > 0 ? "For it, no interest either way" : "Against it, no interest either way";
+}
+
 export function landingLine(landing, names = STANCE_AXIS_NAMES) {
   if (landing === null || landing === undefined) return "Adding it up…";
   if (landing.severed) return severanceWords(names).landing;
   const { resulting } = readoutWords(names);
-  if (landing.inert) {
-    const directedInert = landing.landing.pDirected === 0;
-    const interestInert = landing.landing.pInterest === 0;
-    if (directedInert && interestInert) return `${resulting}: carries nothing.`;
-    if (directedInert) return `${resulting}: your side of it carries nothing.`;
-    if (interestInert) return `${resulting}: what reaches you carries nothing.`;
-  }
+  if (landing.inert) return `${resulting} ${UNREACHABLE_EMOJI} ${unreachableHead(landing.landing)} — ${UNREACHABLE_TAIL}`;
   const readout = bundleReadout(landing.landing);
   return `${resulting} ${readout.emoji} ${formatStancePair(landing.landing)}`;
 }
@@ -573,13 +602,16 @@ export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, 
   );
 }
 
-/* AN OPINION ON ONE'S OWN POST IS ONE NUMBER (jakob's ruling, 2026-09-14:
-   "the second number isn't yours to set on your own post"). A post always
-   reaches its author in full, so `pInterest` is not a value the author picks
-   and a pair would draw a second figure nobody chose. The face comes from
-   `VALENCE_SIX`, the table built for exactly this reading, and the spoken twin
-   names the one axis there is. */
-export function OwnStanceReadout({ pDirected, style }) {
+/* THE BACKING AN AUTHOR SIGNS WITH THEIR OWN CONTENT IS ONE NUMBER (jakob
+   2026-10-16, PR-101). Publish — Owner for a listing, Send for a message — is
+   a single-parameter family: `p_d` is the author's attachment, their
+   BACKING, and `p_i` is pinned at 1 by the census, so a pair would draw a
+   second figure nobody can choose. The face comes from `VALENCE_SIX` (🤔 at
+   exactly 0.00), and the spoken twin names the one axis there is. The
+   author's OPINION on their own content is a different record — an ordinary
+   Opinion through the content's face, read by `StanceReadout` like any
+   other. Backing is the authoring bundle; opinion is the face's. */
+export function AttachmentReadout({ pDirected, style }) {
   const band = nearestValenceAnchor(pDirected);
   const exact = formatDimension(pDirected);
   return <ReadoutLine emoji={band.emoji} exact={exact} spoken={`${band.label}, ${DIRECTED_LABEL} ${exact}`} style={style} />;
@@ -604,9 +636,19 @@ export function standingParts(bundle, targetLabel, names = STANCE_AXIS_NAMES) {
 /** The landing, split the same way. */
 export function landingParts(landing, names = STANCE_AXIS_NAMES) {
   if (landing === null || landing === undefined) return { sentence: "Adding it up…" };
-  if (landing.severed || landing.inert) return { sentence: landingLine(landing, names) };
-  const readout = bundleReadout(landing.landing, severanceWords(names).zero);
+  if (landing.severed) return { sentence: landingLine(landing, names) };
   const words = readoutWords(names);
+  if (landing.inert) {
+    const head = unreachableHead(landing.landing);
+    return {
+      label: words.resulting,
+      emoji: UNREACHABLE_EMOJI,
+      head,
+      words: `${head} — ${UNREACHABLE_TAIL}`,
+      spoken: `${words.resulting}: ${head} — ${UNREACHABLE_TAIL}`,
+    };
+  }
+  const readout = bundleReadout(landing.landing, severanceWords(names).zero);
   return {
     label: words.resulting,
     emoji: readout.emoji,
@@ -640,7 +682,7 @@ export function useSettled(value, ms = SETTLE_MS) {
    pad's `current`, `pick` or `landing` — and, when it reads as a readout and
    not a sentence, names its `label`, `face` and `exact` pair, the anchor's
    own words for the face and the figure. */
-function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style, onOpenHistory, node }) {
+function ReadoutBlock({ label, emoji, pair, spoken, sentence, words, head, onExplainZero, zeroShown = false, big = false, style, onOpenHistory, node }) {
   // Spoken once the readout rests (the K13 round); drawn at once.
   const said = useSettled(sentence !== undefined ? sentence : spoken);
   if (sentence !== undefined) {
@@ -682,6 +724,34 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style
           {label}
         </span>
       )}
+      {words !== undefined ? (
+        /* THE UNREACHABLE LANDING: the zero face and the state in words, where
+           the pair would stand. Handed `onExplainZero`, the face is a door —
+           its explanation replaces the pad's body in place, the "?"'s
+           grammar — named by the state it explains. */
+        <span style={{ display: "flex", alignItems: "baseline", gap: "var(--space-2)" }}>
+          {onExplainZero ? (
+            <button
+              type="button"
+              aria-label={head}
+              aria-expanded={zeroShown}
+              onClick={onExplainZero}
+              className="cg-state cg-focus cg-hit"
+              style={{ flex: "none", background: "none", border: 0, padding: 0, cursor: "pointer", fontSize: "var(--text-title-medium)", lineHeight: 1.2 }}
+              data-node={node && "zero"}
+            >
+              <span aria-hidden="true">{emoji}</span>
+            </button>
+          ) : (
+            <span aria-hidden="true" style={{ flex: "none", fontSize: "var(--text-title-medium)", lineHeight: 1.2 }} data-node={node && "face"}>
+              {emoji}
+            </span>
+          )}
+          <span aria-hidden="true" style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }} data-node={node && "words"}>
+            {words}
+          </span>
+        </span>
+      ) : (
       <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)" }}>
         <span style={{ fontSize: big ? "var(--text-title-large)" : "var(--text-title-medium)", lineHeight: 1.2 }} data-node={node && "face"}>
           {emoji}
@@ -690,6 +760,7 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style
           {pair}
         </span>
       </span>
+      )}
       <span style={SR_ONLY}>{said}</span>
     </div>
   );
@@ -716,12 +787,78 @@ export function StanceStanding({ pick, bundle, targetLabel, names = STANCE_AXIS_
   );
 }
 
-/** The landing — the one readout that sits below the field. Given a `node`,
- *  the readout itself carries it; the live region around it stays unnamed. */
-export function StanceLandingLine({ landing, names = STANCE_AXIS_NAMES, style, node }) {
+/* THE ONE-AXIS PAD'S READOUTS (jakob 2026-10-16, PR-101): the stance pad's
+   grammar, one number each. The pick IS the record — the pad never works in
+   results — so the readouts say what is newly set and what it comes to. The
+   compose pad has nothing standing, so its pick is its result and `Your pick`
+   reads alone. An edit's pad reads `Current backing` (the bundle's net now)
+   over `Your pick`, and `Backing after` beneath the field
+   (`AttachmentLandingLine`). Faces read through `VALENCE_SIX`, 🤔 at exactly
+   0.00. Given a `node`, the blocks are its `current` and `pick`. */
+export const CURRENT_BACKING_LABEL = "Current backing";
+export const BACKING_AFTER_LABEL = "Backing after";
+
+function backingBlock(label, value) {
+  const band = nearestValenceAnchor(value);
+  const exact = formatDimension(value);
+  return { label, emoji: band.emoji, pair: exact, spoken: `${label}: ${band.label}, ${DIRECTED_LABEL} ${exact}` };
+}
+
+export function AttachmentStanding({ pick, current, style, node }) {
   return (
-    <div aria-live="polite" style={style}>
-      <ReadoutBlock {...landingParts(landing, names)} node={node} />
+    <div aria-live="polite" style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", ...style }} data-node={node}>
+      {current !== undefined && <ReadoutBlock {...backingBlock(CURRENT_BACKING_LABEL, current)} node={node && "current"} />}
+      <ReadoutBlock big {...backingBlock(PICK_LABEL, pick)} node={node && "pick"} />
+    </div>
+  );
+}
+
+/* WHERE THE PICK LANDS THE BACKING — beneath an edit's strip. The fold is the
+   stance pad's: `clip` of the RAW SUM plus the pick, so a bundle that has
+   summed past ±1 lands where the graph will put it, not where the clipped
+   net suggests. And clipped is not hidden (*Two numbers, never one*): when
+   the sum passes the cap, a quiet line says the total and the cap. */
+export function attachmentLanding(rawSum, pick) {
+  const raw = rawSum + pick;
+  return { raw, landing: clampDimension(raw), capped: raw > DIMENSION_MAX || raw < DIMENSION_MIN };
+}
+
+export function AttachmentLandingLine({ rawSum, pick, style, node }) {
+  const { raw, landing, capped } = attachmentLanding(rawSum, pick);
+  return (
+    <div aria-live="polite" style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)", ...style }}>
+      <ReadoutBlock {...backingBlock(BACKING_AFTER_LABEL, landing)} node={node} />
+      {capped && (
+        <p style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }} data-node={node && "cap"}>
+          {`Adds up to ${formatDimension(raw)}; your feed reads it capped at ${formatDimension(landing)}.`}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* THE BORROWED VIEW HOLDS UNTIL AN OPINION IS LIVE (jakob 2026-10-20, seam
+   240). A member walks a borrowed view until they hold one outgoing opinion
+   with neither number at zero, so a first pick that lands unreachable — or at
+   nothing — starts no feed of their own. The host says whether the reader
+   still borrows (`borrowed`); the line warns, and never blocks. */
+export const BORROWED_KEPT_LINE = "You'd keep your borrowed view — no feed of your own yet.";
+
+/** The landing — the one readout that sits below the field. Given a `node`,
+ *  the readout itself carries it; the live region around it stays unnamed.
+ *  `onExplainZero` makes an unreachable landing's 🤔 the door to its
+ *  explanation; `borrowed` adds the borrowed-view line under an unreachable
+ *  or severed landing. */
+export function StanceLandingLine({ landing, names = STANCE_AXIS_NAMES, onExplainZero, zeroShown = false, borrowed = false, style, node }) {
+  const keepsBorrowed = borrowed && landing !== null && landing !== undefined && (landing.inert || landing.severed);
+  return (
+    <div aria-live="polite" style={keepsBorrowed ? { display: "flex", flexDirection: "column", gap: "var(--space-1)", ...style } : style}>
+      <ReadoutBlock {...landingParts(landing, names)} onExplainZero={onExplainZero} zeroShown={zeroShown} node={node} />
+      {keepsBorrowed && (
+        <p style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }} data-node={node && "borrowed"}>
+          {BORROWED_KEPT_LINE}
+        </p>
+      )}
     </div>
   );
 }
@@ -802,4 +939,21 @@ export function padHelp(names) {
 
 export function alternatesHelp(names) {
   return [...STANCE_ALTERNATES_HELP.slice(0, 3), severanceWords(names).helpAlternates];
+}
+
+/* WHAT THE 🤔 OPENS ON AN UNREACHABLE LANDING (jakob 2026-10-20, seam 240) —
+   in place, the "?"'s grammar: the lines replace the pad's body, `Back to the
+   pad` returns, and Set waits while they show. Three facts, in the order a
+   reader doubts them: the opinion is still held (a person stays under `Your
+   people` — `FeedSheet`'s set, whichever way the opinion points); nothing
+   passes through it; and it is not the family's way out, which is an act of
+   its own. The target is the pad's, and the way out is the family's word. */
+export function unreachableHelp(names, targetLabel) {
+  return [
+    targetLabel.startsWith("@")
+      ? `It still counts among your opinions — ${targetLabel} stays under Your people.`
+      : "It still counts among your opinions.",
+    "It shapes no one's feed, earns nothing, and nothing passes on through you.",
+    `${severanceWords(names).control} is different: its own act, confirmed and paid for, that leaves a clean slate.`,
+  ];
 }

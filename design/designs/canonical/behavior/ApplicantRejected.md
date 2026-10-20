@@ -18,18 +18,18 @@ WHEN the application is closed while the reader is on the shell -> the card flip
 
 WHEN tap Copy your ask link -> the ask link lands on the clipboard AND the snackbar reads Link copied
 
-WHEN Sign and publish is pressed on the seal GIVEN the application is closed -> the wizard closes onto this feed AND the snackbar reads Your post waits — it arrives when someone vouches you in. AND the post waits on the device, never sent AND NEVER the snackbar says the post waits with an application
+WHEN tap New post on the bar -> the snackbar reads You can post once you're in. AND NEVER the wizard opens
 
-WHEN tap New post on the bar GIVEN a post already waits -> the snackbar reads Your post waits — it arrives when someone vouches you in. AND NEVER the wizard opens
+WHEN tap a stance face -> the snackbar reads You can give your opinion once you're in. AND NEVER the pad blooms
 
-WHEN tap a stance face GIVEN an opinion already waits -> the snackbar reads Your opinion waits — it arrives when someone vouches you in. AND NEVER the pad opens
+WHEN press-and-hold a stance face -> the snackbar reads You can give your opinion once you're in. AND NEVER anything is signed or staged
 
-WHEN someone vouches the reader in -> the waiting post and opinion arrive with the vouch-in
+ALWAYS feed.bottomBar.composeSlot wears the locked look, visibly inactive at the disabled opacity and still tappable
+
+ALWAYS every feed.card.actionRow.stance.anchor wears the locked look, visibly inactive at the disabled opacity and still tappable
 
 WHEN tap the closed application's notification -> this shell opens at the card where the ask link stands
 
 WHEN tap Profile on the bar -> the applicant's own profile opens
-
-WHEN the first opinion stages, by Set or by a press-and-hold -> the face takes the staged pick AND the snackbar reads Your opinion waits — it arrives when someone vouches you in.
 
 WHEN a member takes the application up through the ask link -> the card flips to the landing card AND the band's line reads Browsing from @kel's view while your application lands. AND the band still names @kel

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM retention_archive WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "505ce931f6e6b84ae4929dd3f0d8ce5dad2f5a6318b8092de6b1ebc6d9f262a5"
+}

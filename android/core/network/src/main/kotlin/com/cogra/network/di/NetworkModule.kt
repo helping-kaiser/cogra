@@ -19,6 +19,7 @@ import com.cogra.domain.history.ViewHistoryRepository
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.ContentRepository
+import com.cogra.domain.repo.DeviceLockRepository
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.SessionRepository
@@ -26,10 +27,18 @@ import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
 import com.cogra.domain.repo.WriteRepository
+import com.cogra.domain.release.AnnouncedReleaseStore
+import com.cogra.domain.release.ReleaseRegistry
+import com.cogra.domain.report.ReportRepository
+import com.cogra.domain.hidden.HiddenRepository
+import com.cogra.domain.notifications.NotificationsRepository
+import com.cogra.domain.saved.SavedRepository
 import com.cogra.domain.settings.SettingsRepository
+import com.cogra.domain.signing.CarriedLandingGate
 import com.cogra.domain.store.DeviceData
 import com.cogra.domain.store.DevicePreferences
 import com.cogra.domain.store.IdentityStore
+import com.cogra.domain.store.LockCustodyStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
 import com.cogra.network.auth.BearerInterceptor
@@ -37,6 +46,7 @@ import com.cogra.network.auth.SessionGate
 import com.cogra.network.repo.AccountDeletionRepositoryImpl
 import com.cogra.network.repo.AccountRepositoryImpl
 import com.cogra.network.repo.ContentRepositoryImpl
+import com.cogra.network.repo.DeviceLockRepositoryImpl
 import com.cogra.network.repo.MediaRepositoryImpl
 import com.cogra.network.repo.PartUploader
 import com.cogra.network.repo.ProfileRepositoryImpl
@@ -45,6 +55,11 @@ import com.cogra.network.repo.SessionRepositoryImpl
 import com.cogra.network.repo.SettingsRepositoryImpl
 import com.cogra.network.repo.StanceRepositoryImpl
 import com.cogra.network.repo.ReferenceRepositoryImpl
+import com.cogra.network.repo.ReleaseRegistryImpl
+import com.cogra.network.repo.ReportRepositoryImpl
+import com.cogra.network.repo.HiddenRepositoryImpl
+import com.cogra.network.repo.NotificationsRepositoryImpl
+import com.cogra.network.repo.SavedRepositoryImpl
 import com.cogra.network.repo.TopicRepositoryImpl
 import com.cogra.network.repo.ViewHistoryRepositoryImpl
 import com.cogra.network.repo.FeedRepositoryImpl
@@ -53,9 +68,11 @@ import com.cogra.network.repo.WriteRepositoryImpl
 import com.cogra.network.store.ComposeDraftStoreImpl
 import com.cogra.network.store.SealedDraftStoreImpl
 import com.cogra.network.store.DeviceDataImpl
+import com.cogra.network.store.AnnouncedReleaseStoreImpl
 import com.cogra.network.store.DevicePreferencesImpl
 import com.cogra.network.store.EncryptedStore
 import com.cogra.network.store.IdentityStoreImpl
+import com.cogra.network.store.LockCustodyStoreImpl
 import com.cogra.network.store.StorageHealthImpl
 import com.cogra.network.store.StoreCipher
 import com.cogra.network.store.TinkStoreCipher
@@ -116,6 +133,14 @@ internal object NetworkProvidesModule {
     @Singleton
     fun encryptedStore(dataStore: DataStore<Preferences>, cipher: StoreCipher): EncryptedStore =
         EncryptedStore(dataStore, cipher)
+
+    /**
+     * THE CARRIED LANDING GATE (PR-89(iii)'s precondition seam, Carried.kt):
+     * what the landing confirms before a carried batch signs. Ready until the
+     * verified media move is wired in here.
+     */
+    @Provides
+    fun carriedLandingGate(): CarriedLandingGate = CarriedLandingGate.AlwaysReady
 }
 
 // Public, not internal: test code replaces this module wholesale via
@@ -129,6 +154,12 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun identityStore(impl: IdentityStoreImpl): IdentityStore
+
+    @Binds
+    abstract fun lockCustodyStore(impl: LockCustodyStoreImpl): LockCustodyStore
+
+    @Binds
+    abstract fun deviceLockRepository(impl: DeviceLockRepositoryImpl): DeviceLockRepository
 
     @Binds
     abstract fun storageHealth(impl: StorageHealthImpl): StorageHealth
@@ -185,6 +216,18 @@ abstract class NetworkBindsModule {
     abstract fun seenHistorySource(impl: ViewHistoryRepositoryImpl): SeenHistorySource
 
     @Binds
+    abstract fun reportRepository(impl: ReportRepositoryImpl): ReportRepository
+
+    @Binds
+    abstract fun savedRepository(impl: SavedRepositoryImpl): SavedRepository
+
+    @Binds
+    abstract fun notificationsRepository(impl: NotificationsRepositoryImpl): NotificationsRepository
+
+    @Binds
+    abstract fun hiddenRepository(impl: HiddenRepositoryImpl): HiddenRepository
+
+    @Binds
     abstract fun seenRecordStore(impl: SeenRecordStoreImpl): SeenRecordStore
 
     @Binds
@@ -192,4 +235,10 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun accountDeletionRepository(impl: AccountDeletionRepositoryImpl): AccountDeletionRepository
+
+    @Binds
+    abstract fun releaseRegistry(impl: ReleaseRegistryImpl): ReleaseRegistry
+
+    @Binds
+    abstract fun announcedReleaseStore(impl: AnnouncedReleaseStoreImpl): AnnouncedReleaseStore
 }

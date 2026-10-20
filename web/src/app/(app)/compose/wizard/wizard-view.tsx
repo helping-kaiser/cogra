@@ -32,18 +32,24 @@ import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
 import type { StagedWriteView } from "@/lib/api/writes-api";
+import { fetchGraphIds } from "@/lib/api/graph-ids-api";
+import { postExpectation } from "@/lib/compose/intent";
+import { contentExpectation } from "@/lib/compose/payload-expectation";
+import type { Expectation } from "@/lib/signing/intent";
 import { TransportError } from "@/lib/ui/transport-error";
 import {
   advanceGate,
   attachmentClaims,
   bodyContent,
   COVER_FROM_PICTURE,
+  descriptionContent,
   effectiveCover,
   emptyWizard,
   isVideoPost,
   sealGate,
   shapeRatio,
   stepIndex,
+  wizardLedger,
   wizardReducer,
   type PickedAsset,
   type WizardAction,
@@ -139,6 +145,8 @@ export function ComposeWizard({
   const [sheet, setSheet] = useState<SealSheet>("none");
   // The pad's own pick, staged until Set — Cancel and the wash stage nothing.
   const [stagedPDirected, setStagedPDirected] = useState(state.pDirected);
+  // `Start it unreachable?` over the pad — Set was pressed at exactly 0.00.
+  const [confirmingUnreachable, setConfirmingUnreachable] = useState(false);
   // Show all, and the describe sheet it can open. Describing holds an asset id
   // rather than an index so a remove or a reorder underneath it cannot silently
   // move the sheet onto a different picture.
@@ -620,19 +628,36 @@ export function ComposeWizard({
     setReferenceErrors({});
     setTransportFailed(false);
 
-    const prepared = await guard.run(() =>
-      preparePost(client, {
-        title: state.title.trim() === "" ? null : state.title,
-        description: state.description.trim() === "" ? null : state.description,
-        content: bodyContent(state),
-        sensitive: state.sensitive,
-        sensitiveReason: state.sensitiveReason,
-        license: state.license,
-        tags: state.tags,
-        references: state.references,
-        attachments: attachmentClaims(state) ?? undefined,
-      }),
+    // The cited nodes' L1 ids, read before anything is staged: the batch
+    // is checked against them before its first pre-signature (intent.ts).
+    const graphIds = await guard.run(() =>
+      fetchGraphIds(
+        client,
+        state.references.map((reference) => reference.targetId),
+      ),
     );
+    if (graphIds.kind !== "success") {
+      setBusy(false);
+      setTransportFailed(true);
+      return;
+    }
+
+    // One request, read twice: once by the API layer and once by the payload
+    // expectation, so the device checks the envelope against exactly what it
+    // asked for (payload-expectation.ts).
+    const sent = {
+      title: state.title.trim() === "" ? null : state.title,
+      description: descriptionContent(state),
+      content: bodyContent(state),
+      sensitive: state.sensitive,
+      sensitiveReason: state.sensitiveReason,
+      license: state.license,
+      pDirected: state.pDirected,
+      tags: state.tags,
+      references: state.references,
+      attachments: attachmentClaims(state) ?? undefined,
+    };
+    const prepared = await guard.run(() => preparePost(client, sent));
 
     if (prepared.kind === "failed") {
       setBusy(false);
@@ -660,11 +685,17 @@ export function ComposeWizard({
       return;
     }
 
-    await finish(prepared.value.node, prepared.value.writes);
+    const node = prepared.value.node;
+    const content = contentExpectation(node, sent, "post", wizardLedger(state));
+    await finish(node, prepared.value.writes, postExpectation(state, content, graphIds.value));
   };
 
-  const finish = async (node: string, writes: readonly StagedWriteView[]) => {
-    const results = await signer.sign(writes);
+  const finish = async (
+    node: string,
+    writes: readonly StagedWriteView[],
+    expected: Expectation,
+  ) => {
+    const results = await signer.sign(writes, expected);
     setBusy(false);
 
     if (results.every((result) => result.kind === "done")) {
@@ -972,10 +1003,12 @@ export function ComposeWizard({
           keyOnDevice={keyOnDevice}
           refusal={refusal}
           stagedPDirected={stagedPDirected}
+          confirmingUnreachable={confirmingUnreachable}
           onSheet={(next) => {
-            // Opening the pad starts it from the stance that is standing, so
+            // Opening the pad starts it from the backing the row reads, so
             // Cancel can put it back exactly.
             if (next === "stance") setStagedPDirected(state.pDirected);
+            setConfirmingUnreachable(false);
             setSheet(next);
           }}
           onLicense={(license) => dispatch({ type: "license", license })}
@@ -985,10 +1018,22 @@ export function ComposeWizard({
           onReferences={(references) => dispatch({ type: "references", references })}
           onStagedPDirected={setStagedPDirected}
           onSetStance={() => {
+            // EXACTLY 0.00 ASKS FIRST (ComposePad.md): the post's own path
+            // would carry nothing. It warns and never refuses.
+            if (stagedPDirected === 0) {
+              setConfirmingUnreachable(true);
+              return;
+            }
             dispatch({ type: "pDirected", pDirected: stagedPDirected });
             setSheet("none");
           }}
-          onStanceHelp={() => setHelp(HELP_TOPICS.yourOpinionOnYourPost)}
+          onKeepAdjusting={() => setConfirmingUnreachable(false)}
+          onSetAnyway={() => {
+            setConfirmingUnreachable(false);
+            dispatch({ type: "pDirected", pDirected: 0 });
+            setSheet("none");
+          }}
+          onStanceHelp={() => setHelp(HELP_TOPICS.yourBackingOnYourPost)}
           onSensitive={(sensitive) => dispatch({ type: "sensitive", sensitive })}
           onSensitiveReason={(sensitiveReason) =>
             dispatch({ type: "sensitiveReason", sensitiveReason })

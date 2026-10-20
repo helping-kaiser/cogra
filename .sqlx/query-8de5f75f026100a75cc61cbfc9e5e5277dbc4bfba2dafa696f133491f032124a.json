@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT media_live_placed($1) AS \"placed!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "placed!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "8de5f75f026100a75cc61cbfc9e5e5277dbc4bfba2dafa696f133491f032124a"
+}

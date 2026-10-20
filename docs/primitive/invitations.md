@@ -163,10 +163,12 @@ The flow:
    application leaves no record on it.
 2. **The inviter approves** — per applicant, or in batches for
    high-reach onboarding. Approval is the deliberate act that
-   commits the inviter's stance: the backend then runs the
-   admission sequence — the funded burn, the Registration
+   commits the inviter's stance: it funds the applicant's address
+   (the burn), the applicant's own device signs the Registration
    grounding the new Actor + Profile, and the inviter's Opinion
-   toward the new Profile. **The link carries no stance values**:
+   toward the new Profile is the vouch — the account lands once
+   the Registration and at least one vouch-Opinion are confirmed.
+   **The link carries no stance values**:
    the inviter chooses `(p_d, p_i)` at approval, the moment the
    act is priced and the only moment anything reads them.
 3. **The joiner accepts by reciprocating** (§2) — their own
@@ -257,7 +259,7 @@ self-correcting — with teeth the pre-L1 design lacked:
   path: absent from feeds, from attribution earnings, from vouch
   propagation, from subsidy — the zero-jail
   ([feed-ranking.md §7](feed-ranking.md#7-sort-order-tie-breakers-zero-jail)).
-- **Severance and defunding are the same act.** The reversed
+- **Severance defunds.** The reversed
   stances stop propagating standing, dropping the cluster below
   the wall — the community stops paying for actors it has severed
   ([economics.md](economics.md)).

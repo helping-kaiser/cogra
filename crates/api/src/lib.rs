@@ -5,9 +5,11 @@
 //! tools can drive them without a running server.
 
 pub mod auth;
+pub mod bookmarks;
 pub mod bootstrap;
 pub mod breach;
 pub mod content;
+pub mod hidden;
 pub mod history;
 pub mod ingest;
 pub mod l1;
@@ -20,8 +22,11 @@ pub mod prepare;
 pub mod profile;
 pub mod ranker_pod;
 pub mod ratelimit;
+pub mod redaction;
 pub mod references;
+pub mod registry;
 pub mod relay;
+pub mod report;
 pub mod schema;
 pub mod search;
 pub mod stance;

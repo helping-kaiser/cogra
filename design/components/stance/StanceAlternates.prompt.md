@@ -22,4 +22,10 @@ It must offer the **full** range, not a coarse subset — a degraded alternate i
 </StanceAlternates>
 ```
 
-**The "?" names its own pad** (jakob's ruling A7) — `helpLabel`, defaulting to `"How opinions work"`. A board that draws a named pad passes that pad's own title (`"Your opinion on your post"`, `"Toward what you answer"`, `"Your vouch back"`); it mirrors whatever `helpLabel` `StanceControl` was given.
+**One axis takes one control** (jakob 2026-10-20). The input chosen in settings governs everywhere, the backing pads included. Where the record has one free parameter — the backing on one's own content, its second number pinned at 1 by the census — pass `axis="one"`: one track, or one typed field, over `For or against`, with `Type an exact value` / `Use a slider` as the swap. Never a second, locked track for the pinned number: a control nobody can move is a choice the record does not have. On the backing pads it hosts in place at `host="sheet"`, the `TagPad` pattern, behind the hidden-until-focused `Set an exact value for your backing`.
+
+```jsx
+<StanceAlternates host="sheet" axis="one" pick={{ pDirected: 0.1, pInterest: 1 }} onPick={setPick} />
+```
+
+**The "?" names its own pad** (jakob's ruling A7) — `helpLabel`, defaulting to `"How opinions work"`. A board that draws a named pad passes that pad's own title (`"Your backing on your post"`, `"Toward what you answer"`, `"Your vouch back"`); it mirrors whatever `helpLabel` `StanceControl` was given.

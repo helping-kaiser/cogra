@@ -12,7 +12,7 @@ import type { SeenEntry, SeenPage } from "@/lib/api/history-api";
 import { derive, type DeviceCuts, type HeldAnswer } from "@/lib/feed/derive";
 import { SeenQueue } from "./seen-queue";
 import { SeenRecord } from "./seen-record";
-import { claimSync, syncSeenRecord, type FetchSeenPage } from "./seen-sync";
+import { claimSync, forgetSeen, resetSeenSyncForTests, syncSeenRecord, type FetchSeenPage } from "./seen-sync";
 
 const ACCOUNT_A = "11111111-1111-4111-8111-111111111111";
 const ACCOUNT_B = "22222222-2222-4222-8222-222222222222";
@@ -116,6 +116,69 @@ describe("the device's seen record", () => {
   });
 });
 
+// jakob's ruling 2026-10-13: a don't-remember sign-out clears THAT account's
+// record — ids and watermark — and no other account's on the browser.
+describe("a don't-remember sign-out", () => {
+  const seeded = async (seen: SeenRecord, account: string) => {
+    await seen.use(account);
+    await syncSeenRecord(seen, account, viewLog(seenAt(`${account}-p2`, `${account}-p1`)).fetchPage);
+  };
+
+  it("a_dont_remember_sign_out_clears_only_that_accounts_record", async () => {
+    const seen = record();
+    await seeded(seen, ACCOUNT_B);
+    await seeded(seen, ACCOUNT_A);
+    expect(seen.has(`${ACCOUNT_A}-p1`)).toBe(true);
+    expect(await seen.watermark(ACCOUNT_A)).not.toBeNull();
+
+    await forgetSeen(seen, ACCOUNT_A);
+
+    // Gone from memory and from the disk — a restart finds nothing — with its watermark.
+    expect(seen.has(`${ACCOUNT_A}-p1`)).toBe(false);
+    expect(await seen.watermark(ACCOUNT_A)).toBeNull();
+    const restarted = record();
+    await restarted.use(ACCOUNT_A);
+    expect(restarted.size).toBe(0);
+
+    // The other account's record and watermark are untouched.
+    await restarted.use(ACCOUNT_B);
+    expect(restarted.has(`${ACCOUNT_B}-p1`)).toBe(true);
+    expect(restarted.has(`${ACCOUNT_B}-p2`)).toBe(true);
+    expect(await restarted.watermark(ACCOUNT_B)).not.toBeNull();
+  });
+
+  it("a_remembered_sign_out_keeps_the_record", async () => {
+    const seen = record();
+    await seeded(seen, ACCOUNT_A);
+
+    // Ending the session without forgetting: the account leaves the held slot only.
+    await seen.use(null);
+
+    const restarted = record();
+    await restarted.use(ACCOUNT_A);
+    expect(restarted.has(`${ACCOUNT_A}-p1`)).toBe(true);
+    expect(await restarted.watermark(ACCOUNT_A)).not.toBeNull();
+  });
+
+  it("a_forgotten_account_re_seeds_from_the_view_log_at_its_next_sign_in", async () => {
+    resetSeenSyncForTests();
+    const seen = record();
+    const log = viewLog(seenAt("p2", "p1"));
+    expect(claimSync(ACCOUNT_A)).toBe(true);
+    await seeded(seen, ACCOUNT_A);
+
+    await forgetSeen(seen, ACCOUNT_A);
+
+    // The same page load signs the account back in: the sync claim is free again,
+    // and with the watermark gone it reads the whole log from the top.
+    expect(claimSync(ACCOUNT_A)).toBe(true);
+    await seen.use(ACCOUNT_A);
+    expect(await syncSeenRecord(seen, ACCOUNT_A, log.fetchPage)).toEqual({ kind: "done", pages: 1 });
+    expect(log.reads).toEqual([null]);
+    expect(seen.has("p1")).toBe(true);
+  });
+});
+
 describe("the seen record's sync", () => {
   it("a_fresh_sign_in_seeds_the_seen_record_from_view_history_once", async () => {
     const log = viewLog(seenAt("p5", "p4", "p3", "p2", "p1"));
@@ -198,9 +261,12 @@ describe("the seen record's sync", () => {
     // This device has seen nothing; the phone saw p2.
     const desktop = record();
     await desktop.use(ACCOUNT_A);
-    expect(derive(held, cuts, desktop).map((row) => row.targetId)).toEqual(["p1", "p2", "p3"]);
+    expect(derive(held, cuts, desktop).head.map((row) => row.targetId)).toEqual(["p1", "p2", "p3"]);
 
+    // Cut from the unseen run: it stands under the separator (PR-80).
     await syncSeenRecord(desktop, ACCOUNT_A, viewLog(seenAt("p2")).fetchPage);
-    expect(derive(held, cuts, desktop).map((row) => row.targetId)).toEqual(["p1", "p3"]);
+    const derived = derive(held, cuts, desktop);
+    expect(derived.head.map((row) => row.targetId)).toEqual(["p1", "p3"]);
+    expect(derived.tail.map((row) => row.targetId)).toEqual(["p2"]);
   });
 });

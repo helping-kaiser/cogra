@@ -62,6 +62,11 @@ data class CommentsUiState(
     val commentSigned: Boolean = false,
     /** Reply branches a reader has opened (Q49). */
     val replyThreads: Map<String, ReplyThread> = emptyMap(),
+    /**
+     * One-shot: the top-level comment a landing has made ready — its branch
+     * unfolded down to the comment asked for — for the list to scroll to.
+     */
+    val landingAt: String? = null,
 )
 
 /**
@@ -235,4 +240,7 @@ class CommentsViewModel @Inject constructor(
     }
 
     fun onCommentSignedShown() = _state.update { it.copy(commentSigned = false) }
+
+    /** Opening the thread landed on one comment (Saved.md); see [CommentLanding]. */
+    internal val landing = CommentLanding(content, _state, { postId }, viewModelScope)
 }

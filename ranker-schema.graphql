@@ -1,39 +1,172 @@
-# ranker-schema.graphql — PROVISIONAL
-#
-# The server ranker pod's own GraphQL schema (ranker-core.md §4-§5;
-# miner-api.md "Wire form"), as the api's ranking relay calls it. The api
-# never links the ranker: it calls this schema over HTTP at RANKER_URL, with
-# a client generated from this file (crates/api/src/ranker_pod.rs).
-#
-# PROVISIONAL, by ruling OS-20 (i): written by ranked-feed-api's RF-2 so the
-# relay can be built and tested against a stub pod before the pod exists.
-# ranker-core's RK-2 INHERITS this file: the pod's exported schema replaces
-# it, and RK-2 fixes the names. Until then every name here is the
-# ranked-feed-api packet's recommendation (§4.10, M4, M8', M9, OC-1, OC-8;
-# RC-G1 ruled (c), the id-level wire).
-#
-# It carries only what the relay sends and reads today:
-# - `rank` alone. `rankSearch` arrives with the trace read (RF-7) and
-#   ranked search (RF-4).
-# - no `paths` drill-down on FeedEntry (the trace read's, RF-7).
-# - no `RankParams.seenList` (OC-8): the in-house relay never sends one;
-#   the reader's device cuts what it has seen.
+"""
+Implement the DateTime<Utc> scalar
 
-schema {
-  query: Query
+The input/output is a string in RFC3339 format.
+"""
+scalar DateTime
+
+"""
+One ranked target, at the id level (RC-G1 (c)); the relay hydrates.
+"""
+type FeedEntry {
+	targetId: UUID!
+	targetKind: NodeKind!
+	"""
+	S(u, target) — the signed greedy disjoint-sum (feed-ranking.md §6.1).
+	"""
+	score: Float!
+	tieBreakers: TieBreakers!
+	"""
+	The viewer's held opinion of the person behind the row, at the pin
+	(OS-18 S1). Null when none is held, and for a Tags row.
+	"""
+	mark: PeopleMark
+	"""
+	This entry's 0-based index among `entries` in NEWEST order (genesis
+	causal key, newest first). A permutation of 0..|entries|-1.
+	"""
+	newestIndex: Int!
+	"""
+	The extracted paths behind the score, strongest first.
+	"""
+	paths: [RankPath!]!
+}
+
+"""
+One ranking.
+"""
+type FeedRanking {
+	"""
+	The epoch the ranked slice reads as of.
+	"""
+	asOfEpoch: Int!
+	"""
+	The landed targets, scored, in RANKED order, best first. A target no
+	live path reaches is absent, not zero-scored.
+	"""
+	entries: [FeedEntry!]!
+	"""
+	The placed settling candidates; an unplaced candidate is absent.
+	"""
+	settling: [SettlingPlace!]!
+}
+
+"""
+Where friend-authored fresh posts would land relative to the ranked
+feed (miner-api.md).
+"""
+enum FriendAuthorPlacement {
+	INTERLEAVED
+	ABOVE
+}
+
+"""
+The friend-fresh reorder (feed-ranking.md §9.2). Post-MVP (PR-18): the
+pod accepts it only switched off.
+"""
+input FriendAuthorReorder {
+	enabled: Boolean!
+	"""
+	Epoch-age threshold on the author's Publish record.
+	"""
+	freshnessThresholdEpochs: Int
+	placement: FriendAuthorPlacement
+}
+
+"""
+One raw member record of a hop's bundle, with this leg's parameters,
+so the hop re-folds from the answer alone.
+"""
+type HopMember {
+	recordId: String!
+	landingEpoch: Int!
+	actTime: Int!
+	position: Int!
+	pDirected: Float!
+	pInterest: Float!
+	maturity: Float!
+}
+
+"""
+A rankable node's kind — the api's `NodeKind`, verbatim.
+"""
+enum NodeKind {
+	USER
+	COLLECTIVE
+	POST
+	COMMENT
+	CHAT
+	CHAT_MESSAGE
+	ITEM
+	HASHTAG
+	PROPOSAL
+	CAMPAIGN
+	OFFER
+}
+
+"""
+How the viewer holds the person behind a row (OS-18 S1).
+"""
+enum PeopleMark {
+	FOR
+	AGAINST
+	SIGNLESS
 }
 
 type Query {
-  """
-  Rank `viewer`'s feed over their slice, which the pod fetches itself
-  from the api (`feedSlice(viewer, dustFloor, gamma, asOfEpoch)`).
-  `asOfEpoch` pins the slice (null: the newest ingested epoch); a ranking
-  re-run at the same epoch over the same candidates is identical. Faults
-  are transport errors with `extensions.code`: NOT_FOUND when the slice is
-  null (no rankable actor), BAD_INPUT for an out-of-range parameter or an
-  unknown family, INTERNAL otherwise.
-  """
-  rank(viewer: UUID!, params: RankParams!, asOfEpoch: Int): FeedRanking!
+	"""
+	Rank `viewer`'s feed over their slice, which the pod fetches itself
+	from the api (`feedSlice(viewer, dustFloor, gamma, asOfEpoch)`).
+	`asOfEpoch` pins the slice (null: the newest ingested epoch); a
+	ranking re-run at the same epoch over the same candidates is
+	identical.
+	"""
+	rank(viewer: UUID!, params: RankParams!, asOfEpoch: Int): FeedRanking!
+	"""
+	Re-order search candidates by the viewer's feed score: the given ids
+	in, the in-slice subset a live path reaches out, ordered, each with
+	its paths. Of the params only the calibration fields are read.
+	"""
+	rankSearch(viewer: UUID!, candidates: [UUID!]!, params: RankParams!, asOfEpoch: Int): FeedRanking!
+}
+
+"""
+One folded hop: a per-author bundle netted into an effective edge
+(feed-ranking.md §3.2).
+"""
+type RankHop {
+	"""
+	The bundle's family, as `RecordFamily` spells it.
+	"""
+	family: String!
+	"""
+	The leg's role, as `RecordLegRole` spells it.
+	"""
+	role: String!
+	"""
+	The bundle's author, a bare address atom.
+	"""
+	authorId: String!
+	sourceId: String!
+	targetId: String!
+	"""
+	The member records' L1 ids, in ≺.
+	"""
+	recordIds: [String!]!
+	members: [HopMember!]!
+	"""
+	The folded parameters (p̄_d, p̄_i).
+	"""
+	pDirected: Float!
+	pInterest: Float!
+	"""
+	The ≺-newest member's leg maturity.
+	"""
+	maturity: Float!
+	"""
+	This hop's factor: γ·w̃ of the folded leg.
+	"""
+	weight: Float!
 }
 
 """
@@ -42,140 +175,161 @@ ranker computes ride here; the reader's own cuts (seen, people, order,
 Still settling) are applied on the reader's device.
 """
 input RankParams {
-  "Rankable kinds in scope. Null means Posts only."
-  kinds: [NodeKind!]
-  """
-  A topic (Hashtag id): only content reaching the viewer over Tag
-  records toward it is a candidate (hashtag.md §5). Null: no narrowing.
-  """
-  topic: UUID
-  "γ per-hop attenuation in (0, 1]; null: the network default."
-  gamma: Float
-  "χ dust floor; null: the network default."
-  dustFloor: Float
-  "f(Δt) half-life in epochs; null: the network default."
-  recencyHalfLifeEpochs: Int
-  "Friend-fresh reorder config (feed-ranking.md §9.2)."
-  friendAuthorReorder: FriendAuthorReorder
-  """
-  Content still settling, each with its own authorship edge. The pod weaves
-  each candidate whose author a live path reaches at its key's place, and
-  leaves the rest unplaced.
-  """
-  settling: [SettlingCandidate!]
+	"""
+	Rankable kinds in scope. Null means Posts only; an empty list ranks
+	nothing.
+	"""
+	kinds: [NodeKind!]
+	"""
+	A topic (Hashtag id): only content reaching the viewer over Tag
+	records toward it is a candidate (hashtag.md §5). Null: no
+	narrowing.
+	"""
+	topic: UUID
+	"""
+	γ per-hop attenuation in (0, 1]; null: the network default.
+	"""
+	gamma: Float
+	"""
+	χ dust floor, finer than or equal to the network's; null: the
+	network default.
+	"""
+	dustFloor: Float
+	"""
+	f(Δt) half-life in epochs, 0 disabling recency; null: the network
+	default.
+	"""
+	recencyHalfLifeEpochs: Int
+	"""
+	Friend-fresh reorder config (feed-ranking.md §9.2); only `enabled:
+	false` is accepted until the reorder is built.
+	"""
+	friendAuthorReorder: FriendAuthorReorder
+	"""
+	Content still settling, each with its own authorship edge. The pod
+	weaves each routing-live candidate (both parameters non-zero) whose
+	author a live path reaches, and leaves the rest unplaced.
+	"""
+	settling: [SettlingCandidate!]
 }
 
-input FriendAuthorReorder {
-  enabled: Boolean!
-  "Epoch-age threshold on the author's Publish record."
-  freshnessThresholdEpochs: Int
-  placement: FriendAuthorPlacement
+"""
+One extracted path from the viewer to the target, persons as one node.
+"""
+type RankPath {
+	"""
+	Raw L1 identifiers, viewer → … → target.
+	"""
+	nodeIds: [String!]!
+	hops: [RankHop!]!
+	"""
+	σ(π): +1 or −1.
+	"""
+	sign: Int!
+	"""
+	m(π) = ∏ γ·w̃ over the hops.
+	"""
+	magnitude: Float!
+	"""
+	f(Δt) of the path's terminal stance record.
+	"""
+	recency: Float!
+	"""
+	σ(π)·m(π)·f(Δt).
+	"""
+	contribution: Float!
 }
 
-enum FriendAuthorPlacement {
-  INTERLEAVED
-  ABOVE
-}
-
-"A settling node's authorship edge, as staged (PR-36)."
+"""
+A piece of content still settling, with the authorship record it was
+born with (ranked-feed-api §4.10).
+"""
 input SettlingCandidate {
-  """
-  Opaque correlation: CoGra's id for the node. The pod echoes it and reads
-  nothing else from it.
-  """
-  ref: UUID!
-  """
-  The author's person node, in the slice's own key form
-  (`SliceNode.graphId`): `prof:<atom>`. The pod joins it against the
-  slice's nodes without translation.
-  """
-  author: String!
-  "The authorship record's census family; it fixes domain, mask and tier."
-  family: String!
-  "The staged record's own authored parameters."
-  pDirected: Float!
-  pInterest: Float!
-  """
-  The authoring instant: the in-gap tie-break under Ranked and the order
-  under Newest. Never compared with a causal key.
-  """
-  authoredAt: DateTime!
+	"""
+	Opaque correlation: CoGra's id for the node. The pod echoes it and
+	reads nothing else from it.
+	"""
+	ref: UUID!
+	"""
+	The author's person node in the slice's own key form
+	(`SliceNode.graphId`): `prof:<atom>`.
+	"""
+	author: String!
+	"""
+	The authorship record's census family (`publish`, `review`, …); it
+	fixes domain, mask and tier.
+	"""
+	family: String!
+	"""
+	The staged record's own authored parameters.
+	"""
+	pDirected: Float!
+	pInterest: Float!
+	"""
+	The authoring instant: the in-gap tie-break under RANKED and the
+	order under NEWEST. Never compared with a causal key.
+	"""
+	authoredAt: DateTime!
 }
 
-"One ranking."
-type FeedRanking {
-  "The epoch the ranked slice reads as of."
-  asOfEpoch: Int!
-  """
-  The landed targets, scored, in RANKED order, best first. A target no
-  live path reaches is absent, not zero-scored.
-  """
-  entries: [FeedEntry!]!
-  "The placed settling candidates; an unplaced candidate is absent."
-  settling: [SettlingPlace!]!
-}
-
-"One ranked target, at the id level (RC-G1 (c)); the relay hydrates."
-type FeedEntry {
-  targetId: UUID!
-  targetKind: NodeKind!
-  "S(u, target) — the signed greedy disjoint-sum (feed-ranking.md §6.1)."
-  score: Float!
-  "The tie-breaker cascade's inputs (feed-ranking.md §7)."
-  tieBreakers: TieBreakers!
-  """
-  The viewer's held opinion of the person behind the row, at the pin
-  (OS-18 S1). Null when none is held, and for a Tags row.
-  """
-  mark: PeopleMark
-  """
-  This entry's 0-based index among `entries` in NEWEST order (genesis
-  causal key, newest first). A permutation of 0..|entries|-1.
-  """
-  newestIndex: Int!
-}
-
-"The tie-breaker cascade's inputs (feed-ranking.md §7)."
-type TieBreakers {
-  netStance: Float!
-  grossVolume: Float!
-  "Epoch age of the target's genesis record; null for an authorless Type."
-  genesisEpochAge: Int
-}
-
-"One woven settling candidate."
+"""
+One woven settling candidate.
+"""
 type SettlingPlace {
-  ref: UUID!
-  "As FeedEntry.mark, by the candidate's author."
-  mark: PeopleMark
-  "0-based index in the woven RANKED list (entries and places together)."
-  rankedPosition: Int!
-  "0-based index in the woven NEWEST list."
-  newestPosition: Int!
+	ref: UUID!
+	"""
+	As FeedEntry.mark, by the candidate's author.
+	"""
+	mark: PeopleMark
+	"""
+	0-based index in the woven RANKED list (entries and places
+	together).
+	"""
+	rankedPosition: Int!
+	"""
+	0-based index in the woven NEWEST list.
+	"""
+	newestPosition: Int!
 }
 
-"How the viewer holds the person behind a row (OS-18 S1)."
-enum PeopleMark {
-  FOR
-  AGAINST
-  SIGNLESS
+"""
+The tie-breaker cascade's inputs (feed-ranking.md §7). A statistic
+rides exactly when the governed composition names it.
+"""
+type TieBreakers {
+	netStance: Float
+	grossVolume: Float
+	"""
+	Epoch age of the target's genesis record, for display — an update
+	never refreshes it; null for an authorless Type.
+	"""
+	genesisEpochAge: Int
 }
 
-"The api's node kinds (schema.graphql NodeKind), verbatim."
-enum NodeKind {
-  USER
-  COLLECTIVE
-  POST
-  COMMENT
-  CHAT
-  CHAT_MESSAGE
-  ITEM
-  HASHTAG
-  PROPOSAL
-  CAMPAIGN
-  OFFER
-}
+"""
+A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
+Strings within GraphQL. UUIDs are used to assign unique identifiers to
+entities without requiring a central allocating authority.
 
+# References
+
+* [Wikipedia: Universally Unique Identifier](http://en.wikipedia.org/wiki/Universally_unique_identifier)
+* [RFC4122: A Universally Unique Identifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
+"""
 scalar UUID
 
-scalar DateTime
+"""
+Directs the executor to include this field or fragment only when the `if` argument is true.
+"""
+directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+"""
+Directs the executor to skip this field or fragment when the `if` argument is true.
+"""
+directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+"""
+Provides a scalar specification URL for specifying the behavior of custom scalar types.
+"""
+directive @specifiedBy(url: String!) on SCALAR
+schema {
+	query: Query
+}

@@ -121,7 +121,7 @@ impl Rig {
                 description: None,
                 content: Some("body".into()),
                 license: license(),
-                p_directed: None,
+                p_directed: 0.1,
                 tags: vec![],
                 references: vec![],
                 attachments: vec![],
@@ -153,8 +153,8 @@ impl Rig {
             artifact,
             &ReferenceDraft {
                 target,
-                relevance: Some(relevance),
-                support: Some(support),
+                relevance,
+                support,
             },
         )
         .await
@@ -191,8 +191,8 @@ fn bad_input(e: ReferencesError) -> ReferenceError {
 fn draft(target: Uuid) -> ReferenceDraft {
     ReferenceDraft {
         target,
-        relevance: None,
-        support: None,
+        relevance: 0.1,
+        support: 0.1,
     }
 }
 
@@ -821,8 +821,8 @@ async fn a_pending_citation_shows_only_in_the_pending_inclusive_view(pool: PgPoo
         carrier,
         &ReferenceDraft {
             target: cited,
-            relevance: Some(0.6),
-            support: Some(-0.2),
+            relevance: 0.6,
+            support: -0.2,
         },
     )
     .await

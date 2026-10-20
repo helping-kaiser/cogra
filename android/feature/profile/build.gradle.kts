@@ -30,6 +30,7 @@ dependencies {
     implementation(project(":core:domain"))
     // The header's primary action on someone else's profile.
     implementation(project(":feature:stance"))
+    implementation(project(":feature:saved"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

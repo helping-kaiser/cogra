@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, state, carried, payload, nonce, content_salt, content_commitment\n         FROM staged_writes WHERE act_id = $1\n         FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "state",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "carried",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 3,
+        "name": "payload",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 4,
+        "name": "nonce",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 5,
+        "name": "content_salt",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 6,
+        "name": "content_commitment",
+        "type_info": "Bytea"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "044352d5c75428efb1579e97fdfc9b32a1c6f2f6082461f0dd1b9c91d52c09de"
+}

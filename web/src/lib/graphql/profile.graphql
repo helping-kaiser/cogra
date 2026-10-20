@@ -27,6 +27,8 @@ query UserProfile($handle: String!) {
       altText
       status
     }
+    # The profile menu's Save / Unsave row.
+    viewerBookmarkedAt
   }
 }
 
@@ -54,6 +56,8 @@ query MyProfile {
       altText
       status
     }
+    # One ProfileView shape for both reads; null on the viewer's own.
+    viewerBookmarkedAt
   }
 }
 

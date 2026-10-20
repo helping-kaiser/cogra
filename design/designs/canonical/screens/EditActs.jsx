@@ -9,7 +9,10 @@
    THE KINDS ARE THE COMPLETE SET (jakob's ruling, the night batch 2026-10-01
    — audit K5.3). An edit stages more than its words and tags, and every kind
    it stages is a row here, counted in the records it signs:
-   · `Edit` — the post's new content state, one record.
+   · `Edit` — the post's new content state, one record. The author's
+     backing pick rides it (jakob 2026-10-16, PR-101): every edit's record
+     carries one number, 0.00 until the backing row's pad moves it, so the
+     pick is no row and no count of its own.
    · `Tags added` · `Tags withdrawn` · `Tags revised` — one record per tag:
      a tag is newest-wins, so its new pair is one record, and a tag
      withdrawal is ONE record — one fresh 0,0 layer, newest-wins; the drawing

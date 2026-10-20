@@ -34,7 +34,13 @@ import { Icon } from "./Icon.jsx";
    64px short navigation bar on `surfaceContainer`, hairline `outlineVariant` top
    border, safe-area padding at the bottom. Selection shows in COLOUR
    (`onSurfaceVariant` → `onSurface`) and in the filled icon cut — never an
-   indicator pill. */
+   indicator pill.
+
+   AN APPLICANT'S NEW POST IS LOCKED, NOT GONE (PR-103, round 16; auth.md's
+   locked look, the comment foot's twin): the centre slot stands at the
+   disabled opacity and stays tappable, the tap answering `You can post once
+   you're in.` The value is the opacity itself — `var(--state-disabled)` — as
+   `CommentCard`'s `replyOpacity` and `ProfileHeader`'s `invitesOpacity`. */
 
 const DEFAULT_SLOTS = ["feed", "compose", "profile"];
 /** The V1.0 bar: all five slots — the wallet's opens its coming-soon door. */
@@ -47,7 +53,7 @@ export const ALL_SLOTS = ["feed", "search", "compose", "wallet", "profile"];
 const LABELS = { feed: "Feed", search: "Explore", compose: "New post", wallet: "Wallet", profile: "Profile" };
 const GLYPHS = { feed: "dynamic_feed", search: "search", wallet: "wallet" };
 
-export function BottomNav({ active = "feed", slots = DEFAULT_SLOTS, onSelect, inline = false, glyphs, node }) {
+export function BottomNav({ active = "feed", slots = DEFAULT_SLOTS, onSelect, inline = false, glyphs, composeOpacity, node }) {
   const item = {
     display: "flex",
     flex: 1,
@@ -102,7 +108,7 @@ export function BottomNav({ active = "feed", slots = DEFAULT_SLOTS, onSelect, in
               aria-label={LABELS.compose}
               onClick={() => onSelect && onSelect(slot)}
               className="cg-state cg-focus"
-              style={item}
+              style={composeOpacity !== undefined ? { ...item, opacity: composeOpacity } : item}
               data-node={slotNode}
             >
               <span

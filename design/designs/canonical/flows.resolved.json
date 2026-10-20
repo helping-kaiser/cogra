@@ -34,6 +34,7 @@
         "HistoryEmpty",
         "HistoryHidden",
         "HistoryNone",
+        "HistorySearch",
         "KeyElsewhere",
         "Notifications",
         "NotificationsEmpty",
@@ -60,12 +61,14 @@
         "Removed",
         "Saved",
         "SavedEmpty",
+        "SavedNone",
+        "SavedSearch",
         "SavedUndo",
         "VouchBack",
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 57 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 60 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -104,6 +107,7 @@
         "HistoryEmpty",
         "HistoryHidden",
         "HistoryNone",
+        "HistorySearch",
         "KeyElsewhere",
         "Notifications",
         "NotificationsEmpty",
@@ -130,6 +134,8 @@
         "Removed",
         "Saved",
         "SavedEmpty",
+        "SavedNone",
+        "SavedSearch",
         "SavedUndo",
         "VouchBack",
         "WalletComingSoon"
@@ -217,6 +223,7 @@
         "FeedWordsSensitive",
         "History",
         "HistoryHidden",
+        "HistorySearch",
         "KeyElsewhere",
         "PostDetail",
         "PostDetailHidden",
@@ -226,13 +233,16 @@
         "Reel",
         "ReelSensitive",
         "Removed",
+        "Saved",
+        "SavedSearch",
+        "SavedUndo",
         "TagPage",
         "TagPageHeld",
         "TagPageHidden",
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 30 boards → ReplyEntry",
+        "start · «comment count» on 34 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
@@ -259,6 +269,7 @@
         "FeedWordsSensitive",
         "History",
         "HistoryHidden",
+        "HistorySearch",
         "KeyElsewhere",
         "PostDetail",
         "PostDetailHidden",
@@ -268,6 +279,9 @@
         "Reel",
         "ReelSensitive",
         "Removed",
+        "Saved",
+        "SavedSearch",
+        "SavedUndo",
         "TagPage",
         "TagPageHeld",
         "TagPageHidden",
@@ -782,6 +796,7 @@
         "HistoryEmpty",
         "HistoryHidden",
         "HistoryNone",
+        "HistorySearch",
         "KeyElsewhere",
         "Notifications",
         "NotificationsEmpty",
@@ -808,12 +823,14 @@
         "Removed",
         "Saved",
         "SavedEmpty",
+        "SavedNone",
+        "SavedSearch",
         "SavedUndo",
         "VouchBack",
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 57 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 60 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeDetailsWords — the words path skips crop and cover — details without the media row or a description",
         "ComposeDetailsWords · 8 «Next» → ComposeSeal — the words path never waits on uploads",
@@ -852,6 +869,7 @@
         "HistoryEmpty",
         "HistoryHidden",
         "HistoryNone",
+        "HistorySearch",
         "KeyElsewhere",
         "Notifications",
         "NotificationsEmpty",
@@ -878,6 +896,8 @@
         "Removed",
         "Saved",
         "SavedEmpty",
+        "SavedNone",
+        "SavedSearch",
         "SavedUndo",
         "VouchBack",
         "WalletComingSoon"
@@ -916,6 +936,7 @@
         "HistoryEmpty",
         "HistoryHidden",
         "HistoryNone",
+        "HistorySearch",
         "KeyElsewhere",
         "Notifications",
         "NotificationsEmpty",
@@ -942,12 +963,14 @@
         "Removed",
         "Saved",
         "SavedEmpty",
+        "SavedNone",
+        "SavedSearch",
         "SavedUndo",
         "VouchBack",
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 57 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 60 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -986,6 +1009,7 @@
         "HistoryEmpty",
         "HistoryHidden",
         "HistoryNone",
+        "HistorySearch",
         "KeyElsewhere",
         "Notifications",
         "NotificationsEmpty",
@@ -1012,6 +1036,8 @@
         "Removed",
         "Saved",
         "SavedEmpty",
+        "SavedNone",
+        "SavedSearch",
         "SavedUndo",
         "VouchBack",
         "WalletComingSoon"
@@ -1050,6 +1076,7 @@
         "HistoryEmpty",
         "HistoryHidden",
         "HistoryNone",
+        "HistorySearch",
         "KeyElsewhere",
         "Notifications",
         "NotificationsEmpty",
@@ -1076,12 +1103,14 @@
         "Removed",
         "Saved",
         "SavedEmpty",
+        "SavedNone",
+        "SavedSearch",
         "SavedUndo",
         "VouchBack",
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 57 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 60 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -1118,6 +1147,7 @@
         "HistoryEmpty",
         "HistoryHidden",
         "HistoryNone",
+        "HistorySearch",
         "KeyElsewhere",
         "Notifications",
         "NotificationsEmpty",
@@ -1144,6 +1174,8 @@
         "Removed",
         "Saved",
         "SavedEmpty",
+        "SavedNone",
+        "SavedSearch",
         "SavedUndo",
         "VouchBack",
         "WalletComingSoon"
@@ -1210,15 +1242,28 @@
     },
     {
       "name": "set-your-own-stance-on-your-post",
-      "description": "Adjust on the seal blooms the one-axis pad — your own post always reaches you in full, so the stance is declared before signing, never assumed.",
+      "description": "Adjust on the seal's Your backing row blooms the one-axis pad — the post's own record carries one free number, the author's backing, For or Against, and it is declared before signing, never assumed.",
       "status": "resolved",
       "steps": [
-        "start · ComposeSeal · 5 «Adjust (your stance)» → ComposePad",
-        "end · ComposePad · 4 «Set» → ComposeSeal — the adjusted stance on the seal"
+        "start · ComposeSeal · 5 «Adjust (your backing)» → ComposePad",
+        "end · ComposePad · 4 «Set» → ComposeSeal — the adjusted backing on the seal"
       ],
       "boards": [
         "ComposeSeal",
         "ComposePad"
+      ]
+    },
+    {
+      "name": "adjust-your-opinion-with-an-edit",
+      "description": "Adjust on a post edit's Your backing row blooms the one-axis pad, its pick the edit's own record at 0.00; the pad reads the current backing, the pick and the backing after, Set stages the pick and Sign the edit signs it with the rest. An edit nobody adjusts moves the backing by nothing.",
+      "status": "resolved",
+      "steps": [
+        "start · EditCompose · 21 «Adjust (your backing)» → EditPad — the one-axis pad over the edit, its pick the edit's own record — 0.00 until the author moves it",
+        "end · EditPad · 4 «Set» → EditCompose — the pick stages on the edit's own record — the row reads the backing after, the count does not move, and nothing signs until Sign the edit"
+      ],
+      "boards": [
+        "EditCompose",
+        "EditPad"
       ]
     },
     {
@@ -1501,6 +1546,7 @@
         "FeedWordsSensitive",
         "History",
         "HistoryHidden",
+        "HistorySearch",
         "KeyElsewhere",
         "Main",
         "PostDetail",
@@ -1510,13 +1556,16 @@
         "Reel",
         "ReelSensitive",
         "Removed",
+        "Saved",
+        "SavedSearch",
+        "SavedUndo",
         "TagPage",
         "TagPageHeld",
         "TagPageHidden",
         "VouchBack"
       ],
       "steps": [
-        "start · «author chip» on 36 boards → ProfileOther",
+        "start · «author chip» on 40 boards → ProfileOther",
         "end · arrival at ProfileOther"
       ],
       "boards": [
@@ -1544,6 +1593,7 @@
         "FeedWordsSensitive",
         "History",
         "HistoryHidden",
+        "HistorySearch",
         "KeyElsewhere",
         "Main",
         "PostDetail",
@@ -1553,6 +1603,9 @@
         "Reel",
         "ReelSensitive",
         "Removed",
+        "Saved",
+        "SavedSearch",
+        "SavedUndo",
         "TagPage",
         "TagPageHeld",
         "TagPageHidden",
@@ -1644,10 +1697,11 @@
         "KeyElsewhere",
         "Main",
         "ProfilePosts",
+        "Saved",
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — a portrait clip — the stream opens on 23 boards → Reel",
+        "start · «post media» — a portrait clip — the stream opens on 24 boards → Reel",
         "end · arrival at Reel"
       ],
       "boards": [
@@ -1674,6 +1728,7 @@
         "KeyElsewhere",
         "Main",
         "ProfilePosts",
+        "Saved",
         "VouchBack"
       ]
     },
@@ -1729,10 +1784,11 @@
         "KeyElsewhere",
         "Main",
         "ProfilePosts",
+        "Saved",
         "VouchBack"
       ],
       "steps": [
-        "start · «reference count» on 22 boards → RefsSheet",
+        "start · «reference count» on 23 boards → RefsSheet",
         "end · RefsSheet · 3 «post reference rows» → PostDetail — the cited post opens"
       ],
       "boards": [
@@ -1759,6 +1815,7 @@
         "KeyElsewhere",
         "Main",
         "ProfilePosts",
+        "Saved",
         "VouchBack"
       ]
     },
@@ -1881,6 +1938,7 @@
         "FeedWordsSensitive",
         "History",
         "HistoryHidden",
+        "HistorySearch",
         "KeyElsewhere",
         "Main",
         "PostDetail",
@@ -1889,13 +1947,16 @@
         "PostDetailVideoSensitive",
         "ProfilePosts",
         "Removed",
+        "Saved",
+        "SavedSearch",
+        "SavedUndo",
         "TagPage",
         "TagPageHeld",
         "TagPageHidden",
         "VouchBack"
       ],
       "steps": [
-        "start · «Feed score» — to FeedEntry on 35 boards → FeedEntry",
+        "start · «Feed score» — to FeedEntry on 39 boards → FeedEntry",
         "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
         "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
         "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",
@@ -1929,6 +1990,7 @@
         "FeedWordsSensitive",
         "History",
         "HistoryHidden",
+        "HistorySearch",
         "KeyElsewhere",
         "Main",
         "PostDetail",
@@ -1937,6 +1999,9 @@
         "PostDetailVideoSensitive",
         "ProfilePosts",
         "Removed",
+        "Saved",
+        "SavedSearch",
+        "SavedUndo",
         "TagPage",
         "TagPageHeld",
         "TagPageHidden",
@@ -2184,21 +2249,14 @@
     },
     {
       "name": "post-while-an-applicant",
-      "description": "An applicant's first post runs the same wizard and the same seal; signing stages it with the application, the wizard closing onto the applicant's own feed, and the post waits in their chronicle, seen by them alone.",
+      "description": "New post in the applicant days answers where it was pressed — You can post once you're in. — and the wizard never opens; posting starts once the vouch lets the reader in.",
       "status": "resolved",
       "steps": [
-        "start · ApplicantWaiting · 12 «nav · New post» → ComposePick — first post — the wizard opens, the act stages",
-        "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
-        "ComposeWords · 3 «Next» → ComposeDetailsWords — the words path skips crop and cover — details without the media row or a description",
-        "ComposeDetailsWords · 8 «Next» → ComposeSeal — the words path never waits on uploads",
-        "end · ComposeSeal · 7 «Sign and publish» → ApplicantWaiting — an applicant — the post stages, signed only at approval: the wizard closes onto the applicant's own feed, its snackbar saying Your post waits with your application — it arrives with you., and the post waits in their chronicle, seen by them alone (drawn on the waiting shell; the first-steps shell answers the same, and the turned-down shell, with no application live, says Your post waits — it arrives when someone vouches you in.)"
+        "start · ApplicantWaiting",
+        "end · ApplicantWaiting · 12 «nav · New post» → self — the wizard never opens: the snackbar answers You can post once you're in."
       ],
       "boards": [
-        "ApplicantWaiting",
-        "ComposePick",
-        "ComposeWords",
-        "ComposeDetailsWords",
-        "ComposeSeal"
+        "ApplicantWaiting"
       ]
     },
     {
@@ -3639,12 +3697,12 @@
       "status": "resolved",
       "steps": [
         "start · Feed · 3 «post overflow ⋮» → FeedPostMenu — the reader's sheet on the feed (the feed-hosted state, drawn — ruling 84)",
-        "end · FeedPostMenu · 4 «License terms» → PostLicense — the menu closes and the terms come up in a sheet over the feed (master)"
+        "end · FeedPostMenu · 4 «License terms» → FeedPostLicense — the menu closes and the terms come up in a sheet over the feed (the feed-hosted state, drawn — FC-G10)"
       ],
       "boards": [
         "Feed",
         "FeedPostMenu",
-        "PostLicense"
+        "FeedPostLicense"
       ]
     },
     {
@@ -3715,7 +3773,7 @@
       "description": "A bare word that matches a person's name or handle brings their row among the results; it opens their profile, its arrow reading Back to the search.",
       "status": "resolved",
       "steps": [
-        "start · Explore · 1 «search field» → ExplorePerson — an unscoped query that reaches a person by name or handle — the Profiles row among the results",
+        "start · Explore · 1 «search field» → ExplorePerson — a query that reaches people — the people section first, at most three, then the content",
         "end · ExplorePerson · 5 «profile result row» → ProfileOther — another person — their profile, its back arrow reading Back to the search"
       ],
       "boards": [
@@ -3984,12 +4042,12 @@
     },
     {
       "name": "open-something-you-saved",
-      "description": "Saved, in your own profile's menu, lists what you kept — posts, comments and people in one list; a saved post's row opens the post.",
+      "description": "Saved, in your own profile's menu, lists what you kept — posts, comments and people as their own feed cards in one list; a saved post's picture opens the post.",
       "status": "resolved",
       "steps": [
         "start · Profile · 2 «profile overflow ⋮» → ProfileOwnMenu — your own profile's sheet — the two private lists and the share row",
         "ProfileOwnMenu · 1 «Saved» → Saved",
-        "end · Saved · 2 «a saved row» → PostDetail — a post"
+        "end · Saved · 6 «post media» → PostDetail — pictures — the post opens, the arrow reading Back to Saved"
       ],
       "boards": [
         "Profile",
@@ -4000,19 +4058,30 @@
     },
     {
       "name": "unsave-and-undo",
-      "description": "A row's unsave takes it out of Saved, the list closing over it, and the line offers Undo; Undo puts the row back where it was.",
+      "description": "A card's own Save, its ⋮'s first row reading Unsave in Saved, takes it out of the list, the list closing over it, and the line offers Undo; Undo puts the card back where it was.",
       "status": "resolved",
       "steps": [
-        "start · Profile · 2 «profile overflow ⋮» → ProfileOwnMenu — your own profile's sheet — the two private lists and the share row",
-        "ProfileOwnMenu · 1 «Saved» → Saved",
-        "Saved · 8 «a row's unsave» → SavedUndo — the row goes, the list closes over it, and the line offers Undo — the last of them leaves SavedEmpty",
-        "end · SavedUndo · 9 «Undo» → Saved — the row comes back where it was and the list is as it was"
+        "start · Saved · 4 «post overflow ⋮ — the card's own Save» → ReaderPostMenu — the reader's sheet (master) — its first row reads Unsave, every card here being kept; Unsave there lands on SavedUndo",
+        "ReaderPostMenu · 1 «Save» → SavedUndo — Unsave, the menu opened from a card in Saved — the sheet closes, the card goes, the list closes over it, and the line offers Undo; the last of them leaves SavedEmpty",
+        "end · SavedUndo · 16 «Undo» → Saved — the card comes back where it was and the list is as it was"
       ],
       "boards": [
-        "Profile",
-        "ProfileOwnMenu",
         "Saved",
+        "ReaderPostMenu",
         "SavedUndo"
+      ]
+    },
+    {
+      "name": "search-what-you-saved",
+      "description": "Saved's field searches the saved list alone by the one search rule; a query nothing saved carries says so, and Show everything brings the whole list back.",
+      "status": "resolved",
+      "steps": [
+        "start · Saved · 2 «search field» → SavedNone — nothing saved carries the query",
+        "end · SavedNone · 3 «Show everything» → Saved — the query cleared — the whole list, newest first by when each thing was saved"
+      ],
+      "boards": [
+        "Saved",
+        "SavedNone"
       ]
     },
     {
@@ -4636,7 +4705,6 @@
     "ComposeDetailsWords": {
       "flows": [
         "cite-something",
-        "post-while-an-applicant",
         "publish-words"
       ],
       "endpoint": []
@@ -4735,7 +4803,6 @@
         "mention-someone",
         "pick-a-video-from-the-grid",
         "pick-files-that-are-refused",
-        "post-while-an-applicant",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
@@ -4802,7 +4869,6 @@
         "mark-a-post-sensitive",
         "pick-a-kept-draft-back-up",
         "pick-a-video-from-the-grid",
-        "post-while-an-applicant",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
@@ -4877,7 +4943,6 @@
       "flows": [
         "cite-a-post",
         "mention-someone",
-        "post-while-an-applicant",
         "publish-words",
         "swap-the-pictures-for-words",
         "write-past-the-words-cap"
@@ -4964,6 +5029,7 @@
     },
     "EditCompose": {
       "flows": [
+        "adjust-your-opinion-with-an-edit",
         "cite-something",
         "edit-a-post-down-to-words",
         "edit-your-post",
@@ -4973,6 +5039,7 @@
         "untag-a-post-in-its-edit"
       ],
       "endpoint": [
+        "adjust-your-opinion-with-an-edit",
         "edit-a-post-down-to-words",
         "edit-your-post",
         "reorder-an-edits-pictures",
@@ -4997,6 +5064,12 @@
       "endpoint": [
         "edit-a-video-post"
       ]
+    },
+    "EditPad": {
+      "flows": [
+        "adjust-your-opinion-with-an-edit"
+      ],
+      "endpoint": []
     },
     "EditPicked": {
       "flows": [
@@ -5333,6 +5406,14 @@
         "undo-the-narrowing"
       ]
     },
+    "FeedPostLicense": {
+      "flows": [
+        "read-a-posts-license"
+      ],
+      "endpoint": [
+        "read-a-posts-license"
+      ]
+    },
     "FeedPostMenu": {
       "flows": [
         "cite-a-post",
@@ -5509,6 +5590,18 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
+      ],
+      "endpoint": []
+    },
+    "HistorySearch": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "trace-a-score-to-its-records",
+        "visit-an-author"
       ],
       "endpoint": []
     },
@@ -5900,14 +5993,6 @@
         "reveal-a-sensitive-video-post"
       ]
     },
-    "PostLicense": {
-      "flows": [
-        "read-a-posts-license"
-      ],
-      "endpoint": [
-        "read-a-posts-license"
-      ]
-    },
     "PostNotFound": {
       "flows": [
         "meet-a-post-link-that-names-nothing",
@@ -5949,7 +6034,6 @@
         "see-who-stands-with-someone",
         "send-someone-an-invite",
         "send-your-first-invite",
-        "unsave-and-undo",
         "vouch-an-applicant-in"
       ],
       "endpoint": [
@@ -5967,7 +6051,6 @@
         "read-your-history",
         "send-someone-an-invite",
         "send-your-first-invite",
-        "unsave-and-undo",
         "vouch-an-applicant-in"
       ]
     },
@@ -6118,8 +6201,7 @@
         "find-nothing-read-yet",
         "find-nothing-saved-yet",
         "open-something-you-saved",
-        "read-your-history",
-        "unsave-and-undo"
+        "read-your-history"
       ],
       "endpoint": []
     },
@@ -6202,7 +6284,8 @@
     "ReaderPostMenu": {
       "flows": [
         "cite-a-post",
-        "hide-someone-from-their-post"
+        "hide-someone-from-their-post",
+        "unsave-and-undo"
       ],
       "endpoint": []
     },
@@ -6642,14 +6725,21 @@
     },
     "Saved": {
       "flows": [
+        "follow-a-citation",
         "open-something-you-saved",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
-        "unsave-and-undo"
+        "reply-to-a-post",
+        "search-what-you-saved",
+        "trace-a-score-to-its-records",
+        "unsave-and-undo",
+        "visit-an-author",
+        "watch-the-stream"
       ],
       "endpoint": [
+        "search-what-you-saved",
         "unsave-and-undo"
       ]
     },
@@ -6665,13 +6755,38 @@
         "find-nothing-saved-yet"
       ]
     },
+    "SavedNone": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "search-what-you-saved"
+      ],
+      "endpoint": []
+    },
+    "SavedSearch": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "trace-a-score-to-its-records",
+        "visit-an-author"
+      ],
+      "endpoint": []
+    },
     "SavedUndo": {
       "flows": [
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
-        "unsave-and-undo"
+        "reply-to-a-post",
+        "trace-a-score-to-its-records",
+        "unsave-and-undo",
+        "visit-an-author"
       ],
       "endpoint": []
     },

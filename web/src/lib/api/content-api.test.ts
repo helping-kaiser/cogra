@@ -3,14 +3,15 @@ import { HttpResponse } from "msw/http";
 import { describe, expect, it } from "vitest";
 
 import {
+  fetchPostBacking,
   fetchPostDetail,
-  fetchPosts,
   prepareComment,
   preparePost,
   preparePostEdit,
   readCachedPost,
   sensitiveInput,
 } from "./content-api";
+import { fetchFeedWindow } from "./feed-api";
 import { gqlLink, startMswServer } from "@/test/msw";
 
 const server = startMswServer();
@@ -41,6 +42,7 @@ function post(id: string, overrides: Record<string, unknown> = {}) {
     license: { __typename: "License", attribution: 0, provenance: 0 },
     topics: [],
     references: [],
+    viewerBookmarkedAt: null,
     ...overrides,
   };
 }
@@ -48,61 +50,6 @@ function post(id: string, overrides: Record<string, unknown> = {}) {
 function pageInfo(hasNextPage: boolean, endCursor: string | null) {
   return { __typename: "PageInfo", hasNextPage, endCursor };
 }
-
-describe("fetchPosts", () => {
-  it("maps the page and its cursor", async () => {
-    server.use(
-      gqlLink.query("Posts", () =>
-        HttpResponse.json({
-          data: {
-            posts: {
-              __typename: "PostConnection",
-              edges: [{ __typename: "PostEdge", node: post("p1") }],
-              pageInfo: pageInfo(true, "c1"),
-            },
-          },
-        }),
-      ),
-    );
-    const outcome = await fetchPosts(client());
-    expect(outcome.kind).toBe("success");
-    if (outcome.kind !== "success") return;
-    expect(outcome.value.items.map((p) => p.id)).toEqual(["p1"]);
-    expect(outcome.value.items[0].title.value).toBe("Hello");
-    expect(outcome.value.endCursor).toBe("c1");
-    expect(outcome.value.hasNextPage).toBe(true);
-  });
-
-  it("fails on a transport fault", async () => {
-    server.use(gqlLink.query("Posts", () => HttpResponse.error()));
-    expect((await fetchPosts(client())).kind).toBe("failed");
-  });
-
-  // The listing serves pending entries unless the reader opts out
-  // (api-spec.md "Pagination"): the default rides every read, and false
-  // asks for the settled graph.
-  it("asks for pending entries by default and carries the landed-only opt-out", async () => {
-    const asked: unknown[] = [];
-    server.use(
-      gqlLink.query("Posts", ({ variables }) => {
-        asked.push(variables.includePending);
-        return HttpResponse.json({
-          data: {
-            posts: {
-              __typename: "PostConnection",
-              edges: [],
-              pageInfo: pageInfo(false, null),
-            },
-          },
-        });
-      }),
-    );
-    const c = client();
-    await fetchPosts(c);
-    await fetchPosts(c, null, { includePending: false });
-    expect(asked).toEqual([true, false]);
-  });
-});
 
 describe("fetchPostDetail", () => {
   it("maps the thread and serves null for an unknown id", async () => {
@@ -177,14 +124,14 @@ describe("readCachedPost", () => {
     });
   }
 
+  /** The feed's own window read — the read that writes the cards. */
   function feedAnswer(...nodes: Record<string, unknown>[]) {
-    return gqlLink.query("Posts", () =>
+    return gqlLink.query("Feed", () =>
       HttpResponse.json({
         data: {
-          posts: {
-            __typename: "PostConnection",
-            edges: nodes.map((node) => ({ __typename: "PostEdge", node })),
-            pageInfo: pageInfo(false, null),
+          feed: {
+            __typename: "FeedConnection",
+            edges: nodes.map((node) => ({ __typename: "FeedEdge", node })),
           },
         },
       }),
@@ -216,7 +163,7 @@ describe("readCachedPost", () => {
   it("reads the card the feed wrote, comment count included", async () => {
     server.use(feedAnswer({ ...wholePost("p1", "Hello"), ...feedCount }));
     const c = client();
-    await fetchPosts(c);
+    await fetchFeedWindow(c, ["p1"]);
     const cached = readCachedPost(c, "p1");
     expect(cached?.title.value).toBe("Hello");
     expect(cached?.author?.displayName.value).toBe("Alice");
@@ -247,7 +194,7 @@ describe("readCachedPost", () => {
       detailAnswer(wholePost("p1", "Hello, edited")),
     );
     const c = client();
-    await fetchPosts(c);
+    await fetchFeedWindow(c, ["p1"]);
     await fetchPostDetail(c, "p1");
     const cached = readCachedPost(c, "p1");
     expect(cached?.title.value).toBe("Hello, edited");
@@ -286,11 +233,72 @@ describe("preparePost", () => {
       description: null,
       content: "B",
       license,
+      pDirected: 0.1,
     });
     expect(outcome.kind).toBe("success");
     if (outcome.kind !== "success") return;
     expect(outcome.value.node).toBe("node-1");
     expect(outcome.value.writes[0]).toMatchObject({ id: "w1", state: "AWAITING_PRE_SIGN" });
+  });
+
+  // The creating-edge stance is required on the wire and the server fills
+  // nothing in, so the value the seal shows is the value the input carries.
+  it("carries the author's picked pDirected on the input", async () => {
+    let variables: Record<string, unknown> | null = null;
+    server.use(
+      gqlLink.mutation("PreparePost", ({ variables: v }) => {
+        variables = v;
+        return HttpResponse.json({
+          data: {
+            preparePost: {
+              __typename: "PrepareContentPayload",
+              node: "node-1",
+              writes: [],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    await preparePost(client(), {
+      title: "T",
+      description: null,
+      content: "B",
+      license,
+      pDirected: 0.7,
+    });
+    expect((variables as unknown as { input: { pDirected: unknown } }).input.pDirected).toBe(0.7);
+  });
+
+  // A zero leaves the device as the positive one (PR-91 rider). On web the
+  // JSON body is what normalises it — `JSON.stringify(-0)` is "0" — so a
+  // pad's `-0` reaches the server as `0`; `toBe` compares with Object.is,
+  // so a `-0` that survived the wire would fail here.
+  it("sends a picked negative zero as the positive zero", async () => {
+    let variables: Record<string, unknown> | null = null;
+    server.use(
+      gqlLink.mutation("PreparePost", ({ variables: v }) => {
+        variables = v;
+        return HttpResponse.json({
+          data: {
+            preparePost: {
+              __typename: "PrepareContentPayload",
+              node: "node-1",
+              writes: [],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    await preparePost(client(), {
+      title: "T",
+      description: null,
+      content: "B",
+      license,
+      pDirected: -0,
+    });
+    expect((variables as unknown as { input: { pDirected: unknown } }).input.pDirected).toBe(0);
   });
 
   it("refuses with the payload's userErrors", async () => {
@@ -315,6 +323,7 @@ describe("preparePost", () => {
       description: null,
       content: "B",
       license,
+      pDirected: 0.1,
     });
     expect(outcome.kind).toBe("refused");
     if (outcome.kind !== "refused") return;
@@ -347,6 +356,7 @@ describe("preparePostEdit", () => {
       content: "B",
       attachments: [],
       sensitive: true,
+      pDirected: 0.3,
     });
     expect(variables).toEqual({
       input: {
@@ -359,6 +369,8 @@ describe("preparePostEdit", () => {
         // An edit re-states the mark rather than dropping it.
         sensitive: true,
         sensitiveReason: null,
+        // The edit's own pick, stated as picked (round 15).
+        pDirected: 0.3,
       },
     });
   });
@@ -392,6 +404,7 @@ describe("preparePostEdit", () => {
         { mediaId: "m-2", altText: null },
       ],
       sensitive: false,
+      pDirected: 0,
     });
     expect((variables as unknown as { input: { attachments: unknown } }).input.attachments).toEqual([
       {
@@ -437,6 +450,7 @@ describe("preparePostEdit", () => {
       content: "",
       attachments: [{ mediaId: "m-v", altText: null, coverMediaId: "m-c", coverTaken: true }],
       sensitive: false,
+      pDirected: 0,
     });
     expect(variables!.input.attachments).toEqual([
       {
@@ -448,6 +462,15 @@ describe("preparePostEdit", () => {
         coverTaken: true,
       },
     ]);
+  });
+});
+
+// THE SERVER GAP, pinned so its closing is a visible change: no field serves
+// the author's Publish bundle toward their own post (EditPad's Current
+// backing), so the read answers "not served" rather than a guessed number.
+describe("fetchPostBacking", () => {
+  it("answers not served until the server grows the read", async () => {
+    expect(await fetchPostBacking()).toEqual({ kind: "success", value: null });
   });
 });
 
@@ -481,6 +504,7 @@ describe("prepareComment", () => {
       target: "p1",
       content: "First!",
       license: { attribution: 0, provenance: 0.5 },
+      stance: { pDirected: 0.25, pInterest: -0.5 },
     });
     expect(outcome.kind).toBe("success");
     expect(variables).toEqual({
@@ -493,12 +517,11 @@ describe("prepareComment", () => {
         attachments: null,
         tags: null,
         references: null,
-        // The seal's Adjust writes the genesis Review's own pair. A caller
-        // that names no stance sends neither, and the server applies its own
-        // +0.1 default to each — stating a value here would be this client
-        // inventing the policy.
-        pDirected: null,
-        pInterest: null,
+        // The genesis Review's own pair, exactly as the seal showed it. Both
+        // are required on the wire: the server never fills a stance in, so
+        // the value always comes from the UI state that displayed it.
+        pDirected: 0.25,
+        pInterest: -0.5,
         // The mark is COMPLETE STATE, so a caller that names none says so
         // rather than omitting it — the same rule an edit follows, and the
         // reason a reason never travels without its mark.
@@ -530,6 +553,7 @@ describe("prepareComment", () => {
       target: "p1",
       content: "Two from the sea wall.",
       license: { attribution: 0, provenance: 0.5 },
+      stance: { pDirected: 0.1, pInterest: 0.1 },
       attachments: [
         { mediaId: "m-a", altText: "the sea wall at dusk" },
         { mediaId: "m-b", altText: "  " },
@@ -597,6 +621,7 @@ describe("prepareComment", () => {
       target: "p1",
       content: "First!",
       license: { attribution: 0, provenance: 0.5 },
+      stance: { pDirected: 0.1, pInterest: 0.1 },
       tags: [{ name: "rust", relevance: 0.4, confidence: 0.8 }],
     });
     expect(outcome.kind).toBe("success");

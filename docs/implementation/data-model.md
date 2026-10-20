@@ -60,6 +60,12 @@ adds nothing. Conventions:
 - **An epoch cursor** records the last fully-ingested epoch;
   ingestion appends records and advances it
   ([architecture.md "Record ingestion"](architecture.md#record-ingestion-the-mirror-contract)).
+- **Per epoch, the attested boundary timestamp** the package
+  publishes (layer1-interface.md, the Host Contract) — when the
+  epoch's records landed, the wall-clock instant a record's display
+  reads (`Record.landedAt`). The stand-in attests its own close time.
+  An ingested epoch missing its instant is filled by the next
+  ingestion pass from the published sequence, through the seam.
 
 The contract is the mirror's whole identity: it may lag L1, it
 must never diverge, and it can be rebuilt from the published
@@ -136,6 +142,17 @@ keys ≥ 100 belong to guilds. The envelope never carries the node's
 type (the L1 act fixes it) and conformance is a binary L2 admission
 gate at prepare, never a scoring input.
 
+The reserved range (keys 4–99, PCE §4.2) is read two ways. A payload
+CoGra authors — the one a device checks before it signs — carries no
+reserved key at any declared version: an unordered key in one's own
+proposal is a smuggle. On the read/ingest path (a landing, a
+redaction reading a carriage) a reserved key is tolerated only when
+the envelope declares an `extension_ver` newer than the reader's
+(PCE §6 Xceil): the carriage keeps it byte-exact, nothing renders or
+re-authors it, and the reading is marked newer-format. At a version
+the reader implements, the key is refused as on the signing path —
+malformed, not future.
+
 CoGra's fields ride **guild key 49258** (`0xC06A`) as a nested
 integer-keyed map — the guild schema:
 
@@ -183,10 +200,12 @@ on a video shown without a poster), key 4 the **cover-taken** mark
 (bool, present only alongside key 3, refused otherwise) recording
 that the cover is the system's own first frame rather than one the
 author chose — absent means chosen, and the only legal in-band
-value is `true`. That is what a reader needs to render honestly —
+value is `true` — and key 5 the **upload digest** (32-byte bstr,
+SHA-256): the device's own hash of the bytes it sent, after its
+metadata strip. That is what a reader needs to render honestly —
 which bytes, what type, what the picture is of, which still stands
 in for a clip that is not playing, and whether that still was
-chosen or taken. The cover
+chosen or taken — and what the author handed over. The cover
 is witnessed because it is the face the post wears at rest: an
 author signs the face as they sign the body, and an edit that
 changes it is a new version saying so. Alt text is witnessed
@@ -199,9 +218,25 @@ order it is stored in. The nested map runs the same reserved-key
 discipline the outer envelope runs: an unknown key is refused
 rather than ignored.
 
+The two digests are one witness in two halves. Key 0 is the
+**rendition digest**, the server's hash of the bytes the asset
+serves, so a reader can check what it was shown; key 5 is the
+**upload digest**, so the record also says what the author's
+device sent. They are equal for an asset stored as it arrived and
+differ for a clip the server re-encoded — and since the server
+keeps no raw original, key 5 is the only trace of the author's own
+bytes a re-encode leaves. Both always ride: a prepare refuses an
+entry without key 5. A reader tolerates its absence, because
+payloads landed before the key existed carry none. Key 5 names the
+upload the entry's media id names — the row a merged or retried
+upload resolved *from* — while key 0 names the asset it resolved
+*to*. A cover carries no upload digest of its own: it is an
+uploaded still, stored as it arrived, so its upload digest is the
+rendition digest key 3 already carries.
+
 That refusal is what lets both maps grow additively. A new field
-is a new key assigned under schema version 1 — manifest keys 3
-and 4 each arrived that way — and every reader refuses a key above
+is a new key assigned under schema version 1 — manifest keys 3, 4
+and 5 each arrived that way — and every reader refuses a key above
 the highest it knows, so a reader older than a field refuses the
 payload rather than dropping the field and rendering an asset it
 did not fully understand.
@@ -250,28 +285,206 @@ later is a producer-side additive change.
 
 ## Act payload carriage
 
-Carriage is the payload bytes' only home — Layer 1 tracks the
-witness, never the bytes ([layers.md §5](../primitive/layers.md#5-deletion-policy)).
+Carriage is the payload bytes' permanent home; Layer 1 keeps the
+witness ([layers.md §5](../primitive/layers.md#5-deletion-policy)).
+The content commitment is invariant across custody phases and only
+carriage migrates
+([layer1-interface.md](../primitive/layer1-interface.md), "Custody
+across phases"). CoGra runs witness-only at Layer 1 from the start.
+The host holds the payload, its content salt and the proposal
+nonce **transiently**, from seal until acceptance, because it forms
+the commitments over them. At acceptance it nulls all three and
+keeps the payload length and both commitments. The nonce goes with
+them: the public pre-commitment is formed over it and the payload,
+so a kept nonce would confirm a guessed payload. The dependency salt
+stays, because an ordering fraud proof opens it. From acceptance on,
+`act_payloads` is the only carriage.
+
 At confirm, promotion moves the envelope and the seal's private
 value from the staged row into `act_payloads`, keyed by the L1 act
-identifier verbatim:
+identifier verbatim — every landed payload, the admission
+Registration's handle included, so the staged row is never a
+payload's last home. A genesis act has no staged row, so the genesis
+bootstrap writes the carriage of each genesis payload the moment the
+seal returns its salt:
 
 ```sql
 CREATE TABLE act_payloads (
     act_id        TEXT        PRIMARY KEY,  -- L1 act identifier, verbatim
-    payload       BYTEA       NOT NULL,     -- the envelope bytes
-    content_salt  BYTEA       NOT NULL,     -- the commitment's private value
+    payload       BYTEA,                    -- the envelope bytes; NULL once reduced
+    content_salt  BYTEA,                    -- the commitment's private value; NULL with it
     payload_state TEXT        NOT NULL DEFAULT 'full'
         CHECK (payload_state IN ('full', 'reduced')),
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    reduced_at    TIMESTAMPTZ,              -- the reduction's moment
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CHECK ((payload IS NULL) = (content_salt IS NULL)),
+    CHECK ((payload IS NULL) = (payload_state = 'reduced')),
+    CHECK ((reduced_at IS NULL) = (payload_state = 'full'))
 );
 ```
 
 Anyone holding a row can verify it against the record's published
-witness. `payload_state` moves toward `'reduced'` only; removal
-(the erasure slice) empties `payload` and `content_salt`
-atomically and the row itself is never deleted. A full-empty
-payload (an act with no bytes) has no carriage row.
+witness. `payload_state` moves toward `'reduced'` only. A reduction
+sets `payload` and `content_salt` to NULL together and stamps
+`reduced_at`; the row itself is never deleted. NULL is never the
+zero-length string: zero bytes is the canonical empty payload
+(`crates/common/src/l1/handshake.rs`), so an emptied row would
+claim the act carried nothing. A full-empty payload (an act with no
+bytes) has no carriage row. A promotion over a reduced row keeps it
+reduced, and a record landing after a redaction reaped its staged
+copy lands reduced: a carriage row in `reduced` holding nothing, and
+no display row built.
+
+### Redacting an act
+
+A redaction of one act (the erasure engines decide which acts;
+`crates/api/src/redaction.rs` does each one) is **one transaction**:
+
+1. **Promote first.** If the act landed but its carriage row is
+   missing, the landed staged row's payload is promoted before
+   anything is reaped, so nothing is erased without an archive unit.
+2. **Archive** the unit (below) — from the carriage while it is full,
+   else from a sealed staged copy of an act that has not landed. A
+   copy never sealed has no witness and is not archived.
+3. **Reduce** the carriage row.
+4. **Reap** the staged row: `payload`, `content_salt` and `nonce` to
+   NULL. The nonce goes with them, because the public pre-commitment
+   is formed over nonce and payload.
+5. **Hold** each asset the envelope names whose last live placement
+   is now gone.
+
+Because all five commit together, no committed state holds an
+archive unit without its reduction or a reduction without its unit.
+Once the transaction commits, the stand-in's own copy — the
+custody of an act that never reached acceptance — is dropped across
+the seam (`L1Boundary::drop_carriage`); a crash between the two
+leaves that residue for the retry, and every step is idempotent. A
+carried act is never redacted: it never reached Layer 1 or a
+reader, and is deleted with its account.
+
+### The retention archive
+
+The store a redacted act's content outlives its carriage in
+([retention-archive.md](../primitive/retention-archive.md)):
+
+```sql
+CREATE TABLE retention_archive (
+    id               UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    original_id      TEXT        NOT NULL,
+    original_type    TEXT        NOT NULL,
+    original_data    JSONB       NOT NULL,   -- schema-on-read
+    redaction_reason TEXT        NOT NULL,
+    redacted_by      TEXT        NOT NULL,
+    redacted_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    legal_hold_until TIMESTAMPTZ,            -- NULL: held until a manual act
+    UNIQUE (original_id, original_type, redacted_by)
+);
+
+-- The media a unit references; the foreign key keeps every asset a
+-- held unit names from being deleted.
+CREATE TABLE retention_archive_media (
+    archive_id UUID NOT NULL REFERENCES retention_archive(id) ON DELETE CASCADE,
+    media_id   UUID NOT NULL REFERENCES media_attachments(id),
+    PRIMARY KEY (archive_id, media_id)
+);
+CREATE INDEX retention_archive_media_media_idx ON retention_archive_media (media_id);
+```
+
+A graph-side redaction writes one row per act, `original_type =
+'act_payload'` and `original_id` the act identifier. Its
+`original_data` is the **unit**, bytes hex-encoded:
+
+```json
+{
+  "unit": 1,
+  "act_id": "act:<author>:<seq>:<family>",
+  "envelope": "<the full payload>",
+  "content_salt": "<hex>",
+  "nonce": "<hex, or null when no copy still held it>",
+  "witness": "<the content commitment>",
+  "media": [
+    { "role": "asset", "rendition_digest": "<R>", "upload_digest": "<U>",
+      "media_id": "<uuid>", "storage_key": "<object key>" },
+    { "role": "cover", "rendition_digest": "<R>", "upload_digest": null,
+      "media_id": "<uuid>", "storage_key": "<object key>" }
+  ]
+}
+```
+
+The unit re-verifies against the public record on its own: salt and
+envelope open the content commitment over the act identifier and
+the record's pre-commitment, the nonce reproduces that
+pre-commitment, and each media entry names the bytes by both
+manifest digests. A unit **references** media; it never copies blob
+bytes. One asset can sit in several placements, so it is held
+(`media_attachments.held_at`) only when its **last** live placement
+is redacted, and until then it keeps serving the others. A live
+placement is the orphan sweep's placement set, where a post,
+comment or profile version stops counting once it is tombstoned or
+its act's carriage is reduced (the SQL function
+`media_live_placed`).
+
+The MVP runs no hard-delete job: `legal_hold_until` is NULL and a
+unit is held until a manual operator act. That act deletes the row
+and its references in one transaction, together with exactly the
+objects no other held unit references and no live placement shows
+(`retention::hard_delete_unit`). The orphan sweep never takes a
+held asset or one a unit references.
+
+### Media areas
+
+Where an asset's bytes physically sit is its **area**
+(`media_attachments.area`), one of three stores of the media
+service:
+
+- **live** — the bucket every `MediaAttachment.url` is minted into,
+  world-readable by design. Every piece of content carries a
+  license, and the license is the evidence against misuse, not an
+  access control.
+- **held** — the operator-only bucket a deleted asset's bytes leave
+  the live one for: no anonymous policy and no serving route, reached
+  by the operator from the host alone. Once deleted, the bytes are
+  out of every reader's reach — no old link, no guessed key, no
+  crawl reaches them.
+- **carried** — the non-public bucket an applicant's carried media
+  waits in for the whole application-to-admission window, served to
+  its author alone. At the landing the bytes move to the live
+  bucket, and the move is confirmed good **before** the carried
+  batch signs: a failed move refuses the sign, retryably, so a post
+  never lands naming bytes nobody can fetch.
+
+Every move is the same verified copy: the bytes are written to the
+destination, read back, and hashed against the rendition digest R
+the record witnesses; only then does the row's area change. A copy
+that does not verify is deleted and the asset stays where it was.
+Each move is retryable and resumes from wherever a crash left it,
+since a destination already holding R counts as moved.
+
+The **held move** follows the hold, after the redaction commits —
+a blob write and a Postgres commit are not one transaction. Under
+the asset's row lock it re-checks that no live placement shows the
+asset (`media_live_placed`), because the hold can go stale between
+the redaction and the move; it deletes the live copy before the row
+reads `held`, so no committed state says held while a public copy
+remains. A move that fails leaves the asset held in the live area,
+and the media reaper's every tick retries it. The manual hard
+delete names each released object's area, which is where the
+operator act deletes it from.
+
+The **carried move** is `media::areas::publish_carried`, and the
+carried batch's sign gate reads
+`media::areas::carried_media_published`: true exactly when every
+asset the carried write names resolves to a ready asset of its
+author's whose bytes are live. A name that resolves to no asset
+fails closed. The gate runs at the seal leg (`submitProposals`,
+`relay::gate_carried_media`): before a released carried write
+records its pre-commitment, the submit runs the move and reads the
+predicate back, and anything short of true refuses as
+`CARRIED_MEDIA_UNPUBLISHED`, a refusal the clients do not treat as
+terminal, so they keep the handshake material and re-send. A write
+naming no media passes at once. The orphan sweep takes only
+live-area assets: carried media has no placement until its landing
+writes one.
 
 ## Staged writes
 
@@ -322,7 +535,10 @@ CREATE TABLE staged_writes (
     license          TEXT,
     asserted_parents TEXT[]           NOT NULL DEFAULT '{}',
     deps             TEXT[]           NOT NULL DEFAULT '{}',
-    payload          BYTEA            NOT NULL,
+    -- NULL only once a redaction reaped it ("Redacting an act"),
+    -- with the content salt and the nonce, at payload_reaped_at.
+    payload          BYTEA,
+    payload_reaped_at TIMESTAMPTZ,
 
     state          TEXT        NOT NULL DEFAULT 'awaiting_pre_sign'
         CHECK (state IN ('carried', 'awaiting_pre_sign', 'sealing',
@@ -361,7 +577,10 @@ CREATE TABLE staged_writes (
     prepared_epoch BIGINT      NOT NULL,
     expired_epoch  BIGINT,
     created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CHECK ((payload IS NULL) = (payload_reaped_at IS NOT NULL)),
+    CHECK (payload IS NOT NULL OR (nonce IS NULL AND content_salt IS NULL)),
+    CHECK (payload IS NOT NULL OR state <> 'carried')
 );
 ```
 
@@ -369,14 +588,19 @@ Lifecycle rules, driven off the ingestion pass:
 
 - **Promotion matches by act identifier.** Every epoch's ingestion
   marks the staged writes whose records landed. The mirror
-  governs: a record landing after its staged write was collected
-  still promotes — though its staged payload is already gone.
+  governs: a record landing after its staged write expired still
+  promotes, and one landing after a redaction reaped its payload
+  lands reduced.
 - **GC is two-phase and epoch-denominated.** A write that has not
   landed within `STAGED_WRITE_GC_EPOCHS` epochs of its
   preparation ([development.md](development.md)) is **expired** —
-  payload dropped, state observable, so a device polling a lost
-  handshake sees the terminal state rather than a vanished id.
-  One further window later the row is deleted. A lost host seal
+  its pending display rows dropped, state observable, so a device
+  polling a lost handshake sees the terminal state rather than a
+  vanished id. One further window later the row is deleted.
+- **A redaction reaps every copy.** A landed row keeps the bytes
+  its carriage was promoted from, so a redaction reaps it too
+  ("Redacting an act"). A reaped row is no longer listed to its
+  author or signable; only its landing still reads it. A lost host seal
   (a relay crash between seal and store) expires the write
   immediately: the salts cannot be re-fetched, so no approval can
   ever be produced — the device re-prepares under a fresh
@@ -551,7 +775,18 @@ CREATE TABLE media_attachments (
     -- the bytes and leaves the mark (primitive/layers.md §5).
     redaction_reason TEXT,
     redacted_at      TIMESTAMPTZ,
+    -- When the asset's last live placement was redacted: from then on
+    -- it belongs to the retention archive ("The retention archive"
+    -- below). NULL while any live placement still shows it.
+    held_at          TIMESTAMPTZ,
+    -- Which store holds the bytes ("Media areas" above): the
+    -- world-readable live bucket, the carried bucket, or the
+    -- operator-only held bucket. Changes only once the bytes have
+    -- moved and verified; only a held asset can sit in the held area.
+    area             TEXT         NOT NULL DEFAULT 'live'
+        CHECK (area IN ('live', 'carried', 'held')),
     created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    CHECK (area <> 'held' OR held_at IS NOT NULL),
     CHECK ((state = 'failed') = (failure_reason IS NOT NULL)),
     CHECK ((state = 'merged') = (merged_into IS NOT NULL)),
     CHECK (merged_into <> id)
@@ -581,7 +816,24 @@ CREATE INDEX media_attachments_processing_idx
 -- every delete checks it as a foreign key.
 CREATE INDEX media_attachments_merged_into_idx
     ON media_attachments (merged_into) WHERE merged_into IS NOT NULL;
+
+-- The held assets whose bytes have not left the live bucket yet — the
+-- media reaper's retry list. Empty at rest.
+CREATE INDEX media_attachments_held_unmoved_idx
+    ON media_attachments (held_at) WHERE held_at IS NOT NULL AND area = 'live';
 ```
+
+A row's **upload digest** is `COALESCE(source_digest, digest)`:
+the digest of the bytes as they arrived, after the metadata
+strip. The server keeps no raw original — the ingest worker deletes
+it once the rendition is stored — so this is all that remains of
+the bytes an author sent. It is what the upload echoes back
+(`MediaAttachment.uploadDigest`), which the device holds to its own
+hash of the bytes it sent before it attaches anything, and what a
+manifest entry naming the row witnesses as key 5. Read through a
+named id, it is always the NAMED row's, never the asset a merge
+resolved it to: two uploads that re-encoded to one rendition are
+two uploads of one asset.
 
 The author-digest index leads with `author_id`, so it serves every
 author-keyed lookup — the account-redaction sweep of
@@ -1085,9 +1337,13 @@ index over them would match superseded titles; this table carries
 only what a read serves now. It is a cache over display content and
 the registry, rebuildable from them at any time.
 
-An untitled post has no row, and neither has a redacted value — a
-node whose current version carries a non-null `redaction_reason`
-(the explicit skip api-spec.md "Moderation" names).
+Every post whose current version is unredacted has a row; an
+untitled post's row carries the empty title, which holds no word and
+equals no query, so it is reached only through its author or a topic
+it carries — the index, not each read, decides what is findable. A
+redacted value has no row — a node whose current version carries a
+non-null `redaction_reason` (the explicit skip api-spec.md
+"Moderation" names).
 
 **The database maintains the table, by trigger.** Every source of an
 indexed value — `actors`, `actor_profile_versions`, `posts`,
@@ -1118,23 +1374,31 @@ CREATE TABLE search_index (
     value      TEXT        NOT NULL,
     folded     TEXT        GENERATED ALWAYS AS (lower(value)) STORED,
     words      TSVECTOR    GENERATED ALWAYS AS (
-                   CASE WHEN field = 'title'
+                   CASE WHEN field IN ('title', 'display_name', 'handle')
                         THEN to_tsvector('simple'::regconfig, value)
                    END
                ) STORED,
-    author_id  UUID,                   -- posts: the @-scope join
+    author_id  UUID,                   -- posts: the @-cue join
     created_at TIMESTAMPTZ NOT NULL,   -- the node's createdAt; a topic's registry age
     PRIMARY KEY (node_id, field)
 );
--- Name-class fields: case-insensitive substring (which takes in the
--- prefix) through the trigram operator class's LIKE support.
+-- Topic names by substring, and handles and topic names by a cue's
+-- prefix: case-insensitive, through the trigram operator class's LIKE
+-- support.
 CREATE INDEX search_index_names_trgm
     ON search_index USING gin (folded gin_trgm_ops)
     WHERE field <> 'title';
--- Titles: word-level full text, no stemming, last word as a prefix.
+-- Titles, display names and handles under plain text: word-level full
+-- text, no stemming, last word as a prefix.
 CREATE INDEX search_index_titles_fts
     ON search_index USING gin (words)
     WHERE field = 'title';
+CREATE INDEX search_index_display_names_fts
+    ON search_index USING gin (words)
+    WHERE field = 'display_name';
+CREATE INDEX search_index_handles_fts
+    ON search_index USING gin (words)
+    WHERE field = 'handle';
 CREATE INDEX search_index_author_recency
     ON search_index (author_id, created_at DESC)
     WHERE author_id IS NOT NULL;
@@ -1163,8 +1427,10 @@ three properties:
 Instances below: the seen-list (`user_view_log`), the hidden-actors
 list (`user_hidden_actors`, frontend-side "don't show me Bob's
 content" — see [feed-ranking.md §9.1](../primitive/feed-ranking.md#91-filtering-vs-ranking)),
-the chat-read pointer (`chat_read_state`), and bookmarks
-(`user_bookmarks`).
+the chat-read pointer (`chat_read_state`), bookmarks
+(`user_bookmarks`), and the notification list with its seen pointer
+(`user_notifications`, `user_notification_state` —
+[notifications.md](notifications.md)).
 
 ```sql
 -- View log: per-viewer record of which nodes and topics have been
@@ -1197,10 +1463,13 @@ The seen-list is append-only and never compacts
 -- for where the filter computes).
 CREATE TABLE user_hidden_actors (
     viewer_id   UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
-    hidden_id   UUID        NOT NULL REFERENCES actors(id),
+    hidden_id   UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
     hidden_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (viewer_id, hidden_id)
 );
+-- Most recently hidden first, keyset on (hidden_at, hidden_id).
+CREATE INDEX user_hidden_actors_recency_idx
+    ON user_hidden_actors (viewer_id, hidden_at DESC, hidden_id DESC);
 
 -- Chat read state: per-user, per-chat 'last read' pointer.
 -- ChatMessages are timestamp-ordered, so a single TIMESTAMPTZ marks
@@ -1218,16 +1487,58 @@ CREATE TABLE chat_read_state (
 -- User bookmarks: per-viewer "save this for later" list. Private
 -- state, never visible to other actors and never an input to the
 -- ranking math (see graph-model.md §3 — bookmarking is a frontend
--- event, not a stance). content_id can be any node UUID; no
--- discriminator is stored.
+-- event, not a stance). `kind` is read from the L2 registries at
+-- write time — posts, comments and people are saveable — and Saved's
+-- keyset on (bookmarked_at, content_id) routes through the index. An
+-- unsave deletes the row.
 CREATE TABLE user_bookmarks (
     user_id       UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
     content_id    UUID        NOT NULL,
     bookmarked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    kind          TEXT        NOT NULL
+                              CHECK (kind IN ('post', 'comment', 'user')),
     PRIMARY KEY (user_id, content_id)
 );
 CREATE INDEX user_bookmarks_recency_idx
-    ON user_bookmarks (user_id, bookmarked_at DESC);
+    ON user_bookmarks (user_id, bookmarked_at DESC, content_id DESC);
+
+-- Notification rows: per-viewer pointers at acts other actors made
+-- that reached the viewer's content, profile or application
+-- (notifications.md). Rebuildable from the record mirror and the
+-- application registry, never authoritative, kept without a bound.
+-- dedup_key makes every writer idempotent — one row per (viewer,
+-- act). created_at is when the act reached the viewer: the ingestion
+-- pass that observed its landing, or the account transition's
+-- commit, so the seen pointer compares like with like.
+CREATE TABLE user_notifications (
+    id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id        UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
+    kind           TEXT        NOT NULL CHECK (kind IN (
+                       'comment', 'reply', 'mention', 'citation', 'profile_opinion',
+                       'profile_opinion_withdrawn',
+                       'application_approvable', 'invite_landed',
+                       'application_approved', 'application_rejected')),
+    actor_id       UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
+    subject_id     UUID,        -- bare node ids, any class (user_bookmarks' rule)
+    context_id     UUID,
+    record_id      TEXT,        -- L1 id, verbatim; no FK: the mirror resets
+    application_id UUID        REFERENCES auth_applications(id) ON DELETE CASCADE,
+    dedup_key      TEXT        NOT NULL,
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    read_at        TIMESTAMPTZ,
+    CHECK (user_id <> actor_id)
+);
+CREATE UNIQUE INDEX user_notifications_one_per_act_idx
+    ON user_notifications (user_id, dedup_key);
+CREATE INDEX user_notifications_recency_idx
+    ON user_notifications (user_id, created_at DESC, id DESC);
+
+-- The seen pointer behind the bell: one row per viewer, moving
+-- forward only. A row is unseen while its created_at is past seen_at.
+CREATE TABLE user_notification_state (
+    user_id  UUID        PRIMARY KEY REFERENCES actors(id) ON DELETE CASCADE,
+    seen_at  TIMESTAMPTZ NOT NULL
+);
 ```
 
 ---
@@ -1658,6 +1969,15 @@ CREATE TABLE auth_rate_limits (
 -- each release adds a row; previous rows stay so past patch-note
 -- links remain resolvable.
 --
+-- Written only by the operator's release CLI (`api --bin release`,
+-- development.md "The release CLI"), and a component's row only once
+-- that component's artifact is live: the web build serving, the
+-- Android build available on its store track. A row is what tells a
+-- running client a newer version exists.
+--
+-- notes holds the release's notes, one entry per line in the order
+-- written; patch_notes_url is the release's public page.
+--
 -- released_by is an optional list of actor UUIDs the release credits
 -- (community contributors beyond what the upstream repo's commit
 -- history captures — e.g. designers, translators, testers). The
@@ -1668,7 +1988,9 @@ CREATE TABLE versions (
     component       TEXT        NOT NULL CHECK (component IN
                                 ('backend', 'ios', 'android', 'web')),
     version         TEXT        NOT NULL,
-    patch_notes_url TEXT,
+    notes           TEXT[]      NOT NULL
+                                CHECK (cardinality(notes) >= 1),
+    patch_notes_url TEXT        NOT NULL,
     released_by     UUID[],
     released_at     TIMESTAMPTZ NOT NULL,
     PRIMARY KEY (component, version)
@@ -1803,8 +2125,10 @@ Every user-scoped table (`auth_refresh_tokens`,
 `auth_account_deletions`, `auth_key_backups`,
 `auth_key_backup_challenges`, `auth_device_locks`, `user_view_log`,
 `user_hidden_actors`, `chat_read_state`, `user_bookmarks`,
+`user_notifications`, `user_notification_state`,
 `user_preferences`) carries
-`user_id REFERENCES actors(id) ON DELETE CASCADE`. That these
+`user_id REFERENCES actors(id) ON DELETE CASCADE` (`user_hidden_actors`
+names it `viewer_id`). That these
 rows exist only for user-kind actors is a service-layer fact
 (only a login mints them), not a constraint. Account deletion
 does **not** remove the `actors` row or its credentials — PII
@@ -1824,8 +2148,17 @@ operator running an explicit `DELETE` (e.g. emergency cleanup) a
 single command that takes the user's private state with them.
 
 Every other actor-reference column (`author_id` everywhere,
-`auth_invite_links.inviter_id`, `user_hidden_actors.hidden_id`)
-is likewise a real FK to `actors(id)` — see the next note.
+`auth_invite_links.inviter_id`) is likewise a real FK to
+`actors(id)` — see the next note. `user_hidden_actors.hidden_id`
+cascades: a reaped or applicant-deleted account no longer exists to
+hide, and a hide of it must not wedge the delete; a member's erasure
+keeps its `actors` row, so other readers' hides of a deleted account
+stand.
+`user_notifications.actor_id` cascades too: an applicant row is the
+actor of its approver's APPLICATION_APPROVABLE row, and a
+non-cascading FK would wedge the two whole-account deletes above. A
+member is erased in place, so rows naming it stand and read the
+deleted form.
 
 ### author_id — one foreign key, still a cache
 

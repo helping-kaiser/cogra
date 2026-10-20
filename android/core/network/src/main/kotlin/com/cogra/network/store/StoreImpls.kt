@@ -202,6 +202,23 @@ class IdentityStoreImpl @Inject constructor(
         return store.names(prefix).map { it.removePrefix(prefix) }.toSet()
     }
 
+    // No adoption: carried expectations arrived after multi-account custody,
+    // so no flat legacy record can exist. The slot name is no key material
+    // (`LockCustodyStoreImpl.isKeyMaterial`), so a lock locks it with the
+    // draft even when the key itself is purged as backed.
+    override suspend fun carriedExpectation(stagedWriteId: String): ByteArray? =
+        account()?.let { store.get(scoped(it, CARRIED_PREFIX + stagedWriteId)) }
+
+    override suspend fun saveCarriedExpectation(stagedWriteId: String, digest: ByteArray) {
+        val account = account() ?: return
+        store.put(scoped(account, CARRIED_PREFIX + stagedWriteId), digest)
+    }
+
+    override suspend fun clearCarriedExpectation(stagedWriteId: String) {
+        val account = account() ?: return
+        store.remove(scoped(account, CARRIED_PREFIX + stagedWriteId))
+    }
+
     override suspend fun stancePadTaught(): Boolean =
         key(STANCE_PAD_TAUGHT)?.let { store.get(it) } != null
 
@@ -254,14 +271,11 @@ class IdentityStoreImpl @Inject constructor(
         if (value) store.put(name, byteArrayOf(1)) else store.remove(name)
     }
 
-    override suspend fun purge() {
+    override suspend fun setKeyBacked(value: Boolean) {
         val account = account() ?: return
-        // The whole slot goes: every key of this account, no other's —
-        // one edit, never a loop of them (custody packet F3). The draft
-        // stays: this is the remote path's purge, and the custody packet
-        // owns what that path does with it.
-        val slot = scoped(account, "")
-        store.removeAll { it.startsWith(slot) }
+        // Read by the device lock by name (`LockCustodyStoreImpl.BACKED`).
+        val name = scoped(account, LockCustodyStoreImpl.BACKED)
+        if (value) store.put(name, byteArrayOf(1)) else store.remove(name)
     }
 
     override suspend fun purgeCustodySet() {
@@ -271,10 +285,14 @@ class IdentityStoreImpl @Inject constructor(
         // walk of the slot alone left it behind), together in one edit.
         // A staged post's sealed copy is the draft it was written from,
         // held until the write lands or expires (FC-G5) — it goes too.
+        // So does the account's seen record, ids and watermark in the one
+        // value: the server's view log survives, and a later remembered
+        // sign-in re-seeds from it.
         val slot = scoped(account, "")
         val draft = composeDraftKey(account)
         val sealed = composeSealedPrefix(account)
-        store.removeAll { it.startsWith(slot) || it == draft || it.startsWith(sealed) }
+        val seen = seenRecordKey(account)
+        store.removeAll { it.startsWith(slot) || it == draft || it.startsWith(sealed) || it == seen }
     }
 
     private companion object {
@@ -287,5 +305,6 @@ class IdentityStoreImpl @Inject constructor(
         const val FORGET = "forget_on_sign_out"
         const val ZERO: Byte = 0
         const val HS_PREFIX = "handshake:"
+        const val CARRIED_PREFIX = "carried:"
     }
 }

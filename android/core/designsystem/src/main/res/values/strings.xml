@@ -37,6 +37,9 @@
 
     <!-- The read shell's band (design.md §6). -->
     <string name="cogra_band_chats">Chats</string>
+    <!-- The bell's spoken names, quiet and lit (FeedUnread.md:13, :15). -->
+    <string name="cogra_band_bell">Notifications</string>
+    <string name="cogra_band_bell_lit">Notifications — something new</string>
 
     <!-- The house page header's back target (design.md §11). An icon never
          carries meaning alone: the label lives in the accessibility tree. -->
@@ -175,6 +178,20 @@
     <!-- The one-axis reading: the anchor's word, then the axis and the
          one number — `Nice, For or against +0.10`. -->
     <string name="valence_reading">%1$s, %2$s %3$s</string>
+    <!-- Exactly 0.00 on the one axis wears 🤷 and is spoken this
+         (copy-voice "The backing pad's own words", jakob 2026-10-16). -->
+    <string name="valence_zero">Nothing</string>
+    <!-- The one-axis pad's readouts (copy-voice "The backing pad's own
+         words", round 15): the pick is the record, Current backing the
+         bundle's net now, Backing after where the pick lands it. -->
+    <string name="backing_current">Current backing</string>
+    <string name="backing_pick">Your pick</string>
+    <string name="backing_after">Backing after</string>
+    <!-- The cap line under Backing after, when the raw sum passes ±1. -->
+    <string name="backing_capped">Adds up to %1$s; your feed reads it capped at %2$s.</string>
+    <!-- PLACEHOLDER, NOT DESIGN COPY: spoken for a backing the server does
+         not serve yet (the Publish bundle's net has no read; seam 233). -->
+    <string name="backing_unread">not read yet</string>
     <string name="stance_carries_nothing">This would carry nothing.</string>
     <string name="stance_carries_nothing_directed">Where you stand would carry nothing.</string>
     <string name="stance_carries_nothing_interest">What reaches you would carry nothing.</string>
@@ -311,4 +328,17 @@
          a spinner: motion clarifies where something came from and never
          performs. -->
     <string name="loading_state">Loading…</string>
+
+    <!-- The row line (RowSigning.md; `SigningPending`'s row form): the one
+         line a target's own row carries for what happened to a gesture made
+         on it. -->
+    <string name="row_line_signing">Signing…</string>
+    <string name="row_line_didnt_sign">That didn\'t sign.</string>
+    <string name="row_line_didnt_go_through">That didn\'t go through.</string>
+    <string name="row_line_retry">Retry</string>
+
+    <!-- A deleted account's row (`ActorChip.jsx` REDACTED_ACTOR_NAME). -->
+    <string name="content_row_deleted_account">Deleted account</string>
+    <!-- A row not yet opened (ContentRow.jsx `unread`). -->
+    <string name="content_row_new">New</string>
 </resources>

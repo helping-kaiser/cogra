@@ -52,6 +52,10 @@ const PATHS = {
   more_vert: [
     "M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z",
   ],
+  // The search field's leading glyph (`SearchBar.jsx`), on Saved's search.
+  search: [
+    "M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z",
+  ],
   // The comments affordance on a card. Filled, so it sits at the same weight as
   // the rest of the row.
   chat_bubble: ["M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"],
@@ -59,6 +63,20 @@ const PATHS = {
   // affordance the band carries on every tab root.
   forum: [
     "M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z",
+  ],
+  // The band's bell, right-most on every signed-in root (CograBand.jsx;
+  // design/assets/icons/notifications.svg).
+  notifications: [
+    "M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z",
+  ],
+  // The unset stance face wherever the muted 🫥 cannot read: over media, and
+  // the vouch card's face in the card's ink (Icon.jsx `sentiment_neutral`;
+  // stance-control.md, jakob 2026-10-14). Mouth, two eyes, ring.
+  sentiment_neutral: [
+    "M9 15.5h6v1H9v-1z",
+    "M15.5 8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 1 1 0-3z",
+    "M8.5 8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 1 1 0-3z",
+    "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z",
   ],
   // Handing a post to the OS share sheet.
   share: [

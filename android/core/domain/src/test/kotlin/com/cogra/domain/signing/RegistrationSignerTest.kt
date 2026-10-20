@@ -1,6 +1,7 @@
 package com.cogra.domain.signing
 
 import com.cogra.crypto.ActorKey
+import com.cogra.crypto.decodeProposal
 import com.cogra.domain.AccountState
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.ApplicationView
@@ -16,13 +17,13 @@ import com.cogra.domain.testing.TestHost
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingOnboardingRepository
 import com.cogra.domain.testing.ThrowingWriteRepository
-import com.cogra.domain.testing.testProposalBytes
+import com.cogra.domain.testing.testRegistrationBytes
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.test.runTest
+import org.junit.Test
 import java.io.IOException
 import java.time.Instant
 import java.util.Base64
-import kotlinx.coroutines.test.runTest
-import org.junit.Test
 
 /** The me-driven status, scripted: the test moves the server-side state. */
 private class FakeOnboarding : ThrowingOnboardingRepository() {
@@ -94,7 +95,7 @@ class RegistrationSignerTest {
     private val actor = ActorKey.generate()
     private val host = TestHost()
     private val onboarding = FakeOnboarding()
-    private val writes = RegistrationWrites(actor, host, testProposalBytes(actor, seq = 0u))
+    private val writes = RegistrationWrites(actor, host, testRegistrationBytes(actor))
     private val identity = FakeIdentityStore().apply { seed = actor.seed() }
     private val account = FakeAccount()
     private val ceremony = KeyCeremony(identity, onboarding, account)
@@ -158,7 +159,9 @@ class RegistrationSignerTest {
     @Test
     fun aMemberSignsTheBatchTheLandingReleased() = runTest {
         // The carried acts came back from the landing awaiting the
-        // pre-signature: the member pass signs them without a prompt.
+        // pre-signature: the member pass signs them without a prompt, against
+        // the digest kept at their prepare.
+        identity.saveCarriedExpectation("reg-1", carriedDigest(decodeProposal(writes.proposal)))
         onboarding.status = Outcome.Success(
             ApplicationStatus(
                 AccountState.MEMBER,
@@ -170,6 +173,23 @@ class RegistrationSignerTest {
         )
         assertThat(signer.advance()).isEqualTo(RegistrationProgress.Member)
         assertThat(writes.approvals).isEqualTo(1)
+    }
+
+    @Test
+    fun aMemberRefusesAReleasedBatchThisDeviceKeptNothingFor() = runTest {
+        // No family is exempt: with no expectation kept here, the pass signs
+        // nothing.
+        onboarding.status = Outcome.Success(
+            ApplicationStatus(
+                AccountState.MEMBER,
+                application(approved = true, landed = true),
+                null,
+                null,
+                carriedBatch = listOf(writes.stagedView(WriteState.AWAITING_PRE_SIGN)),
+            ),
+        )
+        assertThat(signer.advance()).isEqualTo(RegistrationProgress.Member)
+        assertThat(writes.approvals).isEqualTo(0)
     }
 
     @Test

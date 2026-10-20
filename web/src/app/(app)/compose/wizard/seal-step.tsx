@@ -9,13 +9,15 @@
 // author stands, sensitivity — are the settings a reader might still want to
 // change with the cost in front of them.
 //
-// THE STANCE IS ONE AXIS, AND IT IS A PAD RATHER THAN A SLIDER.
+// YOUR BACKING IS ONE AXIS (jakob 2026-10-16, PR-101).
 //
-// On a Publish record `pInterest` is census-fixed at 1 and only `pDirected` is
-// the author's to set — your own post always reaches you in full — so the
-// square would offer a choice that is not one. `ComposePad` draws the line
-// that is left: a 260×72 field with its own ends named, parked over a wash
-// rather than riding a drawer.
+// Publishing signs one record toward the post, a Publish, and the census gives
+// it one free parameter: the author's attachment — their BACKING — with
+// `pInterest` pinned at 1, never a choice, so never drawn as one. `ComposePad`
+// draws the master `AttachmentPad` strip, parked over a wash rather than
+// riding a drawer, the pick reading alone above it: with nothing standing yet
+// the pick is also the result. What the author thinks of the post is another
+// record — the ordinary opinion its face takes once it is out.
 
 import type { ReactNode } from "react";
 
@@ -27,13 +29,14 @@ import { CitedSheet } from "@/lib/ui2/compose/cited-sheet";
 import { ParkedPad } from "@/lib/ui2/compose/parked-pad";
 import { SensitiveSheet } from "@/lib/ui2/compose/sensitive-sheet";
 import { UploadStatusLine } from "@/lib/ui2/compose/upload-notice";
-import { ValenceField } from "@/lib/ui2/compose/valence-field";
-import { OwnPickBlock, OwnStanceReadout } from "@/lib/ui/own-stance-readout";
+import { AttachmentPad } from "@/lib/ui2/compose/attachment-pad";
+import { UnreachableConfirm } from "@/lib/ui2/compose/unreachable-confirm";
+import { AttachmentReadout, AttachmentStanding } from "@/lib/ui/attachment-readout";
 import { LicenseRows } from "@/lib/ui/license-rows";
 import { nearestAnchor } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
-import { licenseTerms, PUBLIC_DOMAIN, type License } from "@/lib/license";
+import { licenseReading, type License } from "@/lib/license";
 import type { ReferenceDraft } from "@/lib/references/draft";
 import type { WizardState } from "@/lib/compose/wizard";
 import { signedActions } from "@/lib/compose/wizard";
@@ -44,6 +47,7 @@ export function SealStep({
   state,
   sheet,
   stagedPDirected,
+  confirmingUnreachable,
   blocked,
   busy,
   keyOnDevice,
@@ -53,6 +57,8 @@ export function SealStep({
   onReferences,
   onStagedPDirected,
   onSetStance,
+  onKeepAdjusting,
+  onSetAnyway,
   onStanceHelp,
   onSensitive,
   onSensitiveReason,
@@ -68,6 +74,8 @@ export function SealStep({
   sheet: SealSheet;
   /** What the pad has under the finger — staged, not set, until Set. */
   stagedPDirected: number;
+  /** `Start it unreachable?` stands over the pad: Set was pressed at exactly 0.00. */
+  confirmingUnreachable: boolean;
   /** Why the seal is closed, or null when it is open. */
   blocked: string | null;
   busy: boolean;
@@ -83,7 +91,12 @@ export function SealStep({
    */
   onReferences: (next: readonly ReferenceDraft[]) => void;
   onStagedPDirected: (next: number) => void;
+  /** The pad's Set — the host asks first at exactly 0.00 (ComposePad.md). */
   onSetStance: () => void;
+  /** `Keep adjusting`: the question closes onto the pad at the same pick. */
+  onKeepAdjusting: () => void;
+  /** `Set it anyway`: 0.00 is set, and the question and the pad close. */
+  onSetAnyway: () => void;
   onStanceHelp: () => void;
   onSensitive: (next: boolean) => void;
   onSensitiveReason: (next: string) => void;
@@ -190,7 +203,7 @@ export function SealStep({
       <div className="flex flex-col">
         <TermRow
           label="License"
-          value={licenseSummary(state.license)}
+          value={licenseReading(state.license)}
           action="Change"
           testId="wizard-open-license"
           onAction={() => onSheet("license")}
@@ -202,11 +215,11 @@ export function SealStep({
         {keyOnDevice !== false && (
           <>
             <TermRow
-              label="Where you stand on it"
+              label="Your backing"
               // ONE NUMBER, not a pair: the second is census-fixed rather
               // than picked, and drawing it would show the author a figure
-              // nobody chose.
-              value={<OwnStanceReadout pDirected={state.pDirected} testId="wizard-stance-value" />}
+              // nobody chose (`_shared.jsx`'s seal, `AttachmentReadout`).
+              value={<AttachmentReadout pDirected={state.pDirected} testId="wizard-stance-value" />}
               action="Adjust"
               testId="wizard-open-stance"
               onAction={() => onSheet("stance")}
@@ -305,7 +318,7 @@ export function SealStep({
           <LicenseRows value={state.license} onChange={onLicense} testIdPrefix="wizard" />
           <div className="flex items-center gap-2 border-t border-outline-variant pt-2.5">
             <span className="flex-1 text-label-small text-on-surface-variant">
-              {licenseTerms(state.license).join(" ")}
+              {licenseReading(state.license)}
             </span>
             <PillButton testId="wizard-license-done" onClick={() => onSheet("none")}>
               Done
@@ -315,44 +328,50 @@ export function SealStep({
       </BottomSheet>
 
       {/* ComposePad. Cancel and the wash stage nothing; only Set moves the
-          stance the seal reads — which is why the pad works on its own staged
+          backing the seal reads — which is why the pad works on its own staged
           value rather than writing through on every drag. */}
       <ParkedPad
         open={sheet === "stance"}
         onClose={() => onSheet("none")}
-        ariaLabel="Your opinion on your post"
+        ariaLabel="Backing pad for your own post"
         standoff="compose"
         testId="wizard-stance-pad"
       >
-        {/* The `?` sits in the corner, out of the readout's reading order,
-            and the readout keeps clear of it (`ComposePad.jsx:49-57`). */}
-        <div className="relative">
-          <span className="absolute top-0 right-0">
-            <HelpDot
-              ariaLabel="Your opinion on your post"
-              onOpen={onStanceHelp}
-              testId="wizard-stance-help"
-            />
-          </span>
-          <OwnPickBlock pDirected={stagedPDirected} testId="wizard-stance-pick" />
+        {/* The `?` sits in the card's corner, 4px in, out of the readout's
+            reading order, and the readout keeps clear of it (`ComposePad.jsx`:
+            `top: 4, right: 4`, `paddingRight: 40`). The parked dialog is the
+            positioned box it is placed against. */}
+        <span className="absolute top-1 right-1">
+          <HelpDot
+            ariaLabel="Your backing on your post"
+            onOpen={onStanceHelp}
+            testId="wizard-stance-help"
+          />
+        </span>
+        <div className="pr-10">
+          <AttachmentStanding pick={stagedPDirected} testIdPrefix="wizard-stance" />
         </div>
-        <ValenceField
-          value={stagedPDirected}
-          onChange={onStagedPDirected}
-          testId="wizard-stance"
-        />
-        <p className="m-0 text-label-small text-on-surface-variant">
-          Your own post always reaches you in full.
-        </p>
+        <div role="group" aria-label="Backing pad for your own post" className="self-stretch">
+          <AttachmentPad value={stagedPDirected} onChange={onStagedPDirected} testId="wizard-stance-field" />
+        </div>
         <div className="flex justify-end gap-2">
-          <PillButton variant="text" testId="wizard-stance-cancel" onClick={() => onSheet("none")}>
+          {/* The board's compact pair (`ComposePad.jsx`: `size="sm"`). */}
+          <PillButton variant="text" size="sm" testId="wizard-stance-cancel" onClick={() => onSheet("none")}>
             Cancel
           </PillButton>
-          <PillButton testId="wizard-stance-set" onClick={onSetStance}>
+          <PillButton size="sm" testId="wizard-stance-set" onClick={onSetStance}>
             Set
           </PillButton>
         </div>
       </ParkedPad>
+
+      {/* Set at exactly 0.00 warns over the parked pad and never refuses. */}
+      <UnreachableConfirm
+        open={sheet === "stance" && confirmingUnreachable}
+        onKeepAdjusting={onKeepAdjusting}
+        onSetAnyway={onSetAnyway}
+        testId="wizard-unreachable"
+      />
 
       <SensitiveSheet
         open={sheet === "sensitive"}
@@ -500,14 +519,6 @@ function TermRow({
       </TextAction>
     </div>
   );
-}
-
-/** The licence in one line, the way the board writes it. */
-export function licenseSummary(license: License): string {
-  return license.attribution === PUBLIC_DOMAIN.attribution &&
-    license.provenance === PUBLIC_DOMAIN.provenance
-    ? "Public domain — your default"
-    : licenseTerms(license).join(" ");
 }
 
 /**

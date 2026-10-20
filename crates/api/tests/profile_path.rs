@@ -359,10 +359,10 @@ async fn the_text_fields_are_capped_at_their_own_lengths(pool: PgPool) {
 }
 
 /// Only one update may be in flight per profile, so a second prepare is
-/// refused while the first is unlanded. Landing the first frees the chain
-/// for the next.
+/// refused while the first is signed and unlanded. Landing the first frees
+/// the chain for the next.
 ///
-/// One update at a time per profile: a second prepare is refused while the first is unlanded, and landing the first frees the chain.
+/// One update at a time per profile: a second prepare is refused while the first is signed and unlanded, and landing the first frees the chain.
 /// ´claim:profile:updates-are-serialized-per-profile´
 #[sqlx::test(migrations = "../../migrations")]
 async fn refuses_a_second_in_flight_update(pool: PgPool) {
@@ -372,15 +372,63 @@ async fn refuses_a_second_in_flight_update(pool: PgPool) {
         .update(actor, draft(None, Some("bio"), None))
         .await
         .expect("prepares");
+    rig.sign_and_relay(first.id, &key).await;
     match rig.update(actor, draft(None, Some("again"), None)).await {
         Err(ProfileError::BadInput { field, .. }) => assert_eq!(field, "input"),
         other => panic!("expected BadInput, got {other:?}"),
     }
-    rig.sign_and_relay(first.id, &key).await;
     rig.close_and_ingest().await;
     rig.update(actor, draft(None, Some("again"), None))
         .await
         .expect("prepares after landing");
+}
+
+/// A prepared update nobody signed — the device refused it, or the
+/// response never arrived — is superseded by the next prepare rather than
+/// holding the profile until GC, and can no longer be signed, so the chain
+/// still never branches. The successor lands as any update does.
+///
+/// An unsigned prepared update is superseded by the next prepare and can no longer be signed, so the next update lands without waiting for GC.
+/// ´claim:profile:an-unsigned-update-is-superseded´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_unsigned_update_is_superseded_by_the_next(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.registered_actor("ada").await;
+    let abandoned = rig
+        .update(actor, draft(None, Some(""), Some("")))
+        .await
+        .expect("prepares");
+    let next = rig
+        .update(actor, draft(None, Some("Curious."), None))
+        .await
+        .expect("an unsigned update holds nothing");
+    assert_eq!(
+        next.proposal.body.asserted_parents, abandoned.proposal.body.asserted_parents,
+        "the successor chains behind the same head"
+    );
+    let write = staged::load(&rig.pool, abandoned.id).await.expect("loads");
+    assert_eq!(write.state, staged::StagedState::Expired);
+    let pre = key.pre_sign(write.proposal);
+    let refused = api::relay::submit_pre_signed(
+        &rig.boundary,
+        &rig.pool,
+        abandoned.id,
+        PreSignedParts {
+            author_pubkey: pre.author_pubkey.clone(),
+            nonce: pre.nonce.clone(),
+            pre_signature: pre.pre_signature.clone(),
+        },
+    )
+    .await;
+    assert!(refused.is_err(), "a superseded update can never be signed");
+
+    rig.sign_and_relay(next.id, &key).await;
+    rig.close_and_ingest().await;
+    let current = profile_store::current_profile(&rig.pool, actor)
+        .await
+        .expect("reads")
+        .expect("has profile");
+    assert_eq!(current.bio.as_deref(), Some("Curious."));
 }
 
 /// An update needs the anchoring Registration to chain behind.
@@ -490,6 +538,30 @@ mod pictures {
             None,
             "an explicit clear takes the avatar back to the monogram"
         );
+    }
+
+    /// The avatar slot is a manifest entry like any gallery's, so it rides
+    /// with both digests: the rendition it serves and the bytes the device
+    /// uploaded, equal for a still stored as it arrived.
+    ///
+    /// The avatar slot carries both the rendition digest and the upload digest.
+    /// ´claim:profile:the-avatar-slot-carries-both-digests´
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn the_avatar_slot_carries_both_digests(pool: PgPool) {
+        let rig = Rig::new(pool).await;
+        let (actor, _key) = rig.registered_actor("ada").await;
+        let face = asset(&rig.pool, actor, 5).await;
+        let prepared = rig
+            .update(actor, with_picture(Some(Some(face))))
+            .await
+            .expect("prepares update");
+        let update = common::envelope::CograProfile::decode_payload(&prepared.proposal.payload)
+            .expect("decodes");
+        let Some(Some(avatar)) = update.avatar else {
+            panic!("the slot is set");
+        };
+        assert_eq!(avatar.digest, [5; 32]);
+        assert_eq!(avatar.upload_digest, Some([5; 32]));
     }
 
     /// The anti-hijack rule reaches a profile picture too: an avatar must

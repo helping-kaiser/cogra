@@ -26,9 +26,11 @@ import {
   prepareProfileUpdate,
   type MediaSelection,
 } from "@/lib/api/profile-api";
-import { uploadMedia } from "@/lib/api/media-api";
+import { echoes, uploadDigestOf, uploadMedia } from "@/lib/api/media-api";
 import { firstRefusalMessage, mediaRefusalMessage } from "@/lib/ui/error-messages";
+import { profileExpectation, type MediaLedger } from "@/lib/compose/payload-expectation";
 import { TOO_BIG_PICTURE } from "@/lib/compose/pick";
+import { ECHO_MISMATCH } from "@/lib/compose/uploads";
 import { pictureTooBig } from "@/lib/ui2/media/caps";
 import { encodeForUpload } from "@/lib/ui2/media/encode-image";
 import {
@@ -41,6 +43,7 @@ import {
 } from "@/lib/profile/caps";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useAuthPhase } from "@/lib/session/provider";
+import { expectation, profileUpdate } from "@/lib/signing/intent";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
 import { PageHeader } from "@/lib/ui/page-header";
@@ -70,6 +73,8 @@ export default function ProfileEditPage() {
   const [signIncomplete, setSignIncomplete] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatar, setAvatar] = useState<ProfileMediaChoice>(UNCHANGED);
+  // The account's own id: the node a profile payload binds to.
+  const [profileNode, setProfileNode] = useState<string | null>(null);
 
   useEffect(() => {
     if (phase === "signedOut") router.replace("/login");
@@ -84,6 +89,7 @@ export default function ProfileEditPage() {
         if (cancelled) return;
         setLoading(false);
         if (outcome.kind === "success" && outcome.value !== null) {
+          setProfileNode(outcome.value.id);
           setDisplayName(outcome.value.displayName.value ?? "");
           setBio(outcome.value.bio.value ?? "");
           setWebsiteUrl(outcome.value.websiteUrl.value ?? "");
@@ -109,24 +115,47 @@ export default function ProfileEditPage() {
   const resolve = async (
     choice: ProfileMediaChoice,
     ratio: number,
-  ): Promise<{ selection: MediaSelection; error?: string }> => {
-    if (choice.kind === "unchanged") return { selection: "unchanged" };
-    if (choice.kind === "cleared") return { selection: { clear: true } };
+  ): Promise<{ selection: MediaSelection; ledger: MediaLedger; error?: string }> => {
+    const none: MediaLedger = new Map();
+    if (choice.kind === "unchanged") return { selection: "unchanged", ledger: none };
+    if (choice.kind === "cleared") return { selection: { clear: true }, ledger: none };
     let encoded;
+    let uploadDigest: string;
     try {
       encoded = await encodeForUpload(choice.file, { ratio, crop: choice.crop });
+      uploadDigest = await uploadDigestOf(encoded.blob);
     } catch {
-      return { selection: "unchanged", error: "This browser couldn't read that picture." };
+      return {
+        selection: "unchanged",
+        ledger: none,
+        error: "This browser couldn't read that picture.",
+      };
     }
     // HT-19: an avatar is a picture and takes the picture cap, in the composer's
     // own words and at the same moment — on the encoded bytes, before they go.
     if (pictureTooBig(encoded.blob)) {
-      return { selection: "unchanged", error: TOO_BIG_PICTURE };
+      return { selection: "unchanged", ledger: none, error: TOO_BIG_PICTURE };
     }
     const result = await guard.run(() => uploadMedia(client, { blob: encoded.blob }));
-    if (result.kind === "success") return { selection: { mediaId: result.value.id } };
+    if (result.kind === "success") {
+      // The echo first: an avatar whose recorded bytes are not the ones sent
+      // is never named (uploads.ts).
+      if (!echoes(result.value, uploadDigest)) {
+        return { selection: "unchanged", ledger: none, error: ECHO_MISMATCH };
+      }
+      return {
+        selection: { mediaId: result.value.id },
+        ledger: new Map([
+          [
+            result.value.id,
+            { digest: result.value.digest, uploadDigest, mime: result.value.mimeType },
+          ],
+        ]),
+      };
+    }
     return {
       selection: "unchanged",
+      ledger: none,
       error:
         result.kind === "refused"
           ? (result.errors[0] === undefined
@@ -155,14 +184,13 @@ export default function ProfileEditPage() {
       return;
     }
 
-    const prepared = await guard.run(() =>
-      prepareProfileUpdate(client, {
-        displayName: displayName.trim(),
-        bio: bio.trim() === "" ? null : bio,
-        websiteUrl: websiteUrl.trim() === "" ? null : websiteUrl.trim(),
-        avatar: uploaded[0].selection,
-      }),
-    );
+    const sent = {
+      displayName: displayName.trim(),
+      bio: bio.trim() === "" ? null : bio,
+      websiteUrl: websiteUrl.trim() === "" ? null : websiteUrl.trim(),
+      avatar: uploaded[0].selection,
+    };
+    const prepared = await guard.run(() => prepareProfileUpdate(client, sent));
     if (prepared.kind === "refused") {
       setSubmitting(false);
       setRefusedMessage(firstRefusalMessage(prepared.errors, "The server refused this update."));
@@ -173,7 +201,13 @@ export default function ProfileEditPage() {
       setTransportFailed(true);
       return;
     }
-    const results = await signer.sign(prepared.value);
+    // One profile update on this device's own profile, its payload held to
+    // the fields this form sent and the avatar this device uploaded
+    // (payload-expectation.ts). The profile's own id was read with the form;
+    // without it there is nothing to bind the payload to, and the batch is
+    // refused rather than signed.
+    const profile = profileExpectation(profileNode ?? "", sent, uploaded[0].ledger);
+    const results = await signer.sign(prepared.value, expectation([profileUpdate(profile)]));
     setSubmitting(false);
     if (results.every((result) => result.kind === "done")) {
       router.push("/profile");

@@ -141,6 +141,12 @@ internal fun PostBody(
      * drawn on a registered board, so they keep theirs.
      */
     node: DataNode? = null,
+    /**
+     * Where [collapsed] folds the words: a post's text body at its drawn
+     * ceiling, a comment card's at two lines under `More`
+     * (FeedCommentShapes.md, the caption's precedent).
+     */
+    wordsClampLines: Int = TEXT_BODY_CLAMP_LINES,
 ) {
     if (isRemoved(content, attachments, attachmentsStatus)) {
         RemovedPlaceholder(
@@ -172,7 +178,7 @@ internal fun PostBody(
                 }
             }
             val caption: @Composable () -> Unit = {
-                Caption(words, description?.value, collapsed, testTagPrefix, node)
+                Caption(words, description?.value, collapsed, testTagPrefix, node, wordsClampLines)
             }
 
             // A post leads with its pictures; a comment leads with its
@@ -229,6 +235,7 @@ private fun Caption(
     collapsed: Boolean,
     testTagPrefix: String,
     node: DataNode?,
+    wordsClampLines: Int,
 ) {
     // What the clamp hid, remembered from the reading that hid it: once
     // the opener has unfolded the text nothing overflows any more, so a
@@ -241,7 +248,7 @@ private fun Caption(
         ClampedText(
             text = it,
             color = MaterialTheme.colorScheme.onSurface,
-            maxLines = if (clamping) TEXT_BODY_CLAMP_LINES else Int.MAX_VALUE,
+            maxLines = if (clamping) wordsClampLines else Int.MAX_VALUE,
             onOverflow = { folded = true },
             testTag = node?.div("body")?.tag ?: "${testTagPrefix}_words",
         )

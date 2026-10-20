@@ -7,6 +7,7 @@ package com.cogra.network
 
 import com.apollographql.apollo.ApolloClient
 import com.cogra.domain.AttachmentClaim
+import com.cogra.domain.DEFAULT_STANCE
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.Landing
@@ -14,7 +15,7 @@ import com.cogra.domain.LicenseChoice
 import com.cogra.domain.ModerationState
 import com.cogra.domain.Outcome
 import com.cogra.domain.identity.EndLocalSession
-import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.topics.TagClaim
 import com.cogra.network.auth.AuthGuard
@@ -56,7 +57,7 @@ class ContentRepositoryTest {
         client,
         AuthGuard(
             tokenStore,
-            SessionRefresher(tokenStore, EndLocalSession(FakeIdentityStore(), tokenStore), Provider { client }),
+            SessionRefresher(tokenStore, EndLocalSession(FakeLockCustodyStore(), tokenStore), Provider { client }),
         ),
     )
 
@@ -128,16 +129,24 @@ class ContentRepositoryTest {
         """.trimIndent()
     } ?: "null"
 
+    /**
+     * The detail read's answer around one post node. The fragment-mapping
+     * tests ride it: `PostFields` maps the same way on every read that
+     * selects it, and the chronological `Posts` listing is retired (the
+     * feed reads the ranked window). The node's `commentCount` alias is a
+     * key the detail does not select, so the parser skips it.
+     */
+    private fun detailOf(node: String, commentCount: Int = 0) =
+        """{"data":{"post":${node.trimEnd().dropLast(1)},
+           "comments":{"__typename":"CommentConnection","totalCount":$commentCount,"edges":[],
+             "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}}"""
+
+    private suspend fun readPost() = requireNotNull((repo().post("p1", 20, null) as Outcome.Success).value).post
+
     @Test
-    fun theListingMapsPostsAndPageInfo() = runTest {
-        enqueue(
-            """{"data":{"posts":{"__typename":"PostConnection",
-               "edges":[{"__typename":"PostEdge","node":${postJson("p1", "Hello", commentCount = 3)}}],
-               "pageInfo":{"__typename":"PageInfo","hasNextPage":true,"endCursor":"c1"}}}}""",
-        )
-        val page = (repo().posts(20, null) as Outcome.Success).value
-        assertThat(page.items).hasSize(1)
-        val post = page.items.single()
+    fun thePostFieldsMapOntoTheView() = runTest {
+        enqueue(detailOf(postJson("p1", "Hello"), commentCount = 3))
+        val post = readPost()
         assertThat(post.id).isEqualTo("p1")
         // The thread's whole size, not the page's — what the card's
         // comment affordance states.
@@ -147,49 +156,21 @@ class ContentRepositoryTest {
         assertThat(post.license).isEqualTo(LicenseChoice(attribution = 0.5, provenance = 1.0))
         assertThat(post.landing).isEqualTo(Landing.landed(7))
         assertThat(post.landing.isPending).isFalse()
-        assertThat(page.hasNextPage).isTrue()
-        assertThat(page.endCursor).isEqualTo("c1")
     }
 
     @Test
     fun aVerdictOnANodeSurvivesTheMappingRatherThanBeingDropped() = runTest {
         // Whether a removal was the author's or a passed proposal's is
         // only readable off this field; dropping it collapses the two.
-        enqueue(
-            """{"data":{"posts":{"__typename":"PostConnection",
-               "edges":[{"__typename":"PostEdge","node":${
-                postJson("p1", "Hello", redacted = true, moderationStatus = "ILLEGAL")
-            }}],
-               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
-        )
-        val post = (repo().posts(20, null) as Outcome.Success).value.items.single()
+        enqueue(detailOf(postJson("p1", "Hello", redacted = true, moderationStatus = "ILLEGAL")))
+        val post = readPost()
         assertThat(post.moderation).isEqualTo(ModerationState.ILLEGAL)
     }
 
     @Test
-    fun theListingCarriesTheLandedOnlyOptOut() = runTest {
-        val body = """{"data":{"posts":{"__typename":"PostConnection",
-               "edges":[{"__typename":"PostEdge","node":${postJson("p1", "Hello")}}],
-               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}"""
-        enqueue(body)
-        repo().posts(20, null)
-        assertThat(server.takeRequest().body.readUtf8()).contains("\"includePending\":true")
-
-        enqueue(body)
-        repo().posts(20, null, includePending = false)
-        assertThat(server.takeRequest().body.readUtf8()).contains("\"includePending\":false")
-    }
-
-    @Test
     fun aPendingNodeCarriesNoEpoch() = runTest {
-        enqueue(
-            """{"data":{"posts":{"__typename":"PostConnection",
-               "edges":[{"__typename":"PostEdge","node":${
-                postJson("p1", "Hello", landing = landingJson("PENDING", null))
-            }}],
-               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
-        )
-        val post = (repo().posts(20, null) as Outcome.Success).value.items.single()
+        enqueue(detailOf(postJson("p1", "Hello", landing = landingJson("PENDING", null))))
+        val post = readPost()
         assertThat(post.landing).isEqualTo(Landing.Pending)
         assertThat(post.landing.isPending).isTrue()
         assertThat(post.landing.epoch).isNull()
@@ -197,12 +178,8 @@ class ContentRepositoryTest {
 
     @Test
     fun aRedactedFieldKeepsItsMark() = runTest {
-        enqueue(
-            """{"data":{"posts":{"__typename":"PostConnection",
-               "edges":[{"__typename":"PostEdge","node":${postJson("p1", null, redacted = true)}}],
-               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
-        )
-        val post = (repo().posts(20, null) as Outcome.Success).value.items.single()
+        enqueue(detailOf(postJson("p1", null, redacted = true)))
+        val post = readPost()
         assertThat(post.content.value).isNull()
         assertThat(post.content.status).isEqualTo(FieldStatus.REDACTED)
     }
@@ -273,17 +250,15 @@ class ContentRepositoryTest {
     @Test
     fun aGalleryMapsInOrderWithItsStateAndReservedShape() = runTest {
         enqueue(
-            """{"data":{"posts":{"__typename":"PostConnection",
-               "edges":[{"__typename":"PostEdge","node":${
+            detailOf(
                 postJson(
                     "p1",
                     "Salt maps",
                     attachments = "[${mediaJson("m1")},${mediaJson("m2", altText = null, aspectRatio = "16:9")}]",
-                )
-            }}],
-               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
+                ),
+            ),
         )
-        val post = (repo().posts(20, null) as Outcome.Success).value.items.single()
+        val post = readPost()
         assertThat(post.attachments.map { it.id }).containsExactly("m1", "m2").inOrder()
         assertThat(post.attachmentsStatus).isEqualTo(FieldStatus.NORMAL)
         assertThat(post.isMediaPost).isTrue()
@@ -300,8 +275,7 @@ class ContentRepositoryTest {
     @Test
     fun aVideoCarriesItsRunningTimeAndTheStillThatCoversIt() = runTest {
         enqueue(
-            """{"data":{"posts":{"__typename":"PostConnection",
-               "edges":[{"__typename":"PostEdge","node":${
+            detailOf(
                 postJson(
                     "p1",
                     "Low tide",
@@ -314,12 +288,10 @@ class ContentRepositoryTest {
                             coverId = "c1",
                         )
                     }]",
-                )
-            }}],
-               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
+                ),
+            ),
         )
-        val asset = (repo().posts(20, null) as Outcome.Success).value.items
-            .single().attachments.single()
+        val asset = readPost().attachments.single()
 
         assertThat(asset.isVideo).isTrue()
         assertThat(asset.durationMs).isEqualTo(42_000)
@@ -334,8 +306,7 @@ class ContentRepositoryTest {
     @Test
     fun aCoverRedactedOnItsOwnSaysSoWithoutTouchingTheVideo() = runTest {
         enqueue(
-            """{"data":{"posts":{"__typename":"PostConnection",
-               "edges":[{"__typename":"PostEdge","node":${
+            detailOf(
                 postJson(
                     "p1",
                     "Low tide",
@@ -348,12 +319,10 @@ class ContentRepositoryTest {
                             coverStatus = "REDACTED",
                         )
                     }]",
-                )
-            }}],
-               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
+                ),
+            ),
         )
-        val asset = (repo().posts(20, null) as Outcome.Success).value.items
-            .single().attachments.single()
+        val asset = readPost().attachments.single()
 
         // The poster answers with its own status; the clip it covers was
         // not removed and must not read as if it were.
@@ -364,14 +333,11 @@ class ContentRepositoryTest {
     @Test
     fun aStillIsNotAVideo() = runTest {
         enqueue(
-            """{"data":{"posts":{"__typename":"PostConnection",
-               "edges":[{"__typename":"PostEdge","node":${
-                postJson("p1", null, attachments = "[${mediaJson()}]")
-            }}],
-               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
+            detailOf(
+                postJson("p1", null, attachments = "[${mediaJson()}]"),
+            ),
         )
-        val asset = (repo().posts(20, null) as Outcome.Success).value.items
-            .single().attachments.single()
+        val asset = readPost().attachments.single()
 
         assertThat(asset.isVideo).isFalse()
         assertThat(asset.durationMs).isNull()
@@ -381,13 +347,11 @@ class ContentRepositoryTest {
     @Test
     fun anUnparsableRatioReservesASquareRatherThanCollapsing() = runTest {
         enqueue(
-            """{"data":{"posts":{"__typename":"PostConnection",
-               "edges":[{"__typename":"PostEdge","node":${
-                postJson("p1", null, attachments = "[${mediaJson(aspectRatio = null)}]")
-            }}],
-               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
+            detailOf(
+                postJson("p1", null, attachments = "[${mediaJson(aspectRatio = null)}]"),
+            ),
         )
-        val post = (repo().posts(20, null) as Outcome.Success).value.items.single()
+        val post = readPost()
         // The field exists to hold the tile open before the load; a
         // zero would collapse exactly what it is there to reserve.
         assertThat(post.attachments.single().aspectRatio).isEqualTo(1f)
@@ -396,17 +360,15 @@ class ContentRepositoryTest {
     @Test
     fun aRedactedAssetKeepsItsMark() = runTest {
         enqueue(
-            """{"data":{"posts":{"__typename":"PostConnection",
-               "edges":[{"__typename":"PostEdge","node":${
+            detailOf(
                 postJson(
                     "p1",
                     null,
                     attachments = "[${mediaJson(altText = null, status = "REDACTED")}]",
-                )
-            }}],
-               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
+                ),
+            ),
         )
-        val post = (repo().posts(20, null) as Outcome.Success).value.items.single()
+        val post = readPost()
         assertThat(post.attachments.single().status).isEqualTo(FieldStatus.REDACTED)
     }
 
@@ -416,11 +378,12 @@ class ContentRepositoryTest {
             """{"data":{"preparePost":{"__typename":"PrepareContentPayload",
                "node":"node-1",
                "writes":[{"__typename":"PreparedWrite","id":"w1","family":"PUBLISH",
-                          "canonicalProposal":"AAECAw==","gcAfterEpochs":8}],
+                          "canonicalProposal":"AAECAw==","gcAfterEpochs":8,"carried":false}],
                "userErrors":[]}}}""",
         )
         val license = LicenseChoice(attribution = 1.0, provenance = 0.0)
-        val prepared = (repo().preparePost("T", null, "B", license) as Outcome.Success).value
+        val first = repo().preparePost("T", null, "B", license, pDirected = DEFAULT_STANCE)
+        val prepared = (first as Outcome.Success).value
         assertThat(prepared.node).isEqualTo("node-1")
         assertThat(prepared.writes.single().id).isEqualTo("w1")
         assertThat(prepared.writes.single().canonicalProposal).isEqualTo(byteArrayOf(0, 1, 2, 3))
@@ -431,8 +394,22 @@ class ContentRepositoryTest {
                "userErrors":[{"__typename":"UserError","message":"not a member",
                               "code":"FORBIDDEN","field":null}]}}}""",
         )
-        val refused = repo().preparePost("T", null, "B", license)
+        val refused = repo().preparePost("T", null, "B", license, pDirected = DEFAULT_STANCE)
         assertThat((refused as Outcome.Refused).errors.single().code).isEqualTo(ErrorCode.FORBIDDEN)
+    }
+
+    @Test
+    fun anApplicantsCarriedPostComesBackCarriedForTheSignerToKeep() = runTest {
+        enqueue(
+            """{"data":{"preparePost":{"__typename":"PrepareContentPayload",
+               "node":"node-1",
+               "writes":[{"__typename":"PreparedWrite","id":"w1","family":"PUBLISH",
+                          "canonicalProposal":"AAECAw==","gcAfterEpochs":8,"carried":true}],
+               "userErrors":[]}}}""",
+        )
+        val license = LicenseChoice(attribution = 1.0, provenance = 0.0)
+        val prepared = repo().preparePost("T", null, "B", license, pDirected = DEFAULT_STANCE)
+        assertThat((prepared as Outcome.Success).value.writes.single().carried).isTrue()
     }
 
     @Test
@@ -461,6 +438,32 @@ class ContentRepositoryTest {
         // absent one is an empty one on the wire, so a words post says
         // what it means instead of relying on the server's default.
         assertThat(body).contains("\"attachments\":[]")
+        // The pick rides explicitly even unmoved: the record carries 0, as
+        // the edit pad shows it (EditCompose.md; #249's field).
+        assertThat(body).contains("\"pDirected\":0.0")
+    }
+
+    /** PICK-IS-THE-EDGE (seam 233): the record's own value travels, never a delta toward a target. */
+    @Test
+    fun anEditCarriesTheAuthorsBackingPick() = runTest {
+        enqueue(
+            """{"data":{"preparePostEdit":{"__typename":"PrepareContentPayload",
+               "node":"p1",
+               "writes":[{"__typename":"PreparedWrite","id":"w1","family":"PUBLISH",
+                          "canonicalProposal":"AA==","gcAfterEpochs":8}],
+               "userErrors":[]}}}""",
+        )
+        repo().preparePostEdit(
+            "p1",
+            title = null,
+            description = null,
+            content = "B",
+            attachments = emptyList(),
+            pDirected = -0.4,
+        )
+        val body = server.takeRequest().body.readUtf8()
+        assertThat(body).contains("\"pDirected\":-0.4")
+        assertThat(body).doesNotContain("pInterest")
     }
 
     /**
@@ -598,8 +601,8 @@ class ContentRepositoryTest {
 
     /**
      * A comment declares its topics on the creation input, the way a
-     * post does (F9), and both parameters ride explicitly so an
-     * untouched slider says what omitting it would.
+     * post does (F9), and both parameters ride explicitly — the wire
+     * requires them — so an untouched slider sends the pre-fill it shows.
      */
     @Test
     fun aCommentCarriesItsDeclaredTopicsOnTheWire() = runTest {
@@ -616,6 +619,8 @@ class ContentRepositoryTest {
             target = "p1",
             content = "Nice",
             license = LicenseChoice.PublicDomain,
+            pDirected = DEFAULT_STANCE,
+            pInterest = DEFAULT_STANCE,
             tags = listOf(TagClaim("rust", relevance = 0.4, confidence = 0.9)),
         )
         val body = server.takeRequest().body.readUtf8()
@@ -637,7 +642,13 @@ class ContentRepositoryTest {
                           "canonicalProposal":"AA==","gcAfterEpochs":8}],
                "userErrors":[]}}}""",
         )
-        repo().prepareComment("p1", "Nice", LicenseChoice.PublicDomain)
+        repo().prepareComment(
+            "p1",
+            "Nice",
+            LicenseChoice.PublicDomain,
+            pDirected = DEFAULT_STANCE,
+            pInterest = DEFAULT_STANCE,
+        )
         assertThat(server.takeRequest().body.readUtf8()).doesNotContain("\"tags\"")
     }
 
@@ -655,6 +666,8 @@ class ContentRepositoryTest {
             target = "p1",
             content = "Nice",
             license = LicenseChoice.PublicDomain,
+            pDirected = DEFAULT_STANCE,
+            pInterest = DEFAULT_STANCE,
             tags = listOf(TagClaim("x y")),
         )
         val error = (refused as Outcome.Refused).errors.single()
@@ -682,6 +695,8 @@ class ContentRepositoryTest {
             target = "p1",
             content = "Two from the sea wall",
             license = LicenseChoice.PublicDomain,
+            pDirected = DEFAULT_STANCE,
+            pInterest = DEFAULT_STANCE,
             attachments = listOf(AttachmentClaim("m1"), AttachmentClaim("m2")),
         )
 

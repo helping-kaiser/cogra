@@ -177,6 +177,7 @@ describe("prepareStance", () => {
                   id: "w1",
                   family: "OPINION",
                   canonicalProposal: "cHJvcG9zYWw=",
+                  carried: false,
                 },
               ],
               userErrors: [],
@@ -198,6 +199,32 @@ describe("prepareStance", () => {
         },
       ],
     });
+  });
+
+  it("an applicant's carried stance comes back CARRIED, for the signer to keep rather than sign", async () => {
+    server.use(
+      gqlLink.mutation("PrepareStance", () =>
+        HttpResponse.json({
+          data: {
+            prepareStance: {
+              __typename: "PreparePayload",
+              writes: [
+                {
+                  __typename: "PreparedWrite",
+                  id: "w1",
+                  family: "OPINION",
+                  canonicalProposal: "cHJvcG9zYWw=",
+                  carried: true,
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+    );
+    const outcome = await prepareStance(client(), { target: "u0" }, 0.1, 0.1);
+    expect(outcome.kind === "success" && outcome.value.map((w) => w.state)).toEqual(["CARRIED"]);
   });
 
   it("surfaces a write-rule refusal", async () => {

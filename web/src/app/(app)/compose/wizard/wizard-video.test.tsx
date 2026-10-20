@@ -69,6 +69,7 @@ function fakeDrafts(initial: WizardState | null = null): ComposeDraftStore {
     clear: async () => {
       held = null;
     },
+    abandonPendingSaves: () => undefined,
   };
 }
 
@@ -374,7 +375,11 @@ describe("picking a video", () => {
       screen.getByText("A video is the whole post. Its cover comes next."),
     ).toBeInTheDocument();
     expect(screen.queryByTestId("wizard-show-all")).toBeNull();
-    expect(screen.queryByText("The first one is the cover.")).toBeNull();
+    // The tray's picture caption, not the closed Show-all sheet's footnote,
+    // which since the K13 round reads the same words.
+    expect(
+      screen.queryByText("The first one is the cover.", { selector: "span" }),
+    ).toBeNull();
   });
 
   // CW-08 (ComposePickVideo.jsx:57): the tray's own remove control names what

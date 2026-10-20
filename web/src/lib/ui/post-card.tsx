@@ -42,7 +42,7 @@ import type { License } from "@/lib/license";
 import { useActiveAccountId } from "@/lib/session/provider";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
 import { RemovedPlaceholder } from "@/lib/ui2/media/removed-placeholder";
-import { OverflowMenu } from "@/lib/ui2/overflow-menu";
+import { OverflowMenu, OverflowTrigger } from "@/lib/ui2/overflow-menu";
 import { postMenuItems } from "@/lib/ui2/post-menu";
 import { RefsSheet } from "@/lib/ui2/refs-sheet";
 import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
@@ -52,6 +52,10 @@ import { part, testAttributes, type DataNode } from "./data-node";
 import { Icon } from "./icons";
 import { useNarrowShare } from "./narrow-share";
 import { PendingMarker } from "./pending-marker";
+import { RowLine } from "./row-line";
+import { useComfortLine } from "@/lib/saved/comfort-line";
+import { useSavedWrites } from "@/lib/saved/provider";
+import { saveRow, type Notify } from "@/lib/saved/save-row";
 import {
   BodyRegion,
   PostMedia,
@@ -153,6 +157,7 @@ export function PostCard({
   post,
   variant = "summary",
   href,
+  shareHref = href,
   testId,
   authorTestId,
   stanceTestId,
@@ -164,9 +169,26 @@ export function PostCard({
   onOpenCitedBy,
   mediaAbove = false,
   onOpenMedia,
+  onOpenMenu,
+  menuOpen = false,
   node,
+  onNotify,
 }: {
   post: PostView;
+  /**
+   * The host's snackbar, for the card's own menu (`Saved.`, `Removed from
+   * Saved.` with `Undo`). A surface hosting the menu itself never needs it.
+   */
+  onNotify?: Notify;
+  /**
+   * THE SURFACE HOSTS THE MENU (ruling 84; `PostMenuHost`): the card draws its
+   * ⋮ and the tap asks the host to raise the one sheet it keeps for every
+   * card, instead of the card keeping a sheet of its own. Absent, the card is
+   * its own menu's host.
+   */
+  onOpenMenu?: () => void;
+  /** The host's sheet is up for this card — what the hosted ⋮ says it is. */
+  menuOpen?: boolean;
   /**
    * The registered card node on a registered screen (`feed.card`,
    * `postDetail.card`), keyed by the post's id. The card's drawn parts then
@@ -179,6 +201,11 @@ export function PostCard({
   variant?: "summary" | "detail";
   /** The post's own route — the summary card's link, and what share hands over. */
   href: string;
+  /**
+   * What share hands over, where the card's link carries an origin the shared
+   * link must not (`?from=saved` names a back arrow, never a recipient's).
+   */
+  shareHref?: string;
   /** The card's test-id scope; every part of it derives from this. */
   testId: string;
   authorTestId: string;
@@ -248,6 +275,8 @@ export function PostCard({
   // never grows a dead row (`share.ts`).
   const narrow = useNarrowShare();
   const shareCapable = useShareCapable();
+  const comfort = useComfortLine(post.id);
+  const writes = useSavedWrites();
 
   const redacted = payloadIsRedacted(post);
   const media = !redacted && hasMedia(post);
@@ -278,13 +307,24 @@ export function PostCard({
         ? {
             label: "Share",
             onSelect: () => {
-              void shareLink(new URL(href, window.location.href).toString()).then((outcome) => {
+              void shareLink(new URL(shareHref, window.location.href).toString()).then((outcome) => {
                 if (outcome === "copied") onLinkCopied();
               });
             },
             testId: `${testId}-menu-share`,
           }
         : null,
+    // The card's own menu serves the surfaces that host none of their own; it
+    // saves the same way, and says so on the host's snackbar where there is
+    // one (`onNotify`).
+    save: saveRow({
+      writes,
+      node: post.id,
+      server: post.viewerBookmarkedAt ?? null,
+      notify: onNotify ?? (() => {}),
+      onGuest: null,
+      testId: `${testId}-menu-save`,
+    }),
     testIdPrefix: `${testId}-menu`,
   });
 
@@ -367,7 +407,16 @@ export function PostCard({
               rides this card: the same card is the feed's, the topic page's
               and the detail's, and each of them carries the rows that raise
               them. */}
-          {!detail && !redacted && (
+          {!detail && !redacted && onOpenMenu !== undefined && (
+            <OverflowTrigger
+              ariaLabel="More on this post"
+              testId={`${testId}-menu`}
+              node={part(node, "menu")}
+              expanded={menuOpen}
+              onOpen={onOpenMenu}
+            />
+          )}
+          {!detail && !redacted && onOpenMenu === undefined && (
             <OverflowMenu
               items={menuItems}
               ariaLabel="More on this post"
@@ -541,13 +590,18 @@ export function PostCard({
             the sheet. */}
         {!narrow && (
           <ShareButton
-            href={href}
+            href={shareHref}
             onCopied={onLinkCopied}
             testId={`${testId}-share`}
             node={part(node, "actionRow.share")}
           />
         )}
       </div>
+      {/* THE ROW LINE, under the face (RowSigning.md): here, a read-side
+          comfort on this post that did not go through — its save or unsave
+          reverted. The hold's two states ride the same master once the stance
+          lanes wire them. */}
+      {comfort !== null && <RowLine state={comfort} testId={`${testId}-row-line`} />}
     </Card>
   );
 }

@@ -18,12 +18,19 @@
 # these two fields against every one of those reads would buy nothing
 # there. Only the upload legs — this, `CompleteMediaUpload`, and the
 # `mediaAttachment` poll — need to know whether the bytes are final yet.
+#
+# `digest` and `uploadDigest` ride the same legs for the intent check
+# (intent.ts): the device holds an upload to the echo of the digest it
+# computed over the bytes it sent, and a manifest entry to the rendition
+# digest it read at READY.
 mutation UploadMedia($input: UploadMediaInput!) {
   uploadMedia(input: $input) {
     media {
       ...MediaFields
       state
       failureReason
+      digest
+      uploadDigest
     }
     userErrors {
       ...UserErrorFields
@@ -67,6 +74,8 @@ mutation CompleteMediaUpload($uploadId: UUID!) {
       ...MediaFields
       state
       failureReason
+      digest
+      uploadDigest
     }
     userErrors {
       ...UserErrorFields
@@ -75,7 +84,9 @@ mutation CompleteMediaUpload($uploadId: UUID!) {
 }
 
 # Polls one of the viewer's own uploads after it comes back PROCESSING —
-# the same idiom `stagedWrite` is polled with (writes.graphql). `url` rides
+# the same idiom `stagedWrite` is polled with (writes.graphql) — and reads
+# an asset an edit carries over, whose digests the intent check needs and
+# no gallery read selects. It answers under the id it was asked by. `url` rides
 # along inside `MediaFields`: while PROCESSING it names the bytes as they
 # arrived, and at READY it names the rendition, so the composer's asset
 # record has to be replaced by this answer rather than patched in place.
@@ -84,6 +95,8 @@ query MediaAttachmentStatus($id: UUID!) {
     ...MediaFields
     state
     failureReason
+    digest
+    uploadDigest
   }
 }
 

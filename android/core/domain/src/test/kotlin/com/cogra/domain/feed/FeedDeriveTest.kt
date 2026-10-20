@@ -1,7 +1,8 @@
 // The device derive's half of ranked-feed-api §14.3 (CD-7, CD-8, CD-10,
-// CD-11): composition by the pod's indices under both orders, and the
-// three device cuts — which delete, never re-order, and commute with the
-// weave. The packet's underscore names render here in this module's
+// CD-11, PR-80): composition by the pod's indices under both orders, the
+// two device cuts — which delete, never re-order, and commute with the
+// weave — and the seen partition, which splits at `feed.seenSeparator`
+// the same way. The packet's underscore names render here in this module's
 // backtick-sentence idiom.
 
 package com.cogra.domain.feed
@@ -33,7 +34,13 @@ class FeedDeriveTest {
     )
 
     private fun FeedRanking.ids(filter: FeedFilter = FeedFilter(), seen: Set<String> = emptySet()) =
-        derive(filter, seen).map { it.targetId }
+        derive(filter, seen).rows.map { it.targetId }
+
+    private fun FeedRanking.head(filter: FeedFilter = FeedFilter(), seen: Set<String>) =
+        derive(filter, seen).head.map { it.targetId }
+
+    private fun FeedRanking.tail(filter: FeedFilter = FeedFilter(), seen: Set<String>) =
+        derive(filter, seen).tail.map { it.targetId }
 
     @Test
     fun `settling rows stand at their woven positions under both orders`() {
@@ -85,15 +92,50 @@ class FeedDeriveTest {
         assertThat(answer.ids(off.copy(order = FeedOrder.NEWEST))).containsExactly("c", "a", "b").inOrder()
     }
 
+    /**
+     * PR-80's named device test (FeedSeenTail.md): the seen rows leave the
+     * unseen run for the tail under the separator, and each side keeps the
+     * feed's own order — ranked under Ranked, by time under Newest.
+     */
     @Test
-    fun `the seen cut deletes the records ids and never reorders`() {
-        assertThat(answer.ids(seen = setOf("b", "s"))).containsExactly("a", "c", "t").inOrder()
+    fun `the seen tail keeps the feeds own order below the separator`() {
+        val seen = setOf("a", "s", "b")
+        assertThat(answer.head(seen = seen)).containsExactly("c", "t").inOrder()
+        assertThat(answer.tail(seen = seen)).containsExactly("a", "s", "b").inOrder()
+        val newest = FeedFilter(order = FeedOrder.NEWEST)
+        assertThat(answer.head(newest, seen)).containsExactly("c", "t").inOrder()
+        assertThat(answer.tail(newest, seen)).containsExactly("s", "a", "b").inOrder()
+        // The whole list is the head, then the tail: nothing seen is dropped.
+        assertThat(answer.ids(seen = seen)).containsExactly("c", "t", "a", "s", "b").inOrder()
     }
 
     @Test
-    fun `show seen on keeps seen rows`() {
-        assertThat(answer.ids(FeedFilter(showSeen = true), seen = setOf("b", "s")))
-            .containsExactly("a", "s", "b", "c", "t").inOrder()
+    fun `the filter cuts the tail exactly as it cuts the rows above it`() {
+        val seen = setOf("a", "s", "b")
+        assertThat(answer.tail(yourPeople(PeopleSign.FOR), seen)).containsExactly("a")
+        assertThat(answer.tail(yourPeople(PeopleSign.EITHER), seen)).containsExactly("a", "s", "b").inOrder()
+        assertThat(answer.tail(FeedFilter(stillSettling = false), seen)).containsExactly("a", "b").inOrder()
+    }
+
+    @Test
+    fun `no tail stands when the filter admits nothing the reader has seen`() {
+        assertThat(answer.derive(FeedFilter(), seen = emptySet()).tail).isEmpty()
+        // c is the only row seen, and Your people · For does not admit it.
+        assertThat(answer.derive(yourPeople(PeopleSign.FOR), seen = setOf("c")).tail).isEmpty()
+    }
+
+    @Test
+    fun `nothing unseen leaves every admitted row in the tail`() {
+        val everything = setOf("a", "s", "b", "c", "t")
+        assertThat(answer.head(seen = everything)).isEmpty()
+        assertThat(answer.tail(seen = everything)).containsExactly("a", "s", "b", "c", "t").inOrder()
+    }
+
+    @Test
+    fun `show seen on stands one list with the seen rows ranked in and no tail`() {
+        val showSeen = FeedFilter(showSeen = true)
+        assertThat(answer.head(showSeen, seen = setOf("b", "s"))).containsExactly("a", "s", "b", "c", "t").inOrder()
+        assertThat(answer.tail(showSeen, seen = setOf("b", "s"))).isEmpty()
     }
 
     @Test
@@ -135,10 +177,24 @@ class FeedDeriveTest {
         assertThat(away.rankArgs).isEqualTo(FeedFilter().rankArgs)
     }
 
+    /**
+     * PR-54's vantage law (ranked-feed packet §5.4): a ranking's marks are
+     * the vantage's whoever reads it, so the Your-people cut keys on the
+     * marks that arrive with or without a session — an empty seen record,
+     * and no session test in the cut. The server half is
+     * `a_session_less_rankings_marks_are_the_vantages`.
+     */
+    @Test
+    fun `a session less derives people cut keys on the vantages marks`() {
+        assertThat(answer.ids(yourPeople(PeopleSign.FOR), seen = emptySet())).containsExactly("a")
+        assertThat(answer.ids(yourPeople(PeopleSign.EITHER), seen = emptySet()))
+            .containsExactly("a", "s", "b").inOrder()
+    }
+
     @Test
     fun `a device cut never reorders the derived list`() {
         val full = answer.ids()
-        val cut = answer.ids(FeedFilter(people = PeopleScope.YOUR_PEOPLE), seen = setOf("a"))
+        val cut = answer.head(FeedFilter(people = PeopleScope.YOUR_PEOPLE), seen = setOf("a"))
         assertThat(full.filter { it in cut }).containsExactlyElementsIn(cut).inOrder()
     }
 
@@ -173,10 +229,13 @@ class FeedDeriveTest {
 
     /**
      * THE PROPERTY (FP-1's commutation argument, §4.10 W-2): for random
-     * answers and every combination of the people, seen and settling cuts,
+     * answers and every combination of the people, seen and settling axes,
      * under both orders, deleting rows from the composed list equals
      * composing over the answer with those rows deleted first — where an
-     * answer is re-indexed exactly as a pod would emit it without them.
+     * answer is re-indexed exactly as a pod would emit it without them. The
+     * seen axis partitions rather than deletes (PR-80), so the property
+     * holds on each side of the separator: the head is the composition of
+     * the unseen survivors, the tail the composition of the seen ones.
      */
     @Test
     fun `cut then compose equals compose then cut`() {
@@ -186,11 +245,17 @@ class FeedDeriveTest {
             val seen = answer.allIds().filter { random.nextInt(4) == 0 }.toSet()
             for (filter in everyDeviceFilter()) {
                 val composedThenCut = answer.derive(filter, seen)
-                val kept = (ranked + newest).filter { filter.keeps(it, seen) }.map { it.targetId }.toSet()
-                val keptRanked = ranked.filter { it.targetId in kept }
-                val keptNewest = newest.filter { it.targetId in kept }
-                val cutThenComposed = reemit(keptRanked, keptNewest).woven(filter.order)
-                assertThat(composedThenCut).containsExactlyElementsIn(cutThenComposed).inOrder()
+                for (above in listOf(true, false)) {
+                    val side = if (above) composedThenCut.head else composedThenCut.tail
+                    val kept = ranked
+                        .filter { filter.keeps(it) && filter.standsAbove(it, seen) == above }
+                        .map { it.targetId }
+                        .toSet()
+                    val keptRanked = ranked.filter { it.targetId in kept }
+                    val keptNewest = newest.filter { it.targetId in kept }
+                    val cutThenComposed = reemit(keptRanked, keptNewest).woven(filter.order)
+                    assertThat(side).containsExactlyElementsIn(cutThenComposed).inOrder()
+                }
             }
         }
     }

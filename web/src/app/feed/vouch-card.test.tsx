@@ -158,9 +158,7 @@ describe("VouchCard", () => {
     expect(hint).toHaveTextContent("Tap the face to vouch back.");
     const anchor = screen.getByTestId("feed.vouchCard.stance.anchor");
     // The hollow face: the account holds no opinion of the voucher.
-    expect(screen.getByTestId("feed.vouchCard.stance.anchor.face").className).toContain(
-      "opacity-40",
-    );
+    expect(screen.getByTestId("feed.vouchCard.stance.anchor.face")).toBeInTheDocument();
     const dismiss = screen.getByTestId("feed.vouchCard.dismiss");
     const order = (a: Element, b: Element) =>
       Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
@@ -170,6 +168,20 @@ describe("VouchCard", () => {
     expect(screen.queryByTestId("feed.vouchCard.vouch")).not.toBeInTheDocument();
     expect(screen.queryByTestId("feed-vouch-card-vouch")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Vouch back" })).not.toBeInTheDocument();
+  });
+
+  // stance-control.md "The vouch card's empty face is a line face in the
+  // card's ink" (jakob 2026-10-14): sentiment_neutral in on-tertiary-container
+  // at full opacity, never the 🫥 emoji.
+  it("the card's empty face is a line face in the card's ink", async () => {
+    server.use(meHandler(() => me()));
+    renderCard();
+    const face = await screen.findByTestId("feed.vouchCard.stance.anchor.face");
+    expect(face).not.toHaveTextContent("🫥");
+    expect(face.style.color).toBe("var(--on-tertiary-container)");
+    expect(face.querySelector("svg")).not.toBeNull();
+    expect(face.className).not.toContain("opacity-40");
+    expect(face.className).not.toContain("grayscale");
   });
 
   // VouchBack.md:13 — the line claims nothing about first-ness; that is the

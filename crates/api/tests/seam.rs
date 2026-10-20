@@ -85,3 +85,73 @@ async fn a_record_crosses_the_seam_into_the_mirror(pool: PgPool) {
     assert_eq!(balance.action_count, 1);
     assert!(balance.balance < balance.burned_total);
 }
+
+/// X-SR3 across the seam: each ingested epoch carries the boundary
+/// timestamp its package attests, and an epoch the mirror took in before
+/// the package carried one is filled from the published sequence on the
+/// next pass — through the seam, never from the stand-in's tables.
+///
+/// Every ingested epoch carries its attested instant, and a missing one is filled from the published sequence.
+/// ´claim:relay:epoch-instants-cross-the-seam´
+#[sqlx::test(migrations = "../../migrations")]
+async fn epoch_instants_cross_the_seam_and_missing_ones_are_filled(pool: PgPool) {
+    let standin = StandIn::new(pool.clone(), StandInConfig::default());
+    let boundary = StandInBoundary(standin.clone());
+    for _ in 0..2 {
+        let actor = ActorKey::generate();
+        standin
+            .credit_burn(&actor.address(), 10_000_000)
+            .await
+            .expect("burn");
+        let pre = actor.pre_sign(registration(&actor));
+        let sealed = boundary.seal(pre.clone()).await.expect("seals");
+        let host_key = boundary.host_public_key().await.expect("host key");
+        let witness = actor.approve(&pre, &sealed, &host_key).expect("approves");
+        boundary.approve(witness).await.expect("approved");
+        standin.close_epoch().await.expect("closes").expect("acts");
+    }
+    api::ingest::ingest_pending(&boundary, &pool, 8)
+        .await
+        .expect("pass");
+    let attested: Vec<(i64, chrono::DateTime<chrono::Utc>)> = boundary
+        .epochs_since(-1)
+        .await
+        .expect("published")
+        .into_iter()
+        .map(|p| (p.epoch, p.attested_at))
+        .collect();
+    assert_eq!(attested.len(), 2);
+    let mirrored = mirror::epoch_instants(&pool, &[0, 1])
+        .await
+        .expect("instants");
+    for (epoch, at) in &attested {
+        assert_eq!(mirrored[epoch], *at);
+    }
+
+    sqlx::query("DELETE FROM mirror_epochs")
+        .execute(&pool)
+        .await
+        .expect("forget the instants");
+    assert_eq!(
+        mirror::first_epoch_without_instant(&pool)
+            .await
+            .expect("gap"),
+        Some(0)
+    );
+    let outcome = api::ingest::ingest_pending(&boundary, &pool, 8)
+        .await
+        .expect("pass");
+    assert_eq!(outcome.epochs, 0);
+    assert_eq!(
+        mirror::first_epoch_without_instant(&pool)
+            .await
+            .expect("gap"),
+        None
+    );
+    let refilled = mirror::epoch_instants(&pool, &[0, 1])
+        .await
+        .expect("instants");
+    for (epoch, at) in &attested {
+        assert_eq!(refilled[epoch], *at);
+    }
+}

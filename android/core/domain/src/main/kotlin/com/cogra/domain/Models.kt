@@ -195,6 +195,12 @@ data class PreparedWriteView(
     /** The canonical proposal wire bytes, decoded from base64. */
     val canonicalProposal: ByteArray,
     val gcAfterEpochs: Int,
+    /**
+     * Carried with the author's application (`PreparedWrite.carried`): the
+     * signer checks it against its form and keeps the verified digest for
+     * the landing instead of signing it now (signing/Carried.kt).
+     */
+    val carried: Boolean = false,
 ) {
     override fun equals(other: Any?): Boolean = other is PreparedWriteView && other.id == id
     override fun hashCode(): Int = id.hashCode()
@@ -219,6 +225,13 @@ data class ApplicationInfo(
     val keyAttached: Boolean,
     val approvedAt: Instant?,
     val landedAt: Instant?,
+    /**
+     * The applicant's raw L1 identifier, `prof:<address>` — the node an
+     * approval's vouch points at, which the device checks the vouch it
+     * signs against (signing/Intent.kt). Null before the key is attached,
+     * when nothing is approvable.
+     */
+    val graphId: String? = null,
 )
 
 /** Client mirror of the server's minimum handle length (auth.md "Application"). */
@@ -344,6 +357,17 @@ data class MediaAssetView(
     val coverTaken: Boolean = false,
     val state: MediaAssetState = MediaAssetState.READY,
     val failureReason: String? = null,
+    /**
+     * The rendition digest, lowercase hex — selected only on the upload legs
+     * (schema.graphql `MediaAttachment.digest`); empty on a gallery read.
+     */
+    val digest: String = "",
+    /**
+     * The upload digest this device computed over the bytes it sent, once the
+     * server's echo matched it (`MediaRepository.uploadMedia`) — what the
+     * intent check holds the manifest's key 5 to. Empty outside an upload.
+     */
+    val uploadDigest: String = "",
 ) {
     /**
      * Whether this asset plays rather than being drawn once.
@@ -505,6 +529,12 @@ data class PostView(
      * page's.
      */
     val commentCount: Int = 0,
+    /**
+     * When the reader saved this post; null when it is not kept. What the
+     * menu's first row reads (`Save` / `Unsave`) — and nothing else does:
+     * the card shows no saved mark anywhere.
+     */
+    val viewerBookmarkedAt: Instant? = null,
 ) {
     /** The body is media rather than words (D16). */
     val isMediaPost: Boolean get() = attachments.isNotEmpty()
@@ -559,6 +589,8 @@ data class CommentView(
      * reason, and when the payload is gone.
      */
     val sensitiveReason: String? = null,
+    /** When the reader saved this comment; null when not kept — the comment menu's first row. */
+    val viewerBookmarkedAt: Instant? = null,
 )
 
 /**
@@ -589,6 +621,15 @@ data class ReferenceClaimView(
      */
     val withdrawalCost: Int,
     val pending: Boolean,
+    /**
+     * The raw sums that cost is read off — what a withdrawal's
+     * counter-records must net to `(0, 0)`, and so what the device checks
+     * them against (signing/Intent.kt). The clipped pair is the raw pair
+     * for any bundle inside the census range, which is what the defaults
+     * state.
+     */
+    val rawRelevance: Double = relevance,
+    val rawSupport: Double = support,
 )
 
 /**
@@ -737,6 +778,19 @@ data class SelfMarkView(
     val reason: String?,
 )
 
+/**
+ * The post's BACKING as its author's own Publish bundle folds it: the
+ * mint's attachment plus every edit's pick, summed then clipped (post.md
+ * §4). One number — the census pins `p_i` at 1. Never the face's opinion,
+ * which is a bundle of its own.
+ */
+data class PostBacking(
+    /** The bundle's net, clipped to the axis — `Current backing`. */
+    val net: Double,
+    /** The raw sum, unclipped — what `Backing after` and the walk-back fold from. */
+    val rawSum: Double,
+)
+
 /** A post with its first page of comments — the detail read. */
 data class PostDetail(
     val post: PostView,
@@ -799,7 +853,15 @@ data class ProfileView(
      * version it asked for from the one it already had.
      */
     val updatedAt: Instant = Instant.EPOCH,
-)
+    /** When the reader saved this person; null when not kept — the profile menu's first row. */
+    val viewerBookmarkedAt: Instant? = null,
+) {
+    /**
+     * A deleted account: the wire serves null values and the REDACTED mark
+     * (ER-G10, design digest item 19), and every surface reads it off that.
+     */
+    val deleted: Boolean get() = displayName.status == FieldStatus.REDACTED
+}
 
 /** A tappable link from a chronicle row into the content it touched. */
 sealed interface RecordLink {

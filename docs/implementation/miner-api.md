@@ -1,12 +1,13 @@
 # Miner API · `spec:implementation:miner-api`
 
 The ranking surface. The backend API ([api-spec.md](api-spec.md))
-deliberately does not rank: it serves each viewer their `χ`-bounded
-subgraph slice (`Query.feedSlice`) and hydrates an ordered id list back
-into a feed (`Query.feed`). Between those two calls sits **ranking**, and
-ranking runs off the backend's hot path — on the viewer's own device, in
-the server's own ranker container, or on a delegated miner ([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)). This
-doc specifies that intermediate surface: slice in, ordered list out.
+never ranks in its own process: it serves each viewer their
+`χ`-bounded subgraph slice (`Query.feedSlice`), relays ranking requests
+to the server's own ranker container (`Query.feedRanking`), and
+hydrates an ordered id list back into a feed (`Query.feed`). **Ranking**
+runs off the backend's hot path — on the viewer's own device, in the
+server's own ranker container, or on a delegated miner ([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)). This
+doc specifies that surface: slice in, ordered list out.
 
 - **Runner**: the viewer's device (default), the server's own ranker
   container, or a chosen miner.
@@ -82,9 +83,9 @@ public state the slice comes from.
 |---|---|
 | `seenList` | Content ids to exclude from the candidate set before ranking ([feed-ranking.md §9.4](../primitive/feed-ranking.md#94-the-already-seen-filter)); the server's relay never sends it. |
 | `kinds` | Which rankable node kinds are in scope (default: Posts only — [§9.3](../primitive/feed-ranking.md#93-what-is-rankable)). |
-| `gamma` | `γ` — per-hop attenuation in `(0, 1]`; default `Network.gamma`. |
-| `dustFloor` | `χ` — bounds the slice node-set and stops extraction; default `Network.dustFloor`. |
-| `recencyHalfLifeEpochs` | `f(Δt)` half-life in epochs; default `Network.recencyHalfLifeEpochs`; `0` disables recency (`f ≡ 1`). |
+| `gamma` | `γ` — per-hop attenuation in `(0, 1]`; default the network's `gamma` parameter. |
+| `dustFloor` | `χ` — bounds the slice node-set and stops extraction; default the network's `dust_floor` parameter. |
+| `recencyHalfLifeEpochs` | `f(Δt)` half-life in epochs; default the network's `recency_half_life_epochs` parameter; `0` disables recency (`f ≡ 1`). |
 | `friendAuthorReorder` | Friend-fresh reorder config — a reordering layer over the ranked output, never a boost multiplier ([§9.2](../primitive/feed-ranking.md#92-friend-fresh-reordering)); null uses the frontend default (the reference frontend ships it on). |
 
 These are the `rank` operation's `params`, typed below:
@@ -100,11 +101,11 @@ input RankParams {
   seenList: [UUID!]
   "Rankable node kinds in scope; default Posts only."
   kinds: [NodeKind!]
-  "γ per-hop attenuation in (0, 1]; default Network.gamma."
+  "γ per-hop attenuation in (0, 1]; default the network's gamma parameter."
   gamma: Float
-  "χ dust floor; default Network.dustFloor."
+  "χ dust floor; default the network's dust_floor parameter."
   dustFloor: Float
-  "f(Δt) half-life in epochs; default Network.recencyHalfLifeEpochs;
+  "f(Δt) half-life in epochs; default the network's recency_half_life_epochs parameter;
    0 disables recency (f ≡ 1)."
   recencyHalfLifeEpochs: Int
   "Friend-fresh reorder config; null uses the frontend default
@@ -302,9 +303,9 @@ type InboundSeverance {
   severer: Actor!
   "Epoch age of the record that netted the bundle to (0,0)."
   severedEpochAge: Int!
-  "True when the viewer's outbound bundle toward the severer is live —
-   trusted-network severance, the per-bundle alarm. False entries
-   signal in volume, not individually."
+  "True when the viewer's outbound bundle toward the severer is not
+   inert — trusted-network severance, the per-bundle alarm. False
+   entries signal in volume, not individually."
   fromTrustedNetwork: Boolean!
 }
 
@@ -316,7 +317,8 @@ type BundleAudit {
   target: Node!
   "The record family the bundle folds over."
   family: RecordFamily!
-  "The folded parameters (p̄_d, p̄_i); (0,0) is a netted bundle."
+  "The folded parameters (p̄_d, p̄_i); (0,0) is a severed bundle, and
+   a zero on either one is routing-inert."
   pDirected: Float!
   pInterest: Float!
   "Raw member records in the bundle."
@@ -362,7 +364,7 @@ type SuspectBridge {
 ```
 
 The traversal is bounded the same way ranking is — `dustFloor` (null
-falls back to `Network.dustFloor`) bounds the analyzed subgraph, and
+falls back to the network's `dust_floor` parameter) bounds the analyzed subgraph, and
 the alternative-paths check is a bounded probe, not a full re-ranking.
 
 ### `redemptionCheck` — the polled outbound watch (§8.7)
@@ -379,12 +381,12 @@ the alternative-paths check is a bounded probe, not a full re-ranking.
 redemptionCheck(targets: [UUID!]!, sinceEpochs: Int): [RedemptionStatus!]!
 
 "One severed account's redemption state — effectively binary per §8.7:
- no positive outbound bundle landing on a min-cut-1 bridge (redeemed),
+ no live outbound bundle targeting a min-cut-1 bridge (redeemed),
  or some (still bridging). There is no halfway-redeemed state."
 type RedemptionStatus {
   target: Actor!
   redeemed: Boolean!
-  "The remaining suspect bridges under the target's positive outbound
+  "The remaining suspect bridges under the target's live outbound
    bundles, each classified by the §8.5 analysis run from the target's
    perspective. Empty exactly when redeemed."
   bridges: [SuspectBridge!]!
@@ -410,26 +412,37 @@ every deployment.
 ### Wire form — GraphQL everywhere, in-process on-device
 
 A remote runner serves a small GraphQL schema: the operations in this
-doc and the types above, verbatim. `FeedSlice`, `RankParams`, and
-`FeedEntry` travel as written — the ranker already speaks the
-backend's type vocabulary, and a second wire encoding (JSON-RPC,
-protobuf) would be a parallel serialization of the same types, kept in
-lockstep by hand. The ranker container serves the same operations in
-its own schema; on the viewer's device the contract is an in-process
-call over the same types, no wire at all.
+doc and the types above, at the id level. A runner holds no
+credential and no database, so it cannot resolve the backend's `Node`
+and `Record`: a `FeedEntry` carries its target's UUID and kind, a
+`RankPath` its nodes' raw L1 identifiers, and a `RankHop` its records'
+L1 ids with the folded and member parameters — everything a
+spot-check re-derives from — and the backend's relay hydrates. A
+second wire encoding (JSON-RPC, protobuf) would be a parallel
+serialization of the same types, kept in lockstep by hand. The ranker
+container exports its schema as the checked-in `ranker-schema.graphql`;
+on the viewer's device the contract is an in-process call over the
+same types, no wire at all.
 
 ### The slice path — the miner re-fetches
 
-The remote wire signatures replace the slice argument with the viewer:
+The remote wire signatures replace the slice argument with the viewer,
+take an optional `asOfEpoch`, and return a `FeedRanking`:
 
 ```graphql
-rank(viewer: UUID!, params: RankParams!): [FeedEntry!]!
-rankSearch(viewer: UUID!, candidates: [UUID!]!, params: RankParams!): [FeedEntry!]!
+rank(viewer: UUID!, params: RankParams!, asOfEpoch: Int): FeedRanking!
+rankSearch(viewer: UUID!, candidates: [UUID!]!, params: RankParams!, asOfEpoch: Int): FeedRanking!
 ```
+
+`FeedRanking` carries the `asOfEpoch` the slice was read as of, the
+ranked `entries`, and the placed `settling` candidates. `asOfEpoch`
+pins the slice (null: the newest ingested epoch); a ranking re-run at
+the same epoch over the same candidates is identical, which is what
+makes spot-checks possible.
 
 Reads are unauthenticated and `feedSlice` is viewer-parameterized
 ([api-spec.md](api-spec.md)), so the miner fetches
-`feedSlice(viewer, params.dustFloor, params.gamma)` itself — the same
+`feedSlice(viewer, params.dustFloor, params.gamma, asOfEpoch)` itself — the same
 public subgraph any client could fetch, bounded by best-possible path
 product `∏(γ·w̃) ≥ χ`
 ([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)).
@@ -447,8 +460,8 @@ on-device call uses directly.
 
 The viewer's inputs — the rank params, and for a delegated miner that is
 handed one, the seen-list — ride inside each request. The server's own
-ranker container is handed none: the reader's device cuts seen content
-from the ranked answer
+ranker container is handed none: the reader's device sets seen content
+apart from the rest of the ranked answer
 ([feed-ranking.md §9.4](../primitive/feed-ranking.md#94-the-already-seen-filter)). The miner holds no credential and no standing
 state, and never authenticates to the backend: to the backend, a miner
 is indistinguishable from any anonymous reader, and

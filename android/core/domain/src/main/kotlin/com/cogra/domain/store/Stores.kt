@@ -101,6 +101,17 @@ interface IdentityStore {
     suspend fun handshakeIds(): Set<String>
 
     /**
+     * The digest a carried write was verified to at its prepare, or null when
+     * this device holds none (signing/Carried.kt). Part of the account's
+     * slot, so it follows the draft's fate through a lock or a purge.
+     */
+    suspend fun carriedExpectation(stagedWriteId: String): ByteArray?
+
+    suspend fun saveCarriedExpectation(stagedWriteId: String, digest: ByteArray)
+
+    suspend fun clearCarriedExpectation(stagedWriteId: String)
+
+    /**
      * Device-local UX state: whether the tap that teaches the held
      * gesture has been spent. Set when the coach mark opens, so a
      * restart cannot swallow a second priced tap in silence
@@ -143,20 +154,22 @@ interface IdentityStore {
     suspend fun setForgetOnSignOut(value: Boolean)
 
     /**
-     * The opt-in's teeth on the REMOTE path (a session ended from
-     * elsewhere): remove ALL of the active account's slot — seed, pending
-     * blob, handshake material, and flags — in one atomic edit. Other
-     * accounts' slots are untouched, and the draft is deliberately NOT
-     * part of it: the remote path's custody is the sign-out custody
-     * packet's, and widening it here would move that boundary silently.
+     * Whether the active account's key is positively known to be backed up
+     * on the server — set when an upload succeeds or the key was restored
+     * from its backup, cleared when a fresh key is minted. The device lock
+     * reads it as "backup positively known" (sign-out-custody §3.2 reading
+     * 1): absent is unknown, and unknown locks rather than purges.
      */
-    suspend fun purge()
+    suspend fun setKeyBacked(value: Boolean)
 
     /**
      * The explicit sign-out's purge (Settings.md "Sign out" with the
      * don't-remember switch on): the account's whole custody set — its
-     * slot AND its compose draft — in ONE atomic edit, so a process death
-     * can never leave a half-cleared account behind.
+     * slot, its compose draft and its seen record (ids and sync watermark;
+     * the server's view log is untouched) — in ONE atomic edit, so a
+     * process death can never leave a half-cleared account behind. A
+     * session ended elsewhere never purges this way: it locks
+     * ([LockCustodyStore]), and drops the seen record beside the lock.
      */
     suspend fun purgeCustodySet()
 }

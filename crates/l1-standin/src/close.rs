@@ -318,7 +318,7 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
     let rows = sqlx::query!(
         "SELECT act_id, author, seq, family, middle, target, p_d, p_i,
                 settlement_ref, license, asserted_parents, deps,
-                length(payload) AS payload_len, content_commitment
+                payload_len, content_commitment
          FROM l1_acts WHERE status = 'approved'
          ORDER BY approved_at, act_id",
     )
@@ -337,7 +337,9 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
             act_id: row.act_id.clone(),
             author: row.author.clone(),
             body: stored_body!(row).to_body()?,
-            payload_len: row.payload_len.unwrap_or(0) as usize,
+            payload_len: usize::try_from(row.payload_len).map_err(|_| {
+                StandInError::Formation(format!("stored act {} has a negative length", row.act_id))
+            })?,
             payload_witness: row.content_commitment.clone(),
             prerequisites,
         });
@@ -393,12 +395,13 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
         return Ok(None);
     }
 
-    persist(&mut tx, epoch, &selection, standin.config().theta_micro).await?;
+    let attested_at = persist(&mut tx, epoch, &selection, standin.config().theta_micro).await?;
     crate::settle_due(&mut tx, epoch).await?;
     tx.commit().await?;
 
     Ok(Some(EpochPackage {
         epoch,
+        attested_at,
         records: selection.records,
     }))
 }
@@ -406,13 +409,22 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
 /// Writes one closed epoch. Every set is written in one statement over
 /// unnested arrays rather than one statement per record: the epoch holds an
 /// `EXCLUSIVE` lock while it runs, and at the default budget a per-record
-/// loop is tens of thousands of round trips inside it.
+/// loop is tens of thousands of round trips inside it. Returns the epoch
+/// row's close instant — the boundary timestamp the package attests.
+///
+/// Acceptance ends the host's handshake custody: the payload, its content
+/// salt and the proposal nonce are nulled together in the statement that
+/// accepts, and the row keeps its length and both commitments. The nonce
+/// goes with them because the public pre-commitment is formed over it and
+/// the payload, so a kept nonce would let anyone confirm a guessed
+/// payload. The dependency salt stays — the ordering fraud proof opens it
+/// (data-model.md "Act payload carriage").
 async fn persist(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     epoch: i64,
     selection: &Selection,
     theta: i64,
-) -> Result<(), StandInError> {
+) -> Result<chrono::DateTime<chrono::Utc>, StandInError> {
     let mut act_ids: Vec<String> = Vec::with_capacity(selection.records.len());
     let mut act_times: Vec<i64> = Vec::with_capacity(selection.records.len());
     let mut positions: Vec<i64> = Vec::with_capacity(selection.records.len());
@@ -441,7 +453,8 @@ async fn persist(
 
     sqlx::query!(
         "UPDATE l1_acts SET status = 'accepted', epoch = $1,
-                act_time = published.act_time, position = published.position
+                act_time = published.act_time, position = published.position,
+                payload = NULL, content_salt = NULL, nonce = NULL
            FROM UNNEST($2::TEXT[], $3::BIGINT[], $4::BIGINT[])
                 AS published(act_id, act_time, position)
           WHERE l1_acts.act_id = published.act_id",
@@ -507,14 +520,13 @@ async fn persist(
     .execute(&mut **tx)
     .await?;
 
-    sqlx::query!(
-        "INSERT INTO l1_epochs (epoch, act_count) VALUES ($1, $2)",
+    Ok(sqlx::query_scalar!(
+        "INSERT INTO l1_epochs (epoch, act_count) VALUES ($1, $2) RETURNING closed_at",
         epoch,
         selection.records.len() as i64,
     )
-    .execute(&mut **tx)
-    .await?;
-    Ok(())
+    .fetch_one(&mut **tx)
+    .await?)
 }
 
 pub(crate) async fn epochs_since(
@@ -523,14 +535,14 @@ pub(crate) async fn epochs_since(
 ) -> Result<Vec<EpochPackage>, StandInError> {
     let mut conn = standin.pool().acquire().await?;
     let epochs = sqlx::query!(
-        "SELECT epoch FROM l1_epochs WHERE epoch > $1 ORDER BY epoch",
+        "SELECT epoch, closed_at FROM l1_epochs WHERE epoch > $1 ORDER BY epoch",
         after,
     )
     .fetch_all(&mut *conn)
     .await?;
     let mut packages = Vec::with_capacity(epochs.len());
     for e in epochs {
-        packages.push(load_epoch(&mut conn, e.epoch).await?);
+        packages.push(load_epoch(&mut conn, e.epoch, e.closed_at).await?);
     }
     Ok(packages)
 }
@@ -541,11 +553,14 @@ pub(crate) async fn epochs_since(
 ///
 /// The legs come back in one query and are grouped in memory: a query per
 /// record is the same N+1 the write side avoids.
-async fn load_epoch(conn: &mut PgConnection, epoch: i64) -> Result<EpochPackage, StandInError> {
+async fn load_epoch(
+    conn: &mut PgConnection,
+    epoch: i64,
+    attested_at: chrono::DateTime<chrono::Utc>,
+) -> Result<EpochPackage, StandInError> {
     let rows = sqlx::query!(
         r#"SELECT act_id, author, family, act_time AS "act_time!",
-                  position AS "position!", length(payload) AS payload_len,
-                  content_commitment
+                  position AS "position!", payload_len, content_commitment
            FROM l1_acts WHERE epoch = $1 AND status = 'accepted'
            ORDER BY position"#,
         epoch,
@@ -588,11 +603,15 @@ async fn load_epoch(conn: &mut PgConnection, epoch: i64) -> Result<EpochPackage,
             epoch,
             act_time: row.act_time,
             position: row.position,
-            payload_marked: row.payload_len.unwrap_or(0) > 0,
+            payload_marked: row.payload_len > 0,
             payload_witness: row.content_commitment,
         });
     }
-    Ok(EpochPackage { epoch, records })
+    Ok(EpochPackage {
+        epoch,
+        attested_at,
+        records,
+    })
 }
 
 #[cfg(test)]

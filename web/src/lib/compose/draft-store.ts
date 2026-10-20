@@ -47,6 +47,13 @@ export type ComposeDraftStore = {
   save(state: WizardState): Promise<void>;
   load(): Promise<WizardState | null>;
   clear(): Promise<void>;
+  /**
+   * Drops every save still in flight, as `clear` does, without touching the
+   * store — what a device lock runs before it removes an account's plaintext
+   * draft, so no save that began before the lock writes it back
+   * (sign-out-custody §3.5).
+   */
+  abandonPendingSaves(): void;
 };
 
 export function open(idb: IDBFactory): Promise<IDBDatabase> {
@@ -159,7 +166,10 @@ export type StoredDraft = {
  * still there under the same id and re-uploading them would only orphan a copy.
  */
 function afterReload(upload: PickedAsset["upload"]): PickedAsset["upload"] {
-  return upload.kind === "done" ? upload : { kind: "waiting" };
+  // A done upload saved before the upload digest existed carries no digests
+  // for the intent check to hold its manifest entry to; it goes up again
+  // rather than being signed against nothing.
+  return upload.kind === "done" && upload.media !== undefined ? upload : { kind: "waiting" };
 }
 
 /**
@@ -272,6 +282,12 @@ export function createComposeDraftStore(deps: {
       await forgetLegacy();
       const stored = await storedOf(state);
       if (startedIn !== generation) return;
+      // The account is read AGAIN at the write. A session that ended while
+      // the blobs were being read — a device lock clears the tokens before it
+      // reads the draft, in this tab or another — leaves no account here, and
+      // a write now would put the plaintext back after the lock took it
+      // (sign-out-custody §3.5, the multi-tab ordering).
+      if (activeAccountId() !== account) return;
       const draft: StoredDraft = {
         schema: DRAFT_SCHEMA,
         savedAt: new Date().toISOString(),
@@ -301,6 +317,10 @@ export function createComposeDraftStore(deps: {
       generation += 1;
       if (account === null) return;
       await run(factory(), "readwrite", (store) => store.delete(account));
+    },
+
+    abandonPendingSaves() {
+      generation += 1;
     },
   };
 }

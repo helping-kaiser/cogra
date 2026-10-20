@@ -12,6 +12,7 @@
 // removing the last picture sends an empty gallery rather than nothing.
 
 import type { GalleryEntryDraft } from "@/lib/api/content-api";
+import { ledgerEntry, type MediaLedger } from "@/lib/compose/payload-expectation";
 import { CENTERED } from "@/lib/ui2/media/crop";
 import { COMMENT_ATTACHMENT_CAP } from "./comment-media";
 import { commentBodyProblem } from "./reply-wizard";
@@ -219,6 +220,26 @@ export function editClaims(gallery: EditGallery): readonly GalleryEntryDraft[] |
     });
   }
   return claims;
+}
+
+/**
+ * The assets this editor uploaded, with the digests it computed and read —
+ * the ledger's own half. The kept placements' digests are read back by id
+ * at sign time (`keptMediaIds`), since no gallery read selects them.
+ */
+export function addedLedger(gallery: EditGallery): MediaLedger {
+  return new Map(addedAssets(gallery).flatMap((asset) => ledgerEntry(asset.upload)));
+}
+
+/** Every asset a kept placement names — the asset and its poster. */
+export function keptMediaIds(gallery: EditGallery): string[] {
+  return gallery.flatMap((picture) =>
+    picture.kind !== "kept"
+      ? []
+      : picture.coverMediaId === null
+        ? [picture.mediaId]
+        : [picture.mediaId, picture.coverMediaId],
+  );
 }
 
 /** Whether the gallery differs from the one the comment opened with. */

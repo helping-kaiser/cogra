@@ -29,7 +29,7 @@ use common::l1::identifier::{ActId, NodeId};
 use postgres_store::content::{self, LandingOrder};
 use postgres_store::{genesis, hashtag, mirror};
 use rig::WireRig;
-use rig::pod::{Mode, StubPod, ranking};
+use rig::pod::{Mode, StubPod, ranking, search_ranking};
 use serde_json::{Value, json};
 use sqlx::PgPool;
 use std::collections::BTreeSet;
@@ -149,10 +149,22 @@ async fn land(pool: &PgPool, records: Vec<PublishedRecord>) -> i64 {
             r
         })
         .collect();
-    mirror::ingest_epoch(pool, &EpochPackage { epoch, records })
-        .await
-        .expect("ingests");
+    mirror::ingest_epoch(
+        pool,
+        &EpochPackage {
+            epoch,
+            attested_at: landing_instant(epoch),
+            records,
+        },
+    )
+    .await
+    .expect("ingests");
     epoch
+}
+
+/// The attested boundary timestamp of a fixture epoch: a minute per epoch.
+fn landing_instant(epoch: i64) -> chrono::DateTime<chrono::Utc> {
+    chrono::DateTime::from_timestamp(1_850_000_000 + epoch * 60, 0).expect("instant")
 }
 
 async fn person(pool: &PgPool, handle: &str, kind: &str) -> Uuid {
@@ -406,6 +418,22 @@ async fn network_parameters_read_every_key(pool: PgPool) {
     assert_eq!(gamma["value"], "1.0");
     let floor = all.iter().find(|p| p["key"] == "dust_floor").expect("χ");
     assert_eq!(floor["value"], "0.0");
+}
+
+/// RC-G4 (PR-65): the genesis composition names genesis recency alone; the
+/// two statistics keys stay defined and governable, unseeded.
+///
+/// Genesis seeds the tie-breaker composition with recency alone.
+/// ´claim:params:genesis-seeds-recency-alone´
+#[sqlx::test(migrations = "../../migrations")]
+async fn genesis_seeds_the_ruled_tie_breaker_order(pool: PgPool) {
+    let rig = rig(pool);
+    bootstrap(&rig.standin, &rig.pool, genesis_input())
+        .await
+        .expect("genesis");
+    let read = parameters(&rig, json!(["tie_breaker_composition"])).await;
+    assert_eq!(read.len(), 1);
+    assert_eq!(read[0]["value"], "[\"recency\"]");
 }
 
 /// Named keys read exactly those parameters.
@@ -2716,4 +2744,1104 @@ fn no_query_reaches_session_material() {
         from_mutations.contains(&"AuthSession.accessToken".to_string()),
         "{from_mutations:?}"
     );
+}
+
+/// Ranked search (RF-4; ranked-feed-api §4.8): the in-slice candidate
+/// bound, the pod's order, the seam, and the pin the cursor carries.
+const SEARCH: &str = r#"query($q: String!, $order: ReadOrder, $viewer: UUID, $kinds: [NodeKind!],
+                          $first: Int, $after: String, $last: Int, $before: String) {
+  search(query: $q, order: $order, viewer: $viewer, kinds: $kinds,
+         first: $first, after: $after, last: $last, before: $before) {
+    totalCount
+    hasMorePeople
+    edges { cursor score node { __typename ... on Post { id } ... on User { id } } }
+    pageInfo { hasNextPage hasPreviousPage startCursor endCursor }
+  }
+}"#;
+
+/// A landed post by `author` with its own title, created `secs` into the
+/// fixture's day — the search index's newest-first key.
+async fn titled_post(
+    pool: &PgPool,
+    author: Uuid,
+    node: &NodeId,
+    epoch: i64,
+    title: &str,
+    secs: i64,
+) -> Uuid {
+    let id = Uuid::new_v4();
+    let mut tx = pool.begin().await.expect("tx");
+    content::insert_post(
+        &mut tx,
+        id,
+        author,
+        &node.to_string(),
+        "a=0;o=0",
+        Some(LandingOrder {
+            landed_epoch: epoch,
+            act_time: epoch * 100,
+            position: 0,
+        }),
+        chrono::DateTime::from_timestamp(1_800_000_000 + secs, 0).expect("instant"),
+        Some(title),
+        None,
+        "a body",
+        None,
+    )
+    .await
+    .expect("post");
+    tx.commit().await.expect("commit");
+    id
+}
+
+/// The search fixture. `v` holds an opinion of `a`, so `a`'s two posts
+/// lie in v's slice; `b`'s post matches too but no path of v's reaches it.
+/// Every title matches `salt`; only `salt` itself is an exact match.
+struct SearchFixture {
+    viewer: Uuid,
+    /// a's "salt maps", the oldest match (tier 1, in the slice).
+    near: Uuid,
+    /// a's "salt" (tier 0, in the slice).
+    near_exact: Uuid,
+    /// b's "salt flats", the newest match (tier 1, outside the slice).
+    far: Uuid,
+}
+
+async fn search_fixture(pool: &PgPool) -> SearchFixture {
+    let viewer = person(pool, "v", "user").await;
+    let a = person(pool, "a", "user").await;
+    let b = person(pool, "b", "user").await;
+    land(
+        pool,
+        ["v", "a", "b"]
+            .into_iter()
+            .map(|h| binary(h, 0, Family::Registration, prof(h)))
+            .collect(),
+    )
+    .await;
+    let (p1, p2, pb) = (
+        minted("a", 1, Family::Publish),
+        minted("a", 2, Family::Publish),
+        minted("b", 1, Family::Publish),
+    );
+    let epoch = land(
+        pool,
+        vec![
+            binary("v", 1, Family::Opinion, prof("a")),
+            binary("a", 1, Family::Publish, p1.clone()),
+            binary("a", 2, Family::Publish, p2.clone()),
+            binary("b", 1, Family::Publish, pb.clone()),
+        ],
+    )
+    .await;
+    SearchFixture {
+        viewer,
+        near: titled_post(pool, a, &p1, epoch, "salt maps", 1).await,
+        near_exact: titled_post(pool, a, &p2, epoch, "salt", 2).await,
+        far: titled_post(pool, b, &pb, epoch, "salt flats", 3).await,
+    }
+}
+
+async fn search_raw(rig: &WireRig, variables: Value) -> Value {
+    rig.gql_raw(None, SEARCH, variables).await
+}
+
+async fn search(rig: &WireRig, variables: Value) -> Value {
+    rig.gql(None, SEARCH, variables).await["search"].clone()
+}
+
+/// The page's rows as (post id, score).
+fn scored(page: &Value) -> Vec<(Uuid, Option<f64>)> {
+    page["edges"]
+        .as_array()
+        .expect("edges")
+        .iter()
+        .map(|edge| {
+            (
+                edge["node"]["id"]
+                    .as_str()
+                    .expect("a post id")
+                    .parse()
+                    .expect("uuid"),
+                edge["score"].as_f64(),
+            )
+        })
+        .collect()
+}
+
+/// The candidates the pod was last asked to rank.
+fn sent_search_candidates(pod: &StubPod) -> HashSet<Uuid> {
+    pod.last_variables()["candidates"]
+        .as_array()
+        .expect("candidates")
+        .iter()
+        .map(|c| c.as_str().expect("uuid").parse().expect("uuid"))
+        .collect()
+}
+
+/// `order: RANKED` ranks for a named view; with none it is refused, never
+/// served as some default view's ranking.
+///
+/// A ranked search without a viewer is BAD_INPUT.
+/// ´claim:search:ranked-needs-a-viewer´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_without_a_viewer_is_bad_input(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(search_ranking(&[]))).await;
+    search_fixture(&rig.pool).await;
+    let response = search_raw(&rig, json!({ "q": "salt", "order": "RANKED" })).await;
+    assert_eq!(codes(&response), vec!["BAD_INPUT"]);
+    assert!(pod.requests().is_empty());
+}
+
+/// No silent fallback (§4.8, the §4.5 law): a seam over every row would
+/// label all of them "beyond your reach", so the pod's absence is the
+/// drawn fault instead.
+///
+/// A ranked search with the ranker down is INTERNAL, never an all-seam list.
+/// ´claim:search:ranked-with-the-ranker-down-is-internal´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_with_the_ranker_down_is_internal(pool: PgPool) {
+    let closed = {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("bind");
+        listener.local_addr().expect("addr")
+    };
+    let rig = WireRig::with_ranker(
+        pool,
+        RateLimitConfig::unlimited(),
+        &RankerConfig {
+            url: format!("http://{closed}/graphql"),
+            ..RankerConfig::default()
+        },
+    );
+    let f = search_fixture(&rig.pool).await;
+    let (_guard, logs) = Logs::capture();
+    let response = search_raw(
+        &rig,
+        json!({ "q": "salt", "order": "RANKED", "viewer": f.viewer }),
+    )
+    .await;
+    assert_eq!(codes(&response), vec!["INTERNAL"]);
+    assert!(response["data"].is_null(), "{response}");
+    assert!(logs.text().contains("unreachable"), "{}", logs.text());
+}
+
+/// The candidate bound (§4.8 step 1): the pod is handed exactly the
+/// matches inside the viewer's slice at the pin, never a match outside it,
+/// however many the query has.
+///
+/// Ranked search hands the pod only the matches inside the viewer's slice, at the pin.
+/// ´claim:search:the-candidates-are-the-in-slice-matches´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_sends_only_the_matches_inside_the_viewers_slice(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(search_ranking(&[]))).await;
+    let f = search_fixture(&rig.pool).await;
+    let pin = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
+    search(
+        &rig,
+        json!({ "q": "salt", "order": "RANKED", "viewer": f.viewer }),
+    )
+    .await;
+    assert_eq!(
+        sent_search_candidates(&pod),
+        HashSet::from([f.near, f.near_exact])
+    );
+    assert_eq!(pod.last_variables()["viewer"], json!(f.viewer));
+    assert_eq!(pod.last_variables()["asOfEpoch"], json!(pin));
+}
+
+/// The pod's order is the head's order, scores carried as the pod gave
+/// them; every match the ranker cannot score follows behind, newest first,
+/// with no score. "sal" equals no title, so every match is a partial
+/// match and the head is one tier.
+///
+/// Ranked search serves the pod's order, then the unscored matches behind the seam, newest first.
+/// ´claim:search:the-pods-order-then-the-seam´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_orders_the_head_by_the_pod_and_the_rest_behind_the_seam(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = search_fixture(&rig.pool).await;
+    pod.set(Mode::Answer(search_ranking(&[
+        (f.near, "POST", 0.2),
+        (f.near_exact, "POST", 0.9),
+    ])));
+    let page = search(
+        &rig,
+        json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer }),
+    )
+    .await;
+    assert_eq!(
+        scored(&page),
+        vec![
+            (f.near, Some(0.2)),
+            (f.near_exact, Some(0.9)),
+            (f.far, None)
+        ]
+    );
+    assert_eq!(page["totalCount"], json!(3));
+}
+
+/// The tiers are the query's, not the ranker's (ExploreSearch.md:5): a
+/// full match stands before a partial one even when the ranker scored the
+/// partial one higher, and inside each tier the pod's order stands.
+///
+/// Under ranked search an exact match still leads, each tier in the pod's order.
+/// ´claim:search:the-exact-tier-leads-the-ranked-head´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_keeps_the_exact_match_tier_first(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = search_fixture(&rig.pool).await;
+    pod.set(Mode::Answer(search_ranking(&[
+        (f.near, "POST", 0.9),
+        (f.near_exact, "POST", 0.2),
+    ])));
+    let page = search(
+        &rig,
+        json!({ "q": "salt", "order": "RANKED", "viewer": f.viewer }),
+    )
+    .await;
+    assert_eq!(
+        scored(&page),
+        vec![
+            (f.near_exact, Some(0.2)),
+            (f.near, Some(0.9)),
+            (f.far, None)
+        ]
+    );
+}
+
+/// Ranking keeps the result sectioned: each section is its ranked head,
+/// then its own rest behind the seam. A person no path of the viewer's
+/// reaches still stands before the ranked content — the seam is drawn
+/// per section, never once across the whole result — and every walk,
+/// forward page by page and backward from the end, keeps that order.
+///
+/// Under ranked search an unranked person still precedes ranked content: one seam per section.
+/// ´claim:search:ranked-search-draws-a-seam-per-section´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_draws_a_seam_per_section(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = search_fixture(&rig.pool).await;
+    let salter = person(&rig.pool, "salter", "user").await;
+    pod.set(Mode::Answer(search_ranking(&[
+        (f.near, "POST", 0.9),
+        (f.near_exact, "POST", 0.2),
+    ])));
+    let whole = vec![
+        (salter, None),
+        (f.near, Some(0.9)),
+        (f.near_exact, Some(0.2)),
+        (f.far, None),
+    ];
+    let page = search(
+        &rig,
+        json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer }),
+    )
+    .await;
+    assert_eq!(scored(&page), whole);
+    assert_eq!(page["totalCount"], json!(4));
+
+    let mut walked = Vec::new();
+    let mut after = Value::Null;
+    loop {
+        let page = search(
+            &rig,
+            json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer,
+                    "first": 1, "after": after }),
+        )
+        .await;
+        walked.extend(scored(&page));
+        if page["pageInfo"]["hasNextPage"] != json!(true) {
+            break;
+        }
+        after = page["pageInfo"]["endCursor"].clone();
+    }
+    assert_eq!(walked, whole, "forward");
+    let mut back = Vec::new();
+    let mut before = Value::Null;
+    loop {
+        let page = search(
+            &rig,
+            json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer,
+                    "last": 1, "before": before }),
+        )
+        .await;
+        let mut chunk = scored(&page);
+        chunk.append(&mut back);
+        back = chunk;
+        if page["pageInfo"]["hasPreviousPage"] != json!(true) {
+            break;
+        }
+        before = page["pageInfo"]["startCursor"].clone();
+    }
+    assert_eq!(back, whole, "backward");
+}
+
+/// Under ranking the people section is capped in the ranked result's own
+/// order: the ranked people first, then the rest behind the seam, newest
+/// first — three in all — before the content's own head and seam. A
+/// person past the cap never reappears behind the seam; the count and
+/// the door follow what the pages serve, and every walk, forward page by
+/// page and backward from the end, keeps the cap.
+///
+/// Under ranked search the people section serves its first three: ranked people first, then the rest behind the seam.
+/// ´claim:search:ranked-search-caps-the-people-section´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_caps_the_people_section(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = search_fixture(&rig.pool).await;
+    let reached = person(&rig.pool, "saltnear", "user").await;
+    land(
+        &rig.pool,
+        vec![
+            binary("saltnear", 0, Family::Registration, prof("saltnear")),
+            binary("v", 2, Family::Opinion, prof("saltnear")),
+        ],
+    )
+    .await;
+    for handle in ["saltb", "saltc", "saltd", "salte"] {
+        person(&rig.pool, handle, "user").await;
+    }
+    pod.set(Mode::Answer(search_ranking(&[
+        (reached, "USER", 0.7),
+        (f.near, "POST", 0.9),
+        (f.near_exact, "POST", 0.2),
+    ])));
+
+    let people = search(&rig, json!({ "q": "sal", "kinds": ["USER"] })).await;
+    let unreached: Vec<Uuid> = scored(&people)
+        .into_iter()
+        .map(|(id, _)| id)
+        .filter(|id| *id != reached)
+        .collect();
+    assert_eq!(unreached.len(), 4);
+    assert_eq!(people["hasMorePeople"], json!(false));
+
+    let whole = vec![
+        (reached, Some(0.7)),
+        (unreached[0], None),
+        (unreached[1], None),
+        (f.near, Some(0.9)),
+        (f.near_exact, Some(0.2)),
+        (f.far, None),
+    ];
+    let page = search(
+        &rig,
+        json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer }),
+    )
+    .await;
+    assert_eq!(scored(&page), whole);
+    assert_eq!(page["totalCount"], json!(6));
+    assert_eq!(page["hasMorePeople"], json!(true));
+
+    let mut walked = Vec::new();
+    let mut after = Value::Null;
+    loop {
+        let page = search(
+            &rig,
+            json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer,
+                    "first": 1, "after": after }),
+        )
+        .await;
+        walked.extend(scored(&page));
+        if page["pageInfo"]["hasNextPage"] != json!(true) {
+            break;
+        }
+        after = page["pageInfo"]["endCursor"].clone();
+    }
+    assert_eq!(walked, whole, "forward");
+    let mut back = Vec::new();
+    let mut before = Value::Null;
+    loop {
+        let page = search(
+            &rig,
+            json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer,
+                    "last": 1, "before": before }),
+        )
+        .await;
+        let mut chunk = scored(&page);
+        chunk.append(&mut back);
+        back = chunk;
+        if page["pageInfo"]["hasPreviousPage"] != json!(true) {
+            break;
+        }
+        before = page["pageInfo"]["startCursor"].clone();
+    }
+    assert_eq!(back, whole, "backward");
+}
+
+/// An in-slice match no live path reaches is absent from the pod's
+/// answer, not zero-scored: it stands behind the seam with the
+/// out-of-slice matches, in the matcher's order.
+///
+/// A candidate the ranker leaves absent stands behind the seam, unscored.
+/// ´claim:search:an-unreached-candidate-stands-behind-the-seam´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_candidate_the_pod_leaves_absent_stands_behind_the_seam(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = search_fixture(&rig.pool).await;
+    pod.set(Mode::Answer(search_ranking(&[(f.near, "POST", 0.5)])));
+    let page = search(
+        &rig,
+        json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer }),
+    )
+    .await;
+    assert_eq!(
+        scored(&page),
+        vec![(f.near, Some(0.5)), (f.far, None), (f.near_exact, None)]
+    );
+}
+
+/// Paging reuses the pin (§4.8 "Paging"): the cursor carries the first
+/// page's epoch, every later page asks the pod at it even after a new
+/// epoch lands, and the pages join into the one order with no row twice.
+///
+/// A ranked search's later pages rank at the first page's pin.
+/// ´claim:search:ranked-pages-reuse-the-pin´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_pages_reuse_the_pin(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = search_fixture(&rig.pool).await;
+    pod.set(Mode::Answer(search_ranking(&[
+        (f.near_exact, "POST", 0.9),
+        (f.near, "POST", 0.2),
+    ])));
+    let pin = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
+    let variables = |after: Value| json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer, "first": 1, "after": after });
+    let first = search(&rig, variables(Value::Null)).await;
+    land(&rig.pool, vec![binary("v", 9, Family::Opinion, prof("b"))]).await;
+    let second = search(&rig, variables(first["pageInfo"]["endCursor"].clone())).await;
+    let third = search(&rig, variables(second["pageInfo"]["endCursor"].clone())).await;
+    assert_eq!(scored(&first), vec![(f.near_exact, Some(0.9))]);
+    assert_eq!(scored(&second), vec![(f.near, Some(0.2))]);
+    assert_eq!(scored(&third), vec![(f.far, None)]);
+    assert_eq!(third["pageInfo"]["hasNextPage"], json!(false));
+    assert_eq!(second["pageInfo"]["hasPreviousPage"], json!(true));
+    let pins: Vec<Value> = pod
+        .requests()
+        .iter()
+        .map(|r| r["variables"]["asOfEpoch"].clone())
+        .collect();
+    assert_eq!(pins, vec![json!(pin); 3]);
+}
+
+/// Walking backward crosses the seam the other way: the last rows are
+/// the tail's, and the page before the tail's head reaches into the
+/// ranked head.
+///
+/// A ranked search walks backward across the seam in the same order.
+/// ´claim:search:ranked-walks-back-across-the-seam´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_walks_back_across_the_seam(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = search_fixture(&rig.pool).await;
+    pod.set(Mode::Answer(search_ranking(&[
+        (f.near_exact, "POST", 0.9),
+        (f.near, "POST", 0.2),
+    ])));
+    let last = search(
+        &rig,
+        json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer, "last": 2 }),
+    )
+    .await;
+    assert_eq!(scored(&last), vec![(f.near, Some(0.2)), (f.far, None)]);
+    assert_eq!(last["pageInfo"]["hasPreviousPage"], json!(true));
+    let before = search(
+        &rig,
+        json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer,
+                "last": 2, "before": last["pageInfo"]["startCursor"] }),
+    )
+    .await;
+    assert_eq!(scored(&before), vec![(f.near_exact, Some(0.9))]);
+    assert_eq!(before["pageInfo"]["hasPreviousPage"], json!(false));
+    assert_eq!(before["pageInfo"]["hasNextPage"], json!(true));
+}
+
+/// Search must still find (PR-3's spirit): a viewer resolving to no
+/// rankable actor ranks nothing, so every match stands behind the seam —
+/// and the pod, which could only answer NOT_FOUND, is never called.
+///
+/// Ranked search for an unrankable viewer lists every match past the seam.
+/// ´claim:search:an-unrankable-viewer-lists-every-match-past-the-seam´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_for_an_unrankable_viewer_lists_every_match_past_the_seam(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(search_ranking(&[]))).await;
+    let f = search_fixture(&rig.pool).await;
+    let page = search(
+        &rig,
+        json!({ "q": "sal", "order": "RANKED", "viewer": Uuid::new_v4() }),
+    )
+    .await;
+    assert_eq!(
+        scored(&page),
+        vec![(f.far, None), (f.near_exact, None), (f.near, None)]
+    );
+    assert!(pod.requests().is_empty());
+}
+
+/// The relay adopts no answer it cannot place: an entry that was never a
+/// candidate, an entry ranked twice, or an answer at another epoch than
+/// the pin is a relay-visible fault, logged, never served.
+///
+/// A malformed pod search answer is INTERNAL and logged.
+/// ´claim:search:a-malformed-search-answer-is-internal´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_malformed_pod_search_answer_is_internal_and_logged(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = search_fixture(&rig.pool).await;
+    let pin = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
+    let mut wrong_epoch = search_ranking(&[(f.near, "POST", 0.5)]);
+    wrong_epoch["asOfEpoch"] = json!(pin - 1);
+    for answer in [
+        search_ranking(&[(f.far, "POST", 0.5)]),
+        search_ranking(&[(f.near, "POST", 0.5), (f.near, "POST", 0.4)]),
+        wrong_epoch,
+    ] {
+        pod.set(Mode::Answer(answer));
+        let (_guard, logs) = Logs::capture();
+        let response = search_raw(
+            &rig,
+            json!({ "q": "salt", "order": "RANKED", "viewer": f.viewer }),
+        )
+        .await;
+        assert_eq!(codes(&response), vec!["INTERNAL"], "{response}");
+        assert!(logs.text().contains("malformed"), "{}", logs.text());
+    }
+}
+
+/// `NEWEST` stays the viewer-independent order it always was: no score on
+/// any row, and no ranking requested.
+///
+/// A Newest search carries no score and never calls the ranker.
+/// ´claim:search:newest-never-calls-the-ranker´
+#[sqlx::test(migrations = "../../migrations")]
+async fn newest_search_carries_no_score_and_never_calls_the_ranker(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(search_ranking(&[]))).await;
+    let f = search_fixture(&rig.pool).await;
+    for order in [Value::Null, json!("NEWEST")] {
+        let page = search(
+            &rig,
+            json!({ "q": "salt", "order": order, "viewer": f.viewer }),
+        )
+        .await;
+        assert_eq!(
+            scored(&page),
+            vec![(f.near_exact, None), (f.far, None), (f.near, None)]
+        );
+    }
+    assert!(pod.requests().is_empty());
+}
+
+/// The live trace read (RF-7; ranked-feed-api §4.11, X-SR1): one target's
+/// score and paths, relayed to the pod's `rankSearch` with no pin.
+const TRACE: &str = r#"query($viewer: UUID!, $target: UUID!) {
+  feedTrace(viewer: $viewer, target: $target) {
+    score
+    paths {
+      sign contribution magnitude recency
+      nodes { graphId id kind }
+      hops {
+        pDirected pInterest weight
+        records {
+          id family landingEpoch landedAt
+          legs { role sourceId targetId pDirected pInterest }
+        }
+      }
+    }
+  }
+}"#;
+
+async fn trace_raw(rig: &WireRig, variables: Value) -> Value {
+    rig.gql_raw(None, TRACE, variables).await
+}
+
+async fn trace(rig: &WireRig, viewer: Uuid, target: Uuid) -> Value {
+    rig.gql(None, TRACE, json!({ "viewer": viewer, "target": target }))
+        .await["feedTrace"]
+        .clone()
+}
+
+/// A pod `rankSearch` answer for a trace: the given entries, as the pod's
+/// `FeedRanking` carries them.
+fn trace_answer(entries: Vec<Value>) -> Value {
+    json!({ "entries": entries, "settling": [] })
+}
+
+/// One traced entry with its paths, in the pod's wire.
+fn trace_entry(target: Uuid, score: f64, paths: Vec<Value>) -> Value {
+    json!({
+        "targetId": target,
+        "targetKind": "POST",
+        "score": score,
+        "tieBreakers": { "netStance": 1.0, "grossVolume": 2.0, "genesisEpochAge": 3 },
+        "mark": null,
+        "newestIndex": 0,
+        "paths": paths,
+    })
+}
+
+/// One extracted path: its raw node ids, its hops, its sign and
+/// contribution.
+fn trace_path(nodes: &[String], hops: Vec<Value>, sign: i64, contribution: f64) -> Value {
+    json!({
+        "nodeIds": nodes,
+        "hops": hops,
+        "sign": sign,
+        "magnitude": contribution.abs(),
+        "recency": 1.0,
+        "contribution": contribution,
+    })
+}
+
+/// One folded hop: its member record ids, its folded pair, its factor.
+fn trace_hop(records: &[String], pair: (f64, f64), weight: f64) -> Value {
+    json!({
+        "family": "opinion",
+        "role": "binary",
+        "authorId": "addr-x",
+        "sourceId": "",
+        "targetId": "",
+        "recordIds": records,
+        "members": [],
+        "pDirected": pair.0,
+        "pInterest": pair.1,
+        "maturity": 0.5,
+        "weight": weight,
+    })
+}
+
+fn record_id(handle: &str, seq: u64, family: Family) -> String {
+    act(handle, seq, family).to_string()
+}
+
+/// Comment K, the fixture's minted Review node, carried as a landed row.
+async fn landed_comment(pool: &PgPool, parent: Uuid) -> Uuid {
+    let id = Uuid::new_v4();
+    let author = actor_id(pool, "a").await;
+    let mut tx = pool.begin().await.expect("tx");
+    content::insert_comment(
+        &mut tx,
+        id,
+        parent,
+        "post",
+        author,
+        &minted("a", 3, Family::Review).to_string(),
+        "a=0;o=0",
+        Some(LandingOrder {
+            landed_epoch: 2,
+            act_time: 200,
+            position: 0,
+        }),
+        authored_at(0),
+        "a reply",
+        None,
+    )
+    .await
+    .expect("comment");
+    tx.commit().await.expect("commit");
+    id
+}
+
+/// The read is live (PR-39): its arguments are the viewer and the target
+/// and nothing else, so no pin can be sent, and the relay asks the pod at
+/// the newest ingested epoch for exactly the one target.
+///
+/// A trace reads one target at the newest epoch, with no pin argument.
+/// ´claim:trace:a-trace-is-live-and-unpinned´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_single_target_trace_reads_at_the_newest_epoch_with_no_pin(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(trace_answer(vec![]))).await;
+    let f = fixture(&rig.pool).await;
+    let data = rig
+        .gql(
+            None,
+            r#"{ __type(name: "Query") { fields { name args { name } } } }"#,
+            json!({}),
+        )
+        .await;
+    let args: Vec<String> = data["__type"]["fields"]
+        .as_array()
+        .expect("fields")
+        .iter()
+        .find(|field| field["name"] == "feedTrace")
+        .expect("feedTrace is declared")["args"]
+        .as_array()
+        .expect("args")
+        .iter()
+        .map(|arg| arg["name"].as_str().expect("name").to_string())
+        .collect();
+    assert_eq!(args, vec!["viewer", "target"]);
+    trace(&rig, f.viewer, f.post).await;
+    let cursor = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
+    assert_eq!(pod.last_variables()["asOfEpoch"], json!(cursor));
+    assert_eq!(pod.last_variables()["candidates"], json!([f.post]));
+    assert_eq!(pod.last_variables()["viewer"], json!(f.viewer));
+}
+
+/// The relay resolves the epoch itself and passes it explicitly, so a
+/// newer epoch is the next trace's: one pin-resolution path for the feed
+/// and the trace, one consistent slice snapshot for the pod's pages.
+///
+/// The trace hands the pod the mirror cursor at call time, explicitly.
+/// ´claim:trace:the-relay-passes-the-cursor´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_trace_passes_the_mirror_cursor_to_the_pod_explicitly(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(trace_answer(vec![]))).await;
+    let f = fixture(&rig.pool).await;
+    trace(&rig, f.viewer, f.post).await;
+    let first = pod.last_variables()["asOfEpoch"].clone();
+    let newer = land(&rig.pool, vec![binary("v", 9, Family::Opinion, prof("b"))]).await;
+    trace(&rig, f.viewer, f.post).await;
+    assert_eq!(first, json!(newer - 1));
+    assert_eq!(pod.last_variables()["asOfEpoch"], json!(newer));
+}
+
+/// An echoed epoch invites a re-pin, and a client has no use for one: the
+/// answer is a score and its paths, nothing else.
+///
+/// A trace answer carries no epoch.
+/// ´claim:trace:the-answer-carries-no-epoch´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_trace_answer_carries_no_epoch(pool: PgPool) {
+    let rig = rig(pool);
+    assert_eq!(
+        fields_of(&rig, "FeedTrace").await,
+        Some(vec!["score".to_string(), "paths".to_string()])
+    );
+}
+
+/// A target the pod leaves absent — unreached, unknown, or moved on — is
+/// an answer with no paths, which the client renders as the moved-on
+/// state; never an error.
+///
+/// A trace of an absent target answers a null score and no paths.
+/// ´claim:trace:an-absent-target-has-no-paths´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_trace_of_an_absent_target_answers_with_no_paths(pool: PgPool) {
+    let (rig, _pod) = pod_rig(pool, Mode::Answer(trace_answer(vec![]))).await;
+    let f = fixture(&rig.pool).await;
+    assert_eq!(
+        trace(&rig, f.viewer, f.post).await,
+        json!({ "score": null, "paths": [] })
+    );
+}
+
+/// A viewer resolving to no rankable actor reads null, as `feedRanking`
+/// does.
+///
+/// A trace for an unrankable viewer reads null.
+/// ´claim:trace:an-unrankable-viewer-reads-null´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_trace_for_an_unknown_viewer_reads_null(pool: PgPool) {
+    let (rig, _pod) = pod_rig(pool, Mode::Fault("NOT_FOUND")).await;
+    let f = fixture(&rig.pool).await;
+    let response = trace_raw(&rig, json!({ "viewer": Uuid::new_v4(), "target": f.post })).await;
+    assert!(response["errors"].is_null(), "{response}");
+    assert!(response["data"]["feedTrace"].is_null(), "{response}");
+}
+
+/// The pod's absence is the drawn fault (score-readout.md:853's mirror
+/// row), never a guessed or stale figure.
+///
+/// A trace read with the ranker down is INTERNAL.
+/// ´claim:trace:the-ranker-down-is-internal´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_trace_read_with_the_ranker_down_is_internal(pool: PgPool) {
+    let closed = {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("bind");
+        listener.local_addr().expect("addr")
+    };
+    let rig = WireRig::with_ranker(
+        pool,
+        RateLimitConfig::unlimited(),
+        &RankerConfig {
+            url: format!("http://{closed}/graphql"),
+            ..RankerConfig::default()
+        },
+    );
+    let f = fixture(&rig.pool).await;
+    let (_guard, logs) = Logs::capture();
+    let response = trace_raw(&rig, json!({ "viewer": f.viewer, "target": f.post })).await;
+    assert_eq!(codes(&response), vec!["INTERNAL"]);
+    assert!(response["data"]["feedTrace"].is_null(), "{response}");
+    assert!(logs.text().contains("unreachable"), "{}", logs.text());
+}
+
+/// The trace's own score is the sum of its paths' contributions
+/// (FeedEntry.md:15), and the paths come in the pod's extraction order —
+/// the relay never re-sorts them. Each node hydrates to its slice
+/// identity: CoGra's id and kind where CoGra carries the node.
+///
+/// A trace returns the pod's paths in extraction order, adding up to its score.
+/// ´claim:trace:paths-in-extraction-order-add-up´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_trace_returns_paths_in_extraction_order_summing_to_the_score(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = fixture(&rig.pool).await;
+    let a = actor_id(&rig.pool, "a").await;
+    let (v, pa, p) = (
+        prof("v").to_string(),
+        prof("a").to_string(),
+        f.p.to_string(),
+    );
+    pod.set(Mode::Answer(trace_answer(vec![trace_entry(
+        f.post,
+        0.3,
+        vec![
+            trace_path(
+                &[v.clone(), pa.clone(), p.clone()],
+                vec![
+                    trace_hop(&[record_id("v", 1, Family::Opinion)], (0.5, 0.5), 0.5),
+                    trace_hop(&[record_id("a", 1, Family::Publish)], (0.5, 0.5), 0.4),
+                ],
+                1,
+                0.5,
+            ),
+            trace_path(
+                &[v.clone(), p.clone()],
+                vec![trace_hop(
+                    &[record_id("v", 3, Family::Opinion)],
+                    (-0.2, 0.9),
+                    0.2,
+                )],
+                -1,
+                -0.2,
+            ),
+        ],
+    )])));
+    let answer = trace(&rig, f.viewer, f.post).await;
+    let paths = answer["paths"].as_array().expect("paths");
+    let contributions: Vec<f64> = paths
+        .iter()
+        .map(|path| path["contribution"].as_f64().expect("contribution"))
+        .collect();
+    assert_eq!(contributions, vec![0.5, -0.2]);
+    let sum: f64 = contributions.iter().sum();
+    assert!((sum - answer["score"].as_f64().expect("score")).abs() < 1e-12);
+    assert_eq!(paths[1]["sign"], json!(-1));
+    assert_eq!(
+        paths[0]["nodes"],
+        json!([
+            { "graphId": v, "id": f.viewer, "kind": "USER" },
+            { "graphId": pa, "id": a, "kind": "USER" },
+            { "graphId": p, "id": f.post, "kind": "POST" },
+        ])
+    );
+}
+
+/// A hop's records are exactly the fold's members the pod names, in its
+/// order — none added, none dropped, each the mirror's public `Record`.
+///
+/// Every hop carries exactly its fold's member records, in the pod's order.
+/// ´claim:trace:a-hop-carries-exactly-its-members´
+#[sqlx::test(migrations = "../../migrations")]
+async fn every_hop_carries_exactly_its_folds_members(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = fixture(&rig.pool).await;
+    let members = vec![
+        record_id("a", 1, Family::Publish),
+        record_id("a", 3, Family::Review),
+        record_id("a", 4, Family::Publish),
+    ];
+    pod.set(Mode::Answer(trace_answer(vec![trace_entry(
+        f.post,
+        0.4,
+        vec![trace_path(
+            &[prof("a").to_string(), f.p.to_string()],
+            vec![trace_hop(&members, (0.5, 0.4), 0.4)],
+            1,
+            0.4,
+        )],
+    )])));
+    let answer = trace(&rig, f.viewer, f.post).await;
+    let records: Vec<&str> = answer["paths"][0]["hops"][0]["records"]
+        .as_array()
+        .expect("records")
+        .iter()
+        .map(|r| r["id"].as_str().expect("id"))
+        .collect();
+    assert_eq!(records, members);
+    assert_eq!(
+        answer["paths"][0]["hops"][0]["records"][1]["family"],
+        json!("REVIEW")
+    );
+}
+
+/// X-SR4: hop `i` crosses `nodes[i]` → `nodes[i + 1]`, and the member's
+/// leg crossing it is the one in `Record.legs` with those ends. On a
+/// hyper act's terminal hop that is the T leg — the pair the hop shows is
+/// the T leg's, never the actor's A leg's.
+///
+/// A hop over a T leg shows the T leg's pair, and its member's matching leg is the T leg.
+/// ´claim:trace:a-t-leg-hop-shows-the-t-pair´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_t_leg_hop_shows_the_t_legs_pair_not_the_actors(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = fixture(&rig.pool).await;
+    let k = landed_comment(&rig.pool, f.post).await;
+    let review = record_id("a", 3, Family::Review);
+    let nodes = [
+        prof("v").to_string(),
+        prof("a").to_string(),
+        f.p.to_string(),
+        minted("a", 3, Family::Review).to_string(),
+    ];
+    pod.set(Mode::Answer(trace_answer(vec![trace_entry(
+        k,
+        0.1,
+        vec![trace_path(
+            &nodes,
+            vec![
+                trace_hop(&[record_id("v", 1, Family::Opinion)], (0.5, 0.5), 0.5),
+                trace_hop(&[record_id("a", 1, Family::Publish)], (0.5, 0.5), 0.5),
+                trace_hop(std::slice::from_ref(&review), (0.4, 0.1), 0.4),
+            ],
+            1,
+            0.1,
+        )],
+    )])));
+    let answer = trace(&rig, f.viewer, k).await;
+    let path = &answer["paths"][0];
+    assert_eq!(path["nodes"][3]["id"], json!(k));
+    assert_eq!(path["nodes"][3]["kind"], json!("COMMENT"));
+    let hop = &path["hops"][2];
+    assert_eq!(
+        (hop["pDirected"].clone(), hop["pInterest"].clone()),
+        (json!(0.4), json!(0.1))
+    );
+    let legs = hop["records"][0]["legs"].as_array().expect("legs");
+    let crossing: Vec<&Value> = legs
+        .iter()
+        .filter(|leg| leg["sourceId"] == json!(nodes[2]) && leg["targetId"] == json!(nodes[3]))
+        .collect();
+    assert_eq!(crossing.len(), 1);
+    assert_eq!(crossing[0]["role"], json!("T"));
+    assert_eq!(
+        (
+            crossing[0]["pDirected"].clone(),
+            crossing[0]["pInterest"].clone()
+        ),
+        (json!(0.4), json!(0.1))
+    );
+    let actor_leg = legs
+        .iter()
+        .find(|leg| leg["role"] == json!("A"))
+        .expect("the review's actor leg");
+    assert_ne!(actor_leg["pDirected"], hop["pDirected"]);
+}
+
+/// X-SR3: a record's landing instant is its epoch's attested boundary
+/// timestamp — wall-clock time for the ages ladder, never the logical
+/// act time.
+///
+/// A record's landing instant is its epoch's attested boundary timestamp.
+/// ´claim:trace:a-records-landing-instant-is-its-epochs´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_records_landing_instant_is_its_epochs_boundary_timestamp(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = fixture(&rig.pool).await;
+    pod.set(Mode::Answer(trace_answer(vec![trace_entry(
+        f.post,
+        0.4,
+        vec![trace_path(
+            &[prof("a").to_string(), f.p.to_string()],
+            vec![trace_hop(
+                &[
+                    record_id("a", 1, Family::Publish),
+                    record_id("a", 3, Family::Review),
+                ],
+                (0.5, 0.4),
+                0.4,
+            )],
+            1,
+            0.4,
+        )],
+    )])));
+    let answer = trace(&rig, f.viewer, f.post).await;
+    let records = &answer["paths"][0]["hops"][0]["records"];
+    for record in records.as_array().expect("records") {
+        let epoch = record["landingEpoch"].as_i64().expect("epoch");
+        let landed: chrono::DateTime<chrono::Utc> = record["landedAt"]
+            .as_str()
+            .expect("landedAt")
+            .parse()
+            .expect("an instant");
+        assert_eq!(landed, landing_instant(epoch), "{record}");
+    }
+    assert_ne!(records[0]["landedAt"], records[1]["landedAt"]);
+}
+
+/// Paths are drawn on demand (miner-api.md "Output"): the feed's own pod
+/// document selects none, so a feed open costs what it cost before the
+/// trace existed; only the trace's document asks for them.
+///
+/// A feed ranking never asks the pod for paths; only the trace does.
+/// ´claim:trace:the-feed-never-fetches-paths´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_feed_ranking_without_paths_selected_costs_what_it_costs_today(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(ranking(&[], &[]))).await;
+    let f = fixture(&rig.pool).await;
+    rank(&rig, None, json!({ "viewer": f.viewer })).await;
+    pod.set(Mode::Answer(trace_answer(vec![])));
+    trace(&rig, f.viewer, f.post).await;
+    let queries: Vec<String> = pod
+        .requests()
+        .iter()
+        .map(|r| r["query"].as_str().expect("query").to_string())
+        .collect();
+    assert!(queries[0].contains("rank(") && !queries[0].contains("paths"));
+    assert!(queries[1].contains("rankSearch(") && queries[1].contains("paths"));
+}
+
+/// The relay adopts no trace it cannot place: an answer at another epoch
+/// than it asked, an entry for another target, or a member record the
+/// mirror does not hold is a logged fault, never a served path.
+///
+/// A malformed pod trace answer is INTERNAL and logged.
+/// ´claim:trace:a-malformed-trace-is-internal´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_malformed_pod_trace_answer_is_internal_and_logged(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = fixture(&rig.pool).await;
+    let cursor = mirror::last_ingested_epoch(&rig.pool)
+        .await
+        .expect("cursor");
+    let mut wrong_epoch = trace_answer(vec![trace_entry(f.post, 0.1, vec![])]);
+    wrong_epoch["asOfEpoch"] = json!(cursor - 1);
+    let unheld = trace_answer(vec![trace_entry(
+        f.post,
+        0.1,
+        vec![trace_path(
+            &[prof("a").to_string(), f.p.to_string()],
+            vec![trace_hop(
+                &["act:nobody:1:publish".to_string()],
+                (0.5, 0.5),
+                0.5,
+            )],
+            1,
+            0.1,
+        )],
+    )]);
+    for answer in [
+        wrong_epoch,
+        trace_answer(vec![trace_entry(Uuid::new_v4(), 0.1, vec![])]),
+        unheld,
+    ] {
+        pod.set(Mode::Answer(answer));
+        let (_guard, logs) = Logs::capture();
+        let response = trace_raw(&rig, json!({ "viewer": f.viewer, "target": f.post })).await;
+        assert_eq!(codes(&response), vec!["INTERNAL"], "{response}");
+        assert!(logs.text().contains("malformed"), "{}", logs.text());
+    }
 }

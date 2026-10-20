@@ -18,6 +18,7 @@ import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.media.awaitReady
 import com.cogra.domain.media.overPictureCap
+import com.cogra.domain.signing.known
 
 /** Records one asset's upload state without disturbing the others (D5). */
 fun List<PickedAsset>.withUpload(uri: String, upload: AssetUpload): List<PickedAsset> =
@@ -164,7 +165,7 @@ internal suspend fun uploadFirstFrame(
  * the same way, conservatively.
  */
 internal fun MediaAssetView.toResolvedUpload(refused: UploadFailure): AssetUpload = when (state) {
-    MediaAssetState.READY -> AssetUpload.Done(id)
+    MediaAssetState.READY -> AssetUpload.Done(id, known())
     MediaAssetState.FAILED, MediaAssetState.UNKNOWN ->
         AssetUpload.Failed(refused, failureReason, retryable = false)
     MediaAssetState.PROCESSING -> error("awaitReady never returns Success while PROCESSING")

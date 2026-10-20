@@ -148,6 +148,8 @@ export const FLOW_MARKERS = {
     { n: 3, find: ">Walk it back</button>", tag: "button" },
     { n: 4, find: ">Cancel</button>", tag: "button" },
     { n: 5, find: ">Set</button>", tag: "button" },
+    // The `landing` chip's unreachable landing: its 🤔 is a door of its own.
+    { n: 6, find: 'aria-label="Interested, no side taken"', tag: "button" },
   ],
   /* The ceremony has exactly one control, which is the whole point of it. */
   VouchedIn: [{ n: 1, find: ">Go to your feed</button>", tag: "button" }],
@@ -234,9 +236,14 @@ Object.assign(FLOW_MARKERS, {
      other has not. */
   ExplorePerson: [
     { n: 11, find: ">saltmaps<", tag: "button" },
-    ...searchShell("salt", 6),
+    ...searchShell(">sal<", 6),
     { n: 4, find: "Salt maps of the coast road", tag: "button" },
     { n: 5, find: ">Sal Torres<", tag: "button" },
+    { n: 5, find: ">Ines Salas<", tag: "button" },
+    { n: 5, find: ">Salome Ward<", tag: "button" },
+    /* The people section's door (round 14, sectioned search (a)) takes the
+       board's next free number — the numbering is append-only. */
+    { n: 12, find: ">See all profiles</button>", tag: "button" },
   ],
   ExploreFilter: [
     { n: 1, find: 'aria-label="How the filter works"', tag: "button" },
@@ -599,6 +606,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 6, find: ">Report</button>", tag: "button" },
   ],
+  // The feed-hosted report confirm and license sheet (FC-G10): scanExempt
+  // like the detail's, numbered as ReportConfirm and PostLicense number them.
+  FeedReportConfirm: [
+    { n: 1, find: ">Report</button>", tag: "button" },
+    { n: 2, find: ">Cancel</button>", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  FeedPostLicense: [{ n: 1, find: 'class="cg-scrim-in"', tag: "div" }],
   // The report confirm (ruling 75): scanExempt like every menu board, so the
   // sheet's own pair and its scrim are all that carries numbers.
   ReportConfirm: [
@@ -914,11 +929,24 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   ComposePad: [
-    { n: 1, find: 'aria-label="Your opinion on your post"', tag: "button" },
-    { n: 2, find: 'aria-label="Opinion pad', tag: "div" },
+    { n: 1, find: 'aria-label="Your backing on your post"', tag: "button" },
+    { n: 2, find: 'aria-label="Backing pad', tag: "div" },
+    { n: 2, find: ">Set an exact value for your backing</button>", tag: "button" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  // The one-axis pad over a post edit (jakob 2026-10-16, PR-101) —
+  // `ComposePad`'s five numbers, the edit beneath inert under the wash, and
+  // the walk-back that parks the pick at the raw sum's opposite.
+  EditPad: [
+    { n: 1, find: 'aria-label="Your backing on your post"', tag: "button" },
+    { n: 2, find: 'aria-label="Backing pad for your own post"', tag: "div" },
+    { n: 2, find: ">Set an exact value for your backing</button>", tag: "button" },
+    { n: 3, find: ">Cancel</button>", tag: "button" },
+    { n: 4, find: ">Set</button>", tag: "button" },
+    { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
+    { n: 6, find: ">Walk it all back</button>", tag: "button" },
   ],
 });
 
@@ -1045,7 +1073,7 @@ Object.assign(FLOW_MARKERS, {
   EditComposeVideo: [
     { n: 14, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
-    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 2, find: 'aria-label="Leave — the edit is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
     { n: 4, find: 'aria-label="Remove this video"', tag: "button" },
     { n: 5, find: ">Describe the video</button>", tag: "button" },
@@ -1063,6 +1091,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 13, find: ">Mark</button>", tag: "button" },
     // The withdrawn tag's Undo (the readme's edit-withdrawal law), as on EditCompose.
     { n: 15, find: 'aria-label="Undo withdrawing #photography"', tag: "button" },
+    { n: 16, find: ">Adjust</button>", tag: "button" },
   ],
   ComposeUploading: [
     { n: 12, find: "aria-label=\"#tidemarket — set how it relates\"", tag: "button" },
@@ -1335,7 +1364,6 @@ Object.assign(FLOW_MARKERS, {
   ],
   ProfileApplicant: [
     ...ownProfile(),
-    { n: 9, find: "First light over the flats", tag: "button" },
     ...nav(10),
     // The ask link's permanent home (jakob 2026-10-02): the next free number
     // after the bell's 15. The `application` chip draws the card twice, open
@@ -1558,31 +1586,100 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 3, find: ">Undo</button>", tag: "button" },
   ],
-  // Saved and History: the back arrow, the rows (one control, one number, drawn
-  // once per row) and the bar.
+  /* Saved as a feed (the Saved redesign, jakob 2026-10-14), History's own
+     construction: the header's arrow and the search field, then the cards in
+     reading order down the column, FeedKinds' grammar — each card's own door
+     its own number, and what the cards repeat (author chip, tag chips, faces,
+     share, score, the post's ⋮) one number each (`all`). Each ⋮ is the card's
+     own Save, its first row reading Unsave here. The bar closes the list. */
   Saved: [
     { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
-    { n: 2, find: ">The long way home<", tag: "button" },
-    { n: 2, find: ">The third headland light is real<", tag: "button" },
-    { n: 2, find: ">Mira Voss<", tag: "button" },
-    { n: 2, find: ">Sunday at the tide market<", tag: "button" },
-    // The row's own unsave, drawn once per row — one edge covers all four.
-    { n: 8, find: 'aria-label="Unsave ', tag: "button", all: true },
-    ...nav(3),
+    { n: 2, find: ">Search what you saved<", tag: "div" },
+    { n: 3, find: '<a href="/u/', tag: "a", all: true },
+    { n: 4, find: 'aria-label="More on this post"', tag: "button", all: true },
+    { n: 5, find: ">More</button>", tag: "button" },
+    { n: 6, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 7, find: '<a href="/t/', tag: "a", all: true },
+    { n: 8, find: ">· 1 reference<", tag: "button" },
+    { n: 9, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
+    { n: 9, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
+    { n: 9, find: 'aria-label="Give your opinion on this comment"', tag: "button" },
+    { n: 9, find: ">Choose your opinion on this comment</button>", tag: "button" },
+    { n: 9, find: 'aria-label="Give your opinion on @mira"', tag: "button" },
+    { n: 9, find: ">Choose your opinion on @mira</button>", tag: "button" },
+    { n: 10, find: ">Feed score</span>", tag: "button", all: true },
+    { n: 11, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 11, find: 'aria-label="1 comment"', tag: "button" },
+    { n: 12, find: 'aria-label="Share ', tag: "button", all: true },
+    { n: 13, find: 'aria-label="On “', tag: "button" },
+    { n: 14, find: 'aria-label="More on this comment"', tag: "button" },
+    { n: 15, find: ">That stretch after the second bend", tag: "a" },
+    { n: 16, find: 'aria-label="Reply to @tobias"', tag: "button" },
+    { n: 17, find: 'aria-label="More about @mira"', tag: "button" },
+    { n: 18, find: ">Runs the stand by the sea wall", tag: "a" },
+    ...nav(19),
   ],
-  // The same list a moment after one row was unsaved. It borrows `Saved`'s
-  // numbering — the same controls in the same places — and appends `Undo`
-  // rather than inserting it, so no via renumbers.
+  /* Saved a moment after an unsave: the top viewport of the same page with
+     the post that went gone — the field, the comment, the person and the
+     words post — so it numbers its own subset in reading order, and the
+     snackbar's Undo takes the next free number after it. */
   SavedUndo: [
     { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
-    { n: 2, find: ">The third headland light is real<", tag: "button" },
-    { n: 2, find: ">Mira Voss<", tag: "button" },
-    { n: 2, find: ">Sunday at the tide market<", tag: "button" },
-    { n: 8, find: 'aria-label="Unsave ', tag: "button", all: true },
-    { n: 9, find: ">Undo</button>", tag: "button" },
-    ...nav(3),
+    { n: 2, find: ">Search what you saved<", tag: "div" },
+    { n: 3, find: 'aria-label="On “', tag: "button" },
+    { n: 4, find: '<a href="/u/', tag: "a", all: true },
+    { n: 5, find: 'aria-label="More on this comment"', tag: "button" },
+    { n: 6, find: ">That stretch after the second bend", tag: "a" },
+    { n: 7, find: '<a href="/t/', tag: "a", all: true },
+    { n: 8, find: 'aria-label="Give your opinion on this comment"', tag: "button" },
+    { n: 8, find: ">Choose your opinion on this comment</button>", tag: "button" },
+    { n: 8, find: 'aria-label="Give your opinion on @mira"', tag: "button" },
+    { n: 8, find: ">Choose your opinion on @mira</button>", tag: "button" },
+    { n: 8, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
+    { n: 8, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
+    { n: 9, find: 'aria-label="Reply to @tobias"', tag: "button" },
+    { n: 10, find: ">Feed score</span>", tag: "button", all: true },
+    { n: 11, find: 'aria-label="Share ', tag: "button", all: true },
+    { n: 12, find: 'aria-label="More about @mira"', tag: "button" },
+    { n: 13, find: ">Runs the stand by the sea wall", tag: "a" },
+    { n: 14, find: 'aria-label="More on this post"', tag: "button" },
+    { n: 15, find: 'aria-label="1 comment"', tag: "button" },
+    { n: 16, find: ">Undo</button>", tag: "button" },
+    ...nav(17),
+  ],
+  /* Saved searched to people (round 14, sectioned search): the arrow, the
+     field, then the people section top-down — each card's own controls one
+     number each across the three (`all`) — the door, the post, the bar. */
+  SavedSearch: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">@m<", tag: "div" },
+    { n: 3, find: '<a href="/u/', tag: "a", all: true },
+    { n: 4, find: 'aria-label="More about @mira"', tag: "button" },
+    { n: 4, find: 'aria-label="More about @maren"', tag: "button" },
+    { n: 4, find: 'aria-label="More about @mateo"', tag: "button" },
+    { n: 5, find: ">Runs the stand by the sea wall", tag: "a" },
+    { n: 5, find: ">Charts the tide pools", tag: "a" },
+    { n: 5, find: ">Boat repairs, mostly", tag: "a" },
+    { n: 6, find: 'aria-label="Give your opinion on @', tag: "button", all: true },
+    { n: 6, find: ">Choose your opinion on @", tag: "button", all: true },
+    { n: 6, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
+    { n: 6, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
+    { n: 7, find: ">Feed score</span>", tag: "button", all: true },
+    { n: 8, find: 'aria-label="Share ', tag: "button", all: true },
+    { n: 9, find: ">See all profiles</button>", tag: "button" },
+    { n: 10, find: 'aria-label="More on this post"', tag: "button" },
+    { n: 11, find: 'aria-label="1 comment"', tag: "button" },
+    ...nav(12),
   ],
   SavedEmpty: [{ n: 1, find: 'aria-label="Back to your profile"', tag: "a" }, ...nav(2)],
+  /* Saved searched to nothing (the Saved redesign): the arrow, the field
+     holding the query, the empty state's one action, the bar. */
+  SavedNone: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">brackish cartography<", tag: "div" },
+    { n: 3, find: ">Show everything</button>", tag: "button" },
+    ...nav(4),
+  ],
   /* History as a feed (the History redesign, 2026-10-05): the header's arrow,
      the search field and the trigger, then the cards in reading order down
      the column, FeedKinds' grammar — each card's own door its own number, and
@@ -1648,6 +1745,36 @@ Object.assign(FLOW_MARKERS, {
     { n: 17, find: 'aria-label="3 comments"', tag: "button" },
     { n: 18, find: ">Undo</button>", tag: "button" },
     ...nav(19),
+  ],
+  /* History searched to people (round 14, sectioned search): `SavedSearch`'s
+     construction, the trigger taking 3 after the field. */
+  HistorySearch: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">m<", tag: "div" },
+    { n: 3, find: 'what your history shows"', tag: "button" },
+    { n: 4, find: '<a href="/u/', tag: "a", all: true },
+    { n: 5, find: 'aria-label="More about @mira"', tag: "button" },
+    { n: 5, find: 'aria-label="More about @maren"', tag: "button" },
+    { n: 5, find: 'aria-label="More about @mateo"', tag: "button" },
+    { n: 6, find: ">Runs the stand by the sea wall", tag: "a" },
+    { n: 6, find: ">Charts the tide pools", tag: "a" },
+    { n: 6, find: ">Boat repairs, mostly", tag: "a" },
+    { n: 7, find: 'aria-label="Give your opinion on @', tag: "button", all: true },
+    { n: 7, find: ">Choose your opinion on @", tag: "button", all: true },
+    { n: 7, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
+    { n: 7, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
+    { n: 8, find: ">Feed score</span>", tag: "button", all: true },
+    { n: 9, find: 'aria-label="Share ', tag: "button", all: true },
+    { n: 10, find: ">See all profiles</button>", tag: "button" },
+    { n: 11, find: ">Low tide at six tomorrow", tag: "a", all: true },
+    { n: 11, find: ">Salt maps of the coast road", tag: "a" },
+    { n: 12, find: 'aria-label="Give your opinion on #', tag: "button", all: true },
+    { n: 12, find: ">Choose your opinion on #", tag: "button", all: true },
+    { n: 13, find: 'aria-label="Tag a new post with it"', tag: "button", all: true },
+    { n: 14, find: ">See all tags</button>", tag: "button" },
+    { n: 15, find: 'aria-label="More on this post"', tag: "button" },
+    { n: 16, find: 'aria-label="1 comment"', tag: "button" },
+    ...nav(17),
   ],
   HistoryEmpty: [{ n: 1, find: 'aria-label="Back to your profile"', tag: "a" }, ...nav(2)],
   /* History narrowed to nothing (the final brief, 2026-10-05). The `cause`
@@ -2102,7 +2229,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 14, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
     { n: 14, find: "aria-label=\"#saltmaps — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
-    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 2, find: 'aria-label="Leave — the edit is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
     // The `upload` chip's `failed` draws the row a second time, its second
     // tile marked; the `signing` chip's `slow` draws the footer a second time
@@ -2129,6 +2256,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 16, find: "+ Add pictures · 2 of 10", tag: "button" },
     { n: 17, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
     { n: 18, find: 'aria-label="Undo withdrawing Tide tables and the third headland — @juno"', tag: "button" },
+    // The opinion row's Adjust (jakob 2026-10-16, PR-101): the one-axis pad over the edit.
+    { n: 21, find: ">Adjust</button>", tag: "button" },
   ],
   /* The same edit with an empty batch — `EditCompose`'s markers, minus the one
      control that stops being one. The acts footer is a plain span at zero, so
@@ -2138,7 +2267,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 14, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
     { n: 14, find: "aria-label=\"#saltmaps — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
-    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 2, find: 'aria-label="Leave — the edit is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
     { n: 4, find: 'aria-label="Manage the pictures"', tag: "button" },
     { n: 5, find: 'data-field="Title"', tag: "div" },
@@ -2152,6 +2281,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 13, find: ">Mark</button>", tag: "button" },
     { n: 15, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
     { n: 16, find: "+ Add pictures · 2 of 10", tag: "button" },
+    { n: 17, find: ">Adjust</button>", tag: "button" },
   ],
   // Show all over the edit. The sheet is the same `PickedSheet` ComposePicked
   // draws, so the markers are its markers — but the REMOVE anchors are spelled
@@ -2176,7 +2306,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 12, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
     { n: 12, find: "aria-label=\"#saltmaps — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
-    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 2, find: 'aria-label="Leave — the edit is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
     { n: 4, find: "1px solid var(--border-field)", tag: "div" },
     { n: 5, find: "+ Add pictures or a video", tag: "button" },
@@ -2188,6 +2318,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 10, find: ">Sign the edit</button>", tag: "button" },
     { n: 11, find: ">Mark</button>", tag: "button" },
     { n: 13, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
+    { n: 14, find: ">Adjust</button>", tag: "button" },
   ],
   EditActs: [
     { n: 1, find: ">Done</button>", tag: "button" },
@@ -2314,6 +2445,8 @@ Object.assign(FLOW_MARKERS, {
     // The ninth, the eighth's twin (the reject extension), taking its next
     // free number for the same reason.
     { n: 15, find: ">@kel closed your application<", tag: "button" },
+    // The tenth, the opinion row's sibling (PR-72), the next free number.
+    { n: 16, find: ">@sol walked back their opinion on you<", tag: "button" },
   ],
   /* ── The Feed score’s drill-down (backlog item 13) ─────────────────────
      The path rows and the step rows carry one number each: they are one control

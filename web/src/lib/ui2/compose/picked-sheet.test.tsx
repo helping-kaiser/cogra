@@ -64,6 +64,24 @@ describe("PickedSheet", () => {
     expect(screen.getByLabelText("Remove picture 2")).toBeInTheDocument();
   });
 
+  // EditPicked.md / PickedSheet.jsx: the drag's non-drag twins, each only
+  // where the move is possible; the handle is named for its picture.
+  it("offers make-it-the-cover, move up and move down only where each is possible", () => {
+    const props = open();
+    expect(screen.queryByTestId("picked-sheet-make-cover-0")).toBeNull();
+    expect(screen.queryByTestId("picked-sheet-up-0")).toBeNull();
+    expect(screen.queryByTestId("picked-sheet-down-2")).toBeNull();
+    fireEvent.click(screen.getByTestId("picked-sheet-make-cover-2"));
+    expect(props.onMove).toHaveBeenLastCalledWith(2, 0);
+    fireEvent.click(screen.getByTestId("picked-sheet-up-1"));
+    expect(props.onMove).toHaveBeenLastCalledWith(1, 0);
+    fireEvent.click(screen.getByTestId("picked-sheet-down-1"));
+    expect(props.onMove).toHaveBeenLastCalledWith(1, 2);
+    expect(screen.getByLabelText("Reorder the cover")).toBeInTheDocument();
+    expect(screen.getByLabelText("Reorder picture 2")).toBeInTheDocument();
+    expect(screen.getByText("The first one is the cover.")).toBeInTheDocument();
+  });
+
   it("reports which picture is to be described", () => {
     const props = open();
     fireEvent.click(screen.getByTestId("picked-sheet-describe-2"));

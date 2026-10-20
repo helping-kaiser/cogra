@@ -129,7 +129,9 @@ describe("the stance stand-in", () => {
     const data = createStubStanceData({
       seed: { t: { records: [TAP_DEFAULT, TAP_DEFAULT, TAP_DEFAULT] } },
     });
-    expect(await data.sever(T)).toEqual({ kind: "success", value: { records: 3 } });
+    const shown = await data.bundle(T);
+    if (shown.kind !== "success") throw new Error("expected a standing");
+    expect(await data.sever(T, shown.value)).toEqual({ kind: "success", value: { records: 3 } });
     expect(data.severed).toEqual(["t"]);
     expect(await data.bundle(T)).toMatchObject({ value: { records: 0, severed: true } });
   });
@@ -147,7 +149,14 @@ describe("the stance stand-in", () => {
       await data.bundle(T),
       await data.project(T, TAP_DEFAULT),
       await data.commit(T, TAP_DEFAULT),
-      await data.sever(T),
+      await data.sever(T, {
+        current: ORIGIN,
+        rawSum: ORIGIN,
+        records: 0,
+        inert: true,
+        severed: true,
+        severance: { records: 0 },
+      }),
     ]) {
       expect(outcome.kind).toBe("failed");
     }

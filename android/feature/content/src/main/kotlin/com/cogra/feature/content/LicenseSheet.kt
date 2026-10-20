@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -31,9 +32,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.sheetContainerColor
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.LicenseChoice
+import java.util.Locale
 
 /**
  * A QUIET INSET, NOT A PARAGRAPH (`LicenseChooser.jsx:110-176`).
@@ -50,7 +54,7 @@ import com.cogra.domain.LicenseChoice
  * here is coloured — the terms are neither a warning nor a promotion.
  */
 @Composable
-internal fun LicenseTerms(license: LicenseChoice, testTag: String) {
+internal fun LicenseTerms(license: LicenseChoice, testTag: String, node: DataNode? = null) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -60,7 +64,7 @@ internal fun LicenseTerms(license: LicenseChoice, testTag: String) {
                 RoundedCornerShape(12.dp),
             )
             .padding(Space.x3)
-            .testTag(testTag),
+            .testTag(node?.tag ?: testTag),
         verticalArrangement = Arrangement.spacedBy(Space.x2),
     ) {
         Row(
@@ -81,23 +85,44 @@ internal fun LicenseTerms(license: LicenseChoice, testTag: String) {
                 Text(
                     stringResource(R.string.content_license_terms_public_domain),
                     style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.testTag("${testTag}_public_domain"),
+                    modifier = if (node == null) {
+                        Modifier.testTag("${testTag}_public_domain")
+                    } else {
+                        Modifier.dataNode(node.div("publicDomain"))
+                    },
                 )
             }
         }
+        val axes = node?.div("axis")
         licenseReadings(license).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(Space.x2)) {
+            val axis = axes?.keyed(axisKey(row.axis))
+            Row(
+                modifier = Modifier.dataNode(axis),
+                horizontalArrangement = Arrangement.spacedBy(Space.x2),
+            ) {
                 Text(
                     row.axis,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.width(116.dp),
+                    modifier = Modifier.width(116.dp).dataNode(axis?.div("label")),
                 )
-                Text(row.reading, style = MaterialTheme.typography.bodySmall)
+                Text(
+                    row.reading,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.dataNode(axis?.div("value")),
+                )
             }
         }
     }
 }
+
+/**
+ * The key a terms row is registered under (`…terms.axis`): the axis's name as
+ * the terms print it, lowercased, each run of other characters one `-` — so
+ * `credit` and `public-record-of-use`.
+ */
+internal fun axisKey(axis: String): String =
+    axis.lowercase(Locale.ROOT).replace(Regex("[^a-z0-9]+"), "-")
 
 /**
  * IT CARRIES NO `SheetTitle`. The inset heads itself — its caption is the words
@@ -109,6 +134,10 @@ internal fun LicenseTerms(license: LicenseChoice, testTag: String) {
  * plain page — a comment's own terms, raised over the comments thread
  * (`CommentLicense.jsx`, design/readme.md:2364). The post's own terms stay
  * unstacked, over the post page.
+ *
+ * [node] is the registered sheet where a board draws one (`feed.licenseSheet`,
+ * `postDetail.licenseSheet`): the sheet wears it, with its grip and `terms`
+ * parts, in place of [testTag].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -117,6 +146,7 @@ internal fun LicenseSheet(
     onDismiss: () -> Unit,
     testTag: String = "license_sheet",
     stacked: Boolean = false,
+    node: DataNode? = null,
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -125,7 +155,10 @@ internal fun LicenseSheet(
             MaterialTheme.colorScheme,
             MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
-        modifier = Modifier.testTag(testTag),
+        modifier = Modifier.testTag(node?.tag ?: testTag),
+        dragHandle = {
+            BottomSheetDefaults.DragHandle(modifier = Modifier.dataNode(node?.div("dragHandle")))
+        },
     ) {
         Column(
             modifier = Modifier
@@ -133,7 +166,7 @@ internal fun LicenseSheet(
                 .padding(horizontal = Space.x6)
                 .padding(bottom = Space.x6),
         ) {
-            LicenseTerms(license, "${testTag}_terms")
+            LicenseTerms(license, "${testTag}_terms", node?.div("terms"))
         }
     }
 }

@@ -10,6 +10,9 @@ CARGO          = cargo
 # postcondition rather than a proxy for it. Same default as compose and
 # .env.example (development.md "Environment Variables").
 MEDIA_BUCKET ?= cogra-media
+# The operator-only bucket the one-shot provisions last (data-model.md
+# "Media areas"): its existence is the postcondition `wait-media` probes.
+MEDIA_HELD_BUCKET ?= cogra-media-held
 
 # How long a readiness wait may take before it fails with a message.
 # Generous against a cold image pull on a slow link; the point is that an
@@ -27,7 +30,7 @@ WEB_APK_DIR       = web/public/downloads
 # guest APK trusts it so it can talk https to this machine's web origin.
 ANDROID_DEV_CA = android/app/src/devCa/res/raw/cogra_dev_ca.pem
 
-.PHONY: help init up down reset-db migrate wait-db wait-media api api-release bootstrap run ci ci-all lint lint-corpus regenerate fmt test build logs dev docs-link-check schema vectors constants fold-vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-format android-test android-build web-dev web-prod web-apk guest-apk web-ci design-ci fuzz-interchange fuzz-linter
+.PHONY: help init up down reset-db migrate wait-db wait-media api ranker api-release bootstrap release-publish run ci ci-all lint lint-corpus regenerate fmt test build logs dev docs-link-check schema ranker-schema vectors constants fold-vectors intent-vectors envelope-vectors ranker-vectors tokens sqlx-prepare sqlx-check android-ci android-lint android-format android-test android-build web-dev web-prod web-apk guest-apk web-ci design-ci fuzz-interchange fuzz-linter
 
 help: ## Show available commands
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -75,22 +78,27 @@ wait-db: ## Block until Postgres accepts connections
 		sleep 1; \
 	done
 
-# The postcondition, not a proxy for it: `mc stat` on the bucket succeeds
-# only after the media-init one-shot both created it and opened anonymous
-# download on it, which is the whole of what provisioning does. Waiting on
+# The postcondition, not a proxy for it: `mc stat` on the held bucket
+# succeeds only after the media-init one-shot created the live bucket and
+# opened anonymous download on it, then created the carried and held
+# buckets with no anonymous policy — the held one last, so its existence
+# is the whole of what provisioning does. Waiting on
 # the SERVER instead let `make dev` start the API in the window between a
 # ready store and a provisioned one — widest right after `reset-db`, which
 # destroys the volume and guarantees the one-shot has real work to do.
-wait-media: ## Block until the media object store has its bucket
-	@echo "Waiting for the media store's bucket to be provisioned..."
+wait-media: ## Block until the media object store has its buckets
+	@echo "Waiting for the media store's buckets to be provisioned..."
 	@deadline=$$(( $$(date +%s) + $(WAIT_TIMEOUT) )); \
-	until $(DOCKER_COMPOSE) exec -T media mc stat local/$(MEDIA_BUCKET) > /dev/null 2>&1; do \
-		[ $$(date +%s) -lt $$deadline ] || { echo "Error: the bucket $(MEDIA_BUCKET) was not provisioned within $(WAIT_TIMEOUT)s — see 'make logs' for the media-init one-shot"; exit 1; }; \
+	until $(DOCKER_COMPOSE) exec -T media mc stat local/$(MEDIA_HELD_BUCKET) > /dev/null 2>&1; do \
+		[ $$(date +%s) -lt $$deadline ] || { echo "Error: the bucket $(MEDIA_HELD_BUCKET) was not provisioned within $(WAIT_TIMEOUT)s — see 'make logs' for the media-init one-shot"; exit 1; }; \
 		sleep 1; \
 	done
 
 api: ## Start the API server
 	$(CARGO) run -p api
+
+ranker: ## Start the ranker pod beside the API (API_URL, RANKER_BIND; ranker-core §4.4)
+	$(CARGO) run -p ranker-server --bin cogra-ranker
 
 api-release: ## Start the API server (optimized build; realistic auth/crypto latency)
 	$(CARGO) run --release -p api
@@ -106,6 +114,9 @@ SCHEMA_TARGET_DIR ?= target/schema
 schema: ## Regenerate schema.graphql (the frontend contract) from the Rust schema
 	CARGO_TARGET_DIR=$(SCHEMA_TARGET_DIR) $(CARGO) run -p api --bin export-schema > schema.graphql
 
+ranker-schema: ## Regenerate ranker-schema.graphql (the pod's contract the api's relay generates from) from ranker-server
+	CARGO_TARGET_DIR=$(SCHEMA_TARGET_DIR) $(CARGO) run -p ranker-server --bin export-ranker-schema > ranker-schema.graphql
+
 vectors: ## Regenerate client-crypto-vectors.json (the client crypto contract) from common
 	UPDATE_CLIENT_VECTORS=1 $(CARGO) test -p common --test client_vectors
 
@@ -114,6 +125,15 @@ constants: ## Regenerate client-constants.json (the caps, page size, registratio
 
 fold-vectors: ## Regenerate stance-fold-vectors.json (the local stance fold both clients re-implement) from common
 	UPDATE_STANCE_FOLD_VECTORS=1 $(CARGO) test -p common --test stance_fold_vectors
+
+intent-vectors: ## Regenerate intent-vectors.json (the device intent check both clients implement) from common
+	UPDATE_INTENT_VECTORS=1 $(CARGO) test -p common --test intent_vectors
+
+envelope-vectors: ## Regenerate envelope-vectors.json (the payload envelope decoder both clients implement) from common
+	UPDATE_ENVELOPE_VECTORS=1 $(CARGO) test -p common --test envelope_vectors
+
+ranker-vectors: ## Regenerate crates/ranker/tests/vectors/ranker-vectors.json (the ranker's bit-exact golden vectors) from ranker
+	UPDATE_RANKER_VECTORS=1 $(CARGO) test -p ranker --test vectors
 
 tokens: ## Regenerate design/tokens/scheme.json (the M3 scheme design/tokens/colors.css transcribes) from design.md §2.2
 	cd web && UPDATE_DESIGN_TOKENS=1 npx vitest run src/lib/ui/design-tokens.test.ts
@@ -127,6 +147,12 @@ sqlx-check: ## Verify .sqlx/ matches the queries against the live schema (needs 
 bootstrap: up ## One-time instance setup: seed genesis and land the L1 genesis records
 	$(MAKE) wait-db
 	$(CARGO) run -p api --bin bootstrap
+
+# A component's row is published only once its artifact is live
+# (development.md "The release CLI"); ARGS carries the CLI's flags.
+release-publish: up ## Publish a release into the registry: make release-publish ARGS="--component web --version 0.1.1 --notes-file notes.txt"
+	$(MAKE) wait-db
+	$(CARGO) run -p api --bin release -- publish $(ARGS)
 
 dev: up ## Start DBs, run migrations, then start the API
 	$(MAKE) wait-db

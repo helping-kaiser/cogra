@@ -14,29 +14,26 @@ ALWAYS feed.vouchCard.hint stands beside feed.vouchCard.stance.anchor and reads 
 
 ALWAYS feed.vouchCard.hint reads Tap the face to vouch back. GIVEN the member who vouched the account in deleted their account
 
-ALWAYS feed.vouchCard.stance.anchor.face is the hollow face, the account holding no opinion of the member who vouched it in
+ALWAYS feed.vouchCard.stance.anchor.face is the empty face, the account holding no opinion of the member who vouched it in
 
-ALWAYS feed.vouchCard.stance.anchor.face wears full ink on the card, never the muted resting treatment, the hollow glyph alone saying no opinion yet
-
+ALWAYS feed.vouchCard.stance.anchor.face is the line face drawn in the card's own ink, never the 🫥 emoji and never the muted resting treatment, the empty face alone saying no opinion yet GIVEN the account holds no opinion of the member who vouched it in
 ALWAYS feed.vouchCard and its band claim no order between the vouch-back and any other opinion
 
-ALWAYS the band reads Browsing from @mira's view — your first opinion starts your own. GIVEN the member has signed no opinion yet
+ALWAYS the band reads Browsing from @mira's view — your first opinion starts your own. GIVEN the member has signed no live opinion yet, one with neither number at zero
 
-ALWAYS the band reads Browsing from a deleted account's view — your first opinion starts your own. GIVEN the member has signed no opinion yet and the issuer's account was deleted
+ALWAYS the band reads Browsing from a deleted account's view — your first opinion starts your own. GIVEN the member has signed no live opinion yet and the issuer's account was deleted
 
 ALWAYS the band carries no Vouch back and asks for nothing
 
 ALWAYS the band stands on the Feed root only, and never on Explore or the reader's own profile
 
-WHEN the member's first opinion is signed, toward any target -> the borrowed view ends AND the band leaves at once AND the feed reads the member's own view from its next refresh AND NEVER the feed reloads at the signing
+WHEN the member's first live opinion is signed, toward any target -> the borrowed view ends AND the band leaves at once AND the feed reads the member's own view from its next refresh AND NEVER the feed reloads at the signing
 
-WHEN the member's first opinion, toward any target, expires instead of landing GIVEN no other opinion of theirs has landed -> the borrowed view returns AND the ordinary did-not-land notice answers alongside it
+WHEN the member's first live opinion, toward any target, expires instead of landing GIVEN no other live opinion of theirs has landed -> the borrowed view returns AND the ordinary did-not-land notice answers alongside it
 
-WHEN the member signs an Affinity GIVEN no opinion of theirs is signed -> NEVER the borrowed view ends
+WHEN the member signs an Affinity GIVEN no live opinion of theirs is signed -> NEVER the borrowed view ends
 
-WHEN the account lands, its registration and the approving vouch both confirmed GIVEN an opinion staged during the application signs with it -> NEVER the band stands AND NEVER the feed reloads at the flip AND the feed reads the member's own view from its next refresh
-
-ALWAYS acts staged during the application sign at the landing, one automatic batch, and never at the registration
+WHEN the member signs an opinion with a number at zero GIVEN no live opinion of theirs is signed -> NEVER the borrowed view ends
 
 WHEN tap feed.vouchCard.stance.anchor GIVEN no vouch-back is kept -> the vouch-back pad blooms at the gentle default +0.10 / +0.10
 

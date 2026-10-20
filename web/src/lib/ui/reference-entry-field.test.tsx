@@ -2,8 +2,9 @@
 // from the 2.3 tag-entry suite on purpose: the two sections are
 // siblings, and a failure should say which one broke.
 
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
+import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { newReferenceDraft, type ReferenceDraft } from "@/lib/references/draft";
@@ -201,5 +202,102 @@ describe("ReferenceEntryField", () => {
       "That target can't be referenced.",
     );
     expect(screen.queryByTestId("compose-reference-error-0")).not.toBeInTheDocument();
+  });
+
+  // THE COMPOSER'S HOST (ComposeDetails.md): a staged citation's pair is set
+  // in `RefPair`, committed on Done and dropped on every other way out.
+  describe("on the composer — the pair in its sheet", () => {
+    function SheetHost({ initial }: { initial: readonly ReferenceDraft[] }) {
+      const [references, setReferences] = useState(initial);
+      return (
+        <>
+          <ReferenceEntryField
+            references={references}
+            onChange={setReferences}
+            cap={10}
+            testIdPrefix="compose"
+            finderDebounceMs={0}
+            pairs="sheet"
+          />
+          <output data-testid="state">
+            {JSON.stringify(
+              references.map(({ targetId, relevance, support }) => ({ targetId, relevance, support })),
+            )}
+          </output>
+        </>
+      );
+    }
+    const staged = () =>
+      JSON.parse(screen.getByTestId("state").textContent ?? "[]") as {
+        targetId: string;
+        relevance: number;
+        support: number;
+      }[];
+    const pairSheet = () => screen.getByTestId("compose-reference-pair") as HTMLDialogElement;
+
+    it("stages a picked citation at +0.10 / +0.10, with no pair standing inline", async () => {
+      server.use(candidatesRespond([userCandidate("u-ada", "ada")]));
+      renderWithProviders(<SheetHost initial={[]} />);
+      fireEvent.click(screen.getByTestId("compose-reference-add"));
+      fireEvent.change(screen.getByTestId("compose-finder-query"), { target: { value: "ada" } });
+      fireEvent.click(await screen.findByTestId("compose-finder-candidate-u-ada"));
+      expect(staged()).toEqual([{ targetId: "u-ada", relevance: 0.1, support: 0.1 }]);
+      expect(screen.queryByRole("slider")).not.toBeInTheDocument();
+    });
+
+    it("opens the picker beside a staged citation and keeps it", () => {
+      renderWithProviders(<SheetHost initial={[mention("u-ada", "ada")]} />);
+      fireEvent.click(screen.getByTestId("compose-reference-add"));
+      expect(screen.getByTestId("compose-finder")).toBeInTheDocument();
+      expect(staged().map((reference) => reference.targetId)).toEqual(["u-ada"]);
+    });
+
+    it("opens the citation's pair in a sheet titled by it, and Done carries the pair", () => {
+      render(<SheetHost initial={[mention("u-ada", "ada"), mention("u-bob", "bob")]} />);
+      fireEvent.click(screen.getByTestId("compose-reference-1-select"));
+      expect(pairSheet().open).toBe(true);
+      expect(pairSheet()).toHaveAttribute("aria-label", "@bob");
+      // No sliders stand under the chip — the pair is the sheet's.
+      expect(screen.queryByTestId("compose-reference-1-relevance")).not.toBeInTheDocument();
+      expect(screen.getByTestId("compose-reference-pair-exact")).toHaveTextContent("+0.10 / +0.10");
+
+      fireEvent.click(screen.getByTestId("compose-reference-pair-exact-route"));
+      fireEvent.change(screen.getByTestId("compose-reference-pair-tracks-interest"), {
+        target: { value: "-0.5" },
+      });
+      // Nothing reaches the staged citation while the sheet is up.
+      expect(staged()[1]!.support).toBe(0.1);
+      fireEvent.click(screen.getByTestId("compose-reference-pair-done"));
+      expect(staged()).toEqual([
+        { targetId: "u-ada", relevance: 0.1, support: 0.1 },
+        { targetId: "u-bob", relevance: 0.1, support: -0.5 },
+      ]);
+    });
+
+    it("drops what the sheet staged on a scrim tap or a close request", () => {
+      render(<SheetHost initial={[mention("u-ada", "ada")]} />);
+      fireEvent.click(screen.getByTestId("compose-reference-0-select"));
+      fireEvent.click(screen.getByTestId("compose-reference-pair-exact-route"));
+      fireEvent.change(screen.getByTestId("compose-reference-pair-tracks-directed"), {
+        target: { value: "0.9" },
+      });
+      fireEvent.click(pairSheet());
+      expect(staged()[0]).toEqual({ targetId: "u-ada", relevance: 0.1, support: 0.1 });
+
+      fireEvent.click(screen.getByTestId("compose-reference-0-select"));
+      fireEvent.click(screen.getByTestId("compose-reference-pair-exact-route"));
+      fireEvent.change(screen.getByTestId("compose-reference-pair-tracks-directed"), {
+        target: { value: "0.9" },
+      });
+      act(() => pairSheet().close());
+      expect(staged()[0]).toEqual({ targetId: "u-ada", relevance: 0.1, support: 0.1 });
+    });
+
+    it("takes a citation out on the spot from its ×, with no dialog", () => {
+      render(<SheetHost initial={[mention("u-ada", "ada")]} />);
+      fireEvent.click(screen.getByTestId("compose-reference-0-remove"));
+      expect(staged()).toEqual([]);
+      expect(screen.queryByTestId("compose-reference-pair")).not.toBeInTheDocument();
+    });
   });
 });

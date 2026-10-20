@@ -26,8 +26,19 @@
 import { usePathname } from "next/navigation";
 import { useRef } from "react";
 
+import { announceFeedReselect } from "@/lib/feed/feed-reselect";
+import { notificationsOrigin } from "@/lib/notifications/origin";
+import type { BellRoot } from "@/lib/notifications/row-content";
 import { useAuthPhase } from "@/lib/session/provider";
-import { BottomNav } from "@/lib/ui/bottom-nav";
+import { BottomNav, type NavSlot } from "@/lib/ui/bottom-nav";
+
+/** The bar slot each bell root lights. */
+const ROOT_SLOT: Record<BellRoot, NavSlot> = {
+  feed: "feed",
+  explore: "search",
+  wallet: "wallet",
+  profile: "profile",
+};
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -40,15 +51,35 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     pathname.startsWith("/u/") ||
     // The own profile is a gated read surface: its frame waits for the
     // gate, which replaces a signed-out arrival with /login.
-    (signedIn && pathname === "/profile");
+    (signedIn && pathname === "/profile") ||
+    (signedIn && pathname === "/saved") ||
+    (signedIn && pathname === "/notifications");
   const showBar = phase !== "resolving" && readSurface;
+  // SAVED KEEPS PROFILE LIT (Saved.md, design digest item 51: the originating
+  // root stays lit on a drill-in) — its one door is the reader's own profile.
+  // NOTIFICATIONS KEEPS LIT THE ROOT THE BELL WAS TAPPED ON (Notifications.md:27).
   const active =
-    pathname === "/feed" ? "feed" : pathname === "/profile" ? "profile" : null;
+    pathname === "/feed"
+      ? "feed"
+      : pathname === "/profile" || pathname === "/saved"
+        ? "profile"
+        : pathname === "/notifications"
+          ? ROOT_SLOT[notificationsOrigin(null)]
+          : null;
   // The bar is drawn once, here, but its node belongs to the SCREEN it rides
-  // (`design/designs/canonical/nodes.json` registers `feed.bottomBar` and
-  // `postDetail.bottomBar`), so the registered screens name it by route.
+  // (`design/designs/canonical/nodes.json` registers `feed.bottomBar`,
+  // `postDetail.bottomBar` and `saved.bottomBar`), so the registered screens
+  // name it by route.
   const screen =
-    pathname === "/feed" ? "feed" : /^\/posts\/[^/]+$/.test(pathname) ? "postDetail" : null;
+    pathname === "/feed"
+      ? "feed"
+      : /^\/posts\/[^/]+$/.test(pathname)
+        ? "postDetail"
+        : pathname === "/saved"
+          ? "saved"
+          : pathname === "/notifications"
+            ? "notifications"
+            : null;
   const scroller = useRef<HTMLDivElement>(null);
   return (
     <div className="flex h-full flex-col">
@@ -65,6 +96,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             active={active}
             signedIn={signedIn}
             node={screen === null ? undefined : { path: `${screen}.bottomBar` }}
+            // Over the feed's own root the Feed slot is a re-tap the feed
+            // answers; from anywhere deeper it is the way back to the root,
+            // which comes back at the scroll it was left (Feed.md:85).
+            onReselectFeed={pathname === "/feed" ? announceFeedReselect : undefined}
           />
         )}
       </ScrollHostProvider>

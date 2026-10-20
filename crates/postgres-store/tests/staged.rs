@@ -59,10 +59,13 @@ fn verified_act(p: &Proposal) -> VerifiedAct {
         author_pubkey: vec![1; 32],
         nonce: vec![2; 32],
         pre_signature: vec![3; 64],
+        pre_commitment: common::l1::handshake::pre_commitment(p, &[2; 32]).to_vec(),
         content_salt: vec![4; 32],
         deps_salt: vec![5; 32],
         content_commitment: vec![6; 32],
         deps_commitment: vec![7; 32],
+        content_edition: common::l1::handshake::EDITION,
+        deps_edition: common::l1::handshake::EDITION,
         host_seal: vec![8; 64],
     }
 }
@@ -123,6 +126,7 @@ async fn seq_allocation_is_monotone_and_catches_up_with_the_mirror(pool: PgPool)
         &pool,
         &EpochPackage {
             epoch: 0,
+            attested_at: chrono::Utc::now(),
             records: vec![published("alice", 7, Family::Registration, 0, 0)],
         },
     )
@@ -168,6 +172,7 @@ async fn seq_catch_up_agrees_with_the_rust_parser_and_survives_a_stray_row(pool:
         &pool,
         &EpochPackage {
             epoch: 0,
+            attested_at: chrono::Utc::now(),
             records: vec![published("alice", 4, Family::Registration, 0, 0)],
         },
     )
@@ -339,6 +344,7 @@ async fn promotion_lands_exactly_the_staged_writes_whose_records_arrive(pool: Pg
         &pool,
         &EpochPackage {
             epoch: 0,
+            attested_at: chrono::Utc::now(),
             records: vec![published("alice", 0, Family::Opinion, 0, 0)],
         },
     )
@@ -461,6 +467,7 @@ async fn a_record_landing_after_expiry_still_promotes(pool: PgPool) {
         &pool,
         &EpochPackage {
             epoch: 0,
+            attested_at: chrono::Utc::now(),
             records: vec![published("alice", 0, Family::Opinion, 0, 0)],
         },
     )
@@ -506,4 +513,81 @@ async fn has_live_targeting_sees_only_live_writes_at_the_target(pool: PgPool) {
             .await
             .expect("query")
     );
+}
+
+/// A staging nobody signed is superseded rather than left to hold the next
+/// edit until GC, and once superseded it can never be signed. A signed one
+/// still holds the guard, as does a carried act or an unchained write, and
+/// another target or actor is left alone.
+///
+/// Superseding expires exactly the actor's unsigned chained writes toward the target, and a superseded write can no longer be pre-signed.
+/// ´claim:staged:superseding-expires-only-unsigned-chained-writes´
+#[sqlx::test(migrations = "../../migrations")]
+async fn superseding_expires_only_unsigned_chained_writes(pool: PgPool) {
+    let actor_id = actor(&pool, "alice", "alice").await;
+    let other_id = actor(&pool, "carol", "carol").await;
+    let pending = |pool: PgPool, who: Uuid| async move {
+        staged::has_pending_targeting(&pool, who, Family::Opinion, "prof:bob")
+            .await
+            .expect("query")
+    };
+
+    let abandoned = stage(&pool, actor_id, &proposal("alice", 0), 0).await;
+    let elsewhere = {
+        let mut p = proposal("alice", 1);
+        p.body.target = NodeId::parse("prof:dave").expect("ok");
+        stage(&pool, actor_id, &p, 0).await
+    };
+    let unchained = {
+        let mut p = proposal("alice", 2);
+        p.body.asserted_parents.clear();
+        stage(&pool, actor_id, &p, 0).await
+    };
+    let carried = stage(&pool, actor_id, &proposal("alice", 3), 0).await;
+    sqlx::query("UPDATE staged_writes SET carried = true WHERE id = $1")
+        .bind(carried)
+        .execute(&pool)
+        .await
+        .expect("carry");
+    let theirs = stage(&pool, other_id, &proposal("carol", 0), 0).await;
+    assert!(pending(pool.clone(), actor_id).await);
+
+    let superseded =
+        staged::supersede_unsigned_targeting(&pool, actor_id, Family::Opinion, "prof:bob", 7)
+            .await
+            .expect("supersede");
+    assert_eq!(superseded, 1, "only the abandoned staging goes");
+    let state = |id| {
+        let pool = pool.clone();
+        async move { staged::load(&pool, id).await.expect("loads").state }
+    };
+    assert_eq!(state(abandoned).await, StagedState::Expired);
+    assert_eq!(state(elsewhere).await, StagedState::AwaitingPreSign);
+    assert_eq!(state(unchained).await, StagedState::AwaitingPreSign);
+    assert_eq!(state(carried).await, StagedState::AwaitingPreSign);
+    assert_eq!(state(theirs).await, StagedState::AwaitingPreSign);
+    assert!(
+        matches!(
+            staged::record_pre_signed(&pool, abandoned, &pre_parts()).await,
+            Err(StagedError::WrongState { actual, .. }) if actual == "expired"
+        ),
+        "a superseded staging can no longer be signed"
+    );
+
+    for id in [carried, unchained] {
+        staged::expire_one(&pool, id, 0).await.expect("expires");
+    }
+    assert!(!pending(pool.clone(), actor_id).await);
+    let signed = stage(&pool, actor_id, &proposal("alice", 4), 0).await;
+    staged::record_pre_signed(&pool, signed, &pre_parts())
+        .await
+        .expect("pre-sign");
+    assert_eq!(
+        staged::supersede_unsigned_targeting(&pool, actor_id, Family::Opinion, "prof:bob", 7)
+            .await
+            .expect("supersede"),
+        0
+    );
+    assert_eq!(state(signed).await, StagedState::Sealing);
+    assert!(pending(pool.clone(), actor_id).await);
 }

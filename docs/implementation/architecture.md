@@ -241,6 +241,17 @@ implementation serves every deployment
 standalone ranker container (never run inside `api`), which a
 delegated miner also uses, and bound into the Android app via UniFFI.
 
+### `crates/ranker-server`
+
+The standalone ranker container, binary `cogra-ranker`: the `ranker`
+crate behind a small GraphQL schema of its own — `rank` and
+`rankSearch` at the id level, exported as the checked-in
+`ranker-schema.graphql` that the api's relay generates its client
+from. It fetches the viewer's slice and the governed ranking
+parameters back from the api as any anonymous reader (`API_URL`) and
+listens on `RANKER_BIND`. It holds no session, no database handle, no
+secret and no state, and it is never a dependency of `api`.
+
 ### `android/`
 
 The reference frontend — Kotlin + Jetpack Compose, with the typed
@@ -273,17 +284,40 @@ steps:
    dependency list — and store it as a **staged write** (Postgres
    row; payload bytes ride the row until confirm promotes them
    into carriage). Return the
-   proposal with its pre-digests to the client so it recomputes
-   what it commits to before signing.
-2. **Pre-sign** (client). The device signs the proposal
-   pre-commitment; the key never leaves it.
+   proposal to the client.
+2. **Pre-sign** (client). The device runs the **intent check**
+   before the first pre-signature of a batch: it rebuilds, from the
+   form state of the gesture, what every act's structural body must
+   be — family, author, endpoints, the picked parameters, license,
+   asserted parents — and what its payload envelope must decode to,
+   read by the device's own decoder: the node it binds to, every
+   text field after the server's own normalization, the gallery in
+   order with each entry's description, poster and both digests
+   (the rendition read at READY, the upload digest the device
+   computed), the self-mark, and a profile's fields. It refuses the
+   whole batch on any extra, missing, or differing write. A severance-shaped
+   batch, whose counter-records the server computes, is checked as a
+   property instead: every record toward the shown target, each
+   value in range, as many records as the cost shown, and the shown
+   raw sums plus the batch netting to exactly `(0, 0)`. The staged
+   admission Registration is the one named exemption: the backend stages
+   it at approval and the device holds no form for it, so it runs
+   the transport checks alone. An act carried with an application
+   is checked at its prepare, where its form exists, and the device
+   keeps the verified proposal's digest, dependencies excluded; at
+   the landing it signs only a proposal that still digests to it,
+   the landing's appended dependencies aside. A landing seen on a
+   device that holds no such digest refuses the whole released
+   batch; no family is exempt. Then the device
+   signs the proposal pre-commitment; the key never leaves it.
 3. **Relay and seal** (backend ↔ L1). Submit the pre-signed
    proposal through the L1 boundary; the L1 host verifies it,
    adds the projection salts, and returns the sealed **verified
    act**, stored on the staged write.
 4. **Approve** (client, then backend). The device verifies the
-   host seal, the exact returned body, and both commitment
-   openings, then signs the **approval witness** — only then is
+   host seal, the exact returned body and pre-commitment, the
+   editions, and both commitment openings, then signs the
+   **approval witness** over the verified act and its seal — only then is
    the act orderable. The backend relays the approval and drives
    retries across epoch boundaries. Both signatures cover the
    act, so the relay can neither alter it nor author one unasked.
@@ -336,7 +370,8 @@ Who funds the debits is economics
 Per epoch, the backend ingests the accepted ordered act sequence
 `𝒬_k` through the L1 boundary and appends it to the mirror
 tables — each record with its authoritative causal key (act time,
-position) — advancing a stored epoch cursor. The contract is
+position), each epoch with its attested boundary timestamp —
+advancing a stored epoch cursor. The contract is
 exactly the mirror's truth relationship: it may lag L1; it must
 never diverge; it is fully rebuildable from the published
 sequence, so ingestion state is never precious. Confirmation of staged writes (§ above) and overlay
@@ -435,6 +470,12 @@ traversal is unrepresentable rather than defended against.
 Readers fetch bytes from the media origin directly, never through
 the API; in development the web dev server proxies `/media/*` to
 it so a phone loads media from the same origin it already trusts.
+That origin serves one bucket of three: the live bucket,
+world-readable by design. Deleted media leaves it for an
+operator-only bucket with no anonymous policy and no serving
+route, and an applicant's carried media waits in a non-public
+bucket until the landing publishes it, verified, before the
+carried batch signs ([data-model.md "Media areas"](data-model.md#media-areas)).
 
 The trait carries the store's **multipart upload** beside its
 whole-object put, which is what lets a large upload survive a

@@ -673,7 +673,9 @@ async fn set_preferences_null_restores_public_domain(pool: PgPool) {
 }
 
 /// A field absent from the input is left as it is: setting the intro flag
-/// keeps the license, and setting the license keeps the flag.
+/// keeps the license, and setting the license keeps the flag. The
+/// sensitive-content switch writes its own axis alone, both ways: neither
+/// its 0 nor its restoring null reaches the intro flag or the license.
 ///
 /// An absent field is left as it is.
 /// ´claim:preferences:an-absent-field-is-kept´
@@ -706,6 +708,19 @@ async fn set_preferences_absent_field_is_left_as_it_is(pool: PgPool) {
         relicensed["preferences"]["contentFilteringSeverityLevel"],
         Value::Null
     );
+    for level in [json!(0), Value::Null] {
+        let filtered = set_preferences(
+            &rig,
+            &token,
+            json!({ "contentFilteringSeverityLevel": level }),
+        )
+        .await;
+        assert_eq!(filtered["preferences"]["hasSeenOnboarding"], json!(true));
+        assert_eq!(
+            filtered["preferences"]["defaultLicense"],
+            json!({ "attribution": 0.0, "provenance": 0.5 })
+        );
+    }
 }
 
 /// An axis off the three published readings refuses as BAD_INPUT on that

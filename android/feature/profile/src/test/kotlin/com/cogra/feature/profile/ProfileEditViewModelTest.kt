@@ -1,7 +1,6 @@
 package com.cogra.feature.profile
 
 import com.cogra.crypto.ActorKey
-import com.cogra.crypto.Family
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetView
@@ -11,17 +10,22 @@ import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ProfileView
 import com.cogra.domain.UserError
 import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.CropWindow
 import com.cogra.domain.media.PICTURE_MAX_BYTES
 import com.cogra.domain.media.ProcessedPicture
+import com.cogra.domain.signing.Expectation
+import com.cogra.domain.signing.SentProfile
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
+import com.cogra.domain.testing.TEST_PROFILE_ID
 import com.cogra.domain.testing.ThrowingMediaProcessor
 import com.cogra.domain.testing.ThrowingMediaRepository
 import com.cogra.domain.testing.ThrowingProfileRepository
+import com.cogra.domain.testing.faithfulProfileUpdate
+import com.cogra.domain.testing.fakeUpload
 import com.cogra.domain.testing.testProfile
 import com.google.common.truth.Truth.assertThat
-import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -31,6 +35,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfileEditViewModelTest {
@@ -43,10 +48,11 @@ class ProfileEditViewModelTest {
     private class ScriptedProfiles(private val sealer: SealingWriteRepository) :
         ThrowingProfileRepository() {
         var mine: Outcome<ProfileView?> = Outcome.Success(
-            testProfile(id = "u1", handle = "jakob", displayName = "Jakob", bio = "Old bio"),
+            testProfile(id = TEST_PROFILE_ID, handle = "jakob", displayName = "Jakob", bio = "Old bio"),
         )
         var prepareOutcome: Outcome<List<PreparedWriteView>>? = null
         var lastUpdate: Triple<String, String?, String?>? = null
+        var prepareCalls = 0
 
         override suspend fun myProfile(): Outcome<ProfileView?> = mine
 
@@ -58,16 +64,21 @@ class ProfileEditViewModelTest {
             websiteUrl: String?,
             avatar: MediaFieldUpdate,
         ): Outcome<List<PreparedWriteView>> {
+            prepareCalls += 1
             lastUpdate = Triple(displayName, bio, websiteUrl)
             lastAvatar = avatar
-            return prepareOutcome ?: Outcome.Success(listOf(sealer.stage(Family.REGISTRATION)))
+            return prepareOutcome ?: Outcome.Success(
+                sealer.stageFaithful(
+                    faithfulProfileUpdate(TEST_PROFILE_ID, SentProfile(displayName, bio, websiteUrl, avatar)),
+                ),
+            )
         }
     }
 
     /** The upload half of the avatar path, scripted per test. */
     private class ScriptedMedia : ThrowingMediaRepository() {
         var outcome: Outcome<MediaAssetView> = Outcome.Success(
-            MediaAssetView("m1", "https://media/m1", null, FieldStatus.NORMAL, 1f),
+            fakeUpload("m1"),
         )
         var calls = 0
 
@@ -139,6 +150,24 @@ class ProfileEditViewModelTest {
         assertThat(sealer.staged.values.single().state.name).isEqualTo("RELAYING")
     }
 
+    /**
+     * jakob's hand test: adding a bio to a profile with no website. The
+     * website rides as the clear, which the server stages as the empty
+     * string, and the device signs it rather than refusing its own gesture.
+     */
+    @Test
+    fun addingABioBesideAnEmptyWebsiteSigns() = runTest(dispatcher) {
+        profiles.mine = Outcome.Success(testProfile(id = TEST_PROFILE_ID, handle = "jakob", displayName = "Jakob"))
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(profiles.lastUpdate).isEqualTo(Triple("Jakob", "Hello", null))
+        assertThat(vm.state.value.signingFailed).isFalse()
+        assertThat(vm.state.value.saved).isTrue()
+    }
+
     @Test
     fun aRefusedPrepareSurfaces() = runTest(dispatcher) {
         profiles.prepareOutcome =
@@ -198,6 +227,33 @@ class ProfileEditViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(profiles.lastAvatar).isEqualTo(MediaFieldUpdate.Set("m1"))
         assertThat(media.calls).isEqualTo(1)
+    }
+
+    /**
+     * The crop's Next brings the picture back to this form (AvatarCrop.md):
+     * it uploads framed as the author left it, and the form's one Save
+     * signs it with the fields — one prepare, one act, nothing signed
+     * before Save.
+     */
+    @Test
+    fun aPictureFramedByTheCropIsSignedWithTheFieldsUnderOneSeal() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        val window = CropWindow(0.1f, 0.2f, 0.7f, 0.8f)
+
+        vm.onAvatarFramed("content://pick/1", window)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(processor.lastCrop).isEqualTo(CropSpec(targetRatio = 1f, window = window))
+        assertThat(profiles.prepareCalls).isEqualTo(0)
+
+        vm.onBioChange("Hello")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(profiles.prepareCalls).isEqualTo(1)
+        assertThat(profiles.lastUpdate).isEqualTo(Triple("Jakob", "Hello", null))
+        assertThat(profiles.lastAvatar).isEqualTo(MediaFieldUpdate.Set("m1"))
+        assertThat(vm.state.value.saved).isTrue()
     }
 
     @Test

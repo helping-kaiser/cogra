@@ -22,7 +22,7 @@ WHEN press the header back arrow GIVEN the crop was entered from an edit -> the 
 
 WHEN press the header X GIVEN the crop was entered from compose's pick step -> the whole flow is left AND the draft is kept AND NEVER a dialog asks
 
-WHEN press the header X GIVEN the crop was entered from an edit -> the edit is left AND the draft is kept AND NEVER a dialog asks
+WHEN press the header X GIVEN the crop was entered from an edit -> DiscardConfirm opens, as the edit's own X raises it AND NEVER the edit is discarded before the dialog is answered
 
 ALWAYS the zoom slider stands under the crop on both platforms, its thumb at the crop's zoom between the fill and about 4×
 

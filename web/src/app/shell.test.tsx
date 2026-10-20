@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { notificationsHref } from "@/lib/notifications/origin";
 import { createTokenStore } from "@/lib/session/token-store";
 import { byNode } from "@/test/data-node";
 import { startMswServer } from "@/test/msw";
@@ -208,5 +209,22 @@ describe("AppShell", () => {
     await waitFor(() =>
       expect(screen.queryByTestId("bottom-nav")).not.toBeInTheDocument(),
     );
+  });
+
+  // Notifications.md:27 — the bar keeps lit the slot of the root the bell was
+  // tapped on, under the list's own registered bar node.
+  it.each([
+    ["feed", "notifications.bottomBar.feedSlot"],
+    ["profile", "notifications.bottomBar.profileSlot"],
+  ] as const)("the_originating_root_stays_lit from %s", async (root, slot) => {
+    notificationsHref(root);
+    pathname = "/notifications";
+    renderWithProviders(
+      <AppShell>
+        <p>content</p>
+      </AppShell>,
+      { store: signedInStore() },
+    );
+    expect(await screen.findByTestId(byNode(slot))).toHaveAttribute("aria-current", "page");
   });
 });

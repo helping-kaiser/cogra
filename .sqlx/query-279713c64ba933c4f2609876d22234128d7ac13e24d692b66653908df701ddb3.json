@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO retention_archive\n             (original_id, original_type, original_data, redaction_reason, redacted_by)\n         VALUES ($1, $2, $3, $4, $5)\n         ON CONFLICT (original_id, original_type, redacted_by) DO NOTHING\n         RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Jsonb",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "279713c64ba933c4f2609876d22234128d7ac13e24d692b66653908df701ddb3"
+}

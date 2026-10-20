@@ -1,5 +1,7 @@
-// The session-authorized write orchestration: pre-sign → submit → (await
-// seal) → verify → approve → observe (architecture.md "The write path").
+// The session-authorized write orchestration: intent check → pre-sign →
+// submit → (await seal) → verify → approve → observe (architecture.md "The
+// write path"). A batch is checked against the gesture its user ordered
+// before its first pre-signature (Intent.kt).
 // Handshake material persists in the IdentityStore between the two
 // signatures so the flow survives process death without ever trusting
 // the server's echo of the nonce; `resume` picks up every persisted
@@ -12,6 +14,7 @@ import com.cogra.crypto.Family
 import com.cogra.crypto.HandshakeException
 import com.cogra.crypto.PreSignedProposal
 import com.cogra.crypto.WireException
+import com.cogra.crypto.decodeProposal
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
@@ -20,8 +23,8 @@ import com.cogra.domain.UserError
 import com.cogra.domain.WriteState
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.store.IdentityStore
-import javax.inject.Inject
 import kotlinx.coroutines.delay
+import javax.inject.Inject
 
 /** Where one write's handshake ended up after a signing pass. */
 sealed interface WriteResult {
@@ -29,6 +32,13 @@ sealed interface WriteResult {
 
     /** Approved and relaying (or already landed) — the device's part is done. */
     data class Done(override val stagedWriteId: String, val state: WriteState) : WriteResult
+
+    /**
+     * Carried with the application: checked against its form, its verified
+     * digest kept in custody (Carried.kt). Nothing is signed or spent now —
+     * it signs at the landing.
+     */
+    data class Carried(override val stagedWriteId: String) : WriteResult
 
     /** Sealing hadn't returned within the polling budget; `resume` continues it. */
     data class AwaitingSeal(override val stagedWriteId: String) : WriteResult
@@ -63,9 +73,15 @@ internal val TERMINAL_REFUSALS = setOf(
     ErrorCode.WRITE_RULE_FAILED,
 )
 
+// One class per signing seam: the batch, the landing and the resume legs share
+// the handshake steps and the custody they keep, and splitting them would
+// split the one place every write crosses.
+@Suppress("TooManyFunctions")
 class WriteSigner @Inject constructor(
     private val writes: WriteRepository,
     private val identity: IdentityStore,
+    /** The landing's precondition (PR-89(iii)); ready until one is wired. */
+    private val carriedGate: CarriedLandingGate = CarriedLandingGate.AlwaysReady,
 ) {
     /** Seal-await polling budget: the stand-in seals synchronously, so a
      *  short bounded poll only covers the asynchronous contract. */
@@ -74,24 +90,135 @@ class WriteSigner @Inject constructor(
 
     /**
      * Runs the two-signature handshake for every prepared write. Each
-     * write is its own priced act — one result per write, no cross-write
-     * atomicity (api-spec.md "The write flow").
+     * write is its own priced act — one result per write (api-spec.md
+     * "The write flow").
+     *
+     * THE BATCH IS CHECKED WHOLE BEFORE ANYTHING IS SIGNED. [expected] is
+     * the gesture rebuilt from its form state (Intent.kt); one write that
+     * disagrees refuses every write of the batch before the first
+     * pre-signature — writes are independent priced acts, so a refusal
+     * midway would leave half a gesture standing. There is no overload
+     * without an expectation.
+     *
+     * A CARRIED write in the batch — an applicant's once-each post, Opinion
+     * or Affinity — is checked with the rest and then not signed: its
+     * verified digest is kept for the landing (Carried.kt) and it answers
+     * [WriteResult.Carried].
      */
-    suspend fun sign(prepared: List<PreparedWriteView>): List<WriteResult> {
+    suspend fun sign(prepared: List<PreparedWriteView>, expected: Expectation): List<WriteResult> {
+        // A family this build does not know is no verdict on the batch: the
+        // whole of it waits for an updated build, as one write always has.
+        if (prepared.any { it.family == Family.UNKNOWN }) {
+            return prepared.map { write -> unsupported(write.id, "record family") }
+        }
         val key = actorKey()
-        return prepared.map { write -> signOne(key, write) }
+        val refusal = intentRefusal(key.address(), prepared.map { it.canonicalProposal }, expected)
+        if (refusal != null) return prepared.map { write -> rejected(write.id, refusal) }
+        return prepared.map { write -> if (write.carried) keepCarried(write) else signOne(key, write) }
     }
 
     /**
-     * Signs one staged write served mid-handshake — the path of the
-     * staged Registration, which the backend stages at approval and the
+     * Signs the batch carried with this account's application, released by
+     * the landing (PR-88). No form is held at the landing, so each write is
+     * checked against what was verified at its prepare (Carried.kt): a write
+     * this device holds an expectation for signs only if the served proposal
+     * digests to it, its dependencies aside — the landing appends the ruled
+     * completion, `[admission Registration, winning vouch]`. A write it
+     * holds none for is a mismatch (no family is exempt), and one mismatch
+     * refuses the whole batch before its first pre-signature.
+     * Then the [CarriedLandingGate] is asked; a batch it holds back is not
+     * signed and nothing of it is spent.
+     */
+    suspend fun signCarriedAtLanding(batch: List<StagedWriteView>): List<WriteResult> {
+        if (batch.isEmpty()) return emptyList()
+        if (batch.any { it.family == Family.UNKNOWN }) {
+            return batch.map { staged -> unsupported(staged.id, "record family") }
+        }
+        val key = actorKey()
+        // The expectations are NOT cleared by a refusal: the write stays
+        // released server-side and is checked against them again on the next
+        // poll.
+        val refusal = carriedRefusal(key.address(), batch)
+        if (refusal != null) return batch.map { staged -> rejected(staged.id, refusal) }
+        val readiness = carriedGate.readiness(batch)
+        if (readiness is CarriedLandingReadiness.NotReady) {
+            return batch.map { staged ->
+                WriteResult.Failed(staged.id, CarriedLandingNotReadyException(readiness.reason))
+            }
+        }
+        return batch.map { staged ->
+            signChecked(key, staged).also { result ->
+                if (expectationSpent(result)) identity.clearCarriedExpectation(staged.id)
+            }
+        }
+    }
+
+    /**
+     * The carried branch at the prepare (PR-88 (a)): the write passed the
+     * batch's intent check against its form, so what was verified is kept —
+     * its digest, dependencies excluded — for the landing to sign against.
+     * Nothing is pre-signed.
+     */
+    private suspend fun keepCarried(write: PreparedWriteView): WriteResult {
+        val proposal = try {
+            decodeProposal(write.canonicalProposal)
+        } catch (e: WireException) {
+            // Unreachable after the check decoded the same bytes; refused
+            // rather than assumed.
+            return WriteResult.RejectedByDevice(write.id, e.message ?: "malformed proposal")
+        }
+        identity.saveCarriedExpectation(write.id, carriedDigest(proposal))
+        return WriteResult.Carried(write.id)
+    }
+
+    /**
+     * Why the released carried batch is not what this device verified at its
+     * prepare, or null when every write matches its kept expectation.
+     * Dependencies are never compared: the landing completes them.
+     */
+    private suspend fun carriedRefusal(author: String, batch: List<StagedWriteView>): String? {
+        for (staged in batch) {
+            val kept = identity.carriedExpectation(staged.id)
+                ?: return "this device holds no prepare-time check for the released carried write"
+            intentRefusal(author, listOf(staged.canonicalProposal), CarriedExpectation(kept))
+                ?.let { return it }
+        }
+        return null
+    }
+
+    /**
+     * Whether the landing's expectation for a write has served its purpose:
+     * the write was pre-signed and submitted (it has left the carried batch
+     * for the handshake custody), or it is gone. Anything else keeps it.
+     */
+    private fun expectationSpent(result: WriteResult): Boolean = when (result) {
+        is WriteResult.Done, is WriteResult.AwaitingSeal -> true
+        is WriteResult.Refused -> result.errors.any {
+            it.code == ErrorCode.STAGED_WRITE_EXPIRED || it.code == ErrorCode.NOT_FOUND
+        }
+        else -> false
+    }
+
+    /**
+     * Signs one staged write served mid-handshake — the staged
+     * Registration's path, which the backend stages at approval and the
      * device discovers on the status poll (auth.md "Approval and
      * landing"): same two signatures, same verification, through the
-     * ordinary session-authorized legs.
+     * ordinary session-authorized legs. The write is checked against
+     * [intent] first — the form's expectation, or the named
+     * [RegistrationExemption].
      */
-    suspend fun signStaged(staged: StagedWriteView): WriteResult {
+    suspend fun signStaged(staged: StagedWriteView, intent: Intent): WriteResult {
         if (staged.family == Family.UNKNOWN) return unsupported(staged.id, "record family")
         val key = actorKey()
+        val refusal = intentRefusal(key.address(), listOf(staged.canonicalProposal), intent)
+        if (refusal != null) return rejected(staged.id, refusal)
+        return signChecked(key, staged)
+    }
+
+    /** One staged write whose intent already passed: the handshake from wherever it stands. */
+    private suspend fun signChecked(key: ActorKey, staged: StagedWriteView): WriteResult {
+        if (staged.family == Family.UNKNOWN) return unsupported(staged.id, "record family")
         return when (staged.state) {
             WriteState.AWAITING_PRE_SIGN -> when (val pre = identity.handshake(staged.id)) {
                 // A fresh staging: pre-sign from the served proposal.
@@ -153,6 +280,12 @@ class WriteSigner @Inject constructor(
     private suspend fun actorKey(): ActorKey =
         ActorKey.fromSeed(identity.actorSeed() ?: throw NoActorKeyException())
 
+    /** The device refused the write: nothing of it is signed, and its material is spent. */
+    private suspend fun rejected(id: String, reason: String): WriteResult {
+        identity.clearHandshake(id)
+        return WriteResult.RejectedByDevice(id, reason)
+    }
+
     private suspend fun signOne(key: ActorKey, write: PreparedWriteView): WriteResult {
         if (write.family == Family.UNKNOWN) return unsupported(write.id, "record family")
         val step = try {
@@ -181,30 +314,32 @@ class WriteSigner @Inject constructor(
                 }
                 else -> if (staged.family == Family.UNKNOWN) {
                     unsupported(id, "record family")
-                } else when (staged.state) {
-                    // The submit response was lost before the server saw it.
-                    WriteState.AWAITING_PRE_SIGN -> {
-                        val sig = preCommitmentSignature(pre)
-                        when (val submitted = writes.submitProposal(id, sig)) {
-                            is Outcome.Success -> approveFrom(key, pre, submitted.value)
-                            is Outcome.Refused -> refused(id, submitted.errors)
-                            is Outcome.Failed -> WriteResult.Failed(id, submitted.cause)
+                } else {
+                    when (staged.state) {
+                        // The submit response was lost before the server saw it.
+                        WriteState.AWAITING_PRE_SIGN -> {
+                            val sig = preCommitmentSignature(pre)
+                            when (val submitted = writes.submitProposal(id, sig)) {
+                                is Outcome.Success -> approveFrom(key, pre, submitted.value)
+                                is Outcome.Refused -> refused(id, submitted.errors)
+                                is Outcome.Failed -> WriteResult.Failed(id, submitted.cause)
+                            }
                         }
+                        WriteState.SEALING, WriteState.AWAITING_APPROVAL ->
+                            approveFrom(key, pre, staged)
+                        WriteState.RELAYING, WriteState.LANDED -> {
+                            identity.clearHandshake(id)
+                            WriteResult.Done(id, staged.state)
+                        }
+                        WriteState.EXPIRED -> {
+                            identity.clearHandshake(id)
+                            WriteResult.Refused(
+                                id,
+                                listOf(UserError(ErrorCode.STAGED_WRITE_EXPIRED, "garbage-collected unlanded")),
+                            )
+                        }
+                        WriteState.CARRIED, WriteState.UNKNOWN -> unsupported(id, "staged-write state")
                     }
-                    WriteState.SEALING, WriteState.AWAITING_APPROVAL ->
-                        approveFrom(key, pre, staged)
-                    WriteState.RELAYING, WriteState.LANDED -> {
-                        identity.clearHandshake(id)
-                        WriteResult.Done(id, staged.state)
-                    }
-                    WriteState.EXPIRED -> {
-                        identity.clearHandshake(id)
-                        WriteResult.Refused(
-                            id,
-                            listOf(UserError(ErrorCode.STAGED_WRITE_EXPIRED, "garbage-collected unlanded")),
-                        )
-                    }
-                    WriteState.CARRIED, WriteState.UNKNOWN -> unsupported(id, "staged-write state")
                 }
             }
         }
@@ -268,20 +403,52 @@ class WriteSigner @Inject constructor(
         }
         return WriteResult.Refused(id, errors)
     }
+}
 
-    /** A read-leg refusal: the handshake is intact server-side — keep the material. */
-    private fun refusedKeeping(id: String, errors: List<UserError>): WriteResult =
-        WriteResult.Refused(id, errors)
+/** A read-leg refusal: the handshake is intact server-side — keep the material. */
+private fun refusedKeeping(id: String, errors: List<UserError>): WriteResult = WriteResult.Refused(id, errors)
 
-    /**
-     * A server value this app version does not know — refused WITHOUT
-     * clearing the handshake material, so an updated build can resume.
-     */
-    private fun unsupported(id: String, what: String): WriteResult = WriteResult.Refused(
-        id,
-        listOf(UserError(ErrorCode.UNKNOWN, "$what this app version does not know — update the app")),
-    )
+/**
+ * A server value this app version does not know — refused WITHOUT
+ * clearing the handshake material, so an updated build can resume.
+ */
+private fun unsupported(id: String, what: String): WriteResult = WriteResult.Refused(
+    id,
+    listOf(UserError(ErrorCode.UNKNOWN, "$what this app version does not know — update the app")),
+)
 
-    private fun preCommitmentSignature(pre: PreSignedProposal): String =
-        java.util.Base64.getEncoder().encodeToString(com.cogra.crypto.encodePreCommitmentOf(pre))
+private fun preCommitmentSignature(pre: PreSignedProposal): String =
+    java.util.Base64.getEncoder().encodeToString(com.cogra.crypto.encodePreCommitmentOf(pre))
+
+/**
+ * Why the batch is not what [intent] says it must be, or null when it is.
+ * A proposal that does not parse is a refusal too — the device cannot check
+ * what it cannot read. [author] is this device's address.
+ */
+internal fun intentRefusal(author: String, proposals: List<ByteArray>, intent: Intent): String? = try {
+    val batch = proposals.map { decodeProposal(it) }
+    when (intent) {
+        RegistrationExemption ->
+            if (batch.all { it.body.family == Family.REGISTRATION }) {
+                null
+            } else {
+                "only a Registration is exempt from the intent check"
+            }
+        is Expectation -> {
+            checkIntent(intent, author, batch)
+            null
+        }
+        // The landing's carried intent (Carried.kt): the digest kept at the
+        // prepare, dependencies excluded.
+        is CarriedExpectation ->
+            if (batch.all { carriedDigest(it).contentEquals(intent.digest) }) {
+                null
+            } else {
+                "the released carried write is not the one this device verified at its prepare"
+            }
+    }
+} catch (e: IntentMismatchException) {
+    e.message ?: "the batch is not the gesture ordered"
+} catch (e: WireException) {
+    e.message ?: "malformed proposal"
 }

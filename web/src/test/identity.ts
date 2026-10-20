@@ -71,5 +71,28 @@ export function fakeIdentityStore(initial: {
       }
       return Promise.resolve();
     },
+    // The device lock's slot calls: a UI suite drives the engine through an
+    // injected fake (`DeviceLockEngine`), so these only need to be inert —
+    // the real store's lock records are covered by `device-lock.test.ts`.
+    isEphemeralFor: () => Promise.resolve(ephemeral),
+    lockIdOf: () => Promise.resolve(null),
+    heldLock: () => Promise.resolve(null),
+    holdLock: () => Promise.resolve(null),
+    dropLock: () => Promise.resolve(),
+    setLockPending: () => Promise.resolve(),
+    isLockPending: () => Promise.resolve(false),
+    custodyOf: () =>
+      Promise.resolve({
+        seed,
+        hasActor: keyOnDevice,
+        backupBlob: pendingBlob,
+        handshakes: [],
+      }),
+    commitLock: () => Promise.resolve(false),
+    purgeBackedKeyMaterial: () => Promise.resolve(),
+    lockedSet: () => Promise.resolve(null),
+    commitUnlock: () => Promise.resolve(),
+    deleteDeadLockedSet: () => Promise.resolve(),
+    lockSlots: () => Promise.resolve([]),
   };
 }

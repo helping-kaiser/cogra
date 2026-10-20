@@ -12,11 +12,15 @@ use axum::body::Body;
 use axum::http::Request;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
+use common::l1::Family;
+use common::l1::census::LegRole;
 use common::l1::client::ActorKey;
+use common::l1::handshake::{EpochPackage, PublishedLeg, PublishedRecord};
+use common::l1::identifier::{ActId, NodeId};
 use common::l1::wire;
 use http_body_util::BodyExt;
 use l1_standin::StandIn;
-use postgres_store::PgPool;
+use postgres_store::{PgPool, mirror};
 use serde_json::{Value, json};
 use tower::ServiceExt;
 use uuid::Uuid;
@@ -233,6 +237,7 @@ impl Rig {
                     "title": title,
                     "content": "a body",
                     "license": { "attribution": 1.0, "provenance": 0.0 },
+                    "pDirected": 0.1,
                 }}),
             )
             .await;
@@ -254,6 +259,8 @@ impl Rig {
                     "target": target,
                     "content": "a reply",
                     "license": { "attribution": 0.0, "provenance": 0.0 },
+                    "pDirected": 0.1,
+                    "pInterest": 0.1,
                 }}),
             )
             .await;
@@ -980,4 +987,212 @@ async fn severance_counts_a_stance_still_in_flight(pool: PgPool) {
         2,
         "the in-flight record is part of what severance must cancel: {severed}"
     );
+}
+
+const PREPARE_POST_EDIT: &str = r#"mutation($input: PreparePostEditInput!) {
+  preparePostEdit(input: $input) {
+    node writes { id canonicalProposal } userErrors { code message field }
+  }
+}"#;
+
+impl Rig {
+    async fn post_backing(&self, token: Option<&str>, id: &str, include_pending: bool) -> Value {
+        let data = self
+            .gql(
+                token,
+                r#"query($id: UUID!, $ip: Boolean!) {
+                     post(id: $id) {
+                       viewerBacking(includePending: $ip) {
+                         rawPDirected pDirected recordCount
+                       }
+                     }
+                   }"#,
+                json!({ "id": id, "ip": include_pending }),
+            )
+            .await;
+        data["post"]["viewerBacking"].clone()
+    }
+
+    async fn post_graph_id(&self, id: &str) -> String {
+        let data = self
+            .gql(
+                None,
+                "query($id: UUID!) { post(id: $id) { graphId } }",
+                json!({ "id": id }),
+            )
+            .await;
+        data["post"]["graphId"].as_str().expect("graphId").into()
+    }
+
+    /// Lands records authored by `author` straight into the mirror as the
+    /// next epoch — the way to author a Publish carrying a pick, which no
+    /// prepare path writes yet.
+    async fn land_mirror_records(&self, author: &str, records: Vec<(u64, Family, f64)>, to: &str) {
+        let epoch = mirror::last_ingested_epoch(&self.pool)
+            .await
+            .expect("cursor")
+            + 1;
+        let records = records
+            .into_iter()
+            .enumerate()
+            .map(|(position, (seq, family, p_d))| PublishedRecord {
+                act_id: ActId::new(author, seq, family).expect("act id"),
+                author: author.to_string(),
+                family,
+                epoch,
+                act_time: epoch * 100 + position as i64,
+                position: position as i64,
+                payload_marked: family == Family::Publish,
+                payload_witness: vec![0; 32],
+                legs: vec![PublishedLeg {
+                    role: LegRole::Binary,
+                    source: NodeId::Addr(author.to_string()),
+                    target: NodeId::parse(to).expect("node id"),
+                    p_d,
+                    p_i: 1.0,
+                    tau: 0.5,
+                }],
+            })
+            .collect();
+        mirror::ingest_epoch(
+            &self.pool,
+            &EpochPackage {
+                epoch,
+                attested_at: chrono::DateTime::from_timestamp(1_850_000_000 + epoch * 60, 0)
+                    .expect("instant"),
+                records,
+            },
+        )
+        .await
+        .expect("ingests");
+    }
+}
+
+/// The creator reads the Publish bundle they authored the post with — a
+/// read `viewerStance` cannot make, since it excludes the payload-marked
+/// records every Publish is. The two views split on what has landed, an
+/// edit adds a record to the sum, and a landed record counts once.
+///
+/// The author's Publish bundle counts payload-marked records and splits on the reader's view of what has landed.
+/// ´claim:stance:the-authors-publish-bundle-is-readable´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_creator_reads_the_publish_bundle_across_both_views(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let prepared = rig
+        .gql(
+            Some(&token),
+            PREPARE_POST,
+            json!({ "input": {
+                "title": "A post",
+                "content": "a body",
+                "license": { "attribution": 1.0, "provenance": 0.0 },
+                "pDirected": 0.1,
+            }}),
+        )
+        .await;
+    let post = prepared["preparePost"]["node"]
+        .as_str()
+        .expect("node")
+        .to_string();
+    let signed = rig
+        .pre_sign(&token, &ak, &prepared["preparePost"]["writes"])
+        .await;
+
+    let l2 = rig.post_backing(Some(&token), &post, true).await;
+    assert_eq!(
+        f(&l2["rawPDirected"]),
+        0.1,
+        "the L2 view counts the Publish in flight"
+    );
+    assert_eq!(l2["recordCount"], 1);
+    let l1 = rig.post_backing(Some(&token), &post, false).await;
+    assert_eq!(f(&l1["rawPDirected"]), 0.0, "the L1 view does not");
+    assert_eq!(l1["recordCount"], 0);
+
+    rig.approve(&token, &ak, &signed).await;
+    rig.close_and_ingest().await;
+    for view in [true, false] {
+        let landed = rig.post_backing(Some(&token), &post, view).await;
+        assert_eq!(f(&landed["rawPDirected"]), 0.1, "view {view}: counted once");
+        assert_eq!(landed["recordCount"], 1);
+    }
+
+    let stance = rig.post_bundle(&token, &post, true).await;
+    assert_eq!(
+        stance["recordCount"], 0,
+        "viewerStance excludes the payload-marked Publish this read counts"
+    );
+
+    let edit = rig
+        .gql(
+            Some(&token),
+            PREPARE_POST_EDIT,
+            json!({ "input": { "id": post, "content": "an edited body" }}),
+        )
+        .await;
+    rig.land(&token, &ak, &edit["preparePostEdit"]["writes"])
+        .await;
+    let edited = rig.post_backing(Some(&token), &post, false).await;
+    assert_eq!(edited["recordCount"], 2, "the edit's Publish joins the sum");
+    assert_eq!(f(&edited["rawPDirected"]), 0.1);
+}
+
+/// The raw sum is served unclipped beside its clip, and only the creator's
+/// Publish records toward this node sum: pick-carrying records land the
+/// raw sum past 1 while the folded value stops at 1; an Opinion toward the
+/// same post is a different family and never joins it.
+///
+/// The Publish bundle serves the unclipped sum beside its clip and sums nothing but the creator's Publish records toward the post.
+/// ´claim:stance:the-publish-bundle-serves-both-sides-of-the-fold´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_publish_bundle_serves_the_raw_sum_beside_its_clip(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let post = rig.landed_post(&token, &ak, "A post").await;
+    let graph_id = rig.post_graph_id(&post).await;
+
+    rig.land_mirror_records(
+        &ak.address(),
+        vec![
+            (9001, Family::Publish, 0.7),
+            (9002, Family::Publish, 0.6),
+            (9003, Family::Opinion, 0.9),
+        ],
+        &graph_id,
+    )
+    .await;
+
+    let backing = rig.post_backing(Some(&token), &post, false).await;
+    assert_eq!(backing["recordCount"], 3);
+    let raw = f(&backing["rawPDirected"]);
+    assert!(
+        (raw - 1.4).abs() < 1e-9,
+        "raw sum 0.1 + 0.7 + 0.6, got {raw}"
+    );
+    assert_eq!(f(&backing["pDirected"]), 1.0, "the fold clips at 1");
+}
+
+/// Nobody but the post's creator reads the bundle: another member and a
+/// guest get null.
+///
+/// The Publish bundle answers only the post's creator.
+/// ´claim:stance:the-publish-bundle-is-the-creators-alone´
+#[sqlx::test(migrations = "../../migrations")]
+async fn only_the_creator_reads_the_publish_bundle(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    rig.seed_member("reader", "reader@example.com").await;
+    let author_token = rig.log_in("author@example.com").await;
+    let reader_token = rig.log_in("reader@example.com").await;
+    let post = rig.landed_post(&author_token, &ak, "A post").await;
+
+    let own = rig.post_backing(Some(&author_token), &post, true).await;
+    assert_eq!(own["recordCount"], 1);
+    let other = rig.post_backing(Some(&reader_token), &post, true).await;
+    assert!(other.is_null(), "a non-creator reads null, got {other}");
+    let guest = rig.post_backing(None, &post, true).await;
+    assert!(guest.is_null(), "a guest reads null, got {guest}");
 }

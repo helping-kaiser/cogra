@@ -5,6 +5,7 @@ import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
 import com.cogra.domain.compose.DraftShape
+import com.cogra.domain.content.MAX_DESCRIPTION_CHARS
 import com.cogra.domain.content.MAX_TITLE_CHARS
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.CropWindow
@@ -148,6 +149,23 @@ class ComposeWizardStateTest {
         assertThat(after.description).isEqualTo("Stood there long enough that the midges found me.")
         assertThat(after.tagSection.tags).containsExactly(TagRow("fieldnotes"))
         assertThat(after.mode).isEqualTo(BodyMode.Media)
+    }
+
+    /**
+     * K8.1/D4 (design/readme.md:8179-8181): the words path composes no
+     * description, and a swap from pictures to words drops the standing
+     * one — never sent, and never holding the words post at its cap.
+     */
+    @Test
+    fun swappingPicturesForWordsDropsTheDescription() {
+        val beside = media.copy(description = "Beside the picture")
+        assertThat(beside.descriptionContent).isEqualTo("Beside the picture")
+
+        val overCap = media.copy(description = "x".repeat(MAX_DESCRIPTION_CHARS + 1))
+        assertThat(overCap.descriptionTooLong).isTrue()
+        val words = overCap.copy(mode = BodyMode.Words, body = "Three weekends at low tide.")
+        assertThat(words.descriptionContent).isNull()
+        assertThat(words.descriptionTooLong).isFalse()
     }
 
     @Test

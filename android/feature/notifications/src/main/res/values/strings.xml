@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Notifications (Notifications.md, NotificationsEmpty.md). -->
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_more_failed">Couldn\'t load more</string>
+    <string name="notifications_retry">Retry</string>
+    <string name="notifications_load_failed">Can\'t reach the server. Check your connection and try again.</string>
+</resources>

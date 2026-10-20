@@ -4,6 +4,8 @@ WHEN the edit opens GIVEN the post's body is words -> the words edit stands with
 
 WHEN the last picture or the clip leaves a media post's edit -> the words edit stands AND the words field arrives empty
 
+WHEN the last picture leaves a media post's edit GIVEN the post carries a description -> the media-to-words flip drops the standing description with the last picture AND NEVER the signed edit carries a description
+
 ALWAYS the words edit carries a title field and no description field
 
 ALWAYS the line A post's body is words or media, never both. stands under + Add pictures or a video
@@ -11,6 +13,18 @@ ALWAYS the line A post's body is words or media, never both. stands under + Add 
 ALWAYS every change the edit makes signs together in one batch
 
 ALWAYS the License row shows the license as signed, with the lock and no action
+
+ALWAYS the Your backing row stands under the License row and reads the post's backing as it stands with the edit, its face and one number
+
+ALWAYS the Your backing row reads the post's backing as it stands GIVEN the edit's pick was never moved
+
+ALWAYS the edit's record carries the pick, the value it adds to the backing, 0.00 GIVEN the author never moved it
+
+ALWAYS an edit whose pick was never moved changes the post's backing by exactly nothing
+
+WHEN tap Adjust on the Your backing row -> the one-axis pad opens over the edit at the edit's pick AND NEVER anything is staged
+
+ALWAYS the pick rides the edit's own record and adds nothing to the footer's count
 
 ALWAYS no count stands under the body GIVEN more than 500 of its 5,000 characters remain
 
@@ -36,9 +50,13 @@ WHEN the signing has not answered 5s after the press -> the line Still signing â
 
 WHEN the signing answers GIVEN the slow line stands under the acts footer -> the slow line goes
 
-WHEN press the header back arrow -> the edit is left toward where it began AND the draft is kept AND NEVER a dialog asks
+WHEN press the header back arrow or the header X GIVEN the batch holds an act -> the dialog Discard the changes? opens over the edit with Nothing is kept. AND NEVER the changes are discarded unasked
 
-WHEN press the header X -> the edit is left AND the draft is kept AND NEVER a dialog asks
+WHEN press the header back arrow GIVEN the batch is empty -> the edit is left toward where it began AND NEVER a dialog asks
+
+WHEN press the header X GIVEN the batch is empty -> the edit is left AND nothing is kept or discarded AND NEVER a dialog asks
+
+WHEN tap Discard in the dialog Discard the changes? -> the changes are discarded AND the edit is left toward where it began with the post as it was AND NEVER a draft is kept
 
 WHEN the words stage opens -> the body takes focus with its caret at the end AND the keyboard rises
 

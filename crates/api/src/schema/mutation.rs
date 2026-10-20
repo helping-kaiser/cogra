@@ -34,7 +34,7 @@ use crate::auth::{self, AuthConfig, RefreshError, Viewer};
 use crate::breach::BreachCorpus;
 use crate::l1::StandInBoundary;
 use crate::mailer::{Mail, Mailer, WebOrigin};
-use crate::media::{self, BlobStore, MediaConfig, resumable};
+use crate::media::{self, BlobStore, MediaAreas, MediaConfig, resumable};
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 use crate::prepare::Staging;
 use crate::profile::ProfileError;
@@ -78,6 +78,17 @@ fn viewer(ctx: &Context<'_>) -> async_graphql::Result<Viewer> {
         .as_ref()
         .copied()
         .ok_or_else(unauthenticated)
+}
+
+/// The transport-tier refusal for an id that names nothing the viewer
+/// holds — unknown and foreign alike.
+fn not_found(message: &str) -> async_graphql::Error {
+    use async_graphql::ErrorExtensions;
+    async_graphql::Error::new(message).extend_with(
+        |_, e: &mut async_graphql::ErrorExtensionValues| {
+            e.set("code", "NOT_FOUND");
+        },
+    )
 }
 
 /// The transport-tier refusal for a throttled auth attempt (auth.md
@@ -428,7 +439,7 @@ fn relay_error(e: RelayError, index: usize) -> UserError {
             "resubmission does not match the sealed pre-commitment",
             path,
         ),
-        RelayError::Staged(staged::StagedError::NotFound(_)) => {
+        RelayError::Staged(staged::StagedError::NotFound(_) | staged::StagedError::Reaped(_)) => {
             UserError::at(ErrorCode::NotFound, "unknown staged write", path)
         }
         RelayError::Staged(staged::StagedError::WrongState { actual, .. })
@@ -445,6 +456,14 @@ fn relay_error(e: RelayError, index: usize) -> UserError {
             format!("staged write is {actual}"),
             path,
         ),
+        RelayError::CarriedMediaUnpublished { reason, .. } => {
+            tracing::warn!(reason = %reason, "a released carried write waits on its media");
+            UserError::at(
+                ErrorCode::CarriedMediaUnpublished,
+                "the write's media is not published yet; retry",
+                path,
+            )
+        }
         other => internal(other),
     }
 }
@@ -616,19 +635,21 @@ impl LicenseInput {
 #[derive(InputObject)]
 struct TagInput {
     name: String,
-    /// Relevance `r`; defaults to +0.1.
-    p_directed: Option<Dimension>,
-    /// Confidence `c`, census-bounded to `[0, 1]`; defaults to 1 — an
-    /// author believes their own declaration.
-    p_interest: Option<Dimension>,
+    /// Relevance `r`. Required: the server never fills a stance in — the
+    /// UI pre-fills +0.1 visibly and sends what it shows.
+    p_directed: Dimension,
+    /// Confidence `c`, census-bounded to `[0, 1]`. Required like
+    /// relevance; the UI pre-fills 1 — an author believes their own
+    /// declaration.
+    p_interest: Dimension,
 }
 
 impl TagInput {
     fn to_draft(&self) -> crate::topics::TagDraft {
         crate::topics::TagDraft {
             name: self.name.clone(),
-            relevance: self.p_directed.map(|d| d.0),
-            confidence: self.p_interest.map(|d| d.0),
+            relevance: self.p_directed.0,
+            confidence: self.p_interest.0,
         }
     }
 }
@@ -643,9 +664,9 @@ fn tag_drafts(tags: &Option<Vec<TagInput>>) -> Vec<crate::topics::TagDraft> {
 /// target is a person's Profile *is* a mention. Nothing is minted; both
 /// endpoints pre-exist.
 ///
-/// Both parameters are optional and default to +0.1, so a plain citation
-/// needs only its target. The defaults are strictly positive on both
-/// axes, which means a default mention vouches — weakly, at coefficient
+/// Both parameters are required: the server never fills a stance in.
+/// The UI pre-fills +0.1 on both axes and sends what it shows — strictly
+/// positive, so an untouched mention vouches, weakly, at coefficient
 /// `√0.01 = 0.1`.
 ///
 /// A citation carries no note. A payload would make the record
@@ -666,25 +687,24 @@ struct ReferenceInput {
     /// External links are body text, never citations: both endpoints
     /// of a Reference are nodes on the graph.
     target: Uuid,
-    /// How load-bearing the cited thing is to this artifact, `[-1, 1]`;
-    /// defaults to +0.1. The census calls this **effort `f`**, and it
-    /// occupies the `pDirected` slot — the same slot relevance occupies
-    /// on a tag.
-    relevance: Option<Dimension>,
-    /// Endorsing versus refuting, `[-1, 1]`; defaults to +0.1. The census
-    /// calls this **enthusiasm `e`**, and it occupies the `pInterest`
-    /// slot. This is the axis that decides whether a mention vouches: a
-    /// citation strictly positive on both axes resolves its fold cell to
-    /// the cited person, and every other citation resolves home.
-    support: Option<Dimension>,
+    /// How load-bearing the cited thing is to this artifact, `[-1, 1]`.
+    /// The census calls this **effort `f`**, and it occupies the
+    /// `pDirected` slot — the same slot relevance occupies on a tag.
+    relevance: Dimension,
+    /// Endorsing versus refuting, `[-1, 1]`. The census calls this
+    /// **enthusiasm `e`**, and it occupies the `pInterest` slot. This is
+    /// the axis that decides whether a mention vouches: a citation
+    /// strictly positive on both axes resolves its fold cell to the cited
+    /// person, and every other citation resolves home.
+    support: Dimension,
 }
 
 impl ReferenceInput {
     fn to_draft(&self) -> crate::references::ReferenceDraft {
         crate::references::ReferenceDraft {
             target: self.target,
-            relevance: self.relevance.map(|d| d.0),
-            support: self.support.map(|d| d.0),
+            relevance: self.relevance.0,
+            support: self.support.0,
         }
     }
 }
@@ -778,6 +798,14 @@ fn self_mark_draft(
     }
 }
 
+/// A post edit's stance pick as the wire carries it: omitted is the inert
+/// attachment `0`, which is what every edit stood at before the pick
+/// existed — so a client that never sends one keeps authoring the same
+/// record.
+fn edit_pick(pick: Option<Dimension>) -> f64 {
+    pick.map_or(0.0, |d| d.0)
+}
+
 /// A new Post: one genesis Publish whose envelope carries the display
 /// fields (post.md §1), plus one Tag record per declared topic — each
 /// its own priced act. Fields are raw scalars; moderation is
@@ -792,9 +820,10 @@ struct PreparePostInput {
     /// Breaking the rule is a field-level refusal on `content`.
     content: Option<String>,
     license: LicenseInput,
-    /// The author's attachment; defaults to the low-defaults policy
-    /// value (+0.1). `pInterest` is census-fixed at 1 for Publish.
-    p_directed: Option<Dimension>,
+    /// The author's attachment. Required: the server never fills a
+    /// stance in — the UI pre-fills +0.1 visibly and sends what it shows.
+    /// `pInterest` is census-fixed at 1 for Publish, so it is no field.
+    p_directed: Dimension,
     /// Topics declared at creation — explicit structured input, never
     /// parsed from the body, so display content and graph structure stay
     /// decoupled. At most 10 per batch; two names that canonicalize
@@ -839,6 +868,12 @@ struct PreparePostEditInput {
     sensitive: Option<bool>,
     /// The reason the edit leaves standing; same rules a create runs.
     sensitive_reason: Option<String>,
+    /// The author's stance pick riding the edit's own record — its
+    /// attachment. Omitted is `0`, the inert setting: an unadjusted edit
+    /// moves no stance. A moved pick alone is a legal edit — a
+    /// content-identical new version. `pInterest` stays census-fixed at
+    /// 1 for Publish, so it is no field.
+    p_directed: Option<Dimension>,
 }
 
 /// A new Comment: one genesis Review — A leg to the target, terminal
@@ -850,9 +885,10 @@ struct PrepareCommentInput {
     target: Uuid,
     content: String,
     license: LicenseInput,
-    /// Enthusiasm and effort; each defaults to +0.1 (invitations.md §3).
-    p_directed: Option<Dimension>,
-    p_interest: Option<Dimension>,
+    /// Enthusiasm and effort. Required: the server never fills a stance
+    /// in — the UI pre-fills +0.1 on both visibly and sends what it shows.
+    p_directed: Dimension,
+    p_interest: Dimension,
     /// Topics declared at creation; same rules as on a Post.
     tags: Option<Vec<TagInput>>,
     /// Citations declared at creation; same rules as on a Post.
@@ -877,18 +913,19 @@ struct PrepareTagInput {
     /// The content being tagged.
     target: Uuid,
     name: String,
-    /// Relevance `r`; defaults to +0.1. Zero is the un-tag.
-    p_directed: Option<Dimension>,
-    /// Confidence `c`, census-bounded to `[0, 1]`; defaults to 1.
-    p_interest: Option<Dimension>,
+    /// Relevance `r`; zero is the un-tag. Required, as on `TagInput`.
+    p_directed: Dimension,
+    /// Confidence `c`, census-bounded to `[0, 1]`. Required, as on
+    /// `TagInput`.
+    p_interest: Dimension,
 }
 
 impl PrepareTagInput {
     fn to_draft(&self) -> crate::topics::TagDraft {
         crate::topics::TagDraft {
             name: self.name.clone(),
-            relevance: self.p_directed.map(|d| d.0),
-            confidence: self.p_interest.map(|d| d.0),
+            relevance: self.p_directed.0,
+            confidence: self.p_interest.0,
         }
     }
 }
@@ -908,18 +945,20 @@ struct PrepareReferenceInput {
     artifact: Uuid,
     /// The cited node. An artifact cannot cite itself.
     target: Uuid,
-    /// Effort `f`, the `pDirected` slot; defaults to +0.1.
-    relevance: Option<Dimension>,
-    /// Enthusiasm `e`, the `pInterest` slot; defaults to +0.1.
-    support: Option<Dimension>,
+    /// Effort `f`, the `pDirected` slot. Required, as on
+    /// `ReferenceInput`.
+    relevance: Dimension,
+    /// Enthusiasm `e`, the `pInterest` slot. Required, as on
+    /// `ReferenceInput`.
+    support: Dimension,
 }
 
 impl PrepareReferenceInput {
     fn to_draft(&self) -> crate::references::ReferenceDraft {
         crate::references::ReferenceDraft {
             target: self.target,
-            relevance: self.relevance.map(|d| d.0),
-            support: self.support.map(|d| d.0),
+            relevance: self.relevance.0,
+            support: self.support.0,
         }
     }
 }
@@ -1454,6 +1493,58 @@ struct DeviceLock {
 }
 
 #[derive(InputObject)]
+struct SetBookmarkInput {
+    node: Uuid,
+    /// When the save took place; null means now. Undo passes the removed
+    /// row's own `bookmarkedAt`, so the row returns to its place
+    /// (SavedUndo). Never later than now: BAD_INPUT at ["bookmarkedAt"].
+    bookmarked_at: Option<DateTime<Utc>>,
+}
+
+#[derive(SimpleObject)]
+struct SetBookmarkPayload {
+    bookmark: Option<crate::schema::types::BookmarkEdge>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
+struct RemoveBookmarkInput {
+    node: Uuid,
+}
+
+#[derive(SimpleObject)]
+struct RemoveBookmarkPayload {
+    ok: Option<bool>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
+struct HideActorInput {
+    actor: Uuid,
+    /// Restores an earlier hiding's moment — the Undo of an unhide puts the
+    /// row back where it stood. Null means now; a moment after now is
+    /// BAD_INPUT.
+    hidden_at: Option<DateTime<Utc>>,
+}
+
+#[derive(SimpleObject)]
+struct HideActorPayload {
+    hidden: Option<crate::schema::types::HiddenActorEdge>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
+struct UnhideActorInput {
+    actor: Uuid,
+}
+
+#[derive(SimpleObject)]
+struct UnhideActorPayload {
+    ok: Option<bool>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
 struct MarkSeenInput {
     /// The nodes the viewer has seen, in the order they were seen.
     nodes: Vec<Uuid>,
@@ -1464,6 +1555,20 @@ struct MarkSeenInput {
 #[derive(SimpleObject)]
 struct MarkSeenPayload {
     ok: Option<bool>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
+struct SendReportInput {
+    /// The reported node: a post, a comment, or a person's profile —
+    /// never the reporter's own.
+    target: Uuid,
+}
+
+#[derive(SimpleObject)]
+struct SendReportPayload {
+    /// When the report was sent; null when it was refused.
+    reported_at: Option<DateTime<Utc>>,
     user_errors: Vec<UserError>,
 }
 
@@ -2689,6 +2794,137 @@ impl Mutation {
         })
     }
 
+    /// Keep a post, comment or person in the viewer's Saved list. Any
+    /// other kind of node is BAD_INPUT at ["node"]; an id that names
+    /// nothing is NOT_FOUND. Saving a kept node changes nothing and
+    /// returns its edge as it stands (idempotent). Needs a session
+    /// (UNAUTHENTICATED otherwise) and no particular account state — an
+    /// applicant keeps things like a member; this is private viewer
+    /// state, not acting. L2 only: no record, no staged write.
+    async fn set_bookmark(
+        &self,
+        ctx: &Context<'_>,
+        input: SetBookmarkInput,
+    ) -> async_graphql::Result<SetBookmarkPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        let refused = |message: &str, field: &str| SetBookmarkPayload {
+            bookmark: None,
+            user_errors: vec![UserError::at(
+                ErrorCode::BadInput,
+                message,
+                vec![field.to_string()],
+            )],
+        };
+        if let Some(at) = input.bookmarked_at
+            && !crate::bookmarks::restore_time_ok(at, Utc::now())
+        {
+            return Ok(refused(
+                "a save time may not be later than now",
+                "bookmarkedAt",
+            ));
+        }
+        use postgres_store::bookmarks::SaveOutcome;
+        let bookmark = match postgres_store::bookmarks::set_bookmark(
+            pool,
+            v.user_id,
+            input.node,
+            input.bookmarked_at,
+        )
+        .await?
+        {
+            SaveOutcome::Kept(bookmark) => bookmark,
+            SaveOutcome::NotSaveable => {
+                return Ok(refused(
+                    "only a post, a comment or a person can be saved",
+                    "node",
+                ));
+            }
+            SaveOutcome::Unknown => return Err(not_found("no such node")),
+        };
+        let edge = crate::schema::types::hydrate_bookmarks(pool, vec![bookmark])
+            .await?
+            .pop()
+            .ok_or_else(|| not_found("no such node"))?;
+        Ok(SetBookmarkPayload {
+            bookmark: Some(edge),
+            user_errors: vec![],
+        })
+    }
+
+    /// Drop a node from the viewer's Saved list — a genuine delete.
+    /// Dropping a node that is not kept is ok (idempotent). Needs a
+    /// session; no account state.
+    async fn remove_bookmark(
+        &self,
+        ctx: &Context<'_>,
+        input: RemoveBookmarkInput,
+    ) -> async_graphql::Result<RemoveBookmarkPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        postgres_store::bookmarks::remove_bookmark(pool, v.user_id, input.node).await?;
+        Ok(RemoveBookmarkPayload {
+            ok: Some(true),
+            user_errors: vec![],
+        })
+    }
+
+    /// Hide an actor from the viewer's own feed. Idempotent: an actor
+    /// already hidden keeps its edge and its moment. Any actor may be
+    /// hidden, a deleted account included; the viewer's own id is
+    /// BAD_INPUT, an id naming no actor NOT_FOUND, a restore moment after
+    /// now BAD_INPUT — all at the transport, client bugs no surface renders.
+    /// Needs a session and no particular account state — an applicant
+    /// hides like a member; this is private viewer state, not acting.
+    /// Nothing reaches the graph or the hidden actor.
+    async fn hide_actor(
+        &self,
+        ctx: &Context<'_>,
+        input: HideActorInput,
+    ) -> async_graphql::Result<HideActorPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        if input.actor == v.user_id {
+            return Err(super::query::bad_input("an account cannot hide itself"));
+        }
+        if let Some(at) = input.hidden_at
+            && !crate::bookmarks::restore_time_ok(at, Utc::now())
+        {
+            return Err(super::query::bad_input(
+                "a hiding moment may not be later than now",
+            ));
+        }
+        let Some(row) =
+            postgres_store::hidden::hide(pool, v.user_id, input.actor, input.hidden_at).await?
+        else {
+            return Err(not_found("no such actor"));
+        };
+        let edge = crate::schema::types::hydrate_hidden(pool, vec![row])
+            .await?
+            .pop()
+            .ok_or_else(|| not_found("no such actor"))?;
+        Ok(HideActorPayload {
+            hidden: Some(edge),
+            user_errors: vec![],
+        })
+    }
+
+    /// Unhide an actor — a genuine delete. Idempotent: an actor not hidden
+    /// answers ok. Needs a session; no account state.
+    async fn unhide_actor(
+        &self,
+        ctx: &Context<'_>,
+        input: UnhideActorInput,
+    ) -> async_graphql::Result<UnhideActorPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        postgres_store::hidden::unhide(pool, v.user_id, input.actor).await?;
+        Ok(UnhideActorPayload {
+            ok: Some(true),
+            user_errors: vec![],
+        })
+    }
+
     /// Record that the viewer has seen nodes — first seeing only: a node
     /// already on the list is left as it is (re-seeing never counts,
     /// never moves it). Posts, comments, profiles and topics are
@@ -2730,6 +2966,105 @@ impl Mutation {
         }
         Ok(MarkSeenPayload {
             ok: Some(true),
+            user_errors: vec![],
+        })
+    }
+
+    /// Clear the bell's dot (Notifications opening): the seen pointer moves
+    /// to `through`, never backwards, and row read state is untouched.
+    /// Idempotent; needs a session (UNAUTHENTICATED otherwise) and no
+    /// account state — reading one's notifications is private viewer
+    /// state, not acting. A `through` after now is BAD_INPUT.
+    async fn mark_notifications_seen(
+        &self,
+        ctx: &Context<'_>,
+        input: super::notifications::MarkNotificationsSeenInput,
+    ) -> async_graphql::Result<super::notifications::MarkNotificationsSeenPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        match postgres_store::notifications::mark_seen(pool, v.user_id, input.through).await? {
+            postgres_store::notifications::SeenOutcome::Moved { unread } => {
+                Ok(super::notifications::MarkNotificationsSeenPayload {
+                    has_unread_notifications: Some(unread),
+                    user_errors: vec![],
+                })
+            }
+            postgres_store::notifications::SeenOutcome::InTheFuture => Err(
+                super::query::bad_input("through lies after every row the list could hold"),
+            ),
+        }
+    }
+
+    /// Mark one row read — the emphasis it keeps until opened. Idempotent:
+    /// a read row keeps its first readAt. An id that is not one of the
+    /// viewer's rows is NOT_FOUND (unknown and foreign read alike). Needs a
+    /// session and no account state.
+    async fn mark_notification_read(
+        &self,
+        ctx: &Context<'_>,
+        input: super::notifications::MarkNotificationReadInput,
+    ) -> async_graphql::Result<super::notifications::MarkNotificationReadPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        let Some(row) =
+            postgres_store::notifications::mark_read(pool, v.user_id, input.notification).await?
+        else {
+            return Err(not_found("no such notification"));
+        };
+        let notification = super::notifications::hydrate(pool, vec![row]).await?.pop();
+        Ok(super::notifications::MarkNotificationReadPayload {
+            notification,
+            user_errors: vec![],
+        })
+    }
+
+    /// Report a post, a comment or a person to CoGra by mail (the MVP's
+    /// report: no report machinery — moderation proposals come with
+    /// slice 8's moderation half). Mails the report address the reporter,
+    /// the reported node's id and the time; writes nothing to the graph
+    /// and keeps no row. Needs a session. Spends a per-account report
+    /// budget: a spent budget answers a transport-tier RATE_LIMITED and
+    /// nothing is mailed.
+    async fn send_report(
+        &self,
+        ctx: &Context<'_>,
+        input: SendReportInput,
+    ) -> async_graphql::Result<SendReportPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        let mailer = ctx.data::<Arc<dyn Mailer>>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        let refuse = |code: ErrorCode, message: &str| SendReportPayload {
+            reported_at: None,
+            user_errors: vec![UserError::at(code, message, vec!["target".to_string()])],
+        };
+        let Some(target) = postgres_store::report::target(pool, input.target).await? else {
+            return Ok(refuse(
+                ErrorCode::NotFound,
+                "no post, comment or profile has this id",
+            ));
+        };
+        if target.owner == v.user_id {
+            return Ok(refuse(ErrorCode::BadInput, "a report names someone else's"));
+        }
+        let Some(reporter) = store::actor_identity(pool, v.user_id).await? else {
+            return Err(unauthenticated());
+        };
+        if !ratelimit::spend_report(pool, limits, v.user_id).await? {
+            return Err(rate_limited());
+        }
+        let reported_at = Utc::now();
+        mailer
+            .send(crate::report::report_mail(
+                v.user_id,
+                &reporter.handle,
+                input.target,
+                &target.kind,
+                reported_at,
+            ))
+            .await;
+        Ok(SendReportPayload {
+            reported_at: Some(reported_at),
             user_errors: vec![],
         })
     }
@@ -3495,7 +3830,7 @@ impl Mutation {
             description: input.description,
             content: input.content,
             license,
-            p_directed: input.p_directed.map(|d| d.0),
+            p_directed: input.p_directed.0,
             tags: tag_drafts(&input.tags),
             references: reference_drafts(&input.references),
             attachments: attachment_drafts(&input.attachments),
@@ -3539,8 +3874,9 @@ impl Mutation {
         }
     }
 
-    /// Prepares a Post edit: an ordinary-role Publish at attachment 0
-    /// toward the existing node, chained behind the current head.
+    /// Prepares a Post edit: an ordinary-role Publish at the author's
+    /// picked attachment (default 0, inert) toward the existing node,
+    /// chained behind the current head.
     /// Creator-only; one in-flight edit per post and author
     /// (post.md §4).
     async fn prepare_post_edit(
@@ -3559,6 +3895,7 @@ impl Mutation {
             content: input.content,
             attachments: attachment_drafts(&input.attachments),
             sensitive: self_mark_draft(input.sensitive, input.sensitive_reason),
+            p_directed: edit_pick(input.p_directed),
         };
         match crate::content::prepare_post_edit(pool, boundary, staging, v.user_id, draft).await {
             Ok(prepared) => Ok(PrepareContentPayload::ok(prepared)),
@@ -3585,8 +3922,8 @@ impl Mutation {
             target: input.target,
             content: input.content,
             license,
-            p_directed: input.p_directed.map(|d| d.0),
-            p_interest: input.p_interest.map(|d| d.0),
+            p_directed: input.p_directed.0,
+            p_interest: input.p_interest.0,
             tags: tag_drafts(&input.tags),
             references: reference_drafts(&input.references),
             attachments: attachment_drafts(&input.attachments),
@@ -3794,6 +4131,12 @@ impl Mutation {
     /// Resubmitting a sealed proposal is idempotent only for the exact
     /// signature that was sealed; differing bytes refuse as BAD_INPUT.
     ///
+    /// A carried write the landing released signs only once every asset
+    /// it names is published to the live store; the submit runs that
+    /// move. One whose move has not landed refuses as
+    /// CARRIED_MEDIA_UNPUBLISHED, which is retryable: nothing was
+    /// recorded, and the next submit resumes the move.
+    ///
     /// A keyless account is refused rather than rendered: no staged write
     /// can exist for one, because the Registration stages only after the
     /// attach proof, so a missing key here is a client bug.
@@ -3805,6 +4148,7 @@ impl Mutation {
         let v = viewer(ctx)?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
+        let areas = ctx.data::<MediaAreas>()?;
         let identity = store::actor_identity(pool, v.user_id)
             .await?
             .ok_or_else(unauthenticated)?;
@@ -3814,7 +4158,7 @@ impl Mutation {
         for (i, proposal) in input.proposals.iter().enumerate() {
             let owned = match staged::load(pool, proposal.staged_write_id).await {
                 Ok(w) if w.actor_id == v.user_id => w,
-                Ok(_) | Err(staged::StagedError::NotFound(_)) => {
+                Ok(_) | Err(staged::StagedError::NotFound(_) | staged::StagedError::Reaped(_)) => {
                     user_errors.push(UserError::at(
                         ErrorCode::NotFound,
                         "unknown staged write",
@@ -3843,6 +4187,10 @@ impl Mutation {
                     continue;
                 }
             };
+            if let Err(e) = relay::gate_carried_media(pool, areas, &owned).await {
+                user_errors.push(relay_error(e, i));
+                continue;
+            }
             match relay::submit_pre_signed(
                 boundary,
                 pool,
@@ -3891,7 +4239,7 @@ impl Mutation {
         for (i, approval) in input.approvals.iter().enumerate() {
             let owned = match staged::load(pool, approval.staged_write_id).await {
                 Ok(w) if w.actor_id == v.user_id => w,
-                Ok(_) | Err(staged::StagedError::NotFound(_)) => {
+                Ok(_) | Err(staged::StagedError::NotFound(_) | staged::StagedError::Reaped(_)) => {
                     user_errors.push(UserError::at(
                         ErrorCode::NotFound,
                         "unknown staged write",

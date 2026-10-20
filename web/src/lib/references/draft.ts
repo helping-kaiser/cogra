@@ -60,6 +60,14 @@ export type ReferenceDraft = {
    * all.
    */
   readonly withdrawalCost: number;
+  /**
+   * The bundle's raw sums before the clip (`ReferenceClaim.rawRelevance` /
+   * `rawSupport`) — what a withdrawal's counter-records must net to zero,
+   * and so what the device checks them against (intent.ts). A reference
+   * drafted in this session stands nowhere yet: its sums are its own pair.
+   */
+  readonly rawRelevance: number;
+  readonly rawSupport: number;
 };
 
 export const DEFAULT_RELEVANCE = 0.1;
@@ -80,6 +88,8 @@ export function newReferenceDraft(
     relevance: DEFAULT_RELEVANCE,
     support: DEFAULT_SUPPORT,
     withdrawalCost: 1,
+    rawRelevance: DEFAULT_RELEVANCE,
+    rawSupport: DEFAULT_SUPPORT,
   };
 }
 

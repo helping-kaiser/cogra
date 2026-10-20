@@ -13,30 +13,40 @@ import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
+import com.cogra.domain.signing.ContentShape
+import com.cogra.domain.signing.Expectation
+import com.cogra.domain.signing.ExpectedContent
 import com.cogra.domain.signing.NoActorKeyException
+import com.cogra.domain.signing.SentContent
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.commentEdit
+import com.cogra.domain.signing.contentExpectation
+import com.cogra.domain.signing.editExpectation
+import com.cogra.domain.signing.ledgerFor
+import com.cogra.domain.topics.TagClaim
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.SectionsEditor
 import com.cogra.feature.content.TagRow
 import com.cogra.feature.content.TagSectionState
+import com.cogra.feature.content.edit.undoWithdrawal
 import com.cogra.feature.content.editableRow
 import com.cogra.feature.content.referenceFieldIndex
 import com.cogra.feature.content.tagFieldIndex
 import com.cogra.feature.content.wizard.AssetUpload
-import com.cogra.feature.content.wizard.UploadFailure
-import com.cogra.feature.content.wizard.uploadPicture
 import com.cogra.feature.content.wizard.PickedAsset
+import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.attachmentFieldIndex
+import com.cogra.feature.content.wizard.uploadPicture
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * `CommentEdit`.
@@ -134,6 +144,7 @@ class CommentEditViewModel @Inject constructor(
                             sensitiveReason = loaded.selfMark.reason,
                             loadedSensitive = loaded.selfMark.sensitive,
                             loadedSensitiveReason = loaded.selfMark.reason,
+                            license = loaded.comment.license,
                         )
                     }
                 } ?: _state.update { it.copy(loading = false, refusal = GONE) }
@@ -146,7 +157,7 @@ class CommentEditViewModel @Inject constructor(
         }
     }
 
-    fun onBodyChange(value: String) = _state.update { it.copy(body = value) }
+    fun onBodyChange(value: String) = _state.update { it.copy(body = value, recordStaged = true) }
 
     fun onPicked(uri: String) {
         val before = _state.value
@@ -192,11 +203,11 @@ class CommentEditViewModel @Inject constructor(
      * come back with the switch as words the author never re-read.
      */
     fun onSensitiveChange(marked: Boolean) = _state.update {
-        it.copy(sensitive = marked, sensitiveReason = if (marked) it.sensitiveReason else null)
+        it.copy(sensitive = marked, sensitiveReason = if (marked) it.sensitiveReason else null, recordStaged = true)
     }
 
     fun onSensitiveReasonChange(reason: String) =
-        _state.update { it.copy(sensitiveReason = reason) }
+        _state.update { it.copy(sensitiveReason = reason, recordStaged = it.recordStaged || it.sensitive) }
 
     fun onCloseSheet() = _state.update { it.closedSheets() }
 
@@ -264,9 +275,15 @@ class CommentEditViewModel @Inject constructor(
     private fun updateReferences(block: (ReferenceSectionState) -> ReferenceSectionState) =
         sections.updateReferences(block)
 
+    /** Undo on a tag's `Withdrawn:` line: it returns as it stood, and the withdrawal unstages. */
+    fun onUndoTagWithdrawal(name: String) = updateTags { it.undoWithdrawal(name) }
+
+    /** Undo on a citation's `Withdrawn:` line, the same way. */
+    fun onUndoReferenceWithdrawal(targetId: String) = updateReferences { it.undoWithdrawal(targetId) }
+
     /**
-     * Signs the edit, then each topic and citation the edit newly
-     * declares — the "2 signed actions" the footer counts.
+     * Signs the edit, then each tag and citation change — every act the
+     * footer counts, the record included once it is staged.
      */
     fun onSign() {
         val current = _state.value
@@ -281,6 +298,7 @@ class CommentEditViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
+            val expected = expectation(current) ?: return@launch
             val writes = mutableListOf<PreparedWriteView>()
 
             // The edit record only when its payload moved: an edit that
@@ -290,16 +308,7 @@ class CommentEditViewModel @Inject constructor(
                     val outcome = content.prepareCommentEdit(
                         id = current.commentId,
                         content = current.body,
-                        attachments = current.picked.mapNotNull { asset ->
-                            asset.mediaId?.let {
-                                AttachmentClaim(
-                                    it,
-                                    asset.altText.ifBlank { null },
-                                    asset.coverMediaId,
-                                    asset.coverTaken,
-                                )
-                            }
-                        },
+                        attachments = sentContent(current).attachments,
                         // Complete state: whatever the Mark row leaves
                         // standing, touched or not. An edit that omitted
                         // it would unveil a comment its author marked.
@@ -325,9 +334,9 @@ class CommentEditViewModel @Inject constructor(
                     is Outcome.Failed -> return@launch failTransport()
                 }
             }
-            for (name in current.tagSection.removes) {
+            for (row in current.tagSection.removes) {
                 when (
-                    val outcome = topics.prepareTag(current.commentId, name, pDirected = WITHDRAWN)
+                    val outcome = topics.prepareTag(current.commentId, row.name, WITHDRAWN, row.confidence)
                 ) {
                     is Outcome.Success -> writes += outcome.value
                     is Outcome.Refused -> return@launch refuse(outcome.errors)
@@ -360,7 +369,7 @@ class CommentEditViewModel @Inject constructor(
             }
 
             val results = try {
-                signer.sign(writes)
+                signer.sign(writes, expected)
             } catch (_: NoActorKeyException) {
                 _state.update { it.copy(submitting = false, keyAbsent = true) }
                 return@launch
@@ -373,6 +382,83 @@ class CommentEditViewModel @Inject constructor(
             }
         }
     }
+
+    /**
+     * The acts card as the intent check reads it (Intent.kt): the L1 ids of
+     * the comment, the node it answers, and every cited node the edit
+     * touches are read first, before anything is staged. Null once a read
+     * failed — already reported.
+     */
+    private suspend fun expectation(current: CommentEditState): Expectation? {
+        val parent = parentOf(current.commentId) ?: return null
+        val refs = current.referenceSection
+        val ids = listOf(current.commentId, parent) + (refs.adds + refs.removes).map { it.targetId }
+        val graphIds = when (val read = content.graphIds(ids)) {
+            is Outcome.Success -> read.value
+            is Outcome.Refused -> return null.also { refuse(read.errors) }
+            is Outcome.Failed -> return null.also { failTransport() }
+        }
+        val commentGraphId = graphIds.getValue(current.commentId)
+        val record = if (current.contentChanged) {
+            val content = contentExpected(current) ?: return null
+            commentEdit(graphIds.getValue(parent), commentGraphId, content)
+        } else {
+            null
+        }
+        return editExpectation(
+            nodeGraphId = commentGraphId,
+            record = record,
+            tags = current.tagSection.adds.map { it.toClaim() } +
+                current.tagSection.removes.map { TagClaim(it.name, WITHDRAWN, it.confidence) },
+            references = refs.adds.map { it.toClaim() },
+            withdrawals = refs.removes.map { it.toWithdrawn() },
+            graphIds = graphIds,
+        )
+    }
+
+    /** The node the comment answers. Null once the read failed — already reported. */
+    private suspend fun parentOf(commentId: String): String? = when (val read = content.commentAnswers(commentId)) {
+        is Outcome.Success -> read.value ?: null.also { failTransport() }
+        is Outcome.Refused -> null.also { refuse(read.errors) }
+        is Outcome.Failed -> null.also { failTransport() }
+    }
+
+    /**
+     * The record's payload as complete state: the pictures added here are
+     * held to the digests this device computed, the kept ones to the
+     * digests of the asset each names, read back by id
+     * (PayloadExpectation.kt). Null once the read-back failed — already
+     * reported.
+     */
+    private suspend fun contentExpected(current: CommentEditState): ExpectedContent? {
+        val sent = sentContent(current)
+        val own = current.picked.mapNotNull { asset ->
+            (asset.upload as? AssetUpload.Done)?.let { done -> done.known?.let { done.mediaId to it } }
+        }.toMap()
+        val ledger = when (val read = media.ledgerFor(sent.attachments, own)) {
+            is Outcome.Success -> read.value
+            is Outcome.Refused -> return null.also { refuse(read.errors) }
+            is Outcome.Failed -> return null.also { failTransport() }
+        }
+        return contentExpectation(current.commentId, sent, ContentShape.COMMENT, ledger)
+    }
+
+    /**
+     * The edit record's request, read by the prepare and by the payload
+     * expectation alike: the words, the whole gallery the edit leaves
+     * standing, and the mark as the transport sends it for an edit — the
+     * reason untouched (RepositoryImpls `prepareCommentEdit`).
+     */
+    private fun sentContent(current: CommentEditState): SentContent = SentContent(
+        content = current.body,
+        attachments = current.picked.mapNotNull { asset ->
+            asset.mediaId?.let {
+                AttachmentClaim(it, asset.altText.ifBlank { null }, asset.coverMediaId, asset.coverTaken)
+            }
+        },
+        sensitive = current.sensitive,
+        sensitiveReason = current.sensitiveReason,
+    )
 
     fun onSavedConsumed() = _state.update { it.copy(saved = false) }
 

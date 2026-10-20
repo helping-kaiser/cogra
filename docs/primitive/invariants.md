@@ -95,7 +95,7 @@ most useful one.
 - [Feed traversal is forward-only](feed-ranking.md#4-the-path-set)
   — paths follow records in their stored direction;
   inbound-inert is one consequence.
-- [Every hop attenuates](feed-ranking.md#2-inputs) — `w̃ < 1`
+- [Every hop attenuates](feed-ranking.md#31-the-damped-weight) — `w̃ < 1`
   everywhere, so path products shrink with depth and loops die by
   construction; no separate simple-path rule is needed.
 - [Exactly two channels cross a T-leg](feed-ranking.md#4-the-path-set)

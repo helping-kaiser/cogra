@@ -40,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
@@ -210,6 +211,22 @@ private fun ShareAffordance(onShare: () -> Unit, testTagPrefix: String, node: Da
     ) {
         Icon(
             imageVector = Icons.Filled.Share,
+            contentDescription = null,
+            modifier = Modifier.size(GLYPH),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/**
+ * One glyph in a card's row — the comment card's reply, a kind's own share —
+ * in the row's shared control shape.
+ */
+@Composable
+internal fun GlyphAffordance(icon: ImageVector, description: String, testTag: String, onClick: () -> Unit) {
+    GlyphButton(onClick = onClick, description = description, testTag = testTag) {
+        Icon(
+            imageVector = icon,
             contentDescription = null,
             modifier = Modifier.size(GLYPH),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,

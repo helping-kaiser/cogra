@@ -30,9 +30,15 @@ use crate::ratelimit::SigningClass;
 use crate::references::{self, ReferenceDraft, ReferenceError, ReferencesError};
 use crate::topics::{self, TagDraft, TagError, TopicsError};
 
-/// The low-defaults stance value (invitations.md §3): defaults sit low
-/// so stronger stances stay expressible.
-pub const DEFAULT_STANCE: f64 = 0.1;
+/// The low-defaults stance value (invitations.md §3) that the clients'
+/// wizards and pads pre-fill: defaults sit low so stronger stances stay
+/// expressible. Exported to both clients as `stance.tapDefault`.
+///
+/// The server never applies it. A user signs only values they chose and
+/// saw, so every stance dimension is a required wire field, and a value
+/// the server filled in after the fact would be a signature over
+/// something nobody picked.
+pub const TAP_DEFAULT_STANCE: f64 = 0.1;
 
 /// The longest title a Post carries (post.md §1), counted in Unicode
 /// scalar values — the unit every character cap on this surface counts
@@ -382,7 +388,9 @@ pub struct PostDraft {
     /// is absent exactly when the gallery carries the body.
     pub content: Option<String>,
     pub license: License,
-    pub p_directed: Option<f64>,
+    /// The author's attachment, exactly as the user chose it — never
+    /// optional, so no path can reach the minting record without one.
+    pub p_directed: f64,
     /// The topics declared at creation. Explicit structured input, never
     /// parsed from the body, so display content and graph structure stay
     /// decoupled (api-spec.md "Content authoring").
@@ -433,14 +441,19 @@ pub struct PostEditDraft {
     /// The self-mark the edit leaves standing. Complete state like the
     /// rest: an edit that sends `sensitive: false` unmarks the post.
     pub sensitive: SelfMarkDraft,
+    /// The author's stance pick riding the edit's own record: its
+    /// attachment, `0` (inert) unless the author moved it. `p_i` is
+    /// census-fixed at 1, as on the genesis.
+    pub p_directed: f64,
 }
 
 pub struct CommentDraft {
     pub target: Uuid,
     pub content: String,
     pub license: License,
-    pub p_directed: Option<f64>,
-    pub p_interest: Option<f64>,
+    /// Effort and enthusiasm, exactly as the user chose them.
+    pub p_directed: f64,
+    pub p_interest: f64,
     /// The topics declared at creation — a Comment is Taggable like any
     /// other passive node (layer1-interface.md §9).
     pub tags: Vec<TagDraft>,
@@ -538,6 +551,26 @@ fn post_body(content: Option<String>, gallery: &PlannedGallery) -> Result<String
     }
 }
 
+/// A words body carries no description (K8.1/D4): a description is how
+/// words stand BESIDE pictures, so words beside words would only ask the
+/// reader which of the two is the post. `body` is `post_body`'s answer —
+/// empty exactly for a media body — and `description` is already
+/// blank-folded, so a whitespace-only one never refuses.
+///
+/// Create and edit both come through here, so an edit cannot land the
+/// pair a create would have refused.
+fn description_beside(body: &str, description: Option<&str>) -> Result<(), ContentError> {
+    if body.is_empty() || description.is_none() {
+        return Ok(());
+    }
+    Err(ContentError::BadInput {
+        field: "description",
+        message: "a post whose body is words carries no description — words beside media \
+                  are the description's only place"
+            .into(),
+    })
+}
+
 /// The title as the envelope will carry it: trimmed, length-checked, and
 /// blank folded to absent so `""` and null cannot mean two different
 /// nothings — the same rule the body and the self-mark's reason run.
@@ -627,8 +660,8 @@ async fn author_address(pool: &PgPool, viewer: Uuid) -> Result<String, ContentEr
 
 /// Prepares a new Post: one genesis Publish whose envelope carries the
 /// display fields (post.md §1), plus one Tag act per declared topic and
-/// one Reference act per declared citation. The attachment defaults low;
-/// `p_i` is census-fixed at 1.
+/// one Reference act per declared citation. The attachment is written as
+/// the user chose it; `p_i` is census-fixed at 1.
 ///
 /// Everything the batch could be refused for is checked before the
 /// minting record is staged — the topic names, the citation targets, and
@@ -644,7 +677,7 @@ pub async fn prepare_post<B: L1Boundary>(
     draft: PostDraft,
 ) -> Result<PreparedContent, ContentError> {
     let gc_after_epochs = staging.gc_after_epochs;
-    let p_d = draft.p_directed.unwrap_or(DEFAULT_STANCE);
+    let p_d = draft.p_directed;
     stance_range("pDirected", p_d)?;
     let title = checked_title(draft.title)?;
     let description = checked_description(draft.description)?;
@@ -652,6 +685,7 @@ pub async fn prepare_post<B: L1Boundary>(
     let citations = references::plan_batch(pool, &draft.references).await?;
     let gallery = media::plan_gallery(pool, viewer, GalleryKind::Post, &draft.attachments).await?;
     let body = post_body(draft.content, &gallery)?;
+    description_beside(&body, description.as_deref())?;
     let mark = self_mark(draft.sensitive)?;
     let address = author_address(pool, viewer).await?;
     prepare::check_write_rule(
@@ -672,7 +706,8 @@ pub async fn prepare_post<B: L1Boundary>(
         media: gallery.manifest,
         sensitive: mark,
     }
-    .encode_payload();
+    .encode_for_prepare()
+    .map_err(|e| ContentError::Internal(format!("payload not admissible: {e}")))?;
     let prepared = prepare::prepare(
         boundary,
         pool,
@@ -808,11 +843,15 @@ async fn stage_references<B: L1Boundary>(
 }
 
 /// Prepares a Post edit: an ordinary-role Publish toward the existing
-/// Content node at attachment 0, chained behind the current head
-/// (post.md §4; substrate.md §9). Eligibility (creator only) and
-/// serialization (one in-flight edit per node and author) are enforced
-/// here — the API refuses to prepare a record its fold would never
-/// read (api-spec.md "Conventions").
+/// Content node at the author's picked attachment — `0`, inert, unless
+/// moved — chained behind the current head (post.md §4; substrate.md
+/// §9). Eligibility (creator only) and serialization (one in-flight edit
+/// per node and author) are enforced here — the API refuses to prepare a
+/// record its fold would never read (api-spec.md "Conventions").
+///
+/// Nothing compares the new state with the standing one: a
+/// content-identical edit whose only change is the pick is a real
+/// version like any other.
 pub async fn prepare_post_edit<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -820,6 +859,8 @@ pub async fn prepare_post_edit<B: L1Boundary>(
     viewer: Uuid,
     draft: PostEditDraft,
 ) -> Result<PreparedContent, ContentError> {
+    let p_d = draft.p_directed;
+    stance_range("pDirected", p_d)?;
     let post = content_store::post(pool, draft.id)
         .await?
         .ok_or(ContentError::NotFound)?;
@@ -830,6 +871,7 @@ pub async fn prepare_post_edit<B: L1Boundary>(
     let description = checked_description(draft.description)?;
     let gallery = media::plan_gallery(pool, viewer, GalleryKind::Post, &draft.attachments).await?;
     let body = post_body(draft.content, &gallery)?;
+    description_beside(&body, description.as_deref())?;
     let mark = self_mark(draft.sensitive)?;
     let address = author_address(pool, viewer).await?;
     let node =
@@ -851,7 +893,8 @@ pub async fn prepare_post_edit<B: L1Boundary>(
         media: gallery.manifest,
         sensitive: mark,
     }
-    .encode_payload();
+    .encode_for_prepare()
+    .map_err(|e| ContentError::Internal(format!("payload not admissible: {e}")))?;
     let prepared = prepare::prepare(
         boundary,
         pool,
@@ -862,7 +905,7 @@ pub async fn prepare_post_edit<B: L1Boundary>(
             family: Family::Publish,
             middle: None,
             target: Target::Node(node.target),
-            p_d: 0.0,
+            p_d,
             p_i: 1.0,
             settlement_ref: None,
             license: None,
@@ -896,8 +939,8 @@ pub async fn prepare_comment<B: L1Boundary>(
     draft: CommentDraft,
 ) -> Result<PreparedContent, ContentError> {
     let gc_after_epochs = staging.gc_after_epochs;
-    let p_d = draft.p_directed.unwrap_or(DEFAULT_STANCE);
-    let p_i = draft.p_interest.unwrap_or(DEFAULT_STANCE);
+    let p_d = draft.p_directed;
+    let p_i = draft.p_interest;
     stance_range("pDirected", p_d)?;
     stance_range("pInterest", p_i)?;
     let content = checked_comment_body(draft.content)?;
@@ -926,7 +969,8 @@ pub async fn prepare_comment<B: L1Boundary>(
         media: gallery.manifest,
         sensitive: mark,
     }
-    .encode_payload();
+    .encode_for_prepare()
+    .map_err(|e| ContentError::Internal(format!("payload not admissible: {e}")))?;
     let prepared = prepare::prepare(
         boundary,
         pool,
@@ -1018,7 +1062,8 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
         media: gallery.manifest,
         sensitive: mark,
     }
-    .encode_payload();
+    .encode_for_prepare()
+    .map_err(|e| ContentError::Internal(format!("payload not admissible: {e}")))?;
     let prepared = prepare::prepare(
         boundary,
         pool,
@@ -1052,7 +1097,10 @@ struct ChainedTarget {
 /// second in-flight edit per (node, author), and assert the current
 /// chain head as the causal parent (substrate.md §9 "Chain root" — the
 /// backend populates the parent and serializes edits, so CoGra's own
-/// clients never author a branch).
+/// clients never author a branch). An earlier edit the author never
+/// signed is superseded rather than serialized behind: it can no longer be
+/// signed, so the chain stays unbranched without it holding the node
+/// until GC.
 ///
 /// The display row exists, so the genesis record landed: a missing chain
 /// head is therefore a diverged mirror — an operational fault, not user
@@ -1064,6 +1112,8 @@ async fn chained_edit_target(
     l1_node_id: &str,
     author: &str,
 ) -> Result<ChainedTarget, ContentError> {
+    let current_epoch = mirror::last_ingested_epoch(pool).await?;
+    staged::supersede_unsigned_targeting(pool, viewer, family, l1_node_id, current_epoch).await?;
     if staged::has_pending_targeting(pool, viewer, family, l1_node_id).await? {
         return Err(ContentError::BadInput {
             field: "id",
@@ -1420,19 +1470,37 @@ pub async fn land_promoted(
 /// landed write missing it is the same internal fault its sibling is:
 /// substituting `Utc::now()` would stamp the content with its promotion
 /// time and leave no mark that it did.
+///
+/// The payload is read under the read/ingest admission
+/// ([`CograContent::read_payload`]): a record a newer format wrote lands
+/// with the fields this reader knows, and its carriage keeps the rest
+/// byte-exact.
+///
+/// A write a redaction reaped lands reduced ([`land_reduced`]), and so
+/// does one a redaction reached between the load and the carriage insert:
+/// that redaction already promoted, archived and reduced the carriage, and
+/// building display rows from the bytes loaded before it would re-publish
+/// what it removed. The insert keeps the reduced row, and the read after
+/// it is what notices.
 async fn land_one(
     pool: &PgPool,
     write: &staged::PromotedWrite,
     family: ContentFamily,
 ) -> Result<(), ContentError> {
-    let staged_row = staged::load(pool, write.id).await?;
+    let staged_row = match staged::load_promotable(pool, write.id).await? {
+        staged::Promotable::Full(row) => *row,
+        staged::Promotable::Reaped(reaped) => {
+            return land_reduced(pool, write, family, &reaped).await;
+        }
+    };
     let payload = &staged_row.proposal.payload;
     let sealed = staged_row
         .sealed
         .as_ref()
         .ok_or_else(|| ContentError::Internal("landed write without sealed parts".into()))?;
-    let content = CograContent::decode_payload(payload)
-        .map_err(|e| ContentError::Internal(format!("landed payload not admissible: {e}")))?;
+    let content = CograContent::read_payload(payload)
+        .map_err(|e| ContentError::Internal(format!("landed payload not admissible: {e}")))?
+        .fields;
     let meta = mirror::record_meta(pool, &write.act_id)
         .await?
         .ok_or_else(|| ContentError::Internal("promoted record missing from mirror".into()))?;
@@ -1455,6 +1523,20 @@ async fn land_one(
         .map_err(|e| ContentError::Internal(e.to_string()))?;
     content_store::insert_act_payload(&mut tx, &write.act_id, payload, &sealed.content_salt)
         .await?;
+    if content_store::lock_act_payload(&mut tx, &write.act_id)
+        .await?
+        .is_some_and(|carriage| carriage.reduced)
+    {
+        drop(tx);
+        let reaped = staged::ReapedWrite {
+            id: staged_row.id,
+            actor_id: staged_row.actor_id,
+            body: staged_row.proposal.body.clone(),
+            node_id: staged_row.node_id,
+            pre_signed_at: staged_row.pre_signed_at,
+        };
+        return land_reduced(pool, write, family, &reaped).await;
+    }
 
     let shape = match (family, is_genesis) {
         (ContentFamily::Post, true) => {
@@ -1513,6 +1595,71 @@ async fn land_one(
             },
         )
         .await?;
+    }
+    tx.commit()
+        .await
+        .map_err(|e| ContentError::Internal(e.to_string()))?;
+    Ok(())
+}
+
+/// Lands a content record whose staged payload a redaction reaped before
+/// the record arrived (data-model.md "Act payload carriage").
+///
+/// The record is ordered fact and lands whatever became of the bytes, but
+/// there are none to promote and none to decode, so it lands **reduced**:
+/// a carriage row in `reduced` holding nothing, and the landing order
+/// written onto whatever display rows the write still owns. No display
+/// row is built — there is no content to build one from — and the rows
+/// that exist show what the redaction's own tombstones made of them.
+async fn land_reduced(
+    pool: &PgPool,
+    write: &staged::PromotedWrite,
+    family: ContentFamily,
+    reaped: &staged::ReapedWrite,
+) -> Result<(), ContentError> {
+    let meta = mirror::record_meta(pool, &write.act_id)
+        .await?
+        .ok_or_else(|| ContentError::Internal("promoted record missing from mirror".into()))?;
+    let order = LandingOrder {
+        landed_epoch: meta.epoch,
+        act_time: meta.act_time,
+        position: meta.position,
+    };
+    let (target, is_genesis) = genesis_shape(&reaped.body);
+    let edited = match (family, is_genesis) {
+        (_, true) => None,
+        (ContentFamily::Post, false) => content_store::post_by_node(pool, &target)
+            .await?
+            .map(|p| p.id),
+        (ContentFamily::Comment, false) => content_store::comment_by_node(pool, &target)
+            .await?
+            .map(|c| c.id),
+    };
+    let mut tx = pool
+        .begin()
+        .await
+        .map_err(|e| ContentError::Internal(e.to_string()))?;
+    content_store::insert_reduced_act_payload(&mut tx, &write.act_id).await?;
+    if let Some(created_at) = reaped.pre_signed_at {
+        match (family, is_genesis, reaped.node_id, edited) {
+            (ContentFamily::Post, true, Some(node), _) => {
+                if content_store::land_post(&mut tx, node, order).await? {
+                    content_store::land_post_version(&mut tx, node, created_at, order).await?;
+                }
+            }
+            (ContentFamily::Comment, true, Some(node), _) => {
+                if content_store::land_comment(&mut tx, node, order).await? {
+                    content_store::land_comment_version(&mut tx, node, created_at, order).await?;
+                }
+            }
+            (ContentFamily::Post, false, _, Some(post)) => {
+                content_store::land_post_version(&mut tx, post, created_at, order).await?;
+            }
+            (ContentFamily::Comment, false, _, Some(comment)) => {
+                content_store::land_comment_version(&mut tx, comment, created_at, order).await?;
+            }
+            _ => {}
+        }
     }
     tx.commit()
         .await

@@ -1,0 +1,59 @@
+# The hidden-actors list (api-spec.md `User.hiddenActors`, `hideActor`,
+# `unhideActor`; hidden-actors-surface packet). The document is web's twin
+# (web/src/lib/graphql/hidden.graphql). The device holds the whole set: the
+# feed filters by it post-rank, the settings row counts it, and the Hidden
+# accounts sheet lists it — so the store pages it to the end, a full page at
+# a time. The page size is a literal so the client-operation guard prices the
+# call the device actually makes.
+query HiddenActorsPage($after: String) {
+  me {
+    id
+    hiddenActors(first: 100, after: $after) {
+      totalCount
+      edges {
+        cursor
+        hiddenAt
+        node {
+          id
+          handle
+          displayName {
+            value
+            status
+          }
+          ... on User {
+            avatar {
+              url
+              status
+            }
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# Hide, or restore an unhidden row's place: Undo passes the row's own
+# `hiddenAt` back.
+mutation HideActor($actor: UUID!, $hiddenAt: DateTime) {
+  hideActor(input: { actor: $actor, hiddenAt: $hiddenAt }) {
+    hidden {
+      hiddenAt
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation UnhideActor($actor: UUID!) {
+  unhideActor(input: { actor: $actor }) {
+    ok
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}

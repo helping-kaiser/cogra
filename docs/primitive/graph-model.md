@@ -89,7 +89,7 @@ What "current" means is always a declared fold:
   ([substrate-map.md §4](substrate-map.md#4-conversations-and-membership));
   the effective network parameters are the newest finalization per
   parameter on the network charter anchor; a content node's current
-  topics are the non-zero newest-wins Tag bundles
+  topics are the newest-wins Tag bundles not withdrawn to `(0,0)`
   ([hashtag.md §4](../instances/hashtag.md#4-the-current-topics-fold));
   a node's updatable
   values are the newest eligible update record's payload
@@ -99,10 +99,11 @@ What "current" means is always a declared fold:
 
 Sum-then-clip gives revision real weight: walking back accumulated
 conviction costs counter-records in proportion to it — flip-flops
-are expensive, stance is sticky. Severance is the limit case:
-counter-records netting a bundle to `(0,0)` make it routing-inert
-for every consumer of the projection, and each counter-record is
-itself a priced act.
+are expensive, stance is sticky. A bundle netted to zero on either
+parameter is routing-inert for every consumer of the projection.
+Severance is the limit case: counter-records netting a bundle to
+`(0,0)`, a clean slate with no conviction left on either parameter.
+Each counter-record is itself a priced act.
 
 ---
 

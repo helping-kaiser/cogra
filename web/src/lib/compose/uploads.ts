@@ -5,11 +5,21 @@
 // them concurrently and retrying them individually means a single flaky upload
 // costs one retry instead of the whole gallery, which is worth much more than
 // one fat request would be (D5).
+//
+// EVERY LEG HASHES WHAT IT SENDS AND CHECKS THE ECHO. The upload digest is
+// SHA-256 over exactly the bytes about to go — after the device's own strip
+// and encode — and the server answers with the upload digest it recorded. A
+// mismatch means the bytes the server kept are not the bytes this device
+// sent: the asset is refused at upload, retryably, in the server-side line,
+// and never attached. With the device strip a fixed point of the server's
+// (data-model.md "Media attachments"), that is a defect report, not a path.
 
 import type { ApolloClient } from "@apollo/client";
 
 import {
+  echoes,
   fetchMediaAttachmentStatus,
+  uploadDigestOf,
   uploadMedia,
   uploadVideo,
   UploadPartsError,
@@ -54,6 +64,9 @@ function realSleep(ms: number): Promise<void> {
  */
 export const MEDIA_POLL_DELAY_MS = 1_000;
 
+/** What a leg says when the server's echo is not the device's own digest. */
+export const ECHO_MISMATCH = "The server couldn't finish that upload.";
+
 function refusalFor(errors: readonly UserError[], subject: string): string {
   const first = errors[0];
   return first === undefined
@@ -76,12 +89,21 @@ async function awaitReady(
   client: ApolloClient,
   guard: AuthGuard,
   media: MediaAsset,
+  uploadDigest: string,
   step: UploadStep,
   subject: string,
   sleep: (ms: number) => Promise<void>,
 ): Promise<void> {
+  if (!echoes(media, uploadDigest)) {
+    step({ kind: "failed", message: ECHO_MISMATCH, retryable: true });
+    return;
+  }
   if (media.state !== "PROCESSING") {
-    step({ kind: "done", mediaId: media.id });
+    step({
+      kind: "done",
+      mediaId: media.id,
+      media: { digest: media.digest, uploadDigest, mime: media.mimeType },
+    });
     return;
   }
   step({ kind: "processing", mediaId: media.id });
@@ -109,7 +131,19 @@ async function awaitReady(
       return;
     }
     if (read.value.state === "READY") {
-      step({ kind: "done", mediaId: read.value.id });
+      // The id the upload was handed stays the attachment's name: the poll
+      // answers under it, and the manifest witnesses the upload digest of
+      // the id attached. The rendition digest is the READY one — the only
+      // bytes the asset will serve from now on.
+      if (!echoes(read.value, uploadDigest)) {
+        step({ kind: "failed", message: ECHO_MISMATCH, retryable: true });
+        return;
+      }
+      step({
+        kind: "done",
+        mediaId: media.id,
+        media: { digest: read.value.digest, uploadDigest, mime: read.value.mimeType },
+      });
       return;
     }
     // Still PROCESSING: sleep and read again.
@@ -178,6 +212,17 @@ export async function runUpload(
     step({ kind: "failed", message: TOO_BIG_PICTURE, retryable: false });
     return;
   }
+  let uploadDigest: string;
+  try {
+    uploadDigest = await uploadDigestOf(encoded.blob);
+  } catch {
+    step({
+      kind: "failed",
+      message: "This browser couldn't read that picture.",
+      retryable: false,
+    });
+    return;
+  }
 
   step({ kind: "uploading" });
   // A token in hand before the bytes go, or they go twice — see `prime`.
@@ -185,7 +230,7 @@ export async function runUpload(
   const uploaded = await guard.run(() => uploadMedia(client, { blob: encoded.blob }));
 
   if (uploaded.kind === "success") {
-    await awaitReady(client, guard, uploaded.value, step, "picture", sleep);
+    await awaitReady(client, guard, uploaded.value, uploadDigest, step, "picture", sleep);
     return;
   }
   if (uploaded.kind === "refused") {
@@ -268,11 +313,15 @@ export async function runVideoUpload(
     return;
   }
   let encoded;
+  let coverDigest: string;
   try {
     onCover({ kind: "encoding" });
     // No ratio: a cover is not cropped to the post's shape — it is the clip's
     // own frame, or a picture the author chose, and either keeps its shape.
     encoded = await encodeForUpload(cover.file);
+    // Hashed whether or not it is then over the cap: a still's digest is
+    // cheap, and the cap check below needs no second path for it.
+    coverDigest = await uploadDigestOf(encoded.blob);
   } catch {
     onCover({ kind: "failed", message: "This browser couldn't read that cover.", retryable: false });
     onVideo({ kind: "failed", message: "The cover didn't upload.", retryable: true });
@@ -298,7 +347,18 @@ export async function runVideoUpload(
     onVideo({ kind: "failed", message: "The cover didn't upload.", retryable: true });
     return;
   }
-  onCover({ kind: "done", mediaId: poster.value.id });
+  // A still is stored as it arrived, so the cover is READY at once and its
+  // rendition digest is its upload digest — once the echo says so.
+  if (!echoes(poster.value, coverDigest)) {
+    onCover({ kind: "failed", message: ECHO_MISMATCH, retryable: true });
+    onVideo({ kind: "failed", message: "The cover didn't upload.", retryable: true });
+    return;
+  }
+  onCover({
+    kind: "done",
+    mediaId: poster.value.id,
+    media: { digest: poster.value.digest, uploadDigest: coverDigest, mime: poster.value.mimeType },
+  });
 
   await sendVideo(client, guard, video, onVideo, scale, deps);
 }
@@ -368,6 +428,20 @@ async function sendVideo(
     return;
   }
 
+  // The upload digest, over exactly what is about to go — and only once it
+  // is certain to go.
+  let uploadDigest: string;
+  try {
+    uploadDigest = await uploadDigestOf(stripped.blob);
+  } catch {
+    onVideo({
+      kind: "failed",
+      message: "This browser couldn't prepare that video.",
+      retryable: false,
+    });
+    return;
+  }
+
   onVideo({ kind: "uploading" });
   // THE CLIP IS THE BODY WORTH PROTECTING. A picture sent twice costs a
   // moment; a video sent twice is the whole wait, twice.
@@ -378,7 +452,7 @@ async function sendVideo(
   });
 
   if (uploaded.kind === "success") {
-    await awaitReady(client, guard, uploaded.value, onVideo, "video", sleep);
+    await awaitReady(client, guard, uploaded.value, uploadDigest, onVideo, "video", sleep);
     return;
   }
   if (uploaded.kind === "refused") {

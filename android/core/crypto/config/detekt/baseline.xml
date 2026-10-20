@@ -31,7 +31,6 @@
     <ID>MagicNumber:Cbor.kt:CborEncoder$8</ID>
     <ID>MagicNumber:Handshake.kt:3u</ID>
     <ID>MagicNumber:Handshake.kt:StructuralBody$9u</ID>
-    <ID>MagicNumber:Handshake.kt:VerifiedAct$5u</ID>
     <ID>MagicNumber:Hashing.kt:0xFF</ID>
     <ID>MagicNumber:Hashing.kt:20</ID>
     <ID>MagicNumber:Hashing.kt:7</ID>
@@ -58,8 +57,6 @@
     <ID>MagicNumber:KeyBackup.kt:RecoveryCode.Companion$5</ID>
     <ID>MagicNumber:KeyBackup.kt:RecoveryCode.Companion$8</ID>
     <ID>MagicNumber:KeyExport.kt:32</ID>
-    <ID>MagicNumber:Wire.kt:12UL</ID>
-    <ID>MagicNumber:Wire.kt:12u</ID>
     <ID>MagicNumber:Wire.kt:3UL</ID>
     <ID>MagicNumber:Wire.kt:3u</ID>
     <ID>MagicNumber:Wire.kt:4UL</ID>

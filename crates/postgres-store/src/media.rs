@@ -173,6 +173,17 @@ pub struct MediaAttachment {
     pub redaction_reason: Option<String>,
     pub redacted_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
+    /// The upload digest of the row this value answers for: the digest
+    /// of the bytes as they arrived, after the metadata strip —
+    /// `source_digest` on a re-encoded asset, `digest` on one stored as it
+    /// arrived. It is the server's echo of the device's own hash (manifest
+    /// key 5, data-model.md "Media attachments").
+    ///
+    /// Read through a named id, the row it answers for is the NAMED one,
+    /// never the asset a merge resolved it to: an upload digest belongs to
+    /// one upload, and two uploads that re-encoded to the same rendition
+    /// are two uploads of one asset.
+    pub upload_digest: Vec<u8>,
 }
 
 /// What a sweep removed: the id for the log, the key for the store.
@@ -319,7 +330,8 @@ async fn write_asset(pool: &PgPool, new: NewAsset<'_>) -> Result<MediaAttachment
                   mime_type, size_bytes,
                   options AS "options!: serde_json::Value",
                   state AS "state: AssetState", failure_reason,
-                  redaction_reason, redacted_at, created_at
+                  redaction_reason, redacted_at, created_at,
+                  COALESCE(source_digest, digest) AS "upload_digest!"
         "#,
         new.id,
         new.author_id,
@@ -346,6 +358,11 @@ async fn write_asset(pool: &PgPool, new: NewAsset<'_>) -> Result<MediaAttachment
 /// The live asset this author's upload of these bytes produced, by either
 /// of its digests — resolved through a merged row to the asset it names,
 /// so a retry of a file whose re-encode merged is handed that asset.
+///
+/// It answers under the MATCHED row's id, with that row's upload digest:
+/// the retry is an upload of that row's bytes, and attaching the id it is
+/// handed must witness the bytes this upload sent, not the bytes of the
+/// upload the merge resolved it to.
 async fn upload_of(
     pool: &PgPool,
     author_id: Uuid,
@@ -354,14 +371,16 @@ async fn upload_of(
     sqlx::query_as!(
         MediaAttachment,
         r#"
-        SELECT id, author_id, digest, digest_algo, storage_key,
-               mime_type, size_bytes,
-               options AS "options!: serde_json::Value",
-               state AS "state: AssetState", failure_reason,
-               redaction_reason, redacted_at, created_at
-        FROM media_attachments
-        WHERE id = (
-            SELECT COALESCE(merged_into, id)
+        SELECT named.id, m.author_id, m.digest, m.digest_algo, m.storage_key,
+               m.mime_type, m.size_bytes,
+               m.options AS "options!: serde_json::Value",
+               m.state AS "state: AssetState", m.failure_reason,
+               m.redaction_reason, m.redacted_at, m.created_at,
+               COALESCE(named.source_digest, named.digest) AS "upload_digest!"
+        FROM media_attachments named
+        JOIN media_attachments m ON m.id = COALESCE(named.merged_into, named.id)
+        WHERE named.id = (
+            SELECT id
             FROM media_attachments
             WHERE author_id = $1
               AND state <> 'failed'
@@ -504,7 +523,8 @@ pub async fn finish_ingest(
                   mime_type, size_bytes,
                   options AS "options!: serde_json::Value",
                   state AS "state: AssetState", failure_reason,
-                  redaction_reason, redacted_at, created_at
+                  redaction_reason, redacted_at, created_at,
+                  COALESCE(source_digest, digest) AS "upload_digest!"
         "#,
         id,
         rendition.digest,
@@ -762,6 +782,7 @@ struct GalleryRow {
     redaction_reason: Option<String>,
     redacted_at: Option<DateTime<Utc>>,
     created_at: DateTime<Utc>,
+    upload_digest: Vec<u8>,
 }
 
 fn gallery_entry(row: GalleryRow) -> (i64, GalleryEntry) {
@@ -782,6 +803,7 @@ fn gallery_entry(row: GalleryRow) -> (i64, GalleryEntry) {
                 redaction_reason: row.redaction_reason,
                 redacted_at: row.redacted_at,
                 created_at: row.created_at,
+                upload_digest: row.upload_digest,
             },
             display_order: row.display_order,
             is_cover: row.is_cover,
@@ -810,7 +832,8 @@ pub async fn post_galleries(
                   m.mime_type, m.size_bytes,
                   m.options AS "options!: serde_json::Value",
                   m.state AS "state: AssetState", m.failure_reason,
-                  m.redaction_reason, m.redacted_at, m.created_at
+                  m.redaction_reason, m.redacted_at, m.created_at,
+                  COALESCE(m.source_digest, m.digest) AS "upload_digest!"
            FROM post_attachments j
            JOIN media_attachments m ON m.id = j.attachment_id
            WHERE j.post_version_id = ANY($1)
@@ -836,7 +859,8 @@ pub async fn comment_galleries(
                   m.mime_type, m.size_bytes,
                   m.options AS "options!: serde_json::Value",
                   m.state AS "state: AssetState", m.failure_reason,
-                  m.redaction_reason, m.redacted_at, m.created_at
+                  m.redaction_reason, m.redacted_at, m.created_at,
+                  COALESCE(m.source_digest, m.digest) AS "upload_digest!"
            FROM comment_attachments j
            JOIN media_attachments m ON m.id = j.attachment_id
            WHERE j.comment_version_id = ANY($1)
@@ -873,7 +897,8 @@ pub async fn assets_by_digests(
                mime_type, size_bytes,
                options AS "options!: serde_json::Value",
                state AS "state: AssetState", failure_reason,
-               redaction_reason, redacted_at, created_at
+               redaction_reason, redacted_at, created_at,
+               COALESCE(source_digest, digest) AS "upload_digest!"
         FROM media_attachments
         WHERE author_id = $1 AND digest = ANY($2) AND state = 'ready'
         "#,
@@ -899,7 +924,8 @@ pub async fn assets_by_ids(
                mime_type, size_bytes,
                options AS "options!: serde_json::Value",
                state AS "state: AssetState", failure_reason,
-               redaction_reason, redacted_at, created_at
+               redaction_reason, redacted_at, created_at,
+               COALESCE(source_digest, digest) AS "upload_digest!"
         FROM media_attachments
         WHERE id = ANY($1)
         "#,
@@ -913,9 +939,13 @@ pub async fn assets_by_ids(
 ///
 /// The two differ exactly when the named row merged into an asset its
 /// author already held: `asset` is then that asset, under its own id.
+/// `requested_upload_digest` is the named row's own upload digest, which
+/// is what a manifest entry naming that id witnesses — the bytes that
+/// upload sent, whichever asset they resolved to.
 #[derive(Debug, Clone)]
 pub struct ResolvedAsset {
     pub requested: Uuid,
+    pub requested_upload_digest: Vec<u8>,
     pub asset: MediaAttachment,
 }
 
@@ -930,11 +960,13 @@ pub async fn resolve_assets(
     let rows = sqlx::query!(
         r#"
         SELECT named.id AS requested,
+               COALESCE(named.source_digest, named.digest) AS "requested_upload_digest!",
                m.id, m.author_id, m.digest, m.digest_algo, m.storage_key,
                m.mime_type, m.size_bytes,
                m.options AS "options!: serde_json::Value",
                m.state AS "state: AssetState", m.failure_reason,
-               m.redaction_reason, m.redacted_at, m.created_at
+               m.redaction_reason, m.redacted_at, m.created_at,
+               COALESCE(m.source_digest, m.digest) AS "upload_digest!"
         FROM media_attachments named
         JOIN media_attachments m ON m.id = COALESCE(named.merged_into, named.id)
         WHERE named.id = ANY($1)
@@ -947,6 +979,7 @@ pub async fn resolve_assets(
         .into_iter()
         .map(|r| ResolvedAsset {
             requested: r.requested,
+            requested_upload_digest: r.requested_upload_digest,
             asset: MediaAttachment {
                 id: r.id,
                 author_id: r.author_id,
@@ -961,6 +994,7 @@ pub async fn resolve_assets(
                 redaction_reason: r.redaction_reason,
                 redacted_at: r.redacted_at,
                 created_at: r.created_at,
+                upload_digest: r.upload_digest,
             },
         })
         .collect())
@@ -968,18 +1002,25 @@ pub async fn resolve_assets(
 
 /// One asset by id, resolved through a merged row to the asset it names —
 /// so a client polling the id its upload was handed reads the asset that
-/// upload became, under that asset's own id.
+/// upload became.
+///
+/// It answers under the id it was asked by, with that row's own upload
+/// digest, exactly as [`upload_of`] does: the client attaches the id its
+/// upload was handed, and the manifest then witnesses the bytes that
+/// upload sent.
 pub async fn by_id(pool: &PgPool, id: Uuid) -> Result<Option<MediaAttachment>, sqlx::Error> {
     sqlx::query_as!(
         MediaAttachment,
         r#"
-        SELECT id, author_id, digest, digest_algo, storage_key,
-               mime_type, size_bytes,
-               options AS "options!: serde_json::Value",
-               state AS "state: AssetState", failure_reason,
-               redaction_reason, redacted_at, created_at
-        FROM media_attachments
-        WHERE id = (SELECT COALESCE(merged_into, id) FROM media_attachments WHERE id = $1)
+        SELECT named.id, m.author_id, m.digest, m.digest_algo, m.storage_key,
+               m.mime_type, m.size_bytes,
+               m.options AS "options!: serde_json::Value",
+               m.state AS "state: AssetState", m.failure_reason,
+               m.redaction_reason, m.redacted_at, m.created_at,
+               COALESCE(named.source_digest, named.digest) AS "upload_digest!"
+        FROM media_attachments named
+        JOIN media_attachments m ON m.id = COALESCE(named.merged_into, named.id)
+        WHERE named.id = $1
         "#,
         id,
     )
@@ -1282,12 +1323,19 @@ pub async fn expired_upload_sessions(
 ///   carried it. That is the correct answer rather than an accident: the
 ///   old bytes' digests stay committed on the superseded record (post.md
 ///   §4), so the bytes have to stay too.
+/// - A **held** asset, or one any retention-archive unit references,
+///   belongs to the archive: only a manual hard delete removes it
+///   (`retention::hard_delete_unit`), never the sweep.
+/// - Only an asset whose bytes are in the **live** area is swept: the
+///   caller deletes from the live store, and an asset waiting in the
+///   carried area has no placement until its landing writes one.
 ///
 /// Each `NOT EXISTS` is an index probe of the referencing column — the
 /// four junctions' reverse index on `attachment_id`, the two version
 /// tables' partial index on the picture column, the post and comment
 /// junctions' partial index on `cover_media_id`, the session table's
-/// `media_id`, and the asset table's partial index on `merged_into`.
+/// `media_id`, the asset table's partial index on `merged_into`, and the
+/// archive references' index on `media_id`.
 /// Postgres creates
 /// no index behind a foreign key, so without them each probe is a
 /// sequential scan and so is the delete's own integrity re-check. A new
@@ -1335,6 +1383,10 @@ pub async fn sweep_orphans(
                     SELECT 1 FROM media_upload_sessions s WHERE s.media_id = m.id)
               AND NOT EXISTS (
                     SELECT 1 FROM media_attachments merged WHERE merged.merged_into = m.id)
+              AND m.held_at IS NULL
+              AND m.area = 'live'
+              AND NOT EXISTS (
+                    SELECT 1 FROM retention_archive_media r WHERE r.media_id = m.id)
             ORDER BY m.created_at
             LIMIT $2
         )
@@ -1344,6 +1396,155 @@ pub async fn sweep_orphans(
         RETURNING m.id, m.storage_key
         "#,
         max_age_secs,
+        limit,
+    )
+    .fetch_all(pool)
+    .await
+}
+
+/// Which store an asset's bytes sit in (data-model.md "Media areas").
+///
+/// Where the bytes are, not whether anything shows them: `held_at` says an
+/// asset's last live placement is gone, and this says whether its bytes
+/// have left the live store yet. The column moves only once the bytes have.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MediaArea {
+    /// The world-readable store every `MediaAttachment.url` points into.
+    Live,
+    /// The non-public store an applicant's carried media waits in until
+    /// the landing publishes it.
+    Carried,
+    /// The operator-only store a deleted asset's bytes leave the internet
+    /// for: no public policy, no serving route.
+    Held,
+}
+
+impl MediaArea {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Live => "live",
+            Self::Carried => "carried",
+            Self::Held => "held",
+        }
+    }
+
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "live" => Self::Live,
+            "carried" => Self::Carried,
+            "held" => Self::Held,
+            _ => return None,
+        })
+    }
+}
+
+impl sqlx::Type<Postgres> for MediaArea {
+    fn type_info() -> PgTypeInfo {
+        <&str as sqlx::Type<Postgres>>::type_info()
+    }
+
+    fn compatible(ty: &PgTypeInfo) -> bool {
+        <&str as sqlx::Type<Postgres>>::compatible(ty)
+    }
+}
+
+impl<'r> sqlx::Decode<'r, Postgres> for MediaArea {
+    fn decode(value: PgValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
+        let raw = <&str as sqlx::Decode<Postgres>>::decode(value)?;
+        Self::parse(raw).ok_or_else(|| format!("unknown media area {raw:?}").into())
+    }
+}
+
+/// What moving an asset's bytes between areas needs to know about it.
+#[derive(Debug, Clone)]
+pub struct AreaAsset {
+    pub id: Uuid,
+    pub author_id: Uuid,
+    /// The rendition digest R — what a moved copy is verified against.
+    pub digest: Vec<u8>,
+    pub digest_algo: String,
+    pub storage_key: String,
+    pub mime_type: String,
+    pub area: MediaArea,
+    pub held_at: Option<DateTime<Utc>>,
+    /// Whether a live placement still shows the asset (`media_live_placed`).
+    pub placed: bool,
+}
+
+/// One asset's area facts, locked for the move that reads them.
+///
+/// The lock is held across the byte copy on purpose: a placement takes a
+/// `FOR KEY SHARE` lock on the asset as its foreign-key check, so no
+/// placement can be written between this read of `placed` and the area
+/// flip, and two movers of one asset serialize instead of racing.
+pub async fn lock_area_asset(
+    tx: &mut Transaction<'_, Postgres>,
+    id: Uuid,
+) -> Result<Option<AreaAsset>, sqlx::Error> {
+    sqlx::query_as!(
+        AreaAsset,
+        r#"SELECT id, author_id, digest, digest_algo, storage_key, mime_type,
+                  area AS "area: MediaArea", held_at,
+                  media_live_placed(id) AS "placed!"
+           FROM media_attachments
+           WHERE id = $1 AND state = 'ready'
+           FOR UPDATE"#,
+        id,
+    )
+    .fetch_optional(&mut **tx)
+    .await
+}
+
+/// The author's ready assets for a set of rendition digests, with their
+/// areas — how a staged manifest is turned back into the bytes it names.
+/// Scoped to the author for the reason [`assets_by_digests`] is.
+pub async fn area_assets_by_digests(
+    pool: &PgPool,
+    author_id: Uuid,
+    digests: &[Vec<u8>],
+) -> Result<Vec<AreaAsset>, sqlx::Error> {
+    sqlx::query_as!(
+        AreaAsset,
+        r#"SELECT id, author_id, digest, digest_algo, storage_key, mime_type,
+                  area AS "area: MediaArea", held_at,
+                  media_live_placed(id) AS "placed!"
+           FROM media_attachments
+           WHERE author_id = $1 AND digest = ANY($2) AND state = 'ready'"#,
+        author_id,
+        digests,
+    )
+    .fetch_all(pool)
+    .await
+}
+
+/// Records that the asset's bytes now sit in `to`. Runs inside the
+/// mover's transaction, after the bytes are verified there; false when
+/// the row is no longer in `from`.
+pub async fn set_area(
+    tx: &mut Transaction<'_, Postgres>,
+    id: Uuid,
+    from: MediaArea,
+    to: MediaArea,
+) -> Result<bool, sqlx::Error> {
+    let moved = sqlx::query!(
+        "UPDATE media_attachments SET area = $3 WHERE id = $1 AND area = $2",
+        id,
+        from.as_str(),
+        to.as_str(),
+    )
+    .execute(&mut **tx)
+    .await?;
+    Ok(moved.rows_affected() == 1)
+}
+
+/// Held assets whose bytes are still in the live store, oldest hold
+/// first — the reconciler's work list.
+pub async fn held_unmoved(pool: &PgPool, limit: i64) -> Result<Vec<Uuid>, sqlx::Error> {
+    sqlx::query_scalar!(
+        "SELECT id FROM media_attachments
+         WHERE held_at IS NOT NULL AND area = 'live' AND state = 'ready'
+         ORDER BY held_at, id
+         LIMIT $1",
         limit,
     )
     .fetch_all(pool)

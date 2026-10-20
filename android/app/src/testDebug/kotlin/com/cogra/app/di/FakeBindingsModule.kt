@@ -7,93 +7,114 @@
 
 package com.cogra.app.di
 
+import com.cogra.crypto.ActorKey
 import com.cogra.domain.AccountState
+import com.cogra.domain.ActorRef
 import com.cogra.domain.ApplicationStatus
-import com.cogra.domain.HashtagView
-import com.cogra.domain.ReferenceCandidateView
-import com.cogra.domain.InviteCheck
 import com.cogra.domain.AttachmentClaim
+import com.cogra.domain.CommentPage
 import com.cogra.domain.FieldStatus
+import com.cogra.domain.HashtagView
+import com.cogra.domain.InviteCheck
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.MediaFieldUpdate
-import com.cogra.domain.compose.ComposeDraftStore
-import com.cogra.domain.compose.SealedDraftStore
-import com.cogra.domain.deletion.AccountDeletionRepository
-import com.cogra.domain.testing.InMemoryComposeDraftStore
-import com.cogra.domain.testing.ScriptedAccountDeletionRepository
-import com.cogra.domain.testing.InMemorySealedDraftStore
-import com.cogra.domain.media.MediaRepository
-import com.cogra.domain.media.ProcessedPicture
-import com.cogra.domain.settings.AccountEmail
-import com.cogra.domain.settings.EmailChangeLinkCheck
-import com.cogra.domain.settings.PendingEmailChange
-import com.cogra.domain.settings.SettingsAccount
-import com.cogra.domain.settings.SettingsRepository
-import com.cogra.domain.store.DeviceData
-import com.cogra.domain.store.DevicePreferences
-import com.cogra.domain.testing.FakeDeviceData
-import com.cogra.domain.testing.FakeDevicePreferences
-import com.cogra.domain.testing.ThrowingMediaRepository
-import com.cogra.domain.ActorRef
 import com.cogra.domain.Outcome
-import com.cogra.domain.CommentPage
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PostView
 import com.cogra.domain.PreparedContentView
-import com.cogra.crypto.ActorKey
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordRow
+import com.cogra.domain.ReferenceCandidateView
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.TaggedContentView
 import com.cogra.domain.UserProfile
+import com.cogra.domain.compose.ComposeDraftStore
+import com.cogra.domain.compose.SealedDraftStore
+import com.cogra.domain.deletion.AccountDeletionRepository
 import com.cogra.domain.feed.FeedKind
 import com.cogra.domain.feed.FeedRankArgs
 import com.cogra.domain.feed.FeedRanking
 import com.cogra.domain.feed.FeedRepository
 import com.cogra.domain.feed.RankedEntry
 import com.cogra.domain.feed.SettlingRow
+import com.cogra.domain.hidden.HiddenRepository
 import com.cogra.domain.history.SeenHistorySource
 import com.cogra.domain.history.SeenRecordStore
 import com.cogra.domain.history.ViewHistoryRepository
+import com.cogra.domain.media.MediaRepository
+import com.cogra.domain.media.ProcessedPicture
+import com.cogra.domain.notifications.NotificationsRepository
+import com.cogra.domain.references.ReferenceClaim
+import com.cogra.domain.release.AnnouncedReleaseStore
+import com.cogra.domain.release.ReleaseRegistry
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.ContentRepository
+import com.cogra.domain.repo.DeviceLockRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.ProfileRepository
+import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.StanceRepository
-import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
 import com.cogra.domain.repo.WriteRepository
+import com.cogra.domain.report.ReportRepository
+import com.cogra.domain.saved.SavedRepository
+import com.cogra.domain.settings.AccountEmail
+import com.cogra.domain.settings.EmailChangeLinkCheck
+import com.cogra.domain.settings.PendingEmailChange
+import com.cogra.domain.settings.SettingsAccount
+import com.cogra.domain.settings.SettingsRepository
+import com.cogra.domain.signing.Expectation
+import com.cogra.domain.signing.node
+import com.cogra.domain.signing.referenceClaim
+import com.cogra.domain.signing.tagClaim
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.stance.StanceTarget
+import com.cogra.domain.store.DeviceData
+import com.cogra.domain.store.DevicePreferences
 import com.cogra.domain.store.IdentityStore
+import com.cogra.domain.store.LockCustodyStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
-import com.cogra.domain.references.ReferenceClaim
-import com.cogra.domain.testing.ThrowingSettingsRepository
-import com.cogra.domain.topics.TagClaim
+import com.cogra.domain.testing.FakeDeviceData
+import com.cogra.domain.testing.FakeDeviceLockRepository
+import com.cogra.domain.testing.FakeDevicePreferences
 import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeLockCustodyStore
+import com.cogra.domain.testing.FakeSeenRecordStore
 import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.InMemoryAnnouncedReleaseStore
+import com.cogra.domain.testing.InMemoryComposeDraftStore
+import com.cogra.domain.testing.InMemorySealedDraftStore
+import com.cogra.domain.testing.RecordingHiddenRepository
+import com.cogra.domain.testing.RecordingNotificationsRepository
+import com.cogra.domain.testing.RecordingReportRepository
+import com.cogra.domain.testing.RecordingSavedRepository
 import com.cogra.domain.testing.RecordingViewHistoryRepository
-import com.cogra.domain.testing.FakeSeenRecordStore
+import com.cogra.domain.testing.ScriptedAccountDeletionRepository
+import com.cogra.domain.testing.ScriptedReleaseRegistry
 import com.cogra.domain.testing.ScriptedSeenHistory
+import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingContentRepository
+import com.cogra.domain.testing.ThrowingMediaRepository
 import com.cogra.domain.testing.ThrowingOnboardingRepository
 import com.cogra.domain.testing.ThrowingProfileRepository
 import com.cogra.domain.testing.ThrowingReferenceRepository
-import com.cogra.domain.testing.ThrowingTopicRepository
-import com.cogra.domain.testing.testModeratedField
 import com.cogra.domain.testing.ThrowingSessionRepository
+import com.cogra.domain.testing.ThrowingSettingsRepository
 import com.cogra.domain.testing.ThrowingStanceRepository
-import com.cogra.domain.testing.SealingWriteRepository
+import com.cogra.domain.testing.ThrowingTopicRepository
+import com.cogra.domain.testing.testGraphId
+import com.cogra.domain.testing.testModeratedField
+import com.cogra.domain.topics.TagClaim
 import com.cogra.network.di.NetworkBindsModule
 import dagger.Module
 import dagger.Provides
@@ -162,17 +183,11 @@ class ScriptedContentRepository : ThrowingContentRepository() {
         attachments: List<AttachmentClaim>,
         sensitive: Boolean,
         sensitiveReason: String?,
+        pDirected: Double,
     ): Outcome<PreparedContentView> {
         pendingAfterPrepare?.let { listing = listOf(it) + listing }
         return Outcome.Success(PreparedContentView(preparedNode, emptyList()))
     }
-
-    override suspend fun posts(
-        first: Int,
-        after: String?,
-        includePending: Boolean,
-    ): Outcome<Page<PostView>> =
-        Outcome.Success(Page(listing, endCursor = null, hasNextPage = false))
 
     override suspend fun post(
         id: String,
@@ -391,10 +406,17 @@ class ScriptedTopicRepository(private val writes: WriteRepository) : ThrowingTop
     override suspend fun prepareTag(
         target: String,
         name: String,
-        pDirected: Double?,
-        pInterest: Double?,
-    ): Outcome<List<PreparedWriteView>> = writes.prepareStance(target, pDirected ?: 0.1, pInterest ?: 1.0)
+        pDirected: Double,
+        pInterest: Double,
+    ): Outcome<List<PreparedWriteView>> = Outcome.Success(
+        faithful(writes).stageFaithful(
+            Expectation(listOf(tagClaim(node(testGraphId(target)), name, pDirected, pInterest))),
+        ),
+    )
 }
+
+/** The bound write repository, as the faithful prepare it is in this suite. */
+private fun faithful(writes: WriteRepository): SealingWriteRepository = writes as SealingWriteRepository
 
 /**
  * Scriptable reference surface: what the finder offers, and staged
@@ -414,10 +436,13 @@ class ScriptedReferenceRepository(private val writes: WriteRepository) : Throwin
     override suspend fun prepareReference(
         artifact: String,
         target: String,
-        relevance: Double?,
-        support: Double?,
-    ): Outcome<List<PreparedWriteView>> =
-        writes.prepareStance(target, relevance ?: 0.1, support ?: 0.1)
+        relevance: Double,
+        support: Double,
+    ): Outcome<List<PreparedWriteView>> = Outcome.Success(
+        faithful(writes).stageFaithful(
+            Expectation(listOf(referenceClaim(node(testGraphId(artifact)), testGraphId(target), relevance, support))),
+        ),
+    )
 
     override suspend fun prepareReferenceWithdrawal(
         artifact: String,
@@ -500,6 +525,20 @@ object FakeBindingsModule {
 
     @Provides
     fun identityStore(fake: FakeIdentityStore): IdentityStore = fake
+
+    @Provides
+    @Singleton
+    fun fakeLockCustodyStore(): FakeLockCustodyStore = FakeLockCustodyStore()
+
+    @Provides
+    fun lockCustodyStore(fake: FakeLockCustodyStore): LockCustodyStore = fake
+
+    @Provides
+    @Singleton
+    fun fakeDeviceLockRepository(): FakeDeviceLockRepository = FakeDeviceLockRepository()
+
+    @Provides
+    fun deviceLockRepository(fake: FakeDeviceLockRepository): DeviceLockRepository = fake
 
     @Provides
     @Singleton
@@ -634,6 +673,42 @@ object FakeBindingsModule {
     @Provides
     fun viewHistoryRepository(fake: RecordingViewHistoryRepository): ViewHistoryRepository = fake
 
+    // A report answers sent: the navigation tests that reach a menu's
+    // Report row read the confirm's aftermath, not the mail.
+    @Provides
+    @Singleton
+    fun recordingReportRepository(): RecordingReportRepository = RecordingReportRepository()
+
+    @Provides
+    fun reportRepository(fake: RecordingReportRepository): ReportRepository = fake
+
+    // Saving answers kept, and the Saved list reads empty unless a test
+    // scripts a page.
+    @Provides
+    @Singleton
+    fun recordingSavedRepository(): RecordingSavedRepository = RecordingSavedRepository()
+
+    @Provides
+    fun savedRepository(fake: RecordingSavedRepository): SavedRepository = fake
+
+    // The notification list reads empty and the bell quiet unless a test
+    // scripts them.
+    @Provides
+    @Singleton
+    fun recordingNotificationsRepository(): RecordingNotificationsRepository = RecordingNotificationsRepository()
+
+    @Provides
+    fun notificationsRepository(fake: RecordingNotificationsRepository): NotificationsRepository = fake
+
+    // Hiding answers hidden, and the hidden set reads empty unless a test
+    // scripts one.
+    @Provides
+    @Singleton
+    fun recordingHiddenRepository(): RecordingHiddenRepository = RecordingHiddenRepository()
+
+    @Provides
+    fun hiddenRepository(fake: RecordingHiddenRepository): HiddenRepository = fake
+
     // The seen record's sync reads an empty server list by default, and
     // the record itself rests in memory for the test process.
     @Provides
@@ -667,4 +742,20 @@ object FakeBindingsModule {
 
     @Provides
     fun accountDeletionRepository(fake: ScriptedAccountDeletionRepository): AccountDeletionRepository = fake
+
+    // An empty registry by default: no feed announces a newer version unless
+    // a test scripts one.
+    @Provides
+    @Singleton
+    fun scriptedReleaseRegistry(): ScriptedReleaseRegistry = ScriptedReleaseRegistry()
+
+    @Provides
+    fun releaseRegistry(fake: ScriptedReleaseRegistry): ReleaseRegistry = fake
+
+    @Provides
+    @Singleton
+    fun inMemoryAnnouncedReleaseStore(): InMemoryAnnouncedReleaseStore = InMemoryAnnouncedReleaseStore()
+
+    @Provides
+    fun announcedReleaseStore(fake: InMemoryAnnouncedReleaseStore): AnnouncedReleaseStore = fake
 }

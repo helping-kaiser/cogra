@@ -5,20 +5,13 @@
 // "Key custody").
 
 import { concat, equalBytes, fromBase64Url, fromHex, randomBytes } from "./bytes";
-import {
-  addressOf,
-  commitment,
-  CryptoUnavailableError,
-  preDigest,
-  SALT_LEN,
-  sign,
-  Tags,
-  verify,
-} from "./hashing";
+import { addressOf, CryptoUnavailableError, SALT_LEN, sign, signDigest, Tags, verify } from "./hashing";
 import {
   ApprovalWitness,
-  canonicalDeps,
-  preCommitmentMsg,
+  contentCommitment,
+  depsCommitment,
+  EDITION,
+  preCommitment,
   PreSignedProposal,
   type Proposal,
   type VerifiedAct,
@@ -112,10 +105,7 @@ export class ActorKey {
    */
   async preSign(proposal: Proposal, nonce: Uint8Array = randomBytes(SALT_LEN)): Promise<PreSignedProposal> {
     if (nonce.length !== SALT_LEN) throw new RangeError(`nonce must be ${SALT_LEN} bytes`);
-    const digestContent = await preDigest(Tags.PRE_DIGEST_CONTENT, nonce, proposal.payload);
-    const digestDeps = await preDigest(Tags.PRE_DIGEST_DEPS, nonce, canonicalDeps(proposal.deps));
-    const msg = preCommitmentMsg(proposal.body, digestContent, digestDeps);
-    const preSignature = await sign(this.privateKey, Tags.PRE_COMMITMENT, msg);
+    const preSignature = await signDigest(this.privateKey, await preCommitment(proposal, nonce));
     return new PreSignedProposal({
       proposal,
       authorPubkey: this.publicKeyBytes(),
@@ -125,10 +115,11 @@ export class ActorKey {
   }
 
   /**
-   * Step 4 of the write — approve: verify the host seal, the exact
-   * returned body, and both commitment openings, then sign the approval
-   * witness. `sent` is the proposal the client pre-signed; the check is
-   * exact equality against what the host returned.
+   * Step 4 of the write — approve: verify the exact returned act, the
+   * pre-commitment and the editions, the host seal, and both commitment
+   * openings, then sign the approval witness over the verified act and its
+   * seal. `sent` is the proposal the client pre-signed; the check is exact
+   * equality against what the host returned.
    */
   async approve(sent: PreSignedProposal, sealed: VerifiedAct, hostPubkey: Uint8Array): Promise<ApprovalWitness> {
     // THE MATERIAL HAS TO BE THIS KEY'S. `sent` is read back out of IndexedDB
@@ -148,21 +139,31 @@ export class ActorKey {
     ) {
       throw new HandshakeError("host returned a different act than was pre-signed");
     }
+    const formed = await sent.preCommitment();
+    if (!equalBytes(sealed.preCommitment, formed)) {
+      throw new HandshakeError("host returned a different pre-commitment than was formed");
+    }
+    if (sealed.contentEdition !== EDITION || sealed.depsEdition !== EDITION) {
+      throw new HandshakeError(
+        `unexpected editions (content ${sealed.contentEdition}, dependencies ${sealed.depsEdition}); this device signs edition ${EDITION}`,
+      );
+    }
     if (!(await verify(hostPubkey, Tags.HOST_SEAL, sealed.sealMsg(), sealed.hostSeal))) {
       throw new HandshakeError("invalid host seal");
     }
-    // Both commitment openings: recompute from the returned salts and
-    // the bytes the client itself holds.
-    const content = await commitment(Tags.COMMIT_CONTENT, sealed.contentSalt, sent.proposal.payload);
+    // Both commitment openings: recompute from the returned salts, the
+    // pre-commitment the client formed, and the bytes it holds.
+    const actId = sent.proposal.body.actId();
+    const content = await contentCommitment(actId, formed, sealed.contentSalt, sent.proposal.payload);
     if (!equalBytes(content, sealed.contentCommitment)) {
       throw new HandshakeError("content commitment does not open over the sent payload");
     }
-    const deps = await commitment(Tags.COMMIT_DEPS, sealed.depsSalt, canonicalDeps(sent.proposal.deps));
+    const deps = await depsCommitment(actId, formed, sealed.depsSalt, sent.proposal.deps);
     if (!equalBytes(deps, sealed.depsCommitment)) {
       throw new HandshakeError("dependency commitment does not open over the sent list");
     }
-    const approvalSignature = await sign(this.privateKey, Tags.APPROVAL, sealed.sealMsg());
-    return new ApprovalWitness(sent.proposal.body.actId(), approvalSignature);
+    const approvalSignature = await signDigest(this.privateKey, await sealed.approvalDigest());
+    return new ApprovalWitness(actId, approvalSignature);
   }
 
   /** Signs `msg` under `tag` — the raw primitive the vectors pin. */

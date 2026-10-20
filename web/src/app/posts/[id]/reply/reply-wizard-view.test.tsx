@@ -12,6 +12,7 @@ import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
+import { echoedMedia } from "@/test/media-echo";
 import type { ReplyTarget } from "@/lib/compose/reply-wizard";
 import { raisedLayersForTests } from "@/lib/ui2/covering-layer";
 import { ReplyWizard } from "./reply-wizard-view";
@@ -99,19 +100,19 @@ const uploadOk = (id = "m1") =>
       data: {
         uploadMedia: {
           __typename: "UploadMediaPayload",
-          media: {
-            __typename: "MediaAttachment",
-            id,
-            url: "https://media.test/x.webp",
-            altText: null,
-            status: "NORMAL",
-            options: { __typename: "MediaOptions", aspectRatio: "4:5" },
-          },
+          media: echoedMedia(id),
           userErrors: [],
         },
       },
     }),
   );
+
+// The device's upload digest, pinned so the server above can echo it
+// (test/media-echo.ts).
+vi.mock("@/lib/api/media-api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api/media-api")>()),
+  uploadDigestOf: async () => "ee".repeat(32),
+}));
 
 function draw({
   target = POST_TARGET,
@@ -314,7 +315,10 @@ describe("the reply wizard", () => {
     it("carries the license row, on the default", async () => {
       draw();
       await toSeal();
-      expect(screen.getByTestId("reply-seal")).toHaveTextContent("Public domain — your default");
+      expect(screen.getByTestId("reply-seal")).toHaveTextContent(
+        "Public domain — nobody owes you a name, and uses go unlogged.",
+      );
+      expect(screen.getByTestId("reply-seal")).not.toHaveTextContent("your default");
       expect(screen.getByTestId("reply-open-license")).toBeInTheDocument();
     });
 

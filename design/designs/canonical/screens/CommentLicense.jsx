@@ -17,13 +17,20 @@
    TOBIAS'S COMMENT IS PUBLIC DOMAIN: both axes at zero, the one reading readers
    already have a word for, and the word rides the caption while the rows still
    spell what it means. The post's sheet draws the other case, where the two
-   axes differ. */
+   axes differ.
+
+   REGISTERED under the `postDetail` prefix (round 11, the license-axis
+   registration), as `CommentMenu` registers the menu it stacks: the detail
+   beneath is named as `PostDetail` names it, the thread's own sheet stays
+   unnamed, and the terms sheet is `licenseSheet` with its `terms` block and
+   the block's two `axis` rows. */
+export const NODE = "postDetail";
 export function Screen() {
   return (
     <>
       <ThreadDetail />
       <CommentsThreadSheet />
-      <LicenseSheet stacked license={{ attribution: 0, provenance: 0 }} />
+      <LicenseSheet stacked license={{ attribution: 0, provenance: 0 }} node="licenseSheet" />
     </>
   );
 }

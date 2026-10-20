@@ -43,14 +43,13 @@
 //! bytes a digest is committed over are the only bytes the asset ever
 //! serves.
 
+pub mod areas;
 pub mod blob;
 pub mod ingest_queue;
 pub mod resumable;
 pub mod transcode;
 pub mod video;
 pub mod webp;
-
-use std::sync::Arc;
 
 use postgres_store::PgPool;
 use postgres_store::media as store;
@@ -59,6 +58,7 @@ use uuid::Uuid;
 
 use crate::env_or;
 
+pub use areas::MediaAreas;
 pub use blob::{BlobError, BlobStore, ObjectBlobStore, S3Config};
 
 /// The widest canvas the pipeline admits, per axis.
@@ -129,7 +129,14 @@ pub enum MediaError {
 /// How to reach the media service and what to allow through it.
 #[derive(Debug, Clone)]
 pub struct MediaConfig {
+    /// The live store: the world-readable bucket `base_url` serves.
     pub s3: S3Config,
+    /// The bucket an applicant's carried media waits in — no public
+    /// policy; served to its author alone (data-model.md "Media areas").
+    pub carried_bucket: String,
+    /// The operator-only bucket a deleted asset's bytes leave the live
+    /// store for — no public policy and no serving route.
+    pub held_bucket: String,
     /// The origin every `MediaAttachment.url` is minted against — the
     /// media service's own, never the API's. Bytes leave through the
     /// store, so a CDN can sit in front of it without the contract
@@ -244,6 +251,8 @@ impl Default for MediaConfig {
                 secret_access_key: "cogra_media_secret".into(),
                 region: "us-east-1".into(),
             },
+            carried_bucket: "cogra-media-carried".into(),
+            held_bucket: "cogra-media-held".into(),
             base_url: "http://localhost:3000/media".into(),
             max_upload_bytes: DEFAULT_MAX_UPLOAD_BYTES,
             max_video_upload_bytes: DEFAULT_MAX_VIDEO_UPLOAD_BYTES,
@@ -273,6 +282,8 @@ impl MediaConfig {
                 secret_access_key: env_or("MEDIA_SECRET_ACCESS_KEY", &base.s3.secret_access_key),
                 region: env_or("MEDIA_REGION", &base.s3.region),
             },
+            carried_bucket: env_or("MEDIA_CARRIED_BUCKET", &base.carried_bucket),
+            held_bucket: env_or("MEDIA_HELD_BUCKET", &base.held_bucket),
             base_url: env_or("MEDIA_BASE_URL", &base.base_url)
                 .trim_end_matches('/')
                 .to_string(),
@@ -795,6 +806,10 @@ fn canonical_entries(
             ));
         }
         seen.push(id);
+        entry.upload_digest = resolved
+            .iter()
+            .find(|r| r.requested == entry.id)
+            .map(|r| r.requested_upload_digest.clone());
         entry.id = id;
         entry.cover = entry.cover.map(canonical);
     }
@@ -810,6 +825,11 @@ struct EntryDraft {
     alt_text: Option<String>,
     cover: Option<Uuid>,
     cover_taken: bool,
+    /// The upload digest of the row the client NAMED, captured before the
+    /// id is rewritten to the asset it resolves to (`canonical_entries`).
+    /// `None` until then, and for an id that names nothing — which the
+    /// anti-hijack read refuses as "no such asset" before it is used.
+    upload_digest: Option<Vec<u8>>,
 }
 
 /// The half of gallery planning that reads only what the client sent:
@@ -887,6 +907,7 @@ fn gallery_entries(
             alt_text,
             cover: draft.cover_media_id,
             cover_taken: draft.cover_taken,
+            upload_digest: None,
         });
     }
 
@@ -928,6 +949,10 @@ fn resolve_gallery(
         let cover = resolve_cover(author, i, entry, asset, rows)?;
         manifest.push(manifest_entry(
             asset,
+            entry
+                .upload_digest
+                .as_deref()
+                .unwrap_or(&asset.upload_digest),
             entry.alt_text.clone(),
             cover,
             entry.cover_taken,
@@ -1083,8 +1108,19 @@ fn checked_alt_text(raw: Option<&str>) -> Result<Option<String>, String> {
 /// The taken mark is sealed only beside a cover. Planning refuses the
 /// other shape before this point; tying the two here as well keeps every
 /// entry this builds one the envelope's decoder accepts.
+///
+/// **Both digests, always** (data-model.md "The payload envelope"): key 0
+/// is the rendition digest of the RESOLVED asset — the bytes a reader is
+/// served — and key 5 the upload digest of the row the client NAMED,
+/// which the caller passes in. The two rows differ only for an upload
+/// whose re-encode merged into an asset its author already held; the
+/// manifest then witnesses the bytes this upload sent beside the bytes it
+/// resolved to. A cover carries no upload digest of its own: it is an
+/// uploaded still, stored as it arrived, so its upload digest is its
+/// rendition digest and a second key could never disagree with key 3.
 fn manifest_entry(
     asset: &store::MediaAttachment,
+    upload_digest: &[u8],
     alt_text: Option<String>,
     cover: Option<&store::MediaAttachment>,
     cover_taken: bool,
@@ -1095,6 +1131,7 @@ fn manifest_entry(
         alt_text,
         cover_taken: cover_taken && cover.is_some(),
         cover: cover.map(manifest_digest).transpose()?,
+        upload_digest: Some(sized_digest(asset.id, upload_digest)?),
     })
 }
 
@@ -1103,9 +1140,16 @@ fn manifest_entry(
 fn manifest_digest(
     asset: &store::MediaAttachment,
 ) -> Result<[u8; common::envelope::MEDIA_DIGEST_LEN], GalleryPlanError> {
-    asset.digest.as_slice().try_into().map_err(|_| {
-        GalleryPlanError::Internal(format!("asset {} carries a mis-sized digest", asset.id))
-    })
+    sized_digest(asset.id, &asset.digest)
+}
+
+fn sized_digest(
+    id: Uuid,
+    digest: &[u8],
+) -> Result<[u8; common::envelope::MEDIA_DIGEST_LEN], GalleryPlanError> {
+    digest
+        .try_into()
+        .map_err(|_| GalleryPlanError::Internal(format!("asset {id} carries a mis-sized digest")))
 }
 
 /// Checks one profile image slot — the avatar or the cover.
@@ -1139,8 +1183,10 @@ pub async fn plan_profile_image(
     let resolved = store::resolve_assets(pool, std::slice::from_ref(&id))
         .await
         .map_err(|e| GalleryPlanError::Internal(e.to_string()))?;
+    let named = resolved.first();
     Ok(Some(Some(checked_profile_image(
-        resolved.first().map(|r| &r.asset),
+        named.map(|r| &r.asset),
+        named.map(|r| r.requested_upload_digest.as_slice()),
         author,
         field,
     )?)))
@@ -1156,8 +1202,12 @@ pub async fn plan_profile_image(
 /// circular 1:1 (design.md "Profile header"). The refusal is the one a
 /// poster already gives for the same reason, said against the field that
 /// carried the id.
+///
+/// `upload_digest` is the named row's own, as a gallery entry's is; `None`
+/// falls back to the asset's.
 fn checked_profile_image(
     asset: Option<&store::MediaAttachment>,
+    upload_digest: Option<&[u8]>,
     author: Uuid,
     field: &'static str,
 ) -> Result<common::envelope::MediaAsset, GalleryPlanError> {
@@ -1173,7 +1223,13 @@ fn checked_profile_image(
             GalleryError::at(path, "a profile picture must be an image, not a video").into(),
         );
     }
-    manifest_entry(asset, None, None, false)
+    manifest_entry(
+        asset,
+        upload_digest.unwrap_or(&asset.upload_digest),
+        None,
+        None,
+        false,
+    )
 }
 
 /// The asset one profile image slot's manifest entry names, resolved the
@@ -1380,16 +1436,26 @@ const ORPHAN_SWEEP_BATCH: i64 = 200;
 /// would be a second interval to configure for no gain. It runs first
 /// because a session it finishes collecting can leave an asset behind
 /// for the orphan sweep to see on this very pass.
+///
+/// The held-media reconciler rides it too: a held asset whose bytes did
+/// not leave the live store when its redaction committed is moved to the
+/// operator store here ([`areas::settle_held`]), so a failed move is
+/// retried every tick rather than left public.
 pub async fn orphan_reaper_loop(
     pool: PgPool,
-    blobs: Arc<dyn BlobStore>,
+    areas: MediaAreas,
     interval_secs: u64,
     max_age_secs: f64,
 ) {
+    let blobs = areas.live.clone();
     let mut ticker = tokio::time::interval(std::time::Duration::from_secs(interval_secs));
     ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
     loop {
         ticker.tick().await;
+        let moved = areas::settle_held(&pool, &areas).await;
+        if !moved.is_empty() {
+            tracing::info!(assets = moved.len(), "held media left the live store");
+        }
         resumable::sweep_expired(&pool, &blobs).await;
         match store::sweep_orphans(&pool, max_age_secs, ORPHAN_SWEEP_BATCH).await {
             Ok(swept) if swept.is_empty() => {}
@@ -1432,6 +1498,7 @@ mod planning_tests {
             redaction_reason: None,
             redacted_at: None,
             created_at: chrono::Utc::now(),
+            upload_digest: vec![7u8; 32],
         }
     }
 
@@ -1452,6 +1519,7 @@ mod planning_tests {
             alt_text: None,
             cover,
             cover_taken: false,
+            upload_digest: None,
         }
     }
 
@@ -1486,10 +1554,12 @@ mod planning_tests {
         let resolved = [
             store::ResolvedAsset {
                 requested: merged,
+                requested_upload_digest: vec![3u8; 32],
                 asset: held.clone(),
             },
             store::ResolvedAsset {
                 requested: poster.id,
+                requested_upload_digest: poster.upload_digest.clone(),
                 asset: poster.clone(),
             },
         ];
@@ -1506,6 +1576,7 @@ mod planning_tests {
         let with_held = [
             store::ResolvedAsset {
                 requested: held.id,
+                requested_upload_digest: held.upload_digest.clone(),
                 asset: held.clone(),
             },
             resolved[0].clone(),
@@ -1517,6 +1588,64 @@ mod planning_tests {
                 .path,
             gallery_path(1, "mediaId")
         );
+    }
+
+    /// The manifest entry of an id that merged witnesses BOTH rows: key 0
+    /// the held asset's rendition — the bytes a reader is served — and
+    /// key 5 the merged upload's own upload digest, the bytes that upload
+    /// sent. Naming the held asset directly witnesses its own upload
+    /// digest instead: an upload digest is per upload, not per asset.
+    ///
+    /// A merged upload keeps its own upload digest in the manifest beside the rendition digest of the asset it resolved to.
+    /// ´claim:media:a-merged-upload-keeps-its-own-upload-digest´
+    #[test]
+    fn a_merged_upload_keeps_its_own_upload_digest_in_the_manifest() {
+        let author = Uuid::new_v4();
+        let held = store::MediaAttachment {
+            digest: vec![5u8; 32],
+            upload_digest: vec![6u8; 32],
+            ..asset(author, video::MIME)
+        };
+        let merged = Uuid::new_v4();
+        let resolved = [store::ResolvedAsset {
+            requested: merged,
+            requested_upload_digest: vec![3u8; 32],
+            asset: held.clone(),
+        }];
+        let mut entries = vec![entry(merged, None)];
+        canonical_entries(&mut entries, &resolved).expect("a merged id plans");
+        let planned = resolve_gallery(
+            author,
+            GalleryKind::Post,
+            &entries,
+            std::slice::from_ref(&held),
+        )
+        .expect("the gallery plans");
+        assert_eq!(
+            planned.manifest[0].digest, [5u8; 32],
+            "the rendition served"
+        );
+        assert_eq!(
+            planned.manifest[0].upload_digest,
+            Some([3u8; 32]),
+            "the bytes the merged upload sent"
+        );
+
+        let mut direct = vec![entry(held.id, None)];
+        let resolved_direct = [store::ResolvedAsset {
+            requested: held.id,
+            requested_upload_digest: held.upload_digest.clone(),
+            asset: held.clone(),
+        }];
+        canonical_entries(&mut direct, &resolved_direct).expect("a serving id plans");
+        let planned = resolve_gallery(
+            author,
+            GalleryKind::Post,
+            &direct,
+            std::slice::from_ref(&held),
+        )
+        .expect("the gallery plans");
+        assert_eq!(planned.manifest[0].upload_digest, Some([6u8; 32]));
     }
 
     /// An empty gallery is not a refusal; a gallery past the kind's
@@ -1932,7 +2061,7 @@ mod planning_tests {
     fn a_profile_picture_is_the_authors_own_still() {
         let author = Uuid::new_v4();
         let mine = asset(author, webp::MIME);
-        checked_profile_image(Some(&mine), author, "avatarMediaId")
+        checked_profile_image(Some(&mine), None, author, "avatarMediaId")
             .expect("an author's own picture is a profile picture");
 
         let slot = vec!["avatarMediaId".to_string()];
@@ -1940,6 +2069,7 @@ mod planning_tests {
             path_of(
                 &checked_profile_image(
                     Some(&asset(Uuid::new_v4(), webp::MIME)),
+                    None,
                     author,
                     "avatarMediaId"
                 )
@@ -1949,14 +2079,20 @@ mod planning_tests {
         );
         assert_eq!(
             path_of(
-                &checked_profile_image(Some(&asset(author, video::MIME)), author, "avatarMediaId")
-                    .expect_err("a video is not a profile picture")
+                &checked_profile_image(
+                    Some(&asset(author, video::MIME)),
+                    None,
+                    author,
+                    "avatarMediaId"
+                )
+                .expect_err("a video is not a profile picture")
             ),
             slot
         );
         assert_eq!(
             path_of(
-                &checked_profile_image(None, author, "avatarMediaId").expect_err("no such asset")
+                &checked_profile_image(None, None, author, "avatarMediaId")
+                    .expect_err("no such asset")
             ),
             slot
         );

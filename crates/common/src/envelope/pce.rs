@@ -26,6 +26,12 @@ pub const COGRA_GUILD_KEY: u64 = 49258;
 /// The version vector CoGra produces (PCE §2.1): package, body,
 /// extension-floor, and extension-ceiling axes, all at 1.
 pub const VERSION_V1: [u64; 4] = [1, 1, 1, 1];
+/// The highest `extension_ver` this reader implements under
+/// `min_extension_ver` 1 — PCE §2.1's `K_ext`. Nothing in the reserved
+/// range (4–99) is allocated at it.
+pub const READER_EXTENSION_VER: u64 = 1;
+/// The `extension_ver` axis of the version vector (PCE §2.1, index 3).
+const AXIS_EXTENSION_VER: usize = 3;
 const KEY_VERSION: u64 = 0;
 const KEY_BODY: u64 = 1;
 const KEY_EXTENSIONS: u64 = 2;
@@ -112,22 +118,50 @@ impl Value {
     }
 }
 
-/// A decoded envelope: the version vector, the body, and the extension
-/// map (empty when key 2 is absent — §4.4 forbids an in-band empty map).
+/// Which admission a decode runs over the reserved range — the role split
+/// between the two places an envelope is read.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Discipline {
+    /// The signing path's: an envelope CoGra authors carries nothing this
+    /// reader does not know, at any declared version, because an unordered
+    /// key in one's own proposal is a smuggle, not a future.
+    Signing,
+    /// The read/ingest path's: an act someone else authored may come from a
+    /// newer format. Unknown reserved keys are preserved, never rendered,
+    /// when the envelope declares an `extension_ver` newer than this
+    /// reader's (PCE §6 Xceil); at a version this reader implements in
+    /// full they stay refused — malformed, not future.
+    Reading,
+}
+
+/// A decoded envelope: the version vector, the body, the extension map
+/// (empty when key 2 is absent — §4.4 forbids an in-band empty map), and
+/// the reserved-range keys a newer format allocated and this reader does
+/// not know.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Envelope {
     pub version: [u64; 4],
     pub body: String,
     pub extensions: BTreeMap<u64, Value>,
+    /// Reserved keys (4–99) held as read and never rendered. Only
+    /// [`Envelope::decode_for_read`] fills it, and only under a newer
+    /// `extension_ver`; a key never sits here and in `extensions` at once.
+    /// Re-encoding writes them back in place, so the bytes a witness
+    /// covers survive the round trip.
+    pub preserved: BTreeMap<u64, Value>,
 }
 
 impl Envelope {
     /// Serializes canonically (PCE §5): magic tag, definite lengths,
-    /// ascending integer keys (the BTreeMap's iteration order).
+    /// ascending integer keys — the extension map and the preserved keys
+    /// interleaved in one ascending run, as they were read.
     pub fn encode(&self) -> Vec<u8> {
+        let mut entries: Vec<(&u64, &Value)> =
+            self.extensions.iter().chain(&self.preserved).collect();
+        entries.sort_unstable_by_key(|(k, _)| **k);
         let mut e = Encoder::new();
         e.tag(MAGIC_TAG);
-        e.map(if self.extensions.is_empty() { 2 } else { 3 });
+        e.map(if entries.is_empty() { 2 } else { 3 });
         e.uint(KEY_VERSION);
         e.array(4);
         for axis in self.version {
@@ -135,10 +169,10 @@ impl Envelope {
         }
         e.uint(KEY_BODY);
         e.text(&self.body);
-        if !self.extensions.is_empty() {
+        if !entries.is_empty() {
             e.uint(KEY_EXTENSIONS);
-            e.map(self.extensions.len() as u64);
-            for (k, v) in &self.extensions {
+            e.map(entries.len() as u64);
+            for (k, v) in entries {
                 e.uint(*k);
                 v.encode(&mut e);
             }
@@ -146,11 +180,17 @@ impl Envelope {
         e.finish()
     }
 
-    /// Decodes and admission-checks one envelope: Gate M (magic, shape),
-    /// Gate P (package version and key set), Gate C2/C3 (canonical form —
-    /// verified by re-encoding), the §4.4 empty rules, and the §4.2
-    /// reserved-range rule. The §3 text pipeline is not applied (see the
+    /// Decodes and admission-checks one envelope under the signing
+    /// discipline: Gate M (magic, shape), Gate P (package version and key
+    /// set), Gate C2/C3 (canonical form — verified by re-encoding), the
+    /// §4.4 empty rules, and the §4.2 reserved-range rule applied without
+    /// the fail-open ceiling — any key 4–99 refuses, whatever version the
+    /// envelope declares. The §3 text pipeline is not applied (see the
     /// module documentation).
+    ///
+    /// This is the discipline both clients mirror for the payloads they
+    /// sign, and the one the shared envelope vectors pin. Reading an act
+    /// someone else authored runs [`Envelope::decode_for_read`] instead.
     ///
     /// Gate P is fail-closed: this reader implements package 1 only, and a
     /// future package denies the whole envelope rather than any part of it.
@@ -158,6 +198,23 @@ impl Envelope {
     /// point of decode then encode, so anything non-preferred, unsorted,
     /// indefinite, or text-keyed fails to reproduce itself.
     pub fn decode(bytes: &[u8]) -> Result<Self, EnvelopeError> {
+        Self::decode_with(bytes, Discipline::Signing)
+    }
+
+    /// Decodes an envelope on the read/ingest path: every gate
+    /// [`Envelope::decode`] runs, except that a reserved key (4–99) is
+    /// preserved rather than refused when the envelope's `extension_ver`
+    /// is newer than [`READER_EXTENSION_VER`] — PCE §6 Xceil's fail-open
+    /// ceiling. At an `extension_ver` this reader implements, the key is
+    /// refused exactly as on the signing path.
+    ///
+    /// Preserved keys still pass Gate C2: the envelope must re-encode to
+    /// its own bytes, so what is kept is kept byte-exact.
+    pub fn decode_for_read(bytes: &[u8]) -> Result<Self, EnvelopeError> {
+        Self::decode_with(bytes, Discipline::Reading)
+    }
+
+    fn decode_with(bytes: &[u8], discipline: Discipline) -> Result<Self, EnvelopeError> {
         if bytes.len() < 3 || bytes[0..3] != [0xD9, 0xD9, 0xF7] {
             return Err(EnvelopeError::Magic);
         }
@@ -187,7 +244,10 @@ impl Envelope {
             return Err(EnvelopeError::Shape("second key must be 1 (body)"));
         }
         let body = d.text()?;
+        let ceiling_is_newer =
+            discipline == Discipline::Reading && version[AXIS_EXTENSION_VER] > READER_EXTENSION_VER;
         let mut extensions = BTreeMap::new();
+        let mut preserved = BTreeMap::new();
         if pairs == 3 {
             let key = d.uint()?;
             if key != KEY_EXTENSIONS {
@@ -206,6 +266,10 @@ impl Envelope {
                 last = Some(k);
                 let v = Value::decode(&mut d)?;
                 if (4..100).contains(&k) {
+                    if ceiling_is_newer {
+                        preserved.insert(k, v);
+                        continue;
+                    }
                     return Err(EnvelopeError::ReservedKey(k));
                 }
                 if k < 4 {
@@ -226,6 +290,7 @@ impl Envelope {
             version,
             body,
             extensions,
+            preserved,
         };
         if envelope.encode() != bytes {
             return Err(EnvelopeError::NonCanonical);

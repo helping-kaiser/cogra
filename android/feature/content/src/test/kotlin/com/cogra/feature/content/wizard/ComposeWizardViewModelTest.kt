@@ -1,7 +1,6 @@
 package com.cogra.feature.content.wizard
 
 import com.cogra.crypto.ActorKey
-import com.cogra.crypto.Family
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
@@ -28,21 +27,29 @@ import com.cogra.domain.media.UploadProgress
 import com.cogra.domain.media.VideoFrame
 import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.references.ReferenceClaim
-import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.repo.WriteRepository
+import com.cogra.domain.signing.ContentShape
+import com.cogra.domain.signing.SentContent
+import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.postExpectation
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.InMemoryComposeDraftStore
 import com.cogra.domain.testing.InMemorySealedDraftStore
 import com.cogra.domain.testing.SealingWriteRepository
+import com.cogra.domain.testing.TEST_NODE_ID
 import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.ThrowingMediaProcessor
 import com.cogra.domain.testing.ThrowingMediaRepository
+import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingSettingsRepository
 import com.cogra.domain.testing.ThrowingVideoProcessor
-import com.cogra.domain.testing.ThrowingReferenceRepository
+import com.cogra.domain.testing.faithfulContent
+import com.cogra.domain.testing.fakeReadiness
+import com.cogra.domain.testing.fakeUpload
+import com.cogra.domain.testing.testGraphIds
 import com.cogra.domain.topics.TagClaim
+import com.cogra.domain.signing.known
 import com.google.common.truth.Truth.assertThat
-import java.io.IOException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -53,6 +60,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 
 /**
  * The wizard's flow: what reaches the wire, what the uploads do, and
@@ -72,6 +80,7 @@ class ComposeWizardViewModelTest {
         var lastAttachments: List<AttachmentClaim> = emptyList()
         var lastSensitive: Boolean? = null
         var lastSensitiveReason: String? = null
+        var lastPDirected: Double? = null
         var calls = 0
 
         override suspend fun preparePost(
@@ -84,15 +93,25 @@ class ComposeWizardViewModelTest {
             attachments: List<AttachmentClaim>,
             sensitive: Boolean,
             sensitiveReason: String?,
+            pDirected: Double,
         ): Outcome<PreparedContentView> {
             calls += 1
+            lastPDirected = pDirected
             lastContent = content
             lastAttachments = attachments
             lastSensitive = sensitive
             lastSensitiveReason = sensitiveReason
-            return outcome ?: Outcome.Success(
-                PreparedContentView("node-1", listOf(sealer.stage(Family.PUBLISH))),
+            // A faithful prepare: exactly the batch the view model ordered.
+            val sent = SentContent(title, description, content, attachments, sensitive, sensitiveReason)
+            val ordered = postExpectation(
+                pDirected,
+                license,
+                faithfulContent(TEST_NODE_ID, sent, ContentShape.POST),
+                tags,
+                references,
+                testGraphIds(references.map { it.targetId }),
             )
+            return outcome ?: Outcome.Success(PreparedContentView(TEST_NODE_ID, sealer.stageFaithful(ordered)))
         }
     }
 
@@ -144,14 +163,14 @@ class ComposeWizardViewModelTest {
             val id = "m$next"
             val state = if (id in processing) MediaAssetState.PROCESSING else MediaAssetState.READY
             return Outcome.Success(
-                MediaAssetView(id, "https://media/$id", null, FieldStatus.NORMAL, 1f, state = state),
+                fakeUpload(id, state),
             )
         }
 
         override suspend fun mediaAttachment(id: String): Outcome<MediaReadiness?> {
             pollCalls += 1
             val (state, reason) = pollAnswers[id] ?: (MediaAssetState.READY to null)
-            return Outcome.Success(MediaReadiness(id, state, reason))
+            return Outcome.Success(fakeReadiness(id, state, reason))
         }
 
         /** Every upload in the order it was made — stills and clips alike. */
@@ -176,15 +195,7 @@ class ComposeWizardViewModelTest {
                 return Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "not H.264")))
             }
             return Outcome.Success(
-                MediaAssetView(
-                    "v1",
-                    "https://media/v1",
-                    null,
-                    FieldStatus.NORMAL,
-                    0.5625f,
-                    mimeType = "video/mp4",
-                    durationMs = 42_000,
-                ),
+                fakeUpload("v1").copy(aspectRatio = 0.5625f, durationMs = 42_000),
             )
         }
     }
@@ -400,7 +411,10 @@ class ComposeWizardViewModelTest {
         // waiting on the walk out of Details.
         assertThat(media.uploads).isEqualTo(2)
         assertThat(vm.state.value.picked.map { it.upload })
-            .containsExactly(AssetUpload.Done("m1"), AssetUpload.Done("m2"))
+            .containsExactly(
+                AssetUpload.Done("m1", fakeUpload("m1").known()),
+                AssetUpload.Done("m2", fakeUpload("m2").known()),
+            )
         // THE READY-AT-ONCE PATH COSTS NOTHING EXTRA: Android's own
         // uploads are always within target, so the gate never has reason
         // to poll `mediaAttachment` at all.
@@ -435,7 +449,7 @@ class ComposeWizardViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(media.pollCalls).isEqualTo(1)
-        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("m1"))
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("m1", fakeUpload("m1").known()))
         assertThat(vm.state.value.uploadsComplete).isTrue()
     }
 
@@ -488,7 +502,7 @@ class ComposeWizardViewModelTest {
 
         // The upload is finished and done with; the describing happens
         // strictly after it.
-        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("m1"))
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("m1", fakeUpload("m1").known()))
 
         vm.onAltTextChange("a", "a salt map of the coast road")
         vm.onNext() // details -> seal
@@ -525,7 +539,7 @@ class ComposeWizardViewModelTest {
         vm.onAltTextChange("a", "a salt map of the coast road")
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("m1"))
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("m1", fakeUpload("m1").known()))
         assertThat(media.uploads).isEqualTo(1)
         assertThat(vm.state.value.canSign).isTrue()
     }
@@ -720,7 +734,7 @@ class ComposeWizardViewModelTest {
         vm.onSign()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.outcome).isEqualTo(WizardOutcome.Landed("node-1"))
+        assertThat(vm.state.value.outcome).isEqualTo(WizardOutcome.Landed(TEST_NODE_ID))
         assertThat(drafts.held).isNull()
     }
 
@@ -768,7 +782,7 @@ class ComposeWizardViewModelTest {
     private fun signAndLeave(): String {
         val vm = viewModel()
         vm.signWords()
-        assertThat(vm.state.value.outcome).isEqualTo(WizardOutcome.Landed("node-1"))
+        assertThat(vm.state.value.outcome).isEqualTo(WizardOutcome.Landed(TEST_NODE_ID))
         return sealer.staged.keys.single()
     }
 
@@ -795,7 +809,7 @@ class ComposeWizardViewModelTest {
         assertThat(drafts.held).isNull()
         // …because the post's draft is SEALED, out of its reach.
         val copy = seals.copies.single()
-        assertThat(copy.node).isEqualTo("node-1")
+        assertThat(copy.node).isEqualTo(TEST_NODE_ID)
         assertThat(copy.writes).containsExactly(id)
         assertThat(copy.draft.body).isEqualTo("Salt maps of the coast road")
 
@@ -873,7 +887,7 @@ class ComposeWizardViewModelTest {
             settings = settings,
         )
         vm.signWords()
-        assertThat(vm.state.value.outcome).isEqualTo(WizardOutcome.Landed("node-1"))
+        assertThat(vm.state.value.outcome).isEqualTo(WizardOutcome.Landed(TEST_NODE_ID))
         assertThat(seals.copies).isEmpty()
         assertThat(drafts.held).isNull()
     }
@@ -1498,7 +1512,7 @@ class ComposeWizardViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(media.order).containsExactly("still", "video", "still").inOrder()
-        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1", fakeUpload("v1").known()))
         assertThat(vm.state.value.coverMediaId).isEqualTo("m2")
         assertThat(vm.state.value.uploadsComplete).isTrue()
     }
@@ -1576,7 +1590,7 @@ class ComposeWizardViewModelTest {
         // No stage was entered, so no frames were paid for.
         assertThat(vm.state.value.coverFrames).isEmpty()
         // "Pictures upload while you write": the clip goes up from details.
-        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1", fakeUpload("v1").known()))
         assertThat(vm.state.value.uploadsComplete).isTrue()
 
         // Back from details is the pick: there is no step behind it.
@@ -1677,7 +1691,7 @@ class ComposeWizardViewModelTest {
         assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.NoStill)
         assertThat(vm.state.value.coverMediaId).isNull()
         assertThat(media.order).containsExactly("video")
-        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1", fakeUpload("v1").known()))
         assertThat(vm.state.value.uploadsComplete).isTrue()
 
         vm.onNext()
@@ -1694,7 +1708,7 @@ class ComposeWizardViewModelTest {
         vm.toDetailsWithVerticalClip()
 
         assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.NoStill)
-        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1", fakeUpload("v1").known()))
         assertThat(vm.state.value.uploadsComplete).isTrue()
     }
 
@@ -1783,7 +1797,7 @@ class ComposeWizardViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(video.calls.count { it == "firstFrame" }).isEqualTo(2)
         assertThat(vm.state.value.coverMediaId).isNotNull()
-        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1", fakeUpload("v1").known()))
     }
 
     /**
@@ -1859,7 +1873,7 @@ class ComposeWizardViewModelTest {
         vm.toSealWithMedia("camera.jpg")
 
         assertThat(vm.state.value.refused).isEmpty()
-        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("m1"))
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("m1", fakeUpload("m1").known()))
     }
 
     @Test
@@ -1987,6 +2001,82 @@ class ComposeWizardViewModelTest {
         vm.onSetStance()
         assertThat(vm.state.value.pDirected).isEqualTo(-0.8)
         assertThat(vm.state.value.sheet).isEqualTo(SealSheet.None)
+    }
+
+    // The pick the seal shows is the pick the Publish carries: the wizard held
+    // it, but `preparePost` was never handed it, so every post took +0.1.
+    @Test
+    fun aSetStanceRidesOnThePreparePost() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.signWords {
+            vm.onOpenSheet(SealSheet.Stance)
+            vm.onPDirectedChange(-0.8)
+            vm.onSetStance()
+        }
+
+        assertThat(content.lastPDirected).isEqualTo(-0.8)
+    }
+
+    @Test
+    fun anUntouchedStanceRidesAsTheDefaultExplicitly() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.signWords()
+
+        assertThat(content.lastPDirected).isEqualTo(ComposeWizardState.DEFAULT_P_DIRECTED)
+    }
+
+    // ComposePad.md: "WHEN press Set GIVEN the pick reads 0.00 -> the dialog
+    // Start it unreachable? opens over the pad, which stays parked beneath it
+    // AND NEVER the pick is refused".
+    @Test
+    fun setAtExactlyZeroAsksBeforeTheRowMoves() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onOpenSheet(SealSheet.Stance)
+        vm.onPDirectedChange(0.0)
+        vm.onSetStance()
+
+        assertThat(vm.state.value.confirmingUnreachable).isTrue()
+        assertThat(vm.state.value.padOpen).isTrue()
+        assertThat(vm.state.value.pDirected).isEqualTo(ComposeWizardState.DEFAULT_P_DIRECTED)
+    }
+
+    @Test
+    fun keepAdjustingLeavesThePadStandingAtThePick() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onOpenSheet(SealSheet.Stance)
+        vm.onPDirectedChange(0.0)
+        vm.onSetStance()
+        vm.onKeepAdjusting()
+
+        assertThat(vm.state.value.confirmingUnreachable).isFalse()
+        assertThat(vm.state.value.padOpen).isTrue()
+        assertThat(vm.state.value.stagedPDirected).isEqualTo(0.0)
+    }
+
+    @Test
+    fun setItAnywayCarriesZeroOnThePreparePost() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.signWords {
+            vm.onOpenSheet(SealSheet.Stance)
+            vm.onPDirectedChange(0.0)
+            vm.onSetStance()
+            vm.onSetUnreachable()
+            assertThat(vm.state.value.padOpen).isFalse()
+            assertThat(vm.state.value.confirmingUnreachable).isFalse()
+        }
+
+        assertThat(content.lastPDirected).isEqualTo(0.0)
+    }
+
+    @Test
+    fun aNonZeroSetNeverAsks() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onOpenSheet(SealSheet.Stance)
+        vm.onPDirectedChange(0.01)
+        vm.onSetStance()
+
+        assertThat(vm.state.value.confirmingUnreachable).isFalse()
+        assertThat(vm.state.value.pDirected).isEqualTo(0.01)
     }
 
     @Test

@@ -21,6 +21,7 @@ import com.cogra.domain.references.REFERENCE_DEFAULT_RELEVANCE
 import com.cogra.domain.references.REFERENCE_DEFAULT_SUPPORT
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.repo.ReferenceRepository
+import com.cogra.domain.signing.WithdrawnReference
 
 /**
  * One citation a submit will declare: the target's **L2 id**, the
@@ -51,11 +52,22 @@ data class ReferenceRow(
      */
     val withdrawalCost: Int = 1,
     val error: String? = null,
+    /**
+     * The bundle's raw sums as the claim served them — what a withdrawal's
+     * counter-records must net to zero, and so what the device checks them
+     * against (Intent.kt). A chip staged in this session stands nowhere
+     * yet: its sums are its own pair.
+     */
+    val rawRelevance: Double = relevance,
+    val rawSupport: Double = support,
 ) {
     fun sameClaimAs(other: ReferenceRow): Boolean =
         targetId == other.targetId && relevance == other.relevance && support == other.support
 
     fun toClaim(): ReferenceClaim = ReferenceClaim(targetId, relevance, support)
+
+    /** This row taken off, as the edit's walk-back is checked against it. */
+    fun toWithdrawn(): WithdrawnReference = WithdrawnReference(targetId, rawRelevance, rawSupport, withdrawalCost)
 }
 
 /**
@@ -218,6 +230,8 @@ internal fun ReferenceClaimView.editableRow(): ReferenceRow? {
         relevance = relevance,
         support = support,
         withdrawalCost = withdrawalCost,
+        rawRelevance = rawRelevance,
+        rawSupport = rawSupport,
     )
 }
 

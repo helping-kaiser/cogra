@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -78,12 +79,14 @@ class StancePadTest {
         axes: StanceAxes = StanceAxes.Opinion,
         targetLabel: String? = null,
         zeroWords: StanceZeroWords = StanceZeroWords.Severed,
+        lineFaceInk: Color? = null,
     ) {
         compose.setContent {
             // Centred, so a drag has room on every side of the target.
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 StanceControl(
                     state = state,
+                    lineFaceInk = lineFaceInk,
                     onHoldDefault = { holdSigned++ },
                     onOpenPad = { opened++ },
                     onPick = { picks += it },
@@ -129,6 +132,47 @@ class StancePadTest {
         compose.onNodeWithText("Stance", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithTag("${TAG}_stance_standing_face", useUnmergedTree = true)
             .assertDoesNotExist()
+    }
+
+    // stance-control.md "The vouch card's empty face is a line face in the
+    // card's ink" (jakob 2026-10-14). The ink is a draw colour no semantics
+    // node exposes (and captureToImage never completes under Robolectric
+    // here), so the treatment is pinned at its single source and the host's
+    // ink at the control: a host handing none keeps the muted emoji, a host
+    // handing an ink gets the line face in exactly that ink — full opacity
+    // by construction, the line face carrying no alpha of its own.
+    @Test
+    fun theEmptyFaceIsTheMutedEmojiByDefaultAndTheLineFaceInTheHostsInkWhenHandedOne() {
+        assertThat(emptyFaceFor(null)).isEqualTo(EmptyFace.MutedEmoji)
+        assertThat(RESTING_FACE_ALPHA).isEqualTo(0.4f)
+        val ink = Color(0xFF3A4A1B)
+        assertThat(emptyFaceFor(ink)).isEqualTo(EmptyFace.Line(ink))
+    }
+
+    @Test
+    fun theLineFaceDrawsTheMastersSentimentNeutralAndTheEmojiGoesAway() {
+        assertThat(LINE_FACE_PATHS).hasSize(4)
+
+        show(StanceControlState(standing = null), lineFaceInk = Color(0xFF3A4A1B))
+
+        compose.onNodeWithTag("${TAG}_stance_empty_face", useUnmergedTree = true).assertExists()
+        compose.onNodeWithText("🫥", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun aSetStanceKeepsItsOwnEmojiEvenWhereTheHostHandsALineFaceInk() {
+        show(StanceControlState(standing = StancePoint(0.55, 0.20)), lineFaceInk = Color(0xFF3A4A1B))
+
+        compose.onNodeWithText("😊", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("${TAG}_stance_empty_face", useUnmergedTree = true)
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun theOtherHostsKeepTheMutedEmojiAsTheEmptyFace() {
+        show(StanceControlState(standing = null))
+
+        compose.onNodeWithText("🫥", useUnmergedTree = true).assertExists()
     }
 
     @Test

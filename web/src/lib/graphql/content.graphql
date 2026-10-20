@@ -10,6 +10,8 @@ mutation PreparePost($input: PreparePostInput!) {
     node
     writes {
       ...PreparedWriteFields
+      # Carried with an applicant's application: checked, kept, signed at the landing.
+      carried
     }
     userErrors {
       ...UserErrorFields
@@ -72,22 +74,6 @@ fragment FeedPost on Post {
   # carry two argument sets.
   comments(first: 0, includePending: $includePending) {
     totalCount
-  }
-}
-
-# `includePending` carries the schema's own default: a listing serves
-# pending entries unless the reader asks for the settled graph.
-query Posts($first: Int!, $after: String, $includePending: Boolean! = true) {
-  posts(first: $first, after: $after, includePending: $includePending) {
-    edges {
-      node {
-        ...FeedPost
-      }
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
 }
 
@@ -225,5 +211,23 @@ query CommentSelfMark($id: UUID!) {
     id
     sensitiveSelfMark
     sensitiveReason
+  }
+}
+
+# LANDING ON A COMMENT (Saved.md; jakob 2026-10-01): one step up a comment's
+# chain — what it answers. A reply sits behind its parent's collapsed count, so
+# the thread walks up to the top level and unfolds each branch on the way down.
+query CommentParent($id: UUID!) {
+  comment(id: $id) {
+    id
+    target {
+      __typename
+      ... on Comment {
+        id
+      }
+      ... on Post {
+        id
+      }
+    }
   }
 }

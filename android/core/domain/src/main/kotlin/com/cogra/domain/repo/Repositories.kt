@@ -9,34 +9,34 @@ import com.cogra.domain.ActorRef
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.AuthTokens
-import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.CommentForEdit
 import com.cogra.domain.CommentPage
 import com.cogra.domain.CommentView
 import com.cogra.domain.HashtagView
-import com.cogra.domain.ProfileView
-import com.cogra.domain.RecordRow
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.LoginGrant
+import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
+import com.cogra.domain.PostBacking
 import com.cogra.domain.PostDetail
-import com.cogra.domain.PostView
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ProfileView
+import com.cogra.domain.RecordRow
 import com.cogra.domain.ReferenceCandidateView
 import com.cogra.domain.SelfMarkView
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.TaggedContentView
 import com.cogra.domain.UserProfile
+import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.stance.StanceTarget
-import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.topics.TagClaim
 import java.time.Instant
 
@@ -175,19 +175,19 @@ interface AccountRepository {
  * "Slice 2"): prepare verbs stage device-signed writes; reads serve
  * the display store.
  */
+@Suppress("TooManyFunctions") // the content surface's reads and prepares, plus the two reads the intent check binds to
 interface ContentRepository {
     /**
-     * The chronological listing, newest first — pending entries first,
-     * then landed entries in landing order. `includePending = false`
-     * serves only what has landed on L1, for a reader who wants the
-     * settled graph (api-spec.md "Pending entries come first, in their
-     * own cursor namespace"); true is the API's own default.
+     * The raw L1 identifier of every node in [ids] (L2 ids), read through
+     * the read surface — never the prepare it is checking — before a
+     * gesture's batch is prepared: the intent check (signing/Intent.kt)
+     * binds every act's endpoints to them. Content first, in one batch;
+     * whatever that leaves is read as a person. An id that resolves to
+     * neither fails the whole read: an act toward a node the device cannot
+     * name is an act it cannot check. A node's L1 id never changes once
+     * minted, so reading it at signing time is reading what was on screen.
      */
-    suspend fun posts(
-        first: Int,
-        after: String?,
-        includePending: Boolean = true,
-    ): Outcome<Page<PostView>>
+    suspend fun graphIds(ids: List<String>): Outcome<Map<String, String>>
 
     /** One post with its first comments page; null for an unknown id. */
     suspend fun post(
@@ -238,6 +238,15 @@ interface ContentRepository {
          */
         sensitive: Boolean = false,
         sensitiveReason: String? = null,
+        /**
+         * Where the author stands on their own post — the genesis
+         * Publish's `pDirected`, exactly as the seal's stance pad
+         * (`ComposeSeal`) shows it. Required: the contract never fills a
+         * stance in, so the pre-filled +0.1 is the UI's to state.
+         * `pInterest` is census-fixed at 1 for a Publish and so is not a
+         * parameter.
+         */
+        pDirected: Double,
     ): Outcome<PreparedContentView>
 
     /**
@@ -269,6 +278,13 @@ interface ContentRepository {
      * content state, so a mark the edit does not re-state is a mark the
      * edit removes. The caller passes what it read from [postSelfMark],
      * unchanged, unless the author moved the switch.
+     *
+     * [pDirected] is the author's attachment pick riding the edit's own
+     * record — THE RECORD'S OWN VALUE, `0` (inert) unless the backing pad
+     * moved it; it adds to the post's backing bundle, and the client never
+     * computes it as a delta toward a target (PICK-IS-THE-EDGE, seam 233).
+     * `pInterest` stays census-fixed at 1 for Publish, so it is no
+     * parameter.
      */
     suspend fun preparePostEdit(
         id: String,
@@ -278,7 +294,20 @@ interface ContentRepository {
         attachments: List<AttachmentClaim>,
         sensitive: Boolean = false,
         sensitiveReason: String? = null,
+        pDirected: Double = 0.0,
     ): Outcome<PreparedContentView>
+
+    /**
+     * The post's BACKING — the author's own Publish bundle toward it (the
+     * mint and every edit's pick, summed then clipped) — for the edit pad's
+     * `Current backing`, `Backing after` and `Walk it all back` (EditPad.md).
+     *
+     * SERVER GAP (seam 233): no read serves it yet — `viewerStance` folds the
+     * Opinion bundle only, which is the face's, never the backing. Until one
+     * exists every implementation answers null and the pad draws the
+     * backing as unread; nothing here estimates it.
+     */
+    suspend fun postBacking(id: String): Outcome<PostBacking?> = Outcome.Success(null)
 
     /**
      * [tags] are the topics declared at creation, exactly as on a post
@@ -300,13 +329,13 @@ interface ContentRepository {
          */
         attachments: List<AttachmentClaim> = emptyList(),
         /**
-         * Where the author stands on what they answer — the reply
-         * seal's own pad (`ReplyPad`). Null leaves the low-defaults
-         * policy value the contract applies (+0.1 each); a comment box
-         * that offers no pad passes nothing rather than re-stating it.
+         * Where the author stands on what they answer, exactly as the
+         * reply seal's own pad (`ReplyPad`) shows it. Required: the
+         * contract never fills a stance in, so the pre-filled +0.1 each
+         * is the UI's to state.
          */
-        pDirected: Double? = null,
-        pInterest: Double? = null,
+        pDirected: Double,
+        pInterest: Double,
         /**
          * The author's own sensitive mark, and the reason that rides the
          * veil with it — the reply seal's Mark row (`ReplySeal`), the
@@ -355,6 +384,20 @@ interface ContentRepository {
         after: String?,
         includePending: Boolean = true,
     ): Outcome<Page<CommentView>>
+
+    /**
+     * One step up a comment's chain — the comment it answers, or null when it
+     * answers the post itself. What landing on a comment walks (Saved.md "tap a
+     * comment's row"): a reply sits behind its parent's collapsed count.
+     */
+    suspend fun commentParent(commentId: String): Outcome<String?> = Outcome.Success(null)
+
+    /**
+     * The node a comment answers — its post or its parent comment, by L2
+     * id; null for an unknown comment. A comment edit's record keeps its
+     * A leg there, so the edit's expectation names it (signing/Intent.kt).
+     */
+    suspend fun commentAnswers(commentId: String): Outcome<String?>
 
     companion object {
         /**
@@ -412,6 +455,13 @@ interface StanceRepository {
      * act for this device to sign.
      */
     suspend fun prepareSeverance(target: StanceTarget): Outcome<List<PreparedWriteView>>
+
+    /**
+     * The raw L1 identifier of the node [target] names — what a stance or
+     * severance toward it must point at (signing/Intent.kt). The one the
+     * last bundle read for [target] served, or read now.
+     */
+    suspend fun targetGraphId(target: StanceTarget): Outcome<String>
 }
 
 /**
@@ -491,13 +541,14 @@ interface TopicRepository {
      * Stages one standalone Tag on existing content — the chip row's
      * add gesture and, at `pDirected = 0`, its remove gesture
      * (hashtag.md §4). Never reachable from the post/comment editor
-     * (post.md §3, D14).
+     * (post.md §3, D14). Both values are required, as the chip shows
+     * them: the contract never fills a stance in.
      */
     suspend fun prepareTag(
         target: String,
         name: String,
-        pDirected: Double? = null,
-        pInterest: Double? = null,
+        pDirected: Double,
+        pInterest: Double,
     ): Outcome<List<PreparedWriteView>>
 }
 
@@ -525,13 +576,15 @@ interface ReferenceRepository {
     /**
      * Stages one standalone citation on existing content — the edit
      * screen's add gesture. Citations are never edit fields: changing
-     * what a post cites is its own priced act (post.md §3).
+     * what a post cites is its own priced act (post.md §3). Both values
+     * are required, as the row shows them: the contract never fills a
+     * stance in.
      */
     suspend fun prepareReference(
         artifact: String,
         target: String,
-        relevance: Double? = null,
-        support: Double? = null,
+        relevance: Double,
+        support: Double,
     ): Outcome<List<PreparedWriteView>>
 
     /**

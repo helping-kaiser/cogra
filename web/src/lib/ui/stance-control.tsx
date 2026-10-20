@@ -84,6 +84,7 @@ import type { StanceBundle, StanceLanding, StanceTargetRef } from "@/lib/stance/
 import { useAuthPhase } from "@/lib/session/provider";
 import { buttonClassName } from "@/lib/ui/button";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { Icon } from "@/lib/ui/icons";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
 import { parkedPadStyle } from "@/lib/ui/pad-parking";
 import { SeveranceConfirm } from "@/lib/ui/severance-confirm";
@@ -177,6 +178,7 @@ export function StanceControl({
   node,
   variant,
   padOnly,
+  lineFaceInk,
 }: {
   target: StanceTargetRef;
   /**
@@ -210,6 +212,17 @@ export function StanceControl({
    * nothing taken closes back onto that host (VouchBackPad.md:45).
    */
   padOnly?: { readonly onClose: () => void };
+  /**
+   * THE VOUCH CARD'S EMPTY FACE IS A LINE FACE IN THE CARD'S INK
+   * (stance-control.md, jakob 2026-10-14; the master's `lineFaceInk`). The
+   * 🫥 emoji draws in its own fixed pale greys and cannot be tinted, so it
+   * never reads on the card's tertiary-container ground. The card's unset
+   * state is the line face, `sentiment_neutral`, drawn in the ink handed
+   * here at full opacity. Only the empty resting face is affected (a set
+   * stance keeps its own emoji); left out, every other host keeps the
+   * muted face.
+   */
+  lineFaceInk?: string;
 }) {
   const data = useStanceData();
   const phase = useAuthPhase();
@@ -432,8 +445,11 @@ export function StanceControl({
 
   /** Signs the whole counter-record batch. Reports whether it completed. */
   const runSever = async (): Promise<boolean> => {
+    // The walk-back is checked against the standing the reader confirmed;
+    // with none known there is nothing it could be checked against.
+    if (bundle === null || bundle === undefined) return false;
     setBusy(true);
-    const outcome = await data.sever(seamTarget);
+    const outcome = await data.sever(seamTarget, bundle);
     setBusy(false);
     if (outcome.kind !== "success") return false;
     announceStanceSigned();
@@ -814,17 +830,28 @@ export function StanceControl({
               face outside the table, muted and translucent — the control
               visibly waiting to be given a value rather than wearing an
               answer, and never the shrug a zero standing owns (§8.4). */}
-          <span
-            aria-hidden="true"
-            {...testAttributes(part(node, "anchor.face"), `${testIdPrefix}-resting-face`)}
-            className={
-              restingFace === null
-                ? "flex-none text-title-large opacity-40 grayscale"
-                : "flex-none text-title-large"
-            }
-          >
-            {restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}
-          </span>
+          {restingFace === null && lineFaceInk !== undefined ? (
+            <span
+              aria-hidden="true"
+              {...testAttributes(part(node, "anchor.face"), `${testIdPrefix}-resting-face`)}
+              className="inline-flex flex-none"
+              style={{ color: lineFaceInk }}
+            >
+              <Icon name="sentiment_neutral" size={24} />
+            </span>
+          ) : (
+            <span
+              aria-hidden="true"
+              {...testAttributes(part(node, "anchor.face"), `${testIdPrefix}-resting-face`)}
+              className={
+                restingFace === null
+                  ? "flex-none text-title-large opacity-40 grayscale"
+                  : "flex-none text-title-large"
+              }
+            >
+              {restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}
+            </span>
+          )}
           {/* Colour never carries stance alone: the words say it too
               (design.md §10) — and the exact pair with them, because the
               numbers are part of the default reading (§8.3). The words are

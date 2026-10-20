@@ -15,3 +15,20 @@ fn checked_in_schema_matches_the_code() {
         "schema.graphql is stale — run `make schema` and commit the result"
     );
 }
+
+/// The device derives every signing base from the proposal itself and
+/// checks the proposal against the gesture its user ordered, so a digest
+/// the server computed beside it is one no device has a use for.
+///
+/// A prepared write carries no server-computed digest beside its proposal.
+/// ´claim:server:the-dead-pre-digest-fields-are-gone´
+#[test]
+fn the_dead_pre_digest_fields_are_gone_from_the_schema() {
+    let sdl = api::schema::sdl();
+    for field in ["contentPreDigest", "dependencyPreDigest"] {
+        assert!(
+            !sdl.contains(field),
+            "`{field}` is back on the schema — no client requests it"
+        );
+    }
+}

@@ -8,18 +8,25 @@ import com.cogra.domain.content.isBioTooLong
 import com.cogra.domain.content.isDisplayNameTooLong
 import com.cogra.domain.content.isWebsiteUrlTooLong
 import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.CropWindow
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.overPictureCap
 import com.cogra.domain.repo.ProfileRepository
+import com.cogra.domain.signing.Expectation
+import com.cogra.domain.signing.KnownMedia
+import com.cogra.domain.signing.SentProfile
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.known
+import com.cogra.domain.signing.profileExpectation
+import com.cogra.domain.signing.profileUpdate
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * The profile picture, as the form holds it.
@@ -39,7 +46,12 @@ sealed interface ProfileImageState {
 
     data class Picked(val uri: String) : ProfileImageState
 
-    data class Uploaded(val mediaId: String, val url: String) : ProfileImageState
+    /**
+     * On the server. [known] is what the intent check holds the avatar
+     * entry to: the upload digest this device computed and the server
+     * echoed, and the rendition digest.
+     */
+    data class Uploaded(val mediaId: String, val url: String, val known: KnownMedia? = null) : ProfileImageState
 
     data class Failed(val uri: String, val message: String) : ProfileImageState
 
@@ -66,6 +78,8 @@ sealed interface ProfileImageState {
 }
 
 data class ProfileEditUiState(
+    /** The account's own id: the node a profile payload binds to. */
+    val profileId: String = "",
     val loading: Boolean = true,
     val transportFailed: Boolean = false,
     val displayName: String = "",
@@ -124,6 +138,7 @@ class ProfileEditViewModel @Inject constructor(
                     } else {
                         _state.update {
                             it.copy(
+                                profileId = profile.id,
                                 loading = false,
                                 displayName = profile.displayName.value.orEmpty(),
                                 bio = profile.bio.value.orEmpty(),
@@ -154,20 +169,28 @@ class ProfileEditViewModel @Inject constructor(
     /**
      * A picked avatar: cropped to its fixed shape, processed and
      * uploaded exactly as a post's pictures are — same pipeline, same
-     * `uploadMedia`, only the shape differs.
+     * `uploadMedia`, only the shape differs. With no framing the picture
+     * is taken from the middle of whatever was picked.
      */
-    fun onAvatarPicked(uri: String) = pick(uri)
+    fun onAvatarPicked(uri: String) = onAvatarFramed(uri, window = null)
+
+    /**
+     * The picture the crop handed back: `AvatarCrop`'s Next, opened from
+     * Change picture, returns here holding it, and this form's one Save
+     * signs it with the fields (ProfileEdit.md, AvatarCrop.md). It uploads
+     * at once, framed as the author left it, so Save waits only on bytes
+     * already on their way.
+     */
+    fun onAvatarFramed(uri: String, window: CropWindow?) =
+        pick(uri, CropSpec(targetRatio = AVATAR_RATIO, window = window))
 
     /** Back to the monogram, which is the designed placeholder. */
     fun onAvatarCleared() = _state.update { it.copy(avatar = ProfileImageState.Cleared) }
 
-    private fun pick(uri: String) {
+    private fun pick(uri: String, crop: CropSpec) {
         _state.update { it.copy(avatar = ProfileImageState.Picked(uri)) }
         viewModelScope.launch {
-            // The fixed crop is centred: the profile form has no
-            // framing step, so the picture is taken from the middle of
-            // whatever was picked rather than from a corner.
-            val processed = processor.process(uri, CropSpec(targetRatio = AVATAR_RATIO))
+            val processed = processor.process(uri, crop)
             val next = if (processed == null) {
                 ProfileImageState.Failed(uri, UNREADABLE)
             } else if (processed.overPictureCap()) {
@@ -180,7 +203,7 @@ class ProfileEditViewModel @Inject constructor(
             } else {
                 when (val outcome = media.uploadMedia(processed)) {
                     is Outcome.Success ->
-                        ProfileImageState.Uploaded(outcome.value.id, outcome.value.url)
+                        ProfileImageState.Uploaded(outcome.value.id, outcome.value.url, outcome.value.known())
                     is Outcome.Refused ->
                         ProfileImageState.Failed(uri, outcome.errors.firstOrNull()?.message ?: REFUSED)
                     is Outcome.Failed -> ProfileImageState.Failed(uri, TRANSPORT)
@@ -200,12 +223,18 @@ class ProfileEditViewModel @Inject constructor(
         if (s.displayNameTooLong || s.bioTooLong || s.websiteUrlTooLong) return
         _state.update { it.copy(submitting = true, refused = false, signingFailed = false) }
         viewModelScope.launch {
+            val sent = SentProfile(
+                displayName = s.displayName.trim(),
+                bio = s.bio.ifBlank { null },
+                websiteUrl = s.websiteUrl.trim().ifBlank { null },
+                avatar = s.avatar.toUpdate(),
+            )
             val prepared = when (
                 val outcome = profiles.prepareProfileUpdate(
-                    displayName = s.displayName.trim(),
-                    bio = s.bio.ifBlank { null },
-                    websiteUrl = s.websiteUrl.trim().ifBlank { null },
-                    avatar = s.avatar.toUpdate(),
+                    displayName = sent.displayName,
+                    bio = sent.bio,
+                    websiteUrl = sent.websiteUrl,
+                    avatar = sent.avatar,
                 )
             ) {
                 is Outcome.Success -> outcome.value
@@ -218,7 +247,13 @@ class ProfileEditViewModel @Inject constructor(
                     return@launch
                 }
             }
-            val results = signer.sign(prepared)
+            // One profile update on this device's own profile, its payload held
+            // to the fields this form sent and the avatar this device uploaded
+            // (PayloadExpectation.kt).
+            val avatar = s.avatar as? ProfileImageState.Uploaded
+            val ledger = avatar?.known?.let { mapOf(avatar.mediaId to it) }.orEmpty()
+            val profile = profileExpectation(s.profileId, sent, ledger)
+            val results = signer.sign(prepared, Expectation(listOf(profileUpdate(profile))))
             if (results.all { it is WriteResult.Done }) {
                 _state.update { it.copy(submitting = false, saved = true) }
             } else {

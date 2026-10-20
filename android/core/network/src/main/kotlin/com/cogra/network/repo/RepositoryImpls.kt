@@ -22,7 +22,6 @@ import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
-import com.cogra.domain.PostView
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ProfileView
@@ -41,6 +40,7 @@ import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.WriteRepository
+import com.cogra.domain.signing.wireReason
 import com.cogra.domain.topics.TagClaim
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
@@ -53,8 +53,10 @@ import com.cogra.network.graphql.BorrowedViewQuery
 import com.cogra.network.graphql.ChangeHandleMutation
 import com.cogra.network.graphql.ChangePasswordMutation
 import com.cogra.network.graphql.CommentForEditQuery
+import com.cogra.network.graphql.CommentParentQuery
 import com.cogra.network.graphql.CommentRepliesQuery
 import com.cogra.network.graphql.ConfirmPasswordResetMutation
+import com.cogra.network.graphql.ContentGraphIdsQuery
 import com.cogra.network.graphql.CreateInviteLinkMutation
 import com.cogra.network.graphql.CreateKeyBackupChallengeMutation
 import com.cogra.network.graphql.DismissVouchBackMutation
@@ -68,7 +70,6 @@ import com.cogra.network.graphql.MyProfileQuery
 import com.cogra.network.graphql.PostCommentsQuery
 import com.cogra.network.graphql.PostDetailQuery
 import com.cogra.network.graphql.PostSelfMarkQuery
-import com.cogra.network.graphql.PostsQuery
 import com.cogra.network.graphql.PrepareCommentEditMutation
 import com.cogra.network.graphql.PrepareCommentMutation
 import com.cogra.network.graphql.PreparePostEditMutation
@@ -85,6 +86,7 @@ import com.cogra.network.graphql.StagedWriteQuery
 import com.cogra.network.graphql.SubmitProposalsMutation
 import com.cogra.network.graphql.UploadKeyBackupMutation
 import com.cogra.network.graphql.UserByHandleQuery
+import com.cogra.network.graphql.UserGraphIdQuery
 import com.cogra.network.graphql.VerifyEmailMutation
 import com.cogra.network.graphql.type.ApplicationApprovalInput
 import com.cogra.network.graphql.type.ApprovalSignatureInput
@@ -267,7 +269,7 @@ class WriteRepositoryImpl @Inject constructor(private val client: ApolloClient, 
                 PrepareStanceInput(target = Optional.present(targetId), pDirected = pDirected, pInterest = pInterest),
             ),
         ).payloadOutcome({ it.prepareStance.userErrors.map { e -> e.userErrorFields } }) {
-            it.prepareStance.writes?.map { w -> w.preparedWriteFields.toDomain() }
+            it.prepareStance.writes?.map { w -> w.preparedWriteFields.toDomain(carried = w.carried) }
         }
     }
 
@@ -285,7 +287,7 @@ class WriteRepositoryImpl @Inject constructor(private val client: ApolloClient, 
                 ),
             ),
         ).payloadOutcome({ it.prepareStance.userErrors.map { e -> e.userErrorFields } }) {
-            it.prepareStance.writes?.map { w -> w.preparedWriteFields.toDomain() }
+            it.prepareStance.writes?.map { w -> w.preparedWriteFields.toDomain(carried = w.carried) }
         }
     }
 
@@ -490,36 +492,38 @@ class AccountRepositoryImpl @Inject constructor(private val client: ApolloClient
 }
 
 @Singleton
+@Suppress("TooManyFunctions") // one override per ContentRepository verb, which names its own reason
 class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient, private val guard: AuthGuard) :
     ContentRepository {
 
-    // Reads are public-graph queries; they still ride the guard so a
-    // signed-in viewer's stale token refreshes rather than erroring.
-    override suspend fun posts(
-        first: Int,
-        after: String?,
-        includePending: Boolean,
-    ): Outcome<Page<PostView>> = guard.run {
-        client.query(
-            PostsQuery(
-                first = first,
-                after = Optional.presentIfNotNull(after),
-                includePending = Optional.present(includePending),
-            ),
-        )
-            .fetch()
-            .map { data ->
-                Page(
-                    items = data.posts.edges.map { edge ->
-                        edge.node.postFields.toDomain()
-                            .copy(commentCount = edge.node.commentCount.totalCount)
-                    },
-                    endCursor = data.posts.pageInfo.endCursor,
-                    hasNextPage = data.posts.pageInfo.hasNextPage,
-                )
+    override suspend fun graphIds(ids: List<String>): Outcome<Map<String, String>> = guard.run {
+        val unique = ids.distinct()
+        val found = mutableMapOf<String, String>()
+        if (unique.isEmpty()) return@run Outcome.Success(found)
+        when (val content = client.query(ContentGraphIdsQuery(unique)).fetch()) {
+            is Outcome.Failed -> return@run Outcome.Failed(content.cause)
+            is Outcome.Refused -> return@run Outcome.Refused(content.errors)
+            is Outcome.Success -> for (node in content.value.nodes) {
+                node?.onPost?.let { found[it.id] = it.graphId }
+                node?.onComment?.let { found[it.id] = it.graphId }
             }
+        }
+        for (id in unique.filterNot { it in found }) {
+            when (val person = client.query(UserGraphIdQuery(id)).fetch()) {
+                is Outcome.Failed -> return@run Outcome.Failed(person.cause)
+                is Outcome.Refused -> return@run Outcome.Refused(person.errors)
+                is Outcome.Success -> {
+                    val graphId = person.value.user?.graphId
+                        ?: return@run Outcome.Failed(IllegalStateException("no graph identifier for node $id"))
+                    found[id] = graphId
+                }
+            }
+        }
+        Outcome.Success(found)
     }
 
+    // Reads are public-graph queries; they still ride the guard so a
+    // signed-in viewer's stale token refreshes rather than erroring.
     override suspend fun post(
         id: String,
         commentsFirst: Int,
@@ -581,6 +585,18 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
         }
     }
 
+    override suspend fun commentParent(commentId: String): Outcome<String?> = guard.run {
+        client.query(CommentParentQuery(id = commentId)).fetch().map { data ->
+            data.comment?.target?.onComment?.id
+        }
+    }
+
+    override suspend fun commentAnswers(commentId: String): Outcome<String?> = guard.run {
+        client.query(CommentParentQuery(id = commentId)).fetch().map { data ->
+            data.comment?.target?.let { it.onComment?.id ?: it.onPost?.id }
+        }
+    }
+
     override suspend fun comments(
         postId: String,
         first: Int,
@@ -621,6 +637,7 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
         attachments: List<AttachmentClaim>,
         sensitive: Boolean,
         sensitiveReason: String?,
+        pDirected: Double,
     ): Outcome<PreparedContentView> = guard.run {
         client.mutation(
             PreparePostMutation(
@@ -633,6 +650,8 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
                     // value and would read as "both".
                     content = Optional.presentIfNotNull(content),
                     license = license.toInput(),
+                    // Required: the value the seal's stance pad shows.
+                    pDirected = pDirected,
                     tags = tags.toInput(),
                     references = references.toInput(),
                     attachments = attachments.toInput(),
@@ -640,14 +659,14 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
                     // A reason only rides a mark: the server refuses one
                     // without it, and a blank counts as none.
                     sensitiveReason = Optional.presentIfNotNull(
-                        sensitiveReason?.takeIf { sensitive && it.isNotBlank() },
+                        wireReason(sensitive, sensitiveReason),
                     ),
                 ),
             ),
         ).payloadOutcome({ it.preparePost.userErrors.map { e -> e.userErrorFields } }) { data ->
             data.preparePost.node?.let { node ->
                 data.preparePost.writes?.let { writes ->
-                    PreparedContentView(node, writes.map { w -> w.preparedWriteFields.toDomain() })
+                    PreparedContentView(node, writes.map { w -> w.preparedWriteFields.toDomain(carried = w.carried) })
                 }
             }
         }
@@ -667,6 +686,7 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
         attachments: List<AttachmentClaim>,
         sensitive: Boolean,
         sensitiveReason: String?,
+        pDirected: Double,
     ): Outcome<PreparedContentView> = guard.run {
         client.mutation(
             PreparePostEditMutation(
@@ -691,8 +711,12 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
                     // switch is refused on `["sensitiveReason"]` — so the
                     // reason rides only under its own mark.
                     sensitiveReason = Optional.present(
-                        sensitiveReason?.takeIf { sensitive && it.isNotBlank() },
+                        wireReason(sensitive, sensitiveReason),
                     ),
+                    // The author's attachment pick, the record's own value —
+                    // sent explicitly, as the pad shows it, 0 when unmoved
+                    // (the intent check holds the record to it).
+                    pDirected = Optional.present(pDirected),
                 ),
             ),
         ).payloadOutcome({ it.preparePostEdit.userErrors.map { e -> e.userErrorFields } }) { data ->
@@ -711,8 +735,8 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
         tags: List<TagClaim>,
         references: List<ReferenceClaim>,
         attachments: List<AttachmentClaim>,
-        pDirected: Double?,
-        pInterest: Double?,
+        pDirected: Double,
+        pInterest: Double,
         sensitive: Boolean,
         sensitiveReason: String?,
     ): Outcome<PreparedContentView> = guard.run {
@@ -725,16 +749,15 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
                     tags = tags.toInput(),
                     references = references.toInput(),
                     attachments = attachments.toCommentInput(),
-                    // Absent leaves the contract's own +0.1; the reply
-                    // seal's pad always names both.
-                    pDirected = Optional.presentIfNotNull(pDirected),
-                    pInterest = Optional.presentIfNotNull(pInterest),
+                    // Required: the pair the reply seal's pad shows.
+                    pDirected = pDirected,
+                    pInterest = pInterest,
                     sensitive = Optional.present(sensitive),
                     // Blank counts as none, and a reason without the
                     // switch is refused on `["sensitiveReason"]` — so the
                     // reason rides only under its own mark.
                     sensitiveReason = Optional.present(
-                        sensitiveReason?.takeIf { sensitive && it.isNotBlank() },
+                        wireReason(sensitive, sensitiveReason),
                     ),
                 ),
             ),
@@ -799,16 +822,16 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
 
 /**
  * The topics a creation declares, as the API takes them. Both parameters
- * ride explicitly: the sliders start at the server's own defaults, so an
- * untouched slider says exactly what omitting it would (api-spec.md
- * `TagInput`). An empty list stays absent rather than riding as `[]`.
+ * are required (api-spec.md `TagInput`): the sliders open on the visible
+ * pre-fill, and an untouched slider sends exactly what it shows. An empty
+ * list stays absent rather than riding as `[]`.
  */
 private fun List<TagClaim>.toInput(): Optional<List<TagInput>?> = Optional.presentIfNotNull(
     takeIf { it.isNotEmpty() }?.map {
         TagInput(
             name = it.name,
-            pDirected = Optional.present(it.relevance),
-            pInterest = Optional.present(it.confidence),
+            pDirected = it.relevance,
+            pInterest = it.confidence,
         )
     },
 )
@@ -816,8 +839,8 @@ private fun List<TagClaim>.toInput(): Optional<List<TagInput>?> = Optional.prese
 /**
  * The references a creation declares, as the API takes them — the
  * same shape the tags beside them ride (api-spec.md `ReferenceInput`).
- * Both parameters go explicitly for the same reason: an untouched
- * slider sits on the server's own default and says so.
+ * Both parameters are required for the same reason: an untouched
+ * slider sends the pre-fill it shows.
  */
 @JvmName("referenceClaimsToInput")
 private fun List<ReferenceClaim>.toInput(): Optional<List<ReferenceInput>?> =
@@ -825,8 +848,8 @@ private fun List<ReferenceClaim>.toInput(): Optional<List<ReferenceInput>?> =
         takeIf { it.isNotEmpty() }?.map {
             ReferenceInput(
                 target = it.targetId,
-                relevance = Optional.present(it.relevance),
-                support = Optional.present(it.support),
+                relevance = it.relevance,
+                support = it.support,
             )
         },
     )

@@ -31,6 +31,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import {
+  fetchCommentChain,
   fetchCommentReplies,
   fetchCommentSelfMark,
   fetchPostComments,
@@ -43,6 +44,11 @@ import {
 import { firstRefusalMessage } from "@/lib/ui/error-messages";
 import { appendDeduped } from "@/lib/api/pagination";
 import type { StagedWriteView } from "@/lib/api/writes-api";
+import { fetchGraphIds, graphIdOf } from "@/lib/api/graph-ids-api";
+import { fetchKnownMedia } from "@/lib/api/media-api";
+import { editExpectation } from "@/lib/compose/intent";
+import { contentExpectation } from "@/lib/compose/payload-expectation";
+import { commentEdit, type Expectation, type ExpectedWrite } from "@/lib/signing/intent";
 import { prepareTag } from "@/lib/api/topics-api";
 import {
   fetchCitedBy,
@@ -54,18 +60,23 @@ import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { tagChanges, WITHDRAWN_RELEVANCE, type TagDraft } from "@/lib/topics/draft";
 import { referenceDrafts } from "@/lib/references/claims";
 import {
-  referenceActs,
+  editActCount,
+  editActRows,
+  undoReferenceWithdrawal,
+  undoTagWithdrawal,
+} from "@/lib/compose/edit-batch";
+import {
   referenceChanges,
   type ReferenceDraft,
 } from "@/lib/references/draft";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
-import { useConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { ActorChip } from "@/lib/ui/actor-chip";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
-import type { License } from "@/lib/license";
+import type { DataNode } from "@/lib/ui/data-node";
+import { PUBLIC_DOMAIN, type License } from "@/lib/license";
 import { PendingMarker } from "@/lib/ui/pending-marker";
 import { useMeasureEffect } from "@/lib/ui/measure-effect";
 import {
@@ -89,10 +100,11 @@ import type { ReplyTarget } from "@/lib/compose/reply-wizard";
 import {
   addTo,
   addedAssets,
+  addedLedger,
   editBlocked,
   editClaims,
-  galleryChanged,
   galleryOf,
+  keptMediaIds,
   keptPreviews,
   pictureAltText,
   pictureId,
@@ -106,6 +118,7 @@ import { usePreviewUrls } from "@/lib/compose/previews";
 import { sensitiveReasonProblem } from "@/lib/compose/wizard";
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
+import { DiscardConfirm } from "@/lib/ui2/compose/discard-confirm";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { CitedBySheet } from "@/lib/ui2/cited-by-sheet";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
@@ -113,8 +126,12 @@ import { OverflowMenu, type MenuItem } from "@/lib/ui2/overflow-menu";
 import { StageHost } from "@/lib/ui2/media/stage-host";
 import { commentTarget, ReplyWizard } from "@/app/posts/[id]/reply/reply-wizard-view";
 import { CommentEditView } from "@/app/posts/[id]/edit/comment-edit-view";
-import { MultiActionConfirm } from "@/lib/ui/signed-actions";
 import { StanceControl } from "@/lib/ui/stance-control";
+import { JoinPrompt } from "@/lib/ui/join-prompt";
+import { RowLine } from "@/lib/ui/row-line";
+import { useSavedWrites } from "@/lib/saved/provider";
+import { useHostSnack } from "@/lib/saved/save-row";
+import { commentMenuItems } from "@/lib/ui2/comment-menu";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
@@ -141,6 +158,16 @@ type ReplyThread = {
  * 26 tracks that lag).
  */
 const MAX_INDENT_DEPTH = 1;
+
+/**
+ * The comment's stacked terms sheet: `CommentLicense` registers under
+ * `postDetail`, over the thread (design/readme.md round 10), whichever
+ * surface raised the thread.
+ */
+const COMMENT_LICENSE_SHEET: DataNode = { path: "postDetail.licenseSheet" };
+
+/** How many pages a landing reads, of the thread or of one branch, before it settles. */
+const LANDING_PAGES = 10;
 
 /** A reader who has not scrolled the thread is at its top. */
 const TOP: ScrollPlace = { offset: 0, anchorId: null, anchorTop: 0 };
@@ -186,9 +213,6 @@ function replyCount(comment: ThreadComment): number {
   return comment.replies.totalCount;
 }
 
-/** Which composer on this surface a confirmation is standing in front of. */
-type PendingSubmit = "edit";
-
 /**
  * What the sheet has to be given back when a composer hands the screen over.
  *
@@ -208,6 +232,8 @@ export function CommentsSheet({
   store = identityStore,
   onCount,
   refreshToken = 0,
+  landOn = null,
+  aimReply = false,
 }: {
   open: boolean;
   /**
@@ -235,6 +261,16 @@ export function CommentsSheet({
    * before the pull.
    */
   refreshToken?: number;
+  /**
+   * A comment to land on (Saved.md "tap a comment's row"): once the thread is
+   * read, it pages and unfolds until that comment stands, then scrolls to it.
+   */
+  landOn?: string | null;
+  /**
+   * The landing came from a comment card's comment glyph (FeedKinds.md): once
+   * the comment stands, the reply composer opens aimed at it.
+   */
+  aimReply?: boolean;
 }) {
   const client = useApolloClient();
   const router = useRouter();
@@ -257,6 +293,10 @@ export function CommentsSheet({
   // the wizard's own machine, and nothing of a discarded comment survives here.
   const [replying, setReplying] = useState<ReplyTarget | null>(null);
   const [commentSigned, setCommentSigned] = useState(false);
+  const { snack: menuSnack, notify, dismiss: dismissMenuSnack } = useHostSnack();
+  const writes = useSavedWrites();
+  // A guest's Save is asked to join first (GuestGate.md:5).
+  const [joinOpen, setJoinOpen] = useState(false);
   // THE LICENSE IS NEVER A STATE OF THE CARD (`ReaderPostMenu.jsx:27-29`): one
   // sheet for the thread, raised by whichever comment's menu row asked for it.
   // The license it shows outlives the `open` flag so the block does not blank
@@ -304,9 +344,19 @@ export function CommentsSheet({
     loadedSensitiveReason: string;
     sensitive: boolean;
     sensitiveReason: string;
+    /** The comment's license as signed — shown on the locked row. */
+    license: License;
+    /**
+     * Whether the edit record is in the batch: set by the first change to a
+     * field it carries and never cleared by typing it back — the guard is the
+     * acts batch, never a byte comparison (EditComposeUnchanged.md:3).
+     */
+    recordStaged: boolean;
   } | null>(null);
   const [editDescribing, setEditDescribing] = useState<string | null>(null);
   const [editActsOpen, setEditActsOpen] = useState(false);
+  // `Discard the changes?` stands over the edit (DiscardConfirm.md).
+  const [editConfirmingDiscard, setEditConfirmingDiscard] = useState(false);
   // The editor has two help doors — the header's "Editing" and the mark
   // sheet's "?" — so the state is which topic is open, not whether one is.
   const [editHelp, setEditHelp] = useState<HelpTopic | null>(null);
@@ -318,11 +368,6 @@ export function CommentsSheet({
   const [editReferenceErrors, setEditReferenceErrors] = useState<
     Readonly<Record<number, string>>
   >({});
-  // F4: a submit staging more than one act asks first. The two composers that
-  // used to raise it now seal instead — ReplySeal names every act with its
-  // price — so the edit is the one surface left that asks.
-  const [confirmMultiAction, setConfirmMultiAction] = useConfirmMultiAction();
-  const [confirming, setConfirming] = useState<PendingSubmit | null>(null);
 
   // ---- where the reader was -----------------------------------------------
 
@@ -497,6 +542,87 @@ export function CommentsSheet({
     if (branch === null || replyThreads[branch]?.loading === false) setRestoring(null);
   }, [restoring, open, loading, comments, replyThreads, measurePlace]);
 
+  // ---- landing on a comment -----------------------------------------------
+
+  // THE THREAD OPENS LANDED ON THE COMMENT (jakob 2026-10-01; Saved.md). A
+  // reply sits behind its parent's collapsed count, and its top-level
+  // ancestor may be pages down the thread, so the landing walks the chain up,
+  // pages the thread until the top of it arrives, unfolds each branch on the
+  // way down, and only then scrolls. Each step is bounded: a chain it cannot
+  // finish lands on the deepest comment it could open.
+  const landedOn = useRef<string | null>(null);
+  const [landingAt, setLandingAt] = useState<string | null>(null);
+  // Where the landing came to rest — what an aimed reply opens on.
+  const landedAt = useRef<string | null>(null);
+  useEffect(() => {
+    if (!open || landOn === null || landedOn.current === landOn || loading) return;
+    landedOn.current = landOn;
+    void (async () => {
+      const chain = await fetchCommentChain(client, landOn);
+      if (chain.kind !== "success") return;
+      const ids = chain.value;
+      const top = ids[0]!;
+      let items: readonly CommentView[] = [];
+      let cursor: string | null = null;
+      let more = true;
+      for (let page = 0; page < LANDING_PAGES && more && !items.some((c) => c.id === top); page += 1) {
+        const next = await fetchPostComments(client, post.id, cursor);
+        if (next.kind !== "success" || next.value === null) break;
+        items = appendDeduped(items, next.value.items);
+        cursor = next.value.endCursor;
+        more = next.value.hasNextPage;
+      }
+      if (items.length > 0) {
+        setComments(items);
+        setEndCursor(cursor);
+        setHasMore(more);
+      }
+      let deepest = items.some((c) => c.id === top) ? top : null;
+      for (let at = 0; deepest !== null && at < ids.length - 1; at += 1) {
+        const parent = ids[at]!;
+        const child = ids[at + 1]!;
+        let replies: readonly ThreadComment[] = [];
+        let replyCursor: string | null = null;
+        let replyMore = true;
+        for (let page = 0; page < LANDING_PAGES && replyMore && !replies.some((r) => r.id === child); page += 1) {
+          const next = await fetchCommentReplies(client, parent, replyCursor);
+          if (next.kind !== "success") {
+            replyMore = false;
+            break;
+          }
+          replies = appendDeduped(replies, next.value.items);
+          replyCursor = next.value.endCursor;
+          replyMore = next.value.hasNextPage;
+        }
+        const thread: ReplyThread = {
+          items: replies,
+          endCursor: replyCursor,
+          hasMore: replyMore,
+          loading: false,
+          failed: false,
+        };
+        setReplyThreads((current) => ({ ...current, [parent]: thread }));
+        deepest = replies.some((r) => r.id === child) ? child : null;
+        if (deepest === null) setLandingAt(parent);
+      }
+      if (deepest !== null) setLandingAt(deepest);
+    })();
+  }, [open, landOn, loading, client, post.id]);
+
+  // The comment stands once its branch has rendered: scroll it into the
+  // sheet's view and hand it focus, so the reader lands where they asked to.
+  useMeasureEffect(() => {
+    if (landingAt === null) return;
+    const scroller = bodyRef.current;
+    const target = scroller?.querySelector<HTMLElement>(`[${ANCHOR_ATTRIBUTE}="${landingAt}"]`);
+    if (!target) return;
+    target.scrollIntoView?.({ block: "center" });
+    target.setAttribute("tabindex", "-1");
+    target.focus({ preventScroll: true });
+    landedAt.current = landingAt;
+    setLandingAt(null);
+  }, [landingAt, comments, replyThreads]);
+
   // ---- the edit's own pictures --------------------------------------------
 
   // A kept picture is already on the server, so only the ADDED ones are handed
@@ -607,41 +733,36 @@ export function CommentsSheet({
    * mints with tags comes back as the record plus one act per tag, and
    * all of them are this device's to sign.
    */
-  const signAll = async (writes: readonly StagedWriteView[]): Promise<boolean> => {
-    const results = await signer.sign(writes);
+  const signAll = async (
+    writes: readonly StagedWriteView[],
+    expected: Expectation,
+  ): Promise<boolean> => {
+    const results = await signer.sign(writes, expected);
     return results.every((result) => result.kind === "done");
   };
 
-  // What pressing each submit right now would sign (F4). A comment or a
-  // reply mints its record and batches one act per drafted topic; an
-  // edit signs the edit record only if the text moved, plus one act per
-  // tag change.
+  // What the edit signs (CommentEdit / CommentEditActs): THE GUARD IS THE ACTS
+  // BATCH, NEVER A BYTE COMPARISON (EditComposeUnchanged.md — the family's
+  // rule). The edit record is staged by the first change to a field it
+  // carries — the words, the gallery, the mark — and stays staged when the
+  // field is typed back; each tag and citation change is its own act, a
+  // citation's withdrawal at its counter-records (`withdrawalCost`).
   const editChanges = editing === null ? [] : tagChanges(editing.loadedTags, editing.tags);
   const editReferenceChanges =
     editing === null ? [] : referenceChanges(editing.loadedReferences, editing.references);
-  // The edit record carries the body AND the gallery, so either moving is what
-  // stages it — a comment whose only change was a removed picture still has to
-  // write one, or the removal never happens.
-  const editGalleryMoved =
-    editing !== null && galleryChanged(editing.loadedGallery, editing.gallery);
-  // The mark is a term of the same record, so moving it stages the edit the
-  // way the body and the gallery do — a comment whose only change is the
-  // author's own mark still has to write one, or the mark never moves. The
-  // reason counts only where it is shown: on an unmarked comment it is not
-  // sent at all.
-  const editMarkMoved =
-    editing !== null &&
-    (editing.sensitive !== editing.loadedSensitive ||
-      (editing.sensitive && editing.sensitiveReason !== editing.loadedSensitiveReason));
-  const editTextChanged =
-    editing !== null &&
-    (editing.draft !== editing.loadedDraft || editGalleryMoved || editMarkMoved);
-  // A withdrawal is a whole counter-record batch, and the claim quotes
-  // it: `withdrawalCost` comes off the raw bundle sums the clipped pair
-  // has already lost, so this count is exact and every edit asks before
-  // it prepares.
-  const editActions =
-    (editTextChanged ? 1 : 0) + editChanges.length + referenceActs(editReferenceChanges);
+  const editTextChanged = editing !== null && editing.recordStaged;
+  const editRows =
+    editing === null
+      ? []
+      : editActRows({
+          recordStaged: editing.recordStaged,
+          recordName: editing.draft.trim().slice(0, 60) || "Your comment",
+          loadedTags: editing.loadedTags,
+          tags: editing.tags,
+          loadedReferences: editing.loadedReferences,
+          references: editing.references,
+        });
+  const editActions = editActCount(editRows);
   // The reason answers to its cap only while the mark is on: an unmarked
   // edit's reason is never sent (`sensitiveInput`), so a leftover over-length
   // reason from a mark switched back off must not hold up an edit that no
@@ -670,18 +791,59 @@ export function CommentsSheet({
     const perReference: Record<number, string> = {};
     let general: string | null = null;
 
+    // The L1 ids of the comment, the node it answers, and every cited node
+    // the edit touches — read before anything is staged, so the batch is
+    // checked against them before its first pre-signature (intent.ts).
+    const parentUuid = editing.parentId ?? post.id;
+    const graphIds = await guard.run(() =>
+      fetchGraphIds(client, [
+        editing.id,
+        parentUuid,
+        ...editReferenceChanges.map((change) => change.reference.targetId),
+      ]),
+    );
+    if (graphIds.kind !== "success") {
+      setEditSubmitting(false);
+      setEditFailed(true);
+      return;
+    }
+    const commentGraphId = graphIdOf(graphIds.value, editing.id);
+    const sent = {
+      id: editing.id,
+      content: editing.draft,
+      // Re-stated, never omitted: the edit carries the whole state — the
+      // gallery for the same reason as the mark.
+      attachments: editClaims(editing.gallery) ?? undefined,
+      sensitive: editing.sensitive,
+      sensitiveReason: editing.sensitiveReason,
+    };
+    // The record's payload is complete state: the pictures added here are
+    // held to the digests this device computed, the kept ones to the
+    // digests of the asset each names, read back by id (payload-expectation.ts).
+    let record: ExpectedWrite | null = null;
     if (editTextChanged) {
-      const prepared = await guard.run(() =>
-        prepareCommentEdit(client, {
-          id: editing.id,
-          content: editing.draft,
-          // Re-stated, never omitted: the edit carries the whole state — the
-          // gallery for the same reason as the mark.
-          attachments: editClaims(editing.gallery) ?? undefined,
-          sensitive: editing.sensitive,
-          sensitiveReason: editing.sensitiveReason,
-        }),
+      const kept = await guard.run(() => fetchKnownMedia(client, keptMediaIds(editing.gallery)));
+      if (kept.kind !== "success") {
+        setEditSubmitting(false);
+        setEditFailed(true);
+        return;
+      }
+      const ledger = new Map([...kept.value, ...addedLedger(editing.gallery)]);
+      record = commentEdit(
+        graphIdOf(graphIds.value, parentUuid),
+        commentGraphId,
+        contentExpectation(editing.id, sent, "comment", ledger),
       );
+    }
+    const expected = editExpectation(
+      commentGraphId,
+      record,
+      { tags: editChanges, references: editReferenceChanges },
+      graphIds.value,
+    );
+
+    if (editTextChanged) {
+      const prepared = await guard.run(() => prepareCommentEdit(client, sent));
       if (prepared.kind === "failed") {
         setEditSubmitting(false);
         setEditFailed(true);
@@ -698,10 +860,11 @@ export function CommentsSheet({
       const prepared = await guard.run(() =>
         prepareTag(client, {
           target: editing.id,
-          name: change.kind === "tag" ? change.tag.name : change.name,
+          name: change.tag.name,
           // Withdrawing is a Tag act at relevance 0 (hashtag.md §4).
           relevance: change.kind === "tag" ? change.tag.relevance : WITHDRAWN_RELEVANCE,
-          confidence: change.kind === "tag" ? change.tag.confidence : undefined,
+          // An un-tag signs the confidence its chip showed; only relevance moves.
+          confidence: change.tag.confidence,
         }),
       );
       if (prepared.kind === "failed") {
@@ -773,7 +936,7 @@ export function CommentsSheet({
       return;
     }
 
-    const done = await signAll(writes);
+    const done = await signAll(writes, expected);
     setEditSubmitting(false);
     if (done) {
       // The edit settles IN THE THREAD (`CommentEdit` 12 → the thread), so
@@ -790,13 +953,21 @@ export function CommentsSheet({
     }
   };
 
+  // THE EDIT KEEPS NO DRAFT, so the way out reads the acts batch — the same
+  // count the sign guard reads: an empty batch leaves at once, and a batch
+  // holding an act is asked before anything is discarded (DiscardConfirm.md).
+  const leaveEdit = () => {
+    if (editSubmitting) return;
+    if (editActions === 0) backToThread({ place: place.current, unfolding: null });
+    else setEditConfirmingDiscard(true);
+  };
+
   const onSubmitEdit = async () => {
     if (editing === null || editSubmitting || editing.draft.trim() === "") return;
     if (editActions === 0) return;
-    if (editActions > 1 && confirmMultiAction) {
-      setConfirming("edit");
-      return;
-    }
+    // Sign is the confirmation: the count is said on the foot and in the acts
+    // sheet, and no dialog asks again (CommentEditActs; `_shared.jsx`
+    // `CommentEditBody`).
     await runEdit();
   };
 
@@ -819,10 +990,27 @@ export function CommentsSheet({
     setReplying(target);
   };
 
+  // A LANDING THAT CAME FROM A COMMENT CARD'S GLYPH (FeedKinds.md, Saved.md)
+  // opens the reply composer aimed at the comment it came to rest on — once.
+  const aimed = useRef<string | null>(null);
+  useMeasureEffect(() => {
+    const at = landedAt.current;
+    if (!aimReply || at === null || at !== landOn || aimed.current === at) return;
+    const landed =
+      comments.find((comment) => comment.id === at) ??
+      Object.values(replyThreads)
+        .flatMap((thread) => thread.items)
+        .find((reply) => reply.id === at);
+    if (landed === undefined) return;
+    aimed.current = at;
+    openComposer(commentTarget(landed));
+  }, [landingAt, comments, replyThreads]);
+
   /** ...AND TAKES ITS PLACE BACK, whole. Both composers' exits land here. */
   const backToThread = (returned: Return) => {
     setReplying(null);
     setEditing(null);
+    setEditConfirmingDiscard(false);
     setRestoring(returned);
     onOpenChange(true);
   };
@@ -844,50 +1032,22 @@ export function CommentsSheet({
   };
 
   /**
-   * THE COMMENT'S ROWS (`_shared.jsx:392` — `[...CARD_MENU, OPINIONS_ROW,
-   * LICENSE_ROW]`). Save · Cite in a new post · Opinions on this · License
-   * terms, and no Hide: hiding names an actor, and its route is the
-   * commenter's profile (jakob 2026-09-12).
-   *
-   * `Opinions on this` STANDS WHATEVER THE COUNT IS, which is the difference
-   * between a menu row and a count line: a row that came and went with a number
-   * would make the menu a different menu every time.
+   * THE COMMENT'S ROWS — the one builder every comment's ⋮ shares
+   * (`comment-menu.ts`), its aftermath on this thread's own snackbar. The
+   * license terms rise from inside the thread, a sheet over a sheet
+   * (`CommentLicense.jsx`, design/readme.md:2364).
    */
-  const commentMenuItems = (comment: ThreadComment): MenuItem[] => {
-    const rows: MenuItem[] = [
-      { label: "Save", onSelect: () => {}, testId: `comment-menu-save-${comment.id}` },
-      {
-        label: "Cite in a new post",
-        onSelect: () => router.push(`/compose?reference=${comment.id}`),
-        testId: `comment-menu-cite-${comment.id}`,
-      },
-      // INBOUND BEFORE OPINIONS (`_shared.jsx:397-413`): it sits between the
-      // acts and the license because it is a fact about the ARTIFACT, where
-      // the row under it is a fact about people. Like that row it stands
-      // whatever the count is — a comment has no count line of its own, so
-      // this is the only door to the list, and the only way to meet it empty.
-      {
-        label: "Cited by",
-        onSelect: () => openCitedBy(comment.id),
-        testId: `comment-menu-cited-by-${comment.id}`,
-      },
-      {
-        label: "Opinions on this",
-        onSelect: () => {},
-        testId: `comment-menu-opinions-${comment.id}`,
-      },
-    ];
-    if (comment.license !== null && comment.license !== undefined) {
-      rows.push({
-        label: "License terms",
-        // Raised from inside the comments thread — a sheet over a sheet
-        // (`CommentLicense.jsx`, design/readme.md:2364).
-        onSelect: () => openLicense(comment.license),
-        testId: `comment-menu-license-${comment.id}`,
-      });
-    }
-    return rows;
-  };
+  const menuRowsOf = (comment: ThreadComment): MenuItem[] =>
+    commentMenuItems({
+      comment,
+      writes,
+      notify,
+      onGuest: phase === "signedOut" ? () => setJoinOpen(true) : null,
+      navigate: (route) => router.push(route),
+      openCitedBy,
+      openLicense,
+      testIdPrefix: "comment-menu",
+    });
 
   const openEditor = (comment: ThreadComment, parentId: string | null) => {
     // The editor opens on what the comment actually carries — text and
@@ -921,6 +1081,8 @@ export function CommentsSheet({
       loadedSensitiveReason: "",
       sensitive: false,
       sensitiveReason: "",
+      license: comment.license ?? PUBLIC_DOMAIN,
+      recordStaged: false,
     });
     void fetchCommentSelfMark(client, comment.id).then((outcome) => {
       if (outcome.kind !== "success") return;
@@ -1010,7 +1172,7 @@ export function CommentsSheet({
                 thread already lives in a sheet, so this menu is a sheet on a
                 sheet (design/readme.md:2364). */}
             <OverflowMenu
-              items={commentMenuItems(comment)}
+              items={menuRowsOf(comment)}
               ariaLabel="More on this comment"
               testId={`comment-menu-${comment.id}`}
               stacked
@@ -1086,6 +1248,17 @@ export function CommentsSheet({
             target={{ id: comment.id, kind: "comment", label: "this comment" }}
             testIdPrefix={`comment-stance-${comment.id}`}
           />
+          {/* THE ROW LINE under the face (RowSigning.md): a save or unsave of
+              this comment that did not go through. */}
+          {writes.failure(comment.id) !== null && (
+            <RowLine
+              state={{
+                kind: "didntGoThrough",
+                onRetry: () => writes.failure(comment.id)?.retry(),
+              }}
+              testId={`comment-${comment.id}-row-line`}
+            />
+          )}
           <div className="flex gap-2">
             {phase === "signedIn" && (
               <Button
@@ -1193,6 +1366,18 @@ export function CommentsSheet({
               testId="comment-signed"
               message={commentSigned ? "Signed — it's in the thread now, still settling." : null}
               onDismiss={dismissCommentSigned}
+            />
+            {/* THE COMMENT MENUS' AFTERMATH (CommentMenu.md, design digest item
+                54): `Saved.`, and `Removed from Saved.` with `Undo`. It reads
+                inside the thread, where the menu was opened; the page's own
+                `postDetail.snackbar` is beneath the sheet's scrim, so this one
+                carries no registered path until a stacked state is drawn. */}
+            <Snackbar
+              testId="comment-menu-snackbar"
+              message={menuSnack?.message ?? null}
+              action={menuSnack?.action}
+              token={menuSnack?.token}
+              onDismiss={dismissMenuSnack}
             />
             {/* ReplyEntry's entry row, pinned at the foot of the sheet: the
                 door that pins the POST as what the comment answers. The board
@@ -1304,7 +1489,8 @@ export function CommentsSheet({
           open={licenseOpen}
           onClose={() => setLicenseOpen(false)}
           license={licenseShown}
-          testId="license-sheet"
+          testId="postDetail.licenseSheet"
+          node={COMMENT_LICENSE_SHEET}
           stacked
         />
       )}
@@ -1346,22 +1532,27 @@ export function CommentsSheet({
             words={editing.draft}
             gallery={editing.gallery}
             previews={{ ...keptPreviews(editing.gallery), ...editPickedPreviews }}
+            license={editing.license}
             tags={editing.tags}
             references={editing.references}
+            loadedTags={editing.loadedTags}
+            loadedReferences={editing.loadedReferences}
             tagErrors={editTagErrors}
             referenceErrors={editReferenceErrors}
             sensitive={editing.sensitive}
             sensitiveReason={editing.sensitiveReason}
             sensitiveOpen={editSensitiveOpen}
-            acts={editActions}
+            acts={editRows}
             actsOpen={editActsOpen}
             busy={editSubmitting}
             blocked={editGateReason}
             refusal={editRefusedMessage}
             failed={editFailed}
-            onWords={(draft) => setEditing({ ...editing, draft })}
-            onSensitive={(sensitive) => setEditing({ ...editing, sensitive })}
-            onSensitiveReason={(sensitiveReason) => setEditing({ ...editing, sensitiveReason })}
+            onWords={(draft) => setEditing({ ...editing, draft, recordStaged: true })}
+            onSensitive={(sensitive) => setEditing({ ...editing, sensitive, recordStaged: true })}
+            onSensitiveReason={(sensitiveReason) =>
+              setEditing({ ...editing, sensitiveReason, recordStaged: true })
+            }
             onSensitiveOpen={setEditSensitiveOpen}
             onSensitiveHelp={() => setEditHelp(HELP_TOPICS.markingAsSensitive)}
             onPick={(files) =>
@@ -1371,18 +1562,48 @@ export function CommentsSheet({
                   editing.gallery,
                   files.map((file) => ({ id: crypto.randomUUID(), file })),
                 ),
+                recordStaged: true,
               })
             }
             onRemovePicture={(id) =>
-              setEditing({ ...editing, gallery: removeFromGallery(editing.gallery, id) })
+              setEditing({
+                ...editing,
+                gallery: removeFromGallery(editing.gallery, id),
+                recordStaged: true,
+              })
             }
             onDescribe={setEditDescribing}
             onTags={(tags) => setEditing({ ...editing, tags })}
             onReferences={(references) => setEditing({ ...editing, references })}
+            onUndoTag={(name) =>
+              setEditing({
+                ...editing,
+                tags: undoTagWithdrawal(editing.loadedTags, editing.tags, name),
+              })
+            }
+            onUndoReference={(targetId) =>
+              setEditing({
+                ...editing,
+                references: undoReferenceWithdrawal(
+                  editing.loadedReferences,
+                  editing.references,
+                  targetId,
+                ),
+              })
+            }
             onActs={setEditActsOpen}
             onHelp={() => setEditHelp(HELP_TOPICS.editing)}
             onSign={() => void onSubmitEdit()}
-            onLeave={() => backToThread({ place: place.current, unfolding: null })}
+            onLeave={leaveEdit}
+          />
+          {/* Discard keeps nothing: the edit's state lives in this sheet alone,
+              and leaving drops it — the comment stands as it was. */}
+          <DiscardConfirm
+            open={editConfirmingDiscard}
+            subject="edit"
+            onKeepWriting={() => setEditConfirmingDiscard(false)}
+            onDiscard={() => backToThread({ place: place.current, unfolding: null })}
+            testId="comment-edit-discard-confirm"
           />
           {/* One picture at a time, keyed by id: comments have no in-sheet
               stepping, on the editor as on the composer. */}
@@ -1408,6 +1629,7 @@ export function CommentsSheet({
                 setEditing({
                   ...editing,
                   gallery: withAltText(editing.gallery, editDescribing, altText),
+                  recordStaged: true,
                 });
               }
             }}
@@ -1421,19 +1643,7 @@ export function CommentsSheet({
           />
         </>
       )}
-      {confirming !== null && (
-        <MultiActionConfirm
-          count={editActions}
-          busy={editSubmitting}
-          testIdPrefix="comment-edit"
-          onCancel={() => setConfirming(null)}
-          onConfirm={(stopAsking) => {
-            if (stopAsking) setConfirmMultiAction(false);
-            setConfirming(null);
-            void runEdit();
-          }}
-        />
-      )}
+      {joinOpen && <JoinPrompt open onClose={() => setJoinOpen(false)} />}
     </>
   );
 }

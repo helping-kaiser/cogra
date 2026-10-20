@@ -48,7 +48,7 @@ export const VALS = `doorShown: this.props.upload === "uploading" ? "none" : "fl
 export function Screen() {
   return (
     <>
-      <WizardHeader title="Edit post" leaveLabel="Leave — your draft is kept" help="Editing" />
+      <WizardHeader title="Edit post" leaveLabel="Leave — the edit is discarded" help="Editing" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         {/* The fields scroll under the pinned foot, the post edit's reading:
             with a chosen cover and the gate drawn, the form runs taller than
@@ -106,6 +106,7 @@ export function Screen() {
                 </span>
               }
             />
+            <EditBackingRow />
             <FactRow label="Sensitive" value="Not marked" action="Mark" last />
           </div>
 

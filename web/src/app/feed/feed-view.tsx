@@ -21,7 +21,7 @@
 // opening a post and coming back is not a fresh feed; `scroll-pin.ts` says why
 // the place is an anchor rather than a number, and how it is held afterwards.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
@@ -31,6 +31,7 @@ import { fetchFeedRanking, fetchFeedWindow } from "@/lib/api/feed-api";
 import { failed, success } from "@/lib/api/outcome";
 import { appendDeduped } from "@/lib/api/pagination";
 import { onFeedDone } from "@/lib/feed/feed-done";
+import { onFeedReselect } from "@/lib/feed/feed-reselect";
 import { RankedFeed, type FeedIo, type FeedWindow } from "@/lib/feed/ranked-feed";
 import { seenRecord } from "@/lib/history/seen-record";
 import { SEEN_ATTRIBUTE, useSeenTracker } from "@/lib/history/seen-tracker";
@@ -49,22 +50,74 @@ import {
 } from "@/lib/ui/borrowed-view-band";
 import { Button } from "@/lib/ui/button";
 import { CograBand } from "@/lib/ui/cogra-band";
+import { useBellLit, useFreshRootBell } from "@/lib/notifications/bell";
+import { notificationsHref } from "@/lib/notifications/origin";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
 import { PostCard } from "@/lib/ui/post-card";
 import { tailIndexOf, useApproachingTail } from "@/lib/ui/infinite-list";
 import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
-import { useScrollHost } from "@/lib/ui/scroll-host";
+import { scrollHostToTopAnimated, scrollOffsetOf, useScrollHost } from "@/lib/ui/scroll-host";
 import { ANCHOR_ATTRIBUTE, usePinnedPlace } from "@/lib/ui/scroll-pin";
 import { LINK_COPIED } from "@/lib/ui/share";
+import { useHiddenSet } from "@/lib/hidden/provider";
+import { useNewerVersionAnnouncement } from "@/lib/release/newer-version-announcer";
+import { useHostSnack } from "@/lib/saved/save-row";
 import { Snackbar } from "@/lib/ui/snackbar";
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import * as clipMemory from "@/lib/ui2/media/clip-memory";
+import type { PostMenuRow } from "@/lib/ui2/post-menu";
+import { PostMenuHost } from "@/lib/ui2/post-menu-host";
 import { StageHost } from "@/lib/ui2/media/stage-host";
 import { CommentsSheet } from "@/app/comments/comments-sheet";
 import { ComposeNotice, composeOutcomeOf } from "./compose-notice";
 import { recallFeed, rememberFeed, rememberFeedPlace } from "./feed-memory";
 import { VouchCard } from "./vouch-card";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
+
+/**
+ * The rows FeedPostMenu registers (`feed.menuSheet.*`) — the reader menu's.
+ * The author's own rows on the feed have no drawn board, so they keep their
+ * own ids rather than wear a path the registry does not hold.
+ */
+const FEED_MENU_ROWS: ReadonlySet<PostMenuRow> = new Set([
+  "save",
+  "cite",
+  "hide",
+  "license",
+  "report",
+]);
+
+function feedMenuRow(row: PostMenuRow): DataNode | undefined {
+  return FEED_MENU_ROWS.has(row) ? { path: `feed.menuSheet.${row}` } : undefined;
+}
+
+/** No row under the separator: the list before its first derive. */
+const NO_SEEN_TAIL: ReadonlySet<string> = new Set();
+
+const SEEN_SEPARATOR: DataNode = { path: "feed.seenSeparator" };
+
+/**
+ * `feed.seenSeparator` (FeedSeenTail.md, the `FeedSeenTail` board): a hairline
+ * with "Already seen" centred on it, quiet, and no control — the board's 12px
+ * gap and 8px/24px padding, the hairline `--border-hairline`
+ * (`outline-variant`), the words label-small in `--text-secondary`
+ * (`on-surface-variant`).
+ */
+function SeenSeparator() {
+  return (
+    <li className="flex items-center gap-3 px-6 py-2" {...testAttributes(SEEN_SEPARATOR)}>
+      <span aria-hidden="true" className="h-px flex-1 bg-outline-variant" />
+      <span
+        className="flex-none text-label-small text-on-surface-variant"
+        {...testAttributes(part(SEEN_SEPARATOR, "label"))}
+      >
+        Already seen
+      </span>
+      <span aria-hidden="true" className="h-px flex-1 bg-outline-variant" />
+    </li>
+  );
+}
 
 /** Every clip a list of posts draws, by the media id the clip memory keys on. */
 function clipIdsOf(posts: readonly PostView[]): string[] {
@@ -209,6 +262,19 @@ export function FeedView({
       alive.current = false;
     };
   }, []);
+  // THE READER'S HIDDEN SET (hidden-actors packet §4.3): a post-rank filter on
+  // this device, never a ranking input. A row whose author is hidden leaves
+  // the list — unless a hide or its Undo made from that very row did not go
+  // through, when the row stands carrying its line (design digest item 55).
+  const hidden = useHiddenSet();
+  const hides = useCallback(
+    (post: PostView) =>
+      reader !== null &&
+      post.author != null &&
+      hidden.has(post.author.id) &&
+      hidden.failure(post.id) === null,
+    [hidden, reader],
+  );
   // The reads the held ranking is handed per call (`ranked-feed.ts`).
   const io = useMemo<FeedIo>(() => {
     const gone = () => Promise.resolve(failed(new Error("the feed left the screen")));
@@ -230,19 +296,34 @@ export function FeedView({
         return seenRecord;
       },
       wanted: () => alive.current,
+      hides: (item) => hides(item as PostView),
     };
-  }, [client, guard, reader]);
+  }, [client, guard, reader, hides]);
   const [rememberedPlace] = useState(() => remembered?.place ?? null);
   const [posts, setPosts] = useState<readonly PostView[]>(remembered?.posts ?? []);
   const [endCursor, setEndCursor] = useState<string | null>(remembered?.endCursor ?? null);
   const [hasNextPage, setHasNextPage] = useState(remembered?.hasNextPage ?? false);
+  // THE SEEN TAIL (FeedSeenTail.md): which of the list's rows stand under the
+  // separator — fixed when the list was derived, like its order, so a row seen
+  // on screen moves only at the next load, refresh or re-derive.
+  const [seenTail, setSeenTail] = useState<ReadonlySet<string>>(
+    () => remembered?.feed.seenTail ?? NO_SEEN_TAIL,
+  );
   const [loading, setLoading] = useState(remembered === null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [transportFault, setTransportFault] = useState<TransportFault | null>(null);
-  const [linkCopied, setLinkCopied] = useState(false);
-  // Stable, so the snackbar's own timer is not restarted by every render of
-  // the feed underneath it.
-  const dismissLinkCopied = useCallback(() => setLinkCopied(false), []);
+  // THE FEED'S ONE SNACKBAR (`feed.snackbar`): a copied link, and the
+  // aftermath of what the card menus did.
+  const { snack, notify, dismiss: dismissSnack } = useHostSnack();
+  // A NEWER VERSION, SAID ONCE (FeedNewerVersion.md): on the feed's arrival
+  // in a cold open, the same one snackbar — queued behind whatever it is
+  // already saying, as Material shows one at a time.
+  const newer = useNewerVersionAnnouncement(!loading, snack === null);
+  // THE ONE MENU SHEET THE CARDS SHARE (ruling 84, FeedPostMenu.md:3): a
+  // card's ⋮ raises it over the feed, which stands unchanged beneath. The post
+  // outlives the flag so the sheet does not blank out through its exit.
+  const [menuPost, setMenuPost] = useState<PostView | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   // The band's chats affordance, signed out: the guest gate the canvas
   // draws (`graph.json` "FeedBare" → `GuestGate`) — ask, never bounce.
   const [chatsPrompting, setChatsPrompting] = useState(false);
@@ -276,6 +357,11 @@ export function FeedView({
   // Which refreshed list is on screen: the stage and its clips are built anew
   // for each one (see `restill` below).
   const [listEra, setListEra] = useState(0);
+  // THE BELL LIGHTS ON A FRESH LOAD OF THIS ROOT (FeedUnread.md:3, :5): an
+  // arrival with nothing remembered, or a pull. A remembered feed coming back
+  // by back or the bar is a return, and never lights it (:9).
+  useFreshRootBell(reader, remembered === null || listEra > 0, listEra);
+  const bellIsLit = useBellLit(reader);
 
   // WHICH ASK IS CURRENT. A ranking, a pull and a Done can overlap; only the
   // newest one's answer reaches the screen, and nothing lands after unmount.
@@ -284,6 +370,7 @@ export function FeedView({
   /** Puts the derived list's first window on screen. */
   const showFirst = useCallback((first: FeedWindow) => {
     setPosts(first.items);
+    setSeenTail(first.seenTail);
     setEndCursor(first.hasMore ? String(first.next) : null);
     setHasNextPage(first.hasMore);
   }, []);
@@ -293,8 +380,22 @@ export function FeedView({
       const mine = ++ask.current;
       const feed = feedFor(reader);
       void (async () => {
-        const ranked = await feed.refresh(io);
-        const first = ranked.kind === "success" ? await feed.window(0, io) : ranked;
+        // THE FEED NEVER RENDERS A PAGE BEFORE THE HIDDEN SET HAS BEEN READ
+        // (§5.1): both reads go together, and a set that could not be read at
+        // all is the feed's own fault — never an unfiltered page. Every open
+        // and every pull reads it again, so a hide made on another device
+        // reaches this one.
+        const [ranked, setRead] = await Promise.all([
+          feed.refresh(io),
+          reader === null ? Promise.resolve(true) : hidden.refetch(),
+        ]);
+        const hiddenKnown = setRead || hidden.status === "read";
+        const first =
+          ranked.kind !== "success"
+            ? ranked
+            : hiddenKnown
+              ? await feed.window(0, io)
+              : failed(new Error("the hidden set could not be read"));
         if (!alive.current || mine !== ask.current) return;
         setLoading(false);
         if (first.kind === "success") {
@@ -318,7 +419,7 @@ export function FeedView({
         }
       })();
     },
-    [feedFor, io, reader, showFirst],
+    [feedFor, hidden, io, reader, showFirst],
   );
 
   // THE FIRST OPEN RANKS — once per reader per page load. A feed remembered
@@ -336,6 +437,12 @@ export function FeedView({
     openedFor.current = reader;
     refresh();
   }, [phase, reader, refresh]);
+  // A RETURN TO THE FEED reads the hidden set again even where the list is
+  // the remembered one (§5.1, "at every feed open"); the list on screen is
+  // filtered by the set already held meanwhile.
+  useEffect(() => {
+    if (remembered !== null && reader !== null) void hidden.refetch();
+  }, [hidden, reader, remembered]);
 
   // A SHEET DONE (CD-1): the held ranking decides whether it ranks again or
   // re-derives locally, and the derived list's first window replaces the one
@@ -391,6 +498,22 @@ export function FeedView({
   }, [releasePin, refresh]);
   usePullToRefresh({ host, onPull, enabled: !commentsOpen });
 
+  // THE WAY BACK UP (FeedScrolled.md:11-13): the list goes to the top,
+  // animated, and NEVER refreshes — the pill's tap and the bar's re-tap from a
+  // scrolled root alike. Going up is a move, so the place stops being held.
+  const goToTop = useCallback(() => {
+    releasePin();
+    scrollHostToTopAnimated(host);
+  }, [host, releasePin]);
+
+  // THE BAR'S RE-TAP OVER THE ROOT (Feed.md:81-91): scrolled, it is the way up;
+  // already at the top, it is the feed's other refresh route, the one a pull
+  // takes there.
+  useEffect(
+    () => onFeedReselect(() => (scrollOffsetOf(host) > 0 ? goToTop() : onPull())),
+    [goToTop, host, onPull],
+  );
+
   // The next window of the derived list — a hydration, never a ranking: the
   // order was fixed when the list was derived, and nothing in it moves while
   // the reader scrolls (W-6).
@@ -425,14 +548,35 @@ export function FeedView({
     onReach: loadMore,
     enabled: hasNextPage && transportFault !== "append",
   });
-  const tailIndex = tailIndexOf(posts.length);
+  // WHAT IS DRAWN: the held pages less the hidden people's rows (FeedHidden.md
+  // :3) — they leave, the rows behind move up, and nothing marks the space.
+  // The pages themselves keep them, so Undo stands the feed as it was (:11)
+  // and a hide made on another surface clears this list on return (:9).
+  const hiddenVersion = hidden.snapshot();
+  const shown = useMemo(
+    () => posts.filter((post) => !hides(post)),
+    // The set changes under a stable `hides`; its version says when.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [posts, hides, hiddenVersion],
+  );
+  const tailIndex = tailIndexOf(shown.length);
+  // A hide that took every drawn row while more pages wait: the tail watch has
+  // nothing to hang on, so the next page is asked for here.
+  const emptiedByHide = !loading && shown.length === 0 && posts.length > 0;
+  useEffect(() => {
+    if (emptiedByHide && hasNextPage && transportFault === null) void loadMore();
+  }, [emptiedByHide, hasNextPage, transportFault, loadMore]);
 
   // A POST WHOLLY ON SCREEN JOINS HISTORY (History.md:5) — the card's own
   // post, never its author or tags. Attached at the list, so the card stays
   // the feed's (`seen-tracker.ts` says what counts and when it is sent).
   const listRef = useRef<HTMLUListElement>(null);
-  const postIds = useMemo(() => posts.map((post) => post.id), [posts]);
+  const postIds = useMemo(() => shown.map((post) => post.id), [shown]);
   useSeenTracker({ root: host, list: listRef, ids: postIds, suspended: commentsOpen });
+  // Where the drawn cards cross into the seen tail: the derive stands every
+  // tail row after every unseen one, so the separator goes before the first
+  // tail card drawn — and with nothing unseen, the feed opens at it.
+  const seenFrom = useMemo(() => shown.findIndex((post) => seenTail.has(post.id)), [shown, seenTail]);
 
   return (
     // The band is chrome and full-bleed, so the gutter belongs to the content
@@ -444,6 +588,7 @@ export function FeedView({
         // from the same lazy-state source the restore itself reads, so this
         // and the actual landing offset can never disagree.
         initiallyHidden={rememberedPlace !== null && rememberedPlace.offset > 0}
+        onBackToTop={goToTop}
       >
         {/* A tab root wears the mark, not a page title: the reader knows which
             tab they are on from the bar, and the band's other half works. */}
@@ -462,6 +607,13 @@ export function FeedView({
               : phase === "signedIn"
                 ? () => router.push("/chats")
                 : undefined
+          }
+          // The bell (FeedUnread.md): a signed-in reader's, an applicant's
+          // included; a guest has no list and no bell (FeedBare.md:9).
+          bell={
+            phase === "signedIn"
+              ? { lit: bellIsLit, onOpen: () => router.push(notificationsHref("feed")) }
+              : undefined
           }
         >
           {/* The band carries its own gutter — it is a bare line under the
@@ -523,7 +675,7 @@ export function FeedView({
             Loading…
           </p>
         )}
-        {!loading && transportFault === null && posts.length === 0 && (
+        {!loading && transportFault === null && shown.length === 0 && !hasNextPage && (
           <p data-testid="feed-empty">Nothing here yet — write the first post.</p>
         )}
       </div>
@@ -544,38 +696,48 @@ export function FeedView({
               (`VouchBack.jsx`), after the security notice and the key card
               that head the column (ruling 45). */}
           {phase === "signedIn" && <VouchCard refreshSignal={listEra} />}
-          {posts.map((post, index) => (
-            // The card names itself to the pin: it is the anchor the reader's
-            // place is measured against (`scroll-pin.ts`). One of them also
-            // carries the watch that fetches the next page.
-            <li
-              key={post.id}
-              {...{ [ANCHOR_ATTRIBUTE]: post.id, [SEEN_ATTRIBUTE]: post.id }}
-              ref={index === tailIndex ? tailRef : undefined}
-            >
-              <PostCard
-                post={post}
-                // The registered Feed screen's card, keyed by the post's id —
-                // the record's own identity, where the board keys its sample
-                // cards by author (`design/designs/canonical/nodes.json`).
-                node={{ path: "feed.card", key: post.id }}
-                href={`/posts/${post.id}`}
-                testId={`feed-post-${post.id}`}
-                authorTestId={`feed-author-${post.id}`}
-                stanceTestId={`feed-stance-${post.id}`}
-                comments={
-                  liveComments?.id === post.id ? liveComments.total : post.comments.totalCount
-                }
-                // THE COUNT RAISES THE THREAD (graph.json: every `comment count`
-                // edge advances to `ReplyEntry`) — the card's own tap opens the
-                // post, which is the different intent.
-                onOpenComments={() => {
-                  setCommentsPost(post);
-                  setCommentsOpen(true);
-                }}
-                onLinkCopied={() => setLinkCopied(true)}
-              />
-            </li>
+          {shown.map((post, index) => (
+            <Fragment key={post.id}>
+              {index === seenFrom && <SeenSeparator />}
+              {/* The card names itself to the pin: it is the anchor the
+                  reader's place is measured against (`scroll-pin.ts`). One of
+                  them also carries the watch that fetches the next page.
+                  READING THE TAIL RECORDS NOTHING (FeedSeenTail.md): a card
+                  under the separator never names itself to the seen tracker. */}
+              <li
+                {...{ [ANCHOR_ATTRIBUTE]: post.id }}
+                {...(seenTail.has(post.id) ? {} : { [SEEN_ATTRIBUTE]: post.id })}
+                ref={index === tailIndex ? tailRef : undefined}
+              >
+                <PostCard
+                  post={post}
+                  // The registered Feed screen's card, keyed by the post's id —
+                  // the record's own identity, where the board keys its sample
+                  // cards by author (`design/designs/canonical/nodes.json`).
+                  node={{ path: "feed.card", key: post.id }}
+                  href={`/posts/${post.id}`}
+                  testId={`feed-post-${post.id}`}
+                  authorTestId={`feed-author-${post.id}`}
+                  stanceTestId={`feed-stance-${post.id}`}
+                  comments={
+                    liveComments?.id === post.id ? liveComments.total : post.comments.totalCount
+                  }
+                  // THE COUNT RAISES THE THREAD (graph.json: every `comment count`
+                  // edge advances to `ReplyEntry`) — the card's own tap opens the
+                  // post, which is the different intent.
+                  onOpenComments={() => {
+                    setCommentsPost(post);
+                    setCommentsOpen(true);
+                  }}
+                  onLinkCopied={() => notify(LINK_COPIED)}
+                  onOpenMenu={() => {
+                    setMenuPost(post);
+                    setMenuOpen(true);
+                  }}
+                  menuOpen={menuOpen && menuPost?.id === post.id}
+                />
+              </li>
+            </Fragment>
           ))}
         </ul>
       </StageHost>
@@ -611,14 +773,35 @@ export function FeedView({
             Loading…
           </p>
         )}
-        {/* One region for the whole feed: a card that copied a link says so
-            here rather than each card mounting a live region of its own. */}
+        {/* One region for the whole feed: a card that copied a link, and a
+            menu row's aftermath, say so here rather than each card mounting a
+            live region of its own. */}
         <Snackbar
-          testId="feed-link-copied"
-          message={linkCopied ? LINK_COPIED : null}
-          onDismiss={dismissLinkCopied}
+          testId="feed-snackbar"
+          node={{ path: "feed.snackbar" }}
+          message={newer.message ?? snack?.message ?? null}
+          action={newer.message !== null ? newer.action : snack?.action}
+          token={newer.message !== null ? undefined : snack?.token}
+          onDismiss={newer.message !== null ? newer.dismiss : dismissSnack}
         />
       </div>
+      {/* THE CARDS' MENU, OVER THE FEED (FeedPostMenu.md). What its rows raise
+          rises over the feed too — the license terms (:21) and the report's
+          confirm (:23), registered as `feed.licenseSheet` and
+          `feed.reportSheet` (FC-G10). */}
+      <PostMenuHost
+        post={menuPost}
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        nodes={{
+          sheet: { path: "feed.menuSheet" },
+          row: feedMenuRow,
+          licenseSheet: { path: "feed.licenseSheet" },
+          reportSheet: { path: "feed.reportSheet" },
+        }}
+        testId="feed-menu"
+        notify={notify}
+      />
       {/* Conditionally mounted, matching `stance-control.tsx`'s own guest
           gate: `JoinPrompt` always draws its `data-testid`, so a second one
           mounted unconditionally alongside a post card's own gate collides

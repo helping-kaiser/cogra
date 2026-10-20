@@ -57,6 +57,9 @@
     <string name="settings_people">People</string>
     <string name="settings_people_hidden">Hidden accounts</string>
     <string name="settings_people_hidden_none">None</string>
+    <!-- SettingsHidden (hidden-actors packet §6): a row's age and its one control. -->
+    <string name="settings_hidden_age">Hidden %1$s</string>
+    <string name="settings_hidden_unhide">Unhide</string>
     <string name="settings_people_footnote">Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking.</string>
 
     <string name="settings_sensitive">Sensitive content</string>
@@ -106,7 +109,7 @@
 
     <string name="settings_leaving">Sign out</string>
     <string name="settings_leaving_forget">Don\'t remember this account on this device</string>
-    <string name="settings_leaving_forget_status">Your key, your draft and any kept picks are cleared from this app when you sign out.</string>
+    <string name="settings_leaving_forget_status">Your key, your draft, any kept picks and what you\'ve seen are cleared from this app when you sign out.</string>
     <string name="settings_leaving_leave">Sign out</string>
     <string name="settings_leaving_signing_out">Signing out…</string>
 
@@ -315,4 +318,15 @@
     <string name="key_export_actor_key">Your actor key</string>
     <string name="key_export_pem">PEM (PKCS#8)</string>
     <string name="key_export_hex">Raw hex — Ed25519 private key</string>
+
+    <!-- What's new (WhatsNew.md, WhatsNewBehind.md; copy-voice, the settings page, About). -->
+    <string name="whats_new_title">What\'s new</string>
+    <string name="whats_new_back">Back to settings</string>
+    <string name="whats_new_newer_line">A newer version exists.</string>
+    <string name="whats_new_update_now">Update now</string>
+    <string name="whats_new_update_description">Update to version %1$s</string>
+    <string name="whats_new_door">See it on GitHub</string>
+    <string name="whats_new_door_description">See version %1$s on GitHub</string>
+    <string name="whats_new_footnote">Newest first.</string>
+    <string name="whats_new_transport">Can\'t reach the server. Check your connection and try again.</string>
 </resources>

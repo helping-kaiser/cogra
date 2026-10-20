@@ -132,6 +132,26 @@ class EncryptedStore(
     inner class Editor internal constructor(private val prefs: MutablePreferences) {
         operator fun contains(name: String): Boolean = stringPreferencesKey(name) in prefs
 
+        /**
+         * The value as this transaction sees it, or null when it is absent or
+         * will not open. A caller that must not lose an unopenable value
+         * checks [contains] as well: null alone does not say which.
+         */
+        fun get(name: String): ByteArray? {
+            val sealed = prefs[stringPreferencesKey(name)] ?: return null
+            return try {
+                cipher.open(Base64.getDecoder().decode(sealed))
+            } catch (_: GeneralSecurityException) {
+                null
+            } catch (_: IllegalArgumentException) {
+                null
+            }
+        }
+
+        /** Every name in this transaction that starts with [prefix]. */
+        fun names(prefix: String): List<String> =
+            prefs.asMap().keys.map { it.name }.filter { it.startsWith(prefix) }
+
         fun put(name: String, value: ByteArray) {
             prefs[stringPreferencesKey(name)] = Base64.getEncoder().encodeToString(cipher.seal(value))
         }

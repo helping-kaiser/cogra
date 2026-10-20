@@ -6,10 +6,37 @@ query HostPublicKey {
   hostPublicKey
 }
 
+# The raw L1 identifiers of the nodes a gesture names, read before its
+# batch is prepared: the device checks every act's endpoints against
+# them before it pre-signs anything (Intent.kt). Content resolves through
+# `nodes`; a person through `user`, which `nodes` does not cover.
+query ContentGraphIds($ids: [UUID!]!) {
+  nodes(ids: $ids) {
+    __typename
+    ... on Post {
+      id
+      graphId
+    }
+    ... on Comment {
+      id
+      graphId
+    }
+  }
+}
+
+query UserGraphId($id: UUID!) {
+  user(id: $id) {
+    id
+    graphId
+  }
+}
+
 mutation PrepareStance($input: PrepareStanceInput!) {
   prepareStance(input: $input) {
     writes {
       ...PreparedWriteFields
+      # Carried with an applicant's application: checked, kept, signed at the landing.
+      carried
     }
     userErrors {
       ...UserErrorFields

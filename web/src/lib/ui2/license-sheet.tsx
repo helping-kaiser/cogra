@@ -18,6 +18,7 @@
 // reader asks for it.
 
 import type { License } from "@/lib/license";
+import { part, type DataNode } from "@/lib/ui/data-node";
 import { LicenseTerms } from "@/lib/ui/license-fields";
 import { BottomSheet } from "./bottom-sheet";
 
@@ -26,12 +27,18 @@ export function LicenseSheet({
   onClose,
   license,
   testId,
+  node,
   stacked = false,
 }: {
   open: boolean;
   onClose: () => void;
   license: License;
   testId: string;
+  /**
+   * The registered sheet (`feed.licenseSheet`, `postDetail.licenseSheet`); its
+   * grip and `terms` follow, and each terms row is a keyed `axis`.
+   */
+  node?: DataNode;
   /**
    * Raised from a comment's menu, this sheet comes up over the comments
    * thread — a sheet over a sheet — rather than over the plain post page
@@ -47,9 +54,10 @@ export function LicenseSheet({
       title="License terms"
       titleHidden
       testId={testId}
+      node={node}
       stacked={stacked}
     >
-      <LicenseTerms license={license} testId={`${testId}-terms`} />
+      <LicenseTerms license={license} testId={`${testId}-terms`} node={part(node, "terms")} />
     </BottomSheet>
   );
 }

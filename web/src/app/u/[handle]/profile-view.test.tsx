@@ -7,8 +7,10 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { createStubStanceData } from "@/lib/stance/stub-stance-data";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
+import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
+import { bookmarkHandlers, bookmarkLog } from "@/test/saved";
 import { stanceBundle, stanceHandlers } from "@/test/stance";
 import { ProfileScreen } from "./profile-view";
 
@@ -52,6 +54,7 @@ function profile(id: string, handle: string, bio: string | null = "Curious.") {
     displayName: moderated("Ada L"),
     bio: moderated(bio),
     websiteUrl: moderated("https://ada.example"),
+    viewerBookmarkedAt: null,
   };
 }
 
@@ -302,6 +305,190 @@ describe("ProfileScreen", () => {
     await screen.findByTestId("profile-edit");
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(marked).toEqual([]);
+  });
+
+  // THE PROFILE'S ⋮ (ProfileOwnMenu.md, ProfileMenu.md, ProfileDeletedMenu.md;
+  // saved-surface SS-1): three sheets, built whole; History and Mention stand
+  // inert until their packets wire them.
+  describe("the profile menu", () => {
+    function rows() {
+      return Array.from(
+        screen.getByTestId("profile.menuSheet").querySelectorAll("[data-testid^='profile.menuSheet.']"),
+        (row) => [row.getAttribute("data-testid"), row.textContent],
+      ).filter(([id]) => id !== "profile.menuSheet.dragHandle");
+    }
+
+    function other(overrides: Record<string, unknown> = {}) {
+      return gqlLink.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: { ...profile("u2", "ada"), ...overrides } } }),
+      );
+    }
+
+    it("the_own_menu_reads_saved_history_share_and_opens_saved", async () => {
+      server.use(
+        meHandler(),
+        gqlLink.query("MyProfile", () => HttpResponse.json({ data: { me: profile("u1", "ada") } })),
+        recordsHandler([]),
+      );
+      renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
+      fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
+      expect(rows()).toEqual([
+        ["profile.menuSheet.saved", "Saved"],
+        ["profile.menuSheet.history", "History"],
+        ["profile.menuSheet.share", "Share your profile"],
+      ]);
+      fireEvent.click(screen.getByTestId("profile.menuSheet.saved"));
+      expect(push).toHaveBeenCalledWith("/saved");
+    });
+
+    it("another_persons_menu_reads_save_mention_share_hide_report", async () => {
+      server.use(meHandler(), other(), recordsHandler([]));
+      renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+      fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
+      expect(rows()).toEqual([
+        ["profile.menuSheet.save", "Save"],
+        ["profile.menuSheet.mention", "Mention in a new post"],
+        ["profile.menuSheet.share", "Share this profile"],
+        ["profile.menuSheet.hide", "Hide @ada"],
+        ["profile.menuSheet.report", "Report"],
+      ]);
+    });
+
+    it("a_deleted_accounts_menu_has_no_mention_and_names_no_handle", async () => {
+      server.use(
+        meHandler(),
+        other({ displayName: { __typename: "ModeratedText", value: null, status: "REDACTED" } }),
+        recordsHandler([]),
+      );
+      renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+      fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
+      expect(rows()).toEqual([
+        ["profile.menuSheet.save", "Save"],
+        ["profile.menuSheet.share", "Share this profile"],
+        ["profile.menuSheet.hide", "Hide this account"],
+        ["profile.menuSheet.report", "Report"],
+      ]);
+      fireEvent.click(screen.getByTestId("profile.menuSheet.report"));
+      expect(await screen.findByText("Report this account?")).toBeInTheDocument();
+    });
+
+    it("save_from_a_profile_keeps_the_person_and_snackbars_saved", async () => {
+      const log = bookmarkLog();
+      server.use(meHandler(), other(), recordsHandler([]), ...bookmarkHandlers(log));
+      renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+      fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
+      fireEvent.click(screen.getByTestId("profile.menuSheet.save"));
+      expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent("Saved.");
+      await waitFor(() => expect(log.sets).toEqual([{ node: "u2", at: null }]));
+    });
+
+    it("unsave_from_a_profile_offers_undo", async () => {
+      const log = bookmarkLog();
+      server.use(
+        meHandler(),
+        other({ viewerBookmarkedAt: "2026-10-01T08:00:00Z" }),
+        recordsHandler([]),
+        ...bookmarkHandlers(log),
+      );
+      renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+      fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
+      expect(screen.getByTestId("profile.menuSheet.save")).toHaveTextContent("Unsave");
+      fireEvent.click(screen.getByTestId("profile.menuSheet.save"));
+      expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent(
+        "Removed from Saved.",
+      );
+      fireEvent.click(screen.getByTestId("profile.snackbar.action"));
+      await waitFor(() =>
+        expect(log.sets).toEqual([{ node: "u2", at: "2026-10-01T08:00:00Z" }]),
+      );
+    });
+
+    it("a_failed_profile_save_says_retry_in_the_actions_row", async () => {
+      server.use(
+        meHandler(),
+        other(),
+        recordsHandler([]),
+        ...bookmarkHandlers(bookmarkLog(), { failSet: true }),
+      );
+      renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+      fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
+      fireEvent.click(screen.getByTestId("profile.menuSheet.save"));
+      expect(await screen.findByTestId("profile-row-line")).toHaveTextContent(
+        "That didn't go through.",
+      );
+      expect(screen.queryByTestId("profile.snackbar.message")).not.toBeInTheDocument();
+    });
+    it("hide_from_a_profile_keeps_the_profile_open", async () => {
+      const log = hiddenLog();
+      server.use(meHandler(), other(), recordsHandler([]), ...hiddenHandlers(log));
+      renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+      fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
+      fireEvent.click(screen.getByTestId("profile.menuSheet.hide"));
+      expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent(
+        "@ada is hidden — their posts stay out of your feed.",
+      );
+      // ProfileMenu.md:23 — the reader stays on the profile.
+      expect(screen.getByTestId("profile.identity.actionRow.menu")).toBeInTheDocument();
+      await waitFor(() => expect(log.hides).toEqual([{ actor: "u2", at: null }]));
+      fireEvent.click(screen.getByTestId("profile.snackbar.action"));
+      await waitFor(() => expect(log.unhides).toEqual(["u2"]));
+    });
+
+    it("a_deleted_accounts_hide_reads_this_account_is_hidden", async () => {
+      server.use(
+        meHandler(),
+        other({ displayName: { __typename: "ModeratedText", value: null, status: "REDACTED" } }),
+        recordsHandler([]),
+        ...hiddenHandlers(hiddenLog()),
+      );
+      renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+      fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
+      fireEvent.click(screen.getByTestId("profile.menuSheet.hide"));
+      expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent(
+        "This account is hidden — its posts stay out of your feed.",
+      );
+    });
+
+    it("a_hidden_persons_profile_still_opens", async () => {
+      server.use(
+        meHandler(),
+        other(),
+        recordsHandler([]),
+        ...hiddenHandlers(hiddenLog(), {
+          entries: [{ id: "u2", handle: "ada", displayName: "Ada", hiddenAt: "2026-10-01T00:00:00Z" }],
+        }),
+      );
+      renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+      expect(await screen.findByTestId("profile.identity.actionRow.menu")).toBeInTheDocument();
+    });
+
+    it("a_guest_meets_the_ask_on_hide", async () => {
+      const log = hiddenLog();
+      server.use(other(), recordsHandler([]), ...hiddenHandlers(log));
+      renderWithProviders(<ProfileScreen handle="ada" />);
+      fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
+      fireEvent.click(screen.getByTestId("profile.menuSheet.hide"));
+      expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
+      expect(log.hides).toEqual([]);
+    });
+
+    it("a_guest_meets_the_ask_on_a_profile_save", async () => {
+      const log = bookmarkLog();
+      server.use(other(), recordsHandler([]), ...bookmarkHandlers(log));
+      renderWithProviders(<ProfileScreen handle="ada" />);
+      fireEvent.click(await screen.findByTestId("profile.identity.actionRow.menu"));
+      fireEvent.click(screen.getByTestId("profile.menuSheet.save"));
+      expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
+      expect(log.sets).toEqual([]);
+    });
+
+    it("opened_from_saved_the_back_arrow_reads_back_to_saved", async () => {
+      server.use(other(), recordsHandler([]));
+      renderWithProviders(<ProfileScreen handle="ada" from="saved" />);
+      const back = await screen.findByTestId("profile-back");
+      expect(back).toHaveAttribute("aria-label", "Back to Saved");
+      expect(back).toHaveAttribute("href", "/saved");
+    });
   });
 
   it("shows not-found for an unknown handle", async () => {

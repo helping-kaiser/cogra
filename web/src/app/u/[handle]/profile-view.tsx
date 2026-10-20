@@ -28,7 +28,7 @@ import {
   type RecordRow,
 } from "@/lib/api/profile-api";
 import { useAuthGuard } from "@/lib/session/runtime";
-import { useAuthPhase } from "@/lib/session/provider";
+import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { StatusBanners } from "@/app/status-banners";
 import { MonogramAvatar } from "@/lib/ui/actor-chip";
 import { Button, buttonClassName } from "@/lib/ui/button";
@@ -39,6 +39,15 @@ import { useScrollHost } from "@/lib/ui/scroll-host";
 import { StanceControl } from "@/lib/ui/stance-control";
 import { TransportError } from "@/lib/ui/transport-error";
 import { opensVouchBackOn, VOUCHED_IN_PATH, vouchBackVariant } from "@/lib/vouch/vouch-back";
+import { useComfortLine } from "@/lib/saved/comfort-line";
+import { useHostSnack } from "@/lib/saved/save-row";
+import { RowLine } from "@/lib/ui/row-line";
+import { Snackbar } from "@/lib/ui/snackbar";
+import { backFor } from "@/lib/ui/back-origin";
+import { BellButton } from "@/lib/ui/cogra-band";
+import { notificationsHref } from "@/lib/notifications/origin";
+import { firstArrival, useBellLit, useFreshRootBell } from "@/lib/notifications/bell";
+import { ProfileMenu } from "@/lib/ui2/profile-menu";
 
 const FILTERS: readonly { key: ChronicleFilter; label: string }[] = [
   { key: "posts", label: "Posts" },
@@ -49,17 +58,31 @@ const FILTERS: readonly { key: ChronicleFilter; label: string }[] = [
 export function ProfileScreen({
   handle,
   store = identityStore,
+  from = null,
 }: {
   handle: string | null;
   /** Test injection. */
   store?: IdentityStore;
+  /** The surface the reader came from, which the back arrow names (`saved`). */
+  from?: string | null;
 }) {
+  // THE PAGE'S ONE SNACKBAR (`profile.snackbar`): the ⋮'s aftermath —
+  // `Saved.`, `Removed from Saved.` with `Undo`, a copied link, a report.
+  const { snack, notify, dismiss } = useHostSnack();
   const keyOnDevice = useKeyOnDevice(store);
   const client = useApolloClient();
   const guard = useAuthGuard();
   const phase = useAuthPhase();
   const host = useScrollHost();
   const router = useRouter();
+  // THE BELL ON THE OWN PROFILE ROOT (Profile.md:3, :41): lit only on this
+  // root's fresh load — its first arrival in the page load — and never by a
+  // return (FeedUnread.md:3, :9).
+  const account = useActiveAccountId();
+  const reader = handle === null && phase === "signedIn" ? account : null;
+  const [freshRoot] = useState(() => firstArrival(reader, "profile"));
+  useFreshRootBell(reader, freshRoot);
+  const bellIsLit = useBellLit(reader);
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [own, setOwn] = useState(false);
@@ -189,6 +212,10 @@ export function ProfileScreen({
   };
 
   const name = profile?.displayName.value?.trim() ? profile.displayName.value : profile?.handle;
+  // A DELETED ACCOUNT reads off its REDACTED status (ER-G10, design digest
+  // item 19): the wire serves null values and the mark.
+  const deleted = profile?.displayName.status === "REDACTED";
+  const comfort = useComfortLine(profile?.id ?? "");
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
@@ -196,20 +223,29 @@ export function ProfileScreen({
         <PageHeader
           inGutter
           title={profile ? `@${profile.handle}` : "Profile"}
-          backHref={handle === null ? undefined : "/feed"}
+          backHref={handle === null ? undefined : backFor(from).href}
           backScroll={false}
-          backLabel="Back to feed"
+          backLabel={backFor(from).label}
           backTestId="profile-back"
           action={
             own ? (
-              <Link
-                href="/settings"
-                aria-label="Settings"
-                data-testid="profile-settings"
-                className={buttonClassName({ variant: "text", size: "sm" })}
-              >
-                Settings
-              </Link>
+              <span className="flex items-center">
+                <Link
+                  href="/settings"
+                  aria-label="Settings"
+                  data-testid="profile-settings"
+                  className={buttonClassName({ variant: "text", size: "sm" })}
+                >
+                  Settings
+                </Link>
+                {/* The bell rides the own profile ROOT only, right-most — the
+                    header is not yet the drawn band (N3 conformance). */}
+                {handle === null && (
+                  <BellButton
+                    bell={{ lit: bellIsLit, onOpen: () => router.push(notificationsHref("profile")) }}
+                  />
+                )}
+              </span>
             ) : undefined
           }
         />
@@ -271,7 +307,7 @@ export function ProfileScreen({
                 (design.md §6): the interpersonal stance, the same generic
                 gesture a post or a comment takes. */}
             {!own && (
-              <div className="pt-2">
+              <div className="flex items-center gap-2 pt-2">
                 <StanceControl
                   target={{ id: profile.id, kind: "profile", label: `@${profile.handle}` }}
                   testIdPrefix="profile-stance"
@@ -286,8 +322,20 @@ export function ProfileScreen({
                       : undefined
                   }
                 />
+                {/* THE ⋮ CLOSES THE ACTIONS ROW (`otherProfileMenu`,
+                    `deletedProfileMenu`) — placed at its drawn node without
+                    conforming the rest of the page (SS-6). */}
+                <ProfileMenu
+                  kind={deleted ? "deleted" : "other"}
+                  profile={profile}
+                  signedIn={phase === "signedIn"}
+                  notify={notify}
+                />
               </div>
             )}
+            {/* THE ROW LINE IN THE ACTIONS ROW (design digest item 46): a save or
+                unsave of this person that did not go through. */}
+            {comfort !== null && <RowLine state={comfort} testId="profile-row-line" />}
             {own && (
               <div className="flex flex-wrap items-center gap-2 pt-2">
                 <Link
@@ -317,6 +365,10 @@ export function ProfileScreen({
                     Invites
                   </Link>
                 )}
+                {/* YOUR OWN ⋮, closing the actions row after Edit profile and
+                    Invites (`ownProfileMenu`): Saved, History, Share your
+                    profile — the private state's one door. */}
+                <ProfileMenu kind="own" profile={profile} signedIn notify={notify} />
               </div>
             )}
             {invitesLocked && (
@@ -378,6 +430,14 @@ export function ProfileScreen({
           )}
         </>
       )}
+      <Snackbar
+        testId="profile-snackbar"
+        node={{ path: "profile.snackbar" }}
+        message={snack?.message ?? null}
+        action={snack?.action}
+        token={snack?.token}
+        onDismiss={dismiss}
+      />
     </main>
   );
 }

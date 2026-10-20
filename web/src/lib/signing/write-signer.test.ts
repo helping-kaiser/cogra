@@ -16,23 +16,33 @@ import type { StagedWriteState } from "@/__generated__/graphql";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { ActorKey } from "@/lib/crypto/actor-key";
 import { fromBase64, randomBytes, toBase64 } from "@/lib/crypto/bytes";
-import { commitment, Tags, verify } from "@/lib/crypto/hashing";
+import { Tags, verifyDigest } from "@/lib/crypto/hashing";
 import {
-  canonicalDeps,
+  contentCommitment,
+  depsCommitment,
+  EDITION,
   PreSignedProposal,
   Proposal,
   StructuralBody,
   VerifiedAct,
 } from "@/lib/crypto/handshake";
-import { ActId, AddrId } from "@/lib/crypto/identifiers";
+import { ActId, AddrId, NodeId, type Family } from "@/lib/crypto/identifiers";
 import {
   decodePreCommitment,
+  decodeProposal,
   encodeProposal,
   encodeVerifiedAct,
 } from "@/lib/crypto/wire";
 import { createIdentityStore, type IdentityStore } from "@/lib/identity/store";
 import type { AuthGuard } from "@/lib/session/guard";
 import { gqlLink, startMswServer } from "@/test/msw";
+import {
+  carriedDigest,
+  createCarriedExpectationStore,
+  type CarriedExpectationStore,
+  type CarriedLandingGate,
+} from "./carried";
+import { expectation, REGISTRATION_EXEMPTION, stanceRecord } from "./intent";
 import { createWriteSigner, type WriteSigner } from "./write-signer";
 
 const server = startMswServer();
@@ -69,15 +79,20 @@ async function sealOver(
 ): Promise<VerifiedAct> {
   const contentSalt = randomBytes(32);
   const depsSalt = randomBytes(32);
+  const formed = await pre.preCommitment();
+  const actId = proposal.body.actId();
   const fields = {
     proposal,
     authorPubkey: pre.authorPubkey,
     nonce: pre.nonce,
     preSignature: pre.preSignature,
+    preCommitment: formed,
     contentSalt,
     depsSalt,
-    contentCommitment: await commitment(Tags.COMMIT_CONTENT, contentSalt, proposal.payload),
-    depsCommitment: await commitment(Tags.COMMIT_DEPS, depsSalt, canonicalDeps(proposal.deps)),
+    contentCommitment: await contentCommitment(actId, formed, contentSalt, proposal.payload),
+    depsCommitment: await depsCommitment(actId, formed, depsSalt, proposal.deps),
+    contentEdition: EDITION,
+    depsEdition: EDITION,
     hostSeal: new Uint8Array(64),
   };
   const unsealed = new VerifiedAct(fields);
@@ -141,6 +156,7 @@ function submittedPre(signature: string, actorPub: Uint8Array): PreSignedProposa
 
 describe("write signer", () => {
   let store: IdentityStore;
+  let carried: CarriedExpectationStore;
   let signer: WriteSigner;
   let actorPub: Uint8Array;
   let host: ActorKey;
@@ -149,6 +165,7 @@ describe("write signer", () => {
   beforeEach(async () => {
     globalThis.indexedDB = new IDBFactory();
     store = createIdentityStore({ activeAccountId: () => "acct-1" });
+    carried = createCarriedExpectationStore({ activeAccountId: () => "acct-1" });
     const seed = randomBytes(32);
     const saved = await store.saveActor(seed, true);
     actorPub = saved.publicKeyBytes();
@@ -165,6 +182,7 @@ describe("write signer", () => {
       client: client(),
       guard: passthroughGuard,
       store,
+      carried,
       sleep: () => Promise.resolve(),
     });
   });
@@ -192,10 +210,9 @@ describe("write signer", () => {
       gqlLink.mutation("ApproveActs", async ({ variables }) => {
         const input = (variables as { input: { approvals: { signature: string }[] } }).input;
         if (sealed === null) throw new Error("approve before submit");
-        const witnessOk = await verify(
+        const witnessOk = await verifyDigest(
           actorPub,
-          Tags.APPROVAL,
-          sealed.sealMsg(),
+          await sealed.approvalDigest(),
           fromBase64(input.approvals[0].signature),
         );
         if (!witnessOk) throw new Error("approval witness does not verify");
@@ -211,7 +228,7 @@ describe("write signer", () => {
       }),
     );
 
-    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result).toEqual({ kind: "done", id: ID, state: "RELAYING" });
     expect(await store.handshake(ID)).toBeNull();
   });
@@ -259,7 +276,7 @@ describe("write signer", () => {
       ),
     );
 
-    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result).toEqual({ kind: "done", id: ID, state: "RELAYING" });
     expect(polls).toBe(2);
   });
@@ -283,7 +300,7 @@ describe("write signer", () => {
       ),
     );
 
-    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result).toEqual({ kind: "awaitingSeal", id: ID });
     expect(await store.handshake(ID)).not.toBeNull();
   });
@@ -304,7 +321,7 @@ describe("write signer", () => {
         }),
       ),
     );
-    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("refused");
     expect(await store.handshake(ID)).toBeNull();
   });
@@ -346,7 +363,7 @@ describe("write signer", () => {
       ),
     );
 
-    const first = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const first = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(first.kind).toBe("refused");
     if (first.kind === "refused") expect(first.errors[0].code).toBe("RATE_LIMITED");
     expect(await store.handshake(ID)).not.toBeNull();
@@ -377,7 +394,7 @@ describe("write signer", () => {
       ),
     );
 
-    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("refused");
     if (result.kind === "refused") expect(result.errors[0].code).toBe("RATE_LIMITED");
     expect(await store.handshake(ID)).not.toBeNull();
@@ -388,7 +405,7 @@ describe("write signer", () => {
     if (key === null) throw new Error("expected a key");
     await store.saveHandshake(ID, await key.preSign(PROPOSAL));
 
-    const result = await signer.signStaged(view(ID, "SOMETHING_NEW" as StagedWriteState, null));
+    const result = await signer.signStaged(view(ID, "SOMETHING_NEW" as StagedWriteState, null), REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("refused");
     if (result.kind === "refused") expect(result.errors[0].message).toMatch(/does not know/);
     expect(await store.handshake(ID)).not.toBeNull();
@@ -396,7 +413,7 @@ describe("write signer", () => {
 
   it("a transport fault keeps the material and resume re-sends the same nonce", async () => {
     server.use(gqlLink.mutation("SubmitProposals", () => HttpResponse.error()));
-    const first = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const first = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(first.kind).toBe("failed");
     const parked = await store.handshake(ID);
     expect(parked).not.toBeNull();
@@ -464,7 +481,7 @@ describe("write signer", () => {
         });
       }),
     );
-    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("rejectedByDevice");
     if (result.kind === "rejectedByDevice") expect(result.reason).toMatch(/different act/);
     expect(await store.handshake(ID)).toBeNull();
@@ -491,7 +508,7 @@ describe("write signer", () => {
         });
       }),
     );
-    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("rejectedByDevice");
     if (result.kind === "rejectedByDevice") expect(result.reason).toMatch(/host seal/);
   });
@@ -511,14 +528,14 @@ describe("write signer", () => {
       canonicalProposal: toBase64(new Uint8Array([0x00])),
       verifiedAct: null,
     };
-    const result = await signer.signStaged(malformed);
+    const result = await signer.signStaged(malformed, REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("rejectedByDevice");
     expect(submits).toBe(0);
     expect(await store.handshake(ID)).toBeNull();
   });
 
   it("refuses a sealing staged write when the material is lost", async () => {
-    const result = await signer.signStaged(view(ID, "AWAITING_APPROVAL", null));
+    const result = await signer.signStaged(view(ID, "AWAITING_APPROVAL", null), REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("refused");
     if (result.kind === "refused") {
       expect(result.errors[0].code).toBe("INTERNAL");
@@ -543,7 +560,7 @@ describe("write signer", () => {
         HttpResponse.json({ data: { stagedWrite: stagedJson(ID, "EXPIRED", null) } }),
       ),
     );
-    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("refused");
     if (result.kind === "refused") expect(result.errors[0].code).toBe("STAGED_WRITE_EXPIRED");
     expect(await store.handshake(ID)).toBeNull();
@@ -553,20 +570,20 @@ describe("write signer", () => {
     const key = await store.actorKey();
     if (key === null) throw new Error("expected a key");
 
-    expect(await signer.signStaged(view(ID, "RELAYING", null))).toEqual({
+    expect(await signer.signStaged(view(ID, "RELAYING", null), REGISTRATION_EXEMPTION)).toEqual({
       kind: "done",
       id: ID,
       state: "RELAYING",
     });
 
-    const expired = await signer.signStaged(view(ID, "EXPIRED", null));
+    const expired = await signer.signStaged(view(ID, "EXPIRED", null), REGISTRATION_EXEMPTION);
     expect(expired.kind).toBe("refused");
     if (expired.kind === "refused") expect(expired.errors[0].code).toBe("STAGED_WRITE_EXPIRED");
   });
 
   it("resume refuses a vanished staged write and clears the material", async () => {
     server.use(gqlLink.mutation("SubmitProposals", () => HttpResponse.error()));
-    await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     server.use(
       gqlLink.query("StagedWrite", () => HttpResponse.json({ data: { stagedWrite: null } })),
     );
@@ -584,9 +601,10 @@ describe("write signer", () => {
       client: client(),
       guard: passthroughGuard,
       store: emptyStore,
+      carried,
       sleep: () => Promise.resolve(),
     });
-    const result = await keyless.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const result = await keyless.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("failed");
   });
 
@@ -598,7 +616,7 @@ describe("write signer", () => {
     const other = await ActorKey.generate();
     server.use(meAnswering(toBase64(other.publicKeyBytes())));
 
-    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null));
+    const result = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(result.kind).toBe("refused");
     if (result.kind === "refused") expect(result.errors[0].code).toBe("FORBIDDEN");
     // Not spent: a restore of the account's own key finishes this write.
@@ -609,19 +627,20 @@ describe("write signer", () => {
     const other = await ActorKey.generate();
     server.use(meAnswering(toBase64(other.publicKeyBytes())));
 
-    const results = await signer.sign([
-      view("sw-a", "AWAITING_PRE_SIGN", null),
-      view("sw-b", "AWAITING_PRE_SIGN", null),
-    ]);
+    const pick = stanceRecord(PERSON, 0.4, 0.2);
+    const results = await signer.sign(
+      [await stanceView("sw-a", "AWAITING_PRE_SIGN", 0.4, 0.2), await stanceView("sw-b", "AWAITING_PRE_SIGN", 0.4, 0.2)],
+      expectation([pick, pick]),
+    );
     expect(results.map((r) => r.kind)).toEqual(["refused", "refused"]);
     expect(results.map((r) => r.id)).toEqual(["sw-a", "sw-b"]);
   });
 
   it("signs a batch in order, one result per write", async () => {
-    const results = await signer.sign([
-      view("sw-a", "RELAYING", null),
-      view("sw-b", "LANDED", null),
-    ]);
+    const results = await signer.sign(
+      [await stanceView("sw-a", "RELAYING", 0.4, 0.2), await stanceView("sw-b", "LANDED", 0.1, 0.1)],
+      expectation([stanceRecord(PERSON, 0.4, 0.2), stanceRecord(PERSON, 0.1, 0.1)]),
+    );
     expect(results).toEqual([
       { kind: "done", id: "sw-a", state: "RELAYING" },
       { kind: "done", id: "sw-b", state: "LANDED" },
@@ -629,6 +648,403 @@ describe("write signer", () => {
   });
 
   it("signs nothing, and asks the account nothing, for an empty batch", async () => {
-    expect(await signer.sign([])).toEqual([]);
+    expect(await signer.sign([], expectation([]))).toEqual([]);
   });
+
+  it("no batch signer entry point accepts a batch without an expectation", async () => {
+    // The type is the guard: a call site that builds no expectation does
+    // not compile. tsc fails this file if the directive ever goes unused.
+    // @ts-expect-error — `sign` has no overload without an expectation.
+    await expect(signer.sign([])).resolves.toEqual([]);
+  });
+
+  // ---- the intent check (intent.ts), against a prepare that lies ----------
+
+  /** Counts every submit, so a test can prove nothing was pre-signed. */
+  function countingSubmits(): { count: () => number } {
+    let submits = 0;
+    server.use(
+      gqlLink.mutation("SubmitProposals", () => {
+        submits += 1;
+        return HttpResponse.json({ data: {} });
+      }),
+    );
+    return { count: () => submits };
+  }
+
+  it("a write whose body disagrees with its form is refused on device", async () => {
+    const submits = countingSubmits();
+    // The pad picked (0.4, 0.2); the prepare served a subtly different
+    // valence — the stance the user never chose.
+    const results = await signer.sign(
+      [await stanceView("sw-a", "AWAITING_PRE_SIGN", 0.4, 0.25)],
+      expectation([stanceRecord(PERSON, 0.4, 0.2)]),
+    );
+    expect(results.map((r) => r.kind)).toEqual(["rejectedByDevice"]);
+    expect(submits.count()).toBe(0);
+    expect(await store.handshakeIds()).toEqual([]);
+  });
+
+  it("a batch with one mismatched write signs none of its writes", async () => {
+    const submits = countingSubmits();
+    const results = await signer.sign(
+      [
+        await stanceView("sw-a", "AWAITING_PRE_SIGN", 0.4, 0.2),
+        await stanceView("sw-b", "AWAITING_PRE_SIGN", -0.3, 0.2),
+      ],
+      expectation([stanceRecord(PERSON, 0.4, 0.2), stanceRecord(PERSON, 0.3, 0.2)]),
+    );
+    expect(results.map((r) => r.kind)).toEqual(["rejectedByDevice", "rejectedByDevice"]);
+    // The intent check runs before the first pre-signature of the batch:
+    // the matching first write was not pre-signed either.
+    expect(submits.count()).toBe(0);
+    expect(await store.handshakeIds()).toEqual([]);
+  });
+
+  it("a write carrying an injected payload is refused on device", async () => {
+    const submits = countingSubmits();
+    const results = await signer.sign(
+      [await stanceView("sw-a", "AWAITING_PRE_SIGN", 0.4, 0.2, new Uint8Array([1]))],
+      expectation([stanceRecord(PERSON, 0.4, 0.2)]),
+    );
+    expect(results.map((r) => r.kind)).toEqual(["rejectedByDevice"]);
+    expect(submits.count()).toBe(0);
+  });
+
+  it("the staged registration is the one named exemption from the intent check", async () => {
+    const submits = countingSubmits();
+    // A stance served where a Registration was expected: the exemption
+    // holds for a Registration and nothing else.
+    const result = await signer.signStaged(
+      await stanceView("sw-a", "AWAITING_PRE_SIGN", 0.4, 0.2),
+      REGISTRATION_EXEMPTION,
+    );
+    expect(result.kind).toBe("rejectedByDevice");
+    expect(submits.count()).toBe(0);
+  });
+
+  it("a staged write served with its form expectation signs through the same leg", async () => {
+    const result = await signer.signStaged(
+      await stanceView("sw-a", "RELAYING", 0.4, 0.2),
+      expectation([stanceRecord(PERSON, 0.4, 0.2)]),
+    );
+    expect(result).toEqual({ kind: "done", id: "sw-a", state: "RELAYING" });
+  });
+  // ---- the carried branch (PR-88: CI-G5 ruled (a)+(a1)) -------------------
+
+  /** The ruled dependency completion the landing appends. */
+  const COMPLETION = [
+    new ActId("dd".repeat(20), 1n, "registration"),
+    new ActId("ee".repeat(20), 4n, "opinion"),
+  ];
+
+  /**
+   * The host for one released write: seals exactly what `served` carries
+   * and relays the approval — the whole handshake, counting the submits.
+   */
+  function sealingHost(served: StagedWriteView): { count: () => number } {
+    let submits = 0;
+    const proposal = decoded(served);
+    const node = (state: StagedWriteState, verifiedAct: string | null) => ({
+      ...stagedJson(served.id, state, verifiedAct),
+      family: served.family,
+      canonicalProposal: served.canonicalProposal,
+    });
+    server.use(
+      hostHandler,
+      gqlLink.mutation("SubmitProposals", async ({ variables }) => {
+        submits += 1;
+        const input = (variables as { input: { proposals: { signature: string }[] } }).input;
+        const blob = decodePreCommitment(fromBase64(input.proposals[0].signature));
+        const pre = new PreSignedProposal({
+          proposal,
+          authorPubkey: actorPub,
+          nonce: blob.nonce,
+          preSignature: blob.preSignature,
+        });
+        const sealed = await sealOver(host, pre);
+        return HttpResponse.json({
+          data: {
+            submitProposals: {
+              __typename: "SubmitProposalsPayload",
+              stagedWrites: [node("AWAITING_APPROVAL", toBase64(encodeVerifiedAct(sealed)))],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+      gqlLink.mutation("ApproveActs", () =>
+        HttpResponse.json({
+          data: {
+            approveActs: {
+              __typename: "ApproveActsPayload",
+              stagedWrites: [node("RELAYING", null)],
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+    );
+    return { count: () => submits };
+  }
+
+  /** The applicant's prepare: the stance, checked and kept for the landing. */
+  async function preparedCarried(): Promise<void> {
+    const results = await signer.sign(
+      [await stanceView("sw-c", "CARRIED", 0.4, 0.2)],
+      expectation([stanceRecord(PERSON, 0.4, 0.2)]),
+    );
+    expect(results).toEqual([{ kind: "carried", id: "sw-c" }]);
+  }
+
+  it("a_carried_write_is_intent_checked_at_its_prepare_and_kept_not_signed", async () => {
+    const submits = countingSubmits();
+    const staged = await stanceView("sw-c", "CARRIED", 0.4, 0.2);
+    const results = await signer.sign([staged], expectation([stanceRecord(PERSON, 0.4, 0.2)]));
+    expect(results).toEqual([{ kind: "carried", id: "sw-c" }]);
+    // Nothing pre-signed, nothing spent — and what was verified is kept.
+    expect(submits.count()).toBe(0);
+    expect(await store.handshakeIds()).toEqual([]);
+    expect(await carried.get("sw-c")).toEqual(await carriedDigest(decoded(staged)));
+  });
+
+  it("a_carried_write_that_disagrees_with_its_form_is_refused_at_its_prepare_and_nothing_is_kept", async () => {
+    const submits = countingSubmits();
+    const results = await signer.sign(
+      [await stanceView("sw-c", "CARRIED", 0.4, 0.25)],
+      expectation([stanceRecord(PERSON, 0.4, 0.2)]),
+    );
+    expect(results.map((r) => r.kind)).toEqual(["rejectedByDevice"]);
+    expect(submits.count()).toBe(0);
+    expect(await carried.get("sw-c")).toBeNull();
+  });
+
+  it("the_landing_signs_a_carried_write_equal_to_its_kept_expectation_modulo_the_dependency_completion", async () => {
+    await preparedCarried();
+    const released = await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.4, 0.2, new Uint8Array(), COMPLETION);
+    const submits = sealingHost(released);
+    const results = await signer.signCarriedAtLanding([released]);
+    expect(submits.count()).toBe(1);
+    expect(results).toEqual([{ kind: "done", id: "sw-c", state: "RELAYING" }]);
+    // Pre-signed and handed to the backend: the expectation has done its job.
+    expect(await carried.get("sw-c")).toBeNull();
+  });
+
+  it("a_released_carried_write_that_differs_from_its_kept_expectation_refuses_the_whole_batch", async () => {
+    await preparedCarried();
+    const submits = countingSubmits();
+    const results = await signer.signCarriedAtLanding([
+      // Prepared on another device: nothing kept for it…
+      await stanceView("sw-other", "AWAITING_PRE_SIGN", 0.1, 0.1, new Uint8Array(), COMPLETION),
+      // …but the served value is not the one this device verified.
+      await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.9, 0.2, new Uint8Array(), COMPLETION),
+    ]);
+    expect(results.map((r) => r.kind)).toEqual(["rejectedByDevice", "rejectedByDevice"]);
+    expect(submits.count()).toBe(0);
+    // KEPT through the refusal: the next poll checks against it again.
+    expect(await carried.get("sw-c")).not.toBeNull();
+  });
+
+  it("a_released_carried_write_with_an_injected_payload_is_refused", async () => {
+    await preparedCarried();
+    const submits = countingSubmits();
+    const results = await signer.signCarriedAtLanding([
+      await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.4, 0.2, Uint8Array.of(1), COMPLETION),
+    ]);
+    expect(results.map((r) => r.kind)).toEqual(["rejectedByDevice"]);
+    expect(submits.count()).toBe(0);
+  });
+
+  it("a_released_write_that_does_not_parse_is_refused", async () => {
+    const submits = countingSubmits();
+    const results = await signer.signCarriedAtLanding([
+      { ...view("sw-c", "AWAITING_PRE_SIGN", null), canonicalProposal: toBase64(Uint8Array.of(1, 2)) },
+    ]);
+    expect(results.map((r) => r.kind)).toEqual(["rejectedByDevice"]);
+    expect(submits.count()).toBe(0);
+  });
+
+  // ---- no family is exempt from the carried check at the landing ----------
+
+  it.each(["opinion", "publish", "tag", "reference", "affinity"] as const)(
+    "a_released_%s_this_device_never_prepared_is_refused_not_exempt",
+    async (family) => {
+      const submits = countingSubmits();
+      const results = await signer.signCarriedAtLanding([
+        await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.4, 0.2, new Uint8Array(), COMPLETION, family),
+      ]);
+      expect(results).toEqual([
+        {
+          kind: "rejectedByDevice",
+          id: "sw-c",
+          reason: "this device holds no prepare-time check for the released carried write",
+        },
+      ]);
+      expect(submits.count()).toBe(0);
+    },
+  );
+
+  it("one_digest_less_write_refuses_the_whole_released_batch", async () => {
+    await preparedCarried();
+    const submits = countingSubmits();
+    const results = await signer.signCarriedAtLanding([
+      // Verified at its prepare on this device…
+      await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.4, 0.2, new Uint8Array(), COMPLETION),
+      // …but the batch also releases a Tag nothing on this device verified.
+      await stanceView("sw-tag", "AWAITING_PRE_SIGN", 0.5, 0.5, new Uint8Array(), COMPLETION, "tag"),
+    ]);
+    expect(results.map((r) => r.kind)).toEqual(["rejectedByDevice", "rejectedByDevice"]);
+    expect(submits.count()).toBe(0);
+    expect(await store.handshakeIds()).toEqual([]);
+    expect(await carried.get("sw-c")).not.toBeNull();
+  });
+
+  it("a_non_opinion_write_with_its_kept_expectation_still_signs_at_the_landing", async () => {
+    // A family checked at its prepare on this device signs against its kept
+    // digest.
+    const prepared = await stanceView("sw-c", "CARRIED", 0.5, 0.5, new Uint8Array(), [], "tag");
+    await carried.save("sw-c", await carriedDigest(decoded(prepared)));
+    const released = await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.5, 0.5, new Uint8Array(), COMPLETION, "tag");
+    const submits = sealingHost(released);
+    const results = await signer.signCarriedAtLanding([released]);
+    expect(submits.count()).toBe(1);
+    expect(results).toEqual([{ kind: "done", id: "sw-c", state: "RELAYING" }]);
+  });
+
+  it("a_released_write_with_its_kept_expectation_still_runs_the_approve_checks", async () => {
+    // Passing the carried check does not skip the handshake: a seal over a
+    // body the device never pre-signed is refused at the approve step.
+    const released = await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.4, 0.2, new Uint8Array(), COMPLETION);
+    const proposal = decoded(released);
+    await carried.save("sw-c", await carriedDigest(proposal));
+    let submits = 0;
+    server.use(
+      hostHandler,
+      gqlLink.mutation("SubmitProposals", async ({ variables }) => {
+        submits += 1;
+        const input = (variables as { input: { proposals: { signature: string }[] } }).input;
+        const blob = decodePreCommitment(fromBase64(input.proposals[0].signature));
+        const pre = new PreSignedProposal({
+          proposal,
+          authorPubkey: actorPub,
+          nonce: blob.nonce,
+          preSignature: blob.preSignature,
+        });
+        const swapped = new Proposal(proposal.body, new TextEncoder().encode("swapped"), proposal.deps);
+        const sealed = await sealOver(host, pre, swapped);
+        return HttpResponse.json({
+          data: {
+            submitProposals: {
+              __typename: "SubmitProposalsPayload",
+              stagedWrites: [
+                {
+                  ...stagedJson("sw-c", "AWAITING_APPROVAL", toBase64(encodeVerifiedAct(sealed))),
+                  family: released.family,
+                  canonicalProposal: released.canonicalProposal,
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    const [result] = await signer.signCarriedAtLanding([released]);
+    expect(submits).toBe(1);
+    expect(result.kind).toBe("rejectedByDevice");
+    if (result.kind === "rejectedByDevice") expect(result.reason).toMatch(/different act/);
+    expect(await store.handshake("sw-c")).toBeNull();
+  });
+
+  it("the_landing_gate_holds_the_carried_batch_back_without_spending_anything", async () => {
+    await preparedCarried();
+    const asked: string[][] = [];
+    const gate: CarriedLandingGate = async (batch) => {
+      asked.push(batch.map((write) => write.id));
+      return { kind: "notReady", reason: "the media move is not confirmed yet" };
+    };
+    const gated = createWriteSigner({
+      client: client(),
+      guard: passthroughGuard,
+      store,
+      carried,
+      carriedGate: gate,
+      sleep: () => Promise.resolve(),
+    });
+    const submits = countingSubmits();
+    const results = await gated.signCarriedAtLanding([
+      await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.4, 0.2, new Uint8Array(), COMPLETION),
+    ]);
+    expect(asked).toEqual([["sw-c"]]);
+    expect(results.map((r) => r.kind)).toEqual(["failed"]);
+    expect(submits.count()).toBe(0);
+    expect(await carried.get("sw-c")).not.toBeNull();
+  });
+
+  it("the_landing_gate_is_never_asked_for_a_batch_the_intent_check_refused", async () => {
+    await preparedCarried();
+    let asked = 0;
+    const gated = createWriteSigner({
+      client: client(),
+      guard: passthroughGuard,
+      store,
+      carried,
+      carriedGate: async () => {
+        asked += 1;
+        return { kind: "ready" };
+      },
+      sleep: () => Promise.resolve(),
+    });
+    await gated.signCarriedAtLanding([
+      await stanceView("sw-c", "AWAITING_PRE_SIGN", 0.9, 0.2, new Uint8Array(), COMPLETION),
+    ]);
+    expect(asked).toBe(0);
+  });
+
 });
+
+const PERSON = `prof:${"bb".repeat(20)}`;
+
+/** The proposal a staged view serves. */
+function decoded(staged: StagedWriteView): Proposal {
+  return decodeProposal(fromBase64(staged.canonicalProposal));
+}
+
+/**
+ * A stance the prepare serves, authored by this device's own address —
+ * the shape a faithful prepare stages for a pick of `(pD, pI)`. `family`
+ * re-serves the same shape as another family, for the checks that read the
+ * family alone.
+ */
+async function stanceView(
+  id: string,
+  state: StagedWriteState,
+  pD: number,
+  pI: number,
+  payload: Uint8Array = new Uint8Array(),
+  deps: readonly ActId[] = [],
+  family: Family = "opinion",
+): Promise<StagedWriteView> {
+  const key = await createIdentityStore({ activeAccountId: () => "acct-1" }).actorKey();
+  if (key === null) throw new Error("expected the device key");
+  const body = new StructuralBody({
+    author: await key.address(),
+    seq: 5n,
+    family,
+    middle: null,
+    target: NodeId.parse(PERSON),
+    pD,
+    pI,
+    settlementRef: null,
+    license: null,
+    assertedParents: [],
+  });
+  const proposal = new Proposal(body, payload, [...deps]);
+  return {
+    id,
+    state,
+    family: family.toUpperCase() as StagedWriteView["family"],
+    canonicalProposal: toBase64(encodeProposal(proposal)),
+    verifiedAct: null,
+  };
+}

@@ -2,50 +2,66 @@
 //!
 //! The one search matcher (api-spec.md "Search"): how a typed query
 //! becomes a match request over the `search_index` projection.
-//! `Query.search` and `Query.referenceCandidates` both go through here,
-//! and so will `User.viewHistory(query:)` — no surface grows a second
-//! matcher.
+//! `Query.search`, `Query.referenceCandidates` and `User.bookmarks(query:)`
+//! all go through here — no surface grows a second matcher.
 //!
 //! What the matcher owns, stated once:
 //!
 //! - **Parsing.** The query is trimmed; a blank query matches nothing and
 //!   is never an error; past [`MAX_QUERY_CHARS`] it is refused. Only a
-//!   LEADING `@handle` or `#tag` is a scope operator — anywhere else
-//!   those characters are text.
-//! - **Name-class fields** (a handle, a display name, a topic's name)
-//!   match case-insensitively by substring, which takes in the prefix:
-//!   the index's trigram operator class serves `LIKE` (PostgreSQL docs,
-//!   *pg_trgm*, "Index Support").
-//! - **Post titles** match by word: full text under the `simple`
-//!   configuration, the last word as a prefix so a title refines as it is
-//!   typed (PostgreSQL docs §12.3.2, prefix matching in `to_tsquery`).
-//! - **Tiers.** A node whose indexed field equals the query
-//!   case-insensitively is tier 0; any other match is tier 1. Order is
-//!   tier, then newest first, then id.
-//!
-//! - **Scopes.** A scope operator with text after it is a content search
-//!   inside the scope; the text matches as above, through what the
-//!   scoped content carries — a post's title, a comment's thread root's
-//!   title, a topic's name ([`scoped`]). `@handle <text>` serves that
-//!   person's posts, comments and the topics they tagged their own
-//!   content with, and never the person's own row; `#tag <text>` serves
-//!   the posts and comments that carry the topic. A BARE scope — the
-//!   operator and a name, nothing after — is a lookup in progress: it
-//!   proposes people (`@`) or topics (`#`) whose handle or name starts
-//!   with what was typed, and never lists anyone's content ([`lookup`]).
-//!   A name that can never be a handle or a topic scopes to nothing.
+//!   LEADING `@prefix` or `#prefix` is a cue — anywhere else those
+//!   characters are text.
+//! - **Plain text** matches a post's title and a person's handle and
+//!   display name by word: full text under the `simple` configuration,
+//!   every word required, the last as a prefix, so "Mod" finds "Genesis
+//!   Moderator", "gen" finds @genesis, and "enesis" finds neither
+//!   (PostgreSQL docs §12.3.2, prefix matching in `to_tsquery`). A
+//!   handle's words are what the parser splits it into: `pixel_joiner`
+//!   holds `pixel` and `joiner`. A person whose display name matches
+//!   brings their posts, titled or not; a handle match brings only the
+//!   person — `@` is the deliberate handle cue. A topic's name matches
+//!   case-insensitively by substring: the index's trigram operator class
+//!   serves `LIKE` (PostgreSQL docs, *pg_trgm*, "Index Support").
+//! - **Cues** ([`cue`]). `@prefix` names every person whose handle starts
+//!   with it; `#prefix` every topic whose name does. A bare cue lists the
+//!   matches, then what they reach: a person's posts, comments and the
+//!   topics they tagged their own content with; the posts and comments
+//!   that carry a topic. A cue with text after it searches inside what
+//!   its matches reach, as text matches above — a post's title, a
+//!   comment's thread root's title, a topic's name — and never lists the
+//!   matches themselves. A name that can never begin a handle or a topic
+//!   names nothing.
+//! - **Sections and tiers.** A result is people, then topics, then
+//!   content. Inside a section a node whose matched field equals the text
+//!   case-insensitively leads; then newest first, then id. The store folds
+//!   both into one `tier` (`postgres_store::search`).
+//! - **Kinds subtract.** A `kinds` filter drops sections and keeps the
+//!   rest's semantics: without people, a person cue or a display-name
+//!   match still lists the authored content.
+//! - **The people section is capped** ([`PEOPLE_SECTION_CAP`]). Where a
+//!   result can stand people beside another section, the people section
+//!   serves its first three by the result's own order, and the rest stand
+//!   behind the "See all profiles" door — the same query with people
+//!   alone as its kind, which serves every match. A cue that names many
+//!   handles would otherwise put an endless people list before any
+//!   content (seam 220, ruled (a) in seam 223).
 
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
-use postgres_store::search::{MatchQuery, ScopedQuery, SearchCursor};
+use postgres_store::search::{MatchQuery, SECTIONS, ScopedQuery, SearchCursor};
 use uuid::Uuid;
 
 /// The longest query accepted, in Unicode scalar values: a full post
-/// title (500), a separator and a scope operator of a full-length handle
-/// or tag, with headroom. Longer is a malformed argument, not a miss.
+/// title (500), a separator and a cue of a full-length handle or tag,
+/// with headroom. Longer is a malformed argument, not a miss.
 pub const MAX_QUERY_CHARS: usize = 640;
 
-/// A kind the index serves.
+/// The most people a people section serves while the result can stand
+/// another section beside it (ExplorePerson.md, SavedSearch.md,
+/// HistorySearch.md: "the people section holds at most three people").
+pub const PEOPLE_SECTION_CAP: usize = 3;
+
+/// A kind the plain-text matcher serves.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IndexKind {
     User,
@@ -54,7 +70,7 @@ pub enum IndexKind {
 }
 
 impl IndexKind {
-    /// Every kind the unscoped matcher serves today.
+    /// Every kind the plain-text matcher serves.
     pub const ALL: [Self; 3] = [Self::User, Self::Post, Self::Hashtag];
 
     /// The `kind` the index row carries.
@@ -67,18 +83,20 @@ impl IndexKind {
     }
 }
 
-/// A kind a scoped content search serves.
+/// A kind a cue request serves.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ScopedKind {
+    User,
     Post,
     Comment,
     Hashtag,
 }
 
 impl ScopedKind {
-    /// The kind as the scoped statements name it.
+    /// The kind as the cue statements name it.
     pub fn as_store(self) -> &'static str {
         match self {
+            Self::User => "user",
             Self::Post => "post",
             Self::Comment => "comment",
             Self::Hashtag => "hashtag",
@@ -86,33 +104,31 @@ impl ScopedKind {
     }
 }
 
-/// A leading scope operator.
+/// A leading cue.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Scope {
-    /// `@handle` — one person's work.
+    /// `@prefix` — people by handle, and their work.
     Handle,
-    /// `#tag` — inside a topic.
+    /// `#prefix` — topics by name, and what carries them.
     Tag,
 }
 
 impl Scope {
-    /// What a content search inside this scope serves: a person's work
-    /// takes in the topics they tagged it with; a topic's set is posts
-    /// and comments. Never a person — `@handle <text>` is a search of
-    /// their work, not a lookup of them.
-    pub fn content_kinds(self) -> &'static [ScopedKind] {
-        match self {
-            Self::Handle => &[ScopedKind::Post, ScopedKind::Comment, ScopedKind::Hashtag],
-            Self::Tag => &[ScopedKind::Post, ScopedKind::Comment],
-        }
-    }
-
-    /// The one kind a bare scope proposes: people for `@`, topics for
-    /// `#`.
-    pub fn lookup_kind(self) -> IndexKind {
-        match self {
-            Self::Handle => IndexKind::User,
-            Self::Tag => IndexKind::Hashtag,
+    /// What a cue serves. Bare, its matches lead: people for `@`, topics
+    /// for `#`. With text, only what they reach — a person's work takes
+    /// in the topics they tagged it with; a topic's set is posts and
+    /// comments.
+    pub fn kinds(self, bare: bool) -> &'static [ScopedKind] {
+        match (self, bare) {
+            (Self::Handle, true) => &[
+                ScopedKind::User,
+                ScopedKind::Post,
+                ScopedKind::Comment,
+                ScopedKind::Hashtag,
+            ],
+            (Self::Handle, false) => &[ScopedKind::Post, ScopedKind::Comment, ScopedKind::Hashtag],
+            (Self::Tag, true) => &[ScopedKind::Hashtag, ScopedKind::Post, ScopedKind::Comment],
+            (Self::Tag, false) => &[ScopedKind::Post, ScopedKind::Comment],
         }
     }
 }
@@ -122,10 +138,10 @@ impl Scope {
 pub enum Parsed<'a> {
     /// Nothing to match: an empty or all-blank query.
     Blank,
-    /// No scope operator — the whole (trimmed) query is text.
+    /// No cue — the whole (trimmed) query is text.
     Unscoped(&'a str),
-    /// A leading scope operator, the name it carries, and the text after
-    /// it, if any.
+    /// A leading cue, the prefix it carries, and the text after it, if
+    /// any.
     Scoped {
         scope: Scope,
         name: &'a str,
@@ -165,7 +181,7 @@ pub fn parse(raw: &str) -> Result<Parsed<'_>, QueryTooLong> {
     })
 }
 
-/// The match request for unscoped `text` over `kinds`. `exclude_seen_by`
+/// The match request for plain `text` over `kinds`. `exclude_seen_by`
 /// drops nodes on that account's seen-list; `keyed_users_only` serves
 /// only people who front a Profile — the finder's narrowing.
 pub fn unscoped(
@@ -181,52 +197,59 @@ pub fn unscoped(
         kinds: kinds.iter().map(|k| k.as_store().to_string()).collect(),
         exclude_seen_by,
         keyed_users_only,
-        lookup: false,
     }
 }
 
-/// The match request for a bare scope's `name` — a lookup proposing what
-/// starts with it, of the one `kind` the scope proposes. None when there
-/// is nothing typed after the operator yet: a lone `@` or `#` proposes
-/// no one, as a blank query matches nothing.
-pub fn lookup(name: &str, kind: IndexKind, exclude_seen_by: Option<Uuid>) -> Option<MatchQuery> {
+/// What a cue's `name` names, as the store binds it. None when nothing
+/// can match: a lone `@` or `#`, as a blank query matches nothing; an
+/// `@` prefix carrying a character no handle holds (auth.md, the handle
+/// charset); a `#` prefix the tag grammar refuses.
+pub fn cue(scope: Scope, name: &str) -> Option<postgres_store::search::Scope> {
     if name.is_empty() {
         return None;
     }
-    Some(MatchQuery {
-        text: name.to_string(),
-        like_body: like_body(name),
-        title_query: None,
-        kinds: vec![kind.as_store().to_string()],
-        exclude_seen_by,
-        keyed_users_only: false,
-        lookup: true,
-    })
+    match scope {
+        Scope::Handle => {
+            let folded = name.to_lowercase();
+            let admissible = folded.chars().count() <= crate::auth::HANDLE_MAX_CHARS
+                && folded
+                    .chars()
+                    .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_');
+            admissible.then(|| postgres_store::search::Scope::Authors {
+                like_body: like_body(&folded),
+                cue: folded,
+            })
+        }
+        Scope::Tag => scoped_topic(name).map(|canonical| postgres_store::search::Scope::Topics {
+            like_body: like_body(&canonical),
+            cue: canonical,
+        }),
+    }
 }
 
-/// The scoped content search for `remainder` inside `scope`, over
-/// `kinds`. `pending_actor` is the viewer's address atom: their own
-/// in-flight topic claims count, as on the tag page.
+/// The cue request for `scope` with `remainder` after it (None for a bare
+/// cue), over `kinds`. `pending_actor` is the viewer's address atom:
+/// their own in-flight topic claims count, as on the tag page.
 pub fn scoped(
     scope: postgres_store::search::Scope,
-    remainder: &str,
+    remainder: Option<&str>,
     kinds: &[ScopedKind],
     exclude_seen_by: Option<Uuid>,
     pending_actor: Option<String>,
 ) -> ScopedQuery {
     ScopedQuery {
         scope,
-        text: remainder.to_string(),
-        like_body: like_body(remainder),
-        title_query: title_query(remainder),
+        text: remainder.map(str::to_string),
+        like_body: remainder.map(like_body).unwrap_or_default(),
+        title_query: remainder.and_then(title_query),
         kinds: kinds.iter().map(|k| k.as_store().to_string()).collect(),
         exclude_seen_by,
         pending_actor,
     }
 }
 
-/// The canonical topic a `#` scope names: the name exactly as the tag
-/// grammar canonicalizes it (hashtag.md §2), the operator being its one
+/// The canonical topic a `#` cue names: the name exactly as the tag
+/// grammar canonicalizes it (hashtag.md §2), the cue being its one
 /// sigil — so `##salt` names nothing. None for a name no topic can carry.
 pub fn scoped_topic(name: &str) -> Option<String> {
     common::hashtag::canonicalize(&format!("#{name}")).ok()
@@ -246,7 +269,8 @@ fn like_body(text: &str) -> String {
 }
 
 /// The words of `text` as a `to_tsquery` expression: every word
-/// required, the last matched as a prefix. A word is a maximal run of
+/// required, the last matched as a prefix — the one word query titles,
+/// handles and display names match. A word is a maximal run of
 /// alphanumeric characters, so every word is a single quoted lexeme with
 /// nothing in it the query syntax could read as an operator. None when
 /// `text` carries no word.
@@ -259,6 +283,11 @@ fn title_query(text: &str) -> Option<String> {
     let mut parts: Vec<String> = init.iter().map(|w| format!("'{w}'")).collect();
     parts.push(format!("'{last}':*"));
     Some(parts.join(" & "))
+}
+
+/// Whether `tier` is one the matcher issues: two per section.
+pub fn tier_ok(tier: i32) -> bool {
+    (0..2 * SECTIONS).contains(&tier)
 }
 
 /// A cursor as the wire carries it: opaque per the Relay spec.
@@ -286,7 +315,7 @@ pub fn decode_cursor(cursor: &str) -> Option<SearchCursor> {
         return None;
     };
     let tier: i32 = tier.parse().ok()?;
-    if !(0..=1).contains(&tier) {
+    if !tier_ok(tier) {
         return None;
     }
     Some(SearchCursor {
@@ -299,6 +328,7 @@ pub fn decode_cursor(cursor: &str) -> Option<SearchCursor> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use postgres_store::search::Scope as Named;
 
     /// An empty or all-blank query parses as blank: nothing to match, nothing to refuse.
     /// ´claim:search:a-blank-query-is-blank´
@@ -317,7 +347,7 @@ mod tests {
         assert_eq!(parse(&format!("{at_cap}é")), Err(QueryTooLong));
     }
 
-    /// Only a leading @handle or #tag scopes a query; anywhere else those characters are text.
+    /// Only a leading @prefix or #prefix is a cue; anywhere else those characters are text.
     /// ´claim:search:only-a-leading-operator-scopes´
     #[test]
     fn only_a_leading_operator_scopes() {
@@ -341,19 +371,47 @@ mod tests {
         );
     }
 
-    /// A lone operator has nothing to look up, and a bare scope looks up only the one kind it proposes, by prefix.
+    /// A lone cue names nothing; an @ cue folds its prefix and names nothing once it holds a character no handle can.
     /// ´claim:search:a-lone-operator-looks-up-nothing´
     #[test]
-    fn a_lone_operator_looks_up_nothing() {
-        assert!(lookup("", IndexKind::User, None).is_none());
-        let request = lookup("so_l", IndexKind::Hashtag, None).expect("a lookup");
-        assert!(request.lookup);
-        assert_eq!(request.kinds, vec!["hashtag"]);
-        assert_eq!(request.like_body, r"so\_l");
-        assert_eq!(request.title_query, None);
+    fn a_lone_cue_names_nothing() {
+        assert_eq!(cue(Scope::Handle, ""), None);
+        assert_eq!(cue(Scope::Tag, ""), None);
+        assert_eq!(
+            cue(Scope::Handle, "So_L"),
+            Some(Named::Authors {
+                cue: "so_l".to_string(),
+                like_body: r"so\_l".to_string(),
+            })
+        );
+        assert_eq!(cue(Scope::Handle, "sol!"), None);
+        assert_eq!(cue(Scope::Handle, &"a".repeat(31)), None);
     }
 
-    /// A topic scope names a topic by the tag grammar with the operator as its one sigil, so a second sigil names nothing.
+    /// A bare cue leads with its matches; with text it serves only what they reach.
+    /// ´claim:search:a-bare-cue-leads-with-its-matches´
+    #[test]
+    fn a_bare_cue_leads_with_its_matches() {
+        assert!(Scope::Handle.kinds(true).contains(&ScopedKind::User));
+        assert!(!Scope::Handle.kinds(false).contains(&ScopedKind::User));
+        assert!(Scope::Tag.kinds(true).contains(&ScopedKind::Hashtag));
+        assert!(!Scope::Tag.kinds(false).contains(&ScopedKind::Hashtag));
+        let request = scoped(
+            Named::Topics {
+                cue: "salt".to_string(),
+                like_body: "salt".to_string(),
+            },
+            None,
+            Scope::Tag.kinds(true),
+            None,
+            None,
+        );
+        assert_eq!(request.text, None);
+        assert_eq!(request.title_query, None);
+        assert_eq!(request.kinds, vec!["hashtag", "post", "comment"]);
+    }
+
+    /// A topic cue names a topic prefix by the tag grammar with the cue as its one sigil, so a second sigil names nothing.
     /// ´claim:search:a-tag-scope-names-a-canonical-topic´
     #[test]
     fn a_tag_scope_names_a_canonical_topic() {
@@ -361,6 +419,13 @@ mod tests {
         assert_eq!(scoped_topic("#saltmaps"), None);
         assert_eq!(scoped_topic("salt:maps"), None);
         assert_eq!(scoped_topic(""), None);
+        assert_eq!(
+            cue(Scope::Tag, "Salt"),
+            Some(Named::Topics {
+                cue: "salt".to_string(),
+                like_body: "salt".to_string(),
+            })
+        );
     }
 
     /// The pattern metacharacters a query carries match themselves, never as wildcards.
@@ -370,7 +435,7 @@ mod tests {
         assert_eq!(like_body(r"50%_off\"), r"50\%\_off\\");
     }
 
-    /// A title query requires every typed word and reads the last one as a prefix, so a title refines as it is typed.
+    /// A word query requires every typed word and reads the last one as a prefix, so a title or a display name refines as it is typed.
     /// ´claim:search:the-last-title-word-is-a-prefix´
     #[test]
     fn the_last_title_word_is_a_prefix() {
@@ -383,20 +448,23 @@ mod tests {
         assert_eq!(title_query("it's").as_deref(), Some("'it' & 's':*"));
     }
 
-    /// A search cursor decodes back to its position, and one this matcher did not issue decodes to nothing.
+    /// A search cursor decodes back to its position, every section's tiers included, and one this matcher did not issue decodes to nothing.
     /// ´claim:search:a-search-cursor-round-trips´
     #[test]
     fn a_cursor_round_trips_and_a_foreign_one_does_not_decode() {
-        let cursor = SearchCursor {
-            tier: 1,
-            created_at: chrono::DateTime::from_timestamp_micros(1_791_354_394_123_456)
-                .expect("instant"),
-            node_id: Uuid::new_v4(),
-        };
-        assert_eq!(decode_cursor(&encode_cursor(cursor)), Some(cursor));
+        for tier in 0..2 * SECTIONS {
+            let cursor = SearchCursor {
+                tier,
+                created_at: chrono::DateTime::from_timestamp_micros(1_791_354_394_123_456)
+                    .expect("instant"),
+                node_id: Uuid::new_v4(),
+            };
+            assert_eq!(decode_cursor(&encode_cursor(cursor)), Some(cursor));
+        }
         for foreign in [
             "not base64!",
-            &B64.encode("search:2:0:00000000-0000-0000-0000-000000000000"),
+            &B64.encode("search:6:0:00000000-0000-0000-0000-000000000000"),
+            &B64.encode("search:-1:0:00000000-0000-0000-0000-000000000000"),
             &B64.encode("1:2:3"),
             &B64.encode("search:0:0:not-a-uuid"),
             &B64.encode("search:0:0:00000000-0000-0000-0000-000000000000:extra"),

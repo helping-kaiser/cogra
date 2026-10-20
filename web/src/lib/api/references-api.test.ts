@@ -11,6 +11,7 @@ import {
   prepareReference,
   prepareReferenceWithdrawal,
 } from "./references-api";
+import { DEFAULT_RELEVANCE, DEFAULT_SUPPORT } from "@/lib/references/draft";
 import { gqlLink, startMswServer } from "@/test/msw";
 
 const server = startMswServer();
@@ -111,9 +112,10 @@ describe("fetchReferenceCandidates", () => {
 });
 
 describe("prepareReference", () => {
-  // Omitting a parameter means "the server's default" and is sent as null,
-  // which is what the input's nullable fields mean.
-  it("sends nulls for the parameters the author left alone", async () => {
+  // Both parameters are required on the wire — the server never fills a
+  // stance in — so the pre-filled pair the author left alone is sent as
+  // the values it showed, never as null.
+  it("sends the shown pre-fill for parameters the author left alone", async () => {
     let input: Record<string, unknown> | undefined;
     server.use(
       gqlLink.mutation("PrepareReference", ({ variables }) => {
@@ -129,15 +131,20 @@ describe("prepareReference", () => {
         });
       }),
     );
-    const outcome = await prepareReference(client(), { artifact: "p-1", target: "u-1" });
+    const outcome = await prepareReference(client(), {
+      artifact: "p-1",
+      target: "u-1",
+      relevance: DEFAULT_RELEVANCE,
+      support: DEFAULT_SUPPORT,
+    });
     expect(outcome.kind).toBe("success");
     if (outcome.kind !== "success") return;
     expect(outcome.value.map((write) => write.id)).toEqual(["sw-1"]);
     expect(input).toEqual({
       artifact: "p-1",
       target: "u-1",
-      relevance: null,
-      support: null,
+      relevance: 0.1,
+      support: 0.1,
     });
   });
 
@@ -187,7 +194,12 @@ describe("prepareReference", () => {
         }),
       ),
     );
-    const outcome = await prepareReference(client(), { artifact: "p-1", target: "u-1" });
+    const outcome = await prepareReference(client(), {
+      artifact: "p-1",
+      target: "u-1",
+      relevance: 0.1,
+      support: 0.1,
+    });
     expect(outcome.kind).toBe("refused");
     if (outcome.kind !== "refused") return;
     expect(outcome.errors[0]?.code).toBe("WRITE_RULE_FAILED");

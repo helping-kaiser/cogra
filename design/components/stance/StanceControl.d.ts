@@ -41,10 +41,15 @@ export interface StanceControlProps {
   /** The anchor restyled to sit on photography: a line-face glyph in the rail's
    *  family instead of the card's muted emoji. Restyles the anchor only. */
   overMedia?: boolean;
+  /** The ink the unset face is drawn in as a LINE face (`sentiment_neutral`)
+   *  instead of the muted 🫥 — a host ground the emoji's fixed colors cannot
+   *  read on, the vouch card's (`var(--on-tertiary-container)`). A set stance
+   *  still shows its own emoji face. */
+  lineFaceInk?: string;
   /**
    * The pad's "?" accessible name (jakob's ruling A7) — the name of the
    * dialog it belongs to, not a generic one, on a board that draws a named
-   * pad ("Your opinion on your post", "Toward what you answer", "Your
+   * pad ("Your backing on your post", "Toward what you answer", "Your
    * vouch back"). Defaults to "How opinions work", the ordinary feed-card
    * control's name. Passed through to `StanceAlternates` unchanged.
    */
@@ -111,7 +116,13 @@ export interface StanceControlProps {
   holdProgress?: number;
   /** The pad's knob under the finger, for a board: `StancePad`'s pressed layer (a 40px disc at 10 %) drawn around the knob. Absent, the layer is the drag's own. */
   knobHeld?: boolean;
-  /** The data-node name its placer gives this control (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `anchor`, the resting control, with its `face` and `exact`; and the open pad (ruling 40, one anatomy for every pad board): `pad`, the dialog, holding `help`, `standing` (`current` and `pick`, each with `label`, `face`, `exact`), `field` (`StancePad`'s `left`, `right`, `top`, `bottom` and `square` with `zeroAcross`, `zeroDown`, `knob`, `knobLayer`), `landing` (`label`, `face`, `exact`), `helpPanel` with its `back`, `notNow`, `sever`, `cancel` and `set`. A `padNote` is the placer's, named `note` by it. */
+  /** The locked look on the anchor for an applicant (auth.md): `var(--state-disabled)`, the anchor still tappable, a tap or a press-and-hold answering `You can give your opinion once you're in.` — the host wires the answer; the pad never blooms. */
+  anchorOpacity?: string | number;
+  /** The reader still borrows a view — they hold no outgoing opinion with neither number at zero. An unreachable or severed landing then carries `You'd keep your borrowed view — no feed of your own yet.` Warns, never blocks. */
+  borrowed?: boolean;
+  /** For a board: the pad's body already explaining — `"help"`, the "?"'s lines, or `"zero"`, the unreachable landing's. */
+  defaultExplaining?: false | "help" | "zero";
+  /** The data-node name its placer gives this control (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `anchor`, the resting control, with its `face` and `exact`; and the open pad (ruling 40, one anatomy for every pad board): `pad`, the dialog, holding `help`, `standing` (`current` and `pick`, each with `label`, `face`, `exact`), `field` (`StancePad`'s `left`, `right`, `top`, `bottom` and `square` with `zeroAcross`, `zeroDown`, `knob`, `knobLayer`), `landing` (`label`, `face`, `exact`; unreachable, `label`, `zero`, `words`; and `borrowed`), `helpPanel` with its `back`, `zeroPanel` with its `back`, `notNow`, `sever`, `cancel` and `set`. A `padNote` is the placer's, named `note` by it. */
   node?: string;
 }
 

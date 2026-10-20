@@ -20,9 +20,11 @@
 // anyone asking for it.
 //
 // THE ACTS FOOTER IS AN AFFORDANCE, not a label: it opens the acts sheet
-// (CommentEditActs), which is the EditActs pattern at comment scale.
+// (CommentEditActs), which is the EditActs pattern at comment scale. At an
+// empty batch it is no control at all — `Nothing to sign yet` — and Sign the
+// edit stays visible and inert (EditComposeUnchanged: the guard is the
+// family's, and it is the acts batch, never a byte comparison).
 
-import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { useCoversSurface } from "@/lib/ui2/covering-layer";
 import { HeaderBar, HelpButton } from "@/lib/ui2/header-bar";
 import { PillButton, TextAction } from "@/lib/ui2/pill-button";
@@ -30,10 +32,18 @@ import { TextField } from "@/lib/ui2/text-field";
 import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
 import { DescribeCounter } from "@/lib/ui2/compose/picked-row";
 import { SensitiveSheet } from "@/lib/ui2/compose/sensitive-sheet";
+import { ActsFooter, ActsSheet, WithdrawnLine } from "@/lib/ui2/compose/edit-acts";
+import { useSlowAnswer } from "@/lib/ui2/waiting-commit";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
 import { TransportError } from "@/lib/ui/transport-error";
-import { signedActionsLine } from "@/lib/ui/signed-actions";
+import { licenseName, type License } from "@/lib/license";
+import {
+  editActCount,
+  withdrawnReferences,
+  withdrawnTags,
+  type EditActRow,
+} from "@/lib/compose/edit-batch";
 import { COMMENT_ATTACHMENT_CAP } from "@/lib/compose/comment-media";
 import {
   describedCount,
@@ -45,6 +55,9 @@ import { COMMENT_BODY_MAX_CHARS, commentBodyProblem } from "@/lib/compose/reply-
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
 
+/** The header X's accessible name: the edit keeps no draft (CommentEditVideo, WizardHeader boards). */
+export const COMMENT_EDIT_LEAVE_LABEL = "Leave — the edit is discarded";
+
 /** A group's caption — the board's own label rung. */
 function FieldLabel({ children }: { children: string }) {
   return <span className="text-label-large">{children}</span>;
@@ -55,8 +68,11 @@ export function CommentEditView({
   words,
   gallery,
   previews,
+  license,
   tags,
   references,
+  loadedTags,
+  loadedReferences,
   tagErrors,
   referenceErrors,
   sensitive,
@@ -78,6 +94,8 @@ export function CommentEditView({
   onDescribe,
   onTags,
   onReferences,
+  onUndoTag,
+  onUndoReference,
   onActs,
   onHelp,
   onSign,
@@ -89,15 +107,21 @@ export function CommentEditView({
   gallery: EditGallery;
   /** Picture id → something to draw: a served URL, or a local object URL. */
   previews: Readonly<Record<string, string>>;
+  /** The comment's license as it was signed — shown, locked. */
+  license: License;
   tags: readonly TagDraft[];
   references: readonly ReferenceDraft[];
+  /** What the comment arrived with: the baseline a withdrawal is read against. */
+  loadedTags: readonly TagDraft[];
+  loadedReferences: readonly ReferenceDraft[];
   tagErrors?: Readonly<Record<number, string>>;
   referenceErrors?: Readonly<Record<number, string>>;
   /** The author's own mark, and the line the veil would show. */
   sensitive: boolean;
   sensitiveReason: string;
   sensitiveOpen: boolean;
-  acts: number;
+  /** The batch, every kind counted in the records it signs. */
+  acts: readonly EditActRow[];
   actsOpen: boolean;
   busy: boolean;
   /** Why the edit cannot be signed yet, or null. */
@@ -114,12 +138,16 @@ export function CommentEditView({
   onDescribe: (id: string) => void;
   onTags: (tags: readonly TagDraft[]) => void;
   onReferences: (references: readonly ReferenceDraft[]) => void;
+  onUndoTag: (name: string) => void;
+  onUndoReference: (targetId: string) => void;
   onActs: (open: boolean) => void;
   onHelp: () => void;
   onSign: () => void;
   onLeave: () => void;
 }) {
   const full = gallery.length >= COMMENT_ATTACHMENT_CAP;
+  const count = editActCount(acts);
+  const slowAnswer = useSlowAnswer(busy);
   // A modal dialog over the surface that raised it, so it announces itself as
   // one: the stage beneath it is suspended while it is up (Feed.md:31,
   // `covering-layer.tsx`). Mounted only while open, so it covers for as long
@@ -139,7 +167,7 @@ export function CommentEditView({
         backLabel="Back to the thread"
         onBack={onLeave}
         onLeave={onLeave}
-        leaveLabel="Leave — this edit is discarded"
+        leaveLabel={COMMENT_EDIT_LEAVE_LABEL}
         help={<HelpButton label="Editing" onOpen={onHelp} />}
       />
 
@@ -237,6 +265,14 @@ export function CommentEditView({
             cap={null}
             testIdPrefix="comment-edit"
           />
+          {withdrawnTags(loadedTags, tags).map((tag) => (
+            <WithdrawnLine
+              key={tag.name}
+              name={`#${tag.name}`}
+              onUndo={() => onUndoTag(tag.name)}
+              testId={`comment-edit-withdrawn-tag-${tag.name}`}
+            />
+          ))}
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -248,6 +284,14 @@ export function CommentEditView({
             cap={null}
             testIdPrefix="comment-edit"
           />
+          {withdrawnReferences(loadedReferences, references).map((reference) => (
+            <WithdrawnLine
+              key={reference.targetId}
+              name={reference.target.label}
+              onUndo={() => onUndoReference(reference.targetId)}
+              testId={`comment-edit-withdrawn-reference-${reference.targetId}`}
+            />
+          ))}
         </div>
 
         {/* The two term rows the board draws shut: the licence, stated and
@@ -255,7 +299,12 @@ export function CommentEditView({
         <div className="flex flex-col">
           <div className="flex min-h-11 items-center gap-2 border-t border-outline-variant">
             <span className="flex-1 text-body-medium">License</span>
-            <span className="text-body-medium text-on-surface-variant">Public domain</span>
+            <span
+              className="text-body-medium text-on-surface-variant"
+              data-testid="comment-edit-license"
+            >
+              {licenseName(license)}
+            </span>
             <span
               className="inline-flex text-on-surface-variant"
               aria-label="The license never changes"
@@ -300,26 +349,23 @@ export function CommentEditView({
         )}
 
         {/* What the edit would sign, and the way into the detail. */}
-        <button
-          type="button"
-          data-testid="comment-edit-signed-actions"
-          onClick={() => onActs(true)}
-          className="cg-state cg-focus flex items-center justify-center gap-1 border-0 bg-transparent text-label-small text-on-surface-variant"
-        >
-          {/* The board draws the populated case; the product already owns the
-              words for an untouched editor, and "0 signed actions" is not
-              them. */}
-          This {signedActionsLine(acts)}
-          <ChevronGlyph />
-        </button>
+        <ActsFooter
+          count={count}
+          onOpen={() => onActs(true)}
+          testId="comment-edit-signed-actions"
+        />
 
+        {/* Inert, never hidden, at an empty batch; a press while the signing
+            is out is refused without the button dimming (CommentEdit.md). */}
         <PillButton
           testId="comment-edit-save"
           full
-          disabled={busy || acts === 0 || blocked !== null}
-          onClick={onSign}
+          disabled={count === 0 || blocked !== null}
+          onClick={() => {
+            if (!busy) onSign();
+          }}
         >
-          {busy ? "Signing…" : "Sign the edit"}
+          {slowAnswer ? "Signing the edit…" : "Sign the edit"}
         </PillButton>
       </div>
 
@@ -334,23 +380,12 @@ export function CommentEditView({
         testIdPrefix="comment-edit"
       />
 
-      <BottomSheet
+      <ActsSheet
         open={actsOpen}
+        rows={acts}
         onClose={() => onActs(false)}
-        title={acts === 1 ? "1 signed action" : `${acts} signed actions`}
         testId="comment-edit-acts-sheet"
-      >
-        <div className="flex flex-col gap-3 px-6 pb-4">
-          <p className="m-0 text-body-medium text-on-surface-variant">
-            They land together, or none does.
-          </p>
-          <div className="flex justify-end">
-            <PillButton variant="text" testId="comment-edit-acts-done" onClick={() => onActs(false)}>
-              Done
-            </PillButton>
-          </div>
-        </div>
-      </BottomSheet>
+      />
     </div>
   );
 }
@@ -360,15 +395,6 @@ function LockGlyph() {
   return (
     <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" aria-hidden="true">
       <path d="M18 8h-1V6a5 5 0 00-10 0v2H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2zM9 6a3 3 0 016 0v2H9V6zm3 13a2 2 0 110-4 2 2 0 010 4z" />
-    </svg>
-  );
-}
-
-// Material's `expand_more`, which is what the acts footer wears.
-function ChevronGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" aria-hidden="true">
-      <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z" />
     </svg>
   );
 }

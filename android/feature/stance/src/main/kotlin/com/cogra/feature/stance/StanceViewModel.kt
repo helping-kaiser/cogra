@@ -25,9 +25,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.domain.Outcome
 import com.cogra.domain.repo.StanceRepository
+import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.severance
+import com.cogra.domain.signing.stanceRecord
 import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
@@ -37,11 +40,11 @@ import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.stance.localLanding
 import com.cogra.domain.store.IdentityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /** Where one control's pad is (mirrors the design system's own mode). */
 enum class PadMode { CLOSED, STICKY }
@@ -275,12 +278,24 @@ class StanceViewModel @Inject constructor(
         if (open.working) return
         update(target) { it.copy(severance = open.copy(working = true, failed = false)) }
         viewModelScope.launch {
+            // The walk-back is checked against the quote the reader
+            // confirmed: toward the node the read named, netting exactly
+            // the raw sums shown, in exactly the records its cost stated.
+            val graphId = when (val read = stances.targetGraphId(target)) {
+                is Outcome.Success -> read.value
+                else -> return@launch failSeverance(target)
+            }
+            val quote = open.quote
+            val expected = Expectation(
+                writes = emptyList(),
+                netting = listOf(severance(graphId, quote.raw.pDirected, quote.raw.pInterest, quote.records)),
+            )
             val prepared = when (val outcome = stances.prepareSeverance(target)) {
                 is Outcome.Success -> outcome.value
                 else -> return@launch failSeverance(target)
             }
             val results = try {
-                signer.sign(prepared)
+                signer.sign(prepared, expected)
             } catch (_: NoActorKeyException) {
                 return@launch failSeverance(target)
             }
@@ -326,13 +341,20 @@ class StanceViewModel @Inject constructor(
         // pick leaves the bundle while the record is still being signed.
         showPendingStanding(target, pick)
         viewModelScope.launch {
+            // The record must come back as exactly the pick, toward the node
+            // the standing read named (Intent.kt).
+            val graphId = when (val read = stances.targetGraphId(target)) {
+                is Outcome.Success -> read.value
+                else -> return@launch fail(target, needsKey = false)
+            }
+            val expected = Expectation(listOf(stanceRecord(graphId, pick.pDirected, pick.pInterest)))
             // The record carries the pick verbatim; no delta is derived.
             val prepared = when (val outcome = stances.prepareStance(target, pick)) {
                 is Outcome.Success -> outcome.value
                 else -> return@launch fail(target, needsKey = false)
             }
             val results = try {
-                signer.sign(prepared)
+                signer.sign(prepared, expected)
             } catch (_: NoActorKeyException) {
                 // A husk device: the write waits on the reader restoring
                 // the key, not on time passing.

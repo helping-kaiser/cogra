@@ -24,6 +24,7 @@ import {
   type MediaAttachmentStatusQuery,
   type UploadMediaMutation,
 } from "@/__generated__/graphql";
+import { toHex } from "@/lib/crypto/bytes";
 import { graphqlUri } from "@/lib/graphql-uri";
 import { tokenStore } from "@/lib/session/token-store";
 import type { AuthGuard } from "@/lib/session/guard";
@@ -37,6 +38,38 @@ export type MediaAsset = NonNullable<UploadMediaMutation["uploadMedia"]["media"]
 
 /** The same asset, read back mid-poll — `MediaAttachmentStatus`'s own shape. */
 export type MediaAttachmentStatus = NonNullable<MediaAttachmentStatusQuery["mediaAttachment"]>;
+
+/**
+ * What the device knows about an asset it may attach — what the intent
+ * check holds a manifest entry to (intent.ts): the rendition digest it read
+ * for the asset at READY, the upload digest it computed over the bytes it
+ * sent, and the type the server read them as. Digests are lowercase hex.
+ */
+export type KnownMedia = {
+  readonly digest: string;
+  readonly uploadDigest: string;
+  readonly mime: string;
+};
+
+/**
+ * The upload digest: SHA-256 over exactly the bytes about to be sent, after
+ * the device's own strip and encode. The server keeps no raw original, so
+ * this is the only trace of the author's bytes a re-encode leaves.
+ */
+export async function uploadDigestOf(blob: Blob): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", await blob.arrayBuffer());
+  return toHex(new Uint8Array(digest));
+}
+
+/**
+ * Whether the server recorded the bytes this device sent: its echo of the
+ * upload digest against the device's own. A mismatch means the server's
+ * strip changed the bytes — or something between the two did — and the
+ * asset is never attached.
+ */
+export function echoes(media: { readonly uploadDigest: string }, device: string): boolean {
+  return media.uploadDigest === device;
+}
 
 /**
  * Reads one of the viewer's own uploads back — how a caller learns that an
@@ -59,6 +92,33 @@ export async function fetchMediaAttachmentStatus(
   );
   if (fetched.kind !== "success") return fetched;
   return success(fetched.value.mediaAttachment);
+}
+
+/**
+ * The digests of assets this viewer already holds, read back by id — what an
+ * edit's carried-over placements are checked against, since no gallery read
+ * selects them. Only a READY asset is known: an id that answers null (not
+ * this viewer's, or gone) or not READY is left out, so the payload
+ * expectation names it unknown and the gesture is refused rather than signed
+ * over a placement this device cannot state.
+ */
+export async function fetchKnownMedia(
+  client: ApolloClient,
+  ids: readonly string[],
+): Promise<Outcome<ReadonlyMap<string, KnownMedia>>> {
+  const known = new Map<string, KnownMedia>();
+  for (const id of new Set(ids)) {
+    const read = await fetchMediaAttachmentStatus(client, id);
+    if (read.kind !== "success") return read;
+    if (read.value !== null && read.value.state === "READY") {
+      known.set(id, {
+        digest: read.value.digest,
+        uploadDigest: read.value.uploadDigest,
+        mime: read.value.mimeType,
+      });
+    }
+  }
+  return success(known);
 }
 
 /**

@@ -626,14 +626,14 @@ from the media path and carrying their own doc write-back:
   wired on both clients; designed as the filter sheet's
   `Still settling` chip, on by default — `FeedSheet`,
   [design/readme.md §13](../../design/readme.md#13-decided-in-design-sessions)),
-  the license qualifiers on the feed card
-  (already fetched), the author's did-not-land notice
+  the post's license terms, reached from the feed card's menu as a
+  sheet over the feed (never a state of the card), the author's did-not-land notice
   ([design/readme.md §9](../../design/readme.md#9-honesty-surfaces); rides `stagedWrite`/`EXPIRED`), and
-  the composer's unchanged-snapshot guard (disable save when the
-  edit is byte-identical; the protocol keeps accepting priced
-  no-ops), and an optional **quick-pad variant** — hold, drag,
-  commit on release, no Set step — as a second mode beside the
-  full pad (jakob, 2026-08-25; the full pad stays the default).
+  the edit's unchanged guard (the edit signs only when its acts
+  batch holds an act, never by a byte comparison; the protocol
+  keeps accepting priced no-ops —
+  [design/readme.md §13](../../design/readme.md#13-decided-in-design-sessions),
+  `EditComposeUnchanged`).
 - **The borrowed view starts ranking here.** The guest and applicant
   bands already name whose view a feed shows over a chronological
   one; this slice makes the order borrowed too, and adds the
@@ -656,7 +656,7 @@ from the media path and carrying their own doc write-back:
 
 ### Slice 3.1 — Notifications
 
-- Built against [notifications.md](notifications.md): the nine
+- Built against [notifications.md](notifications.md): the ten
   addressed acts, the in-app list as the one channel, per-viewer
   rows and their two-level read state, and the contract sketch the
   slice moves into [api-spec.md](api-spec.md) and

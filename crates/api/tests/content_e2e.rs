@@ -252,6 +252,7 @@ async fn post_from_the_phone_read_it_back(pool: PgPool) {
                 "title": "Hello graph",
                 "content": "The very first post.",
                 "license": { "attribution": 1.0, "provenance": 0.0 },
+                "pDirected": 0.1,
             }}),
         )
         .await;
@@ -313,6 +314,7 @@ async fn post_from_the_phone_read_it_back(pool: PgPool) {
                 "target": post_id,
                 "content": "Great start!",
                 "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
                 "pInterest": 0.5,
             }}),
         )
@@ -414,6 +416,7 @@ async fn content_writes_need_a_member_session(pool: PgPool) {
             json!({ "input": {
                 "content": "anonymous?",
                 "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
             }}),
         )
         .await;
@@ -445,9 +448,9 @@ async fn a_self_marked_post_veils_its_body_and_keeps_its_title(pool: PgPool) {
             PREPARE_POST,
             json!({ "input": {
                 "title": "A hard thing",
-                "description": "Beside the words",
                 "content": "The body nobody sees unmarked.",
                 "license": { "attribution": 1.0, "provenance": 0.0 },
+                "pDirected": 0.1,
                 "sensitive": true,
                 "sensitiveReason": "Depicts an injury",
             }}),
@@ -483,7 +486,6 @@ async fn a_self_marked_post_veils_its_body_and_keeps_its_title(pool: PgPool) {
             json!({ "input": {
                 "id": post_id,
                 "title": "A hard thing",
-                "description": "Beside the words",
                 "content": "Softened.",
             }}),
         )
@@ -548,6 +550,7 @@ async fn a_sensitive_reason_without_the_mark_is_refused(pool: PgPool) {
             json!({ "input": {
                 "content": "unmarked",
                 "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
                 "sensitiveReason": "why",
             }}),
         )
@@ -582,6 +585,7 @@ async fn a_self_marked_comment_veils_its_body(pool: PgPool) {
                 "title": "Host",
                 "content": "The thread starts here.",
                 "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
             }}),
         )
         .await;
@@ -602,6 +606,8 @@ async fn a_self_marked_comment_veils_its_body(pool: PgPool) {
                 "target": post_id,
                 "content": "Hard to look at.",
                 "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
+                "pInterest": 0.1,
                 "sensitive": true,
                 "sensitiveReason": "Describes the injury",
             }}),
@@ -651,6 +657,8 @@ async fn a_refused_prepare_reports_user_errors(pool: PgPool) {
                 "target": Uuid::new_v4(),
                 "content": "into the void",
                 "license": { "attribution": 0.0, "provenance": 0.0 },
+                "pDirected": 0.1,
+                "pInterest": 0.1,
             }}),
         )
         .await;
@@ -680,6 +688,181 @@ async fn a_refused_prepare_reports_user_errors(pool: PgPool) {
             .expect("message")
             .contains("Dimension"),
         "expected a Dimension validation refusal: {response}"
+    );
+}
+
+/// The user signs only values they chose: a post without its attachment,
+/// or a comment without either of its two stance values, is refused by
+/// the schema before any resolver runs. Nothing is staged, so nothing can
+/// land — the server never fills the hole with a default.
+///
+/// A post or comment with a stance value left out is refused whole and nothing is staged.
+/// ´claim:content:an-omitted-stance-is-refused-whole´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_omitted_stance_value_refuses_the_whole_request(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, _key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let staged = || async {
+        sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM staged_writes")
+            .fetch_one(&rig.pool)
+            .await
+            .expect("counts")
+    };
+    let before = staged().await;
+    let license = json!({ "attribution": 0.0, "provenance": 0.0 });
+
+    let post = rig
+        .gql_raw(
+            Some(&token),
+            PREPARE_POST,
+            json!({ "input": { "content": "x", "license": license } }),
+        )
+        .await;
+    assert!(post["data"].is_null(), "no resolver ran: {post}");
+    assert!(
+        post["errors"][0]["message"]
+            .as_str()
+            .expect("message")
+            .contains("pDirected"),
+        "the refusal names the missing field: {post}"
+    );
+
+    for (present, missing) in [("pDirected", "pInterest"), ("pInterest", "pDirected")] {
+        let comment = rig
+            .gql_raw(
+                Some(&token),
+                PREPARE_COMMENT,
+                json!({ "input": {
+                    "target": Uuid::new_v4(),
+                    "content": "x",
+                    "license": license,
+                    present: 0.1,
+                }}),
+            )
+            .await;
+        assert!(comment["data"].is_null(), "no resolver ran: {comment}");
+        assert!(
+            comment["errors"][0]["message"]
+                .as_str()
+                .expect("message")
+                .contains(missing),
+            "the refusal names {missing}: {comment}"
+        );
+    }
+
+    assert_eq!(staged().await, before, "a refused request stages nothing");
+}
+
+/// The first write's `(p_d, p_i)` and act id, decoded from the canonical
+/// proposal the device signs — the values signed are the values read.
+fn signed_pair(writes: &Value) -> ((f64, f64), String) {
+    let proposal = wire::decode_proposal(
+        &B64.decode(writes[0]["canonicalProposal"].as_str().expect("proposal"))
+            .expect("b64"),
+    )
+    .expect("decodes");
+    (
+        (proposal.body.p_d, proposal.body.p_i),
+        proposal.body.act_id().to_string(),
+    )
+}
+
+/// The round-13 edit pick over the wire, through both device signatures.
+/// An edit that sends no pick — every client shipped before round 13 —
+/// signs the inert record it always signed; one that sends a pick signs
+/// it, and a pick-only edit lands as a version the post reads as edited.
+///
+/// An edit with no pick signs the inert record; a sent pick rides the signed record, and a pick-only edit reads as edited.
+/// ´claim:content:an-edit-pick-rides-the-signed-record´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_edit_pick_rides_the_signed_record(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let landed = |act: String| {
+        let pool = rig.pool.clone();
+        async move {
+            let leg = postgres_store::mirror::record_full(&pool, &act)
+                .await
+                .expect("reads record")
+                .expect("record landed")
+                .target()
+                .expect("leg")
+                .clone();
+            (leg.p_d, leg.p_i)
+        }
+    };
+
+    let prepared = rig
+        .gql(
+            Some(&token),
+            PREPARE_POST,
+            json!({ "input": {
+                "title": "Tide",
+                "content": "Low tide at six.",
+                "license": { "attribution": 1.0, "provenance": 0.0 },
+                "pDirected": 0.1,
+            }}),
+        )
+        .await;
+    let post_id = prepared["preparePost"]["node"].as_str().expect("node id");
+    rig.sign_prepared(&token, &key, &prepared["preparePost"]["writes"])
+        .await;
+    rig.close_and_ingest().await;
+
+    let unpicked = rig
+        .gql(
+            Some(&token),
+            PREPARE_POST_EDIT,
+            json!({ "input": {
+                "id": post_id, "title": "Tide", "content": "Low tide at seven.",
+            }}),
+        )
+        .await;
+    let writes = &unpicked["preparePostEdit"]["writes"];
+    let (pair, act) = signed_pair(writes);
+    assert_eq!(pair, (0.0, 1.0), "no pick signs the inert attachment");
+    rig.sign_prepared(&token, &key, writes).await;
+    rig.close_and_ingest().await;
+    assert_eq!(landed(act).await, (0.0, 1.0));
+    let read_post = || async {
+        rig.gql(
+            None,
+            r#"query($id: UUID!) { post(id: $id) {
+                 content { value } updatedAt
+               } }"#,
+            json!({ "id": post_id }),
+        )
+        .await["post"]
+            .clone()
+    };
+    let standing = read_post().await;
+
+    let picked = rig
+        .gql(
+            Some(&token),
+            PREPARE_POST_EDIT,
+            json!({ "input": {
+                "id": post_id, "title": "Tide", "content": "Low tide at seven.",
+                "pDirected": 0.4,
+            }}),
+        )
+        .await;
+    let writes = &picked["preparePostEdit"]["writes"];
+    let (pair, act) = signed_pair(writes);
+    assert_eq!(pair, (0.4, 1.0), "the sent pick is the signed attachment");
+    rig.sign_prepared(&token, &key, writes).await;
+    rig.close_and_ingest().await;
+    assert_eq!(landed(act).await, (0.4, 1.0));
+    let after = read_post().await;
+    assert_eq!(
+        after["content"], standing["content"],
+        "the pick-only edit is content-identical"
+    );
+    assert_ne!(
+        after["updatedAt"], standing["updatedAt"],
+        "and still a real version: the post's edit instant moved to it"
     );
 }
 
@@ -732,6 +915,7 @@ async fn one_asset_reads_differently_in_two_posts(pool: PgPool) {
                     "title": "Look",
                     "description": description,
                     "license": { "attribution": 1.0, "provenance": 0.0 },
+                    "pDirected": 0.1,
                     "attachments": [{
                         "mediaId": asset.to_string(),
                         "displayOrder": 0,
@@ -831,6 +1015,7 @@ async fn a_taken_cover_round_trips_to_the_reader(pool: PgPool) {
                 "title": "Look",
                 "description": "A clip",
                 "license": { "attribution": 1.0, "provenance": 0.0 },
+                "pDirected": 0.1,
                 "attachments": [attachment],
             }}),
         )

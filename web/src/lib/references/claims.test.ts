@@ -7,6 +7,8 @@ const typedClaim: ReferenceClaimNode = {
   relevance: 0.4,
   support: -0.2,
   withdrawalCost: 2,
+  rawRelevance: 1.4,
+  rawSupport: -0.2,
   pending: false,
   target: { __typename: "User", id: "u-uuid", handle: "ada" },
 };
@@ -16,6 +18,8 @@ const untypedClaim: ReferenceClaimNode = {
   relevance: 0.1,
   support: 0.1,
   withdrawalCost: 1,
+  rawRelevance: 0.1,
+  rawSupport: 0.1,
   pending: true,
   target: null,
 };
@@ -36,6 +40,12 @@ describe("referenceDrafts", () => {
   it("carries the served withdrawal cost, which the clipped pair cannot imply", () => {
     const [draft] = referenceDrafts([typedClaim]);
     expect(draft.withdrawalCost).toBe(2);
+  });
+
+  it("carries the raw sums a withdrawal is checked against", () => {
+    const [draft] = referenceDrafts([typedClaim]);
+    expect(draft.rawRelevance).toBe(1.4);
+    expect(draft.rawSupport).toBe(-0.2);
   });
 
   it("drops a claim it cannot name back to the server", () => {

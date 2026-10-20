@@ -24,6 +24,7 @@ import {
   StanceLandingLine,
   StanceStanding,
   TAP_DEFAULT,
+  unreachableHelp,
 } from "./StanceReadout.jsx";
 
 /* CoGra's SIGNATURE INTERACTION (readme §8; guidelines/stance-control.md).
@@ -240,14 +241,16 @@ export function StanceControl({
   padNote,
   wide = false,
   overMedia = false,
-  /* THE VOUCH CARD'S EMPTY FACE WEARS FULL INK (jakob 2026-10-13). The
-     muted-and-translucent resting treatment dies on the vouch card's
-     tertiary-container ground — three layers of quiet stack and the face
-     all but vanishes. On that card the hollow glyph alone carries "no
-     opinion yet", at full opacity and its own colors; the per-surface
-     restyle pattern is OVER_MEDIA's. Everywhere else the muted resting
-     face stands unchanged. */
-  fullInkEmpty = false,
+  /* THE VOUCH CARD'S EMPTY FACE IS A LINE FACE IN THE CARD'S INK (jakob
+     2026-10-14). The 🫥 emoji draws in its own fixed pale greys and cannot
+     be tinted, so neither the muted resting treatment nor full opacity
+     reads on the vouch card's tertiary-container ground. The card joins
+     over media: its unset state is `sentiment_neutral`, the line face, here
+     drawn in the ink the host hands (`var(--on-tertiary-container)` on the
+     card) — the glyph says "no opinion yet" by being the empty face. A set
+     stance still shows its own emoji face. Everywhere else the muted
+     resting face stands unchanged. */
+  lineFaceInk,
   helpLabel = "How opinions work",
   /* A NAMED PAD'S HELP, IN PLACE (jakob 2026-10-05, the collected brief's
      D4). The "?" replaces the pad's body with its help wherever the pad is
@@ -305,6 +308,24 @@ export function StanceControl({
      orange at 10 % (blessed as drawn, jakob 2026-10-05). Additive — absent, the pad renders
      exactly as before, and the live layer is the drag's own. */
   knobHeld = false,
+  /* AN APPLICANT'S ANCHOR IS LOCKED, NOT GONE (PR-103, round 16; auth.md's
+     locked look, the comment foot's twin): the anchor stands at the disabled
+     opacity and stays tappable, a tap or a press-and-hold answering `You can
+     give your opinion once you're in.` — the host wires that answer, and the
+     pad never blooms. The value is the opacity itself — `var(--state-disabled)`
+     — as `CommentCard`'s `replyOpacity`. Additive — absent, the control
+     renders exactly as before. */
+  anchorOpacity,
+  /* THE READER STILL BORROWS A VIEW (jakob 2026-10-20, seam 240): they hold
+     no outgoing opinion with neither number at zero yet. The host knows; the
+     landing line then warns, under an unreachable or severed landing, that
+     the pick would keep the borrowed view. Warns, never blocks. Additive —
+     absent, the control renders exactly as before. */
+  borrowed = false,
+  /* A BODY ALREADY EXPLAINING, for a board: `"help"` draws the "?"'s lines
+     in place, `"zero"` the unreachable landing's. Additive — absent, the pad
+     opens on its field. */
+  defaultExplaining = false,
   node,
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
@@ -321,7 +342,9 @@ export function StanceControl({
   }, [taughtProp]);
   const [open, setOpen] = React.useState(defaultOpen);
   const [alternates, setAlternates] = React.useState(false);
-  const [explaining, setExplaining] = React.useState(false);
+  /* false, `"help"` (the "?") or `"zero"` (the unreachable landing's 🤔):
+     either explanation replaces the pad's body in place. */
+  const [explaining, setExplaining] = React.useState(defaultExplaining);
   const [pick, setPick] = React.useState(defaultPick ?? TAP_DEFAULT);
   const [confirming, setConfirming] = React.useState(null);
   const [signed, setSigned] = React.useState(null);
@@ -501,6 +524,7 @@ export function StanceControl({
             fontWeight: "var(--text-label-large--font-weight)",
             color: "var(--primary)",
             ...(overMedia ? OVER_MEDIA_ANCHOR : null),
+            ...(anchorOpacity !== undefined ? { opacity: anchorOpacity } : null),
           }}
           data-node={node && "anchor"}
         >
@@ -515,14 +539,20 @@ export function StanceControl({
                glyph says "no opinion yet" by being the empty face rather than
                by being faint. */
             <Icon name="sentiment_neutral" size={28} />
+          ) : lineFaceInk && restingFace === null ? (
+            /* The card's unset state: the same line face, in the host's ink,
+               and still the anchor's `face`. */
+            <span aria-hidden="true" style={{ display: "inline-flex", color: lineFaceInk }} data-node={node && "face"}>
+              <Icon name="sentiment_neutral" size={24} />
+            </span>
           ) : (
             <span
               aria-hidden="true"
               style={{
                 fontSize: overMedia ? "var(--size-face-over-media)" : "var(--text-title-large)",
                 lineHeight: 1,
-                opacity: restingFace === null && !fullInkEmpty ? "var(--opacity-resting-face)" : 1,
-                filter: restingFace === null && !fullInkEmpty ? "grayscale(1)" : "none",
+                opacity: restingFace === null ? "var(--opacity-resting-face)" : 1,
+                filter: restingFace === null ? "grayscale(1)" : "none",
               }}
               data-node={node && "face"}
             >
@@ -653,14 +683,14 @@ export function StanceControl({
                 out of the reading order of the three readouts. 48px target, 32px
                 ring. Its name is `helpLabel` (jakob's ruling A7) — the dialog's
                 own title, not a generic one, wherever a board draws a named
-                pad (`ComposePad`'s "Your opinion on your post", `ReplyPad`'s
+                pad (`ComposePad`'s "Your backing on your post", `ReplyPad`'s
                 "Toward what you answer", `VouchBackPad`'s "Your first
                 opinion"); the ordinary feed-card control keeps the default. */}
             <button
               type="button"
-              aria-expanded={explaining}
+              aria-expanded={explaining === "help"}
               aria-label={helpLabel}
-              onClick={() => setExplaining((shown) => !shown)}
+              onClick={() => setExplaining((shown) => (shown === "help" ? false : "help"))}
               className={BUTTON_CLASS}
               style={{
                 position: "absolute",
@@ -708,8 +738,8 @@ export function StanceControl({
                 growing below them: the pad is parked, and a panel that pushes Set
                 and Cancel away from the thumb defeats the parking. */}
             {explaining ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }} data-node={node && "helpPanel"}>
-                {(help ?? padHelp(axes)).map((line) => (
+              <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }} data-node={node && (explaining === "zero" ? "zeroPanel" : "helpPanel")}>
+                {(explaining === "zero" ? unreachableHelp(axes, targetLabel) : help ?? padHelp(axes)).map((line) => (
                   <p key={helpKey(line)} style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
                     <HelpLine line={line} />
                   </p>
@@ -728,7 +758,9 @@ export function StanceControl({
               <>
                 <StancePad value={pick} onChange={setPick} fieldRef={fieldRef} axes={axes} held={knobHeld} node={node && "field"} />
                 {padNote}
-                {padSigning !== "writeRule" && <StanceLandingLine landing={landing} names={axes} node={node && "landing"} />}
+                {padSigning !== "writeRule" && (
+                  <StanceLandingLine landing={landing} names={axes} onExplainZero={() => setExplaining("zero")} borrowed={borrowed} node={node && "landing"} />
+                )}
               </>
             )}
             {/* THE WRITE RULE REFUSED SET (jakob 2026-10-01, backlog item 117):
@@ -777,7 +809,7 @@ export function StanceControl({
               </button>
               <button
                 type="button"
-                disabled={explaining}
+                disabled={Boolean(explaining)}
                 onClick={padSigning === "busy" ? undefined : () => commitChecked(pick)}
                 aria-busy={padSigning === "busy" || undefined}
                 aria-disabled={padSigning === "busy" || undefined}
@@ -785,7 +817,7 @@ export function StanceControl({
                 style={buttonStyle({
                   variant: padSigning === "failed" ? "outline" : "primary",
                   size: "sm",
-                  disabled: explaining,
+                  disabled: Boolean(explaining),
                   busy: padSigning === "busy",
                 })}
                 data-node={node && "set"}
@@ -805,7 +837,17 @@ export function StanceControl({
           onCommit={() => commitChecked(pick)}
           onCancel={closeAll}
           onSever={openSeverance}
-          landing={<StanceLandingLine landing={landing} names={axes} />}
+          landing={
+            <StanceLandingLine
+              landing={landing}
+              names={axes}
+              onExplainZero={() => setExplaining("zero")}
+              zeroShown={explaining === "zero"}
+              borrowed={borrowed}
+            />
+          }
+          zeroHelp={explaining === "zero" ? unreachableHelp(axes, targetLabel) : null}
+          onZeroBack={() => setExplaining(false)}
           helpLabel={helpLabel}
           axes={axes}
         >

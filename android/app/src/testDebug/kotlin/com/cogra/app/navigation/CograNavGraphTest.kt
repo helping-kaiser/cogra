@@ -375,7 +375,7 @@ class CograNavGraphTest {
         // affordance row.
         waitForTag("postDetail.header.menu")
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_cite").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.cite").performClick()
         compose.waitForIdle()
 
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ComposePost>())
@@ -638,13 +638,12 @@ class CograNavGraphTest {
     }
 
     @Test
-    fun theAvatarFlowSitsTwoEntriesAboveTheProfileItAnswers() {
-        // The invariant the avatar fix rests on: the flow is pushed from
-        // the EDIT screen, so `previousBackStackEntry` is ProfileEdit —
-        // which reads no results at all, and reporting there dropped the
-        // signed picture entirely (HT-8). The result has to be aimed at
-        // the Profile entry by name. Re-parent this destination and this
-        // test is the thing that says the aim must move with it.
+    fun aPictureTheCropBringsBackIsHeldByTheEditAndNothingIsSigned() {
+        // AvatarCrop.md: opened from Change picture on the profile edit,
+        // Next brings the edit back holding the new picture AND NEVER the
+        // picture's own seal opens — the edit's one seal signs it with the
+        // fields. A seal here signed a second act the edit's Save then
+        // raced, refused as already in flight (hand test, round 4).
         signIn()
         identity.seed = ActorKey.generate().seed()
         account.profile = member()
@@ -655,14 +654,28 @@ class CograNavGraphTest {
         compose.onNodeWithTag("profile_edit").performScrollTo().performClick()
         waitForTag("profile_edit_bio")
 
-        navController.navigate(AvatarFlow("content://picked"))
-        compose.waitUntil(timeoutMillis = 30_000) {
-            navController.currentBackStackEntry?.destination?.hasRoute<AvatarFlow>() == true
+        // The crop itself draws through GL, which Robolectric cannot host, so
+        // what its Next leaves behind is placed here as the graph's onFramed
+        // places it: the framing on the edit's own entry, the flow popped.
+        compose.runOnIdle {
+            val edit = navController.currentBackStackEntry!!
+            assertThat(edit.destination.hasRoute<ProfileEdit>()).isTrue()
+            edit.savedStateHandle["framed_picture_window"] = floatArrayOf(0.1f, 0.1f, 0.9f, 0.9f)
+            edit.savedStateHandle["framed_picture_uri"] = "content://picked"
         }
-        assertThat(navController.previousBackStackEntry?.destination?.hasRoute<ProfileEdit>())
-            .isTrue()
-        assertThat(navController.getBackStackEntry<Profile>().destination.hasRoute<Profile>())
-            .isTrue()
+
+        // The edit holds the picture on its way up — sending, or refused as
+        // unreadable by the real pipeline — and nothing is signed before Save.
+        compose.waitUntil(timeoutMillis = 30_000) {
+            compose.onAllNodes(
+                hasTestTag("profile_edit_avatar_sending") or hasTestTag("profile_edit_avatar_failed"),
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+        assertThat(profiles.updates).isEmpty()
+        // The result is taken, so a recomposition cannot hand it over twice.
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.savedStateHandle?.get<String?>("framed_picture_uri") == null
+        }
     }
 
     // The guest read shell: Feed and PostDetail live on the signed-out

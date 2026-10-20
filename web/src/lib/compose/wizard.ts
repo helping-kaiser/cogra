@@ -15,6 +15,8 @@
 // lose their paragraphs to a mis-tap — but only the active side is ever sent.
 
 import type { GalleryEntryDraft } from "@/lib/api/content-api";
+import type { KnownMedia } from "@/lib/api/media-api";
+import { ledgerEntry, type MediaLedger } from "@/lib/compose/payload-expectation";
 import type { Crop } from "@/lib/ui2/media/crop";
 import { CENTERED } from "@/lib/ui2/media/crop";
 import { POST_SHAPES, type PostShape } from "@/lib/ui2/media/aspect";
@@ -126,7 +128,19 @@ export type AssetUpload =
   | { readonly kind: "encoding" }
   | { readonly kind: "uploading" }
   | { readonly kind: "processing"; readonly mediaId: string }
-  | { readonly kind: "done"; readonly mediaId: string }
+  | {
+      readonly kind: "done";
+      readonly mediaId: string;
+      /**
+       * The digests the intent check holds this asset's manifest entry to:
+       * the upload digest this device computed and the server echoed, and
+       * the rendition digest it read at READY. It persists with the draft,
+       * so a restored draft is checked as it was uploaded. Absent only on a
+       * draft saved before the upload digest existed, which is re-sent on
+       * restore (`draft-store.ts`) rather than signed blind.
+       */
+      readonly media?: KnownMedia;
+    }
   | { readonly kind: "failed"; readonly message: string; readonly retryable: boolean };
 
 export type PickedAsset = {
@@ -230,9 +244,9 @@ export type WizardState = {
   /** Shown on the veil when it is given. Blank counts as none. */
   readonly sensitiveReason: string;
   /**
-   * Where the author stands on their own post — the Publish record's `pDirected`.
-   * `pInterest` is census-fixed at 1 for Publish, so there is one free number
-   * here and not a pair; the low-defaults policy value is +0.1.
+   * The author's BACKING of their own post — the Publish record's `pDirected`
+   * (PR-101). `pInterest` is census-fixed at 1 for Publish, so there is one
+   * free number here and not a pair; the low-defaults policy value is +0.1.
    */
   readonly pDirected: number;
 };
@@ -336,7 +350,9 @@ export function bodyGate(state: WizardState): Gate {
 export function detailsGate(state: WizardState): Gate {
   const titleIssue = titleProblem(state.title);
   if (titleIssue !== null) return { ok: false, reason: titleIssue };
-  const descriptionIssue = descriptionProblem(state.description);
+  // The words side carries no description, so one left over the cap beside
+  // pictures the author swapped away never holds the words post up.
+  const descriptionIssue = state.mode === "media" ? descriptionProblem(state.description) : null;
   return descriptionIssue === null ? ALLOWED : { ok: false, reason: descriptionIssue };
 }
 
@@ -492,9 +508,35 @@ export function attachmentClaims(state: WizardState): readonly GalleryEntryDraft
   return claims;
 }
 
+/**
+ * Every asset this draft uploaded and can state the digests of — the
+ * pictures, the clip, and either cover — for the payload expectation
+ * (payload-expectation.ts).
+ */
+export function wizardLedger(state: WizardState): MediaLedger {
+  return new Map([
+    ...state.assets.flatMap((asset) => ledgerEntry(asset.upload)),
+    ...(state.cover === null ? [] : ledgerEntry(state.cover.upload)),
+    ...(state.autoCover === null ? [] : ledgerEntry(state.autoCover.upload)),
+  ]);
+}
+
 /** The words half, or null on a media post — the XOR, as the input wants it. */
 export function bodyContent(state: WizardState): string | null {
   return state.mode === "words" ? state.words : null;
+}
+
+/**
+ * The description the post carries, or null. THE WORDS PATH COMPOSES NONE
+ * (K8.1/D4; design/readme.md:8179-8181): a description is how words stand
+ * beside pictures, so on the words side it is neither drawn nor sent — the
+ * server refuses one at `["description"]`. A description typed beside the
+ * pictures rides with them: swapping to words drops it from the post, and
+ * it comes back only with the pictures it stood beside.
+ */
+export function descriptionContent(state: WizardState): string | null {
+  if (state.mode !== "media") return null;
+  return state.description.trim() === "" ? null : state.description;
 }
 
 export function shapeRatio(state: WizardState): number {

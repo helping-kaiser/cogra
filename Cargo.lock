@@ -800,6 +800,7 @@ version = "0.1.0"
 dependencies = [
  "aes-gcm",
  "base64 0.23.1",
+ "chrono",
  "ed25519-dalek",
  "hex",
  "hkdf",
@@ -2357,6 +2358,7 @@ dependencies = [
 name = "l1-standin"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "common",
  "ed25519-dalek",
  "rand 0.8.8",
@@ -3339,6 +3341,38 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "513962919efc330f829edb2535844d1b912b0fbe2ca165d613e4e8788bb05a5a"
 dependencies = [
  "rand_core 0.9.5",
+]
+
+[[package]]
+name = "ranker"
+version = "0.1.0"
+dependencies = [
+ "common",
+ "libm",
+ "proptest",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "ranker-server"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-graphql",
+ "async-graphql-axum",
+ "axum",
+ "chrono",
+ "graphql_client",
+ "ranker",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
 ]
 
 [[package]]

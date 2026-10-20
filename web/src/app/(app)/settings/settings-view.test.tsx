@@ -4,9 +4,11 @@ import { delay } from "msw/utils/delay";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AccountDeletionProvider } from "@/lib/deletion/deletion-status";
+import { RUNNING_VERSION } from "@/lib/release/running-version";
 import { createTokenStore } from "@/lib/session/token-store";
 import { accountFilterLevel, setAccountFilterLevel } from "@/lib/settings/sensitive-content";
 import { fakeIdentityStore } from "@/test/identity";
+import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { SettingsView } from "./settings-view";
@@ -99,16 +101,31 @@ function renderSettings({
   const identity = fakeIdentityStore({ keyOnDevice, seed, ephemeral });
   const drafts = { clear: vi.fn(async () => {}) };
   const seals = { forget: vi.fn(async () => {}) };
+  const forgetSeenRecord = vi.fn<(account: string) => Promise<void>>(async () => {});
   const erase = vi.fn(async () => {});
   const leave = vi.fn();
   const tokens = signedInStore();
+  // The device lock's two settings-side calls (sign-out-custody §3.4-§3.5);
+  // the engine itself is covered by `device-lock.test.ts`.
+  const deviceLock = {
+    ensureHeld: vi.fn(async () => "held" as const),
+    discard: vi.fn(async () => {}),
+  };
   const rendered = renderWithProviders(
     <AccountDeletionProvider>
-      <SettingsView store={identity} drafts={drafts} seals={seals} erase={erase} leave={leave} />
+      <SettingsView
+        store={identity}
+        drafts={drafts}
+        seals={seals}
+        forgetSeenRecord={forgetSeenRecord}
+        erase={erase}
+        leave={leave}
+        deviceLock={deviceLock}
+      />
     </AccountDeletionProvider>,
     { store: tokens },
   );
-  return { ...rendered, identity, drafts, seals, tokens, erase, leave };
+  return { ...rendered, identity, drafts, seals, forgetSeenRecord, tokens, erase, leave, deviceLock };
 }
 
 /** The node a registered path names (`data-node.ts`). */
@@ -510,6 +527,15 @@ describe("the settings page", () => {
     expect(push).toHaveBeenCalledWith("/about?from=settings");
   });
 
+  it("whats_new_opens_the_release_chronicle_and_reads_the_running_version", async () => {
+    renderSettings();
+    const value = await screen.findByTestId("settings.about.whatsNew.value");
+    // The one source the chronicle's `installed` reads too (WhatsNew.md:7).
+    expect(value).toHaveTextContent(RUNNING_VERSION);
+    fireEvent.click(screen.getByTestId("settings.about.whatsNew"));
+    expect(push).toHaveBeenCalledWith("/settings/whats-new");
+  });
+
   it("says a subpage's return in its snackbar, once", async () => {
     search = new URLSearchParams("done=handle");
     renderSettings();
@@ -756,7 +782,7 @@ describe("signing out", () => {
     const row = await screen.findByTestId("settings.leaving.forget");
     expect(row).toHaveAttribute("aria-checked", "false");
     expect(screen.getByTestId("settings.leaving.forget.status")).toHaveTextContent(
-      "Your key, your draft and any kept picks are cleared from this browser when you sign out.",
+      "Your key, your draft, any kept picks and what you've seen are cleared from this browser when you sign out.",
     );
     fireEvent.click(row);
     await waitFor(() => expect(row).toHaveAttribute("aria-checked", "true"));
@@ -765,9 +791,29 @@ describe("signing out", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
+  it("forget_switch_on_obtains_a_lock_and_off_discards_it", async () => {
+    const { deviceLock } = renderSettings();
+    const row = await screen.findByTestId("settings.leaving.forget");
+    fireEvent.click(row);
+    await waitFor(() => expect(deviceLock.ensureHeld).toHaveBeenCalledWith("acct-1"));
+    fireEvent.click(row);
+    await waitFor(() => expect(deviceLock.discard).toHaveBeenCalledWith("acct-1"));
+    // Neither waits in the way: the switch reads its new state at once.
+    expect(row).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("the forget switch flips even when its lock gets no answer", async () => {
+    const { deviceLock } = renderSettings();
+    deviceLock.ensureHeld.mockRejectedValueOnce(new Error("offline"));
+    const row = await screen.findByTestId("settings.leaving.forget");
+    fireEvent.click(row);
+    await waitFor(() => expect(deviceLock.ensureHeld).toHaveBeenCalled());
+    expect(row).toHaveAttribute("aria-checked", "true");
+  });
+
   it("sign_out_remembered_keeps_the_key_and_offers_the_account — and keeps the draft (F4)", async () => {
     server.use(okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }));
-    const { identity, drafts, seals, tokens } = renderSettings();
+    const { identity, drafts, seals, forgetSeenRecord, tokens } = renderSettings();
     await screen.findByTestId("settings.credentials.password.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     await waitFor(() => expect(tokens.accessToken()).toBeNull());
@@ -775,11 +821,13 @@ describe("signing out", () => {
     // A remembered sign-out clears nothing — the draft and its sealed copies included.
     expect(drafts.clear).not.toHaveBeenCalled();
     expect(seals.forget).not.toHaveBeenCalled();
+    // a_remembered_sign_out_keeps_the_record
+    expect(forgetSeenRecord).not.toHaveBeenCalled();
   });
 
   it("sign_out_forgotten_with_a_backup_clears_without_asking", async () => {
     server.use(okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }));
-    const { identity, drafts, seals, tokens } = renderSettings({ ephemeral: true });
+    const { identity, drafts, seals, forgetSeenRecord, tokens } = renderSettings({ ephemeral: true });
     await screen.findByTestId("settings.credentials.password.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     await waitFor(() => expect(tokens.accessToken()).toBeNull());
@@ -788,11 +836,14 @@ describe("signing out", () => {
     expect(drafts.clear).toHaveBeenCalled();
     // A staged post's sealed copy is the draft it came from (Settings.md:145).
     expect(seals.forget).toHaveBeenCalled();
+    // a_dont_remember_sign_out_clears_the_accounts_seen_record: this account's, by id, once.
+    expect(forgetSeenRecord).toHaveBeenCalledTimes(1);
+    expect(forgetSeenRecord).toHaveBeenCalledWith("acct-1");
   });
 
   it("sign_out_forgotten_with_the_only_key_asks_first", async () => {
     server.use(accountHandler({ keyBackupCreatedAt: null }));
-    const { identity, drafts, seals, tokens } = renderSettings({ ephemeral: true });
+    const { identity, drafts, seals, forgetSeenRecord, tokens } = renderSettings({ ephemeral: true });
     await screen.findByTestId("settings.backup.recovery.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     const dialog = await screen.findByTestId("settings.dialog");
@@ -801,6 +852,7 @@ describe("signing out", () => {
     expect(await identity.actorKey()).not.toBeNull();
     expect(drafts.clear).not.toHaveBeenCalled();
     expect(seals.forget).not.toHaveBeenCalled();
+    expect(forgetSeenRecord).not.toHaveBeenCalled();
     // dialog_names_key_draft_and_kept_picks
     expect(within(dialog).getByTestId("settings.dialog.title")).toHaveTextContent("Sign out without a backup?");
     expect(within(dialog).getByTestId("settings.dialog.body")).toHaveTextContent(
@@ -841,7 +893,7 @@ describe("signing out", () => {
       accountHandler({ keyBackupCreatedAt: null }),
       okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }),
     );
-    const { identity, drafts, seals, tokens } = renderSettings({ ephemeral: true });
+    const { identity, drafts, seals, forgetSeenRecord, tokens, deviceLock } = renderSettings({ ephemeral: true });
     await screen.findByTestId("settings.backup.recovery.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     fireEvent.click(await screen.findByTestId("settings.dialog.erase"));
@@ -849,6 +901,29 @@ describe("signing out", () => {
     expect(await identity.actorKey()).toBeNull();
     expect(drafts.clear).toHaveBeenCalled();
     expect(seals.forget).toHaveBeenCalled();
+    expect(forgetSeenRecord).toHaveBeenCalledWith("acct-1");
+    // erase_discards_the_device_lock (sign-out-custody §3.5 ERASE)
+    expect(deviceLock.discard).toHaveBeenCalledWith("acct-1");
+  });
+
+  it("erase_discards_the_device_lock", async () => {
+    // The Clearing-data erase too: the server half goes while a session
+    // still exists to name it.
+    const { deviceLock, leave } = renderSettings();
+    await screen.findByTestId("settings.backup.recovery.status");
+    fireEvent.click(screen.getByTestId("settings.clearing.erase"));
+    fireEvent.click(byNode("settings.dialog.erase", "made"));
+    await waitFor(() => expect(leave).toHaveBeenCalledWith("/login"));
+    expect(deviceLock.discard).toHaveBeenCalledWith("acct-1");
+  });
+
+  it("a forgotten sign-out with a backup discards the lock before it purges", async () => {
+    server.use(okMutation("RevokeSession", "RevokeSessionPayload", { session: { __typename: "Session", id: "s1" } }));
+    const { deviceLock, tokens } = renderSettings({ ephemeral: true });
+    await screen.findByTestId("settings.credentials.password.status");
+    fireEvent.click(screen.getByTestId("settings.leaving.leave"));
+    await waitFor(() => expect(tokens.accessToken()).toBeNull());
+    expect(deviceLock.discard).toHaveBeenCalledWith("acct-1");
   });
 
   it("scrim_and_back_close_still_signed_in_focus_on_sign_out", async () => {
@@ -1023,5 +1098,107 @@ describe("clearing data (B6)", () => {
     expect(push).toHaveBeenCalledWith("/settings/backup");
     expect(erase).not.toHaveBeenCalled();
     expect(tokens.accessToken()).toBe("access-1");
+  });
+});
+
+describe("hidden accounts (SettingsHidden.md; hidden-actors packet §5.4, §6)", () => {
+  const JUNO = { id: "j", handle: "juno", displayName: "Juno Baptiste", hiddenAt: ago(3) };
+  const ADA = { id: "a", handle: "ada", displayName: "Ada Okonkwo", hiddenAt: ago(14) };
+
+  /** The Unhide of the row keyed `handle`. */
+  const unhideOf = (handle: string) => byNode("settings.hiddenSheet.list.account.trailing.unhide", handle);
+
+  it("hidden_row_reads_the_count_and_opens_the_sheet_titled_with_no_count", async () => {
+    server.use(...hiddenHandlers(hiddenLog(), { entries: [JUNO, ADA] }));
+    renderSettings();
+    await waitFor(() => expect(screen.getByTestId("settings.people.hidden.value")).toHaveTextContent("2"));
+    fireEvent.click(screen.getByTestId("settings.people.hidden"));
+    const sheet = await screen.findByTestId("settings.hiddenSheet");
+    expect(within(sheet).getByTestId("settings.hiddenSheet.title")).toHaveTextContent(/^Hidden accounts$/);
+  });
+
+  it("rows_stand_most_recently_hidden_first_reading_name_handle_and_hidden_age_with_unhide", async () => {
+    server.use(...hiddenHandlers(hiddenLog(), { entries: [ADA, JUNO] }));
+    renderSettings();
+    await waitFor(() => expect(screen.getByTestId("settings.people.hidden.value")).toHaveTextContent("2"));
+    fireEvent.click(screen.getByTestId("settings.people.hidden"));
+    await screen.findByTestId("settings.hiddenSheet");
+    const keys = screen
+      .getAllByTestId("settings.hiddenSheet.list.account")
+      .map((row) => row.getAttribute("data-testid-key"));
+    expect(keys).toEqual(["juno", "ada"]);
+    const juno = byNode("settings.hiddenSheet.list.account", "juno");
+    expect(juno).toHaveTextContent("Juno Baptiste");
+    expect(juno).toHaveTextContent("@juno");
+    expect(juno).toHaveTextContent("Hidden 3d");
+    expect(unhideOf("juno")).toHaveTextContent("Unhide");
+  });
+
+  it("unhide_takes_the_row_and_the_snackbar_offers_undo_which_puts_it_back_in_place", async () => {
+    const log = hiddenLog();
+    server.use(...hiddenHandlers(log, { entries: [JUNO, ADA] }));
+    renderSettings();
+    await waitFor(() => expect(screen.getByTestId("settings.people.hidden.value")).toHaveTextContent("2"));
+    fireEvent.click(screen.getByTestId("settings.people.hidden"));
+    await screen.findByTestId("settings.hiddenSheet");
+    fireEvent.click(unhideOf("juno"));
+    expect(screen.getAllByTestId("settings.hiddenSheet.list.account")).toHaveLength(1);
+    expect(await screen.findByTestId("settings-snackbar")).toHaveTextContent(
+      "@juno is unhidden — their posts can reach your feed again.",
+    );
+    await waitFor(() => expect(log.unhides).toEqual(["j"]));
+    fireEvent.click(screen.getByRole("button", { name: "Undo" }));
+    // Back in its place, with its own age (the restore passes the row's hiddenAt).
+    expect(
+      screen.getAllByTestId("settings.hiddenSheet.list.account").map((row) => row.getAttribute("data-testid-key")),
+    ).toEqual(["juno", "ada"]);
+    await waitFor(() => expect(log.hides).toEqual([{ actor: "j", at: JUNO.hiddenAt }]));
+  });
+
+  it("unhiding_the_last_closes_onto_settings_reading_none", async () => {
+    server.use(...hiddenHandlers(hiddenLog(), { entries: [JUNO] }));
+    renderSettings();
+    await waitFor(() => expect(screen.getByTestId("settings.people.hidden.value")).toHaveTextContent("1"));
+    fireEvent.click(screen.getByTestId("settings.people.hidden"));
+    await screen.findByTestId("settings.hiddenSheet");
+    fireEvent.click(unhideOf("juno"));
+    await waitFor(() => expect(screen.getByTestId("settings.people.hidden.value")).toHaveTextContent("None"));
+    await waitFor(() =>
+      expect((screen.getByTestId("settings.hiddenSheet") as HTMLDialogElement).open).toBe(false),
+    );
+  });
+
+  it("a_failed_unhide_reverts_with_retry_in_the_rows_own_slots", async () => {
+    const log = hiddenLog();
+    server.use(...hiddenHandlers(log, { entries: [JUNO, ADA], failUnhide: true }));
+    renderSettings();
+    await waitFor(() => expect(screen.getByTestId("settings.people.hidden.value")).toHaveTextContent("2"));
+    fireEvent.click(screen.getByTestId("settings.people.hidden"));
+    await screen.findByTestId("settings.hiddenSheet");
+    fireEvent.click(unhideOf("juno"));
+    await waitFor(() =>
+      expect(byNode("settings.hiddenSheet.list.account", "juno")).toHaveTextContent("That didn't go through."),
+    );
+    fireEvent.click(screen.getByTestId("settings-hidden-j-retry"));
+    await waitFor(() => expect(log.unhides).toEqual(["j", "j"]));
+  });
+
+  it("a_deleted_accounts_row_reads_deleted_account_keyed_by_its_id", async () => {
+    server.use(
+      ...hiddenHandlers(hiddenLog(), {
+        entries: [{ id: "gone-1", handle: "gone", displayName: "x", hiddenAt: ago(40), redacted: true }],
+      }),
+    );
+    renderSettings();
+    await waitFor(() => expect(screen.getByTestId("settings.people.hidden.value")).toHaveTextContent("1"));
+    fireEvent.click(screen.getByTestId("settings.people.hidden"));
+    await screen.findByTestId("settings.hiddenSheet");
+    const row = byNode("settings.hiddenSheet.list.redactedAccount", "gone-1");
+    expect(row).toHaveTextContent("Deleted account");
+    expect(row).not.toHaveTextContent("@gone");
+    fireEvent.click(byNode("settings.hiddenSheet.list.redactedAccount.trailing.unhide", "gone-1"));
+    expect(await screen.findByTestId("settings-snackbar")).toHaveTextContent(
+      "This account is unhidden — its posts can reach your feed again.",
+    );
   });
 });

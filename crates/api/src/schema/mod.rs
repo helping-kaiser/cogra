@@ -8,9 +8,13 @@
 //! credentials, invite links, and the client-signed write path's relay
 //! legs (api-spec.md).
 
+pub mod app_versions;
 pub mod feed;
 mod mutation;
+pub mod notifications;
 mod query;
+pub mod ranked_search;
+pub mod trace;
 pub mod types;
 
 use std::sync::Arc;
@@ -25,7 +29,7 @@ use crate::auth::AuthConfig;
 use crate::breach::BreachCorpus;
 use crate::l1::StandInBoundary;
 use crate::mailer::{Mailer, WebOrigin};
-use crate::media::{BlobStore, MediaConfig};
+use crate::media::{BlobStore, MediaAreas, MediaConfig};
 use crate::onboarding::OnboardingConfig;
 use crate::ranker_pod::RankerClient;
 use crate::ratelimit::RateLimitConfig;
@@ -44,9 +48,12 @@ pub struct ApiContext {
     pub rate_limits: RateLimitConfig,
     pub breach: Arc<dyn BreachCorpus>,
     pub media: MediaConfig,
-    /// The media service, as a client. Bytes never live in this process
-    /// — the store is its own container with its own lifecycle.
-    pub blobs: Arc<dyn BlobStore>,
+    /// The media service's three areas, as clients. Bytes never live in
+    /// this process — the store is its own container with its own
+    /// lifecycle. The live store is also in the context on its own, as
+    /// the `Arc<dyn BlobStore>` the upload legs write to; it is this
+    /// value's `live`, so the two can never name different stores.
+    pub areas: MediaAreas,
     /// The server ranker pod, as a client. Ranking never runs in this
     /// process; `feedRanking` relays to it.
     pub ranker: RankerClient,
@@ -139,6 +146,9 @@ pub fn build_with(ctx: ApiContext, budgets: QueryBudgets) -> ApiSchema {
         .data(loaders.comment_galleries)
         .data(loaders.media)
         .data(loaders.payload_states)
+        .data(loaders.epoch_instants)
+        .data(loaders.bookmarks)
+        .data(loaders.thread_posts)
         .data(ctx.pool)
         .data(ctx.boundary)
         .data(ctx.auth)
@@ -148,7 +158,8 @@ pub fn build_with(ctx: ApiContext, budgets: QueryBudgets) -> ApiSchema {
         .data(ctx.rate_limits)
         .data(ctx.breach)
         .data(ctx.media)
-        .data(ctx.blobs)
+        .data::<Arc<dyn BlobStore>>(ctx.areas.live.clone())
+        .data(ctx.areas)
         .data(ctx.ranker)
         .data(ctx.slice_reads)
         .limit_depth(budgets.depth)

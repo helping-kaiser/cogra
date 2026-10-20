@@ -3,6 +3,7 @@ package com.cogra.feature.content.wizard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.core.designsystem.v2.compose.HelpTopic
+import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
@@ -16,18 +17,26 @@ import com.cogra.domain.compose.fateOf
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.MediaProcessor
+import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.PICTURE_MAX_BYTES
 import com.cogra.domain.media.VideoProcessor
-import com.cogra.domain.media.MediaRepository
+import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.settings.SettingsRepository
+import com.cogra.domain.signing.ContentShape
+import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.NoActorKeyException
+import com.cogra.domain.signing.SentContent
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.signing.contentExpectation
+import com.cogra.domain.signing.ledgerFor
+import com.cogra.domain.signing.postExpectation
+import com.cogra.domain.signing.wireReason
+import com.cogra.domain.topics.TagClaim
 import com.cogra.domain.valueOrNull
-import com.cogra.domain.AttachmentClaim
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.SectionsEditor
@@ -36,24 +45,23 @@ import com.cogra.feature.content.candidateRows
 import com.cogra.feature.content.referenceFieldIndex
 import com.cogra.feature.content.tagFieldIndex
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.io.IOException
-import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.IOException
+import javax.inject.Inject
 
 /**
  * The compose wizard (design/readme.md §13; canonical `Compose*`
  * boards): body-first pick, crop, details, and a seal that names every
  * act before a single one is signed.
  *
- * It replaces the old composer for **creation**. Editing still runs the
- * shipped `ComposePostScreen`: an edit's batching is its own ruled bite
- * (D19's split-out), and the wizard's body step has no meaning for a
- * post whose body already exists.
+ * It is the surface for **creation**. Editing runs the post edit
+ * (`edit/PostEditScreen.kt`, one screen and one batch): the wizard's
+ * body step has no meaning for a post whose body already exists.
  *
  * Three things drive the shape of this class:
  *
@@ -680,8 +688,25 @@ class ComposeWizardViewModel @Inject constructor(
     /** A drag on the pad's field: staged, not set (`ComposePad`). */
     fun onPDirectedChange(value: Double) = _state.update { it.copy(stagedPDirected = value) }
 
-    /** The pad's Set — the one gesture that moves the stance the seal reads. */
-    fun onSetStance() = _state.update { it.copy(pDirected = it.stagedPDirected).closedSheets() }
+    /**
+     * The pad's Set — the one gesture that moves the backing the seal reads.
+     * At exactly 0.00 it asks `Start it unreachable?` first, the pad parked
+     * beneath: a Publish at zero carries nothing on the post's own path
+     * (ComposePad.md). It warns, never refuses.
+     */
+    fun onSetStance() = _state.update {
+        if (it.stagedPDirected == 0.0) {
+            it.copy(confirmingUnreachable = true)
+        } else {
+            it.copy(pDirected = it.stagedPDirected).closedSheets()
+        }
+    }
+
+    /** `Keep adjusting`: the dialog closes and the pad stands at the pick. */
+    fun onKeepAdjusting() = _state.update { it.copy(confirmingUnreachable = false) }
+
+    /** `Set it anyway`: the dialog and the pad close, the row reads 0.00 — nothing is signed. */
+    fun onSetUnreachable() = _state.update { it.copy(pDirected = 0.0).closedSheets() }
 
     // -- Uploads (D5: one call per asset, concurrent, retryable) --
 
@@ -717,6 +742,87 @@ class ComposeWizardViewModel @Inject constructor(
     // -- The seal (`ComposeSeal`) --
 
     /**
+     * The cited nodes' L1 ids, read before anything is staged: the intent
+     * check (Intent.kt) binds every citation to them. Null once the read
+     * failed — already reported.
+     */
+    private suspend fun citedGraphIds(references: List<ReferenceClaim>): Map<String, String>? =
+        when (val read = content.graphIds(references.map { it.targetId })) {
+            is Outcome.Success -> read.value
+            is Outcome.Refused -> null.also { refuse(read.errors) }
+            is Outcome.Failed -> null.also { failTransport() }
+        }
+
+    /**
+     * The request the seal sends — read twice: once by the prepare and once
+     * by the payload expectation, so the device checks the envelope against
+     * exactly what it asked for (PayloadExpectation.kt).
+     */
+    private fun sentContent(current: ComposeWizardState): SentContent = SentContent(
+        title = current.title.ifBlank { null },
+        description = current.descriptionContent,
+        // The XOR, structurally: a media post sends no content at all, and
+        // a words post no gallery.
+        content = current.body.takeIf { current.mode == BodyMode.Words },
+        // The poster rides the clip's own placement, never a gallery entry
+        // of its own — which is what keeps "ten pictures or one video" one
+        // counting rule.
+        attachments = if (current.mode == BodyMode.Media) {
+            current.picked.mapNotNull { asset ->
+                asset.mediaId?.let {
+                    AttachmentClaim(
+                        mediaId = it,
+                        altText = asset.altText.ifBlank { null },
+                        coverMediaId = current.coverMediaId.takeIf { _ -> asset.isVideo },
+                        // TAKEN (frame 1, silently) vs CHOSEN — the fact
+                        // `storesFirstFrame` already names, gated the same way
+                        // as the id itself so a picture post never claims it.
+                        coverTaken = current.coverChoice.storesFirstFrame.takeIf { asset.isVideo } ?: false,
+                    )
+                }
+            }
+        } else {
+            emptyList()
+        },
+        // Always sent explicitly, never omitted: an edit payload is the
+        // complete state, so an omitted mark UNMARKS. Sending the switch's
+        // current value is what keeps create and edit the same code.
+        sensitive = current.sensitive,
+        // Blank counts as none, said here rather than left to the transport:
+        // an empty string is a value, and "no reason" is what the author
+        // actually chose.
+        sensitiveReason = wireReason(current.sensitive, current.sensitiveReason.ifBlank { null }),
+    )
+
+    /**
+     * What the post orders, as the intent check reads it (Intent.kt), once
+     * the prepare named the node: the payload [sent] must decode to — its
+     * pictures held to the digests this device computed, the poster read
+     * back by id — then the topics and citations. Null once a read failed —
+     * already reported.
+     */
+    @Suppress("LongParameterList") // one parameter per thing the seal holds
+    private suspend fun expectation(
+        current: ComposeWizardState,
+        node: String,
+        sent: SentContent,
+        tags: List<TagClaim>,
+        references: List<ReferenceClaim>,
+        graphIds: Map<String, String>,
+    ): Expectation? {
+        val own = current.picked.mapNotNull { asset ->
+            (asset.upload as? AssetUpload.Done)?.let { done -> done.known?.let { done.mediaId to it } }
+        }.toMap()
+        val ledger = when (val read = media.ledgerFor(sent.attachments, own)) {
+            is Outcome.Success -> read.value
+            is Outcome.Refused -> return null.also { refuse(read.errors) }
+            is Outcome.Failed -> return null.also { failTransport() }
+        }
+        val payload = contentExpectation(node, sent, ContentShape.POST, ledger)
+        return postExpectation(current.pDirected, current.license, payload, tags, references, graphIds)
+    }
+
+    /**
      * Stages the batch and signs it. A refusal from the prepare stops
      * before any signature: nothing was signed, so nothing may claim
      * signing failed.
@@ -737,55 +843,33 @@ class ComposeWizardViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
+            val tags = current.tagSection.tags.map { it.toClaim() }
+            val references = current.referenceSection.references.map { it.toClaim() }
+            val graphIds = citedGraphIds(references) ?: return@launch
+            val sent = sentContent(current)
             val prepared = when (
                 val outcome = content.preparePost(
-                    title = current.title.ifBlank { null },
-                    description = current.description.ifBlank { null },
-                    // The XOR, structurally: a media post sends no
-                    // content at all, and a words post no gallery.
-                    content = current.body.takeIf { current.mode == BodyMode.Words },
+                    title = sent.title,
+                    description = sent.description,
+                    content = sent.content,
                     license = current.license,
-                    tags = current.tagSection.tags.map { it.toClaim() },
-                    references = current.referenceSection.references.map { it.toClaim() },
-                    // The poster rides the clip's own placement, never a
-                    // gallery entry of its own — which is what keeps "ten
-                    // pictures or one video" one counting rule.
-                    attachments = if (current.mode == BodyMode.Media) {
-                        current.picked.mapNotNull { asset ->
-                            asset.mediaId?.let {
-                                AttachmentClaim(
-                                    mediaId = it,
-                                    altText = asset.altText.ifBlank { null },
-                                    coverMediaId = current.coverMediaId.takeIf { _ -> asset.isVideo },
-                                    // TAKEN (frame 1, silently) vs CHOSEN —
-                                    // the fact `storesFirstFrame` already
-                                    // names, gated the same way as the id
-                                    // itself so a picture post never claims it.
-                                    coverTaken = current.coverChoice.storesFirstFrame.takeIf { asset.isVideo } ?: false,
-                                )
-                            }
-                        }
-                    } else {
-                        emptyList()
-                    },
-                    // Always sent explicitly, never omitted: an edit
-                    // payload is the complete state, so an omitted mark
-                    // UNMARKS. Sending the switch's current value is what
-                    // keeps create and edit the same code.
-                    sensitive = current.sensitive,
-                    // Blank counts as none, said here rather than left to
-                    // the transport: an empty string is a value, and "no
-                    // reason" is what the author actually chose.
-                    sensitiveReason = current.sensitiveReason.ifBlank { null },
+                    tags = tags,
+                    references = references,
+                    attachments = sent.attachments,
+                    sensitive = sent.sensitive,
+                    sensitiveReason = sent.sensitiveReason,
+                    pDirected = current.pDirected,
                 )
             ) {
                 is Outcome.Success -> outcome.value
                 is Outcome.Refused -> return@launch refuse(outcome.errors)
                 is Outcome.Failed -> return@launch failTransport()
             }
+            val expected = expectation(current, prepared.node, sent, tags, references, graphIds)
+                ?: return@launch
 
             val results = try {
-                signer.sign(prepared.writes)
+                signer.sign(prepared.writes, expected)
             } catch (_: NoActorKeyException) {
                 // `ComposeKeyAbsent`: the write waits on the reader
                 // restoring the key, not on time passing. The draft is

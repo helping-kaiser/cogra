@@ -8,6 +8,7 @@
 //! references below are that document's.
 
 use super::census::{Family, LegRole};
+use super::crypto::{self, tags};
 use super::encoding::Encoder;
 use super::identifier::{ActId, NodeId};
 
@@ -117,7 +118,16 @@ pub struct PreSignedProposal {
     pub pre_signature: Vec<u8>,
 }
 
-/// The message the pre-commitment signature covers.
+impl PreSignedProposal {
+    /// The pre-commitment the pre-signature covers, recomputed from the
+    /// proposal and the nonce it was formed under.
+    pub fn pre_commitment(&self) -> [u8; 32] {
+        pre_commitment(&self.proposal, &self.nonce)
+    }
+}
+
+/// The message the pre-commitment hashes: the canonical body and both
+/// pre-digests.
 pub fn pre_commitment_msg(
     body: &StructuralBody,
     digest_content: &[u8; 32],
@@ -131,54 +141,156 @@ pub fn pre_commitment_msg(
     e.finish()
 }
 
-/// The host-sealed verified act (§8.2): the exact
-/// proposal plus host salts and the binding commitments, sealed by the
-/// host signature. No host order fields.
+/// The proposal pre-commitment (§8.2, "Proposal pre-commitment"): the
+/// tagged hash of the canonical body and both pre-digests, each pre-digest
+/// formed over the act identifier, the private nonce, and the projection's
+/// bytes. The pre-signature is the author's Ed25519 signature over exactly
+/// these 32 bytes, and both commitments bind them, so the value is named,
+/// carried in the verified act, and kept with the structural record.
+pub fn pre_commitment(proposal: &Proposal, nonce: &[u8]) -> [u8; 32] {
+    let act_id = proposal.body.act_id().to_string();
+    let digest_content = crypto::pre_digest(
+        tags::PRE_DIGEST_CONTENT,
+        act_id.as_bytes(),
+        nonce,
+        &proposal.payload,
+    );
+    let digest_deps = crypto::pre_digest(
+        tags::PRE_DIGEST_DEPS,
+        act_id.as_bytes(),
+        nonce,
+        &canonical_deps(&proposal.deps),
+    );
+    crypto::sha256_tagged(
+        tags::PRE_COMMITMENT,
+        &[&pre_commitment_msg(
+            &proposal.body,
+            &digest_content,
+            &digest_deps,
+        )],
+    )
+}
+
+/// The content commitment of an act — the payload witness — over the act
+/// identifier, the pre-commitment, the host's content salt, and the
+/// payload (§8.2, "Verified act").
+pub fn content_commitment(
+    act_id: &ActId,
+    pre_commitment: &[u8],
+    salt: &[u8],
+    payload: &[u8],
+) -> [u8; 32] {
+    crypto::commitment(
+        tags::COMMIT_CONTENT,
+        act_id.to_string().as_bytes(),
+        pre_commitment,
+        salt,
+        payload,
+    )
+}
+
+/// The dependency commitment of an act, over the act identifier, the
+/// pre-commitment, the host's dependency salt, and the canonical
+/// dependency list — the opening an ordering fraud proof re-derives
+/// (§8.2, "Ordering fraud proof").
+pub fn deps_commitment(
+    act_id: &ActId,
+    pre_commitment: &[u8],
+    salt: &[u8],
+    deps: &[ActId],
+) -> [u8; 32] {
+    crypto::commitment(
+        tags::COMMIT_DEPS,
+        act_id.to_string().as_bytes(),
+        pre_commitment,
+        salt,
+        &canonical_deps(deps),
+    )
+}
+
+/// The edition tags the stand-in seals under, for the content and the
+/// dependency projection alike. A device refuses a verified act carrying
+/// any other edition (§8.2, "Approval witness": correct editions).
+pub const EDITION: u64 = 1;
+
+/// The host-sealed verified act (§8.2): the exact proposal plus the named
+/// pre-commitment, host salts, the binding commitments and the edition
+/// tags, sealed by the host signature. No host order fields.
 #[derive(Debug, Clone, PartialEq)]
 pub struct VerifiedAct {
     pub proposal: Proposal,
     pub author_pubkey: Vec<u8>,
     pub nonce: Vec<u8>,
     pub pre_signature: Vec<u8>,
+    pub pre_commitment: Vec<u8>,
     pub content_salt: Vec<u8>,
     pub deps_salt: Vec<u8>,
     pub content_commitment: Vec<u8>,
     pub deps_commitment: Vec<u8>,
+    pub content_edition: u64,
+    pub deps_edition: u64,
     pub host_seal: Vec<u8>,
 }
 
 impl VerifiedAct {
-    /// The message the host seal and the approval witness cover: the exact
-    /// verified act including the host-added commitments (§8.2 — the
-    /// witness signs no epoch index, position, or logical time).
+    /// The encoded verified act — the message the host seal covers, and
+    /// with the seal the message the approval witness covers (§8.2 — no
+    /// epoch index, position, or logical time).
     pub fn seal_msg(&self) -> Vec<u8> {
-        seal_message(
-            &self.proposal.body,
-            &self.pre_signature,
-            &self.content_commitment,
-            &self.deps_commitment,
-        )
+        seal_message(&SealFrame {
+            body: &self.proposal.body,
+            pre_commitment: &self.pre_commitment,
+            pre_signature: &self.pre_signature,
+            content_commitment: &self.content_commitment,
+            deps_commitment: &self.deps_commitment,
+            content_edition: self.content_edition,
+            deps_edition: self.deps_edition,
+        })
+    }
+
+    /// The digest the author's approval witness signs: the encoded verified
+    /// act and its host seal, together.
+    pub fn approval_digest(&self) -> [u8; 32] {
+        approval_digest(&self.seal_msg(), &self.host_seal)
     }
 }
 
-/// The seal frame from its parts — the one encoding of the message
-/// `VerifiedAct::seal_msg` covers, callable where only stored columns
-/// exist rather than an assembled act. Like the body, the frame closes on a
-/// schema version so its shape can evolve forward.
-pub fn seal_message(
-    body: &StructuralBody,
-    pre_signature: &[u8],
-    content_commitment: &[u8],
-    deps_commitment: &[u8],
-) -> Vec<u8> {
+/// The parts of a verified act its encoding is formed from
+/// (§8.2, "Verified act": body, pre-commitment, pre-signature, both
+/// commitments, both edition tags), borrowed from wherever they are held.
+pub struct SealFrame<'a> {
+    pub body: &'a StructuralBody,
+    pub pre_commitment: &'a [u8],
+    pub pre_signature: &'a [u8],
+    pub content_commitment: &'a [u8],
+    pub deps_commitment: &'a [u8],
+    pub content_edition: u64,
+    pub deps_edition: u64,
+}
+
+/// The encoded verified act from its parts — the one encoding the seal and
+/// the approval cover, callable where only stored columns exist rather than
+/// an assembled act. Like the body, the frame closes on a schema version so
+/// its shape can evolve forward.
+pub fn seal_message(frame: &SealFrame<'_>) -> Vec<u8> {
     let mut e = Encoder::new();
-    e.array(5);
-    e.bytes(&body.canonical_bytes());
-    e.bytes(pre_signature);
-    e.bytes(content_commitment);
-    e.bytes(deps_commitment);
+    e.array(8);
+    e.bytes(&frame.body.canonical_bytes());
+    e.bytes(frame.pre_commitment);
+    e.bytes(frame.pre_signature);
+    e.bytes(frame.content_commitment);
+    e.bytes(frame.deps_commitment);
+    e.uint(frame.content_edition);
+    e.uint(frame.deps_edition);
     e.uint(1);
     e.finish()
+}
+
+/// The approval witness's digest: the tagged hash of the encoded verified
+/// act followed by its host seal (§8.2, "Approval witness"), so the
+/// author signs the seal itself along with what it seals.
+pub fn approval_digest(seal_msg: &[u8], host_seal: &[u8]) -> [u8; 32] {
+    crypto::sha256_tagged(tags::APPROVAL, &[seal_msg, host_seal])
 }
 
 /// The client's approval: the act identifier plus the approval-witness
@@ -224,10 +336,13 @@ pub struct PublishedLeg {
 
 /// One closed epoch as published through the seam: the ordered accepted
 /// act sequence 𝒬_k as records (§11.6 — the record projection of the
-/// final act sequence).
+/// final act sequence), with the boundary's attested timestamp.
 #[derive(Debug, Clone, PartialEq)]
 pub struct EpochPackage {
     pub epoch: i64,
+    /// The attested boundary timestamp (the Host Contract's accepted-records
+    /// package): when the epoch closed, so when its records landed.
+    pub attested_at: chrono::DateTime<chrono::Utc>,
     pub records: Vec<PublishedRecord>,
 }
 

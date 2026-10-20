@@ -95,7 +95,7 @@
       "x": -5640,
       "y": 0,
       "w": 5220,
-      "h": 7952,
+      "h": 8034,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -498,10 +498,37 @@
     {
       "file": "Saved.dc.html",
       "title": "Saved · what you kept",
-      "x": 0,
+      "x": 4800,
+      "y": 5037,
+      "w": 390,
+      "h": 1370,
+      "page": "profile"
+    },
+    {
+      "file": "SavedNone.dc.html",
+      "title": "Saved · nothing matches",
+      "x": 5280,
       "y": 5037,
       "w": 390,
       "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SavedSearch.dc.html",
+      "title": "Saved · a search, people first",
+      "x": 5760,
+      "y": 5037,
+      "w": 390,
+      "h": 1110,
+      "page": "profile"
+    },
+    {
+      "file": "HistorySearch.dc.html",
+      "title": "History · a search, people, tags, content",
+      "x": 6240,
+      "y": 5037,
+      "w": 390,
+      "h": 1740,
       "page": "profile"
     },
     {

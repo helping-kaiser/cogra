@@ -40,7 +40,10 @@ use async_graphql::dataloader::{DataLoader, Loader};
 use postgres_store::auth::ActorIdentity;
 use postgres_store::content::{Comment, Post};
 use postgres_store::media::{GalleryEntry, MediaAttachment};
-use postgres_store::{PgPool, auth as store, content as content_store, media as media_store};
+use postgres_store::{
+    PgPool, auth as store, bookmarks as bookmarks_store, content as content_store,
+    media as media_store,
+};
 use uuid::Uuid;
 
 /// A batch read's failure, shared out to every key that was waiting on
@@ -230,6 +233,82 @@ impl Loader<String> for PayloadStateLoader {
     }
 }
 
+/// An epoch's attested boundary timestamp, keyed on the epoch:
+/// `Record.landedAt` on every record of a page asks once per distinct
+/// epoch. An epoch the mirror has not ingested is absent.
+pub struct EpochInstantLoader(PgPool);
+
+impl Loader<i64> for EpochInstantLoader {
+    type Value = chrono::DateTime<chrono::Utc>;
+    type Error = LoadError;
+
+    async fn load(
+        &self,
+        keys: &[i64],
+    ) -> Result<HashMap<i64, chrono::DateTime<chrono::Utc>>, LoadError> {
+        postgres_store::mirror::epoch_instants(&self.0, keys)
+            .await
+            .map_err(LoadError::from_display)
+    }
+}
+
+/// When a viewer kept a node, keyed on `(viewer, node)`.
+///
+/// `viewerBookmarkedAt` is a per-node field every menu host reads, so a
+/// feed page of twenty cards asks twenty times. The viewer rides in the
+/// key rather than in the loader because the loaders are registered once
+/// on the schema, not per request — a key without its viewer would let
+/// one reader's batch answer another's. A pair with no row is absent
+/// from the map, which the resolver reads as "not kept".
+pub struct BookmarkLoader(PgPool);
+
+impl Loader<(Uuid, Uuid)> for BookmarkLoader {
+    type Value = chrono::DateTime<chrono::Utc>;
+    type Error = LoadError;
+
+    async fn load(
+        &self,
+        keys: &[(Uuid, Uuid)],
+    ) -> Result<HashMap<(Uuid, Uuid), chrono::DateTime<chrono::Utc>>, LoadError> {
+        Ok(bookmarks_store::bookmarked_at_many(&self.0, keys)
+            .await
+            .map_err(LoadError::from_display)?
+            .into_iter()
+            .map(|(viewer, node, at)| ((viewer, node), at))
+            .collect())
+    }
+}
+
+/// The post a comment's thread hangs under, keyed on the comment's id.
+///
+/// A Saved comment row names "the post it answers" and opens the post it
+/// hangs under; for a reply that is the thread's post, any number of
+/// levels up. A page of comment rows resolves in two reads: one walk
+/// for the whole batch, then the posts it found.
+pub struct ThreadPostLoader(PgPool);
+
+impl Loader<Uuid> for ThreadPostLoader {
+    type Value = Post;
+    type Error = LoadError;
+
+    async fn load(&self, keys: &[Uuid]) -> Result<HashMap<Uuid, Post>, LoadError> {
+        let pairs = content_store::thread_posts(&self.0, keys)
+            .await
+            .map_err(LoadError::from_display)?;
+        let post_ids: Vec<Uuid> = pairs.iter().map(|(_, post)| *post).collect();
+        let posts = crate::nodes::resolve_content_many(&self.0, &post_ids)
+            .await
+            .map_err(LoadError::from_display)?;
+        Ok(pairs
+            .into_iter()
+            .filter_map(|(comment, post)| match posts.get(&post) {
+                Some(crate::nodes::ContentNode::Post(p)) => Some((comment, p.clone())),
+                _ => None,
+            })
+            .collect())
+    }
+}
+
 /// Groups a flat gallery read back into one list per version, preserving
 /// the query's own ordering — which is gallery order.
 ///
@@ -256,6 +335,9 @@ pub struct NodeLoaders {
     pub comment_galleries: DataLoader<CommentGalleryLoader>,
     pub media: DataLoader<MediaByIdLoader>,
     pub payload_states: DataLoader<PayloadStateLoader>,
+    pub epoch_instants: DataLoader<EpochInstantLoader>,
+    pub bookmarks: DataLoader<BookmarkLoader>,
+    pub thread_posts: DataLoader<ThreadPostLoader>,
 }
 
 impl NodeLoaders {
@@ -268,7 +350,10 @@ impl NodeLoaders {
             post_galleries: DataLoader::new(PostGalleryLoader(pool.clone()), tokio::spawn),
             comment_galleries: DataLoader::new(CommentGalleryLoader(pool.clone()), tokio::spawn),
             media: DataLoader::new(MediaByIdLoader(pool.clone()), tokio::spawn),
-            payload_states: DataLoader::new(PayloadStateLoader(pool), tokio::spawn),
+            payload_states: DataLoader::new(PayloadStateLoader(pool.clone()), tokio::spawn),
+            epoch_instants: DataLoader::new(EpochInstantLoader(pool.clone()), tokio::spawn),
+            bookmarks: DataLoader::new(BookmarkLoader(pool.clone()), tokio::spawn),
+            thread_posts: DataLoader::new(ThreadPostLoader(pool), tokio::spawn),
         }
     }
 }

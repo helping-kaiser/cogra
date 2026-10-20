@@ -12,7 +12,7 @@
 // than a UUID (hashtag.md §1), so that one root is keyed on `name`.
 
 import { HttpResponse } from "msw/http";
-import { gqlLink } from "./msw";
+import { gqlLink } from "./gql-link";
 import type { RequestHandler } from "msw";
 
 /** A seeded standing: where the fold nets, and how many records it folds. */

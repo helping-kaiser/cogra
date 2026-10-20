@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
 import { CollapsingTop } from "./collapsing-top";
 
@@ -114,5 +114,98 @@ describe("CollapsingTop", () => {
     const region = screen.getByTestId("collapsing-top");
     expect(region.className).toContain("duration-[var(--duration-collapsing-top)]");
     expect(region.className).not.toMatch(/duration-\d/);
+  });
+});
+
+// THE BACK TO TOP PILL (FeedScrolled.md:3-15). The window is 900px tall, so
+// three viewport-heights is 2700px, and the band returns after 300px of
+// upward run.
+describe("CollapsingTop's Back to top pill", () => {
+  function renderWithPill(onBackToTop = vi.fn()) {
+    render(
+      <CollapsingTop onBackToTop={onBackToTop}>
+        <p>header</p>
+      </CollapsingTop>,
+    );
+    stubLayout(0);
+    return onBackToTop;
+  }
+
+  function pill() {
+    return screen.getByTestId("back-to-top");
+  }
+
+  // FeedScrolled.md:3
+  it("the_back_to_top_pill_rides_in_with_the_band_three_screens_deep", async () => {
+    renderWithPill();
+    await scrollTo(3500);
+    expectShown(false);
+    expect(pill()).toHaveAttribute("data-shown", "false");
+    await scrollTo(3100);
+    expectShown(true);
+    expect(pill()).toHaveAttribute("data-shown", "true");
+    expect(pill()).not.toHaveAttribute("inert");
+    expect(screen.getByTestId("back-to-top-pill")).toHaveTextContent("Back to top");
+  });
+
+  // FeedScrolled.md:5
+  it("never_the_pill_appears_shallower_than_three_viewport_heights", async () => {
+    renderWithPill();
+    await scrollTo(2000);
+    await scrollTo(1600);
+    expectShown(true);
+    expect(pill()).toHaveAttribute("data-shown", "false");
+    expect(pill()).toHaveAttribute("inert");
+  });
+
+  // FeedScrolled.md:7
+  it("the_pill_leaves_under_the_band_and_never_passes_over_it", async () => {
+    renderWithPill();
+    await scrollTo(3500);
+    await scrollTo(3100);
+    expect(pill()).toHaveAttribute("data-shown", "true");
+    await scrollTo(3300);
+    expectShown(false);
+    expect(pill()).toHaveAttribute("data-shown", "false");
+    // One rung under the band, on the band's own duration.
+    expect(pill().className).toContain("z-[19]");
+    expect(screen.getByTestId("collapsing-top").className).toContain("z-20");
+    expect(pill().className).toContain("duration-[var(--duration-collapsing-top)]");
+  });
+
+  // FeedScrolled.md:9
+  it("the_pill_takes_no_layout_space_and_leaves_the_collapse_point_alone", () => {
+    renderWithPill();
+    expect(pill().className).toContain("fixed");
+    expect(screen.getByTestId("collapsing-top")).not.toContainElement(pill());
+  });
+
+  // FeedScrolled.md:11 — what the tap does is the host's; the pill hands it on.
+  it("tapping_the_pill_hands_the_way_up_to_its_host", async () => {
+    const onBackToTop = renderWithPill();
+    await scrollTo(3500);
+    await scrollTo(3100);
+    fireEvent.click(screen.getByTestId("back-to-top-pill"));
+    expect(onBackToTop).toHaveBeenCalledTimes(1);
+  });
+
+  // FeedScrolled.md:15 — the band stands at the hard top, and the pill, with
+  // nothing left to go up to, leaves.
+  it("at_the_hard_top_the_band_stands_and_the_pill_is_gone", async () => {
+    renderWithPill();
+    await scrollTo(3500);
+    await scrollTo(3100);
+    await scrollTo(0);
+    expectShown(true);
+    expect(pill()).toHaveAttribute("data-shown", "false");
+  });
+
+  it("draws no pill on a surface that has none", () => {
+    render(
+      <CollapsingTop>
+        <p>header</p>
+      </CollapsingTop>,
+    );
+    expect(screen.queryByTestId("back-to-top")).not.toBeInTheDocument();
   });
 });

@@ -128,6 +128,10 @@ export function LicenseChooser({ value = PUBLIC_DOMAIN, onChange, name = "licens
   );
 }
 
+/* An axis's registry key: its name as the terms print it, lowercased, each
+   run of other characters one - (node-paths.mjs, `axis`). */
+const axisKey = (axis) => axis.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
 /** What a landed node's qualifiers oblige, on the read surface.
 
    A QUIET INSET, NOT A PARAGRAPH. The terms are the one thing about a post a
@@ -141,11 +145,19 @@ export function LicenseChooser({ value = PUBLIC_DOMAIN, onChange, name = "licens
    filled inset on top of it would either invert between the themes or claim an
    elevation this owes nothing to; a hairline at the medium rung recesses it in
    both. Nothing here is coloured — the terms are neither a warning nor a
-   promotion, and `--error` is spoken for (readme §13, the input-error round). */
-export function LicenseTerms({ license = PUBLIC_DOMAIN }) {
+   promotion, and `--error` is spoken for (readme §13, the input-error round).
+
+   `node` names the block where a registered board places it (design ⇄ impl
+   seam 002), and each axis's row inside it is an `axis`, keyed by the axis's
+   name as the terms print it (`credit`, `public-record-of-use` — the key rule
+   blessed by jakob 2026-10-14), with its `label` and its `value`. The row's
+   wrapper lays out as `contents`, so the two readings stay aligned in the
+   block's one grid. */
+export function LicenseTerms({ license = PUBLIC_DOMAIN, node }) {
   const publicDomain = license.attribution === 0 && license.provenance === 0;
   return (
     <div
+      data-node={node}
       style={{
         display: "flex",
         flexDirection: "column",
@@ -173,6 +185,7 @@ export function LicenseTerms({ license = PUBLIC_DOMAIN }) {
             than replacing the rows, which stay uniform across every license. */}
         {publicDomain && (
           <span
+            data-node={node && "publicDomain"}
             style={{
               fontSize: "var(--text-label-small)",
               lineHeight: "var(--text-label-small--line-height)",
@@ -185,12 +198,14 @@ export function LicenseTerms({ license = PUBLIC_DOMAIN }) {
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "116px 1fr", columnGap: "var(--space-2)", rowGap: "var(--space-1)" }}>
         {licenseReadings(license).map((row) => (
-          <React.Fragment key={row.axis}>
-            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
+          <div key={row.axis} style={{ display: "contents" }} data-node={node && "axis"} data-node-key={node && axisKey(row.axis)}>
+            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "label"}>
               {row.axis}
             </span>
-            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)" }}>{row.reading}</span>
-          </React.Fragment>
+            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)" }} data-node={node && "value"}>
+              {row.reading}
+            </span>
+          </div>
         ))}
       </div>
     </div>

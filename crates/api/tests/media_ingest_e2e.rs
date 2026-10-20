@@ -37,8 +37,7 @@ use rig::TestMailer;
 
 const BOUNDARY: &str = "cogra-test-boundary";
 
-const MEDIA_FIELDS: &str =
-    "id url digest sizeBytes mimeType state failureReason options { aspectRatio durationMs }";
+const MEDIA_FIELDS: &str = "id url digest uploadDigest sizeBytes mimeType state failureReason options { aspectRatio durationMs }";
 
 struct Rig {
     app: axum::Router,
@@ -67,7 +66,10 @@ impl Rig {
             rate_limits: api::ratelimit::RateLimitConfig::unlimited(),
             breach: Arc::new(api::breach::DisabledCorpus),
             media: media.clone(),
-            blobs: blobs.clone(),
+            areas: api::media::MediaAreas {
+                live: blobs.clone(),
+                ..api::media::MediaAreas::in_memory()
+            },
             ranker: api::ranker_pod::RankerClient::new(&Default::default()).expect("ranker client"),
             slice_reads: Default::default(),
         };
@@ -131,6 +133,7 @@ impl Rig {
                 json!({ "input": {
                     "title": "A clip",
                     "license": { "attribution": 1.0, "provenance": 0.0 },
+                    "pDirected": 0.1,
                     "attachments": [{ "mediaId": media_id, "displayOrder": 0 }],
                 }}),
             )
@@ -333,6 +336,43 @@ impl Rig {
         self.gql(Some(token), &query, json!({ "id": id })).await["mediaAttachment"].clone()
     }
 
+    /// The manifest a video post naming one asset would witness: the
+    /// minting record's payload, decoded off the canonical proposal the
+    /// device is handed.
+    async fn prepared_manifest(
+        &self,
+        token: &str,
+        media_id: &str,
+    ) -> Vec<common::envelope::MediaAsset> {
+        let data = self
+            .gql(
+                Some(token),
+                "mutation($input: PreparePostInput!) { preparePost(input: $input) { \
+                   writes { canonicalProposal } userErrors { code message field } } }",
+                json!({ "input": {
+                    "title": "A clip",
+                    "license": { "attribution": 1.0, "provenance": 0.0 },
+                    "pDirected": 0.1,
+                    "attachments": [{ "mediaId": media_id, "displayOrder": 0 }],
+                }}),
+            )
+            .await;
+        let prepared = &data["preparePost"];
+        assert_eq!(prepared["userErrors"], json!([]), "{prepared}");
+        let proposal = wire::decode_proposal(
+            &B64.decode(
+                prepared["writes"][0]["canonicalProposal"]
+                    .as_str()
+                    .expect("proposal"),
+            )
+            .expect("b64"),
+        )
+        .expect("decodes");
+        common::envelope::CograContent::decode_payload(&proposal.payload)
+            .expect("the payload is admissible")
+            .media
+    }
+
     /// A video post naming one asset, returning the prepare's user errors.
     async fn prepare_video_post(&self, token: &str, media_id: &str) -> Value {
         let data = self
@@ -343,6 +383,7 @@ impl Rig {
                 json!({ "input": {
                     "title": "A clip",
                     "license": { "attribution": 1.0, "provenance": 0.0 },
+                    "pDirected": 0.1,
                     "attachments": [{ "mediaId": media_id, "displayOrder": 0 }],
                 }}),
             )
@@ -370,6 +411,14 @@ impl Rig {
         .await
         .expect("an ingest pass")
     }
+}
+
+/// The upload digest an upload response echoed.
+fn echo_of(uploaded: &Value) -> String {
+    uploaded["uploadDigest"]
+        .as_str()
+        .expect("the echo")
+        .to_string()
 }
 
 /// A real MP4 carrying one H.264 track of the given canvas and one tiny
@@ -1176,9 +1225,29 @@ async fn a_clip_from_an_earlier_post_posts_again(pool: PgPool) {
     let polled = rig.media_attachment(&token, &repick_id).await;
     assert_eq!(polled["state"], "READY", "{polled}");
     assert_eq!(
-        polled["id"],
-        held.as_str(),
+        polled["url"], first["url"],
         "the upload reads as the held clip"
+    );
+    assert_eq!(
+        polled["id"],
+        repick_id.as_str(),
+        "under the id it was asked by"
+    );
+    assert_eq!(
+        polled["uploadDigest"], repick["uploadDigest"],
+        "with the bytes that upload sent, not the held clip's"
+    );
+    assert_ne!(polled["uploadDigest"], first["uploadDigest"]);
+    let manifest = rig.prepared_manifest(&token, &repick_id).await;
+    assert_eq!(
+        Some(hex::encode(manifest[0].digest)),
+        first["digest"].as_str().map(str::to_string),
+        "the manifest witnesses the rendition the post serves"
+    );
+    assert_eq!(
+        manifest[0].upload_digest.map(hex::encode),
+        repick["uploadDigest"].as_str().map(str::to_string),
+        "beside the bytes this upload sent"
     );
     let third_post = rig.land_video_post(&token, &key, &repick_id).await;
 
@@ -1212,6 +1281,90 @@ async fn a_clip_from_an_earlier_post_posts_again(pool: PgPool) {
             .await
             .expect("read")
             .is_some()
+    );
+}
+
+/// The echo a device verifies before it attaches anything: the upload
+/// answers with the digest of the bytes as they arrived, after the
+/// server's strip, which for a clip that carries nothing to strip is the
+/// hash of exactly the bytes sent.
+///
+/// The upload answers with the upload digest of the bytes it was sent, which a device compares against its own hash.
+/// ´claim:media:the-upload-echoes-the-upload-digest´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_upload_echo_returns_the_upload_digest_the_device_computed(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    for clip in [h264_movie(1080, 1920, 2_500), h264_movie(2560, 1440, 2_500)] {
+        let device = hex::encode(Sha256::digest(&clip));
+        let uploaded = rig.upload(&token, &clip).await;
+        assert_eq!(uploaded["uploadDigest"], device.as_str(), "{uploaded}");
+        assert_eq!(
+            uploaded["digest"],
+            device.as_str(),
+            "before any re-encode the two digests are one"
+        );
+    }
+}
+
+/// A retried upload of a file the server already re-encoded is handed
+/// that asset, READY under its rendition — and its echo is still the
+/// digest of the bytes the device sent, never the rendition's. Echoing
+/// `digest` would make a legitimate retry look like a server that
+/// recorded other bytes. The manifest a post naming it then witnesses
+/// both: the rendition served beside the bytes sent.
+///
+/// A retried upload resolving to a re-encoded asset echoes the upload digest of the bytes sent, not the rendition, and the manifest carries both.
+/// ´claim:media:a-retry-echoes-the-upload-digest-not-the-rendition´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_retried_upload_resolving_to_a_transcoded_asset_echoes_the_upload_digest_not_the_rendition(
+    pool: PgPool,
+) {
+    let rig = Rig::new(pool);
+    rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let clip = h264_movie(2560, 1440, 2_500);
+    let device = hex::encode(Sha256::digest(&clip));
+    let first = rig.upload(&token, &clip).await;
+    assert_eq!(first["state"], "PROCESSING", "{first}");
+    let id = first["id"].as_str().expect("id").to_string();
+    let job = postgres_store::media::claim_ingest(&rig.pool, 60.0)
+        .await
+        .expect("claim")
+        .expect("the upload's job");
+    let rendition = [0xAB; 32];
+    postgres_store::media::finish_ingest(
+        &rig.pool,
+        job.id,
+        postgres_store::media::Rendition {
+            digest: &rendition,
+            storage_key: "rendition.mp4",
+            size_bytes: 1,
+            options: &json!({ "v": 1 }),
+        },
+    )
+    .await
+    .expect("settles")
+    .expect("the job's row");
+
+    let retried = rig.upload(&token, &clip).await;
+    assert_eq!(retried["id"].as_str(), Some(id.as_str()), "{retried}");
+    assert_eq!(retried["state"], "READY");
+    assert_eq!(retried["digest"], hex::encode(rendition).as_str());
+    assert_eq!(
+        retried["uploadDigest"],
+        device.as_str(),
+        "the echo is the bytes sent, not the rendition"
+    );
+
+    let manifest = rig.prepared_manifest(&token, &id).await;
+    assert_eq!(manifest[0].digest, rendition, "the rendition served");
+    assert_eq!(
+        manifest[0].upload_digest.map(hex::encode),
+        Some(device),
+        "beside the upload digest of the bytes sent"
     );
 }
 
@@ -1298,8 +1451,12 @@ async fn an_asset_is_not_swept_while_a_merged_upload_names_it(pool: PgPool) {
 /// that differ only in how their container is laid out, both queued for
 /// their audio, re-encoded to one rendition. The second settles by merging
 /// into the first — its original released, its id reading as the first
-/// clip, a retry of its file handed that clip without another encode —
-/// and a post attaching it is accepted.
+/// clip under its own id and upload digest, a retry of its file handed
+/// that clip without another encode — and a post attaching it is accepted,
+/// witnessing the first clip's rendition beside the second upload's bytes.
+/// The second upload's digest is read off its own echo — the bytes as they
+/// arrived after the server's strip, since ffmpeg's remux writes tags a
+/// device strip would have dropped first.
 ///
 /// A re-encode whose rendition is a clip its author already holds merges into that clip.
 /// ´claim:media:a-matching-re-encode-merges´
@@ -1338,15 +1495,50 @@ async fn a_re_encode_that_matches_a_held_clip_merges_into_it(pool: PgPool) {
         "the merged upload's original is released"
     );
 
+    let sent = second["uploadDigest"]
+        .as_str()
+        .expect("the echo")
+        .to_string();
+    assert_ne!(sent, echo_of(&first), "two uploads, two upload digests");
     let polled = rig.media_attachment(&token, &second_id).await;
     assert_eq!(polled["state"], "READY", "{polled}");
-    assert_eq!(polled["id"], held.as_str());
+    assert_eq!(
+        polled["id"],
+        second_id.as_str(),
+        "under the id it was asked by"
+    );
+    let held_clip = rig.media_attachment(&token, &held).await;
+    assert_eq!(held_clip["uploadDigest"], first["uploadDigest"]);
+    assert_eq!(
+        polled["digest"], held_clip["digest"],
+        "reading as the held clip"
+    );
+    assert_eq!(
+        polled["uploadDigest"],
+        sent.as_str(),
+        "with its own upload digest"
+    );
 
     let retried = rig.upload(&token, &relaid).await;
-    assert_eq!(retried["id"], held.as_str(), "a retry is handed the clip");
+    assert_eq!(
+        retried["id"],
+        second_id.as_str(),
+        "a retry is handed its upload"
+    );
+    assert_eq!(
+        retried["digest"], held_clip["digest"],
+        "which reads as the clip"
+    );
+    assert_eq!(retried["uploadDigest"], sent.as_str());
     assert_eq!(rig.ingest(Some(&ffmpeg)).await, Settled::Idle);
 
     assert_eq!(rig.prepare_video_post(&token, &second_id).await, json!([]));
+    let manifest = rig.prepared_manifest(&token, &second_id).await;
+    assert_eq!(
+        Some(hex::encode(manifest[0].digest)),
+        held_clip["digest"].as_str().map(str::to_string)
+    );
+    assert_eq!(manifest[0].upload_digest.map(hex::encode), Some(sent));
 }
 
 /// The same movie with its header moved ahead of its media — a stream

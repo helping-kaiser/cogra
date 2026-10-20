@@ -1024,8 +1024,9 @@ at login, at restore and in Settings, for a shared or public
 device; default off. An account flagged with it keeps nothing
 usable on the device once its session ends. With a recovery
 backup, its device material — key, pending backup blob, handshake
-material, draft, kept picks and device-local flags — is purged at
-sign-out. Without one, the device holds the only copy of the key,
+material, draft, kept picks, seen record (ids and sync watermark;
+the server's view log is untouched) and device-local flags — is
+purged at sign-out. Without one, the device holds the only copy of the key,
 so the material is never destroyed silently: explicit sign-out
 asks first — make a recovery code, lock it, or erase it — and a
 session ended from anywhere else locks it ("Device lock" below).
@@ -1106,6 +1107,22 @@ blob's posture.
   and key, each framed by its big-endian 64-bit length — so a
   record opens only in its own account's slot, as itself. Golden
   vectors sit beside the blob's in `client-crypto-vectors.json`.
+- **A ticked sign-in completes only with a lock held.** A sign-in
+  with "don't remember" ticked obtains its lock before it commits
+  the session; one whose lock gets no answer stays on the sign-in
+  form with the no-answer line, the session held for the retry. A
+  slot that still holds no lock when its session is ended
+  elsewhere — the switch flipped offline, an issue that never
+  landed — keeps its material, refused by the app until the
+  account signs in there again, and never destroyed.
+- **The seen record is never locked.** It is a cache of the
+  server's view log, so a flagged account's session ending —
+  locked or not — drops that account's record and watermark, as
+  the sign-out does; the next sign-in re-seeds it.
+- **A lock the server can no longer open completes the sign-in.**
+  When the release answers that the lock is gone, the sign-in
+  completes, the dead ciphertext is deleted, and the account is
+  told so once, in the same notice vehicle as the reuse notice.
 
 A locked, unbacked key depends on the login and on CoGra's server
 to open again; unlike a recovery code or an export ("Key

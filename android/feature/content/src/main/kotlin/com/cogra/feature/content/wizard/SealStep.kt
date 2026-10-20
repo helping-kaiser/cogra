@@ -3,7 +3,6 @@ package com.cogra.feature.content.wizard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
@@ -26,15 +24,13 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.AttachmentReadout
 import com.cogra.core.designsystem.StancePoint
-import com.cogra.core.designsystem.ValenceField
 import com.cogra.core.designsystem.nearestStanceAnchor
-import com.cogra.core.designsystem.nearestValenceAnchor
 import com.cogra.core.designsystem.pair
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
@@ -46,16 +42,18 @@ import com.cogra.core.designsystem.v2.atom.HelpDot
 import com.cogra.core.designsystem.v2.atom.SettingRow
 import com.cogra.core.designsystem.v2.atom.SheetTitle
 import com.cogra.core.designsystem.v2.atom.SummaryRow
+import com.cogra.core.designsystem.v2.compose.AttributionTiers
 import com.cogra.core.designsystem.v2.compose.HelpTopic
+import com.cogra.core.designsystem.v2.compose.ProvenanceTiers
 import com.cogra.core.designsystem.v2.compose.UploadStatusLine
+import com.cogra.core.designsystem.v2.compose.licenseSummary
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
-import com.cogra.core.designsystem.valenceExact
-import com.cogra.core.designsystem.valenceReading
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.content.MAX_SENSITIVE_REASON_CHARS
 import com.cogra.domain.content.isSensitiveReasonTooLong
+import com.cogra.feature.content.BackingPad
 import com.cogra.feature.content.R
 import com.cogra.feature.content.ReferenceRow
 import com.cogra.feature.content.referenceLabel
@@ -102,18 +100,22 @@ internal fun ColumnScope.SealStepBody(
         // back, but the license is the only term left changeable — the
         // board draws one row (ComposeKeyAbsent.jsx:47).
         if (!state.keyAbsent) {
+            // `Your backing` — ONE NUMBER, never a pair (ComposeSeal.md;
+            // jakob 2026-10-16, PR-101): the post's own record is a
+            // Publish, whose one free parameter is the author's attachment
+            // — their BACKING; the second is pinned at 1 by the census, so
+            // a pair would read back a figure nobody chose. It starts at
+            // +0.10 and rides the post's own record, adding nothing to the
+            // total. The author's OPINION on the post is another record,
+            // the one its face takes once it is out.
             SettingRow(
-                label = "Where you stand on it",
-                // ONE NUMBER, not a pair (jakob's ruling, 2026-09-14): the
-                // second is census-fixed at 1 rather than picked — "your own
-                // post always reaches you in full" — so reading a pair back
-                // shows the author a figure nobody chose. The face is the
-                // one-axis table's, built for exactly this reading.
-                value = ownStanceRowReading(state.pDirected),
+                label = "Your backing",
                 actionText = "Adjust",
                 onAction = { onOpenSheet(SealSheet.Stance) },
                 testTag = "wizard_seal_stance",
-            )
+            ) {
+                AttachmentReadout(pDirected = state.pDirected, testTag = "wizard_seal_stance_value")
+            }
             // The author's own mark. The row says where it stands and the
             // sheet is where it is set — the same shape License and the
             // stance pad take, so the seal reads as one list of choices.
@@ -444,15 +446,6 @@ private fun stanceRowReading(pick: StancePoint): String =
     "${nearestStanceAnchor(pick).emoji} ${pick.pair()}"
 
 /**
- * The same row reading for a pick that names NO PAIR: the face from the
- * one-axis table and the one number the author actually set. A citation's
- * row keeps [stanceRowReading] — a stance toward somebody else's thing is
- * two choices, and both of them are drawn.
- */
-private fun ownStanceRowReading(pDirected: Double): String =
-    "${nearestValenceAnchor(pDirected).emoji} ${valenceExact(pDirected)}"
-
-/**
  * `ComposeKeyAbsent` — this app holds no actor key, so nothing can be
  * signed here. The panel itself; the keep-draft way out is a sibling
  * below it ([SealStepBody]), not drawn inside — the board's own layout
@@ -646,17 +639,14 @@ internal fun LicenseSheet(
 
 private data class Degree(val value: Double, val label: String, val reading: String)
 
-private val CREDIT = listOf(
-    Degree(0.0, "No credit", "Nobody owes you a name."),
-    Degree(0.5, "Credit commercially", "Commercial uses credit you; everything else is free."),
-    Degree(1.0, "Credit always", "Every use credits you."),
-)
+// The published tiers, read from the one shared place (`LicenseTier.kt`)
+// rather than restated here: the record axis's tier names are verbs
+// (`Not logged` · `Log commercial use` · `Log every use`, copy-voice "The
+// license block"), never the retired `No record` the graph's own word made
+// false.
+private val CREDIT = AttributionTiers.map { Degree(it.value, it.label, it.hint) }
 
-private val RECORD = listOf(
-    Degree(0.0, "No record", "Uses go unlogged."),
-    Degree(0.5, "Record commercially", "Commercial uses are logged publicly and stay open to audit."),
-    Degree(1.0, "Record always", "Every use is logged publicly and stays open to audit."),
-)
+private val RECORD = ProvenanceTiers.map { Degree(it.value, it.label, it.hint) }
 
 @Composable
 private fun DegreeGroup(
@@ -713,19 +703,13 @@ private fun DegreeGroup(
 }
 
 /**
- * `ComposePad` — where the author stands on their own post.
+ * `ComposePad` — the backing pad over the seal ([BackingPad], round 15).
  *
- * **THE FIELD IS ONE AXIS, and that is why `StancePad` is not here.**
- * The two-axis field is the square because the square IS the value
- * space, both parameters the author's to choose. On one's own post the
- * second is not: a post always reaches its author in full, so
- * `pInterest` is census-fixed at 1 on the Publish input and a square
- * would offer a choice that is not one. What is left is a line, and
- * [ValenceField] draws it.
- *
- * **It parks over the page; it is not a drawer.** The caller owns the
- * wash and the parking (`ComposeWizardScreen`), the way the reply seal's
- * pad already works; this draws the card.
+ * A new post has nothing standing yet, so the pick is the result and
+ * `Your pick` reads alone. **It parks over the page; it is not a
+ * drawer.** The caller owns the wash and the parking
+ * (`ComposeWizardScreen`), the way the reply seal's pad already works;
+ * this draws the card.
  */
 @Composable
 internal fun ComposePad(
@@ -736,110 +720,25 @@ internal fun ComposePad(
     onHelp: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(PAD_CORNER))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .padding(Space.x4)
-            .testTag("wizard_stance_pad"),
-        verticalArrangement = Arrangement.spacedBy(Space.x3),
-    ) {
-        Box(Modifier.fillMaxWidth()) {
-            // The readout clears the corner the `?` sits in, so the two
-            // never collide.
-            Column(modifier = Modifier.padding(end = PAD_HELP_GUTTER)) {
-                Text(
-                    // Drawn, not spoken: the reading below says the value,
-                    // and a screen reader hearing "Your pick" before every
-                    // drag would hear the label more often than the number
-                    // (`ComposePad.jsx:58-73`, design/backlog.md item 30).
-                    text = "Your pick",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                OwnStanceReading(pDirected)
-            }
-            HelpDot(
-                onHelp = onHelp,
-                contentDescription = HelpTopic.YourOpinionOnYourPost.title,
-                modifier = Modifier.align(Alignment.TopEnd),
-                testTag = "wizard_stance_help",
-            )
-        }
-        ValenceField(
-            value = pDirected,
-            onValueChange = onChange,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            testTag = "wizard_stance_field",
-        )
-        Text(
-            text = "Your own post always reaches you in full.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Space.x2, Alignment.End),
-        ) {
-            CograButton("Cancel", onCancel, kind = ButtonKind.Text, testTag = "wizard_stance_cancel")
-            CograButton("Set", onSet, testTag = "wizard_stance_set")
-        }
-    }
+    BackingPad(
+        pick = pDirected,
+        onPickChange = onChange,
+        onSet = onSet,
+        onCancel = onCancel,
+        onHelp = onHelp,
+        testTagPrefix = "wizard_stance",
+        modifier = modifier,
+    )
 }
 
 /**
- * THE FACE AND THE ONE NUMBER, one type step apart — the board's own
- * proportion for this readout, and the same one the reply pad draws its
- * pair at.
- *
- * The face leaves the semantics tree and the readout announces the
- * band's words plus the one axis instead: an emoji's own accessible name
- * is "slightly smiling face", never "Nice" (design.md §10).
+ * The seal's reading of a license: the author's reading of the pair by
+ * copy-voice's one joining rule (`licenseSummary`, the license block) —
+ * the same sentence the license sheets' foot and the settings default
+ * read. It carries no `your default`: the reading says what the post's
+ * terms are, wherever they came from (FC-8b; seam 106.5).
  */
-@Composable
-private fun OwnStanceReading(pDirected: Double) {
-    val band = nearestValenceAnchor(pDirected)
-    val spoken = valenceReading(pDirected)
-    Row(
-        verticalAlignment = Alignment.Bottom,
-        horizontalArrangement = Arrangement.spacedBy(Space.x2),
-        modifier = Modifier
-            .semantics(mergeDescendants = true) { contentDescription = spoken }
-            .testTag("wizard_stance_reading"),
-    ) {
-        Text(
-            text = band.emoji,
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.clearAndSetSemantics { },
-        )
-        Text(
-            text = valenceExact(pDirected),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.clearAndSetSemantics { },
-        )
-    }
-}
-
-/** `--radius-extra-large`, the rung every parked pad and sheet wears. */
-private val PAD_CORNER = 28.dp
-
-/** What the readout leaves clear of the `?` in the corner. */
-private val PAD_HELP_GUTTER = 40.dp
-
-/**
- * The seal's reading of a license, the way the board words it — the
- * default says it is the default, so an author who never opened the
- * sheet knows where the terms came from.
- */
-internal fun LicenseChoice.sealLabel(): String = when {
-    this == LicenseChoice.PublicDomain -> "Public domain — your default"
-    attribution >= 1.0 -> "Credit always"
-    attribution > 0.0 -> "Credit commercially"
-    provenance >= 1.0 -> "Record always"
-    provenance > 0.0 -> "Record commercially"
-    else -> "Public domain"
-}
+internal fun LicenseChoice.sealLabel(): String = licenseSummary(attribution, provenance)
 
 @ThemePreviews
 @Composable

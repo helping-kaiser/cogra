@@ -10,7 +10,9 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.ReferenceContentKind
 import com.cogra.domain.ReferenceTargetView
 import com.cogra.domain.identity.EndLocalSession
-import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.references.REFERENCE_DEFAULT_RELEVANCE
+import com.cogra.domain.references.REFERENCE_DEFAULT_SUPPORT
+import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.auth.SessionRefresher
@@ -53,7 +55,7 @@ class ReferenceRepositoryTest {
             tokenStore,
             SessionRefresher(
                 tokenStore,
-                EndLocalSession(FakeIdentityStore(), tokenStore),
+                EndLocalSession(FakeLockCustodyStore(), tokenStore),
                 Provider { client },
             ),
         ),
@@ -153,10 +155,19 @@ class ReferenceRepositoryTest {
             """{"data":{"prepareReference":{"__typename":"PreparePayload",
             "writes":[],"userErrors":[]}}}""",
         )
-        repo().prepareReference(artifact = "p1", target = "u1")
+        // Untouched sliders still state their pre-fill: both values are
+        // required on the wire and the server fills nothing in.
+        repo().prepareReference(
+            artifact = "p1",
+            target = "u1",
+            relevance = REFERENCE_DEFAULT_RELEVANCE,
+            support = REFERENCE_DEFAULT_SUPPORT,
+        )
         val body = server.takeRequest().body.readUtf8()
         assertThat(body).contains("\"artifact\":\"p1\"")
         assertThat(body).contains("\"target\":\"u1\"")
+        assertThat(body).contains("\"relevance\":0.1")
+        assertThat(body).contains("\"support\":0.1")
     }
 
     @Test

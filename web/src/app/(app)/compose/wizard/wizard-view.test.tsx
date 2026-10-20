@@ -10,10 +10,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
+import { echoedMedia } from "@/test/media-echo";
 import { fakeWriteSigner } from "@/test/registration";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
-import { emptyWizard, type WizardState } from "@/lib/compose/wizard";
+import { DEFAULT_P_DIRECTED, emptyWizard, type WizardState } from "@/lib/compose/wizard";
 import { createComposeDraftStore, type ComposeDraftStore } from "@/lib/compose/draft-store";
 import { createSealedDraftStore, type SealedDraftStore } from "@/lib/compose/sealed-draft";
 import { IDBFactory } from "fake-indexeddb";
@@ -48,6 +49,7 @@ function fakeDrafts(initial: WizardState | null = null): ComposeDraftStore & {
     clear: async () => {
       held = null;
     },
+    abandonPendingSaves: () => undefined,
     held: () => held,
   };
 }
@@ -110,20 +112,20 @@ const uploadOk = (ids: string[]) => {
       data: {
         uploadMedia: {
           __typename: "UploadMediaPayload",
-          media: {
-            __typename: "MediaAttachment",
-            id: ids[Math.min(next++, ids.length - 1)],
-            url: "https://media.test/x.webp",
-            altText: null,
-            status: "NORMAL",
-            options: { __typename: "MediaOptions", aspectRatio: "4:5" },
-          },
+          media: echoedMedia(ids[Math.min(next++, ids.length - 1)]!),
           userErrors: [],
         },
       },
     }),
   );
 };
+
+// The device's upload digest, pinned so the server above can echo it
+// (test/media-echo.ts).
+vi.mock("@/lib/api/media-api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api/media-api")>()),
+  uploadDigestOf: async () => "ee".repeat(32),
+}));
 
 async function pick(names: string[]) {
   // The screen is behind the draft lookup, so the picker exists only once that
@@ -173,7 +175,9 @@ afterEach(() => {
 
 describe("the compose wizard", () => {
   it("publishes a words post without ever showing a crop screen", async () => {
-    let variables: { input: { content: string | null; attachments: unknown } } | null = null;
+    let variables: {
+      input: { content: string | null; attachments: unknown; pDirected: unknown };
+    } | null = null;
     server.use(
       gqlLink.mutation("PreparePost", ({ variables: v }) => {
         variables = v as never;
@@ -214,6 +218,86 @@ describe("the compose wizard", () => {
     expect(variables!.input.content).toBe("Three weekends at low tide.");
     // The XOR, on the wire: a words post carries no gallery at all.
     expect(variables!.input.attachments).toBeNull();
+    // The stance the seal showed is the one on the wire (here the untouched
+    // default, which the wizard states explicitly rather than leaving absent).
+    expect(variables!.input.pDirected).toBe(DEFAULT_P_DIRECTED);
+  });
+
+  // ComposePad.md (round 15): Set at exactly 0.00 asks `Start it
+  // unreachable?` over the parked pad, warns and never refuses; any other
+  // pick sets without a word.
+  it("asks Start it unreachable? at a Set of exactly 0.00, and signs the zero when set anyway", async () => {
+    let variables: { input: { pDirected: unknown } } | null = null;
+    server.use(
+      gqlLink.mutation("PreparePost", ({ variables: v }) => {
+        variables = v as never;
+        return HttpResponse.json({
+          data: {
+            preparePost: {
+              __typename: "PrepareContentPayload",
+              node: "post-1",
+              writes: [
+                {
+                  __typename: "PreparedWrite",
+                  id: "w1",
+                  family: "PUBLISH",
+                  canonicalProposal: "AA==",
+                  gcAfterEpochs: 3,
+                },
+              ],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    render();
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), {
+      target: { value: "Three weekends at low tide." },
+    });
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+    await screen.findByTestId(byNode("composeDetails.title.input"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+
+    // A non-zero Set closes the pad at once.
+    fireEvent.click(await screen.findByTestId("wizard-open-stance"));
+    const strip = screen.getByTestId("wizard-stance-field-strip");
+    fireEvent.keyDown(strip, { key: "ArrowRight" });
+    fireEvent.click(screen.getByTestId("wizard-stance-set"));
+    expect(screen.getByTestId("wizard-unreachable")).not.toHaveAttribute("open");
+    expect(screen.getByTestId("wizard-stance-pad")).not.toHaveAttribute("open");
+    expect(screen.getByTestId("wizard-stance-value").textContent).toContain("+0.15");
+
+    // Down to exactly 0.00: the question stands over the pad, which stays.
+    fireEvent.click(screen.getByTestId("wizard-open-stance"));
+    for (let press = 0; press < 3; press += 1) {
+      fireEvent.keyDown(screen.getByTestId("wizard-stance-field-strip"), { key: "ArrowLeft" });
+    }
+    expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤷");
+    fireEvent.click(screen.getByTestId("wizard-stance-set"));
+    expect(screen.getByTestId("wizard-unreachable")).toHaveAttribute("open");
+    expect(screen.getByTestId("wizard-stance-pad")).toHaveAttribute("open");
+
+    // Keep adjusting: back to the pad at the same pick, nothing set.
+    fireEvent.click(screen.getByTestId("wizard-unreachable-keep"));
+    expect(screen.getByTestId("wizard-unreachable")).not.toHaveAttribute("open");
+    expect(screen.getByTestId("wizard-stance-pad")).toHaveAttribute("open");
+    expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤷");
+    expect(screen.getByTestId("wizard-stance-value").textContent).toContain("+0.15");
+
+    // Set it anyway: both close, and the row reads the zero.
+    fireEvent.click(screen.getByTestId("wizard-stance-set"));
+    fireEvent.click(screen.getByTestId("wizard-unreachable-anyway"));
+    expect(screen.getByTestId("wizard-unreachable")).not.toHaveAttribute("open");
+    expect(screen.getByTestId("wizard-stance-pad")).not.toHaveAttribute("open");
+    expect(screen.getByTestId("wizard-stance-value").textContent).toContain("🤷");
+    expect(screen.getByTestId("wizard-stance-value").textContent).toContain("+0.00");
+
+    fireEvent.click(screen.getByTestId("wizard-sign"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-1?published=1"));
+    // The pick is never refused: the zero travels as picked.
+    expect(variables!.input.pDirected).toBe(0);
   });
 
   // CW-26: WizardHeader.jsx's stageLabel slot draws at --text-label-small.
@@ -403,14 +487,7 @@ describe("the compose wizard", () => {
           data: {
             uploadMedia: {
               __typename: "UploadMediaPayload",
-              media: {
-                __typename: "MediaAttachment",
-                id: "m-retried",
-                url: "https://media.test/x.webp",
-                altText: null,
-                status: "NORMAL",
-                options: { __typename: "MediaOptions", aspectRatio: "4:5" },
-              },
+              media: echoedMedia("m-retried"),
               userErrors: [],
             },
           },
@@ -1035,7 +1112,8 @@ describe("the license a new post starts from", () => {
     await screen.findByText("Last step");
     // The seal's License row reads the seeded pair, never public domain.
     const licenseRow = screen.getByTestId("wizard-open-license").parentElement!;
-    await waitFor(() => expect(licenseRow).toHaveTextContent("Every use credits you."));
+    await waitFor(() => expect(licenseRow).toHaveTextContent("Credit always"));
+    expect(licenseRow).toHaveTextContent("every use credits you");
     expect(licenseRow).not.toHaveTextContent("Public domain");
   });
 

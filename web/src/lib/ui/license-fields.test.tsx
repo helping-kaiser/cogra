@@ -29,6 +29,30 @@ describe("LicenseTerms — the reader's block", () => {
     expect(screen.getByText("Not logged")).toBeInTheDocument();
   });
 
+  it("wears the registered publicDomain part where the block is a registered node", () => {
+    render(<LicenseTerms license={PUBLIC_DOMAIN} testId="terms" node={{ path: "postDetail.licenseSheet.terms" }} />);
+    expect(screen.getByTestId("postDetail.licenseSheet.terms.publicDomain")).toHaveTextContent(
+      "Public domain",
+    );
+    expect(screen.queryByTestId("terms-public-domain")).not.toBeInTheDocument();
+  });
+
+  it("keys each row by the axis name lowercased, runs of other characters one dash", () => {
+    render(
+      <LicenseTerms
+        license={{ attribution: 1, provenance: 0 }}
+        testId="terms"
+        node={{ path: "feed.licenseSheet.terms" }}
+      />,
+    );
+    const keys = screen
+      .getAllByTestId("feed.licenseSheet.terms.axis")
+      .map((el) => el.getAttribute("data-testid-key"));
+    expect(keys).toEqual(["credit", "public-record-of-use"]);
+    expect(screen.getAllByTestId("feed.licenseSheet.terms.axis.label")).toHaveLength(2);
+    expect(screen.getAllByTestId("feed.licenseSheet.terms.axis.value")).toHaveLength(2);
+  });
+
   it("reads a degree between the published tiers as the degree itself", () => {
     render(<LicenseTerms license={{ attribution: 0.25, provenance: 0 }} testId="terms" />);
     expect(screen.getByText("Owed to degree 0.25")).toBeInTheDocument();

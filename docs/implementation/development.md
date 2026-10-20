@@ -85,6 +85,7 @@ over file values.
 | `RATE_LIMIT_GC_INTERVAL_SECS` | `3600` | Sweep interval of the idle throttle-row GC; the login backoff's shape (threshold 5, 1 s doubling, 15 min cap) and the re-authentication backoff's (threshold 10, same doubling and cap) change in code, not env |
 | `RATE_LIMIT_UPLOAD_PER_ACCOUNT` | `60` | Media uploads per account per hour — uploading is not an act, so this is the only cost control media has |
 | `RATE_LIMIT_MARK_SEEN_PER_ACCOUNT` | `600` | `markSeen` calls per account per hour — the seen-list never compacts, so this bounds how fast a script can grow it; refused as `RATE_LIMITED` ([api-spec.md "Private viewer state"](api-spec.md#private-viewer-state)) |
+| `RATE_LIMIT_REPORT_PER_ACCOUNT` | `10` | Content reports (`sendReport`) per account per day — each one mails an inbox people read; refused as `RATE_LIMITED`, nothing mailed ([api-spec.md "Auth and accounts"](api-spec.md#auth-and-accounts)) |
 | `RATE_LIMIT_SIGN_POST` | `10` | The signing budget ([api-spec.md "Conventions"](api-spec.md#conventions)), refused as `WRITE_RULE_FAILED`: Post genesis acts per account per hour |
 | `RATE_LIMIT_SIGN_COMMENT` | `60` | Comment genesis acts per account per hour |
 | `RATE_LIMIT_SIGN_EDIT` | `30` | Edit records (Post, Comment, profile) per account per hour |
@@ -94,13 +95,15 @@ over file values.
 | `RATE_LIMIT_SIGN_ANY` | `2000` | The backstop: every staged act per account per day |
 | `RATE_LIMIT_ADMISSION_FUNDING` | `20` | Fresh admission fundings per voucher per day — approvals of an already-funded applicant spend none; refused with the approval batch as `WRITE_RULE_FAILED` ([auth.md "Rate limiting"](auth.md#rate-limiting)) |
 | `MEDIA_S3_ENDPOINT` | `http://localhost:9000` | The media service's S3 API endpoint. `stamp-net.sh` stamps it to the machine's LAN address like `DATABASE_URL` — the API and the store can live in separate WSL distros, where cross-distro localhost is dead — while the host firewall keeps the port closed to other devices; a phone reaches media through the web origin's `/media` proxy, never the store itself |
-| `MEDIA_BUCKET` | `cogra-media` | Bucket the media objects live in; created by the `media-init` one-shot |
+| `MEDIA_BUCKET` | `cogra-media` | The live bucket, world-readable by design; created by the `media-init` one-shot |
+| `MEDIA_CARRIED_BUCKET` | `cogra-media-carried` | The carried area's bucket — an applicant's media waits here until the landing publishes it; no anonymous policy, no proxy route ([data-model.md "Media areas"](data-model.md#media-areas)) |
+| `MEDIA_HELD_BUCKET` | `cogra-media-held` | The held area's bucket — the operator-only store a deleted asset's bytes leave the live bucket for; no anonymous policy, no proxy route, reached from the host alone |
 | `MEDIA_ACCESS_KEY_ID` | `cogra_media` | Media store access key (also the store's root user in compose) |
 | `MEDIA_SECRET_ACCESS_KEY` | `cogra_media_secret` | Media store secret key |
 | `MEDIA_REGION` | `us-east-1` | S3 region the requests are signed for; any value the store accepts |
 | `MEDIA_PORT` | `9000` | Exposed host port of the media S3 API |
 | `MEDIA_CONSOLE_PORT` | `9001` | Exposed host port of the media store's web console |
-| `MEDIA_BASE_URL` | `http://localhost:3000/media` | The public origin every `MediaAttachment.url` is minted against. In development the web dev server's `/media` proxy, so a phone loads bytes from the https origin it already trusts; in production the media origin or the CDN in front of it |
+| `MEDIA_BASE_URL` | `http://localhost:3000/media` | The public origin every `MediaAttachment.url` is minted against. In development the web dev server's `/media` proxy, so a phone loads bytes from the https origin it already trusts; in production the media origin or the CDN in front of it. The web client normalizes `/media/` URLs to same-origin relative paths, so any origin that proxies `/media` serves them |
 | `MEDIA_ORIGIN` | `http://localhost:9000/cogra-media` | The web front's `/media` proxy target — the store's bucket URL (web-only; the binaries never read it). `stamp-net.sh` stamps it to the LAN address like `MEDIA_S3_ENDPOINT`, because the web server and the store can live in separate WSL distros where cross-distro localhost is dead |
 | `MEDIA_MAX_UPLOAD_BYTES` | `10485760` | Per-picture upload cap. An ordinary over-cap upload gets a field-level `userError` naming `file` |
 | `MEDIA_MAX_VIDEO_UPLOAD_BYTES` | `104857600` | Per-video upload cap — parity with the picture body, a post being ten pictures or one video. The multipart transport refuses at twice the larger of the two caps, which cap applies being a fact about bytes it has not sniffed yet |
@@ -368,6 +371,49 @@ cargo run -p api --bin l1-dev rebuild   # wipe the mirror and re-ingest everythi
 cargo run -p api --bin l1-dev balance <address>
 cargo run -p api --bin l1-dev status    # mirror cursor + records per epoch
 ```
+
+### The release CLI
+
+The one writer of the release registry `appVersions` serves
+([api-spec.md](api-spec.md), Application versions). A release row is
+operator state, so it is written by this binary against whatever
+`DATABASE_URL` names, never through the API.
+
+```bash
+cargo run -p api --bin release -- publish \
+    --component android|web|backend|ios [--component …] \
+    --version 0.1.3 --notes-file notes.txt \
+    [--patch-notes-url URL] [--released-by UUID …] [--released-at RFC3339]
+cargo run -p api --bin release -- list [--component …]
+make release-publish ARGS="--component web --version 0.1.3 --notes-file notes.txt"
+```
+
+- `notes.txt` holds one note per line; each line is one paragraph on
+  the release's card. A blank line refuses the publish.
+- The release page defaults to
+  `https://github.com/helping-kaiser/cogra/releases/tag/v<version>`.
+- `--released-at` backfills; the default is now.
+- Naming several components writes one row each in one transaction: a
+  component that already has the version refuses the whole publish.
+
+**The ordering law.** A component's row is published only once that
+component's artifact is live, because the row is what tells a running
+client it is behind, and Update now must lead somewhere that has the
+release:
+
+- **web**: as the deploy's last step, after the new build serves — a
+  reload then lands in the new version;
+- **android**: once the store track shows the release available to the
+  cohort, so the listing Update now opens offers it;
+- **before either**: the public GitHub release `v<version>` exists,
+  since every card's door opens it.
+
+One version string per release on every shipped client keeps the
+components' lists the same release line.
+
+For a hand test, the same CLI seeds a dev database: an `android` row
+matching the debug build's `versionName`, then a newer one, shows the
+behind state.
 
 ### Postgres
 

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE staged_writes\n         SET payload = NULL, content_salt = NULL, nonce = NULL,\n             payload_reaped_at = NOW(), updated_at = NOW()\n         WHERE act_id = $1 AND state <> 'carried' AND payload IS NOT NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fea61b494a3746a509053c5aa7195d37a18c9e483c9a5bfd07bb3d0fc1756333"
+}

@@ -211,8 +211,8 @@ before it is signed, and anything half-finished says who acts next.
 - `Just looking? Browse the feed →`
 
 **Emoji: yes, in exactly one place.** The twenty-anchor stance readout
-(§8) plus 🤷 for a zero bundle and 🫥 for a control at rest. These are
-*system* emoji rendering a value, not decoration. Emoji never appear in
+(§8) plus 🤷 for a zero bundle, 🤔 for one number at zero and 🫥 for a
+control at rest. These are *system* emoji rendering a value, not decoration. Emoji never appear in
 headings, buttons, marketing copy, or empty states. The single arrow in
 `Browse the feed →` is the only other glyph used as punctuation.
 
@@ -621,7 +621,7 @@ cold launch only** — the app closed by the reader, or updated — and
 that lands on Feed's root, fresh.
 
 **Landing on a comment is one statement for every deep link** (jakob
-2026-10-01). A notification, a Saved row, a search result, a Cited by
+2026-10-01). A notification, a comment card in Saved, a search result, a Cited by
 row or a shared link that opens a thread on a comment opens the comments
 sheet with that comment scrolled to the sheet's top, its branch
 expanded, and a brief tonal highlight on it — one rung up the surface
@@ -705,8 +705,10 @@ rulings*) — under Newest, the reader's choice or what the search serves
 before the ranker exists, the tiers stay and each runs newest first, with
 no seam, every row's age on its edge and a tag row bare (§13, *The five
 ordered draws*); History searches the reader's seen-list, newest first by
-first seeing. A query that finds nothing says so in the list's place and
-offers the way back (`ExploreNone`, `HistoryNone`).
+first seeing; Saved searches the reader's saved list, newest first by
+when each thing was saved. A query that finds nothing says so in the
+list's place and offers the way back (`ExploreNone`, `HistoryNone`,
+`SavedNone`).
 
 ### Orientation
 
@@ -821,7 +823,7 @@ is a different thing from a piece the apps have not reached yet.
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader`, `StanceRow` |
 | `components/states/` | `EmptyState`, `LoadingState`, `ComingSoonCard` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending`, `NoticePanel`, `NoticeLine`, `RedactedContent`, `SensitiveVeil`, `SensitiveScope` |
-| `components/stance/` | `StanceControl`, `StancePad`, `StanceReadout`, `OwnStanceReadout`, `StanceValue`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `HelpLine`, `SeveranceConfirm` |
+| `components/stance/` | `StanceControl`, `StancePad`, `AttachmentPad`, `StanceReadout`, `AttachmentReadout`, `AttachmentStanding`, `StanceValue`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `HelpLine`, `SeveranceConfirm` |
 | `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `PagerDots`, `MediaViewer`, `VideoTransport`, `Timeline`, `SeekLine`, `DetailClip`, `ReelRail`, `ReelRailItem`, `ReelRailScore`, `ReelPlate`, `ReelCaption` |
 | `components/proposed/` | `ExplainableNumber` — **not shipped**, see §7.1 |
 
@@ -1029,11 +1031,24 @@ own (§3). All four quadrants are legitimate.
   anchors by Euclidean distance — dense in the for-it-and-want-it
   quadrant, sparse at the extremes. `(0, 0)` never speaks through the
   table: it gets 🤷.
+- **An author reaches their own content by two records: backing and
+  opinion** (jakob 2026-10-16, PR-101). The backing — the Publish,
+  Owner or Send that creates or edits it — carries one free parameter,
+  the attachment, with the second census-pinned at 1: the seal's and an
+  edit's `Your backing` row read one number (`AttachmentReadout`) and
+  `Adjust` opens the one-axis pad (`AttachmentPad`). The anchor on their
+  own content is the ordinary pad, an ordinary Opinion — its own bundle,
+  never netting with the backing. The pick is the record on every pad:
+  an edit's starts at `0.00`, and its pad reads `Current backing`, `Your
+  pick` and `Backing after`; only `Walk it all back` aims at a result
+  (stance-control, *Your own content*). What the author's records never
+  decide is whether their post reaches them: their own posts always
+  show in their own feed.
 - **A pick with only one axis reads through `VALENCE_SIX`**, the
   pure-valence spine of the twenty — six ruled bands over `pDirected`
-  alone, for the own-post pad and the seal row that states what it
-  picked. A nearest-of-twenty lookup cannot answer for a value that
-  names no pair.
+  alone, for the one-axis pad and the rows that state what it picked —
+  and exactly `0.00` wears 🤔, the one-zero face. A nearest-of-twenty
+  lookup cannot answer for a value that names no pair.
 - **Where the anchors sit is recorded on the anchor-map card**
   (`components/stance/anchor-map.card.html`) — the twenty on the
   two-axis field and the six pure-valence ones on the strip, each at its
@@ -1606,20 +1621,21 @@ signing. Sensitive self-marking is one switch opening a bottom
 sheet: it veils the body and the description; the title and tags
 stay readable so choosing to look is informed; an optional reason is
 shown on the veil. Every stance a write signs is disclosed and
-adjustable: the post's own attachment on a one-axis pad (For/Against
-only — your own post always reaches you in full), a reply's stance
-on its parent on the full two-axis pad. The pad keeps its floating
+adjustable: the post's own backing on the one-axis pad (For/Against
+only — a Publish carries one free number), +0.10 until the author
+moves it, and a reply's stance on its parent on the full two-axis
+pad. The pad keeps its floating
 card form everywhere; only license and sensitive present as sheets.
 
 **Key absent is restore-first.** Nothing is staged server-side and
 nothing is signed; the draft stays on the device, and the state
 wears `tertiary` — a waiting state, never `error`. Leaving mid-write
 keeps one local draft per target, on-device only, on the surfaces
-that keep drafts — the post wizard, the post edit, the profile
-picture; there the draft is the safety, so nothing asks on the way
-out. The reply wizard and the comment edit keep no draft: leaving
-them discards, so a non-empty composer, or an edit changed since it
-opened, is asked first — one shared dialog (the *DiscardConfirm* board)
+that keep drafts — the post wizard and the profile picture; there
+the draft is the safety, so nothing asks on the way out. The reply
+wizard, the comment edit and the post edit keep no draft (the post
+edit's, jakob 2026-10-14): leaving them discards, so a non-empty
+composer, or an edit changed since it opened, is asked first — one shared dialog (the *DiscardConfirm* board)
 reading "Discard this reply?" or, from an edit, "Discard the changes?"
 (jakob 2026-10-02), body "Nothing is kept.", a quiet *Discard* beside a
 filled *Keep writing* — the safe answer carries the weight, as it does
@@ -2217,17 +2233,18 @@ entry first". What stands:
   number without an edge, an edge without its number, an untagged
   semantic element on a wired page, a screen nothing reaches — and
   reports gaps without failing.
-- **`_build/check-readouts.mjs` is the gate's second half**: the six
-  pads that draw their own readout (`RefPair`, `ComposePad`, `TagPad`,
+- **`_build/check-readouts.mjs` is the gate's second half**: the five
+  pads that draw their own readout (`RefPair`, `TagPad`,
   `TagPadCompose`, `PadKeyAbsent`, the shared `ReplyPadBody`) spell
   face and pair as literals, because the formatters and the anchor
   lookups stay off the bundle's namespace. The check reads each pad's
   own `value` and asks the masters what it reads as —
   `formatStancePair` / `formatTagPair`, `nearestAnchor` /
-  `nearestTagAnchor`, `padPercentOf` — so a moved value, a hyphen
+  `nearestTagAnchor` — so a moved value, a hyphen
   where §3 rules U+2212, or a spoken reading left behind is a
-  failure. A seventh hand-spelled readout anywhere in `screens/` fails
-  too: unchecked is not a state a literal gets to be in.
+  failure. A sixth hand-spelled readout anywhere in `screens/` fails
+  too: unchecked is not a state a literal gets to be in. The one-axis
+  pads read through `AttachmentStanding` and spell nothing.
 - **`_build/report-summaries.mjs` is the gate's third half** (items 60
   + 64): it enumerates the feed-filter trigger's reachable summary
   strings (`feedFilterSummary`, `FeedFilter.jsx`), measures each with
@@ -4425,7 +4442,8 @@ Ruled by jakob the same day.
   picture in that circle reads as a person, which is the one thing a
   round disc means here. The chat message is the fourth saveable kind
   and waits for the chat round: it joins this list rather than starting
-  a second one.
+  a second one. (The Saved redesign, 2026-10-14, draws every saved
+  thing as its kind's own feed card.)
 - **History is posts only, ordered by the first time you saw one**
   (jakob). Saving is a deliberate act on anything; being seen is
   something posts do in a feed, and a history that collected every
@@ -4835,6 +4853,8 @@ such.
   reader is retracing — so `ContentRow` gains `action`, splits into a
   pressable part and the control beside it, and nests no button in a
   button. `SettingsRow` had already assigned that slot the same way.
+  (The Saved redesign, 2026-10-14, retires the row and its control:
+  the card's own Save is the unsave.)
 - **The saved state is one word, `Unsave`**, replacing
   `Remove from saved` on every menu and in copy-voice. **Save joins your
   own post's menu too**, and LEADS it — saving is private, so whose post
@@ -7104,7 +7124,10 @@ slots.
   micro-fix): a first connection has nothing to walk back, so the pad omits
   the walk-away; the message's pad keeps the full control, an opinion on a
   message being a real, revisitable stance. The message's own seal keeps the
-  compose seal's one-axis grammar, `OwnStanceReadout` with `Adjust`.
+  compose seal's grammar: `Your backing`, one number, `AttachmentReadout`,
+  with `Adjust` opening the one-axis pad — a Send carries one free number, as a Publish
+  does (*Round 15, the census revert*); the pad over the chat seal is
+  drawn when the chat round comes.
 - **Pending and didn't-land (design.md §9).** A message still settling shows
   whole with `Still settling ·` before its clock; one that expires leaves
   every reader's view and its author gets a calm notice where it stood —
@@ -9616,6 +9639,14 @@ each).
   The plain feed's ⋮ edge now lands on it; the other feed-flavored
   boards' ⋮ edges still name the detail's master and wait for a ruled
   sweep.
+- **The feed-hosted license sheet and report confirm** (FC-G10, seams
+  187/190). `FeedPostLicense` and `FeedReportConfirm`: the feed as
+  `FeedPostMenu` draws it, with `PostLicense`'s sheet and
+  `ReportConfirm`'s sheet risen where the menu stood — the same sheets,
+  read from one place each. The drawn states register `feed.licenseSheet`
+  (with its `terms`) and `feed.reportSheet.*`, mirroring
+  `postDetail.reportSheet`'s; the feed menu's License terms and Report
+  edges now land on them.
 - **The aftermath extension** (item 83). The hide's snackbar landing,
   drawn on the two surfaces #122 left: `HistoryHidden` — History's top
   viewport as it stood, every card in place (the open list is frozen; the
@@ -9906,16 +9937,19 @@ drafted and wait for his review (copy-voice marks each).
   with no first-opinion words, which stay the band's. The tap blooms the
   vouch-back pad, holding a kept pick where there is one; the hold signs
   the gentle default and the ceremony opens, as from the profile's
-  anchor. The card's reading lines keep their words.
+  anchor. The card's reading lines keep their words. Its empty face is
+  the line face in the card's own ink, never the 🫥 emoji, whose fixed
+  colors cannot read on the olive ground (jakob 2026-10-14).
 - **The borrowed view is the vantage's whole read** (*Guest and applicant
   feeds borrow a vantage point*). The filter sheet speaks it by name
   under a borrowed view — `@mira's people`, `as far as @mira's eyes
   reach`, Ranked's `closest to @mira first — the view you're browsing
   from`, the topics `@mira holds` — and the trigger's extra collapses to
   the count past its 154px like any other. A guest's wide anchor reads
-  `@genesismod's opinion` beside the hollow face, falling back to
-  `Their opinion` where the name outgrows it: a flagged exception, and
-  on a profile it fires for most handles (backlog item 139).
+  `@genesismod's opinion` beside the hollow face, its handle ellipsized
+  before `'s opinion` where the name outgrows it — `@genesismo…'s
+  opinion` (jakob 2026-10-14, backlog item 139) — and its accessible
+  name keeps the full handle.
 - **The sweep.** Already third person under a borrowed view: the trace,
   its steps, folds and records, and a guest anchor's spoken name. The
   reader's own, so first person by the law: the seen toggle, the kinds'
@@ -9942,6 +9976,390 @@ drafted and wait for his review (copy-voice marks each).
   join `VouchBack`, `feed.vouchCard.hint` joins both boards, and
   `feed.vouchCard.vouch` is removed with the button it named (jakob's
   ruling, seam 165).
+
+### Round 11, the seen tail — 2026-10-14
+
+jakob's feature (ruled 2026-10-14) and the license-axis registration
+banked by round 10, drawn as one round.
+
+- **The seen tail.** At the foot of the unseen feed, when the filter
+  admits anything the reader has already seen, a quiet separator stands
+  — the hairline with the centred label `Already seen` (picked over
+  `You're caught up.`) — and the seen rows continue under it in the
+  feed's own order, ranked or newest. Only the seen cut lifts: the
+  kinds, the kinds of post, the topic, the people row, Still settling,
+  Sensitive, Removed and the hidden people all cut the tail as they cut
+  the feed. Scrolling or reading the tail records nothing. With nothing
+  unseen and seen rows to show, the feed opens at the separator — the
+  moment that was the empty feed. Why: a sparse network holds more feed
+  than its one new post. The separator is Explore's `Seam` with the
+  feed's own words, never a second construction. Drawn on
+  `FeedSeenTail` ("Feed · already seen", the feed row's next slot), its
+  `unseen` chip drawing the sparse morning (`one`) and the open-at-the-
+  separator load (`none`); an exemplar of `Feed`'s shell, wired on
+  `Feed`. Registered `feed.seenSeparator` and its `label`. The laws
+  around it: Back to top's three viewport-heights count the whole list,
+  the tail included (`FeedScrolled`); a refresh lands what arrives
+  unseen above the separator; Done carries the tail to the new filter by
+  the rows' own rule, re-derived or re-queried (`FeedSheet`); and
+  `FeedNothing`, every kind off, admits nothing seen or unseen, so its
+  empty state stands alone. The mechanics of paging the tail are the
+  implementation's.
+- **The license terms' axis rows.** The key rule jakob blessed for
+  round 10, `axis`: the axis's name as the terms print it, lowercased,
+  each run of other characters one - — so `credit` and
+  `public-record-of-use`. `LicenseTerms` names each row `axis` with its
+  `label` and `value` wherever its placer names the block. `PostLicense`
+  and `CommentLicense` register under `postDetail`, as `ReaderPostMenu`
+  and `CommentMenu` do, so the detail's and the thread's sheets join
+  the feed's: `postDetail.licenseSheet.terms.axis` and
+  `feed.licenseSheet.terms.axis`.
+- **The gate**: edges unchanged at **2041** (`FeedSeenTail` is an
+  exemplar with no control of its own); the registry **94 / 3679 → 97 /
+  3799** — `PostLicense`
+  and `CommentLicense` (38 paths each) and `FeedSeenTail` (41) join, and
+  `FeedPostLicense` grows its three axis paths; nothing removed.
+
+### Round 12, the Saved redesign — 2026-10-14
+
+jakob's ruling (2026-10-14): Saved becomes "a normal feed looking page
+that is just composed of my saved contents... just like history is a
+normal feed composed of my view history". It supersedes the 2026-09-11
+chronicle-row shape.
+
+- **Every saved thing as its kind's own feed card.** Posts, comments and
+  people — the saveable kinds — stand as `PostCard`, `CommentFeedCard`
+  and `ProfileFeedCard`, unchanged and fully live; no card anatomy is the
+  page's own, and every door lands where the feed's does. A tag is never
+  saved, so the tag card never stands here; the chat message still waits
+  for the chat round. One mixed list (2026-09-11 stands), newest first
+  by when the reader saved each thing; the cards wear their own ages,
+  and the scores do not order it. Drawn whole, `History`'s reason.
+- **The unsave is the card's own Save.** A card's Save control is its
+  ⋮'s first row; every card in Saved is kept, so it reads `Unsave`
+  there, and the tap closes the sheet, takes the card out, closes the
+  list over it and answers `Removed from Saved.` with `Undo` — no
+  dialog, nothing marking the space. The row's icon-only control and
+  the shared `Unsave` it was built from are retired. A failed unsave
+  brings the card back with the row line under its face; a failed Undo
+  keeps the returned card with the same line. Focus moves to the next
+  card, else the previous, else the empty state.
+- **Search ships with it** (jakob: "the same search just over a
+  different set of nodes"): `Search what you saved`, Explore's one rule
+  over the saved list, newest first by save time; `SavedNone` is the
+  no-match state, `HistoryNone`'s construction with only the query's
+  cause. No kinds trigger — no kind filter is ruled for this list.
+  `SavedEmpty` draws no field, `HistoryEmpty`'s rule.
+- **The standing edges carry over to cards**: a removed thing keeps its
+  place with its removal mark, a deleted account is the redacted profile
+  card, sensitive content keeps its veil, and a hidden account's things
+  and profile stay.
+- **Boards.** `Saved` redrawn whole (390×1370) and moved to the profile
+  page's row slot at x 4800; `SavedUndo` is its top viewport with the
+  snackbar, `HistoryHidden`'s construction; `SavedNone` ("Saved ·
+  nothing matches") takes the next slot at x 5280. The card's ⋮ is the
+  unsave's door in the graph: the three menus' first-row edges land on
+  `SavedUndo` from a card in Saved.
+- **The gate**: edges **2041 → 2076**, flows 225 → **226**
+  (`search-what-you-saved`; `unsave-and-undo` re-routed through the
+  card's ⋮); the registry **97 / 3799 → 98 / 3876** — `SavedNone` joins,
+  `Saved` and `SavedUndo` register their cards, and the sixteen
+  `saved.list` row paths (eight on each board) and the `saved.list.entry`
+  key rule leave the registry by hand, the breaking change proposed for
+  blessing.
+
+### Round 13, the own-stance round — 2026-10-16
+
+jakob's rulings (2026-10-16) on an author's stance on their own content.
+They supersede the valence-six round's "the second number isn't yours
+to set on your own post". The words he did not write himself are
+drafted and wait for his review (copy-voice marks them).
+
+- **An opinion on your own post is the full pair.** The seal's `Your
+  opinion` row draws `StanceReadout`, +0.10 / +0.10 at rest — the pad's
+  universal default (jakob 2026-10-05) and authorship.md's "defaulted
+  low like every stance", drawn pending jakob's word (backlog 140).
+  `Adjust` opens `ComposePad`, the ordinary full pad at seal scale: the
+  reply pad's drawing over this seal, `Your pick` above the master
+  square, Set staging and `Sign and publish` signing. The pick rides the
+  post's own record. `OwnStanceReadout` leaves the stance masters;
+  `VALENCE_SIX` and `nearestValenceAnchor` stand on the anchor-map card
+  alone, their retirement jakob's call.
+- **Every post edit carries the pair, inert at (0, 0).** `EditCompose`,
+  `EditWords` and `EditComposeVideo` draw `Your opinion` under the
+  License row, reading the author's standing opinion on the post;
+  `Adjust` opens `EditPad`, the ordinary full pad over the edit —
+  `Current opinion`, `Your pick` and `Resulting opinion` the masters'
+  own, the pick opening at the edit's, (0, 0) until moved. A (0, 0)
+  record carries w̃ = 0 and crosses neither channel, so an edit nobody
+  adjusts moves the author's opinion by exactly nothing. Set stages,
+  `Sign the edit` signs; the pick rides the edit's own record, so the
+  acts card adds no row and no count (`EditActs`). The boards that draw
+  the edit beneath an overlay carry the row with it. The comment edits
+  draw none: a comment's revision carries its stance toward what it
+  answers (backlog 140).
+- **The own-post anchor is the ordinary pad.** The stance face on the
+  reader's own post opens `PadStanding`'s pad as on anyone's, its
+  current opinion one bundle of the post's own records and the opinions
+  given through its face; walking it back follows the generic severance
+  law (stance-control, *Your own content*).
+- **Your own posts always show in your own feed**, whatever your opinion
+  on them reads — a feed law (`Feed`), and the one place "your own"
+  still differs. The one-axis pad's note goes with the pad, and its
+  "?" text is replaced by a draft for the full pad.
+- **The chat seal** keeps the compose seal's grammar: `ChatSignSheet`
+  reads the pair, and the pad over it is drawn when the chat round
+  comes.
+- **The gate**: edges **2076 → 2085** — the four edits' `Adjust` and
+  `EditPad`'s five; flows **226 → 227**
+  (`adjust-your-opinion-with-an-edit`; `set-your-own-stance-on-your-post`
+  re-described); `EditPad` ("Edit post · your opinion on it") takes
+  the compose page's edit row at x 5280. The registry holds at **98 /
+  3878**: none of the boards this round touched is registered, and
+  nothing is removed.
+
+### Round 14, the search-law round — 2026-10-16
+
+jakob's stamped search law (seam 220, with his 2026-10-16 extension to
+handles, seam 226) and his search-section ruling (a), drawn on every
+search surface that draws results. The law is one for global search,
+Saved and History:
+
+- **`@prefix` is a person cue.** The people whose handle starts with
+  what is typed stand first, then what they authored; no second word
+  and no full handle is needed. `@handle text` keeps its scoped
+  reading — the matched people's own work, and no profile row.
+- **`#prefix` is a topic cue.** The tags whose name starts with what is
+  typed stand first, then what carries them; `#tag text` stays the
+  intersection. On Saved, where a tag is never saved, a bare `#tag`
+  lists the saved things carrying a matching tag.
+- **Plain text matches by word prefix**: any word of a title, a
+  display name or a handle — a person's own, or the author's of a
+  thing — with no sigil. `Mod` finds Genesis Moderator; `enesis` finds
+  nobody. Bodies, descriptions and bios are still never read, so
+  `ExploreNone`'s, `SavedNone`'s and `HistoryNone`'s "Search reads names
+  and titles, never bodies" stands verbatim — a handle is a name.
+- **Kind filters subtract.** A filter that leaves Profiles out drops
+  the people section and keeps the authored-content reading; Profiles
+  alone keeps only the people.
+- **Saved and History search everything kept or seen**, never only the
+  cards already loaded — the one place the server-side matcher shows.
+- **The results are sectioned.** The people stand first under
+  `SectionLabel`'s `People` (the caption Explore's `Recent` wears),
+  capped at **three**; `See all profiles`, a text button on its own line,
+  closes the section when more match, and the content follows by the
+  surface's own order with no caption of its own. The door opens the
+  narrowing that already exists — the filter at Profiles alone
+  (`ExplorePerson`, `HistorySearch`); Saved has no kind filter, so its
+  door opens Saved's own people-only narrowing, the query kept.
+  `ExplorePerson` is redrawn sectioned (`sal`: Sal Torres, Ines Salas
+  by her second word, Salome Ward, the door, then the post and the
+  tag); `SavedSearch` and `HistorySearch` are new (`@m`: three profile
+  cards, the door, then Mira's words post).
+- **Saved and History cap too — the orchestrator's rec, drawn pending
+  jakob's word** (backlog 141): one law for every sectioned surface.
+- **The gate**: edges **2085 → 2119** (`ExplorePerson`'s door; the two
+  new boards' own; Saved's, SavedUndo's, SavedNone's, History's,
+  HistoryHidden's and HistoryNone's fields reaching them); flows hold
+  at **227**, `search-and-open-a-person` re-described and the shared
+  starts' board counts re-blessed. The new boards stand on the profile
+  page's Saved/History row at x 5760 and 6240. The registry goes **98 /
+  3878 → 100 / 3971**: `explore.profilesLabel` and `explore.profilesDoor`
+  on `ExplorePerson` (its `result` keys grow to 1–5), the two new
+  screens' 45 and 46 paths (`profilesLabel`, `profilesDoor`, and the cards
+  under their existing key rules). No key rule is added, and nothing
+  is removed.
+
+### Round 15, the census revert — 2026-10-16
+
+jakob's ruling (PR-101, verified against the L1 original): the census
+stands — Publish, create and edit alike, is pinned `p_d = a`, `p_i = 1`,
+and the pin is deliberate L1 design: "the face stance is for the
+authors opinion on his post and one path and the authoring gestures are
+the other edge bundle that he writes whenever he creates or edits
+contents". It holds for every authored kind, not only posts. Round 13
+is partly reverted: its own-post anchor stands; its full pad at
+authoring does not. jakob's answers to the round's questions (backlog
+142) set the pad model the same day.
+
+- **Backing and opinion.** "'your backing' sounds nice": the authoring
+  bundle is the author's **backing**, the face's record their
+  **opinion**, and the two words never trade places. The seal's, an
+  edit's and the chat sheet's row reads `Your backing`; the pads are the
+  `Backing pad for your own post`, their "?" `Your backing on your
+  post`, its help text blessed.
+- **The authoring pad is one axis again, drawn fresh.** `AttachmentPad`
+  is the square's own language cut to a strip — the same field, rung,
+  knob, pressed layer, zero hairline and gutters, `Against` · `For`
+  alone — rather than the retired hand-drawn track (jakob did not like
+  its look; the drawing was design's call). `AttachmentReadout` reads the
+  rows as one number through `VALENCE_SIX`; `AttachmentStanding` and
+  `AttachmentLandingLine` draw the pad's readouts, so `ComposePad` and
+  `EditPad` spell no literal and check-readouts holds five sites. The
+  compose default is `+0.10` (post.md §1).
+- **The pick is the edge.** "you add an edge with what you set and you
+  get the readout of what you are setting and what this will result
+  in." The strip collects the record's own value; nothing computes a
+  delta, and stance-control's *Each gesture authors one edge* stands
+  unqualified. An edit's pick starts at `0.00` — no change, a perfectly
+  ordinary edit — and its pad reads `Current backing` and `Your pick`
+  above the strip, `Backing after` below it (`clip` of the raw sum plus
+  the pick, the total and the cap stated past ±1). Every pick on the
+  strip is legal. At compose the pick is the result, so `Your pick`
+  reads alone.
+- **Only the walk-back aims at a result.** "only the manual severance
+  ever aims at the endresult (might need multiple acts for that)".
+  `EditPad` carries `Walk it all back` on the left of its commit row: it
+  parks the pick at the raw sum's opposite, clipped to the strip, and is
+  greyed while the backing already nets `0.00` ("you cant walk something
+  back that is already walked back?"). No dialog guards Set at `0.00` on
+  an edit.
+- **Exactly `0.00` shrugs.** "yes the shrug should be the icon for
+  exactly 0": the one-axis face at exactly `0.00` is 🤷, spoken
+  `Nothing`; the bands keep the rest of the axis.
+- **The face stance is an Opinion.** `PadStanding` on one's own post is
+  the ordinary pad, now read as what it signs: an Opinion, its own
+  bundle — bundles key by family, so it never nets with the post's
+  Publish records — and a second path to the post. Its `Current
+  opinion` reads the face's opinions alone.
+- **`Start it unreachable?` re-derived.** At `0.00` a Publish folds to
+  `(0, 1)` and carries `w̃ = 0`; the post's own path is gone, but the
+  first legs of its author's own tags and citations still reach it, so
+  the round-13 body's "the only path" overclaimed. The body is
+  re-drafted in backing's words (copy-voice, *The unreachable start*).
+- **The docs follow.** "(0,1) is the default for editing contents but it
+  is author changeable": post.md §4 and items.md §7 give an edit the
+  author's attachment pick, `0` by default.
+- **Where it applies.** Posts (drawn); Item listings (Owner — the law in
+  prose, no surface drawn); messages (Send — the one-axis chat sheet,
+  message edits banked with the chat round). Where it does not:
+  comments — a reply's pair aims at the parent, so the reply pad keeps
+  both numbers and a comment edit carries `(0, 0)`, fixed; chat joins
+  and foundings (their first legs carry two free numbers); and every
+  face, which is an opinion.
+- **The gate**: edges **2119 → 2120** (`EditPad`'s `Walk it all back`)
+  and flows hold at **227** — the own-stance edges' labels and cases and
+  two flow descriptions re-worded, the flows re-blessed. The registry
+  holds at **100 / 3971**: no board this round touched is registered,
+  and nothing is removed.
+
+### Round 16, the applicant-acting cut — 2026-10-16
+
+jakob's ruling (RULINGS PR-103; seams 234 and 235): applicant acting is
+post-MVP whole — no act staged with the application, no applicant
+uploads, no applicant compose or stance seal. The MVP keeps the
+application→vouch→landing flow and the vouched-in member's first
+opinion, the vouch-back or toward anyone else. jakob left the shapes to
+design. The canonical boards are cut down to that truth rather than
+annotated, and the package is banked whole (backlog 143). The round
+supersedes the staging the earlier applicant records draw: *The
+applicant once-each round*, the topic round's once-each Affinity, *The
+v1.0.0 scope cut*'s staging bullet, *The applicant's life round*'s seal
+and topic line, *The applicant fix round*'s turned-down seal exit, *The
+applicant remainder, ruled*'s waiting opinion and topic, *The 134 and
+135 residue*'s waiting post and chronicle line.
+
+- **Every acting door answers in place**, in the applicant-foot family's
+  register. The bar's `New post` wherever an applicant meets it (wired on
+  `ApplicantFeed` and its family, `ProfileApplicant` and
+  `WalletComingSoon`) and the menus' `Cite in a new post` and `Mention in a new post` answer
+  `You can post once you're in.`; the wizard never opens. A stance face —
+  every one an applicant meets, a topic's and a profile's wide anchor
+  included — answers a tap or a press-and-hold with `You can give your
+  opinion once you're in.`; the pad never blooms and nothing is signed
+  or staged (stance-control, *An applicant's anchor answers in place*).
+  The comment foot and `Reply` keep their line. One line per door, the
+  same on every applicant shell, the turned-down one included.
+- **The seal has no applicant branch.** No applicant reaches it, so
+  `ComposeSeal`'s two applicant exits leave its sidecar and the three
+  seals' `Sign and publish` lose their `ApplicantWaiting` outcome.
+  `post-while-an-applicant` now ends on `New post`'s answer.
+- **The applicant's own profile is honest.** The open card reads `Their
+  approval brings you in. Until then, you can read everything.`; the
+  chronicle is empty, at `EmptyState`, `Nothing here yet. Your posts and
+  opinions show up here once you're in.`, and the figures read zero. The
+  staged rows, their closing lines and the staged row's door go.
+- **`ApplicantWaiting`'s snackbar is `New post`'s answer**, drawn once
+  for every shell. About's `Getting in, and being let in` drops its
+  once-each paragraph. `VouchBack`'s two lines about acts staged during
+  the application go; the landing, the vouch card and the vouch-back
+  stand as drawn.
+- **The new doors wear the locked look** (jakob 2026-10-16, as
+  recommended — auth.md's "every other acting surface stays visible but
+  locked"): `New post` and every stance face an applicant meets stand at
+  the disabled opacity, still tappable, as the foot, `Reply` and
+  `Invites` do. `BottomNav` takes `composeOpacity` and `StanceControl`
+  `anchorOpacity` (`PostCard`'s `stanceOpacity`), the `replyOpacity`
+  pattern; the applicant shells and `ProfileApplicant` pass
+  `var(--state-disabled)`. The menus' `Cite` and `Mention` rows stay
+  drawn as they are — no menu row has a locked treatment to follow.
+- **Blessed (jakob 2026-10-16)** (copy-voice, *The applicant-foot family*
+  and *About*): `You can post once you're in.`, `You can give your
+  opinion once you're in.`, the profile card's second sentence, the empty
+  chronicle's line, and About's new first-paragraph tail.
+- **The gate**: edges **2120 → 2119** (`ProfileApplicant`'s staged row);
+  the five shells' stance faces turn `detour`, every outcome now an
+  answer. Flows hold at **227**, `post-while-an-applicant` re-blessed.
+  The registry goes **100 / 3971 → 100 / 3965**: `ProfileApplicant`'s
+  eight staged-chronicle paths (`profile.chronicle.act` and its six
+  children, `.pending` among them, and `profile.chronicle.stagedLine`)
+  and the `profile.chronicle.act` key rule leave by hand, the breaking
+  change accepted (jakob 2026-10-16); `profile.chronicle.empty` and its
+  `title` join.
+
+### Round 18, the zero-state package — 2026-10-20
+
+jakob's rulings (seam 240): severance stays the exact `(0, 0)` net — a
+distinct, confirmed, clean-slate act. A bundle with one number at zero
+is a deliberate state, "interested, no side taken": held, shaping no
+feed, named UNREACHABLE in the docs. Profiles display at authoring time,
+and the borrowed view lasts until the member holds one outgoing opinion
+with neither number at zero. Design finalizes the words, and never
+states the expected.
+
+- **The unreachable landing.** A pick landing one number at zero reads,
+  under `Resulting opinion`, 🤔 and the state — `Interested, no side
+  taken — this won't shape anyone's feed.` and its three siblings by the
+  other number's sign (`unreachableHead`). Its 🤔 is a door named by the
+  state: the pad's body gives way in place to three lines (still held, a
+  person staying under `Your people`; nothing passes through it; the
+  family's way out is a different act), the "?"'s grammar. Set signs it
+  like any pick; only `(0, 0)` asks. `PadStanding`'s `landing` chip draws
+  both states. The law is stance-control's *Severance*: the consequences
+  come from the zero, and severance is the named, confirmed version of
+  full inertness.
+- **One zero thinks, two shrug** (jakob 2026-10-20: "shrug should be the
+  0,0 only"). 🤔 (`UNREACHABLE_EMOJI`, used nowhere before) is the face
+  of every one-zero state — the unreachable landing and the one-axis
+  `0.00`; 🤷 stays with `(0, 0)` alone: severed, walked back, no opinion
+  yet. The words are the same.
+- **The borrowed view warns.** `StanceControl`'s `borrowed` (and
+  `PostCard`'s `stanceBorrowed`) adds `You'd keep your borrowed view — no
+  feed of your own yet.` under an unreachable or severed landing; it
+  never blocks. `VouchBackPad` and `VouchBack` carry the live-opinion
+  rule; the stance card draws the line.
+- **The backing pads.** The one-axis 0.00 is spoken `No side taken`. The
+  zero hairline is a "no side yet" detent. The input setting governs
+  here too: `Set an exact value for your backing`, hidden until focused,
+  swaps the strip in place for one track (`StanceAlternates`'
+  `axis="one"`, drawn on the alternates card) — never a locked second.
+  `Start it unreachable?` keeps its title and buttons, the body in the
+  unreachable vocabulary.
+- **Explain only what is new** (jakob 2026-10-20, a hard rule): a "?"
+  text or a helper line never explains the common, obvious or expected.
+  copy-voice's voice rules carry it; the picture's "?" keeps its two
+  facts and says nothing about the picture changing; backlog 146 sweeps
+  the rest.
+- **Smaller fixes.** `EditPad`'s Set: the pick adds no count of its own,
+  but a pick that alone fills the batch reads `You're signing 1 thing`.
+  The severance card's explicit route costs `⌈1.40⌉ = 2` counter-records,
+  as the route stages them, not one per standing edge. Backlog 145 banks
+  `CARRIED_MEDIA_UNPUBLISHED`'s copy; 144 gains the detent.
+- **Blessed (jakob 2026-10-20)**: every new string above, as recommended.
+- **The gate**: edges **2123 → 2124** (`PadStanding`'s 🤔, `via` 6);
+  flows hold at **227**, none re-blessed. The registry holds at **100
+  screens**: every board drawn this round is unregistered, so no path
+  joins and none leaves.
 
 ---
 

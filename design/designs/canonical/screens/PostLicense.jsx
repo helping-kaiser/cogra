@@ -12,12 +12,18 @@
    THE POST IS ADA'S, whose terms are credit on every use and no record of use
    — two axes that genuinely differ, so the block reads as the pair it is. The
    both-axes-zero case, and the word readers have for it, is drawn on the
-   comment's sheet. */
+   comment's sheet.
+
+   REGISTERED under the `postDetail` prefix (round 11, the license-axis
+   registration): the detail beneath is named as `ReaderPostMenu` names it,
+   the sheet `licenseSheet`, its `terms` block, and each of the block's axis
+   rows an `axis` keyed by the axis's printed name. */
+export const NODE = "postDetail";
 export function Screen() {
   return (
     <>
       <ThreadDetail />
-      <LicenseSheet license={ADA_POST.license} />
+      <LicenseSheet license={ADA_POST.license} node="licenseSheet" />
     </>
   );
 }

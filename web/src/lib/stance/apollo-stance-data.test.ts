@@ -9,11 +9,12 @@ import { describe, expect, it, vi } from "vitest";
 
 import { createGuard, type AuthGuard } from "@/lib/session/guard";
 import { createTokenStore } from "@/lib/session/token-store";
+import { expectation, severance, stanceRecord, type Expectation } from "@/lib/signing/intent";
 import type { WriteResult, WriteSigner } from "@/lib/signing/write-signer";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { createApolloStanceData } from "./apollo-stance-data";
-import type { StanceTarget } from "./stance-data";
+import type { StanceBundle, StanceTarget } from "./stance-data";
 
 const server = startMswServer();
 
@@ -34,30 +35,45 @@ function signer(result: (staged: StagedWriteView) => WriteResult = (s) => ({
   kind: "done",
   id: s.id,
   state: "RELAYING",
-})): WriteSigner & { signed: string[] } {
+})): WriteSigner & { signed: string[]; expected: Expectation[] } {
   const signed: string[] = [];
+  const expected: Expectation[] = [];
   return {
     signed,
+    expected,
     signStaged: vi.fn(async (staged: StagedWriteView) => {
       signed.push(staged.id);
       return result(staged);
     }),
-    // The stance path deliberately signs one at a time — it short-circuits
-    // on the first write that does not land, which the batch helper does
-    // not do — so this arm is here for the interface and unreached.
-    sign: vi.fn(async (writes: readonly StagedWriteView[]) =>
-      writes.map((staged) => {
+    // The whole batch goes to the signer at once, with what the gesture
+    // ordered: the real signer checks it before the first pre-signature.
+    sign: vi.fn(async (writes: readonly StagedWriteView[], intent: Expectation) => {
+      expected.push(intent);
+      return writes.map((staged) => {
         signed.push(staged.id);
         return result(staged);
-      }),
-    ),
+      });
+    }),
+    signCarriedAtLanding: vi.fn(async () => []),
     resume: vi.fn(async () => []),
   };
+}
+
+const POST_GRAPH_ID = "mint:act:b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0:3:publish";
+
+/** The standing read every gesture's expectation names its node from. */
+function postStanceRead() {
+  return gqlLink.query("PostStance", () =>
+    HttpResponse.json({
+      data: { post: { __typename: "Post", id: "post-1", viewerStance: bundleFields() } },
+    }),
+  );
 }
 
 function bundleFields(over: Record<string, unknown> = {}) {
   return {
     __typename: "StanceBundle",
+    targetGraphId: POST_GRAPH_ID,
     pDirected: 0.6,
     pInterest: 0.4,
     // Past the clip on one axis, so a mapping that read the raw sums off
@@ -304,6 +320,7 @@ describe("writing", () => {
   it("stages exactly the picked pair — no delta reaches the wire", async () => {
     let input: unknown = null;
     server.use(
+      postStanceRead(),
       gqlLink.mutation("PrepareStance", ({ variables }) => {
         input = variables.input;
         return HttpResponse.json({
@@ -325,10 +342,14 @@ describe("writing", () => {
     });
     expect(input).toEqual({ target: "post-1", pDirected: -0.3, pInterest: 0.2 });
     expect(sign.signed).toEqual(["w-1"]);
+    // The signer is told what was ordered: exactly that pair, toward the
+    // node the standing read named.
+    expect(sign.expected).toEqual([expectation([stanceRecord(POST_GRAPH_ID, -0.3, 0.2)])]);
   });
 
   it("signs every counter-record of a severance batch in one pass", async () => {
     server.use(
+      postStanceRead(),
       gqlLink.mutation("PrepareSeverance", () =>
         HttpResponse.json({
           data: {
@@ -343,14 +364,22 @@ describe("writing", () => {
     );
     const sign = signer();
     const data = createApolloStanceData({ client: client(), guard, signer: sign });
-    expect(await data.sever(POST)).toEqual({ kind: "success", value: { records: 3 } });
+    expect(await data.sever(POST, SHOWN)).toEqual({ kind: "success", value: { records: 3 } });
     // In order, and every one of them: the reader agreed to the batch
     // once, at its stated cost.
     expect(sign.signed).toEqual(["w-1", "w-2", "w-3"]);
+    // Checked as a property against the standing the reader confirmed.
+    expect(sign.expected).toEqual([
+      expectation(
+        [],
+        [severance(POST_GRAPH_ID, { rawPDirected: 1.6, rawPInterest: 0.4, cost: 3 })],
+      ),
+    ]);
   });
 
-  it("stops the batch at the first element that does not complete", async () => {
+  it("reports a batch with an element that did not complete as failed", async () => {
     server.use(
+      postStanceRead(),
       gqlLink.mutation("PrepareSeverance", () =>
         HttpResponse.json({
           data: {
@@ -369,13 +398,15 @@ describe("writing", () => {
         : { kind: "done", id: staged.id, state: "RELAYING" },
     );
     const data = createApolloStanceData({ client: client(), guard, signer: sign });
-    expect((await data.sever(POST)).kind).toBe("failed");
-    // The rest is left staged for resume(), not re-driven here.
-    expect(sign.signed).toEqual(["w-1", "w-2"]);
+    expect((await data.sever(POST, SHOWN)).kind).toBe("failed");
+    // The batch was checked whole and signed whole; the write still
+    // awaiting its seal is resume()'s to finish.
+    expect(sign.signed).toEqual(["w-1", "w-2", "w-3"]);
   });
 
   it("surfaces a refusal to sever rather than manufacturing writes", async () => {
     server.use(
+      postStanceRead(),
       gqlLink.mutation("PrepareSeverance", () =>
         HttpResponse.json({
           data: {
@@ -392,7 +423,17 @@ describe("writing", () => {
     );
     const sign = signer();
     const data = createApolloStanceData({ client: client(), guard, signer: sign });
-    expect((await data.sever(POST)).kind).toBe("refused");
+    expect((await data.sever(POST, SHOWN)).kind).toBe("refused");
     expect(sign.signed).toEqual([]);
   });
 });
+
+/** The standing the reader confirmed the walk-back against. */
+const SHOWN: StanceBundle = {
+  current: { pDirected: 0.6, pInterest: 0.4 },
+  rawSum: { pDirected: 1.6, pInterest: 0.4 },
+  records: 2,
+  inert: false,
+  severed: false,
+  severance: { records: 3 },
+};

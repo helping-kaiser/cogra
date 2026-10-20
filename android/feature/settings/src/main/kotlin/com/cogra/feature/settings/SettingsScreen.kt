@@ -54,6 +54,7 @@ import com.cogra.domain.AccountDeletionPath
 import com.cogra.domain.ageLadder
 import com.cogra.domain.dateLine
 import com.cogra.domain.forwardLadder
+import com.cogra.domain.hidden.HiddenSet
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.store.ThemeChoice
 import kotlinx.coroutines.launch
@@ -72,6 +73,8 @@ data class SettingsDoors(
     val onChangeHandle: () -> Unit = {},
     val onOpenEmail: (EmailDoor) -> Unit = {},
     val onOpenAbout: () -> Unit = {},
+    /** The release chronicle (WhatsNew.md). */
+    val onOpenWhatsNew: () -> Unit = {},
     /** The reader's own mail, addressed to the contact address — never the report. */
     val onContact: () -> Unit = {},
     /** The Delete account row's two doors: the request screen, or the grace page. */
@@ -98,6 +101,7 @@ fun SettingsRoute(
     SettingsScreen(
         state = state,
         versionName = versionName,
+        hidden = com.cogra.feature.saved.rememberHiddenSet(),
         events = viewModel.events,
         notice = notice,
         onNoticeShown = onNoticeShown,
@@ -185,8 +189,11 @@ fun SettingsScreen(
     onNoticeShown: () -> Unit = {},
     clearingInView: Boolean = false,
     onClearingShown: () -> Unit = {},
+    /** The reader's hidden set: the People row's count and the Hidden accounts sheet. */
+    hidden: HiddenSet? = null,
 ) {
     val snackbar = remember { SnackbarHostState() }
+    val hiddenAccounts = rememberHiddenAccounts(hidden, snackbar)
     // Plain, not snapshot state: the requesters are handles, never read to draw.
     val sessionFocus = remember { HashMap<String, FocusRequester>() }
     val signOutFocus = remember { FocusRequester() }
@@ -221,7 +228,7 @@ fun SettingsScreen(
             StanceGroup(state, actions)
             WritingGroup(state, actions, licenseFocus)
             ReadingGroup(state, actions)
-            PeopleGroup()
+            PeopleGroup(hiddenAccounts)
             SensitiveGroup(state, actions)
             BackupGroup(state, doors)
             ClearingGroup(state, actions, eraseFocus, ClearingInView(clearingInView, scroll, onClearingShown))
@@ -234,6 +241,7 @@ fun SettingsScreen(
     }
 
     SettingsDialogs(state, actions)
+    HiddenAccountsSheet(hiddenAccounts)
     state.licenseSheet?.let { staged ->
         SettingsLicenseSheet(
             staged = staged,
@@ -485,22 +493,44 @@ private fun ReadingGroup(state: SettingsUiState, actions: SettingsActions) {
 }
 
 @Composable
-private fun PeopleGroup() {
+private fun PeopleGroup(hidden: HiddenAccounts) {
     val group = Page / "people"
+    val count = hidden.view.count
     SettingsGroup(
         label = stringResource(R.string.settings_people),
         footnote = stringResource(R.string.settings_people_footnote),
         node = group,
         rows = listOf(
             {
-                // DRIFT (hide-and-unhide packet): nothing can be hidden yet,
-                // so the count is always nobody — inert at `None`, which is
-                // the drawn state for that count (Settings.md :37-39).
+                // THE COUNT IS THE HIDDEN SET'S (hidden-actors §5.1). With
+                // nobody hidden the row is inert and reads `None` — a tap that
+                // could only open an empty sheet is a tap spent on nothing
+                // (Settings.md :37-39). An Undo of an unhide that did not go
+                // through after the sheet closed is said here, with Retry
+                // (SettingsHidden.md:33).
                 SettingsRow(
                     label = stringResource(R.string.settings_people_hidden),
-                    value = stringResource(R.string.settings_people_hidden_none),
-                    kind = SettingsRowKind.Inert,
+                    status = if (hidden.rowFailed) stringResource(R.string.settings_save_failed) else null,
+                    value = if (count == 0) {
+                        stringResource(R.string.settings_people_hidden_none)
+                    } else {
+                        count.toString()
+                    },
+                    kind = if (count == 0) SettingsRowKind.Inert else SettingsRowKind.Opens,
+                    onClick = hidden::show,
+                    trailing = if (hidden.rowFailed) {
+                        {
+                            InlineAction(
+                                text = stringResource(R.string.retry),
+                                onClick = hidden::retryRow,
+                                testTag = "settings_hidden_retry",
+                            )
+                        }
+                    } else {
+                        null
+                    },
                     node = group / "hidden",
+                    modifier = Modifier.focusRequester(hidden.rowFocus),
                 )
             },
         ),
@@ -769,8 +799,7 @@ private fun AboutGroup(versionName: String, doors: SettingsDoors) {
             // DRIFT (the intro packet): the intro has no Android surface yet.
             row(R.string.settings_about_intro, "intro") {},
             row(R.string.settings_about_cogra, "aboutCogra", onClick = doors.onOpenAbout),
-            // DRIFT (the what's-new packet): the release chronicle is not built.
-            row(R.string.settings_about_whats_new, "whatsNew", value = versionName) {},
+            row(R.string.settings_about_whats_new, "whatsNew", value = versionName, onClick = doors.onOpenWhatsNew),
             // DRIFT (the report-a-problem packet): the report is not built.
             row(R.string.settings_about_report, "report") {},
             row(

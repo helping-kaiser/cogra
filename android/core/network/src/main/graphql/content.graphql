@@ -63,6 +63,8 @@ fragment PostFields on Post {
   references {
     ...ReferenceClaimFields
   }
+  # The post menu's Save / Unsave row: the only place a kept state shows.
+  viewerBookmarkedAt
 }
 
 fragment CommentFields on Comment {
@@ -132,6 +134,8 @@ fragment CommentFields on Comment {
   references {
     ...ReferenceClaimFields
   }
+  # The comment menu's Save / Unsave row.
+  viewerBookmarkedAt
 }
 
 mutation PreparePost($input: PreparePostInput!) {
@@ -139,6 +143,8 @@ mutation PreparePost($input: PreparePostInput!) {
     node
     writes {
       ...PreparedWriteFields
+      # Carried with an applicant's application: checked, kept, signed at the landing.
+      carried
     }
     userErrors {
       ...UserErrorFields
@@ -182,29 +188,6 @@ mutation PrepareCommentEdit($input: PrepareCommentEditInput!) {
   }
 }
 
-# `includePending` defaults to true per api-spec.md "Pending entries come
-# first, in their own cursor namespace"; false serves only what landed.
-query Posts($first: Int!, $after: String, $includePending: Boolean! = true) {
-  posts(first: $first, after: $after, includePending: $includePending) {
-    edges {
-      node {
-        ...PostFields
-        # The count the card's comment affordance reads. An aliased
-        # empty page rather than a field on `PostFields`: that fragment
-        # is spread again per comment in the detail read, and the count
-        # is a post's fact alone. `totalCount` costs one aggregate per
-        # connection and is priced at zero complexity.
-        commentCount: comments(first: 0, includePending: $includePending) {
-          totalCount
-        }
-      }
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
-  }
-}
 
 # The author's own mark, read alone — what the edit form has to
 # re-state.
@@ -244,6 +227,25 @@ query PostSelfMark($id: UUID!) {
 query CommentForEdit($id: UUID!) {
   comment(id: $id) {
     ...CommentFields
+  }
+}
+
+# LANDING ON A COMMENT (Saved.md; jakob 2026-10-01): one step up a comment's
+# chain — what it answers. A reply sits behind its parent's collapsed count, so
+# the thread walks up to the top level and unfolds each branch on the way down.
+# web's twin is web/src/lib/graphql/content.graphql `CommentParent`.
+query CommentParent($id: UUID!) {
+  comment(id: $id) {
+    id
+    target {
+      __typename
+      ... on Comment {
+        id
+      }
+      ... on Post {
+        id
+      }
+    }
   }
 }
 

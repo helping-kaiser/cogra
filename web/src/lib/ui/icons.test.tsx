@@ -71,6 +71,12 @@ describe("icons", () => {
       "visibility_off",
       // The checkbox's mark (Checkbox.jsx), first needed by DeleteAccount's sweep.
       "check",
+      // The search field's glyph, first needed by Saved's search (SearchBar.jsx).
+      "search",
+      // The band's bell (CograBand.jsx; Icon.jsx `notifications`).
+      "notifications",
+      // The unset stance face in a host's ink (Icon.jsx `sentiment_neutral`).
+      "sentiment_neutral",
     ];
     expect([...shippedNames()].sort()).toEqual([...needed].sort());
   });

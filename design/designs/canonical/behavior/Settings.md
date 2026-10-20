@@ -20,7 +20,7 @@ ALWAYS the theme follows the device's own light-or-dark setting GIVEN Auto is ch
 
 ALWAYS one of The pad, Sliders and Typed values stands selected
 
-WHEN tap The pad, Sliders or Typed values -> that input is how every opinion is taken, everywhere AND the other two stand unselected AND the choice stays on this device
+WHEN tap The pad, Sliders or Typed values -> that input is how every opinion and every backing is taken, everywhere AND the other two stand unselected AND the choice stays on this device
 
 WHEN tap Confirm multi-action submits -> the switch flips AND NEVER a dialog asks
 
@@ -128,9 +128,9 @@ WHEN tap Contact -> the reader's own mail opens addressed to the contact address
 
 WHEN tap Privacy or Terms -> the written document opens
 
-ALWAYS the don't-remember switch's line reads Your key, your draft and any kept picks are cleared from this browser when you sign out. on the web
+ALWAYS the don't-remember switch's line reads Your key, your draft, any kept picks and what you've seen are cleared from this browser when you sign out. on the web
 
-ALWAYS the don't-remember switch's line reads Your key, your draft and any kept picks are cleared from this app when you sign out. on android
+ALWAYS the don't-remember switch's line reads Your key, your draft, any kept picks and what you've seen are cleared from this app when you sign out. on android
 
 ALWAYS settings.backup.footnote reads Your key signs everything you publish and lives only in this browser. Your recovery code is the only way back. on the web and Your key signs everything you publish and lives only in this app. Your recovery code is the only way back. on android GIVEN a recovery code exists
 
@@ -156,7 +156,7 @@ ALWAYS the login form carries the same Don't remember this account on this devic
 
 WHEN tap Sign out GIVEN the don't-remember switch is off -> the session ends AND the sign-in screen opens with the account still offered AND the key stays on this device AND NEVER a dialog asks
 
-WHEN tap Sign out GIVEN the don't-remember switch is on and this device does not hold the only copy of an unbacked key -> the session ends AND the key, the draft and any picks kept pending are cleared from this device AND the sign-in screen opens AND NEVER a dialog asks
+WHEN tap Sign out GIVEN the don't-remember switch is on and this device does not hold the only copy of an unbacked key -> the session ends AND the key, the draft, any picks kept pending and the seen list's copy are cleared from this device AND the sign-in screen opens AND NEVER a dialog asks
 
 WHEN tap Sign out GIVEN the don't-remember switch is on and this device holds the only copy of an unbacked key -> the dialog Sign out without a backup? opens over settings AND NEVER the session ends before an answer AND NEVER anything is cleared before an answer
 

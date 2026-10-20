@@ -1268,7 +1268,8 @@ fn post_input(text: &str) -> Value {
     serde_json::json!({
         "content": text,
         "license": { "attribution": 0.0, "provenance": 0.0 },
-        "tags": [{ "name": "gardening" }],
+        "pDirected": 0.1,
+        "tags": [{ "name": "gardening", "pDirected": 0.1, "pInterest": 1.0 }],
     })
 }
 
@@ -1443,7 +1444,8 @@ async fn a_carried_act_is_seen_by_its_author_alone(pool: PgPool) {
 
     let mine = api::stance::bundle(&rig.pool, noa.account, mira.id, true)
         .await
-        .expect("bundle");
+        .expect("bundle")
+        .sum;
     assert!(
         (mine.p_d - 0.3).abs() < 1e-9,
         "the face wears the carried pick"
@@ -1633,7 +1635,7 @@ async fn crate_post(rig: &Rig, author: &Member) -> api::content::PreparedContent
             description: None,
             content: Some("a draft that never lands".into()),
             license: api::content::License::PUBLIC_DOMAIN,
-            p_directed: None,
+            p_directed: 0.1,
             tags: vec![],
             references: vec![],
             attachments: vec![],

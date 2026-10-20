@@ -86,24 +86,37 @@ fn the_version_ordering_never_drifts_in_the_crate() {
     assert!(total > 0, "the ordering vanished from the crate");
 }
 
-/// The search index's derivation lives in its trigger migration, not in
-/// the crate, so the crate-wide check above cannot see it. It orders a
-/// post's versions with the pending key and a profile's without, exactly
-/// once each, and in no third form.
+/// The search index's derivation lives in migrations, not in the crate,
+/// so the crate-wide check above cannot see it. Every migration that
+/// defines the derivation orders a post's versions with the pending key
+/// and a profile's without, exactly once each, and in no third form.
 ///
 /// The search index's trigger derivation orders versions the way the reads do.
 /// ´claim:content:the-search-derivation-carries-the-version-ordering-rule´
 #[test]
 fn the_search_index_derivation_orders_versions_the_same_way() {
-    let migration = crate_dir().join("../../migrations/20261012190000_search_index_trigger.sql");
-    let flat = read_flat(&migration);
-    let key = flat.matches(KEY).count();
-    let full = flat.matches(WITH_PENDING).count();
-    let short = short_form_count(&flat, full);
-    assert_eq!(
-        (key, full, short),
-        (2, 1, 1),
-        "the derivation orders posts with the pending key and profiles without"
+    let migrations = crate_dir().join("../../migrations");
+    let mut definitions = 0;
+    for entry in fs::read_dir(&migrations).expect("migrations are readable") {
+        let path = entry.expect("entry").path();
+        let flat = read_flat(&path);
+        if !flat.contains("FUNCTION search_index_rederive(") {
+            continue;
+        }
+        definitions += 1;
+        let key = flat.matches(KEY).count();
+        let full = flat.matches(WITH_PENDING).count();
+        let short = short_form_count(&flat, full);
+        assert_eq!(
+            (key, full, short),
+            (2, 1, 1),
+            "{}: the derivation orders posts with the pending key and profiles without",
+            path.display()
+        );
+    }
+    assert!(
+        definitions > 0,
+        "the derivation vanished from the migrations"
     );
 }
 

@@ -36,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -55,6 +56,7 @@ import com.cogra.core.designsystem.ActorChip
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.NodeSnackbarVisuals
 import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.dataNodeSurface
@@ -75,11 +77,20 @@ import com.cogra.domain.LicenseChoice
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
+import com.cogra.domain.hidden.HiddenSet
+import com.cogra.domain.saved.SavedWrites
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.R
 import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.content.reply.ReplyTargetKind
+import com.cogra.feature.saved.ComfortRowLine
+import com.cogra.feature.saved.SavedHost
+import com.cogra.feature.saved.asHiddenPerson
+import com.cogra.feature.saved.rememberHiddenSet
+import com.cogra.feature.saved.rememberSavedHost
+import com.cogra.feature.saved.rememberSavedWrites
 import com.cogra.feature.stance.StanceControlRoute
+import kotlinx.coroutines.launch
 
 @Composable
 fun PostDetailRoute(
@@ -121,6 +132,17 @@ fun PostDetailRoute(
     onCommentsDepart: (CommentsScroll) -> Unit = {},
     /** The deletion band, while the account's confirmed deletion is in its grace (`FeedDeleting.md:3`). */
     deletionBand: @Composable () -> Unit = {},
+    /**
+     * The guest gate: non-null means the reader is signed out, and the menu's
+     * Report row raises it instead of the confirm (ReportConfirm.md:21).
+     */
+    onRequireAccount: (() -> Unit)? = null,
+    /** Where the reader came from, which the back arrow names (`saved` reads `Back to Saved`). */
+    from: String? = null,
+    /** A comment to land on: the thread opens over the post, scrolled to it. */
+    landOn: String? = null,
+    /** The landing opens the reply composer aimed at that comment (a comment card's glyph). */
+    aimReply: Boolean = false,
     viewModel: PostDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -162,22 +184,17 @@ fun PostDetailRoute(
         onReference = onReference,
         onShare = { id -> context.sharePost(viewModel.shareUrl(id)) },
         onBack = onBack,
-        stanceControl = { target, tag, node ->
-            StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node)
-        },
+        reportSheet = reportDoor(onRequireAccount, "detail_report_sheet", POST_DETAIL / "reportSheet"),
+        stanceControl = nodeStanceControl,
         commentsSheet = { onDismiss ->
-            CommentsSheetRoute(
+            DetailThread(
                 postId = postId,
+                post = state.post,
                 viewerId = viewerId,
                 signedIn = signedIn,
                 onDismiss = onDismiss,
-                onReply = { request ->
-                    val target = request.comment?.asReplyTarget() ?: state.post?.asReplyTarget()
-                    target?.let(onReply)
-                },
-                onEditComment = { commentId ->
-                    onEditComment(commentId, state.post?.title?.value.orEmpty())
-                },
+                onReply = onReply,
+                onEditComment = onEditComment,
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
                 onReference = onReference,
@@ -186,11 +203,77 @@ fun PostDetailRoute(
                 commentsReturn = commentsReturn,
                 onReturnConsumed = onCommentsReturnConsumed,
                 refreshToken = threadToken,
-                stanceControl = { target, tag ->
-                    StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag)
-                },
+                landOn = landOn,
+                aimReply = aimReply,
+                onRequireAccount = onRequireAccount,
             )
         },
+        saved = rememberSavedWrites(),
+        hidden = rememberHiddenSet(),
+        onRequireAccount = onRequireAccount,
+        backDescription = originBack(from),
+        landOn = landOn,
+    )
+}
+
+/** The origin-naming table (`Back to Saved`, `Back to Notifications`); null for the plain arrow. */
+@Composable
+private fun originBack(from: String?): String? = when (from) {
+    "saved" -> stringResource(R.string.content_back_saved)
+    "notifications" -> stringResource(R.string.content_back_notifications)
+    else -> null
+}
+
+/** The back arrow's spoken name: the origin's when one is named, else the plain `Back`. */
+@Composable
+private fun backLabel(named: String?): String = named ?: stringResource(R.string.content_back)
+
+/** The thread the detail raises over the post: the same sheet the feed raises. */
+@Composable
+private fun DetailThread(
+    postId: String,
+    post: PostView?,
+    viewerId: String?,
+    signedIn: Boolean?,
+    onDismiss: () -> Unit,
+    onReply: (ReplyTarget) -> Unit,
+    onEditComment: (commentId: String, parentTitle: String) -> Unit,
+    onOpenActor: (String) -> Unit,
+    onOpenTopic: (String) -> Unit,
+    onReference: (String) -> Unit,
+    onSignInOrJoin: () -> Unit,
+    onDepart: (CommentsScroll) -> Unit,
+    commentsReturn: CommentsReturn,
+    onReturnConsumed: () -> Unit,
+    refreshToken: Int,
+    landOn: String?,
+    aimReply: Boolean,
+    onRequireAccount: (() -> Unit)?,
+) {
+    CommentsSheetRoute(
+        postId = postId,
+        viewerId = viewerId,
+        signedIn = signedIn,
+        onDismiss = onDismiss,
+        onReply = { request ->
+            val target = request.comment?.asReplyTarget() ?: post?.asReplyTarget()
+            target?.let(onReply)
+        },
+        onEditComment = { commentId -> onEditComment(commentId, post?.title?.value.orEmpty()) },
+        onOpenActor = onOpenActor,
+        onOpenTopic = onOpenTopic,
+        onReference = onReference,
+        onSignInOrJoin = onSignInOrJoin,
+        onDepart = onDepart,
+        commentsReturn = commentsReturn,
+        onReturnConsumed = onReturnConsumed,
+        refreshToken = refreshToken,
+        stanceControl = { target, tag ->
+            StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag)
+        },
+        landOn = landOn,
+        aimReply = aimReply,
+        onRequireAccount = onRequireAccount,
     )
 }
 
@@ -252,8 +335,46 @@ fun PostDetailScreen(
      */
     commentsSheet: @Composable (onDismiss: () -> Unit) -> Unit = {},
     deletionBand: @Composable () -> Unit = {},
+    /**
+     * THE REPORT'S CONFIRM, `postDetail.reportSheet` (ReportConfirm.md) — or
+     * a guest's join prompt ([reportDoor]) — over this page, handed the
+     * page's own snackbar for its aftermath.
+     */
+    reportSheet: ReportSheetSlot = { _, _, _ -> },
+    /** The app's one Saved overlay, which the menu saves through; null stands its Save row inert. */
+    saved: SavedWrites? = null,
+    /** The guest gate a signed-out reader's Save opens; null when signed in. */
+    onRequireAccount: (() -> Unit)? = null,
+    /**
+     * The back arrow's spoken name: where the reader came from, by the
+     * origin-naming table (`Back to Saved` from a Saved row). Null reads the
+     * plain `Back`.
+     */
+    backDescription: String? = null,
+    /**
+     * A comment to land on (Saved.md "tap a comment's row"): the thread
+     * stands raised over the post from the first frame.
+     */
+    landOn: String? = null,
+    /**
+     * The reader's hidden set, which the menu hides through; null stands its
+     * Hide row inert. HIDING KEEPS THE READER ON THE POST (ReaderPostMenu.md:15):
+     * the person leaves the feed, never this page.
+     */
+    hidden: HiddenSet? = null,
 ) {
     val snackbar = remember { SnackbarHostState() }
+    // THE PAGE'S SNACKBAR (`postDetail.snackbar`): the scope is the screen's,
+    // so a confirmation outlives the sheet that raised it.
+    val scope = rememberCoroutineScope()
+    val notify: (String) -> Unit = { text ->
+        scope.launch { snackbar.showSnackbar(NodeSnackbarVisuals(text, POST_DETAIL / "snackbar")) }
+    }
+    // THE MENU SAVES THROUGH THE ONE OVERLAY AND HIDES THROUGH THE ONE SET, its
+    // aftermath on this page's snackbar — `Undo` on `postDetail.snackbar.action`.
+    val savedHost = rememberSavedHost(saved, snackbar, POST_DETAIL / "snackbar", onRequireAccount, hidden)
+    // Which post's report confirm is up — the post the page is reading.
+    var reportFor by remember { mutableStateOf<String?>(null) }
     // THE LICENSE IS NEVER A STATE OF THE CARD (`ReaderPostMenu.jsx:27-29`):
     // one sheet for the screen, raised by the menu row that asked for it.
     // This screen's only such row is the post's own, in the top bar; a
@@ -264,7 +385,7 @@ fun PostDetailScreen(
     // their own destinations, so the thread is left and re-entered rather than
     // covered — and every way out of them comes back to it (`ReplyCompose` and
     // `CommentEdit` both cancel and advance to the thread).
-    var commentsOpen by rememberSaveable { mutableStateOf(false) }
+    var commentsOpen by rememberSaveable { mutableStateOf(landOn != null) }
     // THE PLATFORM'S SHARE SHEET IS A SHEET OVER THE POST TOO
     // (PostDetailVideo.md:41): it rises with the tap that hands the post over,
     // and it is down again when this screen is resumed — the chooser is
@@ -314,7 +435,7 @@ fun PostDetailScreen(
                             IconButton(onClick = onBack, modifier = Modifier.dataNode(header / "back")) {
                                 Icon(
                                     Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = stringResource(R.string.content_back),
+                                    contentDescription = backLabel(backDescription),
                                 )
                             }
                         },
@@ -328,7 +449,9 @@ fun PostDetailScreen(
                                 // Over the page — never stacked.
                                 onLicense = { license -> licenseShown = license },
                                 onShare = share,
+                                onReport = { id -> reportFor = id },
                                 node = header / "menu",
+                                saved = savedHost,
                             )
                         },
                     )
@@ -445,6 +568,7 @@ fun PostDetailScreen(
                                 onOpenComments = { commentsOpen = true },
                                 onShare = share,
                                 stanceControl = stanceControl,
+                                saved = savedHost,
                             )
                         }
                     }
@@ -465,7 +589,11 @@ fun PostDetailScreen(
         // thread and stand over it — that mount moved into the sheet, which is
         // now the one thing that knows it is a sheet over a sheet.
         licenseShown?.let { license ->
-            LicenseSheet(license = license, onDismiss = { licenseShown = null })
+            LicenseSheet(
+                license = license,
+                onDismiss = { licenseShown = null },
+                node = POST_DETAIL / "licenseSheet",
+            )
         }
         // THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob 2026-09-14): erasure is
         // slice 8's, whole — "we need to do erasure right so it should be one
@@ -475,6 +603,11 @@ fun PostDetailScreen(
                 onDismiss = { removeOpen = false },
                 onRemove = { removeOpen = false },
             )
+        }
+        // The confirm rises where the menu stood, over this page; it says it
+        // is up itself, so the detail clip stops beneath it.
+        reportFor?.let { id ->
+            reportSheet(id, { reportFor = null }, notify)
         }
     }
 }
@@ -499,7 +632,9 @@ private fun DetailMenu(
     onRemove: () -> Unit,
     onLicense: (LicenseChoice) -> Unit,
     onShare: (String) -> Unit,
+    onReport: (String) -> Unit,
     node: DataNode,
+    saved: SavedHost?,
 ) {
     if (post == null) return
     if (isRemoved(post.content, post.attachments, post.attachmentsStatus)) return
@@ -514,6 +649,7 @@ private fun DetailMenu(
     } else {
         null
     }
+    val menuSheet = POST_DETAIL / "menuSheet"
     CograOverflowMenu(
         items = postMenuRows(
             own = own,
@@ -525,9 +661,17 @@ private fun DetailMenu(
             onLicense = { onLicense(post.license) },
             onShare = shareRow,
             testTagPrefix = "detail_menu",
+            onReport = { onReport(post.id) },
+            // Both of the detail's menus are registered whole — the reader's
+            // (ReaderPostMenu) and the author's (RemoveMenu) — so every row
+            // wears its `postDetail.menuSheet` path.
+            rowNode = { row -> menuSheet / row.nodeName },
+            saveRow = saved?.menuRow(post.id, post.viewerBookmarkedAt, "detail_menu_save"),
+            onHide = post.author?.let { saved?.hideAct(it.asHiddenPerson(), post.id) },
         ),
         contentDescription = stringResource(R.string.content_menu_post),
         testTag = node.tag,
+        sheetNode = menuSheet,
     )
 }
 
@@ -549,6 +693,7 @@ private fun PostDetailBody(
     /** Hands this post to the platform's own share sheet. */
     onShare: (String) -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
+    saved: SavedHost?,
 ) {
     // A removed post keeps its skeleton and loses everything the payload
     // carried: the license, the topics and the citations rode it away.
@@ -641,6 +786,9 @@ private fun PostDetailBody(
                     onShare = onShare,
                     stanceControl = stanceControl,
                 )
+                // THE ROW LINE under the face (RowSigning.md): a save or
+                // unsave of this post that did not go through.
+                ComfortRowLine(saved, post.id, "detail_row_line", Modifier.padding(horizontal = Space.x4))
             }
         }
     }
@@ -861,7 +1009,7 @@ private fun DetailCardFoot(
  * `design/designs/canonical/nodes.json`): every element the board names
  * wears its `postDetail.…` path.
  */
-private val POST_DETAIL = DataNode("postDetail")
+internal val POST_DETAIL = DataNode("postDetail")
 
 /**
  * The post, as the composer's target card reads it (`ReplyEntry` 7).

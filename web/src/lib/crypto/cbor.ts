@@ -1,9 +1,15 @@
 // Canonical serialization for seam objects — the deterministic subset of
 // CBOR (RFC 8949) the deployment fixed: definite lengths only,
 // shortest-form integer heads, IEEE 754 double-precision floats, field
-// order fixed by the encoder, no maps. Byte-for-byte the encoding of
+// order fixed by the encoder. Byte-for-byte the encoding of
 // crates/common/src/l1/encoding.rs (Android mirror:
 // android/core/crypto Cbor.kt); the golden vectors pin the layout.
+//
+// Maps, tags and booleans exist for one reader: the payload envelope
+// (envelope.ts), a tag-55799 integer-keyed map the device decodes and
+// never produces. The encoder half of them serves that decoder's
+// canonicality check — re-serializing what was read and comparing — and
+// nothing on the device writes an envelope.
 
 import { concat } from "./bytes";
 
@@ -94,6 +100,22 @@ export class CborEncoder {
     this.chunks.push(Uint8Array.of(0xf6));
     return this;
   }
+
+  map(len: bigint): CborEncoder {
+    this.head(5, len);
+    return this;
+  }
+
+  /** A tag head (major type 6); the caller writes the tagged item next. */
+  tag(value: bigint): CborEncoder {
+    this.head(6, value);
+    return this;
+  }
+
+  bool(v: boolean): CborEncoder {
+    this.chunks.push(Uint8Array.of(v ? 0xf5 : 0xf4));
+    return this;
+  }
 }
 
 /**
@@ -162,6 +184,28 @@ export class CborDecoder {
 
   array(): bigint {
     return this.head(4, "array");
+  }
+
+  map(): bigint {
+    return this.head(5, "map");
+  }
+
+  /** A tag head; returns the tag value. */
+  tag(): bigint {
+    return this.head(6, "tag");
+  }
+
+  bool(): boolean {
+    const at = this.pos;
+    const b = this.byte();
+    if (b === 0xf4) return false;
+    if (b === 0xf5) return true;
+    throw new CborDecodeError(`expected bool at byte ${at}, found major type ${b >> 5}`);
+  }
+
+  /** Major type of the next item, without consuming it; null at end of input. */
+  peekMajor(): number | null {
+    return this.pos < this.input.length ? this.input[this.pos] >> 5 : null;
   }
 
   float(): number {

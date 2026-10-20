@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
 
@@ -123,7 +123,7 @@ describe("TagEntryField — the input-time gate (F1)", () => {
 });
 
 describe("TagEntryField — the parameter sliders (F6)", () => {
-  it("opens both sliders on the server's defaults, keyboard-reachable and labelled", () => {
+  it("opens both sliders on the visible pre-fill, keyboard-reachable and labelled", () => {
     render(<Harness />);
     const relevance = screen.getByTestId("t-tag-new-relevance");
     const confidence = screen.getByTestId("t-tag-new-confidence");
@@ -183,5 +183,92 @@ describe("TagEntryField — the parameter sliders (F6)", () => {
     fireEvent.click(screen.getByTestId("t-tag-add"));
     fireEvent.click(screen.getByTestId("t-tag-0-remove"));
     expect(staged()).toEqual([]);
+  });
+});
+
+// THE COMPOSER'S HOST (ComposeDetails.md, TagPadCompose.md): a tag is staged
+// at the contract's +0.1 / 1 and its pair is set afterwards in its sheet —
+// no pair stands loose beside the entry, and nothing the sheet stages reaches
+// the chip but through Done.
+describe("TagEntryField — on the composer, the pair in its sheet", () => {
+  function SheetHarness({ initial = [] }: { initial?: readonly TagDraft[] }) {
+    const [tags, setTags] = useState<readonly TagDraft[]>(initial);
+    return (
+      <>
+        <TagEntryField tags={tags} onChange={setTags} testIdPrefix="t" pairs="sheet" />
+        <output data-testid="state">{JSON.stringify(tags)}</output>
+      </>
+    );
+  }
+  const pairSheet = () => screen.getByTestId("t-tag-pair") as HTMLDialogElement;
+  const setRelevance = (value: string) => {
+    fireEvent.click(screen.getByTestId("t-tag-pair-exact-route"));
+    fireEvent.change(screen.getByTestId("t-tag-pair-tracks-directed"), { target: { value } });
+  };
+
+  it("stages a tag at relevance +0.1 and confidence 1, with no pair beside the entry", () => {
+    render(<SheetHarness />);
+    expect(screen.queryByTestId("t-tag-new-params")).not.toBeInTheDocument();
+    expect(screen.queryByRole("slider")).not.toBeInTheDocument();
+    type("rust");
+    fireEvent.click(screen.getByTestId("t-tag-add"));
+    type("wasm");
+    fireEvent.click(screen.getByTestId("t-tag-add"));
+    expect(staged()).toEqual([
+      { name: "rust", relevance: 0.1, confidence: 1 },
+      { name: "wasm", relevance: 0.1, confidence: 1 },
+    ]);
+  });
+
+  it("opens the tag's pair in a sheet titled by it — no sliders under the chip", () => {
+    render(<SheetHarness initial={[{ name: "rust", relevance: 0.1, confidence: 1 }]} />);
+    fireEvent.click(screen.getByTestId("t-tag-0-select"));
+    expect(pairSheet().open).toBe(true);
+    expect(pairSheet()).toHaveAttribute("aria-label", "#rust");
+    expect(screen.getByTestId("t-tag-0-select")).toHaveAttribute("aria-expanded", "true");
+    expect(screen.queryByTestId("t-tag-0-params")).not.toBeInTheDocument();
+    expect(screen.getByTestId("t-tag-pair-exact")).toHaveTextContent("+0.10 / 1.00");
+  });
+
+  it("carries the sheet's pair onto the chip on Done, and only then", () => {
+    render(
+      <SheetHarness
+        initial={[
+          { name: "rust", relevance: 0.1, confidence: 1 },
+          { name: "wasm", relevance: 0.1, confidence: 1 },
+        ]}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("t-tag-1-select"));
+    setRelevance("0.6");
+    expect(staged()[1]).toEqual({ name: "wasm", relevance: 0.1, confidence: 1 });
+    fireEvent.click(screen.getByTestId("t-tag-pair-done"));
+    expect(staged()).toEqual([
+      { name: "rust", relevance: 0.1, confidence: 1 },
+      { name: "wasm", relevance: 0.6, confidence: 1 },
+    ]);
+    // A movement after the chip was added is kept, and the sheet reopens on it.
+    fireEvent.click(screen.getByTestId("t-tag-1-select"));
+    expect(screen.getByTestId("t-tag-pair-exact")).toHaveTextContent("+0.60 / 1.00");
+  });
+
+  it("keeps the chip's pair on a scrim tap or a close request", () => {
+    render(<SheetHarness initial={[{ name: "rust", relevance: 0.1, confidence: 1 }]} />);
+    fireEvent.click(screen.getByTestId("t-tag-0-select"));
+    setRelevance("0.9");
+    fireEvent.click(pairSheet());
+    expect(staged()).toEqual([{ name: "rust", relevance: 0.1, confidence: 1 }]);
+
+    fireEvent.click(screen.getByTestId("t-tag-0-select"));
+    setRelevance("0.9");
+    act(() => pairSheet().close());
+    expect(staged()).toEqual([{ name: "rust", relevance: 0.1, confidence: 1 }]);
+  });
+
+  it("takes a tag out on the spot from its ×, with no dialog", () => {
+    render(<SheetHarness initial={[{ name: "rust", relevance: 0.1, confidence: 1 }]} />);
+    fireEvent.click(screen.getByTestId("t-tag-0-remove"));
+    expect(staged()).toEqual([]);
+    expect(screen.queryByTestId("t-tag-pair")).not.toBeInTheDocument();
   });
 });

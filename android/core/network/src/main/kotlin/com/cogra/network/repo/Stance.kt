@@ -87,6 +87,14 @@ class StanceRepositoryImpl @Inject constructor(
     // knew.
     private val kinds = ConcurrentHashMap<String, TargetKind>()
 
+    // The node each target's last bundle read named — what a stance or
+    // severance signed from that read must point at (Intent.kt).
+    private val graphIds = ConcurrentHashMap<StanceTarget, String>()
+
+    override suspend fun targetGraphId(target: StanceTarget): Outcome<String> =
+        graphIds[target]?.let { Outcome.Success(it) }
+            ?: bundle(target, pick = null, includePending = true).map { it.targetGraphId }
+
     /**
      * The generic prepare, which the write path already owns — the
      * reciprocation gesture stages its stance through the same call, and
@@ -179,10 +187,12 @@ class StanceRepositoryImpl @Inject constructor(
         val picked = Optional.presentIfNotNull(
             pick?.let { StancePickInput(it.pDirected, it.pInterest) },
         )
-        when (target) {
+        val read = when (target) {
             is StanceTarget.Topic -> topicBundle(target.name, picked, includePending)
             is StanceTarget.Node -> nodeBundle(target.id, picked, includePending)
         }
+        (read as? Outcome.Success)?.let { graphIds[target] = it.value.targetGraphId }
+        read
     }
 
     /**

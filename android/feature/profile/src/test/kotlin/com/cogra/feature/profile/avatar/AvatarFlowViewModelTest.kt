@@ -1,7 +1,6 @@
 package com.cogra.feature.profile.avatar
 
 import com.cogra.crypto.ActorKey
-import com.cogra.crypto.Family
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetView
@@ -14,15 +13,20 @@ import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.CropWindow
 import com.cogra.domain.media.PICTURE_MAX_BYTES
 import com.cogra.domain.media.ProcessedPicture
+import com.cogra.domain.signing.Expectation
+import com.cogra.domain.signing.SentProfile
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
+import com.cogra.domain.testing.TEST_PROFILE_ID
 import com.cogra.domain.testing.ThrowingMediaProcessor
 import com.cogra.domain.testing.ThrowingMediaRepository
 import com.cogra.domain.testing.ThrowingProfileRepository
+import com.cogra.domain.testing.faithfulProfileUpdate
+import com.cogra.domain.testing.fakeUpload
 import com.cogra.domain.testing.testProfile
+import com.cogra.domain.signing.known
 import com.google.common.truth.Truth.assertThat
-import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -32,6 +36,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 
 /**
  * The profile-picture flow, end to end on the JVM.
@@ -52,7 +57,7 @@ class AvatarFlowViewModelTest {
         ThrowingProfileRepository() {
         var mine: Outcome<ProfileView?> = Outcome.Success(
             testProfile(
-                id = "u1",
+                id = TEST_PROFILE_ID,
                 handle = "jakob",
                 displayName = "Jakob",
                 bio = "Old bio",
@@ -75,13 +80,17 @@ class AvatarFlowViewModelTest {
             prepareCalls += 1
             lastUpdate = Triple(displayName, bio, websiteUrl)
             lastAvatar = avatar
-            return prepareOutcome ?: Outcome.Success(listOf(sealer.stage(Family.REGISTRATION)))
+            return prepareOutcome ?: Outcome.Success(
+                sealer.stageFaithful(
+                    faithfulProfileUpdate(TEST_PROFILE_ID, SentProfile(displayName, bio, websiteUrl, avatar)),
+                ),
+            )
         }
     }
 
     private class ScriptedMedia : ThrowingMediaRepository() {
         var outcome: Outcome<MediaAssetView> = Outcome.Success(
-            MediaAssetView("m1", "https://media/m1", null, FieldStatus.NORMAL, 1f),
+            fakeUpload("m1"),
         )
         var calls = 0
 
@@ -181,7 +190,7 @@ class AvatarFlowViewModelTest {
 
         assertThat(media.calls).isEqualTo(1)
         assertThat(processor.lastCrop?.window).isEqualTo(window)
-        assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Done("m1"))
+        assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Done("m1", fakeUpload("m1").known()))
         assertThat(vm.state.value.canSign).isTrue()
     }
 
@@ -237,12 +246,40 @@ class AvatarFlowViewModelTest {
         assertThat(vm.state.value.upload).isInstanceOf(AvatarUpload.Failed::class.java)
 
         media.outcome = Outcome.Success(
-            MediaAssetView("m2", "https://media/m2", null, FieldStatus.NORMAL, 1f),
+            fakeUpload("m2"),
         )
         vm.onRetryUpload()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Done("m2"))
+        assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Done("m2", fakeUpload("m2").known()))
+    }
+
+    /** The seal opens on the upload already running, not on a copy taken before it started. */
+    @Test
+    fun theSealOpensOnTheUploadInFlight() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onPicked("content://pick/1")
+
+        vm.onNext()
+
+        assertThat(vm.state.value.step).isEqualTo(AvatarStep.Seal)
+        assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Running)
+    }
+
+    /** A new framing after the upload finished sends the picture now framed. */
+    @Test
+    fun aNewFramingAfterTheUploadSendsTheNewPicture() = runTest(dispatcher) {
+        val vm = startedAtSeal(CropSpec(targetRatio = 1f, window = CropWindow(0.1f, 0.1f, 0.9f, 0.9f)))
+        assertThat(media.calls).isEqualTo(1)
+
+        vm.onBack()
+        val reframed = CropSpec(targetRatio = 1f, window = CropWindow(0.3f, 0.3f, 0.7f, 0.7f))
+        vm.onCropCommitted(reframed)
+        vm.onNext()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(media.calls).isEqualTo(2)
+        assertThat(processor.lastCrop).isEqualTo(reframed)
     }
 
     @Test
@@ -269,6 +306,25 @@ class AvatarFlowViewModelTest {
         assertThat(profiles.lastUpdate)
             .isEqualTo(Triple("Jakob", "Old bio", "https://example.test"))
         assertThat(profiles.lastAvatar).isEqualTo(MediaFieldUpdate.Set("m1"))
+        assertThat(vm.state.value.saved).isTrue()
+    }
+
+    /**
+     * A profile with no bio or website re-states them as cleared, which the
+     * server stages as the empty string; the device must sign that rather
+     * than refuse its own gesture (jakob's hand test: the refusal left the
+     * update staged and every later one "already in flight").
+     */
+    @Test
+    fun aProfileWithoutBioOrWebsiteStillSigns() = runTest(dispatcher) {
+        profiles.mine = Outcome.Success(testProfile(id = TEST_PROFILE_ID, handle = "jakob", displayName = "Jakob"))
+        val vm = startedAtSeal()
+
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(profiles.lastUpdate).isEqualTo(Triple("Jakob", null, null))
+        assertThat(vm.state.value.signingFailed).isFalse()
         assertThat(vm.state.value.saved).isTrue()
     }
 

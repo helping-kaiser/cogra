@@ -114,3 +114,68 @@ pub async fn bundle(
 
     Ok(sum)
 }
+
+/// The author's own Publish bundle toward one minted Content node: the
+/// raw `p_d` sums of every Publish-family record the author wrote toward
+/// it, and how many records sum.
+///
+/// The sibling of [`bundle`] with the one difference that is the point of
+/// it: payload-marked records are counted. Every Publish is payload-marked
+/// — the genesis record and each edit carry the content envelope — so the
+/// exclusion `bundle` applies, which keeps ballots out of a stance, would
+/// empty this read. Census-unknown legs stay excluded for the same reason
+/// as there, and the pending half counts the author's staged Publish rows
+/// under the same lifecycle test (pre-committed or carried, neither landed
+/// nor expired) with no empty-payload condition.
+pub async fn publish_bundle(
+    pool: &PgPool,
+    author_atom: &str,
+    target: &str,
+    view: BundleView,
+) -> Result<BundleSum, sqlx::Error> {
+    let source = NodeId::Addr(author_atom.to_string()).to_string();
+    let family = Family::Publish.as_str();
+    let landed = sqlx::query!(
+        r#"SELECT COALESCE(SUM(p_d), 0)::float8 AS "p_d!",
+                  COALESCE(SUM(p_i), 0)::float8 AS "p_i!",
+                  COUNT(*)::bigint             AS "records!"
+           FROM mirror_record_legs
+           WHERE leg = 'binary' AND family = $1
+             AND source = $2 AND target = $3
+             AND NOT census_unknown"#,
+        family,
+        source,
+        target,
+    )
+    .fetch_one(pool)
+    .await?;
+
+    let mut sum = BundleSum {
+        p_d: landed.p_d,
+        p_i: landed.p_i,
+        records: landed.records.max(0) as u32,
+    };
+
+    if view == BundleView::IncludingPending {
+        let pending = sqlx::query!(
+            r#"SELECT COALESCE(SUM(p_d), 0)::float8 AS "p_d!",
+                      COALESCE(SUM(p_i), 0)::float8 AS "p_i!",
+                      COUNT(*)::bigint             AS "records!"
+               FROM staged_writes
+               WHERE family = $1 AND author = $2 AND target = $3
+                 AND middle IS NULL
+                 AND (pre_signed_at IS NOT NULL OR carried)
+                 AND state NOT IN ('landed', 'expired')"#,
+            family,
+            author_atom,
+            target,
+        )
+        .fetch_one(pool)
+        .await?;
+        sum.p_d += pending.p_d;
+        sum.p_i += pending.p_i;
+        sum.records += pending.records.max(0) as u32;
+    }
+
+    Ok(sum)
+}

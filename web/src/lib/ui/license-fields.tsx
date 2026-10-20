@@ -6,8 +6,6 @@
 // wire, but a degree CoGra has published no reading for is a term no
 // author could mean and no reader could check.
 
-import React from "react";
-
 import {
   ATTRIBUTION_TIERS,
   PROVENANCE_TIERS,
@@ -16,6 +14,7 @@ import {
   type License,
   type LicenseTier,
 } from "@/lib/license";
+import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 
 function AxisChoice({
   legend,
@@ -92,6 +91,14 @@ export function LicenseChooser({
 }
 
 /**
+ * The key a terms row is registered under (`...terms.axis`): the axis's name
+ * as the terms print it, lowercased, each run of other characters one `-`.
+ */
+function axisKey(axis: string): string {
+  return axis.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+}
+
+/**
  * What a landed node's qualifiers oblige, on the read surface
  * (`LicenseChooser.jsx:110-176`).
  *
@@ -106,11 +113,23 @@ export function LicenseChooser({
  * an elevation this owes nothing to; a hairline recesses it in both. Nothing
  * here is coloured — the terms are neither a warning nor a promotion.
  */
-export function LicenseTerms({ license, testId }: { license: License; testId: string }) {
+export function LicenseTerms({
+  license,
+  testId,
+  node,
+}: {
+  license: License;
+  testId: string;
+  /**
+   * The registered inset (`feed.licenseSheet.terms`, `postDetail.licenseSheet.terms`);
+   * it then names the block instead of `testId`, and each row is its keyed `axis`.
+   */
+  node?: DataNode;
+}) {
   return (
     <div
       className="flex flex-col gap-2 rounded-medium border border-outline-variant p-3"
-      data-testid={testId}
+      {...testAttributes(node, testId)}
     >
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-label-small text-on-surface-variant">License terms</span>
@@ -119,18 +138,31 @@ export function LicenseTerms({ license, testId }: { license: License; testId: st
             the two rows that spell it — so it rides the caption line rather
             than replacing the rows, which stay uniform across every license. */}
         {isPublicDomain(license) && (
-          <span className="text-label-small" data-testid={`${testId}-public-domain`}>
+          <span
+            className="text-label-small"
+            {...testAttributes(part(node, "publicDomain"), `${testId}-public-domain`)}
+          >
             Public domain
           </span>
         )}
       </div>
       <div className="grid grid-cols-[116px_1fr] gap-x-2 gap-y-1">
-        {licenseReadings(license).map((row) => (
-          <React.Fragment key={row.axis}>
-            <span className="text-body-small text-on-surface-variant">{row.axis}</span>
-            <span className="text-body-small">{row.reading}</span>
-          </React.Fragment>
-        ))}
+        {licenseReadings(license).map((row) => {
+          const axis = instance(node, "axis", axisKey(row.axis));
+          return (
+            <div key={row.axis} className="contents" {...testAttributes(axis)}>
+              <span
+                className="text-body-small text-on-surface-variant"
+                {...testAttributes(part(axis, "label"))}
+              >
+                {row.axis}
+              </span>
+              <span className="text-body-small" {...testAttributes(part(axis, "value"))}>
+                {row.reading}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

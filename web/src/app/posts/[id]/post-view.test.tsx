@@ -3,7 +3,7 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { PostsDocument, type PostsQuery } from "@/__generated__/graphql";
+import { FeedDocument, type FeedQuery } from "@/__generated__/graphql";
 import { COMMENT_BODY_MAX_CHARS } from "@/lib/compose/reply-wizard";
 import { SENSITIVE_REASON_MAX_CHARS } from "@/lib/compose/wizard";
 import { createTokenStore } from "@/lib/session/token-store";
@@ -11,6 +11,7 @@ import { writeConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
 import { forgetReveals } from "@/lib/ui2/media/reveal";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
+import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeIdentityStore } from "@/test/identity";
@@ -19,6 +20,7 @@ import { whenObserved } from "@/test/media-env";
 import { stanceBundle, stanceHandlers } from "@/test/stance";
 import { PostView } from "./post-view";
 import { byNode } from "@/test/data-node";
+import { bookmarkHandlers, bookmarkLog } from "@/test/saved";
 
 // The menu rows that go somewhere navigate rather than link, because a sheet
 // row is a button — so the router is what a citing or editing row is measured
@@ -218,6 +220,8 @@ function detail(
       license: { __typename: "License", attribution: 0, provenance: 0 },
       topics: postTopics,
       references: postReferences,
+      // Not kept: the menu's first row reads Save.
+      viewerBookmarkedAt: null,
       // The detail read selects the author's own mark beside the card's
       // fields; an answer without it is one the cache cannot store whole.
       sensitiveSelfMark: false,
@@ -434,13 +438,54 @@ describe("PostView", () => {
     expect(screen.queryByTestId("comment-license-terms-c1")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
-    fireEvent.click(screen.getByTestId("post-menu-license"));
-    expect(screen.getByTestId("license-sheet-terms")).toHaveTextContent("Public domain");
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.license"));
+    expect(screen.getByTestId("postDetail.licenseSheet.terms")).toHaveTextContent("Public domain");
+    expect(screen.getByTestId("postDetail.licenseSheet.terms.publicDomain")).toHaveTextContent(
+      "Public domain",
+    );
     // Raised from the post's own menu, over the page — never stacked
     // (design/readme.md:2364).
-    expect(screen.getByTestId("license-sheet").className).not.toContain(
+    expect(screen.getByTestId("postDetail.licenseSheet").className).not.toContain(
       "bg-surface-container-highest",
     );
+    expect(screen.getByTestId("postDetail.licenseSheet.dragHandle")).toBeInTheDocument();
+    // The legacy ids are retired: the registered paths are the only names.
+    expect(screen.queryByTestId("post-menu-license-sheet")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("post-menu-license-sheet-terms")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("post-menu-license-sheet-terms-public-domain"),
+    ).not.toBeInTheDocument();
+  });
+
+  // The terms' two rows are the registered keyed `axis`
+  // (design/readme.md round 10: `credit`, `public-record-of-use`).
+  it("names the post's license rows by their registered axis keys", async () => {
+    server.use(...thread("u1", [{ id: "c1", body: "First!" }]));
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
+    await screen.findByTestId(byNode("postDetail.card.body"));
+    fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.license"));
+    const credit = screen.getByTestId(byNode("postDetail.licenseSheet.terms.axis", "credit"));
+    expect(
+      within(credit).getByTestId(byNode("postDetail.licenseSheet.terms.axis.label", "credit")),
+    ).toHaveTextContent("Credit");
+    expect(
+      within(credit).getByTestId(byNode("postDetail.licenseSheet.terms.axis.value", "credit")),
+    ).toHaveTextContent("Not required");
+    const record = screen.getByTestId(
+      byNode("postDetail.licenseSheet.terms.axis", "public-record-of-use"),
+    );
+    expect(
+      within(record).getByTestId(
+        byNode("postDetail.licenseSheet.terms.axis.label", "public-record-of-use"),
+      ),
+    ).toHaveTextContent("Public record of use");
+    expect(
+      within(record).getByTestId(
+        byNode("postDetail.licenseSheet.terms.axis.value", "public-record-of-use"),
+      ),
+    ).toHaveTextContent("Not logged");
   });
 
   it("raises a comment's own terms from the comment's menu", async () => {
@@ -457,12 +502,51 @@ describe("PostView", () => {
       "bg-surface-container-highest",
     );
     fireEvent.click(screen.getByTestId("comment-menu-license-c1"));
-    expect(screen.getByTestId("license-sheet-terms")).toHaveTextContent("Public domain");
+    expect(screen.getByTestId("postDetail.licenseSheet.terms")).toHaveTextContent("Public domain");
+    expect(screen.getByTestId("postDetail.licenseSheet.terms.publicDomain")).toHaveTextContent(
+      "Public domain",
+    );
     // Raised from a comment's menu, over the comments thread — stacked
     // (`CommentLicense.jsx`, design/readme.md:2364).
-    expect(screen.getByTestId("license-sheet").className).toContain(
+    expect(screen.getByTestId("postDetail.licenseSheet").className).toContain(
       "bg-surface-container-highest",
     );
+    expect(screen.getByTestId("postDetail.licenseSheet.dragHandle")).toBeInTheDocument();
+    // The legacy ids are retired: the registered paths are the only names.
+    expect(screen.queryByTestId("license-sheet")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("license-sheet-terms")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("license-sheet-terms-public-domain")).not.toBeInTheDocument();
+  });
+
+  // The comment's stacked terms ride the same registered `postDetail.licenseSheet`
+  // home, their two rows the keyed `axis` (`CommentLicense`, design/readme.md round 10).
+  it("names a comment's license rows by their registered axis keys", async () => {
+    server.use(...thread("u1", [{ id: "c1", body: "First!" }]));
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
+    await screen.findByTestId(byNode("postDetail.card.body"));
+    fireEvent.click(screen.getByTestId("comment-menu-c1"));
+    fireEvent.click(screen.getByTestId("comment-menu-license-c1"));
+    const credit = screen.getByTestId(byNode("postDetail.licenseSheet.terms.axis", "credit"));
+    expect(
+      within(credit).getByTestId(byNode("postDetail.licenseSheet.terms.axis.label", "credit")),
+    ).toHaveTextContent("Credit");
+    expect(
+      within(credit).getByTestId(byNode("postDetail.licenseSheet.terms.axis.value", "credit")),
+    ).toHaveTextContent("Not required");
+    const record = screen.getByTestId(
+      byNode("postDetail.licenseSheet.terms.axis", "public-record-of-use"),
+    );
+    expect(
+      within(record).getByTestId(
+        byNode("postDetail.licenseSheet.terms.axis.label", "public-record-of-use"),
+      ),
+    ).toHaveTextContent("Public record of use");
+    expect(
+      within(record).getByTestId(
+        byNode("postDetail.licenseSheet.terms.axis.value", "public-record-of-use"),
+      ),
+    ).toHaveTextContent("Not logged");
   });
 
   // The rows are `OWN_POST_MENU` (`_shared.jsx:421-428`): Save · Cite in a
@@ -478,30 +562,34 @@ describe("PostView", () => {
       writeSigner: fakeWriteSigner(),
     });
     fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
-    expect(screen.getByTestId("post-menu-save")).toHaveTextContent("Save");
-    expect(screen.getByTestId("post-menu-cite")).toHaveTextContent("Cite in a new post");
-    expect(screen.getByTestId("post-menu-edit")).toHaveTextContent("Edit");
-    expect(screen.getByTestId("post-menu-sensitive")).toHaveTextContent("Mark as sensitive");
-    expect(screen.getByTestId("post-menu-remove")).toHaveTextContent("Remove");
-    expect(screen.getByTestId("post-menu-license")).toHaveTextContent("License terms");
-    // A reader's rows are not on an author's menu.
-    expect(screen.queryByTestId("post-menu-hide")).not.toBeInTheDocument();
+    expect(screen.getByTestId("postDetail.menuSheet.save")).toHaveTextContent("Save");
+    expect(screen.getByTestId("postDetail.menuSheet.cite")).toHaveTextContent("Cite in a new post");
+    expect(screen.getByTestId("postDetail.menuSheet.edit")).toHaveTextContent("Edit");
+    expect(screen.getByTestId("postDetail.menuSheet.markSensitive")).toHaveTextContent(
+      "Mark as sensitive",
+    );
+    expect(screen.getByTestId("postDetail.menuSheet.remove")).toHaveTextContent("Remove");
+    expect(screen.getByTestId("postDetail.menuSheet.license")).toHaveTextContent("License terms");
+    // A reader's rows are not on an author's menu — nor is Report: a reader
+    // has nothing to report themselves for (ruling 75).
+    expect(screen.queryByTestId("postDetail.menuSheet.hide")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("postDetail.menuSheet.report")).not.toBeInTheDocument();
     const order = Array.from(
       screen.getByTestId("post-menu-sheet-body").querySelectorAll("[data-testid]"),
       (node) => node.getAttribute("data-testid"),
     );
     expect(order).toEqual([
-      "post-menu-save",
-      "post-menu-cite",
-      "post-menu-edit",
-      "post-menu-sensitive",
-      "post-menu-remove",
-      "post-menu-license",
+      "postDetail.menuSheet.save",
+      "postDetail.menuSheet.cite",
+      "postDetail.menuSheet.edit",
+      "postDetail.menuSheet.markSensitive",
+      "postDetail.menuSheet.remove",
+      "postDetail.menuSheet.license",
     ]);
   });
 
-  // The rows are `READER_POST_MENU` (`_shared.jsx:376`): Save · Cite in a new
-  // post · Hide @handle · License terms.
+  // The rows are `READER_POST_MENU` (`_shared.jsx:605`): Save · Cite in a new
+  // post · Hide @handle · License terms · Report at the sheet tail.
   it("gives a non-creator the reader menu, naming the author in its hide row", async () => {
     server.use(
       ...thread("someone-else", []),
@@ -513,13 +601,94 @@ describe("PostView", () => {
     await openComments();
     expect(await screen.findByTestId("post-no-comments")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
-    expect(screen.getByTestId("post-menu-save")).toHaveTextContent("Save");
-    expect(screen.getByTestId("post-menu-cite")).toHaveTextContent("Cite in a new post");
+    expect(screen.getByTestId("postDetail.menuSheet.save")).toHaveTextContent("Save");
+    expect(screen.getByTestId("postDetail.menuSheet.cite")).toHaveTextContent("Cite in a new post");
     // `Hide @ada`, never "Hide this author" (`ActorChip.jsx:67`).
-    expect(screen.getByTestId("post-menu-hide")).toHaveTextContent(/^Hide @/);
-    expect(screen.getByTestId("post-menu-license")).toHaveTextContent("License terms");
-    expect(screen.queryByTestId("post-menu-edit")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("post-menu-remove")).not.toBeInTheDocument();
+    expect(screen.getByTestId("postDetail.menuSheet.hide")).toHaveTextContent(/^Hide @/);
+    expect(screen.getByTestId("postDetail.menuSheet.license")).toHaveTextContent("License terms");
+    expect(screen.getByTestId("postDetail.menuSheet.report")).toHaveTextContent("Report");
+    expect(screen.queryByTestId("postDetail.menuSheet.edit")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("postDetail.menuSheet.remove")).not.toBeInTheDocument();
+    const order = Array.from(
+      screen.getByTestId("post-menu-sheet-body").querySelectorAll("[data-testid]"),
+      (node) => node.getAttribute("data-testid"),
+    );
+    expect(order).toEqual([
+      "postDetail.menuSheet.save",
+      "postDetail.menuSheet.cite",
+      "postDetail.menuSheet.hide",
+      "postDetail.menuSheet.license",
+      "postDetail.menuSheet.report",
+    ]);
+  });
+
+  // REPORT, CONFIRMED BEFORE IT GOES (ReportConfirm.md:3-11): the menu closes,
+  // `postDetail.reportSheet` rises in its place with nothing sent, and only its
+  // commit sends — the page's own snackbar then says `Reported.`.
+  it("report_confirm_sends_the_mail_and_snackbars_reported", async () => {
+    const targets: string[] = [];
+    server.use(
+      ...thread("someone-else", []),
+      gqlLink.mutation("SendReport", ({ variables }) => {
+        targets.push(variables.target as string);
+        return HttpResponse.json({
+          data: {
+            sendReport: {
+              __typename: "SendReportPayload",
+              reportedAt: "2026-10-13T12:00:00Z",
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.report"));
+    const sheet = screen.getByTestId("postDetail.reportSheet") as HTMLDialogElement;
+    expect(sheet.open).toBe(true);
+    expect(screen.getByTestId("postDetail.reportSheet.title")).toHaveTextContent(
+      "Report this post?",
+    );
+    expect(screen.getByTestId("postDetail.reportSheet.body")).toHaveTextContent(
+      "It goes to the people who run CoGra for a look.",
+    );
+    expect(targets).toEqual([]);
+
+    fireEvent.click(screen.getByTestId("postDetail.reportSheet.report"));
+    expect(await screen.findByTestId("postDetail.snackbar.message")).toHaveTextContent(
+      "Reported.",
+    );
+    expect(targets).toEqual(["p1"]);
+    await waitFor(() => expect(sheet.open).toBe(false));
+  });
+
+  // ReportConfirm.md:15 (FC-G15): a refusal keeps the sheet up and never
+  // claims the report went out.
+  it("a_rate_limited_report_answers_with_the_no_answer_snackbar", async () => {
+    server.use(
+      ...thread("someone-else", []),
+      gqlLink.mutation("SendReport", () =>
+        HttpResponse.json({
+          data: null,
+          errors: [{ message: "rate limited; retry later", extensions: { code: "RATE_LIMITED" } }],
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.report"));
+    fireEvent.click(screen.getByTestId("postDetail.reportSheet.report"));
+    expect(await screen.findByTestId("postDetail.snackbar.message")).toHaveTextContent(
+      "That didn't send. Try again.",
+    );
+    expect((screen.getByTestId("postDetail.reportSheet") as HTMLDialogElement).open).toBe(true);
   });
 
   // THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK (design/readme.md, jakob
@@ -630,24 +799,177 @@ describe("PostView", () => {
     expect(await screen.findByTestId(byNode("postDetail.card.citedBy"))).toHaveTextContent("Cited by 4");
   });
 
-  // THE INTRODUCED-BUT-INERT LAW (jakob 2026-09-14): a row whose destination is
-  // not built yet stands and does nothing, rather than the menu growing a row
-  // per slice.
-  it("renders the rows whose destinations are not built yet, and they do nothing", async () => {
-    server.use(
-      ...thread("someone-else", []),
-    );
+  // ReaderPostMenu.md:15 — hiding from the detail keeps the reader on the post;
+  // the person leaves the feed, never this page.
+  it("hide_from_the_detail_keeps_the_reader_on_the_post", async () => {
+    const log = hiddenLog();
+    server.use(...thread("someone-else", []), ...hiddenHandlers(log));
     renderWithProviders(<PostView postId="p1" />, {
       store: storeFor("acct-1"),
       writeSigner: fakeWriteSigner(),
     });
     fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
-    fireEvent.click(screen.getByTestId("post-menu-save"));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.hide"));
+    expect(await screen.findByText(/is hidden — their posts stay out of your feed\.$/)).toBeInTheDocument();
     expect(screen.getByTestId(byNode("postDetail.card.body"))).toBeInTheDocument();
+    await waitFor(() => expect(log.hides).toEqual([{ actor: "someone-else", at: null }]));
+  });
 
+  /** The detail's post, kept by the reader at `keptAt` (or not kept). */
+  function keptThread(keptAt: string | null) {
+    return threadFrom(() => {
+      const data = detail("someone-else", []);
+      return { post: { ...data.post, viewerBookmarkedAt: keptAt } };
+    });
+  }
+
+  // THE SAVE ACTION (ReaderPostMenu.md:5-13): the row reads Save while the post
+  // is not kept; the tap closes the sheet, keeps it and says `Saved.`.
+  it("save_row_keeps_the_post_and_snackbars_saved", async () => {
+    const log = bookmarkLog();
+    server.use(...keptThread(null), ...bookmarkHandlers(log));
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
+    expect(screen.getByTestId("postDetail.menuSheet.save")).toHaveTextContent(/^Save$/);
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.save"));
+    expect(await screen.findByTestId("postDetail.snackbar.message")).toHaveTextContent("Saved.");
+    expect(screen.queryByTestId("postDetail.snackbar.action")).not.toBeInTheDocument();
+    await waitFor(() => expect(log.sets).toEqual([{ node: "p1", at: null }]));
     fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
-    fireEvent.click(screen.getByTestId("post-menu-hide"));
-    expect(screen.getByTestId(byNode("postDetail.card.body"))).toBeInTheDocument();
+    expect(screen.getByTestId("postDetail.menuSheet.save")).toHaveTextContent("Unsave");
+  });
+
+  // UNSAVE ON A MENU (design digest item 48): the sheet closes and the
+  // snackbar reads `Removed from Saved.` with `Undo`, which keeps the post
+  // again at its own first time.
+  it("unsave_from_a_menu_closes_and_offers_undo", async () => {
+    const log = bookmarkLog();
+    server.use(...keptThread("2026-10-01T08:00:00Z"), ...bookmarkHandlers(log));
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
+    expect(screen.getByTestId("postDetail.menuSheet.save")).toHaveTextContent("Unsave");
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.save"));
+    expect(await screen.findByTestId("postDetail.snackbar.message")).toHaveTextContent(
+      "Removed from Saved.",
+    );
+    await waitFor(() => expect(log.removes).toEqual(["p1"]));
+    fireEvent.click(screen.getByTestId("postDetail.snackbar.action"));
+    await waitFor(() =>
+      expect(log.sets).toEqual([{ node: "p1", at: "2026-10-01T08:00:00Z" }]),
+    );
+  });
+
+  // A COMFORT THAT FAILS (ReaderPostMenu.md:13; RowSigning.md): the save
+  // reverts, the snackbar that announced it clears, and the target's row says
+  // `That didn't go through.` with Retry — never the snackbar.
+  it("a_failed_save_reverts_and_the_row_says_retry", async () => {
+    const log = bookmarkLog();
+    server.use(...keptThread(null), ...bookmarkHandlers(log, { failSet: true }));
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.save"));
+    const line = await screen.findByTestId("post-row-line");
+    expect(line).toHaveTextContent("That didn't go through.");
+    expect(line).toHaveAttribute("role", "alert");
+    expect(screen.queryByTestId("postDetail.snackbar.message")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
+    expect(screen.getByTestId("postDetail.menuSheet.save")).toHaveTextContent(/^Save$/);
+    // Retry asks the same save again, and signs nothing.
+    fireEvent.click(screen.getByTestId("post-row-line-retry"));
+    await waitFor(() => expect(log.sets).toHaveLength(2));
+  });
+
+  // GuestGate.md:5 — a guest's Save asks them to join and sends nothing.
+  it("a_guest_meets_the_ask_on_save", async () => {
+    const log = bookmarkLog();
+    server.use(...keptThread(null), ...bookmarkHandlers(log));
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.save"));
+    expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
+    expect(log.sets).toEqual([]);
+  });
+
+  // THE COMMENT MENUS GAIN THE SNACKBAR (design digest item 54): a comment's
+  // Save keeps it and says `Saved.` on the thread.
+  it("a_comments_save_keeps_it_and_snackbars_saved", async () => {
+    const log = bookmarkLog();
+    server.use(...thread("u1", [{ id: "c1", body: "First!" }]), ...bookmarkHandlers(log));
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    await openComments();
+    fireEvent.click(await screen.findByTestId("comment-menu-c1"));
+    fireEvent.click(screen.getByTestId("comment-menu-save-c1"));
+    expect(await screen.findByTestId("comment-menu-snackbar")).toHaveTextContent("Saved.");
+    await waitFor(() => expect(log.sets).toEqual([{ node: "c1", at: null }]));
+  });
+
+  // LANDING ON A COMMENT (jakob 2026-10-01; Saved.md "tap a comment's row"):
+  // the thread opens over the post, the reply's branch unfolds, and the reply
+  // takes focus.
+  it("a_saved_reply_opens_its_thread_landed_on_it", async () => {
+    server.use(
+      ...thread("u1", [{ id: "c1", body: "Top", replyCount: 1 }]),
+      gqlLink.query("CommentParent", ({ variables }) =>
+        HttpResponse.json({
+          data: {
+            comment: {
+              __typename: "Comment",
+              id: variables.id,
+              target:
+                variables.id === "r1"
+                  ? { __typename: "Comment", id: "c1" }
+                  : { __typename: "Post", id: "p1" },
+            },
+          },
+        }),
+      ),
+      gqlLink.query("CommentReplies", () =>
+        HttpResponse.json({
+          data: {
+            comment: {
+              __typename: "Comment",
+              id: "c1",
+              replies: {
+                __typename: "CommentConnection",
+                edges: [{ __typename: "CommentEdge", node: commentNode({ id: "r1", body: "nested" }) }],
+                pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+              },
+            },
+          },
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" landOn="r1" from="saved" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    const reply = await screen.findByTestId("post-comment-r1");
+    await waitFor(() => expect(document.activeElement).toBe(reply));
+    expect((screen.getByTestId("comments-sheet") as HTMLDialogElement).open).toBe(true);
+  });
+
+  // A SAVED ROW'S DESTINATION NAMES ITS ORIGIN (the origin-naming table).
+  it("opened_from_saved_the_back_arrow_reads_back_to_saved", async () => {
+    server.use(...thread("someone-else", []));
+    renderWithProviders(<PostView postId="p1" from="saved" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    const back = await screen.findByTestId(byNode("postDetail.header.back"));
+    expect(back).toHaveAttribute("aria-label", "Back to Saved");
+    expect(back).toHaveAttribute("href", "/saved");
   });
 
   // The dialog ships; the removal does not (jakob 2026-09-14 — erasure is
@@ -661,12 +983,12 @@ describe("PostView", () => {
       writeSigner: fakeWriteSigner(),
     });
     fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
-    fireEvent.click(screen.getByTestId("post-menu-remove"));
-    const dialog = screen.getByTestId("post-remove-confirm") as HTMLDialogElement;
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.remove"));
+    const dialog = screen.getByTestId("post-menu-remove-confirm") as HTMLDialogElement;
     expect(dialog.open).toBe(true);
     expect(dialog).toHaveTextContent("This is immediate and permanent.");
 
-    fireEvent.click(screen.getByTestId("post-remove-confirm-remove"));
+    fireEvent.click(screen.getByTestId("post-menu-remove-confirm-remove"));
     expect(dialog.open).toBe(false);
     // The post is still on the page: nothing was removed.
     expect(screen.getByTestId(byNode("postDetail.card.body"))).toBeInTheDocument();
@@ -836,6 +1158,99 @@ describe("PostView", () => {
     // The editor closes and the in-flight notice shows.
     expect(screen.queryByTestId("comment-edit-input")).not.toBeInTheDocument();
     expect(screen.getByTestId("comment-signed")).toBeInTheDocument();
+  });
+
+  describe("leaving a comment edit (CommentEdit, DiscardConfirm): the edit keeps no draft", () => {
+    const ask = () => screen.getByTestId("comment-edit-discard-confirm");
+
+    async function openEdit() {
+      let prepared = false;
+      server.use(
+        ...threadFrom(() =>
+          detail("author-1", [{ id: "c1", body: "old words", authorId: "acct-1" }]),
+        ),
+        gqlLink.mutation("PrepareCommentEdit", () => {
+          prepared = true;
+          return HttpResponse.json({ data: { prepareCommentEdit: null } });
+        }),
+      );
+      const signer = fakeWriteSigner();
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: signer,
+      });
+      await openComments();
+      fireEvent.click(await screen.findByTestId("comment-edit-c1"));
+      return { signer, wasPrepared: () => prepared };
+    }
+
+    it("the_x_is_named_leave_the_edit_is_discarded", async () => {
+      await openEdit();
+      expect(screen.getByRole("button", { name: "Leave — the edit is discarded" })).toBeVisible();
+      expect(screen.queryByRole("button", { name: "Leave — this edit is discarded" })).toBeNull();
+    });
+
+    it("an_unchanged_edit_leaves_at_once_by_the_x_and_the_back_arrow", async () => {
+      await openEdit();
+      fireEvent.click(screen.getByTestId("header-leave"));
+      expect(screen.queryByTestId("comment-edit")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("comment-edit-discard-confirm")).not.toBeInTheDocument();
+      fireEvent.click(await screen.findByTestId("comment-edit-c1"));
+      fireEvent.click(screen.getByTestId("header-back"));
+      expect(screen.queryByTestId("comment-edit")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("comment-edit-discard-confirm")).not.toBeInTheDocument();
+    });
+
+    it("a_changed_edit_asks_discard_the_changes_before_the_x_leaves", async () => {
+      await openEdit();
+      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+        target: { value: "better words" },
+      });
+      fireEvent.click(screen.getByTestId("header-leave"));
+      expect(screen.getByTestId("comment-edit")).toBeInTheDocument();
+      expect(ask()).toHaveAttribute("open");
+      expect(ask()).toHaveTextContent("Discard the changes?");
+      expect(ask()).toHaveTextContent("Nothing is kept.");
+    });
+
+    it("a_changed_edit_asks_the_same_before_the_back_arrow_leaves", async () => {
+      await openEdit();
+      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+        target: { value: "better words" },
+      });
+      fireEvent.click(screen.getByTestId("header-back"));
+      expect(screen.getByTestId("comment-edit")).toBeInTheDocument();
+      expect(ask()).toHaveAttribute("open");
+    });
+
+    it("keep_writing_closes_the_ask_onto_the_edit_as_it_was", async () => {
+      await openEdit();
+      const input = screen.getByTestId("comment-edit-input");
+      fireEvent.change(input, { target: { value: "better words" } });
+      fireEvent.click(screen.getByTestId("header-leave"));
+      fireEvent.click(screen.getByTestId("comment-edit-discard-confirm-keep"));
+      expect(ask()).not.toHaveAttribute("open");
+      expect(screen.getByTestId("comment-edit")).toBeInTheDocument();
+      expect(input).toHaveValue("better words");
+    });
+
+    it("discard_returns_to_the_thread_and_keeps_and_signs_nothing", async () => {
+      const { signer, wasPrepared } = await openEdit();
+      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+        target: { value: "better words" },
+      });
+      fireEvent.click(screen.getByTestId("header-leave"));
+      fireEvent.click(screen.getByTestId("comment-edit-discard-confirm-discard"));
+      expect(screen.queryByTestId("comment-edit")).not.toBeInTheDocument();
+      expect(await screen.findByTestId("comment-edit-c1")).toBeInTheDocument();
+      expect(screen.getByText("old words")).toBeInTheDocument();
+      expect(screen.queryByTestId("comment-signed")).not.toBeInTheDocument();
+      expect(wasPrepared()).toBe(false);
+      expect(signer.signStaged).not.toHaveBeenCalled();
+      // Reopening starts from the comment, not from the discarded words.
+      fireEvent.click(screen.getByTestId("comment-edit-c1"));
+      expect(screen.getByTestId("comment-edit-input")).toHaveValue("old words");
+    });
   });
 
   // Q49: the thread read carries no replies at all. A branch is a count, and
@@ -1112,7 +1527,7 @@ describe("PostView", () => {
     expect(screen.queryByTestId("post-tag-input")).not.toBeInTheDocument();
     expect(screen.queryByTestId("post-topic-rust-remove")).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
-    fireEvent.click(screen.getByTestId("post-menu-edit"));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.edit"));
     expect(routerPush).toHaveBeenCalledWith("/compose?post=p1");
   });
 
@@ -1129,7 +1544,7 @@ describe("PostView", () => {
       writeSigner: fakeWriteSigner(),
     });
     fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
-    fireEvent.click(screen.getByTestId("post-menu-sensitive"));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.markSensitive"));
     expect(routerPush).toHaveBeenCalledWith("/compose?post=p1");
   });
 
@@ -1769,7 +2184,7 @@ describe("PostView", () => {
       const tagInputs: Record<string, unknown>[] = [];
       let editCalled = false;
       server.use(
-        ...threadFrom(() => ownComment([topicClaim("wasm", 0.1, 1)])),
+        ...threadFrom(() => ownComment([topicClaim("wasm", 0.1, 0.6)])),
         gqlLink.mutation("PrepareCommentEdit", () => {
           editCalled = true;
           return HttpResponse.json({ data: editPayload() });
@@ -1799,8 +2214,10 @@ describe("PostView", () => {
       expect(editCalled).toBe(true);
       expect(tagInputs).toEqual([
         { target: "c1", name: "rust", pDirected: 0.1, pInterest: 1 },
-        // A withdrawal is a Tag act at relevance 0, never a deletion.
-        { target: "c1", name: "wasm", pDirected: 0, pInterest: null },
+        // A withdrawal is a Tag act at relevance 0, never a deletion, and it
+        // signs the confidence the removed chip showed — never a hole the
+        // server would fill.
+        { target: "c1", name: "wasm", pDirected: 0, pInterest: 0.6 },
       ]);
     });
 
@@ -1903,7 +2320,7 @@ describe("PostView", () => {
       expect(screen.getByTestId("comment-edit-input")).toBeInTheDocument();
     });
 
-    it("counts the edit as the record only when the text moved", async () => {
+    it("counts the batch: the record once the words were typed, and each tag act", async () => {
       server.use(
         ...threadFrom(() => ownComment([topicClaim("wasm", 0.1, 1)])),
       );
@@ -1913,23 +2330,31 @@ describe("PostView", () => {
       });
       await openComments();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
-      // Untouched: nothing to sign, and nothing to press.
+      // Untouched: nothing to sign, and the press is inert.
       expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
-        "creates no signed actions",
+        "Nothing to sign yet",
       );
       expect(screen.getByTestId("comment-edit-save")).toBeDisabled();
 
       fireEvent.click(screen.getByTestId("comment-edit-tag-0-remove"));
       expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
-        "creates 1 signed action",
+        "You're signing 1 thing",
       );
-      fireEvent.change(screen.getByTestId("comment-edit-input"), { target: { value: "moved" } });
+      const input = screen.getByTestId("comment-edit-input");
+      const words = (input as HTMLTextAreaElement).value;
+      fireEvent.change(input, { target: { value: "moved" } });
       expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
-        "creates 2 signed actions",
+        "You're signing 2 things",
+      );
+      // THE GUARD IS THE ACTS BATCH, NOT A BYTE COMPARISON
+      // (EditComposeUnchanged.md:3): typed back, the record stays staged.
+      fireEvent.change(input, { target: { value: words } });
+      expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
+        "You're signing 2 things",
       );
     });
 
-    it("asks before an edit that signs more than one action", async () => {
+    it("signs a batch of more than one act on the press, no dialog asking again", async () => {
       writeConfirmMultiAction(true);
       server.use(
         ...threadFrom(() => ownComment([])),
@@ -1946,13 +2371,13 @@ describe("PostView", () => {
       fireEvent.change(screen.getByTestId("comment-edit-input"), { target: { value: "moved" } });
       fireEvent.change(screen.getByTestId("comment-edit-tag-input"), { target: { value: "rust" } });
       fireEvent.click(screen.getByTestId("comment-edit-tag-add"));
+      expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
+        "You're signing 2 things",
+      );
       fireEvent.click(screen.getByTestId("comment-edit-save"));
 
-      expect(screen.getByTestId("comment-edit-multi-action-count")).toHaveTextContent(
-        "creates 2 signed actions",
-      );
-      expect(signer.signStaged).not.toHaveBeenCalled();
-      fireEvent.click(screen.getByTestId("comment-edit-multi-action-proceed"));
+      // Sign is the confirmation: the count was said on the foot.
+      expect(screen.queryByTestId("comment-edit-multi-action-count")).not.toBeInTheDocument();
       await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(2));
     });
   });
@@ -2135,7 +2560,7 @@ describe("PostView — references", () => {
     await screen.findByTestId(byNode("postDetail.card.body"));
 
     fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
-    fireEvent.click(screen.getByTestId("post-menu-cite"));
+    fireEvent.click(screen.getByTestId("postDetail.menuSheet.cite"));
     expect(routerPush).toHaveBeenCalledWith("/compose?reference=p1");
 
     fireEvent.click(screen.getByTestId("comment-menu-c1"));
@@ -2143,7 +2568,7 @@ describe("PostView — references", () => {
     expect(routerPush).toHaveBeenCalledWith("/compose?reference=c1");
   });
 
-  it("asks before it prepares a comment's withdrawal, on the served cost", async () => {
+  it("counts a comment's withdrawal at its served cost before anything is prepared", async () => {
     writeConfirmMultiAction(true);
     let withdrawalInput: Record<string, unknown> | undefined;
     server.use(
@@ -2177,15 +2602,16 @@ describe("PostView — references", () => {
 
     fireEvent.click(await screen.findByTestId("comment-edit-c1"));
     fireEvent.click(screen.getByTestId("comment-edit-reference-0-remove"));
-    fireEvent.click(screen.getByTestId("comment-edit-save"));
-
-    const count = await screen.findByTestId("comment-edit-multi-action-count");
-    expect(count).toHaveTextContent("creates 2 signed actions");
-    // Nothing is staged, let alone signed, while the reader decides.
+    // The foot counts the withdrawal's counter-records, served by the claim,
+    // and nothing is staged while the reader reads it.
+    expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
+      "You're signing 2 things",
+    );
+    expect(screen.getByText(/Withdrawn:/)).toBeInTheDocument();
     expect(withdrawalInput).toBeUndefined();
     expect(signer.signStaged).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByTestId("comment-edit-multi-action-proceed"));
+    fireEvent.click(screen.getByTestId("comment-edit-save"));
     await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(2));
     // The withdrawal names the L2 id, never the claim's L1 identifier.
     expect((withdrawalInput as { input: { target: string } }).input.target).toBe("u-ada");
@@ -2206,7 +2632,7 @@ describe("PostView — references", () => {
     await openComments();
     fireEvent.click(await screen.findByTestId("comment-edit-c1"));
     expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
-      "creates no signed actions",
+      "Nothing to sign yet",
     );
     expect(screen.getByTestId("comment-edit-reference-0")).toHaveTextContent("@ada");
   });
@@ -2563,15 +2989,18 @@ describe("PostView — opened from the feed", () => {
   function feedCache(...nodes: Record<string, unknown>[]) {
     const cache = new InMemoryCache();
     cache.writeQuery({
-      query: PostsDocument,
-      variables: { first: 20, after: null, includePending: true },
+      query: FeedDocument,
+      variables: {
+        orderedIds: nodes.map((node) => String(node.id)),
+        first: nodes.length,
+        includePending: true,
+      },
       data: {
-        posts: {
-          __typename: "PostConnection",
-          edges: nodes.map((node) => ({ __typename: "PostEdge", node })),
-          pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+        feed: {
+          __typename: "FeedConnection",
+          edges: nodes.map((node) => ({ __typename: "FeedEdge", node })),
         },
-      } as unknown as PostsQuery,
+      } as unknown as FeedQuery,
     });
     return cache;
   }

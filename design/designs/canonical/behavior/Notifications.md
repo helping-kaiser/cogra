@@ -8,13 +8,17 @@ ALWAYS a row notifies only an act someone else made that reached something of th
 
 ALWAYS an opinion on the reader's content never notifies, and only an opinion on the reader's profile does
 
-ALWAYS the rows read @ada commented on your post, @tobias replied to your comment, @sol gave an opinion on you, @mira mentioned you, @ada cited your post, @rafa is ready for your approval, @juno landed through your invite, @mira approved your application and @kel closed your application, one sentence per kind
+ALWAYS the rows read @ada commented on your post, @tobias replied to your comment, @sol gave an opinion on you, @mira mentioned you, @ada cited your post, @rafa is ready for your approval, @juno landed through your invite, @mira approved your application, @kel closed your application and @sol walked back their opinion on you, one sentence per kind
+
+ALWAYS an opinion on the reader's profile walked back to nothing notifies as its own row, @sol walked back their opinion on you, and the row the opinion left stands as it was
 
 ALWAYS a comment's and a reply's row carries the words that arrived as its second line
 
 ALWAYS a mention's and a citation's row reads in with the title of the piece that carries it as its second line
 
 ALWAYS the opinion row wears the opinion's face where a picture would go, with no digits in either reading mode, and carries no second line
+
+ALWAYS the withdrawal row wears the walked-back face 🤷 where a picture would go, with no digits, and carries no second line
 
 ALWAYS the ready-for-your-approval row wears the monogram from the applicant's handle, never a picture
 
@@ -35,6 +39,8 @@ WHEN tap a comment's or a reply's row -> the thread opens landed on that comment
 WHEN tap a mention's or a citation's row -> the post that carries it opens AND its back arrow reads Back to Notifications
 
 WHEN tap the opinion row -> the profile of the person who gave it opens AND its back arrow reads Back to Notifications
+
+WHEN tap the withdrawal row -> the profile of the person who walked it back opens AND its back arrow reads Back to Notifications
 
 WHEN tap a landed-through-your-invite row -> the new member's profile opens AND its back arrow reads Back to Notifications
 

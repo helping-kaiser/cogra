@@ -81,6 +81,78 @@ interface Actor {
 	displayName: ModeratedText!
 }
 
+"""
+A platform component with releases in the application registry.
+"""
+enum AppComponent {
+	BACKEND
+	IOS
+	ANDROID
+	WEB
+}
+
+"""
+One release of a platform component, from the append-only
+application registry — operational metadata, never ranked.
+"""
+type AppVersion {
+	component: AppComponent!
+	"""
+	Human-readable version string; unique per component.
+	"""
+	version: String!
+	"""
+	The release's notes in plain words, one line per entry, in the
+	order written — what a reader can now do. Written when the release
+	ships; the same words on every component the release ships on.
+	"""
+	notes: [String!]!
+	"""
+	The release's public page: its full notes and its code.
+	"""
+	patchNotesUrl: String!
+	"""
+	Actor ids the release credits beyond the upstream repo's commit
+	history (designers, translators, testers) — Users and Collectives
+	in one list, resolved via `nodes`. Empty when nobody beyond the
+	commit history is credited. Display-only, never an input to
+	ranking or economics.
+	"""
+	releasedBy: [UUID!]!
+	releasedAt: DateTime!
+}
+
+type AppVersionConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [AppVersionEdge!]!
+	"""
+	How many releases the registry holds under this narrowing, across
+	every page. Priced at zero like every connection count; saturates
+	at [`i32::MAX`].
+	"""
+	totalCount: Int
+}
+
+"""
+An edge in a connection.
+"""
+type AppVersionEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: AppVersion!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
 type Application {
 	id: UUID!
 	"""
@@ -97,6 +169,13 @@ type Application {
 	address — the other approvability proof.
 	"""
 	keyAttached: Boolean!
+	"""
+	The applicant's raw L1 identifier, `prof:<address>`, once the key
+	is attached — the node the approver's vouch points at, and what
+	the approver's device binds the vouch it signs to. Null before
+	the key ceremony.
+	"""
+	graphId: String
 	"""
 	The member whose queue this application sits in — whose vouch it
 	waits on, or whose vouch is in play: the invite link's issuer for
@@ -333,6 +412,23 @@ type AuthSession {
 	user: User
 }
 
+type BackingBundle {
+	"""
+	The raw valence sum, before the clip — beyond `±1` where the
+	records carry more than the fold shows. Not a `Dimension`: the sum
+	is unbounded by construction.
+	"""
+	rawPDirected: Float!
+	"""
+	The folded valence: the raw sum clipped to `[-1, 1]`.
+	"""
+	pDirected: Dimension!
+	"""
+	How many Publish records the sum folds.
+	"""
+	recordCount: Int!
+}
+
 """
 Opens a resumable upload for a file too large to risk in one request.
 """
@@ -355,6 +451,52 @@ input BeginMediaUploadInput {
 type BeginMediaUploadPayload {
 	upload: MediaUploadSession
 	userErrors: [UserError!]!
+}
+
+type BookmarkConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [BookmarkEdge!]!
+	"""
+	How many things the viewer's Saved list serves, across every page
+	— narrowed by `query` and `kinds` when given, less the people a
+	capped people section leaves behind its door. Priced at zero like
+	every connection count; saturates at [`i32::MAX`].
+	"""
+	totalCount: Int
+	"""
+	Whether more saved people match than the people section serves —
+	the "See all profiles" door. While a narrowed list can stand
+	content beside its people, the people section serves its three
+	newest saves; the same query with `kinds: [USER]` serves every
+	match, uncapped. False when the section is not capped, and on a
+	list no query narrows.
+	"""
+	hasMorePeople: Boolean!
+}
+
+"""
+An edge in a connection.
+"""
+type BookmarkEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: Node!
+	"""
+	When the viewer saved this thing — the list's order, newest
+	first, and the time an Undo passes back to restore its place.
+	"""
+	bookmarkedAt: DateTime!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
 }
 
 """
@@ -397,6 +539,12 @@ type ChangePasswordPayload {
 
 type Comment implements Node {
 	id: UUID!
+	"""
+	The comment's raw L1 identifier — the `mint` its genesis record
+	minted, and the identifier every record toward it names. A
+	device binds the acts it signs about this comment to it.
+	"""
+	graphId: String!
 	"""
 	When this node was created — when its minting record was
 	authored, which on a pending node precedes landing.
@@ -457,6 +605,12 @@ type Comment implements Node {
 	The node this comment is on — the genesis Review's parent.
 	"""
 	target: CommentTarget
+	"""
+	The post this comment's thread hangs under — the target itself for
+	a top-level comment, the thread's post for a reply at any depth.
+	Null when the chain ends at no post the server holds.
+	"""
+	post: Post
 	moderationStatus: ModerationStatus!
 	"""
 	This comment's direct replies, in `order` — oldest-first by
@@ -486,6 +640,11 @@ type Comment implements Node {
 	only what has landed on L1.
 	"""
 	viewerStance(pick: StancePickInput, includePending: Boolean! = true): StanceBundle
+	"""
+	When the viewer saved this comment; null when not kept, or with no
+	session. What the comment menus' Save / Unsave row reads.
+	"""
+	viewerBookmarkedAt: DateTime
 }
 
 type CommentConnection {
@@ -703,9 +862,9 @@ enum ErrorCode {
 	"""
 	BAD_INPUT
 	"""
-	An auth or upload endpoint's per-IP / per-account budget, or a
-	private-viewer-state budget (markSeen) — never a signing act. The
-	login backoff serves no retry-after figure.
+	An auth or upload endpoint's per-IP / per-account budget, a
+	private-viewer-state budget (markSeen), or the report mail budget —
+	never a signing act. The login backoff serves no retry-after figure.
 	"""
 	RATE_LIMITED
 	"""
@@ -797,6 +956,12 @@ enum ErrorCode {
 	The key-backup upload challenge is unknown, expired, or spent.
 	"""
 	CHALLENGE_EXPIRED
+	"""
+	A carried write the landing released names media not yet
+	published to the live store. Retryable: nothing was recorded, and
+	the next submit resumes the move.
+	"""
+	CARRIED_MEDIA_UNPUBLISHED
 }
 
 type FeedConnection {
@@ -914,6 +1079,24 @@ type FeedSlice {
 }
 
 """
+One thing's standing in a viewer's view, as this read found it.
+"""
+type FeedTrace {
+	"""
+	S(viewer, target) — the signed greedy disjoint-sum (feed-ranking.md
+	§6.1) — as this read found it. Null when no live path reaches the
+	target: unreached, unknown, or moved on.
+	"""
+	score: Float
+	"""
+	The extracted paths behind `score`, in extraction order (strongest
+	first); their contributions add up to it. Empty when `score` is
+	null.
+	"""
+	paths: [RankPath!]!
+}
+
+"""
 Per-field moderation state (api-spec.md "Per-field moderation").
 SENSITIVE is the read-side flag; REDACTED means the value is gone
 and the mark remains — record-granular, so every field carried by a
@@ -985,6 +1168,57 @@ type Health {
 	the first epoch lands, null when the cursor could not be read.
 	"""
 	mirrorEpoch: Int
+}
+
+type HiddenActorConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [HiddenActorEdge!]!
+	"""
+	How many actors the viewer has hidden, across every page — the
+	settings row's count. Priced at zero like every connection count;
+	saturates at [`i32::MAX`].
+	"""
+	totalCount: Int
+}
+
+"""
+An edge in a connection.
+"""
+type HiddenActorEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: Actor!
+	"""
+	When the viewer hid this actor — the list's order, newest first,
+	and the moment an Undo of an unhide passes back to restore its place.
+	"""
+	hiddenAt: DateTime!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
+input HideActorInput {
+	actor: UUID!
+	"""
+	Restores an earlier hiding's moment — the Undo of an unhide puts the
+	row back where it stood. Null means now; a moment after now is
+	BAD_INPUT.
+	"""
+	hiddenAt: DateTime
+}
+
+type HideActorPayload {
+	hidden: HiddenActorEdge
+	userErrors: [UserError!]!
 }
 
 type InviteLink {
@@ -1167,6 +1401,49 @@ type LogInPayload {
 	userErrors: [UserError!]!
 }
 
+"""
+Marks one row read.
+"""
+input MarkNotificationReadInput {
+	"""
+	One of the viewer's own rows.
+	"""
+	notification: UUID!
+}
+
+"""
+The row as the mark leaves it.
+"""
+type MarkNotificationReadPayload {
+	notification: Notification
+	userErrors: [UserError!]!
+}
+
+"""
+Clears the bell's dot: the seen pointer moves to `through`.
+"""
+input MarkNotificationsSeenInput {
+	"""
+	The createdAt of the newest row the opened list holds — everything
+	at or before it becomes seen. A row that arrived after the list was
+	read stays unseen and lights the bell at the next root load. A
+	moment after now is BAD_INPUT.
+	"""
+	through: DateTime!
+}
+
+"""
+The bell as the moved pointer leaves it.
+"""
+type MarkNotificationsSeenPayload {
+	"""
+	Whether anything is still unseen — a row that arrived after
+	`through`.
+	"""
+	hasUnreadNotifications: Boolean
+	userErrors: [UserError!]!
+}
+
 input MarkSeenInput {
 	"""
 	The nodes the viewer has seen, in the order they were seen.
@@ -1203,6 +1480,20 @@ type MediaAttachment {
 	the digest so a reader never infers it from a length.
 	"""
 	digestAlgo: String!
+	"""
+	The upload digest, lowercase hex under `digestAlgo`: the digest of
+	the bytes as they arrived, after the metadata strip. It is the
+	server's echo of the hash the uploading device took of the bytes it
+	sent, and what a placement's manifest witnesses beside `digest`
+	(manifest key 5). Equal to `digest` for an asset stored as it
+	arrived; the bytes before a re-encode for one that was not.
+	
+	It belongs to the id this value answers under. Read through
+	`uploadMedia`, `completeMediaUpload` or `mediaAttachment(id)`, that
+	is the upload the caller named — never the asset a merge resolved
+	it to, whose own upload sent other bytes.
+	"""
+	uploadDigest: String!
 	mimeType: String!
 	"""
 	Whether the bytes are final. An upload the server has to re-encode
@@ -1613,6 +1904,38 @@ type Mutation {
 	"""
 	setPreferences(input: SetPreferencesInput!): SetPreferencesPayload!
 	"""
+	Keep a post, comment or person in the viewer's Saved list. Any
+	other kind of node is BAD_INPUT at ["node"]; an id that names
+	nothing is NOT_FOUND. Saving a kept node changes nothing and
+	returns its edge as it stands (idempotent). Needs a session
+	(UNAUTHENTICATED otherwise) and no particular account state — an
+	applicant keeps things like a member; this is private viewer
+	state, not acting. L2 only: no record, no staged write.
+	"""
+	setBookmark(input: SetBookmarkInput!): SetBookmarkPayload!
+	"""
+	Drop a node from the viewer's Saved list — a genuine delete.
+	Dropping a node that is not kept is ok (idempotent). Needs a
+	session; no account state.
+	"""
+	removeBookmark(input: RemoveBookmarkInput!): RemoveBookmarkPayload!
+	"""
+	Hide an actor from the viewer's own feed. Idempotent: an actor
+	already hidden keeps its edge and its moment. Any actor may be
+	hidden, a deleted account included; the viewer's own id is
+	BAD_INPUT, an id naming no actor NOT_FOUND, a restore moment after
+	now BAD_INPUT — all at the transport, client bugs no surface renders.
+	Needs a session and no particular account state — an applicant
+	hides like a member; this is private viewer state, not acting.
+	Nothing reaches the graph or the hidden actor.
+	"""
+	hideActor(input: HideActorInput!): HideActorPayload!
+	"""
+	Unhide an actor — a genuine delete. Idempotent: an actor not hidden
+	answers ok. Needs a session; no account state.
+	"""
+	unhideActor(input: UnhideActorInput!): UnhideActorPayload!
+	"""
 	Record that the viewer has seen nodes — first seeing only: a node
 	already on the list is left as it is (re-seeing never counts,
 	never moves it). Posts, comments, profiles and topics are
@@ -1629,6 +1952,31 @@ type Mutation {
 	rate: over it is RATE_LIMITED, and the batch writes nothing.
 	"""
 	markSeen(input: MarkSeenInput!): MarkSeenPayload!
+	"""
+	Clear the bell's dot (Notifications opening): the seen pointer moves
+	to `through`, never backwards, and row read state is untouched.
+	Idempotent; needs a session (UNAUTHENTICATED otherwise) and no
+	account state — reading one's notifications is private viewer
+	state, not acting. A `through` after now is BAD_INPUT.
+	"""
+	markNotificationsSeen(input: MarkNotificationsSeenInput!): MarkNotificationsSeenPayload!
+	"""
+	Mark one row read — the emphasis it keeps until opened. Idempotent:
+	a read row keeps its first readAt. An id that is not one of the
+	viewer's rows is NOT_FOUND (unknown and foreign read alike). Needs a
+	session and no account state.
+	"""
+	markNotificationRead(input: MarkNotificationReadInput!): MarkNotificationReadPayload!
+	"""
+	Report a post, a comment or a person to CoGra by mail (the MVP's
+	report: no report machinery — moderation proposals come with
+	slice 8's moderation half). Mails the report address the reporter,
+	the reported node's id and the time; writes nothing to the graph
+	and keeps no row. Needs a session. Spends a per-account report
+	budget: a spent budget answers a transport-tier RATE_LIMITED and
+	nothing is mailed.
+	"""
+	sendReport(input: SendReportInput!): SendReportPayload!
 	"""
 	Issues the challenge an upload must spend (auth.md "Key
 	recovery"). The server picks it: a client-chosen nonce would let
@@ -1832,8 +2180,9 @@ type Mutation {
 	"""
 	preparePost(input: PreparePostInput!): PrepareContentPayload!
 	"""
-	Prepares a Post edit: an ordinary-role Publish at attachment 0
-	toward the existing node, chained behind the current head.
+	Prepares a Post edit: an ordinary-role Publish at the author's
+	picked attachment (default 0, inert) toward the existing node,
+	chained behind the current head.
 	Creator-only; one in-flight edit per post and author
 	(post.md §4).
 	"""
@@ -1890,6 +2239,12 @@ type Mutation {
 	failures surface as SIGNATURE_INVALID userErrors per proposal.
 	Resubmitting a sealed proposal is idempotent only for the exact
 	signature that was sealed; differing bytes refuse as BAD_INPUT.
+	
+	A carried write the landing released signs only once every asset
+	it names is published to the live store; the submit runs that
+	move. One whose move has not landed refuses as
+	CARRIED_MEDIA_UNPUBLISHED, which is retryable: nothing was
+	recorded, and the next submit resumes the move.
 	
 	A keyless account is refused rather than rendered: no staged write
 	can exist for one, because the Registration stages only after the
@@ -1984,6 +2339,148 @@ enum NodeKind {
 }
 
 """
+Something another actor did that reached the viewer's content, profile
+or application — one row per act (notifications.md). A pointer, never a
+copy: every displayed fact resolves through the nodes, record and
+application below.
+"""
+type Notification {
+	id: UUID!
+	kind: NotificationKind!
+	"""
+	Who acted. For APPLICATION_APPROVABLE this is the applicant account
+	— an actor row with a handle and nothing on the graph yet, named
+	only to the approver of the path that staged it.
+	"""
+	actor: Actor!
+	"""
+	What opening the row lands on: the new comment or reply, the citing
+	post or comment, the acting actor's profile. Null for
+	APPLICATION_APPROVABLE and APPLICATION_REJECTED, whose destinations
+	are the invites screen and the viewer's own application state, and
+	whenever the node no longer resolves.
+	"""
+	subject: Node
+	"""
+	The viewer's own node the act reached: the post commented on, the
+	comment replied to, the cited post or comment, the viewer's own
+	profile for a mention. Null for the two opinion kinds and the four
+	application kinds.
+	"""
+	context: Node
+	"""
+	The landed L1 record behind the act — the row's traceable source,
+	and where an opinion row reads its pair. INVITE_LANDED's record is
+	the admission Registration. Null for APPLICATION_APPROVABLE,
+	APPLICATION_APPROVED and APPLICATION_REJECTED, which are moments in
+	an application's life with no record of their own.
+	"""
+	record: Record
+	"""
+	The application the act concerns — the waiting application for
+	APPLICATION_APPROVABLE, the viewer's own path for
+	APPLICATION_APPROVED and APPLICATION_REJECTED, the landed path for
+	INVITE_LANDED; null for the six record kinds. Resolves while the
+	row exists; an application later closed or landed reads in its
+	current state.
+	"""
+	application: Application
+	"""
+	When the act reached the viewer — the moment its landing was
+	observed, or the moment the account transition committed.
+	"""
+	createdAt: DateTime!
+	"""
+	When the viewer opened this row; null while unread.
+	"""
+	readAt: DateTime
+}
+
+type NotificationConnection {
+	"""
+	Information to aid in pagination.
+	"""
+	pageInfo: PageInfo!
+	"""
+	A list of edges.
+	"""
+	edges: [NotificationEdge!]!
+	"""
+	How many rows the viewer's list serves, across every page. Priced at
+	zero like every connection count; saturates at [`i32::MAX`].
+	"""
+	totalCount: Int
+}
+
+"""
+An edge in a connection.
+"""
+type NotificationEdge {
+	"""
+	The item at the end of the edge
+	"""
+	node: Notification!
+	"""
+	A cursor for use in pagination
+	"""
+	cursor: String!
+}
+
+"""
+The ten addressed acts. A kind is the act plus what it reached,
+which is what a reader needs to know before opening.
+"""
+enum NotificationKind {
+	"""
+	A comment on the viewer's post.
+	"""
+	COMMENT
+	"""
+	A reply to the viewer's comment.
+	"""
+	REPLY
+	"""
+	A citation whose target is the viewer's profile.
+	"""
+	MENTION
+	"""
+	A citation whose target is the viewer's post or comment.
+	"""
+	CITATION
+	"""
+	An opinion whose target is the viewer's profile — a first one or a
+	revision.
+	"""
+	PROFILE_OPINION
+	"""
+	An opinion on the viewer's profile walked back — its author's bundle
+	netted to (0, 0). Opens on the author's profile; the earlier
+	PROFILE_OPINION row stands.
+	"""
+	PROFILE_OPINION_WITHDRAWN
+	"""
+	An application waiting in the viewer's queue became approvable —
+	email verified and key attached.
+	"""
+	APPLICATION_APPROVABLE
+	"""
+	An account the viewer vouched for landed — the vouch that completed
+	its entry was the viewer's.
+	"""
+	INVITE_LANDED
+	"""
+	A member vouched for the viewer's application — their signed
+	approval.
+	"""
+	APPLICATION_APPROVED
+	"""
+	The approver closed the viewer's application without approving it —
+	that queue entry only; the account and its ask link remain.
+	"""
+	APPLICATION_REJECTED
+}
+
+"""
 Information about pagination in a connection
 """
 type PageInfo {
@@ -2050,6 +2547,12 @@ enum PeopleMark {
 
 type Post implements Node {
 	id: UUID!
+	"""
+	The post's raw L1 identifier — the `mint` its genesis record
+	minted, and the identifier every record toward it names. A
+	device binds the acts it signs about this post to it.
+	"""
+	graphId: String!
 	"""
 	When this node was created — when its minting record was
 	authored, which on a pending node precedes landing.
@@ -2171,6 +2674,20 @@ type Post implements Node {
 	only what has landed on L1.
 	"""
 	viewerStance(pick: StancePickInput, includePending: Boolean! = true): StanceBundle
+	"""
+	The viewer's own Publish bundle toward this post — the raw sum of
+	the records they authored it with, and the clip of that sum.
+	Answers only the post's creator; null for every other viewer and
+	for no session. Unlike `viewerStance`, it counts payload-marked
+	records, since every Publish is one. `includePending: false`
+	folds only what has landed on L1.
+	"""
+	viewerBacking(includePending: Boolean! = true): BackingBundle
+	"""
+	When the viewer saved this post; null when not kept, or with no
+	session. What the menus' Save / Unsave row reads.
+	"""
+	viewerBookmarkedAt: DateTime
 }
 
 type PostConnection {
@@ -2229,10 +2746,11 @@ input PrepareCommentInput {
 	content: String!
 	license: LicenseInput!
 	"""
-	Enthusiasm and effort; each defaults to +0.1 (invitations.md §3).
+	Enthusiasm and effort. Required: the server never fills a stance
+	in — the UI pre-fills +0.1 on both visibly and sends what it shows.
 	"""
-	pDirected: Dimension
-	pInterest: Dimension
+	pDirected: Dimension!
+	pInterest: Dimension!
 	"""
 	Topics declared at creation; same rules as on a Post.
 	"""
@@ -2311,6 +2829,14 @@ input PreparePostEditInput {
 	The reason the edit leaves standing; same rules a create runs.
 	"""
 	sensitiveReason: String
+	"""
+	The author's stance pick riding the edit's own record — its
+	attachment. Omitted is `0`, the inert setting: an unadjusted edit
+	moves no stance. A moved pick alone is a legal edit — a
+	content-identical new version. `pInterest` stays census-fixed at
+	1 for Publish, so it is no field.
+	"""
+	pDirected: Dimension
 }
 
 """
@@ -2331,10 +2857,11 @@ input PreparePostInput {
 	content: String
 	license: LicenseInput!
 	"""
-	The author's attachment; defaults to the low-defaults policy
-	value (+0.1). `pInterest` is census-fixed at 1 for Publish.
+	The author's attachment. Required: the server never fills a
+	stance in — the UI pre-fills +0.1 visibly and sends what it shows.
+	`pInterest` is census-fixed at 1 for Publish, so it is no field.
 	"""
-	pDirected: Dimension
+	pDirected: Dimension!
 	"""
 	Topics declared at creation — explicit structured input, never
 	parsed from the body, so display content and graph structure stay
@@ -2409,13 +2936,15 @@ input PrepareReferenceInput {
 	"""
 	target: UUID!
 	"""
-	Effort `f`, the `pDirected` slot; defaults to +0.1.
+	Effort `f`, the `pDirected` slot. Required, as on
+	`ReferenceInput`.
 	"""
-	relevance: Dimension
+	relevance: Dimension!
 	"""
-	Enthusiasm `e`, the `pInterest` slot; defaults to +0.1.
+	Enthusiasm `e`, the `pInterest` slot. Required, as on
+	`ReferenceInput`.
 	"""
-	support: Dimension
+	support: Dimension!
 }
 
 """
@@ -2495,13 +3024,14 @@ input PrepareTagInput {
 	target: UUID!
 	name: String!
 	"""
-	Relevance `r`; defaults to +0.1. Zero is the un-tag.
+	Relevance `r`; zero is the un-tag. Required, as on `TagInput`.
 	"""
-	pDirected: Dimension
+	pDirected: Dimension!
 	"""
-	Confidence `c`, census-bounded to `[0, 1]`; defaults to 1.
+	Confidence `c`, census-bounded to `[0, 1]`. Required, as on
+	`TagInput`.
 	"""
-	pInterest: Dimension
+	pInterest: Dimension!
 }
 
 type PreparedWrite {
@@ -2513,21 +3043,11 @@ type PreparedWrite {
 	"""
 	The canonical proposal, serialized for pre-signing (base64). It
 	carries everything the author asserts — endpoints, parameters,
-	dependency list, payload bytes — and the device recomputes every
-	signing base from it: the user never signs blind bytes.
+	dependency list, payload bytes. The device checks it against the
+	gesture its user ordered and recomputes every signing base from
+	it: the user never signs blind bytes.
 	"""
 	canonicalProposal: String!
-	"""
-	Domain-separated digest over the payload bytes — a transport
-	cross-check for the parsed proposal. The signing pre-digests are
-	computed on-device under the private nonce and never leave it.
-	"""
-	contentPreDigest: String!
-	"""
-	Domain-separated digest over the canonical dependency encoding —
-	the dependency-side transport cross-check.
-	"""
-	dependencyPreDigest: String!
 	"""
 	A staged write that never completes the handshake and lands is
 	garbage-collected — staged payload included — after this many
@@ -2664,7 +3184,9 @@ type Query {
 	asset it uploaded as PROCESSING has become READY (or FAILED).
 	Polled the way `stagedWrite` is. An upload whose re-encode came
 	out as bytes the viewer already holds answers as that asset,
-	READY under its own id; attaching either id attaches it. Null for
+	READY, under the id it was asked by and with its own
+	`uploadDigest`; attaching either id attaches the asset, and the
+	manifest witnesses the upload digest of the id attached. Null for
 	an unknown id, for somebody else's asset, and without a session:
 	an upload is nobody else's business until a parent carries it.
 	"""
@@ -2741,22 +3263,33 @@ type Query {
 	referenceCandidates(query: String!, limit: Int): [ReferenceCandidate!]!
 	"""
 	Global search across nodes; returns a `SearchResult` per edge.
-	Recall is lexical over the indexed name-class fields and post
-	titles — an untitled post is never matched by its words; order is
-	exact-match tier first, then newest first — viewer-independent,
-	the backend never graph-ranks (feed-ranking.md §11). A ranker may
-	re-order fetched results by the viewer's feed metric. Served kinds
-	grow with the slices: USER, POST, HASHTAG unscoped; COMMENT is
-	always a valid kind but is served only under a scope operator
-	(`@handle`, `#tag`) — unscoped, it contributes no rows, never an
-	error. COLLECTIVE, CHAT, CHAT_MESSAGE, ITEM and OFFER join with
-	their slices and read empty until then. An empty `kinds` list
-	means the same as null (no narrowing). `includeSeen: false` drops
-	nodes on the viewer's seen-list (`User.viewHistory`); it needs a
-	session and is ignored without one. Full semantics in the Search
-	section.
+	Recall is lexical: plain text matches topic names by substring,
+	post titles, handles and display names by word (the last word a
+	prefix), and brings the posts of every person whose display name
+	matches; `@prefix` names people by handle prefix and `#prefix`
+	topics by name prefix — bare, the matches lead and everything they
+	reach follows; with text, the text searches what they reach. The
+	result is sectioned — people, then topics, then content — and
+	inside a section an exact match leads, then newest first,
+	viewer-independent — unless `order: RANKED`, where the server's
+	ranker container orders each section's matches inside `viewer`'s
+	slice, exact matches first, and the section's rest follow behind
+	the seam, newest first; ranking never runs in the backend process
+	(feed-ranking.md §11). `order: RANKED` needs `viewer`. While the
+	served kinds stand people beside another kind, the people section
+	serves its first three in that order, and `hasMorePeople` says
+	whether more match; `kinds: [USER]` serves them all. Served
+	kinds grow with the slices: USER, POST, HASHTAG for plain text;
+	COMMENT is always a valid kind but is served only under a cue —
+	for plain text it contributes no rows, never an error. A `kinds`
+	filter drops sections and keeps the rest's semantics. COLLECTIVE,
+	CHAT, CHAT_MESSAGE, ITEM and OFFER join with their slices and read
+	empty until then. An empty `kinds` list means the same as null (no
+	narrowing). `includeSeen: false` drops nodes on the reader's
+	seen-list (`User.viewHistory`); it needs a session and is ignored
+	without one. Full semantics in the Search section.
 	"""
-	search(query: String!, kinds: [NodeKind!], includeSeen: Boolean = true, first: Int, after: String, last: Int, before: String): SearchConnection!
+	search(query: String!, kinds: [NodeKind!], includeSeen: Boolean = true, order: ReadOrder = NEWEST, viewer: UUID, first: Int, after: String, last: Int, before: String): SearchConnection!
 	"""
 	The chronological listing (roadmap "Slice 2"): every post,
 	newest-first — pending entries, then landed entries in landing
@@ -2803,6 +3336,18 @@ type Query {
 	"""
 	feedRanking(viewer: UUID!, asOfEpoch: Int, filter: FeedRankFilter): FeedRanking
 	"""
+	The live trace of one thing in `viewer`'s view: its score and the
+	paths behind it, computed now by the server's standalone ranker
+	container and relayed (miner-api.md). Paths are never stored, so
+	every call is a real fetch at the newest ingested epoch; the read
+	takes no pin and reports none, and its figure may differ from a
+	held feed's — the reader adopts what the trace finds, and a feed
+	never re-orders for it. A target no live path reaches answers with
+	a null score and no paths. Null if `viewer` resolves to no
+	rankable actor.
+	"""
+	feedTrace(viewer: UUID!, target: UUID!): FeedTrace
+	"""
 	Hydrate a window of a ranking snapshot: the nodes behind the given
 	ids, in the given order. At most 100 ids per call (the page
 	budget). An id that resolves to nothing hydratable (a pending write
@@ -2810,6 +3355,85 @@ type Query {
 	order it is handed.
 	"""
 	feed(orderedIds: [UUID!]!, first: Int, after: String, last: Int, before: String): FeedConnection!
+	"""
+	Releases from the application registry, newest first; `component`
+	narrows to one platform component. Answers "what's the current
+	version?" and "where are version X's patch notes?". Readable
+	anonymously; served in `released_at` order.
+	"""
+	appVersions(component: AppComponent, first: Int, after: String, last: Int, before: String): AppVersionConnection!
+}
+
+"""
+One folded hop: a per-author bundle netted into an effective edge
+(feed-ranking.md §3.2).
+"""
+type RankHop {
+	"""
+	The bundle's folded directed parameter p̄_d.
+	"""
+	pDirected: Float!
+	"""
+	The bundle's folded interest parameter p̄_i.
+	"""
+	pInterest: Float!
+	"""
+	This hop's factor γ·w̃. For spot-checks; never drawn.
+	"""
+	weight: Float!
+	"""
+	Exactly the fold's member records, in the causal order. The leg a
+	member contributes is the one in its `legs` whose ends are the
+	hop's, persons folded (`addr:a` is `prof:a`).
+	"""
+	records: [Record!]!
+}
+
+"""
+One extracted path from the viewer to the target.
+"""
+type RankPath {
+	"""
+	The path's nodes, viewer → … → target, persons as one node under
+	their profile identifier.
+	"""
+	nodes: [SliceNode!]!
+	"""
+	The path's hops: hop `i` crosses `nodes[i]` → `nodes[i + 1]`.
+	"""
+	hops: [RankHop!]!
+	"""
+	σ(π): +1 or −1.
+	"""
+	sign: Int!
+	"""
+	σ(π)·m(π)·f(Δt): this path's term of the score.
+	"""
+	contribution: Float!
+	"""
+	m(π) = ∏ γ·w̃ over the hops. For spot-checks; never drawn.
+	"""
+	magnitude: Float!
+	"""
+	f(Δt) of the path's terminal stance record. For spot-checks; never
+	drawn.
+	"""
+	recency: Float!
+}
+
+"""
+How a read orders what it serves: by the viewer's ranker, or by time.
+"""
+enum ReadOrder {
+	"""
+	The viewer's ranker orders what their slice reaches; the rest
+	follows behind, newest first.
+	"""
+	RANKED
+	"""
+	Newest first, viewer-independent.
+	"""
+	NEWEST
 }
 
 type Record {
@@ -2855,6 +3479,12 @@ type Record {
 	The landing epoch.
 	"""
 	landingEpoch: Int!
+	"""
+	When the record landed: its epoch's attested boundary timestamp
+	(layer1-interface.md, the Host Contract). Wall-clock time for
+	display; `landingEpoch` and the causal key carry the order.
+	"""
+	landedAt: DateTime!
 	"""
 	Authoritative act time — the first component of the causal key.
 	"""
@@ -3060,6 +3690,18 @@ type ReferenceClaim {
 	"""
 	support: Dimension!
 	"""
+	The raw relevance sum, before the clip — beyond `±1` where the
+	bundle carries more than the fold shows. A withdrawal's
+	counter-records net exactly these sums to zero, so a device
+	checks the batch it is asked to sign against them. Not a
+	`Dimension`, for the reason `StanceBundle.rawPDirected` is not.
+	"""
+	rawRelevance: Float!
+	"""
+	The raw support sum, before the clip.
+	"""
+	rawSupport: Float!
+	"""
 	How many counter-records withdrawing this citation stages right
 	now — the gesture's cost, since each is its own priced act
 	(D11). Never zero: a bundle already netted to `(0, 0)` has left
@@ -3085,9 +3727,9 @@ the target's node class is the whole distinction: a Reference whose
 target is a person's Profile *is* a mention. Nothing is minted; both
 endpoints pre-exist.
 
-Both parameters are optional and default to +0.1, so a plain citation
-needs only its target. The defaults are strictly positive on both
-axes, which means a default mention vouches — weakly, at coefficient
+Both parameters are required: the server never fills a stance in.
+The UI pre-fills +0.1 on both axes and sends what it shows — strictly
+positive, so an untouched mention vouches, weakly, at coefficient
 `√0.01 = 0.1`.
 
 A citation carries no note. A payload would make the record
@@ -3111,20 +3753,19 @@ input ReferenceInput {
 	"""
 	target: UUID!
 	"""
-	How load-bearing the cited thing is to this artifact, `[-1, 1]`;
-	defaults to +0.1. The census calls this **effort `f`**, and it
-	occupies the `pDirected` slot — the same slot relevance occupies
-	on a tag.
+	How load-bearing the cited thing is to this artifact, `[-1, 1]`.
+	The census calls this **effort `f`**, and it occupies the
+	`pDirected` slot — the same slot relevance occupies on a tag.
 	"""
-	relevance: Dimension
+	relevance: Dimension!
 	"""
-	Endorsing versus refuting, `[-1, 1]`; defaults to +0.1. The census
-	calls this **enthusiasm `e`**, and it occupies the `pInterest`
-	slot. This is the axis that decides whether a mention vouches: a
-	citation strictly positive on both axes resolves its fold cell to
-	the cited person, and every other citation resolves home.
+	Endorsing versus refuting, `[-1, 1]`. The census calls this
+	**enthusiasm `e`**, and it occupies the `pInterest` slot. This is
+	the axis that decides whether a mention vouches: a citation
+	strictly positive on both axes resolves its fold cell to the cited
+	person, and every other citation resolves home.
 	"""
-	support: Dimension
+	support: Dimension!
 }
 
 """
@@ -3232,6 +3873,15 @@ type ReleaseDeviceLockPayload {
 	The lock's secret (base64); null with a refusal.
 	"""
 	secret: String
+	userErrors: [UserError!]!
+}
+
+input RemoveBookmarkInput {
+	node: UUID!
+}
+
+type RemoveBookmarkPayload {
+	ok: Boolean
 	userErrors: [UserError!]!
 }
 
@@ -3347,11 +3997,20 @@ type SearchConnection {
 	"""
 	edges: [SearchEdge!]!
 	"""
-	How many nodes the query matches in total, across every page,
-	independent of the cursor. Priced at zero like every connection
-	count; saturates at [`i32::MAX`].
+	How many nodes the query serves in total, across every page,
+	independent of the cursor: every match, less the people a capped
+	people section leaves behind its door. Priced at zero like every
+	connection count; saturates at [`i32::MAX`].
 	"""
 	totalCount: Int
+	"""
+	Whether more people match than the people section serves — the
+	"See all profiles" door. Where the result can stand people beside
+	another section, the people section serves its first three by the
+	result's own order; the same query with `kinds: [USER]` serves
+	every match, uncapped. False when the section is not capped.
+	"""
+	hasMorePeople: Boolean!
 }
 
 """
@@ -3362,6 +4021,13 @@ type SearchEdge {
 	The item at the end of the edge
 	"""
 	node: SearchResult!
+	"""
+	The viewer's feed score of the result, S(viewer, result)
+	(feed-ranking.md §6.1), under `order: RANKED`. Null past the seam —
+	a match outside the viewer's slice, or one no live path reaches —
+	and on every row under `NEWEST`.
+	"""
+	score: Float
 	"""
 	A cursor for use in pagination
 	"""
@@ -3377,6 +4043,22 @@ deliberately not a `Node` — it has nothing to date and nothing to land
 — and search serves topics (GraphQL spec §3.8, *Unions*).
 """
 union SearchResult = Post | Comment | User | Hashtag
+
+input SendReportInput {
+	"""
+	The reported node: a post, a comment, or a person's profile —
+	never the reporter's own.
+	"""
+	target: UUID!
+}
+
+type SendReportPayload {
+	"""
+	When the report was sent; null when it was refused.
+	"""
+	reportedAt: DateTime
+	userErrors: [UserError!]!
+}
 
 type Session {
 	id: UUID!
@@ -3395,6 +4077,21 @@ type Session {
 	Whether this is the session that issued the current request.
 	"""
 	isCurrent: Boolean!
+}
+
+input SetBookmarkInput {
+	node: UUID!
+	"""
+	When the save took place; null means now. Undo passes the removed
+	row's own `bookmarkedAt`, so the row returns to its place
+	(SavedUndo). Never later than now: BAD_INPUT at ["bookmarkedAt"].
+	"""
+	bookmarkedAt: DateTime
+}
+
+type SetBookmarkPayload {
+	bookmark: BookmarkEdge
+	userErrors: [UserError!]!
 }
 
 """
@@ -3627,6 +4324,12 @@ enum StagedWriteState {
 
 type StanceBundle {
 	"""
+	The raw L1 identifier of the node this bundle points at — the
+	target a stance or severance toward it names, which the device
+	binds the acts it signs to.
+	"""
+	targetGraphId: String!
+	"""
 	The folded valence as it stands.
 	"""
 	pDirected: Dimension!
@@ -3727,14 +4430,16 @@ wins, and relevance 0 is the un-tag, read as withdrawn (hashtag.md
 input TagInput {
 	name: String!
 	"""
-	Relevance `r`; defaults to +0.1.
+	Relevance `r`. Required: the server never fills a stance in — the
+	UI pre-fills +0.1 visibly and sends what it shows.
 	"""
-	pDirected: Dimension
+	pDirected: Dimension!
 	"""
-	Confidence `c`, census-bounded to `[0, 1]`; defaults to 1 — an
-	author believes their own declaration.
+	Confidence `c`, census-bounded to `[0, 1]`. Required like
+	relevance; the UI pre-fills 1 — an author believes their own
+	declaration.
 	"""
-	pInterest: Dimension
+	pInterest: Dimension!
 }
 
 """
@@ -3779,6 +4484,15 @@ entities without requiring a central allocating authority.
 * [RFC4122: A Universally Unique Identifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
 """
 scalar UUID
+
+input UnhideActorInput {
+	actor: UUID!
+}
+
+type UnhideActorPayload {
+	ok: Boolean
+	userErrors: [UserError!]!
+}
 
 """
 A multipart file upload
@@ -3839,6 +4553,13 @@ type UploadMediaPayload {
 
 type User implements Node & Actor {
 	id: UUID!
+	"""
+	The person's raw L1 identifier as a record toward them names it —
+	`prof:<address>`. A device binds the acts it signs toward this
+	person to it. Null for a keyless account, which fronts nothing
+	on the graph yet.
+	"""
+	graphId: String
 	"""
 	When this node was created — when the account row that fronts the
 	Profile was written, which precedes the Registration record
@@ -3907,21 +4628,84 @@ type User implements Node & Actor {
 	"""
 	sessions: [Session!]
 	"""
+	Saved-for-later nodes: the posts, comments and people the viewer
+	kept, one mixed list, newest first by `bookmarkedAt`. Paging is
+	keyset on `(bookmarkedAt, node id)`, so a save made elsewhere
+	while the list is open joins at the next read and never shifts a
+	page. Kept things stay in the list whatever becomes of them —
+	removed, redacted, a deleted account, or an actor the viewer hid —
+	and read through their own status; hiding never narrows it. A kept
+	node that no longer resolves — a pending write that never landed —
+	is skipped. `query` narrows the list by the one search law
+	(Search section) over the saved set alone — the matcher runs on
+	the server, so a match is found wherever it stands in the list.
+	Narrowed, the list is sectioned as search is — people, then
+	content — newest save first inside a section, and paged on its own
+	cursors; a blank or null `query` narrows nothing. While the
+	narrowed list can stand content beside its people, the people
+	section serves only its three newest saves, and
+	`hasMorePeople` says whether more match — the "See all profiles"
+	door, which is the same query with `kinds: [USER]`. `kinds`
+	narrows the list to those kinds, with or without a query (null or
+	empty = every kind Saved holds: USER, POST, COMMENT; another kind
+	is BAD_INPUT). A query past the search length cap is BAD_INPUT.
+	Field-level: viewer-only.
+	"""
+	bookmarks(query: String, kinds: [NodeKind!], first: Int, after: String, last: Int, before: String): BookmarkConnection
+	"""
+	Actors this user has hidden from their own feed — a read-side
+	comfort applied post-rank on the viewer's side (feed-ranking.md
+	§8.2, §9.1); it does not lift the viewer's own records' effect on
+	anyone else's feed. Most recently hidden first; keyset on
+	`(hiddenAt, actor id)`. Field-level: viewer-only.
+	"""
+	hiddenActors(first: Int, after: String, last: Int, before: String): HiddenActorConnection
+	"""
+	When the viewer saved this person; null when not kept, or with no
+	session. What the profile menus' Save / Unsave row reads.
+	"""
+	viewerBookmarkedAt: DateTime
+	"""
 	The seen-list (feed-ranking.md §9.4): every node the viewer has
 	seen, once each, newest first by first seeing — the list the
 	ranked feed filters by, and History's feed. Re-seeing never moves
 	an entry. `kinds` narrows (null or empty = every kind History
 	serves: POST, COMMENT, USER, HASHTAG; a kind outside the served
-	set is BAD_INPUT, and later slices widen the set). A hidden
-	actor's posts and comments stay out while the actor is hidden,
-	and their own profile stays; a removed thing keeps its place and
-	reads its removal mark; a thing whose node no longer resolves — a
-	pending write that never landed — is skipped. Paging is keyset on
-	`(firstSeenAt, node id)`, so a thing first seen while the reader
-	scrolls sorts above the open page and never shifts the next one.
-	Field-level: viewer-only.
+	set is BAD_INPUT, and later slices widen the set), with or without
+	a query. `query` narrows the list by the one search law (Search
+	section) over the seen set alone — the matcher runs on the server,
+	so a match is found wherever it stands in the list. Narrowed, the
+	list is sectioned as search is — people, then topics, then content
+	— newest first seeing first inside a section, and paged on its
+	own cursors; a blank or null `query` narrows nothing. While the
+	narrowed list can stand another kind beside its people, the people
+	section serves only the three people first seen most recently, and
+	`hasMorePeople` says whether more match — the "See all profiles"
+	door, which is the same query with `kinds: [USER]`. A query past
+	the search length cap is BAD_INPUT. A hidden actor's posts and
+	comments stay out while the actor is hidden, and their own profile
+	stays; a removed thing keeps its place and reads its removal mark;
+	a thing whose node no longer resolves — a pending write that never
+	landed — is skipped. Paging is keyset on `(firstSeenAt, node id)`,
+	so a thing first seen while the reader scrolls sorts above the
+	open page and never shifts the next one. Field-level: viewer-only.
 	"""
-	viewHistory(kinds: [NodeKind!], first: Int, after: String, last: Int, before: String): ViewHistoryConnection
+	viewHistory(kinds: [NodeKind!], query: String, first: Int, after: String, last: Int, before: String): ViewHistoryConnection
+	"""
+	Acts other actors made that reached this user's content, profile or
+	application — newest first, one row per act (notifications.md). A
+	hidden actor's rows stay out while the actor is hidden. Keyset on
+	`(createdAt, id)`: a row arriving while the reader scrolls sorts
+	above the open page, so forward paging never shifts. Field-level:
+	viewer-only; null otherwise.
+	"""
+	notifications(first: Int, after: String, last: Int, before: String): NotificationConnection
+	"""
+	Whether a row has arrived since the viewer last opened the list —
+	the band's dot. A boolean, never a count; a hidden actor's rows
+	never light it. False for any viewer but the account's own.
+	"""
+	hasUnreadNotifications: Boolean!
 	"""
 	Acts mid-handshake — awaiting a signature, the host seal, or
 	confirmation — across devices. Field-level: viewer-only.
@@ -4135,11 +4919,21 @@ type ViewHistoryConnection {
 	"""
 	edges: [ViewHistoryEdge!]!
 	"""
-	How many things the viewer's seen-list serves under these kinds,
-	across every page. Priced at zero like every connection count;
-	saturates at [`i32::MAX`].
+	How many things the viewer's seen-list serves, across every page —
+	narrowed by `query` and `kinds` when given, less the people a
+	capped people section leaves behind its door. Priced at zero like
+	every connection count; saturates at [`i32::MAX`].
 	"""
 	totalCount: Int
+	"""
+	Whether more seen people match than the people section serves —
+	the "See all profiles" door. While a narrowed list can stand
+	another kind beside its people, the people section serves the
+	three people first seen most recently; the same query with
+	`kinds: [USER]` serves every match, uncapped. False when the
+	section is not capped, and on a list no query narrows.
+	"""
+	hasMorePeople: Boolean!
 }
 
 """

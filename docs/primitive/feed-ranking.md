@@ -78,9 +78,9 @@ w̃(e) = |det Ψ_e^[P]|^(1/2) · √(1 + τ_e²) · e^(−β·H_τ(e))
 Adopting rather than re-deriving buys the proven structure:
 
 - **Invariant: every hop attenuates.** `w̃(e) ≤ |det Ψ^[P]|^(1/2) · √2`
-  (``prop:epoch:damped-weight-bounds``), and determinant magnitudes
-  top out near `0.36` (Full tier), so `w̃ < 1` everywhere. Path
-  products only shrink with depth.
+  (``prop:epoch:damped-weight-bounds``), and on every traversed leg
+  determinant magnitudes top out near `0.36` (Full tier), so
+  `w̃ < 1` everywhere. Path products only shrink with depth.
 - **The tier ladder is built in.** Full / Half / Marginal routing
   floors damp proposal-like and annotation-like hops by the
   published formula, which CoGra adopts as-is — an L1 terminal
@@ -121,11 +121,12 @@ here.
 This mirrors L1's net-stance fold (``def:epoch:net-stance``;
 [layer1-interface.md §11.3](layer1-interface.md#113-act-folding-and-the-base-allocation-matrix))
 deliberately, with the scope stated honestly: **L1's math makes a
-`(0,0)`-netted bundle inert in the standing projection; its
-inertness in CoGra's feed and attribution holds because this spec
-declares the same fold.** Attribution consumes the same folded
-paths (§6.4), so netting a bundle to `(0,0)` also kills earnings —
-the two halves of severance (§8) stand or fall together.
+bundle netted to zero on either parameter inert in the standing
+projection; its inertness in CoGra's feed and attribution holds
+because this spec declares the same fold.** Attribution consumes
+the same folded paths (§6.4), so an inert bundle also earns
+nothing — reach and money stand or fall together, for severance
+(§8) and for every other inert netting.
 
 The fold gives revision its economics: stances are chronicles
 ([graph-model.md §3](graph-model.md#3-revision-and-current-state)),
@@ -218,8 +219,9 @@ stranger's reference onward to every viewer who reaches it.
   the continuation of *this* reference's own A-leg. The target is
   reached only *through* the reference's **author**, at the
   viewer's forward-path weight to that author (indirect connections
-  count, decayed). A carrier with no single author — a Type, a
-  Chat — has only this channel.
+  count, decayed). A carrier with no single author — a Chat — has
+  only this channel. A Type is no carrier at all: paths end there
+  (the **Types are sinks** invariant above).
 
 A `(0,0)` citation carries `w̃ = 0` and crosses neither channel.
 
@@ -415,8 +417,12 @@ S(u,c) = Σ_{i=1..k}  σ(π_i) · m(π_i) · f(Δt_{π_i})
 ```
 
 Ties on cost break by canonical key — the lexicographically least
-sequence of record identity keys — so every consumer extracts the
-same paths from the same records. `k` is governed (order 4–8).
+sequence of hop keys — so every consumer extracts the same paths
+from the same records. A folded hop's key is its bundle's
+full-incidence key (author, family, source, middle, semantic target)
+with its leg role, so a revision never reshuffles a tie; a hop read
+per record adds that record's identifier. `k` is governed (order
+4–8).
 
 **Exact, never sampled.** Binding on every implementation — the
 ranker crate, the miner, any future rewrite: the aggregation is
@@ -477,7 +483,7 @@ viewer's path terms split among that path's distinct authors
 campaign pool ([economics.md](economics.md), which owns the
 metric: anchor sets, eligibility, settlement window, pricing).
 Because the path set is shared, the delta-funnel earnings ceiling
-and "netting to `(0,0)` kills earnings" hold for money exactly as
+and "an inert bundle earns nothing" hold for money exactly as
 they hold for visibility — per viewer a carrier earns once, and
 reach pays through the crowd sum, not through per-viewer
 multiplicity. The three CAN invariants
@@ -506,33 +512,40 @@ folded bundles toward `t`, summed per stance-author `a` — and
 genesis recency. The genesis seed names recency only; the
 statistics keys stay defined and governable but unseeded. Genesis
 recency is newest content first: the target's **genesis**
-authorship record read by its authoritative causal key (Lamport
-time, then host position;
-``def:graph:authoritative-act-order``), which is total over
-accepted acts, so no tie outlasts it. An update record never
+authorship record read by its place in the published order — its
+landing epoch, then its authoritative causal key (Lamport time, then
+host position; ``def:graph:authoritative-act-order``) — which is
+total over accepted acts, so no tie outlasts it. An update record never
 refreshes it: "newest" means newest content, not
 most-recently-edited.
 Global statistics enter here and only here, never the primary
 rank.
 
-**Zero-jail.** The predicate: **every path from `u` to `t`
-crosses a `(0,0)`-netted bundle** — not one traversable path
-remains. You put a target there by zeroing: authoring
-counter-records until your own bundle toward them nets to `(0,0)`
-(§8.1). Each viewer's zeroing kills the paths through their own
-records; the jail closes when the last live entry is netted — a
-lone unsevered bridge is the midway state §8.3's cascade
-finishes. Jailed means absent, and the absence propagates through
-every consumer of the shared computation:
+**Unreachable.** When every path from `u` to `t` crosses a
+routing-inert bundle — one netted to zero on either parameter
+(§3.1) — not one traversable path remains, and `t` is
+**unreachable** from `u`. Unreachable means absent, and the absence
+propagates through every consumer of the shared computation:
 
-- no feed presence, for every viewer whose paths all cross netted
+- no feed presence, for every viewer whose paths all cross inert
   bundles;
 - no attribution earnings — the same paths carry the money (§6.4);
-- no vouch propagation — netted bundles are routing-inert in
-  the standing projection by L1 math;
+- no vouch propagation — inert bundles are routing-inert in the
+  standing projection by L1 math;
 - no subsidised capacity — an actor nobody's live records reach
-  loses community funding for their θ-debits: severance and
-  defunding are the same act ([economics.md](economics.md)).
+  loses community funding for their θ-debits
+  ([economics.md](economics.md)).
+
+**Zero-jail** is the severed case. The predicate: **every path
+from `u` to `t` crosses a `(0,0)`-netted bundle**. You put a
+target there by severing: authoring counter-records until your
+own bundle toward them nets to `(0,0)` (§8.1). Each viewer's
+severance kills the paths through their own records; the jail
+closes when the last live entry is severed — a lone unsevered
+bridge is the midway state §8.3's cascade finishes. A target some
+of whose paths close only on a single-zero bundle is unreachable,
+not jailed: `(0,x)` — interested, no side taken — and `(x,0)` are
+stances that happen to close a path, never severance.
 
 The jail is **unreachability**, enforced by the fold, not by a
 sort position. "Bot" here is a role, not a species: whoever the
@@ -541,7 +554,8 @@ intolerable actor — the math reads path-set properties and never a
 category (§8.3). While any live entry path remains, `t` is
 reachable through it, at the 1× bridge ceiling (§6.2).
 A cancellation `S = 0` (opposing live paths summing to zero) is
-not jail — it sorts as the neutral score it is; jail is absence.
+not unreachability — it sorts as the neutral score it is;
+unreachable is absent.
 
 Hyper-edge T-legs landing on a Profile source from passive
 artifacts, so no viewer's netting can remove another author's
@@ -570,13 +584,17 @@ attribution (§6.4) — and it is priced:
 each counter-record debits `θ`, in proportion to the conviction
 being walked back. It is simultaneously the community defense and
 the economic one: a bridge into a bot cluster keeps *earning* from
-attribution until it is reversed to `(0,0)`.
+attribution while it stays live.
 
 `(0,0)` is not the everyday signal. Dislike is `(−, +)`,
 avoidance `(+, −)`, hate-and-avoid `(−, −)` — all live signal the
 math ranks (§5.2). Netting to `(0,0)` is the deliberate cut:
-"outside my graph of relevance," with consequences ordinary
-stances don't have.
+"outside my graph of relevance," and a clean slate — both sums at
+zero, no conviction left to return. A bundle at zero on one
+parameter only — `(0,x)`, interested with no side taken, or
+`(x,0)` — is just as routing-inert, but it is a stance, not a cut:
+its other parameter's conviction stands, and a target it closes
+off is unreachable, not jailed (§7).
 
 ### 8.2 The read-side blocklist
 
@@ -584,7 +602,7 @@ A viewer blocklist ("never show me X") is frontend filtering
 (§9.1) — personal comfort, invisible to the graph and to everyone
 else's feeds. **Frontends must hint at the difference:** blocking
 does not lift the effect your own live records have on your
-friends' feeds; only netting your bundles to `(0,0)` does.
+friends' feeds; only netting your bundles inert (§3.1) does.
 
 ### 8.3 Cascading severance — and its locality
 
@@ -667,8 +685,8 @@ community disengages from.
 Reversible by the severed person's own act: net your own bridge
 bundles to `(0,0)` — priced, public, chronicled. The redeemed
 state is graph-derivable, so severers need no memory of *why* they
-severed: `T` is clean when no positive outbound bundle of `T`
-lands on a min-cut-1 bridge (§8.5). The check is effectively
+severed: `T` is clean when no live outbound bundle of `T`
+targets a min-cut-1 bridge (§8.5). The check is effectively
 binary — a genuine transit node has one or two bridges to clean
 up; an account with many is the cluster's body, not its bridge.
 
@@ -726,9 +744,10 @@ path can carry a score. Scope is a read-side filter:
 
 ### 9.4 The already-seen filter
 
-Per-viewer set of seen node keys that the reader's view excludes.
-The reference frontend ranks seen and unseen content alike and cuts
-seen content on the device: a reader's seen fraction of reachable
+Per-viewer set of seen node keys that the reader's view sets apart.
+The reference frontend ranks seen and unseen content alike and sets
+seen content apart on the device — under the feed's "Already seen"
+line, in the feed's own order: a reader's seen fraction of reachable
 content is small, so excluding first saves little. A calculator
 that is handed the list may still exclude it before ranking, with
 identical results. New stance activity on a seen node does not

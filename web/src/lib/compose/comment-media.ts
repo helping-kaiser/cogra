@@ -18,6 +18,7 @@
 // means — `encodeForUpload` then keeps the source's own shape.
 
 import type { GalleryEntryDraft } from "@/lib/api/content-api";
+import { ledgerEntry, type MediaLedger } from "@/lib/compose/payload-expectation";
 import { CENTERED } from "@/lib/ui2/media/crop";
 import {
   effectiveCover,
@@ -182,6 +183,23 @@ export function commentGate(
     };
   }
   return ALLOWED;
+}
+
+/**
+ * Every asset this comment uploaded and can state the digests of — the
+ * pictures, the clip, and either cover — for the payload expectation
+ * (payload-expectation.ts).
+ */
+export function commentMediaLedger(
+  media: CommentMedia,
+  cover: CoverAsset | null = null,
+  autoCover: CoverAsset | null = null,
+): MediaLedger {
+  return new Map([
+    ...media.flatMap((asset) => ledgerEntry(asset.upload)),
+    ...(cover === null ? [] : ledgerEntry(cover.upload)),
+    ...(autoCover === null ? [] : ledgerEntry(autoCover.upload)),
+  ]);
 }
 
 /**

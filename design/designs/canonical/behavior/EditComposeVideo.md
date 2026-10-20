@@ -12,6 +12,18 @@ ALWAYS every change the edit makes signs together in one batch
 
 ALWAYS the License row shows the license as signed, with the lock and no action
 
+ALWAYS the Your backing row stands under the License row and reads the post's backing as it stands with the edit, its face and one number
+
+ALWAYS the Your backing row reads the post's backing as it stands GIVEN the edit's pick was never moved
+
+ALWAYS the edit's record carries the pick, the value it adds to the backing, 0.00 GIVEN the author never moved it
+
+ALWAYS an edit whose pick was never moved changes the post's backing by exactly nothing
+
+WHEN tap Adjust on the Your backing row -> the one-axis pad opens over the edit at the edit's pick AND NEVER anything is staged
+
+ALWAYS the pick rides the edit's own record and adds nothing to the footer's count
+
 WHEN tap Add a cover -> the device's own picker opens AND NEVER the clip's frames are offered
 
 WHEN a picture is picked for the cover -> it passes the crop locked to the clip's shape AND the new cover joins the edit's batch
@@ -64,6 +76,10 @@ WHEN press Remove it under the cover row -> the new cover leaves the batch AND t
 
 WHEN the last upload lands GIVEN Sign the edit was not pressed -> the upload line goes AND Sign the edit stays as it was
 
-WHEN press the header back arrow -> the edit is left toward where it began AND the draft is kept AND NEVER a dialog asks
+WHEN press the header back arrow or the header X GIVEN the batch holds an act -> the dialog Discard the changes? opens over the edit with Nothing is kept. AND NEVER the changes are discarded unasked
 
-WHEN press the header X -> the edit is left AND the draft is kept AND NEVER a dialog asks
+WHEN press the header back arrow GIVEN the batch is empty -> the edit is left toward where it began AND NEVER a dialog asks
+
+WHEN press the header X GIVEN the batch is empty -> the edit is left AND nothing is kept or discarded AND NEVER a dialog asks
+
+WHEN tap Discard in the dialog Discard the changes? -> the changes are discarded AND the edit is left toward where it began with the post as it was AND NEVER a draft is kept

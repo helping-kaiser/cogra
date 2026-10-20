@@ -145,6 +145,14 @@ fn family_for(node: &NodeId) -> Family {
     }
 }
 
+/// A bundle read together with the node it points at — the node a stance
+/// or severance toward it will name, which the device binds its acts to.
+#[derive(Debug, Clone)]
+pub struct TargetBundle {
+    pub node: NodeId,
+    pub sum: BundleSum,
+}
+
 /// The author's bundle toward a target — the read the pad's readout folds
 /// (design.md §8.2). Returns the raw sums; the clip is `BundleSum::fold`.
 pub async fn bundle(
@@ -152,10 +160,14 @@ pub async fn bundle(
     viewer: Uuid,
     target: Uuid,
     include_pending: bool,
-) -> Result<BundleSum, StanceError> {
+) -> Result<TargetBundle, StanceError> {
     let author = author_address(pool, viewer).await?;
     let resolved = resolve_target(pool, &TargetRef::Node(target)).await?;
-    read_bundle(pool, &author, &resolved, include_pending).await
+    let sum = read_bundle(pool, &author, &resolved, include_pending).await?;
+    Ok(TargetBundle {
+        node: resolved.node,
+        sum,
+    })
 }
 
 /// The viewer's bundle toward a Type named by name — the read behind a
@@ -166,10 +178,35 @@ pub async fn topic_bundle(
     viewer: Uuid,
     canonical_name: &str,
     include_pending: bool,
-) -> Result<BundleSum, StanceError> {
+) -> Result<TargetBundle, StanceError> {
     let author = author_address(pool, viewer).await?;
     let resolved = resolve_target(pool, &TargetRef::Topic(canonical_name.to_string())).await?;
-    read_bundle(pool, &author, &resolved, include_pending).await
+    let sum = read_bundle(pool, &author, &resolved, include_pending).await?;
+    Ok(TargetBundle {
+        node: resolved.node,
+        sum,
+    })
+}
+
+/// The author's Publish bundle toward their own post: the sums of every
+/// Publish record the viewer wrote toward `node`, genesis and edits
+/// alike, unclipped. The caller has already established that the viewer
+/// is the post's creator; this is the store question only.
+pub async fn publish_backing(
+    pool: &PgPool,
+    viewer: Uuid,
+    node: &str,
+    include_pending: bool,
+) -> Result<BundleSum, StanceError> {
+    let author = author_address(pool, viewer).await?;
+    stance_store::publish_bundle(
+        pool,
+        &author,
+        node,
+        BundleView::from_include_pending(include_pending),
+    )
+    .await
+    .map_err(StanceError::Storage)
 }
 
 async fn read_bundle(

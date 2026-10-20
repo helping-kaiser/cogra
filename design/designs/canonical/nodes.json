@@ -1039,6 +1039,112 @@
         "changePassword.title": []
       }
     },
+    "CommentLicense": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the author's handle, without @ (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.licenseSheet.terms.axis": "the axis's name as the terms print it, lowercased, each run of other characters one - (LicenseTerms)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "ada"
+        ],
+        "postDetail.card.actionRow": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.score": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.share": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "postDetail.card.authorChip": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.name": [
+          "ada"
+        ],
+        "postDetail.card.description": [
+          "ada"
+        ],
+        "postDetail.card.media": [
+          "ada"
+        ],
+        "postDetail.card.media.frame": [
+          "ada/1"
+        ],
+        "postDetail.card.opinions": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine.counts": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "ada"
+        ],
+        "postDetail.card.title": [
+          "ada"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.licenseSheet": [],
+        "postDetail.licenseSheet.dragHandle": [],
+        "postDetail.licenseSheet.terms": [],
+        "postDetail.licenseSheet.terms.axis": [
+          "credit",
+          "public-record-of-use"
+        ],
+        "postDetail.licenseSheet.terms.axis.label": [
+          "credit",
+          "public-record-of-use"
+        ],
+        "postDetail.licenseSheet.terms.axis.value": [
+          "credit",
+          "public-record-of-use"
+        ],
+        "postDetail.licenseSheet.terms.publicDomain": []
+      }
+    },
     "CommentMenu": {
       "prefix": "postDetail",
       "keys": {
@@ -1813,28 +1919,40 @@
         "explore.bottomBar.walletSlot": [],
         "explore.filterTrigger": [],
         "explore.help": [],
+        "explore.profilesDoor": [],
+        "explore.profilesLabel": [],
         "explore.result": [
           "1",
           "2",
-          "3"
+          "3",
+          "4",
+          "5"
         ],
         "explore.result.mark": [
           "1",
           "2",
-          "3"
+          "3",
+          "4",
+          "5"
         ],
         "explore.result.name": [
           "1",
           "2",
-          "3"
+          "3",
+          "4",
+          "5"
         ],
         "explore.result.rank": [
           "1",
           "2",
-          "3"
+          "3",
+          "4",
+          "5"
         ],
         "explore.result.sub": [
-          "2"
+          "1",
+          "2",
+          "3"
         ],
         "explore.searchField": [],
         "explore.searchField.glyph": [],
@@ -2714,6 +2832,141 @@
         "feed.snackbar.message": []
       }
     },
+    "FeedPostLicense": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "feed.licenseSheet.terms.axis": "the axis's name as the terms print it, lowercased, each run of other characters one - (LicenseTerms)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.comments": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.score": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.score.value": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.share": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.avatar": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.handle": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.name": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.body": [
+          "tobias"
+        ],
+        "feed.card.description": [
+          "ada"
+        ],
+        "feed.card.media": [
+          "ada"
+        ],
+        "feed.card.media.frame": [
+          "ada/1"
+        ],
+        "feed.card.menu": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.opener": [
+          "ada"
+        ],
+        "feed.card.tagsLine": [
+          "ada"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.title": [
+          "ada"
+        ],
+        "feed.licenseSheet": [],
+        "feed.licenseSheet.dragHandle": [],
+        "feed.licenseSheet.terms": [],
+        "feed.licenseSheet.terms.axis": [
+          "credit",
+          "public-record-of-use"
+        ],
+        "feed.licenseSheet.terms.axis.label": [
+          "credit",
+          "public-record-of-use"
+        ],
+        "feed.licenseSheet.terms.axis.value": [
+          "credit",
+          "public-record-of-use"
+        ],
+        "feed.licenseSheet.terms.publicDomain": []
+      }
+    },
     "FeedPostMenu": {
       "prefix": "feed",
       "keys": {
@@ -2837,6 +3090,279 @@
         "feed.menuSheet.license": [],
         "feed.menuSheet.report": [],
         "feed.menuSheet.save": []
+      }
+    },
+    "FeedReportConfirm": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.comments": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.score": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.score.value": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.share": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.avatar": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.handle": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.name": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.body": [
+          "tobias"
+        ],
+        "feed.card.description": [
+          "ada"
+        ],
+        "feed.card.media": [
+          "ada"
+        ],
+        "feed.card.media.frame": [
+          "ada/1"
+        ],
+        "feed.card.menu": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.opener": [
+          "ada"
+        ],
+        "feed.card.tagsLine": [
+          "ada"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.title": [
+          "ada"
+        ],
+        "feed.reportSheet": [],
+        "feed.reportSheet.body": [],
+        "feed.reportSheet.cancel": [],
+        "feed.reportSheet.dragHandle": [],
+        "feed.reportSheet.report": [],
+        "feed.reportSheet.title": []
+      }
+    },
+    "FeedSeenTail": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "tobias",
+          "ada",
+          "sol"
+        ],
+        "feed.card.actionRow": [
+          "tobias",
+          "ada",
+          "sol"
+        ],
+        "feed.card.actionRow.comments": [
+          "tobias",
+          "ada",
+          "sol"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "tobias",
+          "ada",
+          "sol"
+        ],
+        "feed.card.actionRow.score": [
+          "tobias",
+          "ada",
+          "sol"
+        ],
+        "feed.card.actionRow.score.value": [
+          "tobias",
+          "ada",
+          "sol"
+        ],
+        "feed.card.actionRow.share": [
+          "tobias",
+          "ada",
+          "sol"
+        ],
+        "feed.card.actionRow.stance": [
+          "tobias",
+          "ada",
+          "sol"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "tobias",
+          "ada",
+          "sol"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "tobias",
+          "ada",
+          "sol"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "tobias",
+          "ada",
+          "sol"
+        ],
+        "feed.card.authorChip": [
+          "tobias",
+          "ada",
+          "sol"
+        ],
+        "feed.card.authorChip.avatar": [
+          "tobias",
+          "ada",
+          "sol"
+        ],
+        "feed.card.authorChip.handle": [
+          "tobias",
+          "ada",
+          "sol"
+        ],
+        "feed.card.authorChip.name": [
+          "tobias",
+          "ada",
+          "sol"
+        ],
+        "feed.card.body": [
+          "tobias"
+        ],
+        "feed.card.description": [
+          "ada",
+          "sol"
+        ],
+        "feed.card.media": [
+          "ada",
+          "sol"
+        ],
+        "feed.card.media.dots": [
+          "sol"
+        ],
+        "feed.card.media.frame": [
+          "ada/1",
+          "sol/1",
+          "sol/2"
+        ],
+        "feed.card.menu": [
+          "tobias",
+          "ada",
+          "sol"
+        ],
+        "feed.card.opener": [
+          "ada",
+          "sol"
+        ],
+        "feed.card.tagsLine": [
+          "ada",
+          "sol"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad",
+          "sol/fieldnotes",
+          "sol/saltmaps"
+        ],
+        "feed.card.timestamp": [
+          "tobias",
+          "ada",
+          "sol"
+        ],
+        "feed.card.title": [
+          "ada",
+          "sol"
+        ],
+        "feed.seenSeparator": [],
+        "feed.seenSeparator.label": []
       }
     },
     "FeedUnread": {
@@ -3466,6 +3992,232 @@
         ]
       }
     },
+    "HistorySearch": {
+      "prefix": "history",
+      "keys": {
+        "history.card": "the author's handle, without @ (PostCard)",
+        "history.profileCard": "the person's handle, without @ (the profile feed card)",
+        "history.tagCard": "the tag's name, without # (the tag feed card)"
+      },
+      "nodes": {
+        "history.bottomBar": [],
+        "history.bottomBar.composeSlot": [],
+        "history.bottomBar.feedSlot": [],
+        "history.bottomBar.profileSlot": [],
+        "history.bottomBar.searchSlot": [],
+        "history.bottomBar.walletSlot": [],
+        "history.card": [
+          "mira"
+        ],
+        "history.card.actionRow": [
+          "mira"
+        ],
+        "history.card.actionRow.comments": [
+          "mira"
+        ],
+        "history.card.actionRow.comments.count": [
+          "mira"
+        ],
+        "history.card.actionRow.score": [
+          "mira"
+        ],
+        "history.card.actionRow.score.value": [
+          "mira"
+        ],
+        "history.card.actionRow.share": [
+          "mira"
+        ],
+        "history.card.actionRow.stance": [
+          "mira"
+        ],
+        "history.card.actionRow.stance.anchor": [
+          "mira"
+        ],
+        "history.card.actionRow.stance.anchor.exact": [
+          "mira"
+        ],
+        "history.card.actionRow.stance.anchor.face": [
+          "mira"
+        ],
+        "history.card.authorChip": [
+          "mira"
+        ],
+        "history.card.authorChip.avatar": [
+          "mira"
+        ],
+        "history.card.authorChip.handle": [
+          "mira"
+        ],
+        "history.card.authorChip.name": [
+          "mira"
+        ],
+        "history.card.body": [
+          "mira"
+        ],
+        "history.card.menu": [
+          "mira"
+        ],
+        "history.card.timestamp": [
+          "mira"
+        ],
+        "history.filterTrigger": [],
+        "history.header": [],
+        "history.header.back": [],
+        "history.header.title": [],
+        "history.profileCard": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.actionRow": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.actionRow.score": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.actionRow.score.value": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.actionRow.share": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.actionRow.stance": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.actionRow.stance.anchor": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.actionRow.stance.anchor.face": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.avatar": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.bio": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.handle": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.menu": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.name": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profilesDoor": [],
+        "history.profilesLabel": [],
+        "history.searchField": [],
+        "history.searchField.glyph": [],
+        "history.searchField.input": [],
+        "history.tagCard": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.compose": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.score": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.score.value": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.share": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.stance": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.stance.anchor": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.stance.anchor.face": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.glimpse": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.glimpse.by": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.glimpse.newest": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.mark": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.name": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.through": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.timestamp": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagsDoor": [],
+        "history.tagsLabel": []
+      }
+    },
     "Invites": {
       "prefix": "invites",
       "keys": {
@@ -3603,7 +4355,8 @@
           "6",
           "7",
           "8",
-          "9"
+          "9",
+          "10"
         ],
         "notifications.list.notification.disc": [
           "1",
@@ -3614,7 +4367,8 @@
           "6",
           "7",
           "8",
-          "9"
+          "9",
+          "10"
         ],
         "notifications.list.notification.dot": [
           "1",
@@ -3636,7 +4390,8 @@
           "6",
           "7",
           "8",
-          "9"
+          "9",
+          "10"
         ],
         "notifications.list.notification.trailing": [
           "1",
@@ -3647,7 +4402,8 @@
           "6",
           "7",
           "8",
-          "9"
+          "9",
+          "10"
         ]
       }
     },
@@ -3874,6 +4630,111 @@
         "postDetail.snackbar.message": []
       }
     },
+    "PostLicense": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the author's handle, without @ (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "postDetail.licenseSheet.terms.axis": "the axis's name as the terms print it, lowercased, each run of other characters one - (LicenseTerms)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "ada"
+        ],
+        "postDetail.card.actionRow": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.score": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.share": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "postDetail.card.authorChip": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.name": [
+          "ada"
+        ],
+        "postDetail.card.description": [
+          "ada"
+        ],
+        "postDetail.card.media": [
+          "ada"
+        ],
+        "postDetail.card.media.frame": [
+          "ada/1"
+        ],
+        "postDetail.card.opinions": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine.counts": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "ada"
+        ],
+        "postDetail.card.title": [
+          "ada"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.licenseSheet": [],
+        "postDetail.licenseSheet.dragHandle": [],
+        "postDetail.licenseSheet.terms": [],
+        "postDetail.licenseSheet.terms.axis": [
+          "credit",
+          "public-record-of-use"
+        ],
+        "postDetail.licenseSheet.terms.axis.label": [
+          "credit",
+          "public-record-of-use"
+        ],
+        "postDetail.licenseSheet.terms.axis.value": [
+          "credit",
+          "public-record-of-use"
+        ]
+      }
+    },
     "Profile": {
       "prefix": "profile",
       "keys": {
@@ -3960,8 +4821,7 @@
     "ProfileApplicant": {
       "prefix": "profile",
       "keys": {
-        "profile.application": "the application chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
-        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)"
+        "profile.application": "the application chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "profile.application": [
@@ -4009,33 +4869,8 @@
         "profile.bottomBar.searchSlot": [],
         "profile.bottomBar.walletSlot": [],
         "profile.chronicle": [],
-        "profile.chronicle.act": [
-          "1",
-          "2"
-        ],
-        "profile.chronicle.act.aside": [
-          "2"
-        ],
-        "profile.chronicle.act.disc": [
-          "1",
-          "2"
-        ],
-        "profile.chronicle.act.pending": [
-          "1",
-          "2"
-        ],
-        "profile.chronicle.act.second": [
-          "1"
-        ],
-        "profile.chronicle.act.title": [
-          "1",
-          "2"
-        ],
-        "profile.chronicle.act.trailing": [
-          "1",
-          "2"
-        ],
-        "profile.chronicle.stagedLine": [],
+        "profile.chronicle.empty": [],
+        "profile.chronicle.empty.title": [],
         "profile.identity": [],
         "profile.identity.actionRow": [],
         "profile.identity.actionRow.edit": [],
@@ -5183,7 +6018,11 @@
     "Saved": {
       "prefix": "saved",
       "keys": {
-        "saved.list.entry": "the saved thing's title, or an untitled post's stand-in (a words post's first line, a media post's kind and author's handle: Pictures by @ada, A video by @ada), lowercased, each run of other characters one - (Saved)"
+        "saved.card": "the author's handle, without @ (PostCard)",
+        "saved.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "saved.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "saved.commentCard": "the comment author's handle, without @ (CommentCard)",
+        "saved.profileCard": "the person's handle, without @ (the profile feed card)"
       },
       "nodes": {
         "saved.bottomBar": [],
@@ -5192,52 +6031,150 @@
         "saved.bottomBar.profileSlot": [],
         "saved.bottomBar.searchSlot": [],
         "saved.bottomBar.walletSlot": [],
+        "saved.card": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.actionRow": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.actionRow.comments": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.actionRow.comments.count": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.actionRow.score": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.actionRow.score.value": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.actionRow.share": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.actionRow.stance": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.actionRow.stance.anchor": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.actionRow.stance.anchor.exact": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.actionRow.stance.anchor.face": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.authorChip": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.authorChip.avatar": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.authorChip.handle": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.authorChip.name": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.body": [
+          "tobias"
+        ],
+        "saved.card.description": [
+          "ada"
+        ],
+        "saved.card.media": [
+          "ada"
+        ],
+        "saved.card.media.frame": [
+          "ada/1"
+        ],
+        "saved.card.menu": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.opener": [
+          "ada"
+        ],
+        "saved.card.tagsLine": [
+          "ada"
+        ],
+        "saved.card.tagsLine.counts": [
+          "ada"
+        ],
+        "saved.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "saved.card.timestamp": [
+          "ada",
+          "tobias"
+        ],
+        "saved.card.title": [
+          "ada"
+        ],
+        "saved.commentCard": [
+          "tobias"
+        ],
         "saved.header": [],
         "saved.header.back": [],
         "saved.header.title": [],
-        "saved.list": [],
-        "saved.list.entry": [
-          "the-long-way-home",
-          "the-third-headland-light-is-real",
-          "mira-voss",
-          "sunday-at-the-tide-market"
+        "saved.profileCard": [
+          "mira"
         ],
-        "saved.list.entry.aside": [
-          "the-long-way-home",
-          "the-third-headland-light-is-real",
-          "mira-voss",
-          "sunday-at-the-tide-market"
+        "saved.profileCard.actionRow": [
+          "mira"
         ],
-        "saved.list.entry.disc": [
-          "the-long-way-home",
-          "the-third-headland-light-is-real",
-          "mira-voss",
-          "sunday-at-the-tide-market"
+        "saved.profileCard.actionRow.score": [
+          "mira"
         ],
-        "saved.list.entry.second": [
-          "the-long-way-home",
-          "the-third-headland-light-is-real",
-          "mira-voss",
-          "sunday-at-the-tide-market"
+        "saved.profileCard.actionRow.score.value": [
+          "mira"
         ],
-        "saved.list.entry.title": [
-          "the-long-way-home",
-          "the-third-headland-light-is-real",
-          "mira-voss",
-          "sunday-at-the-tide-market"
+        "saved.profileCard.actionRow.share": [
+          "mira"
         ],
-        "saved.list.entry.trailing": [
-          "the-long-way-home",
-          "the-third-headland-light-is-real",
-          "mira-voss",
-          "sunday-at-the-tide-market"
+        "saved.profileCard.actionRow.stance": [
+          "mira"
         ],
-        "saved.list.entry.unsave": [
-          "the-long-way-home",
-          "the-third-headland-light-is-real",
-          "mira-voss",
-          "sunday-at-the-tide-market"
-        ]
+        "saved.profileCard.actionRow.stance.anchor": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow.stance.anchor.face": [
+          "mira"
+        ],
+        "saved.profileCard.avatar": [
+          "mira"
+        ],
+        "saved.profileCard.bio": [
+          "mira"
+        ],
+        "saved.profileCard.handle": [
+          "mira"
+        ],
+        "saved.profileCard.menu": [
+          "mira"
+        ],
+        "saved.profileCard.name": [
+          "mira"
+        ],
+        "saved.searchField": [],
+        "saved.searchField.glyph": [],
+        "saved.searchField.input": []
       }
     },
     "SavedEmpty": {
@@ -5257,10 +6194,32 @@
         "saved.header.title": []
       }
     },
-    "SavedUndo": {
+    "SavedNone": {
+      "prefix": "saved",
+      "keys": {},
+      "nodes": {
+        "saved.bottomBar": [],
+        "saved.bottomBar.composeSlot": [],
+        "saved.bottomBar.feedSlot": [],
+        "saved.bottomBar.profileSlot": [],
+        "saved.bottomBar.searchSlot": [],
+        "saved.bottomBar.walletSlot": [],
+        "saved.empty": [],
+        "saved.empty.action": [],
+        "saved.empty.title": [],
+        "saved.header": [],
+        "saved.header.back": [],
+        "saved.header.title": [],
+        "saved.searchField": [],
+        "saved.searchField.glyph": [],
+        "saved.searchField.input": []
+      }
+    },
+    "SavedSearch": {
       "prefix": "saved",
       "keys": {
-        "saved.list.entry": "the saved thing's title, or an untitled post's stand-in (a words post's first line, a media post's kind and author's handle: Pictures by @ada, A video by @ada), lowercased, each run of other characters one - (Saved)"
+        "saved.card": "the author's handle, without @ (PostCard)",
+        "saved.profileCard": "the person's handle, without @ (the profile feed card)"
       },
       "nodes": {
         "saved.bottomBar": [],
@@ -5269,45 +6228,251 @@
         "saved.bottomBar.profileSlot": [],
         "saved.bottomBar.searchSlot": [],
         "saved.bottomBar.walletSlot": [],
+        "saved.card": [
+          "mira"
+        ],
+        "saved.card.actionRow": [
+          "mira"
+        ],
+        "saved.card.actionRow.comments": [
+          "mira"
+        ],
+        "saved.card.actionRow.comments.count": [
+          "mira"
+        ],
+        "saved.card.actionRow.score": [
+          "mira"
+        ],
+        "saved.card.actionRow.score.value": [
+          "mira"
+        ],
+        "saved.card.actionRow.share": [
+          "mira"
+        ],
+        "saved.card.actionRow.stance": [
+          "mira"
+        ],
+        "saved.card.actionRow.stance.anchor": [
+          "mira"
+        ],
+        "saved.card.actionRow.stance.anchor.exact": [
+          "mira"
+        ],
+        "saved.card.actionRow.stance.anchor.face": [
+          "mira"
+        ],
+        "saved.card.authorChip": [
+          "mira"
+        ],
+        "saved.card.authorChip.avatar": [
+          "mira"
+        ],
+        "saved.card.authorChip.handle": [
+          "mira"
+        ],
+        "saved.card.authorChip.name": [
+          "mira"
+        ],
+        "saved.card.body": [
+          "mira"
+        ],
+        "saved.card.menu": [
+          "mira"
+        ],
+        "saved.card.timestamp": [
+          "mira"
+        ],
         "saved.header": [],
         "saved.header.back": [],
         "saved.header.title": [],
-        "saved.list": [],
-        "saved.list.entry": [
-          "the-third-headland-light-is-real",
-          "mira-voss",
-          "sunday-at-the-tide-market"
+        "saved.profileCard": [
+          "mira",
+          "maren",
+          "mateo"
         ],
-        "saved.list.entry.aside": [
-          "the-third-headland-light-is-real",
-          "mira-voss",
-          "sunday-at-the-tide-market"
+        "saved.profileCard.actionRow": [
+          "mira",
+          "maren",
+          "mateo"
         ],
-        "saved.list.entry.disc": [
-          "the-third-headland-light-is-real",
-          "mira-voss",
-          "sunday-at-the-tide-market"
+        "saved.profileCard.actionRow.score": [
+          "mira",
+          "maren",
+          "mateo"
         ],
-        "saved.list.entry.second": [
-          "the-third-headland-light-is-real",
-          "mira-voss",
-          "sunday-at-the-tide-market"
+        "saved.profileCard.actionRow.score.value": [
+          "mira",
+          "maren",
+          "mateo"
         ],
-        "saved.list.entry.title": [
-          "the-third-headland-light-is-real",
-          "mira-voss",
-          "sunday-at-the-tide-market"
+        "saved.profileCard.actionRow.share": [
+          "mira",
+          "maren",
+          "mateo"
         ],
-        "saved.list.entry.trailing": [
-          "the-third-headland-light-is-real",
-          "mira-voss",
-          "sunday-at-the-tide-market"
+        "saved.profileCard.actionRow.stance": [
+          "mira",
+          "maren",
+          "mateo"
         ],
-        "saved.list.entry.unsave": [
-          "the-third-headland-light-is-real",
-          "mira-voss",
-          "sunday-at-the-tide-market"
+        "saved.profileCard.actionRow.stance.anchor": [
+          "mira",
+          "maren",
+          "mateo"
         ],
+        "saved.profileCard.actionRow.stance.anchor.face": [
+          "mira",
+          "maren",
+          "mateo"
+        ],
+        "saved.profileCard.avatar": [
+          "mira",
+          "maren",
+          "mateo"
+        ],
+        "saved.profileCard.bio": [
+          "mira",
+          "maren",
+          "mateo"
+        ],
+        "saved.profileCard.handle": [
+          "mira",
+          "maren",
+          "mateo"
+        ],
+        "saved.profileCard.menu": [
+          "mira",
+          "maren",
+          "mateo"
+        ],
+        "saved.profileCard.name": [
+          "mira",
+          "maren",
+          "mateo"
+        ],
+        "saved.profilesDoor": [],
+        "saved.profilesLabel": [],
+        "saved.searchField": [],
+        "saved.searchField.glyph": [],
+        "saved.searchField.input": []
+      }
+    },
+    "SavedUndo": {
+      "prefix": "saved",
+      "keys": {
+        "saved.card": "the author's handle, without @ (PostCard)",
+        "saved.commentCard": "the comment author's handle, without @ (CommentCard)",
+        "saved.profileCard": "the person's handle, without @ (the profile feed card)"
+      },
+      "nodes": {
+        "saved.bottomBar": [],
+        "saved.bottomBar.composeSlot": [],
+        "saved.bottomBar.feedSlot": [],
+        "saved.bottomBar.profileSlot": [],
+        "saved.bottomBar.searchSlot": [],
+        "saved.bottomBar.walletSlot": [],
+        "saved.card": [
+          "tobias"
+        ],
+        "saved.card.actionRow": [
+          "tobias"
+        ],
+        "saved.card.actionRow.comments": [
+          "tobias"
+        ],
+        "saved.card.actionRow.comments.count": [
+          "tobias"
+        ],
+        "saved.card.actionRow.score": [
+          "tobias"
+        ],
+        "saved.card.actionRow.score.value": [
+          "tobias"
+        ],
+        "saved.card.actionRow.share": [
+          "tobias"
+        ],
+        "saved.card.actionRow.stance": [
+          "tobias"
+        ],
+        "saved.card.actionRow.stance.anchor": [
+          "tobias"
+        ],
+        "saved.card.actionRow.stance.anchor.exact": [
+          "tobias"
+        ],
+        "saved.card.actionRow.stance.anchor.face": [
+          "tobias"
+        ],
+        "saved.card.authorChip": [
+          "tobias"
+        ],
+        "saved.card.authorChip.avatar": [
+          "tobias"
+        ],
+        "saved.card.authorChip.handle": [
+          "tobias"
+        ],
+        "saved.card.authorChip.name": [
+          "tobias"
+        ],
+        "saved.card.body": [
+          "tobias"
+        ],
+        "saved.card.menu": [
+          "tobias"
+        ],
+        "saved.card.timestamp": [
+          "tobias"
+        ],
+        "saved.commentCard": [
+          "tobias"
+        ],
+        "saved.header": [],
+        "saved.header.back": [],
+        "saved.header.title": [],
+        "saved.profileCard": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow.score": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow.score.value": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow.share": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow.stance": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow.stance.anchor": [
+          "mira"
+        ],
+        "saved.profileCard.actionRow.stance.anchor.face": [
+          "mira"
+        ],
+        "saved.profileCard.avatar": [
+          "mira"
+        ],
+        "saved.profileCard.bio": [
+          "mira"
+        ],
+        "saved.profileCard.handle": [
+          "mira"
+        ],
+        "saved.profileCard.menu": [
+          "mira"
+        ],
+        "saved.profileCard.name": [
+          "mira"
+        ],
+        "saved.searchField": [],
+        "saved.searchField.glyph": [],
+        "saved.searchField.input": [],
         "saved.snackbar": [],
         "saved.snackbar.action": [],
         "saved.snackbar.message": []

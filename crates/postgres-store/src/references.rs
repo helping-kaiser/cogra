@@ -61,6 +61,12 @@ pub struct ReferenceClaim {
     pub relevance: f64,
     /// Folded support — enthusiasm `e`, clipped to `[−1, 1]`.
     pub support: f64,
+    /// The raw relevance sum before the clip — the number a withdrawal's
+    /// counter-records net to zero, and so what a device checks them
+    /// against.
+    pub raw_relevance: f64,
+    /// The raw support sum before the clip.
+    pub raw_support: f64,
     /// How many records the bundle folds.
     pub records: u32,
     /// How many counter-records withdrawing this citation would stage —
@@ -161,6 +167,8 @@ pub async fn references_of(
                 author: author.to_string(),
                 relevance: net.p_d,
                 support: net.p_i,
+                raw_relevance: sum.p_d,
+                raw_support: sum.p_i,
                 records: sum.records,
                 withdrawal_cost: sum.severance_cost().try_into().unwrap_or(u32::MAX),
                 pending: r.pending,

@@ -1,11 +1,18 @@
 package com.cogra.network
 
 import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo.api.http.HttpRequest
+import com.apollographql.apollo.api.http.HttpResponse
+import com.apollographql.apollo.exception.ApolloNetworkException
+import com.apollographql.apollo.network.http.HttpInterceptor
+import com.apollographql.apollo.network.http.HttpInterceptorChain
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.MediaAssetState
 import com.cogra.domain.Outcome
 import com.cogra.domain.media.MediaDestination
+import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.ProcessedVideo
+import com.cogra.domain.media.UploadEchoMismatchException
 import com.cogra.domain.media.UploadProgress
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.auth.BearerInterceptor
@@ -14,10 +21,12 @@ import com.cogra.network.auth.SessionRefresher
 import com.cogra.network.repo.MediaRepositoryImpl
 import com.cogra.network.repo.PartUploader
 import com.cogra.domain.identity.EndLocalSession
-import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.FakeLockCustodyStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.google.common.truth.Truth.assertThat
 import java.io.File
+import java.io.IOException
+import java.security.MessageDigest
 import kotlin.random.Random
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -66,6 +75,12 @@ class MediaUploadTest {
     /** What the next (and every subsequent) `mediaAttachment` poll answers. */
     private var mediaAttachmentResponse = """{"data":{"mediaAttachment":null}}"""
 
+    /**
+     * The upload digest the server echoes: the clip's own bytes hashed by the
+     * JDK — a faithful server — unless a test makes it record other bytes.
+     */
+    private var echoedDigest = ""
+
     @Before
     fun setUp() {
         server = MockWebServer()
@@ -82,7 +97,32 @@ class MediaUploadTest {
         client = ApolloClient.Builder()
             .serverUrl(server.url("/graphql").toString())
             .addHttpInterceptor(BearerInterceptor(sessionGate()))
+            .addHttpInterceptor(DroppingUploads())
             .build()
+    }
+
+    /** How many multipart sends left the device, dropped or not. */
+    private var multipartSends = 0
+
+    /** How many of the next multipart sends die in transport. */
+    private var multipartDrops = 0
+
+    /**
+     * A dead pooled connection, as Apollo reports it for an upload: OkHttp
+     * cannot replay a one-shot multipart body on a fresh connection, so the
+     * call fails with the network exception rather than healing silently.
+     */
+    private inner class DroppingUploads : HttpInterceptor {
+        override suspend fun intercept(request: HttpRequest, chain: HttpInterceptorChain): HttpResponse {
+            if (request.body?.contentType?.startsWith("multipart/") == true) {
+                multipartSends += 1
+                if (multipartDrops > 0) {
+                    multipartDrops -= 1
+                    throw ApolloNetworkException("unexpected end of stream", IOException("unexpected end of stream"))
+                }
+            }
+            return chain.proceed(request)
+        }
     }
 
     @After
@@ -93,7 +133,7 @@ class MediaUploadTest {
 
     /** The suite's tokens are opaque, so the gate only ever passes them on. */
     private fun sessionGate() = SessionGate(tokens) {
-        SessionRefresher(tokens, EndLocalSession(FakeIdentityStore(), tokens)) { client }
+        SessionRefresher(tokens, EndLocalSession(FakeLockCustodyStore(), tokens)) { client }
     }
 
     private fun part(request: RecordedRequest): MockResponse {
@@ -148,13 +188,15 @@ class MediaUploadTest {
         {"__typename":"MediaAttachment","id":"v1","url":"https://media/v1","altText":null,
          "status":"NORMAL","mimeType":"video/mp4",
          "options":{"__typename":"MediaOptions","aspectRatio":"9:16","durationMs":1000},
-         "coverMedia":null,"coverTaken":false,"state":"$state","failureReason":${failureReason?.let { "\"$it\"" }}}
+         "coverMedia":null,"coverTaken":false,"state":"$state","failureReason":${failureReason?.let { "\"$it\"" }},
+         "digest":"$echoedDigest","uploadDigest":"$echoedDigest"}
     """.trimIndent()
 
     /** A clip of [bytes] bytes on disk, and the repository that sends it. */
     private fun TestScope.repositoryFor(bytes: Int): Pair<MediaRepositoryImpl, ProcessedVideo> {
         val file = temp.newFile("clip.mp4")
         file.writeBytes(ByteArray(bytes) { it.toByte() })
+        echoedDigest = sha256Hex(file.readBytes())
         val uploader = PartUploader(
             tokens = tokens,
             endpoint = server.url("/graphql").toString(),
@@ -166,7 +208,7 @@ class MediaUploadTest {
         )
         val guard = AuthGuard(
             tokens,
-            SessionRefresher(tokens, EndLocalSession(FakeIdentityStore(), tokens)) { client },
+            SessionRefresher(tokens, EndLocalSession(FakeLockCustodyStore(), tokens)) { client },
         )
         val repo = MediaRepositoryImpl(client, guard, uploader).apply {
             // Within reach of a test-sized file: eight mebibytes of
@@ -332,7 +374,8 @@ class MediaUploadTest {
         tokens.save(AuthTokens("access", "refresh", "acct"))
         val (repo, _) = repositoryFor(PART_SIZE - 1)
         mediaAttachmentResponse = """{"data":{"mediaAttachment":
-            {"__typename":"MediaAttachment","id":"v1","state":"READY","failureReason":null}}}"""
+            {"__typename":"MediaAttachment","id":"v1","state":"READY","failureReason":null,
+             "digest":"${"cd".repeat(32)}","uploadDigest":"$echoedDigest","mimeType":"video/mp4"}}}"""
 
         val outcome = repo.mediaAttachment("v1")
 
@@ -341,6 +384,37 @@ class MediaUploadTest {
         assertThat(readiness?.id).isEqualTo("v1")
         assertThat(readiness?.state).isEqualTo(MediaAssetState.READY)
         assertThat(readiness?.failureReason).isNull()
+        // The rendition at READY, beside the upload digest of the id asked by.
+        assertThat(readiness?.digest).isEqualTo("cd".repeat(32))
+        assertThat(readiness?.uploadDigest).isEqualTo(echoedDigest)
+        assertThat(readiness?.mimeType).isEqualTo("video/mp4")
+    }
+
+    @Test
+    fun theUploadEchoReturnsTheUploadDigestTheDeviceComputed() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, clip) = repositoryFor(PART_SIZE - 1)
+
+        val outcome = repo.uploadVideo(clip, MediaDestination.POST)
+
+        // The digest the asset now carries is the JDK's hash of the clip on
+        // disk — exactly the bytes that went.
+        val media = (outcome as Outcome.Success).value
+        assertThat(media.uploadDigest).isEqualTo(sha256Hex(File(clip.path).readBytes()))
+    }
+
+    @Test
+    fun anUploadWhoseEchoDiffersFromTheDeviceDigestIsRefusedBeforeAnyAttach() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, clip) = repositoryFor(PART_SIZE + 10)
+        // The server recorded other bytes — its strip repaired these, or
+        // something between the two changed them.
+        echoedDigest = "ab".repeat(32)
+
+        val outcome = repo.uploadVideo(clip, MediaDestination.POST)
+
+        assertThat(outcome).isInstanceOf(Outcome.Failed::class.java)
+        assertThat((outcome as Outcome.Failed).cause).isInstanceOf(UploadEchoMismatchException::class.java)
     }
 
     @Test
@@ -349,7 +423,8 @@ class MediaUploadTest {
         val (repo, _) = repositoryFor(PART_SIZE - 1)
         mediaAttachmentResponse = """{"data":{"mediaAttachment":
             {"__typename":"MediaAttachment","id":"v1","state":"FAILED",
-             "failureReason":"not H.264"}}}"""
+             "failureReason":"not H.264","digest":"$echoedDigest","uploadDigest":"$echoedDigest",
+             "mimeType":"video/mp4"}}}"""
 
         val outcome = repo.mediaAttachment("v1")
 
@@ -386,6 +461,75 @@ class MediaUploadTest {
         val media = (outcome as Outcome.Success).value
         assertThat(media.state).isEqualTo(MediaAssetState.PROCESSING)
     }
+
+    /** A picture and the repository that sends it, the server echoing its digest. */
+    private fun TestScope.pictureRepository(): Pair<MediaRepositoryImpl, ProcessedPicture> {
+        val (repo, _) = repositoryFor(PART_SIZE - 1)
+        val picture = ProcessedPicture(ByteArray(48) { (it * 7).toByte() }, 100, 100)
+        echoedDigest = sha256Hex(picture.bytes)
+        return repo to picture
+    }
+
+    /**
+     * The hand test's first-attempt failure: the upload is the first request
+     * after the picker sat idle, its pooled connection is dead, and OkHttp may
+     * not replay a one-shot body. The repository resends it once, as OkHttp
+     * does for every other request — safe, since the server answers a resent
+     * picture with the row it already has.
+     */
+    @Test
+    fun aPictureLostInTransportOnceIsSentAgainAndLands() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, picture) = pictureRepository()
+        multipartDrops = 1
+
+        val outcome = repo.uploadMedia(picture)
+
+        assertThat(outcome).isInstanceOf(Outcome.Success::class.java)
+        assertThat(multipartSends).isEqualTo(2)
+    }
+
+    @Test
+    fun aClipInOneRequestLostInTransportOnceIsSentAgainAndLands() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, clip) = repositoryFor(PART_SIZE - 1)
+        multipartDrops = 1
+
+        val outcome = repo.uploadVideo(clip, MediaDestination.POST)
+
+        assertThat(outcome).isInstanceOf(Outcome.Success::class.java)
+        assertThat(multipartSends).isEqualTo(2)
+    }
+
+    /** One resend, not a loop: a network that is really down is reported. */
+    @Test
+    fun aPictureLostInTransportTwiceFailsAfterOneResend() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, picture) = pictureRepository()
+        multipartDrops = 2
+
+        val outcome = repo.uploadMedia(picture)
+
+        assertThat(outcome).isInstanceOf(Outcome.Failed::class.java)
+        assertThat((outcome as Outcome.Failed).cause).isInstanceOf(ApolloNetworkException::class.java)
+        assertThat(multipartSends).isEqualTo(2)
+    }
+
+    /** An echo that differs is the server's answer about the bytes, never resent. */
+    @Test
+    fun aPictureWhoseEchoDiffersIsNotSentAgain() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, picture) = pictureRepository()
+        echoedDigest = "ab".repeat(32)
+
+        val outcome = repo.uploadMedia(picture)
+
+        assertThat((outcome as Outcome.Failed).cause).isInstanceOf(UploadEchoMismatchException::class.java)
+        assertThat(multipartSends).isEqualTo(1)
+    }
+
+    private fun sha256Hex(bytes: ByteArray): String =
+        MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
 
     private companion object {
         const val SESSION = "11111111-1111-1111-1111-111111111111"

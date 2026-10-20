@@ -141,8 +141,9 @@ design error:
 | **Subsidy** | Who pays its θ-debits? | Governed policy — Collectives draw on the community's admission fund, within the governed generosity and caps ([economics.md](../primitive/economics.md)). |
 | **Self-funding** | Can it stand on its own? | Always open — an admission burn to the collective's address is funder-unconstrained; a self-funded Collective is indistinguishable from a subsidized one at the comparator. |
 
-A Collective the community defunds (severance netting its
-inbound stances to `(0,0)`) falls back to its own commitment
+A Collective the community defunds (every inbound stance netted
+inert — severed to `(0,0)` or zero on either parameter) falls
+back to its own commitment
 rate — the standing its community-funded burns buy, every
 relational lift gone (``prop:epoch:final-standing-embedding``) — no
 matter how healthy its internal membership; a thriving internal

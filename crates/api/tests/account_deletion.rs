@@ -1194,7 +1194,8 @@ async fn an_applicant_deletion_takes_its_carried_acts(pool: PgPool) {
         json!({
             "content": "a first word",
             "license": { "attribution": 0.0, "provenance": 0.0 },
-            "tags": [{ "name": "gardening" }],
+            "pDirected": 0.1,
+            "tags": [{ "name": "gardening", "pDirected": 0.1, "pInterest": 1.0 }],
         }),
     )
     .await;

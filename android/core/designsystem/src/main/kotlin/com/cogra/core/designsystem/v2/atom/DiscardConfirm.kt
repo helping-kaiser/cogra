@@ -12,13 +12,15 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
 /**
  * What the dialog is asking about, which is the only thing that varies.
  *
- * One shared dialog serves the reply composer and the comment edit
- * (design/readme.md §13); only the question changes, so the surfaces
- * cannot drift into two dialogs that ask the same thing differently.
+ * One shared dialog serves the reply composer, the comment edit and the
+ * post edit (DiscardConfirm.md); only the question changes, so the
+ * surfaces cannot drift into dialogs that ask the same thing differently.
+ * Both edits ask the same question: the post edit reuses the comment
+ * edit's sibling.
  */
 enum class DiscardSubject(val question: String) {
     Reply("Discard this reply?"),
-    Edit("Discard this edit?"),
+    Edit("Discard the changes?"),
 }
 
 /**
@@ -26,10 +28,10 @@ enum class DiscardSubject(val question: String) {
  * (`DiscardConfirm` board).
  *
  * **It belongs only to the surfaces that keep no draft.** The post
- * wizard, the post edit and the profile picture each keep a local draft,
- * "and there the draft is the safety, so nothing asks on the way out"
- * (design/readme.md §13). The reply wizard and the comment edit keep
- * none: leaving them discards, which is the whole reason this asks.
+ * wizard and the profile picture each keep a local draft, and there the
+ * draft is the safety, so nothing asks on the way out. The reply wizard,
+ * the comment edit and the post edit keep none: leaving them discards,
+ * which is the whole reason this asks.
  *
  * **An empty composer is never asked.** A confirm with nothing to lose
  * is noise, so the caller shows this only when something has been

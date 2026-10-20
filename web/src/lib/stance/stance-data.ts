@@ -141,6 +141,11 @@ export interface StanceData {
   /** Author one edge carrying exactly `pick`, and sign it. */
   commit(target: StanceTarget, pick: StancePair): Promise<Outcome<StanceCommit>>;
 
-  /** Author the counter-record batch that nets the bundle to `(0, 0)`. */
-  sever(target: StanceTarget): Promise<Outcome<StanceCommit>>;
+  /**
+   * Author the counter-record batch that nets the bundle to `(0, 0)`.
+   * `shown` is the standing the reader confirmed against: the batch is
+   * signed only if it nets exactly those raw sums, in exactly the records
+   * its cost stated (intent.ts).
+   */
+  sever(target: StanceTarget, shown: StanceBundle): Promise<Outcome<StanceCommit>>;
 }

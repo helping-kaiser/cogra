@@ -18,10 +18,13 @@ import com.cogra.domain.feed.FeedViewer
 import com.cogra.domain.feed.FilterChange
 import com.cogra.domain.feed.changeTo
 import com.cogra.domain.feed.derive
+import com.cogra.domain.hidden.HiddenSet
+import com.cogra.domain.hidden.HiddenStatus
 import com.cogra.domain.history.SeenRecord
 import com.cogra.domain.history.SeenTracker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -63,6 +66,12 @@ data class FeedUiState(
      * screen stay where they are (W-6).
      */
     val rows: List<FeedRow> = emptyList(),
+    /**
+     * The rows of [rows] under `feed.seenSeparator` — the reader's seen
+     * record as it stood at the last derive (FeedSeenTail.md). They stand
+     * after every unseen row; empty, no separator stands.
+     */
+    val seenTail: Set<String> = emptySet(),
 )
 
 /**
@@ -72,14 +81,15 @@ data class FeedUiState(
  *
  * - **The pod orders, the device places and cuts.** Ranked is the
  *   answer's own order, Newest its second permutation, the settling rows
- *   stand where the pod wove them, and the seen, people and Still-settling
- *   cuts delete rows without re-ordering any (CD-7, CD-8, CD-10, CD-11).
+ *   stand where the pod wove them, the people and Still-settling cuts
+ *   delete rows, and the seen rows stand under `feed.seenSeparator` —
+ *   none of it re-orders a row (CD-7, CD-8, CD-10, CD-11, PR-80).
  *   Nothing here scores or compares (PR-9/PR-10).
  * - **A local re-derive is not a fetch.** A Done that changes only
  *   device-side axes re-derives from the held answer: no call, no new pin.
- * - **Seen is cut from the device's record, read fresh at every derive**,
- *   and the derived list is frozen between derives: scrolling never
- *   deletes the rows under the reader (W-6).
+ * - **Seen is read from the device's record fresh at every derive**, and
+ *   the derived list is frozen between derives: scrolling never moves the
+ *   rows under the reader, nor the separator (W-6; FeedSeenTail.md).
  * - **Staleness (PR-55).** The ranking is fetched when this ViewModel is
  *   created — a cold start always refetches — and otherwise only when the
  *   reader pulls. Nothing here watches the app's lifecycle: a return from
@@ -99,7 +109,11 @@ class FeedViewModel @Inject constructor(
     private val seen: SeenPosts,
     @WebOrigin private val webOrigin: String,
     private val seenTracker: SeenTracker,
+    private val hidden: HiddenSet,
 ) : ViewModel() {
+
+    /** Whether the reader's hidden set takes [post] out of the feed (hidden-actors §4.3). */
+    private fun visible(post: PostView): Boolean = !hidden.view.value.hides(post.author?.id, post.id)
 
     private val _state = MutableStateFlow(FeedUiState())
     val state = _state.asStateFlow()
@@ -116,12 +130,23 @@ class FeedViewModel @Inject constructor(
     /** The fetch or derive in flight; a newer one supersedes it. */
     private var composing: Job? = null
 
+    // READING THE TAIL RECORDS NOTHING (FeedSeenTail.md): a card under the
+    // separator is one the record already holds, and seeing it again is
+    // never reported — the tracker hears only the rows above the line.
+
     /** Post cards that stood fully in the viewport, in the order they did. */
-    fun onCardsSeen(postIds: List<String>) = seenTracker.saw(postIds)
+    fun onCardsSeen(postIds: List<String>) {
+        val tail = _state.value.seenTail
+        seenTracker.saw(postIds.filterNot { it in tail })
+    }
 
     /** Tall post cards with an edge on screen; each joins once both edges have been. */
-    fun onCardEdgesSeen(sightings: List<EdgeSighting>) =
-        sightings.forEach { seenTracker.sawEdges(it.nodeId, top = it.top, bottom = it.bottom) }
+    fun onCardEdgesSeen(sightings: List<EdgeSighting>) {
+        val tail = _state.value.seenTail
+        sightings
+            .filterNot { it.nodeId in tail }
+            .forEach { seenTracker.sawEdges(it.nodeId, top = it.top, bottom = it.bottom) }
+    }
 
     /** The reading paused — the scroll rested or the reader left. */
     fun onSeenCheckpoint() = seenTracker.flush()
@@ -167,8 +192,15 @@ class FeedViewModel @Inject constructor(
         composing?.cancel()
         composing = viewModelScope.launch {
             val filter = _state.value.filter
-            when (val ranked = feed.rank(viewer, filter)) {
-                is Outcome.Success -> {
+            // THE FEED NEVER DRAWS A PAGE BEFORE THE HIDDEN SET HAS BEEN READ
+            // (hidden-actors §5.1): both reads go together, every open and
+            // every pull, and a set that could not be read at all is the
+            // feed's own fault — never an unfiltered page.
+            val setRead = async { hidden.refetch() }
+            val ranked = feed.rank(viewer, filter)
+            val setKnown = setRead.await() || hidden.view.value.status == HiddenStatus.READ
+            when {
+                ranked is Outcome.Success && setKnown -> {
                     hydrated.clear()
                     install(ranked.value)
                 }
@@ -211,8 +243,9 @@ class FeedViewModel @Inject constructor(
      */
     private suspend fun install(ranking: FeedRanking) {
         val filter = _state.value.filter
-        val rows = ranking.derive(filter, seenRecord.seenIds())
-        when (val first = feed.hydrate(rows, from = 0, hydrated)) {
+        val derived = ranking.derive(filter, seenRecord.seenIds())
+        val rows = derived.rows
+        when (val first = feed.hydrate(rows, from = 0, hydrated, ::visible)) {
             is Outcome.Success -> {
                 val (posts, next) = first.value
                 cursor = next
@@ -225,6 +258,7 @@ class FeedViewModel @Inject constructor(
                         transportFault = null,
                         ranking = ranking,
                         rows = rows,
+                        seenTail = derived.tailIds,
                         posts = posts,
                         hasNextPage = next < rows.size,
                     )
@@ -242,7 +276,7 @@ class FeedViewModel @Inject constructor(
         val rows = s.rows
         val from = cursor
         viewModelScope.launch {
-            val outcome = feed.hydrate(rows, from, hydrated)
+            val outcome = feed.hydrate(rows, from, hydrated, ::visible)
             // A derive that replaced the list meanwhile owns the cards now.
             if (_state.value.rows !== rows) {
                 _state.update { it.copy(loadingMore = false) }
@@ -292,20 +326,23 @@ private suspend fun FeedRepository.rank(viewer: FeedViewer, filter: FeedFilter):
 
 /**
  * Hydrates [rows] from [from] a window at a time, until a window yields a
- * card or the list ends (the fill rule, §5.1): a window of expired or
- * not-yet-rendered rows loads the next rather than leaving the reader at a
- * dead end. Rows already in [hydrated] — read since the last fetch — are
- * not read again; what is read joins it. Returns the cards, in the list's
- * order, and where the next window starts.
+ * [visible] card or the list ends (the fill rule, §5.1; hidden-actors §4.4
+ * "over-fetch to fill"): a window of expired, not-yet-rendered or hidden
+ * people's rows loads the next rather than leaving the reader at a dead end.
+ * The hidden rows still ride along — the screen leaves them out, and Undo
+ * puts them back where they stood. Rows already in [hydrated] — read since
+ * the last fetch — are not read again; what is read joins it. Returns the
+ * cards, in the list's order, and where the next window starts.
  */
 private suspend fun FeedRepository.hydrate(
     rows: List<FeedRow>,
     from: Int,
     hydrated: MutableMap<String, PostView>,
+    visible: (PostView) -> Boolean,
 ): Outcome<Pair<List<PostView>, Int>> {
     var at = from
     val cards = mutableListOf<PostView>()
-    while (at < rows.size && cards.isEmpty()) {
+    while (at < rows.size && cards.none(visible)) {
         val ids = rows.subList(at, minOf(at + FEED_PAGE_SIZE, rows.size)).map { it.targetId }
         val unread = ids.filterNot { it in hydrated }
         if (unread.isNotEmpty()) {

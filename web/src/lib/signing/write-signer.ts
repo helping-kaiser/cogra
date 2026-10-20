@@ -1,7 +1,9 @@
 // The device's half of the write handshake (api-spec.md "The write
-// flow"; Android mirror: WriteSigner.kt): material persists BEFORE the
-// submit, and the approve step verifies against that persisted copy,
-// never the server's echo — the user never signs blind bytes.
+// flow"; Android mirror: WriteSigner.kt): a batch is checked against the
+// gesture its user ordered before its first pre-signature (intent.ts),
+// material persists BEFORE the submit, and the approve step verifies
+// against that persisted copy, never the server's echo — the user never
+// signs blind bytes.
 
 import type { ApolloClient } from "@apollo/client";
 
@@ -16,17 +18,35 @@ import {
   type StagedWriteView,
 } from "@/lib/api/writes-api";
 import { ActorKey, HandshakeError } from "@/lib/crypto/actor-key";
-import { fromBase64, toBase64 } from "@/lib/crypto/bytes";
+import { equalBytes, fromBase64, toBase64 } from "@/lib/crypto/bytes";
 import { CryptoUnavailableError } from "@/lib/crypto/hashing";
-import type { PreSignedProposal } from "@/lib/crypto/handshake";
+import type { PreSignedProposal, Proposal } from "@/lib/crypto/handshake";
 import { decodeProposal, decodeVerifiedAct, encodePreCommitmentOf, WireError } from "@/lib/crypto/wire";
 import type { AuthGuard } from "@/lib/session/guard";
 import type { IdentityStore } from "@/lib/identity/store";
+import {
+  CARRIED_LANDING_ALWAYS_READY,
+  carriedDigest,
+  type CarriedExpectationStore,
+  type CarriedLandingGate,
+} from "./carried";
+import {
+  checkIntent,
+  IntentMismatch,
+  type Expectation,
+  type RegistrationExemption,
+} from "./intent";
 import { keyUsable } from "./key-usable";
 
 export type WriteResult =
   /** Approved and relaying (or already landed) — the device's part is done. */
   | { kind: "done"; id: string; state: StagedWriteState }
+  /**
+   * Carried with the application: checked against its form, its expectation
+   * kept in custody (carried.ts). Nothing is signed or spent now — it signs at
+   * the landing.
+   */
+  | { kind: "carried"; id: string }
   /** Seal-poll budget exhausted; material kept, resume() continues. */
   | { kind: "awaitingSeal"; id: string }
   /** The API refused; TERMINAL_REFUSALS decides whether material is cleared. */
@@ -38,11 +58,15 @@ export type WriteResult =
 
 export type WriteSigner = {
   /**
-   * Runs the handshake for a staged write discovered on the poll — the
-   * admission Registration's path. Dispatches on the staged state so a
-   * crash between any two legs heals here.
+   * Runs the handshake for one staged write discovered on a poll.
+   * Dispatches on the staged state so a crash between any two legs heals
+   * here. The write is checked against `intent` first — the form's
+   * expectation, or the named Registration exemption (intent.ts).
    */
-  signStaged(staged: StagedWriteView): Promise<WriteResult>;
+  signStaged(
+    staged: StagedWriteView,
+    intent: Expectation | RegistrationExemption,
+  ): Promise<WriteResult>;
   /**
    * Signs a whole staged batch, in order, and answers one result per
    * write.
@@ -54,11 +78,34 @@ export type WriteSigner = {
    * drifts per surface. Android's `WriteSigner.sign(prepared)` is the
    * same seam.
    *
+   * THE BATCH IS CHECKED WHOLE BEFORE ANYTHING IS SIGNED. `expected` is
+   * the gesture rebuilt from its form state; one write that disagrees
+   * refuses every write of the batch, before the first pre-signature —
+   * writes are independent priced acts, so a refusal midway would leave
+   * half a gesture standing. There is no overload without an expectation.
+   *
+   * A CARRIED write in the batch — an applicant's once-each post, Opinion or
+   * Affinity — is checked with the rest and then not signed: its verified
+   * digest is kept for the landing (carried.ts) and it answers `carried`.
+   *
    * Sequential by construction: the legs share one device key and one
    * custody store, and the batch is small enough that concurrency would
    * buy less than it risks.
    */
-  sign(writes: readonly StagedWriteView[]): Promise<WriteResult[]>;
+  sign(writes: readonly StagedWriteView[], expected: Expectation): Promise<WriteResult[]>;
+  /**
+   * Signs the batch carried with this account's application, released by
+   * the landing (PR-88). No form is held at the landing, so each write is
+   * checked against what was verified at its prepare (carried.ts): a write
+   * this device holds an expectation for signs only if the served proposal
+   * digests to it, its dependencies aside — the landing appends the ruled
+   * completion, `[admission Registration, winning vouch]`. A write it holds
+   * none for is a mismatch (no family is exempt), and one mismatch refuses
+   * the whole batch before its first pre-signature.
+   * Then the landing gate (`CarriedLandingGate`) is asked; a batch it holds
+   * back is not signed and nothing of it is spent.
+   */
+  signCarriedAtLanding(writes: readonly StagedWriteView[]): Promise<WriteResult[]>;
   /** Continues every persisted handshake — the parked-acts entry point. */
   resume(): Promise<WriteResult[]>;
 };
@@ -96,10 +143,15 @@ export function createWriteSigner(deps: {
   client: ApolloClient;
   guard: AuthGuard;
   store: IdentityStore;
+  /** The prepare-time expectations of carried writes (carried.ts). */
+  carried: CarriedExpectationStore;
+  /** The landing's precondition (PR-89(iii)); ready by default. */
+  carriedGate?: CarriedLandingGate;
   /** Injectable for tests; production uses the real timer. */
   sleep?: (ms: number) => Promise<void>;
 }): WriteSigner {
-  const { client, guard, store } = deps;
+  const { client, guard, store, carried } = deps;
+  const carriedGate = deps.carriedGate ?? CARRIED_LANDING_ALWAYS_READY;
   const sleep = deps.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
 
   /** A write-leg refusal: clears the material only when it is spent. */
@@ -234,7 +286,9 @@ export function createWriteSigner(deps: {
         return refuse(id, [synthesized("STAGED_WRITE_EXPIRED", "garbage-collected unlanded")]);
       case "CARRIED":
         // Carried with the application: never this device's to sign before
-        // the landing releases it as AWAITING_PRE_SIGN. Nothing is spent.
+        // the landing releases it as AWAITING_PRE_SIGN. Nothing is spent. (A
+        // fresh prepare's carried write never reaches here: the checked batch
+        // keeps its expectation instead, `keepCarried`.)
         return refuseKeeping(id, [
           synthesized("INTERNAL", "carried with the application — it signs at the landing"),
         ]);
@@ -322,20 +376,176 @@ export function createWriteSigner(deps: {
     }
   }
 
+  /**
+   * Why the batch is not what its user ordered, or null when it is. A
+   * proposal that does not parse is a refusal too — the device cannot
+   * check what it cannot read.
+   */
+  async function intentRefusal(
+    key: ActorKey,
+    writes: readonly StagedWriteView[],
+    intent: Expectation | RegistrationExemption,
+  ): Promise<string | null> {
+    try {
+      const proposals = writes.map((staged) => decodeProposal(fromBase64(staged.canonicalProposal)));
+      if (intent.kind === "registrationExemption") {
+        return proposals.every((p) => p.body.family === "registration")
+          ? null
+          : "only a Registration is exempt from the intent check";
+      }
+      checkIntent(intent, await key.address(), proposals);
+      return null;
+    } catch (e) {
+      if (e instanceof IntentMismatch || e instanceof WireError) return e.message;
+      throw e;
+    }
+  }
+
+  /** The whole batch refused by the device: nothing of it is signed. */
+  async function rejectAll(
+    writes: readonly StagedWriteView[],
+    reason: string,
+  ): Promise<WriteResult[]> {
+    const results: WriteResult[] = [];
+    for (const staged of writes) results.push(await reject(staged.id, reason));
+    return results;
+  }
+
+  /** Every write of the batch failed on an environment fault: nothing decided, nothing spent. */
+  function failedAll(writes: readonly StagedWriteView[], cause: unknown): WriteResult[] {
+    return writes.map((staged) => ({ kind: "failed", id: staged.id, cause }));
+  }
+
+  /**
+   * The carried branch at the prepare (PR-88 (a)): the write passed the
+   * batch's intent check against its form, so what was verified is kept —
+   * its digest, dependencies excluded — for the landing to sign against.
+   * Nothing is pre-signed.
+   */
+  async function keepCarried(staged: StagedWriteView): Promise<WriteResult> {
+    try {
+      const proposal = decodeProposal(fromBase64(staged.canonicalProposal));
+      await carried.save(staged.id, await carriedDigest(proposal));
+    } catch (e) {
+      // The check already decoded these bytes, so what is left is the
+      // environment or custody failing — not a verdict on the write. The
+      // write stays carried server-side either way.
+      return { kind: "failed", id: staged.id, cause: e };
+    }
+    return { kind: "carried", id: staged.id };
+  }
+
+  async function signChecked(
+    writes: readonly StagedWriteView[],
+    intent: Expectation | RegistrationExemption,
+  ): Promise<WriteResult[]> {
+    if (writes.length === 0) return [];
+    const answer = await accountKey();
+    if (answer.kind !== "key") return writes.map((staged) => withoutKey(staged.id, answer));
+    let refusal: string | null;
+    try {
+      refusal = await intentRefusal(answer.key, writes, intent);
+    } catch (e) {
+      // A browser that cannot hash learned nothing about the batch —
+      // the same environment-fault rule as the approve step.
+      if (e instanceof CryptoUnavailableError) return failedAll(writes, e);
+      throw e;
+    }
+    if (refusal !== null) return rejectAll(writes, refusal);
+    const results: WriteResult[] = [];
+    for (const staged of writes) {
+      results.push(
+        staged.state === "CARRIED" && intent.kind === "expectation"
+          ? await keepCarried(staged)
+          : await signOne(answer.key, staged),
+      );
+    }
+    return results;
+  }
+
+  /**
+   * Why the released carried batch is not what this device verified at its
+   * prepare, or null when every write matches its kept expectation.
+   * Dependencies are never compared: the landing completes them.
+   */
+  async function carriedRefusal(writes: readonly StagedWriteView[]): Promise<string | null> {
+    for (const staged of writes) {
+      let proposal: Proposal;
+      try {
+        proposal = decodeProposal(fromBase64(staged.canonicalProposal));
+      } catch (e) {
+        if (e instanceof WireError) return e.message;
+        throw e;
+      }
+      const kept = await carried.get(staged.id);
+      if (kept === null) {
+        return "this device holds no prepare-time check for the released carried write";
+      }
+      if (!equalBytes(kept, await carriedDigest(proposal))) {
+        return "the released carried write is not the one this device verified at its prepare";
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Whether the landing's expectation for a write has served its purpose: the
+   * write was pre-signed and submitted (it has left the carried batch for the
+   * handshake custody), or it is gone. Anything else keeps it — a write still
+   * awaiting its pre-signature is checked against it again on the next poll,
+   * and a refused one stays refused.
+   */
+  function expectationSpent(result: WriteResult): boolean {
+    switch (result.kind) {
+      case "done":
+      case "awaitingSeal":
+        return true;
+      case "refused":
+        return result.errors.some(
+          (e) => e.code === "STAGED_WRITE_EXPIRED" || e.code === "NOT_FOUND",
+        );
+      default:
+        return false;
+    }
+  }
+
+  async function signReleased(writes: readonly StagedWriteView[]): Promise<WriteResult[]> {
+    if (writes.length === 0) return [];
+    const answer = await accountKey();
+    if (answer.kind !== "key") return writes.map((staged) => withoutKey(staged.id, answer));
+    let refusal: string | null;
+    try {
+      refusal = await carriedRefusal(writes);
+    } catch (e) {
+      if (e instanceof CryptoUnavailableError) return failedAll(writes, e);
+      throw e;
+    }
+    // The expectations are NOT cleared by a refusal: the write stays released
+    // server-side and is checked against them again on the next poll.
+    if (refusal !== null) return rejectAll(writes, refusal);
+    const readiness = await carriedGate(writes);
+    if (readiness.kind !== "ready") return failedAll(writes, new Error(readiness.reason));
+    const results: WriteResult[] = [];
+    for (const staged of writes) {
+      const result = await signOne(answer.key, staged);
+      if (expectationSpent(result)) await carried.clear(staged.id);
+      results.push(result);
+    }
+    return results;
+  }
+
   return {
-    async signStaged(staged) {
-      const answer = await accountKey();
-      if (answer.kind !== "key") return withoutKey(staged.id, answer);
-      return signOne(answer.key, staged);
+    async signStaged(staged, intent) {
+      const [result] = await signChecked([staged], intent);
+      return result;
     },
 
-    async sign(writes) {
-      if (writes.length === 0) return [];
-      const answer = await accountKey();
-      if (answer.kind !== "key") return writes.map((staged) => withoutKey(staged.id, answer));
-      const results: WriteResult[] = [];
-      for (const staged of writes) results.push(await signOne(answer.key, staged));
-      return results;
+    sign(writes, expected) {
+      return signChecked(writes, expected);
+    },
+
+    signCarriedAtLanding(writes) {
+      return signReleased(writes);
     },
 
     async resume() {

@@ -41,15 +41,22 @@ entry's existence and destruction are both private.
 
 ## 1. Polymorphic shape
 
-One Postgres table, one row per redacted entity (a removed
-payload envelope with its private value, a profile snapshot, a
-post body, a media attachment, etc.):
+One Postgres table, one row per redacted entity. A graph-side
+redaction writes one row per redacted **act**, holding it as one
+unit: its envelope, the private value and proposal nonce its
+witness was formed over, and a reference list of the media the
+envelope names — held together and hard-deleted together. A
+Postgres-side redaction writes the prior row contents.
 
 - `original_id` + `original_type` identify what was redacted.
-- `original_data` holds the original content — the removed
-  payload bytes and private value for graph-side redactions, the
-  prior row contents for Postgres-side ones — schema-on-read, so
-  the archive does not migrate when source formats evolve.
+- `original_data` holds the original content — the unit for
+  graph-side redactions, the prior row contents for Postgres-side
+  ones — schema-on-read, so the archive does not migrate when
+  source formats evolve.
+- Media is **referenced, never copied**. One asset can sit in
+  several placements, so it passes to the archive only when its
+  last live placement is redacted, and a hard delete removes it
+  only when no other held unit references it.
 - `redaction_reason` records the trigger
   (`'illegal-content-cascade'`, `'user-content-removal'`,
   `'user-account-deletion'`, `'court-order'`, etc.).
@@ -64,7 +71,9 @@ record**: the redacted record's structural part and witness are
 permanent on the shared graph, and the archived payload and
 private value reproduce that commitment — so an archive row can
 be proven to hold exactly the content that was removed, and
-nothing can be substituted into it after the fact.
+nothing can be substituted into it after the fact. The unit is
+written in the same transaction that removes the payload from
+carriage, so neither ever exists without the other.
 
 Concrete column types, indexes, and migration mechanics belong in
 [data-model.md](../implementation/data-model.md). This doc fixes
@@ -108,7 +117,10 @@ destroyed depends on the per-row deadline.
 
 A scheduled job hard-deletes rows where
 `legal_hold_until < now()` and no other statute extends the hold.
-This is the explicit, statutorily required exception to
+The MVP runs no such job: every row is held until a manual
+operator act removes it with the objects only it referenced.
+This is the explicit, statutorily
+required exception to
 [layers.md §5](layers.md#5-deletion-policy)'s "No silent
 deletion." invariant.
 

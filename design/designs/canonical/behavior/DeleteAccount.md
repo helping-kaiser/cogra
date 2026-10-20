@@ -26,7 +26,9 @@ WHEN press the header back arrow -> settings returns AND NEVER a link is mailed 
 
 WHEN the board opens GIVEN User.deletionPath reads IMMEDIATE -> the body reads Nothing has landed yet — deleting removes your application and your account right away. AND Delete my account stands as the one commitment AND NEVER Send the confirmation link stands AND NEVER Also remove what I posted stands
 
-WHEN Delete my account is pressed GIVEN User.deletionPath reads IMMEDIATE -> the account and its application are deleted at once AND the reader lands signed out on the bare view AND the snackbar reads Your account is deleted. AND NEVER a confirmation link is mailed AND NEVER the seven-day grace runs AND NEVER the deletion band stands AND NEVER DeleteAccountConfirmed opens
+WHEN Delete my account is pressed GIVEN User.deletionPath reads IMMEDIATE -> the account and its application are deleted at once AND the reader lands signed out on the bare view AND the snackbar reads Your account is deleted. AND NEVER a confirmation link is mailed AND NEVER the seven-day grace runs AND NEVER the deletion band stands AND NEVER DeleteAccountConfirmed opens AND NEVER anything is erased from this device
+
+ALWAYS the key, the draft and any picks kept pending stay on this device after an immediate deletion, exactly as Sign out, keep them locked leaves them
 
 WHEN press Delete my account GIVEN User.deletionPath reads IMMEDIATE and no answer reaches the device -> the line That didn't send. Try again. stands above Delete my account AND Delete my account stays, the retry AND NEVER the account is deleted
 

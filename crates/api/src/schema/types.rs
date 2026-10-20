@@ -17,7 +17,7 @@ use chrono::{DateTime, Utc};
 use common::hashtag_uuid;
 use common::l1::census::Family;
 use common::l1::identifier::NodeId;
-use common::l1::{crypto, wire};
+use common::l1::wire;
 use postgres_store::content::ThreadOrder;
 use postgres_store::references::ReferenceView;
 use postgres_store::topics::{TagChannel, TopicView};
@@ -93,12 +93,20 @@ pub struct StanceProjection {
 /// drag, and cost surfaces price severance against the sum, so the
 /// history beyond the clip has to reach them (design.md §8.3).
 pub struct StanceBundle {
+    target: String,
     sum: common::l1::fold::BundleSum,
     pick: Option<(f64, f64)>,
 }
 
 #[Object]
 impl StanceBundle {
+    /// The raw L1 identifier of the node this bundle points at — the
+    /// target a stance or severance toward it names, which the device
+    /// binds the acts it signs to.
+    async fn target_graph_id(&self) -> &str {
+        &self.target
+    }
+
     /// The folded valence as it stands.
     async fn p_directed(&self) -> Dimension {
         Dimension(self.sum.fold().p_d)
@@ -156,6 +164,36 @@ impl StanceBundle {
             inert: net.is_inert(),
             severed: net.is_severed(),
         })
+    }
+}
+
+/// The author's own Publish bundle toward their post: the sum of every
+/// Publish-family record they wrote toward it — the genesis record and
+/// each edit — before and after the clip. A post's creator authors this
+/// bundle and nobody else reads it; it is the Publish sibling of
+/// [`StanceBundle`] and counts the payload-marked records that bundle
+/// excludes, because every Publish is payload-marked.
+pub struct BackingBundle {
+    sum: common::l1::fold::BundleSum,
+}
+
+#[Object]
+impl BackingBundle {
+    /// The raw valence sum, before the clip — beyond `±1` where the
+    /// records carry more than the fold shows. Not a `Dimension`: the sum
+    /// is unbounded by construction.
+    async fn raw_p_directed(&self) -> f64 {
+        self.sum.p_d
+    }
+
+    /// The folded valence: the raw sum clipped to `[-1, 1]`.
+    async fn p_directed(&self) -> Dimension {
+        Dimension(self.sum.fold().p_d)
+    }
+
+    /// How many Publish records the sum folds.
+    async fn record_count(&self) -> i32 {
+        self.sum.records.try_into().unwrap_or(i32::MAX)
     }
 }
 
@@ -269,14 +307,31 @@ pub(crate) async fn viewer_stance(
     };
     let pool = ctx.data::<PgPool>()?;
     match crate::stance::bundle(pool, viewer.user_id, target, include_pending).await {
-        Ok(sum) => Ok(Some(StanceBundle {
-            sum,
+        Ok(read) => Ok(Some(StanceBundle {
+            target: read.node.to_string(),
+            sum: read.sum,
             pick: pick.map(|p| (p.p_directed.0, p.p_interest.0)),
         })),
         Err(crate::stance::StanceError::BadInput { .. })
         | Err(crate::stance::StanceError::Internal(_)) => Ok(None),
         Err(e) => Err(e.into()),
     }
+}
+
+/// Resolves the `viewerBookmarkedAt` field shared by every saveable node:
+/// when the viewer kept it, null when not kept or with no session.
+/// Batched through [`crate::loaders::BookmarkLoader`], so a page of cards
+/// costs one read.
+pub(crate) async fn viewer_bookmarked_at(
+    ctx: &Context<'_>,
+    node: Uuid,
+) -> async_graphql::Result<Option<DateTime<Utc>>> {
+    let Some(Some(viewer)) = ctx.data_opt::<Option<Viewer>>() else {
+        return Ok(None);
+    };
+    let loader =
+        ctx.data::<async_graphql::dataloader::DataLoader<crate::loaders::BookmarkLoader>>()?;
+    Ok(loader.load_one((viewer.user_id, node)).await?)
 }
 
 /// One shared error vocabulary across both tiers: transport faults ride
@@ -295,9 +350,9 @@ pub enum ErrorCode {
     NotFound,
     /// Malformed input; `field` names the offender.
     BadInput,
-    /// An auth or upload endpoint's per-IP / per-account budget, or a
-    /// private-viewer-state budget (markSeen) — never a signing act. The
-    /// login backoff serves no retry-after figure.
+    /// An auth or upload endpoint's per-IP / per-account budget, a
+    /// private-viewer-state budget (markSeen), or the report mail budget —
+    /// never a signing act. The login backoff serves no retry-after figure.
     RateLimited,
     /// Collapsed server fault; detail is logged, not surfaced.
     Internal,
@@ -346,6 +401,10 @@ pub enum ErrorCode {
     SignatureInvalid,
     /// The key-backup upload challenge is unknown, expired, or spent.
     ChallengeExpired,
+    /// A carried write the landing released names media not yet
+    /// published to the live store. Retryable: nothing was recorded, and
+    /// the next submit resumes the move.
+    CarriedMediaUnpublished,
 }
 
 /// The refusals that end a two-signature handshake for good, so the
@@ -729,6 +788,25 @@ impl Record {
         self.0.epoch
     }
 
+    /// When the record landed: its epoch's attested boundary timestamp
+    /// (layer1-interface.md, the Host Contract). Wall-clock time for
+    /// display; `landingEpoch` and the causal key carry the order.
+    async fn landed_at(&self, ctx: &Context<'_>) -> async_graphql::Result<DateTime<Utc>> {
+        use async_graphql::ErrorExtensions;
+        ctx.data::<DataLoader<crate::loaders::EpochInstantLoader>>()?
+            .load_one(self.0.epoch)
+            .await?
+            .ok_or_else(|| {
+                tracing::error!(
+                    epoch = self.0.epoch,
+                    record = %self.0.record_id,
+                    "a mirrored record's epoch has no attested instant"
+                );
+                async_graphql::Error::new("the record's landing instant is missing")
+                    .extend_with(|_, e| e.set("code", "INTERNAL"))
+            })
+    }
+
     /// Authoritative act time — the first component of the causal key.
     async fn act_time(&self) -> i64 {
         self.0.act_time
@@ -881,29 +959,11 @@ impl PreparedWrite {
 
     /// The canonical proposal, serialized for pre-signing (base64). It
     /// carries everything the author asserts — endpoints, parameters,
-    /// dependency list, payload bytes — and the device recomputes every
-    /// signing base from it: the user never signs blind bytes.
+    /// dependency list, payload bytes. The device checks it against the
+    /// gesture its user ordered and recomputes every signing base from
+    /// it: the user never signs blind bytes.
     async fn canonical_proposal(&self) -> String {
         B64.encode(wire::encode_proposal(&self.proposal))
-    }
-
-    /// Domain-separated digest over the payload bytes — a transport
-    /// cross-check for the parsed proposal. The signing pre-digests are
-    /// computed on-device under the private nonce and never leave it.
-    async fn content_pre_digest(&self) -> String {
-        B64.encode(crypto::sha256_tagged(
-            b"cogra-api:transport-digest:content:v1",
-            &[&self.proposal.payload],
-        ))
-    }
-
-    /// Domain-separated digest over the canonical dependency encoding —
-    /// the dependency-side transport cross-check.
-    async fn dependency_pre_digest(&self) -> String {
-        B64.encode(crypto::sha256_tagged(
-            b"cogra-api:transport-digest:deps:v1",
-            &[&common::l1::handshake::canonical_deps(&self.proposal.deps)],
-        ))
     }
 
     /// A staged write that never completes the handshake and lands is
@@ -1181,6 +1241,17 @@ impl User {
         self.identity.id
     }
 
+    /// The person's raw L1 identifier as a record toward them names it —
+    /// `prof:<address>`. A device binds the acts it signs toward this
+    /// person to it. Null for a keyless account, which fronts nothing
+    /// on the graph yet.
+    async fn graph_id(&self) -> Option<String> {
+        self.identity
+            .realization_address
+            .as_deref()
+            .map(|address| NodeId::Prof(address.to_string()).to_string())
+    }
+
     /// When this node was created — when the account row that fronts the
     /// Profile was written, which precedes the Registration record
     /// landing.
@@ -1386,24 +1457,215 @@ impl User {
         ))
     }
 
+    /// Saved-for-later nodes: the posts, comments and people the viewer
+    /// kept, one mixed list, newest first by `bookmarkedAt`. Paging is
+    /// keyset on `(bookmarkedAt, node id)`, so a save made elsewhere
+    /// while the list is open joins at the next read and never shifts a
+    /// page. Kept things stay in the list whatever becomes of them —
+    /// removed, redacted, a deleted account, or an actor the viewer hid —
+    /// and read through their own status; hiding never narrows it. A kept
+    /// node that no longer resolves — a pending write that never landed —
+    /// is skipped. `query` narrows the list by the one search law
+    /// (Search section) over the saved set alone — the matcher runs on
+    /// the server, so a match is found wherever it stands in the list.
+    /// Narrowed, the list is sectioned as search is — people, then
+    /// content — newest save first inside a section, and paged on its own
+    /// cursors; a blank or null `query` narrows nothing. While the
+    /// narrowed list can stand content beside its people, the people
+    /// section serves only its three newest saves, and
+    /// `hasMorePeople` says whether more match — the "See all profiles"
+    /// door, which is the same query with `kinds: [USER]`. `kinds`
+    /// narrows the list to those kinds, with or without a query (null or
+    /// empty = every kind Saved holds: USER, POST, COMMENT; another kind
+    /// is BAD_INPUT). A query past the search length cap is BAD_INPUT.
+    /// Field-level: viewer-only.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "each argument is a GraphQL field argument the schema declares; grouping them into a struct would change the published contract"
+    )]
+    async fn bookmarks(
+        &self,
+        ctx: &Context<'_>,
+        query: Option<String>,
+        kinds: Option<Vec<NodeKind>>,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<Option<BookmarkConnection>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        validate_page_args(first, last, after.as_deref(), before.as_deref())
+            .map_err(|e| super::query::bad_input(e.message))?;
+        let kinds = saved_kinds(kinds.as_deref())?;
+        let parsed = crate::search::parse(query.as_deref().unwrap_or("")).map_err(|_| {
+            super::query::bad_input(format!(
+                "query may be at most {} characters",
+                crate::search::MAX_QUERY_CHARS
+            ))
+        })?;
+        if parsed != crate::search::Parsed::Blank {
+            return self
+                .narrowed_bookmarks(ctx, parsed, &kinds, first, after, last, before)
+                .await
+                .map(Some);
+        }
+        let store_kinds = saved_store_kinds(&kinds);
+        let backward = last.is_some() || before.is_some();
+        let cursor = match if backward { &before } else { &after } {
+            Some(raw) => Some(
+                crate::bookmarks::decode_cursor(raw)
+                    .ok_or_else(|| super::query::bad_input("invalid cursor"))?,
+            ),
+            None => None,
+        };
+        let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
+        let mut kept = postgres_store::bookmarks::bookmarks(
+            pool,
+            self.identity.id,
+            &store_kinds,
+            cursor,
+            backward,
+            limit + 1,
+        )
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let has_more = kept.len() as i64 > limit;
+        if has_more {
+            if backward {
+                kept.remove(0);
+            } else {
+                kept.pop();
+            }
+        }
+        let (has_previous, has_next) = if backward {
+            (has_more, cursor.is_some())
+        } else {
+            (cursor.is_some(), has_more)
+        };
+        let mut connection = BookmarkConnection::with_additional_fields(
+            has_previous,
+            has_next,
+            BookmarkConnectionFields {
+                viewer: self.identity.id,
+                kinds: store_kinds,
+                narrowed: None,
+                more_people: Some(false),
+            },
+        );
+        connection
+            .edges
+            .extend(hydrate_bookmarks(pool, kept).await?);
+        Ok(Some(connection))
+    }
+
+    /// Actors this user has hidden from their own feed — a read-side
+    /// comfort applied post-rank on the viewer's side (feed-ranking.md
+    /// §8.2, §9.1); it does not lift the viewer's own records' effect on
+    /// anyone else's feed. Most recently hidden first; keyset on
+    /// `(hiddenAt, actor id)`. Field-level: viewer-only.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    async fn hidden_actors(
+        &self,
+        ctx: &Context<'_>,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<Option<HiddenActorConnection>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        validate_page_args(first, last, after.as_deref(), before.as_deref())
+            .map_err(|e| super::query::bad_input(e.message))?;
+        let backward = last.is_some() || before.is_some();
+        let cursor = match if backward { &before } else { &after } {
+            Some(raw) => Some(
+                crate::hidden::decode_cursor(raw)
+                    .ok_or_else(|| super::query::bad_input("invalid cursor"))?,
+            ),
+            None => None,
+        };
+        let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
+        let mut hidden = postgres_store::hidden::hidden_actors(
+            pool,
+            self.identity.id,
+            cursor,
+            backward,
+            limit + 1,
+        )
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let has_more = hidden.len() as i64 > limit;
+        if has_more {
+            if backward {
+                hidden.remove(0);
+            } else {
+                hidden.pop();
+            }
+        }
+        let (has_previous, has_next) = if backward {
+            (has_more, cursor.is_some())
+        } else {
+            (cursor.is_some(), has_more)
+        };
+        let mut connection = HiddenActorConnection::with_additional_fields(
+            has_previous,
+            has_next,
+            HiddenActorConnectionFields {
+                viewer: self.identity.id,
+            },
+        );
+        connection.edges.extend(hydrate_hidden(pool, hidden).await?);
+        Ok(Some(connection))
+    }
+
+    /// When the viewer saved this person; null when not kept, or with no
+    /// session. What the profile menus' Save / Unsave row reads.
+    async fn viewer_bookmarked_at(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<DateTime<Utc>>> {
+        viewer_bookmarked_at(ctx, self.identity.id).await
+    }
+
     /// The seen-list (feed-ranking.md §9.4): every node the viewer has
     /// seen, once each, newest first by first seeing — the list the
     /// ranked feed filters by, and History's feed. Re-seeing never moves
     /// an entry. `kinds` narrows (null or empty = every kind History
     /// serves: POST, COMMENT, USER, HASHTAG; a kind outside the served
-    /// set is BAD_INPUT, and later slices widen the set). A hidden
-    /// actor's posts and comments stay out while the actor is hidden,
-    /// and their own profile stays; a removed thing keeps its place and
-    /// reads its removal mark; a thing whose node no longer resolves — a
-    /// pending write that never landed — is skipped. Paging is keyset on
-    /// `(firstSeenAt, node id)`, so a thing first seen while the reader
-    /// scrolls sorts above the open page and never shifts the next one.
-    /// Field-level: viewer-only.
+    /// set is BAD_INPUT, and later slices widen the set), with or without
+    /// a query. `query` narrows the list by the one search law (Search
+    /// section) over the seen set alone — the matcher runs on the server,
+    /// so a match is found wherever it stands in the list. Narrowed, the
+    /// list is sectioned as search is — people, then topics, then content
+    /// — newest first seeing first inside a section, and paged on its
+    /// own cursors; a blank or null `query` narrows nothing. While the
+    /// narrowed list can stand another kind beside its people, the people
+    /// section serves only the three people first seen most recently, and
+    /// `hasMorePeople` says whether more match — the "See all profiles"
+    /// door, which is the same query with `kinds: [USER]`. A query past
+    /// the search length cap is BAD_INPUT. A hidden actor's posts and
+    /// comments stay out while the actor is hidden, and their own profile
+    /// stays; a removed thing keeps its place and reads its removal mark;
+    /// a thing whose node no longer resolves — a pending write that never
+    /// landed — is skipped. Paging is keyset on `(firstSeenAt, node id)`,
+    /// so a thing first seen while the reader scrolls sorts above the
+    /// open page and never shifts the next one. Field-level: viewer-only.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "each argument is a GraphQL field argument the schema declares; grouping them into a struct would change the published contract"
+    )]
     async fn view_history(
         &self,
         ctx: &Context<'_>,
         kinds: Option<Vec<NodeKind>>,
+        query: Option<String>,
         first: Option<i32>,
         after: Option<String>,
         last: Option<i32>,
@@ -1415,7 +1677,20 @@ impl User {
         let pool = ctx.data::<PgPool>()?;
         validate_page_args(first, last, after.as_deref(), before.as_deref())
             .map_err(|e| super::query::bad_input(e.message))?;
-        let kinds = history_kinds(kinds.as_deref())?;
+        let served = history_kinds(kinds.as_deref())?;
+        let parsed = crate::search::parse(query.as_deref().unwrap_or("")).map_err(|_| {
+            super::query::bad_input(format!(
+                "query may be at most {} characters",
+                crate::search::MAX_QUERY_CHARS
+            ))
+        })?;
+        if parsed != crate::search::Parsed::Blank {
+            return self
+                .narrowed_history(ctx, parsed, &served, first, after, last, before)
+                .await
+                .map(Some);
+        }
+        let kinds = history_store_kinds(&served);
         let backward = last.is_some() || before.is_some();
         let cursor = match if backward { &before } else { &after } {
             Some(raw) => Some(
@@ -1454,25 +1729,58 @@ impl User {
             ViewHistoryConnectionFields {
                 viewer: self.identity.id,
                 kinds,
+                narrowed: None,
+                more_people: Some(false),
             },
         );
-        connection
-            .edges
-            .extend(
-                hydrate_history(pool, entries)
-                    .await?
+        connection.edges.extend(
+            hydrate_history(
+                pool,
+                entries
                     .into_iter()
-                    .map(|(entry, item)| {
-                        Edge::with_additional_fields(
-                            crate::history::encode_cursor(entry.cursor()),
-                            item,
-                            ViewHistoryEdgeFields {
-                                first_seen_at: entry.first_seen_at,
-                            },
-                        )
-                    }),
-            );
+                    .map(|entry| {
+                        let cursor = crate::history::encode_cursor(entry.cursor());
+                        (entry, cursor)
+                    })
+                    .collect(),
+            )
+            .await?,
+        );
         Ok(Some(connection))
+    }
+
+    /// Acts other actors made that reached this user's content, profile or
+    /// application — newest first, one row per act (notifications.md). A
+    /// hidden actor's rows stay out while the actor is hidden. Keyset on
+    /// `(createdAt, id)`: a row arriving while the reader scrolls sorts
+    /// above the open page, so forward paging never shifts. Field-level:
+    /// viewer-only; null otherwise.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    async fn notifications(
+        &self,
+        ctx: &Context<'_>,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<Option<super::notifications::NotificationConnection>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        Ok(Some(
+            super::notifications::page(ctx, self.identity.id, first, after, last, before).await?,
+        ))
+    }
+
+    /// Whether a row has arrived since the viewer last opened the list —
+    /// the band's dot. A boolean, never a count; a hidden actor's rows
+    /// never light it. False for any viewer but the account's own.
+    async fn has_unread_notifications(&self, ctx: &Context<'_>) -> async_graphql::Result<bool> {
+        if !self.is_viewer(ctx) {
+            return Ok(false);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(postgres_store::notifications::has_unread(pool, self.identity.id).await?)
     }
 
     /// Acts mid-handshake — awaiting a signature, the host seal, or
@@ -2142,6 +2450,21 @@ impl Application {
         self.0.key_attached
     }
 
+    /// The applicant's raw L1 identifier, `prof:<address>`, once the key
+    /// is attached — the node the approver's vouch points at, and what
+    /// the approver's device binds the vouch it signs to. Null before
+    /// the key ceremony.
+    async fn graph_id(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<String>> {
+        if !self.0.key_attached {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::actor_identity(pool, self.0.account_id)
+            .await?
+            .and_then(|identity| identity.realization_address)
+            .map(|address| NodeId::Prof(address).to_string()))
+    }
+
     /// The member whose queue this application sits in — whose vouch it
     /// waits on, or whose vouch is in play: the invite link's issuer for
     /// the registration application, the member who took it up for an
@@ -2463,6 +2786,13 @@ impl PostType {
         self.0.id
     }
 
+    /// The post's raw L1 identifier — the `mint` its genesis record
+    /// minted, and the identifier every record toward it names. A
+    /// device binds the acts it signs about this post to it.
+    async fn graph_id(&self) -> &str {
+        &self.0.l1_node_id
+    }
+
     /// When this node was created — when its minting record was
     /// authored, which on a pending node precedes landing.
     async fn created_at(&self) -> DateTime<Utc> {
@@ -2732,6 +3062,47 @@ impl PostType {
     ) -> async_graphql::Result<Option<StanceBundle>> {
         viewer_stance(ctx, self.0.id, pick, include_pending).await
     }
+
+    /// The viewer's own Publish bundle toward this post — the raw sum of
+    /// the records they authored it with, and the clip of that sum.
+    /// Answers only the post's creator; null for every other viewer and
+    /// for no session. Unlike `viewerStance`, it counts payload-marked
+    /// records, since every Publish is one. `includePending: false`
+    /// folds only what has landed on L1.
+    async fn viewer_backing(
+        &self,
+        ctx: &Context<'_>,
+        #[graphql(default = true)] include_pending: bool,
+    ) -> async_graphql::Result<Option<BackingBundle>> {
+        let Some(Some(viewer)) = ctx.data_opt::<Option<Viewer>>() else {
+            return Ok(None);
+        };
+        if viewer.user_id != self.0.author_id {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        let read = crate::stance::publish_backing(
+            pool,
+            viewer.user_id,
+            &self.0.l1_node_id,
+            include_pending,
+        )
+        .await;
+        match read {
+            Ok(sum) => Ok(Some(BackingBundle { sum })),
+            Err(crate::stance::StanceError::Internal(_)) => Ok(None),
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    /// When the viewer saved this post; null when not kept, or with no
+    /// session. What the menus' Save / Unsave row reads.
+    async fn viewer_bookmarked_at(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<DateTime<Utc>>> {
+        viewer_bookmarked_at(ctx, self.0.id).await
+    }
 }
 
 /// The universal threading primitive: an L1 Comment node minted by the
@@ -2742,6 +3113,13 @@ pub struct CommentType(pub postgres_store::content::Comment);
 impl CommentType {
     async fn id(&self) -> Uuid {
         self.0.id
+    }
+
+    /// The comment's raw L1 identifier — the `mint` its genesis record
+    /// minted, and the identifier every record toward it names. A
+    /// device binds the acts it signs about this comment to it.
+    async fn graph_id(&self) -> &str {
+        &self.0.l1_node_id
     }
 
     /// When this node was created — when its minting record was
@@ -2921,6 +3299,14 @@ impl CommentType {
         })
     }
 
+    /// The post this comment's thread hangs under — the target itself for
+    /// a top-level comment, the thread's post for a reply at any depth.
+    /// Null when the chain ends at no post the server holds.
+    async fn post(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<PostType>> {
+        let loader = ctx.data::<DataLoader<crate::loaders::ThreadPostLoader>>()?;
+        Ok(loader.load_one(self.0.id).await?.map(PostType))
+    }
+
     async fn moderation_status(&self) -> ModerationStatus {
         node_moderation_status(SensitiveMarks::of(self.0.sensitive))
     }
@@ -2989,6 +3375,15 @@ impl CommentType {
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<Option<StanceBundle>> {
         viewer_stance(ctx, self.0.id, pick, include_pending).await
+    }
+
+    /// When the viewer saved this comment; null when not kept, or with no
+    /// session. What the comment menus' Save / Unsave row reads.
+    async fn viewer_bookmarked_at(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<DateTime<Utc>>> {
+        viewer_bookmarked_at(ctx, self.0.id).await
     }
 }
 
@@ -3096,8 +3491,9 @@ impl HashtagType {
         };
         let pool = ctx.data::<PgPool>()?;
         match crate::stance::topic_bundle(pool, viewer.user_id, &self.name, include_pending).await {
-            Ok(sum) => Ok(Some(StanceBundle {
-                sum,
+            Ok(read) => Ok(Some(StanceBundle {
+                target: read.node.to_string(),
+                sum: read.sum,
                 pick: pick.map(|p| (p.p_directed.0, p.p_interest.0)),
             })),
             Err(crate::stance::StanceError::BadInput { .. })
@@ -3159,6 +3555,8 @@ pub struct ReferenceClaim {
     pub target_id: String,
     pub relevance: Dimension,
     pub support: Dimension,
+    pub raw_relevance: f64,
+    pub raw_support: f64,
     pub withdrawal_cost: i32,
     pub pending: bool,
 }
@@ -3196,6 +3594,20 @@ impl ReferenceClaim {
     /// Strictly positive on both axes is what makes a mention a vouch.
     async fn support(&self) -> Dimension {
         self.support
+    }
+
+    /// The raw relevance sum, before the clip — beyond `±1` where the
+    /// bundle carries more than the fold shows. A withdrawal's
+    /// counter-records net exactly these sums to zero, so a device
+    /// checks the batch it is asked to sign against them. Not a
+    /// `Dimension`, for the reason `StanceBundle.rawPDirected` is not.
+    async fn raw_relevance(&self) -> f64 {
+        self.raw_relevance
+    }
+
+    /// The raw support sum, before the clip.
+    async fn raw_support(&self) -> f64 {
+        self.raw_support
     }
 
     /// How many counter-records withdrawing this citation stages right
@@ -3536,6 +3948,8 @@ async fn reference_claims(
             target_id: row.target,
             relevance: Dimension(row.relevance),
             support: Dimension(row.support),
+            raw_relevance: row.raw_relevance,
+            raw_support: row.raw_support,
             withdrawal_cost: row.withdrawal_cost.try_into().unwrap_or(i32::MAX),
             pending: row.pending,
         })
@@ -3791,6 +4205,10 @@ pub struct ViewHistoryEdgeFields {
     pub first_seen_at: DateTime<Utc>,
 }
 
+/// One thing on the seen-list.
+pub type ViewHistoryEdge =
+    Edge<String, ViewHistoryItem, ViewHistoryEdgeFields, ViewHistoryEdgeName>;
+
 /// A page of the viewer's seen-list.
 pub type ViewHistoryConnection = Connection<
     String,
@@ -3803,31 +4221,75 @@ pub type ViewHistoryConnection = Connection<
 >;
 
 /// `ViewHistoryConnection`'s connection-level fields: the viewer and the
-/// kinds that served the edges, so the count runs under exactly that
-/// predicate and only when asked.
+/// kinds that served the edges, and — on a list narrowed by a query —
+/// the search request it was narrowed by (None when that request could
+/// match nothing), so the count runs only when asked and under exactly
+/// the predicate the pages ran. `more_people` is the people cap's answer
+/// when the page already read it.
 pub struct ViewHistoryConnectionFields {
     viewer: Uuid,
     kinds: Vec<String>,
+    narrowed: Option<Option<postgres_store::search::SearchRequest>>,
+    more_people: Option<bool>,
 }
 
 #[Object]
 impl ViewHistoryConnectionFields {
-    /// How many things the viewer's seen-list serves under these kinds,
-    /// across every page. Priced at zero like every connection count;
-    /// saturates at [`i32::MAX`].
+    /// How many things the viewer's seen-list serves, across every page —
+    /// narrowed by `query` and `kinds` when given, less the people a
+    /// capped people section leaves behind its door. Priced at zero like
+    /// every connection count; saturates at [`i32::MAX`].
     #[graphql(complexity = 0)]
     async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
         let pool = ctx.data::<PgPool>()?;
-        let total = postgres_store::history::count_view_history(pool, self.viewer, &self.kinds)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let total = match &self.narrowed {
+            None => {
+                postgres_store::history::count_view_history(pool, self.viewer, &self.kinds).await
+            }
+            Some(None) => Ok(0),
+            Some(Some(request)) => {
+                super::query::served_count(
+                    pool,
+                    request,
+                    Some(postgres_store::search::ReaderList::History(self.viewer)),
+                )
+                .await
+            }
+        }
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
+    }
+
+    /// Whether more seen people match than the people section serves —
+    /// the "See all profiles" door. While a narrowed list can stand
+    /// another kind beside its people, the people section serves the
+    /// three people first seen most recently; the same query with
+    /// `kinds: [USER]` serves every match, uncapped. False when the
+    /// section is not capped, and on a list no query narrows.
+    async fn has_more_people(&self, ctx: &Context<'_>) -> async_graphql::Result<bool> {
+        if let Some(more) = self.more_people {
+            return Ok(more);
+        }
+        let Some(Some(request)) = &self.narrowed else {
+            return Ok(false);
+        };
+        let pool = ctx.data::<PgPool>()?;
+        Ok(super::query::people_cap(
+            pool,
+            request,
+            Some(postgres_store::search::ReaderList::History(self.viewer)),
+        )
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        .is_some_and(|cap| cap.more))
     }
 }
 
 /// The kinds a `viewHistory(kinds:)` argument serves: null or empty
 /// narrows nothing; a kind History does not serve is BAD_INPUT.
-fn history_kinds(kinds: Option<&[NodeKind]>) -> async_graphql::Result<Vec<String>> {
+fn history_kinds(
+    kinds: Option<&[NodeKind]>,
+) -> async_graphql::Result<Vec<crate::history::HistoryKind>> {
     use crate::history::HistoryKind;
     let served = |kind: NodeKind| match kind {
         NodeKind::Post => Some(HistoryKind::Post),
@@ -3836,8 +4298,8 @@ fn history_kinds(kinds: Option<&[NodeKind]>) -> async_graphql::Result<Vec<String
         NodeKind::Hashtag => Some(HistoryKind::Hashtag),
         _ => None,
     };
-    let kinds: Vec<HistoryKind> = match kinds {
-        None | Some([]) => HistoryKind::ALL.to_vec(),
+    match kinds {
+        None | Some([]) => Ok(HistoryKind::ALL.to_vec()),
         Some(kinds) => kinds
             .iter()
             .map(|kind| {
@@ -3845,21 +4307,152 @@ fn history_kinds(kinds: Option<&[NodeKind]>) -> async_graphql::Result<Vec<String
                     super::query::bad_input("History serves POST, COMMENT, USER and HASHTAG only")
                 })
             })
-            .collect::<async_graphql::Result<_>>()?,
-    };
-    Ok(kinds.iter().map(|k| k.as_store().to_string()).collect())
+            .collect(),
+    }
 }
 
-/// The seen-list entries, typed, in list order. An entry whose thing
-/// vanished between the read and the load is dropped rather than served
-/// empty.
+/// History kinds as the seen-list's rows name them.
+fn history_store_kinds(kinds: &[crate::history::HistoryKind]) -> Vec<String> {
+    kinds.iter().map(|k| k.as_store().to_string()).collect()
+}
+
+/// History kinds as the search request's `kinds` names them.
+fn history_node_kinds(kinds: &[crate::history::HistoryKind]) -> Vec<NodeKind> {
+    use crate::history::HistoryKind;
+    kinds
+        .iter()
+        .map(|kind| match kind {
+            HistoryKind::Post => NodeKind::Post,
+            HistoryKind::Comment => NodeKind::Comment,
+            HistoryKind::User => NodeKind::User,
+            HistoryKind::Hashtag => NodeKind::Hashtag,
+        })
+        .collect()
+}
+
+impl User {
+    /// `viewHistory(query:)` with a query that is not blank: the search
+    /// request the query makes — the one `search` builds, over the
+    /// `kinds` asked of History — served from the viewer's seen-list by
+    /// the matcher's own statement, which joins the list, orders by
+    /// section and first seeing and stops at the page
+    /// (`search::ReaderList::History`). The people section is capped as
+    /// search's is ([`super::query::people_cap`]), by newest first seeing.
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "the resolver's own page arguments, passed through as it received them"
+    )]
+    async fn narrowed_history(
+        &self,
+        ctx: &Context<'_>,
+        parsed: crate::search::Parsed<'_>,
+        kinds: &[crate::history::HistoryKind],
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<ViewHistoryConnection> {
+        let pool = ctx.data::<PgPool>()?;
+        let backward = last.is_some() || before.is_some();
+        let cursor = match if backward { &before } else { &after } {
+            Some(raw) => Some(
+                crate::history::decode_match_cursor(raw)
+                    .ok_or_else(|| super::query::bad_input("invalid cursor"))?,
+            ),
+            None => None,
+        };
+        let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
+        let node_kinds = history_node_kinds(kinds);
+        let request =
+            super::query::search_request(ctx, parsed, Some(node_kinds.as_slice()), None).await?;
+        let list = Some(postgres_store::search::ReaderList::History(
+            self.identity.id,
+        ));
+        let past_people =
+            !backward && cursor.is_some_and(|c| c.section > postgres_store::search::SECTION_PEOPLE);
+        let cap = match &request {
+            Some(request) if !past_people => super::query::people_cap(pool, request, list)
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?,
+            _ => None,
+        };
+        let window = postgres_store::search::Window {
+            list,
+            people: cap.as_ref().map(|cap| cap.served.as_slice()),
+            ..postgres_store::search::Window::default()
+        };
+        let mut hits = match &request {
+            Some(request) => request
+                .find_in(
+                    pool,
+                    window,
+                    cursor.map(postgres_store::history::HistoryMatchCursor::as_search_cursor),
+                    backward,
+                    limit + 1,
+                )
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?,
+            None => Vec::new(),
+        };
+        let has_more = hits.len() as i64 > limit;
+        if has_more {
+            if backward {
+                hits.remove(0);
+            } else {
+                hits.pop();
+            }
+        }
+        let (has_previous, has_next) = if backward {
+            (has_more, cursor.is_some())
+        } else {
+            (cursor.is_some(), has_more)
+        };
+        let mut connection = ViewHistoryConnection::with_additional_fields(
+            has_previous,
+            has_next,
+            ViewHistoryConnectionFields {
+                viewer: self.identity.id,
+                kinds: history_store_kinds(kinds),
+                more_people: cap.as_ref().map(|cap| cap.more),
+                narrowed: Some(request),
+            },
+        );
+        connection.edges.extend(
+            hydrate_history(
+                pool,
+                hits.into_iter()
+                    .map(|hit| {
+                        let cursor = crate::history::encode_match_cursor(
+                            postgres_store::history::HistoryMatchCursor::of_hit(&hit),
+                        );
+                        let entry = postgres_store::history::SeenEntry {
+                            content_id: hit.node_id,
+                            kind: hit.kind,
+                            first_seen_at: hit.created_at,
+                            name: hit.name,
+                        };
+                        (entry, cursor)
+                    })
+                    .collect(),
+            )
+            .await?,
+        );
+        Ok(connection)
+    }
+}
+
+/// The seen-list entries as edges, typed, in list order, each with its
+/// cursor given: a narrowed list pages on cursors of its own. An entry
+/// whose thing vanished between the read and the load is dropped rather
+/// than served empty.
 async fn hydrate_history(
     pool: &PgPool,
-    entries: Vec<postgres_store::history::SeenEntry>,
-) -> async_graphql::Result<Vec<(postgres_store::history::SeenEntry, ViewHistoryItem)>> {
+    entries: Vec<(postgres_store::history::SeenEntry, String)>,
+) -> async_graphql::Result<Vec<ViewHistoryEdge>> {
     let ids_of = |kinds: &[&str]| -> Vec<Uuid> {
         entries
             .iter()
+            .map(|(e, _)| e)
             .filter(|e| kinds.contains(&e.kind.as_str()))
             .map(|e| e.content_id)
             .collect()
@@ -3875,7 +4468,7 @@ async fn hydrate_history(
             .collect();
     Ok(entries
         .into_iter()
-        .filter_map(|entry| {
+        .filter_map(|(entry, cursor)| {
             let item = match entry.kind.as_str() {
                 "post" => match content.get(&entry.content_id) {
                     Some(crate::nodes::ContentNode::Post(post)) => {
@@ -3898,7 +4491,428 @@ async fn hydrate_history(
                 }),
                 _ => return None,
             };
-            Some((entry, item))
+            Some(Edge::with_additional_fields(
+                cursor,
+                item,
+                ViewHistoryEdgeFields {
+                    first_seen_at: entry.first_seen_at,
+                },
+            ))
+        })
+        .collect())
+}
+
+/// Names the Saved connection `BookmarkConnection`, as the contract does,
+/// rather than after its node type (`NodeConnection`).
+pub struct BookmarkConnectionName;
+
+impl async_graphql::connection::ConnectionNameType for BookmarkConnectionName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "BookmarkConnection".to_string()
+    }
+}
+
+/// Names the Saved edge `BookmarkEdge`.
+pub struct BookmarkEdgeName;
+
+impl async_graphql::connection::EdgeNameType for BookmarkEdgeName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "BookmarkEdge".to_string()
+    }
+}
+
+/// `BookmarkEdge`'s own field: when the viewer kept the thing.
+#[derive(SimpleObject)]
+pub struct BookmarkEdgeFields {
+    /// When the viewer saved this thing — the list's order, newest
+    /// first, and the time an Undo passes back to restore its place.
+    pub bookmarked_at: DateTime<Utc>,
+}
+
+/// One kept thing on the Saved list.
+pub type BookmarkEdge = Edge<String, Node, BookmarkEdgeFields, BookmarkEdgeName>;
+
+/// A page of the viewer's Saved list.
+pub type BookmarkConnection = Connection<
+    String,
+    Node,
+    BookmarkConnectionFields,
+    BookmarkEdgeFields,
+    BookmarkConnectionName,
+    BookmarkEdgeName,
+    async_graphql::connection::DisableNodesField,
+>;
+
+/// `BookmarkConnection`'s connection-level fields: the viewer whose list
+/// served the edges and the kinds it was narrowed to, and — on a list
+/// narrowed by a query — the search request it was narrowed by (None
+/// when that request could match nothing), so the count runs only when
+/// asked and under exactly the predicate the pages ran. `more_people` is
+/// the people cap's answer when the page already read it.
+pub struct BookmarkConnectionFields {
+    viewer: Uuid,
+    kinds: Vec<String>,
+    narrowed: Option<Option<postgres_store::search::SearchRequest>>,
+    more_people: Option<bool>,
+}
+
+#[Object]
+impl BookmarkConnectionFields {
+    /// How many things the viewer's Saved list serves, across every page
+    /// — narrowed by `query` and `kinds` when given, less the people a
+    /// capped people section leaves behind its door. Priced at zero like
+    /// every connection count; saturates at [`i32::MAX`].
+    #[graphql(complexity = 0)]
+    async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
+        let pool = ctx.data::<PgPool>()?;
+        let total = match &self.narrowed {
+            None => {
+                postgres_store::bookmarks::count_bookmarks(pool, self.viewer, &self.kinds).await
+            }
+            Some(None) => Ok(0),
+            Some(Some(request)) => {
+                super::query::served_count(
+                    pool,
+                    request,
+                    Some(postgres_store::search::ReaderList::Saved(self.viewer)),
+                )
+                .await
+            }
+        }
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
+    }
+
+    /// Whether more saved people match than the people section serves —
+    /// the "See all profiles" door. While a narrowed list can stand
+    /// content beside its people, the people section serves its three
+    /// newest saves; the same query with `kinds: [USER]` serves every
+    /// match, uncapped. False when the section is not capped, and on a
+    /// list no query narrows.
+    async fn has_more_people(&self, ctx: &Context<'_>) -> async_graphql::Result<bool> {
+        if let Some(more) = self.more_people {
+            return Ok(more);
+        }
+        let Some(Some(request)) = &self.narrowed else {
+            return Ok(false);
+        };
+        let pool = ctx.data::<PgPool>()?;
+        Ok(super::query::people_cap(
+            pool,
+            request,
+            Some(postgres_store::search::ReaderList::Saved(self.viewer)),
+        )
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        .is_some_and(|cap| cap.more))
+    }
+}
+
+/// The kinds a `kinds` argument narrows Saved to, in the list's own
+/// order: null or empty narrows nothing; a kind Saved never holds is
+/// BAD_INPUT.
+fn saved_kinds(kinds: Option<&[NodeKind]>) -> async_graphql::Result<Vec<NodeKind>> {
+    const HELD: [NodeKind; 3] = [NodeKind::User, NodeKind::Post, NodeKind::Comment];
+    match kinds {
+        None | Some([]) => Ok(HELD.to_vec()),
+        Some(kinds) => {
+            if kinds.iter().any(|kind| !HELD.contains(kind)) {
+                return Err(super::query::bad_input(
+                    "Saved holds USER, POST and COMMENT only",
+                ));
+            }
+            Ok(HELD
+                .into_iter()
+                .filter(|held| kinds.contains(held))
+                .collect())
+        }
+    }
+}
+
+/// Saved kinds as the list's rows name them.
+fn saved_store_kinds(kinds: &[NodeKind]) -> Vec<String> {
+    kinds
+        .iter()
+        .filter_map(|kind| match kind {
+            NodeKind::User => Some("user"),
+            NodeKind::Post => Some("post"),
+            NodeKind::Comment => Some("comment"),
+            _ => None,
+        })
+        .map(str::to_string)
+        .collect()
+}
+
+impl User {
+    /// `bookmarks(query:)` with a query that is not blank: the search
+    /// request the query makes — the one `search` builds, over the
+    /// `kinds` asked of Saved — served from the viewer's Saved list by
+    /// the matcher's own statement, which joins the list, orders by
+    /// section and save time and stops at the page
+    /// (`search::ReaderList::Saved`). The people section is capped as
+    /// search's is ([`super::query::people_cap`]), by newest save.
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "the resolver's own page arguments, passed through as it received them"
+    )]
+    async fn narrowed_bookmarks(
+        &self,
+        ctx: &Context<'_>,
+        parsed: crate::search::Parsed<'_>,
+        kinds: &[NodeKind],
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<BookmarkConnection> {
+        let pool = ctx.data::<PgPool>()?;
+        let backward = last.is_some() || before.is_some();
+        let cursor = match if backward { &before } else { &after } {
+            Some(raw) => Some(
+                crate::bookmarks::decode_match_cursor(raw)
+                    .ok_or_else(|| super::query::bad_input("invalid cursor"))?,
+            ),
+            None => None,
+        };
+        let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
+        let request = super::query::search_request(ctx, parsed, Some(kinds), None).await?;
+        let list = Some(postgres_store::search::ReaderList::Saved(self.identity.id));
+        let past_people =
+            !backward && cursor.is_some_and(|c| c.section > postgres_store::search::SECTION_PEOPLE);
+        let cap = match &request {
+            Some(request) if !past_people => super::query::people_cap(pool, request, list)
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?,
+            _ => None,
+        };
+        let window = postgres_store::search::Window {
+            list,
+            people: cap.as_ref().map(|cap| cap.served.as_slice()),
+            ..postgres_store::search::Window::default()
+        };
+        let mut hits = match &request {
+            Some(request) => request
+                .find_in(
+                    pool,
+                    window,
+                    cursor.map(postgres_store::bookmarks::SavedMatchCursor::as_search_cursor),
+                    backward,
+                    limit + 1,
+                )
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?,
+            None => Vec::new(),
+        };
+        let has_more = hits.len() as i64 > limit;
+        if has_more {
+            if backward {
+                hits.remove(0);
+            } else {
+                hits.pop();
+            }
+        }
+        let (has_previous, has_next) = if backward {
+            (has_more, cursor.is_some())
+        } else {
+            (cursor.is_some(), has_more)
+        };
+        let mut connection = BookmarkConnection::with_additional_fields(
+            has_previous,
+            has_next,
+            BookmarkConnectionFields {
+                viewer: self.identity.id,
+                kinds: saved_store_kinds(kinds),
+                more_people: cap.as_ref().map(|cap| cap.more),
+                narrowed: Some(request),
+            },
+        );
+        connection.edges.extend(
+            hydrate_bookmarks_with(
+                pool,
+                hits.into_iter()
+                    .map(|hit| {
+                        let cursor = crate::bookmarks::encode_match_cursor(
+                            postgres_store::bookmarks::SavedMatchCursor::of_hit(&hit),
+                        );
+                        let bookmark = postgres_store::bookmarks::Bookmark {
+                            content_id: hit.node_id,
+                            kind: hit.kind,
+                            bookmarked_at: hit.created_at,
+                        };
+                        (bookmark, cursor)
+                    })
+                    .collect(),
+            )
+            .await?,
+        );
+        Ok(connection)
+    }
+}
+
+/// Kept things as edges, typed, in list order: one batched read per
+/// kind. A thing that vanished between the read and the load is dropped
+/// rather than served empty.
+pub(crate) async fn hydrate_bookmarks(
+    pool: &PgPool,
+    kept: Vec<postgres_store::bookmarks::Bookmark>,
+) -> async_graphql::Result<Vec<BookmarkEdge>> {
+    hydrate_bookmarks_with(
+        pool,
+        kept.into_iter()
+            .map(|bookmark| {
+                let cursor = crate::bookmarks::encode_cursor(bookmark.cursor());
+                (bookmark, cursor)
+            })
+            .collect(),
+    )
+    .await
+}
+
+/// [`hydrate_bookmarks`] with each edge's cursor given: a narrowed list
+/// pages on cursors of its own.
+async fn hydrate_bookmarks_with(
+    pool: &PgPool,
+    kept: Vec<(postgres_store::bookmarks::Bookmark, String)>,
+) -> async_graphql::Result<Vec<BookmarkEdge>> {
+    let ids_of = |kinds: &[&str]| -> Vec<Uuid> {
+        kept.iter()
+            .map(|(b, _)| b)
+            .filter(|b| kinds.contains(&b.kind.as_str()))
+            .map(|b| b.content_id)
+            .collect()
+    };
+    let content = crate::nodes::resolve_content_many(pool, &ids_of(&["post", "comment"]))
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+    let mut users: std::collections::HashMap<Uuid, store::ActorIdentity> =
+        store::actor_identities_by_ids(pool, &ids_of(&["user"]))
+            .await?
+            .into_iter()
+            .map(|identity| (identity.id, identity))
+            .collect();
+    Ok(kept
+        .into_iter()
+        .filter_map(|(bookmark, cursor)| {
+            let node = match bookmark.kind.as_str() {
+                "post" => match content.get(&bookmark.content_id) {
+                    Some(crate::nodes::ContentNode::Post(post)) => {
+                        Node::Post(PostType(post.clone()))
+                    }
+                    _ => return None,
+                },
+                "comment" => match content.get(&bookmark.content_id) {
+                    Some(crate::nodes::ContentNode::Comment(comment)) => {
+                        Node::Comment(CommentType(comment.clone()))
+                    }
+                    _ => return None,
+                },
+                "user" => Node::Profile(User {
+                    identity: users.remove(&bookmark.content_id)?,
+                    viewer_session: None,
+                }),
+                _ => return None,
+            };
+            Some(Edge::with_additional_fields(
+                cursor,
+                node,
+                BookmarkEdgeFields {
+                    bookmarked_at: bookmark.bookmarked_at,
+                },
+            ))
+        })
+        .collect())
+}
+
+/// Names the hidden-actors connection `HiddenActorConnection`, as the
+/// contract does.
+pub struct HiddenActorConnectionName;
+
+impl async_graphql::connection::ConnectionNameType for HiddenActorConnectionName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "HiddenActorConnection".to_string()
+    }
+}
+
+/// Names the hidden-actors edge `HiddenActorEdge`.
+pub struct HiddenActorEdgeName;
+
+impl async_graphql::connection::EdgeNameType for HiddenActorEdgeName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "HiddenActorEdge".to_string()
+    }
+}
+
+/// `HiddenActorEdge`'s own field: when the viewer hid the actor.
+#[derive(SimpleObject)]
+pub struct HiddenActorEdgeFields {
+    /// When the viewer hid this actor — the list's order, newest first,
+    /// and the moment an Undo of an unhide passes back to restore its place.
+    pub hidden_at: DateTime<Utc>,
+}
+
+/// One hidden actor.
+pub type HiddenActorEdge = Edge<String, Actor, HiddenActorEdgeFields, HiddenActorEdgeName>;
+
+/// A page of the viewer's hidden actors.
+pub type HiddenActorConnection = Connection<
+    String,
+    Actor,
+    HiddenActorConnectionFields,
+    HiddenActorEdgeFields,
+    HiddenActorConnectionName,
+    HiddenActorEdgeName,
+    async_graphql::connection::DisableNodesField,
+>;
+
+/// `HiddenActorConnection`'s connection-level fields: the viewer whose list
+/// served the edges, so the count runs only when asked.
+pub struct HiddenActorConnectionFields {
+    viewer: Uuid,
+}
+
+#[Object]
+impl HiddenActorConnectionFields {
+    /// How many actors the viewer has hidden, across every page — the
+    /// settings row's count. Priced at zero like every connection count;
+    /// saturates at [`i32::MAX`].
+    #[graphql(complexity = 0)]
+    async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
+        let pool = ctx.data::<PgPool>()?;
+        let total = postgres_store::hidden::count_hidden(pool, self.viewer)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
+    }
+}
+
+/// Hidden actors as edges, typed, in list order, through the actor
+/// registry (a keyless applicant is still an actor) — never
+/// `nodes::resolve_target`, which reads an unkeyed account as nothing.
+pub(crate) async fn hydrate_hidden(
+    pool: &PgPool,
+    hidden: Vec<postgres_store::hidden::HiddenActor>,
+) -> async_graphql::Result<Vec<HiddenActorEdge>> {
+    let ids: Vec<Uuid> = hidden.iter().map(|h| h.actor_id).collect();
+    let mut actors: std::collections::HashMap<Uuid, store::ActorIdentity> =
+        store::actor_identities_by_ids(pool, &ids)
+            .await?
+            .into_iter()
+            .map(|identity| (identity.id, identity))
+            .collect();
+    Ok(hidden
+        .into_iter()
+        .filter_map(|row| {
+            let identity = actors.remove(&row.actor_id)?;
+            Some(Edge::with_additional_fields(
+                crate::hidden::encode_cursor(row.cursor()),
+                Actor::User(User {
+                    identity,
+                    viewer_session: None,
+                }),
+                HiddenActorEdgeFields {
+                    hidden_at: row.hidden_at,
+                },
+            ))
         })
         .collect())
 }
@@ -3927,38 +4941,69 @@ pub type SearchConnection = Connection<
     String,
     SearchResult,
     SearchConnectionFields,
-    async_graphql::connection::EmptyFields,
+    SearchEdgeFields,
     SearchConnectionName,
     SearchEdgeName,
     async_graphql::connection::DisableNodesField,
 >;
+
+/// `SearchEdge`'s own field.
+#[derive(SimpleObject)]
+pub struct SearchEdgeFields {
+    /// The viewer's feed score of the result, S(viewer, result)
+    /// (feed-ranking.md §6.1), under `order: RANKED`. Null past the seam —
+    /// a match outside the viewer's slice, or one no live path reaches —
+    /// and on every row under `NEWEST`.
+    pub score: Option<f64>,
+}
 
 /// `SearchConnection`'s connection-level fields. It holds the match
 /// request that served the edges, so the count is resolved under exactly
 /// that predicate and only when asked. `None` is a request that matched
 /// nothing without asking the store — a blank query, a scope naming no
 /// one, a kind filter naming no served kind — whose count is zero
-/// without a query.
+/// without a query. `more_people` is the people cap's answer when the
+/// page already read it; otherwise it is read when asked.
 pub struct SearchConnectionFields {
     pub(crate) request: Option<postgres_store::search::SearchRequest>,
+    pub(crate) more_people: Option<bool>,
 }
 
 #[Object]
 impl SearchConnectionFields {
-    /// How many nodes the query matches in total, across every page,
-    /// independent of the cursor. Priced at zero like every connection
-    /// count; saturates at [`i32::MAX`].
+    /// How many nodes the query serves in total, across every page,
+    /// independent of the cursor: every match, less the people a capped
+    /// people section leaves behind its door. Priced at zero like every
+    /// connection count; saturates at [`i32::MAX`].
     #[graphql(complexity = 0)]
     async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
         let Some(request) = &self.request else {
             return Ok(Some(0));
         };
         let pool = ctx.data::<PgPool>()?;
-        let total = request
-            .count(pool)
+        let total = super::query::served_count(pool, request, None)
             .await
             .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
+    }
+
+    /// Whether more people match than the people section serves — the
+    /// "See all profiles" door. Where the result can stand people beside
+    /// another section, the people section serves its first three by the
+    /// result's own order; the same query with `kinds: [USER]` serves
+    /// every match, uncapped. False when the section is not capped.
+    async fn has_more_people(&self, ctx: &Context<'_>) -> async_graphql::Result<bool> {
+        if let Some(more) = self.more_people {
+            return Ok(more);
+        }
+        let Some(request) = &self.request else {
+            return Ok(false);
+        };
+        let pool = ctx.data::<PgPool>()?;
+        Ok(super::query::people_cap(pool, request, None)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?
+            .is_some_and(|cap| cap.more))
     }
 }
 
@@ -4546,6 +5591,21 @@ impl MediaAttachmentType {
     /// the digest so a reader never infers it from a length.
     async fn digest_algo(&self) -> &str {
         &self.asset.digest_algo
+    }
+
+    /// The upload digest, lowercase hex under `digestAlgo`: the digest of
+    /// the bytes as they arrived, after the metadata strip. It is the
+    /// server's echo of the hash the uploading device took of the bytes it
+    /// sent, and what a placement's manifest witnesses beside `digest`
+    /// (manifest key 5). Equal to `digest` for an asset stored as it
+    /// arrived; the bytes before a re-encode for one that was not.
+    ///
+    /// It belongs to the id this value answers under. Read through
+    /// `uploadMedia`, `completeMediaUpload` or `mediaAttachment(id)`, that
+    /// is the upload the caller named — never the asset a merge resolved
+    /// it to, whose own upload sent other bytes.
+    async fn upload_digest(&self) -> String {
+        hex::encode(&self.asset.upload_digest)
     }
 
     async fn mime_type(&self) -> &str {

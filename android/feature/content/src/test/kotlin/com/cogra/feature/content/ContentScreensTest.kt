@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotDisplayed
@@ -25,8 +26,10 @@ import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.isRoot
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -46,14 +49,27 @@ import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.MediaAssetView
 import com.cogra.core.designsystem.v2.media.DETAIL_CLIP_TAG
 import com.cogra.domain.ModeratedField
+import com.cogra.domain.AuthTokens
+import com.cogra.domain.Outcome
+import com.cogra.domain.saved.SavedWrites
+import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.RecordingSavedRepository
 import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testContentTarget
 import com.cogra.domain.testing.testMentionTarget
 import com.cogra.domain.testing.testPost
 import com.cogra.domain.testing.testReferenceClaim
 import com.cogra.domain.testing.testTopicClaim
+import com.cogra.feature.content.edit.EDIT_COUNT_CHANGED_LINE
+import com.cogra.feature.content.edit.EDIT_SLOW_LINE
+import com.cogra.feature.content.edit.PostEditActions
+import com.cogra.feature.content.edit.PostEditScreen
+import com.cogra.feature.content.edit.PostEditUiState
+import com.cogra.feature.content.edit.WORDS_OVER_CAP_LINE
 import com.cogra.feature.content.reply.ReplyTargetKind
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -87,9 +103,11 @@ class ContentScreensTest {
         onCitePost: (String) -> Unit = {},
         thread: CommentsUiState = CommentsUiState(loading = false),
         onThreadRaised: (String) -> Unit = {},
+        saved: SavedWrites? = null,
     ) {
         compose.setContent {
             FeedScreen(
+                saved = saved,
                 onShare = onShare,
                 stanceControl = { target, tag, node ->
                     onStance(target, tag)
@@ -467,6 +485,53 @@ class ContentScreensTest {
         assertThat(more).isTrue()
     }
 
+    // -- The save row (saved-surface packet, "The save action") --
+
+    private fun savedWrites(repository: RecordingSavedRepository) = SavedWrites(
+        repository,
+        FakeTokenStore().apply { tokens.value = AuthTokens("a", "r", "someone-else") },
+        CoroutineScope(Dispatchers.Unconfined),
+    )
+
+    /** ReaderPostMenu.md:5-11 — Save keeps the post at the tap, and the row then reads Unsave. */
+    @Test
+    fun theFeedMenusSaveKeepsThePostAndTheRowThenReadsUnsave() {
+        val repository = RecordingSavedRepository()
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            viewerId = "someone-else",
+            saved = savedWrites(repository),
+        )
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.save").assertTextEquals("Save")
+        compose.onNodeWithTag("feed.menuSheet.save").performClick()
+        compose.waitForIdle()
+        assertThat(repository.sets).containsExactly("p1" to null)
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.save").assertTextEquals("Unsave")
+    }
+
+    /** RowSigning.md — a save that does not go through reverts, and the card's row says so with Retry. */
+    @Test
+    fun aFailedSaveRevertsAndTheCardsRowSaysRetry() {
+        val repository = RecordingSavedRepository().apply {
+            setAnswers.addLast(Outcome.Failed(java.io.IOException("down")))
+        }
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            viewerId = "someone-else",
+            saved = savedWrites(repository),
+        )
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.save").performClick()
+        compose.waitForIdle()
+        // The card merges its descendants, so the line is found in the unmerged tree.
+        compose.onNodeWithTag("feed_post_p1_row_line", useUnmergedTree = true).assertExists()
+        compose.onNodeWithText("That didn't go through.", useUnmergedTree = true).assertExists()
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.save").assertTextEquals("Save")
+    }
+
     // -- The feed card's ⋮ (`PostCard.jsx:262`) --
 
     /** The rows are `READER_POST_MENU` (`_shared.jsx:376`), on a card. */
@@ -477,10 +542,10 @@ class ContentScreensTest {
             viewerId = "someone-else",
         )
         compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
-        compose.onNodeWithTag("feed_p1_menu_save").assertExists()
-        compose.onNodeWithTag("feed_p1_menu_cite").assertExists()
-        compose.onNodeWithTag("feed_p1_menu_hide").assertExists()
-        compose.onNodeWithTag("feed_p1_menu_license").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.save").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.cite").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.hide").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.license").assertExists()
         compose.onNodeWithTag("feed_p1_menu_edit").assertDoesNotExist()
         compose.onNodeWithTag("feed_p1_menu_remove").assertDoesNotExist()
     }
@@ -499,19 +564,19 @@ class ContentScreensTest {
             onEditPost = { editing = it },
         )
         compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
-        compose.onNodeWithTag("feed_p1_menu_save").assertExists()
-        compose.onNodeWithTag("feed_p1_menu_cite").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.save").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.cite").assertExists()
         compose.onNodeWithTag("feed_p1_menu_sensitive").assertExists()
         compose.onNodeWithTag("feed_p1_menu_remove").assertExists()
-        compose.onNodeWithTag("feed_p1_menu_license").assertExists()
-        compose.onNodeWithTag("feed_p1_menu_hide").assertDoesNotExist()
+        compose.onNodeWithTag("feed.menuSheet.license").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.hide").assertDoesNotExist()
 
-        val save = compose.onNodeWithTag("feed_p1_menu_save").getUnclippedBoundsInRoot().top
-        val cite = compose.onNodeWithTag("feed_p1_menu_cite").getUnclippedBoundsInRoot().top
+        val save = compose.onNodeWithTag("feed.menuSheet.save").getUnclippedBoundsInRoot().top
+        val cite = compose.onNodeWithTag("feed.menuSheet.cite").getUnclippedBoundsInRoot().top
         val edit = compose.onNodeWithTag("feed_p1_menu_edit").getUnclippedBoundsInRoot().top
         val sensitive = compose.onNodeWithTag("feed_p1_menu_sensitive").getUnclippedBoundsInRoot().top
         val remove = compose.onNodeWithTag("feed_p1_menu_remove").getUnclippedBoundsInRoot().top
-        val license = compose.onNodeWithTag("feed_p1_menu_license").getUnclippedBoundsInRoot().top
+        val license = compose.onNodeWithTag("feed.menuSheet.license").getUnclippedBoundsInRoot().top
         assertThat(save.value).isLessThan(cite.value)
         assertThat(cite.value).isLessThan(edit.value)
         assertThat(edit.value).isLessThan(sensitive.value)
@@ -533,7 +598,7 @@ class ContentScreensTest {
             viewerId = null,
         )
         compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
-        compose.onNodeWithTag("feed_p1_menu_cite").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.cite").assertExists()
         compose.onNodeWithTag("feed_p1_menu_edit").assertDoesNotExist()
     }
 
@@ -547,7 +612,7 @@ class ContentScreensTest {
             onCitePost = { cited = it },
         )
         compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
-        compose.onNodeWithTag("feed_p1_menu_cite").performClick()
+        compose.onNodeWithTag("feed.menuSheet.cite").performClick()
         assertThat(cited).isEqualTo("p1")
     }
 
@@ -564,23 +629,28 @@ class ContentScreensTest {
             viewerId = "someone-else",
         )
         compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
-        compose.onNodeWithTag("feed_p1_menu_license").performClick()
-        compose.onNodeWithTag("license_sheet_terms").assertExists()
+        compose.onNodeWithTag("feed.menuSheet.license").performClick()
+        compose.onNodeWithTag("feed.licenseSheet").assertExists()
+        compose.onNodeWithTag("feed.licenseSheet.dragHandle", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("feed.licenseSheet.terms").assertExists()
+        assertAxisRows("feed", "Required for every use", "Not logged")
     }
 
     /**
-     * EVERY CARD'S ROWS ARE ITS OWN. A feed is a list of cards, so the tags
-     * are per post — two cards' rows are never one tag.
+     * ONE SHEET OVER THE FEED (FeedPostMenu.md:3). Every card's rows wear the
+     * one registered `feed.menuSheet`, so only the card the reader asked from
+     * ever has its sheet standing — two cards' rows are never on screen as one.
      */
     @Test
-    fun eachCardsRowsAreScopedToThatCard() {
+    fun onlyTheAskingCardsSheetStandsOverTheFeed() {
         renderFeed(
             FeedUiState(loading = false, posts = listOf(testPost("p1"), testPost("p2"))),
             viewerId = "someone-else",
         )
+        compose.onAllNodesWithTag("feed.menuSheet").assertCountEquals(0)
         compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
-        compose.onNodeWithTag("feed_p1_menu_cite").assertExists()
-        compose.onNodeWithTag("feed_p2_menu_cite").assertDoesNotExist()
+        compose.onAllNodesWithTag("feed.menuSheet").assertCountEquals(1)
+        compose.onAllNodesWithTag("feed.menuSheet.cite").assertCountEquals(1)
     }
 
     /** A REMOVED POST HAS NO MENU AT ALL (`Removed.jsx:5-6`). */
@@ -599,12 +669,11 @@ class ContentScreensTest {
         compose.onNodeIn(feedCard("p1"), "feed.card.menu").assertDoesNotExist()
     }
 
-    // -- Composer --
+    // -- The post edit (EditCompose family) --
 
     private fun renderComposer(
-        state: ComposePostUiState,
+        state: PostEditUiState,
         onSubmit: () -> Unit = {},
-        onLicenseChange: (LicenseChoice) -> Unit = {},
         onOpenSensitive: () -> Unit = {},
         onCloseSensitive: () -> Unit = {},
         onSensitiveChange: (Boolean) -> Unit = {},
@@ -616,6 +685,7 @@ class ContentScreensTest {
         onDoneTuningTag: () -> Unit = {},
         onTagRelevanceChange: (String, Double) -> Unit = { _, _ -> },
         onTagConfidenceChange: (String, Double) -> Unit = { _, _ -> },
+        onUndoTagWithdrawal: (String) -> Unit = {},
         onOpenFinder: () -> Unit = {},
         onCloseFinder: () -> Unit = {},
         onFinderQueryChange: (String) -> Unit = {},
@@ -625,53 +695,48 @@ class ContentScreensTest {
         onDoneTuningReference: () -> Unit = {},
         onReferenceRelevanceChange: (String, Double) -> Unit = { _, _ -> },
         onReferenceSupportChange: (String, Double) -> Unit = { _, _ -> },
-        onConfirmSubmit: (Boolean) -> Unit = {},
-        onDismissConfirm: () -> Unit = {},
-        keyBanner: @Composable () -> Unit = {},
+        onOpenActs: () -> Unit = {},
+        keyCard: @Composable () -> Unit = {},
     ) {
         compose.setContent {
-            ComposePostScreen(
+            PostEditScreen(
                 state = state,
-                onTitleChange = {},
-                onDescriptionChange = {},
-                onBodyChange = {},
-                onLicenseChange = onLicenseChange,
-                onOpenSensitive = onOpenSensitive,
-                onCloseSensitive = onCloseSensitive,
-                onSensitiveChange = onSensitiveChange,
-                onSensitiveReasonChange = onSensitiveReasonChange,
-                onTagInputChange = onTagInputChange,
-                onAddTag = onAddTag,
-                onRemoveTag = onRemoveTag,
-                onTuneTag = onTuneTag,
-                onDoneTuningTag = onDoneTuningTag,
-                onTagRelevanceChange = onTagRelevanceChange,
-                onTagConfidenceChange = onTagConfidenceChange,
-                onOpenFinder = onOpenFinder,
-                onCloseFinder = onCloseFinder,
-                onFinderQueryChange = onFinderQueryChange,
-                onPickReference = onPickReference,
-                onRemoveReference = onRemoveReference,
-                onTuneReference = onTuneReference,
-                onDoneTuningReference = onDoneTuningReference,
-                onReferenceRelevanceChange = onReferenceRelevanceChange,
-                onReferenceSupportChange = onReferenceSupportChange,
-                onSubmit = onSubmit,
-                onConfirmSubmit = onConfirmSubmit,
-                onDismissConfirm = onDismissConfirm,
-                onBack = {},
-                keyBanner = keyBanner,
+                actions = PostEditActions(
+                    onOpenSensitive = onOpenSensitive,
+                    onCloseSheet = onCloseSensitive,
+                    onSensitiveChange = onSensitiveChange,
+                    onSensitiveReasonChange = onSensitiveReasonChange,
+                    onTagInputChange = onTagInputChange,
+                    onAddTag = onAddTag,
+                    onRemoveTag = onRemoveTag,
+                    onTuneTag = onTuneTag,
+                    onDoneTuningTag = onDoneTuningTag,
+                    onTagRelevanceChange = onTagRelevanceChange,
+                    onTagConfidenceChange = onTagConfidenceChange,
+                    onUndoTagWithdrawal = onUndoTagWithdrawal,
+                    onOpenFinder = onOpenFinder,
+                    onCloseFinder = onCloseFinder,
+                    onFinderQueryChange = onFinderQueryChange,
+                    onPickReference = onPickReference,
+                    onRemoveReference = onRemoveReference,
+                    onTuneReference = onTuneReference,
+                    onDoneTuningReference = onDoneTuningReference,
+                    onReferenceRelevanceChange = onReferenceRelevanceChange,
+                    onReferenceSupportChange = onReferenceSupportChange,
+                    onOpenActs = onOpenActs,
+                    onSign = onSubmit,
+                ),
+                keyCard = keyCard,
             )
         }
     }
 
-    // The composer hosts the key-banner slot on its collapsing top — a
-    // keyless writer learns before drafting, not at submit.
+    /** EditCompose.md: without the key, the key-absent seal stands in the commit's place. */
     @Test
-    fun theComposerHostsTheKeyBannerSlot() {
+    fun theKeyAbsentSealTakesTheCommitsPlace() {
         renderComposer(
-            ComposePostUiState(),
-            keyBanner = {
+            PostEditUiState(postId = "p1", body = "Salt maps", keyAbsent = true),
+            keyCard = {
                 Box(
                     Modifier
                         .fillMaxWidth()
@@ -681,21 +746,20 @@ class ContentScreensTest {
             },
         )
         compose.onNodeWithTag("key_banner").assertExists()
+        compose.onNodeWithTag("post_edit_sign").assertDoesNotExist()
     }
 
     /**
      * HT-18. A media post's body IS its gallery, so its edit shows the
-     * pictures and draws no words field: the field it used to draw was
-     * one whose every value the server refuses, and saving it replaced
-     * the media the surface never showed.
+     * picked row — the whole row opens Show all — and draws no words field.
      */
     @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(qualifiers = "+h1600dp")
     @Test
-    fun aMediaPostsEditShowsItsGalleryInsteadOfAWordsField() {
+    fun aMediaPostsEditShowsItsPickedRowInsteadOfAWordsField() {
         renderComposer(
-            ComposePostUiState(
-                editingId = "p1",
+            PostEditUiState(
+                postId = "p1",
                 attachments = listOf(
                     MediaAssetView(
                         id = "m1",
@@ -708,41 +772,36 @@ class ContentScreensTest {
                 ),
             ),
         )
-        compose.onNodeWithTag("compose_media").performScrollTo().assertExists()
-        compose.onNodeWithTag("compose_media_note").performScrollTo().assertExists()
-        compose.onNodeWithTag("compose_body").assertDoesNotExist()
+        compose.onNodeWithTag("post_edit_picked").performScrollTo().assertExists()
+        compose.onNodeWithTag("post_edit_body_rule").performScrollTo().assertExists()
+        compose.onNodeWithTag("post_edit_description").performScrollTo().assertExists()
+        compose.onNodeWithTag("post_edit_words").assertDoesNotExist()
     }
 
-    /** A words post keeps the field its body actually lives in. */
+    /** EditWords.md:7 — a words post keeps its field, and carries no description field. */
     @Test
-    fun aWordsPostsEditKeepsItsWordsField() {
-        renderComposer(ComposePostUiState(editingId = "p1", body = "Salt maps"))
-        compose.onNodeWithTag("compose_body").assertExists()
-        compose.onNodeWithTag("compose_media").assertDoesNotExist()
+    fun theWordsEditCarriesATitleAndNoDescriptionField() {
+        renderComposer(PostEditUiState(postId = "p1", body = "Salt maps", description = "left over"))
+        compose.onNodeWithTag("post_edit_words").assertExists()
+        compose.onNodeWithTag("post_edit_title").assertExists()
+        compose.onNodeWithTag("post_edit_description").assertDoesNotExist()
+        compose.onNodeWithTag("post_edit_picked").assertDoesNotExist()
+    }
+
+    /** EditWords.md: past 5,000 characters the board's own line stands under the body. */
+    @Test
+    fun theWordsCapLineStandsUnderTheBody() {
+        renderComposer(PostEditUiState(postId = "p1", body = "x".repeat(5001), recordStaged = true))
+        compose.onNodeWithText(WORDS_OVER_CAP_LINE).performScrollTo().assertExists()
+        compose.onNodeWithTag("post_edit_sign").assertIsNotEnabled()
     }
 
     // THE EDIT SURFACE'S OWN SENSITIVE ROW (`_shared.jsx:1390`), where the
-    // menu's `Mark as sensitive` lands. A creation marks at its seal
-    // instead, which is where the license it can still choose also lives.
-    @Test
-    fun theEditSurfaceCarriesTheSensitiveRow() {
-        renderComposer(ComposePostUiState(editingId = "p1", body = "Salt maps"))
-        compose.onNodeWithTag("compose_sensitive").performScrollTo().assertExists()
-    }
-
-    /** A creation marks at its seal instead, which is also where the
-     *  license it can still choose lives. */
-    @Test
-    fun aCreationCarriesTheLicenseControlsAndNoSensitiveRow() {
-        renderComposer(ComposePostUiState(body = "Salt maps"))
-        compose.onNodeWithTag("compose_sensitive").assertDoesNotExist()
-    }
-
-    /** The row reads the mark it stands on, and offers the word that moves it. */
+    // menu's `Mark as sensitive` lands.
     @Test
     fun theSensitiveRowReadsTheMarkItStands() {
-        renderComposer(ComposePostUiState(editingId = "p1", body = "Salt maps"))
-        compose.onNodeWithTag("compose_sensitive").performScrollTo().assertExists()
+        renderComposer(PostEditUiState(postId = "p1", body = "Salt maps"))
+        compose.onNodeWithTag("post_edit_sensitive").performScrollTo().assertExists()
         compose.onNodeWithText("Sensitive").assertExists()
         compose.onNodeWithText("Not marked").assertExists()
         compose.onNodeWithText("Mark").assertExists()
@@ -750,10 +809,8 @@ class ContentScreensTest {
 
     @Test
     fun aMarkedPostsRowSaysSoAndOffersTheChange() {
-        renderComposer(
-            ComposePostUiState(editingId = "p1", body = "Salt maps", sensitive = true),
-        )
-        compose.onNodeWithTag("compose_sensitive").performScrollTo().assertExists()
+        renderComposer(PostEditUiState(postId = "p1", body = "Salt maps", sensitive = true))
+        compose.onNodeWithTag("post_edit_sensitive").performScrollTo().assertExists()
         compose.onNodeWithText("Marked").assertExists()
         compose.onNodeWithText("Change").assertExists()
     }
@@ -762,82 +819,58 @@ class ContentScreensTest {
     @Test
     fun theSensitiveRowsActionAsksForTheSheet() {
         var opened = 0
-        renderComposer(
-            ComposePostUiState(editingId = "p1", body = "Salt maps"),
-            onOpenSensitive = { opened++ },
-        )
+        renderComposer(PostEditUiState(postId = "p1", body = "Salt maps"), onOpenSensitive = { opened++ })
         compose.onNodeWithText("Mark").performScrollTo().performClick()
         assertThat(opened).isEqualTo(1)
     }
 
-    /** It is the seal's own sheet — one sheet for every surface that
-     *  marks (ruling 42), so the words are the same in both places. */
+    /** It is the seal's own sheet — one sheet for every surface that marks (ruling 42). */
     @Test
     fun theOpenMarkIsTheSealsOwnSheet() {
+        renderComposer(PostEditUiState(postId = "p1", body = "Salt maps", sensitiveOpen = true))
+        compose.onNodeWithTag("post_edit_sensitive_sheet").assertExists()
+        compose.onNodeWithTag("post_edit_sensitive_switch").assertExists()
+    }
+
+    /** EditCompose.md: the License row shows the license as signed, with the lock and no action. */
+    @Test
+    fun theLicenseRowShowsTheLicenseAsSignedLocked() {
         renderComposer(
-            ComposePostUiState(editingId = "p1", body = "Salt maps", sensitiveOpen = true),
+            PostEditUiState(postId = "p1", body = "Salt maps", license = LicenseChoice(1.0, 0.0)),
         )
-        compose.onNodeWithTag("compose_sensitive_sheet").assertExists()
-        compose.onNodeWithTag("compose_sensitive_switch").assertExists()
-    }
-
-    @Test
-    fun createModeCarriesTheLicenseControls() {
-        var license: LicenseChoice? = null
-        renderComposer(ComposePostUiState(), onLicenseChange = { license = it })
-        compose.onNodeWithTag("license_attribution_none").assertExists()
-        compose.onNodeWithTag("license_provenance_always").performScrollTo().performClick()
-        assertThat(license).isEqualTo(LicenseChoice(attribution = 0.0, provenance = 1.0))
-    }
-
-    // The composer offers the published readings and nothing between
-    // them — a free numeric input would ask an author to price a degree
-    // CoGra has no reading for (platform-guidelines.md §5).
-    @Test
-    fun theComposerOffersOnlyTheNamedTiers() {
-        renderComposer(ComposePostUiState())
-        listOf(
-            "license_attribution_none",
-            "license_attribution_commercial",
-            "license_attribution_always",
-            "license_provenance_none",
-            "license_provenance_commercial",
-            "license_provenance_always",
-        ).forEach { compose.onNodeWithTag(it).assertExists() }
-    }
-
-    @Test
-    fun editModeHidesTheImmutableLicense() {
-        renderComposer(ComposePostUiState(editingId = "p1"))
+        compose.onNodeWithTag("post_edit_license_value").performScrollTo()
+            .assertTextContains("Credit always · Not logged")
+        compose.onNodeWithContentDescription("The license never changes").assertExists()
         compose.onNodeWithTag("license_attribution_none").assertDoesNotExist()
-    }
-
-    @Test
-    fun theErrorStatesRender() {
-        renderComposer(
-            ComposePostUiState(
-                emptyBody = true,
-                refusal = "the server said no",
-                signingFailed = true,
-            ),
-        )
-        compose.onNodeWithTag("compose_empty_body").assertExists()
-        compose.onNodeWithTag("compose_refused").assertExists()
-        compose.onNodeWithTag("compose_signing_failed").assertExists()
     }
 
     /** F2: a refusal reaches the reader in the server's own words. */
     @Test
     fun aRefusalIsShownVerbatim() {
-        renderComposer(ComposePostUiState(refusal = "`x y` is not a legal topic name"))
-        compose.onNodeWithTag("compose_refused")
+        renderComposer(PostEditUiState(postId = "p1", body = "b", refusal = "`x y` is not a legal topic name"))
+        compose.onNodeWithTag("post_edit_problem").performScrollTo()
             .assertTextContains("`x y` is not a legal topic name")
     }
 
+    /** EditCompose.md: the write rule's notice takes the commit's place, and no Retry appears. */
     @Test
-    fun submittingDisablesTheButton() {
-        renderComposer(ComposePostUiState(submitting = true))
-        compose.onNodeWithTag("compose_submit").assertIsNotEnabled()
+    fun theWriteRuleNoticeTakesTheCommitsPlace() {
+        renderComposer(PostEditUiState(postId = "p1", body = "b", recordStaged = true, writeRuleRefused = true))
+        compose.onNodeWithTag("post_edit_write_rule").assertTextContains("You can't sign right now.")
+        compose.onNodeWithTag("post_edit_sign").assertDoesNotExist()
+        compose.onNodeWithText("Retry").assertDoesNotExist()
+    }
+
+    /** EditCompose.md: a press while the signing is out is refused, and Sign the edit never dims. */
+    @Test
+    fun aPressWhileSigningIsRefusedAndNeverDims() {
+        var signs = 0
+        renderComposer(
+            PostEditUiState(postId = "p1", body = "b", recordStaged = true, submitting = true),
+            onSubmit = { signs++ },
+        )
+        compose.onNodeWithTag("post_edit_sign").assertIsEnabled().performClick()
+        assertThat(signs).isEqualTo(0)
     }
 
     // -- Post detail --
@@ -921,7 +954,12 @@ class ContentScreensTest {
             // terms reach this mount, and they stand over the thread's own
             // sheet (design/readme.md:2364).
             licenseShown?.let { license ->
-                LicenseSheet(license = license, onDismiss = { licenseShown = null }, stacked = true)
+                LicenseSheet(
+                    license = license,
+                    onDismiss = { licenseShown = null },
+                    stacked = true,
+                    node = POST_DETAIL / "licenseSheet",
+                )
             }
         }
     }
@@ -1373,8 +1411,41 @@ class ContentScreensTest {
         compose.onNodeWithTag("comment_license_terms_c1").assertDoesNotExist()
 
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_license").performClick()
-        compose.onNodeWithTag("license_sheet_terms").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.license").performClick()
+        compose.onNodeWithTag("postDetail.licenseSheet").assertExists()
+        compose.onNodeWithTag("postDetail.licenseSheet.dragHandle", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("postDetail.licenseSheet.terms").assertExists()
+        // The legacy tags are retired: the registered paths are the only names.
+        compose.onNodeWithTag("license_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("license_sheet_terms").assertDoesNotExist()
+    }
+
+    /** The terms' two rows are the registered keyed `axis` (`credit`, `public-record-of-use`). */
+    @Test
+    fun theDetailsLicenseRowsAreTheRegisteredAxes() {
+        renderDetail(
+            detailFixture(
+                loading = false,
+                post = testPost("p1", license = LicenseChoice(attribution = 1.0, provenance = 0.0)),
+            ),
+        )
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.license").performClick()
+        assertAxisRows("postDetail", "Required for every use", "Not logged")
+    }
+
+    private fun assertAxisRows(prefix: String, creditValue: String, recordValue: String) {
+        val axis = "$prefix.licenseSheet.terms.axis"
+        listOf(
+            Triple("credit", "Credit", creditValue),
+            Triple("public-record-of-use", "Public record of use", recordValue),
+        ).forEach { (key, label, value) ->
+            compose.onNodeWithTag("$axis:$key").assertExists()
+            compose.onNode(hasTestTag("$axis.label") and hasAnyAncestor(hasTestTag("$axis:$key")))
+                .assertTextEquals(label)
+            compose.onNode(hasTestTag("$axis.value") and hasAnyAncestor(hasTestTag("$axis:$key")))
+                .assertTextEquals(value)
+        }
     }
 
     // THE READER'S READINGS, not the author's (`LicenseChooser.jsx:36-49`).
@@ -1389,7 +1460,7 @@ class ContentScreensTest {
             ),
         )
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_license").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.license").performClick()
 
         compose.onNodeWithText("Credit").assertExists()
         compose.onNodeWithText("Required for every use").assertExists()
@@ -1411,8 +1482,9 @@ class ContentScreensTest {
             ),
         )
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_license").performClick()
-        compose.onNodeWithTag("license_sheet_terms_public_domain").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.license").performClick()
+        compose.onNodeWithTag("postDetail.licenseSheet.terms.publicDomain").assertExists()
+        compose.onNodeWithTag("license_sheet_terms_public_domain").assertDoesNotExist()
         // The rows below still spell what it means.
         compose.onNodeWithText("Not required").assertExists()
         compose.onNodeWithText("Not logged").assertExists()
@@ -1426,12 +1498,12 @@ class ContentScreensTest {
             viewerId = "someone-else",
         )
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_save").assertExists()
-        compose.onNodeWithTag("detail_menu_cite").assertExists()
-        compose.onNodeWithTag("detail_menu_hide").assertExists()
-        compose.onNodeWithTag("detail_menu_license").assertExists()
-        compose.onNodeWithTag("detail_menu_edit").assertDoesNotExist()
-        compose.onNodeWithTag("detail_menu_remove").assertDoesNotExist()
+        compose.onNodeWithTag("postDetail.menuSheet.save").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.cite").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.hide").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.license").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.edit").assertDoesNotExist()
+        compose.onNodeWithTag("postDetail.menuSheet.remove").assertDoesNotExist()
     }
 
     /**
@@ -1448,27 +1520,27 @@ class ContentScreensTest {
             onEdit = { editing = it },
         )
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_save").assertExists()
-        compose.onNodeWithTag("detail_menu_cite").assertExists()
-        compose.onNodeWithTag("detail_menu_sensitive").assertExists()
-        compose.onNodeWithTag("detail_menu_remove").assertExists()
-        compose.onNodeWithTag("detail_menu_license").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.save").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.cite").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.markSensitive").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.remove").assertExists()
+        compose.onNodeWithTag("postDetail.menuSheet.license").assertExists()
         // A reader's rows are not on an author's menu.
-        compose.onNodeWithTag("detail_menu_hide").assertDoesNotExist()
+        compose.onNodeWithTag("postDetail.menuSheet.hide").assertDoesNotExist()
 
-        val save = compose.onNodeWithTag("detail_menu_save").getUnclippedBoundsInRoot().top
-        val cite = compose.onNodeWithTag("detail_menu_cite").getUnclippedBoundsInRoot().top
-        val edit = compose.onNodeWithTag("detail_menu_edit").getUnclippedBoundsInRoot().top
-        val sensitive = compose.onNodeWithTag("detail_menu_sensitive").getUnclippedBoundsInRoot().top
-        val remove = compose.onNodeWithTag("detail_menu_remove").getUnclippedBoundsInRoot().top
-        val license = compose.onNodeWithTag("detail_menu_license").getUnclippedBoundsInRoot().top
+        val save = compose.onNodeWithTag("postDetail.menuSheet.save").getUnclippedBoundsInRoot().top
+        val cite = compose.onNodeWithTag("postDetail.menuSheet.cite").getUnclippedBoundsInRoot().top
+        val edit = compose.onNodeWithTag("postDetail.menuSheet.edit").getUnclippedBoundsInRoot().top
+        val sensitive = compose.onNodeWithTag("postDetail.menuSheet.markSensitive").getUnclippedBoundsInRoot().top
+        val remove = compose.onNodeWithTag("postDetail.menuSheet.remove").getUnclippedBoundsInRoot().top
+        val license = compose.onNodeWithTag("postDetail.menuSheet.license").getUnclippedBoundsInRoot().top
         assertThat(save.value).isLessThan(cite.value)
         assertThat(cite.value).isLessThan(edit.value)
         assertThat(edit.value).isLessThan(sensitive.value)
         assertThat(sensitive.value).isLessThan(remove.value)
         assertThat(remove.value).isLessThan(license.value)
 
-        compose.onNodeWithTag("detail_menu_edit").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.edit").performClick()
         assertThat(editing).isEqualTo("p1")
     }
 
@@ -1484,7 +1556,7 @@ class ContentScreensTest {
             onEdit = { editing = it },
         )
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_sensitive").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.markSensitive").performClick()
         assertThat(editing).isEqualTo("p1")
     }
 
@@ -1535,7 +1607,8 @@ class ContentScreensTest {
         renderDetail(detailFixture(loading = false, post = testPost("p1")))
         compose.onNodeWithTag("postDetail.header.menu").performClick()
         compose.onNodeWithTag("comments_sheet").assertDoesNotExist()
-        compose.onNodeWithTag("postDetail.header.menu_sheet").assertExists()
+        // The registered sheet (ReaderPostMenu), never stacked.
+        compose.onNodeWithTag("postDetail.menuSheet").assertExists()
     }
 
     // ONE SHEET, TWO MENUS (`CommentLicense.jsx:9-10`): raised from a
@@ -1553,7 +1626,31 @@ class ContentScreensTest {
         compose.onNodeWithTag("comment_c1_menu").performClick()
         compose.onNodeWithTag("comment_menu_license_c1").performClick()
         compose.onNodeWithTag("comments_sheet").assertExists()
-        compose.onNodeWithTag("license_sheet_terms").assertExists()
+        compose.onNodeWithTag("postDetail.licenseSheet").assertExists()
+        compose.onNodeWithTag("postDetail.licenseSheet.dragHandle", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("postDetail.licenseSheet.terms").assertExists()
+        // The legacy tags are retired: the registered paths are the only names.
+        compose.onNodeWithTag("license_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("license_sheet_terms").assertDoesNotExist()
+        // A comment defaults to public domain: the zero pair's caption wears its registered part.
+        compose.onNodeWithTag("postDetail.licenseSheet.terms.publicDomain").assertExists()
+        compose.onNodeWithTag("license_sheet_terms_public_domain").assertDoesNotExist()
+    }
+
+    /** The comment's stacked terms ride `postDetail.licenseSheet`, their rows the keyed `axis`. */
+    @Test
+    fun aCommentsLicenseRowsAreTheRegisteredAxes() {
+        renderDetail(
+            detailFixture(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(testComment("c1")),
+            ),
+        )
+        openComments()
+        compose.onNodeWithTag("comment_c1_menu").performClick()
+        compose.onNodeWithTag("comment_menu_license_c1").performClick()
+        assertAxisRows("postDetail", "Not required", "Not logged")
     }
 
     // THE INTRODUCED-BUT-INERT LAW (jakob 2026-09-14): a row whose destination
@@ -1565,12 +1662,12 @@ class ContentScreensTest {
             viewerId = "someone-else",
         )
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_save").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.save").performClick()
         // The screen is where it was: the row acted on nothing.
         compose.onNode(isDetailCard()).assertExists()
 
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_hide").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.hide").performClick()
         compose.onNode(isDetailCard()).assertExists()
     }
 
@@ -1647,7 +1744,7 @@ class ContentScreensTest {
             viewerId = "author-1",
         )
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_remove").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.remove").performClick()
         compose.onNodeWithTag("post_remove_confirm").assertExists()
 
         compose.onNodeWithTag("post_remove_confirm_remove").performClick()
@@ -2734,29 +2831,29 @@ class ContentScreensTest {
         // Stateless by design (android/CLAUDE.md "Stateless screens"): the
         // preview reads straight off state.tagInput, so a state carrying
         // the raw text is enough to assert the normalization it renders.
-        renderComposer(ComposePostUiState(tagSection = TagSectionState(input = "#Rust")))
-        compose.onNodeWithTag("compose_tag_preview").assertTextContains("rust", substring = true)
+        renderComposer(PostEditUiState(tagSection = TagSectionState(input = "#Rust")))
+        compose.onNodeWithTag("post_edit_tag_preview").assertTextContains("rust", substring = true)
     }
 
     @Test
     fun typingIntoTheTagFieldReportsTheRawText() {
         var input: String? = null
-        renderComposer(ComposePostUiState(), onTagInputChange = { input = it })
-        compose.onNodeWithTag("compose_tag_input").performTextInput("Rust")
+        renderComposer(PostEditUiState(), onTagInputChange = { input = it })
+        compose.onNodeWithTag("post_edit_tag_input").performTextInput("Rust")
         assertThat(input).isEqualTo("Rust")
     }
 
     @Test
     fun stagedTagsRenderAsRemovableChips() {
-        renderComposer(ComposePostUiState(tagSection = TagSectionState(tags = tagRows("rust", "kotlin"))))
-        compose.onNodeWithTag("compose_tag_rust").assertExists()
-        compose.onNodeWithTag("compose_tag_kotlin").assertExists()
+        renderComposer(PostEditUiState(tagSection = TagSectionState(tags = tagRows("rust", "kotlin"))))
+        compose.onNodeWithTag("post_edit_tag_rust").assertExists()
+        compose.onNodeWithTag("post_edit_tag_kotlin").assertExists()
     }
 
     @Test
     fun aStagedChipOffersARemoveAffordance() {
-        renderComposer(ComposePostUiState(tagSection = TagSectionState(tags = tagRows("rust"))))
-        compose.onNodeWithTag("compose_tag_rust_remove")
+        renderComposer(PostEditUiState(tagSection = TagSectionState(tags = tagRows("rust"))))
+        compose.onNodeWithTag("post_edit_tag_rust_remove")
             .assertExists()
             .assert(hasClickAction())
     }
@@ -2764,51 +2861,51 @@ class ContentScreensTest {
     @Test
     fun reachingTheCapHidesTheEntryFieldAndShowsTheLimit() {
         renderComposer(
-            ComposePostUiState(
+            PostEditUiState(
                 tagSection = TagSectionState(tags = tagRows(*(1..10).map { "tag$it" }.toTypedArray())),
             ),
         )
-        compose.onNodeWithTag("compose_tag_input").assertDoesNotExist()
-        compose.onNodeWithTag("compose_tags_cap").assertExists()
+        compose.onNodeWithTag("post_edit_tag_input").assertDoesNotExist()
+        compose.onNodeWithTag("post_edit_tags_cap").assertExists()
     }
 
     /** F3: tag editing moved ONTO the edit screen — it is no longer hidden there. */
     @Test
     fun theEditScreenCarriesTheTagsSection() {
-        renderComposer(ComposePostUiState(editingId = "p1", tagSection = TagSectionState(tags = tagRows("rust"))))
-        compose.onNodeWithTag("compose_tags").assertExists()
-        compose.onNodeWithTag("compose_tag_rust").assertExists()
-        compose.onNodeWithTag("compose_tag_input").assertExists()
+        renderComposer(PostEditUiState(postId = "p1", tagSection = TagSectionState(tags = tagRows("rust"))))
+        compose.onNodeWithTag("post_edit_tags").assertExists()
+        compose.onNodeWithTag("post_edit_tag_rust").assertExists()
+        compose.onNodeWithTag("post_edit_tag_input").assertExists()
     }
 
     /** F1: the Add action refuses a name L1's atom rule cannot carry. */
     @Test
     fun anIllegalNameDisablesAddAndSaysWhy() {
-        renderComposer(ComposePostUiState(tagSection = TagSectionState(input = "two words")))
-        compose.onNodeWithTag("compose_tag_add").assertIsNotEnabled()
-        compose.onNodeWithTag("compose_tag_illegal").assertExists()
-        compose.onNodeWithTag("compose_tag_preview").assertDoesNotExist()
+        renderComposer(PostEditUiState(tagSection = TagSectionState(input = "two words")))
+        compose.onNodeWithTag("post_edit_tag_add").assertIsNotEnabled()
+        compose.onNodeWithTag("post_edit_tag_illegal").assertExists()
+        compose.onNodeWithTag("post_edit_tag_preview").assertDoesNotExist()
     }
 
     @Test
     fun aNonAsciiNameIsRefusedAtInputTime() {
-        renderComposer(ComposePostUiState(tagSection = TagSectionState(input = "café")))
-        compose.onNodeWithTag("compose_tag_add").assertIsNotEnabled()
-        compose.onNodeWithTag("compose_tag_illegal").assertExists()
+        renderComposer(PostEditUiState(tagSection = TagSectionState(input = "café")))
+        compose.onNodeWithTag("post_edit_tag_add").assertIsNotEnabled()
+        compose.onNodeWithTag("post_edit_tag_illegal").assertExists()
     }
 
     @Test
     fun aLegalNameEnablesAdd() {
-        renderComposer(ComposePostUiState(tagSection = TagSectionState(input = "#Rust")))
-        compose.onNodeWithTag("compose_tag_add").assertIsEnabled()
-        compose.onNodeWithTag("compose_tag_illegal").assertDoesNotExist()
+        renderComposer(PostEditUiState(tagSection = TagSectionState(input = "#Rust")))
+        compose.onNodeWithTag("post_edit_tag_add").assertIsEnabled()
+        compose.onNodeWithTag("post_edit_tag_illegal").assertDoesNotExist()
     }
 
     /** F2: the server's own words, on the chip it named. */
     @Test
     fun aFieldRefusalLandsOnItsChip() {
         renderComposer(
-            ComposePostUiState(
+            PostEditUiState(
                 tagSection = TagSectionState(
                     tags = listOf(
                         TagRow("rust"),
@@ -2817,11 +2914,11 @@ class ContentScreensTest {
                 ),
             ),
         )
-        compose.onNodeWithTag("compose_tag_error_kotlin")
+        compose.onNodeWithTag("post_edit_tag_error_kotlin")
             .assertTextContains("`kotlin` is not a legal topic name: nope")
-        compose.onNodeWithTag("compose_tag_error_rust").assertDoesNotExist()
+        compose.onNodeWithTag("post_edit_tag_error_rust").assertDoesNotExist()
         // Nothing was signed, so nothing claims signing failed.
-        compose.onNodeWithTag("compose_signing_failed").assertDoesNotExist()
+        compose.onNodeWithTag("post_edit_problem").assertDoesNotExist()
     }
 
     /** F6: tapping a chip opens its two parameters. */
@@ -2829,81 +2926,99 @@ class ContentScreensTest {
     fun tappingAChipReportsItForTuning() {
         var tuned: String? = null
         renderComposer(
-            ComposePostUiState(tagSection = TagSectionState(tags = tagRows("rust"))),
+            PostEditUiState(tagSection = TagSectionState(tags = tagRows("rust"))),
             onTuneTag = { tuned = it },
         )
-        compose.onNodeWithTag("compose_tag_rust_open").performScrollTo().performClick()
+        compose.onNodeWithTag("post_edit_tag_rust_open").performScrollTo().performClick()
         assertThat(tuned).isEqualTo("rust")
     }
 
     @Test
     fun theTunedChipShowsBothSliders() {
         renderComposer(
-            ComposePostUiState(tagSection = TagSectionState(tags = tagRows("rust"), tuning = "rust")),
+            PostEditUiState(tagSection = TagSectionState(tags = tagRows("rust"), tuning = "rust")),
         )
-        compose.onNodeWithTag("compose_tag_params").assertExists()
-        compose.onNodeWithTag("compose_tag_params_relevance").assertExists()
-        compose.onNodeWithTag("compose_tag_params_confidence").assertExists()
+        compose.onNodeWithTag("post_edit_tag_params").assertExists()
+        compose.onNodeWithTag("post_edit_tag_params_relevance").assertExists()
+        compose.onNodeWithTag("post_edit_tag_params_confidence").assertExists()
     }
 
-    // -- Signed-action indicator and the multi-action confirm (F4) --
+    // -- The acts foot (ActsFooter; EditComposeUnchanged, EditActs) --
 
+    /** The foot counts every act in the batch: here a tag added and one picked beside it. */
     @Test
-    fun theIndicatorCountsTheMintingRecordAndEachTag() {
-        renderComposer(ComposePostUiState(tagSection = TagSectionState(tags = tagRows("rust", "kotlin"))))
-        compose.onNodeWithTag("compose_signed_actions").assertTextContains("3", substring = true)
-    }
-
-    @Test
-    fun anUnchangedEditStagesNothingAndCannotBeSubmitted() {
+    fun theFootReadsTheLiveCountOfTheBatch() {
         renderComposer(
-            ComposePostUiState(
-                editingId = "p1",
-                body = "same",
-                loadedBody = "same",
+            PostEditUiState(postId = "p1", body = "b", tagSection = TagSectionState(tags = tagRows("rust", "kotlin"))),
+        )
+        compose.onNodeWithTag("post_edit_acts_footer").assertTextContains("You're signing 2 things")
+    }
+
+    /** EditComposeUnchanged.md: an empty batch leaves Sign inert and the foot no control. */
+    @Test
+    fun anEmptyBatchLeavesSignInertAndTheFooterNotAControl() {
+        renderComposer(PostEditUiState(postId = "p1", body = "same"))
+        compose.onNodeWithText("Nothing to sign yet").assertExists()
+        compose.onNodeWithTag("post_edit_acts_footer").assertHasNoClickAction()
+        compose.onNodeWithTag("post_edit_sign").assertIsDisplayed().assertIsNotEnabled()
+    }
+
+    /** A typed-then-reverted field keeps its act staged, so Sign the edit answers. */
+    @Test
+    fun aStagedRecordSignsEvenWithTheFieldsAsTheyStood() {
+        var signs = 0
+        renderComposer(PostEditUiState(postId = "p1", body = "same", recordStaged = true), onSubmit = { signs++ })
+        compose.onNodeWithTag("post_edit_acts_footer").assertTextContains("You're signing 1 thing")
+        compose.onNodeWithTag("post_edit_sign").assertIsEnabled().performClick()
+        assertThat(signs).isEqualTo(1)
+    }
+
+    /** EditActs.md: the foot opens the acts sheet, its title carrying the count. */
+    @Test
+    fun theActsSheetTitleCarriesTheBatchsCount() {
+        var opened = 0
+        renderComposer(
+            PostEditUiState(
+                postId = "p1",
+                body = "b",
+                recordStaged = true,
+                tagSection = TagSectionState(tags = tagRows("rust")),
+            ),
+            onOpenActs = { opened++ },
+        )
+        compose.onNodeWithTag("post_edit_acts_footer").performClick()
+        assertThat(opened).isEqualTo(1)
+    }
+
+    @Test
+    fun theOpenActsSheetListsEveryKindAndSaysTheyLandTogether() {
+        renderComposer(
+            PostEditUiState(
+                postId = "p1",
+                body = "b",
+                recordStaged = true,
+                actsOpen = true,
+                tagSection = TagSectionState(tags = tagRows("rust")),
             ),
         )
-        compose.onNodeWithTag("compose_signed_actions").assertTextContains("0", substring = true)
-        compose.onNodeWithTag("compose_submit").assertIsNotEnabled()
+        compose.onNodeWithText("2 things, signed together").assertExists()
+        compose.onNodeWithTag("post_edit_acts_row_Edit").assertExists()
+        compose.onNodeWithTag("post_edit_acts_row_TagsAdded").assertExists()
+        compose.onNodeWithTag("post_edit_acts_together").assertExists()
     }
 
+    /** EditCompose.md: past 5s the slow line stands under the count. */
     @Test
-    fun theConfirmNamesTheCountAndProceedCarriesTheCheckbox() {
-        var confirmed: Boolean? = null
-        renderComposer(
-            ComposePostUiState(tagSection = TagSectionState(tags = tagRows("rust")), confirmPending = true),
-            onConfirmSubmit = { confirmed = it },
-        )
-        compose.onNodeWithTag("compose_confirm").assertExists()
-        compose.onNodeWithTag("compose_confirm_body").assertTextContains("2", substring = true)
-        compose.onNodeWithTag("compose_confirm_dont_ask").performClick()
-        compose.onNodeWithTag("compose_confirm_proceed").performClick()
-        assertThat(confirmed).isTrue()
+    fun theSlowLineStandsUnderTheCount() {
+        renderComposer(PostEditUiState(postId = "p1", body = "b", recordStaged = true, submitting = true, slow = true))
+        compose.onNodeWithTag("post_edit_acts_footer_subline").assertTextContains(EDIT_SLOW_LINE)
     }
 
+    /** EditCompose.md: a prepared count that changed drops the held press and says so. */
     @Test
-    fun theConfirmProceedsWithoutTheCheckboxByDefault() {
-        var confirmed: Boolean? = null
-        renderComposer(
-            ComposePostUiState(tagSection = TagSectionState(tags = tagRows("rust")), confirmPending = true),
-            onConfirmSubmit = { confirmed = it },
-        )
-        compose.onNodeWithTag("compose_confirm_proceed").performClick()
-        assertThat(confirmed).isFalse()
-    }
-
-    @Test
-    fun cancellingTheConfirmSignsNothing() {
-        var dismissed = false
-        var confirmed = false
-        renderComposer(
-            ComposePostUiState(tagSection = TagSectionState(tags = tagRows("rust")), confirmPending = true),
-            onConfirmSubmit = { confirmed = true },
-            onDismissConfirm = { dismissed = true },
-        )
-        compose.onNodeWithTag("compose_confirm_cancel").performClick()
-        assertThat(dismissed).isTrue()
-        assertThat(confirmed).isFalse()
+    fun theCountLineStandsWhenThePreparedCountDiffered() {
+        renderComposer(PostEditUiState(postId = "p1", body = "b", recordStaged = true, countChanged = true))
+        compose.onNodeWithTag("post_edit_acts_footer_subline").assertTextContains(EDIT_COUNT_CHANGED_LINE)
     }
 
     private fun tagRows(vararg names: String) = names.map { TagRow(it) }
@@ -2921,7 +3036,7 @@ class ContentScreensTest {
             onReference = { referenced += it },
         )
         compose.onNodeWithTag("postDetail.header.menu").performClick()
-        compose.onNodeWithTag("detail_menu_cite").performClick()
+        compose.onNodeWithTag("postDetail.menuSheet.cite").performClick()
         assertThat(referenced).containsExactly("p1")
     }
 
@@ -2946,8 +3061,8 @@ class ContentScreensTest {
     @Test
     fun theComposerOpensTheFinderFromItsAddAction() {
         var opened = false
-        renderComposer(ComposePostUiState(), onOpenFinder = { opened = true })
-        compose.onNodeWithTag("compose_reference_add").performScrollTo().performClick()
+        renderComposer(PostEditUiState(), onOpenFinder = { opened = true })
+        compose.onNodeWithTag("post_edit_reference_add").performScrollTo().performClick()
         assertThat(opened).isTrue()
     }
 
@@ -2955,7 +3070,7 @@ class ContentScreensTest {
     fun theFinderListsWhatResolvedAndPicksOnTap() {
         val picked = mutableListOf<String>()
         renderComposer(
-            ComposePostUiState(
+            PostEditUiState(
                 referenceSection = ReferenceSectionState(
                     finder = ReferenceFinderState(
                         query = "@ada",
@@ -2967,7 +3082,7 @@ class ContentScreensTest {
             ),
             onPickReference = { picked += it.targetId },
         )
-        compose.onNodeWithTag("compose_finder_candidate_u1").performClick()
+        compose.onNodeWithTag("post_edit_finder_candidate_u1").performClick()
         assertThat(picked).containsExactly("u1")
     }
 
@@ -2975,47 +3090,47 @@ class ContentScreensTest {
     @Test
     fun aFinderThatResolvedNothingSaysSoWithoutAnErrorLine() {
         renderComposer(
-            ComposePostUiState(
+            PostEditUiState(
                 referenceSection = ReferenceSectionState(
                     finder = ReferenceFinderState(query = "ad", candidates = emptyList()),
                 ),
             ),
         )
-        compose.onNodeWithTag("compose_finder_empty").assertExists()
-        compose.onNodeWithTag("compose_finder_failed").assertDoesNotExist()
+        compose.onNodeWithTag("post_edit_finder_empty").assertExists()
+        compose.onNodeWithTag("post_edit_finder_failed").assertDoesNotExist()
     }
 
     @Test
     fun aFinderLookupThatFellOverShowsItsOwnLine() {
         renderComposer(
-            ComposePostUiState(
+            PostEditUiState(
                 referenceSection = ReferenceSectionState(
                     finder = ReferenceFinderState(query = "ada", failed = true),
                 ),
             ),
         )
-        compose.onNodeWithTag("compose_finder_failed").assertExists()
-        compose.onNodeWithTag("compose_finder_empty").assertDoesNotExist()
+        compose.onNodeWithTag("post_edit_finder_failed").assertExists()
+        compose.onNodeWithTag("post_edit_finder_empty").assertDoesNotExist()
     }
 
     @Test
     fun theComposerRefusesTheEleventhReferenceInWords() {
         renderComposer(
-            ComposePostUiState(
+            PostEditUiState(
                 referenceSection = ReferenceSectionState(
                     references = (1..10).map { ReferenceRow("u$it", testMentionTarget("a$it")) },
                 ),
             ),
         )
-        compose.onNodeWithTag("compose_references_cap").assertExists()
-        compose.onNodeWithTag("compose_reference_add").assertDoesNotExist()
+        compose.onNodeWithTag("post_edit_references_cap").assertExists()
+        compose.onNodeWithTag("post_edit_reference_add").assertDoesNotExist()
     }
 
     /** Verbatim, on the chip the server named. */
     @Test
     fun aRefusedReferenceChipCarriesTheServersWords() {
         renderComposer(
-            ComposePostUiState(
+            PostEditUiState(
                 referenceSection = ReferenceSectionState(
                     references = listOf(
                         ReferenceRow(
@@ -3027,40 +3142,135 @@ class ContentScreensTest {
                 ),
             ),
         )
-        compose.onNodeWithTag("compose_reference_error_u1")
+        compose.onNodeWithTag("post_edit_reference_error_u1")
             .assertTextEquals("An artifact cannot cite itself.")
     }
 
     /**
-     * The count a withdrawal costs, quoted in the confirm before
-     * anything is staged: the claim served it, so the dialog can name
-     * it the first time it opens (B4).
+     * A citation taken off reads back under its block with Undo, and the
+     * foot counts the withdrawal at the counter-records its claim served
+     * (B4) — Sign is the confirmation, and no dialog asks again (EditActs).
      */
     @Test
-    fun theConfirmQuotesWhatAWithdrawalCosts() {
+    fun aWithdrawnCitationReadsBackAndTheFootCountsItsServedCost() {
         val standing = ReferenceRow("u1", testMentionTarget("ada"), withdrawalCost = 3)
+        var undone: String? = null
         renderComposer(
-            ComposePostUiState(
-                editingId = "p1",
-                confirmPending = true,
+            PostEditUiState(
+                postId = "p1",
+                body = "b",
                 referenceSection = ReferenceSectionState(
                     references = emptyList(),
                     loaded = listOf(standing),
                 ),
             ),
         )
-        compose.onNodeWithTag("compose_confirm_withdrawal").assertExists()
+        compose.onNodeWithText("You're signing 3 things").assertExists()
+        compose.onNodeWithTag("post_edit_withdrawn_reference_u1").performScrollTo()
+            .assertTextContains("Withdrawn: @ada")
+        compose.onNodeWithTag("post_edit_withdrawn_reference_u1_undo").assertExists()
+        assertThat(undone).isNull()
     }
 
-    @Test
-    fun aConfirmWithNoWithdrawalQuotesNoWithdrawalCost() {
-        renderComposer(
-            ComposePostUiState(
-                tagSection = TagSectionState(tags = tagRows("rust")),
-                confirmPending = true,
-            ),
+    // -- The hide row (hidden-actors packet §5.2, §12.2) --
+
+    private fun hiddenSet(repository: com.cogra.domain.testing.RecordingHiddenRepository) =
+        com.cogra.domain.hidden.HiddenSet(
+            repository,
+            FakeTokenStore().apply { tokens.value = AuthTokens("a", "r", "someone-else") },
+            CoroutineScope(Dispatchers.Unconfined),
         )
-        compose.onNodeWithTag("compose_confirm_withdrawal").assertDoesNotExist()
+
+    private val ada = com.cogra.domain.ActorRef("ada-id", "ada")
+
+    private fun twoByAdaOneByBo() = FeedUiState(
+        loading = false,
+        posts = listOf(
+            testPost("p1", author = ada),
+            testPost("p2", author = com.cogra.domain.ActorRef("bo-id", "bo")),
+            testPost("p3", author = ada),
+        ),
+    )
+
+    /** The feed under a hidden set, on a snackbar host the test can read. */
+    private fun renderHiding(
+        repository: com.cogra.domain.testing.RecordingHiddenRepository,
+        host: androidx.compose.material3.SnackbarHostState = androidx.compose.material3.SnackbarHostState(),
+    ) {
+        val store = hiddenSet(repository)
+        compose.setContent {
+            androidx.compose.runtime.CompositionLocalProvider(
+                com.cogra.core.designsystem.LocalSnackbarHostState provides host,
+            ) {
+                FeedScreen(
+                    state = twoByAdaOneByBo(),
+                    onRefresh = {},
+                    onLoadMore = {},
+                    onOpenPost = {},
+                    onOpenActor = {},
+                    onOpenTopic = {},
+                    viewerId = "someone-else",
+                    saved = savedWrites(RecordingSavedRepository()),
+                    hidden = store,
+                    stanceControl = { _, _, _ -> },
+                )
+            }
+        }
+    }
+
+    /** FeedHidden.md:3 — hiding from a card takes the person's rows out; nothing marks the space. */
+    @Test
+    fun hideFromAFeedCardClosesThePersonsRows() {
+        val repository = com.cogra.domain.testing.RecordingHiddenRepository()
+        renderHiding(repository)
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.hide").assertTextEquals("Hide @ada").performClick()
+        compose.waitForIdle()
+
+        // Never asks first: the hide went out at the tap.
+        assertThat(repository.hides).containsExactly("ada-id" to null)
+        compose.onNodeWithTag(feedCard("p1")).assertDoesNotExist()
+        compose.onNodeWithTag(feedCard("p3")).assertDoesNotExist()
+        compose.onNodeWithTag(feedCard("p2")).assertExists()
+    }
+
+    /** FeedHidden.md:11 — the snackbar names the handle, and Undo stands the feed as it was. */
+    @Test
+    fun hideSnackbarNamesTheHandleAndUndoStandsTheFeedAsItWas() {
+        val repository = com.cogra.domain.testing.RecordingHiddenRepository()
+        val host = androidx.compose.material3.SnackbarHostState()
+        renderHiding(repository, host)
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.hide").performClick()
+        compose.waitForIdle()
+        assertThat(host.currentSnackbarData?.visuals?.message)
+            .isEqualTo("@ada is hidden — their posts stay out of your feed.")
+        assertThat(host.currentSnackbarData?.visuals?.actionLabel).isEqualTo("Undo")
+
+        host.currentSnackbarData?.performAction()
+        compose.waitForIdle()
+        assertThat(repository.unhides).containsExactly("ada-id")
+        compose.onNodeWithTag(feedCard("p1")).assertExists()
+        compose.onNodeWithTag(feedCard("p3")).assertExists()
+    }
+
+    /** ReaderPostMenu.md:17, RowSigning.md:21 — a failed hide reverts, and its row says so with Retry. */
+    @Test
+    fun aFailedHideRevertsAndTheRowSaysRetry() {
+        val repository = com.cogra.domain.testing.RecordingHiddenRepository().apply {
+            hideAnswers.addLast(Outcome.Failed(java.io.IOException("down")))
+        }
+        renderHiding(repository)
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
+        compose.onNodeWithTag("feed.menuSheet.hide").performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithTag(feedCard("p1")).assertExists()
+        compose.onNodeWithTag("feed_post_p1_row_line", useUnmergedTree = true).assertExists()
+        // Retry hides again and signs nothing.
+        compose.onNodeWithText("Retry", useUnmergedTree = true).performClick()
+        compose.waitForIdle()
+        assertThat(repository.hides).hasSize(2)
     }
 }
 

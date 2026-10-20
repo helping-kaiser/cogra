@@ -7,21 +7,21 @@
 import type { ApolloClient } from "@apollo/client";
 
 import {
+  CommentParentDocument,
   CommentRepliesDocument,
   CommentSelfMarkDocument,
   FeedPostFragmentDoc,
   PostCommentsDocument,
   PostDetailDocument,
-  PostsDocument,
   PrepareCommentDocument,
   PrepareCommentEditDocument,
   PreparePostDocument,
   PreparePostEditDocument,
   type CommentRepliesQuery,
+  type FeedPostFragment,
   type LandingState,
   type PostCommentsQuery,
   type PostDetailQuery,
-  type PostsQuery,
 } from "@/__generated__/graphql";
 import type { License } from "@/lib/license";
 import type { ReferenceDraft } from "@/lib/references/draft";
@@ -30,7 +30,11 @@ import type { TagDraft } from "@/lib/topics/draft";
 import { failed, fetchOutcome, payloadOutcome, success, type Outcome } from "./outcome";
 import { stagedFromPrepared, type StagedWriteView } from "./writes-api";
 
-export type PostView = PostsQuery["posts"]["edges"][number]["node"];
+/**
+ * A post as a card draws it: the `FeedPost` selection, whichever read wrote
+ * it — the feed's window, or the cache the detail paints from.
+ */
+export type PostView = FeedPostFragment;
 
 /**
  * A comment, as THE THREAD'S OWN read serves it.
@@ -272,30 +276,6 @@ export async function fetchCommentReplies(
   });
 }
 
-export async function fetchPosts(
-  client: ApolloClient,
-  after: string | null = null,
-  options: ListingOptions = {},
-): Promise<Outcome<Page<PostView>>> {
-  const fetched = await fetchOutcome(() =>
-    client.query({
-      query: PostsDocument,
-      variables: {
-        first: CONTENT_PAGE_SIZE,
-        after,
-        includePending: includePendingOf(options),
-      },
-      fetchPolicy: "network-only",
-    }),
-  );
-  if (fetched.kind !== "success") return fetched;
-  const posts = fetched.value.posts;
-  return success({
-    items: posts.edges.map((edge) => edge.node),
-    endCursor: posts.pageInfo.endCursor ?? null,
-    hasNextPage: posts.pageInfo.hasNextPage,
-  });
-}
 
 /**
  * The post as the cache already holds it — the card a feed (or any read that
@@ -411,6 +391,39 @@ export async function fetchCommentSelfMark(
   });
 }
 
+/** How far up a chain the landing walks before it settles for the deepest ancestor it found. */
+const LANDING_DEPTH = 16;
+
+/**
+ * A comment's chain from its top-level ancestor down to itself — what the
+ * thread must unfold for the comment to be on screen. One read per level; a
+ * chain deeper than the bound, or one the read cannot finish, answers with
+ * what it walked so far (the landing then stops at the deepest branch it can
+ * open).
+ */
+export async function fetchCommentChain(
+  client: ApolloClient,
+  id: string,
+): Promise<Outcome<readonly string[]>> {
+  const chain = [id];
+  let current = id;
+  for (let step = 0; step < LANDING_DEPTH; step += 1) {
+    const fetched = await fetchOutcome(() =>
+      client.query({
+        query: CommentParentDocument,
+        variables: { id: current },
+        fetchPolicy: "network-only",
+      }),
+    );
+    if (fetched.kind !== "success") return step === 0 ? fetched : success(chain);
+    const target = fetched.value.comment?.target;
+    if (target?.__typename !== "Comment") return success(chain);
+    current = target.id;
+    chain.unshift(current);
+  }
+  return success(chain);
+}
+
 function liftPrepared(payload: {
   node?: string | null;
   writes?: readonly Parameters<typeof stagedFromPrepared>[0][] | null;
@@ -434,6 +447,13 @@ export async function preparePost(
     /** The author's own sensitive mark. Omitted counts as false. */
     sensitive?: boolean;
     sensitiveReason?: string;
+    /**
+     * The author's backing of their own post — the genesis Publish's
+     * `pDirected`, exactly as the seal's Your backing row shows it (the
+     * wizard pre-fills +0.1; Adjust moves it). Required on the wire: the
+     * server never fills it in. `pInterest` is census-fixed, so no field.
+     */
+    pDirected: number;
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -446,6 +466,7 @@ export async function preparePost(
             description: fields.description,
             content: fields.content,
             license: fields.license,
+            pDirected: fields.pDirected,
             attachments: attachmentInputs(fields.attachments),
             ...sensitiveInput(fields.sensitive, fields.sensitiveReason),
             // The composer's tags are explicit structured input, never
@@ -487,6 +508,14 @@ export async function preparePostEdit(
      * an image post's body with the words in the form and destroy the media.
      */
     attachments: readonly GalleryEntryDraft[];
+    /**
+     * The edit's own pick — the attachment its Publish carries, the value it
+     * ADDS to the post's backing (round 15, PICK-IS-THE-EDGE; post.md §4).
+     * Required here although the wire defaults it to the inert 0: the
+     * required-stance wire says a stance is always stated, never filled in.
+     * `pInterest` is census-fixed at 1 for Publish, so it is no field.
+     */
+    pDirected: number;
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -501,12 +530,40 @@ export async function preparePostEdit(
             content: fields.content,
             attachments: attachmentInputs(fields.attachments),
             ...sensitiveInput(fields.sensitive, fields.sensitiveReason),
+            pDirected: fields.pDirected,
           },
         },
       }),
     (data) => data.preparePostEdit.userErrors,
     (data) => liftPrepared(data.preparePostEdit),
   );
+}
+
+/**
+ * The author's BACKING of their own post: the RAW sum of their Publish
+ * records toward it — the genesis and every edit — the bundle the edit pad's
+ * `Current backing`, `Backing after` and `Walk it all back` read (EditPad.md).
+ * Raw, not clipped: Backing after is `clip(raw sum + pick)`.
+ */
+export type PostBacking = { readonly rawSum: number };
+
+/**
+ * SERVER GAP — THE READ IS MISSING (lane r13web, 2026-10-16). No field serves
+ * the author's Publish bundle toward their own post: `viewerStance` folds the
+ * family the target's class fixes, which for a post is Opinion — rightly, it
+ * is the face's read (PadStanding.md) — and the store's bundle fold excludes
+ * payload-marked records, which every Publish is. The public chronicle
+ * (`records(author:, target:, family: PUBLISH)`) lists landed records but no
+ * pending ones and no fold, so summing it here would be a second, divergent
+ * fold on the client.
+ *
+ * The edit pad is built against this read and answers `null` — "not served" —
+ * until the server grows it; the readouts it feeds stop at a flagged
+ * placeholder rather than guess. When it lands, this takes the client and the
+ * post's id and asks for the field.
+ */
+export async function fetchPostBacking(): Promise<Outcome<PostBacking | null>> {
+  return { kind: "success", value: null };
 }
 
 export async function prepareComment(
@@ -521,10 +578,11 @@ export async function prepareComment(
     attachments?: readonly GalleryEntryDraft[];
     /**
      * Where the author stands on what they answer — the genesis Review's own
-     * pair, which the seal's Adjust sets (ReplySeal / ReplyPad). Omitted, the
-     * server applies the +0.1 policy default to each.
+     * pair, exactly as the seal shows it (pre-filled +0.1 each; ReplySeal /
+     * ReplyPad's Adjust moves it). Required on the wire: the server never
+     * fills it in.
      */
-    stance?: StancePair;
+    stance: StancePair;
     /**
      * The author's own sensitive mark, as ReplySeal's third term row sets it.
      * Stated rather than omitted for the reason an edit states it: the mark is
@@ -560,8 +618,8 @@ export async function prepareComment(
             // Referencing is part of the same gesture, under its own
             // ten-per-batch cap (D7).
             references: referenceInputs(fields.references),
-            pDirected: fields.stance?.pDirected ?? null,
-            pInterest: fields.stance?.pInterest ?? null,
+            pDirected: fields.stance.pDirected,
+            pInterest: fields.stance.pInterest,
           },
         },
       }),

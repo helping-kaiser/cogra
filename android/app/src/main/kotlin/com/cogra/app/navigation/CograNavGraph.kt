@@ -14,6 +14,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -30,6 +31,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.core.util.Consumer
@@ -50,6 +52,7 @@ import androidx.navigation.toRoute
 import com.cogra.app.BuildConfig
 import com.cogra.app.R
 import com.cogra.app.ui.CograBottomBar
+import com.cogra.app.ui.DeviceLockKeeper
 import com.cogra.app.ui.SecurityNoticeHost
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.DataNode
@@ -59,6 +62,7 @@ import com.cogra.core.designsystem.StanceAxes
 import com.cogra.core.designsystem.StanceZeroWords
 import com.cogra.core.designsystem.v2.token.NavTransitions
 import com.cogra.domain.deletion.AccountDeletionState
+import com.cogra.domain.media.CropWindow
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.store.TokenStore
 import com.cogra.feature.auth.LoginRoute
@@ -67,10 +71,12 @@ import com.cogra.feature.auth.RestoreRoute
 import com.cogra.feature.content.ChatsComingSoonRoute
 import com.cogra.feature.content.CommentsReturn
 import com.cogra.feature.content.CommentsScroll
-import com.cogra.feature.content.ComposePostRoute
+import com.cogra.feature.content.edit.PostEditRoute
 import com.cogra.feature.content.wizard.ComposeWizardRoute
 import com.cogra.feature.content.FeedRoute
 import com.cogra.feature.content.PostDetailRoute
+import com.cogra.feature.content.SavedDoors
+import com.cogra.feature.content.SavedRoute
 import com.cogra.feature.content.reply.CommentEditRoute
 import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.content.reply.ReplyTargetKind
@@ -78,6 +84,7 @@ import com.cogra.feature.content.reply.ReplyWizardRoute
 import com.cogra.feature.home.BorrowedViewBandRoute
 import com.cogra.feature.home.DeletionBandRoute
 import com.cogra.feature.home.KeyRestoreBannerRoute
+import com.cogra.feature.home.NewerVersionAnnouncement
 import com.cogra.feature.home.StatusBannersRoute
 import com.cogra.feature.home.VOUCH_CARD
 import com.cogra.feature.home.VouchCardRoute
@@ -86,8 +93,16 @@ import com.cogra.feature.invites.InvitesRoute
 import com.cogra.feature.onboarding.ApplyRoute
 import com.cogra.feature.onboarding.InviteEntryRoute
 import com.cogra.feature.onboarding.KeyCeremonyRoute
+import com.cogra.feature.profile.FramedPicture
 import com.cogra.feature.profile.ProfileEditRoute
 import com.cogra.feature.profile.ProfileRoute
+import com.cogra.feature.profile.SAVED_ORIGIN
+import com.cogra.feature.notifications.BellViewModel
+import com.cogra.feature.notifications.NotificationsRoute
+import com.cogra.feature.notifications.RootBellViewModel
+import com.cogra.feature.profile.NOTIFICATIONS_ORIGIN
+import com.cogra.domain.notifications.NotificationTarget
+import com.cogra.core.designsystem.v2.atom.BandBell
 import com.cogra.feature.profile.avatar.AvatarFlowRoute
 import com.cogra.feature.settings.AboutScreen
 import com.cogra.feature.settings.BackupRoute
@@ -105,6 +120,7 @@ import com.cogra.feature.settings.EmailDoor
 import com.cogra.feature.settings.KeyExportRoute
 import com.cogra.feature.settings.SettingsDoors
 import com.cogra.feature.settings.SettingsRoute
+import com.cogra.feature.settings.WhatsNewRoute
 import com.cogra.feature.stance.StanceControlRoute
 import com.cogra.feature.stance.vouchBackVariant
 import com.cogra.feature.topics.TopicRoute
@@ -151,8 +167,19 @@ data class ComposePost(
     val referenceTargetId: String? = null,
 )
 
+/**
+ * A post's detail. [from] names where the reader came from, which the back
+ * arrow reads (`saved` → `Back to Saved`); [commentId] lands the thread on
+ * that comment, opened over the post (Saved.md), and [aimReply] — a comment
+ * card's comment glyph — opens the reply composer aimed at it.
+ */
 @Serializable
-data class PostDetail(val postId: String)
+data class PostDetail(
+    val postId: String,
+    val from: String? = null,
+    val commentId: String? = null,
+    val aimReply: Boolean = false,
+)
 
 /**
  * The reply wizard, pinned to what it answers (graph.json `ReplyEntry`
@@ -180,22 +207,36 @@ data class EditComment(val commentId: String, val parentTitle: String)
 @Serializable
 data class Topic(val name: String)
 
-/** An actor's profile; a null handle is the viewer's own (the tab). */
+/** An actor's profile; a null handle is the viewer's own (the tab). [from] names the back arrow's origin. */
 @Serializable
-data class Profile(val handle: String? = null)
+data class Profile(val handle: String? = null, val from: String? = null)
+
+/** The reader's Saved list, reached from their own profile's ⋮ (Saved.md). */
+@Serializable
+data object Saved
+
+/**
+ * The reader's notification list, reached from the bell on a root band
+ * (Notifications.md). [from] names the root the bell was tapped on — the slot
+ * the bar keeps lit and the root the back arrow names.
+ */
+@Serializable
+data class Notifications(val from: String = "feed")
 
 @Serializable
 data object ProfileEdit
 
 /**
- * The profile-picture flow (`AvatarCrop` → `AvatarSeal`).
+ * The profile-picture flow (`AvatarCrop`, then `AvatarSeal` or back).
  *
- * Its own destination rather than a step inside the edit form, because it
- * ends in **its own seal**: changing your picture is a signed act in its
- * own right (design/readme.md §13).
+ * The crop's Next has two outcomes (AvatarCrop.md). Off the avatar's change
+ * badge it opens the picture's own seal. Opened from Change picture on the
+ * edit form ([fromEdit]) it brings the picture back to that form, whose one
+ * seal signs it with the fields — and the picture's own seal never opens
+ * (design/readme.md §13).
  */
 @Serializable
-data class AvatarFlow(val uri: String)
+data class AvatarFlow(val uri: String, val fromEdit: Boolean)
 
 @Serializable
 data object Invites
@@ -205,6 +246,10 @@ data object Settings
 
 @Serializable
 data object KeyExport
+
+/** The release chronicle behind Settings' `What's new` row (WhatsNew.md). */
+@Serializable
+data object WhatsNew
 
 /** The interim recovery-code route (DRIFT: the SettingsBackup* boards are the backup-replacement packet's). */
 @Serializable
@@ -385,6 +430,23 @@ private val contentExpiredKey = NavResultKey<String?>("content_expired", null)
 private val profileSavedKey = NavResultKey("profile_saved", false)
 
 /**
+ * The AvatarCrop→ProfileEdit result keys: the picture the crop brings back
+ * to the edit form, and the framing it was left at — `[left, top, right,
+ * bottom]` as fractions of the picture, absent for one never framed.
+ */
+private val framedPictureUriKey = NavResultKey<String?>("framed_picture_uri", null)
+private val framedPictureWindowKey = NavResultKey<FloatArray?>("framed_picture_window", null)
+
+/** A framing as the saved-state handle carries it. */
+private fun CropWindow.toFractions(): FloatArray = floatArrayOf(left, top, right, bottom)
+
+/** The framing back from the handle; anything not four fractions is no framing. */
+private fun FloatArray.toCropWindow(): CropWindow? =
+    if (size == CROP_WINDOW_SIDES) CropWindow(first(), this[1], this[2], last()) else null
+
+private const val CROP_WINDOW_SIDES = 4
+
+/**
  * A destination's own view of one result: what it says, and the lambda
  * that marks it read.
  *
@@ -418,11 +480,10 @@ private fun <T> NavController.reportToCurrent(key: NavResultKey<T>, value: T) {
 /**
  * Reports [value] to the named destination further down the stack.
  *
- * The avatar flow needs this: it is pushed from the edit screen, so
- * [report] hands its result to that screen — which reads no results at
- * all, so a signed picture was answered by nothing. The news belongs to
- * the profile two entries down, whether the reader saves the rest of
- * the edit afterwards or simply walks back.
+ * The avatar flow's own seal answers the profile by name rather than
+ * whatever entry sits under the flow: a signed picture's news belongs to
+ * the profile, and [report] would hand it to whichever screen pushed the
+ * flow, which may read no such result at all.
  */
 private inline fun <reified R : Any, T> NavController.reportTo(key: NavResultKey<T>, value: T) {
     val entry = runCatching { getBackStackEntry<R>() }.getOrNull() ?: return
@@ -600,6 +661,8 @@ private fun CograNavGraphContent(
     // Above the NavHost so the login security notice shows wherever
     // the post-login navigation lands (auth.md "Reuse detection").
     SecurityNoticeHost()
+    // The device lock's start-time duties (sign-out-custody §3.4-§3.5).
+    DeviceLockKeeper()
 
     // The guest prompt behind an account-needing slot (design.md §6):
     // ask, never bounce — the reader picks the auth flow or stays put.
@@ -640,11 +703,26 @@ private fun CograNavGraphContent(
     // no tab; the task flows drop it for their back arrow.
     val onFeedTab = backStackEntry?.destination?.hasRoute(Feed::class) == true
     val onProfile = backStackEntry?.destination?.hasRoute(Profile::class) == true
-    val onOwnProfileTab = onProfile &&
-        backStackEntry?.toRoute<Profile>()?.handle == null
+    // SAVED KEEPS PROFILE LIT (Saved.md, design digest item 51: the
+    // originating root stays lit on a drill-in) — its one door is the
+    // reader's own profile.
+    val onSaved = backStackEntry?.destination?.hasRoute(Saved::class) == true
+    // NOTIFICATIONS KEEPS LIT THE ROOT THE BELL WAS TAPPED ON (Notifications.md:27).
+    val onNotifications = backStackEntry?.destination?.hasRoute(Notifications::class) == true
+    val notificationsFrom = if (onNotifications) backStackEntry?.toRoute<Notifications>()?.from else null
+    val onOwnProfileTab = onSaved ||
+        notificationsFrom == "profile" ||
+        (onProfile && backStackEntry?.toRoute<Profile>()?.handle == null)
     val onPostDetail = backStackEntry?.destination?.hasRoute(PostDetail::class) == true
     val onChatsComingSoon = backStackEntry?.destination?.hasRoute(ChatsComingSoon::class) == true
-    val onReadSurface = onFeedTab || onProfile || onPostDetail || onChatsComingSoon
+    val onReadSurface = onFeedTab || onProfile || onPostDetail || onChatsComingSoon || onSaved || onNotifications
+    // THE BELL'S DOT: one state the whole shell shows, lit only on a root's
+    // fresh load (FeedUnread.md) — each root reads it through its own entry's
+    // `RootBellViewModel`; a guest has no list and no bell.
+    val bellModel: BellViewModel = hiltViewModel()
+    val bellLit by bellModel.lit.collectAsStateWithLifecycle()
+    fun bellFor(from: String): BandBell? =
+        BandBell(lit = bellLit, onOpen = { navController.navigate(Notifications(from)) }).takeIf { signedIn == true }
 
     // The documented tab pattern: pop to the signed-in root saving
     // state, single-top, restoring the target tab's state.
@@ -674,6 +752,9 @@ private fun CograNavGraphContent(
     // The feed's own pulls, counted: the readers that ride the feed (the
     // band, the vouch card) read again with each one.
     var feedPulls by rememberSaveable { mutableIntStateOf(0) }
+    // The bar's Feed slot re-tapped over the feed's own root, counted: the
+    // feed answers each one it has not answered yet.
+    var feedReselects by rememberSaveable { mutableIntStateOf(0) }
     val borrowedViewBand: @Composable () -> Unit = {
         signedIn?.let { signed ->
             BorrowedViewBandRoute(
@@ -717,6 +798,7 @@ private fun CograNavGraphContent(
                         targetLabel = "@${voucher.handle}",
                         node = VOUCH_CARD / "stance",
                         variant = vouchBackVariant(VOUCH_CARD / "stance" / "pad"),
+                        lineFaceInk = MaterialTheme.colorScheme.onTertiaryContainer,
                         onTaken = {
                             openCeremony(voucher.handle, voucher.displayName, voucher.avatar?.url)
                         },
@@ -751,11 +833,21 @@ private fun CograNavGraphContent(
                     node = when {
                         onFeedTab -> DataNode("feed") / "bottomBar"
                         onPostDetail -> DataNode("postDetail") / "bottomBar"
+                        onNotifications -> DataNode("notifications") / "bottomBar"
                         else -> null
                     },
-                    feedSelected = onFeedTab,
+                    feedSelected = onFeedTab || notificationsFrom == "feed",
                     profileSelected = onOwnProfileTab,
-                    onFeed = { toTab(Feed) },
+                    // Over the feed's own root the slot is a re-tap the feed
+                    // answers (Feed.md:85-91); from anywhere else it is the
+                    // way back to the root, at the scroll it was left.
+                    onFeed = {
+                        if (onFeedTab) {
+                            feedReselects += 1
+                        } else {
+                            toTab(Feed)
+                        }
+                    },
                     onCompose = {
                         if (signedIn == true) {
                             navController.navigate(ComposePost())
@@ -867,8 +959,15 @@ private fun CograNavGraphContent(
                 val (commentParent, consumeCommentParent) = entry.navResult(commentParentKey)
                 val (commentsPlace, consumeCommentsPlace) = entry.navResult(commentsPlaceKey)
                 val accountId by authState.accountId.collectAsStateWithLifecycle()
+                // THE BELL LIGHTS ON THIS ROOT'S FRESH LOAD (FeedUnread.md:5):
+                // once per entry, and again on the reader's pull.
+                val rootBell: RootBellViewModel? = if (signedIn == true) hiltViewModel(entry) else null
                 FeedRoute(
                     signedIn = signedIn,
+                    reselectSignal = feedReselects,
+                    // A guest's Report asks them to join instead of raising
+                    // the confirm (ReportConfirm.md:21).
+                    onRequireAccount = { joinPrompt = true }.takeIf { signedIn == false },
                     onReply = { target -> navController.openReplyWizard(target) },
                     onEditComment = { commentId, parentTitle ->
                         navController.navigate(EditComment(commentId, parentTitle))
@@ -925,6 +1024,7 @@ private fun CograNavGraphContent(
                         }
                         null -> null
                     },
+                    bell = bellFor("feed"),
                     refreshSignal = signedResult,
                     onRefreshSignalConsumed = consumeSigned,
                     keyBanner = keyBanner,
@@ -932,8 +1032,16 @@ private fun CograNavGraphContent(
                     deletionBand = deletionBand(DataNode("feed") / "deletionBand"),
                     banners = { statusBanners(actorRestored, consumeRestored) },
                     vouchCard = vouchCard,
-                    onPulled = { feedPulls += 1 },
+                    onPulled = {
+                        feedPulls += 1
+                        rootBell?.pulled()
+                    },
                 )
+                // A newer version, said once per release on a cold open's
+                // feed — to members, applicants and guests alike
+                // (FeedNewerVersion.md).
+                val context = LocalContext.current
+                NewerVersionAnnouncement(onUpdateNow = { openStoreListing(context) })
             }
             composable<VouchedIn> { entry ->
                 val route = entry.toRoute<VouchedIn>()
@@ -952,11 +1060,11 @@ private fun CograNavGraphContent(
             }
             composable<ComposePost> { entry ->
                 val editing = entry.toRoute<ComposePost>().postId != null
-                // Creating a post runs the wizard (D19); editing one
-                // still runs the shipped composer, whose batching is
-                // its own ruled bite. Both live behind the same
-                // destination so the bottom bar's centre action and the
-                // post menu's Edit keep their routes.
+                // Creating a post runs the wizard (D19); editing one runs
+                // the post edit, one screen and one batch (EditCompose).
+                // Both live behind the same destination so the bottom
+                // bar's centre action and the post menu's Edit keep their
+                // routes.
                 if (!editing) {
                     ComposeWizardRoute(
                         referenceTargetId = entry.toRoute<ComposePost>().referenceTargetId,
@@ -985,17 +1093,17 @@ private fun CograNavGraphContent(
                     )
                     return@composable
                 }
-                ComposePostRoute(
-                    postId = entry.toRoute<ComposePost>().postId,
-                    referenceTargetId = entry.toRoute<ComposePost>().referenceTargetId,
-                    // An edit came from its post already and simply
-                    // returns to it, refreshed.
+                // The post edit, one screen and one batch (EditCompose). An
+                // edit came from its post already and simply returns to it,
+                // refreshed, the edit settling.
+                PostEditRoute(
+                    postId = checkNotNull(entry.toRoute<ComposePost>().postId),
                     onSaved = {
                         navController.report(contentSignedKey, true)
                         navController.popBackStack()
                     },
                     onBack = { navController.navigateUp() },
-                    keyBanner = keyBanner,
+                    keyCard = keyBanner,
                     deletionBand = deletionBand(node = null),
                 )
             }
@@ -1005,10 +1113,15 @@ private fun CograNavGraphContent(
                 val (commentParent, consumeCommentParent) = entry.navResult(commentParentKey)
                 val (commentsPlace, consumeCommentsPlace) = entry.navResult(commentsPlaceKey)
                 val accountId by authState.accountId.collectAsStateWithLifecycle()
+                val detailRoute = entry.toRoute<PostDetail>()
                 PostDetailRoute(
-                    postId = entry.toRoute<PostDetail>().postId,
+                    postId = detailRoute.postId,
+                    from = detailRoute.from,
+                    landOn = detailRoute.commentId,
+                    aimReply = detailRoute.aimReply,
                     viewerId = accountId,
                     signedIn = signedIn,
+                    onRequireAccount = { joinPrompt = true }.takeIf { signedIn == false },
                     onEdit = { id -> navController.navigate(ComposePost(id)) },
                     // `ReplyEntry` 5 and 7 — the composer, pinned to
                     // whatever the thread said it answers.
@@ -1139,8 +1252,13 @@ private fun CograNavGraphContent(
                 val (handleChanged, consumeHandleChanged) = entry.navResult(handleChangedKey)
                 val (profileSaved, consumeProfileSaved) = entry.navResult(profileSavedKey)
                 val (actorRestored, consumeRestored) = entry.navResult(actorRestoredKey)
+                // The own profile is a ROOT: its fresh load reads the bell
+                // (Profile.md:41; FeedUnread.md:5). Another actor's is a drill-in.
+                val ownRoot = route.handle == null && signedIn == true
+                if (ownRoot) hiltViewModel<RootBellViewModel>(entry)
                 ProfileRoute(
                     handle = route.handle,
+                    bell = if (ownRoot) bellFor("profile") else null,
                     handleChangedResult = handleChanged,
                     onHandleChangedResultConsumed = consumeHandleChanged,
                     profileSavedResult = profileSaved,
@@ -1164,26 +1282,121 @@ private fun CograNavGraphContent(
                     onVouchedBack = { profile ->
                         openCeremony(profile.handle, profile.displayName.value, profile.avatar?.url)
                     },
+                    // The own ⋮'s Saved row (ProfileOwnMenu.md).
+                    onOpenSaved = { navController.navigate(Saved) },
+                    onRequireAccount = { joinPrompt = true }.takeIf { signedIn == false },
+                    from = route.from,
                 )
             }
-            composable<ProfileEdit> {
+            // NOTIFICATIONS (Notifications.md): reached from the bell on a root
+            // band; every row opens its thing with a back arrow reading `Back to
+            // Notifications`, and the list's own arrow pops to the bell's root.
+            composable<Notifications> { entry ->
+                val route = entry.toRoute<Notifications>()
+                NotificationsRoute(
+                    from = route.from,
+                    onBack = { navController.navigateUp() },
+                    onOpen = { target ->
+                        when (target) {
+                            is NotificationTarget.Post -> navController.navigate(
+                                PostDetail(target.postId, from = NOTIFICATIONS_ORIGIN),
+                            )
+                            is NotificationTarget.Comment -> navController.navigate(
+                                PostDetail(target.postId, from = NOTIFICATIONS_ORIGIN, commentId = target.commentId),
+                            )
+                            is NotificationTarget.Person -> navController.navigate(
+                                Profile(target.handle, from = NOTIFICATIONS_ORIGIN),
+                            )
+                            NotificationTarget.Invites -> navController.navigate(Invites)
+                            NotificationTarget.OwnFeed -> toTab(Feed)
+                        }
+                    },
+                )
+            }
+            // SAVED (Saved.md): reached from the own profile's ⋮, a feed of
+            // every kept thing as its kind's own card; every door opens its
+            // thing with a back arrow reading `Back to Saved`. A post card's
+            // comment count raises the thread over Saved, as over the feed, so
+            // the thread's return is read here the same way.
+            composable<Saved> { entry ->
+                val (commentSigned, consumeCommentSigned) = entry.navResult(commentSignedKey)
+                val (commentParent, consumeCommentParent) = entry.navResult(commentParentKey)
+                val (commentsPlace, consumeCommentsPlace) = entry.navResult(commentsPlaceKey)
+                val accountId by authState.accountId.collectAsStateWithLifecycle()
+                SavedRoute(
+                    onBack = { navController.navigateUp() },
+                    doors = SavedDoors(
+                        onOpenPost = { id -> navController.navigate(PostDetail(id, from = SAVED_ORIGIN)) },
+                        onOpenComment = { postId, commentId, aimReply ->
+                            navController.navigate(
+                                PostDetail(postId, from = SAVED_ORIGIN, commentId = commentId, aimReply = aimReply),
+                            )
+                        },
+                        onOpenActor = { handle -> navController.navigate(Profile(handle, from = SAVED_ORIGIN)) },
+                        onOpenTopic = { name -> navController.navigate(Topic(name)) },
+                    ),
+                    viewerId = accountId,
+                    signedIn = signedIn,
+                    onEditPost = { id -> navController.navigate(ComposePost(id)) },
+                    onCitePost = { id -> navController.navigate(ComposePost(referenceTargetId = id)) },
+                    onReply = { target -> navController.openReplyWizard(target) },
+                    onEditComment = { commentId, parentTitle ->
+                        navController.navigate(EditComment(commentId, parentTitle))
+                    },
+                    onSignInOrJoin = { navController.navigate(Login) },
+                    commentsReturn = CommentsReturn(
+                        scroll = commentsPlace.asCommentsScroll(),
+                        landed = commentSigned,
+                        parentCommentId = commentParent,
+                    ),
+                    onCommentsReturnConsumed = {
+                        consumeCommentSigned()
+                        consumeCommentParent()
+                        consumeCommentsPlace()
+                    },
+                    onCommentsDepart = { scroll ->
+                        navController.reportToCurrent(
+                            commentsPlaceKey,
+                            intArrayOf(scroll.index, scroll.offset),
+                        )
+                    },
+                )
+            }
+            composable<ProfileEdit> { entry ->
+                val (framedUri, consumeFramedUri) = entry.navResult(framedPictureUriKey)
+                val (framedWindow, consumeFramedWindow) = entry.navResult(framedPictureWindowKey)
                 ProfileEditRoute(
                     onSaved = {
                         navController.report(profileSavedKey, true)
                         navController.popBackStack()
                     },
-                    onPicturePicked = { uri -> navController.navigate(AvatarFlow(uri)) },
+                    onPicturePicked = { uri -> navController.navigate(AvatarFlow(uri, fromEdit = true)) },
                     onBack = { navController.navigateUp() },
+                    framedPicture = framedUri?.let { FramedPicture(it, framedWindow?.toCropWindow()) },
+                    onFramedPictureConsumed = {
+                        consumeFramedUri()
+                        consumeFramedWindow()
+                    },
                 )
             }
             composable<AvatarFlow> { entry ->
+                val route = entry.toRoute<AvatarFlow>()
                 AvatarFlowRoute(
-                    uri = entry.toRoute<AvatarFlow>().uri,
+                    uri = route.uri,
                     onSigned = {
                         navController.reportTo<Profile, _>(profileSavedKey, true)
                         navController.popBackStack()
                     },
                     onLeave = { navController.popBackStack() },
+                    onFramed = if (route.fromEdit) {
+                        { window ->
+                            navController.report(framedPictureWindowKey, window?.toFractions())
+                            navController.report(framedPictureUriKey, route.uri)
+                            navController.popBackStack()
+                        }
+                    } else {
+                        null
+                    },
                 )
             }
             composable<Invites> {
@@ -1219,6 +1432,7 @@ private fun CograNavGraphContent(
                             )
                         },
                         onOpenAbout = { navController.navigate(About) },
+                        onOpenWhatsNew = { navController.navigate(WhatsNew) },
                         onOpenDeletion = { door ->
                             navController.navigate(
                                 when (door) {
@@ -1404,6 +1618,15 @@ private fun CograNavGraphContent(
             composable<KeyExport> {
                 // Arriving reveals nothing; the screen's own gate does.
                 KeyExportRoute(onBack = { navController.navigateUp() }, deletionBand = deletionBand(node = null))
+            }
+            composable<WhatsNew> {
+                // Back pops to Settings, which keeps its own scroll — the
+                // About group the row stood in (WhatsNew.md:23).
+                val context = LocalContext.current
+                WhatsNewRoute(
+                    onBack = { navController.navigateUp() },
+                    onUpdateNow = { openStoreListing(context) },
+                )
             }
             composable<ChatsComingSoon> {
                 ChatsComingSoonRoute(onBack = { navController.navigateUp() })

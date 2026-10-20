@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { createHash } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
@@ -12,7 +13,7 @@ import { createTokenStore } from "@/lib/session/token-store";
 import type { Refresher } from "@/lib/session/refresher";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { COMMENT_SCALE, POST_SCALE, TOO_BIG_PICTURE } from "./pick";
-import { runUpload, runVideoUpload, waitingAssets } from "./uploads";
+import { ECHO_MISMATCH, runUpload, runVideoUpload, waitingAssets } from "./uploads";
 import type { AssetUpload, CoverAsset, PickedAsset } from "./wizard";
 
 const mswServer = startMswServer();
@@ -51,8 +52,40 @@ function steps() {
   return { seen, step: (next: AssetUpload) => seen.push(next) };
 }
 
+/** SHA-256 by Node's own crypto — independent of the code under test. */
+function sha256(bytes: Uint8Array): string {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+/** What `encodable()`'s canvas encodes to, and the mocked strip's output, hashed. */
+const ENCODED_DIGEST = sha256(new Uint8Array(4));
+const STRIPPED_DIGEST = sha256(new Uint8Array(12));
+
+/** A finished upload as the device records it: its id and the digests it holds it to. */
+function done(mediaId: string, digest = ENCODED_DIGEST, mime = "image/webp"): AssetUpload {
+  return { kind: "done", mediaId, media: { digest, uploadDigest: digest, mime } };
+}
+
 function clientAnswering(data: unknown): ApolloClient {
   return { mutate: vi.fn(async () => ({ data })) } as unknown as ApolloClient;
+}
+
+/**
+ * A server that records what it was sent and echoes its digest — the
+ * honest echo every finished upload is checked against.
+ */
+async function echoed(id: string, variables: { input: { file: Blob } }) {
+  const digest = sha256(new Uint8Array(await variables.input.file.arrayBuffer()));
+  const mimeType = variables.input.file.type === "video/mp4" ? "video/mp4" : "image/webp";
+  return { id, digest, uploadDigest: digest, mimeType };
+}
+
+function clientEchoing(id: string): ApolloClient {
+  return {
+    mutate: vi.fn(async ({ variables }) => ({
+      data: { uploadMedia: { media: await echoed(id, variables), userErrors: [] } },
+    })),
+  } as unknown as ApolloClient;
 }
 
 /**
@@ -91,10 +124,10 @@ function guardThatRefreshes() {
 function clientUnauthenticatedOnce(id: string): ApolloClient {
   let call = 0;
   return {
-    mutate: vi.fn(async () => {
+    mutate: vi.fn(async ({ variables }) => {
       call += 1;
       if (call === 1) throw unauthenticatedError();
-      return { data: { uploadMedia: { media: { id }, userErrors: [] } } };
+      return { data: { uploadMedia: { media: await echoed(id, variables), userErrors: [] } } };
     }),
   } as unknown as ApolloClient;
 }
@@ -141,17 +174,41 @@ describe("runUpload", () => {
   it("reports encoding, then uploading, then the id", async () => {
     encodable();
     const { seen, step } = steps();
-    const client = clientAnswering({
-      uploadMedia: { media: { id: "media-1" }, userErrors: [] },
-    });
+    const client = clientEchoing("media-1");
 
     await runUpload(client, guard, asset, 4 / 5, step);
 
-    expect(seen).toEqual([
-      { kind: "encoding" },
-      { kind: "uploading" },
-      { kind: "done", mediaId: "media-1" },
-    ]);
+    expect(seen).toEqual([{ kind: "encoding" }, { kind: "uploading" }, done("media-1")]);
+  });
+
+  it("the_upload_echo_returns_the_upload_digest_the_device_computed", async () => {
+    encodable();
+    const { seen, step } = steps();
+
+    await runUpload(clientEchoing("media-1"), guard, asset, 1, step);
+
+    // The digest held is the hash of exactly the bytes that went — computed
+    // here by Node's own crypto over the encoder's output, not by the code
+    // under test.
+    expect(seen.at(-1)).toEqual(done("media-1", ENCODED_DIGEST));
+  });
+
+  it("an_upload_whose_echo_differs_from_the_device_digest_is_refused_before_any_attach", async () => {
+    encodable();
+    const { seen, step } = steps();
+    // The server recorded other bytes — its strip repaired these, or something
+    // between the two changed them.
+    const client = clientAnswering({
+      uploadMedia: {
+        media: { id: "media-1", digest: "ab".repeat(32), uploadDigest: "ab".repeat(32), mimeType: "image/webp" },
+        userErrors: [],
+      },
+    });
+
+    await runUpload(client, guard, asset, 1, step);
+
+    expect(seen.at(-1)).toEqual({ kind: "failed", message: ECHO_MISMATCH, retryable: true });
+    expect(seen.some((s) => s.kind === "done")).toBe(false);
   });
 
   // F2-3: the access token lives in this tab's memory alone, so a tab that
@@ -169,7 +226,7 @@ describe("runUpload", () => {
 
     expect(refresh).toHaveBeenCalledTimes(1);
     expect((client.mutate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(2);
-    expect(seen.at(-1)).toEqual({ kind: "done", mediaId: "media-2" });
+    expect(seen.at(-1)).toEqual(done("media-2"));
   });
 
   it("carries the crop and the shape into the encode", async () => {
@@ -297,7 +354,7 @@ describe("runUpload", () => {
   // board's own sentence still stands for the case that survives oversized.
   it("weighs the ENCODED bytes against the cap, not the picked file", async () => {
     encodable();
-    const client = clientAnswering({ uploadMedia: { media: { id: "m" }, userErrors: [] } });
+    const client = clientEchoing("m");
     const huge: PickedAsset = {
       ...asset,
       file: new Blob([new Uint8Array(new ArrayBuffer(PICTURE_MAX_BYTES + 1)) as BlobPart]),
@@ -306,7 +363,7 @@ describe("runUpload", () => {
 
     await runUpload(client, guard, huge, 1, step);
 
-    expect(seen.at(-1)).toEqual({ kind: "done", mediaId: "m" });
+    expect(seen.at(-1)).toEqual(done("m"));
   });
 
   it("speaks the board's sentence when the encode itself lands over the cap", async () => {
@@ -358,8 +415,11 @@ function mediaFields(id: string, extra: Record<string, unknown> = {}) {
     mimeType: "image/webp",
     options: { __typename: "MediaOptions", aspectRatio: "1:1", durationMs: null },
     coverMedia: null,
+    coverTaken: false,
     state: "READY",
     failureReason: null,
+    digest: ENCODED_DIGEST,
+    uploadDigest: ENCODED_DIGEST,
     ...extra,
   };
 }
@@ -393,11 +453,7 @@ describe("runUpload — waiting for a PROCESSING asset", () => {
 
     await runUpload(apolloClient(), guard, asset, 4 / 5, step, { sleep: noSleep });
 
-    expect(seen).toEqual([
-      { kind: "encoding" },
-      { kind: "uploading" },
-      { kind: "done", mediaId: "m-ready" },
-    ]);
+    expect(seen).toEqual([{ kind: "encoding" }, { kind: "uploading" }, done("m-ready")]);
   });
 
   it("reports processing, then polls until READY", async () => {
@@ -416,11 +472,15 @@ describe("runUpload — waiting for a PROCESSING asset", () => {
       ),
     );
     let polls = 0;
+    const rendition = "cd".repeat(32);
     mswServer.use(
       gqlLink.query("MediaAttachmentStatus", () => {
         polls += 1;
-        const state = polls < 2 ? "PROCESSING" : "READY";
-        return HttpResponse.json({ data: { mediaAttachment: mediaFields("m-slow", { state }) } });
+        // At READY the asset serves its rendition; its upload digest is still
+        // the bytes this device sent.
+        const answer =
+          polls < 2 ? { state: "PROCESSING" } : { state: "READY", digest: rendition };
+        return HttpResponse.json({ data: { mediaAttachment: mediaFields("m-slow", answer) } });
       }),
     );
     const { seen, step } = steps();
@@ -431,7 +491,11 @@ describe("runUpload — waiting for a PROCESSING asset", () => {
       { kind: "encoding" },
       { kind: "uploading" },
       { kind: "processing", mediaId: "m-slow" },
-      { kind: "done", mediaId: "m-slow" },
+      {
+        kind: "done",
+        mediaId: "m-slow",
+        media: { digest: rendition, uploadDigest: ENCODED_DIGEST, mime: "image/webp" },
+      },
     ]);
     expect(polls).toBe(2);
   });
@@ -496,12 +560,12 @@ describe("runVideoUpload", () => {
     upload: { kind: "waiting" },
   };
 
-  /** Answers the cover call and the video call with different ids, in order. */
+  /** Answers the cover call and the video call with different ids, in order, each echoing its bytes. */
   function clientAnsweringInTurn(...ids: readonly string[]): ApolloClient {
     let call = 0;
     return {
-      mutate: vi.fn(async () => ({
-        data: { uploadMedia: { media: { id: ids[call++] }, userErrors: [] } },
+      mutate: vi.fn(async ({ variables }) => ({
+        data: { uploadMedia: { media: await echoed(ids[call++]!, variables), userErrors: [] } },
       })),
     } as unknown as ApolloClient;
   }
@@ -522,8 +586,8 @@ describe("runVideoUpload", () => {
     expect(calls[0]![0].variables.input).toEqual({ file: expect.any(File) });
     expect(calls[0]![0].variables.input.scale).toBeUndefined();
     expect(calls[1]![0].variables.input).toEqual({ file: expect.any(File), scale: "POST" });
-    expect(poster.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-cover" });
-    expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
+    expect(poster.seen.at(-1)).toEqual(done("media-cover"));
+    expect(video.seen.at(-1)).toEqual(done("media-video", STRIPPED_DIGEST, "video/mp4"));
   });
 
   // The cover is a still like any other and takes the same guard: it is the
@@ -537,7 +601,7 @@ describe("runVideoUpload", () => {
     await runVideoUpload(client, healing, clip, cover, steps().step, poster.step, SCALE);
 
     expect(refresh).toHaveBeenCalledTimes(1);
-    expect(poster.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-cover" });
+    expect(poster.seen.at(-1)).toEqual(done("media-cover"));
   });
 
   // A FACELESS CLIP STILL GOES UP. The cover pick is optional, so `null` is a
@@ -559,7 +623,7 @@ describe("runVideoUpload", () => {
     // does; what faceless means is that the placement names no poster at
     // prepare.
     expect(calls[0]![0].variables.input).toEqual({ file: expect.any(File), scale: "COMMENT" });
-    expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
+    expect(video.seen.at(-1)).toEqual(done("media-video", STRIPPED_DIGEST, "video/mp4"));
     // The cover reports nothing at all: there was no cover to report on.
     expect(poster.seen).toEqual([]);
   });
@@ -754,7 +818,7 @@ describe("runVideoUpload", () => {
       SCALE,
     );
 
-    expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
+    expect(video.seen.at(-1)).toEqual(done("media-video", STRIPPED_DIGEST, "video/mp4"));
   });
 
   it("weighs a comment's clip against a comment's cap", async () => {
@@ -793,7 +857,7 @@ describe("runVideoUpload", () => {
       tight,
     );
 
-    expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
+    expect(video.seen.at(-1)).toEqual(done("media-video", STRIPPED_DIGEST, "video/mp4"));
   });
 
   it("reports the compression as the same `encoding` stage, adding no state", async () => {

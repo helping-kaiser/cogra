@@ -41,6 +41,19 @@ describe("StatusBanners", () => {
     window.localStorage.clear();
   });
 
+  it("says a dead device lock once, and Got it puts it away for good", async () => {
+    // PR-62: the sign-in completed, the dead ciphertext was deleted, and the
+    // shell says so in the notice vehicle.
+    server.use(meHandler("MEMBER"));
+    const notices = createSecurityNotices();
+    notices.postLockLost();
+    renderWithProviders(<StatusBanners notices={notices} />, { store: signedInStore() });
+    expect(screen.getByTestId("lock_lost_notice")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("lock_lost_notice_dismiss"));
+    expect(screen.queryByTestId("lock_lost_notice")).not.toBeInTheDocument();
+    expect(notices.lockLost()).toBe(false);
+  });
+
   it("stays quiet for a settled member and starts no poll loop", async () => {
     server.use(meHandler("MEMBER"));
     const { flow } = fakeFlow();

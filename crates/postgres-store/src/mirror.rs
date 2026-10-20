@@ -33,7 +33,10 @@ pub async fn last_ingested_epoch(pool: &PgPool) -> Result<i64, MirrorError> {
 
 /// Appends one published epoch and advances the cursor, atomically. The
 /// cursor is re-read under the transaction so concurrent ingestors cannot
-/// double-append.
+/// double-append. The notification rows the epoch's records address are
+/// written in the same transaction (`notifications::write_for_epoch`), so
+/// they commit with the epoch: a crash between epochs skips none, and a
+/// replay writes none twice.
 ///
 /// A leg's domain, mask, and tier are family-fixed and come from the
 /// census, never from the package (`common::l1::census`). A leg the census
@@ -203,6 +206,14 @@ pub async fn ingest_epoch(pool: &PgPool, package: &EpochPackage) -> Result<(), M
     )
     .execute(&mut *tx)
     .await?;
+    sqlx::query!(
+        "INSERT INTO mirror_epochs (epoch, attested_at) VALUES ($1, $2)",
+        package.epoch,
+        package.attested_at,
+    )
+    .execute(&mut *tx)
+    .await?;
+    crate::notifications::write_for_epoch(&mut tx, package.epoch).await?;
     sqlx::query!(
         "UPDATE mirror_epoch_cursor SET last_epoch = $1 WHERE singleton",
         package.epoch,
@@ -459,6 +470,102 @@ pub async fn record_full(
         payload_witness: row.payload_witness,
         legs,
     }))
+}
+
+/// The records with the given identifiers, with legs, keyed by
+/// identifier. An identifier the mirror does not hold is absent.
+pub async fn records_by_ids(
+    pool: &PgPool,
+    record_ids: &[String],
+) -> Result<std::collections::HashMap<String, RecordFull>, MirrorError> {
+    let rows = sqlx::query_as!(
+        RecordRow,
+        "SELECT record_id, family, author, epoch, act_time, position,
+                payload_marked, payload_witness
+         FROM mirror_records WHERE record_id = ANY($1)",
+        record_ids,
+    )
+    .fetch_all(pool)
+    .await?;
+    let ids: Vec<String> = rows.iter().map(|r| r.record_id.clone()).collect();
+    let mut legs: std::collections::HashMap<String, Vec<RecordLeg>> =
+        std::collections::HashMap::new();
+    for row in legs_for(pool, &ids).await? {
+        legs.entry(row.record_id).or_default().push(row.leg);
+    }
+    Ok(rows
+        .into_iter()
+        .map(|r| {
+            let record = RecordFull {
+                legs: legs.remove(&r.record_id).unwrap_or_default(),
+                record_id: r.record_id.clone(),
+                family: r.family,
+                author: r.author,
+                epoch: r.epoch,
+                act_time: r.act_time,
+                position: r.position,
+                payload_marked: r.payload_marked,
+                payload_witness: r.payload_witness,
+            };
+            (r.record_id, record)
+        })
+        .collect())
+}
+
+/// The attested boundary timestamps of the given epochs, keyed by epoch:
+/// when each epoch's records landed. An epoch the mirror has not ingested
+/// is absent.
+pub async fn epoch_instants(
+    pool: &PgPool,
+    epochs: &[i64],
+) -> Result<std::collections::HashMap<i64, chrono::DateTime<chrono::Utc>>, MirrorError> {
+    Ok(sqlx::query!(
+        "SELECT epoch, attested_at FROM mirror_epochs WHERE epoch = ANY($1)",
+        epochs,
+    )
+    .fetch_all(pool)
+    .await?
+    .into_iter()
+    .map(|row| (row.epoch, row.attested_at))
+    .collect())
+}
+
+/// The oldest ingested epoch the mirror holds no attested instant for, if
+/// any. Ingested epochs are contiguous from 0 to the cursor, so a full
+/// set is a count check; only an incomplete one is searched.
+pub async fn first_epoch_without_instant(pool: &PgPool) -> Result<Option<i64>, MirrorError> {
+    Ok(sqlx::query_scalar!(
+        r#"WITH c AS (SELECT last_epoch FROM mirror_epoch_cursor WHERE singleton)
+           SELECT CASE
+               WHEN (SELECT COUNT(*) FROM mirror_epochs, c
+                     WHERE epoch <= c.last_epoch) = (SELECT last_epoch + 1 FROM c)
+               THEN NULL
+               ELSE (SELECT MIN(s) FROM c, generate_series(0, c.last_epoch) s
+                     WHERE NOT EXISTS (SELECT 1 FROM mirror_epochs e WHERE e.epoch = s))
+           END AS "epoch""#,
+    )
+    .fetch_one(pool)
+    .await?)
+}
+
+/// Records the attested instants of already-ingested epochs, read back
+/// from their published packages. An epoch that already has one keeps it.
+pub async fn record_instants(
+    pool: &PgPool,
+    instants: &[(i64, chrono::DateTime<chrono::Utc>)],
+) -> Result<u64, MirrorError> {
+    let epochs: Vec<i64> = instants.iter().map(|(epoch, _)| *epoch).collect();
+    let at: Vec<chrono::DateTime<chrono::Utc>> = instants.iter().map(|(_, at)| *at).collect();
+    Ok(sqlx::query!(
+        "INSERT INTO mirror_epochs (epoch, attested_at)
+         SELECT * FROM unnest($1::bigint[], $2::timestamptz[])
+         ON CONFLICT (epoch) DO NOTHING",
+        &epochs,
+        &at,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected())
 }
 
 /// One mirror row as the chronicle read selects it, before its legs are
@@ -991,6 +1098,9 @@ pub async fn reset(pool: &PgPool) -> Result<(), MirrorError> {
         .execute(&mut *tx)
         .await?;
     sqlx::query!("DELETE FROM mirror_records")
+        .execute(&mut *tx)
+        .await?;
+    sqlx::query!("DELETE FROM mirror_epochs")
         .execute(&mut *tx)
         .await?;
     sqlx::query!("UPDATE mirror_epoch_cursor SET last_epoch = -1 WHERE singleton")

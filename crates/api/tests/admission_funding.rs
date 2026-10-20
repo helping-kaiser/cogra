@@ -115,6 +115,10 @@ impl L1Boundary for Realization {
             None => self.inner.burn_settlement(ticket).await,
         }
     }
+
+    async fn drop_carriage(&self, act_ids: &[String]) -> Result<u64, BoundaryError> {
+        self.inner.drop_carriage(act_ids).await
+    }
 }
 
 struct Rig {

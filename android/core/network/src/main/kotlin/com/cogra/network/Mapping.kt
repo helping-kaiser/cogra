@@ -35,10 +35,10 @@ import com.cogra.domain.MediaAssetState
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.ModeratedField
 import com.cogra.domain.ModerationState
-import com.cogra.domain.PostView
-import com.cogra.domain.ProfileView
 import com.cogra.domain.Outcome
+import com.cogra.domain.PostView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.ProfileView
 import com.cogra.domain.ReferenceCandidateView
 import com.cogra.domain.ReferenceClaimView
 import com.cogra.domain.ReferenceContentKind
@@ -61,10 +61,10 @@ import com.cogra.network.graphql.fragment.CommentFields
 import com.cogra.network.graphql.fragment.HashtagFields
 import com.cogra.network.graphql.fragment.MediaFields
 import com.cogra.network.graphql.fragment.PostFields
+import com.cogra.network.graphql.fragment.PreparedWriteFields
+import com.cogra.network.graphql.fragment.ProfileFields
 import com.cogra.network.graphql.fragment.ReferenceClaimFields
 import com.cogra.network.graphql.fragment.ReferenceTargetFields
-import com.cogra.network.graphql.fragment.ProfileFields
-import com.cogra.network.graphql.fragment.PreparedWriteFields
 import com.cogra.network.graphql.fragment.StagedWriteFields
 import com.cogra.network.graphql.fragment.UserErrorFields
 import com.cogra.network.graphql.type.LicenseInput
@@ -178,11 +178,17 @@ internal fun StagedWriteFields.toDomain(): StagedWriteView = StagedWriteView(
     recordId = record?.id,
 )
 
-internal fun PreparedWriteFields.toDomain(): PreparedWriteView = PreparedWriteView(
+/**
+ * A prepared write for the signer. [carried] is read by the two prepares that
+ * can carry — the post and the stance (`PreparedWrite.carried`); every other
+ * prepare stages for signing now.
+ */
+internal fun PreparedWriteFields.toDomain(carried: Boolean = false): PreparedWriteView = PreparedWriteView(
     id = id,
     family = family.toDomain(),
     canonicalProposal = Base64.getDecoder().decode(canonicalProposal),
     gcAfterEpochs = gcAfterEpochs,
+    carried = carried,
 )
 
 /** The viewer's own application row. */
@@ -202,6 +208,7 @@ internal fun ApplicationFields.toInfo(): ApplicationInfo = ApplicationInfo(
     keyAttached = keyAttached,
     approvedAt = approvedAt,
     landedAt = landedAt,
+    graphId = graphId,
 )
 
 /** An unknown status hides the value, like REDACTED. */
@@ -224,6 +231,7 @@ internal fun ProfileFields.toDomain(): ProfileView = ProfileView(
     websiteUrl = ModeratedField(websiteUrl.value, websiteUrl.status.toDomain()),
     avatar = avatar?.mediaFields?.toDomain(),
     updatedAt = updatedAt,
+    viewerBookmarkedAt = viewerBookmarkedAt,
 )
 
 /**
@@ -270,17 +278,30 @@ internal fun MediaFields.CoverMedia.toDomain(): MediaAssetView = MediaAssetView(
  * they are not on [MediaFields] itself).
  */
 internal fun UploadMediaMutation.Media.toDomain(): MediaAssetView =
-    mediaFields.toDomain().copy(state = state.toDomain(), failureReason = failureReason)
+    mediaFields.toDomain().copy(
+        state = state.toDomain(),
+        failureReason = failureReason,
+        digest = digest,
+        uploadDigest = uploadDigest,
+    )
 
 /** See [UploadMediaMutation.Media.toDomain] — same shape, the resumable path's payload. */
 internal fun CompleteMediaUploadMutation.Media.toDomain(): MediaAssetView =
-    mediaFields.toDomain().copy(state = state.toDomain(), failureReason = failureReason)
+    mediaFields.toDomain().copy(
+        state = state.toDomain(),
+        failureReason = failureReason,
+        digest = digest,
+        uploadDigest = uploadDigest,
+    )
 
-/** The poll's own lean answer — just the gate's question, per `media.graphql`'s comment on the query. */
+/** The poll's own lean answer — the gate's question and the intent check's, per `media.graphql`. */
 internal fun MediaAttachmentQuery.MediaAttachment.toDomain(): MediaReadiness = MediaReadiness(
     id = id,
     state = state.toDomain(),
     failureReason = failureReason,
+    digest = digest,
+    uploadDigest = uploadDigest,
+    mimeType = mimeType,
 )
 
 internal fun PostFields.Title.toDomain() = ModeratedField(value, status.toDomain())
@@ -384,6 +405,8 @@ internal fun ReferenceClaimFields.toDomain(): ReferenceClaimView = ReferenceClai
     relevance = relevance,
     support = support,
     withdrawalCost = withdrawalCost,
+    rawRelevance = rawRelevance,
+    rawSupport = rawSupport,
     pending = pending,
 )
 
@@ -418,6 +441,7 @@ internal fun PostFields.toDomain(): PostView = PostView(
     attachments = attachments.map { it.mediaFields.toDomain() },
     attachmentsStatus = attachmentsStatus.toDomain(),
     moderation = moderationStatus.toDomain(),
+    viewerBookmarkedAt = viewerBookmarkedAt,
 )
 
 internal fun CommentFields.toDomain(): CommentView = CommentView(
@@ -437,6 +461,7 @@ internal fun CommentFields.toDomain(): CommentView = CommentView(
     moderation = moderationStatus.toDomain(),
     sensitiveSelfMark = sensitiveSelfMark,
     sensitiveReason = sensitiveReason,
+    viewerBookmarkedAt = viewerBookmarkedAt,
 )
 
 internal fun LicenseChoice.toInput(): LicenseInput = LicenseInput(

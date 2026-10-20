@@ -1,0 +1,11 @@
+# The content report (api-spec.md `sendReport`): the confirm sheet's commit,
+# a mail to the people who run CoGra naming the reporter, the reported thing
+# and the time. `reportedAt` is null exactly when a userError refused it.
+mutation SendReport($target: UUID!) {
+  sendReport(input: { target: $target }) {
+    reportedAt
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}

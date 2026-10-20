@@ -150,8 +150,8 @@ class PostDetailViewModelTest {
             tags: List<TagClaim>,
             references: List<ReferenceClaim>,
             attachments: List<AttachmentClaim>,
-            pDirected: Double?,
-            pInterest: Double?,
+            pDirected: Double,
+            pInterest: Double,
             sensitive: Boolean,
             sensitiveReason: String?,
         ): Outcome<PreparedContentView> {
@@ -184,8 +184,8 @@ class PostDetailViewModelTest {
         override suspend fun prepareTag(
             target: String,
             name: String,
-            pDirected: Double?,
-            pInterest: Double?,
+            pDirected: Double,
+            pInterest: Double,
         ): Outcome<List<PreparedWriteView>> {
             calls += TagCall(target, name, pDirected, pInterest)
             return outcomeFor(name) ?: Outcome.Success(listOf(sealer.stage(Family.TAG)))
@@ -208,8 +208,8 @@ class PostDetailViewModelTest {
         override suspend fun prepareReference(
             artifact: String,
             target: String,
-            relevance: Double?,
-            support: Double?,
+            relevance: Double,
+            support: Double,
         ): Outcome<List<PreparedWriteView>> {
             added += ReferenceCall(artifact, target, relevance, support)
             return Outcome.Success(listOf(sealer.stage(Family.REFERENCE)))

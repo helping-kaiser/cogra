@@ -20,10 +20,15 @@
 // the whole counter-record batch, and the gesture signs every element of
 // it in one pass — the reader agreed to the batch once, at its stated
 // cost, so the signing is not re-asked per record (api-spec.md "A
-// prepare may stage a batch"). The batch is signed in order and stops at
-// the first element that does not complete: a partly-signed batch leaves
-// the rest staged for `resume()`, which is the same recovery every other
-// multi-write gesture in the app relies on.
+// prepare may stage a batch"). A write left mid-handshake stays staged
+// for `resume()`, the recovery every other multi-write gesture relies on.
+//
+// THE SIGNER CHECKS THE BATCH AGAINST WHAT WAS ON SCREEN (intent.ts). A
+// pick must come back as exactly that pair toward the node the read named
+// (`targetGraphId`); a severance must net the bundle the reader was shown
+// to (0, 0) in exactly the records its cost stated. The node is
+// remembered from the reads that rendered the control — the projection
+// read always runs right before a pick is signed.
 
 import type { ApolloClient } from "@apollo/client";
 
@@ -41,6 +46,7 @@ import {
   type StanceSelector,
 } from "@/lib/api/writes-api";
 import type { AuthGuard } from "@/lib/session/guard";
+import { expectation, severance, stanceRecord, type Expectation } from "@/lib/signing/intent";
 import type { WriteSigner } from "@/lib/signing/write-signer";
 import type { StancePair } from "./model";
 import {
@@ -58,6 +64,7 @@ const READ_POLICY = "network-only";
 
 /** The `viewerStance` selection, identically shaped across the three roots. */
 type WireBundle = {
+  readonly targetGraphId: string;
   readonly pDirected: number;
   readonly pInterest: number;
   readonly rawPDirected: number;
@@ -141,28 +148,51 @@ export function createApolloStanceData(deps: {
 }): StanceData {
   const { client, guard, signer } = deps;
 
+  /** The node each target's last read named — what its acts must point at. */
+  const graphIds = new Map<string, string>();
+  const keyOf = (target: StanceTarget) => `${target.kind}:${target.id}`;
+
+  const read = async (
+    target: StanceTarget,
+    pick: StancePair | null,
+    options?: StanceReadOptions,
+  ): Promise<Outcome<WireBundle>> => {
+    const outcome = await guard.run(() => wireBundle(client, target, pick, options));
+    if (outcome.kind === "success") graphIds.set(keyOf(target), outcome.value.targetGraphId);
+    return outcome;
+  };
+
+  /** The node a gesture toward `target` names, read now when no read named it yet. */
+  const graphIdOf = async (target: StanceTarget): Promise<Outcome<string>> => {
+    const known = graphIds.get(keyOf(target));
+    if (known !== undefined) return success(known);
+    const fresh = await read(target, null);
+    return fresh.kind === "success" ? success(fresh.value.targetGraphId) : fresh;
+  };
+
   /**
-   * Signs a prepared batch in order. Every element must complete for the
-   * gesture to have happened; the first that does not stops the pass and
-   * leaves the remainder for `resume()`.
+   * Signs a prepared batch against the gesture's expectation. Every
+   * element must complete for the gesture to have happened.
    */
-  const signAll = async (writes: readonly StagedWriteView[]): Promise<Outcome<StanceCommit>> => {
-    for (const staged of writes) {
-      const result = await signer.signStaged(staged);
-      if (result.kind !== "done") {
-        return failed(
-          new Error(`staged write ${staged.id} did not complete: ${result.kind}`),
-        );
-      }
+  const signAll = async (
+    writes: readonly StagedWriteView[],
+    expected: Expectation,
+  ): Promise<Outcome<StanceCommit>> => {
+    const results = await signer.sign(writes, expected);
+    const incomplete = results.find((result) => result.kind !== "done");
+    if (incomplete !== undefined) {
+      return failed(
+        new Error(`staged write ${incomplete.id} did not complete: ${incomplete.kind}`),
+      );
     }
     return success({ records: writes.length });
   };
 
   return {
     async bundle(target, options): Promise<Outcome<StanceBundle>> {
-      const read = await guard.run(() => wireBundle(client, target, null, options));
-      if (read.kind !== "success") return read;
-      const wire = read.value;
+      const outcome = await read(target, null, options);
+      if (outcome.kind !== "success") return outcome;
+      const wire = outcome.value;
       return success({
         current: { pDirected: wire.pDirected, pInterest: wire.pInterest },
         // Carried through unclipped: the landing line folds against
@@ -176,9 +206,9 @@ export function createApolloStanceData(deps: {
     },
 
     async project(target, pick, options): Promise<Outcome<StanceLanding>> {
-      const read = await guard.run(() => wireBundle(client, target, pick, options));
-      if (read.kind !== "success") return read;
-      const projected = read.value.projected;
+      const outcome = await read(target, pick, options);
+      if (outcome.kind !== "success") return outcome;
+      const projected = outcome.value.projected;
       if (projected === null) {
         return failed(new Error("viewerStance answered a pick without a projection"));
       }
@@ -190,18 +220,37 @@ export function createApolloStanceData(deps: {
     },
 
     async commit(target, pick): Promise<Outcome<StanceCommit>> {
+      const node = await graphIdOf(target);
+      if (node.kind !== "success") return node;
       // Exactly the pick, verbatim — the bundle is the fold's business.
       const prepared = await guard.run(() =>
         prepareStance(client, selectorOf(target), pick.pDirected, pick.pInterest),
       );
       if (prepared.kind !== "success") return prepared;
-      return signAll(prepared.value);
+      return signAll(
+        prepared.value,
+        expectation([stanceRecord(node.value, pick.pDirected, pick.pInterest)]),
+      );
     },
 
-    async sever(target): Promise<Outcome<StanceCommit>> {
+    async sever(target, shown): Promise<Outcome<StanceCommit>> {
+      const node = await graphIdOf(target);
+      if (node.kind !== "success") return node;
       const prepared = await guard.run(() => prepareSeverance(client, selectorOf(target)));
       if (prepared.kind !== "success") return prepared;
-      return signAll(prepared.value);
+      return signAll(
+        prepared.value,
+        expectation(
+          [],
+          [
+            severance(node.value, {
+              rawPDirected: shown.rawSum.pDirected,
+              rawPInterest: shown.rawSum.pInterest,
+              cost: shown.severance.records,
+            }),
+          ],
+        ),
+      );
     },
   };
 }

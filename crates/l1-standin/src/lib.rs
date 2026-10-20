@@ -29,7 +29,7 @@ use common::l1::handshake::{
     AccountBalance, ApprovalWitness, BurnSettlement, BurnTicket, EpochPackage,
 };
 use common::l1::identifier::ActId;
-use common::l1::{PreSignedProposal, VerifiedAct};
+use common::l1::{PreSignedProposal, StructuralBody, VerifiedAct};
 use ed25519_dalek::SigningKey;
 use rand::RngCore;
 use rand::rngs::OsRng;
@@ -160,12 +160,24 @@ pub enum StandInError {
     Storage(#[from] sqlx::Error),
 }
 
-/// An act read back from the host's store: the exact sealed object as
-/// returned to its author at seal time, and whether an approval witness
-/// has been recorded for it.
+/// An act read back from the host's store, and whether an approval
+/// witness has been recorded for it.
+///
+/// The structural record — body, dependency list, pre-commitment, the
+/// content commitment (the witness) and the payload length — is held in
+/// every status. The payload, content salt and nonce are transient
+/// handshake custody: held from seal until acceptance, when the host
+/// keeps only the witness (data-model.md "Act payload carriage").
 #[derive(Debug, Clone, PartialEq)]
 pub struct StoredAct {
-    pub act: VerifiedAct,
+    pub body: StructuralBody,
+    pub deps: Vec<ActId>,
+    pub pre_commitment: Vec<u8>,
+    pub content_commitment: Vec<u8>,
+    pub payload_len: u64,
+    /// The exact sealed object as returned to its author at seal time,
+    /// while the host still holds its custody; `None` once accepted.
+    pub sealed: Option<VerifiedAct>,
     pub approved: bool,
 }
 
@@ -389,6 +401,30 @@ impl StandIn {
     /// them into a Conflict.
     pub async fn sealed_act(&self, act_id: &ActId) -> Result<Option<StoredAct>, StandInError> {
         seal::sealed_act(self, act_id).await
+    }
+
+    /// Drops the transient custody — payload, content salt and proposal
+    /// nonce — of every listed act that still holds it, returning how many
+    /// acts this call emptied.
+    ///
+    /// Acceptance already empties an act (the host is witness-only from
+    /// then on), so what a redaction finds here is the residue that never
+    /// reached acceptance: a sealed act, or an approved one deferred for a
+    /// missing dependency or an insolvent author. The drop is recorded on
+    /// the row, and the act stays exactly as orderable as it was — nothing
+    /// after the seal reads those three values. Idempotent: an accepted or
+    /// already-dropped act is not touched.
+    pub async fn drop_carriage(&self, act_ids: &[String]) -> Result<u64, StandInError> {
+        Ok(sqlx::query!(
+            "UPDATE l1_acts
+             SET payload = NULL, content_salt = NULL, nonce = NULL,
+                 carriage_dropped_at = NOW()
+             WHERE act_id = ANY($1) AND payload IS NOT NULL",
+            act_ids,
+        )
+        .execute(&self.pool)
+        .await?
+        .rows_affected())
     }
 
     /// Relay leg 2 — approve: verify the approval witness; the act becomes

@@ -11,6 +11,7 @@ import { toBase64 } from "@/lib/crypto/bytes";
 import type { KeyCeremony } from "@/lib/identity/key-ceremony";
 import type { IdentityStore } from "@/lib/identity/store";
 import type { AuthGuard } from "@/lib/session/guard";
+import { REGISTRATION_EXEMPTION } from "./intent";
 import { keyUsable } from "./key-usable";
 import type { WriteSigner } from "./write-signer";
 
@@ -75,12 +76,14 @@ export function createRegistrationSigner(deps: {
         status.value;
       if (accountState === "MEMBER") {
         // The landing released what the applicant carried: sign it now,
-        // without a prompt, with the vouch-in (auth.md "Application").
+        // without a prompt, with the vouch-in (auth.md "Application") —
+        // checked against what was verified at its prepare
+        // (write-signer.ts `signCarriedAtLanding`).
         // Best-effort by design — a write left mid-handshake keeps its
         // material for resume(), and one never started is still
         // AWAITING_PRE_SIGN on the next pass.
         if (carriedBatch.length > 0 && keyUsable(await devicePubkey(), actorPubkey)) {
-          await writeSigner.sign(carriedBatch);
+          await writeSigner.signCarriedAtLanding(carriedBatch);
         }
         return { kind: "member" };
       }
@@ -93,7 +96,10 @@ export function createRegistrationSigner(deps: {
         if (!keyUsable(await devicePubkey(), actorPubkey)) {
           return { kind: "awaitingSigningKey" };
         }
-        const result = await writeSigner.signStaged(stagedRegistration);
+        // No form stands behind the staged Registration — the backend
+        // staged it at approval — so it is the named exemption from
+        // the intent check (intent.ts), and still runs every transport check.
+        const result = await writeSigner.signStaged(stagedRegistration, REGISTRATION_EXEMPTION);
         switch (result.kind) {
           case "done":
           case "awaitingSeal":
@@ -104,6 +110,10 @@ export function createRegistrationSigner(deps: {
             return { kind: "rejectedByDevice", reason: result.reason };
           case "failed":
             return { kind: "failed", cause: result.cause };
+          case "carried":
+            // signStaged never keeps a write for the landing: only a checked
+            // batch does (write-signer.ts `sign`).
+            return { kind: "failed", cause: new Error("a staged Registration is never carried") };
         }
       }
 

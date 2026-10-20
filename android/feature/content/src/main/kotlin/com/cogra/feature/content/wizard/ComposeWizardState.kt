@@ -15,6 +15,7 @@ import com.cogra.domain.content.isTitleTooLong
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceMedia
 import com.cogra.domain.media.VideoFrame
+import com.cogra.domain.signing.KnownMedia
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagSectionState
 
@@ -146,7 +147,14 @@ sealed interface AssetUpload {
 
     data object Running : AssetUpload
 
-    data class Done(val mediaId: String) : AssetUpload
+    /**
+     * On the server and READY. [known] is what the intent check holds this
+     * asset's manifest entry to — the upload digest this device computed and
+     * the server echoed, and the rendition digest at READY. Null on an asset
+     * the load found standing (an edit's kept picture), which the sign path
+     * reads back by id instead (`ledgerFor`).
+     */
+    data class Done(val mediaId: String, val known: KnownMedia? = null) : AssetUpload
 
     /**
      * The upload failed or was refused.
@@ -392,6 +400,12 @@ data class ComposeWizardState(
     val stagedPDirected: Double = DEFAULT_P_DIRECTED,
 
     /**
+     * `Start it unreachable?` stands over the parked pad: Set was pressed
+     * at exactly 0.00 (ComposePad.md). It warns, never refuses.
+     */
+    val confirmingUnreachable: Boolean = false,
+
+    /**
      * The author's own sensitive mark (`ComposeSensitive`).
      *
      * It veils the pictures and the words until a reader chooses
@@ -611,7 +625,19 @@ data class ComposeWizardState(
 
     /** The description's own cap — blocks the seal the same way the title does. */
     val descriptionTooLong: Boolean
-        get() = isDescriptionTooLong(description)
+        get() = mode == BodyMode.Media && isDescriptionTooLong(description)
+
+    /**
+     * The description the post carries, or null. THE WORDS PATH COMPOSES
+     * NONE (K8.1/D4; design/readme.md:8179-8181): a description is how
+     * words stand beside pictures, so on the words side it is neither drawn
+     * nor sent — the server refuses one at `["description"]`. A description
+     * typed beside the pictures rides with them: swapping to words drops it
+     * from the post, and it comes back only with the pictures it stood
+     * beside.
+     */
+    val descriptionContent: String?
+        get() = description.takeIf { mode == BodyMode.Media && it.isNotBlank() }
 
     /** The sensitive mark's reason, capped the same way every authored field is. */
     val sensitiveReasonTooLong: Boolean
@@ -746,7 +772,7 @@ fun ComposeWizardState.openedCoverStep(): ComposeWizardState? =
 
 /** Drops every drawer without moving the stage. */
 fun ComposeWizardState.closedSheets(): ComposeWizardState =
-    copy(sheet = SealSheet.None, pickedSheetOpen = false, describingIndex = null)
+    copy(sheet = SealSheet.None, pickedSheetOpen = false, describingIndex = null, confirmingUnreachable = false)
 
 /**
  * Switches the body's half. Both halves survive the switch — the

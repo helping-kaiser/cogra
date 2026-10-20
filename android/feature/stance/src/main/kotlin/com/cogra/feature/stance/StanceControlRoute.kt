@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -74,6 +75,8 @@ fun StanceControlRoute(
      * also answer: the ceremony replaces it (VouchBackPad.md:33).
      */
     onTaken: (() -> Unit)? = null,
+    /** The vouch card's empty face is a line face in this ink; see [StanceControl]. */
+    lineFaceInk: Color? = null,
     viewModel: StanceViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -148,6 +151,7 @@ fun StanceControlRoute(
         node = node,
         variant = variant,
         padOnly = padOnly,
+        lineFaceInk = lineFaceInk,
     )
 }
 

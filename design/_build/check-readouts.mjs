@@ -1,16 +1,15 @@
 // Checks the hand-drawn pad readouts against the masters' own format contract
-// (backlog item 54.2): `RefPair`, `ComposePad`, `TagPad`, `TagPadCompose`,
-// `PadKeyAbsent` and the shared `ReplyPadBody` spell their face and their pair
-// as literals, because `nearestAnchor` and the formatters are master-side
-// helpers the bundle does not expose to screens. Six literals with no compiler
+// (backlog item 54.2): `RefPair`, `TagPad`, `TagPadCompose`, `PadKeyAbsent`
+// and the shared `ReplyPadBody` spell their face and their pair as literals,
+// because `nearestAnchor` and the formatters are master-side helpers the bundle
+// does not expose to screens. Five literals with no compiler
 // between them and the contract is exactly where drift lives: a pad value moves
 // and its readout does not, or a negative pair reaches a board written with an
 // ASCII hyphen where readme §3 rules U+2212.
 //
 // So the check reads the value each pad is actually set to and asks the MASTERS
 // what that value reads as — `formatStancePair` / `formatTagPair` for the pair,
-// `nearestAnchor` / `nearestTagAnchor` / `nearestValenceAnchor` for the face,
-// `padPercentOf` for where a knob sits. Nothing here re-implements a rule:
+// `nearestAnchor` / `nearestTagAnchor` for the face. Nothing here re-implements a rule:
 // every expectation is a helper's return value, so the day a formatter changes,
 // these boards are told.
 //
@@ -69,7 +68,7 @@ const ds = loadMasters([
 
 const fails = [];
 
-// ---- the six hand-drawn readouts.
+// ---- the five hand-drawn readouts.
 // A site is named by its file and, where a file holds more than one component,
 // the function that draws it. Everything else about a site is READ, never
 // declared: which family it belongs to comes from the pad's own `ranges` prop,
@@ -82,12 +81,9 @@ const SITES = [
   { file: "TagPad.jsx" },
   { file: "TagPadCompose.jsx" },
   { file: "_shared.jsx", region: "ReplyPadBody" },
-  // The one-axis pad: `StancePad` is not here (a post's own `pInterest` is not
-  // a choice), so the board draws its own field and there is no `value` prop to
-  // read. Its number is checked against the formatter and against where the
-  // knob it draws actually sits, and its face against `VALENCE_SIX` — the table
-  // built for a pick that names no pair.
-  { file: "ComposePad.jsx", oneAxis: true },
+  // The one-axis pads on one's own post (`ComposePad`, `EditPad`) read through
+  // the master `AttachmentStanding`, so nothing on them is a literal for this
+  // check to read.
 ];
 
 function regionOf(source, file, region) {
@@ -110,7 +106,6 @@ function only(region, re, what, site) {
 const FACE_RE = /lineHeight: 1\.2 \}\}>\s*([^\s<][^<]*?)\s*<\/span>/g;
 const EXACT_RE = /className="cg-exact"[^>]*>\s*([^<]*?)\s*<\/span>/g;
 const PAD_RE = /<StancePad\s+value=\{\{\s*pDirected:\s*(-?[\d.]+),\s*pInterest:\s*(-?[\d.]+)\s*\}\}([^>]*?)\/>/g;
-const KNOB_RE = /left: "([\d.]+)%", top: "50%", width: 24, height: 24/g;
 const SPOKEN_RE = /style=\{SR_ONLY\}>\s*([\s\S]*?)\s*<\/span>/g;
 // Every number the system writes is two decimals; the sign is U+002B or the
 // U+2212 MINUS readme §3 rules. A hyphen is not in the class ON PURPOSE — a
@@ -133,35 +128,12 @@ for (const site of SITES) {
   const spoken = only(region, SPOKEN_RE, "spoken reading", name);
   if (!face || !exact || !spoken) continue;
 
-  let expectedPair;
-  let expectedFace;
-  if (site.oneAxis) {
-    // The literal is the only place the value is written, so it is the value:
-    // round-tripping it through the formatter is what says it is written the
-    // way the system writes a number at all.
-    const parsed = Number(exact[1].replace("−", "-"));
-    if (!Number.isFinite(parsed)) {
-      fails.push(`${name}: "${exact[1]}" is not a number the system could have written`);
-      continue;
-    }
-    expectedPair = ds.formatDimension(parsed);
-    const knob = only(region, KNOB_RE, "knob position", name);
-    if (knob) {
-      const drawn = Number(knob[1]);
-      const owed = ds.padPercentOf({ pDirected: parsed, pInterest: 0 }).x;
-      if (drawn !== owed) {
-        fails.push(`${name}: the knob sits at ${drawn}% but ${expectedPair} is ${owed}% of the field (padPercentOf)`);
-      }
-    }
-    expectedFace = ds.nearestValenceAnchor(parsed).emoji;
-  } else {
-    const pad = only(region, PAD_RE, "StancePad", name);
-    if (!pad) continue;
-    const value = { pDirected: Number(pad[1]), pInterest: Number(pad[2]) };
-    const tagFamily = pad[3].includes("TAG_RANGES");
-    expectedPair = tagFamily ? ds.formatTagPair(value) : ds.formatStancePair(value);
-    expectedFace = (tagFamily ? ds.nearestTagAnchor(value) : ds.nearestAnchor(value)).emoji;
-  }
+  const pad = only(region, PAD_RE, "StancePad", name);
+  if (!pad) continue;
+  const value = { pDirected: Number(pad[1]), pInterest: Number(pad[2]) };
+  const tagFamily = pad[3].includes("TAG_RANGES");
+  const expectedPair = tagFamily ? ds.formatTagPair(value) : ds.formatStancePair(value);
+  const expectedFace = (tagFamily ? ds.nearestTagAnchor(value) : ds.nearestAnchor(value)).emoji;
 
   if (exact[1] !== expectedPair) {
     fails.push(`${name}: the readout says "${exact[1]}" where the pad's value reads "${expectedPair}"`);
@@ -181,7 +153,7 @@ for (const site of SITES) {
   }
 }
 
-// ---- nothing hand-spells a number outside the six.
+// ---- nothing hand-spells a number outside the five.
 // The table above is a list of sites, not of files, so a seventh hand-drawn
 // readout would be checked by nobody — including one added to a file already
 // on the list, which is why this counts per file rather than asking whether the
