@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -327,7 +328,7 @@ describe("SealStep", () => {
       // The blessed body (jakob 2026-10-20), verbatim from the master's
       // behavior file (ComposePad.md) — read, not transcribed.
       const master = readFileSync(
-        new URL("../../../../../../design/designs/canonical/behavior/ComposePad.md", import.meta.url),
+        join(process.cwd(), "..", "design", "designs", "canonical", "behavior", "ComposePad.md"),
         "utf-8",
       );
       const body = master.match(/the dialog Start it unreachable\? reads (.+?) with Keep adjusting/);

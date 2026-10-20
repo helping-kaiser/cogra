@@ -4,6 +4,7 @@
 // master, not transcribed, so a wording edited there and not here fails.
 
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
@@ -16,8 +17,10 @@ import {
   unreachableHead,
 } from "./stance-readout";
 
+// jsdom's `import.meta.url` is not a file URL; vitest runs from `web/`
+// (seen-tracker.test.tsx's precedent).
 const MASTER = readFileSync(
-  new URL("../../../../design/components/stance/StanceReadout.jsx", import.meta.url),
+  join(process.cwd(), "..", "design", "components", "stance", "StanceReadout.jsx"),
   "utf-8",
 );
 
