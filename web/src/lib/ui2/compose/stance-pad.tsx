@@ -126,7 +126,7 @@ export function StancePad({
       aria-label={ariaLabel}
       onKeyDown={onKeyDown}
       onPointerDown={(event) => {
-        drag.current = { x: event.clientX, y: event.clientY, base: value };
+        drag.current = { x: event.clientX, y: event.clientY, base: value, last: null };
         setDragging(true);
         event.currentTarget.setPointerCapture?.(event.pointerId);
       }}

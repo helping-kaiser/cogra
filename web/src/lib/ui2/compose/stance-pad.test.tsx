@@ -107,7 +107,8 @@ describe("StancePad", () => {
     });
 
     it("lands the pair on the nearest hundredths at release, a near-zero axis on exactly +0", () => {
-      const props = draw({ value: { pDirected: 0, pInterest: 0 } });
+      const onChange = vi.fn();
+      const props = draw({ value: { pDirected: 0, pInterest: 0 }, onChange });
       const field = screen.getByTestId("stance-pad-field");
       measureField(field);
       fireEvent.pointerDown(field, { clientX: 100, clientY: 100, pointerId: 1 });
@@ -123,7 +124,7 @@ describe("StancePad", () => {
       });
       fireEvent.pointerUp(field, { pointerId: 1 });
       expect(props.onChange).toHaveBeenLastCalledWith({ pDirected: 0.44, pInterest: 0 });
-      expect(Object.is(props.onChange.mock.lastCall![0].pInterest, 0)).toBe(true);
+      expect(Object.is(onChange.mock.lastCall![0].pInterest, 0)).toBe(true);
     });
 
     it("stops moving the pick once the pointer is up", () => {
