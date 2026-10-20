@@ -81,7 +81,7 @@ export function AttachmentPad({
     event.preventDefault();
     const step = event.shiftKey ? COARSE_STEP : STEP;
     // A step lands on a hundredth, so the arrows reach EXACTLY 0.00 — the
-    // value that wears 🤷 and that a compose Set asks about — rather than a
+    // value that wears 🤔 and that a compose Set asks about — rather than a
     // float's 1e-17 that reads `+0.00` beside a smiling face.
     onChange(clampDimension(Math.round((value + direction * step) * 100) / 100));
   };

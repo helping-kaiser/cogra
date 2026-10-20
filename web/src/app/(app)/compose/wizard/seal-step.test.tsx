@@ -1,5 +1,9 @@
+import { readFileSync } from "node:fs";
+
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+
+import { UNREACHABLE_BODY } from "@/lib/ui2/compose/unreachable-confirm";
 
 import { emptyWizard, type WizardState } from "@/lib/compose/wizard";
 import { newReferenceDraft } from "@/lib/references/draft";
@@ -217,11 +221,11 @@ describe("SealStep", () => {
     expect(screen.queryByText(/your opinion/i)).not.toBeInTheDocument();
   });
 
-  it("reads a backing of exactly 0.00 as 🤷, spoken Nothing", () => {
+  it("reads a backing of exactly 0.00 as 🤔, spoken No side taken", () => {
     renderStep({ pDirected: 0 });
     const readout = screen.getByTestId("wizard-stance-value");
-    expect(readout.textContent).toContain("🤷");
-    expect(within(readout).getByText("Nothing, For or against +0.00")).toBeInTheDocument();
+    expect(readout.textContent).toContain("🤔");
+    expect(within(readout).getByText("No side taken, For or against +0.00")).toBeInTheDocument();
   });
 
   it("reads the row's face off the one-axis table, both signs", () => {
@@ -288,9 +292,9 @@ describe("SealStep", () => {
       expect(screen.queryByText("Backing after")).not.toBeInTheDocument();
     });
 
-    it("reads the pick at exactly 0.00 as 🤷", () => {
+    it("reads the pick at exactly 0.00 as 🤔", () => {
       renderStep({}, "stance", true, 0);
-      expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤷");
+      expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤔");
     });
 
     it("draws the master's one-axis strip: its ends outside, one zero line, no second axis", () => {
@@ -320,9 +324,16 @@ describe("SealStep", () => {
       expect(confirm).toHaveAttribute("open");
       expect(screen.getByTestId("wizard-stance-pad")).toHaveAttribute("open");
       expect(within(confirm).getByText("Start it unreachable?")).toBeInTheDocument();
-      expect(
-        within(confirm).getByText(/^Your backing is your post's own path into anyone's feed\./),
-      ).toBeInTheDocument();
+      // The blessed body (jakob 2026-10-20), verbatim from the master's
+      // behavior file (ComposePad.md) — read, not transcribed.
+      const master = readFileSync(
+        new URL("../../../../../../design/designs/canonical/behavior/ComposePad.md", import.meta.url),
+        "utf-8",
+      );
+      const body = master.match(/the dialog Start it unreachable\? reads (.+?) with Keep adjusting/);
+      expect(body, "ComposePad.md no longer states the dialog's body").not.toBeNull();
+      expect(UNREACHABLE_BODY).toBe(body![1]);
+      expect(within(confirm).getByText(UNREACHABLE_BODY)).toBeInTheDocument();
       // Keep adjusting is filled; Set it anyway is quiet.
       expect(screen.getByTestId("wizard-unreachable-keep").className).not.toBe(
         screen.getByTestId("wizard-unreachable-anyway").className,

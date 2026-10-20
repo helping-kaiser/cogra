@@ -1267,7 +1267,7 @@ describe("the readout", () => {
     expect(field.compareDocumentPosition(landing) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("says a stance carries nothing where the fold flags the landing inert", async () => {
+  it("reads a one-zero landing as its state under 🤔 (jakob 2026-10-20)", async () => {
     // Raw sums that the default's +0.10 cancels on the first axis exactly.
     mount({ rawSum: () => ({ pDirected: -0.1, pInterest: 0 }), seed: { "post-1": { records: [ORIGIN] } } });
     await settle();
@@ -1276,18 +1276,18 @@ describe("the readout", () => {
     // Valence at zero, connection alive: the axis wording follows.
     moveKnob(0, -HALF);
     expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent(
-      "Where you stand would carry nothing.",
+      "This leaves you at: 🤔 Interested, no side taken — this won't shape anyone's feed.",
     );
   });
 
-  it("says what reaches you would carry nothing where the other axis is inert", async () => {
+  it("reads the other axis's zero by the sign of the number that stands", async () => {
     mount({ rawSum: () => ({ pDirected: 0, pInterest: -0.1 }), seed: { "post-1": { records: [ORIGIN] } } });
     await settle();
     await openPad();
     layOutPad();
     moveKnob(HALF, 0);
     expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent(
-      "What reaches you would carry nothing.",
+      "This leaves you at: 🤔 For it, no interest either way — this won't shape anyone's feed.",
     );
   });
 

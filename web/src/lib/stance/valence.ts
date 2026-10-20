@@ -25,7 +25,7 @@
 // `VALENCE_SIX` / `nearestValenceAnchor`, and the design gate
 // `check-readouts` holds the boards to it.
 
-import { STANCE_ANCHORS } from "./anchors";
+import { STANCE_ANCHORS, UNREACHABLE_EMOJI } from "./anchors";
 import { clampDimension } from "./model";
 
 /**
@@ -69,7 +69,7 @@ export type ValenceBand = {
  *     positive row keeps it.
  *   - The 😕 row stops short of zero and the 🙂 row would take it, but
  *     `nearestValenceAnchor` answers EXACTLY 0.00 before the table is
- *     read: it wears 🤷 (jakob 2026-10-16, round 15), the zero face.
+ *     read: it wears 🤔 (jakob 2026-10-20), the one-zero face.
  */
 const BANDS: readonly Omit<ValenceBand, "label" | "pDirected">[] = [
   { emoji: "😠", to: -0.725, toInclusive: false },
@@ -100,14 +100,15 @@ export const VALENCE_SIX: readonly ValenceBand[] = BANDS.map((band) => {
 });
 
 /**
- * EXACTLY 0.00 SHRUGS on the one axis (jakob 2026-10-16, "yes the shrug
- * should be the icon for exactly 0"): a backing of zero carries nothing,
- * so it wears the zero face, 🤷, spoken `Nothing` — never a band's smile.
- * Only the exact value; the bands keep the rest of the axis as ruled
- * (`StanceReadout.jsx`'s `ZERO_BACKING_LABEL`).
+ * EXACTLY 0.00 THINKS on the one axis (jakob 2026-10-16, its face 🤔
+ * since 2026-10-20): a backing of zero takes no side — with the second
+ * number pinned at 1 it folds to `(0, 1)`, unreachable on its own path —
+ * so it wears the one-zero face, spoken `No side taken`, never a band's
+ * smile. Only the exact value; the bands keep the rest of the axis as
+ * ruled (`StanceReadout.jsx`'s `UNREACHABLE_EMOJI`, `ZERO_BACKING_LABEL`).
  */
-export const ZERO_BACKING_EMOJI = "🤷";
-export const ZERO_BACKING_LABEL = "Nothing";
+export const ZERO_BACKING_EMOJI = UNREACHABLE_EMOJI;
+export const ZERO_BACKING_LABEL = "No side taken";
 
 const ZERO_BACKING: ValenceBand = {
   emoji: ZERO_BACKING_EMOJI,
@@ -118,7 +119,7 @@ const ZERO_BACKING: ValenceBand = {
 };
 
 /**
- * The face a ONE-AXIS pick wears — 🤷 at exactly 0.00, otherwise the
+ * The face a ONE-AXIS pick wears — 🤔 at exactly 0.00, otherwise the
  * first band the value falls inside. The bands cover the closed axis, so
  * every value has exactly one; out of range is clamped in rather than
  * refused, the way the pad clamps.
