@@ -163,12 +163,12 @@ pub enum SearchRequest {
 }
 
 /// A restriction of one page read to part of the request's matches.
-/// `within`, `excluding`, `section` and `people` narrow what a page may
-/// hold, never what the request matches, so a count never sees them:
-/// ranked search reads its in-slice candidates `within` the viewer's slice
-/// and pages the rest `excluding` what the ranker ordered, one `section`
-/// at a time (ranked-feed-api §4.8); a capped people section serves only
-/// its first few, the API's cap. `list` is Saved's and History's: it
+/// `within`, `excluding`, `section`, `people` and `topics` narrow what a
+/// page may hold, never what the request matches, so a count never sees
+/// them: ranked search reads its in-slice candidates `within` the viewer's
+/// slice and pages the rest `excluding` what the ranker ordered, one
+/// `section` at a time (ranked-feed-api §4.8); a capped people or topics
+/// section serves only its first few, the API's cap. `list` is Saved's and History's: it
 /// confines the request itself, so [`SearchRequest::count`] takes it too.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Window<'a> {
@@ -181,6 +181,9 @@ pub struct Window<'a> {
     /// In the people section, only these people may be served — the other
     /// sections are untouched; None restricts nothing.
     pub people: Option<&'a [Uuid]>,
+    /// In the topics section, only these topics may be served — the other
+    /// sections are untouched; None restricts nothing.
+    pub topics: Option<&'a [Uuid]>,
     /// Only what stands on this reader's own list may be served, in the
     /// narrowed list's order: section, then the list's own time newest
     /// first, then id. A hit's `tier` is then its section's own
@@ -233,19 +236,32 @@ impl SearchRequest {
     /// The same request serving its people section alone — the same
     /// people, in the same order. None when it serves no people.
     pub fn people_only(&self) -> Option<Self> {
-        if !self.kinds().iter().any(|k| k == "user") {
+        self.only("user")
+    }
+
+    /// Whether a result can stand topics beside another section: the
+    /// request serves topics and some other kind.
+    pub fn serves_topics_beside_others(&self) -> bool {
+        let kinds = self.kinds();
+        kinds.iter().any(|k| k == "hashtag") && kinds.iter().any(|k| k != "hashtag")
+    }
+
+    /// The same request serving its topics section alone — the same
+    /// topics, in the same order. None when it serves no topics.
+    pub fn topics_only(&self) -> Option<Self> {
+        self.only("hashtag")
+    }
+
+    /// The same request narrowed to the one index `kind`; None when it
+    /// serves none.
+    fn only(&self, kind: &str) -> Option<Self> {
+        if !self.kinds().iter().any(|k| k == kind) {
             return None;
         }
-        let people = vec!["user".to_string()];
+        let kinds = vec![kind.to_string()];
         Some(match self {
-            Self::Match(q) => Self::Match(MatchQuery {
-                kinds: people,
-                ..q.clone()
-            }),
-            Self::Scoped(q) => Self::Scoped(ScopedQuery {
-                kinds: people,
-                ..q.clone()
-            }),
+            Self::Match(q) => Self::Match(MatchQuery { kinds, ..q.clone() }),
+            Self::Scoped(q) => Self::Scoped(ScopedQuery { kinds, ..q.clone() }),
         })
     }
 
@@ -414,6 +430,7 @@ pub async fn find_in(
                      ON v.user_id = $16 AND v.content_id = h.node_id
                    WHERE ($13::int IS NULL OR h.tier / 2 = $13)
                      AND ($15::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($15))
+                     AND ($17::uuid[] IS NULL OR h.tier / 2 <> 1 OR h.node_id = ANY($17))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
@@ -439,6 +456,7 @@ pub async fn find_in(
             saved_by,
             window.people,
             seen_by,
+            window.topics,
         )
         .fetch_all(pool)
         .await?;
@@ -495,6 +513,7 @@ pub async fn find_in(
                      ON v.user_id = $16 AND v.content_id = h.node_id
                    WHERE ($13::int IS NULL OR h.tier / 2 = $13)
                      AND ($15::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($15))
+                     AND ($17::uuid[] IS NULL OR h.tier / 2 <> 1 OR h.node_id = ANY($17))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
@@ -520,6 +539,7 @@ pub async fn find_in(
             saved_by,
             window.people,
             seen_by,
+            window.topics,
         )
         .fetch_all(pool)
         .await
@@ -776,6 +796,7 @@ pub async fn find_scoped(
                      AND NOT (h.node_id = ANY($16::uuid[]))
                      AND ($17::int IS NULL OR h.tier / 2 = $17)
                      AND ($19::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($19))
+                     AND ($21::uuid[] IS NULL OR h.tier / 2 <> 1 OR h.node_id = ANY($21))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
@@ -805,6 +826,7 @@ pub async fn find_scoped(
             saved_by,
             window.people,
             seen_by,
+            window.topics,
         )
         .fetch_all(pool)
         .await?;
@@ -976,6 +998,7 @@ pub async fn find_scoped(
                      AND NOT (h.node_id = ANY($16::uuid[]))
                      AND ($17::int IS NULL OR h.tier / 2 = $17)
                      AND ($19::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($19))
+                     AND ($21::uuid[] IS NULL OR h.tier / 2 <> 1 OR h.node_id = ANY($21))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
@@ -1005,6 +1028,7 @@ pub async fn find_scoped(
             saved_by,
             window.people,
             seen_by,
+            window.topics,
         )
         .fetch_all(pool)
         .await

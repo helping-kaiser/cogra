@@ -5083,7 +5083,8 @@ section. What is left is banked, not open:
 - **Item listings** — the backing row and pad come with the first
   listing surface.
 - **Drafts still at jakob's review** — copy-voice's *The unreachable
-  start* body, and the backing pad's cap line and its spoken `Nothing`.
+  start* body, and the backing pad's cap line and its spoken `No side
+  taken` (round 18's word).
 
 ### 143 · The applicant-acting package · *design + contract* · **banked 2026-10-16** · **post-MVP**
 
@@ -5128,4 +5129,31 @@ and the clients build it from the seam, but the master itself —
 `components/stance/StancePad.jsx`'s `AttachmentPad` — does not implement
 it yet: it reports the continuous value and has no release hook. Snapping
 the master would serve as the conformance reference. The two-axis
-square's value stays continuous.
+square's value stays continuous. Round 18 (jakob 2026-10-20) added the
+strip's "no side yet" detent at the zero hairline to the same docs and
+boards, and the master does not hold there yet either — one gap, one
+fix.
+
+### 145 · `CARRIED_MEDIA_UNPUBLISHED` has no words yet · *design + contract* · **deferred 2026-10-20** · **post-MVP**
+
+The contract's carried-write gate (api-spec, `submitProposals`;
+data-model, the carried batch's sign gate) refuses a released carried
+write whose media has not reached the live store as
+`CARRIED_MEDIA_UNPUBLISHED` — retryable, nothing recorded. Only an
+applicant's staged acts are carried, and applicant acting is post-MVP
+whole (143), so no MVP surface can meet the refusal. jakob deferred its
+copy (2026-10-20, round 18): *Faults by code* gains its vehicle and
+sentence when 143 is re-opened, drafted then against the boards that
+carry staged media — not invented now.
+
+### 146 · Sweep the "?" texts and helper lines for the expected · *design* · **filed 2026-10-20**
+
+jakob's hard rule (2026-10-20, copy-voice's *Explain only what is new*):
+a "?" text or a helper line explains new, novel, un-learned behavior,
+never what is common, obvious or expected. Round 18 cut one such clause
+from the picture's "?", and jakob: "this is probably not the only place
+where we have this". Sweep every "?" dialog text (*The "?" dialogs*), the
+pads' help lines and every helper, caption and note line on the boards;
+list each sentence that tells a reader what they already expect, with a
+proposed cut, for jakob to rule. It rides his flagged pass that removes
+words from crowded screens.

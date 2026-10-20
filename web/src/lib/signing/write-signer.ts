@@ -31,10 +31,8 @@ import {
   type CarriedLandingGate,
 } from "./carried";
 import {
-  CARRIED_AT_LANDING_EXEMPTION,
   checkIntent,
   IntentMismatch,
-  type CarriedAtLandingExemption,
   type Expectation,
   type RegistrationExemption,
 } from "./intent";
@@ -101,12 +99,9 @@ export type WriteSigner = {
    * checked against what was verified at its prepare (carried.ts): a write
    * this device holds an expectation for signs only if the served proposal
    * digests to it, its dependencies aside — the landing appends the ruled
-   * completion, `[admission Registration, winning vouch]`; a write it holds
-   * none for was prepared on another device and, when it is an Opinion, signs
-   * under the second named exemption, `CARRIED_AT_LANDING_EXEMPTION`, on the
-   * transport checks. Any other family without a kept expectation is a
-   * mismatch, and one mismatch refuses the whole batch before its first
-   * pre-signature.
+   * completion, `[admission Registration, winning vouch]`. A write it holds
+   * none for is a mismatch (no family is exempt), and one mismatch refuses
+   * the whole batch before its first pre-signature.
    * Then the landing gate (`CarriedLandingGate`) is asked; a batch it holds
    * back is not signed and nothing of it is spent.
    */
@@ -470,10 +465,8 @@ export function createWriteSigner(deps: {
 
   /**
    * Why the released carried batch is not what this device verified at its
-   * prepare, or null when every write either matches its kept expectation or
-   * is an Opinion with none here (the second named exemption: prepared on
-   * another device). Dependencies are never compared: the landing completes
-   * them.
+   * prepare, or null when every write matches its kept expectation.
+   * Dependencies are never compared: the landing completes them.
    */
   async function carriedRefusal(writes: readonly StagedWriteView[]): Promise<string | null> {
     for (const staged of writes) {
@@ -484,30 +477,15 @@ export function createWriteSigner(deps: {
         if (e instanceof WireError) return e.message;
         throw e;
       }
-      const intent = await carriedIntentOf(staged.id);
-      if (intent.kind === "carriedAtLandingExemption") {
-        // The exemption holds only for an Opinion (PR-105), and runs the
-        // transport checks alone (signOne, approveFrom).
-        if (proposal.body.family !== "opinion") {
-          return "only an Opinion is exempt from the carried check at the landing";
-        }
-        continue;
+      const kept = await carried.get(staged.id);
+      if (kept === null) {
+        return "this device holds no prepare-time check for the released carried write";
       }
-      if (!equalBytes(intent.digest, await carriedDigest(proposal))) {
+      if (!equalBytes(kept, await carriedDigest(proposal))) {
         return "the released carried write is not the one this device verified at its prepare";
       }
     }
     return null;
-  }
-
-  /** What one released write is checked against: its kept expectation, or the named exemption. */
-  async function carriedIntentOf(
-    stagedWriteId: string,
-  ): Promise<{ kind: "carriedExpectation"; digest: Uint8Array } | CarriedAtLandingExemption> {
-    const digest = await carried.get(stagedWriteId);
-    return digest === null
-      ? CARRIED_AT_LANDING_EXEMPTION
-      : { kind: "carriedExpectation", digest };
   }
 
   /**
@@ -515,7 +493,7 @@ export function createWriteSigner(deps: {
    * write was pre-signed and submitted (it has left the carried batch for the
    * handshake custody), or it is gone. Anything else keeps it — a write still
    * awaiting its pre-signature is checked against it again on the next poll,
-   * and a refused one must never fall through to the exemption.
+   * and a refused one stays refused.
    */
   function expectationSpent(result: WriteResult): boolean {
     switch (result.kind) {
@@ -543,8 +521,7 @@ export function createWriteSigner(deps: {
       throw e;
     }
     // The expectations are NOT cleared by a refusal: the write stays released
-    // server-side, and the next poll must refuse it again rather than find no
-    // expectation and sign it under the exemption.
+    // server-side and is checked against them again on the next poll.
     if (refusal !== null) return rejectAll(writes, refusal);
     const readiness = await carriedGate(writes);
     if (readiness.kind !== "ready") return failedAll(writes, new Error(readiness.reason));

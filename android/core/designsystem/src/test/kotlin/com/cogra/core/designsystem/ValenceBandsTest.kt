@@ -67,9 +67,9 @@ class ValenceBandsTest {
     }
 
     @Test
-    fun exactlyZeroShrugsAndIsSpokenNothing() {
+    fun exactlyZeroThinksAndIsSpokenNoSideTaken() {
         assertThat(nearestValenceAnchor(0.0)).isEqualTo(ZERO_BACKING_BAND)
-        assertThat(ZERO_BACKING_BAND.emoji).isEqualTo("🤷")
+        assertThat(ZERO_BACKING_BAND.emoji).isEqualTo("🤔")
         assertThat(ZERO_BACKING_BAND.label).isEqualTo(R.string.valence_zero)
         // A drag that never moved horizontally produces negative zero,
         // and it is the same pick.
@@ -82,6 +82,15 @@ class ValenceBandsTest {
         assertThat(word).isNotNull()
         val strings = File("src/main/res/values/strings.xml").readText()
         assertThat(strings).contains("<string name=\"valence_zero\">${word!!.groupValues[1]}</string>")
+    }
+
+    @Test
+    fun theZeroFaceIsTheMastersOneZeroFace() {
+        // The one-axis 0.00 is `(0, 1)` with the pin — a single zero — so it
+        // wears the master's UNREACHABLE_EMOJI; 🤷 stays (0, 0)'s alone.
+        assertThat(master).contains("export const UNREACHABLE_EMOJI = \"$UNREACHABLE_EMOJI\";")
+        assertThat(master).contains("if (value === 0) return { emoji: UNREACHABLE_EMOJI, label: ZERO_BACKING_LABEL")
+        assertThat(UNREACHABLE_EMOJI).isNotEqualTo(ZERO_BUNDLE_READOUT.emoji)
     }
 
     @Test

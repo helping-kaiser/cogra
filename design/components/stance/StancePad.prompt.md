@@ -13,6 +13,8 @@ The field is `surfaceContainerHighest` at the **large (16px)** rung; the knob is
 
 The one-axis pick parks on hundredths at release — the knob follows the drag wherever the finger is, and release lands the pick on the nearest hundredth — while the two-axis square's value stays continuous (jakob 2026-10-16, round 17).
 
+The zero hairline is the strip's "no side yet" detent (jakob 2026-10-20): while the finger stays within the knob's own radius of it, the knob holds on the hairline and the pick reads exactly `0.00`, so no side taken is a place a drag rests on purpose, never one it only passes.
+
 ```jsx
 <AttachmentPad value={0.1} />
 <AttachmentPad value={a} onChange={setA} />

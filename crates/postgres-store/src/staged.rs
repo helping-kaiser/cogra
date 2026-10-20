@@ -883,9 +883,10 @@ pub async fn expire_due(
 
 /// The display side of expiry: every node an expired write owned loses
 /// the pending rows *that write* staged, named by the authoring instant
-/// they were written under. A write that minted nothing (Registration,
-/// Attach) carries no node id, and one that never reached its
-/// pre-commitment staged nothing — neither has anything to discard.
+/// they were written under. A write that puts no display row on screen
+/// (an admission Registration, Attach) carries no node id, and one that
+/// never reached its pre-commitment staged nothing — neither has anything
+/// to discard.
 async fn discard_pending_content(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     nodes: impl Iterator<Item = StagedRows>,

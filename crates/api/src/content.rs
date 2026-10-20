@@ -1144,9 +1144,11 @@ async fn parent_node(pool: &PgPool, target: Uuid) -> Result<nodes::ResolvedNode,
 
 /// Pre-commitment materialization (substrate.md §6; architecture.md
 /// "The write path"): from the moment the author signs, a content write's
-/// display rows exist and read to everyone, marked pending. A write that
-/// mints or edits nothing — Registration, Opinion, Attach — has nothing
-/// to materialize and returns quietly.
+/// display rows exist and read to everyone, marked pending. A profile
+/// update — a chained Registration — materializes its version row the
+/// same way ([`crate::profile::stage_pending`]). A write that mints or
+/// edits nothing — the admission Registration, Opinion, Attach — has
+/// nothing to materialize and returns quietly.
 ///
 /// `created_at` is the authoring instant the pre-sign leg recorded — the
 /// caller has it from `record_pre_signed`, so nothing here reloads the
@@ -1172,6 +1174,11 @@ pub async fn stage_pending(
     let family = match body.family {
         Family::Publish => ContentFamily::Post,
         Family::Review => ContentFamily::Comment,
+        Family::Registration => {
+            return crate::profile::stage_pending(pool, write, created_at)
+                .await
+                .map_err(|e| ContentError::Internal(e.to_string()));
+        }
         _ => return Ok(()),
     };
     if write.node_id.is_none() {

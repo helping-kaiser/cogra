@@ -1000,23 +1000,78 @@ pub(super) async fn people_cap(
     }))
 }
 
+/// A capped topics section — History's alone: the topics it serves, in
+/// order, and whether more match behind its "See all tags" door.
+pub(super) struct TopicsCap {
+    pub(super) served: Vec<Uuid>,
+    pub(super) more: bool,
+}
+
+/// The capped topics section of `request` in the matcher's own order,
+/// read from `list`'s (newest first seeing): its first
+/// [`search::TOPICS_SECTION_CAP`] topics, and whether more match. None
+/// when the cap does not apply: the request serves no topics, or nothing
+/// beside them.
+pub(super) async fn topics_cap(
+    pool: &PgPool,
+    request: &search_store::SearchRequest,
+    list: Option<search_store::ReaderList>,
+) -> Result<Option<TopicsCap>, sqlx::Error> {
+    if !request.serves_topics_beside_others() {
+        return Ok(None);
+    }
+    let Some(topics) = request.topics_only() else {
+        return Ok(None);
+    };
+    let window = search_store::Window {
+        list,
+        ..search_store::Window::default()
+    };
+    let hits = topics
+        .find_in(
+            pool,
+            window,
+            None,
+            false,
+            search::TOPICS_SECTION_CAP as i64 + 1,
+        )
+        .await?;
+    Ok(Some(TopicsCap {
+        more: hits.len() > search::TOPICS_SECTION_CAP,
+        served: hits
+            .into_iter()
+            .take(search::TOPICS_SECTION_CAP)
+            .map(|hit| hit.node_id)
+            .collect(),
+    }))
+}
+
 /// How many nodes `request` serves across every page: every match, less
-/// the people a capped people section leaves behind its door — the count
-/// under exactly the predicate the pages ran.
+/// the people a capped people section leaves behind its door and, on
+/// History, the topics a capped topics section does — the count under
+/// exactly the predicate the pages ran.
 pub(super) async fn served_count(
     pool: &PgPool,
     request: &search_store::SearchRequest,
     list: Option<search_store::ReaderList>,
 ) -> Result<i64, sqlx::Error> {
-    let all = request.count(pool, list).await?;
-    let Some(people) = request
+    let mut served = request.count(pool, list).await?;
+    if let Some(people) = request
         .people_only()
         .filter(|_| request.serves_people_beside_others())
-    else {
-        return Ok(all);
-    };
-    let matched = people.count(pool, list).await?;
-    Ok(all - (matched - search::PEOPLE_SECTION_CAP as i64).max(0))
+    {
+        let matched = people.count(pool, list).await?;
+        served -= (matched - search::PEOPLE_SECTION_CAP as i64).max(0);
+    }
+    if matches!(list, Some(search_store::ReaderList::History(_)))
+        && let Some(topics) = request
+            .topics_only()
+            .filter(|_| request.serves_topics_beside_others())
+    {
+        let matched = topics.count(pool, list).await?;
+        served -= (matched - search::TOPICS_SECTION_CAP as i64).max(0);
+    }
+    Ok(served)
 }
 
 /// The matched nodes, typed, in match order. A hit whose node vanished

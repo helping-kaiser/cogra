@@ -756,6 +756,7 @@ const HISTORY_QUERY: &str = r#"query($query: String, $kinds: [NodeKind!], $first
       pageInfo { hasNextPage hasPreviousPage startCursor endCursor }
       totalCount
       hasMorePeople
+      hasMoreTags
     }
   }
 }"#;
@@ -1052,4 +1053,95 @@ async fn three_seen_people_need_no_door(pool: PgPool) {
     assert_eq!(ids(&found).len(), 4);
     assert_eq!(found["hasMorePeople"], false);
     assert_eq!(found["totalCount"], 4);
+}
+
+/// The topics section of a narrowed list serves the three topics first
+/// seen most recently among those the query matches, then the rest;
+/// `hasMoreTags` opens the door, and the door — the same query with only
+/// topics as its kind — serves every match, newest first seeing first,
+/// with no door of its own. The count follows what the pages serve.
+///
+/// A narrowed History list serves its three most recently seen topics, then the rest, and the topics-only narrowing serves them all.
+/// ´claim:history:a-narrowed-history-caps-its-topics-at-three´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_narrowed_history_caps_its_topics_at_three(pool: PgPool) {
+    let rig = rig(pool);
+    let (_, token) = reader(&rig, "reader").await;
+    let kel = person(&rig.pool, "kel").await;
+    let mut topics = Vec::new();
+    for n in 0..5 {
+        topics.push(tag(&rig.pool, &format!("salt{n}")).await);
+    }
+    mark(&rig, &token, &topics).await;
+    let maps = post(&rig.pool, kel, 1, "Salt maps").await;
+    mark(&rig, &token, &[maps]).await;
+    let newest_first: Vec<Uuid> = topics.iter().rev().copied().collect();
+
+    let capped = history_query(&rig, &token, json!({ "query": "salt" })).await;
+    let mut expected = newest_first[..3].to_vec();
+    expected.push(maps);
+    assert_eq!(ids(&capped), expected);
+    assert_eq!(capped["hasMoreTags"], true);
+    assert_eq!(capped["hasMorePeople"], false);
+    assert_eq!(capped["totalCount"], 4);
+
+    let (forward, back) = walk_both_ways(&rig, &token, "salt", 1).await;
+    assert_eq!(forward, expected, "the cap holds page by page");
+    assert_eq!(back, expected, "and walking back");
+
+    let door = history_query(
+        &rig,
+        &token,
+        json!({ "query": "salt", "kinds": ["HASHTAG"] }),
+    )
+    .await;
+    assert_eq!(ids(&door), newest_first);
+    assert_eq!(door["hasMoreTags"], false);
+    assert_eq!(door["totalCount"], 5);
+
+    let content = history_query(&rig, &token, json!({ "query": "salt", "kinds": ["POST"] })).await;
+    assert_eq!(ids(&content), vec![maps]);
+    assert_eq!(content["hasMoreTags"], false);
+
+    let cue = history_query(&rig, &token, json!({ "query": "#salt" })).await;
+    assert_eq!(ids(&cue), newest_first[..3].to_vec());
+    assert_eq!(cue["hasMoreTags"], true);
+
+    let plain = history_query(&rig, &token, json!({ "first": 5 })).await;
+    assert_eq!(plain["hasMoreTags"], false, "no query narrows nothing");
+}
+
+/// Three matching topics or fewer stand whole, with no door; a fourth
+/// opens it; a query that matches no topic has none.
+///
+/// A narrowed History list holds its topics door shut at three topics or fewer and opens it at the fourth.
+/// ´claim:history:the-topics-door-opens-at-the-fourth-topic´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_topics_door_opens_at_the_fourth_topic(pool: PgPool) {
+    let rig = rig(pool);
+    let (_, token) = reader(&rig, "reader").await;
+    let kel = person(&rig.pool, "kel").await;
+    let maps = post(&rig.pool, kel, 1, "Salt maps").await;
+    mark(&rig, &token, &[maps]).await;
+
+    let none = history_query(&rig, &token, json!({ "query": "salt" })).await;
+    assert_eq!(ids(&none), vec![maps]);
+    assert_eq!(none["hasMoreTags"], false, "no topics, no door");
+
+    let mut topics = Vec::new();
+    for n in 0..3 {
+        topics.push(tag(&rig.pool, &format!("salt{n}")).await);
+    }
+    mark(&rig, &token, &topics).await;
+    let three = history_query(&rig, &token, json!({ "query": "salt" })).await;
+    assert_eq!(ids(&three).len(), 4);
+    assert_eq!(three["hasMoreTags"], false, "exactly three need no door");
+    assert_eq!(three["totalCount"], 4);
+
+    let fourth = tag(&rig.pool, "salt3").await;
+    mark(&rig, &token, &[fourth]).await;
+    let four = history_query(&rig, &token, json!({ "query": "salt" })).await;
+    assert_eq!(ids(&four).len(), 4);
+    assert_eq!(four["hasMoreTags"], true, "a fourth opens the door");
+    assert_eq!(four["totalCount"], 4);
 }

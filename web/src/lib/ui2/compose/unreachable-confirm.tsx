@@ -22,7 +22,7 @@ import { PillButton } from "../pill-button";
 
 export const UNREACHABLE_TITLE = "Start it unreachable?";
 export const UNREACHABLE_BODY =
-  "Your backing is your post's own path into anyone's feed. At 0.00 that path carries nothing — your post will live on your profile, reached only through the tags and citations you sign with it, until someone gives it an opinion.";
+  "Your backing is your post's own path into anyone's feed. At 0.00 the post starts unreachable on its own — only the tags and citations you sign with it lead to it, until someone gives it an opinion.";
 
 export function UnreachableConfirm({
   open,

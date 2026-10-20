@@ -27,7 +27,15 @@
    it rests.
 
    THE SEAL BENEATH IS THE SEAL — `ComposeSealBody`, the same body
-   `ComposeSeal` draws. What a wash covers is inert, not shortened. */
+   `ComposeSeal` draws. What a wash covers is inert, not shortened.
+
+   THE STRIP HAS A NON-DRAG ROUTE (jakob 2026-10-20: the input setting
+   governs everywhere). `Set an exact value for your backing` is the pad's
+   first control, hidden until focused — `TagPad`'s skip-link idiom — and
+   swaps the strip in place for `StanceAlternates` at `axis="one"`: one track
+   over For or against, `Type an exact value` one tap away, never a second
+   track for the pinned number. The swap is a state of this pad and is not
+   drawn a second time. */
 export function Screen() {
   return (
     <>
@@ -52,6 +60,10 @@ export function Screen() {
           boxSizing: "border-box",
         }}
       >
+        <button type="button" className="cg-sr-focusable cg-state cg-focus cg-hit" style={{ fontFamily: "var(--font-sans)" }}>
+          Set an exact value for your backing
+        </button>
+
         <span style={{ position: "absolute", top: 4, right: 4 }}>
           <HelpDot ariaLabel="Your backing on your post" />
         </span>
