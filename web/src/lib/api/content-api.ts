@@ -11,6 +11,7 @@ import {
   CommentRepliesDocument,
   CommentSelfMarkDocument,
   FeedPostFragmentDoc,
+  PostBackingDocument,
   PostCommentsDocument,
   PostDetailDocument,
   PrepareCommentDocument,
@@ -548,22 +549,31 @@ export async function preparePostEdit(
 export type PostBacking = { readonly rawSum: number };
 
 /**
- * SERVER GAP — THE READ IS MISSING (lane r13web, 2026-10-16). No field serves
- * the author's Publish bundle toward their own post: `viewerStance` folds the
- * family the target's class fixes, which for a post is Opinion — rightly, it
- * is the face's read (PadStanding.md) — and the store's bundle fold excludes
- * payload-marked records, which every Publish is. The public chronicle
- * (`records(author:, target:, family: PUBLISH)`) lists landed records but no
- * pending ones and no fold, so summing it here would be a second, divergent
- * fold on the client.
+ * The author's backing of their own post, off `Post.viewerBacking` — never
+ * `viewerStance`, which folds the face's Opinion bundle (PadStanding.md).
  *
- * The edit pad is built against this read and answers `null` — "not served" —
- * until the server grows it; the readouts it feeds stop at a flagged
- * placeholder rather than guess. When it lands, this takes the client and the
- * post's id and asks for the field.
+ * Null when the server answers none: the post does not resolve, or the viewer
+ * is not its creator. The readouts then stand unread rather than guess.
+ *
+ * Always asked of the server: an edit just signed moves the backing, and the
+ * next edit opened must fold it in (pending records count), so a cached
+ * answer from an earlier opening would park the walk-back against a sum that
+ * no longer stands.
  */
-export async function fetchPostBacking(): Promise<Outcome<PostBacking | null>> {
-  return { kind: "success", value: null };
+export async function fetchPostBacking(
+  client: ApolloClient,
+  postId: string,
+): Promise<Outcome<PostBacking | null>> {
+  const fetched = await fetchOutcome(() =>
+    client.query({
+      query: PostBackingDocument,
+      variables: { id: postId },
+      fetchPolicy: "network-only",
+    }),
+  );
+  if (fetched.kind !== "success") return fetched;
+  const backing = fetched.value.post?.viewerBacking;
+  return success(backing == null ? null : { rawSum: backing.rawPDirected });
 }
 
 export async function prepareComment(
