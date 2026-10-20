@@ -1711,10 +1711,11 @@ CREATE TABLE auth_applications (
     -- the latch cannot diverge; rebuildable from the mirror.
     reciprocated_at TIMESTAMPTZ,
     -- Latched derived cache of an L1 fact: set when the record
-    -- mirror confirms the member's first Opinion, toward any target —
-    -- the end of the borrowed view (api-spec.md Query.borrowedView).
-    -- Only a landed Opinion latches; an in-flight one can still
-    -- expire. Rebuildable from the mirror.
+    -- mirror confirms the member's first live Opinion (a non-inert
+    -- netted bundle), toward any target — the end of the borrowed
+    -- view (api-spec.md Query.borrowedView). Only a landed Opinion
+    -- latches; an in-flight one can still expire. Rebuildable from
+    -- the mirror.
     first_opinion_at TIMESTAMPTZ,
     -- The member's own dismissal of the vouch-back prompt, for good
     -- and on every device (User.vouchBackDismissed). Authoritative L2

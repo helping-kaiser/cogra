@@ -2403,14 +2403,16 @@ type Query {
    Moderator's view; an applicant keeps the view of the issuer of
    the invite link they registered through — whoever's vouch lands
    them — from the moment the account exists, whatever they stage; a
-   landed member keeps that issuer's view until their first
-   **Opinion** is signed, toward
-   any target — landed or in flight (VouchBack.md:15); an Affinity
-   never ends it (VouchBack.md:19); a first Opinion that expires
-   with none landed returns it (VouchBack.md:17). An Opinion staged
-   during the application signs with the vouch-in batch, so a
-   member who carried one owns their view from landing on
-   (VouchBack.md:21). From then on the view is their own and the
+   landed member keeps that issuer's view until they hold a live
+   **Opinion**, signed toward any target — landed or in flight
+   (VouchBack.md:15): one whose netted bundle toward its target has
+   neither parameter at zero. An inert Opinion (either parameter
+   zero) never ends it, since a feed rooted in routing-inert edges
+   ranks nothing; nor does an Affinity (VouchBack.md:19); a live
+   Opinion that expires with none landed returns it
+   (VouchBack.md:17). An Opinion staged during the application
+   signs with the vouch-in batch, so a member who carried a live one
+   owns their view from landing on (VouchBack.md:21). From then on the view is their own and the
    field is null — that rule, not missing data."
   borrowedView: Actor
 
