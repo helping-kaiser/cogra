@@ -21,12 +21,17 @@
 // `valenceFrom`, the master's `attachmentFrom`, one pixel worth the same as
 // the square's.
 //
+// RELEASE LANDS THE PICK ON THE NEAREST HUNDREDTH (ComposePad.md, EditPad.md):
+// the knob follows the finger wherever it is, and the lift parks the pick on
+// the grid — so the number a readout prints is the pick itself, and a pick
+// that reads `+0.00` is the exact 0 the gates ask about.
+//
 // THE KEYBOARD WALKS IT TOO. The field carries exactly one value, so
 // `role="slider"` is the truth here, and the arrows step it.
 
 import { useRef, useState } from "react";
 
-import { clampDimension } from "@/lib/stance/model";
+import { clampDimension, snapDimension } from "@/lib/stance/model";
 import { KNOB_TRAVEL_INSET_PX, valenceFrom } from "@/lib/stance/pad-geometry";
 import { VALENCE_LABEL, VALENCE_POLES } from "@/lib/stance/valence";
 import { formatDimension } from "@/lib/ui/stance-format";
@@ -63,14 +68,19 @@ export function AttachmentPad({
   testId: string;
 }) {
   const fieldRef = useRef<HTMLDivElement>(null);
-  const drag = useRef<{ x: number; base: number } | null>(null);
+  // `last` is the pick the drag most recently reported, held here rather than
+  // read back from `value`: the lift can arrive before the move's render.
+  const drag = useRef<{ x: number; base: number; last: number | null } | null>(null);
   const [dragging, setDragging] = useState(false);
   const knobX = attachmentPercentOf(value);
   const exact = formatDimension(value);
 
   const endDrag = () => {
+    const last = drag.current?.last ?? null;
     drag.current = null;
     setDragging(false);
+    // A tap that never travelled moves nothing — not even onto the grid.
+    if (last !== null) onChange(snapDimension(last));
   };
 
   const onKeyDown = (event: React.KeyboardEvent) => {
@@ -83,7 +93,7 @@ export function AttachmentPad({
     // A step lands on a hundredth, so the arrows reach EXACTLY 0.00 — the
     // value that wears 🤷 and that a compose Set asks about — rather than a
     // float's 1e-17 that reads `+0.00` beside a smiling face.
-    onChange(clampDimension(Math.round((value + direction * step) * 100) / 100));
+    onChange(snapDimension(value + direction * step));
   };
 
   return (
@@ -115,7 +125,7 @@ export function AttachmentPad({
         aria-valuetext={`${VALENCE_LABEL} ${exact}`}
         onKeyDown={onKeyDown}
         onPointerDown={(event) => {
-          drag.current = { x: event.clientX, base: value };
+          drag.current = { x: event.clientX, base: value, last: null };
           setDragging(true);
           event.currentTarget.setPointerCapture?.(event.pointerId);
         }}
@@ -123,9 +133,14 @@ export function AttachmentPad({
           const from = drag.current;
           const field = fieldRef.current;
           if (from === null || field === null) return;
-          onChange(
-            valenceFrom(from.base, field.getBoundingClientRect(), event.clientX - from.x, KNOB_TRAVEL_INSET_PX),
+          const next = valenceFrom(
+            from.base,
+            field.getBoundingClientRect(),
+            event.clientX - from.x,
+            KNOB_TRAVEL_INSET_PX,
           );
+          from.last = next;
+          onChange(next);
         }}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}

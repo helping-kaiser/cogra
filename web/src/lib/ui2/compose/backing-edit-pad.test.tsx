@@ -5,6 +5,8 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { KNOB_TRAVEL_INSET_PX, valenceTravelHalfExtent } from "@/lib/stance/pad-geometry";
+
 import { BackingEditPad } from "./backing-edit-pad";
 
 function renderPad({ pick = 0, rawSum = 0.1 as number | null } = {}) {
@@ -136,6 +138,70 @@ describe("EditPad", () => {
     fireEvent.click(screen.getByTestId("pad-set"));
     expect(onSet).toHaveBeenCalledWith(0);
     expect(screen.queryByText("Start it unreachable?")).not.toBeInTheDocument();
+  });
+
+  // THE PICK PARKS ON A HUNDREDTH (EditPad.md): the knob follows the drag
+  // wherever the finger is, and the release lands the pick on the nearest
+  // hundredth — so a pick that reads `+0.00` is EXACTLY 0, wears 🤷, and Set
+  // hands back the 0 that adds no record (EditPad.md "GIVEN the pick reads
+  // 0.00 … NEVER a record is added to the batch").
+  describe("release on the hundredths grid", () => {
+    const WIDTH = 300;
+    const half = valenceTravelHalfExtent({ left: 0, top: 0, width: WIDTH, height: 56 }, KNOB_TRAVEL_INSET_PX);
+
+    /** Drags the strip from x=0 by enough travel to carry `from` to `to`, without letting go. */
+    function dragTo(from: number, to: number) {
+      strip().getBoundingClientRect = () => new DOMRect(0, 0, WIDTH, 56);
+      fireEvent.pointerDown(strip(), { pointerId: 1, clientX: 0, clientY: 0 });
+      fireEvent.pointerMove(strip(), { pointerId: 1, clientX: (to - from) * half, clientY: 0 });
+    }
+
+    it("follows the finger off the grid mid-drag, then lands on exactly 0 at release", () => {
+      const { onSet } = renderPad({ pick: 0.2, rawSum: 0.1 });
+      dragTo(0.2, 0.0031);
+      // Mid-drag the pick is the float under the thumb: it prints +0.00
+      // and is not the zero the face reads as a shrug.
+      expect(text("pad-pick-exact")).toBe("+0.00");
+      expect(text("pad-pick-face")).not.toBe("🤷");
+      fireEvent.pointerUp(strip(), { pointerId: 1 });
+      expect(text("pad-pick-face")).toBe("🤷");
+      expect(strip()).toHaveAttribute("aria-valuenow", "0");
+      fireEvent.click(screen.getByTestId("pad-set"));
+      expect(onSet).toHaveBeenCalledOnce();
+      expect(Object.is(onSet.mock.calls[0]![0], 0)).toBe(true);
+    });
+
+    it("lands a pick just below zero on +0, never −0", () => {
+      const { onSet } = renderPad({ pick: 0, rawSum: 0.1 });
+      dragTo(0, -0.0042);
+      fireEvent.pointerUp(strip(), { pointerId: 1 });
+      fireEvent.click(screen.getByTestId("pad-set"));
+      expect(Object.is(onSet.mock.calls[0]![0], 0)).toBe(true);
+    });
+
+    it("lands anywhere else on the nearest hundredth", () => {
+      const { onSet } = renderPad({ pick: 0, rawSum: 0.1 });
+      dragTo(0, 0.4371);
+      fireEvent.pointerUp(strip(), { pointerId: 1 });
+      fireEvent.click(screen.getByTestId("pad-set"));
+      expect(onSet).toHaveBeenCalledWith(0.44);
+    });
+
+    it("moves nothing on a tap that never travelled", () => {
+      const { onSet } = renderPad({ pick: 0.2, rawSum: 0.1 });
+      fireEvent.pointerDown(strip(), { pointerId: 1, clientX: 40, clientY: 0 });
+      fireEvent.pointerUp(strip(), { pointerId: 1 });
+      fireEvent.click(screen.getByTestId("pad-set"));
+      expect(onSet).toHaveBeenCalledWith(0.2);
+    });
+
+    it("lands a cancelled pointer on the grid too", () => {
+      const { onSet } = renderPad({ pick: 0, rawSum: 0.1 });
+      dragTo(0, 0.0049);
+      fireEvent.pointerCancel(strip(), { pointerId: 1 });
+      fireEvent.click(screen.getByTestId("pad-set"));
+      expect(Object.is(onSet.mock.calls[0]![0], 0)).toBe(true);
+    });
   });
 
   it("Cancel stages nothing", () => {
