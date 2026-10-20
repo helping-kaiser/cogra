@@ -27,12 +27,15 @@ fun decimalOf(x: Double): BigDecimal {
     require(x.isFinite()) { "$x denotes no decimal" }
     if (x == 0.0) return BigDecimal.ZERO
     val exact = BigDecimal(x)
-    for (digits in 1..17) {
+    for (digits in 1..ROUND_TRIP_DIGITS) {
         val candidate = exact.round(MathContext(digits, RoundingMode.HALF_EVEN))
         if (candidate.toString().toDouble() == x) return candidate
     }
-    return exact.round(MathContext(17, RoundingMode.HALF_EVEN))
+    return exact.round(MathContext(ROUND_TRIP_DIGITS, RoundingMode.HALF_EVEN))
 }
+
+/** Significant digits that always carry a double back to itself. */
+private const val ROUND_TRIP_DIGITS = 17
 
 /** Whether the decimals these doubles denote sum to exactly zero. */
 fun netsToZero(values: Iterable<Double>): Boolean =

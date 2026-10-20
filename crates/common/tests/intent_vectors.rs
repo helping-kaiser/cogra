@@ -830,7 +830,7 @@ fn severance_cases() -> Vec<Value> {
         &severance_batch(POST, floats_miss, 40),
         true,
     ));
-    let float_built = vec![
+    let float_built = [
         stance(POST, -1.0, 0.7).with_seq(40),
         stance(POST, -1.0, 0.0).with_seq(41),
         stance(POST, -((2.3 - 1.0) - 1.0), 0.0).with_seq(42),
