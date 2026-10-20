@@ -1,4 +1,4 @@
-<!-- @dsCard group="Components" viewport="1240x470" name="Stance alternates" subtitle="The non-drag path. One control at a time — sliders lead, typing is a tap away. A tag or citation sheet hosts it in the field's place." -->
+<!-- @dsCard group="Components" viewport="1240x760" name="Stance alternates" subtitle="The non-drag path. One control at a time — sliders lead, typing is a tap away. A tag or citation sheet hosts it in the field's place; one axis takes one track." -->
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -9,7 +9,7 @@
 </head><body><div id="root"></div>
 <script type="text/babel">
 const NS = window.CoGraDesignSystem_9084ba;
-const { StanceAlternates, StanceStanding, StanceLandingLine, TAG_RANGES } = NS;
+const { StanceAlternates, StanceStanding, StanceLandingLine, AttachmentStanding, TAG_RANGES } = NS;
 const TAG_AXES={directed:"How much it is about this",interest:"How sure you are",left:"Barely",right:"Entirely",bottom:"Guessing",top:"Certain"};
 const clip=(v)=>(v===0?0:Math.min(1,Math.max(-1,v)));
 const landingOf=(rawSum,pick)=>{const landing={pDirected:clip(rawSum.pDirected+pick.pDirected),pInterest:clip(rawSum.pInterest+pick.pInterest)};return{landing,inert:landing.pDirected===0||landing.pInterest===0,severed:landing.pDirected===0&&landing.pInterest===0}};
@@ -18,7 +18,11 @@ function Demo(){
   const [a,setA]=React.useState({pDirected:0.4,pInterest:0.2});
   const [b,setB]=React.useState({pDirected:-0.35,pInterest:0.75});
   const [c,setC]=React.useState({pDirected:0.1,pInterest:1});
+  const [d,setD]=React.useState({pDirected:0.1,pInterest:1});
+  const [e,setE]=React.useState({pDirected:0,pInterest:1});
+  const backingBox={width:300,padding:16,borderRadius:"var(--radius-extra-large)",background:"var(--surface-dialog)"};
   return (
+  <div className="col" style={{gap:24}}>
   <div className="row">
     <div className="col">
       <span className="lbl">Sliders — what opens by default</span>
@@ -36,6 +40,21 @@ function Demo(){
       <span className="lbl">In a tag's sheet — the field's place, Done unchanged</span>
       <StanceAlternates host="sheet" pick={c} onPick={setC} axes={TAG_AXES} ranges={TAG_RANGES}/>
     </div>
+  </div>
+  <div className="row">
+    <div className="col" style={backingBox}>
+      <span className="lbl">One axis — the backing pad's strip, given way to one track; the pinned number is never drawn</span>
+      <StanceAlternates host="sheet" axis="one" pick={d} onPick={setD}>
+        <AttachmentStanding pick={d.pDirected}/>
+      </StanceAlternates>
+    </div>
+    <div className="col" style={backingBox}>
+      <span className="lbl">One axis, typed — one field</span>
+      <StanceAlternates host="sheet" axis="one" mode="entry" pick={e} onPick={setE}>
+        <AttachmentStanding pick={e.pDirected}/>
+      </StanceAlternates>
+    </div>
+  </div>
   </div>)}
 ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
 </script></body></html>

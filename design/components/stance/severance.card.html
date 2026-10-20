@@ -21,10 +21,12 @@ const oneEdge = {
 
 // The EXPLICIT route. Four edges stand, and their raw sum lies BEYOND the clip:
 // the fold reads +1.00/+0.85 while the history is +1.40/+0.85. The walk back is
-// the raw sum, which is why the dialog states it.
+// the raw sum, which is why the dialog states it — and it costs what the route
+// stages, ⌈max(1.40, 0.85)⌉ = 2 counter-records, not one per edge standing
+// (jakob 2026-10-05): one gesture, as many acts as the walk needs.
 const longHistory = {
   current:{pDirected:1,pInterest:0.85}, rawSum:{pDirected:1.4,pInterest:0.85},
-  records:4, severed:false, severance:{records:4},
+  records:4, severed:false, severance:{records:2},
 };
 
 function Demo(){return (
@@ -36,7 +38,7 @@ function Demo(){return (
   </div>
   <div className="col">
     <span className="lbl">The explicit route — no pick line, and a total beyond the cap</span>
-    <SeveranceConfirm inline targetLabel="@ada" bundle={longHistory} records={4}/>
+    <SeveranceConfirm inline targetLabel="@ada" bundle={longHistory} records={2}/>
     <p className="note"><b>Clipped is not hidden — but the total leads.</b> The reader has said <b>+1.40 / +0.85</b> in all, and that is what severing walks back; the aside notes that routing reads it capped at +1.00 / +0.85. Stated the other way round — fold first, sum second — it reads as broken arithmetic: "my opinion is +1.00, so why does going back take 1.40?" Four things, each paid separately.</p>
   </div>
 </div>)}

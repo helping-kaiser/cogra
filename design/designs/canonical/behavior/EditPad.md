@@ -18,7 +18,7 @@ ALWAYS a quiet line under Backing after states the raw total and the cap GIVEN t
 
 ALWAYS every pick on the field is a pick the edit may carry
 
-ALWAYS any value reads 🤷 GIVEN it is exactly 0.00
+ALWAYS any value reads 🤔 GIVEN it is exactly 0.00
 
 WHEN drag along the field -> the knob, Your pick and Backing after follow the pick AND NEVER anything is staged
 
@@ -27,6 +27,12 @@ WHEN tap the field without dragging -> NEVER the pick moves
 WHEN release a drag on the field -> the pick is parked AND NEVER the pick is staged
 
 ALWAYS the pick parks on a hundredth: the knob follows the drag wherever the finger is, and release lands the pick on the nearest hundredth, so the number a readout prints is the pick itself
+
+ALWAYS the zero hairline is the no side yet detent: the knob holds on it while the finger stays within the knob's own radius of it, and the pick reads exactly 0.00 there
+
+ALWAYS the non-drag route Set an exact value for your backing stands beside the field, hidden until focused, and leads to the same pick by one slider or one typed value
+
+WHEN press the non-drag route -> the field gives way in place to one track over For or against AND Type an exact value stands one tap away AND the readouts and the commit row stay AND NEVER a second track is drawn
 
 ALWAYS Walk it all back stands on the left of the commit row, pushed away from Cancel and Set
 
@@ -38,7 +44,9 @@ ALWAYS Backing after reads as far as one record reaches once Walk it all back ha
 
 ALWAYS Walk it all back is greyed and does nothing GIVEN the backing already nets 0.00
 
-WHEN press Set -> the pad closes AND the edit's Your backing row reads the backing after AND the footer's count stays as it was AND NEVER anything is signed before Sign the edit
+WHEN press Set -> the pad closes AND the edit's Your backing row reads the backing after AND the pick adds no count of its own to the footer AND NEVER anything is signed before Sign the edit
+
+WHEN press Set GIVEN the pick reads other than 0.00 and the batch held no act -> the pick alone fills the batch AND the footer reads You're signing 1 thing, the new version's one record AND Sign the edit answers
 
 WHEN press Set GIVEN the pick reads 0.00 -> the pad closes AND the edit's record carries 0.00 AND NEVER a record is added to the batch AND NEVER a dialog opens
 
