@@ -502,9 +502,11 @@ noun):
   change to it stays on your public record.
 - **Changing your picture** (the profile-picture seal): Your profile
   is a public record, and changes to it are signed actions in your
-  name — the picture changes the moment yours lands. / The signing is
+  name — the new picture shows as soon as you sign. / The signing is
   paid for, like your posts. The record that you changed it stays,
-  like every signed action.
+  like every signed action. *(Profiles display at authoring time, jakob
+  2026-10-20; the first paragraph's tail drafted in round 18, its
+  wording jakob's at review.)*
 - **The filter** (the feed's and search's filter sheets; the seen
   sentence is the surface's own, jakob 2026-10-14): What you
   let in, and in what order — the kinds combine freely, ranked or
