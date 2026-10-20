@@ -51,16 +51,24 @@ export function installTestFetch() {
 
   globalThis.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
     const sent = send(input, init);
-    inFlight.add(sent);
-    sent.then(
-      () => inFlight.delete(sent),
-      () => inFlight.delete(sent),
+    // In flight until the answer's body has fully arrived, not just its
+    // headers: the caller acts on the body. The clone is taken before the
+    // caller's own continuation runs, since this one is attached first.
+    const delivered: Promise<unknown> = sent.then(
+      (response) => response.clone().arrayBuffer().catch(() => undefined),
+      () => undefined,
     );
+    inFlight.add(delivered);
+    void delivered.then(() => inFlight.delete(delivered));
     return sent;
   };
 }
 
-/** Wait until every request already sent has its answer, or `limitMs` passes. */
+/**
+ * Wait until every request already sent has its answer delivered and its
+ * caller has had a turn to act on it — including any request that turn sends
+ * (a ranking's answer asks for its window) — or until `limitMs` passes.
+ */
 export async function settleFetches(limitMs = 5000): Promise<void> {
   const deadline = realNow() + limitMs;
   while (inFlight.size > 0) {
@@ -70,5 +78,6 @@ export async function settleFetches(limitMs = 5000): Promise<void> {
       Promise.allSettled([...inFlight]),
       new Promise((resolve) => realSetTimeout(resolve, left)),
     ]);
+    if (inFlight.size === 0) await new Promise((resolve) => realSetTimeout(resolve, 0));
   }
 }
