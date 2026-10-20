@@ -331,14 +331,9 @@ async fn a_pending_version_is_named_by_its_instant(pool: PgPool) {
         "a retry at the same instant writes nothing"
     );
     assert!(
-        !profile::land_profile_version(
-            &mut tx,
-            actor,
-            signed + Duration::seconds(1),
-            order(3, 0)
-        )
-        .await
-        .expect("lands"),
+        !profile::land_profile_version(&mut tx, actor, signed + Duration::seconds(1), order(3, 0))
+            .await
+            .expect("lands"),
         "another instant names no row"
     );
     assert!(

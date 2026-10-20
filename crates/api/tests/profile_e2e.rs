@@ -432,7 +432,9 @@ async fn a_pending_edit_reads_back_to_every_viewer(pool: PgPool) {
 
     rig.close_and_ingest().await;
 
-    let landed = rig.gql(Some(&bob), PROFILE, json!({ "handle": "ada" })).await;
+    let landed = rig
+        .gql(Some(&bob), PROFILE, json!({ "handle": "ada" }))
+        .await;
     assert_eq!(landed["user"]["bio"]["value"], "Signed, not landed.");
     assert_eq!(landed["user"]["landing"]["state"], "LANDED");
     assert!(landed["user"]["landing"]["epoch"].is_i64());

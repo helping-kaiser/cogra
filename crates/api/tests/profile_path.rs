@@ -338,7 +338,10 @@ async fn a_signed_update_is_served_pending_until_it_lands(pool: PgPool) {
         .await
         .expect("reads")
         .expect("has profile");
-    assert_eq!(landed.display_name, "ada", "the landed profile is untouched");
+    assert_eq!(
+        landed.display_name, "ada",
+        "the landed profile is untouched"
+    );
     assert_eq!(rig.version_count(actor).await, 3);
 
     rig.close_and_ingest().await;
@@ -405,7 +408,11 @@ async fn an_expired_update_falls_back_to_the_previous_version(pool: PgPool) {
 
     let after = current(&rig.pool, actor).await;
     assert!(!after.pending);
-    assert_eq!(after.bio.as_deref(), Some("Landed bio"), "the bio rolls back");
+    assert_eq!(
+        after.bio.as_deref(),
+        Some("Landed bio"),
+        "the bio rolls back"
+    );
     assert_eq!(rig.version_count(actor).await, 2);
 }
 
