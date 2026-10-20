@@ -1648,12 +1648,15 @@ impl User {
     /// narrowed list can stand another kind beside its people, the people
     /// section serves only the three people first seen most recently, and
     /// `hasMorePeople` says whether more match — the "See all profiles"
-    /// door, which is the same query with `kinds: [USER]`. A query past
-    /// the search length cap is BAD_INPUT. A hidden actor's posts and
-    /// comments stay out while the actor is hidden, and their own profile
-    /// stays; a removed thing keeps its place and reads its removal mark;
-    /// a thing whose node no longer resolves — a pending write that never
-    /// landed — is skipped. Paging is keyset on `(firstSeenAt, node id)`,
+    /// door, which is the same query with `kinds: [USER]`. The topics
+    /// section is capped the same way, to the three topics first seen
+    /// most recently, and `hasMoreTags` says whether more match — the
+    /// "See all tags" door, which is the same query with `kinds: [HASHTAG]`.
+    /// A query past the search length cap is BAD_INPUT. A hidden actor's
+    /// posts and comments stay out while the actor is hidden, and their
+    /// own profile stays; a removed thing keeps its place and reads its
+    /// removal mark; a thing whose node no longer resolves — a pending
+    /// write that never landed — is skipped. Paging is keyset on `(firstSeenAt, node id)`,
     /// so a thing first seen while the reader scrolls sorts above the
     /// open page and never shifts the next one. Field-level: viewer-only.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]

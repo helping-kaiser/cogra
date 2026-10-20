@@ -1126,7 +1126,11 @@ type User implements Node & Actor {
    narrowed list can stand another kind beside its people, the people
    section serves only the three people first seen most recently, and
    `hasMorePeople` says whether more match — the See all profiles
-   door, which is the same query with only USER in `kinds`. A query
+   door, which is the same query with only USER in `kinds`. The
+   topics section is capped the same way, to the three topics first
+   seen most recently, and `hasMoreTags` says whether more match —
+   the See all tags door, which is the same query with only HASHTAG
+   in `kinds`. A query
    past the search length cap is BAD_INPUT. A hidden actor's posts
    and comments stay out while the actor is hidden, and their own
    profile stays; a removed thing keeps its place and reads its
@@ -1866,6 +1870,10 @@ type ViewHistoryConnection {
    the See all profiles door (Search, The people section). False on a
    list no query narrows."
   hasMorePeople: Boolean!
+  "Whether more seen topics match than the topics section serves —
+   the See all tags door (Search, History). False when the section is
+   not capped, and on a list no query narrows."
+  hasMoreTags: Boolean!
 }
 "What the seen-list holds: the kinds History serves; later slices
  add members as their kinds join. A union, not `Node`: a Hashtag is
@@ -3038,7 +3046,13 @@ statement bounded by the reader's own saves.
 seen-list by the same law over the seen set: people, then topics,
 then content, newest first seeing first inside a section; the people
 section is capped as above, to the three people first seen most
-recently, and `kinds` narrows as search's does. The seen-list's own
+recently, and `kinds` narrows as search's does. While the narrowed
+list can stand another kind beside its topics, the topics section is
+capped the same way, to the three topics first seen most recently;
+the connection's `hasMoreTags` says whether more match — the See all
+tags door, which re-queries with only `HASHTAG` in `kinds`, where
+every match is served, uncapped. Saved has no topics section and
+search does not cap its own. The seen-list's own
 narrowing holds: a hidden actor's posts and comments match nothing
 while the actor is hidden, and their profile still does. A narrowed
 list pages on cursors of its own, its `totalCount` counts the
