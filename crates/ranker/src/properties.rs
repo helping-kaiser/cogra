@@ -1319,7 +1319,10 @@ fn woven_ranked(answer: &crate::view::FeedRanking) -> Vec<String> {
     for p in &answer.settling {
         slots[p.ranked_position as usize] = Some(p.reference.clone());
     }
-    let mut landed = answer.entries.iter().map(|e| e.entry.target_graph_id.clone());
+    let mut landed = answer
+        .entries
+        .iter()
+        .map(|e| e.entry.target_graph_id.clone());
     slots
         .into_iter()
         .map(|s| s.unwrap_or_else(|| landed.next().expect("a landed row per free slot")))
@@ -1339,14 +1342,15 @@ fn an_inert_born_candidate_is_never_woven() {
     b.opinion("v", "prof:a", 1.0, 1.0);
     let parent = b.post("a", 1.0);
     let slice = b.build();
-    let born = |reference: &str, author: &str, family: Family, p_d: f64, p_i: f64| SettlingCandidate {
-        reference: reference.to_string(),
-        author: format!("prof:{author}"),
-        family,
-        p_d,
-        p_i,
-        authored_at: 0,
-    };
+    let born =
+        |reference: &str, author: &str, family: Family, p_d: f64, p_i: f64| SettlingCandidate {
+            reference: reference.to_string(),
+            author: format!("prof:{author}"),
+            family,
+            p_d,
+            p_i,
+            authored_at: 0,
+        };
     let answer = feed_ranking(
         &slice,
         &all_kinds(),
@@ -1362,9 +1366,18 @@ fn an_inert_born_candidate_is_never_woven() {
         ],
     )
     .expect("weaves");
-    let placed: Vec<&str> = answer.settling.iter().map(|p| p.reference.as_str()).collect();
+    let placed: Vec<&str> = answer
+        .settling
+        .iter()
+        .map(|p| p.reference.as_str())
+        .collect();
     assert_eq!(placed, vec!["live"], "only the routing-live row is woven");
-    assert!(answer.entries.iter().any(|e| e.entry.target_graph_id == parent));
+    assert!(
+        answer
+            .entries
+            .iter()
+            .any(|e| e.entry.target_graph_id == parent)
+    );
 }
 
 /// feed-ranking.md §5.2: the settling key carries the sign the landed path
@@ -1425,13 +1438,16 @@ fn a_settling_key_ties_its_landed_twin_in_every_sign() {
             authored_at: 0,
         })
         .collect();
-    let answer =
-        feed_ranking(&slice, &all_kinds(), &network(), &candidates).expect("weaves");
+    let answer = feed_ranking(&slice, &all_kinds(), &network(), &candidates).expect("weaves");
     let woven = woven_ranked(&answer);
     for (reference, _, _, twin) in &twins {
         let at = woven.iter().position(|id| id == reference).expect("woven");
         assert!(at > 0, "{reference} stands after its twin");
-        assert_eq!(&woven[at - 1], twin, "{reference} stands directly after its twin");
+        assert_eq!(
+            &woven[at - 1],
+            twin,
+            "{reference} stands directly after its twin"
+        );
     }
     let place = |r: &str| woven.iter().position(|id| id == r).expect("woven");
     let landed_score = |id: &str| {
@@ -1445,8 +1461,14 @@ fn a_settling_key_ties_its_landed_twin_in_every_sign() {
         .iter()
         .position(|id| landed_score(id).is_some_and(|s| s < 0.0))
         .expect("a negative landed row");
-    assert!(place("pending/a-") > after_negatives, "woven among the negatives");
-    assert!(place("pending/b+") > after_negatives, "woven among the negatives");
+    assert!(
+        place("pending/a-") > after_negatives,
+        "woven among the negatives"
+    );
+    assert!(
+        place("pending/b+") > after_negatives,
+        "woven among the negatives"
+    );
     assert!(place("pending/b-") < after_negatives, "the sign flips back");
     assert!(place("pending/a+") < after_negatives);
 }
