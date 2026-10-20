@@ -138,11 +138,12 @@ vouches then lift or dilute standing from that baseline
 
 ## 4. Postgres-side content
 
-The account's display material — display name, bio, avatar, cover
-image, website URL — lives in Postgres, keyed by the Profile's
+The account's display material — display name, bio, avatar,
+website URL — lives in Postgres, keyed by the Profile's
 identifier: what a record *shows*, never what it *is*. Edits are
 append-only version rows written in the same flow as the parallel
-Registration that witnesses them
+Registration that witnesses them, served from its signature on and
+pending until it lands
 ([layers.md §4](layers.md#4-layers-on-postgres-side-display-content)).
 Concrete schema in [data-model.md](../implementation/data-model.md).
 
