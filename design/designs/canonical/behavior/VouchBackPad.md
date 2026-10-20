@@ -18,6 +18,8 @@ WHEN the pad closes GIVEN it carried the two coaching lines -> NEVER the two coa
 
 ALWAYS the coaching's exact pair shows only when the reader has asked for exact values, and its spoken twin says the face and the pair either way
 
+ALWAYS the line You'd keep your borrowed view — no feed of your own yet. stands under the landing line, and Set still signs, GIVEN the pick lands a number at zero and the member holds no opinion with neither number at zero
+
 WHEN tap the pad's ? GIVEN the pad opened as the vouch-back -> the help Your vouch back replaces the pad's body in place AND Set is disabled while it shows AND NEVER a dialog opens
 
 WHEN tap the pad's ? GIVEN the pad opened plainly -> the pad's four help lines replace its body in place AND Set is disabled while they show AND NEVER a dialog opens
