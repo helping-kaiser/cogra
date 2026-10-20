@@ -481,8 +481,9 @@ pub async fn land_comment_version(
 
 /// Expiry: removes whatever a never-landed write put on screen under
 /// `node_id` — a pending entity row with its versions, or the pending
-/// version row of an unlanded edit, which leaves the previous version
-/// rendered.
+/// version row of an unlanded edit or profile update, which leaves the
+/// previous version rendered. A profile update's node is its actor, the
+/// UUID its payload envelope carries.
 ///
 /// A version's gallery goes with the version, without a statement here:
 /// the junctions are keyed on the version row and cascade from it. That is
@@ -531,6 +532,16 @@ pub async fn discard_pending_many(
     sqlx::query!(
         "DELETE FROM comment_versions
          WHERE (comment_id, created_at)
+               IN (SELECT * FROM unnest($1::uuid[], $2::timestamptz[]))
+           AND pending",
+        nodes,
+        instants,
+    )
+    .execute(&mut **tx)
+    .await?;
+    sqlx::query!(
+        "DELETE FROM actor_profile_versions
+         WHERE (actor_id, created_at)
                IN (SELECT * FROM unnest($1::uuid[], $2::timestamptz[]))
            AND pending",
         nodes,
