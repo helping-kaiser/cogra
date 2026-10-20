@@ -42,9 +42,9 @@ describe("EditPad", () => {
   });
 
   // PICK-IS-THE-EDGE: the pad opens at the edit's own pick, 0.00 unmoved.
-  it("opens at the edit's pick — 0.00, 🤷, when unmoved", () => {
+  it("opens at the edit's pick — 0.00, 🤔, when unmoved", () => {
     renderPad({ pick: 0, rawSum: 0.1 });
-    expect(text("pad-pick-face")).toBe("🤷");
+    expect(text("pad-pick-face")).toBe("🤔");
     expect(text("pad-pick-exact")).toBe("+0.00");
     expect(strip()).toHaveAttribute("aria-valuenow", "0");
   });
@@ -87,9 +87,9 @@ describe("EditPad", () => {
     expect(screen.queryByTestId("pad-cap")).not.toBeInTheDocument();
   });
 
-  it("reads any value of exactly 0.00 as 🤷", () => {
+  it("reads any value of exactly 0.00 as 🤔", () => {
     renderPad({ pick: -0.1, rawSum: 0.1 });
-    expect(text("pad-after-face")).toBe("🤷");
+    expect(text("pad-after-face")).toBe("🤔");
   });
 
   describe("Walk it all back", () => {
@@ -107,7 +107,7 @@ describe("EditPad", () => {
       const { onSet, onClose } = renderPad({ pick: 0, rawSum: 0.35 });
       fireEvent.click(screen.getByTestId("pad-walk-back"));
       expect(text("pad-pick-exact")).toBe("-0.35");
-      expect(text("pad-after-face")).toBe("🤷");
+      expect(text("pad-after-face")).toBe("🤔");
       expect(text("pad-after-exact")).toBe("+0.00");
       expect(onSet).not.toHaveBeenCalled();
       expect(onClose).not.toHaveBeenCalled();

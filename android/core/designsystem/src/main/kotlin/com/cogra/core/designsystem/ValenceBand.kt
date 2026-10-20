@@ -60,7 +60,7 @@ data class ValenceBand(
  *    positive row keeps it.
  *  - The 😕 row stops short of zero and the 🙂 row would take it, but
  *    [nearestValenceAnchor] answers EXACTLY 0.00 before the table is
- *    read: it wears 🤷, [ZERO_BACKING_BAND] (jakob 2026-10-16).
+ *    read: it wears 🤔, [ZERO_BACKING_BAND] (jakob 2026-10-20).
  *
  * Six monotone bands covering the closed axis, and the same face
  * everywhere.
@@ -75,14 +75,16 @@ val VALENCE_SIX: List<ValenceBand> = listOf(
 )
 
 /**
- * EXACTLY 0.00 SHRUGS on the one axis (jakob 2026-10-16, "yes the shrug
- * should be the icon for exactly 0"): a backing of zero carries nothing,
- * so it wears the zero face, spoken `Nothing`, never a band's smile. Only
- * the exact value — the bands keep the rest of the axis as ruled. The
- * master is `StanceReadout.jsx`'s `ZERO_BACKING_LABEL`.
+ * EXACTLY 0.00 THINKS on the one axis (jakob 2026-10-16, its face 🤔 since
+ * 2026-10-20): a backing of zero takes no side — with the second number
+ * pinned at 1 it folds to `(0, 1)`, unreachable on its own path — so it
+ * wears the one-zero face, spoken `No side taken`, never a band's smile.
+ * Only the exact value — the bands keep the rest of the axis as ruled. The
+ * master is `StanceReadout.jsx`'s `UNREACHABLE_EMOJI` and
+ * `ZERO_BACKING_LABEL`.
  */
 val ZERO_BACKING_BAND = ValenceBand(
-    emoji = ZERO_BUNDLE_READOUT.emoji,
+    emoji = UNREACHABLE_EMOJI,
     label = R.string.valence_zero,
     pDirected = 0.0,
     to = 0.0,
@@ -99,7 +101,7 @@ val ZERO_BACKING_BAND = ValenceBand(
  *
  * Interval comparison only: no distance is computed, so there is no
  * float arithmetic here for two platforms to round differently. Negative
- * zero compares equal to zero, so a drag that never moved shrugs too.
+ * zero compares equal to zero, so a drag that never moved thinks too.
  */
 fun nearestValenceAnchor(pDirected: Double): ValenceBand {
     val value = if (pDirected.isNaN()) 0.0 else pDirected.coerceIn(-1.0, 1.0)

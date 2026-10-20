@@ -114,7 +114,9 @@ export const HELP_TOPICS = {
   changingYourPicture: {
     title: "Changing your picture",
     paragraphs: [
-      "Your profile is a public record, and changes to it are signed actions in your name — the picture changes the moment yours lands.",
+      // Nothing more: the picture changing when it lands is expected, and
+      // a "?" explains only what is new (copy-voice, jakob 2026-10-20).
+      "Your profile is a public record, and changes to it are signed actions in your name.",
       "The community pool covers the signing, like your posts. The record that you changed it stays, like every signed action.",
     ],
   },

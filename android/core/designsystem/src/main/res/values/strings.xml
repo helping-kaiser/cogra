@@ -178,9 +178,9 @@
     <!-- The one-axis reading: the anchor's word, then the axis and the
          one number — `Nice, For or against +0.10`. -->
     <string name="valence_reading">%1$s, %2$s %3$s</string>
-    <!-- Exactly 0.00 on the one axis wears 🤷 and is spoken this
-         (copy-voice "The backing pad's own words", jakob 2026-10-16). -->
-    <string name="valence_zero">Nothing</string>
+    <!-- Exactly 0.00 on the one axis wears 🤔 and is spoken this
+         (copy-voice "The backing pad's own words", jakob 2026-10-20). -->
+    <string name="valence_zero">No side taken</string>
     <!-- The one-axis pad's readouts (copy-voice "The backing pad's own
          words", round 15): the pick is the record, Current backing the
          bundle's net now, Backing after where the pick lands it. -->
@@ -192,9 +192,19 @@
     <!-- PLACEHOLDER, NOT DESIGN COPY: spoken for a backing the read served
          none of (not the post's creator) or failed to read. -->
     <string name="backing_unread">not read yet</string>
-    <string name="stance_carries_nothing">This would carry nothing.</string>
-    <string name="stance_carries_nothing_directed">Where you stand would carry nothing.</string>
-    <string name="stance_carries_nothing_interest">What reaches you would carry nothing.</string>
+    <!-- The unreachable landing (jakob 2026-10-20, blessed; the master is
+         StanceReadout.jsx's unreachableHead / UNREACHABLE_TAIL): a landing
+         with exactly one number at zero wears 🤔 and reads its state by
+         the other number's sign, then the one consequence. -->
+    <string name="stance_unreachable_interested">Interested, no side taken</string>
+    <string name="stance_unreachable_rather_not">Rather not see it, no side taken</string>
+    <string name="stance_unreachable_for">For it, no interest either way</string>
+    <string name="stance_unreachable_against">Against it, no interest either way</string>
+    <string name="stance_unreachable_tail">this won\'t shape anyone\'s feed.</string>
+    <string name="stance_unreachable_line">%1$s — %2$s</string>
+    <!-- The master's BORROWED_KEPT_LINE: under an unreachable or severed
+         landing while the reader still borrows a view. Warns, never blocks. -->
+    <string name="stance_borrowed_kept">You\'d keep your borrowed view — no feed of your own yet.</string>
 
     <string name="stance_exact_values_show">Set exact values</string>
     <string name="stance_exact_values_hide">Hide exact values</string>

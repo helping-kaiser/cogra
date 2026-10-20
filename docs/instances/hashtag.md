@@ -82,7 +82,7 @@ author for account deletion to touch.
   third-party topic claim the feed reads through its author,
   mirroring the reference channels (§5). Tagging is revisable: the
   newest record per (author, content, Type) bundle is the author's
-  current claim, and relevance `0` withdraws it (§4).
+  current claim, and a tag at `(0,0)` withdraws it (§4).
 - **Following a topic** — an **Affinity** record (Actor → Type):
   relevance, not verdict — its sign is coherence, never a
   standing vouch. The target selects the family
@@ -109,18 +109,20 @@ an event — the author's latest record in the bundle is their current
 claim, and the earlier ones are history
 ([graph-model.md §4](../primitive/graph-model.md#4-stances-not-events)).
 
-**Relevance `0` reads as withdrawn.** Un-tagging is re-tagging at
-relevance `r = 0` — an ordinary priced, visible record, never an
+**`(0,0)` reads as withdrawn.** Un-tagging is re-tagging at
+`(r, c) = (0, 0)` — an ordinary priced, visible record, never an
 erasure. The census bounds Tag confidence to `c ∈ [0, 1]`
 ([layer1-interface.md §9](../primitive/layer1-interface.md#9-node-and-edge-type-inventory)),
 so no counter-record can net accumulated confidence back down: a
 net-over-bundle read could not express withdrawal at all. Newest-wins
-needs no arithmetic — the withdrawal is declared.
+needs no arithmetic — the withdrawal is declared. A newest tag at
+zero on one parameter only is routing-inert but not withdrawn: it
+is a claim, not nothing.
 
 **A content node's current topics are the union of the current
-non-zero bundles across all authors** — the content author's own
-declarations and every third-party claim alike, each still reaching a
-viewer only through its author (§5).
+bundles not withdrawn to `(0,0)` across all authors** — the content
+author's own declarations and every third-party claim alike, each
+still reaching a viewer only through its author (§5).
 
 The moderation verdict mark is this fold at another surface: The
 Moderator's Tag toward a moderation Type is `(0,0)` + payload, so it

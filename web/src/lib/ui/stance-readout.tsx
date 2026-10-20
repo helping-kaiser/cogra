@@ -22,7 +22,12 @@
 // `aria-live` so the same change reaches a reader who is not looking at
 // the face.
 
-import { bundleReadout, nearestAnchor, ZERO_BUNDLE_EMOJI } from "@/lib/stance/anchors";
+import {
+  bundleReadout,
+  nearestAnchor,
+  UNREACHABLE_EMOJI,
+  ZERO_BUNDLE_EMOJI,
+} from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import type { StanceBundle, StanceLanding } from "@/lib/stance/stance-data";
 import {
@@ -176,25 +181,45 @@ export function signedLine(
 }
 
 /**
+ * ONE ZERO IS A DELIBERATE STATE, NOT A LOSS (jakob 2026-10-20, seam 240;
+ * the master is `StanceReadout.jsx`'s `UNREACHABLE_TAIL`/`unreachableHead`).
+ * A landing with exactly one number at zero is held and shapes no feed —
+ * UNREACHABLE — and it is not severance: only `(0, 0)` is, which keeps its
+ * own line. The head names the state by the other number's sign; the tail
+ * is the one consequence worth saying.
+ */
+export const UNREACHABLE_TAIL = "this won't shape anyone's feed.";
+
+export function unreachableHead(pair: StancePair): string {
+  if (pair.pDirected === 0) {
+    return pair.pInterest > 0 ? "Interested, no side taken" : "Rather not see it, no side taken";
+  }
+  return pair.pDirected > 0 ? "For it, no interest either way" : "Against it, no interest either way";
+}
+
+/**
+ * THE BORROWED VIEW HOLDS UNTIL AN OPINION IS LIVE (jakob 2026-10-20; the
+ * master's `BORROWED_KEPT_LINE`): a reader who holds no outgoing opinion
+ * with neither number at zero walks a borrowed view, so a pick that lands
+ * unreachable or severed starts no feed of their own. Warns, never blocks.
+ */
+export const BORROWED_KEPT_LINE = "You'd keep your borrowed view — no feed of your own yet.";
+
+/**
  * The landing, in the precedence Android fixes: severance first, then
  * inertness, then the ordinary reading. `null` is a landing not yet
  * known — it says so rather than showing a stale one.
  *
- * Which axis is inert is read off the landing the fold returned, and
- * only once the fold has DECLARED the landing inert. The schema carries
- * one `inert` flag ("either axis at zero") rather than one per axis, so
- * the flag decides that inertness applies and the returned pair only
- * says which side it fell on.
+ * The fold DECLARES the landing inert ("either axis at zero") and severed
+ * ("both axes at zero"); severance is read first, so an inert landing
+ * here has exactly one number at zero, and the returned pair says which.
+ * It reads the state under the one-zero face 🤔, never the table's.
  */
 export function landingLine(landing: StanceLanding | null, zero: ZeroWords = SEVERANCE_ZERO): string {
   if (landing === null) return "Working out where this leaves you…";
   if (landing.severed) return zero.landing;
   if (landing.inert) {
-    const directedInert = landing.landing.pDirected === 0;
-    const interestInert = landing.landing.pInterest === 0;
-    if (directedInert && interestInert) return "This would carry nothing.";
-    if (directedInert) return "Where you stand would carry nothing.";
-    if (interestInert) return "What reaches you would carry nothing.";
+    return `This leaves you at: ${UNREACHABLE_EMOJI} ${unreachableHead(landing.landing)} — ${UNREACHABLE_TAIL}`;
   }
   // Face, words, AND the exact pair (§8.3): the landing carries the same
   // three the standing does. The landing is a bundle, not a pick, so it
@@ -243,21 +268,38 @@ export function StanceStanding({
   );
 }
 
-/** The landing — the one line that sits below the field. */
+/**
+ * The landing — the one line that sits below the field. `borrowed` adds
+ * the borrowed-view line under an unreachable or severed landing.
+ */
 export function StanceLandingLine({
   landing,
   testIdPrefix,
   zero = SEVERANCE_ZERO,
+  borrowed = false,
 }: {
   /** The fold's projection of the pick; null while it is being read. */
   landing: StanceLanding | null;
   testIdPrefix: string;
   /** The record family's words for a bundle netted to zero. */
   zero?: ZeroWords;
+  /** The reader still borrows a view: they hold no live outgoing opinion. */
+  borrowed?: boolean;
 }) {
+  const keepsBorrowed = borrowed && landing !== null && (landing.inert || landing.severed);
   return (
-    <p aria-live="polite" data-testid={`${testIdPrefix}-landing`} className="text-body-small">
-      {landingLine(landing, zero)}
-    </p>
+    <div aria-live="polite" className="flex flex-col gap-1">
+      <p data-testid={`${testIdPrefix}-landing`} className="text-body-small">
+        {landingLine(landing, zero)}
+      </p>
+      {keepsBorrowed && (
+        <p
+          data-testid={`${testIdPrefix}-landing-borrowed`}
+          className="text-body-small text-on-surface-variant"
+        >
+          {BORROWED_KEPT_LINE}
+        </p>
+      )}
+    </div>
   );
 }
