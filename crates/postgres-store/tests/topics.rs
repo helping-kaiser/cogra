@@ -245,7 +245,11 @@ async fn zero_zero_withdraws_the_pair(pool: PgPool) {
     let survivor = topics::topics_of(&pool, &post.to_string(), "alice", TopicView::Landed)
         .await
         .expect("folds");
-    assert_eq!(survivor.len(), 1, "relevance 0 alone is a claim, not nothing");
+    assert_eq!(
+        survivor.len(),
+        1,
+        "relevance 0 alone is a claim, not nothing"
+    );
     assert_eq!((survivor[0].relevance, survivor[0].confidence), (0.0, 1.0));
 
     land(

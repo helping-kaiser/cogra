@@ -54,13 +54,12 @@ async fn land(pool: &PgPool, epoch: i64, seq: u64, person: &str, (p_d, p_i): (f6
 
 /// Stages one pre-signed Opinion by ada toward `person` that has not landed.
 async fn stage(pool: &PgPool, seq: i64, person: &str, (p_d, p_i): (f64, f64)) {
-    let actor_id: Uuid = sqlx::query_scalar(
-        "INSERT INTO actors (kind, handle) VALUES ('user', $1) RETURNING id",
-    )
-    .bind(format!("{AUTHOR}-{seq}"))
-    .fetch_one(pool)
-    .await
-    .expect("actor insert");
+    let actor_id: Uuid =
+        sqlx::query_scalar("INSERT INTO actors (kind, handle) VALUES ('user', $1) RETURNING id")
+            .bind(format!("{AUTHOR}-{seq}"))
+            .fetch_one(pool)
+            .await
+            .expect("actor insert");
     sqlx::query(
         "INSERT INTO staged_writes
              (id, actor_id, act_id, author, seq, family, middle, target,
@@ -82,9 +81,15 @@ async fn stage(pool: &PgPool, seq: i64, person: &str, (p_d, p_i): (f64, f64)) {
 }
 
 async fn read(pool: &PgPool, person: &str, view: BundleView) -> BundleSum {
-    stance::bundle(pool, AUTHOR, Family::Opinion, &format!("prof:{person}"), view)
-        .await
-        .expect("bundle")
+    stance::bundle(
+        pool,
+        AUTHOR,
+        Family::Opinion,
+        &format!("prof:{person}"),
+        view,
+    )
+    .await
+    .expect("bundle")
 }
 
 /// The same records in several orders, each order its own bundle: the
@@ -97,12 +102,7 @@ async fn read(pool: &PgPool, person: &str, view: BundleView) -> BundleSum {
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_store_sums_agree_with_the_fold_in_any_order(pool: PgPool) {
     let records = [(0.1, 0.7), (0.2, -0.1), (-0.3, 0.3), (0.6, -0.2)];
-    let orders = [
-        [0, 1, 2, 3],
-        [3, 2, 1, 0],
-        [2, 0, 3, 1],
-        [1, 3, 0, 2],
-    ];
+    let orders = [[0, 1, 2, 3], [3, 2, 1, 0], [2, 0, 3, 1], [1, 3, 0, 2]];
     let mut epoch = 0;
     for (k, order) in orders.iter().enumerate() {
         let person = format!("p{k}");
@@ -113,8 +113,16 @@ async fn the_store_sums_agree_with_the_fold_in_any_order(pool: PgPool) {
         }
         let stored = read(&pool, &person, BundleView::Landed).await;
         let folded = BundleSum::of_records(picked.iter().copied()).expect("finite");
-        assert_eq!(stored.p_d.to_bits(), folded.p_d.to_bits(), "order {order:?}");
-        assert_eq!(stored.p_i.to_bits(), folded.p_i.to_bits(), "order {order:?}");
+        assert_eq!(
+            stored.p_d.to_bits(),
+            folded.p_d.to_bits(),
+            "order {order:?}"
+        );
+        assert_eq!(
+            stored.p_i.to_bits(),
+            folded.p_i.to_bits(),
+            "order {order:?}"
+        );
         assert_eq!((stored.p_d, stored.p_i), (0.6, 0.7));
         assert_eq!(stored.records, 4);
     }
@@ -131,7 +139,11 @@ async fn a_dirty_walk_back_reads_severed_across_both_halves(pool: PgPool) {
     land(&pool, 0, 1, "bob", (0.1, 0.1)).await;
     land(&pool, 1, 2, "bob", (0.2, 0.2)).await;
     let landed = read(&pool, "bob", BundleView::Landed).await;
-    assert_eq!((landed.p_d, landed.p_i), (0.3, 0.3), "not 0.30000000000000004");
+    assert_eq!(
+        (landed.p_d, landed.p_i),
+        (0.3, 0.3),
+        "not 0.30000000000000004"
+    );
     assert!(landed.project(-0.3, -0.3).is_severed());
 
     stage(&pool, 3, "bob", (-0.3, -0.3)).await;
@@ -160,8 +172,7 @@ async fn an_off_grid_stored_value_sums_exactly(pool: PgPool) {
     land(&pool, 1, 2, "bob", (0.1, 0.0)).await;
     land(&pool, 2, 3, "bob", (-0.37, 0.25)).await;
     let mixed = read(&pool, "bob", BundleView::Landed).await;
-    let folded =
-        BundleSum::of_records([(legacy, 1.0), (0.1, 0.0), (-0.37, 0.25)]).expect("finite");
+    let folded = BundleSum::of_records([(legacy, 1.0), (0.1, 0.0), (-0.37, 0.25)]).expect("finite");
     assert_eq!(mixed.p_d.to_bits(), folded.p_d.to_bits());
     assert_eq!(mixed.p_i.to_bits(), folded.p_i.to_bits());
 }

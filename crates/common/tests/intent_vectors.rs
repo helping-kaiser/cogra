@@ -1320,7 +1320,13 @@ fn build_vectors() -> Value {
 /// ´claim:intent:the-exported-severance-nets-exactly´
 #[test]
 fn the_exported_severance_nets_its_bundle_exactly() {
-    for (p_d, p_i) in [(2.3, -0.7), (1.1, 0.3), (1.4, 0.25), (0.1, 0.1), (-3.0, 0.5)] {
+    for (p_d, p_i) in [
+        (2.3, -0.7),
+        (1.1, 0.3),
+        (1.4, 0.25),
+        (0.1, 0.1),
+        (-3.0, 0.5),
+    ] {
         let sum = BundleSum {
             p_d,
             p_i,

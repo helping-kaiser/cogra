@@ -367,7 +367,11 @@ fn t_fold_no_order_is_observable() {
         p_d: p,
         p_i: p,
     };
-    assert_ne!((0.1 + 0.2) + 0.3, (0.3 + 0.2) + 0.1, "floats would see order");
+    assert_ne!(
+        (0.1 + 0.2) + 0.3,
+        (0.3 + 0.2) + 0.1,
+        "floats would see order"
+    );
     let ascending = [at(0, 0.1), at(1, 0.2), at(2, 0.3)];
     let descending = [at(0, 0.3), at(1, 0.2), at(2, 0.1)];
     for members in [ascending, descending] {

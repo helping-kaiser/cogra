@@ -523,7 +523,9 @@ mod tests {
         assert!(dec("-0.000").is_zero());
         let long = "123456789012345678901234567890123456789012.5";
         assert_eq!(dec(long).to_string(), long);
-        for bad in ["", "-", ".", "1.2.3", "abc", "1e", "NaN", "Infinity", "1e99999"] {
+        for bad in [
+            "", "-", ".", "1.2.3", "abc", "1e", "NaN", "Infinity", "1e99999",
+        ] {
             assert!(bad.parse::<Decimal>().is_err(), "`{bad}` must refuse");
         }
     }

@@ -1297,7 +1297,11 @@ async fn a_tag_at_zero_relevance_alone_keeps_its_chip(pool: PgPool) {
 
     let topics = rig.post_topics(None, &post, true).await;
     let chips = topics.as_array().expect("array");
-    assert_eq!(chips.len(), 2, "(0, 1) is a claim, not a withdrawal: {topics}");
+    assert_eq!(
+        chips.len(),
+        2,
+        "(0, 1) is a claim, not a withdrawal: {topics}"
+    );
 }
 
 /// The un-tag, read through the fold: `(0,0)` is a record like any
@@ -1617,7 +1621,11 @@ async fn seed_standing_topics(
     first_withdrawn: bool,
 ) {
     for i in 0..count {
-        let claim = if i == 0 && first_withdrawn { (0.0, 0.0) } else { (0.1, 1.0) };
+        let claim = if i == 0 && first_withdrawn {
+            (0.0, 0.0)
+        } else {
+            (0.1, 1.0)
+        };
         seed_tag(
             pool,
             &format!("act:{address}:{}:tag", 9000 + i),
