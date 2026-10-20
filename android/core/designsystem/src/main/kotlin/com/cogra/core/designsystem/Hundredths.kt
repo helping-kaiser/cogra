@@ -21,8 +21,11 @@ import kotlin.math.sign
 fun hundredth(value: Double): Double {
     if (value.isNaN()) return 0.0
     val bounded = value.coerceIn(-1.0, 1.0)
-    return sign(bounded) * (abs(bounded) * 100.0).roundToLong() / 100.0 + 0.0
+    return sign(bounded) * (abs(bounded) * HUNDREDTHS_PER_UNIT).roundToLong() / HUNDREDTHS_PER_UNIT + 0.0
 }
+
+/** How many grid steps one unit of a dimension holds. */
+private const val HUNDREDTHS_PER_UNIT = 100.0
 
 /** Both slots of a ranged pick on the grid, then inside the field's reach. */
 fun PairRanges.snap(point: PairPoint): PairPoint = PairPoint(

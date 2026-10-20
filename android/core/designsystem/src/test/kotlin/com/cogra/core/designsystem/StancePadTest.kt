@@ -506,7 +506,9 @@ class StancePadTest {
         val extent = with(compose.density) { FIELD_EXTENT.toPx() }
 
         tapAndDrift(extent)
-        repeat(4) { dragTheField(Offset(0f, extent / 8f)) }
+        // Tenths, not eighths: each release lands on a hundredth, and an
+        // eighth sits exactly on a half-hundredth that would round outward.
+        repeat(5) { dragTheField(Offset(0f, extent / 10f)) }
 
         compose.exactPair().assertTextEquals("+0.60 / -0.40")
         assertThat(committed).isEqualTo(0)
