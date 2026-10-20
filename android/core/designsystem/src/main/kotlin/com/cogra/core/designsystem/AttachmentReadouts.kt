@@ -103,16 +103,16 @@ fun AttachmentReadout(pDirected: Double, modifier: Modifier = Modifier, testTag:
 }
 
 /**
- * What a backing read says while the server has not served it: the
- * current backing, or the raw sum a landing folds from. A placeholder,
- * not a reading — drawn as a bare dash and spoken as unread.
+ * What a backing read says: the current backing, or the raw sum a landing
+ * folds from — or, when the read served none or failed, a placeholder,
+ * not a reading, drawn as a bare dash and spoken as unread.
  */
 @Immutable
 sealed interface BackingValue {
     /** The bundle's net, as read. */
     data class Read(val value: Double) : BackingValue
 
-    /** Not served (yet): nothing to fold from. */
+    /** Not served, or the read failed: nothing to fold from. */
     data object Unread : BackingValue
 }
 
