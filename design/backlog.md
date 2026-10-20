@@ -5129,3 +5129,15 @@ and the clients build it from the seam, but the master itself —
 it yet: it reports the continuous value and has no release hook. Snapping
 the master would serve as the conformance reference. The two-axis
 square's value stays continuous.
+
+### 145 · `CARRIED_MEDIA_UNPUBLISHED` has no words yet · *design + contract* · **deferred 2026-10-20** · **post-MVP**
+
+The contract's carried-write gate (api-spec, `submitProposals`;
+data-model, the carried batch's sign gate) refuses a released carried
+write whose media has not reached the live store as
+`CARRIED_MEDIA_UNPUBLISHED` — retryable, nothing recorded. Only an
+applicant's staged acts are carried, and applicant acting is post-MVP
+whole (143), so no MVP surface can meet the refusal. jakob deferred its
+copy (2026-10-20, round 18): *Faults by code* gains its vehicle and
+sentence when 143 is re-opened, drafted then against the boards that
+carry staged media — not invented now.
