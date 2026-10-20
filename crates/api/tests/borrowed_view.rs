@@ -571,7 +571,10 @@ async fn a_live_opinion_among_inert_ones_ends_the_borrowing(pool: PgPool) {
 
     land_stance(&rig, &token, &key, json!({ "target": ada })).await;
     assert_eq!(wire_borrowed(&rig, &token).await, None);
-    assert!(latched(&rig, account).await, "a landed live opinion latches");
+    assert!(
+        latched(&rig, account).await,
+        "a landed live opinion latches"
+    );
 }
 
 /// The in-flight half follows the same rule: a signed live Opinion ends the
