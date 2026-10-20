@@ -1225,7 +1225,8 @@ async fn settling_content_as(
     id
 }
 
-/// A pending Tag by `handle` on `node` toward `topic` at `relevance`.
+/// A pending Tag by `handle` on `node` toward `topic` at `relevance`, held
+/// at full confidence.
 async fn pending_tag(
     pool: &PgPool,
     handle: &str,
@@ -1233,6 +1234,22 @@ async fn pending_tag(
     node: Uuid,
     topic: &str,
     relevance: f64,
+) {
+    pending_tag_pair(pool, handle, seq, node, topic, (relevance, 1.0)).await;
+}
+
+/// A pending un-tag: the Tag at `(0,0)` that withdraws (hashtag.md §4).
+async fn pending_untag(pool: &PgPool, handle: &str, seq: u64, node: Uuid, topic: &str) {
+    pending_tag_pair(pool, handle, seq, node, topic, (0.0, 0.0)).await;
+}
+
+async fn pending_tag_pair(
+    pool: &PgPool,
+    handle: &str,
+    seq: u64,
+    node: Uuid,
+    topic: &str,
+    claim: (f64, f64),
 ) {
     let author = actor_id(pool, handle).await;
     let node_id: String = sqlx::query_scalar(
@@ -1250,7 +1267,7 @@ async fn pending_tag(
         Family::Tag,
         Some(&node_id),
         &format!("name:{topic}"),
-        (relevance, 1.0),
+        claim,
         None,
         10 + seq as i64,
     )
@@ -2001,7 +2018,8 @@ async fn a_carried_application_write_is_never_a_candidate(pool: PgPool) {
 /// The candidates narrow by what the ranker computes over and nothing
 /// else: `kinds` (a comment is no candidate of a Posts feed), and under a
 /// topic, the author's own current declaration of it (a third party's
-/// pending tag, or the author's withdrawn one, admits nothing).
+/// pending tag, or the author's one withdrawn at `(0,0)`, admits nothing;
+/// one at zero relevance alone is still a claim and admits, hashtag.md §4).
 ///
 /// Settling candidates narrow by kinds and topic only.
 /// ´claim:relay:candidates-narrow-by-kinds-and-topic´
@@ -2032,9 +2050,11 @@ async fn candidates_narrow_by_kinds_and_topic_only(pool: PgPool) {
     pending_tag(&rig.pool, "b", 30, others, "salt", 1.0).await;
     let withdrawn = settling_content(&rig.pool, "a", 24, None, (0.5, 0.5), 5).await;
     pending_tag(&rig.pool, "a", 31, withdrawn, "salt", 1.0).await;
-    pending_tag(&rig.pool, "a", 32, withdrawn, "salt", 0.0).await;
+    pending_untag(&rig.pool, "a", 32, withdrawn, "salt").await;
+    let inert = settling_content(&rig.pool, "a", 25, None, (0.5, 0.5), 6).await;
+    pending_tag(&rig.pool, "a", 33, inert, "salt", 0.0).await;
     rank_with(json!({ "topic": salt })).await;
-    assert_eq!(sent_refs(&pod), HashSet::from([own]));
+    assert_eq!(sent_refs(&pod), HashSet::from([own, inert]));
     assert_eq!(pod.last_variables()["params"]["topic"], json!(salt));
 }
 

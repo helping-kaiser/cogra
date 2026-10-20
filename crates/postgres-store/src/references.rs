@@ -6,7 +6,7 @@
 //!
 //! This is the census's own withdrawal rule — "withdrawal is per-leg net
 //! stance" (layer1-interface.md §9.6) — and deliberately **not** the Tag
-//! rule beside it. Tag withdrawal is newest-wins at relevance 0 precisely
+//! rule beside it. Tag withdrawal is newest-wins at `(0,0)` precisely
 //! because confidence is census-bounded to `c ∈ [0, 1]`, so no
 //! counter-record could net an accumulated bundle back down (hashtag.md
 //! §4). Both Reference parameters span `[−1, 1]`, so netting *is*
@@ -43,6 +43,8 @@
 
 use common::l1::fold::BundleSum;
 use sqlx::PgPool;
+
+use crate::stance::ExactSums;
 
 /// The fold view a references read takes — see
 /// [`crate::view::PendingView`], which every fold with a pending half
@@ -135,8 +137,8 @@ pub async fn references_of(
                  AND s.state NOT IN ('landed', 'expired')
            )
            SELECT target                            AS "target!",
-                  SUM(relevance)::float8            AS "relevance!",
-                  SUM(support)::float8              AS "support!",
+                  SUM(relevance::text::numeric)::text AS "relevance!",
+                  SUM(support::text::numeric)::text   AS "support!",
                   COUNT(*)::bigint                  AS "records!",
                   BOOL_OR(pending)                  AS "pending!"
            FROM candidates
@@ -150,31 +152,28 @@ pub async fn references_of(
     .fetch_all(pool)
     .await?;
 
-    Ok(rows
-        .into_iter()
-        .filter_map(|r| {
-            let sum = BundleSum {
-                p_d: r.relevance,
-                p_i: r.support,
-                records: r.records.max(0) as u32,
-            };
-            let net = sum.fold();
-            if net.is_severed() {
-                return None;
-            }
-            Some(ReferenceClaim {
-                target: r.target,
-                author: author.to_string(),
-                relevance: net.p_d,
-                support: net.p_i,
-                raw_relevance: sum.p_d,
-                raw_support: sum.p_i,
-                records: sum.records,
-                withdrawal_cost: sum.severance_cost().try_into().unwrap_or(u32::MAX),
-                pending: r.pending,
-            })
-        })
-        .collect())
+    let mut claims = Vec::with_capacity(rows.len());
+    for r in rows {
+        let mut exact = ExactSums::default();
+        exact.absorb(&r.relevance, &r.support, r.records)?;
+        let sum = exact.bundle();
+        let net = sum.fold();
+        if net.is_severed() {
+            continue;
+        }
+        claims.push(ReferenceClaim {
+            target: r.target,
+            author: author.to_string(),
+            relevance: net.p_d,
+            support: net.p_i,
+            raw_relevance: sum.p_d,
+            raw_support: sum.p_i,
+            records: sum.records,
+            withdrawal_cost: sum.severance_cost().try_into().unwrap_or(u32::MAX),
+            pending: r.pending,
+        });
+    }
+    Ok(claims)
 }
 
 /// One author's citation bundle from one artifact toward one target: the
@@ -246,8 +245,8 @@ pub async fn netted_bundle(
                  AND s.pre_signed_at IS NOT NULL
                  AND s.state NOT IN ('landed', 'expired')
            )
-           SELECT COALESCE(SUM(relevance), 0)::float8 AS "p_d!",
-                  COALESCE(SUM(support), 0)::float8   AS "p_i!",
+           SELECT COALESCE(SUM(relevance::text::numeric), 0)::text AS "p_d!",
+                  COALESCE(SUM(support::text::numeric), 0)::text   AS "p_i!",
                   COUNT(*)::bigint                    AS "records!",
                   COALESCE(
                       array_agg(act_id ORDER BY seq) FILTER (WHERE act_id IS NOT NULL),
@@ -263,12 +262,10 @@ pub async fn netted_bundle(
     .fetch_one(pool)
     .await?;
 
+    let mut exact = ExactSums::default();
+    exact.absorb(&row.p_d, &row.p_i, row.records)?;
     Ok(NettedBundle {
-        sum: BundleSum {
-            p_d: row.p_d,
-            p_i: row.p_i,
-            records: row.records.max(0) as u32,
-        },
+        sum: exact.bundle(),
         in_flight: row.in_flight,
     })
 }

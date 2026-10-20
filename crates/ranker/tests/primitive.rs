@@ -8,7 +8,7 @@
 
 use std::fmt::Debug;
 
-use common::l1::fold::clip;
+use common::l1::{exact::exact_sum, fold::clip};
 use proptest::prelude::*;
 use proptest::test_runner::{Config, RngSeed, TestCaseError, TestRunner};
 use ranker::{
@@ -318,24 +318,22 @@ fn any_bundle() -> impl Strategy<Value = Vec<Member>> {
     })
 }
 
-/// The reference the fold must equal: common's clip over the members summed
-/// from `+0` in ≺, written out a second time here.
+/// The reference the fold must equal: common's clip over the members' exact
+/// decimal sum (edges.md §1), written out a second time here.
 fn reference_fold(members: &[Member]) -> (f64, f64) {
-    let mut ordered = members.to_vec();
-    ordered.sort_by_key(|m| (m.key.landing_epoch, m.key.act_time, m.key.position));
-    let (d, i) = ordered
-        .iter()
-        .fold((0.0, 0.0), |(d, i), m| (d + m.p_d, i + m.p_i));
-    (clip(d), clip(i))
+    let d = exact_sum(members.iter().map(|m| m.p_d)).expect("finite");
+    let i = exact_sum(members.iter().map(|m| m.p_i)).expect("finite");
+    (clip(d.to_f64()), clip(i.to_f64()))
 }
 
-/// feed-ranking.md §3.2 and ranker-core D-c, D-d: sum-then-clip in ≺,
-/// whatever order the members arrive in, by common's fold and no variant.
+/// feed-ranking.md §3.2 and edges.md §1: sum-then-clip over the exact
+/// decimal sum, whatever order the members arrive in, by common's fold and
+/// no variant.
 ///
-/// A bundle folds to common's clip of its members summed in causal order, bit for bit and whatever order they arrive in.
-/// ´claim:bundle:the-fold-is-commons-in-causal-order´
+/// A bundle folds to common's clip of its members' exact sum, bit for bit and whatever order they arrive in.
+/// ´claim:bundle:the-fold-is-commons-exact-sum´
 #[test]
-fn t_fold_sum_then_clip_in_causal_order() {
+fn t_fold_sum_then_clip_exactly() {
     check(
         any_bundle().prop_flat_map(|members| (Just(members.clone()), Just(members).prop_shuffle())),
         |(members, shuffled)| {
@@ -351,14 +349,15 @@ fn t_fold_sum_then_clip_in_causal_order() {
     );
 }
 
-/// Floating addition is not associative, so the order is observable: the
-/// same three members sum to different bits in ≺ and against it, and the
-/// fold answers with ≺'s whichever way they are handed over.
+/// Floating addition is not associative — the same three members sum to
+/// different bits in two orders — but the fold's sum is exact, so the order
+/// is not observable: both orders fold to the decimal 0.6, and a walk-back
+/// by −0.6 nets the bundle to exactly zero.
 ///
-/// The fold sums in causal order, not input order, where the two give different bits.
-/// ´claim:bundle:causal-order-decides-the-bits´
+/// No order of a bundle's members is observable in its fold, where floating addition would give different bits.
+/// ´claim:bundle:no-order-is-observable-in-the-fold´
 #[test]
-fn t_fold_causal_order_decides_the_bits() {
+fn t_fold_no_order_is_observable() {
     let at = |position, p| Member {
         key: CausalKey {
             landing_epoch: 1,
@@ -368,17 +367,21 @@ fn t_fold_causal_order_decides_the_bits() {
         p_d: p,
         p_i: p,
     };
-    let ascending = [at(0, 0.1), at(1, 0.2), at(2, 0.3)];
-    let mut handed_over = ascending;
-    handed_over.reverse();
-    let folded = fold_members(&handed_over).expect("folds");
-    assert_eq!(folded.p_d, (0.1 + 0.2) + 0.3);
-    assert_ne!(folded.p_d, (0.3 + 0.2) + 0.1);
-    let descending = [at(0, 0.3), at(1, 0.2), at(2, 0.1)];
-    assert_eq!(
-        fold_members(&descending).expect("folds").p_d,
-        (0.3 + 0.2) + 0.1
+    assert_ne!(
+        (0.1 + 0.2) + 0.3,
+        (0.3 + 0.2) + 0.1,
+        "floats would see order"
     );
+    let ascending = [at(0, 0.1), at(1, 0.2), at(2, 0.3)];
+    let descending = [at(0, 0.3), at(1, 0.2), at(2, 0.1)];
+    for members in [ascending, descending] {
+        let folded = fold_members(&members).expect("folds");
+        assert_eq!((folded.p_d, folded.p_i), (0.6, 0.6));
+    }
+    let walked_back = [at(0, 0.1), at(1, 0.2), at(2, 0.3), at(3, -0.6)];
+    let folded = fold_members(&walked_back).expect("folds");
+    assert_eq!((folded.p_d, folded.p_i), (0.0, 0.0));
+    assert!(folded.is_inert());
 }
 
 /// feed-ranking.md §3.2: a bundle netted to `(0, 0)` is routing-inert, and so

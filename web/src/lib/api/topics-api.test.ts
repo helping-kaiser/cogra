@@ -97,10 +97,10 @@ describe("prepareTag", () => {
     });
   });
 
-  // Un-tagging is a further tag at relevance 0 (hashtag.md §4) — never
+  // Un-tagging is a further tag at (0,0) (hashtag.md §4) — never
   // an erasure, just an ordinary priced record the fold reads as
   // withdrawn.
-  it("sends relevance 0 for the un-tag", async () => {
+  it("sends (0,0) for the un-tag", async () => {
     let variables: Record<string, unknown> | null = null;
     server.use(
       gqlLink.mutation("PrepareTag", ({ variables: v }) => {
@@ -123,11 +123,11 @@ describe("prepareTag", () => {
         });
       }),
     );
-    // The un-tag still signs the confidence its chip showed: relevance is
-    // the only value the removal moves.
-    await prepareTag(client(), { target: "p1", name: "rust", relevance: 0, confidence: 0.8 });
+    // The wrapper sends the pair it is handed; the un-tag hands it (0,0)
+    // (hashtag.md §4).
+    await prepareTag(client(), { target: "p1", name: "rust", relevance: 0, confidence: 0 });
     expect(variables).toEqual({
-      input: { target: "p1", name: "rust", pDirected: 0, pInterest: 0.8 },
+      input: { target: "p1", name: "rust", pDirected: 0, pInterest: 0 },
     });
   });
 

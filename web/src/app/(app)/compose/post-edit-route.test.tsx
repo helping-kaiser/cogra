@@ -663,9 +663,9 @@ describe("PostEditRoute — one batch (EditCompose, EditActs)", () => {
     // Sign is the confirmation: no dialog asks again (EditActs.jsx).
     fireEvent.click(sign());
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
-    // The un-tag signs the confidence the removed chip showed (0.6), never a
-    // hole the server would fill.
-    expect(tagInputs).toEqual([{ target: "p1", name: "wasm", pDirected: 0, pInterest: 0.6 }]);
+    // The un-tag signs (0,0) whatever the removed chip showed (hashtag.md §4),
+    // never a hole the server would fill.
+    expect(tagInputs).toEqual([{ target: "p1", name: "wasm", pDirected: 0, pInterest: 0 }]);
     expect(withdrawal).toEqual({ artifact: "p1", target: "u-juno" });
     expect(signer.signStaged).toHaveBeenCalledTimes(4);
   });

@@ -135,7 +135,10 @@ pub struct NotificationCursor {
 /// Writes the record kinds for one ingested epoch — the rows its records
 /// address. Runs inside the mirror's ingestion transaction, after the
 /// epoch's records and legs are in, so a bundle's netted state reads
-/// through this epoch.
+/// through this epoch. That state is the bundle's exact decimal sum
+/// (`SUM(x::text::numeric)`, the sum `stance::ExactSums` documents), so a
+/// walk-back the stance read calls severed is the walk-back reported
+/// withdrawn here.
 ///
 /// Addressees resolve through the L2 registries: a post's or comment's
 /// author through its `l1_node_id`, a profile's account through its
@@ -190,7 +193,7 @@ pub async fn write_for_epoch(conn: &mut PgConnection, epoch: i64) -> Result<u64,
                        AND b.source = la.target AND b.target = lt.target
                        AND br.author = recs.author
                        AND NOT br.payload_marked AND NOT b.census_unknown
-                     HAVING SUM(b.p_d) <> 0 OR SUM(b.p_i) <> 0)
+                     HAVING SUM(b.p_d::text::numeric) <> 0 OR SUM(b.p_i::text::numeric) <> 0)
            ),
            standing_opinions AS (
                SELECT recs.record_id, recs.actor_id, recs.ord, lb.target AS profile
@@ -208,7 +211,7 @@ pub async fn write_for_epoch(conn: &mut PgConnection, epoch: i64) -> Result<u64,
                      WHERE b.leg = 'binary' AND b.family = 'opinion'
                        AND b.source = lb.source AND b.target = lb.target
                        AND NOT br.payload_marked AND NOT b.census_unknown
-                     HAVING SUM(b.p_d) <> 0 OR SUM(b.p_i) <> 0)
+                     HAVING SUM(b.p_d::text::numeric) <> 0 OR SUM(b.p_i::text::numeric) <> 0)
            ),
            withdrawn_opinions AS (
                SELECT DISTINCT ON (lb.source, lb.target)
@@ -227,7 +230,7 @@ pub async fn write_for_epoch(conn: &mut PgConnection, epoch: i64) -> Result<u64,
                      WHERE b.leg = 'binary' AND b.family = 'opinion'
                        AND b.source = lb.source AND b.target = lb.target
                        AND NOT br.payload_marked AND NOT b.census_unknown
-                     HAVING SUM(b.p_d) <> 0 OR SUM(b.p_i) <> 0)
+                     HAVING SUM(b.p_d::text::numeric) <> 0 OR SUM(b.p_i::text::numeric) <> 0)
                ORDER BY lb.source, lb.target, recs.ord DESC
            ),
            candidates AS (

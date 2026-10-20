@@ -2219,10 +2219,10 @@ describe("PostView", () => {
       expect(editCalled).toBe(true);
       expect(tagInputs).toEqual([
         { target: "c1", name: "rust", pDirected: 0.1, pInterest: 1 },
-        // A withdrawal is a Tag act at relevance 0, never a deletion, and it
-        // signs the confidence the removed chip showed — never a hole the
+        // A withdrawal is a Tag act at (0,0), never a deletion, whatever the
+        // removed chip showed (hashtag.md §4) — never a hole the
         // server would fill.
-        { target: "c1", name: "wasm", pDirected: 0, pInterest: 0.6 },
+        { target: "c1", name: "wasm", pDirected: 0, pInterest: 0 },
       ]);
     });
 

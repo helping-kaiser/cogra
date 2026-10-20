@@ -211,14 +211,15 @@ async fn within_one_epoch_the_causal_key_decides(pool: PgPool) {
     assert_eq!(ferris.relevance, 0.6, "highest position is newest");
 }
 
-/// The un-tag is a further Tag at relevance 0, held at full confidence. It
-/// is an ordinary record: the earlier claim becomes history rather than
-/// being erased, so both acts keep both legs on the graph.
+/// The un-tag is a further Tag at `(0,0)` (hashtag.md §4). It is an
+/// ordinary record: the earlier claim becomes history rather than being
+/// erased, so every act keeps both legs on the graph. A newest tag at zero
+/// relevance alone is not the un-tag — "a claim, not nothing" — and stays.
 ///
-/// A withdrawal is a further claim at relevance zero, so the earlier claim becomes history rather than being erased.
+/// A withdrawal is a further claim at (0,0), so the earlier claim becomes history rather than being erased.
 /// ´claim:topics:a-withdrawal-is-a-record-and-never-an-erasure´
 #[sqlx::test(migrations = "../../migrations")]
-async fn relevance_zero_withdraws_the_pair(pool: PgPool) {
+async fn zero_zero_withdraws_the_pair(pool: PgPool) {
     let post = content_of("alice", 0);
     land(
         &pool,
@@ -241,12 +242,28 @@ async fn relevance_zero_withdraws_the_pair(pool: PgPool) {
         vec![tag("alice", 1, &post, "rust", 0.0, 1.0, 1, 2, 0)],
     )
     .await;
+    let survivor = topics::topics_of(&pool, &post.to_string(), "alice", TopicView::Landed)
+        .await
+        .expect("folds");
+    assert_eq!(
+        survivor.len(),
+        1,
+        "relevance 0 alone is a claim, not nothing"
+    );
+    assert_eq!((survivor[0].relevance, survivor[0].confidence), (0.0, 1.0));
+
+    land(
+        &pool,
+        2,
+        vec![tag("alice", 2, &post, "rust", 0.0, 0.0, 2, 3, 0)],
+    )
+    .await;
     assert!(
         topics::topics_of(&pool, &post.to_string(), "alice", TopicView::Landed)
             .await
             .expect("folds")
             .is_empty(),
-        "relevance 0 reads as withdrawn"
+        "(0,0) reads as withdrawn"
     );
 
     let records: i64 =
@@ -254,7 +271,7 @@ async fn relevance_zero_withdraws_the_pair(pool: PgPool) {
             .fetch_one(&pool)
             .await
             .expect("count");
-    assert_eq!(records, 4, "both acts keep both legs — nothing is erased");
+    assert_eq!(records, 6, "every act keeps both legs — nothing is erased");
 }
 
 /// A withdrawn topic can be claimed again, the newest claim standing as always.
@@ -271,7 +288,7 @@ async fn a_topic_can_be_reclaimed_after_withdrawal(pool: PgPool) {
     land(
         &pool,
         1,
-        vec![tag("alice", 1, &post, "rust", 0.0, 0.9, 1, 2, 0)],
+        vec![tag("alice", 1, &post, "rust", 0.0, 0.0, 1, 2, 0)],
     )
     .await;
     land(
@@ -309,7 +326,7 @@ async fn each_type_folds_in_its_own_bundle(pool: PgPool) {
     land(
         &pool,
         1,
-        vec![tag("alice", 2, &post, "rust", 0.0, 0.9, 1, 3, 0)],
+        vec![tag("alice", 2, &post, "rust", 0.0, 0.0, 1, 3, 0)],
     )
     .await;
 
@@ -332,12 +349,11 @@ async fn each_type_folds_in_its_own_bundle(pool: PgPool) {
 /// The raw leg row is asserted on too, so the test fails if the *fixture*
 /// stops matching the census rather than only if the fold does.
 ///
-/// Two cases pin the direction. A withdrawal held at full confidence
-/// (r = 0, c = 1) must withdraw: read from the wrong column its winner
-/// looks like relevance 1 and the topic would wrongly stay on the chip
-/// row. Its mirror image, a claim at full relevance held at zero
-/// confidence, is still a claim: read from the wrong column it would
-/// vanish.
+/// Two cases pin the direction past withdrawal, whose `(0,0)` test reads
+/// the same either way round: a claim at zero relevance and full
+/// confidence, and its mirror image at full relevance and zero confidence.
+/// Both stand, and each must read back as written — from the wrong column
+/// each would come back as the other.
 ///
 /// Relevance is the T-leg's transposed inclination and confidence its transposed distance, and swapping the two changes the answer.
 /// ´claim:topics:relevance-and-confidence-read-from-the-transposed-leg´
@@ -372,13 +388,12 @@ async fn relevance_is_read_from_the_transposed_leg(pool: PgPool) {
         vec![tag("alice", 1, &post, "rust", 0.0, 1.0, 1, 2, 0)],
     )
     .await;
-    assert!(
-        topics::topics_of(&pool, &post.to_string(), "alice", TopicView::Landed)
-            .await
-            .expect("folds")
-            .is_empty(),
-        "an un-tag at full confidence must withdraw, not survive"
-    );
+    let current = topics::topics_of(&pool, &post.to_string(), "alice", TopicView::Landed)
+        .await
+        .expect("folds");
+    assert_eq!(current.len(), 1, "zero relevance alone is not a withdrawal");
+    assert_eq!(current[0].relevance, 0.0);
+    assert_eq!(current[0].confidence, 1.0);
 
     let other = content_of("alice", 1);
     land(
@@ -398,7 +413,7 @@ async fn relevance_is_read_from_the_transposed_leg(pool: PgPool) {
 /// The staged row carries the act tuple and the landed leg carries it
 /// transposed — the same claim in opposite columns, so a fold that reads
 /// one rule for both halves gets exactly one of them wrong. A staged
-/// withdrawal at full confidence withdraws just as a landed one does.
+/// withdrawal at `(0,0)` withdraws just as a landed one does.
 ///
 /// A staged claim carries the act's own tuple where the landed leg carries it transposed.
 /// ´claim:topics:a-staged-claim-carries-the-untransposed-tuple´
@@ -421,7 +436,7 @@ async fn a_staged_claim_is_not_transposed(pool: PgPool) {
     assert!(current[0].pending);
 
     let other = content_of("alice", 1);
-    stage_tag(&pool, "alice", 1, &other, "rust", 0.0, 1.0).await;
+    stage_tag(&pool, "alice", 1, &other, "rust", 0.0, 0.0).await;
     assert!(
         topics::topics_of(
             &pool,
@@ -494,7 +509,7 @@ async fn bundles_of_different_authors_do_not_fold_together(pool: PgPool) {
     land(
         &pool,
         1,
-        vec![tag("bob", 1, &post, "rust", 0.0, 0.9, 1, 3, 0)],
+        vec![tag("bob", 1, &post, "rust", 0.0, 0.0, 1, 3, 0)],
     )
     .await;
 
@@ -576,7 +591,7 @@ async fn the_topic_page_folds_and_orders_newest_first(pool: PgPool) {
         1,
         vec![
             tag("bob", 0, &second, "rust", 0.4, 0.8, 1, 5, 0),
-            tag("carol", 1, &withdrawn, "rust", 0.0, 0.9, 1, 6, 0),
+            tag("carol", 1, &withdrawn, "rust", 0.0, 0.0, 1, 6, 0),
         ],
     )
     .await;
@@ -605,8 +620,9 @@ async fn the_topic_page_folds_and_orders_newest_first(pool: PgPool) {
 }
 
 /// The same guard as the chip row, at the other read direction: a
-/// withdrawal held at full confidence must drop the node, and a claim held
-/// at zero confidence must keep it. Swapping the two columns inverts both.
+/// withdrawal at `(0,0)` drops the node, and a claim held at zero
+/// confidence keeps it and reads back as written — from the swapped
+/// columns its relevance and confidence would trade places.
 ///
 /// (´claim:topics:relevance-and-confidence-read-from-the-transposed-leg´)
 #[sqlx::test(migrations = "../../migrations")]
@@ -623,7 +639,7 @@ async fn the_topic_page_reads_relevance_from_the_transposed_leg(pool: PgPool) {
         &pool,
         1,
         vec![
-            tag("alice", 1, &withdrawn, "rust", 0.0, 1.0, 1, 2, 0),
+            tag("alice", 1, &withdrawn, "rust", 0.0, 0.0, 1, 2, 0),
             tag("bob", 0, &kept, "rust", 1.0, 0.0, 1, 3, 0),
         ],
     )
@@ -702,7 +718,7 @@ async fn a_pending_claim_supersedes_a_landed_one(pool: PgPool) {
         vec![tag("alice", 0, &post, "rust", 0.8, 0.9, 0, 1, 0)],
     )
     .await;
-    stage_tag(&pool, "alice", 1, &post, "rust", 0.0, 0.9).await;
+    stage_tag(&pool, "alice", 1, &post, "rust", 0.0, 0.0).await;
 
     assert_eq!(
         topics::topics_of(&pool, &post.to_string(), "alice", TopicView::Landed)
