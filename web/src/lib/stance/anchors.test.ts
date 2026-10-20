@@ -17,6 +17,7 @@ import {
   nearestAnchor,
   RESTING_FACE_EMOJI,
   STANCE_ANCHORS,
+  UNREACHABLE_EMOJI,
   ZERO_BUNDLE_EMOJI,
   type StanceAnchor,
 } from "./anchors";
@@ -149,6 +150,20 @@ describe("the zero bundle's readout", () => {
     expect(bundleReadout({ pDirected: -0, pInterest: 0 }, "Severed").emoji).toBe(
       ZERO_BUNDLE_EMOJI,
     );
+  });
+});
+
+describe("the one-zero face", () => {
+  it("stands outside the table and apart from the shrug (jakob 2026-10-20)", () => {
+    // 🤷 is (0, 0)'s alone; a single zero thinks — the master's export.
+    expect(STANCE_ANCHORS.map((anchor) => anchor.emoji)).not.toContain(UNREACHABLE_EMOJI);
+    expect(UNREACHABLE_EMOJI).not.toBe(ZERO_BUNDLE_EMOJI);
+    expect(UNREACHABLE_EMOJI).not.toBe(RESTING_FACE_EMOJI);
+    const master = readFileSync(
+      new URL("../../../../design/components/stance/StanceReadout.jsx", import.meta.url),
+      "utf-8",
+    );
+    expect(master).toContain(`export const UNREACHABLE_EMOJI = "${UNREACHABLE_EMOJI}";`);
   });
 });
 

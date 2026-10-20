@@ -178,9 +178,9 @@ fun UnreachableStartConfirm(
 const val UNREACHABLE_TITLE = "Start it unreachable?"
 
 const val UNREACHABLE_BODY =
-    "Your backing is your post's own path into anyone's feed. At 0.00 that path carries " +
-        "nothing — your post will live on your profile, reached only through the tags and " +
-        "citations you sign with it, until someone gives it an opinion."
+    "Your backing is your post's own path into anyone's feed. At 0.00 the post starts " +
+        "unreachable on its own — only the tags and citations you sign with it lead to it, " +
+        "until someone gives it an opinion."
 
 /**
  * The wash a parked pad stands over: the surface beneath goes inert, and a

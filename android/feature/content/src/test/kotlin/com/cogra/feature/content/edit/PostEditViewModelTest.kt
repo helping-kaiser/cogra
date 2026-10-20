@@ -568,6 +568,9 @@ class PostEditViewModelTest {
         assertThat(vm.state.value.backingPadOpen).isFalse()
         assertThat(vm.state.value.pick).isEqualTo(0.3)
         assertThat(vm.state.value.signedActionCount).isEqualTo(1)
+        // EditPad.md (round 18): a pick alone filling the batch reads the
+        // new version's one record.
+        assertThat(actsFooterLine(vm.state.value.signedActionCount)).isEqualTo("You're signing 1 thing")
         vm.signed()
         assertThat(content.lastEditPick).isEqualTo(0.3)
         assertThat(content.lastEdit).containsExactly(TEST_POST_ID, "Loaded title", null, "Loaded body").inOrder()

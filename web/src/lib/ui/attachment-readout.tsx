@@ -6,8 +6,8 @@
 //
 // Publish is a single-parameter family: `p_d` is the author's attachment,
 // their BACKING, and `p_i` is pinned at 1 by the census, so a pair would draw
-// a second figure nobody can choose. The face comes from `VALENCE_SIX` (🤷 at
-// exactly 0.00, spoken `Nothing`), and the spoken twin names the one axis
+// a second figure nobody can choose. The face comes from `VALENCE_SIX` (🤔 at
+// exactly 0.00, spoken `No side taken`), and the spoken twin names the one axis
 // there is. The author's OPINION on their own post is a different record — the
 // ordinary pair its face takes — read by the stance readouts like any other.
 //
