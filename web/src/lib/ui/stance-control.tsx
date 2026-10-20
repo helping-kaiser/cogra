@@ -75,7 +75,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStanceInputMode } from "@/lib/stance/input-mode";
 import { bundleReadout, RESTING_FACE_EMOJI } from "@/lib/stance/anchors";
 import { localLanding } from "@/lib/stance/landing";
-import { ORIGIN, TAP_DEFAULT, type StancePair } from "@/lib/stance/model";
+import { ORIGIN, snapPair, TAP_DEFAULT, type StancePair } from "@/lib/stance/model";
 import { KNOB_TRAVEL_INSET_PX, padPairFrom, padPercentOf } from "@/lib/stance/pad-geometry";
 import { useStanceData } from "@/lib/stance/provider";
 import { announceStanceSigned } from "@/lib/stance/signed-events";
@@ -667,6 +667,7 @@ export function StanceControl({
    */
   const onPointerUp = () => {
     clearHold();
+    landOnGrid();
     releasePointer();
   };
 
@@ -674,7 +675,20 @@ export function StanceControl({
     clearHold();
     // A lost pointer is not a dismissal: the pad parks the way a release
     // parks it, and the reader still has Set and Cancel in front of them.
+    landOnGrid();
     releasePointer();
+  };
+
+  /**
+   * THE RELEASE PARKS THE PICK ON A HUNDREDTH (the value domain, jakob
+   * 2026-10-20): the knob followed the finger, and the lift lands both axes
+   * on the nearest hundredth — so a pick the readout prints as `+0.00` is the
+   * exact 0 the landing line's severance and inertness read. Only a drag on
+   * the field lands; a press on the target never moved the pick.
+   */
+  const landOnGrid = () => {
+    if (drag.current === null) return;
+    setPick((standing) => snapPair(standing));
   };
 
   /**

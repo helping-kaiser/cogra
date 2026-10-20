@@ -435,6 +435,23 @@ class StancePadTest {
     }
 
     @Test
+    fun theReleaseParksThePickOnTheNearestHundredthsANearZeroAxisOnPositiveZero() {
+        // The value domain (jakob 2026-10-20): the knob follows the thumb to
+        // 0.4371 / −0.003, and the lift lands the pick on 0.44 / +0.00 —
+        // the exact zero the landing's inertness reads.
+        showLive()
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+
+        compose.onNodeWithTag("${TAG}_stance").performClick()
+        dragTheField(Offset(((0.4371 - 0.1) * extent).toFloat(), ((0.1 + 0.003) * extent).toFloat()))
+
+        assertThat(picks[picks.size - 2].interest).isWithin(1e-3).of(-0.003)
+        // Data-class equality is `Double.equals`, which tells −0 from +0.
+        assertThat(picks.last()).isEqualTo(StancePoint(0.44, 0.0))
+        compose.exactPair().assertTextEquals("+0.44 / +0.00")
+    }
+
+    @Test
     fun releasingADriftedThumbParksThePadAndSignsNothing() {
         // An accidental lift must never sign a priced act (design.md
         // §8.3): the pad is a considered surface, and Set is the
@@ -511,7 +528,9 @@ class StancePadTest {
         val extent = with(compose.density) { FIELD_EXTENT.toPx() }
 
         tapAndDrift(extent)
-        repeat(4) { dragTheField(Offset(0f, extent / 8f)) }
+        // Tenths, not eighths: each release lands on a hundredth, and an
+        // eighth sits exactly on a half-hundredth that would round outward.
+        repeat(5) { dragTheField(Offset(0f, extent / 10f)) }
 
         compose.exactPair().assertTextEquals("+0.60 / -0.40")
         assertThat(committed).isEqualTo(0)

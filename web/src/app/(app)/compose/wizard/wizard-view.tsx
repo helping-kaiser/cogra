@@ -34,6 +34,7 @@ import { useWriteSigner } from "@/lib/signing/provider";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { fetchGraphIds } from "@/lib/api/graph-ids-api";
 import { postExpectation } from "@/lib/compose/intent";
+import { snapDimension } from "@/lib/stance/model";
 import { contentExpectation } from "@/lib/compose/payload-expectation";
 import type { Expectation } from "@/lib/signing/intent";
 import { TransportError } from "@/lib/ui/transport-error";
@@ -1019,12 +1020,15 @@ export function ComposeWizard({
           onStagedPDirected={setStagedPDirected}
           onSetStance={() => {
             // EXACTLY 0.00 ASKS FIRST (ComposePad.md): the post's own path
-            // starts unreachable. It warns and never refuses.
-            if (stagedPDirected === 0) {
+            // starts unreachable. It warns and never refuses. The pick is a
+            // hundredth (the release lands it there), so reading 0.00 IS 0.
+            const picked = snapDimension(stagedPDirected);
+            if (picked === 0) {
+              setStagedPDirected(picked);
               setConfirmingUnreachable(true);
               return;
             }
-            dispatch({ type: "pDirected", pDirected: stagedPDirected });
+            dispatch({ type: "pDirected", pDirected: picked });
             setSheet("none");
           }}
           onKeepAdjusting={() => setConfirmingUnreachable(false)}

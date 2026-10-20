@@ -33,7 +33,7 @@ import { useId, useRef, useState } from "react";
 import { nearestAnchor } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import {
-  clampToRanges,
+  snapToRanges,
   STANCE_RANGES,
   TAG_RANGES,
   type AxisRange,
@@ -270,7 +270,8 @@ function ExactTracks({
   testId: string;
 }) {
   const [showing, setShowing] = useState<"sliders" | "entry">("sliders");
-  const set = (next: StancePair) => onPick(clampToRanges(next, family.ranges));
+  // The tracks step by hundredths already; a typed value lands on the grid too.
+  const set = (next: StancePair) => onPick(snapToRanges(next, family.ranges));
   const directed = {
     label: family.axes.directed,
     low: family.axes.left,

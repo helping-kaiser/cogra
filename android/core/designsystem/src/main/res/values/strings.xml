@@ -189,8 +189,8 @@
     <string name="backing_after">Backing after</string>
     <!-- The cap line under Backing after, when the raw sum passes ±1. -->
     <string name="backing_capped">Adds up to %1$s; your feed reads it capped at %2$s.</string>
-    <!-- PLACEHOLDER, NOT DESIGN COPY: spoken for a backing the server does
-         not serve yet (the Publish bundle's net has no read; seam 233). -->
+    <!-- PLACEHOLDER, NOT DESIGN COPY: spoken for a backing the read served
+         none of (not the post's creator) or failed to read. -->
     <string name="backing_unread">not read yet</string>
     <!-- The unreachable landing (jakob 2026-10-20, blessed; the master is
          StanceReadout.jsx's unreachableHead / UNREACHABLE_TAIL): a landing

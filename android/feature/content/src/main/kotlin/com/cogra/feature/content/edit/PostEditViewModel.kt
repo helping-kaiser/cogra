@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.core.designsystem.BackingValue
 import com.cogra.core.designsystem.attachmentLanding
+import com.cogra.core.designsystem.hundredth
 import com.cogra.core.designsystem.walkBackPick
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
@@ -90,9 +91,9 @@ data class PostEditUiState(
     val backingPadOpen: Boolean = false,
     /**
      * The post's backing as its author's Publish bundle folds it, or null
-     * while nothing serves it ([ContentRepository.postBacking]: a server
-     * gap today) — the readouts then draw it unread, and the walk-back
-     * stays greyed, rather than guess.
+     * when [ContentRepository.postBacking] served none or failed — the
+     * readouts then draw it unread, and the walk-back stays greyed, rather
+     * than guess.
      */
     val backing: PostBacking? = null,
     /**
@@ -350,9 +351,12 @@ class PostEditViewModel @Inject constructor(
      * (EditPad.md). The count never moves for the pick itself.
      */
     fun onSetBacking() = _state.update {
+        // The pick is a hundredth (EditPad.md), so one that reads 0.00 IS 0
+        // and adds no record — a float's 0.004 never slips one in.
+        val pick = hundredth(it.stagedPick)
         it.copy(
-            pick = it.stagedPick,
-            recordStaged = it.recordStaged || it.stagedPick != 0.0,
+            pick = pick,
+            recordStaged = it.recordStaged || pick != 0.0,
             backingPadOpen = false,
         )
     }

@@ -22,6 +22,12 @@
 // the value is, wherever the press lands, and only horizontal travel moves
 // it. The knob's centre travels the strip inset by the square's own inset
 // ([knobTravelInset]), so it never leaves the drawn shape.
+//
+// RELEASE LANDS THE PICK ON THE NEAREST HUNDREDTH (ComposePad.md, EditPad.md):
+// the knob follows the finger wherever it is, and the lift parks the pick on
+// the grid ([hundredth]) — so the number a readout prints is the pick itself,
+// and a pick that reads `+0.00` is the exact 0 the gates ask about. Float
+// travel from the compose pad's +0.10 could otherwise never land on 0 at all.
 
 package com.cogra.core.designsystem
 
@@ -100,6 +106,13 @@ internal fun attachmentFrom(base: Double, travelX: Float, extentPx: Float): Doub
     val picked = if (extentPx <= 0f) base else base + travelX / extentPx
     return picked.coerceIn(-1.0, 1.0) + 0.0
 }
+
+/**
+ * Where a drag of this much travel PARKS the pick once the finger lifts: the
+ * travelled value on the nearest hundredth.
+ */
+internal fun attachmentReleased(base: Double, travelX: Float, extentPx: Float): Double =
+    hundredth(attachmentFrom(base, travelX, extentPx))
 
 /** Where the knob's centre sits for [value], offset from the strip's centre. */
 internal fun attachmentKnobOffset(value: Double, extentPx: Float): Float =
@@ -196,7 +209,8 @@ private fun AttachmentStrip(
                 stateDescription = reading
                 progressBarRangeInfo = ProgressBarRangeInfo(value.toFloat(), -1f..1f)
                 setProgress { target ->
-                    report.value(target.toDouble().coerceIn(-1.0, 1.0) + 0.0)
+                    // A set progress is a release: it lands on the grid too.
+                    report.value(hundredth(target.toDouble()))
                     true
                 }
             }
@@ -259,12 +273,18 @@ private fun Modifier.attachmentGesture(
             val base = value.value
             val extentPx = attachmentExtent(size.width.toFloat(), inset.toPx())
             var travelX = 0f
+            var travelled = false
             try {
                 drag(down.id) { change ->
                     travelX += change.positionChange().x
                     change.consume()
+                    travelled = true
                     onValueChange.value(attachmentFrom(base, travelX, extentPx))
                 }
+                // The lift — or a lost pointer, which parks the same way —
+                // lands the pick on the nearest hundredth. A tap that never
+                // travelled moves nothing, not even onto the grid.
+                if (travelled) onValueChange.value(attachmentReleased(base, travelX, extentPx))
             } finally {
                 held.value = false
             }

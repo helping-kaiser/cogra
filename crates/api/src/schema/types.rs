@@ -23,7 +23,9 @@ use postgres_store::references::ReferenceView;
 use postgres_store::topics::{TagChannel, TopicView};
 use postgres_store::{
     PgPool, auth as store, mirror, profile as profile_store, references as references_store,
-    staged, topics as topics_store,
+    staged,
+    stance::{self as stance_store, BundleView},
+    topics as topics_store,
 };
 use uuid::Uuid;
 
@@ -199,8 +201,9 @@ impl BackingBundle {
 
 /// The actor whose view this account still borrows (`design/readme.md`
 /// §13, api-spec.md `Query.borrowedView`): the issuer of the invite link
-/// the account registered through, until the member's first Opinion is
-/// signed — toward any target — and nobody after. The lender is the
+/// the account registered through, until the member holds a live
+/// outgoing Opinion edge — a signed Opinion, toward any target, whose
+/// netted bundle is not routing-inert — and nobody after. The lender is the
 /// issuer for the whole ladder, whoever's vouch landed the account (G2).
 /// Vacuously nobody without an issuer, which is the genesis account's
 /// case.
@@ -211,10 +214,14 @@ impl BackingBundle {
 ///   probe is not consulted before landing (VouchBack.md:21's carried
 ///   opinion signs with the vouch-in batch, so it ends the borrowing at
 ///   landing, not before).
-/// - A **landed member** borrows until an Opinion of theirs has landed in
-///   the mirror or is signed and in flight (VouchBack.md:15). An Affinity
-///   never ends it (VouchBack.md:19): only the Opinion family is probed.
-/// - **Only a landed Opinion latches.** An in-flight one ends the
+/// - A **landed member** borrows until a live Opinion edge of theirs has
+///   landed in the mirror or is signed and in flight (VouchBack.md:15). An
+///   edge is live when the bundle of their Opinions toward one target nets
+///   to a pair with neither parameter zero (`NetStance::is_inert`
+///   false); a member whose Opinions are all inert keeps the borrowed view,
+///   because their ranked feed would be empty. An Affinity never ends it
+///   (VouchBack.md:19): only the Opinion family is probed.
+/// - **Only a landed live Opinion latches.** An in-flight one ends the
 ///   borrowing without latching, so an expiry with nothing landed returns
 ///   it (VouchBack.md:17). The latch is the same reads-may-repair cache as
 ///   the reciprocation latch (auth.md "Reads may repair, never decide"):
@@ -244,12 +251,13 @@ pub(crate) async fn borrowed_vantage(
     let Some(account_address) = &account.realization_address else {
         return Ok(Some(issuer));
     };
-    let source = NodeId::Addr(account_address.clone()).to_string();
-    if mirror::has_any_opinion_from(pool, &source).await? {
+    if stance_store::has_live_opinion_from(pool, account_address, BundleView::Landed).await? {
         store::latch_first_opinion(pool, account.id).await?;
         return Ok(None);
     }
-    if staged::has_signed_of_family(pool, account.id, Family::Opinion).await? {
+    if stance_store::has_live_opinion_from(pool, account_address, BundleView::IncludingPending)
+        .await?
+    {
         return Ok(None);
     }
     Ok(Some(issuer))
@@ -1651,12 +1659,15 @@ impl User {
     /// narrowed list can stand another kind beside its people, the people
     /// section serves only the three people first seen most recently, and
     /// `hasMorePeople` says whether more match — the "See all profiles"
-    /// door, which is the same query with `kinds: [USER]`. A query past
-    /// the search length cap is BAD_INPUT. A hidden actor's posts and
-    /// comments stay out while the actor is hidden, and their own profile
-    /// stays; a removed thing keeps its place and reads its removal mark;
-    /// a thing whose node no longer resolves — a pending write that never
-    /// landed — is skipped. Paging is keyset on `(firstSeenAt, node id)`,
+    /// door, which is the same query with `kinds: [USER]`. The topics
+    /// section is capped the same way, to the three topics first seen
+    /// most recently, and `hasMoreTags` says whether more match — the
+    /// "See all tags" door, which is the same query with `kinds: [HASHTAG]`.
+    /// A query past the search length cap is BAD_INPUT. A hidden actor's
+    /// posts and comments stay out while the actor is hidden, and their
+    /// own profile stays; a removed thing keeps its place and reads its
+    /// removal mark; a thing whose node no longer resolves — a pending
+    /// write that never landed — is skipped. Paging is keyset on `(firstSeenAt, node id)`,
     /// so a thing first seen while the reader scrolls sorts above the
     /// open page and never shifts the next one. Field-level: viewer-only.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
@@ -1734,6 +1745,7 @@ impl User {
                 kinds,
                 narrowed: None,
                 more_people: Some(false),
+                more_topics: Some(false),
             },
         );
         connection.edges.extend(
@@ -4227,20 +4239,21 @@ pub type ViewHistoryConnection = Connection<
 /// kinds that served the edges, and — on a list narrowed by a query —
 /// the search request it was narrowed by (None when that request could
 /// match nothing), so the count runs only when asked and under exactly
-/// the predicate the pages ran. `more_people` is the people cap's answer
-/// when the page already read it.
+/// the predicate the pages ran. `more_people` and `more_topics` are the
+/// people and topics caps' answers when the page already read them.
 pub struct ViewHistoryConnectionFields {
     viewer: Uuid,
     kinds: Vec<String>,
     narrowed: Option<Option<postgres_store::search::SearchRequest>>,
     more_people: Option<bool>,
+    more_topics: Option<bool>,
 }
 
 #[Object]
 impl ViewHistoryConnectionFields {
     /// How many things the viewer's seen-list serves, across every page —
-    /// narrowed by `query` and `kinds` when given, less the people a
-    /// capped people section leaves behind its door. Priced at zero like
+    /// narrowed by `query` and `kinds` when given, less the people and
+    /// topics a capped section leaves behind its door. Priced at zero like
     /// every connection count; saturates at [`i32::MAX`].
     #[graphql(complexity = 0)]
     async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
@@ -4278,6 +4291,30 @@ impl ViewHistoryConnectionFields {
         };
         let pool = ctx.data::<PgPool>()?;
         Ok(super::query::people_cap(
+            pool,
+            request,
+            Some(postgres_store::search::ReaderList::History(self.viewer)),
+        )
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        .is_some_and(|cap| cap.more))
+    }
+
+    /// Whether more seen topics match than the topics section serves —
+    /// the "See all tags" door. While a narrowed list can stand another
+    /// kind beside its topics, the topics section serves the three topics
+    /// first seen most recently; the same query with `kinds: [HASHTAG]`
+    /// serves every match, uncapped. False when the section is not
+    /// capped, and on a list no query narrows.
+    async fn has_more_tags(&self, ctx: &Context<'_>) -> async_graphql::Result<bool> {
+        if let Some(more) = self.more_topics {
+            return Ok(more);
+        }
+        let Some(Some(request)) = &self.narrowed else {
+            return Ok(false);
+        };
+        let pool = ctx.data::<PgPool>()?;
+        Ok(super::query::topics_cap(
             pool,
             request,
             Some(postgres_store::search::ReaderList::History(self.viewer)),
@@ -4340,7 +4377,8 @@ impl User {
     /// the matcher's own statement, which joins the list, orders by
     /// section and first seeing and stops at the page
     /// (`search::ReaderList::History`). The people section is capped as
-    /// search's is ([`super::query::people_cap`]), by newest first seeing.
+    /// search's is ([`super::query::people_cap`]), by newest first seeing,
+    /// and so is the topics section ([`super::query::topics_cap`]).
     #[expect(
         clippy::too_many_arguments,
         reason = "the resolver's own page arguments, passed through as it received them"
@@ -4379,9 +4417,18 @@ impl User {
                 .map_err(|e| async_graphql::Error::new(e.to_string()))?,
             _ => None,
         };
+        let past_topics =
+            !backward && cursor.is_some_and(|c| c.section > postgres_store::search::SECTION_TOPICS);
+        let topics_cap = match &request {
+            Some(request) if !past_topics => super::query::topics_cap(pool, request, list)
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?,
+            _ => None,
+        };
         let window = postgres_store::search::Window {
             list,
             people: cap.as_ref().map(|cap| cap.served.as_slice()),
+            topics: topics_cap.as_ref().map(|cap| cap.served.as_slice()),
             ..postgres_store::search::Window::default()
         };
         let mut hits = match &request {
@@ -4417,6 +4464,7 @@ impl User {
                 viewer: self.identity.id,
                 kinds: history_store_kinds(kinds),
                 more_people: cap.as_ref().map(|cap| cap.more),
+                more_topics: topics_cap.as_ref().map(|cap| cap.more),
                 narrowed: Some(request),
             },
         );
