@@ -18,7 +18,7 @@ ALWAYS a quiet line under Backing after states the raw total and the cap GIVEN t
 
 ALWAYS every pick on the field is a pick the edit may carry
 
-ALWAYS any value reads 🤷 GIVEN it is exactly 0.00
+ALWAYS any value reads 🤔 GIVEN it is exactly 0.00
 
 WHEN drag along the field -> the knob, Your pick and Backing after follow the pick AND NEVER anything is staged
 

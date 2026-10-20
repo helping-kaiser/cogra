@@ -61,8 +61,8 @@
    seam 240). −1.00 / −0.15 against the same +1.00 / +1.00 lands at
    +0.00 / +0.85: interested, no side taken — held, unreachable, and not
    severance, so Set signs it like any other pick and no dialog asks.
-   `noSide` draws the landing reading the state under 🤷; `explained` draws
-   the 🤷 tapped, its three lines in the pad's body, the "?"'s grammar. */
+   `noSide` draws the landing reading the state under 🤔; `explained` draws
+   the 🤔 tapped, its three lines in the pad's body, the "?"'s grammar. */
 export const PROPS = {
   knob: { editor: "enum", options: ["parked", "held"], default: "parked" },
   landing: { editor: "enum", options: ["pulledBack", "noSide", "explained"], default: "pulledBack" },

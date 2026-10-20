@@ -65,7 +65,7 @@ export interface StanceAlternatesProps {
    * even locked; the pick keeps its pair shape with the pin untouched.
    */
   axis?: "pair" | "one";
-  /** The unreachable landing's explanation (`unreachableHelp`), handed by the host once its 🤷 is tapped; it replaces the body in place. */
+  /** The unreachable landing's explanation (`unreachableHelp`), handed by the host once its 🤔 is tapped; it replaces the body in place. */
   zeroHelp?: readonly string[] | null;
   /** Leaves `zeroHelp` for the body. */
   onZeroBack?: () => void;

@@ -50,9 +50,9 @@ WHEN the signing answers within 200ms of Set -> NEVER Set reads Setting…
 
 WHEN the signing is taken -> the pad closes back where it bloomed AND the face on the target moves to the new opinion AND the snackbar reads Signed, still settling. with the current opinion's face and pair
 
-ALWAYS the landing line reads Resulting opinion over 🤷 and the state, as Interested, no side taken — this won't shape anyone's feed., GIVEN the pick lands one number at zero
+ALWAYS the landing line reads Resulting opinion over 🤔 and the state, as Interested, no side taken — this won't shape anyone's feed., GIVEN the pick lands one number at zero
 
-WHEN tap the landing's 🤷 -> its three lines replace the pad's body in place, Back to the pad under them AND Set is disabled while they show AND NEVER a dialog opens AND NEVER anything is staged
+WHEN tap the landing's 🤔 -> its three lines replace the pad's body in place, Back to the pad under them AND Set is disabled while they show AND NEVER a dialog opens AND NEVER anything is staged
 
 WHEN tap Set GIVEN the pick lands one number at zero -> the opinion is signed like any other AND NEVER the dialog Walk it all back? opens
 

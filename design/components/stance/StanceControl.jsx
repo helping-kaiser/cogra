@@ -342,7 +342,7 @@ export function StanceControl({
   }, [taughtProp]);
   const [open, setOpen] = React.useState(defaultOpen);
   const [alternates, setAlternates] = React.useState(false);
-  /* false, `"help"` (the "?") or `"zero"` (the unreachable landing's 🤷):
+  /* false, `"help"` (the "?") or `"zero"` (the unreachable landing's 🤔):
      either explanation replaces the pad's body in place. */
   const [explaining, setExplaining] = React.useState(defaultExplaining);
   const [pick, setPick] = React.useState(defaultPick ?? TAP_DEFAULT);

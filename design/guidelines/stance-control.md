@@ -199,9 +199,10 @@ backing already nets `0.00` — the net is zero exactly when the raw sum
 is, since the clip bites only past ±1. It parks; Set still signs, and
 no dialog stands between them.
 
-**Exactly `0.00` shrugs.** On the one axis the value that takes no side
-wears 🤷, spoken `No side taken`; every other value reads its
-`VALENCE_SIX` band.
+**Exactly `0.00` thinks.** On the one axis the value that takes no side
+wears 🤔, spoken `No side taken` (jakob 2026-10-20) — with the pin it is
+a one-zero state, and 🤷 is `(0, 0)`'s alone; every other value reads
+its `VALENCE_SIX` band.
 
 **Zero backing takes the content's own path away.** With
 the second parameter pinned at 1, a Publish at `0.00` folds to
@@ -236,9 +237,9 @@ it, and withholding `(−1, −1)` would be the worse failure. What it does
 instead is explain, and confirm when it matters:
 
 - always show where the pick lands the bundle;
-- if one number lands at zero, read the state under 🤷 —
+- if one number lands at zero, read the state under 🤔 —
   `Interested, no side taken` and its siblings — say once that it
-  shapes no feed, and let the 🤷 explain the rest in place;
+  shapes no feed, and let the 🤔 explain the rest in place;
 - if the result is `(0, 0)`, name it as severance, say what it costs, and
   ask whether that was the intent.
 

@@ -12,7 +12,7 @@ ALWAYS the readout's face is the one-axis table's face for the band the pick sit
 
 WHEN the pick sits exactly on the edge between two bands -> the readout shows the milder face, the one nearer zero
 
-WHEN the pick sits at exactly 0.00 -> the readout shows 🤷
+WHEN the pick sits at exactly 0.00 -> the readout shows 🤔
 
 ALWAYS the pad opens at +0.10 GIVEN the author has not adjusted the backing
 

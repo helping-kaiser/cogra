@@ -128,8 +128,9 @@ in progress (*In-flight labels*).
 ## Emoji
 
 Used for one thing: rendering a value. The stance readout is where that
-happens — twenty anchors, plus 🤷 for a zero opinion and 🫥 for a control
-at rest — and a help, coach or snackbar line that speaks a pair leads
+happens — twenty anchors, plus 🤷 for an opinion at `(0, 0)`, 🤔 for one
+with a single number at zero (jakob 2026-10-20) and 🫥 for a control at
+rest — and a help, coach or snackbar line that speaks a pair leads
 with the same face, because the sentence is a readout too and has to
 hold for a reader who never turns the digits on. The tag table's
 thirteen objects are the same thing for the other family. **Never** in
@@ -2582,11 +2583,11 @@ family's words** — see *the topic disconnects* below.
 
 **The unreachable landing** (`PadStanding`'s `landing` chip; jakob
 2026-10-20, seam 240). A pick that lands one number at zero reads, under
-`Resulting opinion`, the zero face and the state:
-`🤷 Interested, no side taken — this won't shape anyone's feed.` (jakob's
+`Resulting opinion`, the one-zero face 🤔 and the state:
+`🤔 Interested, no side taken — this won't shape anyone's feed.` (jakob's
 direction), and by the other number's sign `Rather not see it, no side
 taken — …`, `For it, no interest either way — …` and `Against it, no
-interest either way — …`, the same tail. The 🤷 is a button named by
+interest either way — …`, the same tail. The 🤔 is a button named by
 the state's head (`Interested, no side taken`); its explanation replaces
 the pad's body in place: `It still counts among your opinions.` (on a
 person, `It still counts among your opinions — @ada stays under Your
@@ -2596,16 +2597,15 @@ and paid for, that leaves a clean slate.` (a topic's, `Disconnect is
 different: …`), then `Back to the pad`. While the reader still borrows a
 view, an unreachable or severed landing adds `You'd keep your borrowed
 view — no feed of your own yet.` (jakob's direction; `VouchBackPad`).
-(*Drafted 2026-10-20, round 18 — the wording jakob's at review, his two
-directions aside.*)
+(*Blessed, jakob 2026-10-20; the face 🤔 his ruling the same day.*)
 
 **The unreachable start** (`ComposePad`, Set at `0.00`). Dialog
 `Start it unreachable?`, body `Your backing is your post's own path into
 anyone's feed. At 0.00 the post starts unreachable on its own — only the
 tags and citations you sign with it lead to it, until someone gives it
 an opinion.`, with `Keep adjusting` filled and `Set it anyway` quiet
-(*the body drafted 2026-10-20, round 18 — its wording jakob's at review;
-the title and both buttons are round 13's*).
+(*the body blessed, jakob 2026-10-20; the title and both buttons are
+round 13's*).
 
 **The backing pad's own words** (`ComposePad`, `EditPad`, round 15):
 the readouts `Current backing` · `Your pick` · `Backing after`, the
@@ -2613,14 +2613,14 @@ walk-back `Walk it all back` — the ordinary pad's walk-away word, with
 `all` because it parks the whole raw sum's opposite — and the cap line
 under `Backing after` when the sum passes ±1, `Adds up to +1.40; your
 feed reads it capped at +1.00.` (the severance aside's shape at one
-axis). Exactly `0.00` is spoken `No side taken` beside its 🤷. The
-non-drag route, hidden until focused beside the strip, is `Set an exact
-value for your backing`; it swaps the strip in place for one track, its
-swap reading `Type an exact value` and back `Use a slider`. (*`Current
-backing`, `Backing after` and `Walk it all back` are the ruling's own
-words, jakob 2026-10-16; the cap line drafted 2026-10-16, and `No side
-taken` and the non-drag route's three drafted 2026-10-20, round 18 —
-their wording jakob's at review.*)
+axis). Exactly `0.00` wears 🤔 (jakob 2026-10-20), spoken `No side
+taken`. The non-drag route, hidden until focused beside the strip, is
+`Set an exact value for your backing`; it swaps the strip in place for
+one track, its swap reading `Type an exact value` and back `Use a
+slider`. (*`Current backing`, `Backing after` and `Walk it all back` are
+the ruling's own words, jakob 2026-10-16; the cap line drafted
+2026-10-16, its wording jakob's at review; `No side taken` and the
+non-drag route's three blessed, jakob 2026-10-20.*)
 
 **What one signature commits is counted in things.** The footer reads
 `You're signing 2 things`, the total `2 things, signed together`

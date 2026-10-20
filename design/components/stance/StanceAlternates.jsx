@@ -189,7 +189,7 @@ export function StanceAlternates({
      choice the record does not have. The pick keeps its pair shape, the pin
      riding along untouched. */
   axis = "pair",
-  /* The unreachable landing's explanation, handed by the host once its 🤷 is
+  /* The unreachable landing's explanation, handed by the host once its 🤔 is
      tapped: it replaces the body in place, and `onZeroBack` returns. */
   zeroHelp,
   onZeroBack,
@@ -282,7 +282,7 @@ export function StanceAlternates({
       </div>
       {/* The help replaces the readouts and the inputs alike — and so does the
           unreachable landing's explanation, which the host hands as
-          `zeroHelp` once its 🤷 is tapped. */}
+          `zeroHelp` once its 🤔 is tapped. */}
       {zeroHelp ? (
         <div style={{ minHeight: slotHeight ?? undefined, display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
           {zeroHelp.map((line) => (
