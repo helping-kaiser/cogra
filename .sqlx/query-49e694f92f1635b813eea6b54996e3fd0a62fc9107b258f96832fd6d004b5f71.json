@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE actor_profile_versions\n            SET pending = FALSE, landed_epoch = $3, act_time = $4,\n                position = $5\n         WHERE actor_id = $1 AND created_at = $2 AND pending",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "49e694f92f1635b813eea6b54996e3fd0a62fc9107b258f96832fd6d004b5f71"
+}

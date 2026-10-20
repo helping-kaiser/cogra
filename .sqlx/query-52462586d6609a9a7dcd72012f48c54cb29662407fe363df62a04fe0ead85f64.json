@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT display_name, bio, avatar_id, website_url,\n                redaction_reason, created_at\n         FROM actor_profile_versions\n         WHERE actor_id = $1\n         ORDER BY landed_epoch DESC NULLS LAST,\n                  act_time DESC NULLS LAST,\n                  position DESC NULLS LAST,\n                  created_at DESC, version_id DESC\n         LIMIT 1",
+  "query": "SELECT display_name, bio, avatar_id, website_url,\n                redaction_reason, pending, created_at\n         FROM actor_profile_versions\n         WHERE actor_id = $1 AND NOT pending\n         ORDER BY landed_epoch DESC NULLS LAST,\n                  act_time DESC NULLS LAST,\n                  position DESC NULLS LAST,\n                  created_at DESC, version_id DESC\n         LIMIT 1",
   "describe": {
     "columns": [
       {
@@ -30,6 +30,11 @@
       },
       {
         "ordinal": 5,
+        "name": "pending",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
         "name": "created_at",
         "type_info": "Timestamptz"
       }
@@ -45,8 +50,9 @@
       true,
       true,
       true,
+      false,
       false
     ]
   },
-  "hash": "047709c7deef54cbb2f217eee4293f6d710a3276fd81b0af21fb681596dfead0"
+  "hash": "52462586d6609a9a7dcd72012f48c54cb29662407fe363df62a04fe0ead85f64"
 }
