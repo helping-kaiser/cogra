@@ -108,6 +108,10 @@ export interface PostCardProps {
   stanceHoldProgress?: number;
   /** Forwarded to `StanceControl`'s `knobHeld`: the pad's knob drawn under the finger, its pressed layer around it, for a board. */
   stanceKnobHeld?: boolean;
+  /** Forwarded to `StanceControl`'s `defaultExplaining`: the open pad's body already explaining, `"help"` or `"zero"`, for a board. */
+  stanceExplaining?: false | "help" | "zero";
+  /** Forwarded to `StanceControl`'s `borrowed`: the reader still borrows a view, so an unreachable or severed landing warns that the pick keeps it. */
+  stanceBorrowed?: boolean;
   /** Forwarded to `StanceControl`'s `anchorOpacity`: the locked look on an applicant's anchor (auth.md), `var(--state-disabled)`, still tappable. */
   stanceOpacity?: string | number;
   /**

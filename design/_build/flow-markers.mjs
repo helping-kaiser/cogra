@@ -148,6 +148,8 @@ export const FLOW_MARKERS = {
     { n: 3, find: ">Walk it back</button>", tag: "button" },
     { n: 4, find: ">Cancel</button>", tag: "button" },
     { n: 5, find: ">Set</button>", tag: "button" },
+    // The `landing` chip's unreachable landing: its 🤷 is a door of its own.
+    { n: 6, find: 'aria-label="Interested, no side taken"', tag: "button" },
   ],
   /* The ceremony has exactly one control, which is the whole point of it. */
   VouchedIn: [{ n: 1, find: ">Go to your feed</button>", tag: "button" }],

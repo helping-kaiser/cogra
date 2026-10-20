@@ -24,7 +24,7 @@ export interface StanceBundle {
 
 export interface StanceLanding {
   landing: StancePair;
-  /** Either axis folded to zero: the stance would carry nothing. */
+  /** Either axis folded to zero: unreachable — held, shaping no feed. */
   inert: boolean;
   /** Both axes folded to zero: severance. */
   severed: boolean;
@@ -137,7 +137,13 @@ export interface StanceLandingLineProps {
   landing: StanceLanding | null;
   /** The record family's axis questions, for the spoken reading. */
   names?: AxisNames;
-  /** The data-node name its placer gives the readout (design ⇄ impl seam 002; renders as attributes only — the open pad's `landing`). Given one, the readout carries it, with its `label`, `face` and `exact` while it reads as a readout rather than a sentence. */
+  /** Handed, an unreachable landing's 🤷 is a button — named by the state it reads — that opens its explanation in place (`unreachableHelp`). */
+  onExplainZero?: () => void;
+  /** Whether that explanation is showing, for the button's `aria-expanded`. */
+  zeroShown?: boolean;
+  /** The reader still borrows a view: an unreachable or severed landing adds `BORROWED_KEPT_LINE` beneath it. Warns, never blocks. */
+  borrowed?: boolean;
+  /** The data-node name its placer gives the readout (design ⇄ impl seam 002; renders as attributes only — the open pad's `landing`). Given one, the readout carries it, with its `label`, `face` and `exact` while it reads as a readout rather than a sentence — an unreachable landing's `label`, `zero` (or `face`) and `words` — and the borrowed-view line is `borrowed`. */
   node?: string;
 }
 
@@ -235,7 +241,15 @@ export declare function formatUnsigned(value: number): string;
 export declare function formatTagPair(pair: StancePair): string;
 export declare function localLanding(rawSum: StancePair, pick: StancePair): StanceLanding;
 export declare function standingLine(bundle: StanceBundle | null | undefined, targetLabel: string): string;
-export declare function landingLine(landing: StanceLanding | null): string;
+export declare function landingLine(landing: StanceLanding | null, names?: AxisNames): string;
+/** An unreachable landing's state in words — "Interested, no side taken" and its three siblings, by which number is zero and the other's sign. */
+export declare function unreachableHead(pair: StancePair): string;
+/** The one consequence an unreachable landing states after its head. */
+export declare const UNREACHABLE_TAIL: string;
+/** What an unreachable landing's 🤷 opens in place: still held, nothing passes through it, and the family's way out differs. */
+export declare function unreachableHelp(names: AxisNames | undefined, targetLabel: string): readonly string[];
+/** The warning under an unreachable or severed landing while the reader still borrows a view. */
+export declare const BORROWED_KEPT_LINE: string;
 /** The severance read, split so the raw total can lead and the cap follow it. */
 export declare function severanceParts(
   bundle: StanceBundle | null | undefined,

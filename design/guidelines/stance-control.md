@@ -138,6 +138,12 @@ borrowed stance on an anchor that is yours to act on could feel like
 your own. The guest alone sees the lender's stances, because the guest
 is nobody yet.
 
+**The borrowed walk lasts until an opinion is live** (jakob 2026-10-20).
+A member walks the borrowed view until they hold one outgoing opinion
+with neither number at zero. So a first pick that lands unreachable
+warns under its landing, `You'd keep your borrowed view — no feed of
+your own yet.`, and never blocks.
+
 **An applicant's anchor answers in place** (PR-103, jakob 2026-10-16:
 applicant acting is post-MVP). The anchor wears auth.md's locked look —
 the disabled opacity, still tappable (`anchorOpacity`) — and a tap or a
@@ -193,8 +199,8 @@ backing already nets `0.00` — the net is zero exactly when the raw sum
 is, since the clip bites only past ±1. It parks; Set still signs, and
 no dialog stands between them.
 
-**Exactly `0.00` shrugs.** On the one axis the value that carries
-nothing wears 🤷, spoken `Nothing`; every other value reads its
+**Exactly `0.00` shrugs.** On the one axis the value that takes no side
+wears 🤷, spoken `No side taken`; every other value reads its
 `VALENCE_SIX` band.
 
 **Zero backing takes the content's own path away.** With
@@ -210,9 +216,14 @@ routing-inert all the same.
 
 ## Severance
 
-A bundle netted to `(0, 0)` is severance: deliberate, burn-priced, and
-carrying consequences ordinary stances do not — no feed presence, no
-attribution earnings, no vouch propagation.
+A bundle with either number at zero is **unreachable** (jakob
+2026-10-20): its path carries `w̃ = 0` (feed-ranking §3.1), so it has no
+feed presence, no attribution earnings and no vouch propagation. The
+consequences come from the zero, not from severing. One zero is a state
+someone can mean — interested, no side taken — and the opinion stays
+held. **Severance** is the named, confirmed, clean-slate version of full
+inertness: a bundle netted to exactly `(0, 0)`, deliberate and
+burn-priced.
 
 **A single pick can reach it.** Against a short history it is easy: one
 `(+1, +1)` edge plus a new `(−1, −1)` nets to exactly zero. The
@@ -225,8 +236,9 @@ it, and withholding `(−1, −1)` would be the worse failure. What it does
 instead is explain, and confirm when it matters:
 
 - always show where the pick lands the bundle;
-- if the result is inert on either axis, say the stance will carry
-  nothing;
+- if one number lands at zero, read the state under 🤷 —
+  `Interested, no side taken` and its siblings — say once that it
+  shapes no feed, and let the 🤷 explain the rest in place;
 - if the result is `(0, 0)`, name it as severance, say what it costs, and
   ask whether that was the intent.
 

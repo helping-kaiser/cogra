@@ -2575,14 +2575,32 @@ paid on its own.` in the singular), and the cap aside trimmed to
 `Your feed reads it capped at +1.00 / +0.85.` **These are the PERSON
 family's words** — see *the topic disconnects* below.
 
+**The unreachable landing** (`PadStanding`'s `landing` chip; jakob
+2026-10-20, seam 240). A pick that lands one number at zero reads, under
+`Resulting opinion`, the zero face and the state:
+`🤷 Interested, no side taken — this won't shape anyone's feed.` (jakob's
+direction), and by the other number's sign `Rather not see it, no side
+taken — …`, `For it, no interest either way — …` and `Against it, no
+interest either way — …`, the same tail. The 🤷 is a button named by
+the state's head (`Interested, no side taken`); its explanation replaces
+the pad's body in place: `It still counts among your opinions.` (on a
+person, `It still counts among your opinions — @ada stays under Your
+people.`) / `It shapes no one's feed, earns nothing, and nothing passes
+on through you.` / `Walk it back is different: its own act, confirmed
+and paid for, that leaves a clean slate.` (a topic's, `Disconnect is
+different: …`), then `Back to the pad`. While the reader still borrows a
+view, an unreachable or severed landing adds `You'd keep your borrowed
+view — no feed of your own yet.` (jakob's direction; `VouchBackPad`).
+(*Drafted 2026-10-20, round 18 — the wording jakob's at review, his two
+directions aside.*)
+
 **The unreachable start** (`ComposePad`, Set at `0.00`). Dialog
 `Start it unreachable?`, body `Your backing is your post's own path into
-anyone's feed. At 0.00 that path carries nothing — your post will live
-on your profile, reached only through the tags and citations you sign
-with it, until someone gives it an opinion.`, with `Keep adjusting`
-filled and `Set it anyway` quiet (*drafted 2026-10-16, round 15 — the
-body's wording jakob's at review; the title and both buttons are
-round 13's*).
+anyone's feed. At 0.00 the post starts unreachable on its own — only the
+tags and citations you sign with it lead to it, until someone gives it
+an opinion.`, with `Keep adjusting` filled and `Set it anyway` quiet
+(*the body drafted 2026-10-20, round 18 — its wording jakob's at review;
+the title and both buttons are round 13's*).
 
 **The backing pad's own words** (`ComposePad`, `EditPad`, round 15):
 the readouts `Current backing` · `Your pick` · `Backing after`, the

@@ -320,9 +320,11 @@ export function nearestTagAnchor(pair) {
 }
 
 /* EXACTLY 0.00 SHRUGS on the one axis (jakob 2026-10-16): a backing of zero
-   carries nothing, so it wears the zero face, 🤷, never a band's smile. Only
-   the exact value — the bands keep the rest of the axis as ruled. */
-export const ZERO_BACKING_LABEL = "Nothing";
+   takes no side — with the second number pinned at 1 it folds to `(0, 1)`,
+   unreachable on its own path — so it wears the zero face, 🤷, never a
+   band's smile. Only the exact value — the bands keep the rest of the axis
+   as ruled. */
+export const ZERO_BACKING_LABEL = "No side taken";
 
 /** The face a ONE-AXIS pick wears — 🤷 at exactly 0.00, otherwise the first
  *  `VALENCE_SIX` band the value falls inside. The bands cover the closed axis,
@@ -502,17 +504,31 @@ function readoutWords(names) {
   };
 }
 
+/* ONE ZERO IS A DELIBERATE STATE, NOT A LOSS (jakob 2026-10-20, seam 240).
+   A landing with exactly one number at zero — `(0, x)` or `(y, 0)` — is a
+   stance someone can mean: interested, no side taken; or a side taken with
+   nothing asked of what reaches them. The fold gives it `w̃ = 0`, so it shapes
+   no feed — the docs call it UNREACHABLE — but it is held, and it is not
+   severance: only `(0, 0)` is, and that keeps its own named, confirmed act and
+   its own line (`severanceWords(names).landing`).
+
+   So the landing reads the state, wearing the zero face 🤷 — the one-axis
+   pads' face for exactly 0.00, the same fact at two axes — and says once what
+   it costs. The sign of the other number decides the words: "interested" is
+   false of a pick that keeps the thing away. The head names the state; the
+   tail is the one consequence worth saying. */
+export const UNREACHABLE_TAIL = "this won't shape anyone's feed.";
+
+export function unreachableHead(pair) {
+  if (pair.pDirected === 0) return pair.pInterest > 0 ? "Interested, no side taken" : "Rather not see it, no side taken";
+  return pair.pDirected > 0 ? "For it, no interest either way" : "Against it, no interest either way";
+}
+
 export function landingLine(landing, names = STANCE_AXIS_NAMES) {
   if (landing === null || landing === undefined) return "Adding it up…";
   if (landing.severed) return severanceWords(names).landing;
   const { resulting } = readoutWords(names);
-  if (landing.inert) {
-    const directedInert = landing.landing.pDirected === 0;
-    const interestInert = landing.landing.pInterest === 0;
-    if (directedInert && interestInert) return `${resulting}: carries nothing.`;
-    if (directedInert) return `${resulting}: your side of it carries nothing.`;
-    if (interestInert) return `${resulting}: what reaches you carries nothing.`;
-  }
+  if (landing.inert) return `${resulting} ${ZERO_BUNDLE_EMOJI} ${unreachableHead(landing.landing)} — ${UNREACHABLE_TAIL}`;
   const readout = bundleReadout(landing.landing);
   return `${resulting} ${readout.emoji} ${formatStancePair(landing.landing)}`;
 }
@@ -614,9 +630,19 @@ export function standingParts(bundle, targetLabel, names = STANCE_AXIS_NAMES) {
 /** The landing, split the same way. */
 export function landingParts(landing, names = STANCE_AXIS_NAMES) {
   if (landing === null || landing === undefined) return { sentence: "Adding it up…" };
-  if (landing.severed || landing.inert) return { sentence: landingLine(landing, names) };
-  const readout = bundleReadout(landing.landing, severanceWords(names).zero);
+  if (landing.severed) return { sentence: landingLine(landing, names) };
   const words = readoutWords(names);
+  if (landing.inert) {
+    const head = unreachableHead(landing.landing);
+    return {
+      label: words.resulting,
+      emoji: ZERO_BUNDLE_EMOJI,
+      head,
+      words: `${head} — ${UNREACHABLE_TAIL}`,
+      spoken: `${words.resulting}: ${head} — ${UNREACHABLE_TAIL}`,
+    };
+  }
+  const readout = bundleReadout(landing.landing, severanceWords(names).zero);
   return {
     label: words.resulting,
     emoji: readout.emoji,
@@ -650,7 +676,7 @@ export function useSettled(value, ms = SETTLE_MS) {
    pad's `current`, `pick` or `landing` — and, when it reads as a readout and
    not a sentence, names its `label`, `face` and `exact` pair, the anchor's
    own words for the face and the figure. */
-function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style, onOpenHistory, node }) {
+function ReadoutBlock({ label, emoji, pair, spoken, sentence, words, head, onExplainZero, zeroShown = false, big = false, style, onOpenHistory, node }) {
   // Spoken once the readout rests (the K13 round); drawn at once.
   const said = useSettled(sentence !== undefined ? sentence : spoken);
   if (sentence !== undefined) {
@@ -692,6 +718,34 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style
           {label}
         </span>
       )}
+      {words !== undefined ? (
+        /* THE UNREACHABLE LANDING: the zero face and the state in words, where
+           the pair would stand. Handed `onExplainZero`, the face is a door —
+           its explanation replaces the pad's body in place, the "?"'s
+           grammar — named by the state it explains. */
+        <span style={{ display: "flex", alignItems: "baseline", gap: "var(--space-2)" }}>
+          {onExplainZero ? (
+            <button
+              type="button"
+              aria-label={head}
+              aria-expanded={zeroShown}
+              onClick={onExplainZero}
+              className="cg-state cg-focus cg-hit"
+              style={{ flex: "none", background: "none", border: 0, padding: 0, cursor: "pointer", fontSize: "var(--text-title-medium)", lineHeight: 1.2 }}
+              data-node={node && "zero"}
+            >
+              <span aria-hidden="true">{emoji}</span>
+            </button>
+          ) : (
+            <span aria-hidden="true" style={{ flex: "none", fontSize: "var(--text-title-medium)", lineHeight: 1.2 }} data-node={node && "face"}>
+              {emoji}
+            </span>
+          )}
+          <span aria-hidden="true" style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }} data-node={node && "words"}>
+            {words}
+          </span>
+        </span>
+      ) : (
       <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)" }}>
         <span style={{ fontSize: big ? "var(--text-title-large)" : "var(--text-title-medium)", lineHeight: 1.2 }} data-node={node && "face"}>
           {emoji}
@@ -700,6 +754,7 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style
           {pair}
         </span>
       </span>
+      )}
       <span style={SR_ONLY}>{said}</span>
     </div>
   );
@@ -776,12 +831,28 @@ export function AttachmentLandingLine({ rawSum, pick, style, node }) {
   );
 }
 
+/* THE BORROWED VIEW HOLDS UNTIL AN OPINION IS LIVE (jakob 2026-10-20, seam
+   240). A member walks a borrowed view until they hold one outgoing opinion
+   with neither number at zero, so a first pick that lands unreachable — or at
+   nothing — starts no feed of their own. The host says whether the reader
+   still borrows (`borrowed`); the line warns, and never blocks. */
+export const BORROWED_KEPT_LINE = "You'd keep your borrowed view — no feed of your own yet.";
+
 /** The landing — the one readout that sits below the field. Given a `node`,
- *  the readout itself carries it; the live region around it stays unnamed. */
-export function StanceLandingLine({ landing, names = STANCE_AXIS_NAMES, style, node }) {
+ *  the readout itself carries it; the live region around it stays unnamed.
+ *  `onExplainZero` makes an unreachable landing's 🤷 the door to its
+ *  explanation; `borrowed` adds the borrowed-view line under an unreachable
+ *  or severed landing. */
+export function StanceLandingLine({ landing, names = STANCE_AXIS_NAMES, onExplainZero, zeroShown = false, borrowed = false, style, node }) {
+  const keepsBorrowed = borrowed && landing !== null && landing !== undefined && (landing.inert || landing.severed);
   return (
-    <div aria-live="polite" style={style}>
-      <ReadoutBlock {...landingParts(landing, names)} node={node} />
+    <div aria-live="polite" style={keepsBorrowed ? { display: "flex", flexDirection: "column", gap: "var(--space-1)", ...style } : style}>
+      <ReadoutBlock {...landingParts(landing, names)} onExplainZero={onExplainZero} zeroShown={zeroShown} node={node} />
+      {keepsBorrowed && (
+        <p style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }} data-node={node && "borrowed"}>
+          {BORROWED_KEPT_LINE}
+        </p>
+      )}
     </div>
   );
 }
@@ -862,4 +933,21 @@ export function padHelp(names) {
 
 export function alternatesHelp(names) {
   return [...STANCE_ALTERNATES_HELP.slice(0, 3), severanceWords(names).helpAlternates];
+}
+
+/* WHAT THE 🤷 OPENS ON AN UNREACHABLE LANDING (jakob 2026-10-20, seam 240) —
+   in place, the "?"'s grammar: the lines replace the pad's body, `Back to the
+   pad` returns, and Set waits while they show. Three facts, in the order a
+   reader doubts them: the opinion is still held (a person stays under `Your
+   people` — `FeedSheet`'s set, whichever way the opinion points); nothing
+   passes through it; and it is not the family's way out, which is an act of
+   its own. The target is the pad's, and the way out is the family's word. */
+export function unreachableHelp(names, targetLabel) {
+  return [
+    targetLabel.startsWith("@")
+      ? `It still counts among your opinions — ${targetLabel} stays under Your people.`
+      : "It still counts among your opinions.",
+    "It shapes no one's feed, earns nothing, and nothing passes on through you.",
+    `${severanceWords(names).control} is different: its own act, confirmed and paid for, that leaves a clean slate.`,
+  ];
 }

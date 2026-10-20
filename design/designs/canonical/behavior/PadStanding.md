@@ -50,6 +50,12 @@ WHEN the signing answers within 200ms of Set -> NEVER Set reads Setting…
 
 WHEN the signing is taken -> the pad closes back where it bloomed AND the face on the target moves to the new opinion AND the snackbar reads Signed, still settling. with the current opinion's face and pair
 
+ALWAYS the landing line reads Resulting opinion over 🤷 and the state, as Interested, no side taken — this won't shape anyone's feed., GIVEN the pick lands one number at zero
+
+WHEN tap the landing's 🤷 -> its three lines replace the pad's body in place, Back to the pad under them AND Set is disabled while they show AND NEVER a dialog opens AND NEVER anything is staged
+
+WHEN tap Set GIVEN the pick lands one number at zero -> the opinion is signed like any other AND NEVER the dialog Walk it all back? opens
+
 WHEN tap Set GIVEN the pick nets the standing bundle to (0, 0) -> the dialog Walk it all back? opens over the pad, which stays parked beneath it, with the pick line and its cost of 1 thing AND NEVER the pick is refused
 
 WHEN tap Set GIVEN the signing key is not on this device -> the pad's notice Your key isn't on this browser stands where the landing line and the actions were AND NEVER anything is signed
