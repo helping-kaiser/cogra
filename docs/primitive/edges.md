@@ -46,11 +46,17 @@ gesture.
   control records type-fixed — and where prose and the census
   tables disagree, the tables govern
   (``rem:nodes:edge-census-normative``).
+- **User-authored values lie on the hundredths grid.** Every
+  parameter value a user authors is a multiple of `0.01` in
+  `[−1.00, +1.00]`, within its family's census range; netting is
+  exact decimal arithmetic.
 - **Domain, mask, and tier are family properties**, fixed by the
   census — never per-edge choices. CoGra picks the family; the
   family fixes the math.
 - **Zero is inert.** An edge with either parameter at `0` is
   routing-inert; indifference is magnitude zero, not a third sign.
+  Inert is not severed: severance is the bundle netted to `(0,0)`
+  ([feed-ranking.md §8.1](feed-ranking.md#81-the-act)).
 - **Revision is a new record.** The record set stores chronicles:
   revising a stance appends a parallel record to the same-author
   bundle. L1's standing projection nets each bundle by
