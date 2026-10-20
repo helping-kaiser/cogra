@@ -13,7 +13,8 @@
 //
 // THE PICK IS ACCUMULATED TRAVEL from where the value stood, one rule for
 // both axes: `perPixel` is the range's span over the knob's whole travel,
-// and the sum is clamped once, per axis.
+// and the sum is clamped once, per axis. Release lands it on the hundredths
+// grid ([hundredth]), clamped back into the reach.
 
 package com.cogra.core.designsystem
 
@@ -151,6 +152,10 @@ internal fun pairFrom(base: PairPoint, travel: Offset, halfExtentPx: Float, rang
         interest = ranges.interest.clamp(base.interest - travel.y * perY),
     )
 }
+
+/** Where a drag of this much travel PARKS once the finger lifts: [pairFrom] on the hundredths grid. */
+internal fun pairReleased(base: PairPoint, travel: Offset, halfExtentPx: Float, ranges: PairRanges): PairPoint =
+    ranges.snap(pairFrom(base, travel, halfExtentPx, ranges))
 
 /** The knob's centre for [point], from the field's top-left, in a field [sidePx] across. */
 internal fun pairKnobAt(point: PairPoint, sidePx: Float, insetPx: Float, ranges: PairRanges): Offset {
@@ -301,12 +306,18 @@ private fun Modifier.pairGesture(
         val base = value.value
         val half = pairHalfExtent(size.width.toFloat(), inset.toPx())
         var travel = Offset.Zero
+        var travelled = false
         try {
             drag(down.id) { change ->
                 travel += change.positionChange()
                 change.consume()
+                travelled = true
                 onValueChange.value(pairFrom(base, travel, half, ranges))
             }
+            // The lift lands the pair on the hundredths grid inside the
+            // field's reach (the value domain, jakob 2026-10-20) — a tag's
+            // relevance never below its floor. A tap moves nothing.
+            if (travelled) onValueChange.value(pairReleased(base, travel, half, ranges))
         } finally {
             held.value = false
         }

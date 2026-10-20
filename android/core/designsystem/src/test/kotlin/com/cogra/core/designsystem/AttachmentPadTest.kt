@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
@@ -93,6 +94,60 @@ class AttachmentPadTest {
         assertThat(1.0 / picked).isPositiveInfinity()
     }
 
+    // ── RELEASE LANDS THE PICK ON THE NEAREST HUNDREDTH (ComposePad.md, EditPad.md) ──
+
+    @Test
+    fun theReleaseLandsANearZeroPickOnExactlyPositiveZero() {
+        // From the compose pad's +0.10, float travel can carry the pick to
+        // 0.0031 or −0.0042 but never to 0.0 itself; the release can.
+        val above = attachmentReleased(0.1, ((0.0031 - 0.1) * extent).toFloat(), extent)
+        val below = attachmentReleased(0.1, ((-0.0042 - 0.1) * extent).toFloat(), extent)
+        assertThat(above).isEqualTo(0.0)
+        assertThat(1.0 / above).isPositiveInfinity()
+        assertThat(1.0 / below).isPositiveInfinity()
+    }
+
+    @Test
+    fun theReleaseLandsAnyOtherPickOnTheNearestHundredth() {
+        assertThat(attachmentReleased(0.0, (0.4371 * extent).toFloat(), extent)).isEqualTo(0.44)
+        assertThat(attachmentReleased(0.0, (-0.4371 * extent).toFloat(), extent)).isEqualTo(-0.44)
+        assertThat(attachmentReleased(0.9, extent * 10, extent)).isEqualTo(1.0)
+    }
+
+    @Test
+    fun aDragFollowsTheFingerAndTheLiftParksThePickOnTheGrid() {
+        val picked = mutableListOf<Double>()
+        compose.setContent {
+            var value by remember { mutableDoubleStateOf(0.1) }
+            AttachmentPad(
+                value = value,
+                onValueChange = {
+                    value = it
+                    picked += it
+                },
+                modifier = Modifier.width(360.dp),
+            )
+        }
+        val strip = compose.onNodeWithTag("attachment_pad")
+        strip.performTouchInput {
+            down(center)
+            moveBy(Offset(10f, 0f))
+        }
+        // Measure the strip's own extent from what ten pixels picked, then
+        // carry the pick to +0.002 — a float that prints +0.00.
+        val measured = 10.0 / (picked.last() - 0.1)
+        val toNearZero = ((0.002 - picked.last()) * measured).toFloat()
+        strip.performTouchInput {
+            moveBy(Offset(toNearZero, 0f))
+        }
+        assertThat(picked.last()).isWithin(1e-4).of(0.002)
+        assertThat(picked.last()).isNotEqualTo(0.0)
+        strip.performTouchInput { up() }
+        assertThat(picked.last()).isEqualTo(0.0)
+        assertThat(1.0 / picked.last()).isPositiveInfinity()
+        strip.assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "+0.00"))
+    }
+
     @Test
     fun theKnobNeverLeavesTheDrawnStrip() {
         for (value in listOf(-4.0, -1.0, -0.5, 0.0, 0.5, 1.0, 4.0)) {
@@ -161,7 +216,8 @@ class AttachmentPadTest {
         compose.onNodeWithTag("attachment_pad").performSemanticsAction(SemanticsActions.SetProgress) {
             it(-0.6f)
         }
-        assertThat(picked.single()).isWithin(1e-6).of(-0.6)
+        // A set progress lands on the grid: −0.6f is −0.60000002384… as a Double.
+        assertThat(picked.single()).isEqualTo(-0.6)
         compose.onNodeWithTag("attachment_pad")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "-0.60"))
     }

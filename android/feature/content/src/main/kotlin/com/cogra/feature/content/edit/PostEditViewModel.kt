@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.core.designsystem.BackingValue
 import com.cogra.core.designsystem.attachmentLanding
+import com.cogra.core.designsystem.hundredth
 import com.cogra.core.designsystem.walkBackPick
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
@@ -350,9 +351,12 @@ class PostEditViewModel @Inject constructor(
      * (EditPad.md). The count never moves for the pick itself.
      */
     fun onSetBacking() = _state.update {
+        // The pick is a hundredth (EditPad.md), so one that reads 0.00 IS 0
+        // and adds no record — a float's 0.004 never slips one in.
+        val pick = hundredth(it.stagedPick)
         it.copy(
-            pick = it.stagedPick,
-            recordStaged = it.recordStaged || it.stagedPick != 0.0,
+            pick = pick,
+            recordStaged = it.recordStaged || pick != 0.0,
             backingPadOpen = false,
         )
     }

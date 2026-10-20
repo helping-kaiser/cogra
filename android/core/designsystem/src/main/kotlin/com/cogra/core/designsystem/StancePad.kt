@@ -673,11 +673,19 @@ private fun Modifier.fieldGesture(
             // drag began, and the picks it reports must not feed back into it.
             val base = pick.value
             var travel = Offset.Zero
+            var travelled = false
             drag(down.id) { change ->
                 travel += change.positionChange()
                 change.consume()
+                travelled = true
                 onPick.value(stancePointFrom(base, travel, extentPx))
             }
+            // THE RELEASE PARKS THE PICK ON A HUNDREDTH (the value domain,
+            // jakob 2026-10-20): the knob followed the finger, and the lift
+            // lands both axes on the nearest hundredth — so a pick the
+            // readout prints as `+0.00` is the exact 0 the landing's
+            // severance and inertness read. A tap moves nothing.
+            if (travelled) onPick.value(stancePointReleased(base, travel, extentPx))
         }
     }
 }
@@ -1562,9 +1570,18 @@ private fun StanceEntry(
     }
     OutlinedTextField(
         value = typed,
-        onValueChange = {
-            typed = it
-            it.toDoubleOrNull()?.takeIf { parsed -> parsed in -1.0..1.0 }?.let(onChange)
+        onValueChange = { text ->
+            val parsed = text.toDoubleOrNull()?.takeIf { it in -1.0..1.0 }
+            if (parsed == null) {
+                typed = text
+            } else {
+                // A typed value lands on the hundredths grid, as a released
+                // drag does; a third decimal is rewritten to the hundredth it
+                // landed on, so the field never shows a pick it is not.
+                val landed = hundredth(parsed)
+                typed = if (landed == parsed) text else entryText(landed)
+                onChange(landed)
+            }
         },
         label = { Text(label) },
         singleLine = true,

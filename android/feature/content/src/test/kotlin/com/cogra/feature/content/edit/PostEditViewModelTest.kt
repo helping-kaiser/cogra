@@ -597,6 +597,36 @@ class PostEditViewModelTest {
         assertThat(vm.state.value.signedActionCount).isEqualTo(0)
     }
 
+    // EditPad.md: the pick parks on a hundredth, so a pick that READS 0.00 is
+    // 0 and adds no record. The bug this pins: 0.004 printed +0.00 and still
+    // filled the batch with a record.
+    @Test
+    fun aSetThatReadsZeroIsZeroAndAddsNoGhostRecord() = runTest(dispatcher) {
+        val vm = opened()
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(0.004)
+        vm.onSetBacking()
+        assertThat(vm.state.value.pick).isEqualTo(0.0)
+        assertThat(vm.state.value.recordStaged).isFalse()
+        assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(-0.0049)
+        vm.onSetBacking()
+        // Truth compares doubles by `equals`, which tells −0 from +0.
+        assertThat(vm.state.value.pick).isEqualTo(0.0)
+        assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+    }
+
+    @Test
+    fun aSetLandsThePickOnTheHundredthsGrid() = runTest(dispatcher) {
+        val vm = opened()
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(0.4371)
+        vm.onSetBacking()
+        assertThat(vm.state.value.pick).isEqualTo(0.44)
+    }
+
     @Test
     fun cancelLeavesThePickAsItWas() = runTest(dispatcher) {
         val vm = opened()
