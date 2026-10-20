@@ -4685,12 +4685,15 @@ type User implements Node & Actor {
 	narrowed list can stand another kind beside its people, the people
 	section serves only the three people first seen most recently, and
 	`hasMorePeople` says whether more match — the "See all profiles"
-	door, which is the same query with `kinds: [USER]`. A query past
-	the search length cap is BAD_INPUT. A hidden actor's posts and
-	comments stay out while the actor is hidden, and their own profile
-	stays; a removed thing keeps its place and reads its removal mark;
-	a thing whose node no longer resolves — a pending write that never
-	landed — is skipped. Paging is keyset on `(firstSeenAt, node id)`,
+	door, which is the same query with `kinds: [USER]`. The topics
+	section is capped the same way, to the three topics first seen
+	most recently, and `hasMoreTags` says whether more match — the
+	"See all tags" door, which is the same query with `kinds: [HASHTAG]`.
+	A query past the search length cap is BAD_INPUT. A hidden actor's
+	posts and comments stay out while the actor is hidden, and their
+	own profile stays; a removed thing keeps its place and reads its
+	removal mark; a thing whose node no longer resolves — a pending
+	write that never landed — is skipped. Paging is keyset on `(firstSeenAt, node id)`,
 	so a thing first seen while the reader scrolls sorts above the
 	open page and never shifts the next one. Field-level: viewer-only.
 	"""
@@ -4924,8 +4927,8 @@ type ViewHistoryConnection {
 	edges: [ViewHistoryEdge!]!
 	"""
 	How many things the viewer's seen-list serves, across every page —
-	narrowed by `query` and `kinds` when given, less the people a
-	capped people section leaves behind its door. Priced at zero like
+	narrowed by `query` and `kinds` when given, less the people and
+	topics a capped section leaves behind its door. Priced at zero like
 	every connection count; saturates at [`i32::MAX`].
 	"""
 	totalCount: Int
@@ -4938,6 +4941,15 @@ type ViewHistoryConnection {
 	section is not capped, and on a list no query narrows.
 	"""
 	hasMorePeople: Boolean!
+	"""
+	Whether more seen topics match than the topics section serves —
+	the "See all tags" door. While a narrowed list can stand another
+	kind beside its topics, the topics section serves the three topics
+	first seen most recently; the same query with `kinds: [HASHTAG]`
+	serves every match, uncapped. False when the section is not
+	capped, and on a list no query narrows.
+	"""
+	hasMoreTags: Boolean!
 }
 
 """
