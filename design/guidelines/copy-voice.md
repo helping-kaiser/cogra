@@ -61,6 +61,11 @@ another tool. Codes, keys, and recovery are the reader's own vocabulary
 on those surfaces. Plain language frames the block; the precise label
 sits on it.
 
+**Explain only what is new** (jakob 2026-10-20, a hard rule). A "?" text
+or a helper line explains new, novel, un-learned behavior — never what
+is common, obvious or expected. A reader who already expects it is told
+nothing, and the screen is wordier for it.
+
 This is greppable and should be enforced as a check over Android's
 `strings.xml` and the web copy, rather than left to review — the check
 does not exist yet.
@@ -502,11 +507,9 @@ noun):
   change to it stays on your public record.
 - **Changing your picture** (the profile-picture seal): Your profile
   is a public record, and changes to it are signed actions in your
-  name — the new picture shows as soon as you sign. / The signing is
-  paid for, like your posts. The record that you changed it stays,
-  like every signed action. *(Profiles display at authoring time, jakob
-  2026-10-20; the first paragraph's tail drafted in round 18, its
-  wording jakob's at review.)*
+  name. / The signing is paid for, like your posts. The record that
+  you changed it stays, like every signed action. *(Blessed, jakob
+  2026-10-20.)*
 - **The filter** (the feed's and search's filter sheets; the seen
   sentence is the surface's own, jakob 2026-10-14): What you
   let in, and in what order — the kinds combine freely, ranked or

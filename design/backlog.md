@@ -5145,3 +5145,15 @@ whole (143), so no MVP surface can meet the refusal. jakob deferred its
 copy (2026-10-20, round 18): *Faults by code* gains its vehicle and
 sentence when 143 is re-opened, drafted then against the boards that
 carry staged media — not invented now.
+
+### 146 · Sweep the "?" texts and helper lines for the expected · *design* · **filed 2026-10-20**
+
+jakob's hard rule (2026-10-20, copy-voice's *Explain only what is new*):
+a "?" text or a helper line explains new, novel, un-learned behavior,
+never what is common, obvious or expected. Round 18 cut one such clause
+from the picture's "?", and jakob: "this is probably not the only place
+where we have this". Sweep every "?" dialog text (*The "?" dialogs*), the
+pads' help lines and every helper, caption and note line on the boards;
+list each sentence that tells a reader what they already expect, with a
+proposed cut, for jakob to rule. It rides his flagged pass that removes
+words from crowded screens.
