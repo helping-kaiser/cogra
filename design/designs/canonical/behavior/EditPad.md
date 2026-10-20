@@ -44,7 +44,9 @@ ALWAYS Backing after reads as far as one record reaches once Walk it all back ha
 
 ALWAYS Walk it all back is greyed and does nothing GIVEN the backing already nets 0.00
 
-WHEN press Set -> the pad closes AND the edit's Your backing row reads the backing after AND the footer's count stays as it was AND NEVER anything is signed before Sign the edit
+WHEN press Set -> the pad closes AND the edit's Your backing row reads the backing after AND the pick adds no count of its own to the footer AND NEVER anything is signed before Sign the edit
+
+WHEN press Set GIVEN the pick reads other than 0.00 and the batch held no act -> the pick alone fills the batch AND the footer reads You're signing 1 thing, the new version's one record AND Sign the edit answers
 
 WHEN press Set GIVEN the pick reads 0.00 -> the pad closes AND the edit's record carries 0.00 AND NEVER a record is added to the batch AND NEVER a dialog opens
 
