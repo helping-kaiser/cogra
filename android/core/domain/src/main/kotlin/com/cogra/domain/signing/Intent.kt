@@ -171,19 +171,9 @@ data class Expectation(
 data object RegistrationExemption : Intent
 
 /**
- * The second named exemption (PR-88): a carried write released by the landing
- * on a device that holds no prepare-time expectation for it — the write was
- * prepared, and intent-checked, on another device (Carried.kt). It still runs
- * every transport check, and it holds only for an Opinion (PR-105). Internal:
- * chosen only by the signer's landing path (WriteSigner.signCarriedAtLanding),
- * never by a surface.
- */
-internal data object CarriedAtLandingExemption : Intent
-
-/**
  * A released carried write as this device verified it at its prepare: the
- * proposal's digest, dependencies excluded (Carried.kt). Internal, like the
- * exemption: only the landing path holds one.
+ * proposal's digest, dependencies excluded (Carried.kt). Internal: only the
+ * landing path holds one.
  */
 internal class CarriedExpectation(val digest: ByteArray) : Intent
 

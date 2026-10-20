@@ -1,7 +1,7 @@
 package com.cogra.domain.signing
 
 import com.cogra.crypto.ActorKey
-import com.cogra.crypto.Family
+import com.cogra.crypto.decodeProposal
 import com.cogra.domain.AccountState
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.ApplicationView
@@ -17,7 +17,6 @@ import com.cogra.domain.testing.TestHost
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingOnboardingRepository
 import com.cogra.domain.testing.ThrowingWriteRepository
-import com.cogra.domain.testing.testProposalBytes
 import com.cogra.domain.testing.testRegistrationBytes
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
@@ -46,14 +45,13 @@ private class RegistrationWrites(
     val actor: ActorKey,
     val host: TestHost,
     val proposal: ByteArray,
-    val family: Family = Family.REGISTRATION,
 ) : ThrowingWriteRepository() {
     var tamperSeal = false
 
     fun stagedView(state: WriteState, verifiedAct: ByteArray? = null) = StagedWriteView(
         id = "reg-1",
         state = state,
-        family = family,
+        family = com.cogra.crypto.Family.REGISTRATION,
         canonicalProposal = proposal,
         verifiedAct = verifiedAct,
         recordId = null,
@@ -161,22 +159,37 @@ class RegistrationSignerTest {
     @Test
     fun aMemberSignsTheBatchTheLandingReleased() = runTest {
         // The carried acts came back from the landing awaiting the
-        // pre-signature: the member pass signs them without a prompt. The
-        // batch is the applicant's Opinion, prepared on another device — the
-        // one family the landing signs with no expectation kept here (PR-105).
-        val released = RegistrationWrites(actor, host, testProposalBytes(actor), Family.OPINION)
-        val landing = RegistrationSigner(onboarding, WriteSigner(released, identity), identity, ceremony)
+        // pre-signature: the member pass signs them without a prompt, against
+        // the digest kept at their prepare.
+        identity.saveCarriedExpectation("reg-1", carriedDigest(decodeProposal(writes.proposal)))
         onboarding.status = Outcome.Success(
             ApplicationStatus(
                 AccountState.MEMBER,
                 application(approved = true, landed = true),
                 null,
                 null,
-                carriedBatch = listOf(released.stagedView(WriteState.AWAITING_PRE_SIGN)),
+                carriedBatch = listOf(writes.stagedView(WriteState.AWAITING_PRE_SIGN)),
             ),
         )
-        assertThat(landing.advance()).isEqualTo(RegistrationProgress.Member)
-        assertThat(released.approvals).isEqualTo(1)
+        assertThat(signer.advance()).isEqualTo(RegistrationProgress.Member)
+        assertThat(writes.approvals).isEqualTo(1)
+    }
+
+    @Test
+    fun aMemberRefusesAReleasedBatchThisDeviceKeptNothingFor() = runTest {
+        // No family is exempt: with no expectation kept here, the pass signs
+        // nothing.
+        onboarding.status = Outcome.Success(
+            ApplicationStatus(
+                AccountState.MEMBER,
+                application(approved = true, landed = true),
+                null,
+                null,
+                carriedBatch = listOf(writes.stagedView(WriteState.AWAITING_PRE_SIGN)),
+            ),
+        )
+        assertThat(signer.advance()).isEqualTo(RegistrationProgress.Member)
+        assertThat(writes.approvals).isEqualTo(0)
     }
 
     @Test
