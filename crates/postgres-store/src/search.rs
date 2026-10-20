@@ -260,14 +260,8 @@ impl SearchRequest {
         }
         let kinds = vec![kind.to_string()];
         Some(match self {
-            Self::Match(q) => Self::Match(MatchQuery {
-                kinds,
-                ..q.clone()
-            }),
-            Self::Scoped(q) => Self::Scoped(ScopedQuery {
-                kinds,
-                ..q.clone()
-            }),
+            Self::Match(q) => Self::Match(MatchQuery { kinds, ..q.clone() }),
+            Self::Scoped(q) => Self::Scoped(ScopedQuery { kinds, ..q.clone() }),
         })
     }
 
