@@ -115,6 +115,62 @@ pub async fn bundle(
     Ok(sum)
 }
 
+/// Whether the author holds at least one live outgoing Opinion edge: some
+/// target whose netted bundle is not routing-inert, `p̄_d ≠ 0` and
+/// `p̄_i ≠ 0` (edges.md §1) — the end of the borrowed view (api-spec.md
+/// `Query.borrowedView`). An author whose Opinions are all inert, or all
+/// netted to zero, has no such edge: their ranked feed would be empty.
+///
+/// The bundle is the fold of [`bundle`] — payload-marked and
+/// census-unknown legs excluded — taken per target across every target
+/// the author has written an Opinion toward. The clip preserves zero
+/// (`clip(x) == 0` exactly when `x` is `0`), so the sum tests directly in
+/// the query and `NetStance::is_inert` never needs the rows.
+///
+/// [`BundleView::Landed`] reads the mirror alone. [`BundleView::
+/// IncludingPending`] adds the author's signed, in-flight Opinions into
+/// the same per-target bundle — signed meaning the pre-commitment is in,
+/// so a write still awaiting it carries no signature of the author's — and
+/// an act carried with the application counts from the landing on, signed
+/// or not: it signs with the vouch-in batch automatically (VouchBack.md:21).
+/// Landed and expired staged rows are not counted as pending: the first is
+/// in the mirror already, the second never existed on the graph.
+pub async fn has_live_opinion_from(
+    pool: &PgPool,
+    author_atom: &str,
+    view: BundleView,
+) -> Result<bool, sqlx::Error> {
+    let source = NodeId::Addr(author_atom.to_string()).to_string();
+    sqlx::query_scalar!(
+        r#"SELECT EXISTS(
+               SELECT 1 FROM (
+                   SELECT l.target, l.p_d, l.p_i
+                   FROM mirror_record_legs l
+                   JOIN mirror_records r ON r.record_id = l.record_id
+                   WHERE l.leg = 'binary' AND l.family = 'opinion'
+                     AND l.source = $1
+                     AND NOT r.payload_marked
+                     AND NOT l.census_unknown
+                   UNION ALL
+                   SELECT target, p_d, p_i
+                   FROM staged_writes
+                   WHERE $3 AND family = 'opinion' AND author = $2
+                     AND middle IS NULL
+                     AND octet_length(payload) = 0
+                     AND (state NOT IN ('awaiting_pre_sign', 'expired', 'carried', 'landed')
+                          OR (carried AND state = 'awaiting_pre_sign'))
+               ) legs
+               GROUP BY target
+               HAVING SUM(p_d) <> 0 AND SUM(p_i) <> 0
+           ) AS "exists!""#,
+        source,
+        author_atom,
+        view == BundleView::IncludingPending,
+    )
+    .fetch_one(pool)
+    .await
+}
+
 /// The author's own Publish bundle toward one minted Content node: the
 /// raw `p_d` sums of every Publish-family record the author wrote toward
 /// it, and how many records sum.

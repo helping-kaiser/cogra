@@ -620,9 +620,12 @@ reachable from the inviter's profile.
 
 The prompt and the borrowed view are separate questions. The
 borrowed view (`Query.borrowedView`) ends on the member's first
-Opinion toward any target, the vouch-back or another; it latches
+live Opinion toward any target, the vouch-back or another — an
+Opinion edge whose netted bundle is not routing-inert (neither
+parameter zero); a member whose Opinions are all inert keeps the
+view, since a feed rooted in them ranks nothing. It latches
 `first_opinion_at` on the landed application row once the mirror
-shows that Opinion, and an in-flight one ends the borrowing
+shows that live Opinion, and an in-flight one ends the borrowing
 without latching.
 
 **Reads may repair, never decide.** The poll's re-staging and the

@@ -3141,12 +3141,14 @@ type Query {
 	link they registered through** — whoever's vouch lands them —
 	from the moment
 	the account exists and before either proof is in, whatever they
-	stage — and a **landed member** keeps borrowing it until their
-	first Opinion is signed, toward any target, landed or in flight.
-	An Affinity never ends it; a first Opinion that expires with
-	none landed returns it; an Opinion carried from the application
-	signs with the vouch-in batch, so that member owns their view
-	from landing on.
+	stage — and a **landed member** keeps borrowing it until they
+	hold a live Opinion, signed toward any target, landed or in
+	flight: one whose netted bundle toward its target has neither
+	parameter at zero. An inert Opinion (either parameter zero) and
+	an Affinity never end it; a live Opinion that expires with none
+	landed returns it; an Opinion carried from the application
+	signs with the vouch-in batch, so a member who carried a live
+	one owns their view from landing on.
 	3. A **bare visitor**, with nothing more specific to go on,
 	borrows the **Genesis Moderator's** view. Strictly the
 	fallback: it is the only vantage that names no relationship

@@ -23,7 +23,9 @@ use postgres_store::references::ReferenceView;
 use postgres_store::topics::{TagChannel, TopicView};
 use postgres_store::{
     PgPool, auth as store, mirror, profile as profile_store, references as references_store,
-    staged, topics as topics_store,
+    staged,
+    stance::{self as stance_store, BundleView},
+    topics as topics_store,
 };
 use uuid::Uuid;
 
@@ -199,8 +201,9 @@ impl BackingBundle {
 
 /// The actor whose view this account still borrows (`design/readme.md`
 /// §13, api-spec.md `Query.borrowedView`): the issuer of the invite link
-/// the account registered through, until the member's first Opinion is
-/// signed — toward any target — and nobody after. The lender is the
+/// the account registered through, until the member holds a live
+/// outgoing Opinion edge — a signed Opinion, toward any target, whose
+/// netted bundle is not routing-inert — and nobody after. The lender is the
 /// issuer for the whole ladder, whoever's vouch landed the account (G2).
 /// Vacuously nobody without an issuer, which is the genesis account's
 /// case.
@@ -211,10 +214,14 @@ impl BackingBundle {
 ///   probe is not consulted before landing (VouchBack.md:21's carried
 ///   opinion signs with the vouch-in batch, so it ends the borrowing at
 ///   landing, not before).
-/// - A **landed member** borrows until an Opinion of theirs has landed in
-///   the mirror or is signed and in flight (VouchBack.md:15). An Affinity
-///   never ends it (VouchBack.md:19): only the Opinion family is probed.
-/// - **Only a landed Opinion latches.** An in-flight one ends the
+/// - A **landed member** borrows until a live Opinion edge of theirs has
+///   landed in the mirror or is signed and in flight (VouchBack.md:15). An
+///   edge is live when the bundle of their Opinions toward one target nets
+///   to a pair with neither parameter zero (`NetStance::is_inert`
+///   false); a member whose Opinions are all inert keeps the borrowed view,
+///   because their ranked feed would be empty. An Affinity never ends it
+///   (VouchBack.md:19): only the Opinion family is probed.
+/// - **Only a landed live Opinion latches.** An in-flight one ends the
 ///   borrowing without latching, so an expiry with nothing landed returns
 ///   it (VouchBack.md:17). The latch is the same reads-may-repair cache as
 ///   the reciprocation latch (auth.md "Reads may repair, never decide"):
@@ -244,12 +251,13 @@ pub(crate) async fn borrowed_vantage(
     let Some(account_address) = &account.realization_address else {
         return Ok(Some(issuer));
     };
-    let source = NodeId::Addr(account_address.clone()).to_string();
-    if mirror::has_any_opinion_from(pool, &source).await? {
+    if stance_store::has_live_opinion_from(pool, account_address, BundleView::Landed).await? {
         store::latch_first_opinion(pool, account.id).await?;
         return Ok(None);
     }
-    if staged::has_signed_of_family(pool, account.id, Family::Opinion).await? {
+    if stance_store::has_live_opinion_from(pool, account_address, BundleView::IncludingPending)
+        .await?
+    {
         return Ok(None);
     }
     Ok(Some(issuer))
