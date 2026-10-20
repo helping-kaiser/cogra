@@ -14,6 +14,7 @@ import type { StancePair } from "@/lib/stance/model";
 import {
   KNOB_TRAVEL_INSET_PX,
   rangedPairFrom,
+  snapToRanges,
   STANCE_RANGES,
   TAG_RANGES,
   TAG_RELEVANCE_FLOOR,
@@ -76,8 +77,9 @@ function dragField(dx: number, dy: number, pointerType = "touch") {
   fireEvent.pointerUp(square, { pointerType, pointerId: 1, clientX: 100 + dx, clientY: 100 + dy });
 }
 
+/** Where a released drag parks: the travel's pair, landed on the hundredths grid. */
 const expectedDrag = (base: StancePair, dx: number, dy: number, ranges: PadRanges) =>
-  rangedPairFrom(base, RECT, { dx, dy }, KNOB_TRAVEL_INSET_PX, ranges);
+  snapToRanges(rangedPairFrom(base, RECT, { dx, dy }, KNOB_TRAVEL_INSET_PX, ranges), ranges);
 
 /** A pull on the sheet's own surface — the swipe that drops a drawer. */
 function swipeDown() {
@@ -226,6 +228,19 @@ describe("TagPadCompose — a staged tag's pair", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it("lands the released pair on the hundredths grid, never below the relevance floor", () => {
+    renderTag();
+    const half = 200 / 2 - KNOB_TRAVEL_INSET_PX;
+    const perX = (1 - TAG_RELEVANCE_FLOOR) / (2 * half);
+    const perY = 1 / (2 * half);
+    // Relevance to 0.0137 and confidence to 0.4371 under the thumb.
+    const dx = (0.0137 - TAG_DEFAULT.pDirected) / perX;
+    const dy = -(0.4371 - TAG_DEFAULT.pInterest) / perY;
+    dragField(dx, dy);
+    fireEvent.click(screen.getByTestId("sheet-done"));
+    expect(held()).toEqual({ pDirected: 0.01, pInterest: 0.44 });
+  });
+
   it("owns its pointers — a downward drag on the field moves the knob, never drops the sheet", () => {
     renderTag();
     dragField(0, PULL_THRESHOLD * 3);
@@ -290,10 +305,12 @@ describe("TagPadCompose — a staged tag's pair", () => {
     expect(typed).toHaveAttribute("type", "number");
     fireEvent.change(typed, { target: { value: "-3" } });
     expect(screen.getByTestId("sheet-exact")).toHaveTextContent("+0.01 / 1.00");
-    fireEvent.change(screen.getByTestId("sheet-tracks-interest"), { target: { value: "0.4" } });
+    // A third decimal lands on the nearest hundredth, as a released drag does.
+    fireEvent.change(screen.getByTestId("sheet-tracks-interest"), { target: { value: "0.437" } });
+    expect(screen.getByTestId("sheet-exact")).toHaveTextContent("+0.01 / 0.44");
 
     fireEvent.click(screen.getByTestId("sheet-done"));
-    expect(held()).toEqual({ pDirected: 0.01, pInterest: 0.4 });
+    expect(held()).toEqual({ pDirected: 0.01, pInterest: 0.44 });
   });
 });
 

@@ -84,6 +84,14 @@ class AttachmentReadoutsTest {
     }
 
     @Test
+    fun walkingItAllBackParksOnTheHundredthsGrid() {
+        // 0.1 + 0.2 is 0.30000000000000004 in binary; the pick a reader can
+        // sign is a hundredth (the value domain, jakob 2026-10-20).
+        assertThat(walkBackPick(0.1 + 0.2)).isEqualTo(-0.3)
+        assertThat(walkBackPick(-0.003)).isEqualTo(0.0)
+    }
+
+    @Test
     fun walkingBackNothingAuthorsPositiveZero() {
         assertThat(1.0 / walkBackPick(0.0)).isPositiveInfinity()
     }

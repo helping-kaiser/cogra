@@ -64,10 +64,10 @@ fun attachmentLanding(rawSum: Double, pick: Double): AttachmentLanding {
 /**
  * `Walk it all back`: the pick that parks at the raw sum's opposite,
  * clipped to the strip (EditPad.md). Within ±1 it lands the backing at
- * exactly 0.00; past it, as far as one record reaches — the rest another
- * edit's.
+ * 0.00; past it, as far as one record reaches — the rest another edit's. A
+ * parked pick is a pick, so it lands on the hundredths grid like a release.
  */
-fun walkBackPick(rawSum: Double): Double = (-rawSum).coerceIn(-1.0, 1.0) + 0.0
+fun walkBackPick(rawSum: Double): Double = hundredth(-rawSum)
 
 /**
  * The seal's and an edit's `Your backing` row value: the face and the one

@@ -2040,6 +2040,30 @@ class ComposeWizardViewModelTest {
         assertThat(vm.state.value.pDirected).isEqualTo(ComposeWizardState.DEFAULT_P_DIRECTED)
     }
 
+    // ComposePad.md: the pick parks on a hundredth, so a pick that READS 0.00
+    // is 0 and asks — a float's 0.004 never slips past the question.
+    @Test
+    fun aSetThatReadsZeroIsZeroAndAsks() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onOpenSheet(SealSheet.Stance)
+        vm.onPDirectedChange(-0.004)
+        vm.onSetStance()
+
+        assertThat(vm.state.value.confirmingUnreachable).isTrue()
+        assertThat(vm.state.value.stagedPDirected).isEqualTo(0.0)
+        assertThat(vm.state.value.pDirected).isEqualTo(ComposeWizardState.DEFAULT_P_DIRECTED)
+    }
+
+    @Test
+    fun aSetLandsThePickOnTheHundredthsGrid() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onOpenSheet(SealSheet.Stance)
+        vm.onPDirectedChange(0.4371)
+        vm.onSetStance()
+
+        assertThat(vm.state.value.pDirected).isEqualTo(0.44)
+    }
+
     @Test
     fun keepAdjustingLeavesThePadStandingAtThePick() = runTest(dispatcher) {
         val vm = viewModel()
