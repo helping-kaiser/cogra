@@ -844,13 +844,13 @@ async fn a_guest_cannot_tag(pool: PgPool) {
     assert!(refused.get("errors").is_some(), "{refused}");
 }
 
-/// The un-tag: a further Tag at relevance 0, an ordinary priced record
+/// The un-tag: a further Tag at `(0,0)`, an ordinary priced record
 /// that the fold reads as withdrawn — never an erasure (hashtag.md §4).
 ///
-/// An un-tag is a further Tag at relevance zero, an ordinary priced record the fold reads as withdrawn rather than an erasure.
+/// An un-tag is a further Tag at (0,0), an ordinary priced record the fold reads as withdrawn rather than an erasure.
 /// ´claim:topics:an-un-tag-is-a-further-record´
 #[sqlx::test(migrations = "../../migrations")]
-async fn un_tagging_is_a_further_tag_at_relevance_zero(pool: PgPool) {
+async fn un_tagging_is_a_further_tag_at_zero_zero(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let (author_id, ak) = rig.seed_member("author", "author@example.com").await;
     let token = rig.log_in("author@example.com").await;
@@ -862,7 +862,7 @@ async fn un_tagging_is_a_further_tag_at_relevance_zero(pool: PgPool) {
         &token,
         &ak,
         &post,
-        json!({ "name": "rust", "pDirected": 0.0, "pInterest": 1.0 }),
+        json!({ "name": "rust", "pDirected": 0.0, "pInterest": 0.0 }),
     )
     .await;
 
@@ -1272,7 +1272,35 @@ async fn an_omitted_tag_parameter_refuses_the_whole_request(pool: PgPool) {
     );
 }
 
-/// The un-tag, read through the fold: relevance 0 is a record like any
+/// Zero relevance alone is not the un-tag: the newest claim at `(0, 1)`
+/// is routing-inert but still a claim — "a gesture and not nothing"
+/// (hashtag.md §4) — so its chip stays on the row.
+///
+/// A tag at zero relevance alone keeps its chip, being a claim rather than the (0,0) un-tag.
+/// ´claim:topics:a-one-axis-zero-tag-keeps-its-chip´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_tag_at_zero_relevance_alone_keeps_its_chip(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let post = rig
+        .landed_post(&token, &ak, "A post", json!([tag("rust"), tag("graphs")]))
+        .await;
+
+    rig.land_tag(
+        &token,
+        &ak,
+        &post,
+        json!({ "name": "rust", "pDirected": 0.0, "pInterest": 1.0 }),
+    )
+    .await;
+
+    let topics = rig.post_topics(None, &post, true).await;
+    let chips = topics.as_array().expect("array");
+    assert_eq!(chips.len(), 2, "(0, 1) is a claim, not a withdrawal: {topics}");
+}
+
+/// The un-tag, read through the fold: `(0,0)` is a record like any
 /// other, and the chip is gone without anything being erased. Re-tagging
 /// brings it back, the fold reading the newest record rather than a
 /// tombstone.
@@ -1298,7 +1326,7 @@ async fn un_tagging_takes_the_chip_off_the_row(pool: PgPool) {
         &token,
         &ak,
         &post,
-        json!({ "name": "rust", "pDirected": 0.0, "pInterest": 1.0 }),
+        json!({ "name": "rust", "pDirected": 0.0, "pInterest": 0.0 }),
     )
     .await;
 
@@ -1520,7 +1548,7 @@ async fn seed_tag(
     author: &str,
     node: &str,
     name: &str,
-    relevance: f64,
+    (relevance, confidence): (f64, f64),
 ) {
     sqlx::query(
         "INSERT INTO mirror_records
@@ -1534,7 +1562,7 @@ async fn seed_tag(
     .await
     .expect("record row");
 
-    let (t_pd, t_pi) = leg_params(LegRole::T, relevance, 1.0);
+    let (t_pd, t_pi) = leg_params(LegRole::T, relevance, confidence);
     sqlx::query(
         "INSERT INTO mirror_record_legs
              (record_id, leg, source, target, p_d, p_i, domain,
@@ -1573,7 +1601,7 @@ async fn fold_key(pool: &PgPool, author: Uuid, post: &str) -> (String, String) {
 }
 
 /// Seeds one author's standing topic set on one artifact, with entry 0
-/// optionally withdrawn at relevance 0 so a test can state a set that is
+/// optionally withdrawn at `(0,0)` so a test can state a set that is
 /// one short of the cap without changing its length.
 ///
 /// The record identifiers are well-formed `act:<author>:<seq>:<family>`
@@ -1589,14 +1617,14 @@ async fn seed_standing_topics(
     first_withdrawn: bool,
 ) {
     for i in 0..count {
-        let relevance = if i == 0 && first_withdrawn { 0.0 } else { 0.1 };
+        let claim = if i == 0 && first_withdrawn { (0.0, 0.0) } else { (0.1, 1.0) };
         seed_tag(
             pool,
             &format!("act:{address}:{}:tag", 9000 + i),
             address,
             node,
             &format!("live{i}"),
-            relevance,
+            claim,
         )
         .await;
     }
@@ -1633,7 +1661,7 @@ async fn the_standing_topic_cap_refuses_the_tag_past_fifty(pool: PgPool) {
     );
 }
 
-/// The cap counts the fold's view: a topic withdrawn at relevance 0 has
+/// The cap counts the fold's view: a topic withdrawn at `(0,0)` has
 /// left the chip row, and the tag that takes its place is admitted.
 ///
 /// (´claim:topics:the-standing-cap-counts-what-stands´)
@@ -1682,7 +1710,7 @@ async fn the_un_tag_is_admitted_on_an_artifact_at_the_standing_topic_cap(pool: P
         .prepare_tag(
             &token,
             &post,
-            json!({ "name": "live0", "pDirected": 0.0, "pInterest": 1.0 }),
+            json!({ "name": "live0", "pDirected": 0.0, "pInterest": 0.0 }),
         )
         .await;
     let writes = prepared["prepareTag"]["writes"].as_array().expect("writes");
