@@ -47,7 +47,7 @@
 //! "Carries" is the tag page's own set: the current-topics fold over the
 //! content-intrinsic channel (`topics::TagChannel::AuthorOwned`) — a
 //! claim whose author is the content's own author, newest record per
-//! (author, content, Type) bundle, relevance 0 read as withdrawn. The
+//! (author, content, Type) bundle, a winner at `(0,0)` read as withdrawn. The
 //! fold is the one `topics::tagged_with` runs, written out here because
 //! a match joins it rather than lists it.
 
@@ -624,7 +624,7 @@ pub async fn find_scoped(
                ),
                claims AS (
                    SELECT l.source AS node, r.author AS author, l.target AS target,
-                          l.p_i AS relevance, FALSE AS pending,
+                          l.p_i AS relevance, l.p_d AS confidence, FALSE AS pending,
                           r.epoch AS epoch, r.act_time AS act_time,
                           r.position AS position, NULL::timestamptz AS authored_at
                    FROM mirror_record_legs l
@@ -641,7 +641,7 @@ pub async fn find_scoped(
                              ELSE NULL
                          END
                  UNION ALL
-                   SELECT s.middle, s.author, s.target, s.p_d, TRUE, 0, 0, 0, s.pre_signed_at
+                   SELECT s.middle, s.author, s.target, s.p_d, s.p_i, TRUE, 0, 0, 0, s.pre_signed_at
                    FROM staged_writes s
                    WHERE s.author = $9
                      AND s.family = 'tag'
@@ -661,12 +661,12 @@ pub async fn find_scoped(
                carried AS (
                    SELECT w.node, w.target
                    FROM (
-                       SELECT DISTINCT ON (author, node, target) node, target, relevance
+                       SELECT DISTINCT ON (author, node, target) node, target, relevance, confidence
                        FROM claims
                        ORDER BY author, node, target, pending DESC,
                                 epoch DESC, act_time DESC, position DESC, authored_at DESC
                    ) w
-                   WHERE w.relevance <> 0
+                   WHERE NOT (w.relevance = 0 AND w.confidence = 0)
                ),
                chain AS (
                    SELECT c.id AS comment_id, c.created_at, c.target_id, c.target_type
@@ -824,7 +824,7 @@ pub async fn find_scoped(
                ),
                claims AS (
                    SELECT l.source AS node, r.author AS author, l.target AS target,
-                          l.p_i AS relevance, FALSE AS pending,
+                          l.p_i AS relevance, l.p_d AS confidence, FALSE AS pending,
                           r.epoch AS epoch, r.act_time AS act_time,
                           r.position AS position, NULL::timestamptz AS authored_at
                    FROM mirror_record_legs l
@@ -841,7 +841,7 @@ pub async fn find_scoped(
                              ELSE NULL
                          END
                  UNION ALL
-                   SELECT s.middle, s.author, s.target, s.p_d, TRUE, 0, 0, 0, s.pre_signed_at
+                   SELECT s.middle, s.author, s.target, s.p_d, s.p_i, TRUE, 0, 0, 0, s.pre_signed_at
                    FROM staged_writes s
                    WHERE s.author = $9
                      AND s.family = 'tag'
@@ -861,12 +861,12 @@ pub async fn find_scoped(
                carried AS (
                    SELECT w.node, w.target
                    FROM (
-                       SELECT DISTINCT ON (author, node, target) node, target, relevance
+                       SELECT DISTINCT ON (author, node, target) node, target, relevance, confidence
                        FROM claims
                        ORDER BY author, node, target, pending DESC,
                                 epoch DESC, act_time DESC, position DESC, authored_at DESC
                    ) w
-                   WHERE w.relevance <> 0
+                   WHERE NOT (w.relevance = 0 AND w.confidence = 0)
                ),
                chain AS (
                    SELECT c.id AS comment_id, c.created_at, c.target_id, c.target_type
@@ -1033,7 +1033,7 @@ pub async fn count_scoped(
            ),
            claims AS (
                SELECT l.source AS node, r.author AS author, l.target AS target,
-                      l.p_i AS relevance, FALSE AS pending,
+                      l.p_i AS relevance, l.p_d AS confidence, FALSE AS pending,
                       r.epoch AS epoch, r.act_time AS act_time,
                       r.position AS position, NULL::timestamptz AS authored_at
                FROM mirror_record_legs l
@@ -1050,7 +1050,7 @@ pub async fn count_scoped(
                          ELSE NULL
                      END
              UNION ALL
-               SELECT s.middle, s.author, s.target, s.p_d, TRUE, 0, 0, 0, s.pre_signed_at
+               SELECT s.middle, s.author, s.target, s.p_d, s.p_i, TRUE, 0, 0, 0, s.pre_signed_at
                FROM staged_writes s
                WHERE s.author = $7
                  AND s.family = 'tag'
@@ -1070,12 +1070,12 @@ pub async fn count_scoped(
            carried AS (
                SELECT w.node, w.target
                FROM (
-                   SELECT DISTINCT ON (author, node, target) node, target, relevance
+                   SELECT DISTINCT ON (author, node, target) node, target, relevance, confidence
                    FROM claims
                    ORDER BY author, node, target, pending DESC,
                             epoch DESC, act_time DESC, position DESC, authored_at DESC
                ) w
-               WHERE w.relevance <> 0
+               WHERE NOT (w.relevance = 0 AND w.confidence = 0)
            ),
            chain AS (
                SELECT c.id AS comment_id, c.target_id, c.target_type

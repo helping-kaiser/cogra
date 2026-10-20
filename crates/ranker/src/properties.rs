@@ -908,21 +908,44 @@ fn a_topic_never_admits_an_unreachable_strangers_tag() {
     assert!(entries.is_empty());
 }
 
-/// Relevance 0 reads as withdrawn.
+/// `(0,0)` reads as withdrawn (hashtag.md §4).
 ///
-/// A tag withdrawn at relevance zero admits nothing.
+/// A tag withdrawn at (0,0) admits nothing.
 /// ´claim:topic:a-withdrawn-tag-admits-nothing´
 #[test]
-fn a_withdrawn_tag_at_relevance_zero_admits_nothing() {
+fn a_withdrawn_tag_at_zero_zero_admits_nothing() {
     let mut b = Builder::new("v");
     b.person("x");
     let topic = b.topic("rust");
     let p = b.post("x", 1.0);
     b.opinion("v", &p, 1.0, 1.0);
     b.hyper(Family::Tag, "x", &p, &topic, 1.0, 1.0);
-    b.hyper(Family::Tag, "x", &p, &topic, 0.0, 1.0);
+    b.hyper(Family::Tag, "x", &p, &topic, 0.0, 0.0);
     let entries = rank(&b.build(), &topic_params(&topic), &network()).expect("ranks");
     assert!(entries.is_empty());
+}
+
+/// A newest tag at zero on one parameter only is routing-inert but not
+/// withdrawn — "a claim, not nothing" (hashtag.md §4) — so it still admits.
+///
+/// A tag at zero on one parameter only is still a claim, and admits.
+/// ´claim:topic:a-one-axis-zero-tag-still-admits´
+#[test]
+fn a_one_axis_zero_tag_still_admits() {
+    for (relevance, confidence) in [(0.0, 1.0), (0.5, 0.0)] {
+        let mut b = Builder::new("v");
+        b.person("x");
+        let topic = b.topic("rust");
+        let p = b.post("x", 1.0);
+        b.opinion("v", &p, 1.0, 1.0);
+        b.hyper(Family::Tag, "x", &p, &topic, 1.0, 1.0);
+        b.hyper(Family::Tag, "x", &p, &topic, relevance, confidence);
+        let entries = rank(&b.build(), &topic_params(&topic), &network()).expect("ranks");
+        assert!(
+            entry(&entries, &p).is_some(),
+            "({relevance}, {confidence}) is a claim"
+        );
+    }
 }
 
 /// The topic fold is newest-wins: re-tagging after a withdrawal admits

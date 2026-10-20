@@ -17,7 +17,7 @@
 //!
 //! There is no creation gesture for a Type and no un-tag gesture: a Type
 //! exists as soon as an accepted record names it, and un-tagging is a
-//! further Tag at relevance 0, which the current-topics fold reads as
+//! further Tag at `(0,0)`, which the current-topics fold reads as
 //! withdrawn (hashtag.md §2, §4).
 
 use common::hashtag::{HashtagNameError, canonicalize};
@@ -46,7 +46,7 @@ pub const MAX_TAGS_PER_BATCH: usize = 10;
 /// CoGra's.
 ///
 /// "Standing" is what the current-topics fold serves, so a topic withdrawn
-/// at relevance 0 has left the set and freed its slot.
+/// at `(0,0)` has left the set and freed its slot.
 pub const MAX_LIVE_TOPICS_PER_ARTIFACT: usize = 50;
 
 /// A field-level refusal, carrying the path into the input that names the
@@ -94,6 +94,14 @@ pub struct PlannedTag {
     pub name: String,
     pub relevance: f64,
     pub confidence: f64,
+}
+
+impl PlannedTag {
+    /// The un-tag: a declaration at `(0,0)`, which the current-topics fold
+    /// reads as withdrawn (hashtag.md §4).
+    pub fn is_withdrawal(&self) -> bool {
+        self.relevance == 0.0 && self.confidence == 0.0
+    }
 }
 
 /// The message a name refusal carries. The three variants exist to make
@@ -236,14 +244,15 @@ pub async fn stage_tags<B: L1Boundary>(
 /// none of them had landed.
 ///
 /// A declaration claims a slot only when it names a topic the author is
-/// not already standing on *and* carries a non-zero relevance. Both
-/// conditions are exact under newest-wins: the record being staged is the
-/// one the fold will read, so its own relevance decides whether the topic
-/// stands, and relevance 0 is the un-tag.
+/// not already standing on *and* is not the un-tag. Both conditions are
+/// exact under newest-wins: the record being staged is the one the fold
+/// will read, so its own pair decides whether the topic stands, and
+/// `(0,0)` is the un-tag — a pair at zero on one parameter only is still a
+/// claim (hashtag.md §4) and takes its slot like any other.
 fn over_the_standing_cap(live: &[String], planned: &[PlannedTag]) -> Option<String> {
     let claiming = planned
         .iter()
-        .filter(|t| t.relevance != 0.0 && !live.contains(&t.name))
+        .filter(|t| !t.is_withdrawal() && !live.contains(&t.name))
         .count();
     (live.len() + claiming > MAX_LIVE_TOPICS_PER_ARTIFACT).then(|| {
         format!(
@@ -273,7 +282,7 @@ async fn live_names(
 }
 
 /// Prepares one standalone Tag — the gesture that adds a topic to
-/// existing content, and, at relevance 0, the one that withdraws it
+/// existing content, and, at `(0,0)`, the one that withdraws it
 /// (post.md §3; hashtag.md §4). Tagging is unconstrained by authorship:
 /// the content's author declares its topics, anyone else makes a
 /// third-party claim, and the read side is what gates the difference.
@@ -391,7 +400,7 @@ mod tests {
         }
     }
 
-    /// Relevance zero is legal, being the un-tag rather than a malformed claim.
+    /// Relevance zero is legal — half of the `(0,0)` un-tag, or a routing-inert claim — never a malformed one.
     /// ´claim:topics:relevance-zero-is-legal´
     #[test]
     fn relevance_zero_is_the_un_tag_and_is_legal() {
@@ -472,10 +481,19 @@ mod tests {
         assert!(refusal.contains("withdraw one first"), "{refusal}");
     }
 
-    /// The cap counts what stands: an un-tag is a further Tag at
-    /// relevance 0, the fold drops it, and its slot comes back.
+    /// The un-tag: a further Tag at `(0,0)`.
+    fn withdrawal(name: &str) -> PlannedTag {
+        PlannedTag {
+            name: name.to_string(),
+            relevance: 0.0,
+            confidence: 0.0,
+        }
+    }
+
+    /// The cap counts what stands: an un-tag is a further Tag at `(0,0)`,
+    /// the fold drops it, and its slot comes back.
     ///
-    /// The standing cap counts what stands, so a topic withdrawn at relevance zero hands its slot back.
+    /// The standing cap counts what stands, so a topic withdrawn at (0,0) hands its slot back.
     /// ´claim:topics:the-standing-cap-counts-what-stands´
     #[test]
     fn an_untagged_topic_frees_its_slot_under_the_standing_cap() {
@@ -492,11 +510,30 @@ mod tests {
     #[test]
     fn the_un_tag_is_admitted_at_the_standing_cap() {
         let live = standing(MAX_LIVE_TOPICS_PER_ARTIFACT);
-        assert!(over_the_standing_cap(&live, &[tag("fresh", 0.0)]).is_none());
+        assert!(over_the_standing_cap(&live, &[withdrawal("fresh")]).is_none());
         assert!(
-            over_the_standing_cap(&live, &[tag("t3", 0.0)]).is_none(),
+            over_the_standing_cap(&live, &[withdrawal("t3")]).is_none(),
             "un-tagging a standing topic is what frees a slot"
         );
+    }
+
+    /// A declaration at zero on one parameter only is a claim, not the
+    /// un-tag (hashtag.md §4): it takes a slot like any other, so a full
+    /// artifact refuses it.
+    ///
+    /// A tag at zero on one parameter only is a claim and takes a standing slot.
+    /// ´claim:topics:a-one-axis-zero-tag-is-a-claim´
+    #[test]
+    fn a_one_axis_zero_tag_takes_a_standing_slot() {
+        let live = standing(MAX_LIVE_TOPICS_PER_ARTIFACT);
+        assert!(over_the_standing_cap(&live, &[tag("fresh", 0.0)]).is_some());
+        let at_zero_confidence = PlannedTag {
+            confidence: 0.0,
+            ..tag("fresh", 0.4)
+        };
+        assert!(over_the_standing_cap(&live, &[at_zero_confidence]).is_some());
+        assert!(!tag("fresh", 0.0).is_withdrawal());
+        assert!(withdrawal("fresh").is_withdrawal());
     }
 
     /// Re-declaring a topic the author already stands on claims no slot —
