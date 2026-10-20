@@ -123,9 +123,11 @@ fun ProfileRoute(
     // course (the house one-shot shape), and hanging the refetch off
     // that consume made the profile sit on the picture it had just
     // replaced for the whole four seconds — and drop the refetch
-    // entirely whenever the snackbar was cancelled early.
+    // entirely whenever the snackbar was cancelled early. One read is
+    // enough: a signed edit is served from its signature on, pending
+    // until it lands (substrate.md §6).
     LaunchedEffect(profileSavedResult) {
-        if (profileSavedResult) viewModel.onEditSaved()
+        if (profileSavedResult) viewModel.refresh()
     }
     ProfileScreen(
         state = state,

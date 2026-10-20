@@ -97,54 +97,28 @@ class ProfileViewModelTest {
     }
 
     /**
-     * F2-8. A profile edit lands asynchronously: `approve` returns while
-     * the record is still relaying, and the read serves only what has
-     * landed — so the re-read fired the instant the editor pops answers
-     * with the version the edit replaced. The screen has to wait for the
-     * version it is expecting rather than take the first answer.
+     * F2-8. A signed profile edit is served from its signature on —
+     * pending until it lands (substrate.md §6) — so the one re-read the
+     * saved edit fires already answers with the new version, and the
+     * chronicle is read once with it. Nothing waits for the landing.
      */
     @Test
-    fun aSavedEditIsWaitedForRatherThanReadOnce() = runTest(dispatcher) {
+    fun aSavedEditShowsOnTheNextRead() = runTest(dispatcher) {
         val before = testProfile(id = "u1", handle = "jakob", bio = "old")
         profiles.mine = Outcome.Success(before)
         val vm = viewModel()
         vm.start(null)
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.profile?.bio?.value).isEqualTo("old")
+        val rowReadsBefore = profiles.rowRequests.size
 
-        // The edit is signed; the backend is still relaying it, so the
-        // read keeps answering with the version it replaced.
-        vm.onEditSaved()
-        dispatcher.scheduler.advanceTimeBy(2_500)
-        assertThat(vm.state.value.profile?.bio?.value).isEqualTo("old")
-
-        // It lands: a new version, with a new instant.
-        profiles.mine = Outcome.Success(
-            before.copy(
-                bio = testModeratedField("new"),
-                updatedAt = before.updatedAt.plusSeconds(1),
-            ),
-        )
+        // The edit is signed: the backend serves the new version at once.
+        profiles.mine = Outcome.Success(before.copy(bio = testModeratedField("new")))
+        vm.refresh()
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(vm.state.value.profile?.bio?.value).isEqualTo("new")
-    }
-
-    /** The wait is bounded: a write that never lands is not a hang. */
-    @Test
-    fun anEditThatNeverLandsStopsBeingWaitedFor() = runTest(dispatcher) {
-        val vm = viewModel()
-        vm.start(null)
-        dispatcher.scheduler.advanceUntilIdle()
-        val readsBefore = profiles.rowRequests.size
-
-        vm.onEditSaved()
-        dispatcher.scheduler.advanceUntilIdle()
-
-        // It gave up rather than reading forever, and left the screen on
-        // what it had — which is where a single refetch left it anyway.
-        assertThat(vm.state.value.profile?.handle).isEqualTo("jakob")
-        assertThat(profiles.rowRequests.size).isEqualTo(readsBefore)
+        assertThat(profiles.rowRequests.size).isEqualTo(rowReadsBefore + 1)
     }
 
     /**

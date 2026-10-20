@@ -274,7 +274,7 @@ describe("the compose wizard", () => {
     for (let press = 0; press < 3; press += 1) {
       fireEvent.keyDown(screen.getByTestId("wizard-stance-field-strip"), { key: "ArrowLeft" });
     }
-    expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤷");
+    expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤔");
     fireEvent.click(screen.getByTestId("wizard-stance-set"));
     expect(screen.getByTestId("wizard-unreachable")).toHaveAttribute("open");
     expect(screen.getByTestId("wizard-stance-pad")).toHaveAttribute("open");
@@ -283,7 +283,7 @@ describe("the compose wizard", () => {
     fireEvent.click(screen.getByTestId("wizard-unreachable-keep"));
     expect(screen.getByTestId("wizard-unreachable")).not.toHaveAttribute("open");
     expect(screen.getByTestId("wizard-stance-pad")).toHaveAttribute("open");
-    expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤷");
+    expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤔");
     expect(screen.getByTestId("wizard-stance-value").textContent).toContain("+0.15");
 
     // Set it anyway: both close, and the row reads the zero.
@@ -291,7 +291,7 @@ describe("the compose wizard", () => {
     fireEvent.click(screen.getByTestId("wizard-unreachable-anyway"));
     expect(screen.getByTestId("wizard-unreachable")).not.toHaveAttribute("open");
     expect(screen.getByTestId("wizard-stance-pad")).not.toHaveAttribute("open");
-    expect(screen.getByTestId("wizard-stance-value").textContent).toContain("🤷");
+    expect(screen.getByTestId("wizard-stance-value").textContent).toContain("🤔");
     expect(screen.getByTestId("wizard-stance-value").textContent).toContain("+0.00");
 
     fireEvent.click(screen.getByTestId("wizard-sign"));

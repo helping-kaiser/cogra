@@ -1,3 +1,4 @@
+import { InMemoryCache } from "@apollo/client";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -512,6 +513,31 @@ describe("ProfileScreen", () => {
     expect(screen.getByTestId("profile-settings")).toHaveAttribute("href", "/settings");
     expect(screen.getByTestId("profile-invites")).toHaveAttribute("href", "/invites");
     expect(screen.getByTestId("profile-chronicle-empty")).toBeInTheDocument();
+  });
+
+  // A signed profile edit is served from its signature on, pending until it
+  // lands (substrate.md §6), and a handle change is immediate — so returning
+  // to the profile from the editor or from settings shows the change on the
+  // arrival's own read. That holds only because the arrival asks the server
+  // rather than the cache the previous visit filled; the shared cache here is
+  // that previous visit.
+  it("a return to the own profile reads the server, not the last visit's cache", async () => {
+    const cache = new InMemoryCache();
+    let served = profile("u1", "ada", "Before the edit.");
+    server.use(
+      meHandler(),
+      gqlLink.query("MyProfile", () => HttpResponse.json({ data: { me: served } })),
+      recordsHandler([]),
+    );
+    const store = signedInStore();
+    const first = renderWithProviders(<ProfileScreen handle={null} />, { store, cache });
+    expect(await screen.findByTestId("profile-bio")).toHaveTextContent("Before the edit.");
+    first.unmount();
+
+    served = profile("u1", "ada_renamed", "Signed, not landed.");
+    renderWithProviders(<ProfileScreen handle={null} />, { store, cache });
+    expect(await screen.findByTestId("profile-bio")).toHaveTextContent("Signed, not landed.");
+    expect(screen.getByTestId("profile-handle")).toHaveTextContent("@ada_renamed");
   });
 
   it("locks the invites entry for an applicant and explains on tap", async () => {

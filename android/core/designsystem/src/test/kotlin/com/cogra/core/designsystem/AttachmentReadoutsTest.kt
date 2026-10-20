@@ -89,9 +89,9 @@ class AttachmentReadoutsTest {
     }
 
     @Test
-    fun theRowReadsOneNumberAndShrugsAtZero() {
+    fun theRowReadsOneNumberAndThinksAtZero() {
         compose.setContent { AttachmentReadout(pDirected = 0.0, testTag = "row") }
-        compose.onNodeWithTag("row").assertContentDescriptionEquals("Nothing, For or against +0.00")
+        compose.onNodeWithTag("row").assertContentDescriptionEquals("No side taken, For or against +0.00")
     }
 
     @Test

@@ -5,7 +5,7 @@
 // The BACKING an author signs with their own content is one number:
 // Publish carries the attachment on `p_d`, and the census pins `p_i` at 1,
 // so a pair would draw a second figure nobody can choose. Every face here
-// reads through the one-axis table, 🤷 at exactly 0.00
+// reads through the one-axis table, 🤔 at exactly 0.00
 // ([nearestValenceAnchor]). Backing is the authoring bundle; OPINION is
 // the face's record, a pair, read by the ordinary stance readouts — the
 // two words never trade places (copy-voice "What an author signs with
