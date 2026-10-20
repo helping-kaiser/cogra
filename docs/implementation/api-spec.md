@@ -1302,7 +1302,7 @@ type Post implements Node {
   comments(first: Int, after: String, last: Int, before: String, includePending: Boolean! = true): CommentConnection!
   "This post's current topics — the author's own declarations, as
    the current-topics fold reads them: newest record per (author,
-   content, Type), relevance 0 read as withdrawn (hashtag.md §4).
+   content, Type), (0, 0) read as withdrawn (hashtag.md §4).
    Third-party claims wait on the forward-path weight that gates
    them (slice 3)."
   topics(includePending: Boolean! = true): [TopicClaim!]!
@@ -1540,7 +1540,7 @@ type TaggedContent {
 
 "One current topic claim on a node — a chip in the chip row. The
  bundle key is (author, content, Type) and the newest record in it
- wins; relevance 0 is a withdrawal and never appears here."
+ wins; (0, 0) is a withdrawal and never appears here."
 type TopicClaim {
   hashtag: Hashtag!
   "Relevance `r` — how much the topic is the content's."
@@ -3711,7 +3711,7 @@ references and, separately, fifty topics — named constants, and
 CoGra's narrowing over a substrate that admits any number of
 records toward any number of targets. The cap counts what the
 folds serve, not what was ever authored: a reference bundle netted
-to `(0,0)` and a topic withdrawn at relevance 0 have both left the
+to `(0,0)` and a topic withdrawn at `(0,0)` have both left the
 set and freed their slots. The standing set is read
 pending-inclusive, so an author's own in-flight acts count against
 it. Only `prepareReference` and `prepareTag` can reach the cap — a
@@ -3769,7 +3769,7 @@ input AttachmentInput {
  (names are normalized by the naming service; a new name needs no
  creation act, Types anchor vacuously — hashtag.md). Re-tagging a
  name revises the claim — the newest record per (author, content,
- Type) wins, and relevance 0 is the un-tag, read as withdrawn
+ Type) wins, and (0, 0) is the un-tag, read as withdrawn
  (hashtag.md §4)."
 input TagInput {
   name: String!
@@ -3942,8 +3942,8 @@ input PrepareCommentEditInput {
 }
 
 "One standalone topic declaration on existing content — the gesture
- that adds a topic after creation, and, at pDirected: 0, the one
- that withdraws it. There is no un-tag mutation: withdrawal is a
+ that adds a topic after creation, and, at (0, 0), the one that
+ withdraws it. There is no un-tag mutation: withdrawal is a
  further Tag. Tags are never edit fields; changing a post's topics
  is its own priced act (post.md §3). Tagging is not restricted to
  the content's author — the read side separates the author's own
@@ -3952,8 +3952,7 @@ input PrepareTagInput {
   "The content being tagged."
   target: UUID!
   name: String!
-  "Required, as on TagInput. An un-tag signs the confidence the
-   removed chip showed; relevance is the only value it moves."
+  "Required, as on TagInput. An un-tag signs both at 0."
   pDirected: Dimension!
   pInterest: Dimension!
 }
@@ -3982,7 +3981,7 @@ input PrepareReferenceInput {
 
 "Withdrawing one citation. Records are never deleted, and
  Reference withdrawal is per-leg net stance — not the Tag rule
- beside it, which is newest-wins at relevance 0 only because a
+ beside it, which is a newest-wins (0, 0) only because a
  tag's confidence cannot be netted. Both citation parameters are
  signed, so a withdrawal is the severance shape: the counter-records
  that net the viewer's (artifact, target) bundle to `(0, 0)`. Each

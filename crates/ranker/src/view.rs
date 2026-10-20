@@ -14,13 +14,18 @@
 //! - **NEWEST** orders the entries by their target's genesis causal key,
 //!   newest first; a Type, having none, after every dated target in its
 //!   RANKED order.
-//! - **The settling key** (PR-36) is `S(u, prof(author)) × φ`: the viewer's
-//!   reach to the author times the factor the pending record's own
-//!   authorship legs will carry when it lands — `γ·w̃` per leg at its
-//!   family's census row, at landing maturity `τ = 0` and age `0`. The
-//!   viewer's own pending content reaches them over the empty walk, whose
-//!   product is `1`. A candidate whose author no live walk reaches is
-//!   unkeyed and gets no place (OS-10).
+//! - **The settling key** (PR-36) is `sgn(p_d) × S(u, prof(author)) × φ`:
+//!   the viewer's signed reach to the author, times the factor `φ` the
+//!   pending record's own authorship legs will carry when it lands — `γ·w̃`
+//!   per leg at its family's census row, at landing maturity `τ = 0` and age
+//!   `0` — signed by the record's own `p_d`, the balance its stance hop adds
+//!   (feed-ranking.md §5.2). A negative-born row keys negative under a
+//!   positive reach; a negative reach times a negative backing keys
+//!   positive. The viewer's own pending content reaches them over the empty
+//!   walk, whose product is `1`. A candidate whose author no live walk
+//!   reaches is unkeyed and gets no place (OS-10); so is a routing-inert one
+//!   (`φ = 0`, either parameter zero), which would be absent once landed
+//!   (feed-ranking.md §3.1, §7).
 //! - **RANKED weave** (W-2): a keyed row stands directly after the last
 //!   entry scoring at least its key — ties go to the landed row; rows in
 //!   one gap order by key, then newest authoring instant, then reference.
@@ -322,7 +327,7 @@ fn assemble(
     let mut keyed = Vec::new();
     for candidate in settling {
         let factor = landing_factor(candidate, cal)?;
-        if landed.contains(candidate.reference.as_str()) {
+        if factor == 0.0 || landed.contains(candidate.reference.as_str()) {
             continue;
         }
         let Some(&author) = g.index.get(&candidate.author) else {
@@ -331,7 +336,11 @@ fn assemble(
         let Some(reach) = strength(g, author, cal, walk_to(&tree, author)) else {
             continue;
         };
-        let key = reach * factor;
+        let key = if candidate.p_d < 0.0 {
+            -(reach * factor)
+        } else {
+            reach * factor
+        };
         let gap = entries.iter().take_while(|e| e.score >= key).count();
         keyed.push(Keyed {
             candidate,

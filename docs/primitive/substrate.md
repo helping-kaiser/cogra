@@ -235,11 +235,16 @@ the exact host-sealed verified act
    prepared act that never lands is discarded, staged payload
    included, after a bounded number of epochs.
 
-**Content exists at authoring, not at landing.** A prepared record
+**Content exists at authoring, not at landing.** A prepared act
 is its author's content from the moment they sign it, readable by
 everyone from that moment and marked as not yet final. Landing is
 when L1 finality arrives — when the act becomes ordered fact — not
-when the content begins to exist. The epoch never defines the
+when the content begins to exist. Landing is said of an act; an
+account lands once its Registration and a first vouch toward it
+have both landed ([user.md §2](user.md#2-creation)), and an
+applicant's carried acts are released at that account landing
+([data-model.md "Staged writes"](../implementation/data-model.md#staged-writes)).
+The epoch never defines the
 content; it dates it. The existence is conditional on that arrival:
 when a prepared act expires unlanded and is discarded, the content
 leaves every reader's view with it — on the graph nothing ever
