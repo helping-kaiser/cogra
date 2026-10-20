@@ -303,9 +303,9 @@ type InboundSeverance {
   severer: Actor!
   "Epoch age of the record that netted the bundle to (0,0)."
   severedEpochAge: Int!
-  "True when the viewer's outbound bundle toward the severer is live —
-   trusted-network severance, the per-bundle alarm. False entries
-   signal in volume, not individually."
+  "True when the viewer's outbound bundle toward the severer is not
+   inert — trusted-network severance, the per-bundle alarm. False
+   entries signal in volume, not individually."
   fromTrustedNetwork: Boolean!
 }
 
@@ -317,7 +317,8 @@ type BundleAudit {
   target: Node!
   "The record family the bundle folds over."
   family: RecordFamily!
-  "The folded parameters (p̄_d, p̄_i); (0,0) is a netted bundle."
+  "The folded parameters (p̄_d, p̄_i); (0,0) is a severed bundle, and
+   a zero on either one is routing-inert."
   pDirected: Float!
   pInterest: Float!
   "Raw member records in the bundle."
@@ -380,12 +381,12 @@ the alternative-paths check is a bounded probe, not a full re-ranking.
 redemptionCheck(targets: [UUID!]!, sinceEpochs: Int): [RedemptionStatus!]!
 
 "One severed account's redemption state — effectively binary per §8.7:
- no positive outbound bundle landing on a min-cut-1 bridge (redeemed),
+ no live outbound bundle targeting a min-cut-1 bridge (redeemed),
  or some (still bridging). There is no halfway-redeemed state."
 type RedemptionStatus {
   target: Actor!
   redeemed: Boolean!
-  "The remaining suspect bridges under the target's positive outbound
+  "The remaining suspect bridges under the target's live outbound
    bundles, each classified by the §8.5 analysis run from the target's
    perspective. Empty exactly when redeemed."
   bridges: [SuspectBridge!]!
