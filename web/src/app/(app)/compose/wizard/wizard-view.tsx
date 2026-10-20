@@ -1024,6 +1024,7 @@ export function ComposeWizard({
             // hundredth (the release lands it there), so reading 0.00 IS 0.
             const picked = snapDimension(stagedPDirected);
             if (picked === 0) {
+              setStagedPDirected(picked);
               setConfirmingUnreachable(true);
               return;
             }
