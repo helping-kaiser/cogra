@@ -1,11 +1,12 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { delay, graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
+import { delay } from "msw/utils/delay";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AccountDeletionProvider } from "@/lib/deletion/deletion-status";
 import { createTokenStore } from "@/lib/session/token-store";
 import { dateline } from "@/lib/ui/timestamp";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 
 import { DeleteAccountPendingView } from "./delete-account-pending-view";
@@ -22,7 +23,7 @@ const server = startMswServer();
 const DEADLINE = new Date(Date.now() + 6 * 86_400_000).toISOString();
 
 function standing(accountDeletion: unknown) {
-  return graphql.query("AccountDeletion", () =>
+  return gqlLink.query("AccountDeletion", () =>
     HttpResponse.json({ data: { me: { __typename: "User", id: "u1", deletionPath: "BY_LINK", accountDeletion } } }),
   );
 }
@@ -30,7 +31,7 @@ function standing(accountDeletion: unknown) {
 const GRACE = { __typename: "AccountDeletion", scheduledFor: DEADLINE, includesContent: false };
 
 function cancelAnswers() {
-  return graphql.mutation("CancelAccountDeletion", () =>
+  return gqlLink.mutation("CancelAccountDeletion", () =>
     HttpResponse.json({
       data: { cancelAccountDeletion: { __typename: "AccountDeletionPayload", accountDeletion: null, userErrors: [] } },
     }),
@@ -82,7 +83,7 @@ describe("DeleteAccountPending", () => {
 
   it("canceling_reads_late_after_200ms", async () => {
     server.use(
-      graphql.mutation("CancelAccountDeletion", async () => {
+      gqlLink.mutation("CancelAccountDeletion", async () => {
         await delay(600);
         return HttpResponse.json({
           data: { cancelAccountDeletion: { __typename: "AccountDeletionPayload", accountDeletion: null, userErrors: [] } },
@@ -96,7 +97,7 @@ describe("DeleteAccountPending", () => {
   });
 
   it("cancel_offline_says_the_network_error_and_the_deletion_stands", async () => {
-    server.use(graphql.mutation("CancelAccountDeletion", () => HttpResponse.error()));
+    server.use(gqlLink.mutation("CancelAccountDeletion", () => HttpResponse.error()));
     renderScreen();
     fireEvent.click(await screen.findByTestId("deleteAccount.cancel"));
     expect(await screen.findByTestId("commit-fault")).toHaveTextContent("That didn't send. Try again.");

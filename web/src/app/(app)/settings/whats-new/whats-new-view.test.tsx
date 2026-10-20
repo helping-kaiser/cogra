@@ -1,11 +1,11 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { describe, expect, it, vi } from "vitest";
 
 import { failed, success } from "@/lib/api/outcome";
 import type { Release } from "@/lib/release/version-status";
 import { byNode } from "@/test/data-node";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { NEWER_VERSION_LINE, NEWEST_FIRST, WhatsNewView } from "./whats-new-view";
 
@@ -211,7 +211,7 @@ describe("the registry read", () => {
   it("reads the web's own component and follows the cursor to the end", async () => {
     const asked: unknown[] = [];
     server.use(
-      graphql.query("AppVersions", ({ variables }) => {
+      gqlLink.query("AppVersions", ({ variables }) => {
         asked.push(variables);
         const second = variables.after === "c1";
         const node = (version: string) => ({

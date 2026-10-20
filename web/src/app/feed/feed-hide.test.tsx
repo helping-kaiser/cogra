@@ -5,13 +5,13 @@
 // was made from — never on the snackbar.
 
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { byNode } from "@/test/data-node";
 import { hiddenHandlers, hiddenLog } from "@/test/hidden";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
 import { FeedView } from "./feed-view";
@@ -56,7 +56,7 @@ function post(id: string, authorId: string, handle: string) {
 
 function rankedFeed(nodes: ReturnType<typeof post>[]) {
   return [
-    graphql.query("FeedRanking", () =>
+    gqlLink.query("FeedRanking", () =>
       HttpResponse.json({
         data: {
           feedRanking: {
@@ -75,7 +75,7 @@ function rankedFeed(nodes: ReturnType<typeof post>[]) {
         },
       }),
     ),
-    graphql.query("Feed", ({ variables }) => {
+    gqlLink.query("Feed", ({ variables }) => {
       const ids = variables.orderedIds as string[];
       return HttpResponse.json({
         data: {
@@ -91,7 +91,7 @@ function rankedFeed(nodes: ReturnType<typeof post>[]) {
   ];
 }
 
-const meHandler = graphql.query("Me", () =>
+const meHandler = gqlLink.query("Me", () =>
   HttpResponse.json({
     data: {
       me: {
@@ -108,7 +108,7 @@ const meHandler = graphql.query("Me", () =>
   }),
 );
 
-const borrowedViewHandler = graphql.query("BorrowedView", () =>
+const borrowedViewHandler = gqlLink.query("BorrowedView", () =>
   HttpResponse.json({ data: { borrowedView: null } }),
 );
 

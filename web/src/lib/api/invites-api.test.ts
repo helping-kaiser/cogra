@@ -1,5 +1,5 @@
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { describe, expect, it } from "vitest";
 
 import { hasCode } from "./outcome";
@@ -9,7 +9,7 @@ import {
   fetchInviteLinks,
   revokeInviteLink,
 } from "./invites-api";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 
 const server = startMswServer();
 
@@ -33,7 +33,7 @@ const linkNode = {
 describe("fetchInviteLinks", () => {
   it("returns the viewer's links", async () => {
     server.use(
-      graphql.query("InviteLinks", () =>
+      gqlLink.query("InviteLinks", () =>
         HttpResponse.json({
           data: {
             me: {
@@ -54,7 +54,7 @@ describe("fetchInviteLinks", () => {
   });
 
   it("treats a null viewer as unauthenticated", async () => {
-    server.use(graphql.query("InviteLinks", () => HttpResponse.json({ data: { me: null } })));
+    server.use(gqlLink.query("InviteLinks", () => HttpResponse.json({ data: { me: null } })));
     expect(hasCode(await fetchInviteLinks(client()), "UNAUTHENTICATED")).toBe(true);
   });
 });
@@ -67,7 +67,7 @@ describe("createInviteLink", () => {
 
   it("returns true on success", async () => {
     server.use(
-      graphql.mutation("CreateInviteLink", () =>
+      gqlLink.mutation("CreateInviteLink", () =>
         HttpResponse.json({
           data: {
             createInviteLink: {
@@ -84,7 +84,7 @@ describe("createInviteLink", () => {
 
   it("surfaces a bad-expiry refusal", async () => {
     server.use(
-      graphql.mutation("CreateInviteLink", () =>
+      gqlLink.mutation("CreateInviteLink", () =>
         HttpResponse.json({
           data: {
             createInviteLink: {
@@ -107,7 +107,7 @@ describe("revokeInviteLink", () => {
     // The contract deviation: NOT_FOUND rides the userError tier here
     // (api-spec.md "Auth and accounts").
     server.use(
-      graphql.mutation("RevokeInviteLink", () =>
+      gqlLink.mutation("RevokeInviteLink", () =>
         HttpResponse.json({
           data: {
             revokeInviteLink: {
@@ -128,7 +128,7 @@ describe("revokeInviteLink", () => {
 describe("approveApplicant", () => {
   it("adapts the returned Opinion records for the signer", async () => {
     server.use(
-      graphql.mutation("ApproveApplicants", ({ variables }) => {
+      gqlLink.mutation("ApproveApplicants", ({ variables }) => {
         expect(variables).toEqual({
           input: { approvals: [{ application: "a1", pDirected: 0.4, pInterest: 0.2 }] },
         });
@@ -167,7 +167,7 @@ describe("approveApplicant", () => {
 
   it("surfaces a per-entry refusal", async () => {
     server.use(
-      graphql.mutation("ApproveApplicants", () =>
+      gqlLink.mutation("ApproveApplicants", () =>
         HttpResponse.json({
           data: {
             approveApplicants: {
@@ -190,7 +190,7 @@ describe("approveApplicant", () => {
   });
 
   it("maps a transport fault to failed", async () => {
-    server.use(graphql.mutation("ApproveApplicants", () => HttpResponse.error()));
+    server.use(gqlLink.mutation("ApproveApplicants", () => HttpResponse.error()));
     expect((await approveApplicant(client(), "a1", 0.1, 0.1)).kind).toBe("failed");
   });
 });

@@ -2,14 +2,14 @@
 // notifications-list §6.1, §6.4 K4.1).
 
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { useAuthGuard } from "@/lib/session/runtime";
 import { createTokenStore } from "@/lib/session/token-store";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { clearBell, firstArrival, resetBell, setBell, useBellLit, useFreshRootBell } from "./bell";
 import { markSeenThrough, pendingMarks, resetMarks, flushMarks } from "./marks";
@@ -50,7 +50,7 @@ function Harness() {
 function serveBell(answers: boolean[]) {
   let asked = 0;
   server.use(
-    graphql.query("NotificationBell", () => {
+    gqlLink.query("NotificationBell", () => {
       const lit = answers[Math.min(asked, answers.length - 1)];
       asked += 1;
       return HttpResponse.json({ data: { me: { __typename: "User", id: "me", hasUnreadNotifications: lit } } });
@@ -124,7 +124,7 @@ describe("the marks", () => {
   it("a_failed_mark_is_retried_silently", async () => {
     let calls = 0;
     server.use(
-      graphql.mutation("MarkNotificationsSeen", () => {
+      gqlLink.mutation("MarkNotificationsSeen", () => {
         calls += 1;
         if (calls === 1) return HttpResponse.error();
         return HttpResponse.json({

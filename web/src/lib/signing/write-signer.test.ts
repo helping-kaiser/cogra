@@ -9,7 +9,7 @@ import "fake-indexeddb/auto";
 import { IDBFactory } from "fake-indexeddb";
 
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import type { StagedWriteState } from "@/__generated__/graphql";
@@ -35,7 +35,7 @@ import {
 } from "@/lib/crypto/wire";
 import { createIdentityStore, type IdentityStore } from "@/lib/identity/store";
 import type { AuthGuard } from "@/lib/session/guard";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import {
   carriedDigest,
   createCarriedExpectationStore,
@@ -120,7 +120,7 @@ function view(id: string, state: StagedWriteState, verifiedAct: string | null): 
 
 /** The account, answering with the public key it has attached. */
 function meAnswering(actorPubkey: string | null) {
-  return graphql.query("Me", () =>
+  return gqlLink.query("Me", () =>
     HttpResponse.json({
       data: {
         me: {
@@ -160,7 +160,7 @@ describe("write signer", () => {
   let signer: WriteSigner;
   let actorPub: Uint8Array;
   let host: ActorKey;
-  let hostHandler: ReturnType<typeof graphql.query>;
+  let hostHandler: ReturnType<typeof gqlLink.query>;
 
   beforeEach(async () => {
     globalThis.indexedDB = new IDBFactory();
@@ -170,7 +170,7 @@ describe("write signer", () => {
     const saved = await store.saveActor(seed, true);
     actorPub = saved.publicKeyBytes();
     host = await ActorKey.generate();
-    hostHandler = graphql.query("HostPublicKey", () =>
+    hostHandler = gqlLink.query("HostPublicKey", () =>
       HttpResponse.json({ data: { hostPublicKey: toBase64(host.publicKeyBytes()) } }),
     );
     // Every signing leg first asks whose key the account accepts, so the
@@ -191,7 +191,7 @@ describe("write signer", () => {
     let sealed: VerifiedAct | null = null;
     server.use(
       hostHandler,
-      graphql.mutation("SubmitProposals", async ({ variables }) => {
+      gqlLink.mutation("SubmitProposals", async ({ variables }) => {
         const input = (variables as { input: { proposals: { signature: string }[] } }).input;
         const pre = submittedPre(input.proposals[0].signature, actorPub);
         sealed = await sealOver(host, pre);
@@ -207,7 +207,7 @@ describe("write signer", () => {
           },
         });
       }),
-      graphql.mutation("ApproveActs", async ({ variables }) => {
+      gqlLink.mutation("ApproveActs", async ({ variables }) => {
         const input = (variables as { input: { approvals: { signature: string }[] } }).input;
         if (sealed === null) throw new Error("approve before submit");
         const witnessOk = await verifyDigest(
@@ -238,7 +238,7 @@ describe("write signer", () => {
     let polls = 0;
     server.use(
       hostHandler,
-      graphql.mutation("SubmitProposals", async ({ variables }) => {
+      gqlLink.mutation("SubmitProposals", async ({ variables }) => {
         const input = (variables as { input: { proposals: { signature: string }[] } }).input;
         const pre = submittedPre(input.proposals[0].signature, actorPub);
         sealedB64 = toBase64(encodeVerifiedAct(await sealOver(host, pre)));
@@ -252,7 +252,7 @@ describe("write signer", () => {
           },
         });
       }),
-      graphql.query("StagedWrite", () => {
+      gqlLink.query("StagedWrite", () => {
         polls += 1;
         return HttpResponse.json({
           data: {
@@ -263,7 +263,7 @@ describe("write signer", () => {
           },
         });
       }),
-      graphql.mutation("ApproveActs", () =>
+      gqlLink.mutation("ApproveActs", () =>
         HttpResponse.json({
           data: {
             approveActs: {
@@ -284,7 +284,7 @@ describe("write signer", () => {
   it("parks as awaitingSeal when the seal budget runs out, material kept", async () => {
     server.use(
       hostHandler,
-      graphql.mutation("SubmitProposals", () =>
+      gqlLink.mutation("SubmitProposals", () =>
         HttpResponse.json({
           data: {
             submitProposals: {
@@ -295,7 +295,7 @@ describe("write signer", () => {
           },
         }),
       ),
-      graphql.query("StagedWrite", () =>
+      gqlLink.query("StagedWrite", () =>
         HttpResponse.json({ data: { stagedWrite: stagedJson(ID, "SEALING", null) } }),
       ),
     );
@@ -307,7 +307,7 @@ describe("write signer", () => {
 
   it("a submit refusal ends the handshake and clears the material", async () => {
     server.use(
-      graphql.mutation("SubmitProposals", () =>
+      gqlLink.mutation("SubmitProposals", () =>
         HttpResponse.json({
           data: {
             submitProposals: {
@@ -331,7 +331,7 @@ describe("write signer", () => {
     let rateLimit = true;
     server.use(
       hostHandler,
-      graphql.mutation("SubmitProposals", async ({ variables }) => {
+      gqlLink.mutation("SubmitProposals", async ({ variables }) => {
         const input = (variables as { input: { proposals: { signature: string }[] } }).input;
         const pre = submittedPre(input.proposals[0].signature, actorPub);
         sealedB64 = toBase64(encodeVerifiedAct(await sealOver(host, pre)));
@@ -345,10 +345,10 @@ describe("write signer", () => {
           },
         });
       }),
-      graphql.query("StagedWrite", () =>
+      gqlLink.query("StagedWrite", () =>
         HttpResponse.json({ data: { stagedWrite: stagedJson(ID, "AWAITING_APPROVAL", sealedB64) } }),
       ),
-      graphql.mutation("ApproveActs", () =>
+      gqlLink.mutation("ApproveActs", () =>
         HttpResponse.json({
           data: {
             approveActs: {
@@ -376,7 +376,7 @@ describe("write signer", () => {
 
   it("a refused read leg during the seal wait keeps the material", async () => {
     server.use(
-      graphql.mutation("SubmitProposals", () =>
+      gqlLink.mutation("SubmitProposals", () =>
         HttpResponse.json({
           data: {
             submitProposals: {
@@ -387,7 +387,7 @@ describe("write signer", () => {
           },
         }),
       ),
-      graphql.query("StagedWrite", () =>
+      gqlLink.query("StagedWrite", () =>
         HttpResponse.json({
           errors: [{ message: "slow down", extensions: { code: "RATE_LIMITED" } }],
         }),
@@ -412,7 +412,7 @@ describe("write signer", () => {
   });
 
   it("a transport fault keeps the material and resume re-sends the same nonce", async () => {
-    server.use(graphql.mutation("SubmitProposals", () => HttpResponse.error()));
+    server.use(gqlLink.mutation("SubmitProposals", () => HttpResponse.error()));
     const first = await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     expect(first.kind).toBe("failed");
     const parked = await store.handshake(ID);
@@ -422,10 +422,10 @@ describe("write signer", () => {
     let sealed: VerifiedAct | null = null;
     server.use(
       hostHandler,
-      graphql.query("StagedWrite", () =>
+      gqlLink.query("StagedWrite", () =>
         HttpResponse.json({ data: { stagedWrite: stagedJson(ID, "AWAITING_PRE_SIGN", null) } }),
       ),
-      graphql.mutation("SubmitProposals", async ({ variables }) => {
+      gqlLink.mutation("SubmitProposals", async ({ variables }) => {
         const input = (variables as { input: { proposals: { signature: string }[] } }).input;
         resent = decodePreCommitment(fromBase64(input.proposals[0].signature)).nonce;
         const pre = submittedPre(input.proposals[0].signature, actorPub);
@@ -442,7 +442,7 @@ describe("write signer", () => {
           },
         });
       }),
-      graphql.mutation("ApproveActs", () =>
+      gqlLink.mutation("ApproveActs", () =>
         HttpResponse.json({
           data: {
             approveActs: {
@@ -463,7 +463,7 @@ describe("write signer", () => {
   it("rejects a seal over a body the device never signed", async () => {
     server.use(
       hostHandler,
-      graphql.mutation("SubmitProposals", async ({ variables }) => {
+      gqlLink.mutation("SubmitProposals", async ({ variables }) => {
         const input = (variables as { input: { proposals: { signature: string }[] } }).input;
         const pre = submittedPre(input.proposals[0].signature, actorPub);
         const other = new Proposal(PROPOSAL.body, new TextEncoder().encode("swapped"), []);
@@ -491,7 +491,7 @@ describe("write signer", () => {
     const impostor = await ActorKey.generate();
     server.use(
       hostHandler,
-      graphql.mutation("SubmitProposals", async ({ variables }) => {
+      gqlLink.mutation("SubmitProposals", async ({ variables }) => {
         const input = (variables as { input: { proposals: { signature: string }[] } }).input;
         const pre = submittedPre(input.proposals[0].signature, actorPub);
         const sealed = await sealOver(impostor, pre);
@@ -516,7 +516,7 @@ describe("write signer", () => {
   it("rejects a malformed canonical proposal without submitting", async () => {
     let submits = 0;
     server.use(
-      graphql.mutation("SubmitProposals", () => {
+      gqlLink.mutation("SubmitProposals", () => {
         submits += 1;
         return HttpResponse.json({ data: {} });
       }),
@@ -545,7 +545,7 @@ describe("write signer", () => {
 
   it("treats expiry during the seal wait as a refusal and clears", async () => {
     server.use(
-      graphql.mutation("SubmitProposals", () =>
+      gqlLink.mutation("SubmitProposals", () =>
         HttpResponse.json({
           data: {
             submitProposals: {
@@ -556,7 +556,7 @@ describe("write signer", () => {
           },
         }),
       ),
-      graphql.query("StagedWrite", () =>
+      gqlLink.query("StagedWrite", () =>
         HttpResponse.json({ data: { stagedWrite: stagedJson(ID, "EXPIRED", null) } }),
       ),
     );
@@ -582,10 +582,10 @@ describe("write signer", () => {
   });
 
   it("resume refuses a vanished staged write and clears the material", async () => {
-    server.use(graphql.mutation("SubmitProposals", () => HttpResponse.error()));
+    server.use(gqlLink.mutation("SubmitProposals", () => HttpResponse.error()));
     await signer.signStaged(view(ID, "AWAITING_PRE_SIGN", null), REGISTRATION_EXEMPTION);
     server.use(
-      graphql.query("StagedWrite", () => HttpResponse.json({ data: { stagedWrite: null } })),
+      gqlLink.query("StagedWrite", () => HttpResponse.json({ data: { stagedWrite: null } })),
     );
     const results = await signer.resume();
     expect(results).toHaveLength(1);
@@ -664,7 +664,7 @@ describe("write signer", () => {
   function countingSubmits(): { count: () => number } {
     let submits = 0;
     server.use(
-      graphql.mutation("SubmitProposals", () => {
+      gqlLink.mutation("SubmitProposals", () => {
         submits += 1;
         return HttpResponse.json({ data: {} });
       }),
@@ -752,7 +752,7 @@ describe("write signer", () => {
     });
     server.use(
       hostHandler,
-      graphql.mutation("SubmitProposals", async ({ variables }) => {
+      gqlLink.mutation("SubmitProposals", async ({ variables }) => {
         submits += 1;
         const input = (variables as { input: { proposals: { signature: string }[] } }).input;
         const blob = decodePreCommitment(fromBase64(input.proposals[0].signature));
@@ -773,7 +773,7 @@ describe("write signer", () => {
           },
         });
       }),
-      graphql.mutation("ApproveActs", () =>
+      gqlLink.mutation("ApproveActs", () =>
         HttpResponse.json({
           data: {
             approveActs: {
@@ -920,7 +920,7 @@ describe("write signer", () => {
     let submits = 0;
     server.use(
       hostHandler,
-      graphql.mutation("SubmitProposals", async ({ variables }) => {
+      gqlLink.mutation("SubmitProposals", async ({ variables }) => {
         submits += 1;
         const input = (variables as { input: { proposals: { signature: string }[] } }).input;
         const blob = decodePreCommitment(fromBase64(input.proposals[0].signature));

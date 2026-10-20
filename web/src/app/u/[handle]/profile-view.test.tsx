@@ -1,6 +1,6 @@
 import { InMemoryCache } from "@apollo/client";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { resetSeenQueueForTests } from "@/lib/history/seen-queue";
@@ -9,7 +9,7 @@ import { createStubStanceData } from "@/lib/stance/stub-stance-data";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { hiddenHandlers, hiddenLog } from "@/test/hidden";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { bookmarkHandlers, bookmarkLog } from "@/test/saved";
 import { stanceBundle, stanceHandlers } from "@/test/stance";
@@ -29,7 +29,7 @@ vi.mock("next/navigation", () => ({
 let marked: string[][] = [];
 const server = startMswServer(
   ...stanceHandlers(),
-  graphql.mutation("MarkSeen", ({ variables }) => {
+  gqlLink.mutation("MarkSeen", ({ variables }) => {
     marked.push(variables.nodes as string[]);
     return HttpResponse.json({
       data: { markSeen: { __typename: "MarkSeenPayload", ok: true, userErrors: [] } },
@@ -60,7 +60,7 @@ function profile(id: string, handle: string, bio: string | null = "Curious.") {
 }
 
 function meHandler(accountState: "APPLICANT" | "MEMBER" = "MEMBER") {
-  return graphql.query("Me", () =>
+  return gqlLink.query("Me", () =>
     HttpResponse.json({
       data: {
         me: {
@@ -81,7 +81,7 @@ function meHandler(accountState: "APPLICANT" | "MEMBER" = "MEMBER") {
 function recordsHandler(
   rows: { id: string; family: string; targetId?: string; postId?: string }[],
 ) {
-  return graphql.query("AuthorRecords", () =>
+  return gqlLink.query("AuthorRecords", () =>
     HttpResponse.json({
       data: {
         records: {
@@ -121,7 +121,7 @@ beforeEach(() => {
 describe("ProfileScreen", () => {
   it("renders a public profile by handle with its chronicle", async () => {
     server.use(
-      graphql.query("UserProfile", () =>
+      gqlLink.query("UserProfile", () =>
         HttpResponse.json({ data: { user: profile("u2", "ada") } }),
       ),
       recordsHandler([{ id: "act:a:1:publish", family: "PUBLISH", postId: "p1" }]),
@@ -142,7 +142,7 @@ describe("ProfileScreen", () => {
 
   it("makes the stance the header's primary action on another actor", async () => {
     server.use(
-      graphql.query("UserProfile", () =>
+      gqlLink.query("UserProfile", () =>
         HttpResponse.json({ data: { user: profile("u2", "ada") } }),
       ),
       recordsHandler([]),
@@ -158,7 +158,7 @@ describe("ProfileScreen", () => {
     // bundle reads exactly the way a post's does.
     server.use(
       meHandler(),
-      graphql.query("UserProfile", () =>
+      gqlLink.query("UserProfile", () =>
         HttpResponse.json({ data: { user: profile("u2", "ada") } }),
       ),
       recordsHandler([]),
@@ -184,7 +184,7 @@ describe("ProfileScreen", () => {
 
     const anonymous: string[] = [];
     server.use(
-      graphql.query("Me", ({ request }) =>
+      gqlLink.query("Me", ({ request }) =>
         HttpResponse.json({
           data:
             request.headers.get("authorization") === null
@@ -203,7 +203,7 @@ describe("ProfileScreen", () => {
                 },
         }),
       ),
-      graphql.mutation("RefreshSession", () =>
+      gqlLink.mutation("RefreshSession", () =>
         HttpResponse.json({
           data: {
             refreshSession: {
@@ -219,11 +219,11 @@ describe("ProfileScreen", () => {
           },
         }),
       ),
-      graphql.query("UserProfile", () =>
+      gqlLink.query("UserProfile", () =>
         HttpResponse.json({ data: { user: profile("u2", "ada") } }),
       ),
       recordsHandler([]),
-      graphql.query("ProfileStance", ({ variables, request }) => {
+      gqlLink.query("ProfileStance", ({ variables, request }) => {
         const id = String(variables.id);
         const authorized = request.headers.get("authorization") !== null;
         if (!authorized) anonymous.push(id);
@@ -254,7 +254,7 @@ describe("ProfileScreen", () => {
   it("offers no stance on one's own profile", async () => {
     server.use(
       meHandler(),
-      graphql.query("MyProfile", () => HttpResponse.json({ data: { me: profile("u1", "ada") } })),
+      gqlLink.query("MyProfile", () => HttpResponse.json({ data: { me: profile("u1", "ada") } })),
       recordsHandler([]),
     );
     renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
@@ -265,7 +265,7 @@ describe("ProfileScreen", () => {
   it("adds another's opened profile to History, the profile alone", async () => {
     server.use(
       meHandler(),
-      graphql.query("UserProfile", () =>
+      gqlLink.query("UserProfile", () =>
         HttpResponse.json({ data: { user: profile("u2", "ada") } }),
       ),
       recordsHandler([{ id: "act:a:1:publish", family: "PUBLISH", postId: "p1" }]),
@@ -279,7 +279,7 @@ describe("ProfileScreen", () => {
 
   it("adds nothing for a profile opened with no session", async () => {
     server.use(
-      graphql.query("UserProfile", () =>
+      gqlLink.query("UserProfile", () =>
         HttpResponse.json({ data: { user: profile("u2", "ada") } }),
       ),
       recordsHandler([]),
@@ -293,8 +293,8 @@ describe("ProfileScreen", () => {
   it("adds nothing for the reader's own profile, by tab or by handle", async () => {
     server.use(
       meHandler(),
-      graphql.query("MyProfile", () => HttpResponse.json({ data: { me: profile("u1", "ada") } })),
-      graphql.query("UserProfile", () =>
+      gqlLink.query("MyProfile", () => HttpResponse.json({ data: { me: profile("u1", "ada") } })),
+      gqlLink.query("UserProfile", () =>
         HttpResponse.json({ data: { user: profile("u1", "ada") } }),
       ),
       recordsHandler([]),
@@ -320,7 +320,7 @@ describe("ProfileScreen", () => {
     }
 
     function other(overrides: Record<string, unknown> = {}) {
-      return graphql.query("UserProfile", () =>
+      return gqlLink.query("UserProfile", () =>
         HttpResponse.json({ data: { user: { ...profile("u2", "ada"), ...overrides } } }),
       );
     }
@@ -328,7 +328,7 @@ describe("ProfileScreen", () => {
     it("the_own_menu_reads_saved_history_share_and_opens_saved", async () => {
       server.use(
         meHandler(),
-        graphql.query("MyProfile", () => HttpResponse.json({ data: { me: profile("u1", "ada") } })),
+        gqlLink.query("MyProfile", () => HttpResponse.json({ data: { me: profile("u1", "ada") } })),
         recordsHandler([]),
       );
       renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
@@ -494,7 +494,7 @@ describe("ProfileScreen", () => {
 
   it("shows not-found for an unknown handle", async () => {
     server.use(
-      graphql.query("UserProfile", () => HttpResponse.json({ data: { user: null } })),
+      gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: null } })),
     );
     renderWithProviders(<ProfileScreen handle="nobody" />);
     expect(await screen.findByTestId("profile-not-found")).toBeInTheDocument();
@@ -503,7 +503,7 @@ describe("ProfileScreen", () => {
   it("offers edit, settings, and invites on the own profile", async () => {
     server.use(
       meHandler(),
-      graphql.query("MyProfile", () =>
+      gqlLink.query("MyProfile", () =>
         HttpResponse.json({ data: { me: profile("u1", "ada") } }),
       ),
       recordsHandler([]),
@@ -526,7 +526,7 @@ describe("ProfileScreen", () => {
     let served = profile("u1", "ada", "Before the edit.");
     server.use(
       meHandler(),
-      graphql.query("MyProfile", () => HttpResponse.json({ data: { me: served } })),
+      gqlLink.query("MyProfile", () => HttpResponse.json({ data: { me: served } })),
       recordsHandler([]),
     );
     const store = signedInStore();
@@ -543,7 +543,7 @@ describe("ProfileScreen", () => {
   it("locks the invites entry for an applicant and explains on tap", async () => {
     server.use(
       meHandler("APPLICANT"),
-      graphql.query("MyProfile", () =>
+      gqlLink.query("MyProfile", () =>
         HttpResponse.json({ data: { me: profile("u1", "ada") } }),
       ),
       recordsHandler([]),
@@ -559,10 +559,10 @@ describe("ProfileScreen", () => {
   it("switches the chronicle filter and refetches", async () => {
     const families: (string | null)[] = [];
     server.use(
-      graphql.query("UserProfile", () =>
+      gqlLink.query("UserProfile", () =>
         HttpResponse.json({ data: { user: profile("u2", "ada") } }),
       ),
-      graphql.query("AuthorRecords", ({ variables }) => {
+      gqlLink.query("AuthorRecords", ({ variables }) => {
         families.push((variables as { family: string | null }).family);
         return HttpResponse.json({
           data: {
@@ -584,11 +584,11 @@ describe("ProfileScreen", () => {
   });
 
   it("offers a retry on the nothing-loaded transport fault", async () => {
-    server.use(graphql.query("UserProfile", () => HttpResponse.error()));
+    server.use(gqlLink.query("UserProfile", () => HttpResponse.error()));
     renderWithProviders(<ProfileScreen handle="ada" />);
     expect(await screen.findByTestId("profile-transport-error")).toBeInTheDocument();
     server.use(
-      graphql.query("UserProfile", () =>
+      gqlLink.query("UserProfile", () =>
         HttpResponse.json({ data: { user: profile("u2", "ada") } }),
       ),
       recordsHandler([]),
@@ -630,7 +630,7 @@ describe("ProfileScreen", () => {
     it("asks the server again without blanking the profile already on screen", async () => {
       let reads = 0;
       server.use(
-        graphql.query("UserProfile", () => {
+        gqlLink.query("UserProfile", () => {
           reads += 1;
           return HttpResponse.json({ data: { user: profile("u2", "ada") } });
         }),
@@ -651,7 +651,7 @@ describe("ProfileScreen", () => {
     it("takes a short tug for what it is — a scroll, not an ask", async () => {
       let reads = 0;
       server.use(
-        graphql.query("UserProfile", () => {
+        gqlLink.query("UserProfile", () => {
           reads += 1;
           return HttpResponse.json({ data: { user: profile("u2", "ada") } });
         }),
@@ -668,7 +668,7 @@ describe("ProfileScreen", () => {
     it("ignores a pull that starts anywhere but the top", async () => {
       let reads = 0;
       server.use(
-        graphql.query("UserProfile", () => {
+        gqlLink.query("UserProfile", () => {
           reads += 1;
           return HttpResponse.json({ data: { user: profile("u2", "ada") } });
         }),
@@ -690,7 +690,7 @@ describe("ProfileScreen", () => {
 // signing taken on that person — Set or the hold — opens the ceremony (:37).
 describe("ProfileScreen — the voucher's profile", () => {
   function voucherMe(hasReciprocated = false) {
-    return graphql.query("Me", () =>
+    return gqlLink.query("Me", () =>
       HttpResponse.json({
         data: {
           me: {
@@ -717,7 +717,7 @@ describe("ProfileScreen — the voucher's profile", () => {
   function serveVoucher(hasReciprocated = false) {
     server.use(
       voucherMe(hasReciprocated),
-      graphql.query("UserProfile", () =>
+      gqlLink.query("UserProfile", () =>
         HttpResponse.json({ data: { user: profile("u2", "mira") } }),
       ),
       recordsHandler([]),

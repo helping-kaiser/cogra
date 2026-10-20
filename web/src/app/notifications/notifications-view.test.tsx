@@ -4,7 +4,7 @@
 // arrow by origin.
 
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { bellLit, resetBell, setBell } from "@/lib/notifications/bell";
@@ -15,7 +15,7 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { intersect } from "@/test/media-env";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { NotificationsScreen } from "./notifications-view";
 
@@ -106,12 +106,12 @@ type Marks = { seen: string[]; read: string[] };
 
 function serve(rows: Row[], marks: Marks = { seen: [], read: [] }) {
   server.use(
-    graphql.query("Notifications", () => HttpResponse.json({ data: page(rows) })),
-    graphql.mutation("MarkNotificationsSeen", ({ variables }) => {
+    gqlLink.query("Notifications", () => HttpResponse.json({ data: page(rows) })),
+    gqlLink.mutation("MarkNotificationsSeen", ({ variables }) => {
       marks.seen.push(variables.through as string);
       return HttpResponse.json({ data: { markNotificationsSeen: { hasUnreadNotifications: false, userErrors: [] } } });
     }),
-    graphql.mutation("MarkNotificationRead", ({ variables }) => {
+    gqlLink.mutation("MarkNotificationRead", ({ variables }) => {
       marks.read.push(variables.notification as string);
       return HttpResponse.json({
         data: {
@@ -250,7 +250,7 @@ describe("NotificationsScreen", () => {
   });
 
   it("a_list_that_cannot_load_says_it_cannot_reach_the_server", async () => {
-    server.use(graphql.query("Notifications", () => HttpResponse.error()));
+    server.use(gqlLink.query("Notifications", () => HttpResponse.error()));
     renderWithProviders(<NotificationsScreen from="feed" />, { store: signedIn() });
     expect(await screen.findByTestId("notifications-transport-error")).toHaveTextContent(
       "Can't reach the server. Check your connection and try again.",
@@ -261,14 +261,14 @@ describe("NotificationsScreen", () => {
   it("a_failed_next_page_offers_couldnt_load_more_and_retry", async () => {
     let reads = 0;
     server.use(
-      graphql.query("Notifications", ({ variables }) => {
+      gqlLink.query("Notifications", ({ variables }) => {
         reads += 1;
         if (variables.after === null) {
           return HttpResponse.json({ data: page(THREE, { hasNextPage: true, endCursor: "c2" }) });
         }
         return HttpResponse.json({ data: null, errors: [{ message: "down", extensions: { code: "INTERNAL" } }] });
       }),
-      graphql.mutation("MarkNotificationsSeen", () =>
+      gqlLink.mutation("MarkNotificationsSeen", () =>
         HttpResponse.json({ data: { markNotificationsSeen: { hasUnreadNotifications: false, userErrors: [] } } }),
       ),
     );
@@ -294,10 +294,10 @@ describe("NotificationsScreen", () => {
     // render that changed nothing — here, a tap marking a row opened — keeps
     // the observer that watches the approaching tail.
     server.use(
-      graphql.query("Notifications", () =>
+      gqlLink.query("Notifications", () =>
         HttpResponse.json({ data: page(THREE, { hasNextPage: true, endCursor: "c2" }) }),
       ),
-      graphql.mutation("MarkNotificationsSeen", () =>
+      gqlLink.mutation("MarkNotificationsSeen", () =>
         HttpResponse.json({ data: { markNotificationsSeen: { hasUnreadNotifications: false, userErrors: [] } } }),
       ),
     );

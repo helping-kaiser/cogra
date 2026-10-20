@@ -5,13 +5,13 @@
 // id; the structural diff waits on registration.
 
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { postBackingHandler } from "@/test/backing";
 import { fakeIdentityStore } from "@/test/identity";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
 import { PostEditRoute } from "./post-edit-route";
@@ -140,11 +140,11 @@ function editablePost({
  */
 function serve(data: ReturnType<typeof editablePost>, { backing = 0.1 as number | null } = {}) {
   server.use(
-    graphql.query("PostDetail", () => HttpResponse.json({ data })),
+    gqlLink.query("PostDetail", () => HttpResponse.json({ data })),
     postBackingHandler({ p1: backing }),
     // The kept placements' digests, read back by id at sign time — no
     // gallery read selects them (payload-expectation.ts).
-    graphql.query("MediaAttachmentStatus", ({ variables }) =>
+    gqlLink.query("MediaAttachmentStatus", ({ variables }) =>
       HttpResponse.json({
         data: {
           mediaAttachment: {
@@ -184,7 +184,7 @@ describe("PostEditRoute — the guard is the acts batch (EditComposeUnchanged)",
     let prepared = false;
     serve(editablePost());
     server.use(
-      graphql.mutation("PreparePostEdit", () => {
+      gqlLink.mutation("PreparePostEdit", () => {
         prepared = true;
         return HttpResponse.json({ data: editPrepared() });
       }),
@@ -205,7 +205,7 @@ describe("PostEditRoute — the guard is the acts batch (EditComposeUnchanged)",
     let sent: Record<string, unknown> | null = null;
     serve(editablePost());
     server.use(
-      graphql.mutation("PreparePostEdit", ({ variables }) => {
+      gqlLink.mutation("PreparePostEdit", ({ variables }) => {
         sent = variables.input as Record<string, unknown>;
         return HttpResponse.json({ data: editPrepared() });
       }),
@@ -287,7 +287,7 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
     let sent: Record<string, unknown> | null = null;
     serve(editablePost(), { backing: 0.35 });
     server.use(
-      graphql.mutation("PreparePostEdit", ({ variables }) => {
+      gqlLink.mutation("PreparePostEdit", ({ variables }) => {
         sent = variables.input as Record<string, unknown>;
         return HttpResponse.json({ data: editPrepared() });
       }),
@@ -331,7 +331,7 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
 
   it("a failed backing read leaves the readouts unread and the edit opens anyway", async () => {
     serve(editablePost());
-    server.use(graphql.query("PostBacking", () => HttpResponse.error()));
+    server.use(gqlLink.query("PostBacking", () => HttpResponse.error()));
     draw();
     expect(await screen.findByTestId("post-edit-title")).toHaveValue("Old title");
     expect(screen.getByTestId("post-edit-backing-unread")).toHaveTextContent("Not readable yet");
@@ -343,7 +343,7 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
   it("refreshes and replays the backing read on an expired token", async () => {
     serve(editablePost());
     server.use(
-      graphql.mutation("RefreshSession", () =>
+      gqlLink.mutation("RefreshSession", () =>
         HttpResponse.json({
           data: {
             refreshSession: {
@@ -359,7 +359,7 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
           },
         }),
       ),
-      graphql.query("PostBacking", ({ request }) =>
+      gqlLink.query("PostBacking", ({ request }) =>
         request.headers.get("authorization") === "Bearer access-2"
           ? HttpResponse.json({
               data: {
@@ -384,7 +384,7 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
     let sent: Record<string, unknown> | null = null;
     serve(editablePost());
     server.use(
-      graphql.mutation("PreparePostEdit", ({ variables }) => {
+      gqlLink.mutation("PreparePostEdit", ({ variables }) => {
         sent = variables.input as Record<string, unknown>;
         return HttpResponse.json({ data: editPrepared() });
       }),
@@ -404,7 +404,7 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
     let sent: Record<string, unknown> | null = null;
     serve(editablePost());
     server.use(
-      graphql.mutation("PreparePostEdit", ({ variables }) => {
+      gqlLink.mutation("PreparePostEdit", ({ variables }) => {
         sent = variables.input as Record<string, unknown>;
         return HttpResponse.json({ data: editPrepared() });
       }),
@@ -534,7 +534,7 @@ describe("PostEditRoute — leaving (EditCompose, EditWords, DiscardConfirm): th
     let prepared = false;
     serve(editablePost());
     server.use(
-      graphql.mutation("PreparePostEdit", () => {
+      gqlLink.mutation("PreparePostEdit", () => {
         prepared = true;
         return HttpResponse.json({ data: editPrepared() });
       }),
@@ -634,14 +634,14 @@ describe("PostEditRoute — one batch (EditCompose, EditActs)", () => {
       }),
     );
     server.use(
-      graphql.mutation("PreparePostEdit", () => HttpResponse.json({ data: editPrepared() })),
-      graphql.mutation("PrepareTag", ({ variables }) => {
+      gqlLink.mutation("PreparePostEdit", () => HttpResponse.json({ data: editPrepared() })),
+      gqlLink.mutation("PrepareTag", ({ variables }) => {
         tagInputs.push(variables.input);
         return HttpResponse.json({
           data: { prepareTag: { __typename: "PreparePayload", writes: writes(1, "TAG"), userErrors: [] } },
         });
       }),
-      graphql.mutation("PrepareReferenceWithdrawal", ({ variables }) => {
+      gqlLink.mutation("PrepareReferenceWithdrawal", ({ variables }) => {
         withdrawal = variables.input;
         return HttpResponse.json({
           data: {
@@ -705,7 +705,7 @@ describe("PostEditRoute — the body (EditWords, EditPicked)", () => {
     let sent: Record<string, unknown> | null = null;
     serve(editablePost({ attachments: [attachment("m-1", "A jetty"), attachment("m-2")] }));
     server.use(
-      graphql.mutation("PreparePostEdit", ({ variables }) => {
+      gqlLink.mutation("PreparePostEdit", ({ variables }) => {
         sent = variables.input as Record<string, unknown>;
         return HttpResponse.json({ data: editPrepared() });
       }),
@@ -727,7 +727,7 @@ describe("PostEditRoute — the body (EditWords, EditPicked)", () => {
     let sent: Record<string, unknown> | null = null;
     serve(editablePost({ attachments: [attachment("m-1")], description: "Rubbings at low tide." }));
     server.use(
-      graphql.mutation("PreparePostEdit", ({ variables }) => {
+      gqlLink.mutation("PreparePostEdit", ({ variables }) => {
         sent = variables.input as Record<string, unknown>;
         return HttpResponse.json({ data: editPrepared() });
       }),
@@ -754,7 +754,7 @@ describe("PostEditRoute — signing", () => {
     let prepared = false;
     serve(editablePost());
     server.use(
-      graphql.mutation("PreparePostEdit", () => {
+      gqlLink.mutation("PreparePostEdit", () => {
         prepared = true;
         return HttpResponse.json({ data: editPrepared() });
       }),
@@ -769,7 +769,7 @@ describe("PostEditRoute — signing", () => {
   it("takes the commit's place with the write rule's notice and no Retry", async () => {
     serve(editablePost());
     server.use(
-      graphql.mutation("PreparePostEdit", () =>
+      gqlLink.mutation("PreparePostEdit", () =>
         HttpResponse.json({
           data: {
             preparePostEdit: {
@@ -798,7 +798,7 @@ describe("PostEditRoute — signing", () => {
   it("drops the held press when the prepared count is not the one the foot read", async () => {
     serve(editablePost());
     server.use(
-      graphql.mutation("PreparePostEdit", () => HttpResponse.json({ data: editPrepared(2) })),
+      gqlLink.mutation("PreparePostEdit", () => HttpResponse.json({ data: editPrepared(2) })),
     );
     const signer = draw();
     fireEvent.change(await screen.findByTestId("post-edit-words"), { target: { value: "x" } });

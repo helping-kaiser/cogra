@@ -1,9 +1,9 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PASSWORD_MIN_CHARS } from "@/lib/onboarding/registration-rules";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { ResetForm } from "./reset-form";
 
@@ -15,13 +15,13 @@ vi.mock("next/navigation", () => ({
 
 const server = startMswServer();
 
-const requestOk = graphql.mutation("RequestPasswordReset", () =>
+const requestOk = gqlLink.mutation("RequestPasswordReset", () =>
   HttpResponse.json({
     data: { requestPasswordReset: { __typename: "RequestPasswordResetPayload", ok: true } },
   }),
 );
 
-const confirmOk = graphql.mutation("ConfirmPasswordReset", () =>
+const confirmOk = gqlLink.mutation("ConfirmPasswordReset", () =>
   HttpResponse.json({
     data: {
       confirmPasswordReset: {
@@ -34,7 +34,7 @@ const confirmOk = graphql.mutation("ConfirmPasswordReset", () =>
 );
 
 const confirmRefused = (code: string) =>
-  graphql.mutation("ConfirmPasswordReset", () =>
+  gqlLink.mutation("ConfirmPasswordReset", () =>
     HttpResponse.json({
       data: {
         confirmPasswordReset: {
@@ -93,7 +93,7 @@ describe("ResetForm", () => {
   });
 
   it("keeps a request transport failure distinct", async () => {
-    server.use(graphql.mutation("RequestPasswordReset", () => HttpResponse.error()));
+    server.use(gqlLink.mutation("RequestPasswordReset", () => HttpResponse.error()));
     renderWithProviders(<ResetForm />);
     fireEvent.change(screen.getByTestId("reset_email"), { target: { value: "a@b.c" } });
     fireEvent.click(screen.getByTestId("reset_request"));
@@ -103,7 +103,7 @@ describe("ResetForm", () => {
 
   it("renders a rate-limited request as a backoff — no sent-email claim, no connectivity copy", async () => {
     server.use(
-      graphql.mutation("RequestPasswordReset", () =>
+      gqlLink.mutation("RequestPasswordReset", () =>
         HttpResponse.json({
           errors: [{ message: "too many attempts", extensions: { code: "RATE_LIMITED" } }],
         }),
@@ -121,7 +121,7 @@ describe("ResetForm", () => {
 
   it("renders a rate-limited confirm as a backoff, not a connectivity failure", async () => {
     server.use(
-      graphql.mutation("ConfirmPasswordReset", () =>
+      gqlLink.mutation("ConfirmPasswordReset", () =>
         HttpResponse.json({
           errors: [{ message: "too many attempts", extensions: { code: "RATE_LIMITED" } }],
         }),
@@ -161,7 +161,7 @@ describe("ResetForm", () => {
   });
 
   it("typing clears the refusal but keeps the transport flag", async () => {
-    server.use(graphql.mutation("ConfirmPasswordReset", () => HttpResponse.error()));
+    server.use(gqlLink.mutation("ConfirmPasswordReset", () => HttpResponse.error()));
     renderWithProviders(<ResetForm />);
     fillConfirm();
     await screen.findByTestId("reset_transport_error");

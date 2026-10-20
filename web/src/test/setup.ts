@@ -12,6 +12,7 @@ import { resetAnnouncerForTests } from "@/lib/release/newer-version-announcer";
 import { resetClipMemoryForTests } from "@/lib/ui2/media/clip-memory";
 import { resetElementPoolForTests } from "@/lib/ui2/media/video-stage";
 
+import { installTestFetch } from "./fetch";
 import { installMediaEnvironment, resetMediaEnvironmentForTests } from "./media-env";
 
 afterEach(cleanup);
@@ -110,3 +111,6 @@ if (typeof HTMLDialogElement !== "undefined" && !HTMLDialogElement.prototype.sho
     this.dispatchEvent(new Event("close"));
   };
 }
+
+// Multipart under jsdom, and requests a test leaves in flight (fetch.ts).
+installTestFetch();

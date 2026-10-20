@@ -4,11 +4,11 @@
 // top is the feed's other refresh route.
 
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { announceFeedReselect } from "@/lib/feed/feed-reselect";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
 import { byNode } from "@/test/data-node";
@@ -55,7 +55,7 @@ function post(id: string) {
 function rankedFeed(rankings: { count: number }) {
   const node = post("p1");
   return [
-    graphql.query("FeedRanking", () => {
+    gqlLink.query("FeedRanking", () => {
       rankings.count += 1;
       return HttpResponse.json({
         data: {
@@ -77,7 +77,7 @@ function rankedFeed(rankings: { count: number }) {
         },
       });
     }),
-    graphql.query("Feed", () =>
+    gqlLink.query("Feed", () =>
       HttpResponse.json({
         data: { feed: { __typename: "FeedConnection", edges: [{ __typename: "FeedEdge", node }] } },
       }),
@@ -87,7 +87,7 @@ function rankedFeed(rankings: { count: number }) {
 
 const server = startMswServer(
   ...stanceHandlers(),
-  graphql.query("BorrowedView", () =>
+  gqlLink.query("BorrowedView", () =>
     HttpResponse.json({
       data: {
         borrowedView: {

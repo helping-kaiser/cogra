@@ -5,7 +5,8 @@
 // (`bookmarks(query:)`); hidden accounts' things staying.
 
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { delay, graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
+import { delay } from "msw/utils/delay";
 import { describe, expect, it, vi } from "vitest";
 
 import { SavedProvider } from "@/lib/saved/provider";
@@ -16,7 +17,7 @@ import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { byNode } from "@/test/data-node";
 import { hiddenPage } from "@/test/hidden";
 import { intersect } from "@/test/media-env";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { bookmarkHandlers, bookmarkLog } from "@/test/saved";
 import { stanceHandlers } from "@/test/stance";
@@ -169,7 +170,7 @@ function signedIn() {
 }
 
 function serve(entries: readonly Entry[]) {
-  server.use(graphql.query("SavedPage", () => HttpResponse.json({ data: page(entries) })));
+  server.use(gqlLink.query("SavedPage", () => HttpResponse.json({ data: page(entries) })));
 }
 
 /** One `SavedPage` read, as the screen sent it. */
@@ -184,7 +185,7 @@ type Read = { query: string | null; after: string | null };
 function serveSaved(answer: (read: Read) => ReturnType<typeof page> | null) {
   const reads: Read[] = [];
   server.use(
-    graphql.query("SavedPage", async ({ variables }) => {
+    gqlLink.query("SavedPage", async ({ variables }) => {
       const read = {
         query: (variables.query as string | null | undefined) ?? null,
         after: (variables.after as string | null | undefined) ?? null,
@@ -297,7 +298,7 @@ describe("SavedScreen — a feed of kept things", () => {
   it("a_hidden_accounts_things_and_profile_stay_in_saved", async () => {
     serve(THREE);
     server.use(
-      graphql.query("HiddenActorsPage", () =>
+      gqlLink.query("HiddenActorsPage", () =>
         HttpResponse.json(
           hiddenPage([
             { id: "u1", handle: "ada", displayName: "Ada", hiddenAt: at(1) },
@@ -596,7 +597,7 @@ describe("SavedScreen — states", () => {
   it("a_failed_next_page_uses_the_load_more_fault", async () => {
     let reads = 0;
     server.use(
-      graphql.query("SavedPage", ({ variables }) => {
+      gqlLink.query("SavedPage", ({ variables }) => {
         reads += 1;
         if (variables.after === null) {
           return HttpResponse.json({ data: page(THREE, { hasNextPage: true, endCursor: "c2" }) });
@@ -628,7 +629,7 @@ describe("SavedScreen — states", () => {
     // render that changed nothing — here, keystrokes still settling — keeps
     // the observer that watches the approaching tail.
     server.use(
-      graphql.query("SavedPage", () =>
+      gqlLink.query("SavedPage", () =>
         HttpResponse.json({ data: page(THREE, { hasNextPage: true, endCursor: "c2" }) }),
       ),
     );
@@ -667,7 +668,7 @@ describe("SavedScreen — states", () => {
   it("pull_down_refreshes_saved", async () => {
     let reads = 0;
     server.use(
-      graphql.query("SavedPage", () => {
+      gqlLink.query("SavedPage", () => {
         reads += 1;
         return HttpResponse.json({ data: page(THREE) });
       }),

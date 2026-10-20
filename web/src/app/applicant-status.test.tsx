@@ -1,10 +1,10 @@
 import { fireEvent, screen } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import type { RegistrationProgress } from "@/lib/signing/registration-signer";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeFlow } from "@/test/registration";
 import { ApplicantStatus } from "./applicant-status";
@@ -71,7 +71,7 @@ describe("ApplicantStatus", () => {
 
   it("offers verification with a resend while the email proof is missing", async () => {
     server.use(
-      graphql.mutation("ResendVerificationEmail", () =>
+      gqlLink.mutation("ResendVerificationEmail", () =>
         HttpResponse.json({
           data: {
             resendVerificationEmail: { __typename: "ResendVerificationEmailPayload", ok: true },

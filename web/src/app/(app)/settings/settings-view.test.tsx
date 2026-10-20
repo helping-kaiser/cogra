@@ -1,5 +1,6 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { delay, graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
+import { delay } from "msw/utils/delay";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AccountDeletionProvider } from "@/lib/deletion/deletion-status";
@@ -8,7 +9,7 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { accountFilterLevel, setAccountFilterLevel } from "@/lib/settings/sensitive-content";
 import { fakeIdentityStore } from "@/test/identity";
 import { hiddenHandlers, hiddenLog } from "@/test/hidden";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { SettingsView } from "./settings-view";
 
@@ -23,7 +24,7 @@ vi.mock("next/navigation", () => ({
 
 /** The account's deletion standing, as the server reads it (OS-15). */
 function deletionHandler(deletionPath: string, accountDeletion: unknown = null) {
-  return graphql.query("AccountDeletion", () =>
+  return gqlLink.query("AccountDeletion", () =>
     HttpResponse.json({ data: { me: { __typename: "User", id: "u1", deletionPath, accountDeletion } } }),
   );
 }
@@ -69,11 +70,11 @@ function account(overrides: Record<string, unknown> = {}) {
 }
 
 function accountHandler(overrides: Record<string, unknown> = {}) {
-  return graphql.query("SettingsAccount", () => HttpResponse.json({ data: { me: account(overrides) } }));
+  return gqlLink.query("SettingsAccount", () => HttpResponse.json({ data: { me: account(overrides) } }));
 }
 
 function okMutation(operation: string, payloadType: string, extra: Record<string, unknown> = {}) {
-  return graphql.mutation(operation, () =>
+  return gqlLink.mutation(operation, () =>
     HttpResponse.json({
       data: {
         [operation.charAt(0).toLowerCase() + operation.slice(1)]: {
@@ -418,7 +419,7 @@ describe("the settings page", () => {
 
   it("revoke_reads_revoking_after_200ms_and_never_spins", async () => {
     server.use(
-      graphql.mutation("RevokeSession", async () => {
+      gqlLink.mutation("RevokeSession", async () => {
         await delay(400);
         return HttpResponse.json({
           data: {
@@ -445,7 +446,7 @@ describe("the settings page", () => {
   });
 
   it("revoke_offline_opens_network_error_and_keeps_the_row", async () => {
-    server.use(graphql.mutation("RevokeSession", () => HttpResponse.error()));
+    server.use(gqlLink.mutation("RevokeSession", () => HttpResponse.error()));
     renderSettings();
     await screen.findByText("Pixel 8");
     fireEvent.click(within(byNode("settings.sessions.session", "2")).getByTestId("settings.sessions.session.revoke"));
@@ -567,7 +568,7 @@ describe("sensitive content (B5)", () => {
 
   /** A SetPreferences that records each input and answers the level it was sent. */
   function recordingSave(sent: unknown[]) {
-    return graphql.mutation("SetPreferences", ({ variables }) => {
+    return gqlLink.mutation("SetPreferences", ({ variables }) => {
       sent.push(variables.input);
       const level = (variables.input as { contentFilteringSeverityLevel: number | null })
         .contentFilteringSeverityLevel;
@@ -664,7 +665,7 @@ describe("sensitive content (B5)", () => {
   });
 
   it("unveil_save_without_an_answer_reverts_with_the_no_answer_snackbar", async () => {
-    server.use(graphql.mutation("SetPreferences", () => HttpResponse.error()));
+    server.use(gqlLink.mutation("SetPreferences", () => HttpResponse.error()));
     renderSettings();
     await screen.findByTestId("settings.credentials.password.status");
     const row = screen.getByTestId("settings.sensitive.unveil");
@@ -705,7 +706,7 @@ describe("the default license", () => {
   it("taps_stage_until_done and done_saves_and_the_row_reads_it", async () => {
     const saved: unknown[] = [];
     server.use(
-      graphql.mutation("SetPreferences", ({ variables }) => {
+      gqlLink.mutation("SetPreferences", ({ variables }) => {
         saved.push(variables);
         return HttpResponse.json({
           data: {
@@ -740,7 +741,7 @@ describe("the default license", () => {
   });
 
   it("failed_save_reverts_with_that_didnt_go_through_and_retry", async () => {
-    server.use(graphql.mutation("SetPreferences", () => HttpResponse.error()));
+    server.use(gqlLink.mutation("SetPreferences", () => HttpResponse.error()));
     renderSettings();
     await screen.findByTestId("settings.writing.license.value");
     fireEvent.click(screen.getByTestId("settings.writing.license"));
@@ -757,7 +758,7 @@ describe("the default license", () => {
   it("scrim_swipe_back_escape_discard", async () => {
     const saved: unknown[] = [];
     server.use(
-      graphql.mutation("SetPreferences", ({ variables }) => {
+      gqlLink.mutation("SetPreferences", ({ variables }) => {
         saved.push(variables);
         return HttpResponse.json({ data: null });
       }),
@@ -870,7 +871,7 @@ describe("signing out", () => {
 
   it("an unconfirmed backup asks too", async () => {
     // No account read and a seed still retained: nothing proves an upload.
-    server.use(graphql.query("SettingsAccount", () => HttpResponse.error()));
+    server.use(gqlLink.query("SettingsAccount", () => HttpResponse.error()));
     renderSettings({ ephemeral: true, seed: new Uint8Array(32) });
     await screen.findByTestId("settings-read-failed");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
@@ -949,7 +950,7 @@ describe("signing out", () => {
 
   it("sign_out_reads_signing_out_after_200ms", async () => {
     server.use(
-      graphql.mutation("RevokeSession", async () => {
+      gqlLink.mutation("RevokeSession", async () => {
         await delay(400);
         return HttpResponse.json({
           data: {
@@ -1040,7 +1041,7 @@ describe("clearing data (B6)", () => {
     let revoked = false;
     server.use(
       accountHandler(),
-      graphql.mutation("RevokeSession", () => {
+      gqlLink.mutation("RevokeSession", () => {
         revoked = true;
         return HttpResponse.json({
           data: {

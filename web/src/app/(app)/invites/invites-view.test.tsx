@@ -1,10 +1,10 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { expectation, stanceRecord } from "@/lib/signing/intent";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
 import { InvitesView } from "./invites-view";
@@ -18,7 +18,7 @@ function signedInStore() {
 }
 
 function meHandler(accountState: "APPLICANT" | "MEMBER") {
-  return graphql.query("Me", () =>
+  return gqlLink.query("Me", () =>
     HttpResponse.json({
       data: {
         me: {
@@ -85,7 +85,7 @@ function link(overrides: {
 }
 
 function linksHandler(links: ReturnType<typeof link>[]) {
-  return graphql.query("InviteLinks", () =>
+  return gqlLink.query("InviteLinks", () =>
     HttpResponse.json({
       data: {
         me: {
@@ -102,7 +102,7 @@ function linksHandler(links: ReturnType<typeof link>[]) {
 }
 
 function approveHandler(onVariables?: (variables: Record<string, unknown>) => void) {
-  return graphql.mutation("ApproveApplicants", ({ variables }) => {
+  return gqlLink.mutation("ApproveApplicants", ({ variables }) => {
     onVariables?.(variables);
     return HttpResponse.json({
       data: {
@@ -124,7 +124,7 @@ function approveHandler(onVariables?: (variables: Record<string, unknown>) => vo
 }
 
 function refusedApproveHandler(code: string) {
-  return graphql.mutation("ApproveApplicants", () =>
+  return gqlLink.mutation("ApproveApplicants", () =>
     HttpResponse.json({
       data: {
         approveApplicants: {
@@ -164,7 +164,7 @@ describe("InvitesView", () => {
     let created = false;
     server.use(
       meHandler("MEMBER"),
-      graphql.query("InviteLinks", () =>
+      gqlLink.query("InviteLinks", () =>
         HttpResponse.json({
           data: {
             me: {
@@ -180,7 +180,7 @@ describe("InvitesView", () => {
           },
         }),
       ),
-      graphql.mutation("CreateInviteLink", ({ variables }) => {
+      gqlLink.mutation("CreateInviteLink", ({ variables }) => {
         created = true;
         const input = (variables as { input: Record<string, unknown> }).input;
         expect(input.singleUse).toBe(true);
@@ -318,7 +318,7 @@ describe("InvitesView", () => {
   });
 
   it("surfaces a transport fault on the links read", async () => {
-    server.use(meHandler("MEMBER"), graphql.query("InviteLinks", () => HttpResponse.error()));
+    server.use(meHandler("MEMBER"), gqlLink.query("InviteLinks", () => HttpResponse.error()));
     renderWithProviders(<InvitesView />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
     expect(await screen.findByTestId("invites_error")).toHaveTextContent("Can't reach the server");
   });
@@ -327,7 +327,7 @@ describe("InvitesView", () => {
     server.use(
       meHandler("MEMBER"),
       linksHandler([link({ id: "l1" })]),
-      graphql.mutation("RevokeInviteLink", () =>
+      gqlLink.mutation("RevokeInviteLink", () =>
         HttpResponse.json({
           data: {
             revokeInviteLink: {
@@ -354,7 +354,7 @@ describe("InvitesView", () => {
     server.use(
       meHandler("MEMBER"),
       linksHandler([link({ id: "l1" })]),
-      graphql.mutation("RevokeInviteLink", () => {
+      gqlLink.mutation("RevokeInviteLink", () => {
         revokeCalls += 1;
         return HttpResponse.json({
           data: {
@@ -380,7 +380,7 @@ describe("InvitesView", () => {
     server.use(
       meHandler("MEMBER"),
       linksHandler([link({ id: "l1" })]),
-      graphql.mutation("RevokeInviteLink", () =>
+      gqlLink.mutation("RevokeInviteLink", () =>
         HttpResponse.json({
           data: {
             revokeInviteLink: refuse

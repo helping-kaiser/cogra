@@ -8,7 +8,7 @@ import "fake-indexeddb/auto";
 import { IDBFactory } from "fake-indexeddb";
 
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import type { AuthGuard } from "@/lib/session/guard";
@@ -22,7 +22,7 @@ import {
 } from "@/lib/crypto/key-backup";
 import { createIdentityStore, type IdentityStore } from "./store";
 import { createBackupManager, type BackupManager } from "./backup";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 
 const server = startMswServer();
 
@@ -41,7 +41,7 @@ type UploadSink = { blob: string | null; challenge?: string; signature?: string 
 const CHALLENGE = toBase64(new Uint8Array(32).fill(0x71));
 
 function challengeHandler() {
-  return graphql.mutation("CreateKeyBackupChallenge", () =>
+  return gqlLink.mutation("CreateKeyBackupChallenge", () =>
     HttpResponse.json({
       data: {
         createKeyBackupChallenge: {
@@ -55,7 +55,7 @@ function challengeHandler() {
 }
 
 function uploadHandler(sink: UploadSink) {
-  return graphql.mutation("UploadKeyBackup", ({ variables }) => {
+  return gqlLink.mutation("UploadKeyBackup", ({ variables }) => {
     const input = (variables as { input: { blob: string; challenge: string; signature: string } })
       .input;
     sink.blob = input.blob;
@@ -80,7 +80,7 @@ async function proofVerifies(sink: UploadSink, publicKey: Uint8Array): Promise<b
 }
 
 function keyBackupHandler(blob: string | null) {
-  return graphql.query("KeyBackup", () =>
+  return gqlLink.query("KeyBackup", () =>
     HttpResponse.json({
       data: { me: { __typename: "User", id: "u1", keyBackup: blob } },
     }),
@@ -144,7 +144,7 @@ describe("backup manager", () => {
   it("a failed upload keeps the seed — nothing changed server-side", async () => {
     const seed = randomBytes(32);
     await store.saveActor(seed, true);
-    server.use(challengeHandler(), graphql.mutation("UploadKeyBackup", () => HttpResponse.error()));
+    server.use(challengeHandler(), gqlLink.mutation("UploadKeyBackup", () => HttpResponse.error()));
 
     expect((await manager.enable()).kind).toBe("failed");
     expect(await store.actorSeed()).toEqual(seed);
@@ -200,7 +200,7 @@ describe("backup manager", () => {
     const seed = randomBytes(32);
     await store.saveActor(seed, true);
     server.use(
-      graphql.mutation("CreateKeyBackupChallenge", () =>
+      gqlLink.mutation("CreateKeyBackupChallenge", () =>
         HttpResponse.json({
           data: {
             createKeyBackupChallenge: {
@@ -301,7 +301,7 @@ describe("backup manager", () => {
     server.use(
       challengeHandler(),
       keyBackupHandler(toBase64(await sealKeyBackup(seed, currentCode))),
-      graphql.mutation("UploadKeyBackup", () =>
+      gqlLink.mutation("UploadKeyBackup", () =>
         HttpResponse.json({
           data: {
             uploadKeyBackup: {

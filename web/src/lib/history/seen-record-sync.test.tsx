@@ -2,11 +2,11 @@
 // account per page load, never on the feed path.
 
 import { waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { seenRecord } from "./seen-record";
 import { SeenRecordSync } from "./seen-record-sync";
@@ -21,7 +21,7 @@ function signedIn(accountId = "acct-1") {
 
 /** The reader's view log: ids, newest first, one page. */
 function viewLog(ids: string[], reads: { n: number }) {
-  return graphql.query("ViewHistoryIds", () => {
+  return gqlLink.query("ViewHistoryIds", () => {
     reads.n += 1;
     return HttpResponse.json({
       data: {

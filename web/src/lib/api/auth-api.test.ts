@@ -2,7 +2,7 @@
 // the viewer reads.
 
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -16,7 +16,7 @@ import {
   sessionAuthOf,
   uploadKeyBackup,
 } from "./auth-api";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 
 const server = startMswServer();
 
@@ -58,7 +58,7 @@ describe("sessionAuthOf", () => {
 describe("logIn", () => {
   it("carries the reuse event the first login after detection delivers", async () => {
     server.use(
-      graphql.mutation("LogIn", () =>
+      gqlLink.mutation("LogIn", () =>
         HttpResponse.json({
           data: {
             logIn: {
@@ -80,7 +80,7 @@ describe("logIn", () => {
 
   it("reads an absent reuse event as null rather than undefined", async () => {
     server.use(
-      graphql.mutation("LogIn", () =>
+      gqlLink.mutation("LogIn", () =>
         HttpResponse.json({
           data: {
             logIn: {
@@ -101,7 +101,7 @@ describe("logIn", () => {
 
   it("surfaces bad credentials as a refusal", async () => {
     server.use(
-      graphql.mutation("LogIn", () =>
+      gqlLink.mutation("LogIn", () =>
         HttpResponse.json({
           data: {
             logIn: {
@@ -128,7 +128,7 @@ describe("logIn", () => {
   });
 
   it("reports a transport fault as failed, never as bad credentials", async () => {
-    server.use(graphql.mutation("LogIn", () => HttpResponse.error()));
+    server.use(gqlLink.mutation("LogIn", () => HttpResponse.error()));
     expect((await logIn(client(), "ada@example.com", "hunter2", null)).kind).toBe("failed");
   });
 });
@@ -137,7 +137,7 @@ describe("refreshExecutor", () => {
   it("spends the token it is given and returns the new pair", async () => {
     let input: { refreshToken: string } | undefined;
     server.use(
-      graphql.mutation("RefreshSession", ({ variables }) => {
+      gqlLink.mutation("RefreshSession", ({ variables }) => {
         input = (variables as { input: { refreshToken: string } }).input;
         return HttpResponse.json({
           data: {
@@ -159,7 +159,7 @@ describe("refreshExecutor", () => {
 
   it("surfaces an invalid refresh token as a refusal", async () => {
     server.use(
-      graphql.mutation("RefreshSession", () =>
+      gqlLink.mutation("RefreshSession", () =>
         HttpResponse.json({
           data: {
             refreshSession: {
@@ -190,7 +190,7 @@ describe("the password-reset pair", () => {
   // reintroduce account enumeration.
   it("reads the request verb's ok without a refusal channel", async () => {
     server.use(
-      graphql.mutation("RequestPasswordReset", () =>
+      gqlLink.mutation("RequestPasswordReset", () =>
         HttpResponse.json({
           data: { requestPasswordReset: { __typename: "RequestPasswordResetPayload", ok: true } },
         }),
@@ -204,7 +204,7 @@ describe("the password-reset pair", () => {
 
   it("surfaces a spent reset token on the confirm leg", async () => {
     server.use(
-      graphql.mutation("ConfirmPasswordReset", () =>
+      gqlLink.mutation("ConfirmPasswordReset", () =>
         HttpResponse.json({
           data: {
             confirmPasswordReset: {
@@ -233,7 +233,7 @@ describe("the password-reset pair", () => {
 describe("the key-backup calls", () => {
   it("reads a never-uploaded blob as null rather than a failure", async () => {
     server.use(
-      graphql.query("KeyBackup", () =>
+      gqlLink.query("KeyBackup", () =>
         HttpResponse.json({
           data: { me: { __typename: "User", id: "u-1", keyBackup: null } },
         }),
@@ -244,7 +244,7 @@ describe("the key-backup calls", () => {
 
   it("returns the newest blob when one exists", async () => {
     server.use(
-      graphql.query("KeyBackup", () =>
+      gqlLink.query("KeyBackup", () =>
         HttpResponse.json({
           data: { me: { __typename: "User", id: "u-1", keyBackup: "AAEC" } },
         }),
@@ -255,7 +255,7 @@ describe("the key-backup calls", () => {
 
   it("surfaces a spent challenge", async () => {
     server.use(
-      graphql.mutation("CreateKeyBackupChallenge", () =>
+      gqlLink.mutation("CreateKeyBackupChallenge", () =>
         HttpResponse.json({
           data: {
             createKeyBackupChallenge: {
@@ -283,7 +283,7 @@ describe("the key-backup calls", () => {
   it("sends the blob with its proof", async () => {
     let input: Record<string, unknown> | undefined;
     server.use(
-      graphql.mutation("UploadKeyBackup", ({ variables }) => {
+      gqlLink.mutation("UploadKeyBackup", ({ variables }) => {
         input = (variables as { input: Record<string, unknown> }).input;
         return HttpResponse.json({
           data: { uploadKeyBackup: { __typename: "UploadKeyBackupPayload", ok: true, userErrors: [] } },
@@ -301,7 +301,7 @@ describe("the key-backup calls", () => {
 describe("fetchMe", () => {
   it("returns the viewer", async () => {
     server.use(
-      graphql.query("Me", () =>
+      gqlLink.query("Me", () =>
         HttpResponse.json({
           data: {
             me: {
@@ -327,7 +327,7 @@ describe("fetchMe", () => {
   // A null viewer on a query that needs one is not a viewer with no fields —
   // the read has to say so rather than hand back an empty user.
   it("does not report a null viewer as a success", async () => {
-    server.use(graphql.query("Me", () => HttpResponse.json({ data: { me: null } })));
+    server.use(gqlLink.query("Me", () => HttpResponse.json({ data: { me: null } })));
     expect((await fetchMe(client())).kind).not.toBe("success");
   });
 });

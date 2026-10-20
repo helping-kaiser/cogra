@@ -1,10 +1,10 @@
 import { act, fireEvent, screen } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { intersectEach, whenObserved } from "@/test/media-env";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
 import { stanceHandlers } from "@/test/stance";
@@ -100,7 +100,7 @@ describe("TopicView", () => {
       ],
     });
     server.use(
-      graphql.query("HashtagDetail", () =>
+      gqlLink.query("HashtagDetail", () =>
         HttpResponse.json({
           data: hashtagDetail("rust", [
             { relevance: 0.1, confidence: 1, pending: false, node: clipNode("p1") },
@@ -128,7 +128,7 @@ describe("TopicView", () => {
 
   it("renders the canonical name and the tagged posts, reusing PostCard", async () => {
     server.use(
-      graphql.query("HashtagDetail", () =>
+      gqlLink.query("HashtagDetail", () =>
         HttpResponse.json({
           data: hashtagDetail("rust", [
             { relevance: 0.1, confidence: 1, pending: false, node: postNode("p1", "About Rust") },
@@ -150,7 +150,7 @@ describe("TopicView", () => {
   // is no toggle and no one-tap follow to find.
   it("offers no follow gesture", async () => {
     server.use(
-      graphql.query("HashtagDetail", () =>
+      gqlLink.query("HashtagDetail", () =>
         HttpResponse.json({
           data: hashtagDetail("rust", [
             { relevance: 0.1, confidence: 1, pending: false, node: postNode("p1", "About Rust") },
@@ -169,7 +169,7 @@ describe("TopicView", () => {
   // on this page and the accessible name is what says which is which.
   it("carries an Affinity row toward the topic, named by the tag", async () => {
     server.use(
-      graphql.query("HashtagDetail", () =>
+      gqlLink.query("HashtagDetail", () =>
         HttpResponse.json({
           data: hashtagDetail("rust", [
             { relevance: 0.1, confidence: 1, pending: false, node: postNode("p1", "About Rust") },
@@ -189,7 +189,7 @@ describe("TopicView", () => {
   // how close you want to be — never the opinion's own question.
   it("asks the Affinity's own questions on the accessible route", async () => {
     server.use(
-      graphql.query("HashtagDetail", () =>
+      gqlLink.query("HashtagDetail", () =>
         HttpResponse.json({
           data: hashtagDetail("rust", [
             { relevance: 0.1, confidence: 1, pending: false, node: postNode("p1", "About Rust") },
@@ -217,7 +217,7 @@ describe("TopicView", () => {
   // bounces them, and the accessible route is not on the page at all.
   it("lets a guest read the page and gates the row at the join prompt", async () => {
     server.use(
-      graphql.query("HashtagDetail", () =>
+      gqlLink.query("HashtagDetail", () =>
         HttpResponse.json({
           data: hashtagDetail("rust", [
             { relevance: 0.1, confidence: 1, pending: false, node: postNode("p1", "About Rust") },
@@ -242,7 +242,7 @@ describe("TopicView", () => {
   // and nothing else.
   it("wires no stance row on the empty page", async () => {
     server.use(
-      graphql.query("HashtagDetail", () =>
+      gqlLink.query("HashtagDetail", () =>
         HttpResponse.json({ data: hashtagDetail("nevertagged") }),
       ),
     );
@@ -253,7 +253,7 @@ describe("TopicView", () => {
 
   it("shows the empty copy for a never-tagged but well-formed name (D4)", async () => {
     server.use(
-      graphql.query("HashtagDetail", () => HttpResponse.json({ data: hashtagDetail("nevertagged") })),
+      gqlLink.query("HashtagDetail", () => HttpResponse.json({ data: hashtagDetail("nevertagged") })),
     );
     renderWithProviders(<TopicView name="nevertagged" />, { writeSigner: fakeWriteSigner() });
     expect(await screen.findByTestId("topic-empty")).toBeInTheDocument();
@@ -261,7 +261,7 @@ describe("TopicView", () => {
 
   it("reports not-found for a substrate-illegal name", async () => {
     server.use(
-      graphql.query("HashtagDetail", () => HttpResponse.json({ data: { hashtag: null } })),
+      gqlLink.query("HashtagDetail", () => HttpResponse.json({ data: { hashtag: null } })),
     );
     renderWithProviders(<TopicView name="münchen" />, { writeSigner: fakeWriteSigner() });
     expect(await screen.findByTestId("topic-not-found")).toBeInTheDocument();
@@ -270,7 +270,7 @@ describe("TopicView", () => {
   it("offers a retry on the nothing-loaded transport error and heals from it", async () => {
     let calls = 0;
     server.use(
-      graphql.query("HashtagDetail", () => {
+      gqlLink.query("HashtagDetail", () => {
         calls += 1;
         return calls === 1 ? HttpResponse.error() : HttpResponse.json({ data: hashtagDetail("rust") });
       }),
@@ -284,7 +284,7 @@ describe("TopicView", () => {
 
   it("backs to the feed", async () => {
     server.use(
-      graphql.query("HashtagDetail", () => HttpResponse.json({ data: hashtagDetail("rust") })),
+      gqlLink.query("HashtagDetail", () => HttpResponse.json({ data: hashtagDetail("rust") })),
     );
     renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
     await screen.findByTestId("topic-name");
@@ -293,7 +293,7 @@ describe("TopicView", () => {
 
   it("renders a tagged comment with a link to its parent post", async () => {
     server.use(
-      graphql.query("HashtagDetail", () =>
+      gqlLink.query("HashtagDetail", () =>
         HttpResponse.json({
           data: hashtagDetail("rust", [
             {

@@ -5,14 +5,22 @@ import { setupServer } from "msw/node";
 import type { RequestHandler } from "msw";
 import { afterAll, afterEach, beforeAll } from "vitest";
 
+import { settleFetches } from "./fetch";
 import { GRAPH_IDS } from "./graph-ids";
 import { NOBODY_HIDDEN } from "./hidden";
+
+export { gqlLink } from "./gql-link";
 
 export function startMswServer(...handlers: RequestHandler[]) {
   // The shared defaults go last: a file's own handler for either wins.
   const server = setupServer(...handlers, NOBODY_HIDDEN, ...GRAPH_IDS);
-  beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
-  afterEach(() => server.resetHandlers());
+  beforeAll(() => server.listen({ onUnhandledFrame: "error" }));
+  // A request the test left in flight is answered by its own handlers, not
+  // the next test's.
+  afterEach(async () => {
+    await settleFetches();
+    server.resetHandlers();
+  });
   afterAll(() => server.close());
   return server;
 }

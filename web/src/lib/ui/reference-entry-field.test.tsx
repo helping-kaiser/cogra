@@ -3,13 +3,13 @@
 // siblings, and a failure should say which one broke.
 
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { newReferenceDraft, type ReferenceDraft } from "@/lib/references/draft";
 import { renderWithProviders } from "@/test/providers";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { ReferenceEntryField } from "./reference-entry-field";
 
 function userCandidate(id: string, handle: string) {
@@ -26,7 +26,7 @@ function userCandidate(id: string, handle: string) {
 }
 
 function candidatesRespond(candidates: unknown[]) {
-  return graphql.query("ReferenceCandidates", () =>
+  return gqlLink.query("ReferenceCandidates", () =>
     HttpResponse.json({ data: { referenceCandidates: candidates } }),
   );
 }
@@ -69,7 +69,7 @@ describe("ReferenceEntryField", () => {
   it("asks nothing while the query resolves nothing", async () => {
     let asked = 0;
     server.use(
-      graphql.query("ReferenceCandidates", () => {
+      gqlLink.query("ReferenceCandidates", () => {
         asked += 1;
         return HttpResponse.json({ data: { referenceCandidates: [] } });
       }),
@@ -89,7 +89,7 @@ describe("ReferenceEntryField", () => {
   it("asks nothing for a #-sigilled query — a topic is tagged, not referenced", async () => {
     let asked = 0;
     server.use(
-      graphql.query("ReferenceCandidates", () => {
+      gqlLink.query("ReferenceCandidates", () => {
         asked += 1;
         return HttpResponse.json({ data: { referenceCandidates: [] } });
       }),

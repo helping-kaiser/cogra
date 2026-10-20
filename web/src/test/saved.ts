@@ -2,7 +2,8 @@
 // row"): the bookmark verbs answered over MSW, with a log of what each menu
 // sent, so every menu's test pins the one behaviour the same way.
 
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
+import { gqlLink } from "./gql-link";
 
 export type BookmarkLog = {
   /** Every `setBookmark`: the node, and the restore time an Undo passed. */
@@ -26,7 +27,7 @@ export function bookmarkHandlers(
   }: { failSet?: boolean; failRemove?: boolean; keptAt?: string } = {},
 ) {
   return [
-    graphql.mutation("SetBookmark", ({ variables }) => {
+    gqlLink.mutation("SetBookmark", ({ variables }) => {
       log.sets.push({
         node: variables.node as string,
         at: (variables.bookmarkedAt as string | null) ?? null,
@@ -47,7 +48,7 @@ export function bookmarkHandlers(
         },
       });
     }),
-    graphql.mutation("RemoveBookmark", ({ variables }) => {
+    gqlLink.mutation("RemoveBookmark", ({ variables }) => {
       log.removes.push(variables.node as string);
       if (failRemove) return HttpResponse.json({ data: null, errors: UNREACHABLE });
       return HttpResponse.json({

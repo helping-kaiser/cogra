@@ -1,11 +1,12 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { delay, graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
+import { delay } from "msw/utils/delay";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AccountDeletionProvider } from "@/lib/deletion/deletion-status";
 import { createTokenStore } from "@/lib/session/token-store";
 import { byNode } from "@/test/data-node";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 
 import { DeleteAccountView, mailRoute } from "./delete-account-view";
@@ -20,13 +21,13 @@ vi.mock("next/navigation", () => ({
 const server = startMswServer();
 
 function standing(deletionPath: string, accountDeletion: unknown = null) {
-  return graphql.query("AccountDeletion", () =>
+  return gqlLink.query("AccountDeletion", () =>
     HttpResponse.json({ data: { me: { __typename: "User", id: "u1", deletionPath, accountDeletion } } }),
   );
 }
 
 function requestAnswers(accountDeletion: unknown = null) {
-  return graphql.mutation("RequestAccountDeletion", () =>
+  return gqlLink.mutation("RequestAccountDeletion", () =>
     HttpResponse.json({
       data: { requestAccountDeletion: { __typename: "AccountDeletionPayload", accountDeletion, userErrors: [] } },
     }),
@@ -73,7 +74,7 @@ describe("DeleteAccount, the member's case (BY_LINK)", () => {
   it("ticking_the_sweep_schedules_nothing", async () => {
     let requested = false;
     server.use(
-      graphql.mutation("RequestAccountDeletion", () => {
+      gqlLink.mutation("RequestAccountDeletion", () => {
         requested = true;
         return HttpResponse.json({ data: null });
       }),
@@ -87,7 +88,7 @@ describe("DeleteAccount, the member's case (BY_LINK)", () => {
   it("send_records_the_sweep_choice_and_opens_the_mail_screen", async () => {
     let input: unknown = null;
     server.use(
-      graphql.mutation("RequestAccountDeletion", ({ variables }) => {
+      gqlLink.mutation("RequestAccountDeletion", ({ variables }) => {
         input = variables.input;
         return HttpResponse.json({
           data: { requestAccountDeletion: { __typename: "AccountDeletionPayload", accountDeletion: null, userErrors: [] } },
@@ -102,7 +103,7 @@ describe("DeleteAccount, the member's case (BY_LINK)", () => {
   });
 
   it("send_with_no_answer_keeps_the_choice_and_says_so_above_the_commit", async () => {
-    server.use(graphql.mutation("RequestAccountDeletion", () => HttpResponse.error()));
+    server.use(gqlLink.mutation("RequestAccountDeletion", () => HttpResponse.error()));
     renderScreen();
     fireEvent.click(await screen.findByRole("checkbox", { name: "Also remove what I posted" }));
     fireEvent.click(screen.getByTestId(byNode("deleteAccount.commit", "member")));
@@ -114,7 +115,7 @@ describe("DeleteAccount, the member's case (BY_LINK)", () => {
 
   it("a_spent_mail_budget_says_too_many_tries_above_the_commit_and_mails_nothing", async () => {
     server.use(
-      graphql.mutation("RequestAccountDeletion", () =>
+      gqlLink.mutation("RequestAccountDeletion", () =>
         HttpResponse.json({ data: null, errors: [{ message: "x", extensions: { code: "RATE_LIMITED" } }] }),
       ),
     );
@@ -130,7 +131,7 @@ describe("DeleteAccount, the member's case (BY_LINK)", () => {
 
   it("sending_reads_late_after_200ms_and_never_spins", async () => {
     server.use(
-      graphql.mutation("RequestAccountDeletion", async () => {
+      gqlLink.mutation("RequestAccountDeletion", async () => {
         await delay(600);
         return HttpResponse.json({
           data: { requestAccountDeletion: { __typename: "AccountDeletionPayload", accountDeletion: null, userErrors: [] } },
@@ -172,7 +173,7 @@ describe("DeleteAccount, the applicant's case (IMMEDIATE)", () => {
 
   it("delete_my_account_signs_out_onto_the_bare_view_with_its_snackbar", async () => {
     server.use(
-      graphql.mutation("DeleteApplicantAccount", () =>
+      gqlLink.mutation("DeleteApplicantAccount", () =>
         HttpResponse.json({
           data: { deleteApplicantAccount: { __typename: "DeleteApplicantAccountPayload", ok: true, userErrors: [] } },
         }),
@@ -188,7 +189,7 @@ describe("DeleteAccount, the applicant's case (IMMEDIATE)", () => {
 
   it("deleting_reads_late_after_200ms_and_never_spins", async () => {
     server.use(
-      graphql.mutation("DeleteApplicantAccount", async () => {
+      gqlLink.mutation("DeleteApplicantAccount", async () => {
         await delay(600);
         return HttpResponse.json({ data: null, errors: [{ message: "x", extensions: { code: "FORBIDDEN" } }] });
       }),
@@ -203,7 +204,7 @@ describe("DeleteAccount, the applicant's case (IMMEDIATE)", () => {
   });
 
   it("delete_with_no_answer_says_so_and_deletes_nothing", async () => {
-    server.use(graphql.mutation("DeleteApplicantAccount", () => HttpResponse.error()));
+    server.use(gqlLink.mutation("DeleteApplicantAccount", () => HttpResponse.error()));
     const { store } = renderScreen();
     fireEvent.click(await screen.findByTestId(byNode("deleteAccount.commit", "applicant")));
     expect(await screen.findByTestId("commit-fault")).toHaveTextContent("That didn't send. Try again.");

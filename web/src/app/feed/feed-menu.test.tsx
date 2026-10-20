@@ -5,11 +5,11 @@
 // out.
 
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
 import { byNode } from "@/test/data-node";
@@ -56,7 +56,7 @@ function post(id: string, authorId = "u1") {
 /** The ranked feed's two reads over `nodes`, ranked in the order given. */
 function rankedFeed(nodes: ReturnType<typeof post>[]) {
   return [
-    graphql.query("FeedRanking", () =>
+    gqlLink.query("FeedRanking", () =>
       HttpResponse.json({
         data: {
           feedRanking: {
@@ -75,7 +75,7 @@ function rankedFeed(nodes: ReturnType<typeof post>[]) {
         },
       }),
     ),
-    graphql.query("Feed", ({ variables }) => {
+    gqlLink.query("Feed", ({ variables }) => {
       const ids = variables.orderedIds as string[];
       return HttpResponse.json({
         data: {
@@ -91,7 +91,7 @@ function rankedFeed(nodes: ReturnType<typeof post>[]) {
   ];
 }
 
-const meHandler = graphql.query("Me", () =>
+const meHandler = gqlLink.query("Me", () =>
   HttpResponse.json({
     data: {
       me: {
@@ -108,7 +108,7 @@ const meHandler = graphql.query("Me", () =>
   }),
 );
 
-const borrowedViewHandler = graphql.query("BorrowedView", () =>
+const borrowedViewHandler = gqlLink.query("BorrowedView", () =>
   HttpResponse.json({ data: { borrowedView: null } }),
 );
 
@@ -128,7 +128,7 @@ function reportHandler(answer: ReportAnswer) {
   const targets: string[] = [];
   return {
     targets,
-    handler: graphql.mutation("SendReport", ({ variables }) => {
+    handler: gqlLink.mutation("SendReport", ({ variables }) => {
       targets.push(variables.target as string);
       if (answer === "no-answer") return HttpResponse.error();
       if (answer === "rate-limited") {
@@ -371,7 +371,7 @@ describe("the feed's post menu", () => {
       ...rankedFeed([post("p1")]),
       report.handler,
       // A guest reads the genesis vantage's feed.
-      graphql.query("BorrowedView", () =>
+      gqlLink.query("BorrowedView", () =>
         HttpResponse.json({
           data: {
             borrowedView: {

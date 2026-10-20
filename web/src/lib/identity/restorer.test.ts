@@ -4,7 +4,7 @@ import "fake-indexeddb/auto";
 import { IDBFactory } from "fake-indexeddb";
 
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { randomBytes, toBase64 } from "@/lib/crypto/bytes";
@@ -12,7 +12,7 @@ import { RecoveryCode, sealKeyBackup } from "@/lib/crypto/key-backup";
 import type { AuthGuard } from "@/lib/session/guard";
 import { restoreActor } from "./restorer";
 import { createIdentityStore, type IdentityStore } from "./store";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 
 const server = startMswServer();
 
@@ -30,7 +30,7 @@ function deps(store: IdentityStore) {
 }
 
 function serveBackup(blob: string | null) {
-  return graphql.query("KeyBackup", () =>
+  return gqlLink.query("KeyBackup", () =>
     HttpResponse.json({
       data: { me: { __typename: "User", id: "u1", keyBackup: blob } },
     }),
@@ -94,14 +94,14 @@ describe("restoreActor", () => {
   });
 
   it("maps a transport fault to failed", async () => {
-    server.use(graphql.query("KeyBackup", () => HttpResponse.error()));
+    server.use(gqlLink.query("KeyBackup", () => HttpResponse.error()));
     const result = await restoreActor(deps(store), RecoveryCode.generate().display());
     expect(result.kind).toBe("failed");
   });
 
   it("maps a rate-limited backup read to rateLimited, not a transport fault", async () => {
     server.use(
-      graphql.query("KeyBackup", () =>
+      gqlLink.query("KeyBackup", () =>
         HttpResponse.json({
           errors: [{ message: "too many attempts", extensions: { code: "RATE_LIMITED" } }],
         }),

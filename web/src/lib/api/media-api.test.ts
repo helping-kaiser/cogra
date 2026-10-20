@@ -4,7 +4,7 @@
 // encoding, which belongs to the link's own suite.
 
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -16,7 +16,7 @@ import {
 } from "./media-api";
 import type { PartUploader } from "./part-uploader";
 import type { AuthGuard } from "@/lib/session/guard";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 
 const server = startMswServer();
 
@@ -28,7 +28,7 @@ function client() {
 }
 
 function uploadHandler(body: unknown) {
-  return graphql.mutation("UploadMedia", () => {
+  return gqlLink.mutation("UploadMedia", () => {
     return HttpResponse.json({ data: { uploadMedia: body } });
   });
 }
@@ -97,7 +97,7 @@ describe("uploadMedia", () => {
   });
 
   it("reports a transport fault as failed, not refused", async () => {
-    server.use(graphql.mutation("UploadMedia", () => HttpResponse.error()));
+    server.use(gqlLink.mutation("UploadMedia", () => HttpResponse.error()));
     expect((await uploadMedia(client(), { blob })).kind).toBe("failed");
   });
 });
@@ -127,7 +127,7 @@ describe("uploadVideo", () => {
     userErrors: unknown[] = [],
     seen?: { declaredBytes?: number; kind?: string; scale?: string },
   ) {
-    return graphql.mutation("BeginMediaUpload", ({ variables }) => {
+    return gqlLink.mutation("BeginMediaUpload", ({ variables }) => {
       if (seen) Object.assign(seen, variables);
       return HttpResponse.json({
         data: { beginMediaUpload: { __typename: "BeginMediaUploadPayload", upload, userErrors } },
@@ -143,7 +143,7 @@ describe("uploadVideo", () => {
     body: unknown,
     seen?: { uploadId?: string },
   ) {
-    return graphql.mutation("CompleteMediaUpload", ({ variables }) => {
+    return gqlLink.mutation("CompleteMediaUpload", ({ variables }) => {
       if (seen) Object.assign(seen, variables);
       return HttpResponse.json({ data: { completeMediaUpload: body } });
     });
@@ -230,7 +230,7 @@ describe("uploadVideo", () => {
 
     let single: { input?: { scale?: string } } = {};
     server.use(
-      graphql.mutation("UploadMedia", ({ variables }) => {
+      gqlLink.mutation("UploadMedia", ({ variables }) => {
         single = variables as typeof single;
         return HttpResponse.json({ data: { uploadMedia: payload(media("m-small")) } });
       }),
@@ -279,7 +279,7 @@ describe("uploadVideo", () => {
     let aborted: string | undefined;
     server.use(
       beginHandler(session()),
-      graphql.mutation("AbortMediaUpload", ({ variables }) => {
+      gqlLink.mutation("AbortMediaUpload", ({ variables }) => {
         aborted = (variables as { uploadId: string }).uploadId;
         return HttpResponse.json({
           data: {
@@ -330,7 +330,7 @@ describe("uploadVideo", () => {
 describe("fetchMediaAttachmentStatus", () => {
   it("returns the asset when found", async () => {
     server.use(
-      graphql.query("MediaAttachmentStatus", () =>
+      gqlLink.query("MediaAttachmentStatus", () =>
         HttpResponse.json({ data: { mediaAttachment: media("m-1", { state: "PROCESSING" }) } }),
       ),
     );
@@ -343,7 +343,7 @@ describe("fetchMediaAttachmentStatus", () => {
 
   it("returns success(null) for an asset this viewer cannot read", async () => {
     server.use(
-      graphql.query("MediaAttachmentStatus", () =>
+      gqlLink.query("MediaAttachmentStatus", () =>
         HttpResponse.json({ data: { mediaAttachment: null } }),
       ),
     );

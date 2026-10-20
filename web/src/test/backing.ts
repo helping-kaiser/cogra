@@ -5,10 +5,11 @@
 // way the server answers any viewer but the post's creator: a post with no
 // `viewerBacking`, which the edit reads as an unread backing.
 
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
+import { gqlLink } from "./gql-link";
 
 export function postBackingHandler(seeded: Readonly<Record<string, number | null>> = {}) {
-  return graphql.query("PostBacking", ({ variables }) => {
+  return gqlLink.query("PostBacking", ({ variables }) => {
     const id = String(variables.id);
     const rawSum = seeded[id] ?? null;
     return HttpResponse.json({

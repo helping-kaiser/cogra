@@ -2,7 +2,7 @@
 // field, and the reads that carry them.
 
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -15,7 +15,7 @@ import {
   rowLabel,
   type RecordNode,
 } from "./profile-api";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 
 const server = startMswServer();
 
@@ -94,7 +94,7 @@ function profile(id: string, handle: string) {
 describe("the profile reads", () => {
   it("maps a resolved handle", async () => {
     server.use(
-      graphql.query("UserProfile", () =>
+      gqlLink.query("UserProfile", () =>
         HttpResponse.json({ data: { user: profile("u-1", "ada") } }),
       ),
     );
@@ -107,7 +107,7 @@ describe("the profile reads", () => {
   // An unknown handle is a `success` carrying null, not a refusal: nothing
   // went wrong, there is simply nobody there.
   it("serves null for an unknown handle", async () => {
-    server.use(graphql.query("UserProfile", () => HttpResponse.json({ data: { user: null } })));
+    server.use(gqlLink.query("UserProfile", () => HttpResponse.json({ data: { user: null } })));
     expect(await fetchProfileByHandle(client(), "nobody")).toEqual({
       kind: "success",
       value: null,
@@ -115,7 +115,7 @@ describe("the profile reads", () => {
   });
 
   it("reports a transport fault as failed", async () => {
-    server.use(graphql.query("MyProfile", () => HttpResponse.error()));
+    server.use(gqlLink.query("MyProfile", () => HttpResponse.error()));
     expect((await fetchMyProfile(client())).kind).toBe("failed");
   });
 });
@@ -131,7 +131,7 @@ describe("fetchAuthorRecords", () => {
 
   it("maps edges to rows and carries the page shape", async () => {
     server.use(
-      graphql.query("AuthorRecords", () =>
+      gqlLink.query("AuthorRecords", () =>
         HttpResponse.json({
           data: {
             records: records(
@@ -176,7 +176,7 @@ describe("fetchAuthorRecords", () => {
   it("maps each chip to its family, and everything to none", async () => {
     const seen: string[] = [];
     server.use(
-      graphql.query("AuthorRecords", ({ variables }) => {
+      gqlLink.query("AuthorRecords", ({ variables }) => {
         seen.push(String((variables as { family: string | null }).family));
         return HttpResponse.json({ data: { records: records([]) } });
       }),
@@ -191,7 +191,7 @@ describe("fetchAuthorRecords", () => {
   it("asks for the page size the chronicle pages by", async () => {
     let first: number | undefined;
     server.use(
-      graphql.query("AuthorRecords", ({ variables }) => {
+      gqlLink.query("AuthorRecords", ({ variables }) => {
         first = (variables as { first: number }).first;
         return HttpResponse.json({ data: { records: records([]) } });
       }),
@@ -205,7 +205,7 @@ describe("prepareProfileUpdate", () => {
   it("sends the three-valued avatar field and maps the staged writes", async () => {
     let input: { avatarMediaId?: string | null } | undefined;
     server.use(
-      graphql.mutation("PrepareProfileUpdate", ({ variables }) => {
+      gqlLink.mutation("PrepareProfileUpdate", ({ variables }) => {
         input = (variables as { input: { avatarMediaId?: string | null } }).input;
         return HttpResponse.json({
           data: {
@@ -240,7 +240,7 @@ describe("prepareProfileUpdate", () => {
 
   it("surfaces a refusal with its field path", async () => {
     server.use(
-      graphql.mutation("PrepareProfileUpdate", () =>
+      gqlLink.mutation("PrepareProfileUpdate", () =>
         HttpResponse.json({
           data: {
             prepareProfileUpdate: {
