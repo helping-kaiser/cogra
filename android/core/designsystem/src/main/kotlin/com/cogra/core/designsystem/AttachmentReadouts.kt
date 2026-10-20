@@ -5,7 +5,7 @@
 // The BACKING an author signs with their own content is one number:
 // Publish carries the attachment on `p_d`, and the census pins `p_i` at 1,
 // so a pair would draw a second figure nobody can choose. Every face here
-// reads through the one-axis table, 🤷 at exactly 0.00
+// reads through the one-axis table, 🤔 at exactly 0.00
 // ([nearestValenceAnchor]). Backing is the authoring bundle; OPINION is
 // the face's record, a pair, read by the ordinary stance readouts — the
 // two words never trade places (copy-voice "What an author signs with
@@ -103,16 +103,16 @@ fun AttachmentReadout(pDirected: Double, modifier: Modifier = Modifier, testTag:
 }
 
 /**
- * What a backing read says while the server has not served it: the
- * current backing, or the raw sum a landing folds from. A placeholder,
- * not a reading — drawn as a bare dash and spoken as unread.
+ * What a backing read says: the current backing, or the raw sum a landing
+ * folds from — or, when the read served none or failed, a placeholder,
+ * not a reading, drawn as a bare dash and spoken as unread.
  */
 @Immutable
 sealed interface BackingValue {
     /** The bundle's net, as read. */
     data class Read(val value: Double) : BackingValue
 
-    /** Not served (yet): nothing to fold from. */
+    /** Not served, or the read failed: nothing to fold from. */
     data object Unread : BackingValue
 }
 

@@ -106,10 +106,10 @@ class PostEditBackingTest {
     }
 
     @Test
-    fun aZeroPickShrugs() {
+    fun aZeroPickThinks() {
         render(PostEditUiState(postId = "p1", body = "b", backing = standing, backingPadOpen = true))
         compose.onNodeWithTag("post_edit_backing_pick").assertContentDescriptionEquals(
-            "Your pick: Nothing, For or against +0.00",
+            "Your pick: No side taken, For or against +0.00",
         )
     }
 

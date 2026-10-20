@@ -90,6 +90,16 @@ val ZERO_BUNDLE_READOUT = StanceAnchor(
 )
 
 /**
+ * ONE NUMBER AT ZERO THINKS; BOTH AT ZERO SHRUG (jakob 2026-10-20: "shrug
+ * should be the 0,0 only"). A state with exactly one number at zero — an
+ * unreachable landing, and the one-axis 0.00, which is `(0, 1)` with the
+ * pin — wears 🤔, outside the table like 🤷 and 🫥, so the held,
+ * unreachable state never reads as severance's face. The master is
+ * `StanceReadout.jsx`'s `UNREACHABLE_EMOJI`.
+ */
+const val UNREACHABLE_EMOJI = "🤔"
+
+/**
  * Whether this is the zero bundle: a standing at exactly `(0, 0)`,
  * severed or netted there. Severance produces exact zero by
  * construction — it stages the counter-records that cancel the bundle —

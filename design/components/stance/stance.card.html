@@ -1,4 +1,4 @@
-<!-- @dsCard group="Components" viewport="700x680" name="Stance control" subtitle="The resting target and the bloomed pad — the signature interaction" -->
+<!-- @dsCard group="Components" viewport="1040x680" name="Stance control" subtitle="The resting target and the bloomed pad — the signature interaction; a first pick landing unreachable while the view is borrowed" -->
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -8,7 +8,7 @@
 <!-- The pad parks with `position:fixed`, which is the master's own rule. A
      `transform` on the host makes that host the containing block, so the
      specimen can park the real pad inside its column instead of redrawing it. -->
-<style>body{margin:0;padding:16px;background:var(--surface)}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}.grid{display:grid;grid-template-columns:1fr 310px;gap:22px;align-items:start}.col{display:flex;flex-direction:column;gap:10px;align-items:flex-start}.park{position:relative;transform:translateZ(0);width:100%;height:610px}</style>
+<style>body{margin:0;padding:16px;background:var(--surface)}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}.grid{display:grid;grid-template-columns:1fr 310px 310px;gap:22px;align-items:start}.col{display:flex;flex-direction:column;gap:10px;align-items:flex-start}.park{position:relative;transform:translateZ(0);width:100%;height:610px}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
 const NS = window.CoGraDesignSystem_9084ba;
@@ -27,6 +27,12 @@ function Demo(){
       <span className="lbl">The bloomed pad — the master's own open state</span>
       <div className="park">
         <StanceControl targetLabel="this post" bundle={standing} defaultPick={{pDirected:0.4,pInterest:0.2}} defaultOpen taught/>
+      </div>
+    </div>
+    <div className="col">
+      <span className="lbl">Unreachable, the view still borrowed — no side taken, the 🤔 a door</span>
+      <div className="park">
+        <StanceControl targetLabel="@mira" defaultPick={{pDirected:0,pInterest:0.4}} defaultOpen borrowed taught/>
       </div>
     </div>
   </div>)}

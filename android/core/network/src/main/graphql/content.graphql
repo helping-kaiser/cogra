@@ -211,6 +211,23 @@ query PostSelfMark($id: UUID!) {
   }
 }
 
+# The edit pad's backing (EditPad.md): the author's own Publish bundle
+# toward their post — the mint and every edit — as its net and its RAW
+# sum, which `Backing after`, the cap line and `Walk it all back` fold
+# from. Its own query for the reason `PostSelfMark` is: an edit opens one
+# post, once. Pending records count — an edit signed a moment ago is
+# part of the backing the next edit adds to, landed or not. Null for any
+# viewer but the post's creator.
+query PostBacking($id: UUID!) {
+  post(id: $id) {
+    id
+    viewerBacking(includePending: true) {
+      rawPDirected
+      pDirected
+    }
+  }
+}
+
 # Everything `CommentEdit` opens on, in one read.
 #
 # The edit is complete-state on every axis — words, gallery, and the

@@ -21,6 +21,7 @@ import com.cogra.domain.LoginGrant
 import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
+import com.cogra.domain.PostBacking
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
@@ -67,6 +68,7 @@ import com.cogra.network.graphql.KeyBackupQuery
 import com.cogra.network.graphql.LogInMutation
 import com.cogra.network.graphql.MeQuery
 import com.cogra.network.graphql.MyProfileQuery
+import com.cogra.network.graphql.PostBackingQuery
 import com.cogra.network.graphql.PostCommentsQuery
 import com.cogra.network.graphql.PostDetailQuery
 import com.cogra.network.graphql.PostSelfMarkQuery
@@ -675,6 +677,12 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
     override suspend fun postSelfMark(id: String): Outcome<SelfMarkView?> = guard.run {
         client.query(PostSelfMarkQuery(id)).fetch().map { data ->
             data.post?.let { SelfMarkView(it.sensitiveSelfMark, it.sensitiveReason) }
+        }
+    }
+
+    override suspend fun postBacking(id: String): Outcome<PostBacking?> = guard.run {
+        client.query(PostBackingQuery(id)).fetch().map { data ->
+            data.post?.viewerBacking?.let { PostBacking(net = it.pDirected, rawSum = it.rawPDirected) }
         }
     }
 

@@ -33,7 +33,11 @@
    nothing.
 
    THE SURFACE BENEATH IS DRAWN WHOLE (`EditComposeBody`), the overlay rule
-   from 2026-09-08. */
+   from 2026-09-08.
+
+   THE NON-DRAG ROUTE IS `ComposePad`'s: `Set an exact value for your
+   backing`, first and hidden until focused, swapping the strip in place for
+   one track (`StanceAlternates`, `axis="one"`). */
 const RAW_SUM = 0.1;
 const PICK = 0.3;
 
@@ -61,6 +65,10 @@ export function Screen() {
           boxSizing: "border-box",
         }}
       >
+        <button type="button" className="cg-sr-focusable cg-state cg-focus cg-hit" style={{ fontFamily: "var(--font-sans)" }}>
+          Set an exact value for your backing
+        </button>
+
         <span style={{ position: "absolute", top: 4, right: 4 }}>
           <HelpDot ariaLabel="Your backing on your post" />
         </span>

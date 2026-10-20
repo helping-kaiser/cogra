@@ -1019,7 +1019,7 @@ export function ComposeWizard({
           onStagedPDirected={setStagedPDirected}
           onSetStance={() => {
             // EXACTLY 0.00 ASKS FIRST (ComposePad.md): the post's own path
-            // would carry nothing. It warns and never refuses.
+            // starts unreachable. It warns and never refuses.
             if (stagedPDirected === 0) {
               setConfirmingUnreachable(true);
               return;
