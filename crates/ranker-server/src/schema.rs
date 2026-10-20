@@ -176,8 +176,8 @@ pub struct RankParams {
     /// false` is accepted until the reorder is built.
     pub friend_author_reorder: Option<FriendAuthorReorder>,
     /// Content still settling, each with its own authorship edge. The pod
-    /// weaves each candidate whose author a live path reaches, and leaves
-    /// the rest unplaced.
+    /// weaves each routing-live candidate (both parameters non-zero) whose
+    /// author a live path reaches, and leaves the rest unplaced.
     pub settling: Option<Vec<SettlingCandidate>>,
 }
 
