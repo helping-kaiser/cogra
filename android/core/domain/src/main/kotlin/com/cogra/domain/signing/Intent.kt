@@ -163,7 +163,7 @@ data class Expectation(
 ) : Intent
 
 /**
- * The first named exemption: the admission Registration, which the backend
+ * The named exemption: the admission Registration, which the backend
  * stages at approval and the device discovers on its status poll with no
  * form behind it. It still runs every transport check, and it holds only
  * for a Registration.
