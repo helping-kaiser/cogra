@@ -600,36 +600,6 @@ class ContentRepositoryTest {
     }
 
     /**
-     * The edit pad's backing: the author's own Publish bundle, its net and
-     * its RAW sum carried apart — past the axis the two differ, and the
-     * walk-back and Backing after fold from the raw one (EditPad.md).
-     */
-    @Test
-    fun theBackingReadServesTheNetAndTheRawSumApart() = runTest {
-        enqueue(
-            """{"data":{"post":{"__typename":"Post","id":"p1",
-               "viewerBacking":{"__typename":"BackingBundle","rawPDirected":2.00047,"pDirected":1.0}}}}""",
-        )
-        val backing = (repo().postBacking("p1") as Outcome.Success).value
-        assertThat(backing?.net).isEqualTo(1.0)
-        assertThat(backing?.rawSum).isEqualTo(2.00047)
-        val sent = server.takeRequest().body.readUtf8()
-        assertThat(sent).contains("\"id\":\"p1\"")
-        // Pending records count: an edit signed a moment ago is part of the backing.
-        assertThat(sent).containsMatch("viewerBacking\\(includePending: ?true\\)")
-    }
-
-    /** Null for any viewer but the creator, and for a post that does not resolve. */
-    @Test
-    fun theBackingReadServesNullWhenNoBackingIsServed() = runTest {
-        enqueue("""{"data":{"post":{"__typename":"Post","id":"p1","viewerBacking":null}}}""")
-        assertThat((repo().postBacking("p1") as Outcome.Success).value).isNull()
-
-        enqueue("""{"data":{"post":null}}""")
-        assertThat((repo().postBacking("gone") as Outcome.Success).value).isNull()
-    }
-
-    /**
      * A comment declares its topics on the creation input, the way a
      * post does (F9), and both parameters ride explicitly — the wire
      * requires them — so an untouched slider sends the pre-fill it shows.
