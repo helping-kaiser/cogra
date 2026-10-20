@@ -89,7 +89,7 @@ What "current" means is always a declared fold:
   ([substrate-map.md §4](substrate-map.md#4-conversations-and-membership));
   the effective network parameters are the newest finalization per
   parameter on the network charter anchor; a content node's current
-  topics are the non-zero newest-wins Tag bundles
+  topics are the newest-wins Tag bundles not withdrawn to `(0,0)`
   ([hashtag.md §4](../instances/hashtag.md#4-the-current-topics-fold));
   a node's updatable
   values are the newest eligible update record's payload
