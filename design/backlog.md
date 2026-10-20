@@ -5128,7 +5128,10 @@ and the clients build it from the seam, but the master itself —
 `components/stance/StancePad.jsx`'s `AttachmentPad` — does not implement
 it yet: it reports the continuous value and has no release hook. Snapping
 the master would serve as the conformance reference. The two-axis
-square's value stays continuous.
+square's value stays continuous. Round 18 (jakob 2026-10-20) added the
+strip's "no side yet" detent at the zero hairline to the same docs and
+boards, and the master does not hold there yet either — one gap, one
+fix.
 
 ### 145 · `CARRIED_MEDIA_UNPUBLISHED` has no words yet · *design + contract* · **deferred 2026-10-20** · **post-MVP**
 

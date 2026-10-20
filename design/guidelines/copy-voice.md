@@ -2608,10 +2608,14 @@ walk-back `Walk it all back` — the ordinary pad's walk-away word, with
 `all` because it parks the whole raw sum's opposite — and the cap line
 under `Backing after` when the sum passes ±1, `Adds up to +1.40; your
 feed reads it capped at +1.00.` (the severance aside's shape at one
-axis). Exactly `0.00` is spoken `Nothing` beside its 🤷. (*`Current
+axis). Exactly `0.00` is spoken `No side taken` beside its 🤷. The
+non-drag route, hidden until focused beside the strip, is `Set an exact
+value for your backing`; it swaps the strip in place for one track, its
+swap reading `Type an exact value` and back `Use a slider`. (*`Current
 backing`, `Backing after` and `Walk it all back` are the ruling's own
-words, jakob 2026-10-16; the cap line and `Nothing` drafted — their
-wording jakob's at review.*)
+words, jakob 2026-10-16; the cap line drafted 2026-10-16, and `No side
+taken` and the non-drag route's three drafted 2026-10-20, round 18 —
+their wording jakob's at review.*)
 
 **What one signature commits is counted in things.** The footer reads
 `You're signing 2 things`, the total `2 things, signed together`

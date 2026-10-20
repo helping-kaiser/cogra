@@ -75,13 +75,28 @@ function DirectEntry({ label, value, onChange, min = -1, max = 1 }) {
 /* THE TWO TRACKS AND THEIR SWAP — the part of the alternates every host shares.
    The bound reaches both routes from one `ranges`, so the slider and the typed
    field refuse the same values the field does. */
-function AlternateInputs({ showing, setShowing, pick, onPick, axes, ranges }) {
+function AlternateInputs({ showing, setShowing, pick, onPick, axes, ranges, axis = "pair" }) {
   const directed = ranges.pDirected;
   const interest = ranges.pInterest;
+  const one = axis === "one";
   return (
     <>
       <div style={{ marginTop: "var(--space-4)", display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
-        {showing === "sliders" ? (
+        {one ? (
+          showing === "sliders" ? (
+            <StanceSlider
+              label={axes.directed}
+              minLabel={axes.left}
+              maxLabel={axes.right}
+              min={directed.min}
+              max={directed.max}
+              value={pick.pDirected}
+              onChange={(pDirected) => onPick && onPick({ ...pick, pDirected })}
+            />
+          ) : (
+            <DirectEntry label={axes.directed} min={directed.min} max={directed.max} value={pick.pDirected} onChange={(pDirected) => onPick && onPick({ ...pick, pDirected })} />
+          )
+        ) : showing === "sliders" ? (
           <>
             <StanceSlider
               label={axes.directed}
@@ -122,7 +137,7 @@ function AlternateInputs({ showing, setShowing, pick, onPick, axes, ranges }) {
           fontSize: "var(--text-label-medium)",
         }}
       >
-        {showing === "sliders" ? "Type exact values" : "Use sliders"}
+        {showing === "sliders" ? (one ? "Type an exact value" : "Type exact values") : one ? "Use a slider" : "Use sliders"}
       </button>
     </>
   );
@@ -166,6 +181,18 @@ export function StanceAlternates({
   title = "Choose your opinion",
   commitLabel = "Sign it",
   host = "dialog",
+  /* ONE AXIS (jakob 2026-10-20, seam 240: the input setting governs
+     everywhere). A family with one free parameter — the backing an author
+     signs with their own content, `p_i` pinned at 1 by the census — takes ONE
+     track and ONE typed field, over `pDirected` alone. The pinned number is
+     never drawn, not even as a locked track: a control nobody can move is a
+     choice the record does not have. The pick keeps its pair shape, the pin
+     riding along untouched. */
+  axis = "pair",
+  /* The unreachable landing's explanation, handed by the host once its 🤷 is
+     tapped: it replaces the body in place, and `onZeroBack` returns. */
+  zeroHelp,
+  onZeroBack,
 }) {
   const [showing, setShowing] = React.useState(mode === "entry" ? "entry" : "sliders");
   // The same help affordance the pad carries, for the same reason: TWO VALUES per
@@ -186,11 +213,11 @@ export function StanceAlternates({
   const slotRef = React.useRef(null);
   const [slotHeight, setSlotHeight] = React.useState(null);
   React.useEffect(() => {
-    if (explaining) return;
+    if (explaining || zeroHelp) return;
     const measured = slotRef.current?.offsetHeight;
     if (measured) setSlotHeight(measured);
-  }, [explaining, showing]);
-  const inputs = <AlternateInputs showing={showing} setShowing={setShowing} pick={pick} onPick={onPick} axes={axes} ranges={ranges} />;
+  }, [explaining, zeroHelp, showing]);
+  const inputs = <AlternateInputs showing={showing} setShowing={setShowing} pick={pick} onPick={onPick} axes={axes} ranges={ranges} axis={axis} />;
   if (host === "sheet") {
     return (
       <div style={{ display: "flex", flexDirection: "column" }}>
@@ -253,8 +280,26 @@ export function StanceAlternates({
           {title}
         </h2>
       </div>
-      {/* The help replaces the readouts and the inputs alike. */}
-      {explaining ? (
+      {/* The help replaces the readouts and the inputs alike — and so does the
+          unreachable landing's explanation, which the host hands as
+          `zeroHelp` once its 🤷 is tapped. */}
+      {zeroHelp ? (
+        <div style={{ minHeight: slotHeight ?? undefined, display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
+          {zeroHelp.map((line) => (
+            <p key={helpKey(line)} style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
+              <HelpLine line={line} />
+            </p>
+          ))}
+          <button
+            type="button"
+            onClick={onZeroBack}
+            className={BUTTON_CLASS}
+            style={{ ...buttonStyle({ variant: "text", size: "sm" }), alignSelf: "flex-start" }}
+          >
+            Back
+          </button>
+        </div>
+      ) : explaining ? (
         <div
           style={{
             minHeight: slotHeight ?? undefined,

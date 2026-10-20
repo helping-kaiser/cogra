@@ -26,11 +26,17 @@ WHEN release a drag on the field -> NEVER the pick is staged
 
 ALWAYS the pick parks on a hundredth: the knob follows the drag wherever the finger is, and release lands the pick on the nearest hundredth, so the number a readout prints is the pick itself
 
+ALWAYS the zero hairline is the no side yet detent: the knob holds on it while the finger stays within the knob's own radius of it, and the pick reads exactly 0.00 there
+
+ALWAYS the non-drag route Set an exact value for your backing stands beside the field, hidden until focused, and leads to the same pick by one slider or one typed value
+
+WHEN press the non-drag route -> the field gives way in place to one track over For or against AND Type an exact value stands one tap away AND the readout and the commit row stay AND NEVER a second track is drawn
+
 WHEN press Set GIVEN the pick reads other than 0.00 -> the pad closes AND the seal's Your backing row reads the pick AND NEVER anything is signed
 
 WHEN press Set GIVEN the pick reads 0.00 -> the dialog Start it unreachable? opens over the pad, which stays parked beneath it AND NEVER the pick is refused
 
-ALWAYS the dialog Start it unreachable? reads Your backing is your post's own path into anyone's feed. At 0.00 that path carries nothing — your post will live on your profile, reached only through the tags and citations you sign with it, until someone gives it an opinion. with Keep adjusting filled and Set it anyway quiet
+ALWAYS the dialog Start it unreachable? reads Your backing is your post's own path into anyone's feed. At 0.00 the post starts unreachable on its own — only the tags and citations you sign with it lead to it, until someone gives it an opinion. with Keep adjusting filled and Set it anyway quiet
 
 WHEN tap Keep adjusting -> the dialog closes AND the pad stands at the pick
 

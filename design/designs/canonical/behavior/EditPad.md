@@ -28,6 +28,12 @@ WHEN release a drag on the field -> the pick is parked AND NEVER the pick is sta
 
 ALWAYS the pick parks on a hundredth: the knob follows the drag wherever the finger is, and release lands the pick on the nearest hundredth, so the number a readout prints is the pick itself
 
+ALWAYS the zero hairline is the no side yet detent: the knob holds on it while the finger stays within the knob's own radius of it, and the pick reads exactly 0.00 there
+
+ALWAYS the non-drag route Set an exact value for your backing stands beside the field, hidden until focused, and leads to the same pick by one slider or one typed value
+
+WHEN press the non-drag route -> the field gives way in place to one track over For or against AND Type an exact value stands one tap away AND the readouts and the commit row stay AND NEVER a second track is drawn
+
 ALWAYS Walk it all back stands on the left of the commit row, pushed away from Cancel and Set
 
 WHEN tap Walk it all back GIVEN the backing nets other than 0.00 -> the pick parks at the opposite of the post's own records' raw sum, clipped to the axis AND NEVER anything is staged AND NEVER a dialog opens
