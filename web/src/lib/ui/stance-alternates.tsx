@@ -16,7 +16,7 @@
 
 import { useEffect, useId, useRef } from "react";
 
-import { clampDimension, type StancePair } from "@/lib/stance/model";
+import { snapDimension, type StancePair } from "@/lib/stance/model";
 import type { StanceInputMode } from "@/lib/stance/input-mode";
 import { buttonClassName } from "@/lib/ui/button";
 import { STANCE_AXES, type StanceAxes } from "@/lib/ui/stance-format";
@@ -49,7 +49,8 @@ function DirectEntry({
         max={1}
         step={0.01}
         value={value}
-        onChange={(event) => onChange(clampDimension(Number(event.target.value)))}
+        // A typed value lands on the hundredths grid, as a released drag does.
+        onChange={(event) => onChange(snapDimension(Number(event.target.value)))}
         className="w-24 rounded-extra-small border border-outline p-2 text-body-medium"
       />
     </div>

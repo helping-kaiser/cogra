@@ -14,7 +14,7 @@
 
 import type { GalleryEntryDraft, PostDetailView } from "@/lib/api/content-api";
 import type { License } from "@/lib/license";
-import { clampDimension } from "@/lib/stance/model";
+import { snapDimension } from "@/lib/stance/model";
 import { referenceDrafts } from "@/lib/references/claims";
 import type { ReferenceDraft } from "@/lib/references/draft";
 import type { TagDraft } from "@/lib/topics/draft";
@@ -172,8 +172,10 @@ export function postEditReducer(state: PostEditState, action: PostEditAction): P
         recordStaged: true,
       };
     case "pick": {
-      // Every pick on the strip is legal; −0 is +0 on the wire (PR-91).
-      const pick = clampDimension(action.pick);
+      // Every pick on the strip is legal; −0 is +0 on the wire (PR-91). The
+      // pick is a hundredth (EditPad.md), so one that reads 0.00 IS 0 and
+      // stages no record — a float's 0.004 never slips one in.
+      const pick = snapDimension(action.pick);
       return { ...state, pick, recordStaged: state.recordStaged || pick !== 0 };
     }
   }

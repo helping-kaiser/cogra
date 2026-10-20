@@ -17,6 +17,7 @@ import { renderWithProviders } from "@/test/providers";
 import { DEFAULT_P_DIRECTED, emptyWizard, type WizardState } from "@/lib/compose/wizard";
 import { createComposeDraftStore, type ComposeDraftStore } from "@/lib/compose/draft-store";
 import { createSealedDraftStore, type SealedDraftStore } from "@/lib/compose/sealed-draft";
+import { KNOB_TRAVEL_INSET_PX, valenceTravelHalfExtent } from "@/lib/stance/pad-geometry";
 import { IDBFactory } from "fake-indexeddb";
 import { ComposeWizard } from "./wizard-view";
 import { byAnyTestId, byNode } from "@/test/data-node";
@@ -298,6 +299,34 @@ describe("the compose wizard", () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-1?published=1"));
     // The pick is never refused: the zero travels as picked.
     expect(variables!.input.pDirected).toBe(0);
+  });
+
+  // ComposePad.md: release lands the pick on the nearest hundredth. The pad
+  // opens at +0.10 and a drag is float travel, so before the snap a drag could
+  // never reach EXACTLY 0 — the 🤔 and the question were unreachable by hand.
+  it("lands a drag released near zero on exactly 0.00, so Set asks Start it unreachable?", async () => {
+    render();
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), {
+      target: { value: "Three weekends at low tide." },
+    });
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+    await screen.findByTestId(byNode("composeDetails.title.input"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+
+    fireEvent.click(await screen.findByTestId("wizard-open-stance"));
+    const strip = screen.getByTestId("wizard-stance-field-strip");
+    const WIDTH = 300;
+    strip.getBoundingClientRect = () => new DOMRect(0, 0, WIDTH, 56);
+    const half = valenceTravelHalfExtent({ left: 0, top: 0, width: WIDTH, height: 56 }, KNOB_TRAVEL_INSET_PX);
+    fireEvent.pointerDown(strip, { pointerId: 1, clientX: 0, clientY: 0 });
+    fireEvent.pointerMove(strip, { pointerId: 1, clientX: (0.0031 - DEFAULT_P_DIRECTED) * half, clientY: 0 });
+    // Under the thumb it is a float that prints +0.00 and smiles.
+    expect(screen.getByTestId("wizard-stance-pick-face").textContent).not.toBe("🤔");
+    fireEvent.pointerUp(strip, { pointerId: 1 });
+    expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤔");
+    fireEvent.click(screen.getByTestId("wizard-stance-set"));
+    expect(screen.getByTestId("wizard-unreachable")).toHaveAttribute("open");
   });
 
   // CW-26: WizardHeader.jsx's stageLabel slot draws at --text-label-small.

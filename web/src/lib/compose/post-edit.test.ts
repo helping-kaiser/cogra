@@ -154,6 +154,21 @@ describe("the post edit", () => {
       expect(run(base(), { type: "pick", pick: 0.4 }, { type: "pick", pick: 0 }).recordStaged).toBe(true);
     });
 
+    it("a pick that reads 0.00 is 0 and adds no record — never a ghost from a float", () => {
+      // The bug this pins: 0.004 printed +0.00 and still staged a record.
+      const near = run(base(), { type: "pick", pick: 0.004 });
+      expect(near.pick).toBe(0);
+      expect(near.recordStaged).toBe(false);
+      expect(Object.is(run(base(), { type: "pick", pick: -0.0049 }).pick, 0)).toBe(true);
+      expect(run(base(), { type: "pick", pick: -0.0049 }).recordStaged).toBe(false);
+      expect(postEditInput(near).pDirected).toBe(0);
+    });
+
+    it("carries the pick on the hundredths grid", () => {
+      expect(run(base(), { type: "pick", pick: 0.4371 }).pick).toBe(0.44);
+      expect(run(base(), { type: "pick", pick: 0.1 + 0.2 }).pick).toBe(0.3);
+    });
+
     it("authors +0 for a −0 (PR-91's normalization) and clamps to the strip", () => {
       expect(Object.is(run(base(), { type: "pick", pick: -0 }).pick, 0)).toBe(true);
       expect(run(base(), { type: "pick", pick: 3 }).pick).toBe(1);

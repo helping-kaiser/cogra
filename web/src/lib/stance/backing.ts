@@ -23,7 +23,7 @@
 // the two never trade places (copy-voice, *What an author signs with their
 // own content is their BACKING*).
 
-import { clampDimension, DIMENSION_MAX, DIMENSION_MIN } from "./model";
+import { clampDimension, DIMENSION_MAX, DIMENSION_MIN, snapDimension } from "./model";
 
 export const CURRENT_BACKING_LABEL = "Current backing";
 export const BACKING_AFTER_LABEL = "Backing after";
@@ -52,5 +52,6 @@ export function attachmentLanding(
  */
 export function walkBackPick(rawSum: number): number | null {
   if (backingNet(rawSum) === 0) return null;
-  return clampDimension(-rawSum);
+  // A parked pick is a pick: it lands on the hundredths grid like a release.
+  return snapDimension(-rawSum);
 }

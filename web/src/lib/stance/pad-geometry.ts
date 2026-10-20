@@ -24,7 +24,7 @@
 // Horizontal is valence, vertical is connection (§8.3). Screen y grows
 // downward and connection grows upward, so the vertical mapping inverts.
 
-import { clampDimension, clampPair, ORIGIN, type StancePair } from "./model";
+import { clampDimension, clampPair, ORIGIN, snapPair, type StancePair } from "./model";
 
 /**
  * The field's corner radius, in pixels — Material's `large` rung, which
@@ -211,6 +211,16 @@ export function clampToRanges(pair: StancePair, ranges: PadRanges): StancePair {
     pDirected: clampTo(pair.pDirected, ranges.pDirected),
     pInterest: clampTo(pair.pInterest, ranges.pInterest),
   };
+}
+
+/**
+ * The pair a release lands on: the hundredths grid, then the field's reach.
+ * Every range's ends are themselves hundredths, so clamping after the snap
+ * keeps the pair on the grid — a tag's relevance a drag carried to 0.004
+ * lands on its +0.01 floor, never on the withdrawal at 0.
+ */
+export function snapToRanges(pair: StancePair, ranges: PadRanges): StancePair {
+  return clampToRanges(snapPair(pair), ranges);
 }
 
 /** How much one pixel of travel is worth on a slot that spans `range`. */

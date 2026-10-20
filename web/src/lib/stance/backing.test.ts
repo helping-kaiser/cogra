@@ -67,6 +67,13 @@ describe("Walk it all back", () => {
     expect(attachmentLanding(1.4, walkBackPick(1.4)!).landing).toBeCloseTo(0.4, 10);
   });
 
+  it("parks on the hundredths grid, a float-summed raw sum included", () => {
+    // 0.1 + 0.2 is 0.30000000000000004 in binary; the pick a reader can sign
+    // is a hundredth (the value domain, jakob 2026-10-20).
+    expect(walkBackPick(0.1 + 0.2)).toBe(-0.3);
+    expect(Object.is(walkBackPick(-0.003), 0)).toBe(true);
+  });
+
   it("stands greyed while the backing already nets 0.00", () => {
     expect(walkBackPick(0)).toBeNull();
     expect(walkBackPick(-0)).toBeNull();
