@@ -1,0 +1,36 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COALESCE(SUM(p_d::text::numeric), 0)::text AS \"p_d!\",\n                  COALESCE(SUM(p_i::text::numeric), 0)::text AS \"p_i!\",\n                  COUNT(*)::bigint             AS \"records!\"\n           FROM mirror_record_legs\n           WHERE leg = 'binary' AND family = $1\n             AND source = $2 AND target = $3\n             AND NOT census_unknown",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "p_d!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "p_i!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "records!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "9d1d45e9f9b60e5e9cd0cffcb4afaefe52cb03f107d822997772cdb5f6b746ee"
+}
