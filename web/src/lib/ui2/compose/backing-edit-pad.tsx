@@ -48,8 +48,8 @@ export function BackingEditPad({
   /** The edit's pick as it stands — where the pad opens. */
   pick: number;
   /**
-   * The raw sum of the author's Publish records toward the post — null while
-   * no read serves it (`fetchPostBacking`, the server gap).
+   * The raw sum of the author's Publish records toward the post — null when
+   * the read answered none or failed (`fetchPostBacking`).
    */
   rawSum: number | null;
   /** Set: the staged pick becomes the edit's. */
@@ -83,7 +83,7 @@ export function BackingEditPad({
       <AttachmentLandingLine rawSum={rawSum} pick={staged} testIdPrefix={testId} />
       <div className="flex items-center justify-end gap-2">
         {/* Greyed, and doing nothing, while the backing nets 0.00 — or while
-            the raw sum it parks against is unread (the server gap). */}
+            the raw sum it parks against is unread. */}
         <span className="mr-auto">
           <PillButton
             variant="text"

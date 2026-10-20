@@ -4568,15 +4568,19 @@ type User implements Node & Actor {
 	"""
 	createdAt: DateTime!
 	"""
-	The most recent profile version's authoring instant; equals
-	`createdAt` for an actor whose profile has never changed.
+	The current profile version's authoring instant — the update's
+	pre-commitment signature, pending or landed alike, so the date
+	never jumps when the update lands; equals `createdAt` for an actor
+	whose profile has never changed.
 	"""
 	updatedAt: DateTime!
 	"""
 	Where this actor's Profile stands relative to L1 finality. A
 	Profile is minted by its own Registration record, so it pends
 	between the key ceremony — which is where the address is bound —
-	and that record landing.
+	and that record landing; and, like any node, an unlanded update
+	leaves it pending, because the profile on screen is the pending
+	version.
 	"""
 	landing: Landing!
 	"""

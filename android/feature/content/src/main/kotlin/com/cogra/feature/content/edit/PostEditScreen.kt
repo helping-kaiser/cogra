@@ -502,8 +502,8 @@ private fun Terms(state: PostEditUiState, actions: PostEditActions) {
     ) {
         when (val withEdit = state.backingWithEdit) {
             is BackingValue.Read -> AttachmentReadout(pDirected = withEdit.value, testTag = "post_edit_backing_value")
-            // SERVER GAP (seam 233): nothing serves the Publish bundle's net
-            // yet, so the row draws it unread rather than guess.
+            // The backing read served none or failed: the row draws it
+            // unread rather than guess.
             BackingValue.Unread -> Text(
                 text = BACKING_UNREAD_MARK,
                 style = MaterialTheme.typography.bodyMedium,

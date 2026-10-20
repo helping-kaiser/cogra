@@ -42,9 +42,9 @@ describe("EditPad", () => {
   });
 
   // PICK-IS-THE-EDGE: the pad opens at the edit's own pick, 0.00 unmoved.
-  it("opens at the edit's pick — 0.00, 🤷, when unmoved", () => {
+  it("opens at the edit's pick — 0.00, 🤔, when unmoved", () => {
     renderPad({ pick: 0, rawSum: 0.1 });
-    expect(text("pad-pick-face")).toBe("🤷");
+    expect(text("pad-pick-face")).toBe("🤔");
     expect(text("pad-pick-exact")).toBe("+0.00");
     expect(strip()).toHaveAttribute("aria-valuenow", "0");
   });
@@ -87,9 +87,9 @@ describe("EditPad", () => {
     expect(screen.queryByTestId("pad-cap")).not.toBeInTheDocument();
   });
 
-  it("reads any value of exactly 0.00 as 🤷", () => {
+  it("reads any value of exactly 0.00 as 🤔", () => {
     renderPad({ pick: -0.1, rawSum: 0.1 });
-    expect(text("pad-after-face")).toBe("🤷");
+    expect(text("pad-after-face")).toBe("🤔");
   });
 
   describe("Walk it all back", () => {
@@ -107,7 +107,7 @@ describe("EditPad", () => {
       const { onSet, onClose } = renderPad({ pick: 0, rawSum: 0.35 });
       fireEvent.click(screen.getByTestId("pad-walk-back"));
       expect(text("pad-pick-exact")).toBe("-0.35");
-      expect(text("pad-after-face")).toBe("🤷");
+      expect(text("pad-after-face")).toBe("🤔");
       expect(text("pad-after-exact")).toBe("+0.00");
       expect(onSet).not.toHaveBeenCalled();
       expect(onClose).not.toHaveBeenCalled();
@@ -119,6 +119,19 @@ describe("EditPad", () => {
       fireEvent.click(screen.getByTestId("pad-walk-back"));
       expect(text("pad-pick-exact")).toBe("-1.00");
       expect(text("pad-after-exact")).toBe("+0.40");
+    });
+
+    // Two edits' worth of backing (two +1.00 edits over the mint): one
+    // walk-back reaches only to +1.00 — the rest is another edit's.
+    it("at a raw sum of +2.00 reads capped, and one walk-back still leaves +1.00", () => {
+      renderPad({ pick: 0, rawSum: 2 });
+      expect(text("pad-current-exact")).toBe("+1.00");
+      expect(text("pad-after-exact")).toBe("+1.00");
+      expect(text("pad-cap")).toBe("Adds up to +2.00; your feed reads it capped at +1.00.");
+      fireEvent.click(screen.getByTestId("pad-walk-back"));
+      expect(text("pad-pick-exact")).toBe("-1.00");
+      expect(text("pad-after-exact")).toBe("+1.00");
+      expect(screen.queryByTestId("pad-cap")).not.toBeInTheDocument();
     });
 
     it("is greyed and does nothing while the backing already nets 0.00", () => {
@@ -146,9 +159,10 @@ describe("EditPad", () => {
     expect(onSet).not.toHaveBeenCalled();
   });
 
-  // THE SERVER GAP: no read serves the author's Publish bundle yet
-  // (`fetchPostBacking`). The two readouts that need it stop at a flagged
-  // placeholder, and the walk-back — which parks against the raw sum — greys.
+  // AN UNREAD BACKING: the read of the author's Publish bundle answered none
+  // or failed (`fetchPostBacking`). The two readouts that need it stop at a
+  // flagged placeholder, and the walk-back — which parks against the raw sum —
+  // greys.
   describe("while the backing is unread", () => {
     it("stops Current backing and Backing after at the placeholder and greys the walk-back", () => {
       renderPad({ pick: 0.3, rawSum: null });

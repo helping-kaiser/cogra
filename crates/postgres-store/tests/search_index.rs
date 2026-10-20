@@ -159,6 +159,47 @@ async fn a_raw_rename_or_retitle_replaces_the_old_value(pool: PgPool) {
     );
 }
 
+/// A pending profile version is the one shown, so it is the one findable:
+/// its display name replaces a landed one, even one whose record landed
+/// after it was signed, and discarding it brings the landed name back.
+///
+/// A pending display name is the indexed one, and discarding it restores the landed name.
+/// ´claim:search:a-pending-display-name-is-the-indexed-one´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_pending_display_name_is_the_indexed_one(pool: PgPool) {
+    let sol = user(&pool, "sol", "Sol Brine").await;
+    run(
+        &pool,
+        "INSERT INTO actor_profile_versions (actor_id, display_name, pending)
+         VALUES ($1, 'Sol Salt', TRUE)",
+        sol,
+    )
+    .await;
+    run(
+        &pool,
+        "INSERT INTO actor_profile_versions
+             (actor_id, display_name, landed_epoch, act_time, position)
+         VALUES ($1, 'Sol Landed', 5, 5, 0)",
+        sol,
+    )
+    .await;
+    assert_eq!(
+        indexed(&pool, sol).await,
+        vec![row("display_name", "Sol Salt"), row("handle", "sol")]
+    );
+
+    run(
+        &pool,
+        "DELETE FROM actor_profile_versions WHERE actor_id = $1 AND pending",
+        sol,
+    )
+    .await;
+    assert_eq!(
+        indexed(&pool, sol).await,
+        vec![row("display_name", "Sol Landed"), row("handle", "sol")]
+    );
+}
+
 /// Redaction appended as a tombstone, or set in place on the current
 /// version, leaves the node no row — for a user, the handle goes with
 /// the name.

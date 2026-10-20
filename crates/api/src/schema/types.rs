@@ -1273,8 +1273,10 @@ impl User {
         self.identity.created_at
     }
 
-    /// The most recent profile version's authoring instant; equals
-    /// `createdAt` for an actor whose profile has never changed.
+    /// The current profile version's authoring instant — the update's
+    /// pre-commitment signature, pending or landed alike, so the date
+    /// never jumps when the update lands; equals `createdAt` for an actor
+    /// whose profile has never changed.
     async fn updated_at(&self, ctx: &Context<'_>) -> async_graphql::Result<DateTime<Utc>> {
         Ok(match self.profile(ctx).await? {
             Some(p) => p.created_at.max(self.identity.created_at),
@@ -1285,28 +1287,29 @@ impl User {
     /// Where this actor's Profile stands relative to L1 finality. A
     /// Profile is minted by its own Registration record, so it pends
     /// between the key ceremony — which is where the address is bound —
-    /// and that record landing.
+    /// and that record landing; and, like any node, an unlanded update
+    /// leaves it pending, because the profile on screen is the pending
+    /// version.
     async fn landing(&self, ctx: &Context<'_>) -> async_graphql::Result<Landing> {
+        const PENDING: Landing = Landing {
+            state: LandingState::Pending,
+            epoch: None,
+        };
         let Some(address) = self.identity.realization_address.as_deref() else {
-            return Ok(Landing {
-                state: LandingState::Pending,
-                epoch: None,
-            });
+            return Ok(PENDING);
         };
         let pool = ctx.data::<PgPool>()?;
         let node = NodeId::Prof(address.to_string()).to_string();
-        Ok(
-            match mirror::minting_epoch(pool, Family::Registration, &node).await? {
-                Some(epoch) => Landing {
-                    state: LandingState::Landed,
-                    epoch: Some(epoch),
-                },
-                None => Landing {
-                    state: LandingState::Pending,
-                    epoch: None,
-                },
-            },
-        )
+        let Some(epoch) = mirror::minting_epoch(pool, Family::Registration, &node).await? else {
+            return Ok(PENDING);
+        };
+        if self.profile(ctx).await?.is_some_and(|p| p.pending) {
+            return Ok(PENDING);
+        }
+        Ok(Landing {
+            state: LandingState::Landed,
+            epoch: Some(epoch),
+        })
     }
 
     /// Records authored from this node — for an actor, their outgoing

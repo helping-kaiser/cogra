@@ -465,12 +465,80 @@ describe("preparePostEdit", () => {
   });
 });
 
-// THE SERVER GAP, pinned so its closing is a visible change: no field serves
-// the author's Publish bundle toward their own post (EditPad's Current
-// backing), so the read answers "not served" rather than a guessed number.
+// The edit pad's backing: the author's own Publish bundle toward their post,
+// as its RAW sum (EditPad.md — Backing after folds from the raw sum).
 describe("fetchPostBacking", () => {
-  it("answers not served until the server grows the read", async () => {
-    expect(await fetchPostBacking()).toEqual({ kind: "success", value: null });
+  it("serves the raw sum, unclipped, asked of the post by id with pending records counted", async () => {
+    let variables: Record<string, unknown> | null = null;
+    let query = "";
+    server.use(
+      graphql.query("PostBacking", ({ variables: v, query: q }) => {
+        variables = v;
+        query = q;
+        return HttpResponse.json({
+          data: {
+            post: {
+              __typename: "Post",
+              id: "p1",
+              viewerBacking: { __typename: "BackingBundle", rawPDirected: 2.00047 },
+            },
+          },
+        });
+      }),
+    );
+    expect(await fetchPostBacking(client(), "p1")).toEqual({
+      kind: "success",
+      value: { rawSum: 2.00047 },
+    });
+    expect(variables).toEqual({ id: "p1" });
+    expect(query).toMatch(/viewerBacking\(includePending: true\)/);
+  });
+
+  it("answers null when the server serves no backing — not the creator, or no such post", async () => {
+    server.use(
+      graphql.query("PostBacking", ({ variables }) =>
+        HttpResponse.json({
+          data: {
+            post:
+              variables.id === "gone"
+                ? null
+                : { __typename: "Post", id: variables.id, viewerBacking: null },
+          },
+        }),
+      ),
+    );
+    expect(await fetchPostBacking(client(), "theirs")).toEqual({ kind: "success", value: null });
+    expect(await fetchPostBacking(client(), "gone")).toEqual({ kind: "success", value: null });
+  });
+
+  it("asks the server every time, never a cached answer from an earlier opening", async () => {
+    const sums = [0.1, 1.1];
+    let calls = 0;
+    server.use(
+      graphql.query("PostBacking", () => {
+        const rawPDirected = sums[calls] ?? 0;
+        calls += 1;
+        return HttpResponse.json({
+          data: {
+            post: {
+              __typename: "Post",
+              id: "p1",
+              viewerBacking: { __typename: "BackingBundle", rawPDirected },
+            },
+          },
+        });
+      }),
+    );
+    const shared = client();
+    expect(await fetchPostBacking(shared, "p1")).toEqual({ kind: "success", value: { rawSum: 0.1 } });
+    // An edit signed in between moved the backing; the next opening reads it.
+    expect(await fetchPostBacking(shared, "p1")).toEqual({ kind: "success", value: { rawSum: 1.1 } });
+    expect(calls).toBe(2);
+  });
+
+  it("lifts a transport fault into failed rather than a backing", async () => {
+    server.use(graphql.query("PostBacking", () => HttpResponse.error()));
+    expect((await fetchPostBacking(client(), "p1")).kind).toBe("failed");
   });
 });
 

@@ -90,9 +90,9 @@ data class PostEditUiState(
     val backingPadOpen: Boolean = false,
     /**
      * The post's backing as its author's Publish bundle folds it, or null
-     * while nothing serves it ([ContentRepository.postBacking]: a server
-     * gap today) — the readouts then draw it unread, and the walk-back
-     * stays greyed, rather than guess.
+     * when [ContentRepository.postBacking] served none or failed — the
+     * readouts then draw it unread, and the walk-back stays greyed, rather
+     * than guess.
      */
     val backing: PostBacking? = null,
     /**

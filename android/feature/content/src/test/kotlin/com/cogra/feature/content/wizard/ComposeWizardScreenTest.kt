@@ -1070,11 +1070,11 @@ class ComposeWizardScreenTest {
     }
 
     @Test
-    fun aBackingOfExactlyZeroShrugsOnTheRow() {
+    fun aBackingOfExactlyZeroThinksOnTheRow() {
         val state = ComposeWizardState(body = "x", step = WizardStep.Seal, pDirected = 0.0)
         compose.setContent { Wizard(state) }
         compose.onNodeWithTag("wizard_seal_stance_value")
-            .assertContentDescriptionEquals("Nothing, For or against +0.00")
+            .assertContentDescriptionEquals("No side taken, For or against +0.00")
     }
 
     // CW-31/CW-32/CW-33/CW-34: the pad parks over the page with its own
