@@ -42,9 +42,10 @@
 // the device cannot know each write in advance. It checks instead that
 // every counter-record points where the shown bundle points, stays in
 // range, that there are exactly as many as the cost shown, and that the
-// shown raw sums plus the batch net to exactly (0, 0) — the records carry
-// picked values, never deltas (design.md §8.1), so the net is the only
-// thing a walk-back means.
+// shown raw sums plus the batch net to exactly (0, 0) in exact decimal
+// arithmetic (`@/lib/stance/exact`) — the records carry picked values,
+// never deltas (design.md §8.1), so the net is the only thing a walk-back
+// means.
 //
 // The shared `intent-vectors.json` pins this file and Intent.kt to the
 // same verdicts over the same canonical bytes.
@@ -60,6 +61,7 @@ import {
 } from "@/lib/crypto/envelope";
 import type { Proposal } from "@/lib/crypto/handshake";
 import type { Family } from "@/lib/crypto/identifiers";
+import { netsToZero } from "@/lib/stance/exact";
 import { previewTagName } from "@/lib/topics/normalize";
 
 /** Where an expected write's middle or target must point. */
@@ -416,8 +418,11 @@ export function checkIntent(
   }
 
   for (const n of expected.netting) {
-    let netD = n.rawPDirected;
-    let netI = n.rawPInterest;
+    if (!Number.isFinite(n.rawPDirected) || !Number.isFinite(n.rawPInterest)) {
+      throw new IntentMismatch("the shown bundle is not a finite sum");
+    }
+    const netD = [n.rawPDirected];
+    const netI = [n.rawPInterest];
     let count = 0;
     batch.forEach((p, j) => {
       if (used[j]) return;
@@ -432,13 +437,16 @@ export function checkIntent(
       }
       used[j] = true;
       count += 1;
-      netD += body.pD;
-      netI += body.pI;
+      netD.push(body.pD);
+      netI.push(body.pI);
     });
     if (count !== n.cost) {
       throw new IntentMismatch(`the walk-back stages ${count} records where ${n.cost} were shown`);
     }
-    if (netD !== 0 || netI !== 0) {
+    // Summed as the decimals the values denote, never as doubles
+    // (edges.md §1): the backend nets that way, and floating addition
+    // misses zero on lawful walk-backs.
+    if (!netsToZero(netD) || !netsToZero(netI)) {
       throw new IntentMismatch("the walk-back does not net the shown bundle to (0, 0)");
     }
   }

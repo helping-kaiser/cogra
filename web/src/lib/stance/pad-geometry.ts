@@ -190,7 +190,7 @@ export const STANCE_RANGES: PadRanges = {
 
 /**
  * THE TAG FIELD STARTS JUST ABOVE NOTHING (`StanceReadout.jsx`, jakob's ruling
- * 2026-09-11). Relevance 0 is the withdrawal — an un-tag is its own act, never
+ * 2026-09-11). The withdrawal is the un-tag, its own act at (0,0), never
  * the far end of a drag — so the field carries claims only and floors here.
  */
 export const TAG_RELEVANCE_FLOOR = 0.01;

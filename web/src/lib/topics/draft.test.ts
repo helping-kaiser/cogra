@@ -4,6 +4,7 @@ import {
   DEFAULT_CONFIDENCE,
   DEFAULT_RELEVANCE,
   newTagDraft,
+  signedValues,
   tagChanges,
   type TagDraft,
 } from "./draft";
@@ -25,6 +26,15 @@ describe("tagChanges", () => {
 
   it("stages a Tag act for an added topic", () => {
     expect(tagChanges([], [tag("rust")])).toEqual([{ kind: "tag", tag: tag("rust") }]);
+  });
+
+  it("signs (0,0) for an untag and the drafted pair for a tag", () => {
+    expect(signedValues({ kind: "untag", tag: tag("rust") })).toEqual({
+      relevance: 0,
+      confidence: 0,
+    });
+    const drafted = { name: "rust", relevance: 0, confidence: 0.6 };
+    expect(signedValues({ kind: "tag", tag: drafted })).toEqual({ relevance: 0, confidence: 0.6 });
   });
 
   it("stages an untag for a removed topic — never a deletion", () => {
