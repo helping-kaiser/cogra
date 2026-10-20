@@ -5083,7 +5083,8 @@ section. What is left is banked, not open:
 - **Item listings** — the backing row and pad come with the first
   listing surface.
 - **Drafts still at jakob's review** — copy-voice's *The unreachable
-  start* body, and the backing pad's cap line and its spoken `Nothing`.
+  start* body, and the backing pad's cap line and its spoken `No side
+  taken` (round 18's word).
 
 ### 143 · The applicant-acting package · *design + contract* · **banked 2026-10-16** · **post-MVP**
 
