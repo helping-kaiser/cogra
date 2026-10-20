@@ -1417,6 +1417,28 @@ describe("severance", () => {
     expect(data.sent).toEqual([]);
   });
 
+  // THE RELEASE LANDS ON A HUNDREDTH: a drag a hair short of the raw sums'
+  // opposite lands EXACTLY on it, so the pick that reads as netting 0.00 is
+  // the severance the gate asks about — not a float a few thousandths off it
+  // that would sign silently.
+  it("asks about a near-zero landing once the release lands it on the grid", async () => {
+    const data = mount({ seed: { "post-1": { records: [{ pDirected: 0.3, pInterest: 0.3 }] } } });
+    await settle();
+    await openPad();
+    // From the pad's +0.10 / +0.10 to −0.296 / −0.303 under the thumb.
+    await dragAndSet((-0.296 - 0.1) * HALF, (0.303 + 0.1) * HALF);
+    expect(screen.getByTestId("severance-confirm")).toBeInTheDocument();
+    expect(data.sent).toEqual([]);
+  });
+
+  it("lands the released pick on the nearest hundredths", async () => {
+    const data = mount();
+    await settle();
+    await openPad();
+    await dragAndSet((0.4371 - 0.1) * HALF, -(0.2049 - 0.1) * HALF);
+    expect(data.sent).toEqual([{ target: "post-1", pick: { pDirected: 0.44, pInterest: 0.2 } }]);
+  });
+
   it("leaves the resting target alone until severance is confirmed", async () => {
     mount({ seed: { "post-1": { records: [{ pDirected: 1, pInterest: 1 }] } } });
     await settle();
