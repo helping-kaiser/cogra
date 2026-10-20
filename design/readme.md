@@ -10307,6 +10307,52 @@ applicant remainder, ruled*'s waiting opinion and topic, *The 134 and
   change accepted (jakob 2026-10-16); `profile.chronicle.empty` and its
   `title` join.
 
+### Round 18, the zero-state package — 2026-10-20
+
+jakob's rulings (seam 240): severance stays the exact `(0, 0)` net — a
+distinct, confirmed, clean-slate act. A bundle with one number at zero
+is a deliberate state, "interested, no side taken": held, shaping no
+feed, named UNREACHABLE in the docs. Profiles display at authoring time,
+and the borrowed view lasts until the member holds one outgoing opinion
+with neither number at zero. Design finalizes the words, and never
+states the expected.
+
+- **The unreachable landing.** A pick landing one number at zero reads,
+  under `Resulting opinion`, 🤷 and the state — `Interested, no side
+  taken — this won't shape anyone's feed.` and its three siblings by the
+  other number's sign (`unreachableHead`). Its 🤷 is a door named by the
+  state: the pad's body gives way in place to three lines (still held, a
+  person staying under `Your people`; nothing passes through it; the
+  family's way out is a different act), the "?"'s grammar. Set signs it
+  like any pick; only `(0, 0)` asks. `PadStanding`'s `landing` chip draws
+  both states. The law is stance-control's *Severance*: the consequences
+  come from the zero, and severance is the named, confirmed version of
+  full inertness.
+- **The borrowed view warns.** `StanceControl`'s `borrowed` (and
+  `PostCard`'s `stanceBorrowed`) adds `You'd keep your borrowed view — no
+  feed of your own yet.` under an unreachable or severed landing; it
+  never blocks. `VouchBackPad` and `VouchBack` carry the live-opinion
+  rule; the stance card draws the line.
+- **The backing pads.** The one-axis 0.00 is spoken `No side taken`. The
+  zero hairline is a "no side yet" detent. The input setting governs
+  here too: `Set an exact value for your backing`, hidden until focused,
+  swaps the strip in place for one track (`StanceAlternates`'
+  `axis="one"`, drawn on the alternates card) — never a locked second.
+  `Start it unreachable?` keeps its title and buttons, the body
+  re-drafted in the unreachable vocabulary.
+- **Smaller fixes.** `EditPad`'s Set: the pick adds no count of its own,
+  but a pick that alone fills the batch reads `You're signing 1 thing`.
+  The picture's "?" says the new picture shows as soon as you sign. The
+  severance card's explicit route costs `⌈1.40⌉ = 2` counter-records, as
+  the route stages them, not one per standing edge. Backlog 145 banks
+  `CARRIED_MEDIA_UNPUBLISHED`'s copy; 144 gains the detent.
+- **Drafted, jakob's at review:** every new string above but his two
+  directions (the `(0, x>0)` landing and the borrowed line).
+- **The gate**: edges **2123 → 2124** (`PadStanding`'s 🤷, `via` 6);
+  flows hold at **227**, none re-blessed. The registry holds at **100
+  screens**: every board drawn this round is unregistered, so no path
+  joins and none leaves.
+
 ---
 
 ## 14. The canvases
