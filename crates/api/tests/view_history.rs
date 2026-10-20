@@ -1107,7 +1107,7 @@ async fn a_narrowed_history_caps_its_topics_at_three(pool: PgPool) {
     assert_eq!(ids(&cue), newest_first[..3].to_vec());
     assert_eq!(cue["hasMoreTags"], true);
 
-    let plain = history(&rig, &token, json!({ "first": 5 })).await;
+    let plain = history_query(&rig, &token, json!({ "first": 5 })).await;
     assert_eq!(plain["hasMoreTags"], false, "no query narrows nothing");
 }
 
