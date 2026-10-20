@@ -45,6 +45,9 @@
 //!   alone as its kind, which serves every match. A cue that names many
 //!   handles would otherwise put an endless people list before any
 //!   content (seam 220, ruled (a) in seam 223).
+//! - **History's topics section is capped** ([`TOPICS_SECTION_CAP`]) the
+//!   same way: its first three, and the rest behind the "See all tags"
+//!   door — the same query with topics alone as its kind (seam 239).
 
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
@@ -60,6 +63,12 @@ pub const MAX_QUERY_CHARS: usize = 640;
 /// another section beside it (ExplorePerson.md, SavedSearch.md,
 /// HistorySearch.md: "the people section holds at most three people").
 pub const PEOPLE_SECTION_CAP: usize = 3;
+
+/// The most topics a topics section serves while the result can stand
+/// another section beside it — History's alone (HistorySearch.md: the
+/// Tags section holds at most three, seam 239): Saved holds no topics and
+/// search does not cap its own.
+pub const TOPICS_SECTION_CAP: usize = 3;
 
 /// A kind the plain-text matcher serves.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

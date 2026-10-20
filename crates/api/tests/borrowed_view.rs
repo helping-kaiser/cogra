@@ -2,9 +2,9 @@
 //! in the viewer's own outgoing stances, so a reader with none is served
 //! someone else's — and `borrowedView` is what the borrowed-view band
 //! reads to name it. A member borrows the view of the issuer of the invite
-//! link they registered through until their
-//! first Opinion is signed, toward any target (VouchBack.md:15); null is
-//! the end of the ladder on purpose.
+//! link they registered through until they hold a live Opinion edge
+//! (neither parameter zero once the bundle nets), signed toward any
+//! target (VouchBack.md:15); null is the end of the ladder on purpose.
 //!
 //! The vouch-back prompt is a separate question with its own account
 //! state: `vouchBackDismissed`, set by `dismissVouchBack`.
@@ -485,6 +485,156 @@ async fn an_opinion_on_a_stranger_ends_the_borrowing(pool: PgPool) {
         None,
         "the latch answers while the mirror rebuilds"
     );
+}
+
+/// Whether the account's landed application row holds the first-opinion latch.
+async fn latched(rig: &WireRig, account: Uuid) -> bool {
+    store::landed_vouch_state(&rig.pool, account)
+        .await
+        .expect("query")
+        .expect("landed")
+        .first_opinion_latched
+}
+
+/// A routing-inert Opinion (either parameter zero, edges.md §1) gives the
+/// member a feed that ranks nothing, so it leaves the borrowed view in
+/// place — landed or merely signed and in flight — and never latches.
+///
+/// A member whose Opinions are all routing-inert keeps the borrowed view.
+/// ´claim:borrowed:an-inert-opinion-keeps-the-borrowing´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_inert_opinion_keeps_the_borrowing(pool: PgPool) {
+    let rig = WireRig::new(pool, api::ratelimit::RateLimitConfig::unlimited());
+    let (mira, _) = rig.seed_member("mira", "mira@example.com").await;
+    let (sol, _) = rig.seed_member("sol", "sol@example.com").await;
+    let (ada, _) = rig.seed_member("ada", "ada@example.com").await;
+    let (kit, _) = rig.seed_member("kit", "kit@example.com").await;
+    let (account, key, token) = wire_member(&rig, mira, "noa").await;
+
+    land_stance(
+        &rig,
+        &token,
+        &key,
+        json!({ "target": sol, "pDirected": 0.0, "pInterest": 0.4 }),
+    )
+    .await;
+    land_stance(
+        &rig,
+        &token,
+        &key,
+        json!({ "target": ada, "pDirected": 0.4, "pInterest": 0.0 }),
+    )
+    .await;
+    assert_eq!(
+        wire_borrowed(&rig, &token).await.as_deref(),
+        Some("mira"),
+        "landed inert opinions end nothing"
+    );
+    assert!(!latched(&rig, account).await);
+
+    let writes = prepare_stance(
+        &rig,
+        &token,
+        json!({ "target": kit, "pDirected": 0.0, "pInterest": 0.0 }),
+    )
+    .await;
+    pre_sign_only(&rig, &token, &key, &writes).await;
+    assert_eq!(
+        wire_borrowed(&rig, &token).await.as_deref(),
+        Some("mira"),
+        "a signed inert opinion in flight ends nothing"
+    );
+}
+
+/// The end is a live edge, wherever it sits among inert ones: the member's
+/// own view starts the moment one Opinion carries both parameters, and a
+/// landed one latches.
+///
+/// A landed live Opinion among inert ones ends the borrowing and latches.
+/// ´claim:borrowed:a-live-opinion-among-inert-ones-ends-the-borrowing´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_live_opinion_among_inert_ones_ends_the_borrowing(pool: PgPool) {
+    let rig = WireRig::new(pool, api::ratelimit::RateLimitConfig::unlimited());
+    let (mira, _) = rig.seed_member("mira", "mira@example.com").await;
+    let (sol, _) = rig.seed_member("sol", "sol@example.com").await;
+    let (ada, _) = rig.seed_member("ada", "ada@example.com").await;
+    let (account, key, token) = wire_member(&rig, mira, "noa").await;
+
+    land_stance(
+        &rig,
+        &token,
+        &key,
+        json!({ "target": sol, "pDirected": 0.0, "pInterest": 0.4 }),
+    )
+    .await;
+    assert_eq!(wire_borrowed(&rig, &token).await.as_deref(), Some("mira"));
+
+    land_stance(&rig, &token, &key, json!({ "target": ada })).await;
+    assert_eq!(wire_borrowed(&rig, &token).await, None);
+    assert!(
+        latched(&rig, account).await,
+        "a landed live opinion latches"
+    );
+}
+
+/// The in-flight half follows the same rule: a signed live Opinion ends the
+/// borrowing without latching, an inert one beside it changes nothing.
+///
+/// A signed, in-flight live Opinion among inert ones ends the borrowing without latching.
+/// ´claim:borrowed:an-in-flight-live-opinion-among-inert-ones-ends-the-borrowing´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_in_flight_live_opinion_among_inert_ones_ends_the_borrowing(pool: PgPool) {
+    let rig = WireRig::new(pool, api::ratelimit::RateLimitConfig::unlimited());
+    let (mira, _) = rig.seed_member("mira", "mira@example.com").await;
+    let (sol, _) = rig.seed_member("sol", "sol@example.com").await;
+    let (ada, _) = rig.seed_member("ada", "ada@example.com").await;
+    let (account, key, token) = wire_member(&rig, mira, "noa").await;
+
+    let inert = prepare_stance(
+        &rig,
+        &token,
+        json!({ "target": sol, "pDirected": 0.4, "pInterest": 0.0 }),
+    )
+    .await;
+    pre_sign_only(&rig, &token, &key, &inert).await;
+    assert_eq!(wire_borrowed(&rig, &token).await.as_deref(), Some("mira"));
+
+    let live = prepare_stance(&rig, &token, json!({ "target": ada })).await;
+    pre_sign_only(&rig, &token, &key, &live).await;
+    assert_eq!(wire_borrowed(&rig, &token).await, None);
+    assert!(
+        !latched(&rig, account).await,
+        "an in-flight opinion never latches"
+    );
+}
+
+/// The edge is the netted bundle, not the record: two Opinions toward one
+/// target that sum to zero leave an inert edge, however live each was.
+///
+/// An Opinion bundle netted to zero is no live edge and keeps the borrowing.
+/// ´claim:borrowed:a-bundle-netted-to-zero-keeps-the-borrowing´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_bundle_netted_to_zero_keeps_the_borrowing(pool: PgPool) {
+    let rig = WireRig::new(pool, api::ratelimit::RateLimitConfig::unlimited());
+    let (mira, _) = rig.seed_member("mira", "mira@example.com").await;
+    let (sol, _) = rig.seed_member("sol", "sol@example.com").await;
+    let (account, key, token) = wire_member(&rig, mira, "noa").await;
+
+    for pick in [0.25, -0.25] {
+        land_stance(
+            &rig,
+            &token,
+            &key,
+            json!({ "target": sol, "pDirected": pick, "pInterest": pick }),
+        )
+        .await;
+    }
+    assert_eq!(
+        wire_borrowed(&rig, &token).await.as_deref(),
+        Some("mira"),
+        "two records, one netted-out edge"
+    );
+    assert!(!latched(&rig, account).await);
 }
 
 /// The borrowing and the pair are two questions now (VouchBack.md:3 vs
