@@ -301,13 +301,15 @@ interface ContentRepository {
      * The post's BACKING — the author's own Publish bundle toward it (the
      * mint and every edit's pick, summed then clipped) — for the edit pad's
      * `Current backing`, `Backing after` and `Walk it all back` (EditPad.md).
+     * Off `Post.viewerBacking`, never `viewerStance`, which folds the face's
+     * Opinion bundle. Pending records count, so an edit signed a moment ago
+     * is part of the backing the next edit reads.
      *
-     * SERVER GAP (seam 233): no read serves it yet — `viewerStance` folds the
-     * Opinion bundle only, which is the face's, never the backing. Until one
-     * exists every implementation answers null and the pad draws the
-     * backing as unread; nothing here estimates it.
+     * Null when the server serves none — the post does not resolve, or the
+     * viewer is not its creator; the pad then draws the backing unread, and
+     * nothing here estimates it.
      */
-    suspend fun postBacking(id: String): Outcome<PostBacking?> = Outcome.Success(null)
+    suspend fun postBacking(id: String): Outcome<PostBacking?>
 
     /**
      * [tags] are the topics declared at creation, exactly as on a post

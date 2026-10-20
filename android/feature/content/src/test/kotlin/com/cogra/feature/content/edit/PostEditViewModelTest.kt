@@ -658,8 +658,25 @@ class PostEditViewModelTest {
         assertThat(vm.state.value.stagedPick).isEqualTo(0.2)
     }
 
-    // SERVER GAP (seam 233): nothing serves the backing yet. The edit stands
-    // without it — unread readouts, a greyed walk-back — and never guesses.
+    // Two +1.00 edits over the mint: the raw sum is past the axis, the net
+    // clipped, and one walk-back reaches only as far as one record can.
+    @Test
+    fun aBackingPastTheAxisReadsClippedOverItsRawSum() = runTest(dispatcher) {
+        content.backingOutcome = Outcome.Success(PostBacking(net = 1.0, rawSum = 2.0))
+        val vm = opened()
+        assertThat(vm.state.value.backingCurrent).isEqualTo(BackingValue.Read(1.0))
+        assertThat(vm.state.value.backingRaw).isEqualTo(BackingValue.Read(2.0))
+        assertThat(vm.state.value.backingWithEdit).isEqualTo(BackingValue.Read(1.0))
+        vm.onOpenBackingPad()
+        vm.onWalkBack()
+        vm.onSetBacking()
+        assertThat(vm.state.value.pick).isEqualTo(-1.0)
+        assertThat(vm.state.value.backingWithEdit).isEqualTo(BackingValue.Read(1.0))
+    }
+
+    // No backing served — the server answers only the post's creator. The
+    // edit stands without it — unread readouts, a greyed walk-back — and
+    // never guesses.
     @Test
     fun anUnservedBackingReadsUnreadAndGreysTheWalkBack() = runTest(dispatcher) {
         val vm = opened()
@@ -679,5 +696,17 @@ class PostEditViewModelTest {
         vm.onTitleChange("Retitled")
         vm.signed()
         assertThat(vm.state.value.saved).isTrue()
+    }
+
+    // A refusal the guard could not replay away reads as unread too — never
+    // as the post missing: the backing is beside the edit, not in its way.
+    @Test
+    fun aRefusedBackingReadNeverBlocksTheEdit() = runTest(dispatcher) {
+        content.backingOutcome = Outcome.Refused(listOf(UserError(ErrorCode.UNAUTHENTICATED, "no viewer")))
+        val vm = opened()
+        assertThat(vm.state.value.notFound).isFalse()
+        assertThat(vm.state.value.title).isEqualTo("Loaded title")
+        assertThat(vm.state.value.backingCurrent).isEqualTo(BackingValue.Unread)
+        assertThat(vm.state.value.canWalkBack).isFalse()
     }
 }
