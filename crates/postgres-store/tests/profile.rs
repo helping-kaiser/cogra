@@ -2,7 +2,7 @@
 //! newest-wins version reads, the append-only insert, and the
 //! one-namespace handle lookup. Requires Postgres (`make up`).
 
-use chrono::{Duration, Utc};
+use chrono::{Duration, SubsecRound, Utc};
 use postgres_store::content::{self, LandingOrder};
 use postgres_store::{auth, genesis, profile};
 use sqlx::PgPool;
@@ -268,7 +268,7 @@ async fn a_row_without_coordinates_never_outranks_a_landed_one(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_pending_version_is_current_ahead_of_every_landed_one(pool: PgPool) {
     let actor = seed_actor(&pool, "ada").await;
-    let signed = Utc::now();
+    let signed = Utc::now().trunc_subsecs(6);
 
     let mut tx = pool.begin().await.expect("tx");
     assert!(
@@ -316,7 +316,7 @@ async fn a_pending_version_is_current_ahead_of_every_landed_one(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_pending_version_is_named_by_its_instant(pool: PgPool) {
     let actor = seed_actor(&pool, "ada").await;
-    let signed = Utc::now();
+    let signed = Utc::now().trunc_subsecs(6);
 
     let mut tx = pool.begin().await.expect("tx");
     assert!(
@@ -367,7 +367,7 @@ async fn a_pending_version_is_named_by_its_instant(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn expiry_discards_only_the_pending_version(pool: PgPool) {
     let actor = seed_actor(&pool, "ada").await;
-    let signed = Utc::now();
+    let signed = Utc::now().trunc_subsecs(6);
 
     let mut tx = pool.begin().await.expect("tx");
     profile::insert_profile_version(
