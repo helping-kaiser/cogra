@@ -34,7 +34,7 @@ use crate::auth::{self, AuthConfig, RefreshError, Viewer};
 use crate::breach::BreachCorpus;
 use crate::l1::StandInBoundary;
 use crate::mailer::{Mail, Mailer, WebOrigin};
-use crate::media::{self, BlobStore, MediaConfig, resumable};
+use crate::media::{self, BlobStore, MediaAreas, MediaConfig, resumable};
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 use crate::prepare::Staging;
 use crate::profile::ProfileError;
@@ -456,6 +456,14 @@ fn relay_error(e: RelayError, index: usize) -> UserError {
             format!("staged write is {actual}"),
             path,
         ),
+        RelayError::CarriedMediaUnpublished { reason, .. } => {
+            tracing::warn!(reason = %reason, "a released carried write waits on its media");
+            UserError::at(
+                ErrorCode::CarriedMediaUnpublished,
+                "the write's media is not published yet; retry",
+                path,
+            )
+        }
         other => internal(other),
     }
 }
@@ -622,8 +630,7 @@ impl LicenseInput {
 /// `[a-z0-9._-]`, at most 128 bytes) and a new name needs no creation
 /// act: Types anchor vacuously (hashtag.md §1, §2). Re-tagging a name
 /// revises the claim — the newest record per (author, content, Type)
-/// wins, and relevance 0 is the un-tag, read as withdrawn (hashtag.md
-/// §4).
+/// wins, and `(0,0)` is the un-tag, read as withdrawn (hashtag.md §4).
 #[derive(InputObject)]
 struct TagInput {
     name: String,
@@ -790,6 +797,14 @@ fn self_mark_draft(
     }
 }
 
+/// A post edit's stance pick as the wire carries it: omitted is the inert
+/// attachment `0`, which is what every edit stood at before the pick
+/// existed — so a client that never sends one keeps authoring the same
+/// record.
+fn edit_pick(pick: Option<Dimension>) -> f64 {
+    pick.map_or(0.0, |d| d.0)
+}
+
 /// A new Post: one genesis Publish whose envelope carries the display
 /// fields (post.md §1), plus one Tag record per declared topic — each
 /// its own priced act. Fields are raw scalars; moderation is
@@ -852,6 +867,12 @@ struct PreparePostEditInput {
     sensitive: Option<bool>,
     /// The reason the edit leaves standing; same rules a create runs.
     sensitive_reason: Option<String>,
+    /// The author's stance pick riding the edit's own record — its
+    /// attachment. Omitted is `0`, the inert setting: an unadjusted edit
+    /// moves no stance. A moved pick alone is a legal edit — a
+    /// content-identical new version. `pInterest` stays census-fixed at
+    /// 1 for Publish, so it is no field.
+    p_directed: Option<Dimension>,
 }
 
 /// A new Comment: one genesis Review — A leg to the target, terminal
@@ -883,15 +904,16 @@ struct PrepareCommentInput {
 }
 
 /// One standalone topic declaration on existing content — the gesture
-/// that adds a topic after creation, and, at `pDirected: 0`, the one
-/// that withdraws it. Tags are never edit fields: changing a post's
-/// topics is its own priced act (post.md §3).
+/// that adds a topic after creation, and, at `(0,0)`, the one that
+/// withdraws it. Tags are never edit fields: changing a post's topics is
+/// its own priced act (post.md §3).
 #[derive(InputObject)]
 struct PrepareTagInput {
     /// The content being tagged.
     target: Uuid,
     name: String,
-    /// Relevance `r`; zero is the un-tag. Required, as on `TagInput`.
+    /// Relevance `r`. Required, as on `TagInput`. An un-tag signs both
+    /// parameters at 0.
     p_directed: Dimension,
     /// Confidence `c`, census-bounded to `[0, 1]`. Required, as on
     /// `TagInput`.
@@ -943,7 +965,7 @@ impl PrepareReferenceInput {
 
 /// Withdrawing one citation. Records are never deleted, and Reference
 /// withdrawal is per-leg net stance — not the Tag rule beside it, which
-/// is newest-wins at relevance 0 only because a tag's confidence cannot
+/// is newest-wins at `(0,0)` only because a tag's confidence cannot
 /// be netted. Both citation parameters are signed, so a withdrawal is the
 /// severance shape: counter-records until the bundle reaches `(0, 0)`.
 ///
@@ -3852,8 +3874,9 @@ impl Mutation {
         }
     }
 
-    /// Prepares a Post edit: an ordinary-role Publish at attachment 0
-    /// toward the existing node, chained behind the current head.
+    /// Prepares a Post edit: an ordinary-role Publish at the author's
+    /// picked attachment (default 0, inert) toward the existing node,
+    /// chained behind the current head.
     /// Creator-only; one in-flight edit per post and author
     /// (post.md §4).
     async fn prepare_post_edit(
@@ -3872,6 +3895,7 @@ impl Mutation {
             content: input.content,
             attachments: attachment_drafts(&input.attachments),
             sensitive: self_mark_draft(input.sensitive, input.sensitive_reason),
+            p_directed: edit_pick(input.p_directed),
         };
         match crate::content::prepare_post_edit(pool, boundary, staging, v.user_id, draft).await {
             Ok(prepared) => Ok(PrepareContentPayload::ok(prepared)),
@@ -3913,7 +3937,7 @@ impl Mutation {
 
     /// Prepares one standalone Tag on existing content — the gesture
     /// that adds a topic after creation. There is no un-tag mutation:
-    /// withdrawing a topic is a further Tag at `pDirected: 0`, which the
+    /// withdrawing a topic is a further Tag at `(0,0)`, which the
     /// current-topics fold reads as withdrawn (hashtag.md §4). Tagging
     /// is not restricted to the content's author; the read side is what
     /// separates the author's own declarations from third-party claims.
@@ -4107,6 +4131,12 @@ impl Mutation {
     /// Resubmitting a sealed proposal is idempotent only for the exact
     /// signature that was sealed; differing bytes refuse as BAD_INPUT.
     ///
+    /// A carried write the landing released signs only once every asset
+    /// it names is published to the live store; the submit runs that
+    /// move. One whose move has not landed refuses as
+    /// CARRIED_MEDIA_UNPUBLISHED, which is retryable: nothing was
+    /// recorded, and the next submit resumes the move.
+    ///
     /// A keyless account is refused rather than rendered: no staged write
     /// can exist for one, because the Registration stages only after the
     /// attach proof, so a missing key here is a client bug.
@@ -4118,6 +4148,7 @@ impl Mutation {
         let v = viewer(ctx)?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
+        let areas = ctx.data::<MediaAreas>()?;
         let identity = store::actor_identity(pool, v.user_id)
             .await?
             .ok_or_else(unauthenticated)?;
@@ -4156,6 +4187,10 @@ impl Mutation {
                     continue;
                 }
             };
+            if let Err(e) = relay::gate_carried_media(pool, areas, &owned).await {
+                user_errors.push(relay_error(e, i));
+                continue;
+            }
             match relay::submit_pre_signed(
                 boundary,
                 pool,

@@ -45,6 +45,14 @@ pub enum BlobError {
     Config(String),
 }
 
+impl BlobError {
+    /// Whether the store answered that no object sits under the key — the
+    /// one failure a mover reads as a fact rather than a fault.
+    pub fn is_not_found(&self) -> bool {
+        matches!(self, Self::Store(ObjectStoreError::NotFound { .. }))
+    }
+}
+
 /// An asset's bytes are immutable — the row is never updated after upload
 /// and a corrected picture is a new asset — so a reader may cache them
 /// forever. `immutable` is what tells a browser not to revalidate at all.

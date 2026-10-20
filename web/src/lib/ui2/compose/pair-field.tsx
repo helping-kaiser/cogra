@@ -21,17 +21,23 @@
 // travel lands and where the knob sits, so this field and the stance square
 // cannot drift into two ideas of what a finger is worth.
 //
+// RELEASE LANDS THE PAIR ON THE HUNDREDTHS GRID (the value domain, jakob
+// 2026-10-20): the knob follows the finger, and the lift parks both slots on
+// the nearest hundredth inside the field's reach — a tag's relevance never
+// below its +0.01 floor.
+//
 // THE KEYBOARD WALKS IT TOO. The sheet's non-drag route is the declared
-// accessible path; the arrows are a convenience on top, held to the same reach.
+// accessible path; the arrows are a convenience on top, held to the same reach
+// and the same grid.
 
 import { useRef, useState } from "react";
 
 import type { StancePair } from "@/lib/stance/model";
 import {
-  clampToRanges,
   KNOB_TRAVEL_INSET_PX,
   rangedPairFrom,
   rangedPercentOf,
+  snapToRanges,
   zeroPercentOf,
   type PadRanges,
 } from "@/lib/stance/pad-geometry";
@@ -66,15 +72,20 @@ export function PairField({
   testId: string;
 }) {
   const fieldRef = useRef<HTMLDivElement>(null);
-  const drag = useRef<{ x: number; y: number; base: StancePair } | null>(null);
+  // `last` is the pair the drag most recently reported, held here rather than
+  // read back from `value`: the lift can arrive before the move's render.
+  const drag = useRef<{ x: number; y: number; base: StancePair; last: StancePair | null } | null>(null);
   const [dragging, setDragging] = useState(false);
   const knob = rangedPercentOf(value, ranges);
   const zeroAcross = zeroPercentOf(ranges.pInterest);
   const zeroDown = zeroPercentOf(ranges.pDirected);
 
   const endDrag = () => {
+    const last = drag.current?.last ?? null;
     drag.current = null;
     setDragging(false);
+    // A tap that never travelled moves nothing — not even onto the grid.
+    if (last !== null) onChange(snapToRanges(last, ranges));
   };
 
   const onKeyDown = (event: React.KeyboardEvent) => {
@@ -85,7 +96,7 @@ export function PairField({
     event.preventDefault();
     const step = event.shiftKey ? COARSE_STEP : STEP;
     onChange(
-      clampToRanges(
+      snapToRanges(
         {
           pDirected: value.pDirected + arrow.dx * step,
           pInterest: value.pInterest + arrow.dy * step,
@@ -136,7 +147,7 @@ export function PairField({
         onPointerDown={(event) => {
           // The press is the field's, never the sheet's pull-to-drop.
           event.stopPropagation();
-          drag.current = { x: event.clientX, y: event.clientY, base: value };
+          drag.current = { x: event.clientX, y: event.clientY, base: value, last: null };
           setDragging(true);
           event.currentTarget.setPointerCapture?.(event.pointerId);
         }}
@@ -145,15 +156,15 @@ export function PairField({
           const from = drag.current;
           const field = fieldRef.current;
           if (from === null || field === null) return;
-          onChange(
-            rangedPairFrom(
-              from.base,
-              field.getBoundingClientRect(),
-              { dx: event.clientX - from.x, dy: event.clientY - from.y },
-              KNOB_TRAVEL_INSET_PX,
-              ranges,
-            ),
+          const next = rangedPairFrom(
+            from.base,
+            field.getBoundingClientRect(),
+            { dx: event.clientX - from.x, dy: event.clientY - from.y },
+            KNOB_TRAVEL_INSET_PX,
+            ranges,
           );
+          from.last = next;
+          onChange(next);
         }}
         onPointerUp={(event) => {
           event.stopPropagation();

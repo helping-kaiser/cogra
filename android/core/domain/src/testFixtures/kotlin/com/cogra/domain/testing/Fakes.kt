@@ -43,6 +43,7 @@ import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.ModeratedField
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
+import com.cogra.domain.PostBacking
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PostView
 import com.cogra.domain.PreparedContentView
@@ -161,6 +162,18 @@ class FakeIdentityStore : IdentityStore {
     }
 
     override suspend fun handshakeIds(): Set<String> = handshakes.keys.toSet()
+
+    val carriedExpectations = mutableMapOf<String, ByteArray>()
+
+    override suspend fun carriedExpectation(stagedWriteId: String): ByteArray? = carriedExpectations[stagedWriteId]
+
+    override suspend fun saveCarriedExpectation(stagedWriteId: String, digest: ByteArray) {
+        carriedExpectations[stagedWriteId] = digest
+    }
+
+    override suspend fun clearCarriedExpectation(stagedWriteId: String) {
+        carriedExpectations.remove(stagedWriteId)
+    }
 
     override suspend fun stancePadTaught(): Boolean = stancePadTaught
 
@@ -840,6 +853,13 @@ open class ThrowingContentRepository : ContentRepository {
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun postSelfMark(id: String): Outcome<SelfMarkView?> =
         throw UnsupportedOperationException()
+
+    /**
+     * Answers rather than throws, for the reason [graphIds] does: every edit
+     * reads it as it opens, and a test about something else need not know
+     * the backing exists. Null — no backing served — is the unread pad.
+     */
+    override suspend fun postBacking(id: String): Outcome<PostBacking?> = Outcome.Success(null)
     override suspend fun preparePostEdit(
         id: String,
         title: String?,
@@ -848,6 +868,7 @@ open class ThrowingContentRepository : ContentRepository {
         attachments: List<AttachmentClaim>,
         sensitive: Boolean,
         sensitiveReason: String?,
+        pDirected: Double,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun prepareComment(
         target: String,

@@ -2,7 +2,9 @@
 //!
 //! The seen-list (data-model.md "Personal frontend state";
 //! feed-ranking.md §9.4): `user_view_log`, the one writer `markSeen` and
-//! the one reader `User.viewHistory`.
+//! the reader `User.viewHistory`. A list narrowed by a query is served by
+//! the one search matcher confined to the seen-list
+//! (`search::ReaderList::History`), which applies the same narrowings.
 //!
 //! # Append-once by construction
 //!
@@ -192,6 +194,37 @@ pub async fn view_history(
         )
         .fetch_all(pool)
         .await
+    }
+}
+
+/// A keyset position on a narrowed seen-list: section ascending, then
+/// `(first_seen_at, content_id)` descending — the order the search
+/// matcher serves the seen-list in (`search::ReaderList::History`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct HistoryMatchCursor {
+    pub section: i32,
+    pub first_seen_at: Timestamp,
+    pub content_id: Uuid,
+}
+
+impl HistoryMatchCursor {
+    /// Where `hit`, served from the seen-list, stands.
+    pub fn of_hit(hit: &crate::search::SearchHit) -> Self {
+        Self {
+            section: crate::search::section_of(hit.tier),
+            first_seen_at: hit.created_at,
+            content_id: hit.node_id,
+        }
+    }
+
+    /// The position as the matcher's own keyset reads it: a narrowed
+    /// list's tier is its section's first.
+    pub fn as_search_cursor(self) -> crate::search::SearchCursor {
+        crate::search::SearchCursor {
+            tier: 2 * self.section,
+            created_at: self.first_seen_at,
+            node_id: self.content_id,
+        }
     }
 }
 

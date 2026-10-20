@@ -11,6 +11,7 @@ import {
   CommentRepliesDocument,
   CommentSelfMarkDocument,
   FeedPostFragmentDoc,
+  PostBackingDocument,
   PostCommentsDocument,
   PostDetailDocument,
   PrepareCommentDocument,
@@ -448,9 +449,10 @@ export async function preparePost(
     sensitive?: boolean;
     sensitiveReason?: string;
     /**
-     * Where the author stands on their own post — the genesis Publish's
-     * `pDirected`, exactly as the seal shows it (the wizard pre-fills +0.1;
-     * Adjust moves it). Required on the wire: the server never fills it in.
+     * The author's backing of their own post — the genesis Publish's
+     * `pDirected`, exactly as the seal's Your backing row shows it (the
+     * wizard pre-fills +0.1; Adjust moves it). Required on the wire: the
+     * server never fills it in. `pInterest` is census-fixed, so no field.
      */
     pDirected: number;
   },
@@ -507,6 +509,14 @@ export async function preparePostEdit(
      * an image post's body with the words in the form and destroy the media.
      */
     attachments: readonly GalleryEntryDraft[];
+    /**
+     * The edit's own pick — the attachment its Publish carries, the value it
+     * ADDS to the post's backing (round 15, PICK-IS-THE-EDGE; post.md §4).
+     * Required here although the wire defaults it to the inert 0: the
+     * required-stance wire says a stance is always stated, never filled in.
+     * `pInterest` is census-fixed at 1 for Publish, so it is no field.
+     */
+    pDirected: number;
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -521,12 +531,49 @@ export async function preparePostEdit(
             content: fields.content,
             attachments: attachmentInputs(fields.attachments),
             ...sensitiveInput(fields.sensitive, fields.sensitiveReason),
+            pDirected: fields.pDirected,
           },
         },
       }),
     (data) => data.preparePostEdit.userErrors,
     (data) => liftPrepared(data.preparePostEdit),
   );
+}
+
+/**
+ * The author's BACKING of their own post: the RAW sum of their Publish
+ * records toward it — the genesis and every edit — the bundle the edit pad's
+ * `Current backing`, `Backing after` and `Walk it all back` read (EditPad.md).
+ * Raw, not clipped: Backing after is `clip(raw sum + pick)`.
+ */
+export type PostBacking = { readonly rawSum: number };
+
+/**
+ * The author's backing of their own post, off `Post.viewerBacking` — never
+ * `viewerStance`, which folds the face's Opinion bundle (PadStanding.md).
+ *
+ * Null when the server answers none: the post does not resolve, or the viewer
+ * is not its creator. The readouts then stand unread rather than guess.
+ *
+ * Always asked of the server: an edit just signed moves the backing, and the
+ * next edit opened must fold it in (pending records count), so a cached
+ * answer from an earlier opening would park the walk-back against a sum that
+ * no longer stands.
+ */
+export async function fetchPostBacking(
+  client: ApolloClient,
+  postId: string,
+): Promise<Outcome<PostBacking | null>> {
+  const fetched = await fetchOutcome(() =>
+    client.query({
+      query: PostBackingDocument,
+      variables: { id: postId },
+      fetchPolicy: "network-only",
+    }),
+  );
+  if (fetched.kind !== "success") return fetched;
+  const backing = fetched.value.post?.viewerBacking;
+  return success(backing == null ? null : { rawSum: backing.rawPDirected });
 }
 
 export async function prepareComment(

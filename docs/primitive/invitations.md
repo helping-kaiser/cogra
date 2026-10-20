@@ -259,7 +259,7 @@ self-correcting — with teeth the pre-L1 design lacked:
   path: absent from feeds, from attribution earnings, from vouch
   propagation, from subsidy — the zero-jail
   ([feed-ranking.md §7](feed-ranking.md#7-sort-order-tie-breakers-zero-jail)).
-- **Severance and defunding are the same act.** The reversed
+- **Severance defunds.** The reversed
   stances stop propagating standing, dropping the cluster below
   the wall — the community stops paying for actors it has severed
   ([economics.md](economics.md)).

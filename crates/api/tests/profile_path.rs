@@ -289,6 +289,166 @@ async fn a_failed_promotion_rides_the_ingestion_outcome(pool: PgPool) {
     assert_eq!(rig.version_count(actor).await, 0);
 }
 
+/// The current profile, read the way every viewer's profile read takes it.
+async fn current(pool: &PgPool, actor: Uuid) -> profile_store::ProfileVersion {
+    profile_store::current_profile(pool, actor)
+        .await
+        .expect("reads")
+        .expect("has profile")
+}
+
+/// A signed update is the author's content from the signature on: its
+/// merged version row is written at the pre-commitment, marked pending,
+/// and the current-profile read — the one every viewer's profile goes
+/// through, with no viewer in it — serves it at once, dated by the
+/// authoring instant. Landing then drops the mark on that same row rather
+/// than appending another, so the date and the content never jump.
+///
+/// A signed profile update is served to every reader from its pre-commitment, marked pending, and its landing flips that same row rather than appending another.
+/// ´claim:profile:a-signed-update-is-served-pending-until-it-lands´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_signed_update_is_served_pending_until_it_lands(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.registered_actor("ada").await;
+    rig.land_update(actor, &key, draft(None, None, Some("https://ada.example")))
+        .await;
+
+    let prepared = rig
+        .update(actor, draft(Some("Ada L"), Some("Curious."), None))
+        .await
+        .expect("prepares update");
+    rig.sign_and_relay(prepared.id, &key).await;
+    let authored = staged::load(&rig.pool, prepared.id)
+        .await
+        .expect("loads")
+        .pre_signed_at
+        .expect("signed");
+
+    let pending = current(&rig.pool, actor).await;
+    assert!(pending.pending, "an unlanded update is marked pending");
+    assert_eq!(pending.display_name, "Ada L");
+    assert_eq!(pending.bio.as_deref(), Some("Curious."));
+    assert_eq!(
+        pending.website_url.as_deref(),
+        Some("https://ada.example"),
+        "the pending row is the merged copy-forward version"
+    );
+    assert_eq!(pending.created_at, authored);
+    let landed = profile_store::landed_profile(&rig.pool, actor)
+        .await
+        .expect("reads")
+        .expect("has profile");
+    assert_eq!(
+        landed.display_name, "ada",
+        "the landed profile is untouched"
+    );
+    assert_eq!(rig.version_count(actor).await, 3);
+
+    rig.close_and_ingest().await;
+
+    let after = current(&rig.pool, actor).await;
+    assert!(!after.pending, "landing drops the mark");
+    assert_eq!(after.display_name, "Ada L");
+    assert_eq!(after.created_at, authored, "the date never jumps");
+    assert_eq!(
+        rig.version_count(actor).await,
+        3,
+        "landing flips the pending row rather than appending another"
+    );
+}
+
+/// The pre-sign leg accepts a retry, and staging is idempotent with it:
+/// the retry merges onto the same landed base and its row collides with
+/// the one already written.
+///
+/// A retried pre-signature stages no second profile version.
+/// ´claim:profile:a-retried-pre-sign-stages-one-row´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_retried_pre_sign_stages_one_row(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.registered_actor("ada").await;
+    let prepared = rig
+        .update(actor, draft(Some("Ada L"), None, None))
+        .await
+        .expect("prepares update");
+    rig.sign_and_relay(prepared.id, &key).await;
+    let write = staged::load(&rig.pool, prepared.id).await.expect("loads");
+    api::content::stage_pending(&rig.pool, &write, write.pre_signed_at.expect("signed"))
+        .await
+        .expect("restages");
+    assert_eq!(rig.version_count(actor).await, 2);
+    assert_eq!(current(&rig.pool, actor).await.display_name, "Ada L");
+}
+
+/// An update that expires unlanded takes its pending row with it, in the
+/// same transaction, and the previous version renders again — on the
+/// graph nothing was ever written, so nothing is left behind.
+///
+/// An expired profile update leaves no row behind, and the previous version renders again.
+/// ´claim:profile:an-expired-update-falls-back-to-the-previous-version´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_expired_update_falls_back_to_the_previous_version(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.registered_actor("ada").await;
+    rig.land_update(actor, &key, draft(None, Some("Landed bio"), None))
+        .await;
+    let prepared = rig
+        .update(actor, draft(None, Some("Pending bio"), None))
+        .await
+        .expect("prepares update");
+    rig.sign_and_relay(prepared.id, &key).await;
+    assert_eq!(
+        current(&rig.pool, actor).await.bio.as_deref(),
+        Some("Pending bio")
+    );
+
+    staged::expire_one(&rig.pool, prepared.id, 999)
+        .await
+        .expect("expires");
+
+    let after = current(&rig.pool, actor).await;
+    assert!(!after.pending);
+    assert_eq!(
+        after.bio.as_deref(),
+        Some("Landed bio"),
+        "the bio rolls back"
+    );
+    assert_eq!(rig.version_count(actor).await, 2);
+}
+
+/// A record that lands after its write expired still promotes — the
+/// mirror governs — and with its pending row gone, landing appends the
+/// merged version under the record's own coordinates instead.
+///
+/// A profile update landing after its pending row expired still lands its version.
+/// ´claim:profile:an-update-landing-after-expiry-still-lands´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_update_landing_after_expiry_still_lands(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.registered_actor("ada").await;
+    let prepared = rig
+        .update(actor, draft(Some("Ada L"), None, None))
+        .await
+        .expect("prepares update");
+    rig.sign_and_relay(prepared.id, &key).await;
+    let authored = staged::load(&rig.pool, prepared.id)
+        .await
+        .expect("loads")
+        .pre_signed_at;
+    staged::expire_one(&rig.pool, prepared.id, 0)
+        .await
+        .expect("expires");
+    assert_eq!(current(&rig.pool, actor).await.display_name, "ada");
+
+    rig.close_and_ingest().await;
+
+    let after = current(&rig.pool, actor).await;
+    assert!(!after.pending);
+    assert_eq!(after.display_name, "Ada L");
+    assert_eq!(Some(after.created_at), authored);
+    assert_eq!(rig.version_count(actor).await, 2);
+}
+
 /// An update carrying no change is refused as the empty gesture it is.
 /// ´claim:profile:an-empty-update-is-refused´
 #[sqlx::test(migrations = "../../migrations")]

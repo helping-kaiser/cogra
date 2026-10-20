@@ -2,7 +2,8 @@
 //! `markSeen`; history-surface packet H1): first seeing only, newest
 //! first, a batch's own order, the kind filter, the hidden-actor
 //! exclusion, removed things kept, the frozen keyset, the viewer-only
-//! read, and the four refusals.
+//! read, and the four refusals — and the list narrowed by a query
+//! through the one search matcher (api-spec.md "Search", History).
 //!
 //! Content is seeded through the store's own writers. Two states have no
 //! verb yet and are seeded by raw SQL: a hidden actor (`hideActor` is the
@@ -734,4 +735,413 @@ async fn mark_seen_trips_the_account_budget(pool: PgPool) {
         .await;
     assert_eq!(first_error_code(&refused), Some("RATE_LIMITED"));
     assert_eq!(ids(&history(&rig, &token, json!({})).await), vec![b, a]);
+}
+
+const HISTORY_QUERY: &str = r#"query($query: String, $kinds: [NodeKind!], $first: Int,
+                                    $after: String, $last: Int, $before: String) {
+  me {
+    viewHistory(query: $query, kinds: $kinds, first: $first, after: $after,
+                last: $last, before: $before) {
+      edges {
+        cursor
+        firstSeenAt
+        node {
+          __typename
+          ... on Post { id }
+          ... on Comment { id }
+          ... on User { id }
+          ... on Hashtag { id }
+        }
+      }
+      pageInfo { hasNextPage hasPreviousPage startCursor endCursor }
+      totalCount
+      hasMorePeople
+      hasMoreTags
+    }
+  }
+}"#;
+
+async fn history_query_raw(rig: &WireRig, token: &str, variables: Value) -> Value {
+    rig.gql_raw(Some(token), HISTORY_QUERY, variables).await
+}
+
+async fn history_query(rig: &WireRig, token: &str, variables: Value) -> Value {
+    let response = history_query_raw(rig, token, variables.clone()).await;
+    assert!(response.get("errors").is_none(), "{variables}: {response}");
+    response["data"]["me"]["viewHistory"].clone()
+}
+
+/// Gives `actor` a display name, so plain text can reach them by it.
+async fn display_name(pool: &PgPool, actor: Uuid, name: &str) {
+    let mut conn = pool.acquire().await.expect("conn");
+    genesis::insert_profile_version(&mut conn, actor, name, None)
+        .await
+        .expect("profile");
+}
+
+/// Walks the narrowed list forward `size` at a time, then backward, and
+/// answers both walks.
+async fn walk_both_ways(
+    rig: &WireRig,
+    token: &str,
+    query: &str,
+    size: i32,
+) -> (Vec<Uuid>, Vec<Uuid>) {
+    let mut forward = Vec::new();
+    let mut after = Value::Null;
+    loop {
+        let page = history_query(
+            rig,
+            token,
+            json!({ "query": query, "first": size, "after": after }),
+        )
+        .await;
+        forward.extend(ids(&page));
+        if page["pageInfo"]["hasNextPage"] != true {
+            break;
+        }
+        after = page["pageInfo"]["endCursor"].clone();
+    }
+    let mut back = Vec::new();
+    let mut before = Value::Null;
+    loop {
+        let page = history_query(
+            rig,
+            token,
+            json!({ "query": query, "last": size, "before": before }),
+        )
+        .await;
+        let mut chunk = ids(&page);
+        chunk.append(&mut back);
+        back = chunk;
+        if page["pageInfo"]["hasPreviousPage"] != true {
+            break;
+        }
+        before = page["pageInfo"]["startCursor"].clone();
+    }
+    (forward, back)
+}
+
+/// The narrowing runs on the server over the whole seen-list: a match
+/// seen long before the first page reaches is found on the first page,
+/// counted alone, and a match the reader never saw is not.
+///
+/// A History query finds a match wherever it stands in the list, and never a thing the reader has not seen.
+/// ´claim:history:a-history-query-runs-over-the-whole-list´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_history_query_finds_a_match_beyond_the_loaded_window(pool: PgPool) {
+    let rig = rig(pool);
+    let (_, token) = reader(&rig, "reader").await;
+    let kel = person(&rig.pool, "kel").await;
+    let old = post(&rig.pool, kel, 0, "Salt maps of the coast road").await;
+    mark(&rig, &token, &[old]).await;
+    let mut later = Vec::new();
+    for n in 1..=30 {
+        later.push(post(&rig.pool, kel, n, &format!("Rubbing {n}")).await);
+    }
+    mark(&rig, &token, &later).await;
+    let unseen = post(&rig.pool, kel, 40, "Salt flats").await;
+
+    let window = history(&rig, &token, json!({ "first": 5 })).await;
+    assert!(!ids(&window).contains(&old), "beyond the plain first page");
+    let found = history_query(&rig, &token, json!({ "query": "salt", "first": 5 })).await;
+    assert_eq!(ids(&found), vec![old]);
+    assert!(!ids(&found).contains(&unseen), "never what was not seen");
+    assert_eq!(found["totalCount"], 1);
+    assert_eq!(found["pageInfo"]["hasNextPage"], false);
+    assert_eq!(found["hasMorePeople"], false);
+    for blank in [json!(null), json!(""), json!("   ")] {
+        let plain = history_query(&rig, &token, json!({ "query": blank, "first": 5 })).await;
+        assert_eq!(ids(&plain), ids(&window), "a blank query narrows nothing");
+        assert_eq!(plain["totalCount"], 31);
+    }
+}
+
+/// History runs the one search law over the seen set: a narrowed list is
+/// sectioned — people, then topics, then content — newest first seeing
+/// inside each. A person cue lists the seen profiles it names, then the
+/// seen things they authored; plain text reaches a person's seen posts
+/// through their display name; a bare topic cue lists the seen topics it
+/// names.
+///
+/// A narrowed History list follows the search law: people, then topics, then content, newest first seeing first.
+/// ´claim:history:a-narrowed-history-follows-the-search-law´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_narrowed_history_follows_the_search_law(pool: PgPool) {
+    let rig = rig(pool);
+    let (_, token) = reader(&rig, "reader").await;
+    let solarium = person(&rig.pool, "solarium").await;
+    display_name(&rig.pool, solarium, "solarium").await;
+    let kel = person(&rig.pool, "kel").await;
+    let theirs = post(&rig.pool, solarium, 1, "Rubbings").await;
+    let their_comment = comment(&rig.pool, solarium, theirs, "post").await;
+    let unseen = post(&rig.pool, solarium, 2, "Wax charts").await;
+    let kels = post(&rig.pool, kel, 3, "Solar charts").await;
+    let flare = tag(&rig.pool, "solarflare").await;
+    tag(&rig.pool, "solstice").await;
+    mark(
+        &rig,
+        &token,
+        &[theirs, solarium, their_comment, kels, flare],
+    )
+    .await;
+
+    let cue = history_query(&rig, &token, json!({ "query": "@sol" })).await;
+    assert_eq!(ids(&cue), vec![solarium, their_comment, theirs]);
+    assert!(!ids(&cue).contains(&unseen));
+    assert_eq!(cue["totalCount"], 3);
+    let text = history_query(&rig, &token, json!({ "query": "sol" })).await;
+    assert_eq!(
+        ids(&text),
+        vec![solarium, flare, kels, theirs],
+        "the person, the seen topic, then the title match and the display-name author's post"
+    );
+    assert_eq!(
+        typenames(&text),
+        vec!["User", "Hashtag", "Post", "Post"],
+        "sections stand people, topics, content"
+    );
+    assert_eq!(text["totalCount"], 4);
+    let topics = history_query(&rig, &token, json!({ "query": "#sol" })).await;
+    assert_eq!(ids(&topics), vec![flare], "only the seen topic");
+    assert_eq!(topics["totalCount"], 1);
+}
+
+/// The narrowed list keeps History's hidden-actor narrowing: while an
+/// account is hidden its posts and comments match nothing, under plain
+/// text or a cue, and their own profile still does.
+///
+/// A hidden actor's things never match in History while hidden; their profile still does.
+/// ´claim:history:a-hidden-actors-things-never-match´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_hidden_actors_things_never_match_in_history(pool: PgPool) {
+    let rig = rig(pool);
+    let (me, token) = reader(&rig, "reader").await;
+    let sol = person(&rig.pool, "sol").await;
+    let ada = person(&rig.pool, "ada").await;
+    let sols = post(&rig.pool, sol, 1, "Salt by sol").await;
+    let adas = post(&rig.pool, ada, 2, "Salt by ada").await;
+    let sols_comment = comment(&rig.pool, sol, adas, "post").await;
+    mark(&rig, &token, &[sol, sols, adas, sols_comment]).await;
+
+    let before = history_query(&rig, &token, json!({ "query": "@sol" })).await;
+    assert_eq!(ids(&before), vec![sol, sols_comment, sols]);
+    hide(&rig.pool, me, sol).await;
+    let text = history_query(&rig, &token, json!({ "query": "salt" })).await;
+    assert_eq!(ids(&text), vec![adas]);
+    assert_eq!(text["totalCount"], 1);
+    let cue = history_query(&rig, &token, json!({ "query": "@sol" })).await;
+    assert_eq!(ids(&cue), vec![sol], "the profile stays, the things leave");
+    assert_eq!(cue["totalCount"], 1);
+    unhide(&rig.pool, me, sol).await;
+    let back = history_query(&rig, &token, json!({ "query": "@sol" })).await;
+    assert_eq!(ids(&back), ids(&before), "unhiding returns them in place");
+}
+
+/// A narrowed list pages on its own keyset: every page forward and every
+/// page backward yields the one-shot order, sections included. Its
+/// cursors, the plain list's and Saved's never pass for each other, and
+/// a query past the search cap is refused.
+///
+/// A narrowed History list pages stably both ways, on cursors of its own.
+/// ´claim:history:a-narrowed-list-pages-on-its-own-keyset´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_narrowed_history_pages_on_its_own_keyset(pool: PgPool) {
+    let rig = rig(pool);
+    let (_, token) = reader(&rig, "reader").await;
+    let salter = person(&rig.pool, "salter").await;
+    let kel = person(&rig.pool, "kel").await;
+    for n in 0..7 {
+        let p = post(&rig.pool, kel, n, &format!("Salt study {n}")).await;
+        mark(&rig, &token, &[p]).await;
+        if n == 3 {
+            mark(&rig, &token, &[salter]).await;
+        }
+    }
+    let whole = history_query(&rig, &token, json!({ "query": "salt", "first": 100 })).await;
+    let expected = ids(&whole);
+    assert_eq!(expected.len(), 8);
+    assert_eq!(expected[0], salter, "the people section leads");
+
+    let (forward, back) = walk_both_ways(&rig, &token, "salt", 3).await;
+    assert_eq!(forward, expected, "forward");
+    assert_eq!(back, expected, "backward");
+
+    let narrowed_cursor = whole["edges"][0]["cursor"].clone();
+    let plain = history(&rig, &token, json!({ "first": 1 })).await;
+    let plain_cursor = plain["edges"][0]["cursor"].clone();
+    let saved_cursor = json!(base64::Engine::encode(
+        &base64::engine::general_purpose::STANDARD,
+        format!("savedq:0:0:{salter}")
+    ));
+    for variables in [
+        json!({ "query": "salt", "after": plain_cursor }),
+        json!({ "query": "salt", "after": saved_cursor }),
+        json!({ "after": narrowed_cursor }),
+        json!({ "query": "s".repeat(api::search::MAX_QUERY_CHARS + 1) }),
+    ] {
+        let refused = history_query_raw(&rig, &token, variables.clone()).await;
+        assert_eq!(first_error_code(&refused), Some("BAD_INPUT"), "{variables}");
+    }
+}
+
+/// The people section of a narrowed list serves the three people first
+/// seen most recently among those the query matches, then the rest;
+/// `hasMorePeople` opens the door, and the door — the same query with
+/// only people as its kind — serves every match, newest first seeing
+/// first, with no door of its own. The count follows what the pages
+/// serve.
+///
+/// A narrowed History list serves its three most recently seen people, then the rest, and the people-only narrowing serves them all.
+/// ´claim:history:a-narrowed-history-caps-its-people-at-three´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_narrowed_history_caps_its_people_at_three(pool: PgPool) {
+    let rig = rig(pool);
+    let (_, token) = reader(&rig, "reader").await;
+    let kel = person(&rig.pool, "kel").await;
+    let mut people = Vec::new();
+    for n in 0..5 {
+        people.push(person(&rig.pool, &format!("salt{n}")).await);
+    }
+    mark(&rig, &token, &people).await;
+    let maps = post(&rig.pool, kel, 1, "Salt maps").await;
+    mark(&rig, &token, &[maps]).await;
+    let newest_first: Vec<Uuid> = people.iter().rev().copied().collect();
+
+    let capped = history_query(&rig, &token, json!({ "query": "salt" })).await;
+    let mut expected = newest_first[..3].to_vec();
+    expected.push(maps);
+    assert_eq!(ids(&capped), expected);
+    assert_eq!(capped["hasMorePeople"], true);
+    assert_eq!(capped["totalCount"], 4);
+
+    let (forward, back) = walk_both_ways(&rig, &token, "salt", 1).await;
+    assert_eq!(forward, expected, "the cap holds page by page");
+    assert_eq!(back, expected, "and walking back");
+
+    let door = history_query(&rig, &token, json!({ "query": "salt", "kinds": ["USER"] })).await;
+    assert_eq!(ids(&door), newest_first);
+    assert_eq!(door["hasMorePeople"], false);
+    assert_eq!(door["totalCount"], 5);
+
+    let content = history_query(&rig, &token, json!({ "query": "salt", "kinds": ["POST"] })).await;
+    assert_eq!(ids(&content), vec![maps]);
+    assert_eq!(content["hasMorePeople"], false);
+
+    let cue = history_query(&rig, &token, json!({ "query": "@salt" })).await;
+    assert_eq!(ids(&cue), newest_first[..3].to_vec());
+    assert_eq!(cue["hasMorePeople"], true);
+}
+
+/// Three matching people or fewer stand whole, with no door.
+///
+/// A narrowed History list of three people or fewer serves them all, with no door.
+/// ´claim:history:three-seen-people-need-no-door´
+#[sqlx::test(migrations = "../../migrations")]
+async fn three_seen_people_need_no_door(pool: PgPool) {
+    let rig = rig(pool);
+    let (_, token) = reader(&rig, "reader").await;
+    let kel = person(&rig.pool, "kel").await;
+    let mut seen = Vec::new();
+    for n in 0..3 {
+        seen.push(person(&rig.pool, &format!("salt{n}")).await);
+    }
+    seen.push(post(&rig.pool, kel, 1, "Salt maps").await);
+    mark(&rig, &token, &seen).await;
+
+    let found = history_query(&rig, &token, json!({ "query": "salt" })).await;
+    assert_eq!(ids(&found).len(), 4);
+    assert_eq!(found["hasMorePeople"], false);
+    assert_eq!(found["totalCount"], 4);
+}
+
+/// The topics section of a narrowed list serves the three topics first
+/// seen most recently among those the query matches, then the rest;
+/// `hasMoreTags` opens the door, and the door — the same query with only
+/// topics as its kind — serves every match, newest first seeing first,
+/// with no door of its own. The count follows what the pages serve.
+///
+/// A narrowed History list serves its three most recently seen topics, then the rest, and the topics-only narrowing serves them all.
+/// ´claim:history:a-narrowed-history-caps-its-topics-at-three´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_narrowed_history_caps_its_topics_at_three(pool: PgPool) {
+    let rig = rig(pool);
+    let (_, token) = reader(&rig, "reader").await;
+    let kel = person(&rig.pool, "kel").await;
+    let mut topics = Vec::new();
+    for n in 0..5 {
+        topics.push(tag(&rig.pool, &format!("salt{n}")).await);
+    }
+    mark(&rig, &token, &topics).await;
+    let maps = post(&rig.pool, kel, 1, "Salt maps").await;
+    mark(&rig, &token, &[maps]).await;
+    let newest_first: Vec<Uuid> = topics.iter().rev().copied().collect();
+
+    let capped = history_query(&rig, &token, json!({ "query": "salt" })).await;
+    let mut expected = newest_first[..3].to_vec();
+    expected.push(maps);
+    assert_eq!(ids(&capped), expected);
+    assert_eq!(capped["hasMoreTags"], true);
+    assert_eq!(capped["hasMorePeople"], false);
+    assert_eq!(capped["totalCount"], 4);
+
+    let (forward, back) = walk_both_ways(&rig, &token, "salt", 1).await;
+    assert_eq!(forward, expected, "the cap holds page by page");
+    assert_eq!(back, expected, "and walking back");
+
+    let door = history_query(
+        &rig,
+        &token,
+        json!({ "query": "salt", "kinds": ["HASHTAG"] }),
+    )
+    .await;
+    assert_eq!(ids(&door), newest_first);
+    assert_eq!(door["hasMoreTags"], false);
+    assert_eq!(door["totalCount"], 5);
+
+    let content = history_query(&rig, &token, json!({ "query": "salt", "kinds": ["POST"] })).await;
+    assert_eq!(ids(&content), vec![maps]);
+    assert_eq!(content["hasMoreTags"], false);
+
+    let cue = history_query(&rig, &token, json!({ "query": "#salt" })).await;
+    assert_eq!(ids(&cue), newest_first[..3].to_vec());
+    assert_eq!(cue["hasMoreTags"], true);
+
+    let plain = history_query(&rig, &token, json!({ "first": 5 })).await;
+    assert_eq!(plain["hasMoreTags"], false, "no query narrows nothing");
+}
+
+/// Three matching topics or fewer stand whole, with no door; a fourth
+/// opens it; a query that matches no topic has none.
+///
+/// A narrowed History list holds its topics door shut at three topics or fewer and opens it at the fourth.
+/// ´claim:history:the-topics-door-opens-at-the-fourth-topic´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_topics_door_opens_at_the_fourth_topic(pool: PgPool) {
+    let rig = rig(pool);
+    let (_, token) = reader(&rig, "reader").await;
+    let kel = person(&rig.pool, "kel").await;
+    let maps = post(&rig.pool, kel, 1, "Salt maps").await;
+    mark(&rig, &token, &[maps]).await;
+
+    let none = history_query(&rig, &token, json!({ "query": "salt" })).await;
+    assert_eq!(ids(&none), vec![maps]);
+    assert_eq!(none["hasMoreTags"], false, "no topics, no door");
+
+    let mut topics = Vec::new();
+    for n in 0..3 {
+        topics.push(tag(&rig.pool, &format!("salt{n}")).await);
+    }
+    mark(&rig, &token, &topics).await;
+    let three = history_query(&rig, &token, json!({ "query": "salt" })).await;
+    assert_eq!(ids(&three).len(), 4);
+    assert_eq!(three["hasMoreTags"], false, "exactly three need no door");
+    assert_eq!(three["totalCount"], 4);
+
+    let fourth = tag(&rig.pool, "salt3").await;
+    mark(&rig, &token, &[fourth]).await;
+    let four = history_query(&rig, &token, json!({ "query": "salt" })).await;
+    assert_eq!(ids(&four).len(), 4);
+    assert_eq!(four["hasMoreTags"], true, "a fourth opens the door");
+    assert_eq!(four["totalCount"], 4);
 }

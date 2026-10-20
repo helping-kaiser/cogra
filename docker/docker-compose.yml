@@ -113,9 +113,24 @@ services:
         done
         mc mb --ignore-existing "store/$$MEDIA_BUCKET"
         mc anonymous set download "store/$$MEDIA_BUCKET"
+        mc mb --ignore-existing "store/$$MEDIA_CARRIED_BUCKET"
+        mc anonymous set none "store/$$MEDIA_CARRIED_BUCKET"
+        mc mb --ignore-existing "store/$$MEDIA_HELD_BUCKET"
+        mc anonymous set none "store/$$MEDIA_HELD_BUCKET"
+    # The two other media areas (data-model.md "Media areas") are buckets
+    # with NO anonymous policy, set to none explicitly so the posture is a
+    # configured fact rather than a default: the carried bucket, where an
+    # applicant's media waits for the landing, and the held bucket, the
+    # operator-only store a deleted asset's bytes leave the live one for.
+    # No proxy route points at either; the operator reaches the held bucket
+    # from the host (`podman exec <media container> mc ls local/<bucket>`).
+    # The held bucket is made last, so `make wait-media` probing it waits
+    # on the whole provisioning.
     environment:
       <<: *media-credentials
       MEDIA_BUCKET: ${MEDIA_BUCKET:-cogra-media}
+      MEDIA_CARRIED_BUCKET: ${MEDIA_CARRIED_BUCKET:-cogra-media-carried}
+      MEDIA_HELD_BUCKET: ${MEDIA_HELD_BUCKET:-cogra-media-held}
 
 volumes:
   postgres_data:

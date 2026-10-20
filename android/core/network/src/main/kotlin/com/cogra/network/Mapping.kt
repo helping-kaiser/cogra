@@ -178,11 +178,17 @@ internal fun StagedWriteFields.toDomain(): StagedWriteView = StagedWriteView(
     recordId = record?.id,
 )
 
-internal fun PreparedWriteFields.toDomain(): PreparedWriteView = PreparedWriteView(
+/**
+ * A prepared write for the signer. [carried] is read by the two prepares that
+ * can carry — the post and the stance (`PreparedWrite.carried`); every other
+ * prepare stages for signing now.
+ */
+internal fun PreparedWriteFields.toDomain(carried: Boolean = false): PreparedWriteView = PreparedWriteView(
     id = id,
     family = family.toDomain(),
     canonicalProposal = Base64.getDecoder().decode(canonicalProposal),
     gcAfterEpochs = gcAfterEpochs,
+    carried = carried,
 )
 
 /** The viewer's own application row. */

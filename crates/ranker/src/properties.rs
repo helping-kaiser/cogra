@@ -908,21 +908,44 @@ fn a_topic_never_admits_an_unreachable_strangers_tag() {
     assert!(entries.is_empty());
 }
 
-/// Relevance 0 reads as withdrawn.
+/// `(0,0)` reads as withdrawn (hashtag.md §4).
 ///
-/// A tag withdrawn at relevance zero admits nothing.
+/// A tag withdrawn at (0,0) admits nothing.
 /// ´claim:topic:a-withdrawn-tag-admits-nothing´
 #[test]
-fn a_withdrawn_tag_at_relevance_zero_admits_nothing() {
+fn a_withdrawn_tag_at_zero_zero_admits_nothing() {
     let mut b = Builder::new("v");
     b.person("x");
     let topic = b.topic("rust");
     let p = b.post("x", 1.0);
     b.opinion("v", &p, 1.0, 1.0);
     b.hyper(Family::Tag, "x", &p, &topic, 1.0, 1.0);
-    b.hyper(Family::Tag, "x", &p, &topic, 0.0, 1.0);
+    b.hyper(Family::Tag, "x", &p, &topic, 0.0, 0.0);
     let entries = rank(&b.build(), &topic_params(&topic), &network()).expect("ranks");
     assert!(entries.is_empty());
+}
+
+/// A newest tag at zero on one parameter only is routing-inert but not
+/// withdrawn — "a claim, not nothing" (hashtag.md §4) — so it still admits.
+///
+/// A tag at zero on one parameter only is still a claim, and admits.
+/// ´claim:topic:a-one-axis-zero-tag-still-admits´
+#[test]
+fn a_one_axis_zero_tag_still_admits() {
+    for (relevance, confidence) in [(0.0, 1.0), (0.5, 0.0)] {
+        let mut b = Builder::new("v");
+        b.person("x");
+        let topic = b.topic("rust");
+        let p = b.post("x", 1.0);
+        b.opinion("v", &p, 1.0, 1.0);
+        b.hyper(Family::Tag, "x", &p, &topic, 1.0, 1.0);
+        b.hyper(Family::Tag, "x", &p, &topic, relevance, confidence);
+        let entries = rank(&b.build(), &topic_params(&topic), &network()).expect("ranks");
+        assert!(
+            entry(&entries, &p).is_some(),
+            "({relevance}, {confidence}) is a claim"
+        );
+    }
 }
 
 /// The topic fold is newest-wins: re-tagging after a withdrawal admits
@@ -1233,12 +1256,12 @@ fn settling(reference: &str, author: &str, p: f64, at: i64) -> SettlingCandidate
 }
 
 /// ranked-feed-api X-8′ and W-2: the key is the author's reach times the
-/// pending record's own landing factor; a key tied with a landed score
+/// pending record's own landing factor, signed by its `p_d`; a key tied with a landed score
 /// stands after it; the weave never moves a landed entry; an unreached
 /// author gets no place; the viewer's own content is reached over the empty
 /// walk.
 ///
-/// A settling row is keyed by its author's reach times its own landing factor and stands after every landed entry scoring at least that key.
+/// A settling row is keyed by its author's reach times its own landing factor, signed by its own p_d, and stands after every landed entry scoring at least that key.
 /// ´claim:view:a-settling-key-places-the-row-after-the-landed-entries-at-or-above-it´
 #[test]
 fn a_settling_key_is_the_authors_reach_times_its_own_edge_factor() {
@@ -1312,6 +1335,167 @@ fn a_settling_key_is_the_authors_reach_times_its_own_edge_factor() {
     );
 }
 
+/// The woven RANKED list as ids: settling rows by reference at their
+/// places, landed entries by graph id filling the remaining slots in order.
+fn woven_ranked(answer: &crate::view::FeedRanking) -> Vec<String> {
+    let mut slots: Vec<Option<String>> = vec![None; answer.entries.len() + answer.settling.len()];
+    for p in &answer.settling {
+        slots[p.ranked_position as usize] = Some(p.reference.clone());
+    }
+    let mut landed = answer
+        .entries
+        .iter()
+        .map(|e| e.entry.target_graph_id.clone());
+    slots
+        .into_iter()
+        .map(|s| s.unwrap_or_else(|| landed.next().expect("a landed row per free slot")))
+        .collect()
+}
+
+/// feed-ranking.md §3.1 and §7: a pending record with either parameter zero
+/// is routing-inert, so once landed its content would be absent; it is never
+/// woven, the viewer's own included and a Review's transposed T-leg alike.
+///
+/// A settling candidate whose own record is routing-inert gets no place, as it would be absent once landed.
+/// ´claim:view:a-routing-inert-settling-candidate-is-never-woven´
+#[test]
+fn an_inert_born_candidate_is_never_woven() {
+    let mut b = Builder::new("v");
+    b.person("a");
+    b.opinion("v", "prof:a", 1.0, 1.0);
+    let parent = b.post("a", 1.0);
+    let slice = b.build();
+    let born =
+        |reference: &str, author: &str, family: Family, p_d: f64, p_i: f64| SettlingCandidate {
+            reference: reference.to_string(),
+            author: format!("prof:{author}"),
+            family,
+            p_d,
+            p_i,
+            authored_at: 0,
+        };
+    let answer = feed_ranking(
+        &slice,
+        &all_kinds(),
+        &network(),
+        &[
+            born("live", "a", Family::Publish, 1.0, 1.0),
+            born("zero-d", "a", Family::Publish, 0.0, 1.0),
+            born("zero-i", "a", Family::Publish, 0.5, 0.0),
+            born("zero-both", "a", Family::Publish, 0.0, 0.0),
+            born("mine-zero-d", "v", Family::Publish, 0.0, 1.0),
+            born("comment-zero-d", "a", Family::Review, 0.0, 1.0),
+            born("comment-zero-i", "a", Family::Review, 1.0, 0.0),
+        ],
+    )
+    .expect("weaves");
+    let placed: Vec<&str> = answer
+        .settling
+        .iter()
+        .map(|p| p.reference.as_str())
+        .collect();
+    assert_eq!(placed, vec!["live"], "only the routing-live row is woven");
+    assert!(
+        answer
+            .entries
+            .iter()
+            .any(|e| e.entry.target_graph_id == parent)
+    );
+}
+
+/// feed-ranking.md §5.2: the settling key carries the sign the landed path
+/// will — the reach's own σ times the balance of the record's `p_d` — so a
+/// pending row stands directly after a landed twin born with the same
+/// parameters by the same author. A negative-born post under a positive
+/// reach weaves among the negatives; a negative reach times a negative
+/// backing weaves among the positives.
+///
+/// A settling row stands directly after a landed twin born with the same parameters, whatever the signs of the reach and of its p_d.
+/// ´claim:view:a-settling-key-ties-its-landed-twin-in-every-sign´
+#[test]
+fn a_settling_key_ties_its_landed_twin_in_every_sign() {
+    let mut b = Builder::new("v");
+    b.person("a");
+    b.person("b");
+    b.epoch = 10;
+    b.tau = 0.0;
+    b.opinion("v", "prof:a", 0.5, 1.0);
+    b.opinion("v", "prof:b", -1.0, 1.0);
+    let twins = [
+        ("pending/a+", "a", 0.5),
+        ("pending/a-", "a", -0.5),
+        ("pending/b+", "b", 0.75),
+        ("pending/b-", "b", -0.75),
+    ]
+    .map(|(reference, author, p_d)| (reference, author, p_d, b.post(author, p_d)));
+    let slice = b.build();
+
+    let reach_a = score(&slice, "prof:a").expect("a is reached");
+    let reach_b = score(&slice, "prof:b").expect("b is reached");
+    assert_eq!(
+        reach_a.to_bits(),
+        w(Family::Opinion, LegRole::Binary, 0.5, 1.0, 0.0).to_bits(),
+        "a +0.5 path to a"
+    );
+    assert!(reach_b < 0.0, "the reach carries its path's sign");
+    let a_minus = &twins[1].3;
+    assert_eq!(
+        score(&slice, a_minus).map(f64::to_bits),
+        Some((-(reach_a * w(Family::Publish, LegRole::Binary, -0.5, 1.0, 0.0))).to_bits()),
+        "a landed (−0.5, 1) post under a +0.5 reach scores negative"
+    );
+    let b_minus = &twins[3].3;
+    assert!(
+        score(&slice, b_minus).expect("reached") > 0.0,
+        "negative reach times negative backing scores positive"
+    );
+
+    let candidates: Vec<SettlingCandidate> = twins
+        .iter()
+        .map(|&(reference, author, p_d, _)| SettlingCandidate {
+            reference: reference.to_string(),
+            author: format!("prof:{author}"),
+            family: Family::Publish,
+            p_d,
+            p_i: 1.0,
+            authored_at: 0,
+        })
+        .collect();
+    let answer = feed_ranking(&slice, &all_kinds(), &network(), &candidates).expect("weaves");
+    let woven = woven_ranked(&answer);
+    for (reference, _, _, twin) in &twins {
+        let at = woven.iter().position(|id| id == reference).expect("woven");
+        assert!(at > 0, "{reference} stands after its twin");
+        assert_eq!(
+            &woven[at - 1],
+            twin,
+            "{reference} stands directly after its twin"
+        );
+    }
+    let place = |r: &str| woven.iter().position(|id| id == r).expect("woven");
+    let landed_score = |id: &str| {
+        answer
+            .entries
+            .iter()
+            .find(|e| e.entry.target_graph_id == id)
+            .map(|e| e.entry.score)
+    };
+    let after_negatives = woven
+        .iter()
+        .position(|id| landed_score(id).is_some_and(|s| s < 0.0))
+        .expect("a negative landed row");
+    assert!(
+        place("pending/a-") > after_negatives,
+        "woven among the negatives"
+    );
+    assert!(
+        place("pending/b+") > after_negatives,
+        "woven among the negatives"
+    );
+    assert!(place("pending/b-") < after_negatives, "the sign flips back");
+    assert!(place("pending/a+") < after_negatives);
+}
+
 /// W-2's in-gap order (PR-66): equal keys break by the newest authoring
 /// instant, then the reference.
 ///
@@ -1383,7 +1567,7 @@ fn the_weave_never_moves_a_landed_entry() {
     let candidates = prop::collection::vec(
         (
             0usize..6,
-            prop::sample::select(vec![-1.0, 0.25, 1.0]),
+            prop::sample::select(vec![-1.0, 0.0, 0.25, 1.0]),
             0i64..4,
         ),
         0..6,
@@ -1426,6 +1610,12 @@ fn the_weave_never_moves_a_landed_entry() {
                 .settling
                 .iter()
                 .all(|p| !landed_ids.contains(p.reference.as_str()))
+        );
+        prop_assert!(
+            answer.settling.iter().all(|p| cands
+                .iter()
+                .any(|c| c.reference == p.reference && c.p_d != 0.0)),
+            "a routing-inert candidate is never woven"
         );
         for positions in [
             answer

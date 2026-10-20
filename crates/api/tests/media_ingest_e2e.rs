@@ -66,7 +66,10 @@ impl Rig {
             rate_limits: api::ratelimit::RateLimitConfig::unlimited(),
             breach: Arc::new(api::breach::DisabledCorpus),
             media: media.clone(),
-            blobs: blobs.clone(),
+            areas: api::media::MediaAreas {
+                live: blobs.clone(),
+                ..api::media::MediaAreas::in_memory()
+            },
             ranker: api::ranker_pod::RankerClient::new(&Default::default()).expect("ranker client"),
             slice_reads: Default::default(),
         };

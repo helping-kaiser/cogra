@@ -431,6 +431,61 @@ objects no other held unit references and no live placement shows
 (`retention::hard_delete_unit`). The orphan sweep never takes a
 held asset or one a unit references.
 
+### Media areas
+
+Where an asset's bytes physically sit is its **area**
+(`media_attachments.area`), one of three stores of the media
+service:
+
+- **live** — the bucket every `MediaAttachment.url` is minted into,
+  world-readable by design. Every piece of content carries a
+  license, and the license is the evidence against misuse, not an
+  access control.
+- **held** — the operator-only bucket a deleted asset's bytes leave
+  the live one for: no anonymous policy and no serving route, reached
+  by the operator from the host alone. Once deleted, the bytes are
+  out of every reader's reach — no old link, no guessed key, no
+  crawl reaches them.
+- **carried** — the non-public bucket an applicant's carried media
+  waits in for the whole application-to-admission window, served to
+  its author alone. At the landing the bytes move to the live
+  bucket, and the move is confirmed good **before** the carried
+  batch signs: a failed move refuses the sign, retryably, so a post
+  never lands naming bytes nobody can fetch.
+
+Every move is the same verified copy: the bytes are written to the
+destination, read back, and hashed against the rendition digest R
+the record witnesses; only then does the row's area change. A copy
+that does not verify is deleted and the asset stays where it was.
+Each move is retryable and resumes from wherever a crash left it,
+since a destination already holding R counts as moved.
+
+The **held move** follows the hold, after the redaction commits —
+a blob write and a Postgres commit are not one transaction. Under
+the asset's row lock it re-checks that no live placement shows the
+asset (`media_live_placed`), because the hold can go stale between
+the redaction and the move; it deletes the live copy before the row
+reads `held`, so no committed state says held while a public copy
+remains. A move that fails leaves the asset held in the live area,
+and the media reaper's every tick retries it. The manual hard
+delete names each released object's area, which is where the
+operator act deletes it from.
+
+The **carried move** is `media::areas::publish_carried`, and the
+carried batch's sign gate reads
+`media::areas::carried_media_published`: true exactly when every
+asset the carried write names resolves to a ready asset of its
+author's whose bytes are live. A name that resolves to no asset
+fails closed. The gate runs at the seal leg (`submitProposals`,
+`relay::gate_carried_media`): before a released carried write
+records its pre-commitment, the submit runs the move and reads the
+predicate back, and anything short of true refuses as
+`CARRIED_MEDIA_UNPUBLISHED`, a refusal the clients do not treat as
+terminal, so they keep the handshake material and re-send. A write
+naming no media passes at once. The orphan sweep takes only
+live-area assets: carried media has no placement until its landing
+writes one.
+
 ## Staged writes
 
 The write path stages before it lands
@@ -440,9 +495,9 @@ pre-commitment and the host-sealed verified act as the handshake
 advances — is one `staged_writes` row from **prepare** until
 **confirm**. Staged payload bytes ride the row; promotion at
 confirm copies them into the carriage tables, which own permanent
-payload storage. A content write's display rows appear earlier, at
-the pre-commitment signature, carrying a pending mark ("Content
-nodes" below); promotion on confirm drops that mark and drives the
+payload storage. A content write's or profile update's display
+rows appear earlier, at the pre-commitment signature, carrying a
+pending mark ("Content nodes" below); promotion on confirm drops that mark and drives the
 flows built on landing (an applicant's Registration and a
 vouch-Opinion both confirming flip their account to member —
 [auth.md](auth.md)). Staged state
@@ -724,7 +779,14 @@ CREATE TABLE media_attachments (
     -- it belongs to the retention archive ("The retention archive"
     -- below). NULL while any live placement still shows it.
     held_at          TIMESTAMPTZ,
+    -- Which store holds the bytes ("Media areas" above): the
+    -- world-readable live bucket, the carried bucket, or the
+    -- operator-only held bucket. Changes only once the bytes have
+    -- moved and verified; only a held asset can sit in the held area.
+    area             TEXT         NOT NULL DEFAULT 'live'
+        CHECK (area IN ('live', 'carried', 'held')),
     created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    CHECK (area <> 'held' OR held_at IS NOT NULL),
     CHECK ((state = 'failed') = (failure_reason IS NOT NULL)),
     CHECK ((state = 'merged') = (merged_into IS NOT NULL)),
     CHECK (merged_into <> id)
@@ -754,6 +816,11 @@ CREATE INDEX media_attachments_processing_idx
 -- every delete checks it as a foreign key.
 CREATE INDEX media_attachments_merged_into_idx
     ON media_attachments (merged_into) WHERE merged_into IS NOT NULL;
+
+-- The held assets whose bytes have not left the live bucket yet — the
+-- media reaper's retry list. Empty at rest.
+CREATE INDEX media_attachments_held_unmoved_idx
+    ON media_attachments (held_at) WHERE held_at IS NOT NULL AND area = 'live';
 ```
 
 A row's **upload digest** is `COALESCE(source_digest, digest)`:
@@ -846,18 +913,21 @@ CREATE TABLE user_credentials (
 -- Actor profiles: append-only versions of the profile display
 -- fields, one shape for every kind (see "Display-content
 -- versioning"). A user edits their own via the parallel
--- Registration (prepareProfileUpdate) — the version row is
--- written at confirm, in the same flow as the record that
--- witnesses it (user.md §4), with the envelope carried in
--- act_payloads. Registration seeds the first row with
--- display_name = handle; genesis seeds the system actors'. A
--- Collective's changes land through its governed edit flow
--- (substrate.md §9). Promotion stamps the record's landing
--- coordinates, and they are what order the versions; the seeded
--- first row carries none, since no record stands behind it. The
--- row's own `version_id` is the key, and the last tiebreak: two
--- writes can share one `created_at` — `now()` is the transaction
--- timestamp.
+-- Registration (prepareProfileUpdate) — the merged version row is
+-- written at the pre-commitment signature, marked `pending`, and
+-- served to every reader from then on, exactly as a post edit's
+-- (post_versions below); confirm drops the mark and stamps the
+-- record's landing coordinates (user.md §4), with the envelope
+-- carried in act_payloads, and expiry deletes the pending row so
+-- the previous version renders again. `created_at` is the
+-- update's authoring instant, keyed unique while pending for the
+-- pre-sign leg's retry idempotence. Registration seeds the first
+-- row with display_name = handle; genesis seeds the system
+-- actors'. A Collective's changes land through its governed edit
+-- flow (substrate.md §9). The coordinates are what order the
+-- landed versions; the seeded first row carries none, since no
+-- record stands behind it. The row's own `version_id` is the key,
+-- and the last tiebreak between rows sharing one `created_at`.
 CREATE TABLE actor_profile_versions (
     actor_id         UUID        NOT NULL REFERENCES actors(id),
     display_name     TEXT        NOT NULL,
@@ -865,6 +935,7 @@ CREATE TABLE actor_profile_versions (
     avatar_id        UUID        REFERENCES media_attachments(id),
     website_url      TEXT,
     redaction_reason TEXT,
+    pending          BOOLEAN     NOT NULL DEFAULT FALSE,
     landed_epoch     BIGINT,
     act_time         BIGINT,
     position         BIGINT,
@@ -872,8 +943,11 @@ CREATE TABLE actor_profile_versions (
     version_id       BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
 );
+CREATE UNIQUE INDEX actor_profile_versions_pending_instant_key
+    ON actor_profile_versions (actor_id, created_at)
+    WHERE pending;
 CREATE INDEX actor_profile_versions_current_idx
-    ON actor_profile_versions (actor_id,
+    ON actor_profile_versions (actor_id, pending DESC,
                                landed_epoch DESC NULLS LAST,
                                act_time     DESC NULLS LAST,
                                position     DESC NULLS LAST,
@@ -1307,7 +1381,7 @@ CREATE TABLE search_index (
     value      TEXT        NOT NULL,
     folded     TEXT        GENERATED ALWAYS AS (lower(value)) STORED,
     words      TSVECTOR    GENERATED ALWAYS AS (
-                   CASE WHEN field IN ('title', 'display_name')
+                   CASE WHEN field IN ('title', 'display_name', 'handle')
                         THEN to_tsvector('simple'::regconfig, value)
                    END
                ) STORED,
@@ -1315,19 +1389,23 @@ CREATE TABLE search_index (
     created_at TIMESTAMPTZ NOT NULL,   -- the node's createdAt; a topic's registry age
     PRIMARY KEY (node_id, field)
 );
--- Handles and topic names: case-insensitive substring and prefix
--- through the trigram operator class's LIKE support.
+-- Topic names by substring, and handles and topic names by a cue's
+-- prefix: case-insensitive, through the trigram operator class's LIKE
+-- support.
 CREATE INDEX search_index_names_trgm
     ON search_index USING gin (folded gin_trgm_ops)
     WHERE field <> 'title';
--- Titles and display names: word-level full text, no stemming, last
--- word as a prefix.
+-- Titles, display names and handles under plain text: word-level full
+-- text, no stemming, last word as a prefix.
 CREATE INDEX search_index_titles_fts
     ON search_index USING gin (words)
     WHERE field = 'title';
 CREATE INDEX search_index_display_names_fts
     ON search_index USING gin (words)
     WHERE field = 'display_name';
+CREATE INDEX search_index_handles_fts
+    ON search_index USING gin (words)
+    WHERE field = 'handle';
 CREATE INDEX search_index_author_recency
     ON search_index (author_id, created_at DESC)
     WHERE author_id IS NOT NULL;
@@ -1640,10 +1718,11 @@ CREATE TABLE auth_applications (
     -- the latch cannot diverge; rebuildable from the mirror.
     reciprocated_at TIMESTAMPTZ,
     -- Latched derived cache of an L1 fact: set when the record
-    -- mirror confirms the member's first Opinion, toward any target —
-    -- the end of the borrowed view (api-spec.md Query.borrowedView).
-    -- Only a landed Opinion latches; an in-flight one can still
-    -- expire. Rebuildable from the mirror.
+    -- mirror confirms the member's first live Opinion (a non-inert
+    -- netted bundle), toward any target — the end of the borrowed
+    -- view (api-spec.md Query.borrowedView). Only a landed Opinion
+    -- latches; an in-flight one can still expire. Rebuildable from
+    -- the mirror.
     first_opinion_at TIMESTAMPTZ,
     -- The member's own dismissal of the vouch-back prompt, for good
     -- and on every device (User.vouchBackDismissed). Authoritative L2

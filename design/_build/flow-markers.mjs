@@ -148,6 +148,8 @@ export const FLOW_MARKERS = {
     { n: 3, find: ">Walk it back</button>", tag: "button" },
     { n: 4, find: ">Cancel</button>", tag: "button" },
     { n: 5, find: ">Set</button>", tag: "button" },
+    // The `landing` chip's unreachable landing: its 🤔 is a door of its own.
+    { n: 6, find: 'aria-label="Interested, no side taken"', tag: "button" },
   ],
   /* The ceremony has exactly one control, which is the whole point of it. */
   VouchedIn: [{ n: 1, find: ">Go to your feed</button>", tag: "button" }],
@@ -927,20 +929,24 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   ComposePad: [
-    { n: 1, find: 'aria-label="Your opinion on your post"', tag: "button" },
-    { n: 2, find: 'aria-label="Opinion pad', tag: "div" },
+    { n: 1, find: 'aria-label="Your backing on your post"', tag: "button" },
+    { n: 2, find: 'aria-label="Backing pad', tag: "div" },
+    { n: 2, find: ">Set an exact value for your backing</button>", tag: "button" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
-  // The ordinary full pad over a post edit (jakob 2026-10-16) — `ComposePad`'s
-  // five numbers, the edit beneath inert under the wash.
+  // The one-axis pad over a post edit (jakob 2026-10-16, PR-101) —
+  // `ComposePad`'s five numbers, the edit beneath inert under the wash, and
+  // the walk-back that parks the pick at the raw sum's opposite.
   EditPad: [
-    { n: 1, find: 'aria-label="Your opinion on your post"', tag: "button" },
-    { n: 2, find: 'aria-label="Opinion pad for your own post"', tag: "div" },
+    { n: 1, find: 'aria-label="Your backing on your post"', tag: "button" },
+    { n: 2, find: 'aria-label="Backing pad for your own post"', tag: "div" },
+    { n: 2, find: ">Set an exact value for your backing</button>", tag: "button" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
+    { n: 6, find: ">Walk it all back</button>", tag: "button" },
   ],
 });
 
@@ -1358,7 +1364,6 @@ Object.assign(FLOW_MARKERS, {
   ],
   ProfileApplicant: [
     ...ownProfile(),
-    { n: 9, find: "First light over the flats", tag: "button" },
     ...nav(10),
     // The ask link's permanent home (jakob 2026-10-02): the next free number
     // after the bell's 15. The `application` chip draws the card twice, open
@@ -1745,7 +1750,7 @@ Object.assign(FLOW_MARKERS, {
      construction, the trigger taking 3 after the field. */
   HistorySearch: [
     { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
-    { n: 2, find: ">@m<", tag: "div" },
+    { n: 2, find: ">m<", tag: "div" },
     { n: 3, find: 'what your history shows"', tag: "button" },
     { n: 4, find: '<a href="/u/', tag: "a", all: true },
     { n: 5, find: 'aria-label="More about @mira"', tag: "button" },
@@ -1761,9 +1766,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: ">Feed score</span>", tag: "button", all: true },
     { n: 9, find: 'aria-label="Share ', tag: "button", all: true },
     { n: 10, find: ">See all profiles</button>", tag: "button" },
-    { n: 11, find: 'aria-label="More on this post"', tag: "button" },
-    { n: 12, find: 'aria-label="1 comment"', tag: "button" },
-    ...nav(13),
+    { n: 11, find: ">Low tide at six tomorrow", tag: "a", all: true },
+    { n: 11, find: ">Salt maps of the coast road", tag: "a" },
+    { n: 12, find: 'aria-label="Give your opinion on #', tag: "button", all: true },
+    { n: 12, find: ">Choose your opinion on #", tag: "button", all: true },
+    { n: 13, find: 'aria-label="Tag a new post with it"', tag: "button", all: true },
+    { n: 14, find: ">See all tags</button>", tag: "button" },
+    { n: 15, find: 'aria-label="More on this post"', tag: "button" },
+    { n: 16, find: 'aria-label="1 comment"', tag: "button" },
+    ...nav(17),
   ],
   HistoryEmpty: [{ n: 1, find: 'aria-label="Back to your profile"', tag: "a" }, ...nav(2)],
   /* History narrowed to nothing (the final brief, 2026-10-05). The `cause`
@@ -2245,7 +2256,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 16, find: "+ Add pictures · 2 of 10", tag: "button" },
     { n: 17, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
     { n: 18, find: 'aria-label="Undo withdrawing Tide tables and the third headland — @juno"', tag: "button" },
-    // The opinion row's Adjust (jakob 2026-10-16): the ordinary full pad over the edit.
+    // The opinion row's Adjust (jakob 2026-10-16, PR-101): the one-axis pad over the edit.
     { n: 21, find: ">Adjust</button>", tag: "button" },
   ],
   /* The same edit with an empty batch — `EditCompose`'s markers, minus the one

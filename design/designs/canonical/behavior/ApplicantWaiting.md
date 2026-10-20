@@ -18,14 +18,14 @@ WHEN the application is approved -> the landing card stands where the waiting ca
 
 WHEN the application is closed -> the closed application's card stands where the waiting card stood, flipped where the reader stands AND it stands whether or not the waiting card was put away
 
-WHEN Sign and publish is pressed on the seal GIVEN the reader is an applicant -> the wizard closes onto this feed AND the snackbar reads Your post waits with your application — it arrives with you. AND the post waits in the reader's own chronicle, seen by them alone AND NEVER the snackbar says the post is signed
+WHEN tap New post on the bar -> the snackbar reads You can post once you're in. AND NEVER the wizard opens
 
-WHEN tap New post on the bar GIVEN a post is already staged -> the snackbar reads Your post waits with your application — it arrives with you. AND NEVER the wizard opens
+WHEN tap a stance face -> the snackbar reads You can give your opinion once you're in. AND NEVER the pad blooms
 
-WHEN tap a stance face GIVEN an opinion is already staged -> the snackbar reads Your opinion waits with your application — it arrives with you. AND NEVER the pad opens
+WHEN press-and-hold a stance face -> the snackbar reads You can give your opinion once you're in. AND NEVER anything is signed or staged
 
-WHEN press-and-hold a stance face GIVEN no opinion is staged yet -> a positive opinion stages with the application
+ALWAYS feed.bottomBar.composeSlot wears the locked look, visibly inactive at the disabled opacity and still tappable
+
+ALWAYS every feed.card.actionRow.stance.anchor wears the locked look, visibly inactive at the disabled opacity and still tappable
 
 WHEN tap Profile on the bar -> the applicant's own profile opens
-
-WHEN the first opinion stages, by Set or by a press-and-hold -> the face takes the staged pick AND the snackbar reads Your opinion waits with your application — it arrives with you.

@@ -208,10 +208,10 @@ The node-value update rule
 instantiated for Items:
 
 - **Carrier:** an ordinary-role **Owner** record toward the Item —
-  the family that minted it, authored at attachment `0`,
-  routing-inert. No title force: only the self-minting genesis act
-  roots the thread, and title moves only through recognized
-  settlements (§3).
+  the family that minted it, carrying the owner's attachment pick:
+  `0` by default, routing-inert, and the owner's to change. No title
+  force: only the self-minting genesis act roots the thread, and
+  title moves only through recognized settlements (§3).
 - **Eligible author:** the **current certified owner** —
   `owner^(k)` as of the edit record's landing epoch (the lister,
   initially). Ownership changes hands; the editing right follows

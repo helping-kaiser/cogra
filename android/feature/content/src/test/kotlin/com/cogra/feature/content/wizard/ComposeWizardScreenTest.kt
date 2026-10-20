@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertContentDescriptionEquals
@@ -53,6 +54,8 @@ import com.cogra.feature.content.ReferenceRow
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagRow
 import com.cogra.feature.content.TagSectionState
+import com.cogra.feature.content.UNREACHABLE_BODY
+import com.cogra.feature.content.UNREACHABLE_TITLE
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -99,6 +102,8 @@ class ComposeWizardScreenTest {
     private var keepDrafts = 0
     private var stanceDrags = mutableListOf<Double>()
     private var stanceSets = 0
+    private var keepAdjusting = 0
+    private var setUnreachable = 0
     private var referenceRemovals = mutableListOf<String>()
     private var referenceTunings = mutableListOf<String>()
 
@@ -136,6 +141,8 @@ class ComposeWizardScreenTest {
             onLicenseChange = {},
             onPDirectedChange = { stanceDrags += it },
             onSetStance = { stanceSets += 1 },
+            onKeepAdjusting = { keepAdjusting += 1 },
+            onSetUnreachable = { setUnreachable += 1 },
             onSensitiveChange = {},
             onSensitiveReasonChange = {},
             onNext = { nexts += 1 },
@@ -1046,17 +1053,28 @@ class ComposeWizardScreenTest {
         ),
     )
 
-    // An opinion on one's own post is ONE number (jakob, 2026-09-14): the
-    // second is census-fixed rather than picked, so the row that read back
-    // a pair was showing a figure nobody chose. The face is the one-axis
-    // table's — 🙂 at +0.10 — and the number beside it is the one number.
+    // ComposeSeal.md (round 15): "the Your backing row reads one number,
+    // never a pair" and "+0.10 GIVEN the author has not adjusted it". The
+    // post's own record is a Publish with one free parameter — the author's
+    // BACKING — so a pair would read back a figure nobody chose.
     @Test
-    fun theSealsStanceRowReadsOneNumberNotAPair() {
-        val state = ComposeWizardState(body = "x", step = WizardStep.Seal, pDirected = 0.1)
+    fun theSealsBackingRowReadsOneNumberNotAPair() {
+        val state = ComposeWizardState(body = "x", step = WizardStep.Seal)
         compose.setContent { Wizard(state) }
         compose.onNodeWithTag("wizard_seal_stance").assertIsDisplayed()
-        compose.onNodeWithText("🙂 +0.10", substring = true).assertExists()
+        compose.onNodeWithTag("wizard_seal_stance_label", useUnmergedTree = true).assertTextEquals("Your backing")
+        compose.onNodeWithTag("wizard_seal_stance_value")
+            .assertContentDescriptionEquals("Nice, For or against +0.10")
         compose.onNodeWithText("+0.10 / +1.00", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("Where you stand on it").assertDoesNotExist()
+    }
+
+    @Test
+    fun aBackingOfExactlyZeroThinksOnTheRow() {
+        val state = ComposeWizardState(body = "x", step = WizardStep.Seal, pDirected = 0.0)
+        compose.setContent { Wizard(state) }
+        compose.onNodeWithTag("wizard_seal_stance_value")
+            .assertContentDescriptionEquals("No side taken, For or against +0.00")
     }
 
     // CW-31/CW-32/CW-33/CW-34: the pad parks over the page with its own
@@ -1075,11 +1093,19 @@ class ComposeWizardScreenTest {
     }
 
     @Test
-    fun thePadsHelpDotOpensTheOpinionTopic() {
+    fun thePadsHelpDotOpensTheBackingTopic() {
         val state = ComposeWizardState(body = "x", step = WizardStep.Seal, sheet = SealSheet.Stance)
         compose.setContent { Wizard(state) }
-        compose.onNodeWithTag("wizard_stance_help").performClick()
-        assertThat(helps).containsExactly(HelpTopic.YourOpinionOnYourPost)
+        // The "?" is heard by what it opens (copy-voice: the pad's "?" is
+        // `Your backing on your post`).
+        compose.onNodeWithTag("wizard_stance_help")
+            .assert(
+                SemanticsMatcher("its click is labelled Your backing on your post") {
+                    it.config[SemanticsActions.OnClick].label == "Your backing on your post"
+                },
+            )
+            .performClick()
+        assertThat(helps).containsExactly(HelpTopic.YourBackingOnYourPost)
     }
 
     @Test
@@ -1093,12 +1119,56 @@ class ComposeWizardScreenTest {
         )
         compose.setContent { Wizard(state) }
         // The pad shows what the finger has, not what the seal is holding.
-        compose.onNodeWithTag("wizard_stance_reading")
-            .assertContentDescriptionContains("Like this, For or against +0.60")
+        compose.onNodeWithTag("wizard_stance_pick")
+            .assertContentDescriptionContains("Your pick: Like this, For or against +0.60")
         assertThat(stanceSets).isEqualTo(0)
 
         compose.onNodeWithTag("wizard_stance_set").performClick()
         assertThat(stanceSets).isEqualTo(1)
+    }
+
+    // ComposePad.md (round 15): one axis, never a second; the pick is the
+    // result at compose, so `Your pick` reads alone — no Current backing,
+    // no Backing after, no walk-back; and the round-13 line "Your own post
+    // always reaches you in full" is not drawn.
+    @Test
+    fun theComposePadIsOneAxisWithYourPickAlone() {
+        val state = ComposeWizardState(body = "x", step = WizardStep.Seal, sheet = SealSheet.Stance)
+        compose.setContent { Wizard(state) }
+        compose.onNodeWithTag("wizard_stance_pick").assertExists()
+        compose.onNodeWithTag("wizard_stance_current").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_stance_after").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_stance_walk_back").assertDoesNotExist()
+        compose.onNodeWithText("Less").assertDoesNotExist()
+        compose.onNodeWithText("Your own post always reaches you in full.").assertDoesNotExist()
+    }
+
+    @Test
+    fun startItUnreachableStandsOverTheParkedPad() {
+        val state = ComposeWizardState(
+            body = "x",
+            step = WizardStep.Seal,
+            sheet = SealSheet.Stance,
+            stagedPDirected = 0.0,
+            confirmingUnreachable = true,
+        )
+        compose.setContent { Wizard(state) }
+        compose.onNodeWithTag("wizard_stance_pad").assertExists()
+        compose.onNodeWithText(UNREACHABLE_TITLE).assertIsDisplayed()
+        compose.onNodeWithText(UNREACHABLE_BODY).assertIsDisplayed()
+
+        compose.onNodeWithTag("wizard_unreachable_keep").assertTextEquals("Keep adjusting").performClick()
+        assertThat(keepAdjusting).isEqualTo(1)
+        compose.onNodeWithTag("wizard_unreachable_set").assertTextEquals("Set it anyway").performClick()
+        assertThat(setUnreachable).isEqualTo(1)
+    }
+
+    @Test
+    fun theDialogsWordsAreCopyVoices() {
+        val voice = java.io.File("../../../design/guidelines/copy-voice.md").readText().replace(Regex("\\s+"), " ")
+        assertThat(voice).contains("Dialog `$UNREACHABLE_TITLE`, body `$UNREACHABLE_BODY`")
+        val law = java.io.File("../../../design/designs/canonical/behavior/ComposePad.md").readText()
+        assertThat(law).contains("reads $UNREACHABLE_BODY with Keep adjusting filled and Set it anyway quiet")
     }
 
     // CW-27: the license sheet's "?" opens the same house explanation the

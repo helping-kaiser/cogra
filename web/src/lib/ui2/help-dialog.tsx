@@ -114,22 +114,26 @@ export const HELP_TOPICS = {
   changingYourPicture: {
     title: "Changing your picture",
     paragraphs: [
-      "Your profile is a public record, and changes to it are signed actions in your name — the picture changes the moment yours lands.",
+      // Nothing more: the picture changing when it lands is expected, and
+      // a "?" explains only what is new (copy-voice, jakob 2026-10-20).
+      "Your profile is a public record, and changes to it are signed actions in your name.",
       "The community pool covers the signing, like your posts. The record that you changed it stays, like every signed action.",
     ],
   },
-  // The post's one-axis pad. Its own topic, not the reply pad's: a
-  // reply's stance is toward somebody else's post, where both axes are
-  // the author's to pick, and this text says the opposite.
+  // The one-axis pad on your own post — the seal's and a post edit's
+  // (copy-voice, *Your backing on your post*; blessed jakob 2026-10-16,
+  // round 15). Its own topic, not the reply pad's: a reply signs an
+  // opinion on somebody else's post with both axes, and this is the
+  // authoring BACKING, one axis.
   //
-  // The parenthesised number and the two faces are copy-voice's own —
-  // the guideline italicises `(+0.10)` as a `cg-exact` span, and neither
-  // app draws geek mode yet, so the text carries it as written.
-  yourOpinionOnYourPost: {
-    title: "Your opinion on your post",
+  // The parenthesised number is copy-voice's own — the guideline
+  // italicises `(+0.10)` as a `cg-exact` span, and neither app draws geek
+  // mode yet, so the text carries it as written.
+  yourBackingOnYourPost: {
+    title: "Your backing on your post",
     paragraphs: [
-      "Publishing also signs your opinion on your own post — for or against, from a gentle 🙂 (+0.10) by default.",
-      "Your own post always reaches you in full, so only for-or-against is yours to set. The face is the reading: six of them run from 😠 at one end to 😍 at the other, and the one you see is wherever your number lands. Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.",
+      "Publishing also signs your backing of your own post — for or against, from a gentle 🙂 (+0.10) by default. An edit adds to it, starting at nothing, so an edit you don't adjust leaves it as it is.",
+      "How much of it reaches you isn't part of publishing: once the post is out, give it an opinion on its face, like anyone's. Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.",
     ],
   },
   yourKey: {

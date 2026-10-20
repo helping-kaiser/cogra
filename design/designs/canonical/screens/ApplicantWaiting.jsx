@@ -33,6 +33,16 @@
    dismissed what ended it. The wait itself has no clock: a verified
    application waits on its vouch for as long as it takes.
 
+   THE SNACKBAR IS `New post`'S ANSWER (PR-103, round 16). Applicant acting
+   is post-MVP, so the bar's `New post` never opens the wizard on any
+   applicant shell: it answers in place in the applicant-foot family's voice,
+   `You can post once you're in.`, drawn once here. A stance face answers the
+   same way with `You can give your opinion once you're in.`, and the pad
+   never blooms. Both wear auth.md's locked look (jakob 2026-10-16), the
+   comment foot's: `composeOpacity` on the bar and `stanceOpacity` on every
+   card, at the disabled opacity and still tappable — as on every applicant
+   shell and `ProfileApplicant`'s bar.
+
    REGISTERED under the feed's own prefix (round 7), named as
    `ApplicantRejected` names the same shell: the card is `application`, its ask
    link `link`, and `Got it` is `dismiss`, as on the vouch-back card. */
@@ -64,11 +74,11 @@ export function Screen() {
             Got it
           </Button>
         </TaskCard>
-        <PostCard {...ADA_POST} signedIn={false} node="card" />
-        <PostCard {...TOBIAS_POST} signedIn={false} node="card" />
+        <PostCard {...ADA_POST} signedIn={false} stanceOpacity="var(--state-disabled)" node="card" />
+        <PostCard {...TOBIAS_POST} signedIn={false} stanceOpacity="var(--state-disabled)" node="card" />
       </FeedList>
-      <Snackbar message="Your post waits with your application — it arrives with you." node="snackbar" />
-      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
+      <Snackbar message="You can post once you're in." node="snackbar" />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline composeOpacity="var(--state-disabled)" node="bottomBar" />
     </>
   );
 }

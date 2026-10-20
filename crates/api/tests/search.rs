@@ -44,6 +44,7 @@ const SEARCH: &str = r#"query($query: String!, $kinds: [NodeKind!], $includeSeen
     }
     pageInfo { hasNextPage hasPreviousPage startCursor endCursor }
     totalCount
+    hasMorePeople
   }
 }"#;
 
@@ -169,24 +170,51 @@ fn codes(response: &Value) -> Vec<String> {
         .unwrap_or_default()
 }
 
-/// A person is found by their handle by prefix and by substring, and by
-/// their display name by word — every word, the last as a prefix —
-/// whatever the case typed. A fragment from inside a display-name word
-/// finds no one.
+/// A person is found by their handle and by their display name by word —
+/// every word, the last as a prefix — whatever the case typed. A
+/// handle's words are split at its underscores. A fragment from inside a
+/// word, of a handle or of a display name, finds no one: plain "enesis"
+/// never finds @genesis, and `@` stays the deliberate handle cue (PR-93).
 ///
-/// A handle matches by substring and a display name by word prefix, case-insensitively.
-/// ´claim:search:a-handle-matches-by-substring-a-display-name-by-word-prefix´
+/// A handle and a display name match by word prefix, case-insensitively; a fragment inside a word finds no one.
+/// ´claim:search:a-handle-and-a-display-name-match-by-word-prefix´
 #[sqlx::test(migrations = "../../migrations")]
-async fn search_matches_a_handle_by_substring_and_a_display_name_by_word_prefix(pool: PgPool) {
+async fn search_matches_a_handle_and_a_display_name_by_word_prefix(pool: PgPool) {
     let rig = rig(pool);
     person(&rig.pool, "solarium", Some("Mira Coastline")).await;
+    person(&rig.pool, "genesis", None).await;
+    person(&rig.pool, "pixel_joiner", None).await;
     person(&rig.pool, "kel", None).await;
 
-    for typed in ["sol", "SOL", "lariu", "um", "mira", "COAST", "mira coa"] {
+    for (typed, who) in [
+        ("sol", "solarium"),
+        ("SOL", "solarium"),
+        ("Solarium", "solarium"),
+        ("mira", "solarium"),
+        ("COAST", "solarium"),
+        ("mira coa", "solarium"),
+        ("gen", "genesis"),
+        ("GENESIS", "genesis"),
+        ("pixel", "pixel_joiner"),
+        ("joiner", "pixel_joiner"),
+        ("pixel_jo", "pixel_joiner"),
+        ("pixel jo", "pixel_joiner"),
+    ] {
         let found = search(&rig, None, json!({ "query": typed })).await;
-        assert_eq!(names(&found), vec!["User:solarium"], "for {typed:?}");
+        assert_eq!(names(&found), vec![format!("User:{who}")], "for {typed:?}");
     }
-    for missing in ["solx", "line", "ira", "coast mir"] {
+    for missing in [
+        "enesis",
+        "nesis",
+        "lariu",
+        "um",
+        "oiner",
+        "xel",
+        "solx",
+        "line",
+        "ira",
+        "coast mir",
+    ] {
         let found = search(&rig, None, json!({ "query": missing })).await;
         assert_eq!(names(&found), Vec::<String>::new(), "for {missing:?}");
     }
@@ -383,8 +411,7 @@ async fn a_superseded_title_no_longer_matches(pool: PgPool) {
 
 /// A redacted account keeps a current value — the `redacted-user-…`
 /// sentinel — so the index skips it by rule: neither its old names nor
-/// the sentinel match, and a substring query for "redacted" surfaces
-/// nothing.
+/// the sentinel match, and a query for "redacted" surfaces nothing.
 ///
 /// A redacted handle or name never matches, the sentinel included.
 /// ´claim:search:redacted-values-never-match´
@@ -481,6 +508,87 @@ async fn sections_lead_then_exact_matches_then_newest_first(pool: PgPool) {
         ]
     );
     assert_eq!(found["totalCount"], 8);
+}
+
+/// Walks every page of `variables` forward, one row a page, then every
+/// page backward from the end, and returns both walks' names.
+async fn walk_both_ways(rig: &WireRig, variables: Value) -> (Vec<String>, Vec<String>) {
+    let mut forward = Vec::new();
+    let mut after = Value::Null;
+    loop {
+        let mut page_vars = variables.clone();
+        page_vars["first"] = json!(1);
+        page_vars["after"] = after;
+        let page = search(rig, None, page_vars).await;
+        forward.extend(names(&page));
+        if page["pageInfo"]["hasNextPage"] != true {
+            break;
+        }
+        after = page["pageInfo"]["endCursor"].clone();
+    }
+    let mut backward = Vec::new();
+    let mut before = Value::Null;
+    loop {
+        let mut page_vars = variables.clone();
+        page_vars["last"] = json!(1);
+        page_vars["before"] = before;
+        let page = search(rig, None, page_vars).await;
+        let mut chunk = names(&page);
+        chunk.append(&mut backward);
+        backward = chunk;
+        if page["pageInfo"]["hasPreviousPage"] != true {
+            break;
+        }
+        before = page["pageInfo"]["startCursor"].clone();
+    }
+    (forward, backward)
+}
+
+/// While a result can stand people beside another section, the people
+/// section serves the first three people by the search's own order — the
+/// exact handle first, then newest — and `hasMorePeople` opens the door:
+/// the same query with people alone as its kind serves every match, with
+/// no door of its own. The count follows what the pages serve, the cap
+/// holds page by page in both directions, and a bare person cue is
+/// capped the same way. Three people or fewer need no door.
+///
+/// The people section serves the first three people by the search's order, and the people-only kind serves them all.
+/// ´claim:search:the-people-section-serves-its-first-three´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_people_section_serves_its_first_three(pool: PgPool) {
+    let rig = rig(pool);
+    for handle in ["saltwife", "salter", "salt", "saltmarsh", "salty"] {
+        person(&rig.pool, handle, None).await;
+    }
+    let kel = person(&rig.pool, "kel", None).await;
+    post(&rig.pool, kel, 1, Some("Salt maps"), None, "x").await;
+    tag(&rig.pool, "salt").await;
+
+    let people = search(&rig, None, json!({ "query": "salt", "kinds": ["USER"] })).await;
+    let all_people = names(&people);
+    assert_eq!(all_people.len(), 5);
+    assert_eq!(all_people[0], "User:salt", "the exact handle leads");
+    assert_eq!(people["hasMorePeople"], false);
+    assert_eq!(people["totalCount"], 5);
+
+    let found = search(&rig, None, json!({ "query": "salt" })).await;
+    let mut expected = all_people[..3].to_vec();
+    expected.extend(["Hashtag:salt".to_string(), "Post:Salt maps".to_string()]);
+    assert_eq!(names(&found), expected);
+    assert_eq!(found["hasMorePeople"], true);
+    assert_eq!(found["totalCount"], 5);
+    let (forward, backward) = walk_both_ways(&rig, json!({ "query": "salt" })).await;
+    assert_eq!(forward, expected, "forward");
+    assert_eq!(backward, expected, "backward");
+
+    let cue = search(&rig, None, json!({ "query": "@salt" })).await;
+    assert_eq!(names(&cue), all_people[..3].to_vec());
+    assert_eq!(cue["hasMorePeople"], true);
+    assert_eq!(cue["totalCount"], 3);
+
+    let one = search(&rig, None, json!({ "query": "saltw" })).await;
+    assert_eq!(names(&one), vec!["User:saltwife"]);
+    assert_eq!(one["hasMorePeople"], false);
 }
 
 /// Walking every page forward, and every page backward from the end,
@@ -1006,9 +1114,9 @@ async fn comment_as(
 }
 
 /// Lands, as epoch `epoch` — the mirror's first is 0 — `handle`'s Tag
-/// claim (act `seq`) that `node` carries `name` at `relevance`: the A-leg
-/// into the content and the transposed T-leg out of it, as the seal
-/// renders a Tag.
+/// claim (act `seq`) that `node` carries `name` at `relevance`, held at
+/// full confidence: the A-leg into the content and the transposed T-leg
+/// out of it, as the seal renders a Tag.
 async fn claim(
     pool: &PgPool,
     epoch: i64,
@@ -1018,10 +1126,28 @@ async fn claim(
     name: &str,
     relevance: f64,
 ) {
+    claim_pair(pool, epoch, handle, seq, node, name, (relevance, 1.0)).await;
+}
+
+/// Lands `handle`'s un-tag: the Tag at `(0,0)` that withdraws
+/// (hashtag.md §4).
+async fn unclaim(pool: &PgPool, epoch: i64, handle: &str, seq: u64, node: &NodeId, name: &str) {
+    claim_pair(pool, epoch, handle, seq, node, name, (0.0, 0.0)).await;
+}
+
+async fn claim_pair(
+    pool: &PgPool,
+    epoch: i64,
+    handle: &str,
+    seq: u64,
+    node: &NodeId,
+    name: &str,
+    (relevance, confidence): (f64, f64),
+) {
     tag(pool, name).await;
     let author = atom(handle);
-    let (a_pd, a_pi) = leg_params(LegRole::A, relevance, 1.0);
-    let (t_pd, t_pi) = leg_params(LegRole::T, relevance, 1.0);
+    let (a_pd, a_pi) = leg_params(LegRole::A, relevance, confidence);
+    let (t_pd, t_pi) = leg_params(LegRole::T, relevance, confidence);
     let record = PublishedRecord {
         act_id: ActId::new(&author, seq, Family::Tag).expect("act id"),
         author: author.clone(),
@@ -1295,7 +1421,7 @@ async fn a_comment_on_a_tagged_post_that_does_not_carry_the_tag_is_not_reached(p
     claim(&rig.pool, 0, "sol", 10, &tagged, "saltmaps", 0.9).await;
     claim(&rig.pool, 1, "sol", 11, &strangers, "saltmaps", 0.9).await;
     claim(&rig.pool, 2, "kel", 10, &withdrawn, "saltmaps", 0.9).await;
-    claim(&rig.pool, 3, "kel", 11, &withdrawn, "saltmaps", 0.0).await;
+    unclaim(&rig.pool, 3, "kel", 11, &withdrawn, "saltmaps").await;
 
     let found = scoped(&rig, None, json!({ "query": "#saltmaps salt" })).await;
     assert_eq!(hits(&found), vec!["Post:Salt maps"]);
@@ -1320,7 +1446,7 @@ async fn a_handle_scoped_query_returns_the_tags_they_tagged_with(pool: PgPool) {
     post_as(&rig.pool, kel, &strangers, 2, Some("Wax charts")).await;
     claim(&rig.pool, 0, "sol", 10, &own, "saltmaps", 0.7).await;
     claim(&rig.pool, 1, "sol", 11, &own, "salty", 0.7).await;
-    claim(&rig.pool, 2, "sol", 12, &own, "salty", 0.0).await;
+    unclaim(&rig.pool, 2, "sol", 12, &own, "salty").await;
     claim(&rig.pool, 3, "kel", 10, &own, "saltpans", 0.7).await;
     claim(&rig.pool, 4, "sol", 13, &own, "tides", 0.7).await;
     claim(&rig.pool, 5, "sol", 14, &strangers, "saltflats", 0.7).await;

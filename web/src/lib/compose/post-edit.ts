@@ -14,6 +14,7 @@
 
 import type { GalleryEntryDraft, PostDetailView } from "@/lib/api/content-api";
 import type { License } from "@/lib/license";
+import { snapDimension } from "@/lib/stance/model";
 import { referenceDrafts } from "@/lib/references/claims";
 import type { ReferenceDraft } from "@/lib/references/draft";
 import type { TagDraft } from "@/lib/topics/draft";
@@ -44,9 +45,17 @@ export type PostEditState = {
   readonly loadedTags: readonly TagDraft[];
   readonly loadedReferences: readonly ReferenceDraft[];
   /**
+   * THE EDIT'S OWN PICK — the attachment its Publish carries, the value it
+   * ADDS to the post's backing (round 15, PICK-IS-THE-EDGE). 0.00 by
+   * default, which changes the backing by nothing; never a value the backing
+   * is set to, so nothing here computes a delta (EditPad.md, post.md §4).
+   */
+  readonly pick: number;
+  /**
    * Whether the edit record is in the batch. STICKY: set by the first change
    * to a field the record carries and never cleared by typing it back — the
    * guard is the acts batch, not a byte comparison (EditComposeUnchanged.md:3).
+   * A moved pick alone fills it (EditCompose.md); a Set at 0.00 adds nothing.
    */
   readonly recordStaged: boolean;
 };
@@ -61,7 +70,9 @@ export type PostEditAction =
   | { type: "sensitiveReason"; reason: string }
   | { type: "removePicture"; id: string }
   | { type: "movePicture"; from: number; to: number }
-  | { type: "describe"; id: string; altText: string };
+  | { type: "describe"; id: string; altText: string }
+  /** The backing pad's Set: the edit's own pick. */
+  | { type: "pick"; pick: number };
 
 /** The post as the read served it, ready to edit. */
 export function postEditOf(post: PostDetailView): PostEditState {
@@ -95,6 +106,7 @@ export function postEditOf(post: PostDetailView): PostEditState {
     sensitiveReason: post.sensitiveReason ?? "",
     loadedTags: tags,
     loadedReferences: references,
+    pick: 0,
     recordStaged: false,
   };
 }
@@ -159,6 +171,13 @@ export function postEditReducer(state: PostEditState, action: PostEditAction): P
         gallery: withAltText(state.gallery, action.id, action.altText),
         recordStaged: true,
       };
+    case "pick": {
+      // Every pick on the strip is legal; −0 is +0 on the wire (PR-91). The
+      // pick is a hundredth (EditPad.md), so one that reads 0.00 IS 0 and
+      // stages no record — a float's 0.004 never slips one in.
+      const pick = snapDimension(action.pick);
+      return { ...state, pick, recordStaged: state.recordStaged || pick !== 0 };
+    }
   }
 }
 
@@ -181,7 +200,11 @@ export function postEditProblem(state: PostEditState): string | null {
   );
 }
 
-/** What `preparePostEdit` is sent: the whole content state, the words path without a description. */
+/**
+ * What `preparePostEdit` is sent: the whole content state, the words path
+ * without a description, and the edit's own pick — always stated, 0 when
+ * unmoved (the required-stance wire: the server never fills a stance in).
+ */
 export function postEditInput(state: PostEditState): {
   id: string;
   title: string | null;
@@ -190,6 +213,7 @@ export function postEditInput(state: PostEditState): {
   attachments: readonly GalleryEntryDraft[];
   sensitive: boolean;
   sensitiveReason: string;
+  pDirected: number;
 } {
   const media = isMediaBody(state);
   return {
@@ -200,6 +224,7 @@ export function postEditInput(state: PostEditState): {
     attachments: editClaims(state.gallery) ?? [],
     sensitive: state.sensitive,
     sensitiveReason: state.sensitiveReason,
+    pDirected: state.pick,
   };
 }
 

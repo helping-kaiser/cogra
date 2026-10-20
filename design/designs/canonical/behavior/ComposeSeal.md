@@ -18,10 +18,6 @@ WHEN the signing does not go through GIVEN no answer reached the seal -> the fau
 
 WHEN the signing is refused for one staged citation GIVEN the cited post never landed -> that citation's row reads This post didn't land, so it can't be cited. followed by Remove it AND Sign and publish stays AND NEVER Retry appears
 
-WHEN Sign and publish is pressed GIVEN the reader is an applicant whose application is live -> the wizard closes onto the applicant's own feed AND the snackbar reads Your post waits with your application — it arrives with you. AND NEVER the detail view opens AND NEVER the snackbar reads Signed — it's in the thread now, still settling.
-
-WHEN Sign and publish is pressed GIVEN the reader is an applicant whose application was closed -> the wizard closes onto the applicant's own feed AND the snackbar reads Your post waits — it arrives when someone vouches you in. AND NEVER the snackbar reads Your post waits with your application — it arrives with you.
-
 WHEN the signing is refused for one staged act GIVEN the act's target landed -> the notice This shouldn't have happened takes the place of Sign and publish AND Try again, Report a problem and Discard the post stand with it AND everything above the foot stays as it was AND NEVER a line in the failure voice appears
 
 WHEN the signing is refused by the write rule -> the notice You can't sign right now takes the place of Sign and publish AND Keep the draft, sign later stands under it AND everything above the foot stays as it was AND NEVER Retry appears AND NEVER the notice takes the error colour
@@ -54,15 +50,15 @@ WHEN tap the Tags row GIVEN it reads N tags -> the tags sheet opens over the sea
 
 ALWAYS the License row reads the author's default until the author changes it
 
-ALWAYS the Your opinion row reads the pair, its face and both numbers, as every stance reads
+ALWAYS the Your backing row reads one number, never a pair
 
-ALWAYS the Your opinion row reads +0.10 / +0.10 GIVEN the author has not adjusted it
+ALWAYS the Your backing row reads +0.10 GIVEN the author has not adjusted it
 
-WHEN tap Adjust on the Your opinion row -> the ordinary full pad opens over the seal at the row's pick AND NEVER a pad with one axis opens
+WHEN tap Adjust on the Your backing row -> the one-axis pad opens over the seal at the row's pick AND NEVER a pad with a second axis opens
 
-WHEN tap Set on the pad over the seal -> the pad closes AND the Your opinion row reads the pick AND NEVER anything is signed before Sign and publish
+WHEN tap Set on the pad over the seal -> the pad closes AND the Your backing row reads the pick AND NEVER anything is signed before Sign and publish
 
-ALWAYS the opinion on the Your opinion row rides the post's own record, the one the Post row counts, and adds nothing to the acts card's total
+ALWAYS the number on the Your backing row rides the post's own record, the one the Post row counts, and adds nothing to the acts card's total
 
 WHEN the sensitive sheet closes on Done GIVEN its switch is on -> the Sensitive row reads Marked with Change
 

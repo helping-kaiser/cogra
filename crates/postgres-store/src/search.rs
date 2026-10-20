@@ -17,11 +17,15 @@
 //!
 //! # One matcher, every consumer
 //!
-//! `search`, the reference finder and the Saved list all read through
-//! [`SearchRequest`]; none grows a second predicate. What differs between
-//! them is passed in: the kinds served, the seen-list exclusion, the
-//! finder's narrowing to what `prepareReference` accepts, and the
-//! [`Window`] a read is confined to — Saved's is the reader's saved set.
+//! `search`, the reference finder, the Saved list and History all read
+//! through [`SearchRequest`]; none grows a second predicate. What differs
+//! between them is passed in: the kinds served, the seen-list exclusion,
+//! the finder's narrowing to what `prepareReference` accepts, and the
+//! [`Window`] a read is confined to. Saved's and History's is the
+//! reader's own list ([`Window::list`]): the statement itself joins the
+//! list, orders by the list's own time and stops at the page, so a
+//! narrowed page costs one statement bounded by the reader's own list,
+//! whatever page it is.
 //!
 //! # Sections and tiers
 //!
@@ -43,7 +47,7 @@
 //! "Carries" is the tag page's own set: the current-topics fold over the
 //! content-intrinsic channel (`topics::TagChannel::AuthorOwned`) — a
 //! claim whose author is the content's own author, newest record per
-//! (author, content, Type) bundle, relevance 0 read as withdrawn. The
+//! (author, content, Type) bundle, a winner at `(0,0)` read as withdrawn. The
 //! fold is the one `topics::tagged_with` runs, written out here because
 //! a match joins it rather than lists it.
 
@@ -74,13 +78,12 @@ pub struct MatchQuery {
     /// the exact-match tier.
     pub text: String,
     /// The text as a `LIKE` pattern body — metacharacters escaped with
-    /// `\`, no wildcards — matched as a substring of a handle or a
-    /// topic's name.
+    /// `\`, no wildcards — matched as a substring of a topic's name.
     pub like_body: String,
     /// The text's words in `to_tsquery` syntax over the `simple`
     /// configuration, the last as a prefix — matched against a post's
-    /// title and a person's display name. None when the text carries no
-    /// word.
+    /// title and a person's handle and display name. None when the text
+    /// carries no word.
     pub title_query: Option<String>,
     /// The index kinds served (`user`, `post`, `hashtag`). Never empty:
     /// a request that serves nothing does not reach the store.
@@ -159,12 +162,14 @@ pub enum SearchRequest {
     Scoped(ScopedQuery),
 }
 
-/// A restriction of one page read to part of the request's matches. It
-/// narrows what a page may hold, never what the request matches, so
-/// [`count`] never sees it: ranked search reads its in-slice candidates
-/// `within` the viewer's slice and pages the rest `excluding` what the
-/// ranker ordered, one `section` at a time (ranked-feed-api §4.8); Saved
-/// reads `within` the reader's saved set.
+/// A restriction of one page read to part of the request's matches.
+/// `within`, `excluding`, `section`, `people` and `topics` narrow what a
+/// page may hold, never what the request matches, so a count never sees
+/// them: ranked search reads its in-slice candidates `within` the viewer's
+/// slice and pages the rest `excluding` what the ranker ordered, one
+/// `section` at a time (ranked-feed-api §4.8); a capped people or topics
+/// section serves only its first few, the API's cap. `list` is Saved's and History's: it
+/// confines the request itself, so [`SearchRequest::count`] takes it too.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Window<'a> {
     /// Only these nodes may be served; None restricts nothing.
@@ -173,9 +178,93 @@ pub struct Window<'a> {
     pub excluding: &'a [Uuid],
     /// Only this section's matches may be served; None restricts nothing.
     pub section: Option<i32>,
+    /// In the people section, only these people may be served — the other
+    /// sections are untouched; None restricts nothing.
+    pub people: Option<&'a [Uuid]>,
+    /// In the topics section, only these topics may be served — the other
+    /// sections are untouched; None restricts nothing.
+    pub topics: Option<&'a [Uuid]>,
+    /// Only what stands on this reader's own list may be served, in the
+    /// narrowed list's order: section, then the list's own time newest
+    /// first, then id. A hit's `tier` is then its section's own
+    /// (`2 · section` — a narrowed list has no exact-match tier) and its
+    /// `created_at` the list's time, so a [`SearchCursor`] walks the
+    /// narrowed list. None serves the matcher's own order.
+    pub list: Option<ReaderList>,
+}
+
+/// A reader's own list a match can be confined to ([`Window::list`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReaderList {
+    /// What this account kept on its Saved list (api-spec.md
+    /// `User.bookmarks`), by save time.
+    Saved(Uuid),
+    /// What this account has seen (api-spec.md `User.viewHistory`), by
+    /// first seeing — less the posts and comments of an actor it hides,
+    /// as History reads its list.
+    History(Uuid),
+}
+
+impl ReaderList {
+    /// `(saved_by, seen_by)` — the list as the statements bind it: at most
+    /// one is set.
+    fn binds(list: Option<Self>) -> (Option<Uuid>, Option<Uuid>) {
+        match list {
+            None => (None, None),
+            Some(Self::Saved(reader)) => (Some(reader), None),
+            Some(Self::History(reader)) => (None, Some(reader)),
+        }
+    }
 }
 
 impl SearchRequest {
+    /// The index kinds the request serves.
+    pub fn kinds(&self) -> &[String] {
+        match self {
+            Self::Match(q) => &q.kinds,
+            Self::Scoped(q) => &q.kinds,
+        }
+    }
+
+    /// Whether a result can stand people beside another section: the
+    /// request serves people and some other kind.
+    pub fn serves_people_beside_others(&self) -> bool {
+        let kinds = self.kinds();
+        kinds.iter().any(|k| k == "user") && kinds.iter().any(|k| k != "user")
+    }
+
+    /// The same request serving its people section alone — the same
+    /// people, in the same order. None when it serves no people.
+    pub fn people_only(&self) -> Option<Self> {
+        self.only("user")
+    }
+
+    /// Whether a result can stand topics beside another section: the
+    /// request serves topics and some other kind.
+    pub fn serves_topics_beside_others(&self) -> bool {
+        let kinds = self.kinds();
+        kinds.iter().any(|k| k == "hashtag") && kinds.iter().any(|k| k != "hashtag")
+    }
+
+    /// The same request serving its topics section alone — the same
+    /// topics, in the same order. None when it serves no topics.
+    pub fn topics_only(&self) -> Option<Self> {
+        self.only("hashtag")
+    }
+
+    /// The same request narrowed to the one index `kind`; None when it
+    /// serves none.
+    fn only(&self, kind: &str) -> Option<Self> {
+        if !self.kinds().iter().any(|k| k == kind) {
+            return None;
+        }
+        let kinds = vec![kind.to_string()];
+        Some(match self {
+            Self::Match(q) => Self::Match(MatchQuery { kinds, ..q.clone() }),
+            Self::Scoped(q) => Self::Scoped(ScopedQuery { kinds, ..q.clone() }),
+        })
+    }
+
     /// One page of matches — see [`find`].
     pub async fn find(
         &self,
@@ -203,11 +292,12 @@ impl SearchRequest {
         }
     }
 
-    /// The total match count — see [`count`].
-    pub async fn count(&self, pool: &PgPool) -> Result<i64, sqlx::Error> {
+    /// The total match count — see [`count`]. `list` counts only what
+    /// stands on that reader's list, as [`Window::list`] serves.
+    pub async fn count(&self, pool: &PgPool, list: Option<ReaderList>) -> Result<i64, sqlx::Error> {
         match self {
-            Self::Match(q) => count(pool, q).await,
-            Self::Scoped(q) => count_scoped(pool, q).await,
+            Self::Match(q) => count(pool, q, list).await,
+            Self::Scoped(q) => count_scoped(pool, q, list).await,
         }
     }
 }
@@ -252,8 +342,10 @@ impl SearchHit {
 ///
 /// What matches, by kind:
 ///
-/// - **user** — the handle contains the text, or the display name
-///   matches it by word: every word, the last as a prefix.
+/// - **user** — the handle or the display name matches the text by
+///   word: every word, the last as a prefix. A handle's words are what
+///   the `simple` parser splits it into (`pixel_joiner` holds `pixel`
+///   and `joiner`); a fragment from inside a word matches nothing.
 /// - **hashtag** — the name contains the text.
 /// - **post** — the title matches the text by word, or the author's
 ///   display name does; an untitled post is reached only through its
@@ -286,6 +378,7 @@ pub async fn find_in(
         Some(c) => (Some(c.tier), Some(c.created_at), Some(c.node_id)),
         None => (None, None, None),
     };
+    let (saved_by, seen_by) = ReaderList::binds(window.list);
     if backward {
         let mut rows = sqlx::query_as!(
             SearchHit,
@@ -296,8 +389,8 @@ pub async fn find_in(
                           MIN(s.value) FILTER (WHERE s.kind = 'hashtag') AS name
                    FROM search_index s
                    WHERE s.kind = ANY($4)
-                     AND ((s.field IN ('handle', 'name')
-                           AND s.folded LIKE '%' || lower($2) || '%')
+                     AND ((s.field = 'name' AND s.folded LIKE '%' || lower($2) || '%')
+                       OR (s.field = 'handle' AND s.words @@ to_tsquery('simple', $3))
                        OR (s.field = 'title' AND s.words @@ to_tsquery('simple', $3))
                        OR (s.field = 'display_name' AND s.words @@ to_tsquery('simple', $3))
                        OR (s.kind = 'post' AND s.author_id IN (
@@ -312,13 +405,37 @@ pub async fn find_in(
                          WHERE a.id = s.node_id AND a.realization_address IS NOT NULL))
                      AND ($11::uuid[] IS NULL OR s.node_id = ANY($11))
                      AND NOT (s.node_id = ANY($12::uuid[]))
+                     AND ($14::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                         SELECT b.content_id FROM user_bookmarks b
+                         WHERE b.user_id = $14)))
+                     AND ($16::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                         SELECT v.content_id FROM user_view_log v
+                         WHERE v.user_id = $16)))
+                     AND ($16::uuid IS NULL OR s.author_id IS NULL OR NOT EXISTS (
+                         SELECT 1 FROM user_hidden_actors x
+                         WHERE x.viewer_id = $16 AND x.hidden_id = s.author_id))
                    GROUP BY s.node_id, s.kind, s.created_at
+               ),
+               placed AS (
+                   SELECT h.node_id, h.kind, h.name,
+                          CASE WHEN $14::uuid IS NULL AND $16::uuid IS NULL THEN h.tier
+                               ELSE h.tier / 2 * 2 END AS tier,
+                          CASE WHEN $14::uuid IS NOT NULL THEN b.bookmarked_at
+                               WHEN $16::uuid IS NOT NULL THEN v.first_seen_at
+                               ELSE h.created_at END AS created_at
+                   FROM hits h
+                   LEFT JOIN user_bookmarks b
+                     ON b.user_id = $14 AND b.content_id = h.node_id
+                   LEFT JOIN user_view_log v
+                     ON v.user_id = $16 AND v.content_id = h.node_id
+                   WHERE ($13::int IS NULL OR h.tier / 2 = $13)
+                     AND ($15::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($15))
+                     AND ($17::uuid[] IS NULL OR h.tier / 2 <> 1 OR h.node_id = ANY($17))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
-               FROM hits
-               WHERE ($13::int IS NULL OR tier / 2 = $13)
-                 AND ($7::int IS NULL
+               FROM placed
+               WHERE ($7::int IS NULL
                       OR tier < $7
                       OR (tier = $7 AND (created_at, node_id) > ($8::timestamptz, $9::uuid)))
                ORDER BY tier DESC, created_at ASC, node_id ASC
@@ -336,6 +453,10 @@ pub async fn find_in(
             window.within,
             window.excluding,
             window.section,
+            saved_by,
+            window.people,
+            seen_by,
+            window.topics,
         )
         .fetch_all(pool)
         .await?;
@@ -351,8 +472,8 @@ pub async fn find_in(
                           MIN(s.value) FILTER (WHERE s.kind = 'hashtag') AS name
                    FROM search_index s
                    WHERE s.kind = ANY($4)
-                     AND ((s.field IN ('handle', 'name')
-                           AND s.folded LIKE '%' || lower($2) || '%')
+                     AND ((s.field = 'name' AND s.folded LIKE '%' || lower($2) || '%')
+                       OR (s.field = 'handle' AND s.words @@ to_tsquery('simple', $3))
                        OR (s.field = 'title' AND s.words @@ to_tsquery('simple', $3))
                        OR (s.field = 'display_name' AND s.words @@ to_tsquery('simple', $3))
                        OR (s.kind = 'post' AND s.author_id IN (
@@ -367,13 +488,37 @@ pub async fn find_in(
                          WHERE a.id = s.node_id AND a.realization_address IS NOT NULL))
                      AND ($11::uuid[] IS NULL OR s.node_id = ANY($11))
                      AND NOT (s.node_id = ANY($12::uuid[]))
+                     AND ($14::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                         SELECT b.content_id FROM user_bookmarks b
+                         WHERE b.user_id = $14)))
+                     AND ($16::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                         SELECT v.content_id FROM user_view_log v
+                         WHERE v.user_id = $16)))
+                     AND ($16::uuid IS NULL OR s.author_id IS NULL OR NOT EXISTS (
+                         SELECT 1 FROM user_hidden_actors x
+                         WHERE x.viewer_id = $16 AND x.hidden_id = s.author_id))
                    GROUP BY s.node_id, s.kind, s.created_at
+               ),
+               placed AS (
+                   SELECT h.node_id, h.kind, h.name,
+                          CASE WHEN $14::uuid IS NULL AND $16::uuid IS NULL THEN h.tier
+                               ELSE h.tier / 2 * 2 END AS tier,
+                          CASE WHEN $14::uuid IS NOT NULL THEN b.bookmarked_at
+                               WHEN $16::uuid IS NOT NULL THEN v.first_seen_at
+                               ELSE h.created_at END AS created_at
+                   FROM hits h
+                   LEFT JOIN user_bookmarks b
+                     ON b.user_id = $14 AND b.content_id = h.node_id
+                   LEFT JOIN user_view_log v
+                     ON v.user_id = $16 AND v.content_id = h.node_id
+                   WHERE ($13::int IS NULL OR h.tier / 2 = $13)
+                     AND ($15::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($15))
+                     AND ($17::uuid[] IS NULL OR h.tier / 2 <> 1 OR h.node_id = ANY($17))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
-               FROM hits
-               WHERE ($13::int IS NULL OR tier / 2 = $13)
-                 AND ($7::int IS NULL
+               FROM placed
+               WHERE ($7::int IS NULL
                       OR tier > $7
                       OR (tier = $7 AND (created_at, node_id) < ($8::timestamptz, $9::uuid)))
                ORDER BY tier ASC, created_at DESC, node_id DESC
@@ -391,6 +536,10 @@ pub async fn find_in(
             window.within,
             window.excluding,
             window.section,
+            saved_by,
+            window.people,
+            seen_by,
+            window.topics,
         )
         .fetch_all(pool)
         .await
@@ -398,14 +547,20 @@ pub async fn find_in(
 }
 
 /// How many nodes the request matches in total, across every page —
-/// counted under exactly the predicate [`find`] pages over.
-pub async fn count(pool: &PgPool, q: &MatchQuery) -> Result<i64, sqlx::Error> {
+/// counted under exactly the predicate [`find`] pages over; with `list`,
+/// only what stands on that reader's list, as [`Window::list`] serves.
+pub async fn count(
+    pool: &PgPool,
+    q: &MatchQuery,
+    list: Option<ReaderList>,
+) -> Result<i64, sqlx::Error> {
+    let (saved_by, seen_by) = ReaderList::binds(list);
     sqlx::query_scalar!(
         r#"SELECT COUNT(DISTINCT s.node_id) AS "count!"
            FROM search_index s
            WHERE s.kind = ANY($3)
-             AND ((s.field IN ('handle', 'name')
-                   AND s.folded LIKE '%' || lower($1) || '%')
+             AND ((s.field = 'name' AND s.folded LIKE '%' || lower($1) || '%')
+               OR (s.field = 'handle' AND s.words @@ to_tsquery('simple', $2))
                OR (s.field = 'title' AND s.words @@ to_tsquery('simple', $2))
                OR (s.field = 'display_name' AND s.words @@ to_tsquery('simple', $2))
                OR (s.kind = 'post' AND s.author_id IN (
@@ -417,12 +572,23 @@ pub async fn count(pool: &PgPool, q: &MatchQuery) -> Result<i64, sqlx::Error> {
                  WHERE l.user_id = $4 AND l.content_id = s.node_id))
              AND (NOT $5 OR s.kind <> 'user' OR EXISTS (
                  SELECT 1 FROM actors a
-                 WHERE a.id = s.node_id AND a.realization_address IS NOT NULL))"#,
+                 WHERE a.id = s.node_id AND a.realization_address IS NOT NULL))
+             AND ($6::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                 SELECT b.content_id FROM user_bookmarks b
+                 WHERE b.user_id = $6)))
+             AND ($7::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                 SELECT v.content_id FROM user_view_log v
+                 WHERE v.user_id = $7)))
+             AND ($7::uuid IS NULL OR s.author_id IS NULL OR NOT EXISTS (
+                 SELECT 1 FROM user_hidden_actors x
+                 WHERE x.viewer_id = $7 AND x.hidden_id = s.author_id))"#,
         q.like_body,
         q.title_query,
         &q.kinds,
         q.exclude_seen_by,
         q.keyed_users_only,
+        saved_by,
+        seen_by,
     )
     .fetch_one(pool)
     .await
@@ -463,6 +629,7 @@ pub async fn find_scoped(
         None => (None, None, None),
     };
     let (handle_prefix, topic_prefix, cue) = q.binds();
+    let (saved_by, seen_by) = ReaderList::binds(window.list);
     if backward {
         let mut rows = sqlx::query_as!(
             SearchHit,
@@ -477,7 +644,7 @@ pub async fn find_scoped(
                ),
                claims AS (
                    SELECT l.source AS node, r.author AS author, l.target AS target,
-                          l.p_i AS relevance, FALSE AS pending,
+                          l.p_i AS relevance, l.p_d AS confidence, FALSE AS pending,
                           r.epoch AS epoch, r.act_time AS act_time,
                           r.position AS position, NULL::timestamptz AS authored_at
                    FROM mirror_record_legs l
@@ -494,7 +661,7 @@ pub async fn find_scoped(
                              ELSE NULL
                          END
                  UNION ALL
-                   SELECT s.middle, s.author, s.target, s.p_d, TRUE, 0, 0, 0, s.pre_signed_at
+                   SELECT s.middle, s.author, s.target, s.p_d, s.p_i, TRUE, 0, 0, 0, s.pre_signed_at
                    FROM staged_writes s
                    WHERE s.author = $9
                      AND s.family = 'tag'
@@ -514,12 +681,12 @@ pub async fn find_scoped(
                carried AS (
                    SELECT w.node, w.target
                    FROM (
-                       SELECT DISTINCT ON (author, node, target) node, target, relevance
+                       SELECT DISTINCT ON (author, node, target) node, target, relevance, confidence
                        FROM claims
                        ORDER BY author, node, target, pending DESC,
                                 epoch DESC, act_time DESC, position DESC, authored_at DESC
                    ) w
-                   WHERE w.relevance <> 0
+                   WHERE NOT (w.relevance = 0 AND w.confidence = 0)
                ),
                chain AS (
                    SELECT c.id AS comment_id, c.created_at, c.target_id, c.target_type
@@ -528,6 +695,15 @@ pub async fn find_scoped(
                      AND (c.author_id IN (SELECT au.id FROM authors au)
                           OR ($7::text IS NOT NULL
                               AND c.l1_node_id IN (SELECT node FROM carried)))
+                     AND ($18::uuid IS NULL OR c.id = ANY(ARRAY(
+                         SELECT b.content_id FROM user_bookmarks b
+                         WHERE b.user_id = $18)))
+                     AND ($20::uuid IS NULL OR c.id = ANY(ARRAY(
+                         SELECT v.content_id FROM user_view_log v
+                         WHERE v.user_id = $20)))
+                     AND ($20::uuid IS NULL OR NOT EXISTS (
+                         SELECT 1 FROM user_hidden_actors x
+                         WHERE x.viewer_id = $20 AND x.hidden_id = c.author_id))
                      AND (SELECT v.redaction_reason IS NULL
                           FROM comment_versions v WHERE v.comment_id = c.id
                           ORDER BY pending DESC,
@@ -564,6 +740,15 @@ pub async fn find_scoped(
                    WHERE 'post' = ANY($4)
                      AND s.kind = 'post' AND s.field = 'title'
                      AND ($10 OR s.words @@ to_tsquery('simple', $3))
+                     AND ($18::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                         SELECT b.content_id FROM user_bookmarks b
+                         WHERE b.user_id = $18)))
+                     AND ($20::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                         SELECT v.content_id FROM user_view_log v
+                         WHERE v.user_id = $20)))
+                     AND ($20::uuid IS NULL OR NOT EXISTS (
+                         SELECT 1 FROM user_hidden_actors x
+                         WHERE x.viewer_id = $20 AND x.hidden_id = s.author_id))
                      AND (s.author_id IN (SELECT au.id FROM authors au)
                           OR ($7::text IS NOT NULL AND EXISTS (
                               SELECT 1 FROM posts p
@@ -589,17 +774,34 @@ pub async fn find_scoped(
                      AND s.kind = 'hashtag' AND s.field = 'name'
                      AND ($10 OR s.folded LIKE '%' || lower($2) || '%')
                      AND EXISTS (SELECT 1 FROM carried k WHERE k.target = 'name:' || s.value)
+               ),
+               placed AS (
+                   SELECT h.node_id, h.kind, h.name,
+                          CASE WHEN $18::uuid IS NULL AND $20::uuid IS NULL THEN h.tier
+                               ELSE h.tier / 2 * 2 END AS tier,
+                          CASE WHEN $18::uuid IS NOT NULL THEN b.bookmarked_at
+                               WHEN $20::uuid IS NOT NULL THEN v.first_seen_at
+                               ELSE h.created_at END AS created_at
+                   FROM hits h
+                   LEFT JOIN user_bookmarks b
+                     ON b.user_id = $18 AND b.content_id = h.node_id
+                   LEFT JOIN user_view_log v
+                     ON v.user_id = $20 AND v.content_id = h.node_id
+                   WHERE ($18::uuid IS NULL OR b.user_id IS NOT NULL)
+                     AND ($20::uuid IS NULL OR v.user_id IS NOT NULL)
+                     AND ($5::uuid IS NULL OR NOT EXISTS (
+                         SELECT 1 FROM user_view_log l
+                         WHERE l.user_id = $5 AND l.content_id = h.node_id))
+                     AND ($15::uuid[] IS NULL OR h.node_id = ANY($15))
+                     AND NOT (h.node_id = ANY($16::uuid[]))
+                     AND ($17::int IS NULL OR h.tier / 2 = $17)
+                     AND ($19::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($19))
+                     AND ($21::uuid[] IS NULL OR h.tier / 2 <> 1 OR h.node_id = ANY($21))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
-               FROM hits h
-               WHERE ($5::uuid IS NULL OR NOT EXISTS (
-                         SELECT 1 FROM user_view_log l
-                         WHERE l.user_id = $5 AND l.content_id = h.node_id))
-                 AND ($15::uuid[] IS NULL OR h.node_id = ANY($15))
-                 AND NOT (h.node_id = ANY($16::uuid[]))
-                 AND ($17::int IS NULL OR tier / 2 = $17)
-                 AND ($11::int IS NULL
+               FROM placed
+               WHERE ($11::int IS NULL
                       OR tier < $11
                       OR (tier = $11 AND (created_at, node_id) > ($12::timestamptz, $13::uuid)))
                ORDER BY tier DESC, created_at ASC, node_id ASC
@@ -621,6 +823,10 @@ pub async fn find_scoped(
             window.within,
             window.excluding,
             window.section,
+            saved_by,
+            window.people,
+            seen_by,
+            window.topics,
         )
         .fetch_all(pool)
         .await?;
@@ -640,7 +846,7 @@ pub async fn find_scoped(
                ),
                claims AS (
                    SELECT l.source AS node, r.author AS author, l.target AS target,
-                          l.p_i AS relevance, FALSE AS pending,
+                          l.p_i AS relevance, l.p_d AS confidence, FALSE AS pending,
                           r.epoch AS epoch, r.act_time AS act_time,
                           r.position AS position, NULL::timestamptz AS authored_at
                    FROM mirror_record_legs l
@@ -657,7 +863,7 @@ pub async fn find_scoped(
                              ELSE NULL
                          END
                  UNION ALL
-                   SELECT s.middle, s.author, s.target, s.p_d, TRUE, 0, 0, 0, s.pre_signed_at
+                   SELECT s.middle, s.author, s.target, s.p_d, s.p_i, TRUE, 0, 0, 0, s.pre_signed_at
                    FROM staged_writes s
                    WHERE s.author = $9
                      AND s.family = 'tag'
@@ -677,12 +883,12 @@ pub async fn find_scoped(
                carried AS (
                    SELECT w.node, w.target
                    FROM (
-                       SELECT DISTINCT ON (author, node, target) node, target, relevance
+                       SELECT DISTINCT ON (author, node, target) node, target, relevance, confidence
                        FROM claims
                        ORDER BY author, node, target, pending DESC,
                                 epoch DESC, act_time DESC, position DESC, authored_at DESC
                    ) w
-                   WHERE w.relevance <> 0
+                   WHERE NOT (w.relevance = 0 AND w.confidence = 0)
                ),
                chain AS (
                    SELECT c.id AS comment_id, c.created_at, c.target_id, c.target_type
@@ -691,6 +897,15 @@ pub async fn find_scoped(
                      AND (c.author_id IN (SELECT au.id FROM authors au)
                           OR ($7::text IS NOT NULL
                               AND c.l1_node_id IN (SELECT node FROM carried)))
+                     AND ($18::uuid IS NULL OR c.id = ANY(ARRAY(
+                         SELECT b.content_id FROM user_bookmarks b
+                         WHERE b.user_id = $18)))
+                     AND ($20::uuid IS NULL OR c.id = ANY(ARRAY(
+                         SELECT v.content_id FROM user_view_log v
+                         WHERE v.user_id = $20)))
+                     AND ($20::uuid IS NULL OR NOT EXISTS (
+                         SELECT 1 FROM user_hidden_actors x
+                         WHERE x.viewer_id = $20 AND x.hidden_id = c.author_id))
                      AND (SELECT v.redaction_reason IS NULL
                           FROM comment_versions v WHERE v.comment_id = c.id
                           ORDER BY pending DESC,
@@ -727,6 +942,15 @@ pub async fn find_scoped(
                    WHERE 'post' = ANY($4)
                      AND s.kind = 'post' AND s.field = 'title'
                      AND ($10 OR s.words @@ to_tsquery('simple', $3))
+                     AND ($18::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                         SELECT b.content_id FROM user_bookmarks b
+                         WHERE b.user_id = $18)))
+                     AND ($20::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                         SELECT v.content_id FROM user_view_log v
+                         WHERE v.user_id = $20)))
+                     AND ($20::uuid IS NULL OR NOT EXISTS (
+                         SELECT 1 FROM user_hidden_actors x
+                         WHERE x.viewer_id = $20 AND x.hidden_id = s.author_id))
                      AND (s.author_id IN (SELECT au.id FROM authors au)
                           OR ($7::text IS NOT NULL AND EXISTS (
                               SELECT 1 FROM posts p
@@ -752,17 +976,34 @@ pub async fn find_scoped(
                      AND s.kind = 'hashtag' AND s.field = 'name'
                      AND ($10 OR s.folded LIKE '%' || lower($2) || '%')
                      AND EXISTS (SELECT 1 FROM carried k WHERE k.target = 'name:' || s.value)
+               ),
+               placed AS (
+                   SELECT h.node_id, h.kind, h.name,
+                          CASE WHEN $18::uuid IS NULL AND $20::uuid IS NULL THEN h.tier
+                               ELSE h.tier / 2 * 2 END AS tier,
+                          CASE WHEN $18::uuid IS NOT NULL THEN b.bookmarked_at
+                               WHEN $20::uuid IS NOT NULL THEN v.first_seen_at
+                               ELSE h.created_at END AS created_at
+                   FROM hits h
+                   LEFT JOIN user_bookmarks b
+                     ON b.user_id = $18 AND b.content_id = h.node_id
+                   LEFT JOIN user_view_log v
+                     ON v.user_id = $20 AND v.content_id = h.node_id
+                   WHERE ($18::uuid IS NULL OR b.user_id IS NOT NULL)
+                     AND ($20::uuid IS NULL OR v.user_id IS NOT NULL)
+                     AND ($5::uuid IS NULL OR NOT EXISTS (
+                         SELECT 1 FROM user_view_log l
+                         WHERE l.user_id = $5 AND l.content_id = h.node_id))
+                     AND ($15::uuid[] IS NULL OR h.node_id = ANY($15))
+                     AND NOT (h.node_id = ANY($16::uuid[]))
+                     AND ($17::int IS NULL OR h.tier / 2 = $17)
+                     AND ($19::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($19))
+                     AND ($21::uuid[] IS NULL OR h.tier / 2 <> 1 OR h.node_id = ANY($21))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
-               FROM hits h
-               WHERE ($5::uuid IS NULL OR NOT EXISTS (
-                         SELECT 1 FROM user_view_log l
-                         WHERE l.user_id = $5 AND l.content_id = h.node_id))
-                 AND ($15::uuid[] IS NULL OR h.node_id = ANY($15))
-                 AND NOT (h.node_id = ANY($16::uuid[]))
-                 AND ($17::int IS NULL OR tier / 2 = $17)
-                 AND ($11::int IS NULL
+               FROM placed
+               WHERE ($11::int IS NULL
                       OR tier > $11
                       OR (tier = $11 AND (created_at, node_id) < ($12::timestamptz, $13::uuid)))
                ORDER BY tier ASC, created_at DESC, node_id DESC
@@ -784,6 +1025,10 @@ pub async fn find_scoped(
             window.within,
             window.excluding,
             window.section,
+            saved_by,
+            window.people,
+            seen_by,
+            window.topics,
         )
         .fetch_all(pool)
         .await
@@ -791,9 +1036,16 @@ pub async fn find_scoped(
 }
 
 /// How many nodes a cue request matches in total, across every page —
-/// counted under exactly the predicate [`find_scoped`] pages over.
-pub async fn count_scoped(pool: &PgPool, q: &ScopedQuery) -> Result<i64, sqlx::Error> {
+/// counted under exactly the predicate [`find_scoped`] pages over; with
+/// `list`, only what stands on that reader's list, as [`Window::list`]
+/// serves.
+pub async fn count_scoped(
+    pool: &PgPool,
+    q: &ScopedQuery,
+    list: Option<ReaderList>,
+) -> Result<i64, sqlx::Error> {
     let (handle_prefix, topic_prefix, _) = q.binds();
+    let (saved_by, seen_by) = ReaderList::binds(list);
     sqlx::query_scalar!(
         r#"WITH RECURSIVE
            authors AS (
@@ -805,7 +1057,7 @@ pub async fn count_scoped(pool: &PgPool, q: &ScopedQuery) -> Result<i64, sqlx::E
            ),
            claims AS (
                SELECT l.source AS node, r.author AS author, l.target AS target,
-                      l.p_i AS relevance, FALSE AS pending,
+                      l.p_i AS relevance, l.p_d AS confidence, FALSE AS pending,
                       r.epoch AS epoch, r.act_time AS act_time,
                       r.position AS position, NULL::timestamptz AS authored_at
                FROM mirror_record_legs l
@@ -822,7 +1074,7 @@ pub async fn count_scoped(pool: &PgPool, q: &ScopedQuery) -> Result<i64, sqlx::E
                          ELSE NULL
                      END
              UNION ALL
-               SELECT s.middle, s.author, s.target, s.p_d, TRUE, 0, 0, 0, s.pre_signed_at
+               SELECT s.middle, s.author, s.target, s.p_d, s.p_i, TRUE, 0, 0, 0, s.pre_signed_at
                FROM staged_writes s
                WHERE s.author = $7
                  AND s.family = 'tag'
@@ -842,12 +1094,12 @@ pub async fn count_scoped(pool: &PgPool, q: &ScopedQuery) -> Result<i64, sqlx::E
            carried AS (
                SELECT w.node, w.target
                FROM (
-                   SELECT DISTINCT ON (author, node, target) node, target, relevance
+                   SELECT DISTINCT ON (author, node, target) node, target, relevance, confidence
                    FROM claims
                    ORDER BY author, node, target, pending DESC,
                             epoch DESC, act_time DESC, position DESC, authored_at DESC
                ) w
-               WHERE w.relevance <> 0
+               WHERE NOT (w.relevance = 0 AND w.confidence = 0)
            ),
            chain AS (
                SELECT c.id AS comment_id, c.target_id, c.target_type
@@ -856,6 +1108,15 @@ pub async fn count_scoped(pool: &PgPool, q: &ScopedQuery) -> Result<i64, sqlx::E
                  AND (c.author_id IN (SELECT au.id FROM authors au)
                       OR ($6::text IS NOT NULL
                           AND c.l1_node_id IN (SELECT node FROM carried)))
+                 AND ($9::uuid IS NULL OR c.id = ANY(ARRAY(
+                     SELECT b.content_id FROM user_bookmarks b
+                     WHERE b.user_id = $9)))
+                 AND ($10::uuid IS NULL OR c.id = ANY(ARRAY(
+                     SELECT v.content_id FROM user_view_log v
+                     WHERE v.user_id = $10)))
+                 AND ($10::uuid IS NULL OR NOT EXISTS (
+                     SELECT 1 FROM user_hidden_actors x
+                     WHERE x.viewer_id = $10 AND x.hidden_id = c.author_id))
                  AND (SELECT v.redaction_reason IS NULL
                       FROM comment_versions v WHERE v.comment_id = c.id
                       ORDER BY pending DESC,
@@ -886,6 +1147,15 @@ pub async fn count_scoped(pool: &PgPool, q: &ScopedQuery) -> Result<i64, sqlx::E
                WHERE 'post' = ANY($3)
                  AND s.kind = 'post' AND s.field = 'title'
                  AND ($8 OR s.words @@ to_tsquery('simple', $2))
+                 AND ($9::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                     SELECT b.content_id FROM user_bookmarks b
+                     WHERE b.user_id = $9)))
+                 AND ($10::uuid IS NULL OR s.node_id = ANY(ARRAY(
+                     SELECT v.content_id FROM user_view_log v
+                     WHERE v.user_id = $10)))
+                 AND ($10::uuid IS NULL OR NOT EXISTS (
+                     SELECT 1 FROM user_hidden_actors x
+                     WHERE x.viewer_id = $10 AND x.hidden_id = s.author_id))
                  AND (s.author_id IN (SELECT au.id FROM authors au)
                       OR ($6::text IS NOT NULL AND EXISTS (
                           SELECT 1 FROM posts p
@@ -912,7 +1182,13 @@ pub async fn count_scoped(pool: &PgPool, q: &ScopedQuery) -> Result<i64, sqlx::E
            FROM hits h
            WHERE ($4::uuid IS NULL OR NOT EXISTS (
                      SELECT 1 FROM user_view_log l
-                     WHERE l.user_id = $4 AND l.content_id = h.node_id))"#,
+                     WHERE l.user_id = $4 AND l.content_id = h.node_id))
+             AND ($9::uuid IS NULL OR h.node_id = ANY(ARRAY(
+                     SELECT b.content_id FROM user_bookmarks b
+                     WHERE b.user_id = $9)))
+             AND ($10::uuid IS NULL OR h.node_id = ANY(ARRAY(
+                     SELECT v.content_id FROM user_view_log v
+                     WHERE v.user_id = $10)))"#,
         q.like_body,
         q.title_query,
         &q.kinds,
@@ -921,6 +1197,8 @@ pub async fn count_scoped(pool: &PgPool, q: &ScopedQuery) -> Result<i64, sqlx::E
         topic_prefix,
         q.pending_actor,
         q.bare(),
+        saved_by,
+        seen_by,
     )
     .fetch_one(pool)
     .await

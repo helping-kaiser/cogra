@@ -24,7 +24,7 @@ export interface StanceBundle {
 
 export interface StanceLanding {
   landing: StancePair;
-  /** Either axis folded to zero: the stance would carry nothing. */
+  /** Either axis folded to zero: unreachable — held, shaping no feed. */
   inert: boolean;
   /** Both axes folded to zero: severance. */
   severed: boolean;
@@ -46,6 +46,52 @@ export interface StanceReadoutProps {
 }
 
 export declare function StanceReadout(props: StanceReadoutProps): JSX.Element;
+
+/** The attachment an author signs with their own content: one number, because
+ *  Publish and Owner carry one free parameter — `p_i` is census-pinned at 1.
+ *  The face reads through `VALENCE_SIX`. The author's opinion on their own
+ *  content is an ordinary Opinion, read by `StanceReadout`. */
+export interface AttachmentReadoutProps {
+  pDirected: number;
+  style?: React.CSSProperties;
+}
+
+export declare function AttachmentReadout(props: AttachmentReadoutProps): JSX.Element;
+
+/** The one-axis pad's readouts, above its strip: `Your pick` — the record's
+ *  own value — alone on a new post's pad, `Current backing` over it on an
+ *  edit's, where `AttachmentLandingLine` follows the strip. Faces read
+ *  `VALENCE_SIX`, 🤔 at exactly 0.00. */
+export interface AttachmentStandingProps {
+  pick: number;
+  /** The backing bundle's net now; omit where nothing stands yet. */
+  current?: number;
+  style?: React.CSSProperties;
+  /** Given one, the blocks are named `current` and `pick`, each with its `label`, `face` and `exact`. */
+  node?: string;
+}
+
+export declare function AttachmentStanding(props: AttachmentStandingProps): JSX.Element;
+
+/** `Backing after`, beneath an edit's strip: `clip` of the bundle's RAW sum
+ *  plus the pick. When the sum passes ±1, a quiet line states the total and
+ *  the cap — clipped is not hidden. */
+export interface AttachmentLandingLineProps {
+  /** The backing bundle's raw sum, unclipped. */
+  rawSum: number;
+  pick: number;
+  style?: React.CSSProperties;
+  /** Given one, the readout carries it, with its `label`, `face`, `exact`, and `cap` while capped. */
+  node?: string;
+}
+
+export declare function AttachmentLandingLine(props: AttachmentLandingLineProps): JSX.Element;
+/** Where a pick lands the backing: the raw total, its fold, and whether the fold clipped it. */
+export declare function attachmentLanding(rawSum: number, pick: number): { raw: number; landing: number; capped: boolean };
+export declare const CURRENT_BACKING_LABEL: string;
+export declare const BACKING_AFTER_LABEL: string;
+/** The spoken word for a one-axis value of exactly 0.00, which wears 🤔. */
+export declare const ZERO_BACKING_LABEL: string;
 
 /** A stance RECORD's face and pair, drawn plainly wherever a stance is data
  *  rather than a control — the opinions page's rows, the chronicle's opinion
@@ -91,7 +137,13 @@ export interface StanceLandingLineProps {
   landing: StanceLanding | null;
   /** The record family's axis questions, for the spoken reading. */
   names?: AxisNames;
-  /** The data-node name its placer gives the readout (design ⇄ impl seam 002; renders as attributes only — the open pad's `landing`). Given one, the readout carries it, with its `label`, `face` and `exact` while it reads as a readout rather than a sentence. */
+  /** Handed, an unreachable landing's 🤔 is a button — named by the state it reads — that opens its explanation in place (`unreachableHelp`). */
+  onExplainZero?: () => void;
+  /** Whether that explanation is showing, for the button's `aria-expanded`. */
+  zeroShown?: boolean;
+  /** The reader still borrows a view: an unreachable or severed landing adds `BORROWED_KEPT_LINE` beneath it. Warns, never blocks. */
+  borrowed?: boolean;
+  /** The data-node name its placer gives the readout (design ⇄ impl seam 002; renders as attributes only — the open pad's `landing`). Given one, the readout carries it, with its `label`, `face` and `exact` while it reads as a readout rather than a sentence — an unreachable landing's `label`, `zero` (or `face`) and `words` — and the borrowed-view line is `borrowed`. */
   node?: string;
 }
 
@@ -114,7 +166,8 @@ export declare const TAG_ANCHORS: readonly (StancePair & { emoji: string; label:
 /** One band of the one-axis table: the face it wears, the anchor's own position
  *  and word, and where the band stops. `to` is the band's upper edge and
  *  `toInclusive` says whether the edge belongs to it — at a midpoint the milder
- *  face wins, and exactly 0.00 reads 🙂. */
+ *  face wins. Exactly 0.00 never reaches the table: `nearestValenceAnchor`
+ *  answers it with 🤔. */
 export interface ValenceBand {
   emoji: string;
   label: string;
@@ -188,7 +241,15 @@ export declare function formatUnsigned(value: number): string;
 export declare function formatTagPair(pair: StancePair): string;
 export declare function localLanding(rawSum: StancePair, pick: StancePair): StanceLanding;
 export declare function standingLine(bundle: StanceBundle | null | undefined, targetLabel: string): string;
-export declare function landingLine(landing: StanceLanding | null): string;
+export declare function landingLine(landing: StanceLanding | null, names?: AxisNames): string;
+/** An unreachable landing's state in words — "Interested, no side taken" and its three siblings, by which number is zero and the other's sign. */
+export declare function unreachableHead(pair: StancePair): string;
+/** The one consequence an unreachable landing states after its head. */
+export declare const UNREACHABLE_TAIL: string;
+/** What an unreachable landing's 🤔 opens in place: still held, nothing passes through it, and the family's way out differs. */
+export declare function unreachableHelp(names: AxisNames | undefined, targetLabel: string): readonly string[];
+/** The warning under an unreachable or severed landing while the reader still borrows a view. */
+export declare const BORROWED_KEPT_LINE: string;
 /** The severance read, split so the raw total can lead and the cap follow it. */
 export declare function severanceParts(
   bundle: StanceBundle | null | undefined,
@@ -206,6 +267,8 @@ export declare const SEVERED_LABEL: string;
 export declare const NO_STANDING_LABEL: string;
 /** What a bundle at exactly (0, 0) reads as. */
 export declare const ZERO_BUNDLE_EMOJI: string;
+/** What a state with exactly one number at zero wears — an unreachable landing, the one-axis 0.00: 🤔. */
+export declare const UNREACHABLE_EMOJI: string;
 /** The face an unauthored target wears at rest, deliberately outside the
  *  anchor table so an empty control cannot read as an opinion already given. */
 export declare const RESTING_FACE_EMOJI: string;

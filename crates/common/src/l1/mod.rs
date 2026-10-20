@@ -10,6 +10,7 @@ pub mod client;
 pub mod crypto;
 pub mod device_lock;
 pub mod encoding;
+pub mod exact;
 pub mod fold;
 pub mod handshake;
 pub mod identifier;

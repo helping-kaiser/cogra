@@ -34,6 +34,7 @@ import { useWriteSigner } from "@/lib/signing/provider";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { fetchGraphIds } from "@/lib/api/graph-ids-api";
 import { postExpectation } from "@/lib/compose/intent";
+import { snapDimension } from "@/lib/stance/model";
 import { contentExpectation } from "@/lib/compose/payload-expectation";
 import type { Expectation } from "@/lib/signing/intent";
 import { TransportError } from "@/lib/ui/transport-error";
@@ -145,6 +146,8 @@ export function ComposeWizard({
   const [sheet, setSheet] = useState<SealSheet>("none");
   // The pad's own pick, staged until Set — Cancel and the wash stage nothing.
   const [stagedPDirected, setStagedPDirected] = useState(state.pDirected);
+  // `Start it unreachable?` over the pad — Set was pressed at exactly 0.00.
+  const [confirmingUnreachable, setConfirmingUnreachable] = useState(false);
   // Show all, and the describe sheet it can open. Describing holds an asset id
   // rather than an index so a remove or a reorder underneath it cannot silently
   // move the sheet onto a different picture.
@@ -1001,10 +1004,12 @@ export function ComposeWizard({
           keyOnDevice={keyOnDevice}
           refusal={refusal}
           stagedPDirected={stagedPDirected}
+          confirmingUnreachable={confirmingUnreachable}
           onSheet={(next) => {
-            // Opening the pad starts it from the stance that is standing, so
+            // Opening the pad starts it from the backing the row reads, so
             // Cancel can put it back exactly.
             if (next === "stance") setStagedPDirected(state.pDirected);
+            setConfirmingUnreachable(false);
             setSheet(next);
           }}
           onLicense={(license) => dispatch({ type: "license", license })}
@@ -1014,10 +1019,25 @@ export function ComposeWizard({
           onReferences={(references) => dispatch({ type: "references", references })}
           onStagedPDirected={setStagedPDirected}
           onSetStance={() => {
-            dispatch({ type: "pDirected", pDirected: stagedPDirected });
+            // EXACTLY 0.00 ASKS FIRST (ComposePad.md): the post's own path
+            // starts unreachable. It warns and never refuses. The pick is a
+            // hundredth (the release lands it there), so reading 0.00 IS 0.
+            const picked = snapDimension(stagedPDirected);
+            if (picked === 0) {
+              setStagedPDirected(picked);
+              setConfirmingUnreachable(true);
+              return;
+            }
+            dispatch({ type: "pDirected", pDirected: picked });
             setSheet("none");
           }}
-          onStanceHelp={() => setHelp(HELP_TOPICS.yourOpinionOnYourPost)}
+          onKeepAdjusting={() => setConfirmingUnreachable(false)}
+          onSetAnyway={() => {
+            setConfirmingUnreachable(false);
+            dispatch({ type: "pDirected", pDirected: 0 });
+            setSheet("none");
+          }}
+          onStanceHelp={() => setHelp(HELP_TOPICS.yourBackingOnYourPost)}
           onSensitive={(sensitive) => dispatch({ type: "sensitive", sensitive })}
           onSensitiveReason={(sensitiveReason) =>
             dispatch({ type: "sensitiveReason", sensitiveReason })

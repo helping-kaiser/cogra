@@ -1242,11 +1242,11 @@
     },
     {
       "name": "set-your-own-stance-on-your-post",
-      "description": "Adjust on the seal blooms the ordinary full pad — both numbers of the author's opinion on their own post are theirs to set, and the stance is declared before signing, never assumed.",
+      "description": "Adjust on the seal's Your backing row blooms the one-axis pad — the post's own record carries one free number, the author's backing, For or Against, and it is declared before signing, never assumed.",
       "status": "resolved",
       "steps": [
-        "start · ComposeSeal · 5 «Adjust (your stance)» → ComposePad",
-        "end · ComposePad · 4 «Set» → ComposeSeal — the adjusted stance on the seal"
+        "start · ComposeSeal · 5 «Adjust (your backing)» → ComposePad",
+        "end · ComposePad · 4 «Set» → ComposeSeal — the adjusted backing on the seal"
       ],
       "boards": [
         "ComposeSeal",
@@ -1255,11 +1255,11 @@
     },
     {
       "name": "adjust-your-opinion-with-an-edit",
-      "description": "Adjust on a post edit's opinion row blooms the ordinary full pad at the edit's pick, (0, 0) until moved; Set stages the pick on the edit's own record and Sign the edit signs it with the rest — an edit nobody adjusts moves the author's opinion by nothing.",
+      "description": "Adjust on a post edit's Your backing row blooms the one-axis pad, its pick the edit's own record at 0.00; the pad reads the current backing, the pick and the backing after, Set stages the pick and Sign the edit signs it with the rest. An edit nobody adjusts moves the backing by nothing.",
       "status": "resolved",
       "steps": [
-        "start · EditCompose · 21 «Adjust (your opinion)» → EditPad — the ordinary full pad over the edit, at the edit's pick — (0, 0) until the author moves it",
-        "end · EditPad · 4 «Set» → EditCompose — the pick stages on the edit's own record — the row reads the resulting opinion, the count does not move, and nothing signs until Sign the edit"
+        "start · EditCompose · 21 «Adjust (your backing)» → EditPad — the one-axis pad over the edit, its pick the edit's own record — 0.00 until the author moves it",
+        "end · EditPad · 4 «Set» → EditCompose — the pick stages on the edit's own record — the row reads the backing after, the count does not move, and nothing signs until Sign the edit"
       ],
       "boards": [
         "EditCompose",
@@ -2249,21 +2249,14 @@
     },
     {
       "name": "post-while-an-applicant",
-      "description": "An applicant's first post runs the same wizard and the same seal; signing stages it with the application, the wizard closing onto the applicant's own feed, and the post waits in their chronicle, seen by them alone.",
+      "description": "New post in the applicant days answers where it was pressed — You can post once you're in. — and the wizard never opens; posting starts once the vouch lets the reader in.",
       "status": "resolved",
       "steps": [
-        "start · ApplicantWaiting · 12 «nav · New post» → ComposePick — first post — the wizard opens, the act stages",
-        "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
-        "ComposeWords · 3 «Next» → ComposeDetailsWords — the words path skips crop and cover — details without the media row or a description",
-        "ComposeDetailsWords · 8 «Next» → ComposeSeal — the words path never waits on uploads",
-        "end · ComposeSeal · 7 «Sign and publish» → ApplicantWaiting — an applicant — the post stages, signed only at approval: the wizard closes onto the applicant's own feed, its snackbar saying Your post waits with your application — it arrives with you., and the post waits in their chronicle, seen by them alone (drawn on the waiting shell; the first-steps shell answers the same, and the turned-down shell, with no application live, says Your post waits — it arrives when someone vouches you in.)"
+        "start · ApplicantWaiting",
+        "end · ApplicantWaiting · 12 «nav · New post» → self — the wizard never opens: the snackbar answers You can post once you're in."
       ],
       "boards": [
-        "ApplicantWaiting",
-        "ComposePick",
-        "ComposeWords",
-        "ComposeDetailsWords",
-        "ComposeSeal"
+        "ApplicantWaiting"
       ]
     },
     {
@@ -4712,7 +4705,6 @@
     "ComposeDetailsWords": {
       "flows": [
         "cite-something",
-        "post-while-an-applicant",
         "publish-words"
       ],
       "endpoint": []
@@ -4811,7 +4803,6 @@
         "mention-someone",
         "pick-a-video-from-the-grid",
         "pick-files-that-are-refused",
-        "post-while-an-applicant",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
@@ -4878,7 +4869,6 @@
         "mark-a-post-sensitive",
         "pick-a-kept-draft-back-up",
         "pick-a-video-from-the-grid",
-        "post-while-an-applicant",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
@@ -4953,7 +4943,6 @@
       "flows": [
         "cite-a-post",
         "mention-someone",
-        "post-while-an-applicant",
         "publish-words",
         "swap-the-pictures-for-words",
         "write-past-the-words-cap"

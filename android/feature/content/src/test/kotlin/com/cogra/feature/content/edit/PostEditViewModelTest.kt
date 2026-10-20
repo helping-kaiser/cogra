@@ -6,6 +6,7 @@
 
 package com.cogra.feature.content.edit
 
+import com.cogra.core.designsystem.BackingValue
 import com.cogra.crypto.ActorKey
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
@@ -14,6 +15,7 @@ import com.cogra.domain.LicenseChoice
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
+import com.cogra.domain.PostBacking
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
@@ -78,6 +80,10 @@ class PostEditViewModelTest {
         var loadedReferences: List<ReferenceClaimView> = emptyList()
         var selfMarkOutcome: Outcome<SelfMarkView?> = Outcome.Success(SelfMarkView(sensitive = false, reason = null))
         var postOutcome: Outcome<PostDetail?>? = null
+        var lastEditPick: Double? = null
+        var backingOutcome: Outcome<PostBacking?> = Outcome.Success(null)
+
+        override suspend fun postBacking(id: String): Outcome<PostBacking?> = backingOutcome
 
         override suspend fun post(
             id: String,
@@ -113,8 +119,10 @@ class PostEditViewModelTest {
             attachments: List<AttachmentClaim>,
             sensitive: Boolean,
             sensitiveReason: String?,
+            pDirected: Double,
         ): Outcome<PreparedContentView> {
             editCalls += 1
+            lastEditPick = pDirected
             lastEdit = listOf(id, title, description, content)
             lastEditAttachments = attachments
             lastEditMark = sensitive to sensitiveReason
@@ -139,6 +147,7 @@ class PostEditViewModelTest {
                                             ),
                                             ContentShape.POST,
                                         ),
+                                        pDirected,
                                     ),
                                 ),
                             ),
@@ -310,9 +319,9 @@ class PostEditViewModelTest {
         assertThat(actsSheetTitle(vm.state.value.signedActionCount)).isEqualTo("2 things, signed together")
         vm.signed()
         assertThat(content.editCalls).isEqualTo(1)
-        // The un-tag signs the confidence the removed chip showed (0.6) —
-        // relevance is the only value a removal moves; the wire fills nothing.
-        assertThat(topics.calls).containsExactly(TagCall(TEST_POST_ID, "wasm", PostEditViewModel.WITHDRAWN, 0.6))
+        // The un-tag signs (0,0) whatever the removed chip showed (hashtag.md §4)
+        // — the wire fills nothing in.
+        assertThat(topics.calls).containsExactly(TagCall(TEST_POST_ID, "wasm", 0.0, 0.0))
         assertThat(vm.state.value.saved).isTrue()
     }
 
@@ -518,5 +527,219 @@ class PostEditViewModelTest {
         assertThat(next.state.value.body).isEqualTo("Loaded body")
         assertThat(next.state.value.signedActionCount).isEqualTo(0)
         assertThat(content.editCalls).isEqualTo(0)
+    }
+
+    // -- The backing (EditPad.md, EditCompose.md; round 15) --
+
+    @Test
+    fun anUnmovedPickIsZeroAndRidesTheEditExplicitly() = runTest(dispatcher) {
+        val vm = opened()
+        assertThat(vm.state.value.pick).isEqualTo(0.0)
+        vm.onTitleChange("Retitled")
+        vm.signed()
+        // The record carries 0.00 — the edit changes the backing by exactly
+        // nothing — and the intent check held it to that.
+        assertThat(content.lastEditPick).isEqualTo(0.0)
+        assertThat(vm.state.value.saved).isTrue()
+    }
+
+    @Test
+    fun thePadOpensAtTheEditsPickAndStagesNothing() = runTest(dispatcher) {
+        val vm = opened()
+        vm.onOpenBackingPad()
+        assertThat(vm.state.value.backingPadOpen).isTrue()
+        assertThat(vm.state.value.stagedPick).isEqualTo(0.0)
+        vm.onBackingPickChange(0.3)
+        assertThat(vm.state.value.pick).isEqualTo(0.0)
+        assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+    }
+
+    // "a moved pick alone fills the batch, the edit signing a new version
+    // whose words and media stand unchanged" — PICK-IS-THE-EDGE: the record
+    // carries the pick itself, never a delta toward a target.
+    @Test
+    fun aMovedPickAloneSignsAContentIdenticalVersion() = runTest(dispatcher) {
+        content.backingOutcome = Outcome.Success(PostBacking(net = 0.1, rawSum = 0.1))
+        val vm = opened()
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(0.3)
+        vm.onSetBacking()
+
+        assertThat(vm.state.value.backingPadOpen).isFalse()
+        assertThat(vm.state.value.pick).isEqualTo(0.3)
+        assertThat(vm.state.value.signedActionCount).isEqualTo(1)
+        // EditPad.md (round 18): a pick alone filling the batch reads the
+        // new version's one record.
+        assertThat(actsFooterLine(vm.state.value.signedActionCount)).isEqualTo("You're signing 1 thing")
+        vm.signed()
+        assertThat(content.lastEditPick).isEqualTo(0.3)
+        assertThat(content.lastEdit).containsExactly(TEST_POST_ID, "Loaded title", null, "Loaded body").inOrder()
+        assertThat(vm.state.value.saved).isTrue()
+    }
+
+    @Test
+    fun thePickRidesTheEditsOwnRecordAndAddsNothingToTheCount() = runTest(dispatcher) {
+        val vm = opened()
+        vm.onTitleChange("Retitled")
+        assertThat(vm.state.value.signedActionCount).isEqualTo(1)
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(-0.5)
+        vm.onSetBacking()
+        assertThat(vm.state.value.signedActionCount).isEqualTo(1)
+        assertThat(vm.state.value.actRows.map { it.count }.sum()).isEqualTo(1)
+    }
+
+    @Test
+    fun setAtZeroAddsNoRecordAndAsksNothing() = runTest(dispatcher) {
+        val vm = opened()
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(0.0)
+        vm.onSetBacking()
+        assertThat(vm.state.value.backingPadOpen).isFalse()
+        assertThat(vm.state.value.pick).isEqualTo(0.0)
+        assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+    }
+
+    // EditPad.md: the pick parks on a hundredth, so a pick that READS 0.00 is
+    // 0 and adds no record. The bug this pins: 0.004 printed +0.00 and still
+    // filled the batch with a record.
+    @Test
+    fun aSetThatReadsZeroIsZeroAndAddsNoGhostRecord() = runTest(dispatcher) {
+        val vm = opened()
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(0.004)
+        vm.onSetBacking()
+        assertThat(vm.state.value.pick).isEqualTo(0.0)
+        assertThat(vm.state.value.recordStaged).isFalse()
+        assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(-0.0049)
+        vm.onSetBacking()
+        // Truth compares doubles by `equals`, which tells −0 from +0.
+        assertThat(vm.state.value.pick).isEqualTo(0.0)
+        assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+    }
+
+    @Test
+    fun aSetLandsThePickOnTheHundredthsGrid() = runTest(dispatcher) {
+        val vm = opened()
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(0.4371)
+        vm.onSetBacking()
+        assertThat(vm.state.value.pick).isEqualTo(0.44)
+    }
+
+    @Test
+    fun cancelLeavesThePickAsItWas() = runTest(dispatcher) {
+        val vm = opened()
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(0.3)
+        vm.onSetBacking()
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(-0.9)
+        vm.onCancelBackingPad()
+        assertThat(vm.state.value.pick).isEqualTo(0.3)
+        assertThat(vm.state.value.stagedPick).isEqualTo(0.3)
+        assertThat(vm.state.value.backingPadOpen).isFalse()
+    }
+
+    @Test
+    fun theRowReadsTheBackingAsItStandsThenAfterTheSetPick() = runTest(dispatcher) {
+        content.backingOutcome = Outcome.Success(PostBacking(net = 0.1, rawSum = 0.1))
+        val vm = opened()
+        assertThat(vm.state.value.backingWithEdit).isEqualTo(BackingValue.Read(0.1))
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(0.3)
+        // Staged, not set: the row still reads the backing as it stands.
+        assertThat(vm.state.value.backingWithEdit).isEqualTo(BackingValue.Read(0.1))
+        vm.onSetBacking()
+        val after = vm.state.value.backingWithEdit as BackingValue.Read
+        assertThat(after.value).isWithin(1e-9).of(0.4)
+    }
+
+    @Test
+    fun walkItAllBackParksTheRawSumsOppositeAndStagesNothing() = runTest(dispatcher) {
+        content.backingOutcome = Outcome.Success(PostBacking(net = 0.4, rawSum = 0.4))
+        val vm = opened()
+        vm.onOpenBackingPad()
+        assertThat(vm.state.value.canWalkBack).isTrue()
+        vm.onWalkBack()
+        assertThat(vm.state.value.stagedPick).isEqualTo(-0.4)
+        assertThat(vm.state.value.pick).isEqualTo(0.0)
+        assertThat(vm.state.value.backingPadOpen).isTrue()
+        assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+    }
+
+    @Test
+    fun walkItAllBackPastTheAxisParksAsFarAsOneRecordReaches() = runTest(dispatcher) {
+        content.backingOutcome = Outcome.Success(PostBacking(net = 1.0, rawSum = 1.6))
+        val vm = opened()
+        vm.onOpenBackingPad()
+        vm.onWalkBack()
+        assertThat(vm.state.value.stagedPick).isEqualTo(-1.0)
+    }
+
+    @Test
+    fun walkItAllBackIsGreyedAtANetOfZero() = runTest(dispatcher) {
+        content.backingOutcome = Outcome.Success(PostBacking(net = 0.0, rawSum = 0.0))
+        val vm = opened()
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(0.2)
+        assertThat(vm.state.value.canWalkBack).isFalse()
+        vm.onWalkBack()
+        assertThat(vm.state.value.stagedPick).isEqualTo(0.2)
+    }
+
+    // Two +1.00 edits over the mint: the raw sum is past the axis, the net
+    // clipped, and one walk-back reaches only as far as one record can.
+    @Test
+    fun aBackingPastTheAxisReadsClippedOverItsRawSum() = runTest(dispatcher) {
+        content.backingOutcome = Outcome.Success(PostBacking(net = 1.0, rawSum = 2.0))
+        val vm = opened()
+        assertThat(vm.state.value.backingCurrent).isEqualTo(BackingValue.Read(1.0))
+        assertThat(vm.state.value.backingRaw).isEqualTo(BackingValue.Read(2.0))
+        assertThat(vm.state.value.backingWithEdit).isEqualTo(BackingValue.Read(1.0))
+        vm.onOpenBackingPad()
+        vm.onWalkBack()
+        vm.onSetBacking()
+        assertThat(vm.state.value.pick).isEqualTo(-1.0)
+        assertThat(vm.state.value.backingWithEdit).isEqualTo(BackingValue.Read(1.0))
+    }
+
+    // No backing served — the server answers only the post's creator. The
+    // edit stands without it — unread readouts, a greyed walk-back — and
+    // never guesses.
+    @Test
+    fun anUnservedBackingReadsUnreadAndGreysTheWalkBack() = runTest(dispatcher) {
+        val vm = opened()
+        assertThat(vm.state.value.backing).isNull()
+        assertThat(vm.state.value.backingCurrent).isEqualTo(BackingValue.Unread)
+        assertThat(vm.state.value.backingWithEdit).isEqualTo(BackingValue.Unread)
+        assertThat(vm.state.value.canWalkBack).isFalse()
+        assertThat(vm.state.value.loading).isFalse()
+    }
+
+    @Test
+    fun aFailedBackingReadNeverBlocksTheEdit() = runTest(dispatcher) {
+        content.backingOutcome = Outcome.Failed(IOException("down"))
+        val vm = opened()
+        assertThat(vm.state.value.transportFailed).isFalse()
+        assertThat(vm.state.value.backingCurrent).isEqualTo(BackingValue.Unread)
+        vm.onTitleChange("Retitled")
+        vm.signed()
+        assertThat(vm.state.value.saved).isTrue()
+    }
+
+    // A refusal the guard could not replay away reads as unread too — never
+    // as the post missing: the backing is beside the edit, not in its way.
+    @Test
+    fun aRefusedBackingReadNeverBlocksTheEdit() = runTest(dispatcher) {
+        content.backingOutcome = Outcome.Refused(listOf(UserError(ErrorCode.UNAUTHENTICATED, "no viewer")))
+        val vm = opened()
+        assertThat(vm.state.value.notFound).isFalse()
+        assertThat(vm.state.value.title).isEqualTo("Loaded title")
+        assertThat(vm.state.value.backingCurrent).isEqualTo(BackingValue.Unread)
+        assertThat(vm.state.value.canWalkBack).isFalse()
     }
 }

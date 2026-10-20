@@ -75,7 +75,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStanceInputMode } from "@/lib/stance/input-mode";
 import { bundleReadout, RESTING_FACE_EMOJI } from "@/lib/stance/anchors";
 import { localLanding } from "@/lib/stance/landing";
-import { ORIGIN, TAP_DEFAULT, type StancePair } from "@/lib/stance/model";
+import { ORIGIN, snapPair, TAP_DEFAULT, type StancePair } from "@/lib/stance/model";
 import { KNOB_TRAVEL_INSET_PX, padPairFrom, padPercentOf } from "@/lib/stance/pad-geometry";
 import { useStanceData } from "@/lib/stance/provider";
 import { announceStanceSigned } from "@/lib/stance/signed-events";
@@ -179,6 +179,7 @@ export function StanceControl({
   variant,
   padOnly,
   lineFaceInk,
+  borrowed = false,
 }: {
   target: StanceTargetRef;
   /**
@@ -223,6 +224,14 @@ export function StanceControl({
    * muted face.
    */
   lineFaceInk?: string;
+  /**
+   * THE READER STILL BORROWS A VIEW (jakob 2026-10-20; the master's
+   * `borrowed`): they hold no outgoing opinion with neither number at zero.
+   * The host knows; an unreachable or severed landing then warns that the
+   * pick keeps the borrowed view. Warns, never blocks. Left out, nothing
+   * is added.
+   */
+  borrowed?: boolean;
 }) {
   const data = useStanceData();
   const phase = useAuthPhase();
@@ -658,6 +667,7 @@ export function StanceControl({
    */
   const onPointerUp = () => {
     clearHold();
+    landOnGrid();
     releasePointer();
   };
 
@@ -665,7 +675,20 @@ export function StanceControl({
     clearHold();
     // A lost pointer is not a dismissal: the pad parks the way a release
     // parks it, and the reader still has Set and Cancel in front of them.
+    landOnGrid();
     releasePointer();
+  };
+
+  /**
+   * THE RELEASE PARKS THE PICK ON A HUNDREDTH (the value domain, jakob
+   * 2026-10-20): the knob followed the finger, and the lift lands both axes
+   * on the nearest hundredth — so a pick the readout prints as `+0.00` is the
+   * exact 0 the landing line's severance and inertness read. Only a drag on
+   * the field lands; a press on the target never moved the pick.
+   */
+  const landOnGrid = () => {
+    if (drag.current === null) return;
+    setPick((standing) => snapPair(standing));
   };
 
   /**
@@ -762,7 +785,7 @@ export function StanceControl({
         coaching && <StanceCoaching testId={`${testIdPrefix}-coaching`} />
       )}
       {/* Below the field, and never merged into the line above it. */}
-      <StanceLandingLine landing={landing} testIdPrefix={testIdPrefix} zero={zeroWords} />
+      <StanceLandingLine landing={landing} testIdPrefix={testIdPrefix} zero={zeroWords} borrowed={borrowed} />
     </>
   );
 
@@ -1013,7 +1036,7 @@ export function StanceControl({
           severable={severable}
           severLabel={severLabel}
           axes={axes}
-          landing={<StanceLandingLine landing={landing} testIdPrefix={testIdPrefix} zero={zeroWords} />}
+          landing={<StanceLandingLine landing={landing} testIdPrefix={testIdPrefix} zero={zeroWords} borrowed={borrowed} />}
         >
           <StanceStanding
             pick={pick}

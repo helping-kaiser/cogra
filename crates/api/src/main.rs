@@ -148,17 +148,19 @@ async fn main() -> anyhow::Result<()> {
         .map_err(|e| anyhow::anyhow!("CLIENT_IP_SOURCE unrecognized: {e}"))?;
 
     let media = api::media::MediaConfig::from_env()?;
-    let blobs: Arc<dyn api::media::BlobStore> =
-        Arc::new(api::media::blob::s3(&media.s3).context("building the media store client")?);
+    let areas = api::media::MediaAreas::s3(&media).context("building the media store clients")?;
+    let blobs: Arc<dyn api::media::BlobStore> = areas.live.clone();
     tracing::info!(
         endpoint = %media.s3.endpoint,
         bucket = %media.s3.bucket,
+        carried_bucket = %media.carried_bucket,
+        held_bucket = %media.held_bucket,
         base_url = %media.base_url,
         "media service configured"
     );
     tokio::spawn(api::media::orphan_reaper_loop(
         pool.clone(),
-        blobs.clone(),
+        areas.clone(),
         media.orphan_reaper_interval_secs,
         media.orphan_max_age_secs,
     ));
@@ -210,7 +212,7 @@ async fn main() -> anyhow::Result<()> {
     let auth = auth_config()?;
     let uploads = api::UploadRouting {
         pool: pool.clone(),
-        blobs: blobs.clone(),
+        blobs,
         media: media.clone(),
     };
     let schema = api::schema::build(ApiContext {
@@ -228,7 +230,7 @@ async fn main() -> anyhow::Result<()> {
         rate_limits: RateLimitConfig::from_env()?,
         breach,
         media: media.clone(),
-        blobs,
+        areas,
         ranker,
         slice_reads: Default::default(),
     });

@@ -16,6 +16,8 @@ use postgres_store::staged::{self, PreSignedParts, StagedState};
 use uuid::Uuid;
 
 use crate::l1::{BoundaryError, L1Boundary};
+use crate::media::MediaAreas;
+use crate::media::areas::{MoveError, ensure_carried_published};
 
 #[derive(Debug, thiserror::Error)]
 pub enum RelayError {
@@ -51,6 +53,15 @@ pub enum RelayError {
     /// be read; the device's retry of the leg runs it again.
     #[error("admission funding: {0}")]
     Funding(String),
+    /// A write the landing released names media whose bytes are not yet
+    /// verified in the live store: the move has not happened, or did not
+    /// verify. Nothing was recorded, so the device keeps its material and
+    /// its next submit runs the move again.
+    #[error("staged write {id}: its media is not published yet: {reason}")]
+    CarriedMediaUnpublished { id: Uuid, reason: String },
+    /// The carried media gate could not read the write or its assets.
+    #[error("carried media: {0}")]
+    CarriedMedia(String),
 }
 
 fn wrong_state(id: Uuid, expected: &str, actual: StagedState) -> RelayError {
@@ -59,6 +70,43 @@ fn wrong_state(id: Uuid, expected: &str, actual: StagedState) -> RelayError {
         expected: expected.to_string(),
         actual: actual.as_str().to_string(),
     })
+}
+
+/// The carried landing's sign gate (data-model.md "Media areas"): before
+/// a write the landing released accepts its pre-signature, every asset it
+/// names is moved from the carried store to the live store and confirmed
+/// there, so a carried post never lands naming bytes nobody can fetch.
+///
+/// Only a released carried write is gated — one still `carried` is not
+/// the device's to sign, and the seal leg refuses it without moving
+/// anything. A write naming no media passes at once: an Opinion's or an
+/// Affinity's payload carries none, nor does a words-only post. Every
+/// refusal is retryable — nothing is recorded, and the next submit
+/// resumes the move from wherever it stopped.
+pub async fn gate_carried_media(
+    pool: &PgPool,
+    areas: &MediaAreas,
+    write: &staged::StagedWrite,
+) -> Result<(), RelayError> {
+    let released = matches!(
+        write.state,
+        StagedState::AwaitingPreSign | StagedState::Sealing
+    );
+    if !write.carried || !released {
+        return Ok(());
+    }
+    match ensure_carried_published(pool, areas, write.id).await {
+        Ok(true) => Ok(()),
+        Ok(false) => Err(RelayError::CarriedMediaUnpublished {
+            id: write.id,
+            reason: "a named asset is not a ready live asset of its author's".into(),
+        }),
+        Err(MoveError::Storage(m)) => Err(RelayError::CarriedMedia(m)),
+        Err(e) => Err(RelayError::CarriedMediaUnpublished {
+            id: write.id,
+            reason: e.to_string(),
+        }),
+    }
 }
 
 /// Relay leg 1 — seal: store the device's pre-commitment, submit through
@@ -77,6 +125,9 @@ fn wrong_state(id: Uuid, expected: &str, actual: StagedState) -> RelayError {
 /// retry — so the write is handed back to `awaiting_pre_sign` instead of
 /// being left in `sealing`, where it would wedge until GC and block the
 /// author's next edit of the node.
+///
+/// A write the landing released passes [`gate_carried_media`] before it
+/// reaches this leg; `submitProposals` runs the gate.
 pub async fn submit_pre_signed<B: L1Boundary>(
     boundary: &B,
     pool: &PgPool,

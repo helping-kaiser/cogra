@@ -1,8 +1,8 @@
 // Checks the hand-drawn pad readouts against the masters' own format contract
-// (backlog item 54.2): `RefPair`, `ComposePad`, `TagPad`, `TagPadCompose`,
-// `PadKeyAbsent` and the shared `ReplyPadBody` spell their face and their pair
-// as literals, because `nearestAnchor` and the formatters are master-side
-// helpers the bundle does not expose to screens. Six literals with no compiler
+// (backlog item 54.2): `RefPair`, `TagPad`, `TagPadCompose`, `PadKeyAbsent`
+// and the shared `ReplyPadBody` spell their face and their pair as literals,
+// because `nearestAnchor` and the formatters are master-side helpers the bundle
+// does not expose to screens. Five literals with no compiler
 // between them and the contract is exactly where drift lives: a pad value moves
 // and its readout does not, or a negative pair reaches a board written with an
 // ASCII hyphen where readme §3 rules U+2212.
@@ -68,7 +68,7 @@ const ds = loadMasters([
 
 const fails = [];
 
-// ---- the six hand-drawn readouts.
+// ---- the five hand-drawn readouts.
 // A site is named by its file and, where a file holds more than one component,
 // the function that draws it. Everything else about a site is READ, never
 // declared: which family it belongs to comes from the pad's own `ranges` prop,
@@ -81,12 +81,9 @@ const SITES = [
   { file: "TagPad.jsx" },
   { file: "TagPadCompose.jsx" },
   { file: "_shared.jsx", region: "ReplyPadBody" },
-  // The pad on one's own post: the full two-axis `StancePad`, its readout
-  // spelled like the reply pad's (jakob 2026-10-16).
-  { file: "ComposePad.jsx" },
-  // The pad over a post edit: the ordinary pad's three readouts are the
-  // masters' own (`StanceStanding`, `StanceLandingLine`), so nothing on it is
-  // a literal for this check to read.
+  // The one-axis pads on one's own post (`ComposePad`, `EditPad`) read through
+  // the master `AttachmentStanding`, so nothing on them is a literal for this
+  // check to read.
 ];
 
 function regionOf(source, file, region) {
@@ -156,7 +153,7 @@ for (const site of SITES) {
   }
 }
 
-// ---- nothing hand-spells a number outside the six.
+// ---- nothing hand-spells a number outside the five.
 // The table above is a list of sites, not of files, so a seventh hand-drawn
 // readout would be checked by nobody — including one added to a file already
 // on the list, which is why this counts per file rather than asking whether the

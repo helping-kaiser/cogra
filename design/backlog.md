@@ -577,10 +577,8 @@ Two follow-ups the round surfaces, still open:
   - **`PickPrompt` requires an escape.** The draft board's
     fresh-start line is the same caption with nothing to escape to;
     it is spelled at the master's values instead of taking it.
-  - ~~**No one-axis stance pad exists.**~~ Ruled 2026-10-16 (round 13):
-    an opinion on one's own post is the full pair, so no board wants a
-    one-axis pad — `ComposePad` reads the master square, as `ReplyPad`
-    does.
+  - ~~**No one-axis stance pad exists.**~~ Done 2026-10-16 (round 15):
+    the master `AttachmentPad`, which `ComposePad` and `EditPad` read.
   - **A flow badge on a field never paints.** The badge's `::after`
     generates no box on a replaced element, and the composer boards
     stamp the `<input>`/`<textarea>` itself (`ComposeCited`,
@@ -4978,49 +4976,39 @@ one's own post, the post edits' opinion row inert at (0, 0), and the
 own-post anchor as the ordinary pad. These are the calls it could not
 make alone:
 
-- **The compose default pair.** Drawn at +0.10 / +0.10, the pad's
-  universal default and authorship.md's "defaulted low like every
-  stance". It gentles a new post's reach-through against the built
-  apps, which pin the second number in full. Keep, or pin `p_i`
-  differently.
+- ~~**The compose default pair.**~~ Ruled 2026-10-16 (PR-101, round
+  15): the census pins `p_i` at 1; the one axis starts at +0.10.
 - **An edit whose only change is the opinion.** Moving the edit's pick
   off (0, 0) and changing nothing else: does that fill the batch — a new
   version identical in content, marked `Edited` — or does an
   opinion-only change belong to the post's own anchor, the edit's
   `Sign the edit` staying disabled? `EditComposeUnchanged`'s gate reads
-  the batch, so the answer decides what it counts.
-- **`Walk it back` on the edit's pad.** The ordinary pad carries the
-  walk-away wherever an opinion stands, and on one's own post one
-  always does. `EditPad` draws the seal-scale pad's two controls only:
-  what walking back inside an edit's batch stages — its counter-records
-  are records of their own, while the edit's pair rides one — is
-  unruled. The same question asks the severance dialog's cost line when
-  an edit's pick nets the bundle to (0, 0): `1 thing` over a pick that
-  adds no record.
-- **The acts card's reading of a moved pick.** The opinion rides the
+  the batch, so the answer decides what it counts. (Impl's server signs
+  and versions an opinion-only edit, built and standing — seam 230; the
+  design draws the same. Awaiting jakob's word only.)
+- ~~**`Walk it back` on the edit's pad.**~~ Ruled 2026-10-16 (round 15,
+  item 142): `Walk it all back` is a row on the edit's pad that parks
+  the pick, greyed while the backing nets `0.00`; no dialog.
+- **The acts card's reading of a moved pick.** The pick rides the
   `Edit` row's record and adds no row (`EditActs`). Proposed: once the
-  pick leaves (0, 0), the `Edit` row reads the post's name over the
-  pick's pair, the seal's References row's shape, and the name alone at
-  (0, 0).
+  pick moves, the `Edit` row reads the post's name over the backing
+  after, the seal's References row's shape, and the name alone when it
+  does not.
 - **The comment edit.** A comment's revision is an ordinary-role Review,
   its A-leg to the same parent, so the pair a comment edit carries is
   the stance toward what the comment answers — the reply pad's
   territory, not an own-stance. `CommentEdit` and `CommentEditVideo`
   draw no opinion row until that is ruled.
-- **The compose pad at an inert pick.** The pad on a new post shows
-  only `Your pick` — nothing stands, so the pick is the landing. A pick
-  with an axis at zero carries nothing on that axis; the generic law
-  says so on the landing line, and the seal-scale pads draw none. Draw
-  the inert line under the field, or leave it to the readout.
+- ~~**The compose pad at an inert pick.**~~ Closed by round 15: the one
+  axis has one zero, and Set there opens `Start it unreachable?`.
 - **The own-post feed law and the docs.** "Your own posts always show
   in your own feed" stands in the design as a feed law; feed-ranking.md
   has no such rule, and a viewer-rooted walk over a severed own-post
   bundle reaches nothing. The docs need the rule, or the design drops it.
-- **`VALENCE_SIX` and `nearestValenceAnchor`.** No surface draws a
-  one-axis pick now; the table stands on the anchor-map card alone and
-  both apps still carry it. Retire it from the contract, or keep it.
-- **The pad help's draft.** copy-voice's `Your opinion on your post`
-  text is drafted and waits for jakob's word.
+- ~~**`VALENCE_SIX` and `nearestValenceAnchor`.**~~ Live again (round
+  15): the one-axis pads and rows read through them.
+- ~~**The pad help's draft.**~~ Superseded by round 15's draft (item
+  142).
 
 ### 141 · What the search-law round left for jakob · *design + contract* · **filed 2026-10-16**
 
@@ -5074,3 +5062,98 @@ not make alone:
   bodies. Start with @ to find people by their handle — what they made
   follows them. Start with # to find tags and what carries them." The
   blessed text stands until he rules.
+
+### 142 · What the census revert left for jakob · *design + contract + docs* · **filed 2026-10-16**
+
+Round 15 (readme §13) drew PR-101: the authoring pad one axis again
+(`AttachmentPad`), the face stance an Opinion of its own. jakob ruled
+all eight of its questions on 2026-10-16 — the pick is the edge (no set
+semantics, so nothing is out of reach), `Walk it all back` as a greyable
+row instead of the edit's dialog, `Your backing` for the authoring row,
+🤷 at exactly `0.00`, the face's help text blessed, the docs given the
+edit's pick, and the scope below. The record is the round's readme
+section. What is left is banked, not open:
+
+- **Message edits** — a message's backing on edit, and the pad over the
+  chat sheet, wait for the chat round.
+- **Comment edits** — a comment's revision carries its Review pair
+  toward the parent, so they stay `(0, 0)`, fixed, and the reply pad
+  keeps both numbers. Adjusting that pair would be a feature of its
+  own, not this one.
+- **Item listings** — the backing row and pad come with the first
+  listing surface.
+- **Drafts still at jakob's review** — copy-voice's *The unreachable
+  start* body, and the backing pad's cap line and its spoken `No side
+  taken` (round 18's word).
+
+### 143 · The applicant-acting package · *design + contract* · **banked 2026-10-16** · **post-MVP**
+
+jakob's ruling (RULINGS PR-103; seams 234 and 235): applicant acting is
+post-MVP whole. Round 16 (readme §13, *Round 16, the applicant-acting
+cut*) drew the MVP truth and banked the package here; the boards as
+they stood are in git history, the tree before the round's first commit.
+What the package holds, for the day it is re-opened — by ruling, never
+by default:
+
+- **The once-each staged acts** — one post, one Opinion and one Affinity
+  carried with the application, visible to their author alone in their
+  own chronicle (`Still settling` rows and the closing line), signed in
+  the landing's automatic batch; on the turned-down shell, a post waiting
+  on the device until someone vouches the reader in.
+- **The staged-act snackbar family** — `Your post / opinion / topic waits
+  with your application — it arrives with you.` and the turned-down
+  shell's `… waits — it arrives when someone vouches you in.`, all
+  blessed, and the first-tap pad bloom and press-and-hold staging they
+  answered.
+- **The seal's applicant branches** — `ComposeSeal`'s two applicant exits
+  and the three seals' `Sign and publish` landing on `ApplicantWaiting`,
+  with the `post-while-an-applicant` flow walking the wizard to them.
+- **The wizard-with-media waiting variant** — `ApplicantWaiting` drawn
+  as the seal's exit, its snackbar the staged post's line.
+- **Applicant uploads and their serving** (PR-103 (a) and (b)) — media in
+  a staged post, and the author-only route serving it; the accepted shape
+  for that day is the authenticated API streaming route (seam 234), not
+  presigned links.
+- **The words that described it** — About's `Getting in, and being let
+  in` once-each paragraph, and `ProfileApplicant`'s `What you post now
+  arrives with you.`
+
+### 144 · The `AttachmentPad` master does not yet snap on release · *system* · **filed 2026-10-16**
+
+Round 17 ruled (jakob 2026-10-16) that the one-axis backing pads park
+their pick on hundredths at release — the board line on `ComposePad` and
+`EditPad`: "the pick parks on a hundredth: the knob follows the drag
+wherever the finger is, and release lands the pick on the nearest
+hundredth". The docs state it (`StancePad.prompt.md`, `stance-control.md`),
+and the clients build it from the seam, but the master itself —
+`components/stance/StancePad.jsx`'s `AttachmentPad` — does not implement
+it yet: it reports the continuous value and has no release hook. Snapping
+the master would serve as the conformance reference. The two-axis
+square's value stays continuous. Round 18 (jakob 2026-10-20) added the
+strip's "no side yet" detent at the zero hairline to the same docs and
+boards, and the master does not hold there yet either — one gap, one
+fix.
+
+### 145 · `CARRIED_MEDIA_UNPUBLISHED` has no words yet · *design + contract* · **deferred 2026-10-20** · **post-MVP**
+
+The contract's carried-write gate (api-spec, `submitProposals`;
+data-model, the carried batch's sign gate) refuses a released carried
+write whose media has not reached the live store as
+`CARRIED_MEDIA_UNPUBLISHED` — retryable, nothing recorded. Only an
+applicant's staged acts are carried, and applicant acting is post-MVP
+whole (143), so no MVP surface can meet the refusal. jakob deferred its
+copy (2026-10-20, round 18): *Faults by code* gains its vehicle and
+sentence when 143 is re-opened, drafted then against the boards that
+carry staged media — not invented now.
+
+### 146 · Sweep the "?" texts and helper lines for the expected · *design* · **filed 2026-10-20**
+
+jakob's hard rule (2026-10-20, copy-voice's *Explain only what is new*):
+a "?" text or a helper line explains new, novel, un-learned behavior,
+never what is common, obvious or expected. Round 18 cut one such clause
+from the picture's "?", and jakob: "this is probably not the only place
+where we have this". Sweep every "?" dialog text (*The "?" dialogs*), the
+pads' help lines and every helper, caption and note line on the boards;
+list each sentence that tells a reader what they already expect, with a
+proposed cut, for jakob to rule. It rides his flagged pass that removes
+words from crowded screens.

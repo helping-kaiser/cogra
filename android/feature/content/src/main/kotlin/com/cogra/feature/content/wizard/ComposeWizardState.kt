@@ -400,6 +400,12 @@ data class ComposeWizardState(
     val stagedPDirected: Double = DEFAULT_P_DIRECTED,
 
     /**
+     * `Start it unreachable?` stands over the parked pad: Set was pressed
+     * at exactly 0.00 (ComposePad.md). It warns, never refuses.
+     */
+    val confirmingUnreachable: Boolean = false,
+
+    /**
      * The author's own sensitive mark (`ComposeSensitive`).
      *
      * It veils the pictures and the words until a reader chooses
@@ -766,7 +772,7 @@ fun ComposeWizardState.openedCoverStep(): ComposeWizardState? =
 
 /** Drops every drawer without moving the stage. */
 fun ComposeWizardState.closedSheets(): ComposeWizardState =
-    copy(sheet = SealSheet.None, pickedSheetOpen = false, describingIndex = null)
+    copy(sheet = SealSheet.None, pickedSheetOpen = false, describingIndex = null, confirmingUnreachable = false)
 
 /**
  * Switches the body's half. Both halves survive the switch — the

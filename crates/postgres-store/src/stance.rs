@@ -11,6 +11,7 @@
 //! not (api-spec.md "Conventions", the includePending split).
 
 use common::l1::census::Family;
+use common::l1::exact::Decimal;
 use common::l1::fold::BundleSum;
 use common::l1::identifier::NodeId;
 use sqlx::PgPool;
@@ -68,8 +69,8 @@ pub async fn bundle(
 ) -> Result<BundleSum, sqlx::Error> {
     let source = NodeId::Addr(author_atom.to_string()).to_string();
     let landed = sqlx::query!(
-        r#"SELECT COALESCE(SUM(l.p_d), 0)::float8 AS "p_d!",
-                  COALESCE(SUM(l.p_i), 0)::float8 AS "p_i!",
+        r#"SELECT COALESCE(SUM(l.p_d::text::numeric), 0)::text AS "p_d!",
+                  COALESCE(SUM(l.p_i::text::numeric), 0)::text AS "p_i!",
                   COUNT(*)::bigint              AS "records!"
            FROM mirror_record_legs l
            JOIN mirror_records r ON r.record_id = l.record_id
@@ -84,16 +85,13 @@ pub async fn bundle(
     .fetch_one(pool)
     .await?;
 
-    let mut sum = BundleSum {
-        p_d: landed.p_d,
-        p_i: landed.p_i,
-        records: landed.records.max(0) as u32,
-    };
+    let mut sum = ExactSums::default();
+    sum.absorb(&landed.p_d, &landed.p_i, landed.records)?;
 
     if view == BundleView::IncludingPending {
         let pending = sqlx::query!(
-            r#"SELECT COALESCE(SUM(p_d), 0)::float8 AS "p_d!",
-                      COALESCE(SUM(p_i), 0)::float8 AS "p_i!",
+            r#"SELECT COALESCE(SUM(p_d::text::numeric), 0)::text AS "p_d!",
+                      COALESCE(SUM(p_i::text::numeric), 0)::text AS "p_i!",
                       COUNT(*)::bigint             AS "records!"
                FROM staged_writes
                WHERE family = $1 AND author = $2 AND target = $3
@@ -107,10 +105,167 @@ pub async fn bundle(
         )
         .fetch_one(pool)
         .await?;
-        sum.p_d += pending.p_d;
-        sum.p_i += pending.p_i;
-        sum.records += pending.records.max(0) as u32;
+        sum.absorb(&pending.p_d, &pending.p_i, pending.records)?;
     }
 
-    Ok(sum)
+    Ok(sum.bundle())
+}
+
+/// Whether the author holds at least one live outgoing Opinion edge: some
+/// target whose netted bundle is not routing-inert, `p̄_d ≠ 0` and
+/// `p̄_i ≠ 0` (edges.md §1) — the end of the borrowed view (api-spec.md
+/// `Query.borrowedView`). An author whose Opinions are all inert, or all
+/// netted to zero, has no such edge: their ranked feed would be empty.
+///
+/// The bundle is the fold of [`bundle`] — payload-marked and
+/// census-unknown legs excluded — taken per target across every target
+/// the author has written an Opinion toward. The clip preserves zero
+/// (`clip(x) == 0` exactly when `x` is `0`), so the sum tests directly in
+/// the query and `NetStance::is_inert` never needs the rows. The sums are
+/// exact decimal, as `ExactSums` documents, so a bundle walked back to
+/// zero reads inert here exactly when the stance read says it is.
+///
+/// [`BundleView::Landed`] reads the mirror alone. [`BundleView::
+/// IncludingPending`] adds the author's signed, in-flight Opinions into
+/// the same per-target bundle — signed meaning the pre-commitment is in,
+/// so a write still awaiting it carries no signature of the author's — and
+/// an act carried with the application counts from the landing on, signed
+/// or not: it signs with the vouch-in batch automatically (VouchBack.md:21).
+/// Landed and expired staged rows are not counted as pending: the first is
+/// in the mirror already, the second never existed on the graph.
+pub async fn has_live_opinion_from(
+    pool: &PgPool,
+    author_atom: &str,
+    view: BundleView,
+) -> Result<bool, sqlx::Error> {
+    let source = NodeId::Addr(author_atom.to_string()).to_string();
+    sqlx::query_scalar!(
+        r#"SELECT EXISTS(
+               SELECT 1 FROM (
+                   SELECT l.target, l.p_d, l.p_i
+                   FROM mirror_record_legs l
+                   JOIN mirror_records r ON r.record_id = l.record_id
+                   WHERE l.leg = 'binary' AND l.family = 'opinion'
+                     AND l.source = $1
+                     AND NOT r.payload_marked
+                     AND NOT l.census_unknown
+                   UNION ALL
+                   SELECT target, p_d, p_i
+                   FROM staged_writes
+                   WHERE $3 AND family = 'opinion' AND author = $2
+                     AND middle IS NULL
+                     AND octet_length(payload) = 0
+                     AND (state NOT IN ('awaiting_pre_sign', 'expired', 'carried', 'landed')
+                          OR (carried AND state = 'awaiting_pre_sign'))
+               ) legs
+               GROUP BY target
+               HAVING SUM(p_d::text::numeric) <> 0 AND SUM(p_i::text::numeric) <> 0
+           ) AS "exists!""#,
+        source,
+        author_atom,
+        view == BundleView::IncludingPending,
+    )
+    .fetch_one(pool)
+    .await
+}
+
+/// The author's own Publish bundle toward one minted Content node: the
+/// raw `p_d` sums of every Publish-family record the author wrote toward
+/// it, and how many records sum.
+///
+/// The sibling of [`bundle`] with the one difference that is the point of
+/// it: payload-marked records are counted. Every Publish is payload-marked
+/// — the genesis record and each edit carry the content envelope — so the
+/// exclusion `bundle` applies, which keeps ballots out of a stance, would
+/// empty this read. Census-unknown legs stay excluded for the same reason
+/// as there, and the pending half counts the author's staged Publish rows
+/// under the same lifecycle test (pre-committed or carried, neither landed
+/// nor expired) with no empty-payload condition.
+pub async fn publish_bundle(
+    pool: &PgPool,
+    author_atom: &str,
+    target: &str,
+    view: BundleView,
+) -> Result<BundleSum, sqlx::Error> {
+    let source = NodeId::Addr(author_atom.to_string()).to_string();
+    let family = Family::Publish.as_str();
+    let landed = sqlx::query!(
+        r#"SELECT COALESCE(SUM(p_d::text::numeric), 0)::text AS "p_d!",
+                  COALESCE(SUM(p_i::text::numeric), 0)::text AS "p_i!",
+                  COUNT(*)::bigint             AS "records!"
+           FROM mirror_record_legs
+           WHERE leg = 'binary' AND family = $1
+             AND source = $2 AND target = $3
+             AND NOT census_unknown"#,
+        family,
+        source,
+        target,
+    )
+    .fetch_one(pool)
+    .await?;
+
+    let mut sum = ExactSums::default();
+    sum.absorb(&landed.p_d, &landed.p_i, landed.records)?;
+
+    if view == BundleView::IncludingPending {
+        let pending = sqlx::query!(
+            r#"SELECT COALESCE(SUM(p_d::text::numeric), 0)::text AS "p_d!",
+                      COALESCE(SUM(p_i::text::numeric), 0)::text AS "p_i!",
+                      COUNT(*)::bigint             AS "records!"
+               FROM staged_writes
+               WHERE family = $1 AND author = $2 AND target = $3
+                 AND middle IS NULL
+                 AND (pre_signed_at IS NOT NULL OR carried)
+                 AND state NOT IN ('landed', 'expired')"#,
+            family,
+            author_atom,
+            target,
+        )
+        .fetch_one(pool)
+        .await?;
+        sum.absorb(&pending.p_d, &pending.p_i, pending.records)?;
+    }
+
+    Ok(sum.bundle())
+}
+
+/// A bundle's exact sums as SQL assembles them, in halves.
+///
+/// Every sum in this crate is `SUM(x::text::numeric)`: the float8's text
+/// is its shortest round-trip decimal — "the shortest precise decimal
+/// representation" whenever `extra_float_digits` is above 0, which sqlx
+/// sets to 3 on connect — and `numeric` addition is exact ("calculations
+/// with numeric values yield exact results where possible, e.g. addition",
+/// PostgreSQL docs, datatype-numeric). That is the decimal
+/// `common::l1::exact` sums on the Rust side, so the store, the ranker and
+/// the projection net the same records to the same value in any order. A
+/// sum leaves as text — float8 would round it, and a sum too small for a
+/// double is refused by float8 rather than carried — and the halves add
+/// exactly here.
+#[derive(Debug, Default)]
+pub(crate) struct ExactSums {
+    p_d: Decimal,
+    p_i: Decimal,
+    records: u32,
+}
+
+impl ExactSums {
+    pub(crate) fn absorb(&mut self, p_d: &str, p_i: &str, records: i64) -> Result<(), sqlx::Error> {
+        self.p_d = &self.p_d + &decimal(p_d)?;
+        self.p_i = &self.p_i + &decimal(p_i)?;
+        self.records = self
+            .records
+            .saturating_add(u32::try_from(records.max(0)).unwrap_or(u32::MAX));
+        Ok(())
+    }
+
+    pub(crate) fn bundle(&self) -> BundleSum {
+        BundleSum::from_decimals(&self.p_d, &self.p_i, self.records)
+    }
+}
+
+/// A `numeric` sum's text as an exact decimal.
+pub(crate) fn decimal(text: &str) -> Result<Decimal, sqlx::Error> {
+    text.parse::<Decimal>()
+        .map_err(|e| sqlx::Error::Decode(Box::new(e)))
 }

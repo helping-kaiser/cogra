@@ -179,12 +179,22 @@ pub async fn bookmarked_at_many(
         .collect())
 }
 
-/// One page of `viewer`'s Saved list, newest first by save time. Walking
-/// forward reads past `cursor` toward older saves; walking backward reads
-/// toward newer ones and returns them in the same newest-first order.
+/// The kinds a Saved list holds, as its rows name them.
+pub const KINDS: [&str; 3] = ["user", "post", "comment"];
+
+/// Every kind a Saved list holds — the read that narrows by none.
+pub fn every_kind() -> Vec<String> {
+    KINDS.iter().map(|kind| kind.to_string()).collect()
+}
+
+/// One page of `viewer`'s Saved list, newest first by save time, of the
+/// `kinds` given ([`KINDS`] names them). Walking forward reads past
+/// `cursor` toward older saves; walking backward reads toward newer ones
+/// and returns them in the same newest-first order.
 pub async fn bookmarks(
     pool: &PgPool,
     viewer: Uuid,
+    kinds: &[String],
     cursor: Option<BookmarkCursor>,
     backward: bool,
     limit: i64,
@@ -199,6 +209,7 @@ pub async fn bookmarks(
             r#"SELECT b.content_id, b.kind, b.bookmarked_at
                FROM user_bookmarks b
                WHERE b.user_id = $1
+                 AND b.kind = ANY($5)
                  AND ($2::timestamptz IS NULL
                       OR (b.bookmarked_at, b.content_id) > ($2, $3::uuid))
                  AND CASE b.kind
@@ -216,6 +227,7 @@ pub async fn bookmarks(
             at,
             id,
             limit,
+            kinds,
         )
         .fetch_all(pool)
         .await?;
@@ -227,6 +239,7 @@ pub async fn bookmarks(
             r#"SELECT b.content_id, b.kind, b.bookmarked_at
                FROM user_bookmarks b
                WHERE b.user_id = $1
+                 AND b.kind = ANY($5)
                  AND ($2::timestamptz IS NULL
                       OR (b.bookmarked_at, b.content_id) < ($2, $3::uuid))
                  AND CASE b.kind
@@ -244,34 +257,16 @@ pub async fn bookmarks(
             at,
             id,
             limit,
+            kinds,
         )
         .fetch_all(pool)
         .await
     }
 }
 
-/// Every node on `viewer`'s Saved list — the set a narrowed read hands
-/// the search matcher as its window. Unordered; whether each still
-/// resolves is the paged read's question, not this one's.
-pub async fn saved_ids(pool: &PgPool, viewer: Uuid) -> Result<Vec<Uuid>, sqlx::Error> {
-    sqlx::query_scalar!(
-        "SELECT content_id FROM user_bookmarks WHERE user_id = $1",
-        viewer
-    )
-    .fetch_all(pool)
-    .await
-}
-
-/// One kept node the search matcher matched, with the result section
-/// the match put it in.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SavedMatch {
-    pub bookmark: Bookmark,
-    pub section: i32,
-}
-
 /// A keyset position on a narrowed Saved list: section ascending, then
-/// `(bookmarked_at, content_id)` descending.
+/// `(bookmarked_at, content_id)` descending — the order the search
+/// matcher serves a Saved list in (`search::Window::list`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SavedMatchCursor {
     pub section: i32,
@@ -279,132 +274,39 @@ pub struct SavedMatchCursor {
     pub content_id: Uuid,
 }
 
-impl SavedMatch {
-    pub fn cursor(&self) -> SavedMatchCursor {
-        SavedMatchCursor {
-            section: self.section,
-            bookmarked_at: self.bookmark.bookmarked_at,
-            content_id: self.bookmark.content_id,
+impl SavedMatchCursor {
+    /// Where `hit`, served from a Saved list, stands.
+    pub fn of_hit(hit: &crate::search::SearchHit) -> Self {
+        Self {
+            section: crate::search::section_of(hit.tier),
+            bookmarked_at: hit.created_at,
+            content_id: hit.node_id,
+        }
+    }
+
+    /// The position as the matcher's own keyset reads it: a Saved list's
+    /// tier is its section's first.
+    pub fn as_search_cursor(self) -> crate::search::SearchCursor {
+        crate::search::SearchCursor {
+            tier: 2 * self.section,
+            created_at: self.bookmarked_at,
+            node_id: self.content_id,
         }
     }
 }
 
-/// One page of `viewer`'s Saved list narrowed to `matched` — the nodes
-/// the search matcher matched inside the saved set, each with its result
-/// section (`ids[i]` in `sections[i]`). Sectioned as search is (people,
-/// then content), newest save first inside a section; served under the
-/// same resolves-still predicate as [`bookmarks`]. Walking backward
-/// returns the rows in the same display order.
-pub async fn bookmarks_among(
+/// How many entries [`bookmarks`] serves across every page — the same
+/// predicate, no cursor.
+pub async fn count_bookmarks(
     pool: &PgPool,
     viewer: Uuid,
-    ids: &[Uuid],
-    sections: &[i32],
-    cursor: Option<SavedMatchCursor>,
-    backward: bool,
-    limit: i64,
-) -> Result<Vec<SavedMatch>, sqlx::Error> {
-    let (section, at, id) = match cursor {
-        Some(c) => (Some(c.section), Some(c.bookmarked_at), Some(c.content_id)),
-        None => (None, None, None),
-    };
-    let rows = if backward {
-        let mut rows = sqlx::query!(
-            r#"SELECT b.content_id, b.kind, b.bookmarked_at, m.section AS "section!"
-               FROM user_bookmarks b
-               JOIN unnest($2::uuid[], $3::int[]) AS m(content_id, section)
-                 ON m.content_id = b.content_id
-               WHERE b.user_id = $1
-                 AND ($4::int IS NULL
-                      OR m.section < $4
-                      OR (m.section = $4
-                          AND (b.bookmarked_at, b.content_id) > ($5::timestamptz, $6::uuid)))
-                 AND CASE b.kind
-                     WHEN 'post' THEN EXISTS (
-                         SELECT 1 FROM posts p WHERE p.id = b.content_id)
-                     WHEN 'comment' THEN EXISTS (
-                         SELECT 1 FROM comments c WHERE c.id = b.content_id)
-                     WHEN 'user' THEN EXISTS (
-                         SELECT 1 FROM actors a WHERE a.id = b.content_id)
-                     ELSE FALSE
-                 END
-               ORDER BY m.section DESC, b.bookmarked_at ASC, b.content_id ASC
-               LIMIT $7"#,
-            viewer,
-            ids,
-            sections,
-            section,
-            at,
-            id,
-            limit,
-        )
-        .fetch_all(pool)
-        .await?;
-        rows.reverse();
-        rows.into_iter()
-            .map(|r| (r.content_id, r.kind, r.bookmarked_at, r.section))
-            .collect::<Vec<_>>()
-    } else {
-        sqlx::query!(
-            r#"SELECT b.content_id, b.kind, b.bookmarked_at, m.section AS "section!"
-               FROM user_bookmarks b
-               JOIN unnest($2::uuid[], $3::int[]) AS m(content_id, section)
-                 ON m.content_id = b.content_id
-               WHERE b.user_id = $1
-                 AND ($4::int IS NULL
-                      OR m.section > $4
-                      OR (m.section = $4
-                          AND (b.bookmarked_at, b.content_id) < ($5::timestamptz, $6::uuid)))
-                 AND CASE b.kind
-                     WHEN 'post' THEN EXISTS (
-                         SELECT 1 FROM posts p WHERE p.id = b.content_id)
-                     WHEN 'comment' THEN EXISTS (
-                         SELECT 1 FROM comments c WHERE c.id = b.content_id)
-                     WHEN 'user' THEN EXISTS (
-                         SELECT 1 FROM actors a WHERE a.id = b.content_id)
-                     ELSE FALSE
-                 END
-               ORDER BY m.section ASC, b.bookmarked_at DESC, b.content_id DESC
-               LIMIT $7"#,
-            viewer,
-            ids,
-            sections,
-            section,
-            at,
-            id,
-            limit,
-        )
-        .fetch_all(pool)
-        .await?
-        .into_iter()
-        .map(|r| (r.content_id, r.kind, r.bookmarked_at, r.section))
-        .collect()
-    };
-    Ok(rows
-        .into_iter()
-        .map(|(content_id, kind, bookmarked_at, section)| SavedMatch {
-            bookmark: Bookmark {
-                content_id,
-                kind,
-                bookmarked_at,
-            },
-            section,
-        })
-        .collect())
-}
-
-/// How many entries [`bookmarks_among`] serves across every page — the
-/// same predicate, no cursor.
-pub async fn count_bookmarks_among(
-    pool: &PgPool,
-    viewer: Uuid,
-    ids: &[Uuid],
+    kinds: &[String],
 ) -> Result<i64, sqlx::Error> {
     sqlx::query_scalar!(
         r#"SELECT COUNT(*) AS "n!"
            FROM user_bookmarks b
            WHERE b.user_id = $1
-             AND b.content_id = ANY($2::uuid[])
+             AND b.kind = ANY($2)
              AND CASE b.kind
                  WHEN 'post' THEN EXISTS (
                      SELECT 1 FROM posts p WHERE p.id = b.content_id)
@@ -415,29 +317,7 @@ pub async fn count_bookmarks_among(
                  ELSE FALSE
              END"#,
         viewer,
-        ids,
-    )
-    .fetch_one(pool)
-    .await
-}
-
-/// How many entries [`bookmarks`] serves across every page — the same
-/// predicate, no cursor.
-pub async fn count_bookmarks(pool: &PgPool, viewer: Uuid) -> Result<i64, sqlx::Error> {
-    sqlx::query_scalar!(
-        r#"SELECT COUNT(*) AS "n!"
-           FROM user_bookmarks b
-           WHERE b.user_id = $1
-             AND CASE b.kind
-                 WHEN 'post' THEN EXISTS (
-                     SELECT 1 FROM posts p WHERE p.id = b.content_id)
-                 WHEN 'comment' THEN EXISTS (
-                     SELECT 1 FROM comments c WHERE c.id = b.content_id)
-                 WHEN 'user' THEN EXISTS (
-                     SELECT 1 FROM actors a WHERE a.id = b.content_id)
-                 ELSE FALSE
-             END"#,
-        viewer,
+        kinds,
     )
     .fetch_one(pool)
     .await

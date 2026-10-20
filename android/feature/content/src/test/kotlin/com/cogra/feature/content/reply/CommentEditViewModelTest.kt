@@ -339,7 +339,7 @@ class CommentEditViewModelTest {
         assertThat(vm.state.value.saved).isTrue()
     }
 
-    /** A topic taken off is a further Tag at relevance 0 (hashtag.md §4). */
+    /** A topic taken off is a further Tag at (0,0) (hashtag.md §4). */
     @Test
     fun aRemovedTopicIsStagedAsAWithdrawalRatherThanADeletion() = runTest(dispatcher) {
         content.loaded = Outcome.Success(
@@ -361,9 +361,9 @@ class CommentEditViewModelTest {
         val staged = topics.staged.single()
         assertThat(staged.second).isEqualTo("rust")
         assertThat(staged.third).isEqualTo(0.0)
-        // The un-tag signs the confidence the removed chip showed (0.6):
-        // relevance is the only value a removal moves.
-        assertThat(topics.interests.single()).isEqualTo(0.6)
+        // The un-tag signs (0,0) whatever the removed chip showed (0.6):
+        // zero on one parameter alone would still be a claim.
+        assertThat(topics.interests.single()).isEqualTo(0.0)
     }
 
     @Test

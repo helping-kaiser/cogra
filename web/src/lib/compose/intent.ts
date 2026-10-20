@@ -22,7 +22,7 @@ import {
   type NodeExpectation,
 } from "@/lib/signing/intent";
 import type { TagChange, TagDraft } from "@/lib/topics/draft";
-import { WITHDRAWN_RELEVANCE } from "@/lib/topics/draft";
+import { signedValues } from "@/lib/topics/draft";
 
 type License = { readonly attribution: number; readonly provenance: number };
 
@@ -111,9 +111,9 @@ export function editExpectation(
   const standing = node(nodeGraphId);
   const writes: ExpectedWrite[] = record === null ? [] : [record];
   for (const change of changes.tags) {
-    // Withdrawing is a Tag act at relevance 0; it signs the confidence its chip showed.
-    const relevance = change.kind === "tag" ? change.tag.relevance : WITHDRAWN_RELEVANCE;
-    writes.push(tagClaim(standing, change.tag.name, relevance, change.tag.confidence));
+    // Withdrawing is a Tag act at (0,0) (hashtag.md §4).
+    const { relevance, confidence } = signedValues(change);
+    writes.push(tagClaim(standing, change.tag.name, relevance, confidence));
   }
   const netting = [];
   for (const change of changes.references) {

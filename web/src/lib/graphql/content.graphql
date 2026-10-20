@@ -10,6 +10,8 @@ mutation PreparePost($input: PreparePostInput!) {
     node
     writes {
       ...PreparedWriteFields
+      # Carried with an applicant's application: checked, kept, signed at the landing.
+      carried
     }
     userErrors {
       ...UserErrorFields
@@ -209,6 +211,22 @@ query CommentSelfMark($id: UUID!) {
     id
     sensitiveSelfMark
     sensitiveReason
+  }
+}
+
+# THE EDIT PAD'S BACKING READ (EditPad.md): the author's own Publish bundle
+# toward their post — the genesis and every edit — as its RAW sum, which
+# `Current backing`, `Backing after`, the cap line and `Walk it all back` all
+# fold from. Its own operation for the reason `CommentSelfMark` is: an edit
+# opens one post, once. Pending records count — an edit signed a moment ago
+# is part of the backing the next edit adds to, landed or not. Null for any
+# viewer but the post's creator.
+query PostBacking($id: UUID!) {
+  post(id: $id) {
+    id
+    viewerBacking(includePending: true) {
+      rawPDirected
+    }
   }
 }
 

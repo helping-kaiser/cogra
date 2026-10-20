@@ -106,7 +106,7 @@ The rule behind the split: the shared graph holds what the Post
 
 - **Topic tagging** — a **Tag** hyper-edge (Actor → Post → Type),
   at creation or later; each tag is its own priced act. Un-tagging
-  is a further tag at relevance `0`, which the current-topics fold
+  is a further tag at `(0,0)`, which the current-topics fold
   reads as withdrawn
   ([hashtag.md §4](hashtag.md#4-the-current-topics-fold)).
 - **Quoting, embedding, mentioning** — a **Reference** hyper-edge
@@ -154,8 +154,10 @@ The instantiation of the node-value update rule
   history is its Publish bundle and any L2 identifies each edit
   from act fields alone
   ([nodes.md §1](../primitive/nodes.md#1-l1-node-types-the-shared-graph)).
-  Edits are authored at attachment `0`: routing-inert,
-  vouch-inert.
+  Each edit carries the author's attachment pick, summed into the
+  bundle like any parallel record: `0` by default — routing-inert,
+  vouch-inert — and the author's to change.
+  A moved pick alone is a legal edit — a content-identical version.
 - **Eligible author:** the creator, alone — an eligibility read
   rule, never a write restriction.
 - **Chain root:** the genesis Publish. The current value is the

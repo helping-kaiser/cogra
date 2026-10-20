@@ -66,6 +66,16 @@ export function nearestAnchor(pair: StancePair): StanceAnchor {
 export const ZERO_BUNDLE_EMOJI = "🤷";
 
 /**
+ * ONE NUMBER AT ZERO THINKS; BOTH AT ZERO SHRUG (jakob 2026-10-20: "shrug
+ * should be the 0,0 only"). A state with exactly one number at zero — an
+ * unreachable landing, and the one-axis 0.00, which is `(0, 1)` with the
+ * pin — wears 🤔, outside the table like 🤷 and 🫥, so the held,
+ * unreachable state never reads as severance's face. The master is
+ * `StanceReadout.jsx`'s `UNREACHABLE_EMOJI`.
+ */
+export const UNREACHABLE_EMOJI = "🤔";
+
+/**
  * The face an unauthored target wears at rest (design.md §8.3, Q42).
  * Deliberately outside the table, so an empty control can never read as
  * a standing the viewer already holds — and deliberately not the shrug,

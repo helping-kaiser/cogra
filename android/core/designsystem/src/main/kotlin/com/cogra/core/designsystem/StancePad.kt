@@ -30,6 +30,7 @@
 
 package com.cogra.core.designsystem
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -202,6 +203,13 @@ data class StanceControlState(
      * shows it once and reports it back through `onConfirmationShown`.
      */
     val confirmation: StancePoint? = null,
+    /**
+     * THE READER STILL BORROWS A VIEW (jakob 2026-10-20; the master's
+     * `borrowed`): they hold no outgoing opinion with neither number at
+     * zero. An unreachable or severed landing then warns that the pick
+     * keeps the borrowed view. Warns, never blocks.
+     */
+    val borrowed: Boolean = false,
 )
 
 /**
@@ -673,11 +681,19 @@ private fun Modifier.fieldGesture(
             // drag began, and the picks it reports must not feed back into it.
             val base = pick.value
             var travel = Offset.Zero
+            var travelled = false
             drag(down.id) { change ->
                 travel += change.positionChange()
                 change.consume()
+                travelled = true
                 onPick.value(stancePointFrom(base, travel, extentPx))
             }
+            // THE RELEASE PARKS THE PICK ON A HUNDREDTH (the value domain,
+            // jakob 2026-10-20): the knob followed the finger, and the lift
+            // lands both axes on the nearest hundredth — so a pick the
+            // readout prints as `+0.00` is the exact 0 the landing's
+            // severance and inertness read. A tap moves nothing.
+            if (travelled) onPick.value(stancePointReleased(base, travel, extentPx))
         }
     }
 }
@@ -861,7 +877,7 @@ private fun PadBody(
         )
     }
     PadNote(variant, state.coaching, testTagPrefix)
-    StanceLandingLine(state.landing, testTagPrefix, axes, zeroWords)
+    StanceLandingLine(state.landing, testTagPrefix, axes, zeroWords, borrowed = state.borrowed)
 }
 
 /** The pad's tag and, for a variant, its title (VouchBackPad.md:9). */
@@ -1380,6 +1396,13 @@ private fun DrawScope.drawStanceField(
  * bundle takes the shrug rather than the table's nearest neighbour
  * (design.md §8.4).
  *
+ * ONE ZERO IS A DELIBERATE STATE, NOT A LOSS (jakob 2026-10-20; the master
+ * is `StanceReadout.jsx`'s `unreachableHead`/`UNREACHABLE_TAIL`). A landing
+ * with exactly one number at zero — severance is read first, so an inert
+ * landing here has one — is held and shapes no feed: it wears the one-zero
+ * face 🤔, never the table's, and reads its state by the other number's
+ * sign, then the one consequence worth saying.
+ *
  * It updates under the drag with no round trip: the fold is local
  * arithmetic on numbers the surface was already served, so there is
  * nothing here to wait for and no spinner to show.
@@ -1390,6 +1413,40 @@ private fun StanceLandingLine(
     testTagPrefix: String,
     axes: StanceAxes,
     zeroWords: StanceZeroWords = StanceZeroWords.Severed,
+    borrowed: Boolean = false,
+) {
+    val keepsBorrowed = borrowed && landing != null &&
+        (landing.severance || landing.inertDirected || landing.inertInterest)
+    if (!keepsBorrowed) {
+        StanceLandingReadout(landing, testTagPrefix, axes, zeroWords)
+        return
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        StanceLandingReadout(landing, testTagPrefix, axes, zeroWords)
+        Text(
+            text = stringResource(R.string.stance_borrowed_kept),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.testTag("${testTagPrefix}_stance_landing_borrowed"),
+        )
+    }
+}
+
+/** The face an unreachable landing reads as, by the sign of the number that stands. */
+@StringRes
+private fun unreachableHead(net: StancePoint): Int = when {
+    net.directed == 0.0 && net.interest > 0.0 -> R.string.stance_unreachable_interested
+    net.directed == 0.0 -> R.string.stance_unreachable_rather_not
+    net.directed > 0.0 -> R.string.stance_unreachable_for
+    else -> R.string.stance_unreachable_against
+}
+
+@Composable
+private fun StanceLandingReadout(
+    landing: StanceLanding?,
+    testTagPrefix: String,
+    axes: StanceAxes,
+    zeroWords: StanceZeroWords,
 ) {
     if (landing == null) {
         Text(
@@ -1401,14 +1458,17 @@ private fun StanceLandingLine(
         return
     }
     val readout = standingReadout(landing.net)
+    val unreachable = !landing.severance && (landing.inertDirected || landing.inertInterest)
     val words = when {
         landing.severance -> stringResource(zeroWords.reached)
-        landing.inertDirected && landing.inertInterest ->
-            stringResource(R.string.stance_carries_nothing)
-        landing.inertDirected -> stringResource(R.string.stance_carries_nothing_directed)
-        landing.inertInterest -> stringResource(R.string.stance_carries_nothing_interest)
+        unreachable -> stringResource(
+            R.string.stance_unreachable_line,
+            stringResource(unreachableHead(landing.net)),
+            stringResource(R.string.stance_unreachable_tail),
+        )
         else -> stringResource(readout.label)
     }
+    val face = if (unreachable) UNREACHABLE_EMOJI else readout.emoji
     val caption = stringResource(R.string.stance_landing)
     // One node, announced once and in words: the face is a readout of a
     // pair that is spoken in full beside it, so its own emoji name would
@@ -1421,7 +1481,7 @@ private fun StanceLandingLine(
             .semantics(mergeDescendants = true) { contentDescription = spoken }
             .testTag("${testTagPrefix}_stance_landing"),
     ) {
-        Text(text = readout.emoji, style = MaterialTheme.typography.titleMedium)
+        Text(text = face, style = MaterialTheme.typography.titleMedium)
         Column {
             Text(
                 text = words,
@@ -1562,9 +1622,18 @@ private fun StanceEntry(
     }
     OutlinedTextField(
         value = typed,
-        onValueChange = {
-            typed = it
-            it.toDoubleOrNull()?.takeIf { parsed -> parsed in -1.0..1.0 }?.let(onChange)
+        onValueChange = { text ->
+            val parsed = text.toDoubleOrNull()?.takeIf { it in -1.0..1.0 }
+            if (parsed == null) {
+                typed = text
+            } else {
+                // A typed value lands on the hundredths grid, as a released
+                // drag does; a third decimal is rewritten to the hundredth it
+                // landed on, so the field never shows a pick it is not.
+                val landed = hundredth(parsed)
+                typed = if (landed == parsed) text else entryText(landed)
+                onChange(landed)
+            }
         },
         label = { Text(label) },
         singleLine = true,

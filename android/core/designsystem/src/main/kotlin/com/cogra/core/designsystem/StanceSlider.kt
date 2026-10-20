@@ -62,7 +62,10 @@ internal fun LabeledSlider(
         Text("$label: $reading")
         Slider(
             value = value.toFloat(),
-            onValueChange = { onChange(it.toDouble()) },
+            // The track is continuous and a Float; the pick is a hundredth
+            // (the value domain, jakob 2026-10-20), so every value it reports
+            // lands on the grid — what the label prints is what is picked.
+            onValueChange = { onChange(hundredth(it.toDouble())) },
             valueRange = valueRange,
             modifier = Modifier
                 .testTag(testTag)

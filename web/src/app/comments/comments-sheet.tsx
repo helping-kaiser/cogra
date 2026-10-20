@@ -57,7 +57,7 @@ import {
   type CitingRecordView,
 } from "@/lib/api/references-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
-import { tagChanges, WITHDRAWN_RELEVANCE, type TagDraft } from "@/lib/topics/draft";
+import { signedValues, tagChanges, type TagDraft } from "@/lib/topics/draft";
 import { referenceDrafts } from "@/lib/references/claims";
 import {
   editActCount,
@@ -861,10 +861,8 @@ export function CommentsSheet({
         prepareTag(client, {
           target: editing.id,
           name: change.tag.name,
-          // Withdrawing is a Tag act at relevance 0 (hashtag.md §4).
-          relevance: change.kind === "tag" ? change.tag.relevance : WITHDRAWN_RELEVANCE,
-          // An un-tag signs the confidence its chip showed; only relevance moves.
-          confidence: change.tag.confidence,
+          // Withdrawing is a Tag act at (0,0) (hashtag.md §4).
+          ...signedValues(change),
         }),
       );
       if (prepared.kind === "failed") {

@@ -60,10 +60,9 @@ data class TagSectionState(
     val adds: List<TagRow> get() = tags.filter { row -> loaded.none { it.sameClaimAs(row) } }
 
     /**
-     * Tags the author took off — each a further Tag at relevance 0
-     * (hashtag.md §4). The loaded row rides along so the withdrawal signs
-     * the confidence that chip showed: relevance is the only value a
-     * removal moves, and the wire fills nothing in.
+     * Tags the author took off — each a further Tag at (0,0)
+     * (hashtag.md §4). The loaded row rides along to name the Type it
+     * withdraws; both values it signs are 0, and the wire fills nothing in.
      */
     val removes: List<TagRow>
         get() = loaded.filter { row -> tags.none { it.name == row.name } }

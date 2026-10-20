@@ -21,6 +21,7 @@ import com.cogra.domain.LoginGrant
 import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
+import com.cogra.domain.PostBacking
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
@@ -67,6 +68,7 @@ import com.cogra.network.graphql.KeyBackupQuery
 import com.cogra.network.graphql.LogInMutation
 import com.cogra.network.graphql.MeQuery
 import com.cogra.network.graphql.MyProfileQuery
+import com.cogra.network.graphql.PostBackingQuery
 import com.cogra.network.graphql.PostCommentsQuery
 import com.cogra.network.graphql.PostDetailQuery
 import com.cogra.network.graphql.PostSelfMarkQuery
@@ -269,7 +271,7 @@ class WriteRepositoryImpl @Inject constructor(private val client: ApolloClient, 
                 PrepareStanceInput(target = Optional.present(targetId), pDirected = pDirected, pInterest = pInterest),
             ),
         ).payloadOutcome({ it.prepareStance.userErrors.map { e -> e.userErrorFields } }) {
-            it.prepareStance.writes?.map { w -> w.preparedWriteFields.toDomain() }
+            it.prepareStance.writes?.map { w -> w.preparedWriteFields.toDomain(carried = w.carried) }
         }
     }
 
@@ -287,7 +289,7 @@ class WriteRepositoryImpl @Inject constructor(private val client: ApolloClient, 
                 ),
             ),
         ).payloadOutcome({ it.prepareStance.userErrors.map { e -> e.userErrorFields } }) {
-            it.prepareStance.writes?.map { w -> w.preparedWriteFields.toDomain() }
+            it.prepareStance.writes?.map { w -> w.preparedWriteFields.toDomain(carried = w.carried) }
         }
     }
 
@@ -666,7 +668,7 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
         ).payloadOutcome({ it.preparePost.userErrors.map { e -> e.userErrorFields } }) { data ->
             data.preparePost.node?.let { node ->
                 data.preparePost.writes?.let { writes ->
-                    PreparedContentView(node, writes.map { w -> w.preparedWriteFields.toDomain() })
+                    PreparedContentView(node, writes.map { w -> w.preparedWriteFields.toDomain(carried = w.carried) })
                 }
             }
         }
@@ -678,6 +680,12 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
         }
     }
 
+    override suspend fun postBacking(id: String): Outcome<PostBacking?> = guard.run {
+        client.query(PostBackingQuery(id)).fetch().map { data ->
+            data.post?.viewerBacking?.let { PostBacking(net = it.pDirected, rawSum = it.rawPDirected) }
+        }
+    }
+
     override suspend fun preparePostEdit(
         id: String,
         title: String?,
@@ -686,6 +694,7 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
         attachments: List<AttachmentClaim>,
         sensitive: Boolean,
         sensitiveReason: String?,
+        pDirected: Double,
     ): Outcome<PreparedContentView> = guard.run {
         client.mutation(
             PreparePostEditMutation(
@@ -712,6 +721,10 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
                     sensitiveReason = Optional.present(
                         wireReason(sensitive, sensitiveReason),
                     ),
+                    // The author's attachment pick, the record's own value —
+                    // sent explicitly, as the pad shows it, 0 when unmoved
+                    // (the intent check holds the record to it).
+                    pDirected = Optional.present(pDirected),
                 ),
             ),
         ).payloadOutcome({ it.preparePostEdit.userErrors.map { e -> e.userErrorFields } }) { data ->

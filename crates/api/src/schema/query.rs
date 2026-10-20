@@ -185,12 +185,14 @@ impl Query {
     ///    link they registered through** — whoever's vouch lands them —
     ///    from the moment
     ///    the account exists and before either proof is in, whatever they
-    ///    stage — and a **landed member** keeps borrowing it until their
-    ///    first Opinion is signed, toward any target, landed or in flight.
-    ///    An Affinity never ends it; a first Opinion that expires with
-    ///    none landed returns it; an Opinion carried from the application
-    ///    signs with the vouch-in batch, so that member owns their view
-    ///    from landing on.
+    ///    stage — and a **landed member** keeps borrowing it until they
+    ///    hold a live Opinion, signed toward any target, landed or in
+    ///    flight: one whose netted bundle toward its target has neither
+    ///    parameter at zero. An inert Opinion (either parameter zero) and
+    ///    an Affinity never end it; a live Opinion that expires with none
+    ///    landed returns it; an Opinion carried from the application
+    ///    signs with the vouch-in batch, so a member who carried a live
+    ///    one owns their view from landing on.
     /// 3. A **bare visitor**, with nothing more specific to go on,
     ///    borrows the **Genesis Moderator's** view. Strictly the
     ///    fallback: it is the only vantage that names no relationship
@@ -543,8 +545,8 @@ impl Query {
     }
 
     /// Global search across nodes; returns a `SearchResult` per edge.
-    /// Recall is lexical: plain text matches handles and topic names by
-    /// substring, post titles and display names by word (the last word a
+    /// Recall is lexical: plain text matches topic names by substring,
+    /// post titles, handles and display names by word (the last word a
     /// prefix), and brings the posts of every person whose display name
     /// matches; `@prefix` names people by handle prefix and `#prefix`
     /// topics by name prefix — bare, the matches lead and everything they
@@ -555,7 +557,10 @@ impl Query {
     /// ranker container orders each section's matches inside `viewer`'s
     /// slice, exact matches first, and the section's rest follow behind
     /// the seam, newest first; ranking never runs in the backend process
-    /// (feed-ranking.md §11). `order: RANKED` needs `viewer`. Served
+    /// (feed-ranking.md §11). `order: RANKED` needs `viewer`. While the
+    /// served kinds stand people beside another kind, the people section
+    /// serves its first three in that order, and `hasMorePeople` says
+    /// whether more match; `kinds: [USER]` serves them all. Served
     /// kinds grow with the slices: USER, POST, HASHTAG for plain text;
     /// COMMENT is always a valid kind but is served only under a cue —
     /// for plain text it contributes no rows, never an error. A `kinds`
@@ -618,7 +623,7 @@ impl Query {
                 search::MAX_QUERY_CHARS
             ))
         })?;
-        let empty = || search_page(Vec::new(), had_cursor, backward, false, None);
+        let empty = || search_page(Vec::new(), had_cursor, backward, false, None, None);
         let reader = match ctx.data_opt::<Option<Viewer>>() {
             Some(Some(v)) => Some(v.user_id),
             _ => None,
@@ -631,8 +636,22 @@ impl Query {
         if let Some(viewer) = ranked_for {
             return ranked_search::page(ctx, request, viewer, ranked_cursor, backward, limit).await;
         }
+        let past_people = !backward
+            && cursor
+                .is_some_and(|c| search_store::section_of(c.tier) > search_store::SECTION_PEOPLE);
+        let cap = if past_people {
+            None
+        } else {
+            people_cap(pool, &request, None)
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        };
+        let window = search_store::Window {
+            people: cap.as_ref().map(|cap| cap.served.as_slice()),
+            ..search_store::Window::default()
+        };
         let mut hits = request
-            .find(pool, cursor, backward, limit + 1)
+            .find_in(pool, window, cursor, backward, limit + 1)
             .await
             .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         let has_more = hits.len() as i64 > limit;
@@ -650,6 +669,7 @@ impl Query {
             backward,
             has_more,
             Some(request),
+            cap.map(|cap| cap.more),
         ))
     }
 
@@ -851,8 +871,8 @@ pub(super) fn bad_input(message: impl Into<String>) -> async_graphql::Error {
 }
 
 /// The match request a parsed query makes over `kinds` — the one path
-/// `search` and `User.bookmarks(query:)` share, so no surface grows a
-/// second matcher. None when the request can match nothing: a blank
+/// `search`, `User.bookmarks(query:)` and `User.viewHistory(query:)`
+/// share, so no surface grows a second matcher. None when the request can match nothing: a blank
 /// query, a cue that names nothing, or kinds that leave nothing served.
 pub(super) async fn search_request(
     ctx: &Context<'_>,
@@ -934,6 +954,126 @@ fn scoped_kinds(kinds: Option<&[NodeKind]>, scope: search::Scope, bare: bool) ->
     }
 }
 
+/// A capped people section: the people it serves, in order, and whether
+/// more match behind its "See all profiles" door.
+pub(super) struct PeopleCap {
+    pub(super) served: Vec<Uuid>,
+    pub(super) more: bool,
+}
+
+/// The capped people section of `request` in the matcher's own order —
+/// with `list`, that reader's list's (newest save, or newest first
+/// seeing): its first [`search::PEOPLE_SECTION_CAP`] people, and whether
+/// more match. None when the cap does not apply: the request serves no
+/// people, or nothing beside them.
+pub(super) async fn people_cap(
+    pool: &PgPool,
+    request: &search_store::SearchRequest,
+    list: Option<search_store::ReaderList>,
+) -> Result<Option<PeopleCap>, sqlx::Error> {
+    if !request.serves_people_beside_others() {
+        return Ok(None);
+    }
+    let Some(people) = request.people_only() else {
+        return Ok(None);
+    };
+    let window = search_store::Window {
+        list,
+        ..search_store::Window::default()
+    };
+    let hits = people
+        .find_in(
+            pool,
+            window,
+            None,
+            false,
+            search::PEOPLE_SECTION_CAP as i64 + 1,
+        )
+        .await?;
+    Ok(Some(PeopleCap {
+        more: hits.len() > search::PEOPLE_SECTION_CAP,
+        served: hits
+            .into_iter()
+            .take(search::PEOPLE_SECTION_CAP)
+            .map(|hit| hit.node_id)
+            .collect(),
+    }))
+}
+
+/// A capped topics section — History's alone: the topics it serves, in
+/// order, and whether more match behind its "See all tags" door.
+pub(super) struct TopicsCap {
+    pub(super) served: Vec<Uuid>,
+    pub(super) more: bool,
+}
+
+/// The capped topics section of `request` in the matcher's own order,
+/// read from `list`'s (newest first seeing): its first
+/// [`search::TOPICS_SECTION_CAP`] topics, and whether more match. None
+/// when the cap does not apply: the request serves no topics, or nothing
+/// beside them.
+pub(super) async fn topics_cap(
+    pool: &PgPool,
+    request: &search_store::SearchRequest,
+    list: Option<search_store::ReaderList>,
+) -> Result<Option<TopicsCap>, sqlx::Error> {
+    if !request.serves_topics_beside_others() {
+        return Ok(None);
+    }
+    let Some(topics) = request.topics_only() else {
+        return Ok(None);
+    };
+    let window = search_store::Window {
+        list,
+        ..search_store::Window::default()
+    };
+    let hits = topics
+        .find_in(
+            pool,
+            window,
+            None,
+            false,
+            search::TOPICS_SECTION_CAP as i64 + 1,
+        )
+        .await?;
+    Ok(Some(TopicsCap {
+        more: hits.len() > search::TOPICS_SECTION_CAP,
+        served: hits
+            .into_iter()
+            .take(search::TOPICS_SECTION_CAP)
+            .map(|hit| hit.node_id)
+            .collect(),
+    }))
+}
+
+/// How many nodes `request` serves across every page: every match, less
+/// the people a capped people section leaves behind its door and, on
+/// History, the topics a capped topics section does — the count under
+/// exactly the predicate the pages ran.
+pub(super) async fn served_count(
+    pool: &PgPool,
+    request: &search_store::SearchRequest,
+    list: Option<search_store::ReaderList>,
+) -> Result<i64, sqlx::Error> {
+    let mut served = request.count(pool, list).await?;
+    if let Some(people) = request
+        .people_only()
+        .filter(|_| request.serves_people_beside_others())
+    {
+        let matched = people.count(pool, list).await?;
+        served -= (matched - search::PEOPLE_SECTION_CAP as i64).max(0);
+    }
+    if matches!(list, Some(search_store::ReaderList::History(_)))
+        && let Some(topics) = request
+            .topics_only()
+            .filter(|_| request.serves_topics_beside_others())
+    {
+        let matched = topics.count(pool, list).await?;
+        served -= (matched - search::TOPICS_SECTION_CAP as i64).max(0);
+    }
+    Ok(served)
+}
+
 /// The matched nodes, typed, in match order. A hit whose node vanished
 /// between the match and the load is dropped rather than served empty.
 pub(super) async fn hydrate(
@@ -991,13 +1131,15 @@ pub(super) async fn hydrate(
 /// A search page from hydrated hits. `had_cursor` and `has_more` decide
 /// the page flags the way every keyset connection does: walking forward,
 /// a cursor means a previous page and the extra row a next one; walking
-/// backward, the other way round.
+/// backward, the other way round. `more_people` is the people cap's
+/// answer when the page already read it.
 fn search_page(
     page: Vec<(search_store::SearchHit, SearchResult)>,
     had_cursor: bool,
     backward: bool,
     has_more: bool,
     request: Option<search_store::SearchRequest>,
+    more_people: Option<bool>,
 ) -> SearchConnection {
     let (has_previous, has_next) = if backward {
         (has_more, had_cursor)
@@ -1007,7 +1149,10 @@ fn search_page(
     let mut connection = SearchConnection::with_additional_fields(
         has_previous,
         has_next,
-        SearchConnectionFields { request },
+        SearchConnectionFields {
+            request,
+            more_people,
+        },
     );
     connection
         .edges

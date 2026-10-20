@@ -822,13 +822,15 @@ async fn a_hidden_actors_kept_things_stay_in_saved(pool: PgPool) {
     assert_eq!(page["totalCount"], 3);
 }
 
-const SAVED_QUERY: &str = r#"query($query: String, $first: Int, $after: String,
-                                  $last: Int, $before: String) {
+const SAVED_QUERY: &str = r#"query($query: String, $kinds: [NodeKind!], $first: Int,
+                                  $after: String, $last: Int, $before: String) {
   me {
-    bookmarks(query: $query, first: $first, after: $after, last: $last, before: $before) {
+    bookmarks(query: $query, kinds: $kinds, first: $first, after: $after,
+              last: $last, before: $before) {
       edges { cursor node { __typename id } }
       pageInfo { hasNextPage hasPreviousPage startCursor endCursor }
       totalCount
+      hasMorePeople
     }
   }
 }"#;
@@ -984,4 +986,146 @@ async fn a_narrowed_saved_list_pages_on_its_own_keyset(pool: PgPool) {
         let refused = saved_query_raw(&rig, &token, variables.clone()).await;
         assert_eq!(first_error_code(&refused), Some("BAD_INPUT"), "{variables}");
     }
+}
+
+/// A save time in the past, `secs` apart: a restore may carry it, so the
+/// list's order is the test's to choose.
+fn saved_at(secs: i64) -> Value {
+    json!(
+        chrono::DateTime::from_timestamp(1_760_000_000 + secs, 0)
+            .expect("in range")
+            .to_rfc3339()
+    )
+}
+
+/// The people section of a narrowed list serves the three newest saves
+/// among the people the query matches, then the content; `hasMorePeople`
+/// opens the door, and the door — the same query with only people as its
+/// kind — serves every match, newest save first, with no door of its own.
+/// The count follows what the pages serve.
+///
+/// A narrowed Saved list serves its three newest saved people, then content, and the people-only narrowing serves them all.
+/// ´claim:bookmarks:a-narrowed-saved-list-caps-its-people-at-three´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_narrowed_saved_list_caps_its_people_at_three(pool: PgPool) {
+    let rig = rig(pool);
+    let (_, token) = reader(&rig, "reader").await;
+    let kel = person(&rig.pool, "kel").await;
+    let mut people = Vec::new();
+    for n in 0..5 {
+        let p = person(&rig.pool, &format!("salt{n}")).await;
+        save_at(&rig, &token, p, &saved_at(n)).await;
+        people.push(p);
+    }
+    let maps = post(&rig.pool, kel, 1, "Salt maps").await;
+    save_at(&rig, &token, maps, &saved_at(10)).await;
+    let newest_first: Vec<Uuid> = people.iter().rev().copied().collect();
+
+    let capped = saved_query(&rig, &token, json!({ "query": "salt" })).await;
+    let mut expected = newest_first[..3].to_vec();
+    expected.push(maps);
+    assert_eq!(ids(&capped), expected);
+    assert_eq!(capped["hasMorePeople"], true);
+    assert_eq!(capped["totalCount"], 4);
+
+    let mut walked = Vec::new();
+    let mut after = Value::Null;
+    loop {
+        let page = saved_query(
+            &rig,
+            &token,
+            json!({ "query": "salt", "first": 1, "after": after }),
+        )
+        .await;
+        walked.extend(ids(&page));
+        if page["pageInfo"]["hasNextPage"] != true {
+            break;
+        }
+        after = page["pageInfo"]["endCursor"].clone();
+    }
+    assert_eq!(walked, expected, "the cap holds page by page");
+    let mut back = Vec::new();
+    let mut before = Value::Null;
+    loop {
+        let page = saved_query(
+            &rig,
+            &token,
+            json!({ "query": "salt", "last": 1, "before": before }),
+        )
+        .await;
+        let mut chunk = ids(&page);
+        chunk.append(&mut back);
+        back = chunk;
+        if page["pageInfo"]["hasPreviousPage"] != true {
+            break;
+        }
+        before = page["pageInfo"]["startCursor"].clone();
+    }
+    assert_eq!(back, expected, "and walking back");
+
+    let door = saved_query(&rig, &token, json!({ "query": "salt", "kinds": ["USER"] })).await;
+    assert_eq!(ids(&door), newest_first);
+    assert_eq!(door["hasMorePeople"], false);
+    assert_eq!(door["totalCount"], 5);
+
+    let content = saved_query(&rig, &token, json!({ "query": "salt", "kinds": ["POST"] })).await;
+    assert_eq!(ids(&content), vec![maps]);
+    assert_eq!(content["hasMorePeople"], false);
+
+    let cue = saved_query(&rig, &token, json!({ "query": "@salt" })).await;
+    assert_eq!(ids(&cue), newest_first[..3].to_vec());
+    assert_eq!(cue["hasMorePeople"], true);
+}
+
+/// Three saved people or fewer stand whole, with no door.
+///
+/// A narrowed Saved list of three people or fewer serves them all, with no door.
+/// ´claim:bookmarks:three-saved-people-need-no-door´
+#[sqlx::test(migrations = "../../migrations")]
+async fn three_saved_people_need_no_door(pool: PgPool) {
+    let rig = rig(pool);
+    let (_, token) = reader(&rig, "reader").await;
+    let kel = person(&rig.pool, "kel").await;
+    for n in 0..3 {
+        let p = person(&rig.pool, &format!("salt{n}")).await;
+        save_at(&rig, &token, p, &saved_at(n)).await;
+    }
+    let maps = post(&rig.pool, kel, 1, "Salt maps").await;
+    save(&rig, &token, maps).await;
+
+    let found = saved_query(&rig, &token, json!({ "query": "salt" })).await;
+    assert_eq!(ids(&found).len(), 4);
+    assert_eq!(found["hasMorePeople"], false);
+    assert_eq!(found["totalCount"], 4);
+}
+
+/// `kinds` narrows the whole list too, with no query: only the kinds
+/// named stand, and the count follows. A kind Saved never holds is a
+/// malformed argument; an empty list narrows nothing.
+///
+/// Saved's kinds narrow the list with or without a query, and a kind Saved never holds is BAD_INPUT.
+/// ´claim:bookmarks:kinds-narrow-the-saved-list´
+#[sqlx::test(migrations = "../../migrations")]
+async fn kinds_narrow_the_saved_list(pool: PgPool) {
+    let rig = rig(pool);
+    let (_, token) = reader(&rig, "reader").await;
+    let sol = person(&rig.pool, "sol").await;
+    let p = post(&rig.pool, sol, 1, "Rubbings").await;
+    let c = comment(&rig.pool, sol, p).await;
+    for id in [sol, p, c] {
+        save(&rig, &token, id).await;
+    }
+
+    let people = saved_query(&rig, &token, json!({ "kinds": ["USER"] })).await;
+    assert_eq!(ids(&people), vec![sol]);
+    assert_eq!(people["totalCount"], 1);
+    assert_eq!(people["hasMorePeople"], false);
+    let content = saved_query(&rig, &token, json!({ "kinds": ["COMMENT", "POST"] })).await;
+    assert_eq!(ids(&content), vec![c, p]);
+    assert_eq!(content["totalCount"], 2);
+    let every = saved_query(&rig, &token, json!({ "kinds": [] })).await;
+    assert_eq!(every["totalCount"], 3);
+
+    let refused = saved_query_raw(&rig, &token, json!({ "kinds": ["HASHTAG"] })).await;
+    assert_eq!(first_error_code(&refused), Some("BAD_INPUT"));
 }

@@ -304,15 +304,15 @@
     },
     {
       "name": "set-your-own-stance-on-your-post",
-      "description": "Adjust on the seal blooms the ordinary full pad — both numbers of the author's opinion on their own post are theirs to set, and the stance is declared before signing, never assumed.",
+      "description": "Adjust on the seal's Your backing row blooms the one-axis pad — the post's own record carries one free number, the author's backing, For or Against, and it is declared before signing, never assumed.",
       "start": { "board": "ComposeSeal", "via": 5 },
       "end": { "board": "ComposePad", "via": 4 }
     },
     {
       "name": "adjust-your-opinion-with-an-edit",
-      "description": "Adjust on a post edit's opinion row blooms the ordinary full pad at the edit's pick, (0, 0) until moved; Set stages the pick on the edit's own record and Sign the edit signs it with the rest — an edit nobody adjusts moves the author's opinion by nothing.",
+      "description": "Adjust on a post edit's Your backing row blooms the one-axis pad, its pick the edit's own record at 0.00; the pad reads the current backing, the pick and the backing after, Set stages the pick and Sign the edit signs it with the rest. An edit nobody adjusts moves the backing by nothing.",
       "start": { "board": "EditCompose", "via": 21 },
-      "end": { "board": "EditPad", "via": 4, "case": "the pick stages on the edit's own record — the row reads the resulting opinion, the count does not move, and nothing signs until Sign the edit" }
+      "end": { "board": "EditPad", "via": 4, "case": "the pick stages on the edit's own record — the row reads the backing after, the count does not move, and nothing signs until Sign the edit" }
     },
     {
       "name": "pick-a-kept-draft-back-up",
@@ -629,14 +629,9 @@
     },
     {
       "name": "post-while-an-applicant",
-      "description": "An applicant's first post runs the same wizard and the same seal; signing stages it with the application, the wizard closing onto the applicant's own feed, and the post waits in their chronicle, seen by them alone.",
-      "start": { "board": "ApplicantWaiting", "via": 12, "to": "ComposePick" },
-      "waypoints": [
-        { "board": "ComposePick", "via": 4, "to": "ComposeWords" },
-        { "board": "ComposeWords", "via": 3, "to": "ComposeDetailsWords" },
-        { "board": "ComposeDetailsWords", "via": 8, "to": "ComposeSeal" }
-      ],
-      "end": { "board": "ComposeSeal", "via": 7, "to": "ApplicantWaiting" }
+      "description": "New post in the applicant days answers where it was pressed — You can post once you're in. — and the wizard never opens; posting starts once the vouch lets the reader in.",
+      "start": { "board": "ApplicantWaiting" },
+      "end": { "board": "ApplicantWaiting", "via": 12 }
     },
     {
       "name": "watch-the-registration-land",

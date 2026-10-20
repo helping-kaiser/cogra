@@ -52,6 +52,31 @@ export function clampPair(pair: StancePair): StancePair {
   };
 }
 
+/**
+ * THE HUNDREDTHS GRID (jakob 2026-10-20): a pick is a value in
+ * `[-1.00, +1.00]` at step 0.01, and release lands it on the nearest
+ * hundredth (ComposePad.md, EditPad.md) — so the number a readout prints
+ * is the pick itself, and an exact-zero gate is reached by a pick that
+ * reads `+0.00` rather than missed by a float's `0.004`.
+ *
+ * Halves round away from zero, so a pick and its mirror land on mirrored
+ * hundredths; `Math.round` on the magnitude is Kotlin's `roundToLong`
+ * exactly, which is what keeps the two clients on one grid. The result is
+ * `clampDimension`'s, so NaN folds to the origin and −0 to +0.
+ */
+export function snapDimension(value: number): number {
+  const bounded = clampDimension(value);
+  return clampDimension((Math.sign(bounded) * Math.round(Math.abs(bounded) * 100)) / 100);
+}
+
+/** Both slots of a pair on the hundredths grid. */
+export function snapPair(pair: StancePair): StancePair {
+  return {
+    pDirected: snapDimension(pair.pDirected),
+    pInterest: snapDimension(pair.pInterest),
+  };
+}
+
 export function samePair(a: StancePair, b: StancePair): boolean {
   return a.pDirected === b.pDirected && a.pInterest === b.pInterest;
 }

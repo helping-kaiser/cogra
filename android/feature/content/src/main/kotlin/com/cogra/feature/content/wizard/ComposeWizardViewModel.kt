@@ -2,6 +2,7 @@ package com.cogra.feature.content.wizard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cogra.core.designsystem.hundredth
 import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
@@ -688,8 +689,28 @@ class ComposeWizardViewModel @Inject constructor(
     /** A drag on the pad's field: staged, not set (`ComposePad`). */
     fun onPDirectedChange(value: Double) = _state.update { it.copy(stagedPDirected = value) }
 
-    /** The pad's Set — the one gesture that moves the stance the seal reads. */
-    fun onSetStance() = _state.update { it.copy(pDirected = it.stagedPDirected).closedSheets() }
+    /**
+     * The pad's Set — the one gesture that moves the backing the seal reads.
+     * At exactly 0.00 it asks `Start it unreachable?` first, the pad parked
+     * beneath: a Publish at zero carries nothing on the post's own path
+     * (ComposePad.md). It warns, never refuses.
+     */
+    fun onSetStance() = _state.update {
+        // The pick is a hundredth (the release lands it there), so one that
+        // reads 0.00 IS 0 and the question is asked.
+        val picked = hundredth(it.stagedPDirected)
+        if (picked == 0.0) {
+            it.copy(stagedPDirected = picked, confirmingUnreachable = true)
+        } else {
+            it.copy(pDirected = picked).closedSheets()
+        }
+    }
+
+    /** `Keep adjusting`: the dialog closes and the pad stands at the pick. */
+    fun onKeepAdjusting() = _state.update { it.copy(confirmingUnreachable = false) }
+
+    /** `Set it anyway`: the dialog and the pad close, the row reads 0.00 — nothing is signed. */
+    fun onSetUnreachable() = _state.update { it.copy(pDirected = 0.0).closedSheets() }
 
     // -- Uploads (D5: one call per asset, concurrent, retryable) --
 

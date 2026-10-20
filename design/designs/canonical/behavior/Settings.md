@@ -20,7 +20,7 @@ ALWAYS the theme follows the device's own light-or-dark setting GIVEN Auto is ch
 
 ALWAYS one of The pad, Sliders and Typed values stands selected
 
-WHEN tap The pad, Sliders or Typed values -> that input is how every opinion is taken, everywhere AND the other two stand unselected AND the choice stays on this device
+WHEN tap The pad, Sliders or Typed values -> that input is how every opinion and every backing is taken, everywhere AND the other two stand unselected AND the choice stays on this device
 
 WHEN tap Confirm multi-action submits -> the switch flips AND NEVER a dialog asks
 
