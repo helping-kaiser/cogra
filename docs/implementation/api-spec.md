@@ -458,7 +458,10 @@ scalar DateTime
  range [-1.0, +1.0]. The range invariant lives in the type rather
  than in a plain Float. (Families outside the stance vocabulary
  restrict the range further per the L1 census — edges.md §1;
- prepare validates per family.)"
+ prepare validates per family.) As an input — a user's pick — it
+ also lies on the hundredths grid, a multiple of 0.01, and an
+ off-grid value is refused at parse time (edges.md §1). As an
+ output it is whatever the graph holds."
 scalar Dimension
 ```
 
