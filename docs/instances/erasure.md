@@ -75,7 +75,8 @@ so a superseded profile revision is an ordinary target.
 - **Scoring-neutral, like every redaction.** The record keeps
   doing what it does — routing, standing, attribution inputs
   ([layers.md §5](../primitive/layers.md#5-deletion-policy)).
-  Retracting a record's *effect* is severance, not erasure.
+  Retracting a record's *effect* takes counter-records — a bundle
+  netted inert, or severed — not erasure.
   Replies below a removed Comment keep their parent and stay
   readable ([comment.md §5](comment.md#5-lifecycle)).
 

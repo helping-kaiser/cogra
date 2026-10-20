@@ -425,36 +425,6 @@ pub async fn has_live_targeting(
     .await?)
 }
 
-/// Whether the actor has a signed, unexpired staged write of the family,
-/// toward any target — the in-flight half of "the member's first
-/// opinion" (api-spec.md `Query.borrowedView`). Signed means the
-/// pre-commitment is submitted: a write still awaiting it carries no
-/// signature of the author's, so it ends nothing. A landed row counts; its
-/// record is in the mirror anyway.
-///
-/// An act carried with the application counts from the landing on, signed
-/// or not: it signs with the vouch-in batch automatically, so the member
-/// owns their view from the flip (VouchBack.md:21) rather than one poll
-/// later. Before the landing nothing here is asked.
-pub async fn has_signed_of_family(
-    pool: &PgPool,
-    actor_id: Uuid,
-    family: Family,
-) -> Result<bool, StagedError> {
-    Ok(sqlx::query_scalar!(
-        r#"SELECT EXISTS(
-               SELECT 1 FROM staged_writes
-               WHERE actor_id = $1 AND family = $2
-                 AND (state NOT IN ('awaiting_pre_sign', 'expired', 'carried')
-                      OR (carried AND state = 'awaiting_pre_sign'))
-           ) AS "exists!""#,
-        actor_id,
-        family.as_str(),
-    )
-    .fetch_one(pool)
-    .await?)
-}
-
 /// Whether the actor has an unlanded, unexpired staged write of the
 /// family toward the target — the edit-serialization guard (post.md §4:
 /// the backend serializes edits per (node, author)). Unlike
@@ -478,6 +448,55 @@ pub async fn has_pending_targeting(
     )
     .fetch_one(pool)
     .await?)
+}
+
+/// Expires the actor's unsigned chained writes of the family toward the
+/// target, returning how many — what the edit-serialization guard runs
+/// before it asks [`has_pending_targeting`], so a staging nobody signed
+/// does not hold the next edit until GC.
+///
+/// Unsigned means the pre-commitment never reached the server: the write
+/// carries no signature of the author's, as `stance::has_live_opinion_from` reads
+/// it, so it is no edit in flight — it is one a device refused to sign, or
+/// a prepare whose response was lost. Expiring it is what keeps the
+/// serialization whole: the pre-sign leg moves only a row still in
+/// `awaiting_pre_sign`, so a superseded staging can never be signed beside
+/// its successor, and the chain never branches. GC expires by epochs, and
+/// epochs close only as acts land, so on a quiet network an abandoned
+/// staging would otherwise hold the author's next edit for hours.
+///
+/// Only chained writes (an asserted parent) are touched — the edits and
+/// profile updates this guard serializes — and never a carried act, which
+/// the server holds for its author until the landing signs it. A write
+/// handed back to `awaiting_pre_sign` after a failed seal may hold pending
+/// display rows; they leave with it, exactly as at GC.
+pub async fn supersede_unsigned_targeting(
+    pool: &PgPool,
+    actor_id: Uuid,
+    family: Family,
+    target: &str,
+    current_epoch: i64,
+) -> Result<u64, StagedError> {
+    let mut tx = pool.begin().await?;
+    let expired = sqlx::query_as!(
+        StagedRows,
+        "UPDATE staged_writes
+         SET state = 'expired', expired_epoch = $4, updated_at = NOW()
+         WHERE actor_id = $1 AND family = $2 AND target = $3
+           AND state = 'awaiting_pre_sign' AND NOT carried
+           AND cardinality(asserted_parents) > 0
+         RETURNING node_id, pre_signed_at",
+        actor_id,
+        family.as_str(),
+        target,
+        current_epoch,
+    )
+    .fetch_all(&mut *tx)
+    .await?;
+    let count = expired.len() as u64;
+    discard_pending_content(&mut tx, expired.into_iter()).await?;
+    tx.commit().await?;
+    Ok(count)
 }
 
 /// An actor's staged writes, newest first (api-spec `User.stagedWrites`).
@@ -864,9 +883,10 @@ pub async fn expire_due(
 
 /// The display side of expiry: every node an expired write owned loses
 /// the pending rows *that write* staged, named by the authoring instant
-/// they were written under. A write that minted nothing (Registration,
-/// Attach) carries no node id, and one that never reached its
-/// pre-commitment staged nothing — neither has anything to discard.
+/// they were written under. A write that puts no display row on screen
+/// (an admission Registration, Attach) carries no node id, and one that
+/// never reached its pre-commitment staged nothing — neither has anything
+/// to discard.
 async fn discard_pending_content(
     tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     nodes: impl Iterator<Item = StagedRows>,

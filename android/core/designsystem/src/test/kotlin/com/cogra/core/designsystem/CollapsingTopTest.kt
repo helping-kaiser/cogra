@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -18,6 +20,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -237,6 +240,53 @@ class CollapsingTopTest {
         compose.onNodeWithTag("banner").assertExists()
         compose.onNodeWithTag("list").performTouchInput { swipeUp() }
         compose.onNodeWithTag("banner").assertDoesNotExist()
+    }
+
+    // A screen whose header is a plain row — no TopAppBar to set the
+    // bar state's height-offset limit — must still scroll: the default
+    // -Float.MAX_VALUE limit would let enterAlways swallow every drag.
+    @Test
+    fun aListWithoutATopAppBarScrollsUnderTheTop() {
+        lateinit var listState: LazyListState
+        compose.setContent {
+            val top = rememberCollapsingTop()
+            listState = rememberLazyListState()
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .collapsingTop(top),
+            ) {
+                CollapsingTopBand(top) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("top_region"),
+                    )
+                }
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag("list"),
+                ) {
+                    items(50) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(80.dp),
+                        )
+                    }
+                }
+            }
+        }
+        compose.onNodeWithTag("list").performTouchInput { swipeUp() }
+        compose.waitForIdle()
+        assertTrue(
+            "the list never left its top",
+            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0,
+        )
+        compose.onNodeWithTag("top_region").assertDoesNotExist()
     }
 
     @Test

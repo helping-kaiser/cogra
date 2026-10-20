@@ -10,6 +10,7 @@ import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ProfileView
 import com.cogra.domain.UserError
 import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.CropWindow
 import com.cogra.domain.media.PICTURE_MAX_BYTES
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.signing.Expectation
@@ -51,6 +52,7 @@ class ProfileEditViewModelTest {
         )
         var prepareOutcome: Outcome<List<PreparedWriteView>>? = null
         var lastUpdate: Triple<String, String?, String?>? = null
+        var prepareCalls = 0
 
         override suspend fun myProfile(): Outcome<ProfileView?> = mine
 
@@ -62,6 +64,7 @@ class ProfileEditViewModelTest {
             websiteUrl: String?,
             avatar: MediaFieldUpdate,
         ): Outcome<List<PreparedWriteView>> {
+            prepareCalls += 1
             lastUpdate = Triple(displayName, bio, websiteUrl)
             lastAvatar = avatar
             return prepareOutcome ?: Outcome.Success(
@@ -147,6 +150,24 @@ class ProfileEditViewModelTest {
         assertThat(sealer.staged.values.single().state.name).isEqualTo("RELAYING")
     }
 
+    /**
+     * jakob's hand test: adding a bio to a profile with no website. The
+     * website rides as the clear, which the server stages as the empty
+     * string, and the device signs it rather than refusing its own gesture.
+     */
+    @Test
+    fun addingABioBesideAnEmptyWebsiteSigns() = runTest(dispatcher) {
+        profiles.mine = Outcome.Success(testProfile(id = TEST_PROFILE_ID, handle = "jakob", displayName = "Jakob"))
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onBioChange("Hello")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(profiles.lastUpdate).isEqualTo(Triple("Jakob", "Hello", null))
+        assertThat(vm.state.value.signingFailed).isFalse()
+        assertThat(vm.state.value.saved).isTrue()
+    }
+
     @Test
     fun aRefusedPrepareSurfaces() = runTest(dispatcher) {
         profiles.prepareOutcome =
@@ -206,6 +227,33 @@ class ProfileEditViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(profiles.lastAvatar).isEqualTo(MediaFieldUpdate.Set("m1"))
         assertThat(media.calls).isEqualTo(1)
+    }
+
+    /**
+     * The crop's Next brings the picture back to this form (AvatarCrop.md):
+     * it uploads framed as the author left it, and the form's one Save
+     * signs it with the fields — one prepare, one act, nothing signed
+     * before Save.
+     */
+    @Test
+    fun aPictureFramedByTheCropIsSignedWithTheFieldsUnderOneSeal() = runTest(dispatcher) {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        val window = CropWindow(0.1f, 0.2f, 0.7f, 0.8f)
+
+        vm.onAvatarFramed("content://pick/1", window)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(processor.lastCrop).isEqualTo(CropSpec(targetRatio = 1f, window = window))
+        assertThat(profiles.prepareCalls).isEqualTo(0)
+
+        vm.onBioChange("Hello")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(profiles.prepareCalls).isEqualTo(1)
+        assertThat(profiles.lastUpdate).isEqualTo(Triple("Jakob", "Hello", null))
+        assertThat(profiles.lastAvatar).isEqualTo(MediaFieldUpdate.Set("m1"))
+        assertThat(vm.state.value.saved).isTrue()
     }
 
     @Test

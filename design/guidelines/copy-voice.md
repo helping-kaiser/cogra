@@ -61,6 +61,11 @@ another tool. Codes, keys, and recovery are the reader's own vocabulary
 on those surfaces. Plain language frames the block; the precise label
 sits on it.
 
+**Explain only what is new** (jakob 2026-10-20, a hard rule). A "?" text
+or a helper line explains new, novel, un-learned behavior — never what
+is common, obvious or expected. A reader who already expects it is told
+nothing, and the screen is wordier for it.
+
 This is greppable and should be enforced as a check over Android's
 `strings.xml` and the web copy, rather than left to review — the check
 does not exist yet.
@@ -123,8 +128,9 @@ in progress (*In-flight labels*).
 ## Emoji
 
 Used for one thing: rendering a value. The stance readout is where that
-happens — twenty anchors, plus 🤷 for a zero opinion and 🫥 for a control
-at rest — and a help, coach or snackbar line that speaks a pair leads
+happens — twenty anchors, plus 🤷 for an opinion at `(0, 0)`, 🤔 for one
+with a single number at zero (jakob 2026-10-20) and 🫥 for a control at
+rest — and a help, coach or snackbar line that speaks a pair leads
 with the same face, because the sentence is a readout too and has to
 hold for a reader who never turns the digits on. The tag table's
 thirteen objects are the same thing for the other family. **Never** in
@@ -218,8 +224,18 @@ not the opinion the reader's face shows on that post; `your opinion`
 there reads as that one, or as overwriting it. So the reply's note,
 its pad's "?" and the citing "?" say `an opinion`. *Your opinion*
 stays where it IS the reader's own: the face and its control, the
-opinion a vouch or an approval signs, one's own post or message, the
+opinion a vouch or an approval signs, the face on one's own post, the
 chat seals' pad, and every readout of an opinion already signed.
+
+**What an author signs with their own content is their BACKING** (jakob
+2026-10-16: "'your backing' sounds nice"). The authoring record — the
+post's Publish, an edit's, a message's Send — carries one number of its
+own, and it is not the opinion the post's face takes. So the seal's, an
+edit's and the chat sheet's row reads `Your backing`, its pad is the
+`Backing pad for your own post` with the "?" `Your backing on your
+post`, and an edit's pad reads `Current backing` and `Backing after`
+around `Your pick`. **Backing** is the authoring bundle; **opinion** is
+the face's record — the two words never trade places.
 
 **"Standing" leaves the screen entirely.** `Current opinion` and
 `Resulting opinion` say what it said, in the word a reader owns.
@@ -425,14 +441,18 @@ noun):
   and your edit is still here. Try again in a little while.` (the edit's
   blessed ending in the reply's sentence, jakob 2026-10-05).
   Payer-neutral by the v1.0.0 scope cut.)*
-- **Your opinion on your post** (the post's one-axis pad): Publishing
-  also signs your opinion on your own post — for or against, from a
-  gentle 🙂 *(+0.10)* by default. / Your own post always reaches you in
-  full, so only for-or-against is yours to set. The face is the
-  reading: six of them run from 😠 at one end to 😍 at the other, and
-  the one you see is wherever your number lands. Nothing is signed
-  until Set. Prefer sliders or exact numbers? Swap the input in
-  settings.
+- **Your backing on your post** (the one-axis pad on your own post —
+  the seal's and a post edit's): Publishing also signs your backing of
+  your own post — for or against, from a gentle 🙂 *(+0.10)* by
+  default. An edit adds to it, starting at nothing, so an edit you
+  don't adjust leaves it as it is. / How much of it reaches you isn't
+  part of publishing: once the post is out, give it an opinion on its
+  face, like anyone's. Nothing is signed until Set. Swap the input in
+  settings if you prefer sliders or numbers. *(Blessed jakob
+  2026-10-16, as drafted in round 15. The same ruling moved two places:
+  `backing` for the authoring number, title included, and the edit
+  sentence to the pick-is-the-edge model, in round 13's blessed
+  `starting at nothing`.)*
 - **Toward what you answer** (the reply's two-axis pad): Replying also
   signs an opinion on what you answer — for or against, and
   how much of it reaches you. It starts at a gentle 🙂 *(+0.10 / +0.10)*
@@ -464,13 +484,14 @@ noun):
   and choose "Cite in a new post". *(Trimmed to v1.0.0's citable kinds,
   jakob 2026-09-25; the end-state wording returns with its kinds. An
   opinion, never "your opinion" — jakob 2026-09-30, see Naming.)*
-- **Searching** (the Explore tab's results): Search reads names and
-  titles, never bodies. Start with @handle to search one person's
-  work — including their comments, found through what
-  they point at. Start with #tag to search inside a tag. /
+- **Searching** (the Explore tab's results): Search reads names,
+  handles and titles, never bodies. Start with @ to find people by
+  their handle — what they made follows them. Start with # to find
+  tags and what carries them. /
   Results put what's closest to you first — the numbers are your
   view, no one else's. Below the line, what's still beyond your
   reach, newest first. Your searches stay on this device.
+  *(Re-voiced for the unified sigil law, blessed jakob 2026-10-16.)*
 - **What is CGT?** (the wallet's balance headline): CGT is CoGra's
   own money. Advertisers fund campaigns with it, and it pays the
   people whose posts and stances carried real reach — the small coin
@@ -487,9 +508,9 @@ noun):
   change to it stays on your public record.
 - **Changing your picture** (the profile-picture seal): Your profile
   is a public record, and changes to it are signed actions in your
-  name — the picture changes the moment yours lands. / The signing is
-  paid for, like your posts. The record that you changed it stays,
-  like every signed action.
+  name. / The signing is paid for, like your posts. The record that
+  you changed it stays, like every signed action. *(Blessed, jakob
+  2026-10-20.)*
 - **The filter** (the feed's and search's filter sheets; the seen
   sentence is the surface's own, jakob 2026-10-14): What you
   let in, and in what order — the kinds combine freely, ranked or
@@ -508,7 +529,7 @@ noun):
 dialog's own subject, so a listener hears which explanation the tap
 brings: `Your key`, `License`, `Sensitive`, `How the filter works`,
 `What is CGT?`. The three stance pads take theirs the same way —
-`Your opinion on your post`, `Toward what you answer`, `Your vouch back`
+`Your backing on your post`, `Toward what you answer`, `Your vouch back`
 — because one name across three surfaces says only that a dialog
 exists. `How opinions work` is the opinion control's own help, where the
 control itself is the subject.
@@ -916,42 +937,13 @@ boards already speak, recorded so the registry is whole:
   `Back to the paths` · `Back to the path` · `Back to the step`
   (`RankPath`, `RankHop`, `RankRecords`).
 
-## The staged-act snackbar
+## The applicant-foot family
 
-An applicant's second tap of a kind already staged answers here instead
-of opening the real surface again; one line per kind, same shape:
-
-- `Your post waits with your application — it arrives with you.`
-- `Your opinion waits with your application — it arrives with you.`
-- `Your topic waits with your application — it arrives with you.` — the
-  Affinity on a tag page, its own once-each kind. Drafted from the
-  audit's recommendation (jakob 2026-10-01, "as recommended"); **blessed (jakob 2026-10-02)**.
-
-The post's line is also the seal's answer for an applicant: `Sign and
-publish` stages the post rather than landing it, so the wizard closes onto
-the applicant's own feed with this line, never with `Signed — it's in the
-thread now, still settling.` (jakob 2026-10-01). On the turned-down shell
-no application is live for the post to wait with, so the seal's exit
-says what it waits for instead: `Your post waits — it arrives when
-someone vouches you in.` (jakob 2026-10-02, the tail his; the opening
-kept from the staged-act line — *new 2026-10-02, blessed (jakob 2026-10-02)*).
-The same line answers the post's second tap there, wherever it is made —
-`New post` on the bar, and the menus' `Cite in a new post` and `Mention in
-a new post` (jakob 2026-10-05).
-The other two kinds answer a second tap on the turned-down shell in the
-same grammar (jakob 2026-10-02, **blessed**):
-
-- `Your opinion waits — it arrives when someone vouches you in.`
-- `Your topic waits — it arrives when someone vouches you in.`
-
-**Comments are not a kind that stages** (jakob 2026-10-01: applicants do
-not comment in v1.0.0). A staged comment would wear `Still settling` for a
-reply that cannot wait as pending, so the comment sheet's foot answers an
-applicant in place. A guest gets the join prompt there instead.
-
-**The applicant-foot family** — jakob's own words, picked 2026-10-02
-(F7) and **blessed**: an applicant's locked control answers its tap with
-what becomes possible, and when.
+An applicant's locked control answers its tap where it was pressed, with
+what becomes possible, and when — never a gate screen, and never an act
+that waits with the application: applicant acting is post-MVP (PR-103,
+jakob 2026-10-16). jakob's own words, picked 2026-10-02 (F7) and
+**blessed**:
 
 - `You can comment once you're in.` — the comment sheet's foot and a
   comment's `Reply`.
@@ -959,9 +951,30 @@ what becomes possible, and when.
 - `You can vouch once you're in.` — an applicant who opens someone's ask
   link, where app-open lands for them (jakob 2026-10-02, **blessed**).
 
+A guest gets the join prompt at the same controls instead. The acting
+doors answer in the same register (PR-103, **blessed (jakob
+2026-10-16)**):
+
+- `You can post once you're in.` — the bar's `New post` wherever an
+  applicant meets it, and the menus' `Cite in a new post` and `Mention in
+  a new post`. The wizard never opens.
+- `You can give your opinion once you're in.` — every stance face an
+  applicant meets, a topic's included, by a tap or a press-and-hold, after
+  the face's own name (`Give your opinion on this post`). The pad never
+  blooms, and nothing is signed or staged.
+
 Every control the family answers wears the locked look (auth.md):
-visibly inactive, still tappable — the foot, `Reply` and `Invites` alike
-(jakob 2026-10-02).
+visibly inactive, still tappable — the foot, `Reply` and `Invites` (jakob
+2026-10-02), and `New post` and the stance faces alike (jakob
+2026-10-16).
+
+The applicant's own profile (`ProfileApplicant`) says the same in its
+own places, **blessed (jakob 2026-10-16)**: the open
+application's card reads `Their approval brings you in. Until then, you
+can read everything.` under `Waiting on @mira` — `ApplicantWaiting`'s
+first sentence, then what is open meanwhile — and the empty chronicle
+reads `Nothing here yet. Your posts and opinions show up here once you're
+in.`, `HistoryEmpty`'s shape.
 
 ## In-flight labels
 
@@ -1351,6 +1364,18 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   Retry signs again.
 - `STAGED_WRITE_EXPIRED` — the did-not-land notice in the shell: `Your
   post didn't land` (`ComposeExpired`).
+- `SIGNING_BUDGET` — the budget refusal's own code and sentence (jakob
+  2026-10-16, PR-97; it names the hourly budget and its reset, never a
+  balance): `That's this hour's signing budget used. Try again in
+  about {n} minutes — nothing was signed or spent, and your draft is
+  kept.` — the `{n}` from the wire's retry-after; while the wire
+  carries none, the timeless fallback `That's this hour's signing
+  budget used. Try again in a little while — nothing was signed or
+  spent, and your draft is kept.` The last clause swaps per surface
+  exactly as `WRITE_RULE_FAILED`'s does (a reply's, an edit's and a
+  pad's truths). Same vehicle as `WRITE_RULE_FAILED`: a notice, never
+  the failure voice, no Retry. *(Both sentences blessed jakob
+  2026-10-16.)*
 - `WRITE_RULE_FAILED` — a notice. On a seal it is `You can't sign
   right now` over `Each signing is paid for, and there's only so much
   to go around at a time. Nothing was signed or spent — your draft is
@@ -1367,7 +1392,10 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   which keeps no draft either, the reply's mirror: `Nothing was signed or
   spent — your edit is still here.` and `Not now`, back to the edit with
   the changes as they were (jakob 2026-10-05; the ending *blessed (jakob
-  2026-10-05)*). The words name no payer (the v1.0.0 scope cut). On a pad the same panel stands where the
+  2026-10-05)*). Reached from a post edit — which keeps no draft since
+  the discard round — the same mirror: `Nothing was signed or spent —
+  your edit is still here.` and `Not now`, back to the edit with the
+  batch as it was (*blessed (jakob 2026-10-16)*). The words name no payer (the v1.0.0 scope cut). On a pad the same panel stands where the
   landing line and Set were, in `PadKeyAbsent`'s shape: `You can't sign
   right now` over `Each signing is paid for, and there's only so much
   to go around at a time. Nothing was signed or spent.` — a pad has no
@@ -1539,8 +1567,7 @@ round*; every one blessed (jakob 2026-10-02).
   turned-down card's blessed words, the handle the approver's:
   `@mira closed your application` over its body, and the ask link
   labelled `Ask someone you know to vouch for you` with that card's
-  caption. The chronicle's closing line reads `These wait — they arrive
-  when someone vouches you in.` *Blessed (jakob 2026-10-05).*
+  caption. *Blessed (jakob 2026-10-05).*
 - `Key made and backed up.` — the snackbar the ceremony's typed-back
   confirm answers with where the ceremony began (`RecoveryCode`), for
   the reason `KeyDecline`'s line exists: the task card leaves, and a
@@ -1574,10 +1601,6 @@ round*; every one blessed (jakob 2026-10-02).
 - `Resend the link` on the verify card answers in `Wrong address?`'s
   blessed sent shape, naming the address the card prints: `Sent — the
   link is on its way to noor@fieldmail.org.` (jakob 2026-10-05).
-- An applicant's first staged opinion, by `Set` or by a press-and-hold,
-  answers with the opinion's staged-act line (*The staged-act snackbar*),
-  the turned-down shell's on that shell, and the face takes the staged
-  pick (jakob 2026-10-05).
 - `ApplicantKeyElsewhere` with no backup (the `backup` chip at `none`)
   drops `Restore the key` and reads `Your application's key was made on
   another device and has no backup, so it can't be brought here yet. Make
@@ -2558,6 +2581,47 @@ paid on its own.` in the singular), and the cap aside trimmed to
 `Your feed reads it capped at +1.00 / +0.85.` **These are the PERSON
 family's words** — see *the topic disconnects* below.
 
+**The unreachable landing** (`PadStanding`'s `landing` chip; jakob
+2026-10-20, seam 240). A pick that lands one number at zero reads, under
+`Resulting opinion`, the one-zero face 🤔 and the state:
+`🤔 Interested, no side taken — this won't shape anyone's feed.` (jakob's
+direction), and by the other number's sign `Rather not see it, no side
+taken — …`, `For it, no interest either way — …` and `Against it, no
+interest either way — …`, the same tail. The 🤔 is a button named by
+the state's head (`Interested, no side taken`); its explanation replaces
+the pad's body in place: `It still counts among your opinions.` (on a
+person, `It still counts among your opinions — @ada stays under Your
+people.`) / `It shapes no one's feed, earns nothing, and nothing passes
+on through you.` / `Walk it back is different: its own act, confirmed
+and paid for, that leaves a clean slate.` (a topic's, `Disconnect is
+different: …`), then `Back to the pad`. While the reader still borrows a
+view, an unreachable or severed landing adds `You'd keep your borrowed
+view — no feed of your own yet.` (jakob's direction; `VouchBackPad`).
+(*Blessed, jakob 2026-10-20; the face 🤔 his ruling the same day.*)
+
+**The unreachable start** (`ComposePad`, Set at `0.00`). Dialog
+`Start it unreachable?`, body `Your backing is your post's own path into
+anyone's feed. At 0.00 the post starts unreachable on its own — only the
+tags and citations you sign with it lead to it, until someone gives it
+an opinion.`, with `Keep adjusting` filled and `Set it anyway` quiet
+(*the body blessed, jakob 2026-10-20; the title and both buttons are
+round 13's*).
+
+**The backing pad's own words** (`ComposePad`, `EditPad`, round 15):
+the readouts `Current backing` · `Your pick` · `Backing after`, the
+walk-back `Walk it all back` — the ordinary pad's walk-away word, with
+`all` because it parks the whole raw sum's opposite — and the cap line
+under `Backing after` when the sum passes ±1, `Adds up to +1.40; your
+feed reads it capped at +1.00.` (the severance aside's shape at one
+axis). Exactly `0.00` wears 🤔 (jakob 2026-10-20), spoken `No side
+taken`. The non-drag route, hidden until focused beside the strip, is
+`Set an exact value for your backing`; it swaps the strip in place for
+one track, its swap reading `Type an exact value` and back `Use a
+slider`. (*`Current backing`, `Backing after` and `Walk it all back` are
+the ruling's own words, jakob 2026-10-16; the cap line drafted
+2026-10-16, its wording jakob's at review; `No side taken` and the
+non-drag route's three blessed, jakob 2026-10-20.*)
+
 **What one signature commits is counted in things.** The footer reads
 `You're signing 2 things`, the total `2 things, signed together`
 (`1 thing, signed` in the singular), the rows carry bare counts, and
@@ -2574,9 +2638,7 @@ default) · `When it settles`.
 section · `Your feed is showing nothing — everything is switched off.`
 (its action, `Show posts again`, carried over — blessed by use, jakob
 2026-10-06; `FeedNothing`)
-· `Your sky — every account a star, sized by your own paths to it.` ·
-`These wait with your application and arrive with you.` ·
-`What you post now arrives with you.`
+· `Your sky — every account a star, sized by your own paths to it.`
 
 **Carried over unchanged, blessed (jakob 2026-10-06)** — drawn by the
 tag round: `Un-tag`, the edit body's `Withdrawn: #coastroad`, and the
@@ -2613,11 +2675,13 @@ the registry is whole:
   hidden-until-focused control beside every face, its target the face's
   own.
 - **The pad's name** — `Opinion pad for this post`; the targets read
-  `this comment`, `@mira`, `#saltmaps`, and on the seal-scale pads `your
-  own post` (`ComposePad`) and `what you answer` (`ReplyPad`).
+  `this comment`, `@mira`, `#saltmaps`, and on the seal-scale pad `what
+  you answer` (`ReplyPad`); the one-axis pads are the `Backing pad for
+  your own post` (`ComposePad`, `EditPad`).
 - **The pad's poles** — `Against` · `For` across, `Less` · `More` up;
   the Affinity pad's `Dislike` · `Like` and `Far away` · `Close to me`
-  (*Topics*).
+  (*Topics*); the one-axis pads' `Against` · `For` alone (`ComposePad`,
+  `EditPad`).
 - **The readouts, spoken.** `Current opinion: All in, For or against
   +1.00, How much reaches you +1.00`, `Your pick: Dislike, keep away,
   For or against −0.55, How much reaches you −0.15` and `Resulting
@@ -2628,8 +2692,6 @@ the registry is whole:
   row's readout is spoken as the word and the pair, `Like this, +0.55 /
   +0.20` (`PostOpinions`, `ProfileStances`, `YourTopics`, the trace's
   boards).
-- `Your own post always reaches you in full.` — the post's one-axis
-  pad, under its one track (`ComposePad`).
 - `Everything you've said about this post adds up to +1.00 / +1.00, and
   that is what this walks back.` — the walk-back's total, the person
   family's twin of the topic's (`SeveranceConfirm`), over `Your pick:` and
@@ -3415,14 +3477,14 @@ lines*), recorded so the registry is whole:
   it, down to the record that paid it.`
 - `Getting in, and being let in` — `CoGra is invite-only. Somebody already
   here vouches for you, and until they have, you are an applicant: you
-  can read everything, write one post, give one opinion and say how you
-  feel about one topic.` / `These wait with your application and arrive
-  with you. Until then only you can see them, and they are signed
-  together with the vouch that lets you in. If your application is
-  closed, your account stays — anyone can still vouch you in.` / `That is
-  not a waiting period for its own sake. The first link to you is a real
-  one, given by a person who stands behind it — which is the thing that
-  keeps this place small enough to be honest.`
+  can read everything, and you can post and give opinions once you're
+  in.` / `If your application is closed, your account stays — anyone can
+  still vouch you in.` / `That is not a waiting period for its own sake.
+  The first link to you is a real one, given by a person who stands
+  behind it — which is the thing that keeps this place small enough to be
+  honest.` The first paragraph's tail is in the applicant-foot family's
+  register, **blessed (jakob 2026-10-16)**; the second
+  keeps its blessed closing sentence alone.
 - `Your key is yours` — `Everything you publish is signed by a key only
   you hold. We cannot sign for you, and we cannot recover it for you —
   your recovery code is the only way back.`

@@ -336,7 +336,7 @@ class CommentEditViewModel @Inject constructor(
             }
             for (row in current.tagSection.removes) {
                 when (
-                    val outcome = topics.prepareTag(current.commentId, row.name, WITHDRAWN, row.confidence)
+                    val outcome = topics.prepareTag(current.commentId, row.name, WITHDRAWN, WITHDRAWN)
                 ) {
                     is Outcome.Success -> writes += outcome.value
                     is Outcome.Refused -> return@launch refuse(outcome.errors)
@@ -409,7 +409,7 @@ class CommentEditViewModel @Inject constructor(
             nodeGraphId = commentGraphId,
             record = record,
             tags = current.tagSection.adds.map { it.toClaim() } +
-                current.tagSection.removes.map { TagClaim(it.name, WITHDRAWN, it.confidence) },
+                current.tagSection.removes.map { TagClaim(it.name, WITHDRAWN, WITHDRAWN) },
             references = refs.adds.map { it.toClaim() },
             withdrawals = refs.removes.map { it.toWithdrawn() },
             graphIds = graphIds,
@@ -507,7 +507,7 @@ class CommentEditViewModel @Inject constructor(
 
     private companion object {
 
-        /** A Tag at relevance 0 is how a topic is taken off (hashtag.md §4). */
+        /** A Tag at (0,0) — both parameters at this value — is how a topic is taken off (hashtag.md §4). */
         const val WITHDRAWN = 0.0
 
         // The one message still carried as prose: `refusal` is also the

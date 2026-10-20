@@ -1,11 +1,11 @@
 // THE ONE-AXIS TABLE — the face a pick that names no pair wears.
 //
-// An opinion on one's own post is ONE number (jakob's ruling,
-// 2026-09-14: "the second number isn't yours to set on your own post").
-// A post always reaches its author in full, so `pInterest` is not a
-// value the author picks, and [nearestStanceAnchor] cannot answer for a
-// value that names no pair: asked for the nearest of twenty points to a
-// value with only a directed half, it would have to invent the other.
+// The BACKING an author signs with their own content is ONE number
+// (jakob 2026-10-16, PR-101): Publish carries the attachment on `p_d`
+// and the census pins `p_i` at 1, never a choice. [nearestStanceAnchor]
+// cannot answer for a value that names no pair: asked for the nearest
+// of twenty points to a value with only a directed half, it would have
+// to invent the other.
 //
 // So the six here are the twenty's pure-valence spine — the mild,
 // middle and far face on each side, at ±0.15, ±0.55 and ±0.90. Glyph,
@@ -58,8 +58,9 @@ data class ValenceBand(
  *    negative side that is the band above, so a negative row stops short
  *    of its edge; on the positive side it is the band below, so a
  *    positive row keeps it.
- *  - EXACTLY 0.00 READS 🙂 — the 😕 row stops short of zero, so zero
- *    falls into the first band above it.
+ *  - The 😕 row stops short of zero and the 🙂 row would take it, but
+ *    [nearestValenceAnchor] answers EXACTLY 0.00 before the table is
+ *    read: it wears 🤔, [ZERO_BACKING_BAND] (jakob 2026-10-20).
  *
  * Six monotone bands covering the closed axis, and the same face
  * everywhere.
@@ -74,17 +75,37 @@ val VALENCE_SIX: List<ValenceBand> = listOf(
 )
 
 /**
- * The band for [pDirected]: the first one the value falls inside. The
- * bands cover the closed axis, so every value has exactly one; out of
- * range is clamped in rather than refused, the way the field clamps, and
- * a value that names no point on the axis at all folds to the origin —
- * the same normalisation web's `clampDimension` makes.
+ * EXACTLY 0.00 THINKS on the one axis (jakob 2026-10-16, its face 🤔 since
+ * 2026-10-20): a backing of zero takes no side — with the second number
+ * pinned at 1 it folds to `(0, 1)`, unreachable on its own path — so it
+ * wears the one-zero face, spoken `No side taken`, never a band's smile.
+ * Only the exact value — the bands keep the rest of the axis as ruled. The
+ * master is `StanceReadout.jsx`'s `UNREACHABLE_EMOJI` and
+ * `ZERO_BACKING_LABEL`.
+ */
+val ZERO_BACKING_BAND = ValenceBand(
+    emoji = UNREACHABLE_EMOJI,
+    label = R.string.valence_zero,
+    pDirected = 0.0,
+    to = 0.0,
+    toInclusive = true,
+)
+
+/**
+ * The band for [pDirected]: [ZERO_BACKING_BAND] at exactly 0.00,
+ * otherwise the first one the value falls inside. The bands cover the
+ * closed axis, so every value has exactly one; out of range is clamped
+ * in rather than refused, the way the field clamps, and a value that
+ * names no point on the axis at all folds to the origin — the same
+ * normalisation web's `clampDimension` makes.
  *
  * Interval comparison only: no distance is computed, so there is no
- * float arithmetic here for two platforms to round differently.
+ * float arithmetic here for two platforms to round differently. Negative
+ * zero compares equal to zero, so a drag that never moved thinks too.
  */
 fun nearestValenceAnchor(pDirected: Double): ValenceBand {
     val value = if (pDirected.isNaN()) 0.0 else pDirected.coerceIn(-1.0, 1.0)
+    if (value == 0.0) return ZERO_BACKING_BAND
     return VALENCE_SIX.firstOrNull { value < it.to || (it.toInclusive && value == it.to) }
         ?: VALENCE_SIX.last()
 }

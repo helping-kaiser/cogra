@@ -1,6 +1,7 @@
 package com.cogra.domain.signing
 
 import com.cogra.crypto.ActorKey
+import com.cogra.crypto.decodeProposal
 import com.cogra.domain.AccountState
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.ApplicationView
@@ -158,7 +159,9 @@ class RegistrationSignerTest {
     @Test
     fun aMemberSignsTheBatchTheLandingReleased() = runTest {
         // The carried acts came back from the landing awaiting the
-        // pre-signature: the member pass signs them without a prompt.
+        // pre-signature: the member pass signs them without a prompt, against
+        // the digest kept at their prepare.
+        identity.saveCarriedExpectation("reg-1", carriedDigest(decodeProposal(writes.proposal)))
         onboarding.status = Outcome.Success(
             ApplicationStatus(
                 AccountState.MEMBER,
@@ -170,6 +173,23 @@ class RegistrationSignerTest {
         )
         assertThat(signer.advance()).isEqualTo(RegistrationProgress.Member)
         assertThat(writes.approvals).isEqualTo(1)
+    }
+
+    @Test
+    fun aMemberRefusesAReleasedBatchThisDeviceKeptNothingFor() = runTest {
+        // No family is exempt: with no expectation kept here, the pass signs
+        // nothing.
+        onboarding.status = Outcome.Success(
+            ApplicationStatus(
+                AccountState.MEMBER,
+                application(approved = true, landed = true),
+                null,
+                null,
+                carriedBatch = listOf(writes.stagedView(WriteState.AWAITING_PRE_SIGN)),
+            ),
+        )
+        assertThat(signer.advance()).isEqualTo(RegistrationProgress.Member)
+        assertThat(writes.approvals).isEqualTo(0)
     }
 
     @Test

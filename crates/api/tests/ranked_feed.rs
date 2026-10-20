@@ -1225,7 +1225,8 @@ async fn settling_content_as(
     id
 }
 
-/// A pending Tag by `handle` on `node` toward `topic` at `relevance`.
+/// A pending Tag by `handle` on `node` toward `topic` at `relevance`, held
+/// at full confidence.
 async fn pending_tag(
     pool: &PgPool,
     handle: &str,
@@ -1233,6 +1234,22 @@ async fn pending_tag(
     node: Uuid,
     topic: &str,
     relevance: f64,
+) {
+    pending_tag_pair(pool, handle, seq, node, topic, (relevance, 1.0)).await;
+}
+
+/// A pending un-tag: the Tag at `(0,0)` that withdraws (hashtag.md §4).
+async fn pending_untag(pool: &PgPool, handle: &str, seq: u64, node: Uuid, topic: &str) {
+    pending_tag_pair(pool, handle, seq, node, topic, (0.0, 0.0)).await;
+}
+
+async fn pending_tag_pair(
+    pool: &PgPool,
+    handle: &str,
+    seq: u64,
+    node: Uuid,
+    topic: &str,
+    claim: (f64, f64),
 ) {
     let author = actor_id(pool, handle).await;
     let node_id: String = sqlx::query_scalar(
@@ -1250,7 +1267,7 @@ async fn pending_tag(
         Family::Tag,
         Some(&node_id),
         &format!("name:{topic}"),
-        (relevance, 1.0),
+        claim,
         None,
         10 + seq as i64,
     )
@@ -2001,7 +2018,8 @@ async fn a_carried_application_write_is_never_a_candidate(pool: PgPool) {
 /// The candidates narrow by what the ranker computes over and nothing
 /// else: `kinds` (a comment is no candidate of a Posts feed), and under a
 /// topic, the author's own current declaration of it (a third party's
-/// pending tag, or the author's withdrawn one, admits nothing).
+/// pending tag, or the author's one withdrawn at `(0,0)`, admits nothing;
+/// one at zero relevance alone is still a claim and admits, hashtag.md §4).
 ///
 /// Settling candidates narrow by kinds and topic only.
 /// ´claim:relay:candidates-narrow-by-kinds-and-topic´
@@ -2032,9 +2050,11 @@ async fn candidates_narrow_by_kinds_and_topic_only(pool: PgPool) {
     pending_tag(&rig.pool, "b", 30, others, "salt", 1.0).await;
     let withdrawn = settling_content(&rig.pool, "a", 24, None, (0.5, 0.5), 5).await;
     pending_tag(&rig.pool, "a", 31, withdrawn, "salt", 1.0).await;
-    pending_tag(&rig.pool, "a", 32, withdrawn, "salt", 0.0).await;
+    pending_untag(&rig.pool, "a", 32, withdrawn, "salt").await;
+    let inert = settling_content(&rig.pool, "a", 25, None, (0.5, 0.5), 6).await;
+    pending_tag(&rig.pool, "a", 33, inert, "salt", 0.0).await;
     rank_with(json!({ "topic": salt })).await;
-    assert_eq!(sent_refs(&pod), HashSet::from([own]));
+    assert_eq!(sent_refs(&pod), HashSet::from([own, inert]));
     assert_eq!(pod.last_variables()["params"]["topic"], json!(salt));
 }
 
@@ -2748,12 +2768,13 @@ fn no_query_reaches_session_material() {
 
 /// Ranked search (RF-4; ranked-feed-api §4.8): the in-slice candidate
 /// bound, the pod's order, the seam, and the pin the cursor carries.
-const SEARCH: &str = r#"query($q: String!, $order: ReadOrder, $viewer: UUID,
+const SEARCH: &str = r#"query($q: String!, $order: ReadOrder, $viewer: UUID, $kinds: [NodeKind!],
                           $first: Int, $after: String, $last: Int, $before: String) {
-  search(query: $q, order: $order, viewer: $viewer,
+  search(query: $q, order: $order, viewer: $viewer, kinds: $kinds,
          first: $first, after: $after, last: $last, before: $before) {
     totalCount
-    edges { cursor score node { __typename ... on Post { id } } }
+    hasMorePeople
+    edges { cursor score node { __typename ... on Post { id } ... on User { id } } }
     pageInfo { hasNextPage hasPreviousPage startCursor endCursor }
   }
 }"#;
@@ -3010,6 +3031,166 @@ async fn ranked_search_keeps_the_exact_match_tier_first(pool: PgPool) {
             (f.far, None)
         ]
     );
+}
+
+/// Ranking keeps the result sectioned: each section is its ranked head,
+/// then its own rest behind the seam. A person no path of the viewer's
+/// reaches still stands before the ranked content — the seam is drawn
+/// per section, never once across the whole result — and every walk,
+/// forward page by page and backward from the end, keeps that order.
+///
+/// Under ranked search an unranked person still precedes ranked content: one seam per section.
+/// ´claim:search:ranked-search-draws-a-seam-per-section´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_draws_a_seam_per_section(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = search_fixture(&rig.pool).await;
+    let salter = person(&rig.pool, "salter", "user").await;
+    pod.set(Mode::Answer(search_ranking(&[
+        (f.near, "POST", 0.9),
+        (f.near_exact, "POST", 0.2),
+    ])));
+    let whole = vec![
+        (salter, None),
+        (f.near, Some(0.9)),
+        (f.near_exact, Some(0.2)),
+        (f.far, None),
+    ];
+    let page = search(
+        &rig,
+        json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer }),
+    )
+    .await;
+    assert_eq!(scored(&page), whole);
+    assert_eq!(page["totalCount"], json!(4));
+
+    let mut walked = Vec::new();
+    let mut after = Value::Null;
+    loop {
+        let page = search(
+            &rig,
+            json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer,
+                    "first": 1, "after": after }),
+        )
+        .await;
+        walked.extend(scored(&page));
+        if page["pageInfo"]["hasNextPage"] != json!(true) {
+            break;
+        }
+        after = page["pageInfo"]["endCursor"].clone();
+    }
+    assert_eq!(walked, whole, "forward");
+    let mut back = Vec::new();
+    let mut before = Value::Null;
+    loop {
+        let page = search(
+            &rig,
+            json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer,
+                    "last": 1, "before": before }),
+        )
+        .await;
+        let mut chunk = scored(&page);
+        chunk.append(&mut back);
+        back = chunk;
+        if page["pageInfo"]["hasPreviousPage"] != json!(true) {
+            break;
+        }
+        before = page["pageInfo"]["startCursor"].clone();
+    }
+    assert_eq!(back, whole, "backward");
+}
+
+/// Under ranking the people section is capped in the ranked result's own
+/// order: the ranked people first, then the rest behind the seam, newest
+/// first — three in all — before the content's own head and seam. A
+/// person past the cap never reappears behind the seam; the count and
+/// the door follow what the pages serve, and every walk, forward page by
+/// page and backward from the end, keeps the cap.
+///
+/// Under ranked search the people section serves its first three: ranked people first, then the rest behind the seam.
+/// ´claim:search:ranked-search-caps-the-people-section´
+#[sqlx::test(migrations = "../../migrations")]
+async fn ranked_search_caps_the_people_section(pool: PgPool) {
+    let (rig, pod) = pod_rig(pool, Mode::Answer(Value::Null)).await;
+    let f = search_fixture(&rig.pool).await;
+    let reached = person(&rig.pool, "saltnear", "user").await;
+    land(
+        &rig.pool,
+        vec![
+            binary("saltnear", 0, Family::Registration, prof("saltnear")),
+            binary("v", 2, Family::Opinion, prof("saltnear")),
+        ],
+    )
+    .await;
+    for handle in ["saltb", "saltc", "saltd", "salte"] {
+        person(&rig.pool, handle, "user").await;
+    }
+    pod.set(Mode::Answer(search_ranking(&[
+        (reached, "USER", 0.7),
+        (f.near, "POST", 0.9),
+        (f.near_exact, "POST", 0.2),
+    ])));
+
+    let people = search(&rig, json!({ "q": "sal", "kinds": ["USER"] })).await;
+    let unreached: Vec<Uuid> = scored(&people)
+        .into_iter()
+        .map(|(id, _)| id)
+        .filter(|id| *id != reached)
+        .collect();
+    assert_eq!(unreached.len(), 4);
+    assert_eq!(people["hasMorePeople"], json!(false));
+
+    let whole = vec![
+        (reached, Some(0.7)),
+        (unreached[0], None),
+        (unreached[1], None),
+        (f.near, Some(0.9)),
+        (f.near_exact, Some(0.2)),
+        (f.far, None),
+    ];
+    let page = search(
+        &rig,
+        json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer }),
+    )
+    .await;
+    assert_eq!(scored(&page), whole);
+    assert_eq!(page["totalCount"], json!(6));
+    assert_eq!(page["hasMorePeople"], json!(true));
+
+    let mut walked = Vec::new();
+    let mut after = Value::Null;
+    loop {
+        let page = search(
+            &rig,
+            json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer,
+                    "first": 1, "after": after }),
+        )
+        .await;
+        walked.extend(scored(&page));
+        if page["pageInfo"]["hasNextPage"] != json!(true) {
+            break;
+        }
+        after = page["pageInfo"]["endCursor"].clone();
+    }
+    assert_eq!(walked, whole, "forward");
+    let mut back = Vec::new();
+    let mut before = Value::Null;
+    loop {
+        let page = search(
+            &rig,
+            json!({ "q": "sal", "order": "RANKED", "viewer": f.viewer,
+                    "last": 1, "before": before }),
+        )
+        .await;
+        let mut chunk = scored(&page);
+        chunk.append(&mut back);
+        back = chunk;
+        if page["pageInfo"]["hasPreviousPage"] != json!(true) {
+            break;
+        }
+        before = page["pageInfo"]["startCursor"].clone();
+    }
+    assert_eq!(back, whole, "backward");
 }
 
 /// An in-slice match no live path reaches is absent from the pod's

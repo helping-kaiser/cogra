@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(*) AS \"n!\"\n           FROM user_bookmarks b\n           WHERE b.user_id = $1\n             AND b.kind = ANY($2)\n             AND CASE b.kind\n                 WHEN 'post' THEN EXISTS (\n                     SELECT 1 FROM posts p WHERE p.id = b.content_id)\n                 WHEN 'comment' THEN EXISTS (\n                     SELECT 1 FROM comments c WHERE c.id = b.content_id)\n                 WHEN 'user' THEN EXISTS (\n                     SELECT 1 FROM actors a WHERE a.id = b.content_id)\n                 ELSE FALSE\n             END",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "n!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "4767a9ab58f765e4f151822df000e4d4f0a709a0ed7f471aa5608a931ed90f65"
+}

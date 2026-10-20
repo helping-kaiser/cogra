@@ -412,6 +412,23 @@ type AuthSession {
 	user: User
 }
 
+type BackingBundle {
+	"""
+	The raw valence sum, before the clip — beyond `±1` where the
+	records carry more than the fold shows. Not a `Dimension`: the sum
+	is unbounded by construction.
+	"""
+	rawPDirected: Float!
+	"""
+	The folded valence: the raw sum clipped to `[-1, 1]`.
+	"""
+	pDirected: Dimension!
+	"""
+	How many Publish records the sum folds.
+	"""
+	recordCount: Int!
+}
+
 """
 Opens a resumable upload for a file too large to risk in one request.
 """
@@ -446,11 +463,21 @@ type BookmarkConnection {
 	"""
 	edges: [BookmarkEdge!]!
 	"""
-	How many things the viewer's Saved list serves, across every page.
-	Priced at zero like every connection count; saturates at
-	[`i32::MAX`].
+	How many things the viewer's Saved list serves, across every page
+	— narrowed by `query` and `kinds` when given, less the people a
+	capped people section leaves behind its door. Priced at zero like
+	every connection count; saturates at [`i32::MAX`].
 	"""
 	totalCount: Int
+	"""
+	Whether more saved people match than the people section serves —
+	the "See all profiles" door. While a narrowed list can stand
+	content beside its people, the people section serves its three
+	newest saves; the same query with `kinds: [USER]` serves every
+	match, uncapped. False when the section is not capped, and on a
+	list no query narrows.
+	"""
+	hasMorePeople: Boolean!
 }
 
 """
@@ -929,6 +956,12 @@ enum ErrorCode {
 	The key-backup upload challenge is unknown, expired, or spent.
 	"""
 	CHALLENGE_EXPIRED
+	"""
+	A carried write the landing released names media not yet
+	published to the live store. Retryable: nothing was recorded, and
+	the next submit resumes the move.
+	"""
+	CARRIED_MEDIA_UNPUBLISHED
 }
 
 type FeedConnection {
@@ -2147,8 +2180,9 @@ type Mutation {
 	"""
 	preparePost(input: PreparePostInput!): PrepareContentPayload!
 	"""
-	Prepares a Post edit: an ordinary-role Publish at attachment 0
-	toward the existing node, chained behind the current head.
+	Prepares a Post edit: an ordinary-role Publish at the author's
+	picked attachment (default 0, inert) toward the existing node,
+	chained behind the current head.
 	Creator-only; one in-flight edit per post and author
 	(post.md §4).
 	"""
@@ -2161,7 +2195,7 @@ type Mutation {
 	"""
 	Prepares one standalone Tag on existing content — the gesture
 	that adds a topic after creation. There is no un-tag mutation:
-	withdrawing a topic is a further Tag at `pDirected: 0`, which the
+	withdrawing a topic is a further Tag at `(0,0)`, which the
 	current-topics fold reads as withdrawn (hashtag.md §4). Tagging
 	is not restricted to the content's author; the read side is what
 	separates the author's own declarations from third-party claims.
@@ -2205,6 +2239,12 @@ type Mutation {
 	failures surface as SIGNATURE_INVALID userErrors per proposal.
 	Resubmitting a sealed proposal is idempotent only for the exact
 	signature that was sealed; differing bytes refuse as BAD_INPUT.
+	
+	A carried write the landing released signs only once every asset
+	it names is published to the live store; the submit runs that
+	move. One whose move has not landed refuses as
+	CARRIED_MEDIA_UNPUBLISHED, which is retryable: nothing was
+	recorded, and the next submit resumes the move.
 	
 	A keyless account is refused rather than rendered: no staged write
 	can exist for one, because the Registration stages only after the
@@ -2603,7 +2643,8 @@ type Post implements Node {
 	"""
 	This post's current topics — the author's own declarations, as
 	the current-topics fold reads them: newest record per (author,
-	content, Type), relevance 0 read as withdrawn (hashtag.md §4).
+	content, Type), a winner at `(0,0)` read as withdrawn (hashtag.md
+	§4).
 	
 	Third-party topic claims are deliberately absent: they reach a
 	viewer only through the tagger, at a forward-path weight the
@@ -2634,6 +2675,15 @@ type Post implements Node {
 	only what has landed on L1.
 	"""
 	viewerStance(pick: StancePickInput, includePending: Boolean! = true): StanceBundle
+	"""
+	The viewer's own Publish bundle toward this post — the raw sum of
+	the records they authored it with, and the clip of that sum.
+	Answers only the post's creator; null for every other viewer and
+	for no session. Unlike `viewerStance`, it counts payload-marked
+	records, since every Publish is one. `includePending: false`
+	folds only what has landed on L1.
+	"""
+	viewerBacking(includePending: Boolean! = true): BackingBundle
 	"""
 	When the viewer saved this post; null when not kept, or with no
 	session. What the menus' Save / Unsave row reads.
@@ -2780,6 +2830,14 @@ input PreparePostEditInput {
 	The reason the edit leaves standing; same rules a create runs.
 	"""
 	sensitiveReason: String
+	"""
+	The author's stance pick riding the edit's own record — its
+	attachment. Omitted is `0`, the inert setting: an unadjusted edit
+	moves no stance. A moved pick alone is a legal edit — a
+	content-identical new version. `pInterest` stays census-fixed at
+	1 for Publish, so it is no field.
+	"""
+	pDirected: Dimension
 }
 
 """
@@ -2893,7 +2951,7 @@ input PrepareReferenceInput {
 """
 Withdrawing one citation. Records are never deleted, and Reference
 withdrawal is per-leg net stance — not the Tag rule beside it, which
-is newest-wins at relevance 0 only because a tag's confidence cannot
+is newest-wins at `(0,0)` only because a tag's confidence cannot
 be netted. Both citation parameters are signed, so a withdrawal is the
 severance shape: counter-records until the bundle reaches `(0, 0)`.
 
@@ -2956,9 +3014,9 @@ input PrepareStanceInput {
 
 """
 One standalone topic declaration on existing content — the gesture
-that adds a topic after creation, and, at `pDirected: 0`, the one
-that withdraws it. Tags are never edit fields: changing a post's
-topics is its own priced act (post.md §3).
+that adds a topic after creation, and, at `(0,0)`, the one that
+withdraws it. Tags are never edit fields: changing a post's topics is
+its own priced act (post.md §3).
 """
 input PrepareTagInput {
 	"""
@@ -2967,7 +3025,8 @@ input PrepareTagInput {
 	target: UUID!
 	name: String!
 	"""
-	Relevance `r`; zero is the un-tag. Required, as on `TagInput`.
+	Relevance `r`. Required, as on `TagInput`. An un-tag signs both
+	parameters at 0.
 	"""
 	pDirected: Dimension!
 	"""
@@ -3084,12 +3143,14 @@ type Query {
 	link they registered through** — whoever's vouch lands them —
 	from the moment
 	the account exists and before either proof is in, whatever they
-	stage — and a **landed member** keeps borrowing it until their
-	first Opinion is signed, toward any target, landed or in flight.
-	An Affinity never ends it; a first Opinion that expires with
-	none landed returns it; an Opinion carried from the application
-	signs with the vouch-in batch, so that member owns their view
-	from landing on.
+	stage — and a **landed member** keeps borrowing it until they
+	hold a live Opinion, signed toward any target, landed or in
+	flight: one whose netted bundle toward its target has neither
+	parameter at zero. An inert Opinion (either parameter zero) and
+	an Affinity never end it; a live Opinion that expires with none
+	landed returns it; an Opinion carried from the application
+	signs with the vouch-in batch, so a member who carried a live
+	one owns their view from landing on.
 	3. A **bare visitor**, with nothing more specific to go on,
 	borrows the **Genesis Moderator's** view. Strictly the
 	fallback: it is the only vantage that names no relationship
@@ -3206,19 +3267,28 @@ type Query {
 	referenceCandidates(query: String!, limit: Int): [ReferenceCandidate!]!
 	"""
 	Global search across nodes; returns a `SearchResult` per edge.
-	Recall is lexical over the indexed name-class fields and post
-	titles — an untitled post is never matched by its words. Order is
-	exact-match tier first, then newest first — viewer-independent —
-	unless `order: RANKED`, where the server's ranker container orders
-	the matches inside `viewer`'s slice, each tier by its ranker, and
-	the rest follow behind the seam, newest first; ranking never runs
-	in the backend process (feed-ranking.md §11). `order: RANKED`
-	needs `viewer`. Served kinds grow with the slices: USER, POST,
-	HASHTAG unscoped; COMMENT is always a valid kind but is served
-	only under a scope operator (`@handle`, `#tag`) — unscoped, it
-	contributes no rows, never an error. COLLECTIVE, CHAT,
-	CHAT_MESSAGE, ITEM and OFFER join with their slices and read empty
-	until then. An empty `kinds` list means the same as null (no
+	Recall is lexical: plain text matches topic names by substring,
+	post titles, handles and display names by word (the last word a
+	prefix), and brings the posts of every person whose display name
+	matches; `@prefix` names people by handle prefix and `#prefix`
+	topics by name prefix — bare, the matches lead and everything they
+	reach follows; with text, the text searches what they reach. The
+	result is sectioned — people, then topics, then content — and
+	inside a section an exact match leads, then newest first,
+	viewer-independent — unless `order: RANKED`, where the server's
+	ranker container orders each section's matches inside `viewer`'s
+	slice, exact matches first, and the section's rest follow behind
+	the seam, newest first; ranking never runs in the backend process
+	(feed-ranking.md §11). `order: RANKED` needs `viewer`. While the
+	served kinds stand people beside another kind, the people section
+	serves its first three in that order, and `hasMorePeople` says
+	whether more match; `kinds: [USER]` serves them all. Served
+	kinds grow with the slices: USER, POST, HASHTAG for plain text;
+	COMMENT is always a valid kind but is served only under a cue —
+	for plain text it contributes no rows, never an error. A `kinds`
+	filter drops sections and keeps the rest's semantics. COLLECTIVE,
+	CHAT, CHAT_MESSAGE, ITEM and OFFER join with their slices and read
+	empty until then. An empty `kinds` list means the same as null (no
 	narrowing). `includeSeen: false` drops nodes on the reader's
 	seen-list (`User.viewHistory`); it needs a session and is ignored
 	without one. Full semantics in the Search section.
@@ -3931,11 +4001,20 @@ type SearchConnection {
 	"""
 	edges: [SearchEdge!]!
 	"""
-	How many nodes the query matches in total, across every page,
-	independent of the cursor. Priced at zero like every connection
-	count; saturates at [`i32::MAX`].
+	How many nodes the query serves in total, across every page,
+	independent of the cursor: every match, less the people a capped
+	people section leaves behind its door. Priced at zero like every
+	connection count; saturates at [`i32::MAX`].
 	"""
 	totalCount: Int
+	"""
+	Whether more people match than the people section serves — the
+	"See all profiles" door. Where the result can stand people beside
+	another section, the people section serves its first three by the
+	result's own order; the same query with `kinds: [USER]` serves
+	every match, uncapped. False when the section is not capped.
+	"""
+	hasMorePeople: Boolean!
 }
 
 """
@@ -4349,8 +4428,7 @@ Names are normalized by the naming service (lowercase, no `#`, ASCII
 `[a-z0-9._-]`, at most 128 bytes) and a new name needs no creation
 act: Types anchor vacuously (hashtag.md §1, §2). Re-tagging a name
 revises the claim — the newest record per (author, content, Type)
-wins, and relevance 0 is the un-tag, read as withdrawn (hashtag.md
-§4).
+wins, and `(0,0)` is the un-tag, read as withdrawn (hashtag.md §4).
 """
 input TagInput {
 	name: String!
@@ -4380,7 +4458,7 @@ type TaggedContent {
 """
 One current topic claim on a node — a chip in the chip row. The
 bundle key is (author, content, Type) and the newest record in it
-wins; relevance 0 is a withdrawal and never appears here.
+wins; `(0,0)` is a withdrawal and never appears here.
 """
 type TopicClaim {
 	hashtag: Hashtag!
@@ -4492,15 +4570,19 @@ type User implements Node & Actor {
 	"""
 	createdAt: DateTime!
 	"""
-	The most recent profile version's authoring instant; equals
-	`createdAt` for an actor whose profile has never changed.
+	The current profile version's authoring instant — the update's
+	pre-commitment signature, pending or landed alike, so the date
+	never jumps when the update lands; equals `createdAt` for an actor
+	whose profile has never changed.
 	"""
 	updatedAt: DateTime!
 	"""
 	Where this actor's Profile stands relative to L1 finality. A
 	Profile is minted by its own Registration record, so it pends
 	between the key ceremony — which is where the address is bound —
-	and that record landing.
+	and that record landing; and, like any node, an unlanded update
+	leaves it pending, because the profile on screen is the pending
+	version.
 	"""
 	landing: Landing!
 	"""
@@ -4561,9 +4643,22 @@ type User implements Node & Actor {
 	removed, redacted, a deleted account, or an actor the viewer hid —
 	and read through their own status; hiding never narrows it. A kept
 	node that no longer resolves — a pending write that never landed —
-	is skipped. Field-level: viewer-only.
+	is skipped. `query` narrows the list by the one search law
+	(Search section) over the saved set alone — the matcher runs on
+	the server, so a match is found wherever it stands in the list.
+	Narrowed, the list is sectioned as search is — people, then
+	content — newest save first inside a section, and paged on its own
+	cursors; a blank or null `query` narrows nothing. While the
+	narrowed list can stand content beside its people, the people
+	section serves only its three newest saves, and
+	`hasMorePeople` says whether more match — the "See all profiles"
+	door, which is the same query with `kinds: [USER]`. `kinds`
+	narrows the list to those kinds, with or without a query (null or
+	empty = every kind Saved holds: USER, POST, COMMENT; another kind
+	is BAD_INPUT). A query past the search length cap is BAD_INPUT.
+	Field-level: viewer-only.
 	"""
-	bookmarks(first: Int, after: String, last: Int, before: String): BookmarkConnection
+	bookmarks(query: String, kinds: [NodeKind!], first: Int, after: String, last: Int, before: String): BookmarkConnection
 	"""
 	Actors this user has hidden from their own feed — a read-side
 	comfort applied post-rank on the viewer's side (feed-ranking.md
@@ -4583,16 +4678,29 @@ type User implements Node & Actor {
 	ranked feed filters by, and History's feed. Re-seeing never moves
 	an entry. `kinds` narrows (null or empty = every kind History
 	serves: POST, COMMENT, USER, HASHTAG; a kind outside the served
-	set is BAD_INPUT, and later slices widen the set). A hidden
-	actor's posts and comments stay out while the actor is hidden,
-	and their own profile stays; a removed thing keeps its place and
-	reads its removal mark; a thing whose node no longer resolves — a
-	pending write that never landed — is skipped. Paging is keyset on
-	`(firstSeenAt, node id)`, so a thing first seen while the reader
-	scrolls sorts above the open page and never shifts the next one.
-	Field-level: viewer-only.
+	set is BAD_INPUT, and later slices widen the set), with or without
+	a query. `query` narrows the list by the one search law (Search
+	section) over the seen set alone — the matcher runs on the server,
+	so a match is found wherever it stands in the list. Narrowed, the
+	list is sectioned as search is — people, then topics, then content
+	— newest first seeing first inside a section, and paged on its
+	own cursors; a blank or null `query` narrows nothing. While the
+	narrowed list can stand another kind beside its people, the people
+	section serves only the three people first seen most recently, and
+	`hasMorePeople` says whether more match — the "See all profiles"
+	door, which is the same query with `kinds: [USER]`. The topics
+	section is capped the same way, to the three topics first seen
+	most recently, and `hasMoreTags` says whether more match — the
+	"See all tags" door, which is the same query with `kinds: [HASHTAG]`.
+	A query past the search length cap is BAD_INPUT. A hidden actor's
+	posts and comments stay out while the actor is hidden, and their
+	own profile stays; a removed thing keeps its place and reads its
+	removal mark; a thing whose node no longer resolves — a pending
+	write that never landed — is skipped. Paging is keyset on `(firstSeenAt, node id)`,
+	so a thing first seen while the reader scrolls sorts above the
+	open page and never shifts the next one. Field-level: viewer-only.
 	"""
-	viewHistory(kinds: [NodeKind!], first: Int, after: String, last: Int, before: String): ViewHistoryConnection
+	viewHistory(kinds: [NodeKind!], query: String, first: Int, after: String, last: Int, before: String): ViewHistoryConnection
 	"""
 	Acts other actors made that reached this user's content, profile or
 	application — newest first, one row per act (notifications.md). A
@@ -4821,11 +4929,30 @@ type ViewHistoryConnection {
 	"""
 	edges: [ViewHistoryEdge!]!
 	"""
-	How many things the viewer's seen-list serves under these kinds,
-	across every page. Priced at zero like every connection count;
-	saturates at [`i32::MAX`].
+	How many things the viewer's seen-list serves, across every page —
+	narrowed by `query` and `kinds` when given, less the people and
+	topics a capped section leaves behind its door. Priced at zero like
+	every connection count; saturates at [`i32::MAX`].
 	"""
 	totalCount: Int
+	"""
+	Whether more seen people match than the people section serves —
+	the "See all profiles" door. While a narrowed list can stand
+	another kind beside its people, the people section serves the
+	three people first seen most recently; the same query with
+	`kinds: [USER]` serves every match, uncapped. False when the
+	section is not capped, and on a list no query narrows.
+	"""
+	hasMorePeople: Boolean!
+	"""
+	Whether more seen topics match than the topics section serves —
+	the "See all tags" door. While a narrowed list can stand another
+	kind beside its topics, the topics section serves the three topics
+	first seen most recently; the same query with `kinds: [HASHTAG]`
+	serves every match, uncapped. False when the section is not
+	capped, and on a list no query narrows.
+	"""
+	hasMoreTags: Boolean!
 }
 
 """

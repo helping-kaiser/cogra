@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM actor_profile_versions\n         WHERE (actor_id, created_at)\n               IN (SELECT * FROM unnest($1::uuid[], $2::timestamptz[]))\n           AND pending",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray",
+        "TimestamptzArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "784cc4343018852cb91eb26c4f7058e4d4aaa2e77dc954c7eab19c7d3a717f62"
+}

@@ -235,11 +235,16 @@ the exact host-sealed verified act
    prepared act that never lands is discarded, staged payload
    included, after a bounded number of epochs.
 
-**Content exists at authoring, not at landing.** A prepared record
+**Content exists at authoring, not at landing.** A prepared act
 is its author's content from the moment they sign it, readable by
 everyone from that moment and marked as not yet final. Landing is
 when L1 finality arrives — when the act becomes ordered fact — not
-when the content begins to exist. The epoch never defines the
+when the content begins to exist. Landing is said of an act; an
+account lands once its Registration and a first vouch toward it
+have both landed ([user.md §2](user.md#2-creation)), and an
+applicant's carried acts are released at that account landing
+([data-model.md "Staged writes"](../implementation/data-model.md#staged-writes)).
+The epoch never defines the
 content; it dates it. The existence is conditional on that arrival:
 when a prepared act expires unlanded and is discarded, the content
 leaves every reader's view with it — on the graph nothing ever
@@ -437,11 +442,17 @@ per-concept table: [substrate-map.md](substrate-map.md)):
 
 Discipline for update records:
 
-- **Inert parameters, read individually.** An update is not a
-  stance: each carrier is authored at its inert setting — Publish
-  and Owner at attachment `0`, Review at `(0,0)` — so the record
-  is routing-inert and vouch-inert (zero is inert,
+- **Inert by default, read individually.** Each carrier stands at
+  its inert setting — Publish and Owner at attachment `0`, Review at
+  `(0,0)` — so an update nobody adjusts is routing-inert and
+  vouch-inert (zero is inert,
   [edges.md §1](edges.md#1-the-edge-record-and-cogras-two-axes)).
+  A Post edit carries its author's attachment pick instead when the
+  author moves it: a stance riding the edit's own record, netting
+  into the author's Publish bundle like any record
+  ([feed-ranking.md §3.2](feed-ranking.md#32-the-fold--per-author-net-stance)),
+  and a moved pick alone is a legal update — a content-identical
+  version ([post.md §4](../instances/post.md#4-editing)).
   Folds read update records **individually** — never the author's
   netted bundle — the same discipline ballots use
   ([governance.md](governance.md)).

@@ -97,6 +97,14 @@ internal fun stancePointFrom(base: StancePoint, travel: Offset, extentPx: Float)
     )
 }
 
+/**
+ * Where a drag of this much travel PARKS once the finger lifts: [stancePointFrom]
+ * with both axes on the hundredths grid ([hundredth]). The web's twin is
+ * `snapPair` over `padPairFrom`.
+ */
+internal fun stancePointReleased(base: StancePoint, travel: Offset, extentPx: Float): StancePoint =
+    stancePointFrom(base, travel, extentPx).let { StancePoint(hundredth(it.directed), hundredth(it.interest)) }
+
 /** Where the knob's centre sits for [point], offset from the field's centre. */
 internal fun knobOffset(point: StancePoint, extentPx: Float): Offset = Offset(
     x = point.directed.toFloat().coerceIn(-1f, 1f) * extentPx,

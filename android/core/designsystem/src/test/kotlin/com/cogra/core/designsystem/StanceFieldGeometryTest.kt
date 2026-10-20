@@ -77,6 +77,19 @@ class StanceFieldGeometryTest {
         assertThat(stancePointFromTravel(Offset(40f, 40f), 0f)).isEqualTo(StancePoint.Origin)
     }
 
+    // -- The release lands both axes on the hundredths grid (jakob 2026-10-20) --
+
+    @Test
+    fun theReleaseLandsBothAxesOnTheNearestHundredthAndANearZeroAxisOnPositiveZero() {
+        // From the pad's +0.10 / +0.10 to 0.4371 / −0.003 under the thumb.
+        val travel = Offset(((0.4371 - 0.1) * extent).toFloat(), ((0.1 + 0.003) * extent).toFloat())
+        val under = stancePointFrom(StancePoint(0.1, 0.1), travel, extent)
+        assertThat(under.interest).isWithin(1e-4).of(-0.003)
+        val parked = stancePointReleased(StancePoint(0.1, 0.1), travel, extent)
+        // Data-class equality is `Double.equals`, which tells −0 from +0.
+        assertThat(parked).isEqualTo(StancePoint(0.44, 0.0))
+    }
+
     // -- A second drag, from the pick already standing (design.md §8.3) --
 
     @Test

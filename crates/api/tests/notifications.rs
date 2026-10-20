@@ -983,6 +983,31 @@ async fn an_opinion_withdrawal_on_my_profile_notifies_me(pool: PgPool) {
     assert_eq!(me["hasUnreadNotifications"], true);
 }
 
+/// A walk-back typed by hand nets exactly: 0.1 + 0.2 against −0.3 reaches
+/// zero in exact decimal arithmetic — floating point leaves it at 5.6e-17,
+/// whichever order the store adds in — so the withdrawal is reported, the
+/// same answer the stance read gives.
+///
+/// A typed walk-back of a dirty bundle nets exactly and reports the withdrawal.
+/// ´claim:notifications:a-typed-walk-back-of-a-dirty-bundle-notifies´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_typed_walk_back_of_a_dirty_bundle_notifies(pool: PgPool) {
+    let rig = unlimited(pool);
+    let ada = member(&rig, "ada").await;
+    let bo = member(&rig, "bo").await;
+    opine(&rig, &bo, ada.id, 0.1, 0.1).await;
+    opine(&rig, &bo, ada.id, 0.2, 0.2).await;
+    opine(&rig, &bo, ada.id, -0.3, -0.3).await;
+    assert_eq!(
+        kinds_of(&rig, &ada.token).await,
+        vec![
+            "PROFILE_OPINION_WITHDRAWN",
+            "PROFILE_OPINION",
+            "PROFILE_OPINION"
+        ]
+    );
+}
+
 /// A walk-back signed as several counter-records that land together is one act and one row.
 /// ´claim:notifications:a-multi-record-walk-back-writes-one-row´
 #[sqlx::test(migrations = "../../migrations")]

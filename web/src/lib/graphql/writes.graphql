@@ -37,6 +37,8 @@ mutation PrepareStance($input: PrepareStanceInput!) {
       id
       family
       canonicalProposal
+      # Carried with an applicant's application: checked, kept, signed at the landing.
+      carried
     }
     userErrors {
       ...UserErrorFields

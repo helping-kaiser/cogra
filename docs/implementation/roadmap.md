@@ -401,7 +401,7 @@ can land in any order — 2.3 (topics) needs only the text core.
   pad (2.2) reaches it.
 - Carries the current-topics fold: newest-wins per (author,
   content, Type) bundle, and the un-tag gesture is a further tag
-  at relevance `0`
+  at `(0,0)`
   ([hashtag.md §4](../instances/hashtag.md#4-the-current-topics-fold)).
 - **Hand test:** tag a post at creation; open the topic from
   its chip; follow it.

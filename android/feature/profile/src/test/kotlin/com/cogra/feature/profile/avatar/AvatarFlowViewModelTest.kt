@@ -254,6 +254,34 @@ class AvatarFlowViewModelTest {
         assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Done("m2", fakeUpload("m2").known()))
     }
 
+    /** The seal opens on the upload already running, not on a copy taken before it started. */
+    @Test
+    fun theSealOpensOnTheUploadInFlight() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onPicked("content://pick/1")
+
+        vm.onNext()
+
+        assertThat(vm.state.value.step).isEqualTo(AvatarStep.Seal)
+        assertThat(vm.state.value.upload).isEqualTo(AvatarUpload.Running)
+    }
+
+    /** A new framing after the upload finished sends the picture now framed. */
+    @Test
+    fun aNewFramingAfterTheUploadSendsTheNewPicture() = runTest(dispatcher) {
+        val vm = startedAtSeal(CropSpec(targetRatio = 1f, window = CropWindow(0.1f, 0.1f, 0.9f, 0.9f)))
+        assertThat(media.calls).isEqualTo(1)
+
+        vm.onBack()
+        val reframed = CropSpec(targetRatio = 1f, window = CropWindow(0.3f, 0.3f, 0.7f, 0.7f))
+        vm.onCropCommitted(reframed)
+        vm.onNext()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(media.calls).isEqualTo(2)
+        assertThat(processor.lastCrop).isEqualTo(reframed)
+    }
+
     @Test
     fun anAlreadyLandedPictureIsNotUploadedTwice() = runTest(dispatcher) {
         val vm = startedAtSeal()
@@ -278,6 +306,25 @@ class AvatarFlowViewModelTest {
         assertThat(profiles.lastUpdate)
             .isEqualTo(Triple("Jakob", "Old bio", "https://example.test"))
         assertThat(profiles.lastAvatar).isEqualTo(MediaFieldUpdate.Set("m1"))
+        assertThat(vm.state.value.saved).isTrue()
+    }
+
+    /**
+     * A profile with no bio or website re-states them as cleared, which the
+     * server stages as the empty string; the device must sign that rather
+     * than refuse its own gesture (jakob's hand test: the refusal left the
+     * update staged and every later one "already in flight").
+     */
+    @Test
+    fun aProfileWithoutBioOrWebsiteStillSigns() = runTest(dispatcher) {
+        profiles.mine = Outcome.Success(testProfile(id = TEST_PROFILE_ID, handle = "jakob", displayName = "Jakob"))
+        val vm = startedAtSeal()
+
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(profiles.lastUpdate).isEqualTo(Triple("Jakob", null, null))
+        assertThat(vm.state.value.signingFailed).isFalse()
         assertThat(vm.state.value.saved).isTrue()
     }
 

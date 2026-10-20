@@ -1,0 +1,36 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COALESCE(SUM(p_d::text::numeric), 0)::text AS \"p_d!\",\n                      COALESCE(SUM(p_i::text::numeric), 0)::text AS \"p_i!\",\n                      COUNT(*)::bigint             AS \"records!\"\n               FROM staged_writes\n               WHERE family = $1 AND author = $2 AND target = $3\n                 AND middle IS NULL\n                 AND octet_length(payload) = 0\n                 AND (pre_signed_at IS NOT NULL OR carried)\n                 AND state NOT IN ('landed', 'expired')",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "p_d!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "p_i!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "records!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "c015e74ff7b77c666b5ddd5ae5b411af5d587997dea16eea6bed06be3d240ccd"
+}

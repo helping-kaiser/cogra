@@ -195,6 +195,12 @@ data class PreparedWriteView(
     /** The canonical proposal wire bytes, decoded from base64. */
     val canonicalProposal: ByteArray,
     val gcAfterEpochs: Int,
+    /**
+     * Carried with the author's application (`PreparedWrite.carried`): the
+     * signer checks it against its form and keeps the verified digest for
+     * the landing instead of signing it now (signing/Carried.kt).
+     */
+    val carried: Boolean = false,
 ) {
     override fun equals(other: Any?): Boolean = other is PreparedWriteView && other.id == id
     override fun hashCode(): Int = id.hashCode()
@@ -680,7 +686,7 @@ data class ReferenceCandidateView(
 /**
  * One current topic claim on a piece of content — a chip in the chip
  * row (hashtag.md §4). The bundle key is (author, content, Type); the
- * newest record in it wins, and relevance 0 is a withdrawal that never
+ * newest record in it wins, and (0,0) is a withdrawal that never
  * appears here.
  */
 data class TopicClaimView(
@@ -770,6 +776,19 @@ data class SelfMarkView(
     val sensitive: Boolean,
     /** Null when unmarked, and when the mark carries no reason. */
     val reason: String?,
+)
+
+/**
+ * The post's BACKING as its author's own Publish bundle folds it: the
+ * mint's attachment plus every edit's pick, summed then clipped (post.md
+ * §4). One number — the census pins `p_i` at 1. Never the face's opinion,
+ * which is a bundle of its own.
+ */
+data class PostBacking(
+    /** The bundle's net, clipped to the axis — `Current backing`. */
+    val net: Double,
+    /** The raw sum, unclipped — what `Backing after` and the walk-back fold from. */
+    val rawSum: Double,
 )
 
 /** A post with its first page of comments — the detail read. */

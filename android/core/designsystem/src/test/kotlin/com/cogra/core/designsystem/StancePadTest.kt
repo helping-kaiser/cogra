@@ -106,6 +106,28 @@ class StancePadTest {
         }
     }
 
+    /** [show], for a state a test changes after the first frame. */
+    private fun showLive(state: () -> StanceControlState) {
+        compose.setContent {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                StanceControl(
+                    state = state(),
+                    onHoldDefault = {},
+                    onOpenPad = {},
+                    onPick = {},
+                    onCommit = {},
+                    onDismissPad = {},
+                    onToggleExactValues = {},
+                    onOpenSeverance = {},
+                    onConfirmSeverance = {},
+                    onDismissSeverance = {},
+                    onConfirmationShown = {},
+                    testTagPrefix = TAG,
+                )
+            }
+        }
+    }
+
     // -- What the resting target reads as (design.md §8.3) --
 
     @Test
@@ -413,6 +435,23 @@ class StancePadTest {
     }
 
     @Test
+    fun theReleaseParksThePickOnTheNearestHundredthsANearZeroAxisOnPositiveZero() {
+        // The value domain (jakob 2026-10-20): the knob follows the thumb to
+        // 0.4371 / −0.003, and the lift lands the pick on 0.44 / +0.00 —
+        // the exact zero the landing's inertness reads.
+        showLive()
+        val extent = with(compose.density) { FIELD_EXTENT.toPx() }
+
+        compose.onNodeWithTag("${TAG}_stance").performClick()
+        dragTheField(Offset(((0.4371 - 0.1) * extent).toFloat(), ((0.1 + 0.003) * extent).toFloat()))
+
+        assertThat(picks[picks.size - 2].interest).isWithin(1e-3).of(-0.003)
+        // Data-class equality is `Double.equals`, which tells −0 from +0.
+        assertThat(picks.last()).isEqualTo(StancePoint(0.44, 0.0))
+        compose.exactPair().assertTextEquals("+0.44 / +0.00")
+    }
+
+    @Test
     fun releasingADriftedThumbParksThePadAndSignsNothing() {
         // An accidental lift must never sign a priced act (design.md
         // §8.3): the pad is a considered surface, and Set is the
@@ -489,7 +528,9 @@ class StancePadTest {
         val extent = with(compose.density) { FIELD_EXTENT.toPx() }
 
         tapAndDrift(extent)
-        repeat(4) { dragTheField(Offset(0f, extent / 8f)) }
+        // Tenths, not eighths: each release lands on a hundredth, and an
+        // eighth sits exactly on a half-hundredth that would round outward.
+        repeat(5) { dragTheField(Offset(0f, extent / 10f)) }
 
         compose.exactPair().assertTextEquals("+0.60 / -0.40")
         assertThat(committed).isEqualTo(0)
@@ -765,7 +806,9 @@ class StancePadTest {
     }
 
     @Test
-    fun anInertLandingSaysTheStanceWillCarryNothing() {
+    fun aOneZeroLandingReadsItsStateUnderTheThinkingFace() {
+        // Round 18 (jakob 2026-10-20): one number at zero is unreachable,
+        // never severance — 🤔, the state, then the one consequence.
         show(
             StanceControlState(
                 pad = StancePadMode.STICKY,
@@ -779,7 +822,60 @@ class StancePadTest {
         )
 
         compose.onNodeWithTag("${TAG}_stance_landing")
-            .assertTextContains("carry nothing", substring = true)
+            .assertTextContains("Interested, no side taken — this won't shape anyone's feed.")
+        compose.onNodeWithText(UNREACHABLE_EMOJI, useUnmergedTree = true).assertExists()
+        compose.onNodeWithText("🤷", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("${TAG}_stance_landing_borrowed").assertDoesNotExist()
+    }
+
+    @Test
+    fun theUnreachableHeadFollowsTheSignOfTheNumberThatStands() {
+        val heads = listOf(
+            StanceLanding(StancePoint(0.0, -0.4), true, false, false) to "Rather not see it, no side taken",
+            StanceLanding(StancePoint(0.4, 0.0), false, true, false) to "For it, no interest either way",
+            StanceLanding(StancePoint(-0.4, 0.0), false, true, false) to "Against it, no interest either way",
+        )
+        var landing by mutableStateOf(heads.first().first)
+        showLive { StanceControlState(pad = StancePadMode.STICKY, landing = landing) }
+        for ((next, head) in heads) {
+            landing = next
+            compose.onNodeWithTag("${TAG}_stance_landing")
+                .assertTextContains("$head — this won't shape anyone's feed.")
+        }
+    }
+
+    @Test
+    fun theMastersZeroStateWordsAreTheStrings() {
+        val master = java.io.File("../../../design/components/stance/StanceReadout.jsx").readText()
+        val strings = java.io.File("src/main/res/values/strings.xml").readText().replace("\\'", "'")
+        for (head in listOf(
+            "Interested, no side taken",
+            "Rather not see it, no side taken",
+            "For it, no interest either way",
+            "Against it, no interest either way",
+        )) {
+            assertThat(master).contains("\"$head\"")
+            assertThat(strings).contains(">$head</string>")
+        }
+        val tail = Regex("export const UNREACHABLE_TAIL = \"([^\"]+)\";").find(master)!!.groupValues[1]
+        assertThat(strings).contains("<string name=\"stance_unreachable_tail\">$tail</string>")
+        val kept = Regex("export const BORROWED_KEPT_LINE = \"([^\"]+)\";").find(master)!!.groupValues[1]
+        assertThat(strings).contains("<string name=\"stance_borrowed_kept\">$kept</string>")
+    }
+
+    @Test
+    fun aBorrowingReaderIsWarnedUnderAnUnreachableOrSeveredLandingOnly() {
+        val unreachable = StanceLanding(StancePoint(0.0, 0.4), true, false, false)
+        val severed = StanceLanding(StancePoint.Origin, true, true, true)
+        val live = StanceLanding(StancePoint(0.3, 0.4), false, false, false)
+        var landing by mutableStateOf(unreachable)
+        showLive { StanceControlState(pad = StancePadMode.STICKY, landing = landing, borrowed = true) }
+        compose.onNodeWithTag("${TAG}_stance_landing_borrowed")
+            .assertTextEquals("You'd keep your borrowed view — no feed of your own yet.")
+        landing = severed
+        compose.onNodeWithTag("${TAG}_stance_landing_borrowed").assertExists()
+        landing = live
+        compose.onNodeWithTag("${TAG}_stance_landing_borrowed").assertDoesNotExist()
     }
 
     @Test

@@ -1919,28 +1919,40 @@
         "explore.bottomBar.walletSlot": [],
         "explore.filterTrigger": [],
         "explore.help": [],
+        "explore.profilesDoor": [],
+        "explore.profilesLabel": [],
         "explore.result": [
           "1",
           "2",
-          "3"
+          "3",
+          "4",
+          "5"
         ],
         "explore.result.mark": [
           "1",
           "2",
-          "3"
+          "3",
+          "4",
+          "5"
         ],
         "explore.result.name": [
           "1",
           "2",
-          "3"
+          "3",
+          "4",
+          "5"
         ],
         "explore.result.rank": [
           "1",
           "2",
-          "3"
+          "3",
+          "4",
+          "5"
         ],
         "explore.result.sub": [
-          "2"
+          "1",
+          "2",
+          "3"
         ],
         "explore.searchField": [],
         "explore.searchField.glyph": [],
@@ -3980,6 +3992,232 @@
         ]
       }
     },
+    "HistorySearch": {
+      "prefix": "history",
+      "keys": {
+        "history.card": "the author's handle, without @ (PostCard)",
+        "history.profileCard": "the person's handle, without @ (the profile feed card)",
+        "history.tagCard": "the tag's name, without # (the tag feed card)"
+      },
+      "nodes": {
+        "history.bottomBar": [],
+        "history.bottomBar.composeSlot": [],
+        "history.bottomBar.feedSlot": [],
+        "history.bottomBar.profileSlot": [],
+        "history.bottomBar.searchSlot": [],
+        "history.bottomBar.walletSlot": [],
+        "history.card": [
+          "mira"
+        ],
+        "history.card.actionRow": [
+          "mira"
+        ],
+        "history.card.actionRow.comments": [
+          "mira"
+        ],
+        "history.card.actionRow.comments.count": [
+          "mira"
+        ],
+        "history.card.actionRow.score": [
+          "mira"
+        ],
+        "history.card.actionRow.score.value": [
+          "mira"
+        ],
+        "history.card.actionRow.share": [
+          "mira"
+        ],
+        "history.card.actionRow.stance": [
+          "mira"
+        ],
+        "history.card.actionRow.stance.anchor": [
+          "mira"
+        ],
+        "history.card.actionRow.stance.anchor.exact": [
+          "mira"
+        ],
+        "history.card.actionRow.stance.anchor.face": [
+          "mira"
+        ],
+        "history.card.authorChip": [
+          "mira"
+        ],
+        "history.card.authorChip.avatar": [
+          "mira"
+        ],
+        "history.card.authorChip.handle": [
+          "mira"
+        ],
+        "history.card.authorChip.name": [
+          "mira"
+        ],
+        "history.card.body": [
+          "mira"
+        ],
+        "history.card.menu": [
+          "mira"
+        ],
+        "history.card.timestamp": [
+          "mira"
+        ],
+        "history.filterTrigger": [],
+        "history.header": [],
+        "history.header.back": [],
+        "history.header.title": [],
+        "history.profileCard": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.actionRow": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.actionRow.score": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.actionRow.score.value": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.actionRow.share": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.actionRow.stance": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.actionRow.stance.anchor": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.actionRow.stance.anchor.face": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.avatar": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.bio": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.handle": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.menu": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profileCard.name": [
+          "mateo",
+          "mira",
+          "maren"
+        ],
+        "history.profilesDoor": [],
+        "history.profilesLabel": [],
+        "history.searchField": [],
+        "history.searchField.glyph": [],
+        "history.searchField.input": [],
+        "history.tagCard": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.compose": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.score": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.score.value": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.share": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.stance": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.stance.anchor": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.actionRow.stance.anchor.face": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.glimpse": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.glimpse.by": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.glimpse.newest": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.mark": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.name": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.through": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagCard.timestamp": [
+          "moorings",
+          "mudflats",
+          "midsummer"
+        ],
+        "history.tagsDoor": [],
+        "history.tagsLabel": []
+      }
+    },
     "Invites": {
       "prefix": "invites",
       "keys": {
@@ -4583,8 +4821,7 @@
     "ProfileApplicant": {
       "prefix": "profile",
       "keys": {
-        "profile.application": "the application chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
-        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)"
+        "profile.application": "the application chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
       },
       "nodes": {
         "profile.application": [
@@ -4632,33 +4869,8 @@
         "profile.bottomBar.searchSlot": [],
         "profile.bottomBar.walletSlot": [],
         "profile.chronicle": [],
-        "profile.chronicle.act": [
-          "1",
-          "2"
-        ],
-        "profile.chronicle.act.aside": [
-          "2"
-        ],
-        "profile.chronicle.act.disc": [
-          "1",
-          "2"
-        ],
-        "profile.chronicle.act.pending": [
-          "1",
-          "2"
-        ],
-        "profile.chronicle.act.second": [
-          "1"
-        ],
-        "profile.chronicle.act.title": [
-          "1",
-          "2"
-        ],
-        "profile.chronicle.act.trailing": [
-          "1",
-          "2"
-        ],
-        "profile.chronicle.stagedLine": [],
+        "profile.chronicle.empty": [],
+        "profile.chronicle.empty.title": [],
         "profile.identity": [],
         "profile.identity.actionRow": [],
         "profile.identity.actionRow.edit": [],
@@ -5998,6 +6210,148 @@
         "saved.header": [],
         "saved.header.back": [],
         "saved.header.title": [],
+        "saved.searchField": [],
+        "saved.searchField.glyph": [],
+        "saved.searchField.input": []
+      }
+    },
+    "SavedSearch": {
+      "prefix": "saved",
+      "keys": {
+        "saved.card": "the author's handle, without @ (PostCard)",
+        "saved.profileCard": "the person's handle, without @ (the profile feed card)"
+      },
+      "nodes": {
+        "saved.bottomBar": [],
+        "saved.bottomBar.composeSlot": [],
+        "saved.bottomBar.feedSlot": [],
+        "saved.bottomBar.profileSlot": [],
+        "saved.bottomBar.searchSlot": [],
+        "saved.bottomBar.walletSlot": [],
+        "saved.card": [
+          "mira"
+        ],
+        "saved.card.actionRow": [
+          "mira"
+        ],
+        "saved.card.actionRow.comments": [
+          "mira"
+        ],
+        "saved.card.actionRow.comments.count": [
+          "mira"
+        ],
+        "saved.card.actionRow.score": [
+          "mira"
+        ],
+        "saved.card.actionRow.score.value": [
+          "mira"
+        ],
+        "saved.card.actionRow.share": [
+          "mira"
+        ],
+        "saved.card.actionRow.stance": [
+          "mira"
+        ],
+        "saved.card.actionRow.stance.anchor": [
+          "mira"
+        ],
+        "saved.card.actionRow.stance.anchor.exact": [
+          "mira"
+        ],
+        "saved.card.actionRow.stance.anchor.face": [
+          "mira"
+        ],
+        "saved.card.authorChip": [
+          "mira"
+        ],
+        "saved.card.authorChip.avatar": [
+          "mira"
+        ],
+        "saved.card.authorChip.handle": [
+          "mira"
+        ],
+        "saved.card.authorChip.name": [
+          "mira"
+        ],
+        "saved.card.body": [
+          "mira"
+        ],
+        "saved.card.menu": [
+          "mira"
+        ],
+        "saved.card.timestamp": [
+          "mira"
+        ],
+        "saved.header": [],
+        "saved.header.back": [],
+        "saved.header.title": [],
+        "saved.profileCard": [
+          "mira",
+          "maren",
+          "mateo"
+        ],
+        "saved.profileCard.actionRow": [
+          "mira",
+          "maren",
+          "mateo"
+        ],
+        "saved.profileCard.actionRow.score": [
+          "mira",
+          "maren",
+          "mateo"
+        ],
+        "saved.profileCard.actionRow.score.value": [
+          "mira",
+          "maren",
+          "mateo"
+        ],
+        "saved.profileCard.actionRow.share": [
+          "mira",
+          "maren",
+          "mateo"
+        ],
+        "saved.profileCard.actionRow.stance": [
+          "mira",
+          "maren",
+          "mateo"
+        ],
+        "saved.profileCard.actionRow.stance.anchor": [
+          "mira",
+          "maren",
+          "mateo"
+        ],
+        "saved.profileCard.actionRow.stance.anchor.face": [
+          "mira",
+          "maren",
+          "mateo"
+        ],
+        "saved.profileCard.avatar": [
+          "mira",
+          "maren",
+          "mateo"
+        ],
+        "saved.profileCard.bio": [
+          "mira",
+          "maren",
+          "mateo"
+        ],
+        "saved.profileCard.handle": [
+          "mira",
+          "maren",
+          "mateo"
+        ],
+        "saved.profileCard.menu": [
+          "mira",
+          "maren",
+          "mateo"
+        ],
+        "saved.profileCard.name": [
+          "mira",
+          "maren",
+          "mateo"
+        ],
+        "saved.profilesDoor": [],
+        "saved.profilesLabel": [],
         "saved.searchField": [],
         "saved.searchField.glyph": [],
         "saved.searchField.input": []

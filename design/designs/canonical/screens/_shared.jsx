@@ -72,9 +72,12 @@ const {
   WizardHeader,
   PayoutAddress,
   StancePad,
+  AttachmentPad,
   SeveranceConfirm,
   StanceReadout,
-  OwnStanceReadout,
+  AttachmentReadout,
+  AttachmentStanding,
+  AttachmentLandingLine,
   StanceValue,
   StanceSlider,
   StanceStanding,
@@ -1638,11 +1641,14 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <FactRow label="License" value={<LicenseSummary />} action="Change" />
-          {/* One number: what reaches you about your own post is not a choice,
-              so the row states the one value the author set. */}
+          {/* One number: the post's own record is a Publish, whose one free
+              parameter is the author's attachment — their backing; the second
+              is pinned by the census (jakob 2026-10-16, PR-101). It starts at
+              +0.10. Backing is the authoring bundle; the author's opinion is
+              the one the post's face takes once it is out. */}
           <FactRow
-            label="Your opinion"
-            value={<OwnStanceReadout pDirected={0.1} />}
+            label="Your backing"
+            value={<AttachmentReadout pDirected={0.1} />}
             action="Adjust"
           />
           <FactRow label="Sensitive" value="Not marked" action="Mark" last />
@@ -2229,6 +2235,22 @@ function editFootSign({ unchanged, faultHoles }) {
   );
 }
 
+/* THE POST EDIT'S BACKING ROW (jakob 2026-10-16, PR-101). An edit is an
+   ordinary-role Publish toward the post — the family that minted it — so it
+   carries the same one free parameter, the author's backing, and the row
+   reads one number: where the backing stands with the edit. The edit's own
+   record is a pick added to the bundle — 0.00 by default, which changes
+   nothing — so at rest the row reads the backing as it stands, and after a
+   Set on `EditPad` it reads the backing after. The record rides the edit
+   itself, so it adds no act to the batch. It stands under the License row,
+   the seal's order. The fixture's backing is the one the post was published
+   with, the compose default +0.10. */
+const EDIT_BACKING = 0.1;
+
+function EditBackingRow() {
+  return <FactRow label="Your backing" value={<AttachmentReadout pDirected={EDIT_BACKING} />} action="Adjust" />;
+}
+
 function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes } = {}) {
   return (
     <>
@@ -2295,6 +2317,7 @@ function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes
                 </span>
               }
             />
+            <EditBackingRow />
             <FactRow label="Sensitive" value="Not marked" action="Mark" last />
           </div>
         </div>

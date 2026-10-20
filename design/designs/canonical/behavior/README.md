@@ -47,11 +47,7 @@ Where each sidecar's words come from:
   the two refusals of one staged act, the citation that never
   landed and the bug (copy-voice, *Faults by code*); and the ways out
   locked while it signs, the slow line past 5s and the outcome after a
-  kill (readme §13, *The curate rulings*); and an applicant's exit,
-  onto their own feed with the staged-act line, or with the turned-down
-  shell's own line when no application is live (readme §13, *The
-  applicant's life round* and *The applicant fix round*; copy-voice,
-  *The staged-act snackbar*).
+  kill (readme §13, *The curate rulings*).
 - `ReplyEntry.md` — the comments thread (*Comments · the thread*): the
   stage law's hard top, at the thread's own hard top and in thread
   order, in the same words; thread order itself (readme §13,
@@ -198,11 +194,13 @@ And it checks nodes, against `nodes.json`:
 - on a registered screen (`Feed`, `PostDetail` and `ComposeDetails`, the
   calibration screens, `FeedCover`, the feed's clip, and
   `FeedCommentShapes`, a comment card's clip; then the Saved and Hide
-  packets' boards — `Saved`, `SavedEmpty`, `SavedUndo`, `SavedNone`, the three
+  packets' boards — `Saved`, `SavedEmpty`, `SavedUndo`, `SavedNone`,
+  `SavedSearch` (round 14), the three
   profiles and their three menus, `FeedHidden`, `ReaderPostMenu`,
   `Settings` and `SettingsHidden`, and the hide's three other landings,
   `PostDetailHidden`, `ProfileOtherHidden` and `SettingsUnhidden`; then the History and Search packets'
-  boards — `History`, `HistoryEmpty`, `HistoryFilter`, `HistoryNone` and
+  boards — `History`, `HistoryEmpty`, `HistoryFilter`, `HistoryNone`,
+  `HistorySearch` (round 14) and
   the `Explore` boards, `ExplorePerson` among them; then the invites and deletion packets' boards —
   `Invites`, `RejectConfirm`, `RejectAllConfirm`, the four `VouchAsk`
   boards, `ApplicantRejected`, `ProfileApplicant`, the five `DeleteAccount`

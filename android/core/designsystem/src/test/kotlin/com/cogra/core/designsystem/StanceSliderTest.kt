@@ -50,4 +50,32 @@ class StanceSliderTest {
         assertEquals(0.5, reported, 1e-6)
         compose.onNodeWithText("Directed: 0.50").assertExists()
     }
+
+    @Test
+    fun theTrackReportsOnlyHundredths() {
+        // The track is a continuous Float: 0.437f is 0.43700000643… as a
+        // Double. The pick is a hundredth (the value domain, jakob 2026-10-20).
+        var reported = Double.NaN
+        compose.setContent {
+            var value by remember { mutableStateOf(0.1) }
+            StanceSlider(
+                label = "Directed",
+                value = value,
+                onChange = {
+                    value = it
+                    reported = it
+                },
+                testTag = "slider",
+            )
+        }
+        compose.onNodeWithTag("slider").performSemanticsAction(SemanticsActions.SetProgress) {
+            it(0.437f)
+        }
+        assertEquals(0.44, reported, 0.0)
+        compose.onNodeWithTag("slider").performSemanticsAction(SemanticsActions.SetProgress) {
+            it(-0.004f)
+        }
+        assertEquals(0.0, reported, 0.0)
+        assertEquals(Double.POSITIVE_INFINITY, 1.0 / reported, 0.0)
+    }
 }

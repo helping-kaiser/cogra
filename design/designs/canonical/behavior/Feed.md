@@ -99,3 +99,4 @@ WHEN the reader comes back to the feed GIVEN a sheet or a dialog was up over it 
 WHEN the app cold-launches -> the feed's root arrives fresh
 
 WHEN press Android Back GIVEN the feed's root is showing -> the app leaves
+

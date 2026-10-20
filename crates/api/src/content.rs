@@ -441,6 +441,10 @@ pub struct PostEditDraft {
     /// The self-mark the edit leaves standing. Complete state like the
     /// rest: an edit that sends `sensitive: false` unmarks the post.
     pub sensitive: SelfMarkDraft,
+    /// The author's stance pick riding the edit's own record: its
+    /// attachment, `0` (inert) unless the author moved it. `p_i` is
+    /// census-fixed at 1, as on the genesis.
+    pub p_directed: f64,
 }
 
 pub struct CommentDraft {
@@ -839,11 +843,15 @@ async fn stage_references<B: L1Boundary>(
 }
 
 /// Prepares a Post edit: an ordinary-role Publish toward the existing
-/// Content node at attachment 0, chained behind the current head
-/// (post.md §4; substrate.md §9). Eligibility (creator only) and
-/// serialization (one in-flight edit per node and author) are enforced
-/// here — the API refuses to prepare a record its fold would never
-/// read (api-spec.md "Conventions").
+/// Content node at the author's picked attachment — `0`, inert, unless
+/// moved — chained behind the current head (post.md §4; substrate.md
+/// §9). Eligibility (creator only) and serialization (one in-flight edit
+/// per node and author) are enforced here — the API refuses to prepare a
+/// record its fold would never read (api-spec.md "Conventions").
+///
+/// Nothing compares the new state with the standing one: a
+/// content-identical edit whose only change is the pick is a real
+/// version like any other.
 pub async fn prepare_post_edit<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -851,6 +859,8 @@ pub async fn prepare_post_edit<B: L1Boundary>(
     viewer: Uuid,
     draft: PostEditDraft,
 ) -> Result<PreparedContent, ContentError> {
+    let p_d = draft.p_directed;
+    stance_range("pDirected", p_d)?;
     let post = content_store::post(pool, draft.id)
         .await?
         .ok_or(ContentError::NotFound)?;
@@ -895,7 +905,7 @@ pub async fn prepare_post_edit<B: L1Boundary>(
             family: Family::Publish,
             middle: None,
             target: Target::Node(node.target),
-            p_d: 0.0,
+            p_d,
             p_i: 1.0,
             settlement_ref: None,
             license: None,
@@ -1087,7 +1097,10 @@ struct ChainedTarget {
 /// second in-flight edit per (node, author), and assert the current
 /// chain head as the causal parent (substrate.md §9 "Chain root" — the
 /// backend populates the parent and serializes edits, so CoGra's own
-/// clients never author a branch).
+/// clients never author a branch). An earlier edit the author never
+/// signed is superseded rather than serialized behind: it can no longer be
+/// signed, so the chain stays unbranched without it holding the node
+/// until GC.
 ///
 /// The display row exists, so the genesis record landed: a missing chain
 /// head is therefore a diverged mirror — an operational fault, not user
@@ -1099,6 +1112,8 @@ async fn chained_edit_target(
     l1_node_id: &str,
     author: &str,
 ) -> Result<ChainedTarget, ContentError> {
+    let current_epoch = mirror::last_ingested_epoch(pool).await?;
+    staged::supersede_unsigned_targeting(pool, viewer, family, l1_node_id, current_epoch).await?;
     if staged::has_pending_targeting(pool, viewer, family, l1_node_id).await? {
         return Err(ContentError::BadInput {
             field: "id",
@@ -1129,9 +1144,11 @@ async fn parent_node(pool: &PgPool, target: Uuid) -> Result<nodes::ResolvedNode,
 
 /// Pre-commitment materialization (substrate.md §6; architecture.md
 /// "The write path"): from the moment the author signs, a content write's
-/// display rows exist and read to everyone, marked pending. A write that
-/// mints or edits nothing — Registration, Opinion, Attach — has nothing
-/// to materialize and returns quietly.
+/// display rows exist and read to everyone, marked pending. A profile
+/// update — a chained Registration — materializes its version row the
+/// same way ([`crate::profile::stage_pending`]). A write that mints or
+/// edits nothing — the admission Registration, Opinion, Attach — has
+/// nothing to materialize and returns quietly.
 ///
 /// `created_at` is the authoring instant the pre-sign leg recorded — the
 /// caller has it from `record_pre_signed`, so nothing here reloads the
@@ -1157,6 +1174,11 @@ pub async fn stage_pending(
     let family = match body.family {
         Family::Publish => ContentFamily::Post,
         Family::Review => ContentFamily::Comment,
+        Family::Registration => {
+            return crate::profile::stage_pending(pool, write, created_at)
+                .await
+                .map_err(|e| ContentError::Internal(e.to_string()));
+        }
         _ => return Ok(()),
     };
     if write.node_id.is_none() {
@@ -1456,6 +1478,11 @@ pub async fn land_promoted(
 /// substituting `Utc::now()` would stamp the content with its promotion
 /// time and leave no mark that it did.
 ///
+/// The payload is read under the read/ingest admission
+/// ([`CograContent::read_payload`]): a record a newer format wrote lands
+/// with the fields this reader knows, and its carriage keeps the rest
+/// byte-exact.
+///
 /// A write a redaction reaped lands reduced ([`land_reduced`]), and so
 /// does one a redaction reached between the load and the carriage insert:
 /// that redaction already promoted, archived and reduced the carriage, and
@@ -1478,8 +1505,9 @@ async fn land_one(
         .sealed
         .as_ref()
         .ok_or_else(|| ContentError::Internal("landed write without sealed parts".into()))?;
-    let content = CograContent::decode_payload(payload)
-        .map_err(|e| ContentError::Internal(format!("landed payload not admissible: {e}")))?;
+    let content = CograContent::read_payload(payload)
+        .map_err(|e| ContentError::Internal(format!("landed payload not admissible: {e}")))?
+        .fields;
     let meta = mirror::record_meta(pool, &write.act_id)
         .await?
         .ok_or_else(|| ContentError::Internal("promoted record missing from mirror".into()))?;

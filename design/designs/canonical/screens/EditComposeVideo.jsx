@@ -106,6 +106,7 @@ export function Screen() {
                 </span>
               }
             />
+            <EditBackingRow />
             <FactRow label="Sensitive" value="Not marked" action="Mark" last />
           </div>
 

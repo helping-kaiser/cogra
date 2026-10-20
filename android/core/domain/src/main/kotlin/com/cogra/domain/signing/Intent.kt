@@ -29,7 +29,9 @@
 // EXACT, NEVER APPROXIMATE. Parameters compare as numbers with no
 // tolerance: no server default stands in for a value the form did not
 // hold, so a server that rounds has changed the order. The two zeros are
-// one value, as on web, whose JSON cannot carry the sign of zero.
+// one value, as on web, whose JSON cannot carry the sign of zero — and a
+// zero this device authors leaves it as the positive one
+// (core:network's DimensionAdapter).
 //
 // A NETTING BATCH IS CHECKED AS A PROPERTY. Severance and citation
 // withdrawal stage counter-records the server computes from the bundle, so
@@ -161,7 +163,7 @@ data class Expectation(
 ) : Intent
 
 /**
- * The one named exemption: the admission Registration, which the backend
+ * The named exemption: the admission Registration, which the backend
  * stages at approval and the device discovers on its status poll with no
  * form behind it. It still runs every transport check, and it holds only
  * for a Registration.
@@ -169,11 +171,11 @@ data class Expectation(
 data object RegistrationExemption : Intent
 
 /**
- * The carried batch's signing at the landing (WriteSigner.signCarriedAtLanding):
- * no form is held for it there, so it runs the transport checks alone. Internal,
- * so no surface outside this module can choose it.
+ * A released carried write as this device verified it at its prepare: the
+ * proposal's digest, dependencies excluded (Carried.kt). Internal: only the
+ * landing path holds one.
  */
-internal data object TransportOnly : Intent
+internal class CarriedExpectation(val digest: ByteArray) : Intent
 
 /** The device found the batch is not what its user ordered. */
 class IntentMismatchException(message: String) : Exception(message)

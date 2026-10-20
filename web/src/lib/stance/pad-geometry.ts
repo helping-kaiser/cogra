@@ -24,7 +24,7 @@
 // Horizontal is valence, vertical is connection (§8.3). Screen y grows
 // downward and connection grows upward, so the vertical mapping inverts.
 
-import { clampDimension, clampPair, ORIGIN, type StancePair } from "./model";
+import { clampDimension, clampPair, ORIGIN, snapPair, type StancePair } from "./model";
 
 /**
  * The field's corner radius, in pixels — Material's `large` rung, which
@@ -121,13 +121,13 @@ export function padPairFrom(
 }
 
 /**
- * THE SAME TRAVEL RULE WITH ONE AXIS IN IT — the one-axis field an
- * author's opinion on their own post is picked on (`ComposePad.jsx`).
+ * THE SAME TRAVEL RULE WITH ONE AXIS IN IT — the one-axis strip an
+ * author's backing of their own post is picked on (`AttachmentPad`).
  *
- * Half the span the knob's centre can travel, measured across the field
- * rather than on its shorter side: a 260×72 line has no second axis to
- * be limited by, and taking the minimum would scale the whole pick to
- * the field's height.
+ * Half the span the knob's centre can travel, measured across the strip
+ * rather than on its shorter side: a line has no second axis to be
+ * limited by, and taking the minimum would scale the whole pick to the
+ * strip's height.
  */
 export function valenceTravelHalfExtent(rect: PadRect, inset: number): number {
   return Math.max(0, rect.width / 2 - inset);
@@ -190,7 +190,7 @@ export const STANCE_RANGES: PadRanges = {
 
 /**
  * THE TAG FIELD STARTS JUST ABOVE NOTHING (`StanceReadout.jsx`, jakob's ruling
- * 2026-09-11). Relevance 0 is the withdrawal — an un-tag is its own act, never
+ * 2026-09-11). The withdrawal is the un-tag, its own act at (0,0), never
  * the far end of a drag — so the field carries claims only and floors here.
  */
 export const TAG_RELEVANCE_FLOOR = 0.01;
@@ -211,6 +211,16 @@ export function clampToRanges(pair: StancePair, ranges: PadRanges): StancePair {
     pDirected: clampTo(pair.pDirected, ranges.pDirected),
     pInterest: clampTo(pair.pInterest, ranges.pInterest),
   };
+}
+
+/**
+ * The pair a release lands on: the hundredths grid, then the field's reach.
+ * Every range's ends are themselves hundredths, so clamping after the snap
+ * keeps the pair on the grid — a tag's relevance a drag carried to 0.004
+ * lands on its +0.01 floor, never on the withdrawal at 0.
+ */
+export function snapToRanges(pair: StancePair, ranges: PadRanges): StancePair {
+  return clampToRanges(snapPair(pair), ranges);
 }
 
 /** How much one pixel of travel is worth on a slot that spans `range`. */

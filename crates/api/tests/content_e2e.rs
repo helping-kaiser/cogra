@@ -754,6 +754,118 @@ async fn an_omitted_stance_value_refuses_the_whole_request(pool: PgPool) {
     assert_eq!(staged().await, before, "a refused request stages nothing");
 }
 
+/// The first write's `(p_d, p_i)` and act id, decoded from the canonical
+/// proposal the device signs — the values signed are the values read.
+fn signed_pair(writes: &Value) -> ((f64, f64), String) {
+    let proposal = wire::decode_proposal(
+        &B64.decode(writes[0]["canonicalProposal"].as_str().expect("proposal"))
+            .expect("b64"),
+    )
+    .expect("decodes");
+    (
+        (proposal.body.p_d, proposal.body.p_i),
+        proposal.body.act_id().to_string(),
+    )
+}
+
+/// The round-13 edit pick over the wire, through both device signatures.
+/// An edit that sends no pick — every client shipped before round 13 —
+/// signs the inert record it always signed; one that sends a pick signs
+/// it, and a pick-only edit lands as a version the post reads as edited.
+///
+/// An edit with no pick signs the inert record; a sent pick rides the signed record, and a pick-only edit reads as edited.
+/// ´claim:content:an-edit-pick-rides-the-signed-record´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_edit_pick_rides_the_signed_record(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let landed = |act: String| {
+        let pool = rig.pool.clone();
+        async move {
+            let leg = postgres_store::mirror::record_full(&pool, &act)
+                .await
+                .expect("reads record")
+                .expect("record landed")
+                .target()
+                .expect("leg")
+                .clone();
+            (leg.p_d, leg.p_i)
+        }
+    };
+
+    let prepared = rig
+        .gql(
+            Some(&token),
+            PREPARE_POST,
+            json!({ "input": {
+                "title": "Tide",
+                "content": "Low tide at six.",
+                "license": { "attribution": 1.0, "provenance": 0.0 },
+                "pDirected": 0.1,
+            }}),
+        )
+        .await;
+    let post_id = prepared["preparePost"]["node"].as_str().expect("node id");
+    rig.sign_prepared(&token, &key, &prepared["preparePost"]["writes"])
+        .await;
+    rig.close_and_ingest().await;
+
+    let unpicked = rig
+        .gql(
+            Some(&token),
+            PREPARE_POST_EDIT,
+            json!({ "input": {
+                "id": post_id, "title": "Tide", "content": "Low tide at seven.",
+            }}),
+        )
+        .await;
+    let writes = &unpicked["preparePostEdit"]["writes"];
+    let (pair, act) = signed_pair(writes);
+    assert_eq!(pair, (0.0, 1.0), "no pick signs the inert attachment");
+    rig.sign_prepared(&token, &key, writes).await;
+    rig.close_and_ingest().await;
+    assert_eq!(landed(act).await, (0.0, 1.0));
+    let read_post = || async {
+        rig.gql(
+            None,
+            r#"query($id: UUID!) { post(id: $id) {
+                 content { value } updatedAt
+               } }"#,
+            json!({ "id": post_id }),
+        )
+        .await["post"]
+            .clone()
+    };
+    let standing = read_post().await;
+
+    let picked = rig
+        .gql(
+            Some(&token),
+            PREPARE_POST_EDIT,
+            json!({ "input": {
+                "id": post_id, "title": "Tide", "content": "Low tide at seven.",
+                "pDirected": 0.4,
+            }}),
+        )
+        .await;
+    let writes = &picked["preparePostEdit"]["writes"];
+    let (pair, act) = signed_pair(writes);
+    assert_eq!(pair, (0.4, 1.0), "the sent pick is the signed attachment");
+    rig.sign_prepared(&token, &key, writes).await;
+    rig.close_and_ingest().await;
+    assert_eq!(landed(act).await, (0.4, 1.0));
+    let after = read_post().await;
+    assert_eq!(
+        after["content"], standing["content"],
+        "the pick-only edit is content-identical"
+    );
+    assert_ne!(
+        after["updatedAt"], standing["updatedAt"],
+        "and still a real version: the post's edit instant moved to it"
+    );
+}
+
 /// One asset in two posts, described differently in each — the property
 /// the detached model exists for. The description is not the asset's to
 /// hold: it rides the payload envelope and the version's junction row

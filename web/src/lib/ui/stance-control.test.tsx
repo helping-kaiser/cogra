@@ -1267,7 +1267,7 @@ describe("the readout", () => {
     expect(field.compareDocumentPosition(landing) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("says a stance carries nothing where the fold flags the landing inert", async () => {
+  it("reads a one-zero landing as its state under 🤔 (jakob 2026-10-20)", async () => {
     // Raw sums that the default's +0.10 cancels on the first axis exactly.
     mount({ rawSum: () => ({ pDirected: -0.1, pInterest: 0 }), seed: { "post-1": { records: [ORIGIN] } } });
     await settle();
@@ -1276,18 +1276,18 @@ describe("the readout", () => {
     // Valence at zero, connection alive: the axis wording follows.
     moveKnob(0, -HALF);
     expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent(
-      "Where you stand would carry nothing.",
+      "This leaves you at: 🤔 Interested, no side taken — this won't shape anyone's feed.",
     );
   });
 
-  it("says what reaches you would carry nothing where the other axis is inert", async () => {
+  it("reads the other axis's zero by the sign of the number that stands", async () => {
     mount({ rawSum: () => ({ pDirected: 0, pInterest: -0.1 }), seed: { "post-1": { records: [ORIGIN] } } });
     await settle();
     await openPad();
     layOutPad();
     moveKnob(HALF, 0);
     expect(screen.getByTestId(`${PREFIX}-landing`)).toHaveTextContent(
-      "What reaches you would carry nothing.",
+      "This leaves you at: 🤔 For it, no interest either way — this won't shape anyone's feed.",
     );
   });
 
@@ -1415,6 +1415,28 @@ describe("severance", () => {
     await dragToFarCorner();
     expect(screen.getByTestId("severance-confirm")).toBeInTheDocument();
     expect(data.sent).toEqual([]);
+  });
+
+  // THE RELEASE LANDS ON A HUNDREDTH: a drag a hair short of the raw sums'
+  // opposite lands EXACTLY on it, so the pick that reads as netting 0.00 is
+  // the severance the gate asks about — not a float a few thousandths off it
+  // that would sign silently.
+  it("asks about a near-zero landing once the release lands it on the grid", async () => {
+    const data = mount({ seed: { "post-1": { records: [{ pDirected: 0.3, pInterest: 0.3 }] } } });
+    await settle();
+    await openPad();
+    // From the pad's +0.10 / +0.10 to −0.296 / −0.303 under the thumb.
+    await dragAndSet((-0.296 - 0.1) * HALF, (0.303 + 0.1) * HALF);
+    expect(screen.getByTestId("severance-confirm")).toBeInTheDocument();
+    expect(data.sent).toEqual([]);
+  });
+
+  it("lands the released pick on the nearest hundredths", async () => {
+    const data = mount();
+    await settle();
+    await openPad();
+    await dragAndSet((0.4371 - 0.1) * HALF, -(0.2049 - 0.1) * HALF);
+    expect(data.sent).toEqual([{ target: "post-1", pick: { pDirected: 0.44, pInterest: 0.2 } }]);
   });
 
   it("leaves the resting target alone until severance is confirmed", async () => {

@@ -29,7 +29,6 @@ import com.cogra.domain.signing.SentProfile
 import com.cogra.domain.signing.contentExpectation
 import com.cogra.domain.signing.galleryMediaIds
 import com.cogra.domain.signing.known
-import com.cogra.domain.signing.profileExpectation
 import com.cogra.domain.signing.profileUpdate
 import java.security.MessageDigest
 
@@ -149,17 +148,43 @@ private fun guildEnvelope(guild: EnvelopeValue.MapValue): ByteArray =
 const val TEST_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
 /**
- * What a faithful prepare of a profile update stages: the fields exactly as
- * sent, and an avatar whose digests are the ones [fakeUpload] handed out.
+ * What a faithful prepare of a profile update stages: the fields as the
+ * server writes them from the request — every text field arrives present, so
+ * a null is the clear, which the server carries as the empty string (api
+ * `edit_field`) — and an avatar whose digests are the ones [fakeUpload] handed
+ * out. Built from the request by the server's rule rather than through
+ * [profileExpectation], so a view model's expectation is held to the server
+ * and not to itself.
  */
 fun faithfulProfileUpdate(
     profileId: String,
     sent: SentProfile,
 ): Expectation {
-    val ledger = (sent.avatar as? MediaFieldUpdate.Set)
-        ?.let { mapOf(it.mediaId to fakeUpload(it.mediaId).known()) }
-        .orEmpty()
-    return Expectation(listOf(profileUpdate(profileExpectation(profileId, sent, ledger))))
+    val avatar = when (val chosen = sent.avatar) {
+        MediaFieldUpdate.Untouched -> AvatarExpectation.Untouched
+        MediaFieldUpdate.Clear -> AvatarExpectation.Cleared
+        is MediaFieldUpdate.Set -> {
+            val upload = fakeUpload(chosen.mediaId)
+            AvatarExpectation.Replaced(
+                AssetExpectation.Asset(
+                    digest = upload.digest,
+                    mime = upload.mimeType,
+                    altText = null,
+                    cover = null,
+                    coverTaken = false,
+                    uploadDigest = upload.uploadDigest,
+                ),
+            )
+        }
+    }
+    val staged = ExpectedProfile(
+        node = profileId,
+        displayName = sent.displayName,
+        bio = sent.bio.orEmpty(),
+        websiteUrl = sent.websiteUrl.orEmpty(),
+        avatar = avatar,
+    )
+    return Expectation(listOf(profileUpdate(staged)))
 }
 
 /** The payload a faithful prepare stages for [e]. */

@@ -16,6 +16,8 @@
 use sqlx::PgConnection;
 use uuid::Uuid;
 
+use crate::media::MediaArea;
+
 /// The archive's `original_type` for a graph-side redaction of one act.
 pub const ACT_PAYLOAD: &str = "act_payload";
 
@@ -155,6 +157,10 @@ pub async fn units_of(
 /// acts this redaction reduced already read as gone. Calling it again
 /// later — after the display tombstones are written — settles any asset a
 /// display row was still showing.
+///
+/// This marks the hold; the bytes follow after the transaction commits,
+/// into the operator-only area (`media_attachments.area`), once the move
+/// re-checks that no live placement shows the asset by then.
 pub async fn hold_unplaced(
     conn: &mut PgConnection,
     media: &[Uuid],
@@ -178,11 +184,13 @@ pub async fn is_live_placed(conn: &mut PgConnection, media_id: Uuid) -> Result<b
 }
 
 /// An object a hard delete leaves with no reference: its asset row and
-/// the key its bytes sit under.
+/// the key its bytes sit under, and the area that holds them — the
+/// operator store once the hold's move has run, the live store before.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LastReference {
     pub media_id: Uuid,
     pub storage_key: String,
+    pub area: MediaArea,
 }
 
 /// What a manual hard delete of one unit removed.
@@ -228,7 +236,7 @@ pub async fn hard_delete_unit(
         .await?;
     let last_references = sqlx::query_as!(
         LastReference,
-        r#"SELECT m.id AS media_id, m.storage_key
+        r#"SELECT m.id AS media_id, m.storage_key, m.area AS "area: MediaArea"
            FROM media_attachments m
            WHERE m.id = ANY($1)
              AND NOT EXISTS (SELECT 1 FROM retention_archive_media r WHERE r.media_id = m.id)

@@ -8,9 +8,10 @@
 //! raw inserts and no shared helper, so it fails when the code's reading
 //! of the census and the table's own text come apart.
 //!
-//! Every fixture value differs between the two slots, and the withdrawn
-//! bundle sits at `(r, c) = (0, 0.8)`: a transposed read would serve it
-//! as a live claim at relevance 0.8 instead of hiding it.
+//! Every standing claim's value differs between the two slots, the
+//! withdrawn bundle sits at `(r, c) = (0, 0)`, and a survivor sits at
+//! `(0, 0.8)` — a claim, not a withdrawal (hashtag.md §4): a transposed
+//! read would serve it at relevance 0.8 and confidence 0.
 
 use postgres_store::topics::{self, TagChannel, TopicView};
 use sqlx::PgPool;
@@ -83,21 +84,24 @@ async fn land_tag(
 /// - **cryptography** — `r1` and `r2` sit in one epoch at one act_time,
 ///   so only position separates them, and `r7` is the verdict mark:
 ///   `(0, 0)` + payload, newest of everything, and no candidate at all.
-/// - **gardening** — `r4` withdraws at relevance 0 from a later epoch
-///   but a far smaller act_time, so an act_time-first ordering
-///   resurrects the withdrawn `r3`.
+/// - **gardening** — `r4` withdraws at `(0, 0)` from a later epoch but a
+///   far smaller act_time, so an act_time-first ordering resurrects the
+///   withdrawn `r3`.
 /// - **chess** — `r5` is ada's own claim, `r6` a stranger's louder one
 ///   on the same content.
+/// - **baking** — `r8` sits at relevance 0 alone: routing-inert, still a
+///   claim, and its two values are the transposition trap.
 async fn fixture(pool: &PgPool) {
     let crypto = "cryptography";
     let garden = "gardening";
     land_tag(pool, "r1", "ada", crypto, (0.40, 0.90), (3, 100, 0), false).await;
     land_tag(pool, "r2", "ada", crypto, (-0.75, 0.25), (3, 100, 5), false).await;
     land_tag(pool, "r3", "ada", garden, (0.60, 0.30), (2, 500, 9), false).await;
-    land_tag(pool, "r4", "ada", garden, (0.0, 0.80), (5, 1, 0), false).await;
+    land_tag(pool, "r4", "ada", garden, (0.0, 0.0), (5, 1, 0), false).await;
     land_tag(pool, "r5", "ada", "chess", (0.15, 1.00), (4, 7, 2), false).await;
     land_tag(pool, "r6", "bob", "chess", (0.95, 0.50), (6, 9, 1), false).await;
     land_tag(pool, "r7", "ada", crypto, (0.0, 0.0), (7, 900, 0), true).await;
+    land_tag(pool, "r8", "ada", "baking", (0.0, 0.80), (5, 2, 0), false).await;
 }
 
 /// The fold, computed by hand from the fixture and asserted against the
@@ -106,9 +110,9 @@ async fn fixture(pool: &PgPool) {
 /// `topics_of(post, ada)`: cryptography's candidates are `r1` and `r2`,
 /// and `r2` wins on position — relevance −0.75, so the claim stands;
 /// gardening's are `r3` and `r4`, and `r4` wins because epoch is the
-/// outermost key — relevance 0, so the bundle is hidden; chess has only
-/// `r5`, bob's `r6` belonging to another bundle. Ordered by target, that
-/// is chess then cryptography.
+/// outermost key — `(0, 0)`, so the bundle is hidden; chess has only
+/// `r5`, bob's `r6` belonging to another bundle; baking's `r8` stands at
+/// `(0, 0.8)`. Ordered by target, that is baking, chess, cryptography.
 ///
 /// `tagged_with(chess)`: the middle names its genesis act, so the
 /// content's author is `ada` — the author-owned channel admits `r5`
@@ -152,6 +156,7 @@ async fn hand_computed_fold_agrees(pool: PgPool) {
     assert_eq!(
         got,
         vec![
+            ("baking", 0.0, 0.80, false),
             ("chess", 0.15, 1.00, false),
             ("cryptography", -0.75, 0.25, false),
         ],

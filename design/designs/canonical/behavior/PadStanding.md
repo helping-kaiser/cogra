@@ -2,6 +2,12 @@
 
 WHEN tap a stance face GIVEN the reader already has an opinion standing on the target -> the pad blooms at the lower centre of the viewport AND NEVER anything is staged
 
+WHEN tap the stance face on the reader's own post -> this pad blooms, as on anyone's post, and Set signs an ordinary opinion on it AND NEVER the post's own one-axis pad opens
+
+ALWAYS Current opinion on the reader's own post reads the opinions given through its face alone, a bundle of their own that the post's own records never join
+
+ALWAYS Walk it back and the severance confirm hold on the reader's own post exactly as on any target
+
 ALWAYS the pad opens with the pick at the default +0.10 / +0.10, the hold's own pick, wherever it blooms
 
 WHEN tap Set GIVEN the pick was never moved -> the default +0.10 / +0.10 is signed, as the hold signs it
@@ -43,6 +49,12 @@ WHEN the signing has not answered 200ms after Set -> Set reads Setting… AND NE
 WHEN the signing answers within 200ms of Set -> NEVER Set reads Setting…
 
 WHEN the signing is taken -> the pad closes back where it bloomed AND the face on the target moves to the new opinion AND the snackbar reads Signed, still settling. with the current opinion's face and pair
+
+ALWAYS the landing line reads Resulting opinion over 🤔 and the state, as Interested, no side taken — this won't shape anyone's feed., GIVEN the pick lands one number at zero
+
+WHEN tap the landing's 🤔 -> its three lines replace the pad's body in place, Back to the pad under them AND Set is disabled while they show AND NEVER a dialog opens AND NEVER anything is staged
+
+WHEN tap Set GIVEN the pick lands one number at zero -> the opinion is signed like any other AND NEVER the dialog Walk it all back? opens
 
 WHEN tap Set GIVEN the pick nets the standing bundle to (0, 0) -> the dialog Walk it all back? opens over the pad, which stays parked beneath it, with the pick line and its cost of 1 thing AND NEVER the pick is refused
 

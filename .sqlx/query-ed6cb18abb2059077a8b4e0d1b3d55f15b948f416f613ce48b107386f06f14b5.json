@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE staged_writes\n         SET state = 'expired', expired_epoch = $4, updated_at = NOW()\n         WHERE actor_id = $1 AND family = $2 AND target = $3\n           AND state = 'awaiting_pre_sign' AND NOT carried\n           AND cardinality(asserted_parents) > 0\n         RETURNING node_id, pre_signed_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "node_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "pre_signed_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "ed6cb18abb2059077a8b4e0d1b3d55f15b948f416f613ce48b107386f06f14b5"
+}

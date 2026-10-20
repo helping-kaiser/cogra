@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CROP_ZOOM_MIN","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_MAX","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_PAN_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropZoom","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"GlyphAction","sourcePath":"components/content/GlyphAction.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FIELD_KINDS","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"DetailClip","sourcePath":"components/media/DetailClip.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelPlate","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailScore","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE_SIGN","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedPeopleRows","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterFoot","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"OwnStanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SETTLE_MS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"fc4b6cba1d23","components/compose/ActsFooter.jsx":"e61cf3a09d3b","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"0ced0eb13a97","components/compose/CropViewport.jsx":"7a44b02ca249","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"eab3571676b8","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"361803c98f90","components/compose/PickedSheet.jsx":"ae8d93d994e5","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"92f8711c1dd7","components/compose/StagedReference.jsx":"6114a0d46969","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"472ce41c6d6e","components/compose/UploadNotice.jsx":"183be9f6882c","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"6aa8be5f1614","components/content/CommentCard.jsx":"c9e7874a5611","components/content/GlyphAction.jsx":"2c79fecadaa8","components/content/OverflowMenu.jsx":"03398f19f306","components/content/PostCard.jsx":"eca45be19076","components/content/ReferenceRow.jsx":"67b6f834803b","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"b7532ea9da3f","components/content/TopicsLine.jsx":"808a7ff4dd2d","components/core/BottomSheet.jsx":"fb331d05687d","components/core/Button.jsx":"c1639e977d88","components/core/Card.jsx":"aad4dcc1a89a","components/core/Chip.jsx":"bc8d42f30ec4","components/core/ContentRow.jsx":"ef5f339d3165","components/core/FactRow.jsx":"e7e899b33d57","components/core/HelpDot.jsx":"0cc2d5d3fcaf","components/core/JoinPrompt.jsx":"4aff76ab6646","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6a5b54419cab","components/core/QuotedRow.jsx":"37e6dc79dbbb","components/core/SectionLabel.jsx":"596e97d7ab5d","components/core/SettingsRow.jsx":"e4c5a20b69d2","components/core/Snackbar.jsx":"c36839b728ef","components/forms/Checkbox.jsx":"058742547c9f","components/forms/LicenseChooser.jsx":"ca6f54717d44","components/forms/PasswordField.jsx":"caaf3deb600d","components/forms/RecoveryCode.jsx":"807de4c04d05","components/forms/SearchBar.jsx":"ef9a9dc56c68","components/forms/TextField.jsx":"95a0bb442204","components/honesty/NoticePanel.jsx":"08b3077f436b","components/honesty/PendingMarker.jsx":"6d2b95913097","components/honesty/SensitiveVeil.jsx":"c17f9bf67cd8","components/honesty/TransportError.jsx":"20877c1cbcac","components/media/DetailClip.jsx":"604997e28cad","components/media/MediaAttachment.jsx":"4e954bd8dc14","components/media/MediaViewer.jsx":"2872a69c9ca5","components/media/ReelCaption.jsx":"5a78543cef0e","components/media/ReelRail.jsx":"ea1d8eb6e4a2","components/media/VideoControls.jsx":"e112d1eb1f77","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"403adfe920e8","components/navigation/BottomNav.jsx":"db76ec946974","components/navigation/CograBand.jsx":"def628da34f1","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"a343fb0a5638","components/navigation/FeedFilter.jsx":"1119ebc2ed05","components/navigation/Icon.jsx":"d3d56ec1f2af","components/navigation/OrderSection.jsx":"22433a18dd55","components/navigation/PageHeader.jsx":"ff3ad7040d89","components/navigation/SegmentedFilter.jsx":"2ed79a7fda3f","components/navigation/TabBar.jsx":"d7fcc2d71e96","components/people/ActorChip.jsx":"a5e5d0daba90","components/people/ProfileHeader.jsx":"e96d65ecd2fb","components/people/StanceRow.jsx":"986b390b9cf2","components/proposed/ExplainableNumber.jsx":"851eaf2760cf","components/stance/SeveranceConfirm.jsx":"a29f96f129c8","components/stance/StanceAlternates.jsx":"e04039276e76","components/stance/StanceControl.jsx":"fd6ed12d7037","components/stance/StancePad.jsx":"0ef1d22bad01","components/stance/StanceReadout.jsx":"42e05bec6945","components/stance/StanceSlider.jsx":"b7e1d2f10fc6","components/states/ComingSoonCard.jsx":"ea42604133b3","components/states/EmptyState.jsx":"5677af403ef2","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"eac455a8e445","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"9e7da75bfa8d","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"licenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"triggerName","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"useModalFocus","sourcePath":"components/core/BottomSheet.jsx"},{"name":"useSettled","sourcePath":"components/stance/StanceReadout.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CROP_ZOOM_MIN","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_MAX","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_PAN_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropZoom","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"GlyphAction","sourcePath":"components/content/GlyphAction.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FIELD_KINDS","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"DetailClip","sourcePath":"components/media/DetailClip.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelPlate","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailScore","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_PEOPLE_SIGN","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedPeopleRows","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterFoot","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"ATTACHMENT_FIELD_HEIGHT_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AttachmentPad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"UNREACHABLE_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SETTLE_MS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"CURRENT_BACKING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BACKING_AFTER_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"AttachmentLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"BORROWED_KEPT_LINE","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"fc4b6cba1d23","components/compose/ActsFooter.jsx":"e61cf3a09d3b","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"0ced0eb13a97","components/compose/CropViewport.jsx":"7a44b02ca249","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"eab3571676b8","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"361803c98f90","components/compose/PickedSheet.jsx":"ae8d93d994e5","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"92f8711c1dd7","components/compose/StagedReference.jsx":"6114a0d46969","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"472ce41c6d6e","components/compose/UploadNotice.jsx":"183be9f6882c","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"6aa8be5f1614","components/content/CommentCard.jsx":"c9e7874a5611","components/content/GlyphAction.jsx":"2c79fecadaa8","components/content/OverflowMenu.jsx":"03398f19f306","components/content/PostCard.jsx":"8a4a8ebc914f","components/content/ReferenceRow.jsx":"67b6f834803b","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"b7532ea9da3f","components/content/TopicsLine.jsx":"808a7ff4dd2d","components/core/BottomSheet.jsx":"fb331d05687d","components/core/Button.jsx":"c1639e977d88","components/core/Card.jsx":"aad4dcc1a89a","components/core/Chip.jsx":"bc8d42f30ec4","components/core/ContentRow.jsx":"ef5f339d3165","components/core/FactRow.jsx":"e7e899b33d57","components/core/HelpDot.jsx":"0cc2d5d3fcaf","components/core/JoinPrompt.jsx":"4aff76ab6646","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6a5b54419cab","components/core/QuotedRow.jsx":"37e6dc79dbbb","components/core/SectionLabel.jsx":"596e97d7ab5d","components/core/SettingsRow.jsx":"e4c5a20b69d2","components/core/Snackbar.jsx":"c36839b728ef","components/forms/Checkbox.jsx":"058742547c9f","components/forms/LicenseChooser.jsx":"ca6f54717d44","components/forms/PasswordField.jsx":"caaf3deb600d","components/forms/RecoveryCode.jsx":"807de4c04d05","components/forms/SearchBar.jsx":"ef9a9dc56c68","components/forms/TextField.jsx":"95a0bb442204","components/honesty/NoticePanel.jsx":"08b3077f436b","components/honesty/PendingMarker.jsx":"6d2b95913097","components/honesty/SensitiveVeil.jsx":"c17f9bf67cd8","components/honesty/TransportError.jsx":"20877c1cbcac","components/media/DetailClip.jsx":"604997e28cad","components/media/MediaAttachment.jsx":"4e954bd8dc14","components/media/MediaViewer.jsx":"2872a69c9ca5","components/media/ReelCaption.jsx":"5a78543cef0e","components/media/ReelRail.jsx":"ea1d8eb6e4a2","components/media/VideoControls.jsx":"e112d1eb1f77","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"403adfe920e8","components/navigation/BottomNav.jsx":"f78daac8f6e5","components/navigation/CograBand.jsx":"def628da34f1","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"a343fb0a5638","components/navigation/FeedFilter.jsx":"1119ebc2ed05","components/navigation/Icon.jsx":"d3d56ec1f2af","components/navigation/OrderSection.jsx":"22433a18dd55","components/navigation/PageHeader.jsx":"ff3ad7040d89","components/navigation/SegmentedFilter.jsx":"2ed79a7fda3f","components/navigation/TabBar.jsx":"d7fcc2d71e96","components/people/ActorChip.jsx":"a5e5d0daba90","components/people/ProfileHeader.jsx":"e96d65ecd2fb","components/people/StanceRow.jsx":"986b390b9cf2","components/proposed/ExplainableNumber.jsx":"851eaf2760cf","components/stance/SeveranceConfirm.jsx":"a29f96f129c8","components/stance/StanceAlternates.jsx":"c6d5e6c48cf6","components/stance/StanceControl.jsx":"82c880ab71a8","components/stance/StancePad.jsx":"1935c44fb16d","components/stance/StanceReadout.jsx":"67cdf32c29a9","components/stance/StanceSlider.jsx":"b7e1d2f10fc6","components/states/ComingSoonCard.jsx":"ea42604133b3","components/states/EmptyState.jsx":"5677af403ef2","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"eac455a8e445","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"9e7da75bfa8d","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"attachmentLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"attachmentPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"licenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"triggerName","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"unreachableHead","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"unreachableHelp","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"useModalFocus","sourcePath":"components/core/BottomSheet.jsx"},{"name":"useSettled","sourcePath":"components/stance/StanceReadout.jsx"}]} */
 
 (() => {
 
@@ -429,6 +429,12 @@ function severanceWords(names) {
 }
 /** What a bundle at exactly (0, 0) reads as. */
 const ZERO_BUNDLE_EMOJI = "🤷";
+/* ONE NUMBER AT ZERO THINKS; BOTH AT ZERO SHRUG (jakob 2026-10-20: "shrug
+   should be the 0,0 only"). A state with exactly one number at zero —
+   interested, no side taken, and its siblings; the one-axis 0.00, which is
+   `(0, 1)` with the pin — wears 🤔, outside both tables like 🤷 and 🫥, so
+   the held, unreachable state never reads as severance's face. */
+const UNREACHABLE_EMOJI = "🤔";
 /** The face an unauthored target wears at rest — the dotted-line face, deliberately
     outside the table so an empty control cannot read as an opinion already given. */
 const RESTING_FACE_EMOJI = "🫥";
@@ -547,10 +553,12 @@ const STANCE_ANCHORS = [{
   label: "Absolutely not"
 }];
 
-/* THE ONE-AXIS TABLE (jakob's ruling, 2026-09-14). A pick on one's own post
-   names a valence and nothing else — a post always reaches its author in full,
-   so `pInterest` is not a thing to choose — and `nearestAnchor` cannot answer
-   for a value that names no pair. These six are the twenty's pure-valence
+/* THE ONE-AXIS TABLE (jakob's ruling, 2026-09-14). It answers for a value
+   that names no pair, which `nearestAnchor` cannot: the backing an author
+   signs with their own content (`AttachmentReadout`). The authoring families
+   are census-pinned to one free parameter — Publish and Owner carry `p_d = a`
+   with `p_i = 1`, never a choice (jakob 2026-10-16, PR-101) — so the pick is
+   one number and its face reads here. These six are the twenty's pure-valence
    spine, the mild, middle and far face on each side, at ±0.15, ±0.55 and
    ±0.90. Glyph, word and position are READ from `STANCE_ANCHORS`, so the six
    are six OF the twenty and cannot drift from them.
@@ -565,14 +573,13 @@ const STANCE_ANCHORS = [{
    EACH ROW OWNS THE AXIS UP TO ITS `to`, and `toInclusive` says whether the
    edge itself belongs to it. Away from the edges this is the nearest anchor by
    distance; the asymmetry in `toInclusive` is where the two ruled tie-breaks
-   live, and it is the same rule stated twice:
-     · AT A MIDPOINT THE MILDER FACE WINS — the one nearer zero. On the
-       negative side that is the band above, so a negative row stops short of
-       its edge; on the positive side it is the band below, so a positive row
-       keeps it.
-     · EXACTLY 0.00 READS 🙂 — the 😕 row stops short of zero, so zero falls
-       into the first band above it.
-   Six monotone bands covering the closed axis, and the same face everywhere. */
+   live: AT A MIDPOINT THE MILDER FACE WINS — the one nearer zero. On the
+   negative side that is the band above, so a negative row stops short of its
+   edge; on the positive side it is the band below, so a positive row keeps
+   it. The 😕 row stops short of zero and the 🙂 row would take it, but
+   `nearestValenceAnchor` answers exactly 0.00 before the table is read: it
+   wears 🤔 (jakob 2026-10-20), the one-zero face. Six monotone bands covering the
+   closed axis, and the same face everywhere. */
 const VALENCE_SIX = [{
   emoji: "😠",
   to: -0.725,
@@ -742,12 +749,26 @@ function nearestTagAnchor(pair) {
   return best;
 }
 
-/** The face a ONE-AXIS pick wears — the first `VALENCE_SIX` band the value
- *  falls inside. The bands cover the closed axis, so every value has exactly
- *  one; out of range is clamped in rather than refused, the way the pad
- *  clamps. */
+/* EXACTLY 0.00 THINKS on the one axis (jakob 2026-10-16, its face 🤔 since
+   2026-10-20): a backing of zero takes no side — with the second number
+   pinned at 1 it folds to `(0, 1)`, unreachable on its own path — so it
+   wears the one-zero face, never a band's smile. Only the exact value — the
+   bands keep the rest of the axis as ruled. */
+const ZERO_BACKING_LABEL = "No side taken";
+
+/** The face a ONE-AXIS pick wears — 🤔 at exactly 0.00, otherwise the first
+ *  `VALENCE_SIX` band the value falls inside. The bands cover the closed axis,
+ *  so every value has exactly one; out of range is clamped in rather than
+ *  refused, the way the pad clamps. */
 function nearestValenceAnchor(pDirected) {
   const value = clampDimension(pDirected);
+  if (value === 0) return {
+    emoji: UNREACHABLE_EMOJI,
+    label: ZERO_BACKING_LABEL,
+    pDirected: 0,
+    to: 0,
+    toInclusive: true
+  };
   for (const band of VALENCE_SIX) {
     if (value < band.to || band.toInclusive && value === band.to) return band;
   }
@@ -936,19 +957,32 @@ function readoutWords(names) {
     anchorWord: !(names && names.anchorWord === false)
   };
 }
+
+/* ONE ZERO IS A DELIBERATE STATE, NOT A LOSS (jakob 2026-10-20, seam 240).
+   A landing with exactly one number at zero — `(0, x)` or `(y, 0)` — is a
+   stance someone can mean: interested, no side taken; or a side taken with
+   nothing asked of what reaches them. The fold gives it `w̃ = 0`, so it shapes
+   no feed — the docs call it UNREACHABLE — but it is held, and it is not
+   severance: only `(0, 0)` is, and that keeps its own named, confirmed act and
+   its own line (`severanceWords(names).landing`).
+
+   So the landing reads the state, wearing the one-zero face 🤔 — the one-axis
+   pads' face for exactly 0.00, the same fact at two axes — and says once what
+   it costs. The sign of the other number decides the words: "interested" is
+   false of a pick that keeps the thing away. The head names the state; the
+   tail is the one consequence worth saying. */
+const UNREACHABLE_TAIL = "this won't shape anyone's feed.";
+function unreachableHead(pair) {
+  if (pair.pDirected === 0) return pair.pInterest > 0 ? "Interested, no side taken" : "Rather not see it, no side taken";
+  return pair.pDirected > 0 ? "For it, no interest either way" : "Against it, no interest either way";
+}
 function landingLine(landing, names = STANCE_AXIS_NAMES) {
   if (landing === null || landing === undefined) return "Adding it up…";
   if (landing.severed) return severanceWords(names).landing;
   const {
     resulting
   } = readoutWords(names);
-  if (landing.inert) {
-    const directedInert = landing.landing.pDirected === 0;
-    const interestInert = landing.landing.pInterest === 0;
-    if (directedInert && interestInert) return `${resulting}: carries nothing.`;
-    if (directedInert) return `${resulting}: your side of it carries nothing.`;
-    if (interestInert) return `${resulting}: what reaches you carries nothing.`;
-  }
+  if (landing.inert) return `${resulting} ${UNREACHABLE_EMOJI} ${unreachableHead(landing.landing)} — ${UNREACHABLE_TAIL}`;
   const readout = bundleReadout(landing.landing);
   return `${resulting} ${readout.emoji} ${formatStancePair(landing.landing)}`;
 }
@@ -1027,13 +1061,16 @@ function StanceReadout({
   });
 }
 
-/* AN OPINION ON ONE'S OWN POST IS ONE NUMBER (jakob's ruling, 2026-09-14:
-   "the second number isn't yours to set on your own post"). A post always
-   reaches its author in full, so `pInterest` is not a value the author picks
-   and a pair would draw a second figure nobody chose. The face comes from
-   `VALENCE_SIX`, the table built for exactly this reading, and the spoken twin
-   names the one axis there is. */
-function OwnStanceReadout({
+/* THE BACKING AN AUTHOR SIGNS WITH THEIR OWN CONTENT IS ONE NUMBER (jakob
+   2026-10-16, PR-101). Publish — Owner for a listing, Send for a message — is
+   a single-parameter family: `p_d` is the author's attachment, their
+   BACKING, and `p_i` is pinned at 1 by the census, so a pair would draw a
+   second figure nobody can choose. The face comes from `VALENCE_SIX` (🤔 at
+   exactly 0.00), and the spoken twin names the one axis there is. The
+   author's OPINION on their own content is a different record — an ordinary
+   Opinion through the content's face, read by `StanceReadout` like any
+   other. Backing is the authoring bundle; opinion is the face's. */
+function AttachmentReadout({
   pDirected,
   style
 }) {
@@ -1074,11 +1111,21 @@ function landingParts(landing, names = STANCE_AXIS_NAMES) {
   if (landing === null || landing === undefined) return {
     sentence: "Adding it up…"
   };
-  if (landing.severed || landing.inert) return {
+  if (landing.severed) return {
     sentence: landingLine(landing, names)
   };
-  const readout = bundleReadout(landing.landing, severanceWords(names).zero);
   const words = readoutWords(names);
+  if (landing.inert) {
+    const head = unreachableHead(landing.landing);
+    return {
+      label: words.resulting,
+      emoji: UNREACHABLE_EMOJI,
+      head,
+      words: `${head} — ${UNREACHABLE_TAIL}`,
+      spoken: `${words.resulting}: ${head} — ${UNREACHABLE_TAIL}`
+    };
+  }
+  const readout = bundleReadout(landing.landing, severanceWords(names).zero);
   return {
     label: words.resulting,
     emoji: readout.emoji,
@@ -1118,6 +1165,10 @@ function ReadoutBlock({
   pair,
   spoken,
   sentence,
+  words,
+  head,
+  onExplainZero,
+  zeroShown = false,
   big = false,
   style,
   onOpenHistory,
@@ -1182,7 +1233,52 @@ function ReadoutBlock({
     "aria-hidden": "true",
     style: labelInk,
     "data-node": node && "label"
-  }, label), /*#__PURE__*/React.createElement("span", {
+  }, label), words !== undefined ?
+  /*#__PURE__*/
+  /* THE UNREACHABLE LANDING: the zero face and the state in words, where
+     the pair would stand. Handed `onExplainZero`, the face is a door —
+     its explanation replaces the pad's body in place, the "?"'s
+     grammar — named by the state it explains. */
+  React.createElement("span", {
+    style: {
+      display: "flex",
+      alignItems: "baseline",
+      gap: "var(--space-2)"
+    }
+  }, onExplainZero ? /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": head,
+    "aria-expanded": zeroShown,
+    onClick: onExplainZero,
+    className: "cg-state cg-focus cg-hit",
+    style: {
+      flex: "none",
+      background: "none",
+      border: 0,
+      padding: 0,
+      cursor: "pointer",
+      fontSize: "var(--text-title-medium)",
+      lineHeight: 1.2
+    },
+    "data-node": node && "zero"
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true"
+  }, emoji)) : /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      flex: "none",
+      fontSize: "var(--text-title-medium)",
+      lineHeight: 1.2
+    },
+    "data-node": node && "face"
+  }, emoji), /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      fontSize: "var(--text-body-small)",
+      color: "var(--text-secondary)"
+    },
+    "data-node": node && "words"
+  }, words)) : /*#__PURE__*/React.createElement("span", {
     "aria-hidden": "true",
     style: {
       display: "inline-flex",
@@ -1244,20 +1340,136 @@ function StanceStanding({
   }));
 }
 
-/** The landing — the one readout that sits below the field. Given a `node`,
- *  the readout itself carries it; the live region around it stays unnamed. */
-function StanceLandingLine({
-  landing,
-  names = STANCE_AXIS_NAMES,
+/* THE ONE-AXIS PAD'S READOUTS (jakob 2026-10-16, PR-101): the stance pad's
+   grammar, one number each. The pick IS the record — the pad never works in
+   results — so the readouts say what is newly set and what it comes to. The
+   compose pad has nothing standing, so its pick is its result and `Your pick`
+   reads alone. An edit's pad reads `Current backing` (the bundle's net now)
+   over `Your pick`, and `Backing after` beneath the field
+   (`AttachmentLandingLine`). Faces read through `VALENCE_SIX`, 🤔 at exactly
+   0.00. Given a `node`, the blocks are its `current` and `pick`. */
+const CURRENT_BACKING_LABEL = "Current backing";
+const BACKING_AFTER_LABEL = "Backing after";
+function backingBlock(label, value) {
+  const band = nearestValenceAnchor(value);
+  const exact = formatDimension(value);
+  return {
+    label,
+    emoji: band.emoji,
+    pair: exact,
+    spoken: `${label}: ${band.label}, ${DIRECTED_LABEL} ${exact}`
+  };
+}
+function AttachmentStanding({
+  pick,
+  current,
   style,
   node
 }) {
   return /*#__PURE__*/React.createElement("div", {
     "aria-live": "polite",
-    style: style
-  }, /*#__PURE__*/React.createElement(ReadoutBlock, _extends({}, landingParts(landing, names), {
-    node: node
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: "var(--space-2)",
+      ...style
+    },
+    "data-node": node
+  }, current !== undefined && /*#__PURE__*/React.createElement(ReadoutBlock, _extends({}, backingBlock(CURRENT_BACKING_LABEL, current), {
+    node: node && "current"
+  })), /*#__PURE__*/React.createElement(ReadoutBlock, _extends({
+    big: true
+  }, backingBlock(PICK_LABEL, pick), {
+    node: node && "pick"
   })));
+}
+
+/* WHERE THE PICK LANDS THE BACKING — beneath an edit's strip. The fold is the
+   stance pad's: `clip` of the RAW SUM plus the pick, so a bundle that has
+   summed past ±1 lands where the graph will put it, not where the clipped
+   net suggests. And clipped is not hidden (*Two numbers, never one*): when
+   the sum passes the cap, a quiet line says the total and the cap. */
+function attachmentLanding(rawSum, pick) {
+  const raw = rawSum + pick;
+  return {
+    raw,
+    landing: clampDimension(raw),
+    capped: raw > DIMENSION_MAX || raw < DIMENSION_MIN
+  };
+}
+function AttachmentLandingLine({
+  rawSum,
+  pick,
+  style,
+  node
+}) {
+  const {
+    raw,
+    landing,
+    capped
+  } = attachmentLanding(rawSum, pick);
+  return /*#__PURE__*/React.createElement("div", {
+    "aria-live": "polite",
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: "var(--space-1)",
+      ...style
+    }
+  }, /*#__PURE__*/React.createElement(ReadoutBlock, _extends({}, backingBlock(BACKING_AFTER_LABEL, landing), {
+    node: node
+  })), capped && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: "var(--text-body-small)",
+      color: "var(--text-secondary)"
+    },
+    "data-node": node && "cap"
+  }, `Adds up to ${formatDimension(raw)}; your feed reads it capped at ${formatDimension(landing)}.`));
+}
+
+/* THE BORROWED VIEW HOLDS UNTIL AN OPINION IS LIVE (jakob 2026-10-20, seam
+   240). A member walks a borrowed view until they hold one outgoing opinion
+   with neither number at zero, so a first pick that lands unreachable — or at
+   nothing — starts no feed of their own. The host says whether the reader
+   still borrows (`borrowed`); the line warns, and never blocks. */
+const BORROWED_KEPT_LINE = "You'd keep your borrowed view — no feed of your own yet.";
+
+/** The landing — the one readout that sits below the field. Given a `node`,
+ *  the readout itself carries it; the live region around it stays unnamed.
+ *  `onExplainZero` makes an unreachable landing's 🤔 the door to its
+ *  explanation; `borrowed` adds the borrowed-view line under an unreachable
+ *  or severed landing. */
+function StanceLandingLine({
+  landing,
+  names = STANCE_AXIS_NAMES,
+  onExplainZero,
+  zeroShown = false,
+  borrowed = false,
+  style,
+  node
+}) {
+  const keepsBorrowed = borrowed && landing !== null && landing !== undefined && (landing.inert || landing.severed);
+  return /*#__PURE__*/React.createElement("div", {
+    "aria-live": "polite",
+    style: keepsBorrowed ? {
+      display: "flex",
+      flexDirection: "column",
+      gap: "var(--space-1)",
+      ...style
+    } : style
+  }, /*#__PURE__*/React.createElement(ReadoutBlock, _extends({}, landingParts(landing, names), {
+    onExplainZero: onExplainZero,
+    zeroShown: zeroShown,
+    node: node
+  })), keepsBorrowed && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: "var(--text-body-small)",
+      color: "var(--text-secondary)"
+    },
+    "data-node": node && "borrowed"
+  }, BORROWED_KEPT_LINE));
 }
 
 /* THE PAD'S HELP — what its `?` opens, and the alternates' twin. The words
@@ -1324,6 +1536,17 @@ function padHelp(names) {
 function alternatesHelp(names) {
   return [...STANCE_ALTERNATES_HELP.slice(0, 3), severanceWords(names).helpAlternates];
 }
+
+/* WHAT THE 🤔 OPENS ON AN UNREACHABLE LANDING (jakob 2026-10-20, seam 240) —
+   in place, the "?"'s grammar: the lines replace the pad's body, `Back to the
+   pad` returns, and Set waits while they show. Three facts, in the order a
+   reader doubts them: the opinion is still held (a person stays under `Your
+   people` — `FeedSheet`'s set, whichever way the opinion points); nothing
+   passes through it; and it is not the family's way out, which is an act of
+   its own. The target is the pad's, and the way out is the family's word. */
+function unreachableHelp(names, targetLabel) {
+  return [targetLabel.startsWith("@") ? `It still counts among your opinions — ${targetLabel} stays under Your people.` : "It still counts among your opinions.", "It shapes no one's feed, earns nothing, and nothing passes on through you.", `${severanceWords(names).control} is different: its own act, confirmed and paid for, that leaves a clean slate.`];
+}
 __ds_scope.DIMENSION_MIN = DIMENSION_MIN;
 __ds_scope.DIMENSION_MAX = DIMENSION_MAX;
 __ds_scope.ORIGIN = ORIGIN;
@@ -1343,6 +1566,7 @@ __ds_scope.NO_STANDING_LABEL = NO_STANDING_LABEL;
 __ds_scope.STANCE_SEVERANCE_WORDS = STANCE_SEVERANCE_WORDS;
 __ds_scope.severanceWords = severanceWords;
 __ds_scope.ZERO_BUNDLE_EMOJI = ZERO_BUNDLE_EMOJI;
+__ds_scope.UNREACHABLE_EMOJI = UNREACHABLE_EMOJI;
 __ds_scope.RESTING_FACE_EMOJI = RESTING_FACE_EMOJI;
 __ds_scope.SR_ONLY = SR_ONLY;
 __ds_scope.STANCE_ANCHORS = STANCE_ANCHORS;
@@ -1352,6 +1576,7 @@ __ds_scope.clampDimension = clampDimension;
 __ds_scope.clampPair = clampPair;
 __ds_scope.nearestAnchor = nearestAnchor;
 __ds_scope.nearestTagAnchor = nearestTagAnchor;
+__ds_scope.ZERO_BACKING_LABEL = ZERO_BACKING_LABEL;
 __ds_scope.nearestValenceAnchor = nearestValenceAnchor;
 __ds_scope.bundleReadout = bundleReadout;
 __ds_scope.StanceValue = StanceValue;
@@ -1363,15 +1588,23 @@ __ds_scope.formatStanceWords = formatStanceWords;
 __ds_scope.localLanding = localLanding;
 __ds_scope.standingLine = standingLine;
 __ds_scope.severanceParts = severanceParts;
+__ds_scope.UNREACHABLE_TAIL = UNREACHABLE_TAIL;
+__ds_scope.unreachableHead = unreachableHead;
 __ds_scope.landingLine = landingLine;
 __ds_scope.signedLine = signedLine;
 __ds_scope.StanceReadout = StanceReadout;
-__ds_scope.OwnStanceReadout = OwnStanceReadout;
+__ds_scope.AttachmentReadout = AttachmentReadout;
 __ds_scope.standingParts = standingParts;
 __ds_scope.landingParts = landingParts;
 __ds_scope.SETTLE_MS = SETTLE_MS;
 __ds_scope.useSettled = useSettled;
 __ds_scope.StanceStanding = StanceStanding;
+__ds_scope.CURRENT_BACKING_LABEL = CURRENT_BACKING_LABEL;
+__ds_scope.BACKING_AFTER_LABEL = BACKING_AFTER_LABEL;
+__ds_scope.AttachmentStanding = AttachmentStanding;
+__ds_scope.attachmentLanding = attachmentLanding;
+__ds_scope.AttachmentLandingLine = AttachmentLandingLine;
+__ds_scope.BORROWED_KEPT_LINE = BORROWED_KEPT_LINE;
 __ds_scope.StanceLandingLine = StanceLandingLine;
 __ds_scope.HelpLine = HelpLine;
 __ds_scope.helpKey = helpKey;
@@ -1379,6 +1612,7 @@ __ds_scope.STANCE_PAD_HELP = STANCE_PAD_HELP;
 __ds_scope.STANCE_ALTERNATES_HELP = STANCE_ALTERNATES_HELP;
 __ds_scope.padHelp = padHelp;
 __ds_scope.alternatesHelp = alternatesHelp;
+__ds_scope.unreachableHelp = unreachableHelp;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/stance/StanceReadout.jsx", error: String((e && e.message) || e) }); }
 
 // components/compose/UploadNotice.jsx
@@ -6159,7 +6393,7 @@ __ds_scope.JoinPrompt = JoinPrompt;
 
 // components/stance/StancePad.jsx
 try { (() => {
-const { clampPair, ORIGIN, DIRECTED_POLES, INTEREST_POLES, STANCE_AXIS_NAMES, STANCE_RANGES } = __ds_scope;
+const { clampPair, clampDimension, ORIGIN, DIRECTED_POLES, INTEREST_POLES, STANCE_AXIS_NAMES, STANCE_RANGES } = __ds_scope;
 /* The pad's field: a SOFT ROUNDED SQUARE, and THE DRAWN FIELD IS THE VALUE SPACE
    (readme §8). The knob travels exactly the field, the corners are the two
    axes' own ends — (±1, ±1) for a stance, (0, 0) to (1, 1) for a tag — and the
@@ -6470,6 +6704,183 @@ function StancePad({
     "data-node": node && "knob"
   }))));
 }
+
+/* THE ONE-AXIS FIELD (jakob 2026-10-16, PR-101): the pad an author meets when
+   they sign their own content. Publish — and Owner for a listing — is a
+   single-parameter family: the author's attachment `a` rides `p_d`, and the
+   census pins `p_i` at 1, never a choice. So the value space is a line, and
+   the line is drawn as one: offering the square here would offer a second
+   axis the record cannot carry.
+
+   IT IS THE SQUARE'S OWN LANGUAGE, CUT TO ONE AXIS — not a slider and not a
+   second drawing. The same field (`surfaceContainerHighest` at the large
+   rung), the same 20px knob and its pressed layer, the same dead-ground
+   hairline at zero, the same pole words held OUTSIDE the field in the same
+   gutters (the 2026-09-15 ruling: a word inside the value space is a word the
+   knob covers). The strip is as wide as the square would be at that width, so
+   the two pads read as one family. What it leaves out is everything the
+   second axis owned: no vertical travel, no `Less`/`More`, and no hairline
+   across — a crossing line would draw a zero for an axis that is not there.
+
+   THE PICK IS ACCUMULATED TRAVEL, as on the square: the knob starts where the
+   value is, wherever the press lands, and only horizontal travel moves it.
+   The knob's centre travels the strip inset by the square's own inset, so it
+   never leaves the drawn shape. */
+const ATTACHMENT_FIELD_HEIGHT_PX = 56;
+
+/** Where the knob sits on the strip, as a percentage of its travel. */
+function attachmentPercentOf(value) {
+  return percent(fractionOf(clampDimension(value), STANCE_RANGES.pDirected));
+}
+
+/** The attachment this much horizontal travel picks, starting from `base`. Clamped once, on the sum. */
+function attachmentFrom(base, rect, dx, inset = KNOB_TRAVEL_INSET_PX) {
+  const halfExtent = Math.max(0, rect.width / 2 - inset);
+  if (halfExtent === 0) return clampDimension(base);
+  return clampDimension(base + dx * perPixel(STANCE_RANGES.pDirected, halfExtent));
+}
+
+/* NAMED ONLY WHERE ITS PLACER NAMES IT, the square's rule: the whole field
+   with its words is the placer's name, the pole words `left` and `right`, and
+   the `strip` — the value space — holds the dead-ground line `zeroDown`, the
+   `knob`, and its pressed `knobLayer`. */
+function AttachmentPad({
+  value = 0,
+  onChange,
+  fieldRef,
+  showAxes = true,
+  axes = STANCE_AXES,
+  held = false,
+  node
+}) {
+  const localRef = React.useRef(null);
+  const ref = fieldRef ?? localRef;
+  const drag = React.useRef(null);
+  const [dragging, setDragging] = React.useState(false);
+  const knobX = attachmentPercentOf(value);
+  const zeroDown = zeroPercentOf(STANCE_RANGES.pDirected);
+  const layered = held || dragging;
+  const onPointerDown = event => {
+    if (!onChange) return;
+    drag.current = {
+      x: event.clientX,
+      base: value
+    };
+    setDragging(true);
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  };
+  const onPointerMove = event => {
+    const from = drag.current;
+    const field = ref.current;
+    if (!from || !field || !onChange) return;
+    onChange(attachmentFrom(from.base, field.getBoundingClientRect(), event.clientX - from.x));
+  };
+  const endDrag = () => {
+    drag.current = null;
+    setDragging(false);
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      width: "100%",
+      boxSizing: "border-box",
+      padding: showAxes ? `0 ${AXIS_GUTTER_X_PX}px` : 0
+    },
+    "data-node": node
+  }, showAxes && /*#__PURE__*/React.createElement("div", {
+    "aria-hidden": "true",
+    style: {
+      position: "absolute",
+      inset: 0,
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
+      color: "var(--text-secondary)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      left: 0,
+      top: "50%",
+      width: `${AXIS_GUTTER_X_PX - 6}px`,
+      transform: "translateY(-50%)",
+      textAlign: "right",
+      whiteSpace: "nowrap"
+    },
+    "data-node": node && "left"
+  }, axes.left), /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      right: 0,
+      top: "50%",
+      width: `${AXIS_GUTTER_X_PX - 6}px`,
+      transform: "translateY(-50%)",
+      textAlign: "left",
+      whiteSpace: "nowrap"
+    },
+    "data-node": node && "right"
+  }, axes.right)), /*#__PURE__*/React.createElement("div", {
+    ref: ref,
+    onPointerDown: onPointerDown,
+    onPointerMove: onPointerMove,
+    onPointerUp: endDrag,
+    onPointerCancel: endDrag,
+    style: {
+      position: "relative",
+      height: `${ATTACHMENT_FIELD_HEIGHT_PX}px`,
+      width: "100%",
+      touchAction: "none",
+      borderRadius: "var(--radius-large)",
+      background: "var(--surface-container-highest)"
+    },
+    "data-node": node && "strip"
+  }, zeroDown !== null && /*#__PURE__*/React.createElement("div", {
+    "aria-hidden": "true",
+    style: {
+      position: "absolute",
+      left: `${zeroDown}%`,
+      top: 0,
+      width: "1px",
+      height: "100%",
+      background: "var(--border-hairline)"
+    },
+    "data-node": node && "zeroDown"
+  }), /*#__PURE__*/React.createElement("div", {
+    "aria-hidden": "true",
+    style: {
+      position: "absolute",
+      top: "50%",
+      left: `${KNOB_TRAVEL_INSET_PX}px`,
+      right: `${KNOB_TRAVEL_INSET_PX}px`,
+      height: 0
+    }
+  }, layered && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "absolute",
+      left: `${knobX}%`,
+      top: 0,
+      height: `${KNOB_LAYER_PX}px`,
+      width: `${KNOB_LAYER_PX}px`,
+      transform: "translate(-50%, -50%)",
+      borderRadius: "var(--radius-full)",
+      background: "var(--surface-loud)",
+      opacity: "var(--state-press)"
+    },
+    "data-node": node && "knobLayer"
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "absolute",
+      left: `${knobX}%`,
+      top: 0,
+      height: `${KNOB_DIAMETER_PX}px`,
+      width: `${KNOB_DIAMETER_PX}px`,
+      transform: "translate(-50%, -50%)",
+      borderRadius: "var(--radius-full)",
+      background: "var(--surface-loud)"
+    },
+    "data-node": node && "knob"
+  }))));
+}
 __ds_scope.STANCE_AXES = STANCE_AXES;
 __ds_scope.AXIS_GUTTER_X_PX = AXIS_GUTTER_X_PX;
 __ds_scope.AXIS_GUTTER_Y_PX = AXIS_GUTTER_Y_PX;
@@ -6481,6 +6892,10 @@ __ds_scope.padTravelHalfExtent = padTravelHalfExtent;
 __ds_scope.padPairFrom = padPairFrom;
 __ds_scope.padPercentOf = padPercentOf;
 __ds_scope.StancePad = StancePad;
+__ds_scope.ATTACHMENT_FIELD_HEIGHT_PX = ATTACHMENT_FIELD_HEIGHT_PX;
+__ds_scope.attachmentPercentOf = attachmentPercentOf;
+__ds_scope.attachmentFrom = attachmentFrom;
+__ds_scope.AttachmentPad = AttachmentPad;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/stance/StancePad.jsx", error: String((e && e.message) || e) }); }
 
 // components/stance/StanceSlider.jsx
@@ -6665,10 +7080,12 @@ function AlternateInputs({
   pick,
   onPick,
   axes,
-  ranges
+  ranges,
+  axis = "pair"
 }) {
   const directed = ranges.pDirected;
   const interest = ranges.pInterest;
+  const one = axis === "one";
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: "var(--space-4)",
@@ -6676,7 +7093,27 @@ function AlternateInputs({
       flexDirection: "column",
       gap: "var(--space-4)"
     }
-  }, showing === "sliders" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(StanceSlider, {
+  }, one ? showing === "sliders" ? /*#__PURE__*/React.createElement(StanceSlider, {
+    label: axes.directed,
+    minLabel: axes.left,
+    maxLabel: axes.right,
+    min: directed.min,
+    max: directed.max,
+    value: pick.pDirected,
+    onChange: pDirected => onPick && onPick({
+      ...pick,
+      pDirected
+    })
+  }) : /*#__PURE__*/React.createElement(DirectEntry, {
+    label: axes.directed,
+    min: directed.min,
+    max: directed.max,
+    value: pick.pDirected,
+    onChange: pDirected => onPick && onPick({
+      ...pick,
+      pDirected
+    })
+  }) : showing === "sliders" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(StanceSlider, {
     label: axes.directed,
     minLabel: axes.left,
     maxLabel: axes.right,
@@ -6730,7 +7167,7 @@ function AlternateInputs({
       color: "var(--text-secondary)",
       fontSize: "var(--text-label-medium)"
     }
-  }, showing === "sliders" ? "Type exact values" : "Use sliders"));
+  }, showing === "sliders" ? one ? "Type an exact value" : "Type exact values" : one ? "Use a slider" : "Use sliders"));
 }
 
 /* THE ALTERNATES TRAVEL WITH THE RECORD FAMILY, AND SO DOES THEIR HOST (jakob's
@@ -6770,7 +7207,19 @@ function StanceAlternates({
   ranges = STANCE_RANGES,
   title = "Choose your opinion",
   commitLabel = "Sign it",
-  host = "dialog"
+  host = "dialog",
+  /* ONE AXIS (jakob 2026-10-20, seam 240: the input setting governs
+     everywhere). A family with one free parameter — the backing an author
+     signs with their own content, `p_i` pinned at 1 by the census — takes ONE
+     track and ONE typed field, over `pDirected` alone. The pinned number is
+     never drawn, not even as a locked track: a control nobody can move is a
+     choice the record does not have. The pick keeps its pair shape, the pin
+     riding along untouched. */
+  axis = "pair",
+  /* The unreachable landing's explanation, handed by the host once its 🤔 is
+     tapped: it replaces the body in place, and `onZeroBack` returns. */
+  zeroHelp,
+  onZeroBack
 }) {
   const [showing, setShowing] = React.useState(mode === "entry" ? "entry" : "sliders");
   // The same help affordance the pad carries, for the same reason: TWO VALUES per
@@ -6790,17 +7239,18 @@ function StanceAlternates({
   const slotRef = React.useRef(null);
   const [slotHeight, setSlotHeight] = React.useState(null);
   React.useEffect(() => {
-    if (explaining) return;
+    if (explaining || zeroHelp) return;
     const measured = slotRef.current?.offsetHeight;
     if (measured) setSlotHeight(measured);
-  }, [explaining, showing]);
+  }, [explaining, zeroHelp, showing]);
   const inputs = /*#__PURE__*/React.createElement(AlternateInputs, {
     showing: showing,
     setShowing: setShowing,
     pick: pick,
     onPick: onPick,
     axes: axes,
-    ranges: ranges
+    ranges: ranges,
+    axis: axis
   });
   if (host === "sheet") {
     return /*#__PURE__*/React.createElement("div", {
@@ -6859,7 +7309,34 @@ function StanceAlternates({
       lineHeight: "var(--text-title-large--line-height)",
       fontWeight: "var(--text-title-large--font-weight)"
     }
-  }, title)), explaining ? /*#__PURE__*/React.createElement("div", {
+  }, title)), zeroHelp ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      minHeight: slotHeight ?? undefined,
+      display: "flex",
+      flexDirection: "column",
+      gap: "var(--space-2)"
+    }
+  }, zeroHelp.map(line => /*#__PURE__*/React.createElement("p", {
+    key: helpKey(line),
+    style: {
+      margin: 0,
+      fontSize: "var(--text-body-small)",
+      color: "var(--text-secondary)"
+    }
+  }, /*#__PURE__*/React.createElement(HelpLine, {
+    line: line
+  }))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onZeroBack,
+    className: BUTTON_CLASS,
+    style: {
+      ...buttonStyle({
+        variant: "text",
+        size: "sm"
+      }),
+      alignSelf: "flex-start"
+    }
+  }, "Back")) : explaining ? /*#__PURE__*/React.createElement("div", {
     style: {
       minHeight: slotHeight ?? undefined,
       display: "flex",
@@ -7269,7 +7746,7 @@ __ds_scope.NoticeLine = NoticeLine;
 
 // components/stance/StanceControl.jsx
 try { (() => {
-const { buttonStyle, BUTTON_CLASS, Icon, Snackbar, JoinPrompt, StancePad, STANCE_AXES, StanceAlternates, SeveranceConfirm, PendingMarker, SigningPending, TransportError, NoticePanel, NoticeLine, bundleReadout, clampPair, formatStancePair, helpKey, HelpLine, localLanding, ORIGIN, padHelp, RESTING_FACE_EMOJI, severanceWords, signedLine, StanceLandingLine, StanceStanding, TAP_DEFAULT } = __ds_scope;
+const { buttonStyle, BUTTON_CLASS, Icon, Snackbar, JoinPrompt, StancePad, STANCE_AXES, StanceAlternates, SeveranceConfirm, PendingMarker, SigningPending, TransportError, NoticePanel, NoticeLine, bundleReadout, clampPair, formatStancePair, helpKey, HelpLine, localLanding, ORIGIN, padHelp, RESTING_FACE_EMOJI, severanceWords, signedLine, StanceLandingLine, StanceStanding, TAP_DEFAULT, unreachableHelp } = __ds_scope;
 /* CoGra's SIGNATURE INTERACTION (readme §8; guidelines/stance-control.md).
    Everything in this file is a rule from those, not a preference:
 
@@ -7566,6 +8043,24 @@ function StanceControl({
      orange at 10 % (blessed as drawn, jakob 2026-10-05). Additive — absent, the pad renders
      exactly as before, and the live layer is the drag's own. */
   knobHeld = false,
+  /* AN APPLICANT'S ANCHOR IS LOCKED, NOT GONE (PR-103, round 16; auth.md's
+     locked look, the comment foot's twin): the anchor stands at the disabled
+     opacity and stays tappable, a tap or a press-and-hold answering `You can
+     give your opinion once you're in.` — the host wires that answer, and the
+     pad never blooms. The value is the opacity itself — `var(--state-disabled)`
+     — as `CommentCard`'s `replyOpacity`. Additive — absent, the control
+     renders exactly as before. */
+  anchorOpacity,
+  /* THE READER STILL BORROWS A VIEW (jakob 2026-10-20, seam 240): they hold
+     no outgoing opinion with neither number at zero yet. The host knows; the
+     landing line then warns, under an unreachable or severed landing, that
+     the pick would keep the borrowed view. Warns, never blocks. Additive —
+     absent, the control renders exactly as before. */
+  borrowed = false,
+  /* A BODY ALREADY EXPLAINING, for a board: `"help"` draws the "?"'s lines
+     in place, `"zero"` the unreachable landing's. Additive — absent, the pad
+     opens on its field. */
+  defaultExplaining = false,
   node
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
@@ -7581,7 +8076,9 @@ function StanceControl({
   }, [taughtProp]);
   const [open, setOpen] = React.useState(defaultOpen);
   const [alternates, setAlternates] = React.useState(false);
-  const [explaining, setExplaining] = React.useState(false);
+  /* false, `"help"` (the "?") or `"zero"` (the unreachable landing's 🤔):
+     either explanation replaces the pad's body in place. */
+  const [explaining, setExplaining] = React.useState(defaultExplaining);
   const [pick, setPick] = React.useState(defaultPick ?? TAP_DEFAULT);
   const [confirming, setConfirming] = React.useState(null);
   const [signed, setSigned] = React.useState(null);
@@ -7768,7 +8265,10 @@ function StanceControl({
       fontSize: "var(--text-label-large)",
       fontWeight: "var(--text-label-large--font-weight)",
       color: "var(--primary)",
-      ...(overMedia ? OVER_MEDIA_ANCHOR : null)
+      ...(overMedia ? OVER_MEDIA_ANCHOR : null),
+      ...(anchorOpacity !== undefined ? {
+        opacity: anchorOpacity
+      } : null)
     },
     "data-node": node && "anchor"
   }, withHoldRing(overMedia && restingFace === null ?
@@ -7892,9 +8392,9 @@ function StanceControl({
     "data-node": node && "pad"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    "aria-expanded": explaining,
+    "aria-expanded": explaining === "help",
     "aria-label": helpLabel,
-    onClick: () => setExplaining(shown => !shown),
+    onClick: () => setExplaining(shown => shown === "help" ? false : "help"),
     className: BUTTON_CLASS,
     style: {
       position: "absolute",
@@ -7940,8 +8440,8 @@ function StanceControl({
       flexDirection: "column",
       gap: "var(--space-2)"
     },
-    "data-node": node && "helpPanel"
-  }, (help ?? padHelp(axes)).map(line => /*#__PURE__*/React.createElement("p", {
+    "data-node": node && (explaining === "zero" ? "zeroPanel" : "helpPanel")
+  }, (explaining === "zero" ? unreachableHelp(axes, targetLabel) : help ?? padHelp(axes)).map(line => /*#__PURE__*/React.createElement("p", {
     key: helpKey(line),
     style: {
       margin: 0,
@@ -7972,6 +8472,8 @@ function StanceControl({
   }), padNote, padSigning !== "writeRule" && /*#__PURE__*/React.createElement(StanceLandingLine, {
     landing: landing,
     names: axes,
+    onExplainZero: () => setExplaining("zero"),
+    borrowed: borrowed,
     node: node && "landing"
   })), padSigning === "writeRule" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(NoticePanel, {
     title: WRITE_RULE_TITLE,
@@ -8020,7 +8522,7 @@ function StanceControl({
     "data-node": node && "cancel"
   }, "Cancel"), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    disabled: explaining,
+    disabled: Boolean(explaining),
     onClick: padSigning === "busy" ? undefined : () => commitChecked(pick),
     "aria-busy": padSigning === "busy" || undefined,
     "aria-disabled": padSigning === "busy" || undefined,
@@ -8028,7 +8530,7 @@ function StanceControl({
     style: buttonStyle({
       variant: padSigning === "failed" ? "outline" : "primary",
       size: "sm",
-      disabled: explaining,
+      disabled: Boolean(explaining),
       busy: padSigning === "busy"
     }),
     "data-node": node && "set"
@@ -8040,8 +8542,13 @@ function StanceControl({
     onSever: openSeverance,
     landing: /*#__PURE__*/React.createElement(StanceLandingLine, {
       landing: landing,
-      names: axes
+      names: axes,
+      onExplainZero: () => setExplaining("zero"),
+      zeroShown: explaining === "zero",
+      borrowed: borrowed
     }),
+    zeroHelp: explaining === "zero" ? unreachableHelp(axes, targetLabel) : null,
+    onZeroBack: () => setExplaining(false),
     helpLabel: helpLabel,
     axes: axes
   }, /*#__PURE__*/React.createElement(StanceStanding, {
@@ -10916,6 +11423,15 @@ function PostCard({
   stanceSigning,
   stanceHoldProgress,
   stanceKnobHeld,
+  /* Pass-throughs to `StanceControl`'s `defaultExplaining` (a board's pad
+     body already explaining) and `borrowed` (the reader still borrows a view
+     — the shell's fact, as `signedIn` is). */
+  stanceExplaining,
+  stanceBorrowed,
+  /* AN APPLICANT'S ANCHOR IS LOCKED, NOT GONE (PR-103, round 16): forwarded
+     to `StanceControl`'s `anchorOpacity`, the shell's fact about its reader
+     as `signedIn` is. */
+  stanceOpacity,
   score,
   onOpenScore,
   comments,
@@ -11260,7 +11776,10 @@ function PostCard({
     pendingReview: stancePendingReview,
     signing: stanceSigning,
     holdProgress: stanceHoldProgress,
-    knobHeld: stanceKnobHeld
+    knobHeld: stanceKnobHeld,
+    defaultExplaining: stanceExplaining,
+    borrowed: stanceBorrowed,
+    anchorOpacity: stanceOpacity
   }, stanceAxes ? {
     axes: stanceAxes
   } : null, {
@@ -13619,7 +14138,13 @@ const { Icon } = __ds_scope;
    64px short navigation bar on `surfaceContainer`, hairline `outlineVariant` top
    border, safe-area padding at the bottom. Selection shows in COLOUR
    (`onSurfaceVariant` → `onSurface`) and in the filled icon cut — never an
-   indicator pill. */
+   indicator pill.
+
+   AN APPLICANT'S NEW POST IS LOCKED, NOT GONE (PR-103, round 16; auth.md's
+   locked look, the comment foot's twin): the centre slot stands at the
+   disabled opacity and stays tappable, the tap answering `You can post once
+   you're in.` The value is the opacity itself — `var(--state-disabled)` — as
+   `CommentCard`'s `replyOpacity` and `ProfileHeader`'s `invitesOpacity`. */
 
 const DEFAULT_SLOTS = ["feed", "compose", "profile"];
 /** The V1.0 bar: all five slots — the wallet's opens its coming-soon door. */
@@ -13647,6 +14172,7 @@ function BottomNav({
   onSelect,
   inline = false,
   glyphs,
+  composeOpacity,
   node
 }) {
   const item = {
@@ -13700,7 +14226,10 @@ function BottomNav({
         "aria-label": LABELS.compose,
         onClick: () => onSelect && onSelect(slot),
         className: "cg-state cg-focus",
-        style: item,
+        style: composeOpacity !== undefined ? {
+          ...item,
+          opacity: composeOpacity
+        } : item,
         "data-node": slotNode
       }, /*#__PURE__*/React.createElement("span", {
         "aria-hidden": "true",
@@ -16518,6 +17047,10 @@ __ds_ns.KNOB_TRAVEL_INSET_PX = __ds_scope.KNOB_TRAVEL_INSET_PX;
 
 __ds_ns.StancePad = __ds_scope.StancePad;
 
+__ds_ns.ATTACHMENT_FIELD_HEIGHT_PX = __ds_scope.ATTACHMENT_FIELD_HEIGHT_PX;
+
+__ds_ns.AttachmentPad = __ds_scope.AttachmentPad;
+
 __ds_ns.DIMENSION_MIN = __ds_scope.DIMENSION_MIN;
 
 __ds_ns.DIMENSION_MAX = __ds_scope.DIMENSION_MAX;
@@ -16554,6 +17087,8 @@ __ds_ns.STANCE_SEVERANCE_WORDS = __ds_scope.STANCE_SEVERANCE_WORDS;
 
 __ds_ns.ZERO_BUNDLE_EMOJI = __ds_scope.ZERO_BUNDLE_EMOJI;
 
+__ds_ns.UNREACHABLE_EMOJI = __ds_scope.UNREACHABLE_EMOJI;
+
 __ds_ns.RESTING_FACE_EMOJI = __ds_scope.RESTING_FACE_EMOJI;
 
 __ds_ns.SR_ONLY = __ds_scope.SR_ONLY;
@@ -16564,15 +17099,29 @@ __ds_ns.VALENCE_SIX = __ds_scope.VALENCE_SIX;
 
 __ds_ns.TAG_ANCHORS = __ds_scope.TAG_ANCHORS;
 
+__ds_ns.ZERO_BACKING_LABEL = __ds_scope.ZERO_BACKING_LABEL;
+
 __ds_ns.StanceValue = __ds_scope.StanceValue;
+
+__ds_ns.UNREACHABLE_TAIL = __ds_scope.UNREACHABLE_TAIL;
 
 __ds_ns.StanceReadout = __ds_scope.StanceReadout;
 
-__ds_ns.OwnStanceReadout = __ds_scope.OwnStanceReadout;
+__ds_ns.AttachmentReadout = __ds_scope.AttachmentReadout;
 
 __ds_ns.SETTLE_MS = __ds_scope.SETTLE_MS;
 
 __ds_ns.StanceStanding = __ds_scope.StanceStanding;
+
+__ds_ns.CURRENT_BACKING_LABEL = __ds_scope.CURRENT_BACKING_LABEL;
+
+__ds_ns.BACKING_AFTER_LABEL = __ds_scope.BACKING_AFTER_LABEL;
+
+__ds_ns.AttachmentStanding = __ds_scope.AttachmentStanding;
+
+__ds_ns.AttachmentLandingLine = __ds_scope.AttachmentLandingLine;
+
+__ds_ns.BORROWED_KEPT_LINE = __ds_scope.BORROWED_KEPT_LINE;
 
 __ds_ns.StanceLandingLine = __ds_scope.StanceLandingLine;
 

@@ -1,27 +1,41 @@
-/* THE OPINION PAD ON YOUR OWN POST (legacy conversion, the conformance round):
-   what the seal's "Adjust" opens. The wash covers the seal; only the parked
-   pad is live, which is what the board's `scanExempt` line says.
+/* THE PAD ON YOUR OWN POST'S SEAL: what the seal's "Adjust" opens. The wash
+   covers the seal; only the parked pad is live, which is what the board's
+   `scanExempt` line says.
 
-   THE FIELD IS ONE AXIS, and that is why `StancePad` is not here. The master
-   is the square where the drawn field IS the value space — Against/For across,
-   Less/More up — because both parameters are the author's to choose. On one's
-   OWN post the second is not: your own post always reaches you in full, so
-   `pInterest` is not a thing to pick and a square offering it would offer a
-   choice that is not one. What is left is a line, and a line is drawn as one.
-   The system has no one-axis pad; this board is the only surface that wants
-   one, so it draws its own and the gap is reported rather than filled in
-   passing.
+   THE FIELD IS ONE AXIS, the master `AttachmentPad` (jakob 2026-10-16,
+   PR-101). Publishing signs one record toward the post, a Publish, and the
+   census gives it one free parameter: the author's attachment — their
+   BACKING — For or Against, with the second number pinned at 1, never a
+   choice, so never drawn as one. The strip is the square's own language cut
+   to that one axis, at the width the square would take here, the knob where
+   +0.10 puts it — the gentle default every post starts from (post.md §1).
+   The pick is the record; with nothing standing yet it is also the result,
+   so one readout suffices.
 
-   EVERYTHING AROUND THE FIELD IS THE PAD'S OWN GRAMMAR, kept: the "?" in the
-   top-right corner out of the readouts' reading order (`HelpDot`, at the
-   master's geometry), the pick's readout ABOVE the field where a thumb cannot
-   cover it, the note, and Cancel · Set — release never commits, Set does. The
-   readout's number carries `cg-exact` exactly as the master's does, so a
-   hand-drawn readout follows the reading mode instead of diverging from it
-   (readme §13).
+   WHAT THE AUTHOR THINKS OF THE POST IS ANOTHER RECORD. Once the post is out,
+   its face takes an ordinary opinion like anyone's — both numbers, a bundle
+   of its own that never nets with this one (`PadStanding`). This pad is the
+   authoring gesture alone: backing, never opinion.
+
+   EVERYTHING AROUND THE FIELD IS THE SEAL-SCALE PAD'S GRAMMAR: the "?" in the
+   top-right corner out of the readouts' reading order (`HelpDot`), opening the
+   pad's named dialog over the seal; the pick's readout ABOVE the field where a
+   thumb cannot cover it, reading `Your pick`; and Cancel · Set — release never
+   commits, Set puts the pick back on the seal's row, and Sign and publish
+   signs it with the post. The readout is the master's (`AttachmentStanding`),
+   its face `VALENCE_SIX`'s, and its polite live region speaks the pick once
+   it rests.
 
    THE SEAL BENEATH IS THE SEAL — `ComposeSealBody`, the same body
-   `ComposeSeal` draws. What a wash covers is inert, not shortened. */
+   `ComposeSeal` draws. What a wash covers is inert, not shortened.
+
+   THE STRIP HAS A NON-DRAG ROUTE (jakob 2026-10-20: the input setting
+   governs everywhere). `Set an exact value for your backing` is the pad's
+   first control, hidden until focused — `TagPad`'s skip-link idiom — and
+   swaps the strip in place for `StanceAlternates` at `axis="one"`: one track
+   over For or against, `Type an exact value` one tap away, never a second
+   track for the pinned number. The swap is a state of this pad and is not
+   drawn a second time. */
 export function Screen() {
   return (
     <>
@@ -35,7 +49,7 @@ export function Screen() {
           position: "absolute",
           left: 30,
           right: 30,
-          bottom: 24,
+          bottom: 16,
           display: "flex",
           flexDirection: "column",
           gap: 12,
@@ -46,63 +60,20 @@ export function Screen() {
           boxSizing: "border-box",
         }}
       >
+        <button type="button" className="cg-sr-focusable cg-state cg-focus cg-hit" style={{ fontFamily: "var(--font-sans)" }}>
+          Set an exact value for your backing
+        </button>
+
         <span style={{ position: "absolute", top: 4, right: 4 }}>
-          <HelpDot ariaLabel="Your opinion on your post" />
+          <HelpDot ariaLabel="Your backing on your post" />
         </span>
 
-        {/* The pick's readout, in the pad's own block shape: the name of the
-            quantity, then the face and the number under it. */}
-        {/* The readout clears the corner the "?" sits in, the way the master's
-            own `StanceStanding` block does. */}
-        <div style={{ display: "flex", flexDirection: "column", paddingRight: 40 }}>
-          <span aria-hidden="true" style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
-            Your pick
-          </span>
-          {/* THE FACE AND THE WORD COME FROM `VALENCE_SIX`, the one-axis table:
-              `nearestValenceAnchor(+0.10)` is 🙂 "Nice", the first band above
-              zero. They are spelled here because the lookup is not among the
-              names the bundle exposes to screens — the value is the table's,
-              not this board's, and the pad must never name a face the system
-              has no band for. */}
-          <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}>
-            <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🙂</span>
-            <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", whiteSpace: "nowrap" }}>+0.10</span>
-          </span>
-          <span style={SR_ONLY}>
-            Nice, For or against +0.10
-          </span>
-        </div>
+        {/* The pick's readout, clearing the corner the "?" sits in. */}
+        <AttachmentStanding pick={0.1} style={{ paddingRight: 40 }} />
 
-        {/* THE POLE WORDS SIT OUTSIDE THE TRACK — the master's ruling (jakob
-            2026-09-15, `StancePad`), which this one-axis field takes rather
-            than patching locally. They were drawn ON the line, which is the
-            one place the dot goes when the value reaches that pole: the word
-            the reader most needs at that moment was the word the dot covered.
-            The gutters hold the words, the track holds the value, and the two
-            never share a pixel. The track narrows by what the words take, so
-            the pad keeps the footprint the sheet was drawn around. */}
-        <div
-          role="group"
-          aria-label="Opinion pad for your own post"
-          style={{ alignSelf: "center", display: "flex", alignItems: "center", gap: 6 }}
-        >
-          <span aria-hidden="true" style={{ flex: "none", width: 50, textAlign: "right", whiteSpace: "nowrap", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
-            Against
-          </span>
-          {/* 192, not the earlier 148 — jakob (2026-09-15): the one-axis track
-              was "quite small"; it takes the row's slack, stopping short of
-              pushing the gutter words into the card's sides. */}
-          <span style={{ position: "relative", width: 192, height: 72, borderRadius: "var(--radius-large)", background: "var(--surface-container-highest)", touchAction: "none" }}>
-            <span aria-hidden="true" style={{ position: "absolute", left: 8, right: 8, top: "50%", height: 1, background: "var(--border-hairline)" }} />
-            <span aria-hidden="true" style={{ position: "absolute", left: "50%", top: 8, bottom: 8, width: 1, background: "var(--border-hairline)" }} />
-            <span aria-hidden="true" style={{ position: "absolute", left: "55%", top: "50%", width: 24, height: 24, margin: "-12px 0 0 -12px", borderRadius: "var(--radius-full)", background: "var(--surface-loud)", border: "1px solid var(--on-surface-loud)" }} />
-          </span>
-          <span aria-hidden="true" style={{ flex: "none", width: 50, textAlign: "left", whiteSpace: "nowrap", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
-            For
-          </span>
+        <div role="group" aria-label="Backing pad for your own post" style={{ alignSelf: "stretch" }}>
+          <AttachmentPad value={0.1} />
         </div>
-
-        <QuietNote>Your own post always reaches you in full.</QuietNote>
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
           <Button variant="text" size="sm">Cancel</Button>

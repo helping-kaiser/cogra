@@ -2,13 +2,27 @@
 
 ALWAYS every change the edit makes signs together in one batch
 
+ALWAYS a moved pick alone fills the batch, the edit signing a new version whose words and media stand unchanged
+
 ALWAYS the footer reads the live count of the batch, You're signing N things
 
 WHEN tap the footer GIVEN the batch holds an act -> the acts sheet opens over the edit
 
 ALWAYS the License row shows the license as signed, with the lock and no action
 
-ALWAYS the Sensitive row stands beside the License row and opens the sensitive sheet
+ALWAYS the Your backing row stands under the License row and reads the post's backing as it stands with the edit, its face and one number
+
+ALWAYS the Your backing row reads the post's backing as it stands GIVEN the edit's pick was never moved
+
+ALWAYS the edit's record carries the pick, the value it adds to the backing, 0.00 GIVEN the author never moved it
+
+ALWAYS an edit whose pick was never moved changes the post's backing by exactly nothing
+
+WHEN tap Adjust on the Your backing row -> the one-axis pad opens over the edit at the edit's pick AND NEVER anything is staged
+
+ALWAYS the pick rides the edit's own record and adds nothing to the footer's count
+
+ALWAYS the Sensitive row stands under the Your backing row and opens the sensitive sheet
 
 ALWAYS the line A post's body is words or media, never both. stands under the gallery
 
@@ -76,9 +90,9 @@ WHEN the last upload lands GIVEN Sign the edit was not pressed -> the upload lin
 
 WHEN press Sign the edit GIVEN the signing is taken -> the post opens with the edit settling
 
-WHEN press Sign the edit GIVEN the signing key is not on this device -> the key-absent seal stands AND nothing is staged or signed
+WHEN press Sign the edit GIVEN the signing key is not on this device -> the key-absent seal stands, its way out reading Not now, back to the edit with the batch as it was AND nothing is staged or signed AND NEVER Keep the draft, restore later stands
 
-WHEN press Sign the edit GIVEN the signing is refused by the write rule -> the notice You can't sign right now takes the commit's place AND NEVER the notice says a draft is kept AND NEVER Retry appears
+WHEN press Sign the edit GIVEN the signing is refused by the write rule -> the notice You can't sign right now takes the commit's place AND the notice's fact ends Nothing was signed or spent — your edit is still here. AND the way out under the notice reads Not now AND NEVER the notice says a draft is kept AND NEVER Retry appears
 
 WHEN press the header back arrow or the header X GIVEN the batch holds an act -> the dialog Discard the changes? opens over the edit with Nothing is kept. AND NEVER the changes are discarded unasked
 

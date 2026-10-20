@@ -55,6 +55,8 @@ import {
 } from "@/lib/compose/post-edit";
 import { pictureAltText, pictureId } from "@/lib/compose/comment-edit";
 import { withdrawnReferences, withdrawnTags } from "@/lib/compose/edit-batch";
+import { attachmentLanding } from "@/lib/stance/backing";
+import { AttachmentReadout, BACKING_UNREAD } from "@/lib/ui/attachment-readout";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
 
@@ -101,6 +103,8 @@ export function PostEditView({
   onRemoveClip,
   onDescribeClip,
   onOpenSensitive,
+  onOpenBacking,
+  backingRawSum,
   onOpenActs,
   onHelp,
   onSign,
@@ -108,6 +112,14 @@ export function PostEditView({
   keyCard,
 }: {
   state: PostEditState;
+  /**
+   * The raw sum of the author's Publish records toward the post — null when
+   * the read answered none or failed (`fetchPostBacking`), when the row stops
+   * at the flagged placeholder.
+   */
+  backingRawSum: number | null;
+  /** `Adjust` on the Your backing row: the one-axis pad over the edit. */
+  onOpenBacking: () => void;
   previews: Readonly<Record<string, string>>;
   /** What the batch signs, in records — the guard reads this and nothing else. */
   count: number;
@@ -316,6 +328,29 @@ export function PostEditView({
             >
               <LockGlyph />
             </span>
+          </div>
+          {/* YOUR BACKING (EditCompose.md, `_shared.jsx`'s `EditBackingRow`):
+              under the License row, the seal's order, reading the post's
+              backing as it stands with the edit — the raw sum plus the edit's
+              own pick, clipped — one number. Unmoved, that is the backing as
+              it stands. Its record rides the edit, so it adds no act. */}
+          <div className="flex min-h-11 items-center gap-2 border-t border-outline-variant">
+            <span className="flex-1 text-body-medium">Your backing</span>
+            <span className="text-body-medium text-on-surface-variant">
+              {backingRawSum === null ? (
+                <span data-testid="post-edit-backing-unread" className="text-body-small">
+                  {BACKING_UNREAD}
+                </span>
+              ) : (
+                <AttachmentReadout
+                  pDirected={attachmentLanding(backingRawSum, state.pick).landing}
+                  testId="post-edit-backing-value"
+                />
+              )}
+            </span>
+            <TextAction testId="post-edit-open-backing" onClick={onOpenBacking}>
+              Adjust
+            </TextAction>
           </div>
           <div className="flex min-h-11 items-center gap-2 border-y border-outline-variant">
             <span className="flex-1 text-body-medium">Sensitive</span>

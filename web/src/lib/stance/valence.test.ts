@@ -20,6 +20,8 @@ import {
   VALENCE_LABEL,
   VALENCE_POLES,
   VALENCE_SIX,
+  ZERO_BACKING_EMOJI,
+  ZERO_BACKING_LABEL,
   type ValenceBand,
 } from "./valence";
 
@@ -81,12 +83,22 @@ describe("the one-axis table", () => {
 });
 
 describe("the face a one-axis pick wears", () => {
-  it("reads exactly 0.00 as 🙂 — the ruled zero case", () => {
-    expect(nearestValenceAnchor(0).emoji).toBe("🙂");
-    expect(nearestValenceAnchor(0).label).toBe("Nice");
+  it("reads exactly 0.00 as 🤔, spoken No side taken — the one-zero face (jakob 2026-10-20)", () => {
+    expect(nearestValenceAnchor(0).emoji).toBe("🤔");
+    expect(nearestValenceAnchor(0).label).toBe("No side taken");
     // A drag that never moved horizontally produces negative zero, and it
     // is the same pick.
-    expect(nearestValenceAnchor(-0).emoji).toBe("🙂");
+    expect(nearestValenceAnchor(-0).emoji).toBe("🤔");
+  });
+
+  it("spells the zero face and its word as the master does", () => {
+    // The one-axis 0.00 is `(0, 1)` with the pin — a single zero — so it
+    // wears the master's UNREACHABLE_EMOJI, and 🤷 stays (0, 0)'s alone.
+    expect(MASTER).toMatch(/export const UNREACHABLE_EMOJI = "🤔";/);
+    expect(MASTER).toMatch(/if \(value === 0\) return \{ emoji: UNREACHABLE_EMOJI, label: ZERO_BACKING_LABEL/);
+    expect(MASTER).toMatch(/export const ZERO_BACKING_LABEL = "No side taken";/);
+    expect(ZERO_BACKING_EMOJI).toBe("🤔");
+    expect(ZERO_BACKING_LABEL).toBe("No side taken");
   });
 
   it("gives every band edge to the MILDER face — the one nearer zero", () => {
@@ -129,13 +141,14 @@ describe("the face a one-axis pick wears", () => {
     expect(nearestValenceAnchor(-4).emoji).toBe("😠");
     expect(nearestValenceAnchor(4).emoji).toBe("😍");
     // NaN names no point on the axis, so it folds to the origin's face.
-    expect(nearestValenceAnchor(Number.NaN).emoji).toBe("🙂");
+    expect(nearestValenceAnchor(Number.NaN).emoji).toBe("🤔");
   });
 
   it("answers for every hundredth of the axis without falling through", () => {
     for (let step = -100; step <= 100; step += 1) {
       const band = nearestValenceAnchor(step / 100);
-      expect(VALENCE_SIX).toContain(band);
+      if (step === 0) expect(band.emoji).toBe("🤔");
+      else expect(VALENCE_SIX).toContain(band);
     }
   });
 });

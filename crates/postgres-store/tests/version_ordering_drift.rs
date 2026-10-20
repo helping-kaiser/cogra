@@ -4,7 +4,7 @@
 //! sqlx's macros take a string literal and nothing that expands to one —
 //! `concat!` is rejected at macro-expansion time — so the ordering cannot
 //! be a shared `const` spliced into the queries. It is therefore copied,
-//! sixteen times across three modules, and re-encoded again in the seven
+//! twenty-one times across four modules, and re-encoded again in the seven
 //! indexes that serve it. A miss in any one of them serves a different
 //! version, silently and only for that query.
 //!
@@ -22,7 +22,8 @@ const WITH_PENDING: &str = "pending DESC, \
     created_at DESC, version_id DESC";
 
 /// The same rule on a table with no pending mark: an unlanded edit needs
-/// a flag of its own, and profile and parameter versions have none.
+/// a flag of its own, and the tables whose rows are only ever promotions
+/// or seeds have none.
 const WITHOUT_PENDING: &str = "landed_epoch DESC NULLS LAST, \
     act_time DESC NULLS LAST, \
     position DESC NULLS LAST, \
@@ -86,24 +87,61 @@ fn the_version_ordering_never_drifts_in_the_crate() {
     assert!(total > 0, "the ordering vanished from the crate");
 }
 
-/// The search index's derivation lives in its trigger migration, not in
-/// the crate, so the crate-wide check above cannot see it. It orders a
-/// post's versions with the pending key and a profile's without, exactly
-/// once each, and in no third form.
+/// The derivation's own body in a flattened migration: from its
+/// `CREATE ... FUNCTION` header to the dollar quote that closes it.
+fn derivation_body(flat: &str) -> &str {
+    let start = flat
+        .find("FUNCTION search_index_rederive(")
+        .expect("the migration defines the derivation");
+    let rest = &flat[start..];
+    let open = rest.find("$$").expect("the body opens") + 2;
+    let close = rest[open..].find("$$").expect("the body closes") + open;
+    &rest[..close]
+}
+
+/// The search index's derivation lives in migrations, not in the crate,
+/// so the crate-wide check above cannot see it. Every migration that
+/// defines it orders versions in one of the rule's two forms, and the
+/// definition in force — the latest — orders both a post's and a
+/// profile's versions with the pending key, once each: both tables carry
+/// a pending mark, and the index must find what the reads show.
 ///
 /// The search index's trigger derivation orders versions the way the reads do.
 /// ´claim:content:the-search-derivation-carries-the-version-ordering-rule´
 #[test]
 fn the_search_index_derivation_orders_versions_the_same_way() {
-    let migration = crate_dir().join("../../migrations/20261012190000_search_index_trigger.sql");
-    let flat = read_flat(&migration);
-    let key = flat.matches(KEY).count();
-    let full = flat.matches(WITH_PENDING).count();
-    let short = short_form_count(&flat, full);
+    let migrations = crate_dir().join("../../migrations");
+    let mut definitions: Vec<(PathBuf, String)> = Vec::new();
+    for entry in fs::read_dir(&migrations).expect("migrations are readable") {
+        let path = entry.expect("entry").path();
+        let flat = read_flat(&path);
+        if !flat.contains("FUNCTION search_index_rederive(") {
+            continue;
+        }
+        let body = derivation_body(&flat);
+        let key = body.matches(KEY).count();
+        let full = body.matches(WITH_PENDING).count();
+        let short = short_form_count(body, full);
+        assert_eq!(
+            key,
+            full + short,
+            "{}: {key} version orderings, {full} with the pending key and \
+             {short} without — the rest are a third form",
+            path.display()
+        );
+        definitions.push((path, body.to_owned()));
+    }
+    definitions.sort_by(|a, b| a.0.cmp(&b.0));
+    let (path, body) = definitions
+        .last()
+        .expect("the derivation vanished from the migrations");
+    let key = body.matches(KEY).count();
+    let full = body.matches(WITH_PENDING).count();
     assert_eq!(
-        (key, full, short),
-        (2, 1, 1),
-        "the derivation orders posts with the pending key and profiles without"
+        (key, full),
+        (2, 2),
+        "{}: the derivation in force orders posts and profiles with the pending key",
+        path.display()
     );
 }
 

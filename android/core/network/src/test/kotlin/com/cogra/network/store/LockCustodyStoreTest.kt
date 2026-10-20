@@ -573,4 +573,30 @@ class LockCustodyStoreTest {
         assertThat(w.custody.lockId(A)).isEqualTo(id)
         assertThat(w.engine.ensureHeld(A)).isFalse()
     }
+
+    // ------------------------------------- the carried expectation (PR-88)
+
+    @Test
+    fun `a_carried_expectation_is_locked_with_the_draft_and_put_back_by_the_unlock`() = runTest {
+        val w = World()
+        w.forgetAccount(A)
+        w.identity.saveCarriedExpectation("c1", byteArrayOf(7, 7, 7))
+        assertThat(w.engine.lock(A)).isTrue()
+        assertThat(w.encrypted.names("acct:$A:carried:")).isEmpty()
+        assertThat(w.encrypted.names("locked:$A:")).contains("locked:$A:acct:$A:carried:c1")
+        assertThat(w.signInAgain(A, forget = true).ready).isTrue()
+        assertThat(w.identity.carriedExpectation("c1")).isEqualTo(byteArrayOf(7, 7, 7))
+    }
+
+    @Test
+    fun `a_backed_remote_end_purges_the_key_but_locks_the_carried_expectation_with_the_draft`() = runTest {
+        val w = World()
+        w.forgetAccount(A, backed = true)
+        w.identity.saveCarriedExpectation("c1", byteArrayOf(7, 7, 7))
+        assertThat(w.endLocal.end()).isEqualTo(LocalSessionEnd.LOCKED)
+        assertThat(w.encrypted.names("locked:$A:")).contains("locked:$A:acct:$A:carried:c1")
+        assertThat(w.signInAgain(A, forget = true).ready).isTrue()
+        assertThat(w.identity.actorSeed()).isNull()
+        assertThat(w.identity.carriedExpectation("c1")).isEqualTo(byteArrayOf(7, 7, 7))
+    }
 }
