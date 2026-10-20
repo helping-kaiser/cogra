@@ -499,7 +499,7 @@ class PostEditViewModel @Inject constructor(
             nodeGraphId = postGraphId,
             record = record,
             tags = s.tagSection.adds.map { it.toClaim() } +
-                s.tagSection.removes.map { TagClaim(it.name, WITHDRAWN, it.confidence) },
+                s.tagSection.removes.map { TagClaim(it.name, WITHDRAWN, WITHDRAWN) },
             references = refs.adds.map { it.toClaim() },
             withdrawals = refs.removes.map { it.toWithdrawn() },
             graphIds = graphIds,
@@ -544,7 +544,7 @@ class PostEditViewModel @Inject constructor(
             writes += staged
         }
         for (row in s.tagSection.removes) {
-            val staged = staged(topics.prepareTag(postId, row.name, WITHDRAWN, row.confidence)) {
+            val staged = staged(topics.prepareTag(postId, row.name, WITHDRAWN, WITHDRAWN)) {
                 refuseTag(row.name, it)
             } ?: return null
             writes += staged
@@ -659,7 +659,7 @@ class PostEditViewModel @Inject constructor(
     private fun failTransport() = end { it.copy(transportFailed = true) }
 
     companion object {
-        /** A tag withdrawal is a Tag act at relevance 0 (hashtag.md §4). */
+        /** A tag withdrawal is a Tag act at (0,0): both parameters at this value (hashtag.md §4). */
         const val WITHDRAWN = 0.0
 
         /** How long a signing may go unanswered before the foot says the network is slow. */

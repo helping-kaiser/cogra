@@ -319,9 +319,9 @@ class PostEditViewModelTest {
         assertThat(actsSheetTitle(vm.state.value.signedActionCount)).isEqualTo("2 things, signed together")
         vm.signed()
         assertThat(content.editCalls).isEqualTo(1)
-        // The un-tag signs the confidence the removed chip showed (0.6) —
-        // relevance is the only value a removal moves; the wire fills nothing.
-        assertThat(topics.calls).containsExactly(TagCall(TEST_POST_ID, "wasm", PostEditViewModel.WITHDRAWN, 0.6))
+        // The un-tag signs (0,0) whatever the removed chip showed (hashtag.md §4)
+        // — the wire fills nothing in.
+        assertThat(topics.calls).containsExactly(TagCall(TEST_POST_ID, "wasm", 0.0, 0.0))
         assertThat(vm.state.value.saved).isTrue()
     }
 
