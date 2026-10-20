@@ -1,5 +1,5 @@
 import { gql, InMemoryCache } from "@apollo/client";
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -1711,11 +1711,16 @@ describe("PostView", () => {
      * `display: none` and the offset goes with it — where jsdom keeps it. So
      * the tests below zero it by hand while the composer is up, which is what
      * the browser would have done, and the restore is what puts it back.
+     *
+     * The sheet measures the place a frame after a scroll, and a reader's next
+     * tap comes after that frame — so the frame passes here, rather than the
+     * measurement landing late, over the zeroed offset.
      */
-    function scrollThreadTo(offset: number) {
+    async function scrollThreadTo(offset: number) {
       const body = screen.getByTestId("comments-sheet-body");
       body.scrollTop = offset;
       fireEvent.scroll(body);
+      await act(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
       return body;
     }
 
@@ -1755,7 +1760,7 @@ describe("PostView", () => {
         { store: storeFor("acct-1"), writeSigner: fakeWriteSigner() },
       );
       const sheet = await openComments();
-      const body = scrollThreadTo(320);
+      const body = await scrollThreadTo(320);
       // The branch is behind its count: nothing of it is on screen yet.
       expect(screen.queryByTestId("post-comment-r1")).not.toBeInTheDocument();
 
@@ -1831,7 +1836,7 @@ describe("PostView", () => {
       // The reader unfolds the branch themselves and edits their own reply.
       fireEvent.click(await screen.findByTestId("replies-more-c1"));
       expect(await screen.findByTestId("post-comment-r1")).toHaveTextContent("old words");
-      const body = scrollThreadTo(180);
+      const body = await scrollThreadTo(180);
 
       fireEvent.click(screen.getByTestId("comment-edit-r1"));
       await screen.findByTestId("comment-edit");
@@ -1859,7 +1864,7 @@ describe("PostView", () => {
         writeSigner: fakeWriteSigner(),
       });
       const sheet = await openComments();
-      const body = scrollThreadTo(240);
+      const body = await scrollThreadTo(240);
 
       fireEvent.click(await screen.findByTestId("comment-add"));
       await screen.findByTestId("reply-wizard");
