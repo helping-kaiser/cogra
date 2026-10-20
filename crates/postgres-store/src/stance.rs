@@ -121,7 +121,9 @@ pub async fn bundle(
 /// census-unknown legs excluded — taken per target across every target
 /// the author has written an Opinion toward. The clip preserves zero
 /// (`clip(x) == 0` exactly when `x` is `0`), so the sum tests directly in
-/// the query and `NetStance::is_inert` never needs the rows.
+/// the query and `NetStance::is_inert` never needs the rows. The sums are
+/// exact decimal, as `ExactSums` documents, so a bundle walked back to
+/// zero reads inert here exactly when the stance read says it is.
 ///
 /// [`BundleView::Landed`] reads the mirror alone. [`BundleView::
 /// IncludingPending`] adds the author's signed, in-flight Opinions into
@@ -157,7 +159,7 @@ pub async fn has_live_opinion_from(
                           OR (carried AND state = 'awaiting_pre_sign'))
                ) legs
                GROUP BY target
-               HAVING SUM(p_d) <> 0 AND SUM(p_i) <> 0
+               HAVING SUM(p_d::text::numeric) <> 0 AND SUM(p_i::text::numeric) <> 0
            ) AS "exists!""#,
         source,
         author_atom,
