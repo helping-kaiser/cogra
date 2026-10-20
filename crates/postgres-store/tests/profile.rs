@@ -2,7 +2,8 @@
 //! newest-wins version reads, the append-only insert, and the
 //! one-namespace handle lookup. Requires Postgres (`make up`).
 
-use postgres_store::content::LandingOrder;
+use chrono::{Duration, Utc};
+use postgres_store::content::{self, LandingOrder};
 use postgres_store::{auth, genesis, profile};
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -62,7 +63,8 @@ async fn current_profile_serves_the_newest_version(pool: PgPool) {
         Some("Curious."),
         None,
         Some("https://ada.example"),
-        order(1, 0),
+        Some(order(1, 0)),
+        Utc::now(),
     )
     .await
     .expect("inserts");
@@ -86,26 +88,44 @@ async fn current_profile_serves_the_newest_version(pool: PgPool) {
     assert_eq!(count, 2);
 }
 
-/// Two version rows written in one transaction carry the same
-/// `created_at` — `now()` is the transaction timestamp — so this is the
-/// same-instant collision the monotonic key exists for, forced through
-/// the real write path rather than simulated. Both rows are given one
-/// landing order too, which is the only state in which every key above
-/// `version_id` ties and the monotonic key alone decides.
+/// Two version rows carrying the same `created_at` — two landed writes
+/// authored at one instant — are the same-instant collision the
+/// monotonic key exists for. Both rows are given one landing order too,
+/// which is the only state in which every key above `version_id` ties
+/// and the monotonic key alone decides.
 ///
-/// Two version rows sharing one transaction timestamp are told apart by the monotonic key alone.
+/// Two version rows sharing one instant are told apart by the monotonic key alone.
 /// ´claim:profile:the-monotonic-key-alone-breaks-a-shared-instant´
 #[sqlx::test(migrations = "../../migrations")]
 async fn same_instant_writes_both_land_and_the_later_one_is_current(pool: PgPool) {
     let actor = seed_actor(&pool, "ada").await;
+    let at = Utc::now();
 
     let mut tx = pool.begin().await.expect("tx");
-    profile::insert_profile_version(&mut tx, actor, "First", None, None, None, order(1, 0))
-        .await
-        .expect("first insert");
-    profile::insert_profile_version(&mut tx, actor, "Second", None, None, None, order(1, 0))
-        .await
-        .expect("second insert");
+    profile::insert_profile_version(
+        &mut tx,
+        actor,
+        "First",
+        None,
+        None,
+        None,
+        Some(order(1, 0)),
+        at,
+    )
+    .await
+    .expect("first insert");
+    profile::insert_profile_version(
+        &mut tx,
+        actor,
+        "Second",
+        None,
+        None,
+        None,
+        Some(order(1, 0)),
+        at,
+    )
+    .await
+    .expect("second insert");
     tx.commit().await.expect("commits");
 
     let stamps: Vec<chrono::DateTime<chrono::Utc>> = sqlx::query_scalar(
@@ -128,17 +148,18 @@ async fn same_instant_writes_both_land_and_the_later_one_is_current(pool: PgPool
 }
 
 /// The records decide, not the clock. Both versions are written through
-/// the real insert, in separate transactions so `now()` genuinely
-/// advances between them, and the landing coordinates run the other way:
-/// the row written second promotes a record that landed *earlier*, which
-/// a promotion pass replaying two epochs out of order produces. The
-/// profile must be the one whose record landed last.
+/// the real insert, the second authored later, and the landing
+/// coordinates run the other way: the row written second promotes a
+/// record that landed *earlier*, which a promotion pass replaying two
+/// epochs out of order produces. The profile must be the one whose record
+/// landed last.
 ///
 /// The current profile is the one whose record landed last, never the one whose row was written last.
 /// ´claim:profile:the-record-that-landed-last-is-current´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_record_that_landed_last_is_current_even_when_written_first(pool: PgPool) {
     let actor = seed_actor(&pool, "ada").await;
+    let first = Utc::now();
 
     let mut tx = pool.begin().await.expect("tx");
     profile::insert_profile_version(
@@ -148,7 +169,8 @@ async fn the_record_that_landed_last_is_current_even_when_written_first(pool: Pg
         None,
         None,
         None,
-        order(9, 0),
+        Some(order(9, 0)),
+        first,
     )
     .await
     .expect("first insert");
@@ -162,7 +184,8 @@ async fn the_record_that_landed_last_is_current_even_when_written_first(pool: Pg
         None,
         None,
         None,
-        order(2, 0),
+        Some(order(2, 0)),
+        first + Duration::seconds(1),
     )
     .await
     .expect("second insert");
@@ -205,9 +228,18 @@ async fn a_row_without_coordinates_never_outranks_a_landed_one(pool: PgPool) {
     let actor = seed_actor(&pool, "ada").await;
 
     let mut tx = pool.begin().await.expect("tx");
-    profile::insert_profile_version(&mut tx, actor, "Ada L", None, None, None, order(1, 0))
-        .await
-        .expect("inserts");
+    profile::insert_profile_version(
+        &mut tx,
+        actor,
+        "Ada L",
+        None,
+        None,
+        None,
+        Some(order(1, 0)),
+        Utc::now(),
+    )
+    .await
+    .expect("inserts");
     tx.commit().await.expect("commits");
 
     let mut conn = pool.acquire().await.expect("conn");
@@ -223,6 +255,152 @@ async fn a_row_without_coordinates_never_outranks_a_landed_one(pool: PgPool) {
         current.display_name, "Ada L",
         "a version the graph never ordered cannot displace one it did"
     );
+}
+
+/// A pending version is served ahead of every landed one — including one
+/// whose record landed after the pending update was signed — because an
+/// update is its author's content from the signature, and it has no place
+/// in the order yet. The landed read leaves it out: that is the base the
+/// next update's delta merges onto.
+///
+/// A pending profile version is current ahead of every landed one, and the landed read leaves it out.
+/// ´claim:profile:a-pending-version-is-current-ahead-of-every-landed-one´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_pending_version_is_current_ahead_of_every_landed_one(pool: PgPool) {
+    let actor = seed_actor(&pool, "ada").await;
+    let signed = Utc::now();
+
+    let mut tx = pool.begin().await.expect("tx");
+    assert!(
+        profile::insert_profile_version(&mut tx, actor, "Pending", None, None, None, None, signed)
+            .await
+            .expect("pending insert")
+    );
+    profile::insert_profile_version(
+        &mut tx,
+        actor,
+        "Landed",
+        None,
+        None,
+        None,
+        Some(order(9, 0)),
+        signed + Duration::seconds(1),
+    )
+    .await
+    .expect("landed insert");
+    tx.commit().await.expect("commits");
+
+    let current = profile::current_profile(&pool, actor)
+        .await
+        .expect("reads")
+        .expect("has profile");
+    assert_eq!(current.display_name, "Pending");
+    assert!(current.pending);
+    assert_eq!(current.created_at, signed);
+
+    let landed = profile::landed_profile(&pool, actor)
+        .await
+        .expect("reads")
+        .expect("has profile");
+    assert_eq!(landed.display_name, "Landed");
+    assert!(!landed.pending);
+}
+
+/// A pending row is keyed by its authoring instant: a second insert at
+/// the same instant writes nothing (a retried pre-sign), landing stamps
+/// exactly that row, and a landing naming another instant finds nothing
+/// to flip.
+///
+/// A pending profile version is named by its authoring instant, so a retry writes nothing and a landing flips only that row.
+/// ´claim:profile:a-pending-version-is-named-by-its-instant´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_pending_version_is_named_by_its_instant(pool: PgPool) {
+    let actor = seed_actor(&pool, "ada").await;
+    let signed = Utc::now();
+
+    let mut tx = pool.begin().await.expect("tx");
+    assert!(
+        profile::insert_profile_version(&mut tx, actor, "Ada L", None, None, None, None, signed)
+            .await
+            .expect("inserts")
+    );
+    assert!(
+        !profile::insert_profile_version(&mut tx, actor, "Ada L", None, None, None, None, signed)
+            .await
+            .expect("retries"),
+        "a retry at the same instant writes nothing"
+    );
+    assert!(
+        !profile::land_profile_version(
+            &mut tx,
+            actor,
+            signed + Duration::seconds(1),
+            order(3, 0)
+        )
+        .await
+        .expect("lands"),
+        "another instant names no row"
+    );
+    assert!(
+        profile::land_profile_version(&mut tx, actor, signed, order(3, 0))
+            .await
+            .expect("lands")
+    );
+    tx.commit().await.expect("commits");
+
+    let current = profile::current_profile(&pool, actor)
+        .await
+        .expect("reads")
+        .expect("has profile");
+    assert_eq!(current.display_name, "Ada L");
+    assert!(!current.pending, "landing drops the mark");
+    let count: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM actor_profile_versions WHERE actor_id = $1")
+            .bind(actor)
+            .fetch_one(&pool)
+            .await
+            .expect("count");
+    assert_eq!(count, 2, "the seed and the one landed update");
+}
+
+/// Expiry's discard takes the pending row its write staged and nothing
+/// else: a landed version at the same instant stays, and the profile
+/// falls back to it.
+///
+/// Expiry discards only the pending profile version its write staged.
+/// ´claim:profile:expiry-discards-only-the-pending-version´
+#[sqlx::test(migrations = "../../migrations")]
+async fn expiry_discards_only_the_pending_version(pool: PgPool) {
+    let actor = seed_actor(&pool, "ada").await;
+    let signed = Utc::now();
+
+    let mut tx = pool.begin().await.expect("tx");
+    profile::insert_profile_version(
+        &mut tx,
+        actor,
+        "Landed",
+        None,
+        None,
+        None,
+        Some(order(1, 0)),
+        signed,
+    )
+    .await
+    .expect("landed insert");
+    profile::insert_profile_version(&mut tx, actor, "Pending", None, None, None, None, signed)
+        .await
+        .expect("pending insert");
+    content::discard_pending(&mut tx, actor, signed)
+        .await
+        .expect("discards");
+    tx.commit().await.expect("commits");
+
+    let current = profile::current_profile(&pool, actor)
+        .await
+        .expect("reads")
+        .expect("has profile");
+    assert_eq!(current.display_name, "Landed");
+    assert!(!current.pending);
 }
 
 /// An actor the store has never seen has no current profile at all.

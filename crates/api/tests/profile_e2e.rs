@@ -371,6 +371,79 @@ async fn bio_edit_lands_through_the_write_path(pool: PgPool) {
     assert_eq!(user["user"]["displayName"]["value"], "ada");
 }
 
+/// A signed edit reads back to every viewer before it lands — another
+/// member's session and an anonymous caller alike — with the profile
+/// PENDING and `updatedAt` at the signature; landing flips the state and
+/// leaves the date where it was.
+///
+/// A signed profile edit reads back to every viewer before it lands, the profile pending and dated by the signature, and landing leaves that date where it was.
+/// ´claim:profile:a-pending-edit-reads-back-to-every-viewer´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_pending_edit_reads_back_to_every_viewer(pool: PgPool) {
+    const PROFILE: &str = r#"query($handle: String) {
+        user(handle: $handle) {
+            bio { value }
+            updatedAt
+            landing { state epoch }
+        }
+    }"#;
+    let rig = Rig::new(pool).await;
+    let (_ada, key) = rig.seed_member("ada", "ada@example.com").await;
+    let (_bob, _bob_key) = rig.seed_member("bob", "bob@example.com").await;
+    let ada = rig.log_in("ada@example.com").await;
+    let bob = rig.log_in("bob@example.com").await;
+
+    let before = rig.gql(None, PROFILE, json!({ "handle": "ada" })).await;
+    assert_eq!(before["user"]["landing"]["state"], "LANDED");
+
+    let prepared = rig
+        .gql(
+            Some(&ada),
+            r#"mutation($input: PrepareProfileUpdateInput!) {
+                 prepareProfileUpdate(input: $input) {
+                   writes { id canonicalProposal }
+                   userErrors { code message }
+                 }
+               }"#,
+            json!({ "input": { "bio": "Signed, not landed." }}),
+        )
+        .await;
+    let writes = &prepared["prepareProfileUpdate"]["writes"];
+    rig.sign_prepared(&ada, &key, writes).await;
+    let staged_id: Uuid = writes[0]["id"].as_str().expect("id").parse().expect("uuid");
+    let authored = staged::load(&rig.pool, staged_id)
+        .await
+        .expect("loads")
+        .pre_signed_at
+        .expect("signed");
+
+    for viewer in [Some(bob.as_str()), None] {
+        let read = rig.gql(viewer, PROFILE, json!({ "handle": "ada" })).await;
+        assert_eq!(read["user"]["bio"]["value"], "Signed, not landed.");
+        assert_eq!(read["user"]["landing"]["state"], "PENDING");
+        assert_eq!(read["user"]["landing"]["epoch"], Value::Null);
+        let updated: chrono::DateTime<chrono::Utc> = read["user"]["updatedAt"]
+            .as_str()
+            .expect("updatedAt")
+            .parse()
+            .expect("timestamp");
+        assert_eq!(updated, authored, "the profile dates from the signature");
+    }
+
+    rig.close_and_ingest().await;
+
+    let landed = rig.gql(Some(&bob), PROFILE, json!({ "handle": "ada" })).await;
+    assert_eq!(landed["user"]["bio"]["value"], "Signed, not landed.");
+    assert_eq!(landed["user"]["landing"]["state"], "LANDED");
+    assert!(landed["user"]["landing"]["epoch"].is_i64());
+    let updated: chrono::DateTime<chrono::Utc> = landed["user"]["updatedAt"]
+        .as_str()
+        .expect("updatedAt")
+        .parse()
+        .expect("timestamp");
+    assert_eq!(updated, authored, "landing leaves the date where it was");
+}
+
 /// (´claim:profile:an-empty-update-is-refused´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn empty_update_refuses_with_a_user_error(pool: PgPool) {
