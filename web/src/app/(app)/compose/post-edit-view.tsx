@@ -113,9 +113,9 @@ export function PostEditView({
 }: {
   state: PostEditState;
   /**
-   * The raw sum of the author's Publish records toward the post — null while
-   * no read serves it (`fetchPostBacking`, the server gap), when the row
-   * stops at the flagged placeholder.
+   * The raw sum of the author's Publish records toward the post — null when
+   * the read answered none or failed (`fetchPostBacking`), when the row stops
+   * at the flagged placeholder.
    */
   backingRawSum: number | null;
   /** `Adjust` on the Your backing row: the one-axis pad over the edit. */

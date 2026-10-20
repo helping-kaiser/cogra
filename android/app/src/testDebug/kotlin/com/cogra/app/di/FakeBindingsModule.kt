@@ -244,10 +244,8 @@ class ScriptedProfileRepository : ThrowingProfileRepository() {
             displayName = testModeratedField(displayName),
             bio = testModeratedField(bio),
             websiteUrl = testModeratedField(websiteUrl),
-            // A landed edit is a NEW profile version, and its instant is
-            // what the screen waits on: a fake that changed the words
-            // without moving this would model a backend that answers
-            // instantly, which is the one thing the real one does not do.
+            // A signed edit is a NEW profile version, served at once and
+            // dated by its signature.
             updatedAt = profile?.updatedAt?.plusSeconds(1) ?: Instant.EPOCH.plusSeconds(1),
         )
         return Outcome.Success(emptyList())

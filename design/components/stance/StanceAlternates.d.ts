@@ -57,6 +57,18 @@ export interface StanceAlternatesProps {
    * scrim, and no "?" or action row is drawn.
    */
   host?: "dialog" | "sheet";
+  /**
+   * "pair" (default) — two tracks, two typed fields. "one" — a family with one
+   * free parameter (the backing on one's own content, `p_i` census-pinned at
+   * 1): ONE track and ONE typed field over `pDirected`, the swap reading `Type
+   * an exact value` / `Use a slider`. The pinned number is never drawn, not
+   * even locked; the pick keeps its pair shape with the pin untouched.
+   */
+  axis?: "pair" | "one";
+  /** The unreachable landing's explanation (`unreachableHelp`), handed by the host once its 🤔 is tapped; it replaces the body in place. */
+  zeroHelp?: readonly string[] | null;
+  /** Leaves `zeroHelp` for the body. */
+  onZeroBack?: () => void;
 }
 
 export declare function StanceAlternates(props: StanceAlternatesProps): JSX.Element;

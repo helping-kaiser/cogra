@@ -43,6 +43,7 @@ import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.ModeratedField
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
+import com.cogra.domain.PostBacking
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PostView
 import com.cogra.domain.PreparedContentView
@@ -852,6 +853,13 @@ open class ThrowingContentRepository : ContentRepository {
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun postSelfMark(id: String): Outcome<SelfMarkView?> =
         throw UnsupportedOperationException()
+
+    /**
+     * Answers rather than throws, for the reason [graphIds] does: every edit
+     * reads it as it opens, and a test about something else need not know
+     * the backing exists. Null — no backing served — is the unread pad.
+     */
+    override suspend fun postBacking(id: String): Outcome<PostBacking?> = Outcome.Success(null)
     override suspend fun preparePostEdit(
         id: String,
         title: String?,

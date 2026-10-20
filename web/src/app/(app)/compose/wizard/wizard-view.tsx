@@ -1020,7 +1020,7 @@ export function ComposeWizard({
           onStagedPDirected={setStagedPDirected}
           onSetStance={() => {
             // EXACTLY 0.00 ASKS FIRST (ComposePad.md): the post's own path
-            // would carry nothing. It warns and never refuses. The pick is a
+            // starts unreachable. It warns and never refuses. The pick is a
             // hundredth (the release lands it there), so reading 0.00 IS 0.
             const picked = snapDimension(stagedPDirected);
             if (picked === 0) {

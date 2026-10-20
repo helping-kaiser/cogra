@@ -90,7 +90,7 @@ describe("the hundredths grid", () => {
 
   it("lands a pick near zero on EXACTLY zero, which is what the gates read", () => {
     // 0.004 prints `+0.00` beside a smile today; snapped, it is the 0 that
-    // wears 🤷 and that a compose Set asks about.
+    // wears 🤔 and that a compose Set asks about.
     expect(snapDimension(0.004) === 0).toBe(true);
     expect(isSevered(snapPair({ pDirected: 0.003, pInterest: -0.0049 }))).toBe(true);
   });

@@ -123,12 +123,9 @@ class WriteSigner @Inject constructor(
      * checked against what was verified at its prepare (Carried.kt): a write
      * this device holds an expectation for signs only if the served proposal
      * digests to it, its dependencies aside — the landing appends the ruled
-     * completion, `[admission Registration, winning vouch]`; a write it holds
-     * none for was prepared on another device and, when it is an Opinion,
-     * signs under the second named exemption, [CarriedAtLandingExemption], on
-     * the transport checks. Any other family without a kept expectation is a
-     * mismatch, and one mismatch refuses the whole batch before its first
-     * pre-signature.
+     * completion, `[admission Registration, winning vouch]`. A write it
+     * holds none for is a mismatch (no family is exempt), and one mismatch
+     * refuses the whole batch before its first pre-signature.
      * Then the [CarriedLandingGate] is asked; a batch it holds back is not
      * signed and nothing of it is spent.
      */
@@ -139,8 +136,8 @@ class WriteSigner @Inject constructor(
         }
         val key = actorKey()
         // The expectations are NOT cleared by a refusal: the write stays
-        // released server-side, and the next poll must refuse it again rather
-        // than find no expectation and sign it under the exemption.
+        // released server-side and is checked against them again on the next
+        // poll.
         val refusal = carriedRefusal(key.address(), batch)
         if (refusal != null) return batch.map { staged -> rejected(staged.id, refusal) }
         val readiness = carriedGate.readiness(batch)
@@ -176,21 +173,18 @@ class WriteSigner @Inject constructor(
 
     /**
      * Why the released carried batch is not what this device verified at its
-     * prepare, or null when every write either matches its kept expectation
-     * or is an Opinion with none here (the named exemption). Dependencies are
-     * never compared: the landing completes them.
+     * prepare, or null when every write matches its kept expectation.
+     * Dependencies are never compared: the landing completes them.
      */
     private suspend fun carriedRefusal(author: String, batch: List<StagedWriteView>): String? {
         for (staged in batch) {
-            intentRefusal(author, listOf(staged.canonicalProposal), carriedIntentOf(staged.id))
+            val kept = identity.carriedExpectation(staged.id)
+                ?: return "this device holds no prepare-time check for the released carried write"
+            intentRefusal(author, listOf(staged.canonicalProposal), CarriedExpectation(kept))
                 ?.let { return it }
         }
         return null
     }
-
-    /** What one released write is checked against: its kept expectation, or the named exemption. */
-    private suspend fun carriedIntentOf(stagedWriteId: String): Intent =
-        identity.carriedExpectation(stagedWriteId)?.let(::CarriedExpectation) ?: CarriedAtLandingExemption
 
     /**
      * Whether the landing's expectation for a write has served its purpose:
@@ -444,21 +438,13 @@ internal fun intentRefusal(author: String, proposals: List<ByteArray>, intent: I
             checkIntent(intent, author, batch)
             null
         }
-        // The landing's two carried intents (Carried.kt): the digest kept at
-        // the prepare, dependencies excluded — or, prepared elsewhere, the
-        // second named exemption and the transport checks alone, which holds
-        // only for an Opinion (PR-105).
+        // The landing's carried intent (Carried.kt): the digest kept at the
+        // prepare, dependencies excluded.
         is CarriedExpectation ->
             if (batch.all { carriedDigest(it).contentEquals(intent.digest) }) {
                 null
             } else {
                 "the released carried write is not the one this device verified at its prepare"
-            }
-        CarriedAtLandingExemption ->
-            if (batch.all { it.body.family == Family.OPINION }) {
-                null
-            } else {
-                "only an Opinion is exempt from the carried check at the landing"
             }
     }
 } catch (e: IntentMismatchException) {

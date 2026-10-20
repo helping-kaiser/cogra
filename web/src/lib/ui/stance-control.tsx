@@ -179,6 +179,7 @@ export function StanceControl({
   variant,
   padOnly,
   lineFaceInk,
+  borrowed = false,
 }: {
   target: StanceTargetRef;
   /**
@@ -223,6 +224,14 @@ export function StanceControl({
    * muted face.
    */
   lineFaceInk?: string;
+  /**
+   * THE READER STILL BORROWS A VIEW (jakob 2026-10-20; the master's
+   * `borrowed`): they hold no outgoing opinion with neither number at zero.
+   * The host knows; an unreachable or severed landing then warns that the
+   * pick keeps the borrowed view. Warns, never blocks. Left out, nothing
+   * is added.
+   */
+  borrowed?: boolean;
 }) {
   const data = useStanceData();
   const phase = useAuthPhase();
@@ -776,7 +785,7 @@ export function StanceControl({
         coaching && <StanceCoaching testId={`${testIdPrefix}-coaching`} />
       )}
       {/* Below the field, and never merged into the line above it. */}
-      <StanceLandingLine landing={landing} testIdPrefix={testIdPrefix} zero={zeroWords} />
+      <StanceLandingLine landing={landing} testIdPrefix={testIdPrefix} zero={zeroWords} borrowed={borrowed} />
     </>
   );
 
@@ -1027,7 +1036,7 @@ export function StanceControl({
           severable={severable}
           severLabel={severLabel}
           axes={axes}
-          landing={<StanceLandingLine landing={landing} testIdPrefix={testIdPrefix} zero={zeroWords} />}
+          landing={<StanceLandingLine landing={landing} testIdPrefix={testIdPrefix} zero={zeroWords} borrowed={borrowed} />}
         >
           <StanceStanding
             pick={pick}

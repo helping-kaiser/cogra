@@ -12,7 +12,6 @@ import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -55,16 +54,6 @@ data class ProfileUiState(
 private const val PAGE = 20
 
 /**
- * How many reads wait for a signed edit to land, and how long between
- * them. The dev stack ingests every 2s and closes an epoch every 3s
- * (`development.md`), so a write is visible within a few seconds; the
- * budget is generous against that and still finite, because a wait
- * that cannot fail is a hang.
- */
-private const val LANDING_READS = 12
-private const val LANDING_POLL = 1_000L
-
-/**
  * One profile — the viewer's own (null handle) or any actor's by
  * handle — with the authored chronicle under the filter chips
  * (roadmap "Slice 2.1": the honest labelled history).
@@ -97,42 +86,6 @@ class ProfileViewModel @Inject constructor(
         started = true
         this.handle = handle
         refresh()
-    }
-
-    /**
-     * An edit was signed on this device — show it once it exists.
-     *
-     * **A single re-read cannot work here, and that is the whole bug.**
-     * The edit is a signed write: `approve` returns while the record is
-     * still RELAYING, and the profile read serves only what has LANDED
-     * (`crates/postgres-store/src/profile.rs` reads
-     * `actor_profile_versions`). So the refetch that fires the instant
-     * the editor pops answers with the version the edit replaced, and
-     * nothing reads again — the screen sits on stale words until the
-     * process dies (F2-8).
-     *
-     * So this waits for the version rather than for a timer: it re-reads
-     * until [ProfileView.updatedAt] moves off the one the screen was
-     * holding. Bounded, because a wait that cannot fail is a hang — the
-     * ingest pass and the epoch clock are what it is waiting for, and if
-     * they never come the screen simply keeps what it has, which is
-     * where a single refetch left it anyway.
-     */
-    fun onEditSaved() {
-        val before = _state.value.profile?.updatedAt
-        viewModelScope.launch {
-            repeat(LANDING_READS) {
-                // A read that failed says nothing about the edit — it is
-                // not the new version arriving, so the wait goes on.
-                val fresh = readProfile()
-                if (fresh != null && fresh.updatedAt != before) {
-                    // The chronicle gained the edit's own record.
-                    loadRows(reset = true)
-                    return@launch
-                }
-                delay(LANDING_POLL)
-            }
-        }
     }
 
     fun refresh() {

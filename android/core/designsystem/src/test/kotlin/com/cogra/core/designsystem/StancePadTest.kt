@@ -106,6 +106,28 @@ class StancePadTest {
         }
     }
 
+    /** [show], for a state a test changes after the first frame. */
+    private fun showLive(state: () -> StanceControlState) {
+        compose.setContent {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                StanceControl(
+                    state = state(),
+                    onHoldDefault = {},
+                    onOpenPad = {},
+                    onPick = {},
+                    onCommit = {},
+                    onDismissPad = {},
+                    onToggleExactValues = {},
+                    onOpenSeverance = {},
+                    onConfirmSeverance = {},
+                    onDismissSeverance = {},
+                    onConfirmationShown = {},
+                    testTagPrefix = TAG,
+                )
+            }
+        }
+    }
+
     // -- What the resting target reads as (design.md §8.3) --
 
     @Test
@@ -784,7 +806,9 @@ class StancePadTest {
     }
 
     @Test
-    fun anInertLandingSaysTheStanceWillCarryNothing() {
+    fun aOneZeroLandingReadsItsStateUnderTheThinkingFace() {
+        // Round 18 (jakob 2026-10-20): one number at zero is unreachable,
+        // never severance — 🤔, the state, then the one consequence.
         show(
             StanceControlState(
                 pad = StancePadMode.STICKY,
@@ -798,7 +822,60 @@ class StancePadTest {
         )
 
         compose.onNodeWithTag("${TAG}_stance_landing")
-            .assertTextContains("carry nothing", substring = true)
+            .assertTextContains("Interested, no side taken — this won't shape anyone's feed.")
+        compose.onNodeWithText(UNREACHABLE_EMOJI, useUnmergedTree = true).assertExists()
+        compose.onNodeWithText("🤷", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("${TAG}_stance_landing_borrowed").assertDoesNotExist()
+    }
+
+    @Test
+    fun theUnreachableHeadFollowsTheSignOfTheNumberThatStands() {
+        val heads = listOf(
+            StanceLanding(StancePoint(0.0, -0.4), true, false, false) to "Rather not see it, no side taken",
+            StanceLanding(StancePoint(0.4, 0.0), false, true, false) to "For it, no interest either way",
+            StanceLanding(StancePoint(-0.4, 0.0), false, true, false) to "Against it, no interest either way",
+        )
+        var landing by mutableStateOf(heads.first().first)
+        showLive { StanceControlState(pad = StancePadMode.STICKY, landing = landing) }
+        for ((next, head) in heads) {
+            landing = next
+            compose.onNodeWithTag("${TAG}_stance_landing")
+                .assertTextContains("$head — this won't shape anyone's feed.")
+        }
+    }
+
+    @Test
+    fun theMastersZeroStateWordsAreTheStrings() {
+        val master = java.io.File("../../../design/components/stance/StanceReadout.jsx").readText()
+        val strings = java.io.File("src/main/res/values/strings.xml").readText().replace("\\'", "'")
+        for (head in listOf(
+            "Interested, no side taken",
+            "Rather not see it, no side taken",
+            "For it, no interest either way",
+            "Against it, no interest either way",
+        )) {
+            assertThat(master).contains("\"$head\"")
+            assertThat(strings).contains(">$head</string>")
+        }
+        val tail = Regex("export const UNREACHABLE_TAIL = \"([^\"]+)\";").find(master)!!.groupValues[1]
+        assertThat(strings).contains("<string name=\"stance_unreachable_tail\">$tail</string>")
+        val kept = Regex("export const BORROWED_KEPT_LINE = \"([^\"]+)\";").find(master)!!.groupValues[1]
+        assertThat(strings).contains("<string name=\"stance_borrowed_kept\">$kept</string>")
+    }
+
+    @Test
+    fun aBorrowingReaderIsWarnedUnderAnUnreachableOrSeveredLandingOnly() {
+        val unreachable = StanceLanding(StancePoint(0.0, 0.4), true, false, false)
+        val severed = StanceLanding(StancePoint.Origin, true, true, true)
+        val live = StanceLanding(StancePoint(0.3, 0.4), false, false, false)
+        var landing by mutableStateOf(unreachable)
+        showLive { StanceControlState(pad = StancePadMode.STICKY, landing = landing, borrowed = true) }
+        compose.onNodeWithTag("${TAG}_stance_landing_borrowed")
+            .assertTextEquals("You'd keep your borrowed view — no feed of your own yet.")
+        landing = severed
+        compose.onNodeWithTag("${TAG}_stance_landing_borrowed").assertExists()
+        landing = live
+        compose.onNodeWithTag("${TAG}_stance_landing_borrowed").assertDoesNotExist()
     }
 
     @Test

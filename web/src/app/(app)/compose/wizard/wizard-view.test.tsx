@@ -275,7 +275,7 @@ describe("the compose wizard", () => {
     for (let press = 0; press < 3; press += 1) {
       fireEvent.keyDown(screen.getByTestId("wizard-stance-field-strip"), { key: "ArrowLeft" });
     }
-    expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤷");
+    expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤔");
     fireEvent.click(screen.getByTestId("wizard-stance-set"));
     expect(screen.getByTestId("wizard-unreachable")).toHaveAttribute("open");
     expect(screen.getByTestId("wizard-stance-pad")).toHaveAttribute("open");
@@ -284,7 +284,7 @@ describe("the compose wizard", () => {
     fireEvent.click(screen.getByTestId("wizard-unreachable-keep"));
     expect(screen.getByTestId("wizard-unreachable")).not.toHaveAttribute("open");
     expect(screen.getByTestId("wizard-stance-pad")).toHaveAttribute("open");
-    expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤷");
+    expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤔");
     expect(screen.getByTestId("wizard-stance-value").textContent).toContain("+0.15");
 
     // Set it anyway: both close, and the row reads the zero.
@@ -292,7 +292,7 @@ describe("the compose wizard", () => {
     fireEvent.click(screen.getByTestId("wizard-unreachable-anyway"));
     expect(screen.getByTestId("wizard-unreachable")).not.toHaveAttribute("open");
     expect(screen.getByTestId("wizard-stance-pad")).not.toHaveAttribute("open");
-    expect(screen.getByTestId("wizard-stance-value").textContent).toContain("🤷");
+    expect(screen.getByTestId("wizard-stance-value").textContent).toContain("🤔");
     expect(screen.getByTestId("wizard-stance-value").textContent).toContain("+0.00");
 
     fireEvent.click(screen.getByTestId("wizard-sign"));
@@ -303,7 +303,7 @@ describe("the compose wizard", () => {
 
   // ComposePad.md: release lands the pick on the nearest hundredth. The pad
   // opens at +0.10 and a drag is float travel, so before the snap a drag could
-  // never reach EXACTLY 0 — the 🤷 and the question were unreachable by hand.
+  // never reach EXACTLY 0 — the 🤔 and the question were unreachable by hand.
   it("lands a drag released near zero on exactly 0.00, so Set asks Start it unreachable?", async () => {
     render();
     fireEvent.click(await screen.findByTestId("wizard-to-words"));
@@ -322,9 +322,9 @@ describe("the compose wizard", () => {
     fireEvent.pointerDown(strip, { pointerId: 1, clientX: 0, clientY: 0 });
     fireEvent.pointerMove(strip, { pointerId: 1, clientX: (0.0031 - DEFAULT_P_DIRECTED) * half, clientY: 0 });
     // Under the thumb it is a float that prints +0.00 and smiles.
-    expect(screen.getByTestId("wizard-stance-pick-face").textContent).not.toBe("🤷");
+    expect(screen.getByTestId("wizard-stance-pick-face").textContent).not.toBe("🤔");
     fireEvent.pointerUp(strip, { pointerId: 1 });
-    expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤷");
+    expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤔");
     fireEvent.click(screen.getByTestId("wizard-stance-set"));
     expect(screen.getByTestId("wizard-unreachable")).toHaveAttribute("open");
   });

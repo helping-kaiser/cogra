@@ -148,6 +148,8 @@ export const FLOW_MARKERS = {
     { n: 3, find: ">Walk it back</button>", tag: "button" },
     { n: 4, find: ">Cancel</button>", tag: "button" },
     { n: 5, find: ">Set</button>", tag: "button" },
+    // The `landing` chip's unreachable landing: its 🤔 is a door of its own.
+    { n: 6, find: 'aria-label="Interested, no side taken"', tag: "button" },
   ],
   /* The ceremony has exactly one control, which is the whole point of it. */
   VouchedIn: [{ n: 1, find: ">Go to your feed</button>", tag: "button" }],
@@ -929,6 +931,7 @@ Object.assign(FLOW_MARKERS, {
   ComposePad: [
     { n: 1, find: 'aria-label="Your backing on your post"', tag: "button" },
     { n: 2, find: 'aria-label="Backing pad', tag: "div" },
+    { n: 2, find: ">Set an exact value for your backing</button>", tag: "button" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
@@ -939,6 +942,7 @@ Object.assign(FLOW_MARKERS, {
   EditPad: [
     { n: 1, find: 'aria-label="Your backing on your post"', tag: "button" },
     { n: 2, find: 'aria-label="Backing pad for your own post"', tag: "div" },
+    { n: 2, find: ">Set an exact value for your backing</button>", tag: "button" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
