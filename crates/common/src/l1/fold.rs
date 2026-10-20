@@ -11,11 +11,23 @@
 //! store returns raw sums and everything here works on them. Severance needs
 //! that distinction: a bundle is netted when its *sum* reaches zero, and a
 //! clipped sum has already lost how far away that is.
+//!
+//! Every sum is exact decimal arithmetic ([`super::exact`]; edges.md §1):
+//! the store, the ranker and the projection all add the decimals the
+//! records' doubles denote and round once at the end, so whether a bundle
+//! sits at `(0, 0)` is one answer whatever order its records arrive in.
+
+use super::exact::{Decimal, NotFinite, exact_add, exact_sum};
 
 /// The closed range every authored parameter lives in (edges.md §1).
 const LIMIT: f64 = 1.0;
 
 /// One bundle's raw parameter sums — the fold's input, before the clip.
+///
+/// Each sum is the exact decimal sum of the bundle's records rounded once to
+/// the nearest double, and zero exactly when the exact sum is — build one
+/// with [`BundleSum::of_records`] or [`BundleSum::from_decimals`], never by
+/// adding doubles.
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct BundleSum {
     pub p_d: f64,
@@ -73,6 +85,35 @@ pub fn clip(x: f64) -> f64 {
 }
 
 impl BundleSum {
+    /// The exact sum of a bundle's records, `(p_d, p_i)` each — the same
+    /// sums whatever order the records come in. A non-finite parameter has
+    /// no decimal to add and is refused.
+    pub fn of_records<I: IntoIterator<Item = (f64, f64)>>(
+        records: I,
+    ) -> Result<BundleSum, NotFinite> {
+        let (mut d, mut i) = (Vec::new(), Vec::new());
+        for (p_d, p_i) in records {
+            d.push(p_d);
+            i.push(p_i);
+        }
+        let records = u32::try_from(d.len()).unwrap_or(u32::MAX);
+        Ok(BundleSum::from_decimals(
+            &exact_sum(d)?,
+            &exact_sum(i)?,
+            records,
+        ))
+    }
+
+    /// A bundle from exact sums already assembled — the store's `numeric`
+    /// sums, read back as decimals.
+    pub fn from_decimals(p_d: &Decimal, p_i: &Decimal, records: u32) -> BundleSum {
+        BundleSum {
+            p_d: p_d.to_f64(),
+            p_i: p_i.to_f64(),
+            records,
+        }
+    }
+
     /// The folded pair this bundle currently stands at.
     pub fn fold(&self) -> NetStance {
         NetStance {
@@ -83,11 +124,13 @@ impl BundleSum {
 
     /// Where one further record carrying `(p_d, p_i)` lands the bundle.
     /// The pick is appended to the sum, never subtracted from it — the
-    /// record carries exactly the values picked (design.md §8.1).
+    /// record carries exactly the values picked (design.md §8.1). Appended
+    /// exactly, so a pick that cancels the sum lands on `(0, 0)` and not one
+    /// rounding error beside it.
     pub fn project(&self, p_d: f64, p_i: f64) -> NetStance {
         BundleSum {
-            p_d: self.p_d + p_d,
-            p_i: self.p_i + p_i,
+            p_d: exact_add(self.p_d, p_d),
+            p_i: exact_add(self.p_i, p_i),
             records: self.records + 1,
         }
         .fold()
@@ -107,17 +150,23 @@ impl BundleSum {
     /// to cancel the sum *exactly*: Layer 1 publishes no netting tolerance
     /// (`ε_clip` is deleted with no successor — layer1-interface.md §12), so
     /// a bundle left at `1e-16` is simply not severed and the author has
-    /// paid θ for nothing. Whole steps keep every intermediate value exactly
-    /// representable, so the counter-records sum to the negation of the
-    /// bundle whatever order the store adds them in.
+    /// paid θ for nothing. The steps are taken in exact decimal arithmetic
+    /// on the decimal the sum denotes, so a sum of hundredths walks back in
+    /// hundredths — `2.3` as `−1, −1, −0.3`, never the `−0.2999999999999998`
+    /// floating subtraction leaves — and the batch nets the bundle in any
+    /// order. A remainder with more than fifteen significant digits (only a
+    /// bundle holding values authored before the grid was enforced) may not
+    /// survive the trip to a double; such a batch nets as near as a double
+    /// reaches, and the exact read says honestly that it did not sever.
     pub fn severance_batch(&self) -> Vec<(f64, f64)> {
         let n = self.reach_steps();
+        let (Some(d), Some(i)) = (Decimal::of_f64(self.p_d), Decimal::of_f64(self.p_i)) else {
+            return vec![];
+        };
         if n == 0 {
             return vec![];
         }
-        let d = walk_back(self.p_d, n);
-        let i = walk_back(self.p_i, n);
-        d.into_iter().zip(i).collect()
+        walk_back(&d, n).into_iter().zip(walk_back(&i, n)).collect()
     }
 
     /// `⌈max(|Σ_d|, |Σ_i|)⌉` — the one place the step count is computed, so
@@ -154,17 +203,17 @@ impl BundleSum {
     }
 }
 
-/// One axis's walk-back: `n` values summing to exactly `-total`, each in
-/// `[-1, 1]`, front-loaded in whole steps so every partial remainder stays
-/// exactly representable.
-fn walk_back(total: f64, n: usize) -> Vec<f64> {
-    let sign = if total > 0.0 { -1.0 } else { 1.0 };
+/// One axis's walk-back: `n` values whose decimals sum to exactly `-total`,
+/// each in `[-1, 1]`, front-loaded in whole steps with the remainder last.
+fn walk_back(total: &Decimal, n: usize) -> Vec<f64> {
+    let one = Decimal::one();
     let mut remaining = total.abs();
     (0..n)
         .map(|_| {
-            let step = remaining.min(LIMIT);
-            remaining -= step;
-            sign * step
+            let step = std::cmp::min(remaining.clone(), one.clone());
+            remaining = &remaining - &step;
+            let counter = if total.is_negative() { step } else { -&step };
+            counter.to_f64()
         })
         .collect()
 }
@@ -264,8 +313,7 @@ mod tests {
     #[test]
     fn projection_appends_the_pick_rather_than_replacing_the_bundle() {
         let projected = sum(0.5, 0.5).project(0.1, 0.1);
-        assert!((projected.p_d - 0.6).abs() < 1e-12);
-        assert!((projected.p_i - 0.6).abs() < 1e-12);
+        assert_eq!(projected, NetStance { p_d: 0.6, p_i: 0.6 });
     }
 
     /// The projection clips where the fold does, so a preview never promises more.
@@ -338,10 +386,20 @@ mod tests {
             assert!((-1.0..=1.0).contains(p_d), "every record stays authorable");
             assert!((-1.0..=1.0).contains(p_i));
         }
-        let net_d: f64 = batch.iter().map(|(d, _)| d).sum();
-        let net_i: f64 = batch.iter().map(|(_, i)| i).sum();
-        assert!((b.p_d + net_d).abs() < 1e-12);
-        assert!((b.p_i + net_i).abs() < 1e-12);
+        assert_eq!(
+            batch,
+            vec![(-1.0, 1.0), (-1.0, 0.2), (-0.5, 0.0)],
+            "walked back in hundredths, never in floating remainders"
+        );
+        assert!(nets_to_zero(b, &batch));
+    }
+
+    /// The bundle plus its batch, summed exactly.
+    fn nets_to_zero(b: BundleSum, batch: &[(f64, f64)]) -> bool {
+        BundleSum::of_records(std::iter::once((b.p_d, b.p_i)).chain(batch.iter().copied()))
+            .expect("finite")
+            .fold()
+            .is_severed()
     }
 
     /// At exactly one, the boundary the batch length turns on.
@@ -365,14 +423,104 @@ mod tests {
     #[test]
     fn severance_batch_applied_to_the_bundle_folds_to_zero() {
         let b = sum(-3.4, 2.9);
-        let mut running = b;
-        for (p_d, p_i) in b.severance_batch() {
-            running = BundleSum {
-                p_d: running.p_d + p_d,
-                p_i: running.p_i + p_i,
-                records: running.records + 1,
-            };
+        let batch = b.severance_batch();
+        assert_eq!(
+            batch,
+            vec![(1.0, -1.0), (1.0, -1.0), (1.0, -0.9), (0.4, 0.0)]
+        );
+        assert!(nets_to_zero(b, &batch));
+        let mut reversed = batch.clone();
+        reversed.reverse();
+        assert!(nets_to_zero(b, &reversed), "in any order");
+    }
+
+    /// Every ordering of a bundle's records folds to the same bits: the sum
+    /// is exact, so addition order is not an input.
+    ///
+    /// A bundle's sums are the same bits in every order its records arrive in.
+    /// ´claim:fold:a-bundle-sums-the-same-in-every-order´
+    #[test]
+    fn a_bundle_sums_the_same_in_every_order() {
+        let records = [(0.1, 0.7), (0.2, -0.1), (-0.3, 0.3), (0.6, -0.2)];
+        let reference = BundleSum::of_records(records).expect("finite");
+        assert_eq!((reference.p_d, reference.p_i), (0.6, 0.7));
+        for a in 0..4 {
+            for b in 0..4 {
+                if a == b {
+                    continue;
+                }
+                let mut shuffled = records;
+                shuffled.swap(a, b);
+                let again = BundleSum::of_records(shuffled).expect("finite");
+                assert_eq!(again.p_d.to_bits(), reference.p_d.to_bits());
+                assert_eq!(again.p_i.to_bits(), reference.p_i.to_bits());
+            }
         }
-        assert!(running.fold().is_severed());
+        assert!(BundleSum::of_records([(f64::NAN, 0.1)]).is_err());
+    }
+
+    /// The known-dirty pattern: a (0.1 + 0.2) bundle sums to 0.3 exactly —
+    /// floating point says 0.30000000000000004 — so walking it back by the
+    /// shown 0.3, by projection or by severance, reaches exact zero.
+    ///
+    /// A bundle of dirty float members walks back to exact zero.
+    /// ´claim:fold:a-dirty-bundle-walks-back-to-exact-zero´
+    #[test]
+    fn a_dirty_bundle_walks_back_to_exact_zero() {
+        assert_ne!(0.1 + 0.2, 0.3, "the float sum is dirty");
+        let b = BundleSum::of_records([(0.1, 0.1), (0.2, 0.2)]).expect("finite");
+        assert_eq!((b.p_d, b.p_i), (0.3, 0.3));
+        assert!(b.project(-0.3, -0.3).is_severed());
+        assert_eq!(b.severance_batch(), vec![(-0.3, -0.3)]);
+        assert!(nets_to_zero(b, &b.severance_batch()));
+        assert!(
+            BundleSum::of_records([(0.2, 0.2), (-0.3, -0.3), (0.1, 0.1)])
+                .expect("finite")
+                .fold()
+                .is_severed(),
+            "the walked-back bundle, in another order"
+        );
+    }
+
+    /// An off-grid system value is held exactly and walks back exactly.
+    ///
+    /// An off-grid record nets and severs exactly.
+    /// ´claim:fold:an-off-grid-record-severs-exactly´
+    #[test]
+    fn an_off_grid_record_severs_exactly() {
+        let b = BundleSum::of_records([(0.00047, 1.0), (0.1, 0.0)]).expect("finite");
+        assert_eq!(b.p_d, 0.10047);
+        let batch = b.severance_batch();
+        assert_eq!(batch, vec![(-0.10047, -1.0)]);
+        assert!(nets_to_zero(b, &batch));
+        assert!(!b.project(-0.1, -1.0).is_severed(), "0.00047 still stands");
+
+        let legacy = 0.00047147125005719825;
+        let b = BundleSum::of_records([(legacy, 1.0)]).expect("finite");
+        assert_eq!(b.severance_batch(), vec![(-legacy, -1.0)]);
+        assert!(nets_to_zero(b, &b.severance_batch()));
+        assert!(
+            !b.project(-0.0004714712500572, -1.0).is_severed(),
+            "a neighbouring decimal is a different value"
+        );
+    }
+
+    /// Exact zero keeps the two predicates apart: one axis netted to zero
+    /// is inert and still standing; both netted is severed.
+    ///
+    /// (´claim:fold:a-bundle-is-inert-when-either-axis-is-zero´)
+    /// (´claim:fold:a-bundle-is-severed-only-when-both-axes-are-zero´)
+    #[test]
+    fn exact_zero_keeps_inert_and_severed_apart() {
+        let one_axis = BundleSum::of_records([(0.1, 0.5), (0.2, 0.5), (-0.3, 0.0)])
+            .expect("finite")
+            .fold();
+        assert!(one_axis.is_inert());
+        assert!(!one_axis.is_severed());
+        let both = BundleSum::of_records([(0.1, 0.4), (0.2, -0.1), (-0.3, -0.3)])
+            .expect("finite")
+            .fold();
+        assert!(both.is_inert());
+        assert!(both.is_severed());
     }
 }
