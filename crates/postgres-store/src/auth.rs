@@ -1693,11 +1693,11 @@ pub async fn landed_vouch_state(
 }
 
 /// Sets the first-opinion latch — the derived cache of the member's
-/// first Opinion confirming in the mirror, which ends the borrowed view
-/// for good. The caller latches only on a landed Opinion: an in-flight
-/// one can still expire, and an expiry with nothing landed returns the
-/// borrowing. Idempotent; the `IS NULL` predicate is the concurrency
-/// gate.
+/// first live Opinion (a non-inert netted bundle) confirming in the
+/// mirror, which ends the borrowed view for good. The caller latches
+/// only on a landed live Opinion: an in-flight one can still expire, and
+/// an expiry with nothing landed returns the borrowing. Idempotent; the
+/// `IS NULL` predicate is the concurrency gate.
 pub async fn latch_first_opinion(pool: &PgPool, account_id: Uuid) -> Result<bool, sqlx::Error> {
     Ok(sqlx::query!(
         "UPDATE auth_applications
