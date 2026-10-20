@@ -318,7 +318,7 @@ class CommentEditTest {
         assertThat(state.signedActionCount).isEqualTo(2)
     }
 
-    /** A topic taken off is its own act too — a Tag at relevance 0. */
+    /** A topic taken off is its own act too — a Tag at (0,0). */
     @Test
     fun aTopicTakenOffIsItsOwnAct() {
         val loaded = TagRow("glovebox")

@@ -6,10 +6,11 @@
 //!
 //! - **The fold is newest-wins, not summed.** A Tag is a standing claim;
 //!   the author's latest record per (author, content, Type) is the current
-//!   one, and relevance `0` reads as withdrawn (hashtag.md §4). A Tag
+//!   one, and a current tag at `(0,0)` reads as withdrawn (hashtag.md §4);
+//!   zero on one parameter only is still a claim. A Tag
 //!   cannot net accumulated confidence back down, so the stance fold of
 //!   feed-ranking.md §3.2 is the wrong reading here.
-//! - **The channel test is §4's.** A current non-zero tag counts when its
+//! - **The channel test is §4's.** A current, unwithdrawn tag counts when its
 //!   author created the content (content-intrinsic), or when a live walk
 //!   from the viewer reaches its author above the dust floor
 //!   (initiator-owned) — never every stranger's.
@@ -67,7 +68,7 @@ pub(crate) fn admitted(
     else {
         return Ok(BTreeSet::new());
     };
-    let mut current: BTreeMap<(String, String), (CausalKey, f64)> = BTreeMap::new();
+    let mut current: BTreeMap<(String, String), (CausalKey, (f64, f64))> = BTreeMap::new();
     for record in &g.records {
         if record.family != Family::Tag || record.target != type_id {
             continue;
@@ -80,15 +81,15 @@ pub(crate) fn admitted(
         }
         let slot = current
             .entry((record.author.clone(), content.clone()))
-            .or_insert((record.key, leg.p_d));
+            .or_insert((record.key, (leg.p_d, leg.p_i)));
         if record.key >= slot.0 {
-            *slot = (record.key, leg.p_d);
+            *slot = (record.key, (leg.p_d, leg.p_i));
         }
     }
     let reached = reached_persons(g, cal);
     let mut admitted = BTreeSet::new();
-    for ((author, content), (_, relevance)) in current {
-        if relevance == 0.0 {
+    for ((author, content), (_, (relevance, confidence))) in current {
+        if relevance == 0.0 && confidence == 0.0 {
             continue;
         }
         let intrinsic = creator(&content).as_deref() == Some(author.as_str());

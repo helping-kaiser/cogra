@@ -4,12 +4,14 @@
 //! bundle nets by sum-then-clip into one effective edge `(p̄_d, p̄_i)`, its
 //! temporal attributes taken from the bundle's ≺-newest member.
 //!
-//! The netting itself is common's `BundleSum::fold` — the seam's one fold,
-//! adopted rather than re-derived, so there is no CoGra-side variant to
-//! trust (feed-ranking.md §3.1 "One formula, three consumers"). What this
-//! module adds is the order: floating addition is not associative, so the
-//! members are summed in authoritative order ≺, causal key ascending
-//! (ranker-core D-c), whatever order they arrived in (D-d).
+//! The netting itself is common's `BundleSum` — the seam's one fold, summed
+//! in exact decimal arithmetic and adopted rather than re-derived, so there
+//! is no CoGra-side variant to trust (feed-ranking.md §3.1 "One formula,
+//! three consumers"). Exact addition is associative, so the sum no longer
+//! depends on the order the members arrived in (D-d) and agrees with the
+//! store's `numeric` sums over the same records; the members are still put
+//! into authoritative order ≺, causal key ascending (ranker-core D-c), for
+//! the newest member and the duplicate-key refusal.
 
 use std::cmp::Ordering;
 
@@ -76,12 +78,12 @@ impl Folded {
     }
 }
 
-/// Folds a bundle's members. Sorts them into ≺ first, so the input order
-/// never matters; sums each axis from `+0` in that order; clips with
-/// common's fold.
+/// Folds a bundle's members. Sorts them into ≺ first; sums each axis
+/// exactly; clips with common's fold.
 ///
-/// Refuses an empty bundle and two members claiming one causal key, which a
-/// conforming slice cannot hold: the published order is total.
+/// Refuses an empty bundle, two members claiming one causal key, and a
+/// non-finite parameter, none of which a conforming slice can hold: the
+/// published order is total and census formation bounds every parameter.
 pub fn fold_members(members: &[Member]) -> Result<Folded, RankError> {
     let mut ordered = members.to_vec();
     ordered.sort_by_key(|m| m.key);
@@ -95,14 +97,8 @@ pub fn fold_members(members: &[Member]) -> Result<Folded, RankError> {
         .last()
         .map(|m| m.key)
         .ok_or_else(|| RankError::malformed("a bundle with no members"))?;
-    let mut sum = BundleSum::default();
-    for member in &ordered {
-        sum = BundleSum {
-            p_d: sum.p_d + member.p_d,
-            p_i: sum.p_i + member.p_i,
-            records: sum.records + 1,
-        };
-    }
+    let sum = BundleSum::of_records(ordered.iter().map(|m| (m.p_d, m.p_i)))
+        .map_err(|e| RankError::malformed(format!("bundle at {newest:?}: {e}")))?;
     let net = sum.fold();
     Ok(Folded {
         p_d: net.p_d,

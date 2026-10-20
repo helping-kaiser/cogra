@@ -27,6 +27,7 @@ use std::path::Path;
 
 use common::envelope::{CograContent, CograProfile, MediaAsset, SensitiveMark};
 use common::l1::census::Family;
+use common::l1::exact::exact_sum;
 use common::l1::fold::BundleSum;
 use common::l1::identifier::{ActId, NodeId};
 use common::l1::wire::encode_proposal;
@@ -796,6 +797,12 @@ fn edit_cases() -> Vec<Value> {
     cases
 }
 
+/// The severance walk-back cases. Netting is exact decimal arithmetic
+/// (edges.md §1): the device sums the decimals the doubles denote, never the
+/// doubles. Floating addition in served order leaves 1.1 − 1 − 0.1 at
+/// 8.3e-17 — a lawful batch a float check would refuse — and nets the
+/// float-built 2.3 walk-back that the decimal sum does not; one case pins
+/// each.
 fn severance_cases() -> Vec<Value> {
     let mut cases = vec![];
     let sum = BundleSum {
@@ -811,6 +818,30 @@ fn severance_cases() -> Vec<Value> {
         shown.clone(),
         &lawful,
         true,
+    ));
+    let floats_miss = BundleSum {
+        p_d: 1.1,
+        p_i: 0.3,
+        records: 2,
+    };
+    cases.push(case(
+        "a walk-back that nets in exact decimal where floating point misses zero",
+        vec![],
+        vec![netting("opinion", None, POST, floats_miss)],
+        &severance_batch(POST, floats_miss, 40),
+        true,
+    ));
+    let float_built = [
+        stance(POST, -1.0, 0.7).with_seq(40),
+        stance(POST, -1.0, 0.0).with_seq(41),
+        stance(POST, -((2.3 - 1.0) - 1.0), 0.0).with_seq(42),
+    ];
+    cases.push(case(
+        "a walk-back that nets only in floating point is refused",
+        vec![],
+        shown.clone(),
+        &float_built,
+        false,
     ));
     let mut short = lawful.clone();
     short[0].p_d = -0.9;
@@ -1281,14 +1312,22 @@ fn build_vectors() -> Value {
 }
 
 /// The lawful severance the vectors accept is the batch the server stages,
-/// and it nets the shown sums to exactly zero in the order it is served —
-/// the property both clients check, recomputed here against the reference.
+/// and the shown sums plus the batch net to exactly zero in exact decimal
+/// arithmetic — the property both clients check, recomputed here against
+/// the reference. Floating addition in served order misses zero for some
+/// of these, which is why the check is decimal.
 ///
-/// The exported severance batch nets its bundle to exactly zero in served order.
+/// The exported severance batch nets its bundle to exactly zero in exact decimal arithmetic.
 /// ´claim:intent:the-exported-severance-nets-exactly´
 #[test]
 fn the_exported_severance_nets_its_bundle_exactly() {
-    for (p_d, p_i) in [(2.3, -0.7), (1.4, 0.25), (0.1, 0.1), (-3.0, 0.5)] {
+    for (p_d, p_i) in [
+        (2.3, -0.7),
+        (1.1, 0.3),
+        (1.4, 0.25),
+        (0.1, 0.1),
+        (-3.0, 0.5),
+    ] {
         let sum = BundleSum {
             p_d,
             p_i,
@@ -1296,11 +1335,15 @@ fn the_exported_severance_nets_its_bundle_exactly() {
         };
         let batch = sum.severance_batch();
         assert_eq!(batch.len(), sum.severance_cost());
-        let net = batch
-            .iter()
-            .fold((p_d, p_i), |(d, i), (bd, bi)| (d + bd, i + bi));
-        assert_eq!(net, (0.0, 0.0), "({p_d}, {p_i}) walked back to {net:?}");
+        let net_d = exact_sum(std::iter::once(p_d).chain(batch.iter().map(|(d, _)| *d)));
+        let net_i = exact_sum(std::iter::once(p_i).chain(batch.iter().map(|(_, i)| *i)));
+        assert!(
+            net_d.expect("finite").is_zero() && net_i.expect("finite").is_zero(),
+            "({p_d}, {p_i}) walked back by {batch:?}"
+        );
     }
+    let float_net = [-1.0, -1.0, -0.3].iter().fold(2.3, |s, x| s + x);
+    assert_ne!(float_net, 0.0, "served-order floats miss the zero");
 }
 
 /// The committed intent vectors match what this crate encodes, so drift fails the build rather than reaching a client.

@@ -686,7 +686,7 @@ data class ReferenceCandidateView(
 /**
  * One current topic claim on a piece of content — a chip in the chip
  * row (hashtag.md §4). The bundle key is (author, content, Type); the
- * newest record in it wins, and relevance 0 is a withdrawal that never
+ * newest record in it wins, and (0,0) is a withdrawal that never
  * appears here.
  */
 data class TopicClaimView(

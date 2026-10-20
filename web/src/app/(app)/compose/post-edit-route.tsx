@@ -40,7 +40,7 @@ import { SensitiveSheet } from "@/lib/ui2/compose/sensitive-sheet";
 import { ActsSheet } from "@/lib/ui2/compose/edit-acts";
 import { BackingEditPad } from "@/lib/ui2/compose/backing-edit-pad";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
-import { WITHDRAWN_RELEVANCE } from "@/lib/topics/draft";
+import { signedValues } from "@/lib/topics/draft";
 import { keptPreviews, pictureAltText, pictureId } from "@/lib/compose/comment-edit";
 import {
   editActCount,
@@ -290,10 +290,8 @@ export function PostEditRoute({
         prepareTag(client, {
           target: postId,
           name: change.tag.name,
-          // Withdrawing is a Tag act at relevance 0 (hashtag.md §4).
-          relevance: change.kind === "tag" ? change.tag.relevance : WITHDRAWN_RELEVANCE,
-          // An un-tag signs the confidence its chip showed; only relevance moves.
-          confidence: change.tag.confidence,
+          // Withdrawing is a Tag act at (0,0) (hashtag.md §4).
+          ...signedValues(change),
         }),
       );
       if (prepared.kind === "failed") {

@@ -39,6 +39,15 @@ use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 
 /// A stance dimension: a float constrained to the closed range
 /// [-1.0, +1.0]. Prepare validates per family.
+///
+/// As an input it is a user's pick, so it must also lie on the hundredths
+/// grid (edges.md §1) — the server half of the grid rule, the clients
+/// snapping their picks being the other. This is the one door every
+/// user-authored parameter comes through; values the server derives (a
+/// severance batch, walking back what is there) and the genesis bootstrap
+/// never pass it, which is what lets the records they net against stay as
+/// they are. As an output it is whatever the graph holds, off-grid values
+/// authored before the rule included.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Dimension(pub f64);
 
@@ -54,6 +63,11 @@ impl ScalarType for Dimension {
         if !(-1.0..=1.0).contains(&f) {
             return Err(InputValueError::custom(
                 "a Dimension lies in the closed range [-1.0, +1.0]",
+            ));
+        }
+        if !common::l1::exact::on_hundredths_grid(f) {
+            return Err(InputValueError::custom(
+                "a Dimension lies on the hundredths grid: a multiple of 0.01",
             ));
         }
         Ok(Dimension(f))
@@ -3028,7 +3042,8 @@ impl PostType {
 
     /// This post's current topics — the author's own declarations, as
     /// the current-topics fold reads them: newest record per (author,
-    /// content, Type), relevance 0 read as withdrawn (hashtag.md §4).
+    /// content, Type), a winner at `(0,0)` read as withdrawn (hashtag.md
+    /// §4).
     ///
     /// Third-party topic claims are deliberately absent: they reach a
     /// viewer only through the tagger, at a forward-path weight the
@@ -3520,7 +3535,7 @@ impl HashtagType {
 
 /// One current topic claim on a node — a chip in the chip row. The
 /// bundle key is (author, content, Type) and the newest record in it
-/// wins; relevance 0 is a withdrawal and never appears here.
+/// wins; `(0,0)` is a withdrawal and never appears here.
 #[derive(SimpleObject)]
 pub struct TopicClaim {
     pub hashtag: HashtagType,
