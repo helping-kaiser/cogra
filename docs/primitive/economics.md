@@ -88,13 +88,14 @@ whoever paid (``rem:gates:guild-funding``,
 the comparator sees a funded member exactly as a self-funded one.
 System actors and Collectives draw on the same pool.
 
-**Defunding is severance.** Community funding follows live reach:
+**Defunding follows reach.** Community funding follows live reach:
 an actor the community has cut off entirely — every path to them
-crossing a `(0,0)`-netted bundle — is in zero-jail
+crossing a routing-inert bundle — is unreachable
 ([feed-ranking §7](feed-ranking.md#7-sort-order-tie-breakers-zero-jail)),
 and the same unreachability that removes them from feeds and
-earnings removes them from funding. Severance and defunding are the
-same act; a defunded actor must self-fund to keep writing.
+earnings removes them from funding. Severance, the `(0,0)` net that
+puts an actor in zero-jail, therefore defunds; a defunded actor
+must self-fund to keep writing.
 
 ---
 
