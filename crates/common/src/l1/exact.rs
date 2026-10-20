@@ -341,7 +341,6 @@ impl FromStr for Decimal {
             Ok(u) => Units::Small(u),
             Err(_) => Units::Big(digits.parse::<BigInt>().map_err(|_| refuse())?),
         };
-        // value = digits × 10^(exponent − |fraction|)
         let shift = exponent - fraction.len() as i64;
         let decimal = if shift <= 0 {
             Decimal {
@@ -489,14 +488,15 @@ mod tests {
     }
 
     /// The small form and the wide form are one arithmetic: a sum whose
-    /// units outgrow an i128 still nets exactly, and a value below the
-    /// smallest subnormal never reads as zero.
+    /// units outgrow an i128 — the smallest subnormal, 5e-324, carries 324
+    /// digits after the point — still nets exactly, and a value below that
+    /// subnormal never reads as zero.
     ///
     /// A sum too long for an i128 still nets exactly, and never reads as zero unless it is.
     /// ´claim:exact:a-wide-sum-nets-exactly-and-never-reads-as-zero´
     #[test]
     fn a_wide_sum_nets_exactly_and_never_reads_as_zero() {
-        let tiny = f64::from_bits(1); // 5e-324: 324 digits after the point
+        let tiny = f64::from_bits(1);
         let sum = exact_sum([0.3, tiny, 0.7]).expect("finite");
         assert_eq!(sum.to_f64(), 1.0);
         let back = &sum - &of(1.0);

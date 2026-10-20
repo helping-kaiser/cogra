@@ -508,8 +508,8 @@ mod tests {
     /// Exact zero keeps the two predicates apart: one axis netted to zero
     /// is inert and still standing; both netted is severed.
     ///
-    /// (´claim:fold:a-bundle-is-inert-when-either-axis-is-zero´)
-    /// (´claim:fold:a-bundle-is-severed-only-when-both-axes-are-zero´)
+    /// Exact zero keeps inert and severed apart: one axis netted is inert and standing, both netted is severed.
+    /// ´claim:fold:exact-zero-keeps-inert-and-severed-apart´
     #[test]
     fn exact_zero_keeps_inert_and_severed_apart() {
         let one_axis = BundleSum::of_records([(0.1, 0.5), (0.2, 0.5), (-0.3, 0.0)])

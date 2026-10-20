@@ -2018,7 +2018,8 @@ async fn a_carried_application_write_is_never_a_candidate(pool: PgPool) {
 /// The candidates narrow by what the ranker computes over and nothing
 /// else: `kinds` (a comment is no candidate of a Posts feed), and under a
 /// topic, the author's own current declaration of it (a third party's
-/// pending tag, or the author's withdrawn one, admits nothing).
+/// pending tag, or the author's one withdrawn at `(0,0)`, admits nothing;
+/// one at zero relevance alone is still a claim and admits, hashtag.md §4).
 ///
 /// Settling candidates narrow by kinds and topic only.
 /// ´claim:relay:candidates-narrow-by-kinds-and-topic´
@@ -2050,7 +2051,6 @@ async fn candidates_narrow_by_kinds_and_topic_only(pool: PgPool) {
     let withdrawn = settling_content(&rig.pool, "a", 24, None, (0.5, 0.5), 5).await;
     pending_tag(&rig.pool, "a", 31, withdrawn, "salt", 1.0).await;
     pending_untag(&rig.pool, "a", 32, withdrawn, "salt").await;
-    // Zero relevance alone is a claim, not the (0,0) un-tag (hashtag.md §4).
     let inert = settling_content(&rig.pool, "a", 25, None, (0.5, 0.5), 6).await;
     pending_tag(&rig.pool, "a", 33, inert, "salt", 0.0).await;
     rank_with(json!({ "topic": salt })).await;

@@ -400,7 +400,7 @@ mod tests {
         }
     }
 
-    /// Relevance zero is legal — half of the `(0,0)` un-tag, or a routing-inert claim — never a malformed one.
+    /// Relevance zero is legal — half of the (0,0) un-tag, or a routing-inert claim — never a malformed one.
     /// ´claim:topics:relevance-zero-is-legal´
     #[test]
     fn relevance_zero_is_the_un_tag_and_is_legal() {

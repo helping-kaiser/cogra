@@ -797,6 +797,12 @@ fn edit_cases() -> Vec<Value> {
     cases
 }
 
+/// The severance walk-back cases. Netting is exact decimal arithmetic
+/// (edges.md §1): the device sums the decimals the doubles denote, never the
+/// doubles. Floating addition in served order leaves 1.1 − 1 − 0.1 at
+/// 8.3e-17 — a lawful batch a float check would refuse — and nets the
+/// float-built 2.3 walk-back that the decimal sum does not; one case pins
+/// each.
 fn severance_cases() -> Vec<Value> {
     let mut cases = vec![];
     let sum = BundleSum {
@@ -813,11 +819,6 @@ fn severance_cases() -> Vec<Value> {
         &lawful,
         true,
     ));
-    // Netting is exact decimal arithmetic (edges.md §1): the device sums the
-    // decimals the doubles denote, never the doubles. Floating addition in
-    // served order leaves 1.1 − 1 − 0.1 at 8.3e-17 — a lawful batch a float
-    // check would refuse — and nets the float-built 2.3 walk-back that the
-    // decimal sum does not.
     let floats_miss = BundleSum {
         p_d: 1.1,
         p_i: 0.3,
