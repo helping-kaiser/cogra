@@ -7,6 +7,7 @@ import { AccountDeletionProvider } from "@/lib/deletion/deletion-status";
 import { SeenRecordSync } from "@/lib/history/seen-record-sync";
 import { DeviceLockKeeper } from "@/lib/identity/device-lock-keeper";
 import { AccountPreferencesSync } from "@/lib/settings/account-preferences-sync";
+import { GeekModeSync } from "@/lib/settings/geek-mode-sync";
 import { THEME_BOOT_SCRIPT } from "@/lib/settings/theme-boot";
 import { SessionProvider } from "@/lib/session/provider";
 import { AuthRuntimeProvider } from "@/lib/session/runtime";
@@ -43,9 +44,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // The theme chosen in Settings rides the document as `data-theme`, set by
-    // the head script before the first paint — React did not render it, so
-    // the attribute is the one hydration difference this element owns.
+    // The theme chosen in Settings rides the document as `data-theme`, and
+    // Show exact values as `data-geek`, both set by the head script before
+    // the first paint — React did not render them, so the two attributes are
+    // the hydration differences this element owns.
     <html
       lang="en"
       className={`${figtree.variable} h-full antialiased`}
@@ -65,6 +67,7 @@ export default function RootLayout({
           <ApolloWrapper>
             <AuthRuntimeProvider>
               <AccountPreferencesSync />
+              <GeekModeSync />
               <SeenRecordSync />
               <DeviceLockKeeper />
               <AccountDeletionProvider>

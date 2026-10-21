@@ -277,3 +277,17 @@ dialog.cg-sheet-out::backdrop {
     transition: none;
   }
 }
+
+/* ------------------------------------------------------------- geek mode --
+ * ONE MARKUP, TWO PAINTINGS (design/readme.md §13). Every surface draws the
+ * glyph AND the number; the number sits in a `.cg-exact` span, and this one
+ * rule decides which is painted. `data-geek="on"` lands on the screen root
+ * from Show exact values (`theme-boot.ts`, `geek-mode-sync.tsx`). Scoped to
+ * the not-on case rather than written as a show/hide pair, because the marked
+ * spans carry their own display and a rule that restored one would restore
+ * the wrong one. Every marked span keeps a screen-reader twin: the mode draws,
+ * it never redacts.
+ */
+:root:not([data-geek="on"]) .cg-exact {
+  display: none;
+}
