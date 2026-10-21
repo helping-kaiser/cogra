@@ -8,7 +8,9 @@
 // number the held gesture writes and the one the pad opens at, and the
 // low-defaults policy is what keeps stronger stances expressible.
 
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
@@ -179,6 +181,30 @@ describe("the zero bundle's readout", () => {
     expect(bundleReadout({ pDirected: -0, pInterest: 0 }, "Severed").emoji).toBe(
       ZERO_BUNDLE_EMOJI,
     );
+  });
+});
+
+// THE CHOKE POINT HOLDS (seam 243): the master's own checker once computed
+// expected faces from the bare table and drifted, so the structure is
+// pinned — outside the two table modules, nothing in the shipped source
+// calls a bare table walk; every face reads `bundleReadout`/`tagReadout`.
+describe("the faces' one choke point", () => {
+  it("leaves the bare table walks callable only from bundleReadout and tagReadout", () => {
+    const root = fileURLToPath(new URL("../../", import.meta.url));
+    const owners = new Set([join(root, "lib", "stance", "anchors.ts"), join(root, "lib", "topics", "anchors.ts")]);
+    const offenders: string[] = [];
+    const walk = (dir: string) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const path = join(dir, entry.name);
+        if (entry.isDirectory()) {
+          if (entry.name !== "__generated__") walk(path);
+        } else if (/\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name) && !owners.has(path)) {
+          if (/\bnearest(Tag)?Anchor\s*\(/.test(readFileSync(path, "utf-8"))) offenders.push(path);
+        }
+      }
+    };
+    walk(root);
+    expect(offenders).toEqual([]);
   });
 });
 
