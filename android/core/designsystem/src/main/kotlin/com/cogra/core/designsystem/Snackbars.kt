@@ -38,6 +38,8 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
 val LocalSnackbarHostState = compositionLocalOf<SnackbarHostState?> { null }
@@ -89,9 +91,26 @@ data class NodeSnackbarVisuals(
     override val duration: SnackbarDuration get() = SnackbarDuration.Short
 }
 
+/**
+ * A snackbar whose drawn words and spoken words differ — the signed-opinion
+ * confirmation (`signedLine`, StanceReadout.jsx): it draws `Current opinion
+ * 🙂` (the pair behind it only in geek mode) and says `Current opinion:
+ * Nice, For or against +0.10, How much reaches you +0.10` in both modes,
+ * because an emoji's own name is never the anchor's word.
+ */
+data class SpokenSnackbarVisuals(
+    override val message: String,
+    val spoken: String,
+) : SnackbarVisuals {
+    override val actionLabel: String? get() = null
+    override val withDismissAction: Boolean get() = false
+    override val duration: SnackbarDuration get() = SnackbarDuration.Short
+}
+
 @Composable
 fun CograSnackbar(data: SnackbarData, testTag: String? = null) {
     val node = (data.visuals as? NodeSnackbarVisuals)?.node
+    val spoken = (data.visuals as? SpokenSnackbarVisuals)?.spoken
     val tagged = when {
         node != null -> Modifier.dataNode(node)
         testTag != null -> Modifier.testTag(testTag)
@@ -115,6 +134,7 @@ fun CograSnackbar(data: SnackbarData, testTag: String? = null) {
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier
                     .weight(1f, fill = false)
+                    .then(if (spoken != null) Modifier.semantics { contentDescription = spoken } else Modifier)
                     .dataNode(node?.div("message")),
             )
             data.visuals.actionLabel?.let { label ->

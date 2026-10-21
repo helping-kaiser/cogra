@@ -62,7 +62,7 @@ class StancePadVariantTest {
                     onPick = {},
                     onCommit = { committed++ },
                     onDismissPad = { dismissed++ },
-                    onToggleExactValues = {},
+                    onOpenAlternates = {},
                     onOpenSeverance = {},
                     onConfirmSeverance = {},
                     onDismissSeverance = {},
@@ -148,7 +148,7 @@ class StancePadVariantTest {
         compose.mainClock.autoAdvance = false
         show(open.copy(busy = true))
         compose.mainClock.advanceTimeBy(SETTING_AFTER_MS - 50)
-        compose.onNodeWithTag((PAD / "set").tag).assertTextEquals("Set this stance")
+        compose.onNodeWithTag((PAD / "set").tag).assertTextEquals("Set")
         compose.mainClock.advanceTimeBy(100)
         compose.onNodeWithTag((PAD / "set").tag).assertTextEquals("Setting…")
         compose.onNodeWithTag((PAD / "set").tag).performClick()

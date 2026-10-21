@@ -214,7 +214,7 @@ class DetailClipTest {
                 onPick = {},
                 onCommit = {},
                 onDismissPad = { pad = StancePadMode.CLOSED },
-                onToggleExactValues = {},
+                onOpenAlternates = {},
                 onOpenSeverance = {},
                 onConfirmSeverance = {},
                 onDismissSeverance = {},

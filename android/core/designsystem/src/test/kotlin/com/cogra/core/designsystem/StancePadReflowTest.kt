@@ -18,11 +18,13 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * The pad is a bottom-anchored popup (`PadAtLowerCentre`), so any growth
- * of its card moves its top edge UP while Set is answering. Pressing Set
- * puts the pad into [StanceControlState.busy] and swaps its standing line
- * for the pending fold; neither may change the pad's height, or the pad
- * lurches the instant the reader presses (jakob, PR-57).
+ * The pad is parked by its bottom edge, so any growth of its card moves its
+ * top edge UP while Set is answering. Pressing Set puts the pad into
+ * [StanceControlState.busy] and swaps Set's label; neither may change the
+ * pad's height, or the pad lurches the instant the reader presses (jakob,
+ * PR-57). The standing itself no longer moves while Set waits — the opinion
+ * moves once the signature is taken (`StanceViewModelTest`) — but a holder
+ * that did move it would still meet the same card.
  */
 @RunWith(RobolectricTestRunner::class)
 // A window tall enough that the pad is never clamped to it: a clamped card
@@ -51,7 +53,7 @@ class StancePadReflowTest {
                     onPick = {},
                     onCommit = {},
                     onDismissPad = {},
-                    onToggleExactValues = {},
+                    onOpenAlternates = {},
                     onOpenSeverance = {},
                     onConfirmSeverance = {},
                     onDismissSeverance = {},
@@ -95,47 +97,9 @@ class StancePadReflowTest {
     }
 
     @Test
-    fun pressingSetOverAZeroBundleDoesNotMoveThePad() {
-        // The one transition that swaps a short sentence for a reading.
-        val zero = open.copy(standing = StancePoint.Origin)
-        val (before, after) = heights(zero, zero.copy(standing = StancePoint(0.1, 0.1), busy = true))
-        assertThat(after).isEqualTo(before)
-    }
-
-    @Test
-    fun pressingSetOverAZeroBundleUnderTheLongestAxisWordsDoesNotMoveThePad() {
-        val zero = open.copy(standing = StancePoint.Origin)
-        val (before, after) = heights(
-            zero,
-            zero.copy(standing = StancePoint(-0.7, -0.45), busy = true),
-            axes = StanceAxes.Affinity,
-        )
-        assertThat(after).isEqualTo(before)
-    }
-
-    @Test
     fun theBusyLabelSwapAloneDoesNotMoveThePad() {
         val held = open.copy(standing = StancePoint(0.6, 0.35))
         val (before, after) = heights(held, held.copy(busy = true))
-        assertThat(after).isEqualTo(before)
-    }
-
-    @Test
-    fun theFirstOpinionDoesNotMoveThePad() {
-        // The one transition an update never makes: the pending fold turns
-        // NO standing into one while the pad is still open and answering
-        // (jakob, hand test 2026-10-14 — the first stance only).
-        val (before, after) = heights(open, open.copy(standing = StancePoint(0.1, 0.1), busy = true))
-        assertThat(after).isEqualTo(before)
-    }
-
-    @Test
-    fun theFirstOpinionUnderTheLongestAxisWordsDoesNotMoveThePad() {
-        val (before, after) = heights(
-            open,
-            open.copy(standing = StancePoint(-0.7, -0.45), busy = true),
-            axes = StanceAxes.Affinity,
-        )
         assertThat(after).isEqualTo(before)
     }
 
@@ -152,7 +116,7 @@ class StancePadReflowTest {
                 onPick = {},
                 onCommit = {},
                 onDismissPad = {},
-                onToggleExactValues = {},
+                onOpenAlternates = {},
                 onOpenSeverance = {},
                 onConfirmSeverance = {},
                 onDismissSeverance = {},
@@ -182,7 +146,7 @@ class StancePadReflowTest {
                 onPick = {},
                 onCommit = {},
                 onDismissPad = {},
-                onToggleExactValues = {},
+                onOpenAlternates = {},
                 onOpenSeverance = {},
                 onConfirmSeverance = {},
                 onDismissSeverance = {},
@@ -218,7 +182,7 @@ class StancePadReflowTest {
                 onPick = {},
                 onCommit = {},
                 onDismissPad = {},
-                onToggleExactValues = {},
+                onOpenAlternates = {},
                 onOpenSeverance = {},
                 onConfirmSeverance = {},
                 onDismissSeverance = {},
