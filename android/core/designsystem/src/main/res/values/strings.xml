@@ -114,29 +114,43 @@
     <string name="tag_anchor_big_claim_divined">big claim, divined</string>
     <string name="tag_anchor_all_of_it">all of it, full stop</string>
 
-    <string name="stance_target">Stance</string>
-    <string name="stance_target_action">Tap to pick exactly, or press and hold for a light yes</string>
-    <!-- The press-and-hold shortcut's accessibility action: a long press
-         signs the low default (stance-control.md "The gesture"). -->
-    <string name="stance_target_hold">Light yes</string>
-    <!-- A target that already carries a standing says so first. -->
-    <string name="stance_target_with_standing">%1$s: %2$s. %3$s</string>
-    <!-- WHAT IT STANCES TOWARD, FIRST (`TagPage`, the topic round). A
-         page may carry more than one stance control — the topic's row
-         and every card's — and the accessible name is the only thing
-         that says which is which. Only surfaces that do not already
-         name their target from context pass one. -->
-    <string name="stance_target_labelled">%1$s. %2$s</string>
-    <!-- The transient confirmation a signed stance leaves (design.md §8.3).
-         "Still settling" is the honest part: the standing it names is the
-         pending-inclusive fold, counting a record not yet on L1 (§9). -->
-    <string name="stance_signed">Signed, still settling. %1$s: %2$s</string>
-    <string name="stance_pick_exactly">Pick exactly</string>
+    <!-- The face's names (copy-voice "Carried over — blessed by use", *The
+         face's names*; StanceControl.jsx:491-498). The target is the card's:
+         `this post`, `this comment`, `@ada`, `#saltmaps`; the master's
+         default where a host names none is `this post`. -->
+    <string name="stance_target_default">this post</string>
+    <string name="stance_target_give">Give your opinion on %1$s</string>
+    <!-- %1$s the target, %2$s the anchor's word, %3$s the pair. -->
+    <string name="stance_target_given">Your opinion on %1$s: %2$s, %3$s. Press and hold to add a positive one.</string>
+    <!-- The non-drag door (StanceControl.jsx:601-614): never drawn, one
+         accessibility action away on every face. -->
+    <string name="stance_target_choose">Choose your opinion on %1$s</string>
+    <!-- The pad's name (copy-voice *The pad's name*; StanceControl.jsx:656). -->
+    <string name="stance_pad_name">Opinion pad for %1$s</string>
+    <!-- The signed-opinion snackbar (copy-voice; StanceReadout.jsx
+         `signedLine`): the face is the reading, the pair rides behind it
+         only in geek mode, and the spoken twin names the word and axes. -->
+    <string name="stance_signed">Signed, still settling. Current opinion %1$s</string>
+    <string name="stance_signed_spoken">Signed, still settling. Current opinion: %1$s</string>
+    <!-- A taken walk-back keeps its sentence (`signedLine`'s severed form). -->
+    <plurals name="stance_signed_gone">
+        <item quantity="one">Signed, still settling. %2$s</item>
+        <item quantity="other">Signed %1$d things, still settling. %2$s</item>
+    </plurals>
 
-    <!-- The two things a reader is told apart: what this pick says, and
-         where it leaves them (design.md §8.2). -->
-    <string name="stance_axis_directed">How you stand</string>
-    <string name="stance_axis_interest">In your world</string>
+    <!-- The two questions an opinion's axes ask (design/readme.md §11 *The
+         stance control*: `How you stand` → For or against, `In your world`
+         → How much reaches you), and the four ends drawn in the field's
+         gutters (`STANCE_AXES`). -->
+    <string name="stance_axis_directed">For or against</string>
+    <string name="stance_axis_interest">How much reaches you</string>
+    <string name="stance_pole_less">Less</string>
+    <string name="stance_pole_more">More</string>
+    <!-- The Affinity's four ends (`AFFINITY_AXES`, TagPageHeldPad.md). -->
+    <string name="stance_pole_affinity_left">Dislike</string>
+    <string name="stance_pole_affinity_right">Like</string>
+    <string name="stance_pole_affinity_bottom">Far away</string>
+    <string name="stance_pole_affinity_top">Close to me</string>
     <!-- THE AFFINITY FAMILY'S OWN TWO (ruled 2026-09-15, drawn on
          `TagPageHeldPad`). Following a topic IS the stance gesture, but
          the two slots it fills are association and attraction, and
@@ -146,19 +160,23 @@
          `StanceAxes`, never swapped in by a surface. -->
     <string name="stance_axis_affinity_directed">How much you like it</string>
     <string name="stance_axis_affinity_interest">How close you want to be</string>
-    <string name="stance_standing">Where you stand now</string>
-    <string name="stance_standing_none">You haven\'t said anything about this yet</string>
-    <!-- The zero bundle's own wording (design.md §8.4). A standing at
-         exactly (0, 0) is the absence of a feeling, so it is named
-         rather than read through the anchor table as its nearest
-         neighbour — which would call it "Nice". -->
-    <string name="stance_standing_zero">Nothing you\'ve said here carries</string>
-    <!-- The raw sums, on the surfaces that explain cost (design.md §8.3).
-         A bundle clipped at +1.00 whose raw sum is +6.00 costs a batch
-         sized by the six, so the six is what gets stated. -->
-    <string name="stance_standing_raw">Everything you\'ve said here adds up to</string>
-    <string name="stance_landing">This leaves you at</string>
-    <string name="stance_landing_working">Working out where this leaves you…</string>
+    <!-- The pad's three labelled readouts (StanceReadout.jsx; readme §11
+         "Three labelled readouts, formatted alike"). -->
+    <string name="stance_current">Current opinion</string>
+    <string name="stance_pick">Your pick</string>
+    <string name="stance_resulting">Resulting opinion</string>
+    <!-- A readout spoken: `Current opinion: Like this, For or against
+         +0.55, How much reaches you +0.20` (copy-voice *The readouts,
+         spoken*). %1$s label, %2$s word, %3$s the reading. -->
+    <string name="stance_readout_spoken">%1$s: %2$s, %3$s</string>
+    <!-- `Current opinion` with nothing signed toward the target (🤷 drawn
+         before it): `standingParts`. -->
+    <string name="stance_standing_none">No opinion on %1$s yet.</string>
+    <!-- The zero bundle's word beside the shrug (`SEVERED_LABEL`). -->
+    <string name="stance_standing_zero">Walked back</string>
+    <!-- A bundle already at nothing, as a sentence (`gone`). -->
+    <string name="stance_standing_gone">You\'ve walked %1$s back to nothing.</string>
+    <string name="stance_landing_working">Adding it up…</string>
     <string name="stance_reading">%1$s %2$s, %3$s %4$s</string>
     <!-- The exact pair, part of the default reading (design.md §8.3). -->
     <string name="stance_pair">%1$s / %2$s</string>
@@ -206,81 +224,88 @@
          landing while the reader still borrows a view. Warns, never blocks. -->
     <string name="stance_borrowed_kept">You\'d keep your borrowed view — no feed of your own yet.</string>
 
-    <string name="stance_exact_values_show">Set exact values</string>
-    <string name="stance_exact_values_hide">Hide exact values</string>
-    <string name="stance_set">Set this stance</string>
+    <string name="stance_set">Set</string>
     <string name="stance_cancel">Cancel</string>
-    <string name="stance_failed">That didn\'t go through. Try again.</string>
-    <!-- A variant pad's own fault line and its commit's two waiting words
-         (PadFailed; VouchBackPad.md:31, :37). -->
+    <!-- The pad's fault line above its commit row (PadFailed.md; the
+         failure pack): the network error's words, announced as an alert. -->
     <string name="stance_pad_failed">That didn\'t send. Try again.</string>
     <string name="stance_setting">Setting…</string>
     <string name="stance_retry">Retry</string>
     <string name="stance_failed_no_key">This device can\'t sign yet. Restore your key first.</string>
 
-    <!-- Severance: the one gesture that nets a bundle back to nothing
-         (design.md §8.5). The route is findable from the open pad. -->
-    <!-- The route's own wording, and deliberately not the ceremony's
-         (`TagPageHeldPad`, drawn 2026-09-15; web's #760): the button is
-         what a reader looking for the way out reads, and "Walk it back"
-         is what the gesture does. The confirmation that follows keeps
-         the word for the act itself. -->
+    <!-- The walk-back, the PERSON family's words (copy-voice *The
+         walk-back*; StanceReadout.jsx `STANCE_SEVERANCE_WORDS`). A topic
+         swaps the `stance_disconnect_*` set below. -->
     <string name="stance_severance_open">Walk it back</string>
-    <string name="stance_severance_title">Sever this?</string>
-    <string name="stance_severance_reached">This pick nets everything you\'ve said about it back to nothing.</string>
-    <string name="stance_severance_body">Nothing you\'ve said about it carries any more: it stops reaching you, it earns you nothing, and nothing you vouch for travels through it.</string>
+    <string name="stance_severance_busy">Walking it back…</string>
+    <string name="stance_severance_title">Walk it all back?</string>
+    <!-- What the pad's landing says a pick of (0, 0) would do. -->
+    <string name="stance_severance_reached">This takes you back to zero.</string>
+    <string name="stance_severance_body">Your opinion of %1$s drops to nothing. It stops reaching your feed, you stop earning from it, and nothing passes on through you.</string>
+    <!-- The raw total leads (SeveranceConfirm.jsx); %2$s is the raw pair. -->
+    <string name="stance_severance_sum">Everything you\'ve said about %1$s adds up to %2$s, and that is what this walks back.</string>
+    <!-- The cap aside, only when the raw total exceeds it. -->
+    <string name="stance_severance_capped">Your feed reads it capped at %1$s.</string>
+    <!-- The dialog's pick line, when a pick raised it: face, then pair. -->
+    <string name="stance_severance_pick">Your pick: %1$s %2$s</string>
+    <string name="stance_severance_pick_spoken">Your pick: %1$s, %2$s</string>
     <plurals name="stance_severance_cost">
-        <item quantity="one">It takes %d signed action, each paid for separately.</item>
-        <item quantity="other">It takes %d signed actions, each paid for separately.</item>
+        <item quantity="one">It signs %d thing, paid on its own.</item>
+        <item quantity="other">It signs %d things, each paid separately.</item>
     </plurals>
     <string name="stance_severance_already">You are already at nothing here.</string>
-    <string name="stance_severance_confirm">Sever</string>
     <string name="stance_severance_keep">Keep it</string>
-    <string name="stance_severance_failed">Severing didn\'t go through. Try again.</string>
+    <string name="stance_severance_help">Walk it back takes everything you\'ve said to nothing. It has its own confirmation, and each thing you\'ve said is walked back by its own signature.</string>
+    <string name="stance_severance_help_alternates">Walk it back takes everything to nothing, and each thing you\'ve said is walked back by its own signature.</string>
 
     <!-- A topic's own way out: DISCONNECTED, never severed (jakob's I2
-         ruling, copy-voice.md "Awaiting blessing — the topic disconnects",
-         2026-09-15: "we want human wording not this nerdy stuff!" —
-         rejecting "walked back", "let go" and "dropped" for a topic in
-         one breath). The split is by record family, not by surface:
-         persons, posts and comments keep every string above verbatim; a
-         topic's pad and its confirmation swap these in instead. -->
+         ruling, 2026-09-15: "we want human wording not this nerdy
+         stuff!"; `AFFINITY_SEVERANCE`). -->
     <string name="stance_disconnect_open">Disconnect</string>
+    <string name="stance_disconnect_busy">Disconnecting…</string>
     <string name="stance_disconnect_title">Disconnect from %1$s?</string>
     <string name="stance_disconnect_reached">This leaves you with no opinion towards it.</string>
     <string name="stance_disconnect_body">You end up with no opinion towards %1$s. It stops reaching your feed, you stop earning from it, and nothing passes on through you.</string>
+    <string name="stance_disconnect_sum">Everything you\'ve said about %1$s adds up to %2$s, and disconnecting clears all of it.</string>
     <string name="stance_disconnect_standing_zero">No opinion towards %1$s.</string>
-    <string name="stance_disconnect_confirm">Disconnect</string>
-    <!-- The confirmation's raw-sums total (copy-voice.md "the topic
-         disconnects": "Everything you've said about #saltmaps adds up
-         to +1.40 / +0.95, and disconnecting clears all of it."). One
-         self-contained sentence, unlike `stance_standing_raw`'s label
-         the caller appends a reading to. -->
-    <string name="stance_disconnect_standing_raw">Everything you\'ve said about %1$s adds up to %2$s, and disconnecting clears all of it.</string>
+    <string name="stance_disconnect_zero">No opinion</string>
+    <string name="stance_disconnect_help">Disconnect takes everything you\'ve said about the topic to nothing. It has its own confirmation, and each thing you\'ve said is cleared by its own signature.</string>
+    <string name="stance_disconnect_help_alternates">Disconnect takes everything to nothing, and each thing you\'ve said is cleared by its own signature.</string>
 
     <!-- The first-ever pad open's two coaching lines, verbatim from
          copy-voice.md "The first-ever pad teaches in two coaching lines,
-         and nothing else teaches it" (`VouchBackPad`). The face is drawn;
-         the spoken twin says the face and the pair. -->
-    <string name="stance_coaching_shortcut">Later, tap the small face under a post to open this — press and hold it instead and a gentle 🙂 is signed on the spot.</string>
+         and nothing else teaches it" (`VouchBackPad`). %1$s is the face,
+         with its ` (+0.10 / +0.10)` tail only in geek mode; the spoken
+         twin says the face and the pair either way. -->
+    <string name="stance_coaching_shortcut">Later, tap the small face under a post to open this — press and hold it instead and a gentle %1$s is signed on the spot.</string>
     <string name="stance_coaching_shortcut_spoken">Later, tap the small face under a post to open this — press and hold it instead and a gentle Nice, For or against +0.10, How much reaches you +0.10 is signed on the spot.</string>
     <string name="stance_coaching_set">Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.</string>
 
-    <!-- The `?` on the pad (design.md §8.3): the explanation on demand.
-         It says what the two axes are and what actually signs,
-         because nothing here should be learned by accident. -->
-    <string name="stance_explain">How stances work</string>
-    <!--
-      The master's four lines, in the order a reader needs them: what the
-      field means, what commits, why the three readouts differ, and what
-      the way out costs (design/components/stance/StanceCoachMark.jsx).
-      The third is the one nobody can guess.
-    -->
-    <string name="stance_explain_field">Drag the knob to where you stand. Left to right is against to for; bottom to top is how much more of it you want reaching you.</string>
+    <!-- The pad's `?` (StanceControl.jsx `helpLabel`, ruling A7). -->
+    <string name="stance_explain">How opinions work</string>
+    <!-- The pad's four help lines (copy-voice *The pad's four help
+         lines*; StanceReadout.jsx `STANCE_PAD_HELP`); the fourth is the
+         family's own (`stance_severance_help` / `stance_disconnect_help`). -->
+    <string name="stance_explain_field">Drag the knob. Left to right is against to for; bottom to top is how much more of it you want reaching you.</string>
     <string name="stance_explain_commit">Letting go changes nothing. Set signs it, Cancel leaves without signing.</string>
-    <string name="stance_explain_adds">Your pick is one new thing you\'re saying. It adds to what you\'ve said before, which is why the resulting stance is a different number.</string>
-    <string name="stance_explain_sever">Sever walks everything you\'ve said back to nothing. It has its own confirmation, and it costs one signed action per record.</string>
+    <string name="stance_explain_adds">Your pick adds to what you\'ve said before — that\'s why the two faces can differ.</string>
     <string name="stance_explain_back">Back to the pad</string>
+    <!-- What the unreachable landing's 🤔 opens in place (copy-voice *The
+         unreachable landing*; `unreachableHelp`). -->
+    <string name="stance_zero_help_held">It still counts among your opinions.</string>
+    <string name="stance_zero_help_held_person">It still counts among your opinions — %1$s stays under Your people.</string>
+    <string name="stance_zero_help_feed">It shapes no one\'s feed, earns nothing, and nothing passes on through you.</string>
+    <string name="stance_zero_help_way_out">%1$s is different: its own act, confirmed and paid for, that leaves a clean slate.</string>
+
+    <!-- The alternates (StanceAlternates.jsx; copy-voice *The pad's four
+         help lines*, the alternates' set). -->
+    <string name="stance_alternates_title">Choose your opinion</string>
+    <string name="stance_alternates_commit">Sign it</string>
+    <string name="stance_alternates_type">Type exact values</string>
+    <string name="stance_alternates_slide">Use sliders</string>
+    <string name="stance_alternates_back">Back</string>
+    <string name="stance_alternates_help_values">Two values, not one. The first is whether you\'re for or against it; the second is how much more of it you want reaching you.</string>
+    <string name="stance_alternates_help_commit">Nothing is signed until you press Sign it.</string>
 
     <!-- Screen-reader labels for the cover row. `contentDescription` is
          what TalkBack announces, so an unlocalized literal here has no
