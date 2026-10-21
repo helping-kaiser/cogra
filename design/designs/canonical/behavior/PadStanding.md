@@ -26,6 +26,8 @@ ALWAYS Your pick wears 🤔 and is spoken as its state, Interested, no side take
 
 ALWAYS Your pick wears 🤷 and is spoken Says nothing GIVEN the pick is exactly (0, 0)
 
+ALWAYS Current opinion and the face on the target wear 🤷 and are spoken Says nothing, never Walked back, GIVEN the bundle nets to exactly (0, 0) and was never walked back
+
 ALWAYS Current opinion, the face on the target and the snackbar's face wear 🤔 and are spoken as the state, never a table face, GIVEN the opinion they read has exactly one number at zero
 
 ALWAYS the pad carries four controls, Walk it back on the left pushed away from Cancel and Set on the right, GIVEN an opinion stands on the target
