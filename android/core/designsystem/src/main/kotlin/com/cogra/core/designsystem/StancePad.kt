@@ -813,82 +813,33 @@ private fun StancePadCard(
                     .verticalScroll(rememberScrollState())
                     .padding(Space.x4),
             ) {
-                StanceStanding(
-                    pick = state.pick,
-                    standing = state.standing,
-                    testTagPrefix = testTagPrefix,
-                    axes = axes,
-                    zeroWords = zeroWords,
-                    targetLabel = targetLabel,
-                    // Clear of the `?` in the corner.
-                    modifier = Modifier.padding(end = 40.dp),
-                    node = padNode?.div("standing"),
-                )
                 // The help REPLACES the field, the note and the landing rather
                 // than growing below them: the pad is parked, and a panel
                 // that pushed Set and Cancel away from the thumb would defeat
                 // the parking.
-                when (explaining) {
-                    Explaining.HELP -> HelpInPlace(
-                        lines = variant?.help ?: padHelp(zeroWords),
-                        back = stringResource(R.string.stance_explain_back),
-                        onBack = { explaining = null },
-                        testTag = padNode?.div("helpPanel")?.tag ?: "${testTagPrefix}_stance_explanation",
-                        backTag = padNode?.div("back")?.tag ?: "${testTagPrefix}_stance_explain_back",
-                    )
-                    Explaining.ZERO -> HelpInPlace(
-                        lines = unreachableHelp(zeroWords, targetLabel),
-                        back = stringResource(R.string.stance_explain_back),
-                        onBack = { explaining = null },
-                        testTag = padNode?.div("zeroPanel")?.tag ?: "${testTagPrefix}_stance_zero_explanation",
-                        backTag = padNode?.div("back")?.tag ?: "${testTagPrefix}_stance_explain_back",
-                    )
-                    null -> {
-                        PairField(
-                            value = PairPoint(state.pick.directed, state.pick.interest),
-                            onValueChange = { onPick(StancePoint(it.directed, it.interest)) },
-                            ranges = PairRanges.Signed,
-                            axes = axes.words(),
-                            exactValuesLabel = stringResource(R.string.stance_target_choose, targetWords(targetLabel)),
-                            onExactValues = onOpenAlternates,
-                            enabled = !state.busy,
-                            testTag = "${testTagPrefix}_stance_field",
-                            node = padNode?.div("field"),
-                        )
-                        PadNote(variant, state.coaching, testTagPrefix)
-                        if (!state.writeRule && !state.keyAbsent) {
-                            StanceLandingLine(
-                                landing = state.landing,
-                                testTagPrefix = testTagPrefix,
-                                axes = axes,
-                                zeroWords = zeroWords,
-                                borrowed = state.borrowed,
-                                onExplainZero = { explaining = Explaining.ZERO },
-                                node = padNode?.div("landing"),
-                            )
-                        }
-                    }
-                }
-                when {
-                    // The notices stand where the landing line and the
-                    // commit row would (PadKeyAbsent, PadWriteRule).
-                    state.keyAbsent -> KeyAbsentNotice(testTagPrefix)
-                    state.writeRule -> WriteRuleNotice(onCancel, testTagPrefix, padNode)
-                    else -> {
-                        if (state.failed) PadFault(state.needsKey, testTagPrefix)
-                        PadCommitRow(
-                            state = state,
-                            explaining = explaining != null,
-                            severable = severable,
-                            onCommit = onCommit,
-                            onCancel = onCancel,
-                            onOpenSeverance = onOpenSeverance,
-                            testTagPrefix = testTagPrefix,
-                            zeroWords = zeroWords,
-                            padNode = padNode,
-                        )
-                    }
-                }
+                PadBody(
+                    state = state,
+                    explaining = explaining,
+                    onExplain = { explaining = it },
+                    onPick = onPick,
+                    onOpenAlternates = onOpenAlternates,
+                    testTagPrefix = testTagPrefix,
+                    axes = axes,
+                    zeroWords = zeroWords,
+                    targetLabel = targetLabel,
+                    variant = variant,
+                )
+                PadFoot(
+                    state = state,
+                    explaining = explaining != null,
+                    severable = severable,
+                    onCommit = onCommit,
+                    onCancel = onCancel,
+                    onOpenSeverance = onOpenSeverance,
+                    testTagPrefix = testTagPrefix,
+                    zeroWords = zeroWords,
+                    padNode = padNode,
+                )
             }
             PadHelpButton(
                 label = helpLabel,
@@ -897,6 +848,117 @@ private fun StancePadCard(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(4.dp),
+            )
+        }
+    }
+}
+
+/**
+ * The pad's readouts, then its body: the field, the shell's note and the
+ * landing — or, in their place, what the `?` or the landing's 🤔 explains.
+ */
+@Composable
+private fun PadBody(
+    state: StanceControlState,
+    explaining: Explaining?,
+    onExplain: (Explaining?) -> Unit,
+    onPick: (StancePoint) -> Unit,
+    onOpenAlternates: () -> Unit,
+    testTagPrefix: String,
+    axes: StanceAxes,
+    zeroWords: StanceZeroWords,
+    targetLabel: String?,
+    variant: StancePadVariant?,
+) {
+    val padNode = variant?.padNode
+    val back = stringResource(R.string.stance_explain_back)
+    val backTag = padNode?.div("back")?.tag ?: "${testTagPrefix}_stance_explain_back"
+    StanceStanding(
+        pick = state.pick,
+        standing = state.standing,
+        testTagPrefix = testTagPrefix,
+        axes = axes,
+        zeroWords = zeroWords,
+        targetLabel = targetLabel,
+        // Clear of the `?` in the corner.
+        modifier = Modifier.padding(end = 40.dp),
+        node = padNode?.div("standing"),
+    )
+    when (explaining) {
+        Explaining.HELP -> HelpInPlace(
+            lines = variant?.help ?: padHelp(zeroWords),
+            back = back,
+            onBack = { onExplain(null) },
+            testTag = padNode?.div("helpPanel")?.tag ?: "${testTagPrefix}_stance_explanation",
+            backTag = backTag,
+        )
+        Explaining.ZERO -> HelpInPlace(
+            lines = unreachableHelp(zeroWords, targetLabel),
+            back = back,
+            onBack = { onExplain(null) },
+            testTag = padNode?.div("zeroPanel")?.tag ?: "${testTagPrefix}_stance_zero_explanation",
+            backTag = backTag,
+        )
+        null -> {
+            PairField(
+                value = PairPoint(state.pick.directed, state.pick.interest),
+                onValueChange = { onPick(StancePoint(it.directed, it.interest)) },
+                ranges = PairRanges.Signed,
+                axes = axes.words(),
+                exactValuesLabel = stringResource(R.string.stance_target_choose, targetWords(targetLabel)),
+                onExactValues = onOpenAlternates,
+                enabled = !state.busy,
+                testTag = "${testTagPrefix}_stance_field",
+                node = padNode?.div("field"),
+            )
+            PadNote(variant, state.coaching, testTagPrefix)
+            if (!state.writeRule && !state.keyAbsent) {
+                StanceLandingLine(
+                    landing = state.landing,
+                    testTagPrefix = testTagPrefix,
+                    axes = axes,
+                    zeroWords = zeroWords,
+                    borrowed = state.borrowed,
+                    onExplainZero = { onExplain(Explaining.ZERO) },
+                    node = padNode?.div("landing"),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The pad's foot: the commit row with any fault above it — or the key and
+ * write-rule notices standing where the landing and the actions would
+ * (PadKeyAbsent, PadWriteRule).
+ */
+@Composable
+private fun PadFoot(
+    state: StanceControlState,
+    explaining: Boolean,
+    severable: Boolean,
+    onCommit: () -> Unit,
+    onCancel: () -> Unit,
+    onOpenSeverance: () -> Unit,
+    testTagPrefix: String,
+    zeroWords: StanceZeroWords,
+    padNode: DataNode?,
+) {
+    when {
+        state.keyAbsent -> KeyAbsentNotice(testTagPrefix)
+        state.writeRule -> WriteRuleNotice(onCancel, testTagPrefix, padNode)
+        else -> {
+            if (state.failed) PadFault(state.needsKey, testTagPrefix)
+            PadCommitRow(
+                state = state,
+                explaining = explaining,
+                severable = severable,
+                onCommit = onCommit,
+                onCancel = onCancel,
+                onOpenSeverance = onOpenSeverance,
+                testTagPrefix = testTagPrefix,
+                zeroWords = zeroWords,
+                padNode = padNode,
             )
         }
     }

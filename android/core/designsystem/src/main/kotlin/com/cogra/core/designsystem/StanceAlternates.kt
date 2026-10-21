@@ -98,10 +98,6 @@ internal fun StanceAlternates(
     val title = stringResource(R.string.stance_alternates_title)
     var typed by rememberSaveable { mutableStateOf(state.inputMode == StanceInputSurface.ENTRY) }
     var explaining by rememberSaveable { mutableStateOf<AlternatesExplaining?>(null) }
-    // The body's height while it shows the inputs, so an explanation that
-    // replaces it never shrinks the dialog and moves the buttons.
-    var slotHeight by rememberSaveable { mutableIntStateOf(0) }
-    val density = LocalDensity.current
     BasicAlertDialog(onDismissRequest = onCancel) {
         Surface(
             shape = RoundedCornerShape(28.dp),
@@ -116,114 +112,175 @@ internal fun StanceAlternates(
                     .verticalScroll(rememberScrollState())
                     .padding(Space.x6),
             ) {
-                Box(Modifier.fillMaxWidth()) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(end = 40.dp),
-                    )
-                    AlternatesHelpButton(
-                        label = helpLabel,
-                        onClick = {
-                            val shown = explaining == AlternatesExplaining.HELP
-                            explaining = if (shown) null else AlternatesExplaining.HELP
-                        },
-                        testTag = "${testTagPrefix}_stance_alternates_help",
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .offset(x = 12.dp, y = (-12).dp),
-                    )
-                }
-                val minHeight = with(density) { slotHeight.toDp() }
-                when (explaining) {
-                    AlternatesExplaining.HELP -> HelpInPlace(
-                        lines = listOf(
-                            stringResource(R.string.stance_alternates_help_values),
-                            stringResource(R.string.stance_alternates_help_commit),
-                            stringResource(R.string.stance_explain_adds),
-                            stringResource(zeroWords.helpAlternates),
-                        ),
-                        back = stringResource(R.string.stance_alternates_back),
-                        onBack = { explaining = null },
-                        testTag = "${testTagPrefix}_stance_alternates_explanation",
-                        backTag = "${testTagPrefix}_stance_alternates_back",
-                        modifier = Modifier.heightIn(min = minHeight),
-                    )
-                    AlternatesExplaining.ZERO -> HelpInPlace(
-                        lines = unreachableHelp(zeroWords, targetLabel),
-                        back = stringResource(R.string.stance_alternates_back),
-                        onBack = { explaining = null },
-                        testTag = "${testTagPrefix}_stance_zero_explanation",
-                        backTag = "${testTagPrefix}_stance_alternates_back",
-                        modifier = Modifier.heightIn(min = minHeight),
-                    )
-                    null -> Column(Modifier.onSizeChanged { slotHeight = it.height }) {
-                        StanceStanding(
-                            pick = state.pick,
-                            standing = state.standing,
-                            testTagPrefix = testTagPrefix,
-                            axes = axes,
-                            zeroWords = zeroWords,
-                            targetLabel = targetLabel,
-                        )
-                        AlternateInputs(typed, { typed = !typed }, state.pick, onPick, axes, testTagPrefix)
-                        StanceLandingLine(
-                            landing = state.landing,
-                            testTagPrefix = testTagPrefix,
-                            axes = axes,
-                            zeroWords = zeroWords,
-                            borrowed = state.borrowed,
-                            onExplainZero = { explaining = AlternatesExplaining.ZERO },
-                        )
-                    }
-                }
-                if (state.failed && !state.needsKey) {
-                    Text(
-                        text = stringResource(R.string.stance_pad_failed),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier
-                            .padding(top = Space.x4)
-                            .testTag("${testTagPrefix}_stance_failed"),
-                    )
-                }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Space.x2),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = Space.x6),
-                ) {
-                    if (onOpenSeverance != null) {
-                        Box(Modifier.weight(1f)) {
-                            CograButton(
-                                text = stringResource(zeroWords.open),
-                                onClick = onOpenSeverance,
-                                kind = ButtonKind.Text,
-                                size = ButtonSize.Compact,
-                                testTag = "${testTagPrefix}_stance_sever",
-                            )
-                        }
-                    } else {
-                        Spacer(Modifier.weight(1f))
-                    }
-                    CograButton(
-                        text = stringResource(R.string.stance_cancel),
-                        onClick = onCancel,
-                        kind = ButtonKind.Text,
-                        size = ButtonSize.Compact,
-                        testTag = "${testTagPrefix}_stance_cancel",
-                    )
-                    CograButton(
-                        text = stringResource(R.string.stance_alternates_commit),
-                        onClick = onCommit,
-                        size = ButtonSize.Compact,
-                        enabled = !state.busy,
-                        testTag = "${testTagPrefix}_stance_set",
-                    )
-                }
+                AlternatesHeader(
+                    title = title,
+                    helpLabel = helpLabel,
+                    onHelp = {
+                        val shown = explaining == AlternatesExplaining.HELP
+                        explaining = if (shown) null else AlternatesExplaining.HELP
+                    },
+                    testTagPrefix = testTagPrefix,
+                )
+                AlternatesBody(
+                    state = state,
+                    explaining = explaining,
+                    onExplain = { explaining = it },
+                    typed = typed,
+                    onSwap = { typed = !typed },
+                    onPick = onPick,
+                    axes = axes,
+                    zeroWords = zeroWords,
+                    targetLabel = targetLabel,
+                    testTagPrefix = testTagPrefix,
+                )
+                AlternatesActions(state, onCommit, onCancel, onOpenSeverance, zeroWords, testTagPrefix)
             }
         }
+    }
+}
+
+/**
+ * The body: the readouts, the inputs and the landing — or, in their place,
+ * the `?`'s lines or the 🤔's. An explanation takes at least the height of
+ * what it replaced, so no button moves when it opens.
+ */
+@Composable
+private fun AlternatesBody(
+    state: StanceControlState,
+    explaining: AlternatesExplaining?,
+    onExplain: (AlternatesExplaining?) -> Unit,
+    typed: Boolean,
+    onSwap: () -> Unit,
+    onPick: (StancePoint) -> Unit,
+    axes: StanceAxes,
+    zeroWords: StanceZeroWords,
+    targetLabel: String?,
+    testTagPrefix: String,
+) {
+    var slotHeight by rememberSaveable { mutableIntStateOf(0) }
+    val density = LocalDensity.current
+    val minHeight = with(density) { slotHeight.toDp() }
+    when (explaining) {
+        AlternatesExplaining.HELP -> HelpInPlace(
+            lines = listOf(
+                stringResource(R.string.stance_alternates_help_values),
+                stringResource(R.string.stance_alternates_help_commit),
+                stringResource(R.string.stance_explain_adds),
+                stringResource(zeroWords.helpAlternates),
+            ),
+            back = stringResource(R.string.stance_alternates_back),
+            onBack = { onExplain(null) },
+            testTag = "${testTagPrefix}_stance_alternates_explanation",
+            backTag = "${testTagPrefix}_stance_alternates_back",
+            modifier = Modifier.heightIn(min = minHeight),
+        )
+        AlternatesExplaining.ZERO -> HelpInPlace(
+            lines = unreachableHelp(zeroWords, targetLabel),
+            back = stringResource(R.string.stance_alternates_back),
+            onBack = { onExplain(null) },
+            testTag = "${testTagPrefix}_stance_zero_explanation",
+            backTag = "${testTagPrefix}_stance_alternates_back",
+            modifier = Modifier.heightIn(min = minHeight),
+        )
+        null -> Column(Modifier.onSizeChanged { slotHeight = it.height }) {
+            StanceStanding(
+                pick = state.pick,
+                standing = state.standing,
+                testTagPrefix = testTagPrefix,
+                axes = axes,
+                zeroWords = zeroWords,
+                targetLabel = targetLabel,
+            )
+            AlternateInputs(typed, onSwap, state.pick, onPick, axes, testTagPrefix)
+            StanceLandingLine(
+                landing = state.landing,
+                testTagPrefix = testTagPrefix,
+                axes = axes,
+                zeroWords = zeroWords,
+                borrowed = state.borrowed,
+                onExplainZero = { onExplain(AlternatesExplaining.ZERO) },
+            )
+        }
+    }
+}
+
+/** The dialog's title in `title-large`, clear of the circled `?` in its corner. */
+@Composable
+private fun AlternatesHeader(title: String, helpLabel: String, onHelp: () -> Unit, testTagPrefix: String) {
+    Box(Modifier.fillMaxWidth()) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(end = 40.dp),
+        )
+        AlternatesHelpButton(
+            label = helpLabel,
+            onClick = onHelp,
+            testTag = "${testTagPrefix}_stance_alternates_help",
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = 12.dp, y = (-12).dp),
+        )
+    }
+}
+
+/**
+ * The fault when one stands, then one row: `Walk it back` on the left where
+ * there is something to walk back, `Cancel` and `Sign it` on the right.
+ */
+@Composable
+private fun AlternatesActions(
+    state: StanceControlState,
+    onCommit: () -> Unit,
+    onCancel: () -> Unit,
+    onOpenSeverance: (() -> Unit)?,
+    zeroWords: StanceZeroWords,
+    testTagPrefix: String,
+) {
+    if (state.failed && !state.needsKey) {
+        Text(
+            text = stringResource(R.string.stance_pad_failed),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier
+                .padding(top = Space.x4)
+                .testTag("${testTagPrefix}_stance_failed"),
+        )
+    }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = Space.x6),
+    ) {
+        if (onOpenSeverance != null) {
+            Box(Modifier.weight(1f)) {
+                CograButton(
+                    text = stringResource(zeroWords.open),
+                    onClick = onOpenSeverance,
+                    kind = ButtonKind.Text,
+                    size = ButtonSize.Compact,
+                    testTag = "${testTagPrefix}_stance_sever",
+                )
+            }
+        } else {
+            Spacer(Modifier.weight(1f))
+        }
+        CograButton(
+            text = stringResource(R.string.stance_cancel),
+            onClick = onCancel,
+            kind = ButtonKind.Text,
+            size = ButtonSize.Compact,
+            testTag = "${testTagPrefix}_stance_cancel",
+        )
+        CograButton(
+            text = stringResource(R.string.stance_alternates_commit),
+            onClick = onCommit,
+            size = ButtonSize.Compact,
+            enabled = !state.busy,
+            testTag = "${testTagPrefix}_stance_set",
+        )
     }
 }
 
