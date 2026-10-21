@@ -500,7 +500,6 @@ class StancePadTest {
         compose.onNodeWithText("Really into this", useUnmergedTree = true).assertDoesNotExist()
     }
 
-    @Test
     private val threeReadouts = open.copy(
         pick = StancePoint(0.4, 0.2),
         standing = heldStanding,

@@ -70,7 +70,7 @@ class SeveranceConfirmTest {
     private fun text(tag: String) = compose
         .onAllNodes(hasTestTag(tag) or hasAnyAncestor(hasTestTag(tag)), useUnmergedTree = true)
         .fetchSemanticsNodes()
-        .flatMap { it.config.getOrNull(SemanticsProperties.Text).orEmpty() }
+        .flatMap { it.config.getOrElse(SemanticsProperties.Text) { emptyList() } }
         .joinToString(" ") { it.text }
 
     @Test
