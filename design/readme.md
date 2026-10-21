@@ -10362,6 +10362,33 @@ states the expected.
   screens**: every board drawn this round is unregistered, so no path
   joins and none leaves.
 
+### Round 19, faces follow the value and the empty sign — 2026-10-21
+
+jakob's rulings (seam 242, from the round-6 hand test): faces follow the
+value, everywhere — any pair drawn as a face wears 🤔 when exactly one
+number is zero, 🤷 stays exact `(0, 0)`'s, 🫥 the control at rest, and
+the twenty anchors read only pairs with both numbers non-zero; a
+standing one-zero bundle wears 🤔. And a `(0, 0)` landing while nothing
+stands gets its own ask, never the walk-back and never a block.
+
+- **One readout.** `bundleReadout` answers every stance face — the
+  pick (`StanceStanding`, `StanceReadout`), `Current opinion`, the
+  resting anchor, `StanceValue`, the snackbar, `StagedReference` and
+  `ReferenceRow` — and `tagReadout` every tag face (`TaggedRow`, a
+  topic `ReferenceRow`) by the same law, in the tag family's words. A
+  pick at `(0, 0)` is spoken `Says nothing`. `ProfileStances` draws Kel
+  at `+0.00 / +0.35` wearing 🤔.
+- **The empty sign.** `EmptySignConfirm` — `Sign an empty opinion?` ·
+  `This says nothing about @ada, shapes no feed, and leaves you where
+  you are.` · `It signs 1 thing, paid on its own.` · `Set it anyway` /
+  `Keep it` filled — raised by `StanceControl` when a pick lands `(0, 0)`
+  with no record standing or the bundle walked back; the standing does
+  not move. Its board stands beside `SeveranceConfirm`, the column
+  right of it one slot over.
+- **The gate**: edges **2124 → 2127** (`EmptySignConfirm`'s three);
+  flows hold at **227**. The registry holds at **100 screens**; the new
+  board is unregistered.
+
 ---
 
 ## 14. The canvases
