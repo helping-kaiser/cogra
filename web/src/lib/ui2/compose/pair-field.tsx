@@ -41,6 +41,7 @@ import {
   zeroPercentOf,
   type PadRanges,
 } from "@/lib/stance/pad-geometry";
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import type { StanceAxes } from "@/lib/ui/stance-format";
 
 /** One arrow press, and one with shift held. */
@@ -61,6 +62,7 @@ export function PairField({
   ranges,
   ariaLabel,
   testId,
+  node,
 }: {
   value: StancePair;
   onChange: (next: StancePair) => void;
@@ -70,6 +72,13 @@ export function PairField({
   ranges: PadRanges;
   ariaLabel: string;
   testId: string;
+  /**
+   * The registered field (`<host>.stance.pad.field`, ruling 40): the whole
+   * field with its words, the four pole words by the side they stand on, and
+   * the `square` with its `knob` and dead-ground lines. Handed none, the
+   * parts keep their `testId` ids.
+   */
+  node?: DataNode;
 }) {
   const fieldRef = useRef<HTMLDivElement>(null);
   // `last` is the pair the drag most recently reported, held here rather than
@@ -107,29 +116,29 @@ export function PairField({
   };
 
   return (
-    <div className="relative w-full px-[56px] py-[20px]" data-testid={testId}>
+    <div className="relative w-full px-[56px] py-[20px]" {...testAttributes(node, testId)}>
       {/* THE AXES ARE NAMED AROUND THE FIELD, in the family's own words. */}
       <div aria-hidden="true" className="absolute inset-0 text-label-small text-on-surface-variant">
         <span
-          data-testid={`${testId}-left`}
+          {...testAttributes(part(node, "left"), `${testId}-left`)}
           className="absolute left-0 top-1/2 w-[50px] -translate-y-1/2 whitespace-nowrap text-right"
         >
           {axes.left}
         </span>
         <span
-          data-testid={`${testId}-right`}
+          {...testAttributes(part(node, "right"), `${testId}-right`)}
           className="absolute right-0 top-1/2 w-[50px] -translate-y-1/2 whitespace-nowrap text-left"
         >
           {axes.right}
         </span>
         <span
-          data-testid={`${testId}-top`}
+          {...testAttributes(part(node, "top"), `${testId}-top`)}
           className="absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap"
         >
           {axes.top}
         </span>
         <span
-          data-testid={`${testId}-bottom`}
+          {...testAttributes(part(node, "bottom"), `${testId}-bottom`)}
           className="absolute bottom-0 left-1/2 -translate-x-1/2 whitespace-nowrap"
         >
           {axes.bottom}
@@ -137,7 +146,7 @@ export function PairField({
       </div>
       <div
         ref={fieldRef}
-        data-testid={`${testId}-square`}
+        {...testAttributes(part(node, "square"), `${testId}-square`)}
         // NOT `role="slider"`: a slider has one value and this field has two.
         // It is a focusable region named by its group; the sheet's non-drag
         // route is the declared accessible path.
@@ -181,7 +190,7 @@ export function PairField({
         {zeroAcross !== null && (
           <div
             aria-hidden="true"
-            data-testid={`${testId}-zero-across`}
+            {...testAttributes(part(node, "square.zeroAcross"), `${testId}-zero-across`)}
             style={{ top: `${zeroAcross}%` }}
             className="absolute left-0 h-px w-full bg-outline-variant"
           />
@@ -189,7 +198,7 @@ export function PairField({
         {zeroDown !== null && (
           <div
             aria-hidden="true"
-            data-testid={`${testId}-zero-down`}
+            {...testAttributes(part(node, "square.zeroDown"), `${testId}-zero-down`)}
             style={{ left: `${zeroDown}%` }}
             className="absolute top-0 h-full w-px bg-outline-variant"
           />
@@ -205,7 +214,7 @@ export function PairField({
             />
           )}
           <div
-            data-testid={`${testId}-knob`}
+            {...testAttributes(part(node, "square.knob"), `${testId}-knob`)}
             style={{ left: `${knob.x}%`, top: `${knob.y}%` }}
             className="absolute size-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-container"
           />

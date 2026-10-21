@@ -28,8 +28,15 @@ export const DIDNT_SIGN_ROW = "That didn't sign.";
 /** The comfort that did not go through (copy-voice: "not a code"). */
 export const DIDNT_GO_THROUGH_ROW = "That didn't go through.";
 
+/**
+ * The write rule refused the hold (RowWriteRule.md): a notice, not a fault —
+ * the quiet register, announced politely, and no word to press.
+ */
+export const WRITE_RULE_ROW = "You can't sign right now.";
+
 export type RowLineState =
   | { readonly kind: "signing" }
+  | { readonly kind: "writeRule" }
   | { readonly kind: "didntSign"; readonly onRetry: () => void }
   | { readonly kind: "didntGoThrough"; readonly onRetry: () => void };
 
@@ -43,14 +50,14 @@ export function RowLine({
   /** The registered slot the line stands in, where its board names one. */
   node?: DataNode;
 }) {
-  if (state.kind === "signing") {
+  if (state.kind === "signing" || state.kind === "writeRule") {
     return (
       <p
         role="status"
         {...testAttributes(node, testId)}
         className="m-0 whitespace-nowrap text-label-small text-on-surface-variant"
       >
-        {SIGNING_ROW}
+        {state.kind === "signing" ? SIGNING_ROW : WRITE_RULE_ROW}
       </p>
     );
   }
