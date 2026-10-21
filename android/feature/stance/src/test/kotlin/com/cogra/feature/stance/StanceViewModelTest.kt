@@ -60,6 +60,9 @@ class StanceViewModelTest {
          */
         var raw: StancePair? = null
         var records = 0
+
+        /** `StanceBundle.severed`: walked back to nothing — never true of an empty sign's (0, 0). */
+        var severed = false
         var prepareOutcome: Outcome<List<PreparedWriteView>>? = null
         var severanceOutcome: Outcome<List<PreparedWriteView>>? = null
         var severanceCalls = 0
@@ -88,7 +91,7 @@ class StanceViewModelTest {
             standingPending += includePending
             if (standingFails) return Outcome.Failed(IllegalStateException("no route to host"))
             return Outcome.Success(
-                StanceStanding(target, net, raw ?: net, records, includePending),
+                StanceStanding(target, net, raw ?: net, records, includePending, severed),
             )
         }
 
@@ -117,7 +120,8 @@ class StanceViewModelTest {
                     standing = net,
                     raw = (raw ?: net).also { quoted = it },
                     records = records,
-                    alreadySevered = net == StancePair.Origin,
+                    alreadySevered = records == 0 || severed,
+                    bundleRecords = records,
                 ),
             )
 
@@ -759,6 +763,7 @@ class StanceViewModelTest {
 
         stances.net = StancePair.Origin
         stances.records = 3
+        stances.severed = true
         vm.onConfirmSeverance(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
@@ -766,8 +771,9 @@ class StanceViewModelTest {
         assertThat(stances.staged).containsExactly(StancePair(-0.8, -0.8))
         assertThat(entry(vm).severance).isNull()
         assertThat(entry(vm).pad).isEqualTo(PadMode.CLOSED)
-        // Read as a walk-back, never as the table's nearest face.
-        assertThat(entry(vm).confirmation).isEqualTo(StancePair.Origin)
+        // Confirmed as the walk-back of one thing it was, never as a face.
+        assertThat(entry(vm).walkedBack).isEqualTo(1)
+        assertThat(entry(vm).confirmation).isNull()
     }
 
     @Test
@@ -860,6 +866,212 @@ class StanceViewModelTest {
 
         assertThat(entry(vm).severance).isNull()
         assertThat(stances.severanceCalls).isEqualTo(0)
+    }
+
+    // -- The empty sign (jakob 2026-10-21, seam 242/243; PadStanding.md:71) --
+
+    /** Opens the pad over the scripted bundle and presses Set on [pick]. */
+    private fun pressSetAt(vm: StanceViewModel, pick: StancePair) {
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onOpenPad(TARGET)
+        vm.onPick(TARGET, pick)
+        vm.onCommit(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+    }
+
+    @Test
+    fun aZeroLandingOverNothingAsksTheEmptySignNeverTheWalkBack() = runTest(dispatcher) {
+        stances.records = 0
+        val vm = viewModel()
+
+        pressSetAt(vm, StancePair.Origin)
+
+        assertThat(entry(vm).emptySign).isEqualTo(EmptySignState())
+        assertThat(entry(vm).severance).isNull()
+        assertThat(stances.staged).isEmpty()
+        // An ask, never a block: the pad stays parked beneath it at the pick.
+        assertThat(entry(vm).pad).isEqualTo(PadMode.STICKY)
+        assertThat(entry(vm).pick).isEqualTo(StancePair.Origin)
+    }
+
+    @Test
+    fun aZeroLandingOverABundleAlreadyWalkedBackAsksTheEmptySign() = runTest(dispatcher) {
+        stances.net = StancePair.Origin
+        stances.records = 3
+        stances.severed = true
+        val vm = viewModel()
+
+        pressSetAt(vm, StancePair.Origin)
+
+        assertThat(entry(vm).emptySign).isNotNull()
+        assertThat(entry(vm).severance).isNull()
+    }
+
+    @Test
+    fun aZeroLandingOverAnEmptySignsStandingIsTheWalkBack() = runTest(dispatcher) {
+        // Records > 0 and not severed: something stands, so (0, 0) is
+        // severance — the ruling's "landing (0,0) over anything standing".
+        stances.net = StancePair.Origin
+        stances.records = 1
+        stances.severed = false
+        val vm = viewModel()
+
+        pressSetAt(vm, StancePair.Origin)
+
+        assertThat(entry(vm).emptySign).isNull()
+        assertThat(entry(vm).severance?.fromPick).isTrue()
+        assertThat(entry(vm).severance?.quote?.alreadySevered).isFalse()
+    }
+
+    @Test
+    fun aZeroLandingOverAStandingOpinionIsTheWalkBack() = runTest(dispatcher) {
+        stances.net = StancePair(0.4, 0.3)
+        stances.records = 2
+        val vm = viewModel()
+
+        pressSetAt(vm, StancePair(-0.4, -0.3))
+
+        assertThat(entry(vm).emptySign).isNull()
+        assertThat(entry(vm).severance?.fromPick).isTrue()
+    }
+
+    @Test
+    fun aZeroPickOverAStandingIsLegalAndOrdinary() = runTest(dispatcher) {
+        // jakob: "a funny thing to do. i think it is fine" — no ask, no block.
+        identity.stancePadTaught = true
+        stances.net = StancePair(0.5, 0.5)
+        stances.records = 2
+        val vm = viewModel()
+
+        pressSetAt(vm, StancePair.Origin)
+
+        assertThat(entry(vm).emptySign).isNull()
+        assertThat(entry(vm).severance).isNull()
+        assertThat(stances.staged).containsExactly(StancePair.Origin)
+    }
+
+    @Test
+    fun setItAnywaySignsTheOneEmptyRecordAndConfirmsTheOrdinaryWay() = runTest(dispatcher) {
+        identity.stancePadTaught = true
+        stances.records = 0
+        val vm = viewModel()
+        pressSetAt(vm, StancePair.Origin)
+
+        // What the API answers after an empty sign: the record counts, the
+        // fold stays at (0, 0), and the bundle is not severed.
+        stances.records = 1
+        stances.severed = false
+        vm.onConfirmEmptySign(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(stances.staged).containsExactly(StancePair.Origin)
+        assertThat(entry(vm).emptySign).isNull()
+        assertThat(entry(vm).pad).isEqualTo(PadMode.CLOSED)
+        assertThat(entry(vm).standing).isEqualTo(StancePair.Origin)
+        assertThat(entry(vm).standingRecords).isEqualTo(1)
+        assertThat(entry(vm).standingSevered).isFalse()
+        // The ordinary snackbar, never the walk-back's.
+        assertThat(entry(vm).confirmation).isEqualTo(StancePair.Origin)
+        assertThat(entry(vm).walkedBack).isNull()
+        assertThat(entry(vm).taken).isTrue()
+    }
+
+    @Test
+    fun theEmptySignWaitsForItsSignatureAndAsksOnlyOnce() = runTest(dispatcher) {
+        identity.stancePadTaught = true
+        stances.records = 0
+        val vm = viewModel()
+        pressSetAt(vm, StancePair.Origin)
+        stances.gate = CompletableDeferred()
+
+        vm.onConfirmEmptySign(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(entry(vm).emptySign?.working).isTrue()
+        // A second press and the ways out wait for the answer.
+        vm.onConfirmEmptySign(TARGET)
+        vm.onDismissEmptySign(TARGET)
+        assertThat(entry(vm).emptySign?.working).isTrue()
+
+        stances.gate?.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(stances.staged).containsExactly(StancePair.Origin)
+        assertThat(entry(vm).emptySign).isNull()
+    }
+
+    @Test
+    fun aFailedEmptySignKeepsTheAskUpWithTheFault() = runTest(dispatcher) {
+        stances.records = 0
+        stances.prepareOutcome = Outcome.Refused(listOf(UserError(ErrorCode.INTERNAL, "not now")))
+        val vm = viewModel()
+        pressSetAt(vm, StancePair.Origin)
+
+        vm.onConfirmEmptySign(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(entry(vm).emptySign).isEqualTo(EmptySignState(failed = true))
+        assertThat(entry(vm).pad).isEqualTo(PadMode.STICKY)
+        assertThat(entry(vm).confirmation).isNull()
+    }
+
+    @Test
+    fun keepItReturnsToThePickAsItWas() = runTest(dispatcher) {
+        stances.records = 0
+        val vm = viewModel()
+        pressSetAt(vm, StancePair.Origin)
+
+        vm.onDismissEmptySign(TARGET)
+
+        assertThat(entry(vm).emptySign).isNull()
+        assertThat(entry(vm).pad).isEqualTo(PadMode.STICKY)
+        assertThat(entry(vm).pick).isEqualTo(StancePair.Origin)
+        assertThat(stances.staged).isEmpty()
+    }
+
+    @Test
+    fun aHoldThatNetsTheBundleToZeroAsksTheWalkBackInsteadOfSigning() = runTest(dispatcher) {
+        // The master's hold is `commitChecked(TAP_DEFAULT)`: checked like Set.
+        stances.net = StancePair(-0.1, -0.1)
+        stances.records = 1
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onHoldDefault(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(stances.staged).isEmpty()
+        assertThat(entry(vm).severance?.fromPick).isTrue()
+        assertThat(entry(vm).pick).isEqualTo(StancePair.TapDefault)
+        assertThat(entry(vm).pad).isEqualTo(PadMode.CLOSED)
+    }
+
+    @Test
+    fun aPendingWalkBackIsSeveredAndAPendingEmptySignIsNot() = runTest(dispatcher) {
+        identity.stancePadTaught = true
+        stances.net = StancePair(0.5, 0.5)
+        stances.records = 2
+        stances.standingFails = false
+        val vm = viewModel()
+        pressSetAt(vm, StancePair(-0.5, -0.5))
+        // The read after the signature fails: the pending fold stands, and it
+        // has to say which zero it is by the API's own rule.
+        stances.standingFails = true
+        vm.onConfirmSeverance(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(entry(vm).standingSevered).isTrue()
+        assertThat(entry(vm).walkedBack).isEqualTo(1)
+
+        // Now an empty sign over that walked-back bundle.
+        vm.onConfirmationShown(TARGET)
+        vm.onOpenPad(TARGET)
+        vm.onPick(TARGET, StancePair.Origin)
+        vm.onCommit(TARGET)
+        assertThat(entry(vm).emptySign).isNotNull()
+        vm.onConfirmEmptySign(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(entry(vm).standingSevered).isFalse()
+        assertThat(entry(vm).confirmation).isEqualTo(StancePair.Origin)
     }
 
     // -- The chosen input surface (design.md §8.6) --

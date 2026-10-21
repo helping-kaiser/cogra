@@ -5,8 +5,10 @@
 
 package com.cogra.feature.notifications
 
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -136,6 +138,34 @@ class NotificationsScreenTest {
         render(loaded(opinion))
         compose.onNodeWithText("@sol gave an opinion on you").assertIsDisplayed()
         assertThat(compose.onAllNodesWithText("0.4", substring = true).fetchSemanticsNodes()).isEmpty()
+    }
+
+    // Faces follow the value, and the row says which (0, 0) it draws from
+    // `Record.severed` (`StanceValue.zeroLabel`; seam 243).
+    private fun faceSpoken(pair: NotificationPair): List<String> {
+        render(loaded(opinion.copy(pair = pair)))
+        return compose.onAllNodes(hasContentDescription(", ", substring = true), useUnmergedTree = true)
+            .fetchSemanticsNodes()
+            .flatMap { it.config.getOrElse(SemanticsProperties.ContentDescription) { emptyList() } }
+    }
+
+    @Test
+    fun `an opinion row at zero that was never walked back says nothing`() {
+        assertThat(faceSpoken(NotificationPair(0.0, 0.0, severed = false)))
+            .contains("Says nothing, +0.00 / +0.00")
+    }
+
+    @Test
+    fun `an opinion row at zero speaks walked back only when its record says so`() {
+        assertThat(faceSpoken(NotificationPair(0.0, 0.0, severed = true)))
+            .contains("Walked back, +0.00 / +0.00")
+    }
+
+    @Test
+    fun `an opinion row with one number at zero thinks and names its state`() {
+        assertThat(faceSpoken(NotificationPair(0.0, 0.4, severed = false)))
+            .contains("Interested, no side taken, +0.00 / +0.40")
+        assertThat(compose.onAllNodesWithText("🤔", useUnmergedTree = true).fetchSemanticsNodes()).hasSize(1)
     }
 
     // Notifications.md:13, :21, :43 — the tenth kind, the opinion row's sibling.

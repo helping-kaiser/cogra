@@ -73,6 +73,8 @@ class StancePadTest {
     private var alternatesOpened = 0
     private var severOpened = 0
     private var confirmationsShown = 0
+    private var emptySigned = 0
+    private var emptyKept = 0
     private var underneath = 0
     private val picks = mutableListOf<StancePoint>()
 
@@ -92,12 +94,16 @@ class StancePadTest {
         lineFaceInk: Color? = null,
         geek: Boolean = false,
         wide: Boolean = false,
+        vouchesIn: Boolean = false,
     ) {
         compose.setContent {
             CompositionLocalProvider(LocalShowExactValues provides geek) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     StanceControl(
                         state = state,
+                        onConfirmEmptySign = { emptySigned++ },
+                        onDismissEmptySign = { emptyKept++ },
+                        vouchesIn = vouchesIn,
                         lineFaceInk = lineFaceInk,
                         onHoldDefault = { holdSigned++ },
                         onOpenPad = { opened++ },
@@ -530,18 +536,124 @@ class StancePadTest {
 
     @Test
     fun aWalkedBackBundleReadsAsItsSentence() {
-        show(open.copy(standing = StancePoint.Origin), targetLabel = "@ada")
+        show(open.copy(standing = StancePoint.Origin, severed = true), targetLabel = "@ada")
         compose.onNodeWithTag("${TAG}_stance_standing").assertTextEquals("🤷 You've walked @ada back to nothing.")
     }
 
     @Test
     fun aTopicsZeroStandingNamesItInTheSentenceRuledForIt() {
         show(
-            open.copy(standing = StancePoint.Origin),
+            open.copy(standing = StancePoint.Origin, severed = true),
             zeroWords = StanceZeroWords.Disconnected,
             targetLabel = "#saltmaps",
         )
         compose.onNodeWithTag("${TAG}_stance_standing").assertTextEquals("🤷 No opinion towards #saltmaps.")
+    }
+
+    // -- Faces follow the value (PadStanding.md:23-31; seam 243) --
+
+    @Test
+    fun anEmptySignsStandingIsAReadoutThatSaysNothingNeverTheWalkBackSentence() {
+        // Records > 0, not severed, at (0, 0): `standingParts`' block, 🤷.
+        show(open.copy(standing = StancePoint.Origin, severed = false), targetLabel = "@ada")
+        compose.onNodeWithText("You've walked @ada back to nothing.", substring = true, useUnmergedTree = true)
+            .assertDoesNotExist()
+        compose.onNodeWithTag("${TAG}_stance_standing").assertContentDescriptionEquals(
+            "Current opinion: Says nothing, For or against +0.00, How much reaches you +0.00",
+        )
+        compose.onNodeWithText("Current opinion", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun aStandingWithOneNumberAtZeroThinksAndSpeaksItsState() {
+        show(open.copy(standing = StancePoint(0.0, 0.35)))
+        compose.onNodeWithTag("${TAG}_stance_standing").assertContentDescriptionEquals(
+            "Current opinion: Interested, no side taken, For or against +0.00, How much reaches you +0.35",
+        )
+    }
+
+    @Test
+    fun aPickWithOneNumberAtZeroThinksNeverReadsNice() {
+        // The bug: the big face read 🙂 "Nice" at (+0.10, 0.00) while the
+        // landing beneath it thought.
+        show(open.copy(pick = StancePoint(0.1, 0.0), standing = heldStanding))
+        compose.onNodeWithTag("${TAG}_stance_readout").assertContentDescriptionEquals(
+            "Your pick: For it, no interest either way, For or against +0.10, How much reaches you +0.00",
+        )
+    }
+
+    @Test
+    fun aPickOfNothingSaysNothing() {
+        show(open.copy(pick = StancePoint.Origin, standing = null))
+        compose.onNodeWithTag("${TAG}_stance_readout").assertContentDescriptionEquals(
+            "Your pick: Says nothing, For or against +0.00, How much reaches you +0.00",
+        )
+    }
+
+    @Test
+    fun theFaceOnTheTargetNamesWhichZeroItIs() {
+        show(StanceControlState(standing = StancePoint.Origin, severed = true), targetLabel = "@ada")
+        compose.onNodeWithTag("${TAG}_stance").assertContentDescriptionContains(
+            "Your opinion on @ada: Walked back, +0.00 / +0.00.",
+            substring = true,
+        )
+    }
+
+    @Test
+    fun theFaceOnTheTargetOverAnEmptySignSaysNothing() {
+        show(StanceControlState(standing = StancePoint.Origin, severed = false), targetLabel = "@ada")
+        compose.onNodeWithText("🤷", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("${TAG}_stance").assertContentDescriptionContains(
+            "Your opinion on @ada: Says nothing, +0.00 / +0.00.",
+            substring = true,
+        )
+    }
+
+    @Test
+    fun aTopicsWalkedBackFaceSpeaksItsFamilysWord() {
+        show(
+            StanceControlState(standing = StancePoint.Origin, severed = true),
+            zeroWords = StanceZeroWords.Disconnected,
+            targetLabel = "#saltmaps",
+        )
+        compose.onNodeWithTag("${TAG}_stance").assertContentDescriptionContains(
+            "Your opinion on #saltmaps: No opinion, +0.00 / +0.00.",
+            substring = true,
+        )
+    }
+
+    @Test
+    fun theFaceOnTheTargetThinksAtOneZero() {
+        show(StanceControlState(standing = StancePoint(-0.4, 0.0)), targetLabel = "@ada")
+        compose.onNodeWithText("🤔", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("${TAG}_stance").assertContentDescriptionContains(
+            "Your opinion on @ada: Against it, no interest either way, -0.40 / +0.00.",
+            substring = true,
+        )
+    }
+
+    // -- The empty sign's ask (PadStanding.md:71; EmptySignConfirm) --
+
+    @Test
+    fun theEmptySignsAskStandsOverTheParkedPadAndAnswersBothWays() {
+        show(open.copy(pick = StancePoint.Origin, emptySign = EmptySignPrompt()), targetLabel = "@ada")
+        compose.onNodeWithTag("${TAG}_empty_sign_title").assertTextEquals("Sign an empty opinion?")
+        compose.onNodeWithTag("${TAG}_severance").assertDoesNotExist()
+        compose.onNodeWithTag("${TAG}_empty_sign_body")
+            .assertTextEquals("This says nothing about @ada, shapes no feed, and leaves you where you are.")
+        compose.onNodeWithTag("${TAG}_empty_sign_confirm").performClick()
+        assertThat(emptySigned).isEqualTo(1)
+        compose.onNodeWithTag("${TAG}_empty_sign_keep").performClick()
+        assertThat(emptyKept).isEqualTo(1)
+    }
+
+    @Test
+    fun aControlThatVouchesInWarnsHarderOnItsEmptySign() {
+        show(open.copy(pick = StancePoint.Origin, emptySign = EmptySignPrompt()), targetLabel = "@rafa", vouchesIn = true)
+        compose.onNodeWithTag("${TAG}_empty_sign_body").assertTextEquals(
+            "@rafa would be vouched in but start out cut off: no feed can carry them, and community funds " +
+                "stay closed to them, until someone gives them an opinion that says something.",
+        )
     }
 
     @Test
@@ -990,12 +1102,38 @@ class StancePadTest {
     }
 
     @Test
-    fun aPickThatNetsToZeroConfirmsAsAWalkBackNeverAsNice() {
+    fun aPickThatWalkedTheBundleBackConfirmsAsTheWalkBackOfOneThing() {
         val host = SnackbarHostState()
-        showLiveConfirmation(host, StancePoint.Origin)
+        showLiveConfirmation(host, null, walkedBack = 1)
         compose.waitForIdle()
         assertThat(host.currentSnackbarData?.visuals?.message)
             .isEqualTo("Signed, still settling. You've walked @ada back to nothing.")
+    }
+
+    @Test
+    fun anEmptySignConfirmsWithTheOrdinaryLineNeverTheWalkBack() {
+        // jakob 2026-10-21: "the snackbar must not be something special."
+        val host = SnackbarHostState()
+        showLiveConfirmation(host, StancePoint.Origin)
+        compose.waitForIdle()
+        val visuals = host.currentSnackbarData?.visuals as SpokenSnackbarVisuals
+        assertThat(visuals.message).isEqualTo("Signed, still settling. Current opinion 🤷")
+        assertThat(visuals.spoken).isEqualTo(
+            "Signed, still settling. Current opinion: Says nothing, For or against +0.00, How much reaches you +0.00",
+        )
+    }
+
+    @Test
+    fun aConfirmationWithOneNumberAtZeroThinks() {
+        val host = SnackbarHostState()
+        showLiveConfirmation(host, StancePoint(0.0, 0.2))
+        compose.waitForIdle()
+        val visuals = host.currentSnackbarData?.visuals as SpokenSnackbarVisuals
+        assertThat(visuals.message).isEqualTo("Signed, still settling. Current opinion 🤔")
+        assertThat(visuals.spoken).isEqualTo(
+            "Signed, still settling. Current opinion: Interested, no side taken, For or against +0.00, " +
+                "How much reaches you +0.20",
+        )
     }
 
     @Test
