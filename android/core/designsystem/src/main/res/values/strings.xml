@@ -125,6 +125,9 @@
     <!-- The non-drag door (StanceControl.jsx:601-614): never drawn, one
          accessibility action away on every face. -->
     <string name="stance_target_choose">Choose your opinion on %1$s</string>
+    <!-- The wide anchor's printed words, only where there is no pair to
+         show (StanceControl.jsx `wide`; copy-voice *At rest and at zero*). -->
+    <string name="stance_wide_words">Your opinion</string>
     <!-- The pad's name (copy-voice *The pad's name*; StanceControl.jsx:656). -->
     <string name="stance_pad_name">Opinion pad for %1$s</string>
     <!-- The signed-opinion snackbar (copy-voice; StanceReadout.jsx
