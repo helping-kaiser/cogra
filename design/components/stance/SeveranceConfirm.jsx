@@ -67,9 +67,10 @@ export function SeveranceConfirm({
      round). "Signed action" is the repo's word for a record; what the reader
      has is a pile of things they said, each of which has to be said back. */
   const cost = records === 1 ? "It signs 1 thing, paid on its own." : `It signs ${records} things, each paid separately.`;
-  /* A pick at exactly (0, 0) never speaks through the table (readme §8): here
-     it IS the walk-back, so the zero readout's own pair — 🤷, "Walked back" —
-     is its honest face. */
+  /* The pick wears the face every pair wears (`bundleReadout`): a pick with
+     one number at zero thinks, as it does on the pad. A pick of (0, 0) never
+     reaches this dialog — with something standing it lands where the bundle
+     already is, and with nothing standing it asks `EmptySignConfirm`. */
   const sever = severanceWords(names);
   const title = sever.title(targetLabel);
   const pickAnchor = pick === null ? null : bundleReadout(pick, sever.zero);

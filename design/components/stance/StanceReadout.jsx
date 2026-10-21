@@ -345,10 +345,41 @@ export function nearestValenceAnchor(pDirected) {
   return VALENCE_SIX[VALENCE_SIX.length - 1];
 }
 
-/** The readout a BUNDLE wears. The table never speaks for zero. */
+/* FACES FOLLOW THE VALUE, EVERYWHERE (jakob 2026-10-21, seam 242). Any pair
+   drawn as a face — the pick, a standing opinion, the resting anchor, a
+   record's row, the snackbar — reads here, and the table reads only a pair
+   with both numbers non-zero: exactly (0, 0) shrugs, exactly one zero thinks
+   and names its state (`unreachableHead`). A pick of (+0.10, 0.00) is the
+   held, unreachable state whether it is being picked or already stands, so
+   it wears the face the landing beneath it wears. 🫥 stays the control's
+   own, outside every value. */
 export function bundleReadout(pair, zeroLabel = SEVERED_LABEL) {
-  if (pair.pDirected === 0 && pair.pInterest === 0) return { emoji: ZERO_BUNDLE_EMOJI, label: zeroLabel };
+  const dZero = pair.pDirected === 0;
+  const iZero = pair.pInterest === 0;
+  if (dZero && iZero) return { emoji: ZERO_BUNDLE_EMOJI, label: zeroLabel };
+  if (dZero || iZero) return { emoji: UNREACHABLE_EMOJI, label: unreachableHead(pair) };
   return nearestAnchor(pair);
+}
+
+/* A PICK OF NOTHING SAYS NOTHING. A pick at exactly (0, 0) is not a walk-back —
+   it adds nothing to what stands — so its spoken word is its own. */
+export const EMPTY_PICK_LABEL = "Says nothing";
+
+/* A TAG'S PAIR FOLLOWS THE SAME LAW (hashtag.md §4): `(0, 0)` is the
+   withdrawal, and a tag at zero on one number only is routing-inert but not
+   withdrawn — a claim, not nothing. So a tag's face shrugs at (0, 0), thinks
+   at one zero, and reads the thirteen objects otherwise; the words are the
+   tag family's, never a stance's. */
+export const TAG_WITHDRAWN_LABEL = "withdrawn";
+export function tagUnreachableHead(pair) {
+  return pair.pDirected === 0 ? "not about it at all" : "no certainty at all";
+}
+export function tagReadout(pair) {
+  const rZero = pair.pDirected === 0;
+  const cZero = pair.pInterest === 0;
+  if (rZero && cZero) return { emoji: ZERO_BUNDLE_EMOJI, label: TAG_WITHDRAWN_LABEL };
+  if (rZero || cZero) return { emoji: UNREACHABLE_EMOJI, label: tagUnreachableHead(pair) };
+  return nearestTagAnchor(pair);
 }
 
 /* The read-only value readout (profile round, 2026-09-01): a stance RECORD's
@@ -591,7 +622,7 @@ function ReadoutLine({ emoji, exact, spoken, style }) {
 
 /** Face and pair, and the words for a reader who cannot see the face (readme §10). */
 export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, names = STANCE_AXIS_NAMES, style }) {
-  const readout = kind === "standing" ? bundleReadout(pair, zeroLabel) : nearestAnchor(pair);
+  const readout = bundleReadout(pair, kind === "standing" ? zeroLabel : EMPTY_PICK_LABEL);
   return (
     <ReadoutLine
       emoji={readout.emoji}
@@ -768,7 +799,7 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, words, head, onExp
 
 /** The current opinion and the pick — everything that sits above the field. */
 export function StanceStanding({ pick, bundle, targetLabel, names = STANCE_AXIS_NAMES, style, onOpenHistory, node }) {
-  const anchor = nearestAnchor(pick);
+  const anchor = bundleReadout(pick, EMPTY_PICK_LABEL);
   const { anchorWord } = readoutWords(names);
   return (
     <div aria-live="polite" style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", ...style }} data-node={node}>

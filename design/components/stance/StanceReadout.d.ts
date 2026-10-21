@@ -230,7 +230,18 @@ export declare function nearestAnchor(pair: StancePair): StancePair & { emoji: s
 /** The nearest of the thirteen TAG anchors — the glyph a tag's pair reads as
  *  wherever it is drawn without the pad. */
 export declare function nearestTagAnchor(pair: StancePair): StancePair & { emoji: string; label: string };
+/** The face ANY stance pair wears — a pick, a standing bundle, a record: 🤷
+ *  (with `zeroLabel`) at exactly (0, 0), 🤔 (with `unreachableHead`) at exactly
+ *  one zero, the nearest of the twenty otherwise. Every face readout reads here. */
 export declare function bundleReadout(pair: StancePair, zeroLabel?: string): { emoji: string; label: string };
+/** A pick's spoken word at exactly (0, 0): it adds nothing, so it says nothing. */
+export declare const EMPTY_PICK_LABEL: string;
+/** The face a TAG pair wears: 🤷 withdrawn at (0, 0), 🤔 at one zero, the nearest of the thirteen otherwise. */
+export declare function tagReadout(pair: StancePair): { emoji: string; label: string };
+/** A tag pair's one-zero state in the tag family's words. */
+export declare function tagUnreachableHead(pair: StancePair): string;
+/** A tag pair's spoken word at (0, 0), the withdrawal. */
+export declare const TAG_WITHDRAWN_LABEL: string;
 export declare function formatStancePair(pair: StancePair): string;
 export declare function formatStanceWords(pair: StancePair, names?: AxisNames): string;
 /** Always signed, two decimals, the negative arm on U+2212 MINUS (readme §3). */
@@ -267,7 +278,7 @@ export declare const SEVERED_LABEL: string;
 export declare const NO_STANDING_LABEL: string;
 /** What a bundle at exactly (0, 0) reads as. */
 export declare const ZERO_BUNDLE_EMOJI: string;
-/** What a state with exactly one number at zero wears — an unreachable landing, the one-axis 0.00: 🤔. */
+/** What a state with exactly one number at zero wears — any pair drawn as a face, the one-axis 0.00: 🤔. */
 export declare const UNREACHABLE_EMOJI: string;
 /** The face an unauthored target wears at rest, deliberately outside the
  *  anchor table so an empty control cannot read as an opinion already given. */

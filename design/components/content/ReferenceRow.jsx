@@ -2,7 +2,7 @@ import React from "react";
 import { Icon, NODE_GLYPHS } from "../navigation/Icon.jsx";
 import { MonogramAvatar } from "../people/ActorChip.jsx";
 import { PendingMarker } from "../honesty/PendingMarker.jsx";
-import { formatStancePair, formatTagPair, nearestAnchor, nearestTagAnchor, SR_ONLY } from "../stance/StanceReadout.jsx";
+import { bundleReadout, formatStancePair, formatTagPair, SR_ONLY, tagReadout } from "../stance/StanceReadout.jsx";
 
 /* One row of the topics-and-references sheet (readme §13, 2026-08-28), and the
    result-row shape search reuses: EVERY row is leading mark · name · value, so
@@ -144,7 +144,7 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, 
      the Type the row names, so the twenty faces' word is true of it. The
      citation is the one family the word is withheld from, and it is withheld
      for what it is rather than for which table it reads. */
-  const anchor = pair ? (tagFamily ? nearestTagAnchor(pair) : nearestAnchor(pair)) : null;
+  const anchor = pair ? (tagFamily ? tagReadout(pair) : bundleReadout(pair)) : null;
   const spokenWord = tagFamily || pairFamily === "stance";
   return (
     <button
