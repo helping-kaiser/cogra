@@ -33,7 +33,7 @@ use crate::auth::Viewer;
 use crate::l1::StandInBoundary;
 use crate::loaders::{
     ActorByAddressLoader, ActorByIdLoader, CommentByNodeLoader, CommentGalleryLoader,
-    MediaByIdLoader, PayloadStateLoader, PostByNodeLoader, PostGalleryLoader,
+    MediaByIdLoader, PayloadStateLoader, PostByNodeLoader, PostGalleryLoader, SeveringRecordLoader,
 };
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 
@@ -95,7 +95,11 @@ pub struct StanceProjection {
     pub p_interest: Dimension,
     /// Either axis at zero — the stance would carry nothing.
     pub inert: bool,
-    /// Both axes at zero — the pick reaches severance.
+    /// Both axes at zero — the pick reaches severance. The landing's pair
+    /// alone: where nothing stands — the bundle holds no record, or is
+    /// already severed — a pick landing at `(0, 0)` is an empty sign, not
+    /// a walk-back, so read it beside the bundle's `recordCount` and
+    /// `severed`.
     pub severed: bool,
 }
 
@@ -110,7 +114,7 @@ pub struct StanceProjection {
 /// history beyond the clip has to reach them (design.md §8.3).
 pub struct StanceBundle {
     target: String,
-    sum: common::l1::fold::BundleSum,
+    standing: common::l1::fold::Standing,
     pick: Option<(f64, f64)>,
 }
 
@@ -125,12 +129,12 @@ impl StanceBundle {
 
     /// The folded valence as it stands.
     async fn p_directed(&self) -> Dimension {
-        Dimension(self.sum.fold().p_d)
+        Dimension(self.standing.sum.fold().p_d)
     }
 
     /// The folded connection as it stands.
     async fn p_interest(&self) -> Dimension {
-        Dimension(self.sum.fold().p_i)
+        Dimension(self.standing.sum.fold().p_i)
     }
 
     /// The raw valence sum, before the clip — beyond `±1` where the
@@ -138,42 +142,51 @@ impl StanceBundle {
     /// sum is unbounded by construction, and clipping it here would
     /// serve the folded number twice.
     async fn raw_p_directed(&self) -> f64 {
-        self.sum.p_d
+        self.standing.sum.p_d
     }
 
     /// The raw connection sum, before the clip.
     async fn raw_p_interest(&self) -> f64 {
-        self.sum.p_i
+        self.standing.sum.p_i
     }
 
-    /// How many records the bundle folds.
+    /// How many records the bundle folds — every record counts, an
+    /// empty sign's `(0, 0)` included.
     async fn record_count(&self) -> i32 {
-        self.sum.records.try_into().unwrap_or(i32::MAX)
+        self.standing.sum.records.try_into().unwrap_or(i32::MAX)
     }
 
     /// Either axis at zero — the bundle carries nothing on it.
     async fn inert(&self) -> bool {
-        self.sum.fold().is_inert()
+        self.standing.sum.fold().is_inert()
     }
 
-    /// Both axes at zero — the bundle is severed.
+    /// Walked back to nothing: the bundle nets to `(0, 0)` and its newest
+    /// record said something. False on an empty bundle, and false on one
+    /// an empty sign left at `(0, 0)` — over nothing or over a walk-back —
+    /// which stands at `(0, 0)` saying nothing. The projection's `severed`
+    /// is the landing's pair alone; this is the bundle's history.
     async fn severed(&self) -> bool {
-        self.sum.fold().is_severed()
+        self.standing.is_severed()
     }
 
-    /// How many counter-records severance would stage right now — the
+    /// How many records the walk-back would stage right now — the
     /// gesture's cost, since each is its own priced act
-    /// (feed-ranking.md §8.1). Zero when the bundle already nets to
-    /// `(0, 0)`.
+    /// (feed-ranking.md §8.1): the counter-records that net the sums, or
+    /// 1 for a bundle an empty sign left at `(0, 0)`. Zero when nothing
+    /// stands, or the bundle is already severed.
     async fn severance_cost(&self) -> i32 {
-        self.sum.severance_cost().try_into().unwrap_or(i32::MAX)
+        self.standing
+            .severance_cost()
+            .try_into()
+            .unwrap_or(i32::MAX)
     }
 
     /// Where the supplied `pick` would land the bundle; null when the
     /// field was asked without one.
     async fn projected(&self) -> Option<StanceProjection> {
         let (p_d, p_i) = self.pick?;
-        let net = self.sum.project(p_d, p_i);
+        let net = self.standing.sum.project(p_d, p_i);
         Some(StanceProjection {
             p_directed: Dimension(net.p_d),
             p_interest: Dimension(net.p_i),
@@ -331,7 +344,7 @@ pub(crate) async fn viewer_stance(
     match crate::stance::bundle(pool, viewer.user_id, target, include_pending).await {
         Ok(read) => Ok(Some(StanceBundle {
             target: read.node.to_string(),
-            sum: read.sum,
+            standing: read.standing,
             pick: pick.map(|p| (p.p_directed.0, p.p_interest.0)),
         })),
         Err(crate::stance::StanceError::BadInput { .. })
@@ -803,6 +816,22 @@ impl Record {
     /// The authored interest parameter, as the actor's leg renders it.
     async fn p_interest(&self) -> Dimension {
         Dimension(self.0.target().map_or(0.0, |leg| leg.p_i))
+    }
+
+    /// Whether this record left its author's stance bundle toward the
+    /// target walked back to nothing — `StanceBundle.severed` read as of
+    /// this record: it says something, and every record of the bundle up
+    /// to and including it, in the published order, nets to `(0, 0)`. A
+    /// row drawing the pair without the bundle reads it to speak a
+    /// walk-back; a record at `(0, 0)` itself is never one — it says
+    /// nothing. Null on a record that folds into no stance bundle: a
+    /// family other than Opinion and Affinity, a payload-marked record, a
+    /// leg with no census spec.
+    async fn severed(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<bool>> {
+        Ok(ctx
+            .data::<DataLoader<SeveringRecordLoader>>()?
+            .load_one(self.0.record_id.clone())
+            .await?)
     }
 
     /// The landing epoch.
@@ -3523,7 +3552,7 @@ impl HashtagType {
         match crate::stance::topic_bundle(pool, viewer.user_id, &self.name, include_pending).await {
             Ok(read) => Ok(Some(StanceBundle {
                 target: read.node.to_string(),
-                sum: read.sum,
+                standing: read.standing,
                 pick: pick.map(|p| (p.p_directed.0, p.p_interest.0)),
             })),
             Err(crate::stance::StanceError::BadInput { .. })

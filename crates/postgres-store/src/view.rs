@@ -15,7 +15,7 @@
 //!
 //! It appears in `topics::topics_of`, `topics::tagged_with`,
 //! `references::references_of`, `references::bundle` and
-//! `stance::bundle`. sqlx's macros take a string literal and nothing that
+//! `stance::standing`. sqlx's macros take a string literal and nothing that
 //! expands to one, so the fragment cannot be shared; what can be shared
 //! is the reason. Two of its three conjuncts are also the partial-index
 //! condition of `staged_writes_bundle_idx`; the third is narrower than

@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COALESCE(SUM(p_d::text::numeric), 0)::text AS \"p_d!\",\n                      COALESCE(SUM(p_i::text::numeric), 0)::text AS \"p_i!\",\n                      COUNT(*)::bigint             AS \"records!\",\n                      (ARRAY_AGG(NOT (p_d = 0 AND p_i = 0) ORDER BY seq DESC))[1]\n                                                   AS \"newest_says?\"\n               FROM staged_writes\n               WHERE family = $1 AND author = $2 AND target = $3\n                 AND middle IS NULL\n                 AND octet_length(payload) = 0\n                 AND (pre_signed_at IS NOT NULL OR carried)\n                 AND state NOT IN ('landed', 'expired')",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "p_d!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "p_i!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "records!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "newest_says?",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "6f438f83375b52f36d6c6899afcfa23b8d390dd3838793f1d293faf701800ea4"
+}

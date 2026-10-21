@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COALESCE(SUM(l.p_d::text::numeric), 0)::text AS \"p_d!\",\n                  COALESCE(SUM(l.p_i::text::numeric), 0)::text AS \"p_i!\",\n                  COUNT(*)::bigint              AS \"records!\",\n                  COALESCE((ARRAY_AGG(NOT (l.p_d = 0 AND l.p_i = 0)\n                                      ORDER BY r.epoch DESC, r.act_time DESC,\n                                               r.position DESC))[1],\n                           FALSE)               AS \"newest_says!\"\n           FROM mirror_record_legs l\n           JOIN mirror_records r ON r.record_id = l.record_id\n           WHERE l.leg = 'binary' AND l.family = $1\n             AND l.source = $2 AND l.target = $3\n             AND NOT r.payload_marked\n             AND NOT l.census_unknown",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "p_d!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "p_i!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "records!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "newest_says!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "660dffb4e5caf01eae713853ac13f63b596aa93ec944f7985b19cabcd599391a"
+}

@@ -12,7 +12,7 @@
 
 use common::l1::census::Family;
 use common::l1::exact::Decimal;
-use common::l1::fold::BundleSum;
+use common::l1::fold::{BundleSum, Standing};
 use common::l1::identifier::NodeId;
 use sqlx::PgPool;
 
@@ -34,9 +34,18 @@ impl BundleView {
     }
 }
 
-/// One author's bundle toward one node: the raw parameter sums and the
-/// record count. `author_atom` is the author's address atom; `target` is
-/// the target's node identifier in its stored form.
+/// One author's bundle toward one node, read as a standing: the raw
+/// parameter sums, the record count, and whether the newest record says
+/// something (`common::l1::fold::Standing`, which reads the bundle
+/// severed or saying nothing from it). `author_atom` is the author's
+/// address atom; `target` is the target's node identifier in its stored
+/// form.
+///
+/// The newest record is the last in the published order — the causal key
+/// `(epoch, act_time, position)` the chronicle pages on — and with the
+/// pending half counted, the author's newest act in flight, by its act
+/// sequence: an act still in flight lands after everything already
+/// landed, so it is the newest the bundle will hold.
 ///
 /// Payload-marked records are excluded — folds read them individually,
 /// "never through the author's netted bundle" (api-spec.md `Record.
@@ -60,18 +69,22 @@ impl BundleView {
 /// parameters were never validated against the family they claim; summing
 /// them into a stance would fold a guess into the number the read rule is
 /// applied to.
-pub async fn bundle(
+pub async fn standing(
     pool: &PgPool,
     author_atom: &str,
     family: Family,
     target: &str,
     view: BundleView,
-) -> Result<BundleSum, sqlx::Error> {
+) -> Result<Standing, sqlx::Error> {
     let source = NodeId::Addr(author_atom.to_string()).to_string();
     let landed = sqlx::query!(
         r#"SELECT COALESCE(SUM(l.p_d::text::numeric), 0)::text AS "p_d!",
                   COALESCE(SUM(l.p_i::text::numeric), 0)::text AS "p_i!",
-                  COUNT(*)::bigint              AS "records!"
+                  COUNT(*)::bigint              AS "records!",
+                  COALESCE((ARRAY_AGG(NOT (l.p_d = 0 AND l.p_i = 0)
+                                      ORDER BY r.epoch DESC, r.act_time DESC,
+                                               r.position DESC))[1],
+                           FALSE)               AS "newest_says!"
            FROM mirror_record_legs l
            JOIN mirror_records r ON r.record_id = l.record_id
            WHERE l.leg = 'binary' AND l.family = $1
@@ -87,12 +100,15 @@ pub async fn bundle(
 
     let mut sum = ExactSums::default();
     sum.absorb(&landed.p_d, &landed.p_i, landed.records)?;
+    let mut newest_says_something = landed.newest_says;
 
     if view == BundleView::IncludingPending {
         let pending = sqlx::query!(
             r#"SELECT COALESCE(SUM(p_d::text::numeric), 0)::text AS "p_d!",
                       COALESCE(SUM(p_i::text::numeric), 0)::text AS "p_i!",
-                      COUNT(*)::bigint             AS "records!"
+                      COUNT(*)::bigint             AS "records!",
+                      (ARRAY_AGG(NOT (p_d = 0 AND p_i = 0) ORDER BY seq DESC))[1]
+                                                   AS "newest_says?"
                FROM staged_writes
                WHERE family = $1 AND author = $2 AND target = $3
                  AND middle IS NULL
@@ -106,9 +122,62 @@ pub async fn bundle(
         .fetch_one(pool)
         .await?;
         sum.absorb(&pending.p_d, &pending.p_i, pending.records)?;
+        if let Some(says) = pending.newest_says {
+            newest_says_something = says;
+        }
     }
 
-    Ok(sum.bundle())
+    Ok(Standing {
+        sum: sum.bundle(),
+        newest_says_something,
+    })
+}
+
+/// For each of the given records that folds into a stance bundle — a
+/// binary Opinion or Affinity, unmarked, its leg census-known — whether it
+/// left that bundle severed: the record says something, and the bundle as
+/// of it — every record of the same author, family and target up to and
+/// including this one in the published order — nets to exactly `(0, 0)`.
+/// That is `Standing::is_severed` read at the record, so the newest
+/// record's answer is the landed bundle's. Records that fold into no
+/// stance bundle are absent from the map.
+///
+/// The row's half of the bundle's reading: a row draws one record's pair
+/// without the bundle, and the flag is what tells a walk-back from a
+/// record that says nothing (api-spec.md `Record.severed`).
+pub async fn severing_records(
+    pool: &PgPool,
+    record_ids: &[String],
+) -> Result<std::collections::HashMap<String, bool>, sqlx::Error> {
+    Ok(sqlx::query!(
+        r#"SELECT l.record_id AS "record_id!",
+                  (NOT (l.p_d = 0 AND l.p_i = 0)
+                   AND prefix.p_d = 0 AND prefix.p_i = 0) AS "severed!"
+           FROM mirror_record_legs l
+           JOIN mirror_records r ON r.record_id = l.record_id
+           CROSS JOIN LATERAL (
+               SELECT COALESCE(SUM(b.p_d::text::numeric), 0) AS p_d,
+                      COALESCE(SUM(b.p_i::text::numeric), 0) AS p_i
+               FROM mirror_record_legs b
+               JOIN mirror_records br ON br.record_id = b.record_id
+               WHERE b.leg = 'binary' AND b.family = l.family
+                 AND b.source = l.source AND b.target = l.target
+                 AND NOT br.payload_marked
+                 AND NOT b.census_unknown
+                 AND (br.epoch, br.act_time, br.position)
+                     <= (r.epoch, r.act_time, r.position)
+           ) prefix
+           WHERE l.record_id = ANY($1)
+             AND l.leg = 'binary' AND l.family IN ('opinion', 'affinity')
+             AND NOT r.payload_marked
+             AND NOT l.census_unknown"#,
+        record_ids,
+    )
+    .fetch_all(pool)
+    .await?
+    .into_iter()
+    .map(|row| (row.record_id, row.severed))
+    .collect())
 }
 
 /// Whether the author holds at least one live outgoing Opinion edge: some
@@ -117,7 +186,7 @@ pub async fn bundle(
 /// `Query.borrowedView`). An author whose Opinions are all inert, or all
 /// netted to zero, has no such edge: their ranked feed would be empty.
 ///
-/// The bundle is the fold of [`bundle`] — payload-marked and
+/// The bundle is the fold of [`standing`] — payload-marked and
 /// census-unknown legs excluded — taken per target across every target
 /// the author has written an Opinion toward. The clip preserves zero
 /// (`clip(x) == 0` exactly when `x` is `0`), so the sum tests directly in
@@ -173,10 +242,10 @@ pub async fn has_live_opinion_from(
 /// raw `p_d` sums of every Publish-family record the author wrote toward
 /// it, and how many records sum.
 ///
-/// The sibling of [`bundle`] with the one difference that is the point of
+/// The sibling of [`standing`] with the one difference that is the point of
 /// it: payload-marked records are counted. Every Publish is payload-marked
 /// — the genesis record and each edit carry the content envelope — so the
-/// exclusion `bundle` applies, which keeps ballots out of a stance, would
+/// exclusion `standing` applies, which keeps ballots out of a stance, would
 /// empty this read. Census-unknown legs stay excluded for the same reason
 /// as there, and the pending half counts the author's staged Publish rows
 /// under the same lifecycle test (pre-committed or carried, neither landed
