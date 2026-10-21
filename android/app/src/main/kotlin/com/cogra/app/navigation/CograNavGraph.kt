@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.core.util.Consumer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -56,6 +58,7 @@ import com.cogra.app.ui.DeviceLockKeeper
 import com.cogra.app.ui.SecurityNoticeHost
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.LocalPadBottomInset
 import com.cogra.core.designsystem.LocalSnackbarHostState
 import com.cogra.core.designsystem.v2.media.LocalAlwaysUnveil
 import com.cogra.core.designsystem.StanceAxes
@@ -530,18 +533,29 @@ fun CograNavGraph(
     // (`AccountPreferencesViewModel.kt`; `SensitiveVeil.kt`'s [LocalAlwaysUnveil]).
     val preferences: AccountPreferencesViewModel = hiltViewModel()
     val alwaysUnveil by preferences.alwaysUnveil.collectAsStateWithLifecycle()
+    // THE PAD PARKS 16dp ABOVE THE BOTTOM BAR where the surface has one
+    // (PadStanding.md:15): the bar's 64 plus the 16, or 16 off the edge.
+    var barShown by remember { mutableStateOf(false) }
     CompositionLocalProvider(
         LocalSnackbarHostState provides shellSnackbar,
         LocalAlwaysUnveil provides alwaysUnveil,
+        LocalPadBottomInset provides if (barShown) PAD_ABOVE_BAR else PAD_OFF_EDGE,
     ) {
-        CograNavGraphContent(navController, shellSnackbar)
+        CograNavGraphContent(navController, shellSnackbar, onBarShown = { barShown = it })
     }
 }
+
+/** The parked pad's standoff over a surface with the bottom bar: `--bottom-bar-height` 64 + 16. */
+private val PAD_ABOVE_BAR = 80.dp
+
+/** …and over one without it: 16 off the bottom edge. */
+private val PAD_OFF_EDGE = 16.dp
 
 @Composable
 private fun CograNavGraphContent(
     navController: NavHostController,
     shellSnackbar: SnackbarHostState,
+    onBarShown: (Boolean) -> Unit,
 ) {
     val authState: AuthStateViewModel = hiltViewModel()
     val phase by authState.phase.collectAsStateWithLifecycle()
@@ -819,12 +833,14 @@ private fun CograNavGraphContent(
         }
     }
 
+    val barShown = signedIn != null && onReadSurface
+    SideEffect { onBarShown(barShown) }
     Scaffold(
         snackbarHost = {
             CograSnackbarHost(shellSnackbar, testTag = "shell_snackbar")
         },
         bottomBar = {
-            if (signedIn != null && onReadSurface) {
+            if (barShown) {
                 CograBottomBar(
                     // The bar is the shell's, but each registered board names
                     // it under its own screen (`feed.bottomBar`,
