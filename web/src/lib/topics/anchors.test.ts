@@ -9,7 +9,13 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import { STANCE_ANCHORS } from "@/lib/stance/anchors";
-import { nearestTagAnchor, TAG_ANCHORS, type TagAnchor } from "./anchors";
+import {
+  nearestTagAnchor,
+  TAG_ANCHORS,
+  TAG_WITHDRAWN_LABEL,
+  tagReadout,
+  type TagAnchor,
+} from "./anchors";
 
 const MASTER = readFileSync(
   new URL("../../../../design/components/stance/StanceReadout.jsx", import.meta.url),
@@ -70,5 +76,28 @@ describe("tag anchors", () => {
     // +0.10 / 1.00, the pair the drawn sheet carries on each.
     expect(nearestTagAnchor(0.4, 0.9).emoji).toBe("🔗");
     expect(nearestTagAnchor(0.1, 1).emoji).toBe("🔍");
+  });
+});
+
+describe("a tag pair drawn as a face (the master's tagReadout)", () => {
+  it("shrugs at (0, 0), the withdrawal", () => {
+    expect(tagReadout(0, 0)).toEqual({ emoji: "🤷", label: "withdrawn" });
+    expect(MASTER).toContain(`export const TAG_WITHDRAWN_LABEL = "${TAG_WITHDRAWN_LABEL}";`);
+  });
+
+  it("thinks at exactly one zero and says which, never one of the thirteen", () => {
+    expect(tagReadout(0, 0.9)).toEqual({ emoji: "🤔", label: "not about it at all" });
+    expect(tagReadout(0.4, 0)).toEqual({ emoji: "🤔", label: "no certainty at all" });
+    expect(TAG_ANCHORS.map((anchor) => anchor.emoji)).not.toContain("🤔");
+  });
+
+  it("reads the thirteen only when both numbers are non-zero", () => {
+    for (const [relevance, confidence] of [
+      [0.4, 0.9],
+      [0.01, 0.01],
+      [1, 1],
+    ] as const) {
+      expect(tagReadout(relevance, confidence)).toEqual(nearestTagAnchor(relevance, confidence));
+    }
   });
 });

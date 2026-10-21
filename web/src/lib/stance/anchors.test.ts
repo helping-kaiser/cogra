@@ -14,6 +14,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   bundleReadout,
+  EMPTY_PICK_LABEL,
   nearestAnchor,
   RESTING_FACE_EMOJI,
   STANCE_ANCHORS,
@@ -133,17 +134,45 @@ describe("the zero bundle's readout", () => {
     expect(bundleReadout(ORIGIN, "No stance yet").label).toBe("No stance yet");
   });
 
-  it("reads every non-zero bundle through the table as before", () => {
-    // Including the ones that are inert on one axis: §8.4 exempts the
-    // ORIGIN, not everything the fold happens to flag.
+  it("reads a pair through the table only when both numbers are non-zero", () => {
+    // Faces follow the value (jakob 2026-10-21, seam 242): the table answers
+    // only off both zero lines.
     for (const pair of [
-      { pDirected: 0, pInterest: 0.6 },
-      { pDirected: 0.7, pInterest: 0 },
       { pDirected: -0.9, pInterest: -0.9 },
-      { pDirected: 0.001, pInterest: 0 },
+      { pDirected: 0.001, pInterest: 0.001 },
+      { pDirected: 0.1, pInterest: -0.4 },
     ]) {
-      expect(bundleReadout(pair, "Severed")).toEqual(nearestAnchor(pair));
+      expect(bundleReadout(pair, "Walked back")).toEqual(nearestAnchor(pair));
     }
+  });
+
+  it("thinks at exactly one zero and names the state, never a table face", () => {
+    // design.md §8.4: "A pair with exactly one number at zero wears 🤔 and
+    // names its state". The expectations are the rule's, not the table's.
+    const cases: [number, number, string][] = [
+      [0, 0.6, "Interested, no side taken"],
+      [0, -0.35, "Rather not see it, no side taken"],
+      [0.7, 0, "For it, no interest either way"],
+      [0.001, 0, "For it, no interest either way"],
+      [-0.1, 0, "Against it, no interest either way"],
+    ];
+    for (const [pDirected, pInterest, head] of cases) {
+      const readout = bundleReadout({ pDirected, pInterest }, "Walked back");
+      expect(readout).toEqual({ emoji: UNREACHABLE_EMOJI, label: head });
+      expect(STANCE_ANCHORS.map((anchor) => anchor.emoji)).not.toContain(readout.emoji);
+    }
+  });
+
+  it("speaks a pick or a never-walked-back standing at (0, 0) as Says nothing", () => {
+    expect(bundleReadout(ORIGIN, EMPTY_PICK_LABEL)).toEqual({
+      emoji: ZERO_BUNDLE_EMOJI,
+      label: "Says nothing",
+    });
+    const master = readFileSync(
+      new URL("../../../../design/components/stance/StanceReadout.jsx", import.meta.url),
+      "utf-8",
+    );
+    expect(master).toContain(`export const EMPTY_PICK_LABEL = "${EMPTY_PICK_LABEL}";`);
   });
 
   it("shrugs at a negative zero, which a drag that never moved produces", () => {
