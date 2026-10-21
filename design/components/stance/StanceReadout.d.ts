@@ -102,6 +102,11 @@ export interface StanceValueProps {
   /** Draws the exact pair beside the face — geek mode decides whether it paints.
    *  Defaults to true; false is for a row that has no room for it at all. */
   showPair?: boolean;
+  /** The spoken word a (0,0) pair carries — the numbers cannot tell a
+   *  walked-back standing from an empty-signed one, so the row's data says
+   *  which. Defaults to the severance family's word; a never-severed (0,0)
+   *  standing passes EMPTY_PICK_LABEL ("Says nothing"). */
+  zeroLabel?: string;
   /** The data-node name its placer gives the value (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its `face` and, while drawn, its `exact` pair. */
   node?: string;
 }

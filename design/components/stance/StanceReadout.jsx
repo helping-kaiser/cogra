@@ -389,9 +389,12 @@ export function tagReadout(pair) {
    — the opinions page's rows, the chronicle's opinion entries. Never
    interactive: acting on a person means opening their profile first (jakob —
    giving an opinion here is more deliberate than a follow). */
-export function StanceValue({ pDirected, pInterest, showPair = true, node }) {
+export function StanceValue({ pDirected, pInterest, showPair = true, zeroLabel = SEVERED_LABEL, node }) {
   const pair = { pDirected, pInterest };
-  const readout = bundleReadout(pair);
+  /* A row cannot tell a walked-back (0,0) from an empty-signed one by the
+     numbers — the data says which, through `zeroLabel`: a never-severed
+     standing passes `EMPTY_PICK_LABEL` so it speaks "Says nothing". */
+  const readout = bundleReadout(pair, zeroLabel);
   return (
     <span
       role="img"
