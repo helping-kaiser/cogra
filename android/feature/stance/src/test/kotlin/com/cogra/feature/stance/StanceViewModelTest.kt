@@ -1,6 +1,7 @@
 package com.cogra.feature.stance
 
 import com.cogra.crypto.ActorKey
+import com.cogra.domain.ActorRef
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
@@ -18,6 +19,7 @@ import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.stance.localLanding
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
+import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingStanceRepository
 import com.cogra.domain.testing.testGraphId
 import com.google.common.truth.Truth.assertThat
@@ -143,7 +145,13 @@ class StanceViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = StanceViewModel(stances, WriteSigner(writes, identity), identity, signals)
+    /** Whether the reader still borrows a view: `borrowedView`'s lender, or null. */
+    private val account = object : ThrowingAccountRepository() {
+        var lender: ActorRef? = null
+        override suspend fun borrowedView(): Outcome<ActorRef?> = Outcome.Success(lender)
+    }
+
+    private fun viewModel() = StanceViewModel(stances, WriteSigner(writes, identity), identity, signals, account)
 
     private fun entry(vm: StanceViewModel) = vm.state.value.targets.getValue(TARGET)
 
@@ -375,8 +383,10 @@ class StanceViewModelTest {
     // -- The hold answers immediately (design.md §8.3) --
 
     @Test
-    fun aHoldMovesTheTargetBeforeTheRecordLands() = runTest(dispatcher) {
-        // Silence reads as failure and invites the same priced act again.
+    fun aHoldMovesTheTargetOnlyOnceItsSignatureIsTaken() = runTest(dispatcher) {
+        // The failure pack: signed acts are pessimistic. "The resting target
+        // moves to the new opinion when the signature is taken … if it is
+        // not taken, the face never moved" (StanceControl.jsx).
         identity.stancePadTaught = true
         stances.net = StancePair(0.5, 0.5)
         stances.records = 2
@@ -389,19 +399,19 @@ class StanceViewModelTest {
         vm.onHoldDefault(TARGET)
         dispatcher.scheduler.advanceUntilIdle()
 
-        // The write is still open, and the target already answers — with
-        // the pick folded onto the standing it had.
+        // The write is still open: the target waits, where it stood.
         assertThat(entry(vm).busy).isTrue()
         assertThat(stances.staged).isEmpty()
-        assertThat(entry(vm).standing).isEqualTo(StancePair(0.6, 0.6))
-        assertThat(entry(vm).standingPending).isTrue()
+        assertThat(entry(vm).standing).isEqualTo(StancePair(0.5, 0.5))
+        assertThat(entry(vm).standingPending).isFalse()
 
         stances.net = StancePair(0.6, 0.6)
         stances.records = 3
         gate.complete(Unit)
         dispatcher.scheduler.advanceUntilIdle()
 
-        // The landed read is the authority and replaces it.
+        // Taken: it moves, and the landed read is the authority.
+        assertThat(entry(vm).busy).isFalse()
         assertThat(entry(vm).standing).isEqualTo(StancePair(0.6, 0.6))
         assertThat(entry(vm).standingPending).isFalse()
         assertThat(entry(vm).standingRecords).isEqualTo(3)
@@ -618,18 +628,65 @@ class StanceViewModelTest {
     }
 
     @Test
-    fun dismissingThePadForgetsThePickAndTheAlternates() = runTest(dispatcher) {
+    fun dismissingThePadForgetsThePick() = runTest(dispatcher) {
         val vm = viewModel()
         vm.observe(TARGET)
         vm.onOpenPad(TARGET)
         vm.onPick(TARGET, StancePair(0.9, 0.9))
-        vm.onToggleExactValues(TARGET)
 
         vm.onDismissPad(TARGET)
 
         assertThat(entry(vm).pad).isEqualTo(PadMode.CLOSED)
         assertThat(entry(vm).pick).isEqualTo(StancePair.Origin)
-        assertThat(entry(vm).exactValues).isFalse()
+    }
+
+    // -- The alternates (StanceControl.jsx:601-614; stance-control.md) --
+
+    @Test
+    fun chooseYourOpinionOpensTheAlternatesAtTheDefault() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onOpenAlternates(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(entry(vm).pad).isEqualTo(PadMode.ALTERNATES)
+        assertThat(entry(vm).pick).isEqualTo(StancePair.TapDefault)
+        assertThat(stances.staged).isEmpty()
+    }
+
+    @Test
+    fun aReaderWhoChoseAnAlternateMeetsItOnTheTap() = runTest(dispatcher) {
+        identity.setStanceInputMode(StanceInputMode.SLIDERS)
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onOpenPad(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(entry(vm).pad).isEqualTo(PadMode.ALTERNATES)
+        // The coaching lines are the pad's; the alternates carry none.
+        assertThat(vm.state.value.coachingTarget).isNull()
+    }
+
+    // -- The borrowed view (the master's `borrowed`, seam 240) --
+
+    @Test
+    fun anOpenAsksWhetherTheReaderStillBorrowsAView() = runTest(dispatcher) {
+        account.lender = ActorRef(id = "genesis", handle = "genesismod")
+        val vm = viewModel()
+        vm.observe(TARGET)
+        vm.onOpenPad(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.borrowed).isTrue()
+
+        account.lender = null
+        vm.onDismissPad(TARGET)
+        vm.onOpenPad(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.borrowed).isFalse()
     }
 
     // -- Severance (design.md §8.2, §8.5) --
@@ -655,6 +712,53 @@ class StanceViewModelTest {
         assertThat(open).isNotNull()
         assertThat(open?.fromPick).isTrue()
         assertThat(open?.quote?.records).isEqualTo(2)
+    }
+
+    @Test
+    fun confirmingAPickThatNetsToZeroSignsThePickAloneAsOneRecord() = runTest(dispatcher) {
+        // The pick route signs exactly one record (jakob 2026-10-05, P5;
+        // PadStanding.md:59 "its cost of 1 thing") — never the walk-back batch.
+        identity.stancePadTaught = true
+        stances.net = StancePair(0.8, 0.8)
+        stances.records = 2
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onOpenPad(TARGET)
+        vm.onPick(TARGET, StancePair(-0.8, -0.8))
+        vm.onCommit(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        stances.net = StancePair.Origin
+        stances.records = 3
+        vm.onConfirmSeverance(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(stances.severanceCalls).isEqualTo(0)
+        assertThat(stances.staged).containsExactly(StancePair(-0.8, -0.8))
+        assertThat(entry(vm).severance).isNull()
+        assertThat(entry(vm).pad).isEqualTo(PadMode.CLOSED)
+        // Read as a walk-back, never as the table's nearest face.
+        assertThat(entry(vm).confirmation).isEqualTo(StancePair.Origin)
+    }
+
+    @Test
+    fun aTakenWalkBackConfirmsWithTheNumberOfThingsItSigned() = runTest(dispatcher) {
+        stances.net = StancePair(0.5, 0.5)
+        stances.records = 3
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onOpenSeverance(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        stances.net = StancePair.Origin
+        vm.onConfirmSeverance(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(entry(vm).walkedBack).isEqualTo(3)
+        vm.onConfirmationShown(TARGET)
+        assertThat(entry(vm).walkedBack).isNull()
     }
 
     @Test

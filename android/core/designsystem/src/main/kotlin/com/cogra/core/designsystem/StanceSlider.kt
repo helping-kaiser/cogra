@@ -42,7 +42,6 @@ fun StanceSlider(
         Text(
             text = if (LocalShowExactValues.current) "$label $reading" else label,
             style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.clearAndSetSemantics { },
         )
         Slider(
             value = value.toFloat(),

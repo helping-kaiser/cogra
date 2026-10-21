@@ -99,6 +99,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.onLongClick
@@ -705,7 +706,8 @@ private fun StancePadWindow(
                             indication = null,
                             onClick = onCancel,
                         )
-                        .clearAndSetSemantics { }
+                        // The wash is `aria-hidden`: a press on it is Cancel, never a control.
+                        .semantics { hideFromAccessibility() }
                         .testTag("${testTagPrefix}_stance_scrim"),
                 )
             }

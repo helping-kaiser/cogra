@@ -1,10 +1,14 @@
 package com.cogra.core.designsystem
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -22,11 +26,24 @@ class StanceSliderTest {
     val compose = createComposeRule()
 
     @Test
-    fun labelCarriesTheTwoDecimalValue() {
+    fun theLabelCarriesTheSignedValueOnlyInGeekMode() {
+        // StanceSlider.jsx: the value in the label is the geek reading (`cg-exact`).
+        compose.setContent {
+            CompositionLocalProvider(LocalShowExactValues provides true) {
+                StanceSlider(label = "Directed", value = 0.1, onChange = {}, testTag = "slider")
+            }
+        }
+        compose.onNodeWithText("Directed +0.10").assertExists()
+    }
+
+    @Test
+    fun theDefaultReadingIsTheQuestionAloneAndTheSliderStillAnnouncesItsValue() {
         compose.setContent {
             StanceSlider(label = "Directed", value = 0.1, onChange = {}, testTag = "slider")
         }
-        compose.onNodeWithText("Directed: 0.10").assertExists()
+        compose.onNodeWithText("Directed").assertExists()
+        compose.onNodeWithTag("slider")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "+0.10"))
     }
 
     @Test
@@ -48,7 +65,8 @@ class StanceSliderTest {
             it(0.5f)
         }
         assertEquals(0.5, reported, 1e-6)
-        compose.onNodeWithText("Directed: 0.50").assertExists()
+        compose.onNodeWithTag("slider")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "+0.50"))
     }
 
     @Test
