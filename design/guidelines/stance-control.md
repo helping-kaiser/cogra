@@ -245,7 +245,10 @@ instead is explain, and confirm when it matters:
 - if the result is `(0, 0)` while nothing stands — never signed, or
   already walked back — there is nothing to walk back: ask whether an
   empty opinion was meant (`Sign an empty opinion?`, jakob 2026-10-21), a
-  priced record that says nothing and leaves the standing as it was.
+  priced record that says nothing. Signed, it is an ordinary record: the
+  bundle counts it, stays at `(0, 0)` and is not severed. Where the
+  opinion vouches someone in, the ask warns that they start out cut off,
+  and the vouch-in proceeds.
 
 The cost is legible: each counter-record is its own priced act, so the
 dialog states the count — `It signs 3 things, each paid separately.`

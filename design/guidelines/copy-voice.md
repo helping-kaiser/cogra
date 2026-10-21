@@ -2615,11 +2615,17 @@ signed, or already walked back — asks its own question, never the
 walk-back's: dialog `Sign an empty opinion?`, body `This says nothing
 about @ada, shapes no feed, and leaves you where you are.` / `It signs 1
 thing, paid on its own.`, with `Keep it` filled and `Set it anyway`
-quiet; in flight `Setting…`. Signed, the snackbar names where the
-unchanged standing leaves the reader: `Signed, still settling. No opinion
-on @ada yet.`, or after a walk-back the family's own `You've walked @ada
-back to nothing.` A pick at exactly `(0, 0)` is spoken `Says nothing`.
-(*Drafted 2026-10-21 from the ruling's sketch; jakob's at review.*)
+quiet; in flight `Setting…`. Where the opinion vouches someone in —
+approving, a vouch asked for — the first line is the stronger warning,
+`@rafa would be vouched in but start out cut off: no feed can carry
+them, and community funds stay closed to them, until someone gives them
+an opinion that says something.`, and `Set it anyway` still vouches them
+in. Signed, it is an ordinary record and nothing special answers it: the
+ordinary snackbar, `Signed, still settling. Current opinion 🤷`. A pick at
+exactly `(0, 0)`, and a standing there never walked back, is spoken `Says
+nothing` — never `Walked back`. (*Blessed, jakob 2026-10-21: the words as
+shipped, the vouch-in line drafted from his facts, the ordinary
+snackbar his ruling.*)
 
 **The backing pad's own words** (`ComposePad`, `EditPad`, round 15):
 the readouts `Current backing` · `Your pick` · `Backing after`, the

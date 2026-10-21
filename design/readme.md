@@ -10382,12 +10382,23 @@ stands gets its own ask, never the walk-back and never a block.
   `This says nothing about @ada, shapes no feed, and leaves you where
   you are.` · `It signs 1 thing, paid on its own.` · `Set it anyway` /
   `Keep it` filled — raised by `StanceControl` when a pick lands `(0, 0)`
-  with no record standing or the bundle walked back; the standing does
-  not move. Its board stands beside `SeveranceConfirm`, the column
-  right of it one slot over.
-- **The gate**: edges **2124 → 2127** (`EmptySignConfirm`'s three);
-  flows hold at **227**. The registry holds at **100 screens**; the new
-  board is unregistered.
+  with no record standing or the bundle walked back. Its board stands
+  beside `SeveranceConfirm`, the column right of it one slot over, and
+  `empty-sign.card.html` draws its states.
+- **Ruled at review (jakob 2026-10-21).** Signed, the empty sign is an
+  ordinary record: the bundle counts it, stays at `(0, 0)`, is not
+  severed, and the ordinary snackbar answers; a standing there speaks
+  `Says nothing`, never `Walked back`, and `Walk it back` stands at its
+  cost of 1. Where the opinion vouches someone in — `ApprovePad`,
+  `VouchAskPad`, `StanceControl`'s `vouchesIn` — the ask keeps and the act
+  proceeds, the first line the stronger warning: `@rafa would be vouched
+  in but start out cut off: no feed can carry them, and community funds
+  stay closed to them, until someone gives them an opinion that says
+  something.` The board's `context` chip draws it over Invites.
+- **The gate**: edges **2124 → 2127** (`EmptySignConfirm`'s three; the
+  approval and vouch-ask Sets gain it as an outcome); flows hold at
+  **227**. The registry holds at **100 screens**; the new board is
+  unregistered.
 
 ---
 
