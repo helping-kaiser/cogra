@@ -2609,6 +2609,18 @@ an opinion.`, with `Keep adjusting` filled and `Set it anyway` quiet
 (*the body blessed, jakob 2026-10-20; the title and both buttons are
 round 13's*).
 
+**The empty sign** (`EmptySignConfirm`; jakob 2026-10-21, seam 242). Set
+on a pick landing `(0, 0)` while nothing stands toward the target — never
+signed, or already walked back — asks its own question, never the
+walk-back's: dialog `Sign an empty opinion?`, body `This says nothing
+about @ada, shapes no feed, and leaves you where you are.` / `It signs 1
+thing, paid on its own.`, with `Keep it` filled and `Set it anyway`
+quiet; in flight `Setting…`. Signed, the snackbar names where the
+unchanged standing leaves the reader: `Signed, still settling. No opinion
+on @ada yet.`, or after a walk-back the family's own `You've walked @ada
+back to nothing.` A pick at exactly `(0, 0)` is spoken `Says nothing`.
+(*Drafted 2026-10-21 from the ruling's sketch; jakob's at review.*)
+
 **The backing pad's own words** (`ComposePad`, `EditPad`, round 15):
 the readouts `Current backing` · `Your pick` · `Backing after`, the
 walk-back `Walk it all back` — the ordinary pad's walk-away word, with

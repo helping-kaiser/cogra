@@ -241,7 +241,11 @@ instead is explain, and confirm when it matters:
   `Interested, no side taken` and its siblings — say once that it
   shapes no feed, and let the 🤔 explain the rest in place;
 - if the result is `(0, 0)`, name it as severance, say what it costs, and
-  ask whether that was the intent.
+  ask whether that was the intent;
+- if the result is `(0, 0)` while nothing stands — never signed, or
+  already walked back — there is nothing to walk back: ask whether an
+  empty opinion was meant (`Sign an empty opinion?`, jakob 2026-10-21), a
+  priced record that says nothing and leaves the standing as it was.
 
 The cost is legible: each counter-record is its own priced act, so the
 dialog states the count — `It signs 3 things, each paid separately.`
