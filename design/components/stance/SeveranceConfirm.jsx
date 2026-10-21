@@ -15,7 +15,8 @@ import {
 // the explicit gesture, and an ordinary pick that happens to land the bundle
 // there — the second is confirmed, never refused, because the control never
 // prevents a choice (the same section). The two are the SAME dialog, distinguished only by
-// the pick line the second one adds.
+// the pick line the second one adds. Both need an opinion standing: a pick that lands
+// (0, 0) with nothing standing walks nothing back and asks `EmptySignConfirm` instead.
 //
 // The order is fixed (Android parity): title · the pick line when it was reached
 // by a pick · the consequences · what the reader has said in total (and, only when
