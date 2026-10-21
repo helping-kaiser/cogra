@@ -298,7 +298,7 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
     const walk = await screen.findByTestId("post-edit-backing-pad-walk-back");
     expect(walk).not.toBeDisabled();
     fireEvent.click(walk);
-    expect(screen.getByTestId("post-edit-backing-pad-pick-exact")).toHaveTextContent("-0.35");
+    expect(screen.getByTestId("post-edit-backing-pad-pick-exact")).toHaveTextContent("−0.35");
     expect(screen.getByTestId("post-edit-backing-pad-after-exact")).toHaveTextContent("+0.00");
     fireEvent.click(screen.getByTestId("post-edit-backing-pad-set"));
     expect(screen.getByTestId("post-edit-backing-value")).toHaveTextContent("+0.00");
@@ -445,11 +445,11 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
     fireEvent.keyDown(await screen.findByTestId("post-edit-backing-pad-field-strip"), { key: "ArrowLeft" });
     fireEvent.click(screen.getByTestId("post-edit-backing-pad-set"));
     fireEvent.click(screen.getByTestId("post-edit-open-backing"));
-    expect(await screen.findByTestId("post-edit-backing-pad-pick-exact")).toHaveTextContent("-0.05");
+    expect(await screen.findByTestId("post-edit-backing-pad-pick-exact")).toHaveTextContent("−0.05");
     fireEvent.keyDown(screen.getByTestId("post-edit-backing-pad-field-strip"), { key: "ArrowLeft" });
     fireEvent.click(screen.getByTestId("post-edit-backing-pad-cancel"));
     fireEvent.click(screen.getByTestId("post-edit-open-backing"));
-    expect(await screen.findByTestId("post-edit-backing-pad-pick-exact")).toHaveTextContent("-0.05");
+    expect(await screen.findByTestId("post-edit-backing-pad-pick-exact")).toHaveTextContent("−0.05");
   });
 
   it("a Set at 0.00 asks nothing and adds no record", async () => {

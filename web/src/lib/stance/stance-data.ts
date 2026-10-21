@@ -148,4 +148,11 @@ export interface StanceData {
    * its cost stated (intent.ts).
    */
   sever(target: StanceTarget, shown: StanceBundle): Promise<Outcome<StanceCommit>>;
+
+  /**
+   * Whether this device can sign at all — the signing key is here. Asked
+   * before a gesture stages anything, so the pad can carry the key notice
+   * (PadKeyAbsent.md) rather than fail a signature it could never give.
+   */
+  keyOnDevice(): Promise<boolean>;
 }

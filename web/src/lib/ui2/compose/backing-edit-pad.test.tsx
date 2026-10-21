@@ -108,7 +108,7 @@ describe("EditPad", () => {
     it("parks the pick at the raw sum's opposite, so the after reads 0.00 — no dialog, nothing staged", () => {
       const { onSet, onClose } = renderPad({ pick: 0, rawSum: 0.35 });
       fireEvent.click(screen.getByTestId("pad-walk-back"));
-      expect(text("pad-pick-exact")).toBe("-0.35");
+      expect(text("pad-pick-exact")).toBe("−0.35");
       expect(text("pad-after-face")).toBe("🤔");
       expect(text("pad-after-exact")).toBe("+0.00");
       expect(onSet).not.toHaveBeenCalled();
@@ -119,7 +119,7 @@ describe("EditPad", () => {
     it("past ±1 parks as far as one record reaches", () => {
       renderPad({ pick: 0, rawSum: 1.4 });
       fireEvent.click(screen.getByTestId("pad-walk-back"));
-      expect(text("pad-pick-exact")).toBe("-1.00");
+      expect(text("pad-pick-exact")).toBe("−1.00");
       expect(text("pad-after-exact")).toBe("+0.40");
     });
 
@@ -131,7 +131,7 @@ describe("EditPad", () => {
       expect(text("pad-after-exact")).toBe("+1.00");
       expect(text("pad-cap")).toBe("Adds up to +2.00; your feed reads it capped at +1.00.");
       fireEvent.click(screen.getByTestId("pad-walk-back"));
-      expect(text("pad-pick-exact")).toBe("-1.00");
+      expect(text("pad-pick-exact")).toBe("−1.00");
       expect(text("pad-after-exact")).toBe("+1.00");
       expect(screen.queryByTestId("pad-cap")).not.toBeInTheDocument();
     });

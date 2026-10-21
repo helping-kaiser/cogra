@@ -361,7 +361,9 @@ describe("VouchCard", () => {
       );
       expect(screen.getByTestId("feed.vouchCard.stance.pad")).toContainElement(help);
       expect(screen.getByTestId("feed.vouchCard.stance.pad.set")).toBeDisabled();
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      // The pad is the one dialog (it is modal, StanceControl.jsx); the help
+      // opens no second one over it.
+      expect(screen.getAllByRole("dialog")).toEqual([screen.getByTestId("feed.vouchCard.stance.pad")]);
     });
 
     // VouchBackPad.md:11.

@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { StanceBundle } from "@/lib/stance/stance-data";
 import { SeveranceConfirm } from "./severance-confirm";
+import { AFFINITY_AXES } from "./stance-format";
 
 const STANDING: StanceBundle = {
   current: { pDirected: 0.6, pInterest: 0.4 },
@@ -32,58 +33,64 @@ function show(props: Partial<React.ComponentProps<typeof SeveranceConfirm>> = {}
   return { onConfirm, onCancel };
 }
 
+// The master is `design/components/stance/SeveranceConfirm.jsx` and its
+// prompt: title, the pick line when a pick reached it, the consequences, the
+// raw total (the cap only when the sum passed it), the cost in things, the
+// failure line, then the walk-back on the left and Keep it, filled, on the
+// right.
 describe("the severance confirmation", () => {
   it("opens as a modal, so focus and Esc come from the platform", () => {
     show();
     expect(screen.getByTestId<HTMLDialogElement>("severance-confirm").open).toBe(true);
   });
 
-  it("asks the one question, whichever route reached it", () => {
+  it("asks the family's one question, whichever route reached it", () => {
     show();
-    expect(screen.getByTestId("severance-confirm")).toHaveTextContent("Sever this?");
+    expect(screen.getByTestId("severance-confirm")).toHaveTextContent("Walk it all back?");
   });
 
-  it("names what severance costs before anything is signed", () => {
+  it("counts the cost in things, before anything is signed", () => {
     show({ records: 4 });
     expect(screen.getByTestId("severance-cost")).toHaveTextContent(
-      "It takes 4 signed actions, each paid for separately.",
+      "It signs 4 things, each paid separately.",
     );
   });
 
-  it("counts a single action in the singular", () => {
+  it("counts a single thing in its own words", () => {
     show({ records: 1 });
-    expect(screen.getByTestId("severance-cost")).toHaveTextContent("It takes 1 signed action,");
+    expect(screen.getByTestId("severance-cost")).toHaveTextContent(
+      "It signs 1 thing, paid on its own.",
+    );
   });
 
   it("says what reaching zero carries with it", () => {
     show();
-    const consequences = screen.getByTestId("severance-consequences");
-    expect(consequences).toHaveTextContent("stops reaching your feed");
-    expect(consequences).toHaveTextContent("stop earning");
-    expect(consequences).toHaveTextContent("nothing passes on through you");
+    expect(screen.getByTestId("severance-consequences")).toHaveTextContent(
+      "Your opinion of @ada drops to nothing. It stops reaching your feed, you stop earning from it, and nothing passes on through you.",
+    );
   });
 
-  it("states where the reader stands before they decide", () => {
-    show();
-    expect(screen.getByTestId("severance-standing")).toHaveTextContent("Where you stand now:");
-    // The fold, clipped, is what the standing line shows.
-    expect(screen.getByTestId("severance-standing")).toHaveTextContent("+0.60 / +0.40");
-  });
-
-  it("states the RAW sums, which are what the walk back actually walks", () => {
-    // §8.3, §8.5: "every surface that explains cost — the severance
-    // confirmation above all — states the raw sums". This bundle folds
-    // to (+0.60, +0.40) but sums to (+1.60, +0.40); showing the fold
-    // would understate the walk by a whole unit.
+  it("leads with the RAW total, and states the cap only because the sum passed it", () => {
+    // §8.3, §8.5 and the master: the total is what the reader built up; the
+    // cap is what the feed reads of it. Both paint in both modes — the one
+    // exemption from geek mode — so neither sits in a cg-exact span.
     show();
     const raw = screen.getByTestId("severance-raw");
-    expect(raw).toHaveTextContent("What you'd be walking back:");
-    expect(raw).toHaveTextContent("+1.60 / +0.40");
+    expect(raw).toHaveTextContent(
+      "Everything you've said about @ada adds up to +1.60 / +0.40, and that is what this walks back.",
+    );
+    expect(raw).toHaveTextContent("Your feed reads it capped at +0.60 / +0.40.");
+    expect(raw.querySelector(".cg-exact")).toBeNull();
   });
 
-  it("says there is nothing to walk back where there is no standing", () => {
+  it("states no cap where the sum never reached it", () => {
+    show({ bundle: { ...STANDING, rawSum: STANDING.current } });
+    expect(screen.getByTestId("severance-raw")).not.toHaveTextContent("capped");
+  });
+
+  it("says there is no opinion where there is none", () => {
     show({ bundle: null });
-    expect(screen.getByTestId("severance-raw")).toHaveTextContent("haven't taken a stance");
+    expect(screen.getByTestId("severance-raw")).toHaveTextContent("🤷 No opinion on @ada yet.");
   });
 
   it("adds the pick line only when a pick reached it", () => {
@@ -91,11 +98,14 @@ describe("the severance confirmation", () => {
     expect(screen.queryByTestId("severance-pick")).toBeNull();
   });
 
-  it("shows the pick that landed here, and asks the same question about it", () => {
-    show({ pick: { pDirected: 0, pInterest: 0 }, records: 1 });
-    expect(screen.getByTestId("severance-pick")).toBeInTheDocument();
-    expect(screen.getByTestId("severance-confirm")).toHaveTextContent("Sever this?");
-    expect(screen.getByTestId("severance-proceed")).toHaveTextContent("Sever");
+  it("shows the pick that landed here as a face and a pair, its word spoken only", () => {
+    show({ pick: { pDirected: -1, pInterest: -1 }, records: 1 });
+    const line = screen.getByTestId("severance-pick");
+    expect(line).toHaveTextContent("Your pick: 💀 −1.00 / −1.00");
+    expect(line.querySelector(".sr-only")).toHaveTextContent(
+      "Your pick: Absolutely not, For or against −1.00, How much reaches you −1.00",
+    );
+    expect(screen.getByTestId("severance-proceed")).toHaveTextContent("Walk it back");
   });
 
   it("refuses to bill for a bundle already at nothing", () => {
@@ -106,12 +116,16 @@ describe("the severance confirmation", () => {
     expect(screen.getByTestId("severance-proceed")).toBeDisabled();
   });
 
-  // F7: the confirming action sits on the RIGHT, the platform convention.
-  it("puts the confirming action last in the DOM order", () => {
+  // The destructive-dialog rule: the SAFE action is filled and keeps the
+  // right-hand slot; the walk-back is a text button on the left.
+  it("puts Keep it, filled, on the right and the walk-back, as text, on the left", () => {
     show();
     const buttons = screen.getByTestId("severance-confirm").querySelectorAll("button");
-    expect(buttons[buttons.length - 1]).toBe(screen.getByTestId("severance-proceed"));
-    expect(buttons[0]).toBe(screen.getByTestId("severance-cancel"));
+    expect(buttons[buttons.length - 1]).toBe(screen.getByTestId("severance-cancel"));
+    expect(buttons[buttons.length - 2]).toBe(screen.getByTestId("severance-proceed"));
+    expect(screen.getByTestId("severance-cancel")).toHaveTextContent("Keep it");
+    expect(screen.getByTestId("severance-cancel").className).toContain("bg-primary");
+    expect(screen.getByTestId("severance-proceed").className).not.toContain("bg-primary");
   });
 
   it("keeps the standing when declined", () => {
@@ -127,15 +141,27 @@ describe("the severance confirmation", () => {
     expect(onConfirm).toHaveBeenCalledOnce();
   });
 
-  it("cannot be signed twice while the first is in flight", () => {
-    const { onConfirm } = show({ busy: true });
+  it("cannot be signed twice, nor left, while the first is in flight", () => {
+    const { onConfirm, onCancel } = show({ busy: true });
     fireEvent.click(screen.getByTestId("severance-proceed"));
+    fireEvent.click(screen.getByTestId("severance-cancel"));
     expect(onConfirm).not.toHaveBeenCalled();
+    expect(onCancel).not.toHaveBeenCalled();
+    // Locked, never dimmed.
+    expect(screen.getByTestId("severance-proceed")).toBeEnabled();
+    expect(screen.getByTestId("severance-proceed")).toHaveAttribute("aria-disabled", "true");
   });
 
-  it("stays up and says so when the signing pass did not complete", () => {
+  it("says what is happening once the wait passes 200ms", () => {
+    show({ busy: true, slow: true });
+    expect(screen.getByTestId("severance-proceed")).toHaveTextContent("Walking it back…");
+  });
+
+  it("stays up, says so and offers Retry when the signing did not complete", () => {
     show({ failed: true });
-    expect(screen.getByTestId("severance-failed")).toHaveTextContent("That didn't send");
+    expect(screen.getByTestId("severance-failed")).toHaveTextContent("That didn't send. Try again.");
+    expect(screen.getByTestId("severance-failed")).toHaveAttribute("role", "alert");
+    expect(screen.getByTestId("severance-proceed")).toHaveTextContent("Retry");
     expect(screen.getByTestId<HTMLDialogElement>("severance-confirm").open).toBe(true);
   });
 
@@ -147,30 +173,15 @@ describe("the severance confirmation", () => {
   });
 });
 
-// jakob's I2 ruling (copy-voice.md "Awaiting blessing — the topic
-// disconnects", 2026-09-15: "we want human wording not this nerdy
-// stuff!"). Topics disconnect; every other kind above keeps severing
-// verbatim — the split is by record family, not by surface.
+// jakob's I2 ruling (2026-09-15: "we want human wording not this nerdy
+// stuff!"). Topics disconnect — the family's own words travel on its axes
+// (`AFFINITY_AXES.severance`); the shape is the control's.
 describe("the disconnect confirmation (a topic's own words)", () => {
   function showTopic(props: Partial<React.ComponentProps<typeof SeveranceConfirm>> = {}) {
-    const onConfirm = vi.fn();
-    const onCancel = vi.fn();
-    render(
-      <SeveranceConfirm
-        pick={null}
-        targetLabel="#saltmaps"
-        bundle={STANDING}
-        records={3}
-        kind="topic"
-        onConfirm={onConfirm}
-        onCancel={onCancel}
-        {...props}
-      />,
-    );
-    return { onConfirm, onCancel };
+    return show({ targetLabel: "#saltmaps", axes: AFFINITY_AXES, ...props });
   }
 
-  it("asks with the target named, never 'Sever this?'", () => {
+  it("asks with the target named", () => {
     showTopic();
     expect(screen.getByTestId("severance-confirm")).toHaveTextContent(
       "Disconnect from #saltmaps?",
@@ -191,16 +202,16 @@ describe("the disconnect confirmation (a topic's own words)", () => {
     );
   });
 
-  it("names the confirming action Disconnect, never Sever", () => {
+  it("names the confirming action Disconnect, and Disconnecting… in flight", () => {
     showTopic();
     expect(screen.getByTestId("severance-proceed")).toHaveTextContent("Disconnect");
   });
 
-  it("keeps 'Keep it' and the cost line shared with every other kind", () => {
+  it("keeps 'Keep it' and the cost line shared with every other family", () => {
     showTopic({ records: 4 });
     expect(screen.getByTestId("severance-cancel")).toHaveTextContent("Keep it");
     expect(screen.getByTestId("severance-cost")).toHaveTextContent(
-      "It takes 4 signed actions, each paid for separately.",
+      "It signs 4 things, each paid separately.",
     );
   });
 });

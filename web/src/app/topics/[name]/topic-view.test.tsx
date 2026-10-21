@@ -180,7 +180,7 @@ describe("TopicView", () => {
     renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
     await screen.findByTestId("topic-name");
     expect(await screen.findByTestId("topic-affinity")).toHaveAccessibleName(
-      "Take a stance on #rust",
+      "Give your opinion on #rust",
     );
   });
 
@@ -204,10 +204,10 @@ describe("TopicView", () => {
     await screen.findByTestId("topic-affinity");
     fireEvent.click(screen.getByTestId("topic-affinity-choose"));
     expect(await screen.findByTestId("stance-alternates")).toBeInTheDocument();
-    expect(screen.getByLabelText("How much you like it")).toBeInTheDocument();
-    expect(screen.getByLabelText("How close you want to be")).toBeInTheDocument();
-    expect(screen.queryByLabelText("How you stand")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("In your world")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("How much you like it", { exact: false })).toBeInTheDocument();
+    expect(screen.getByLabelText("How close you want to be", { exact: false })).toBeInTheDocument();
+    expect(screen.queryByLabelText("For or against", { exact: false })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("How much reaches you", { exact: false })).not.toBeInTheDocument();
   });
 
   // A GUEST IS NOT SPECIAL HERE (backlog item 81, ruled 2026-09-15):
