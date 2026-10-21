@@ -42,6 +42,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.EMPTY_PICK_LABEL
 import com.cogra.core.designsystem.PairAxes
 import com.cogra.core.designsystem.PairField
 import com.cogra.core.designsystem.PairPoint
@@ -49,10 +50,9 @@ import com.cogra.core.designsystem.PairRanges
 import com.cogra.core.designsystem.PairSliders
 import com.cogra.core.designsystem.StancePoint
 import com.cogra.core.designsystem.TagPoint
-import com.cogra.core.designsystem.EMPTY_PICK_LABEL
 import com.cogra.core.designsystem.bundleReadout
-import com.cogra.core.designsystem.tagReadout
 import com.cogra.core.designsystem.pair
+import com.cogra.core.designsystem.tagReadout
 import com.cogra.core.designsystem.twoPlaces
 import com.cogra.core.designsystem.twoPlacesUnsigned
 import com.cogra.core.designsystem.v2.atom.CograButton

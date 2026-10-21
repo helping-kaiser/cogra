@@ -21,8 +21,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.cogra.core.designsystem.StancePoint
 import com.cogra.core.designsystem.EMPTY_PICK_LABEL
+import com.cogra.core.designsystem.StancePoint
 import com.cogra.core.designsystem.bundleReadout
 import com.cogra.core.designsystem.pair
 import com.cogra.core.designsystem.v2.atom.ButtonKind

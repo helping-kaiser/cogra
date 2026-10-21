@@ -649,7 +649,11 @@ class StancePadTest {
 
     @Test
     fun aControlThatVouchesInWarnsHarderOnItsEmptySign() {
-        show(open.copy(pick = StancePoint.Origin, emptySign = EmptySignPrompt()), targetLabel = "@rafa", vouchesIn = true)
+        show(
+            open.copy(pick = StancePoint.Origin, emptySign = EmptySignPrompt()),
+            targetLabel = "@rafa",
+            vouchesIn = true,
+        )
         compose.onNodeWithTag("${TAG}_empty_sign_body").assertTextEquals(
             "@rafa would be vouched in but start out cut off: no feed can carry them, and community funds " +
                 "stay closed to them, until someone gives them an opinion that says something.",

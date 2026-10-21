@@ -23,7 +23,11 @@ class EmptySignConfirmTest {
     private var confirmed = 0
     private var dismissed = 0
 
-    private fun show(prompt: EmptySignPrompt = EmptySignPrompt(), targetLabel: String? = "@ada", vouchIn: Boolean = false) {
+    private fun show(
+        prompt: EmptySignPrompt = EmptySignPrompt(),
+        targetLabel: String? = "@ada",
+        vouchIn: Boolean = false,
+    ) {
         compose.setContent {
             EmptySignConfirm(
                 prompt = prompt,

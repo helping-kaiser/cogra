@@ -142,7 +142,8 @@ class StanceAnchorsTest {
         // own checker once computed faces from `nearestAnchor` and was wrong.
         val master = java.io.File("../../../design/components/stance/StanceReadout.jsx").readText()
         assertThat(master).contains("if (dZero && iZero) return { emoji: ZERO_BUNDLE_EMOJI, label: zeroLabel };")
-        assertThat(master).contains("if (dZero || iZero) return { emoji: UNREACHABLE_EMOJI, label: unreachableHead(pair) };")
+        val oneZero = "if (dZero || iZero) return { emoji: UNREACHABLE_EMOJI, label: unreachableHead(pair) };"
+        assertThat(master).contains(oneZero)
         assertThat(master).contains("export const EMPTY_PICK_LABEL = \"Says nothing\";")
         assertThat(master).contains("export const SEVERED_LABEL = \"Walked back\";")
     }

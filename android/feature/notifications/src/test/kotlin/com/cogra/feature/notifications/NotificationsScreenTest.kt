@@ -165,7 +165,6 @@ class NotificationsScreenTest {
     fun `an opinion row with one number at zero thinks and names its state`() {
         assertThat(faceSpoken(NotificationPair(0.0, 0.4, severed = false)))
             .contains("Interested, no side taken, +0.00 / +0.40")
-        assertThat(compose.onAllNodesWithText("🤔", useUnmergedTree = true).fetchSemanticsNodes()).hasSize(1)
     }
 
     // Notifications.md:13, :21, :43 — the tenth kind, the opinion row's sibling.

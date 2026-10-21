@@ -65,8 +65,8 @@ import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.StancePoint
 import com.cogra.core.designsystem.TagPoint
 import com.cogra.core.designsystem.bundleReadout
-import com.cogra.core.designsystem.tagReadout
 import com.cogra.core.designsystem.pair
+import com.cogra.core.designsystem.tagReadout
 import com.cogra.core.designsystem.twoPlaces
 import com.cogra.core.designsystem.twoPlacesUnsigned
 import com.cogra.core.designsystem.v2.atom.SheetTitle

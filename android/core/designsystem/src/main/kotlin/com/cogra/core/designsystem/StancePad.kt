@@ -404,7 +404,12 @@ private val BLOOM_RISE = 8.dp
  * Press and hold to add a positive one.`
  */
 @Composable
-private fun targetDescription(standing: StancePoint?, severed: Boolean, zeroWords: StanceZeroWords, target: String): String =
+private fun targetDescription(
+    standing: StancePoint?,
+    severed: Boolean,
+    zeroWords: StanceZeroWords,
+    target: String,
+): String =
     if (standing == null) {
         stringResource(R.string.stance_target_give, target)
     } else {
