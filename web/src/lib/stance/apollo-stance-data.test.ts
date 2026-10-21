@@ -296,11 +296,54 @@ describe("projecting a pick", () => {
       }),
     );
     const data = createApolloStanceData({ client: client(), guard, signer: signer() });
-    expect(await data.project(POST, { pDirected: -0.6, pInterest: -0.1 })).toEqual({
+    expect(await data.project(POST, { pDirected: -0.6, pInterest: -0.1 })).toMatchObject({
       kind: "success",
       value: { landing: { pDirected: 0, pInterest: 0.3 }, inert: true, severed: false },
     });
     expect(sentPick).toEqual({ pDirected: -0.6, pInterest: -0.1 });
+  });
+
+  it("carries the standing the pick was read against, as served", async () => {
+    // What splits a (0, 0) landing into a walk-back or an empty sign: the
+    // same read's recordCount and bundle-level severed (StanceProjection.severed).
+    server.use(
+      gqlLink.query("PostStance", () =>
+        HttpResponse.json({
+          data: {
+            post: {
+              __typename: "Post",
+              id: "post-1",
+              viewerStance: bundleFields({
+                pDirected: 0,
+                pInterest: 0,
+                rawPDirected: 0,
+                rawPInterest: 0,
+                recordCount: 1,
+                inert: true,
+                severed: false,
+                severanceCost: 1,
+                projected: {
+                  __typename: "StanceProjection",
+                  pDirected: 0,
+                  pInterest: 0,
+                  inert: true,
+                  severed: true,
+                },
+              }),
+            },
+          },
+        }),
+      ),
+    );
+    const data = createApolloStanceData({ client: client(), guard, signer: signer() });
+    const outcome = await data.project(POST, { pDirected: 0, pInterest: 0 });
+    expect(outcome).toMatchObject({
+      kind: "success",
+      value: {
+        severed: true,
+        standing: { records: 1, severed: false, severance: { records: 1 }, current: { pDirected: 0, pInterest: 0 } },
+      },
+    });
   });
 
   it("treats a projection the server did not answer as a fault, not as zero", async () => {

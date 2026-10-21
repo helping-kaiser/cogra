@@ -131,6 +131,10 @@ query Notifications($after: String) {
             id
             pDirected
             pInterest
+            # Which (0, 0) the opinion row's face draws: a walk-back
+            # (`Walked back`) or an empty sign (`Says nothing`) — the
+            # pair alone cannot tell them apart (design.md §8.4).
+            severed
           }
           application {
             id

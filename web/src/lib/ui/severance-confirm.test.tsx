@@ -108,6 +108,28 @@ describe("the severance confirmation", () => {
     expect(screen.getByTestId("severance-proceed")).toHaveTextContent("Walk it back");
   });
 
+  it("draws a one-zero pick as 🤔 speaking its state, as the pad does", () => {
+    show({ pick: { pDirected: -0.6, pInterest: 0 }, records: 1 });
+    const line = screen.getByTestId("severance-pick");
+    expect(line).toHaveTextContent("Your pick: 🤔 −0.60 / +0.00");
+    expect(line.querySelector(".sr-only")).toHaveTextContent(
+      "Your pick: Against it, no interest either way",
+    );
+  });
+
+  it("speaks a (0, 0) pick over an empty sign's standing as Says nothing, never Walked back", () => {
+    // The one way a (0, 0) pick reaches this dialog: a standing at (0, 0)
+    // that an empty sign left (seam 243, "Also ruled").
+    show({
+      pick: { pDirected: 0, pInterest: 0 },
+      records: 1,
+      bundle: { ...STANDING, current: { pDirected: 0, pInterest: 0 }, rawSum: { pDirected: 0, pInterest: 0 }, records: 1, severance: { records: 1 } },
+    });
+    const spoken = screen.getByTestId("severance-pick").querySelector(".sr-only");
+    expect(spoken).toHaveTextContent("Your pick: Says nothing");
+    expect(spoken).not.toHaveTextContent("Walked back");
+  });
+
   it("refuses to bill for a bundle already at nothing", () => {
     show({ records: 0, alreadySevered: true });
     expect(screen.getByTestId("severance-cost")).toHaveTextContent(

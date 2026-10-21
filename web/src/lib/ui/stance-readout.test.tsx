@@ -12,6 +12,7 @@ import { describe, expect, it } from "vitest";
 import {
   BORROWED_KEPT_LINE,
   CURRENT_LABEL,
+  EMPTY_PICK_LABEL,
   landingLine,
   NO_STANDING_LABEL,
   PICK_LABEL,
@@ -163,6 +164,79 @@ describe("the labelled readouts", () => {
   it("read the standing as a sentence where there is no opinion yet", () => {
     render(<StanceStanding pick={{ pDirected: 0.1, pInterest: 0.1 }} bundle={null} targetLabel="@ada" testIdPrefix="t" />);
     expect(screen.getByTestId("t-standing")).toHaveTextContent("🤷 No opinion on @ada yet.");
+  });
+
+  // FACES FOLLOW THE VALUE (seam 242/243): every pair drawn here reads the
+  // rule — 🤷 at (0, 0), 🤔 with the state at one zero — never the table.
+  const EMPTY_SIGNED = {
+    current: { pDirected: 0, pInterest: 0 },
+    rawSum: { pDirected: 0, pInterest: 0 },
+    records: 1,
+    inert: true,
+    severed: false,
+    severance: { records: 1 },
+  };
+
+  it("draw the pick at one zero as 🤔 speaking its state, never a table face (PadStanding.md:25)", () => {
+    render(
+      <StanceStanding pick={{ pDirected: 0.1, pInterest: 0 }} bundle={null} targetLabel="@ada" testIdPrefix="t" />,
+    );
+    expect(screen.getByTestId("t-face")).toHaveTextContent("🤔");
+    expect(screen.getByTestId("t-pick").querySelector(".sr-only")).toHaveTextContent(
+      "Your pick: For it, no interest either way, For or against +0.10, How much reaches you +0.00",
+    );
+  });
+
+  it("draw a pick of exactly (0, 0) as 🤷 speaking Says nothing (PadStanding.md:27)", () => {
+    expect(EMPTY_PICK_LABEL).toBe(masterString("EMPTY_PICK_LABEL"));
+    render(
+      <StanceStanding pick={{ pDirected: 0, pInterest: 0 }} bundle={null} targetLabel="@ada" testIdPrefix="t" />,
+    );
+    expect(screen.getByTestId("t-face")).toHaveTextContent("🤷");
+    expect(screen.getByTestId("t-pick").querySelector(".sr-only")).toHaveTextContent(
+      "Your pick: Says nothing, For or against +0.00, How much reaches you +0.00",
+    );
+  });
+
+  it("read an empty sign's standing as 🤷 Says nothing, never Walked back (PadStanding.md:29)", () => {
+    render(
+      <StanceStanding pick={{ pDirected: 0.1, pInterest: 0.1 }} bundle={EMPTY_SIGNED} targetLabel="@ada" testIdPrefix="t" />,
+    );
+    expect(screen.getByTestId("t-standing-face")).toHaveTextContent("🤷");
+    const twin = screen.getByTestId("t-standing").querySelector(".sr-only");
+    expect(twin).toHaveTextContent("Current opinion: Says nothing, For or against +0.00, How much reaches you +0.00");
+    expect(twin).not.toHaveTextContent(SEVERED_LABEL);
+  });
+
+  it("read a standing at one zero as 🤔 speaking its state (PadStanding.md:31)", () => {
+    render(
+      <StanceStanding
+        pick={{ pDirected: 0.1, pInterest: 0.1 }}
+        bundle={{ ...EMPTY_SIGNED, current: { pDirected: 0, pInterest: 0.35 }, rawSum: { pDirected: 0, pInterest: 0.35 } }}
+        targetLabel="@ada"
+        testIdPrefix="t"
+      />,
+    );
+    expect(screen.getByTestId("t-standing-face")).toHaveTextContent("🤔");
+    expect(screen.getByTestId("t-standing").querySelector(".sr-only")).toHaveTextContent(
+      "Current opinion: Interested, no side taken",
+    );
+  });
+
+  it("give an empty sign the ORDINARY snackbar, 🤷 speaking Says nothing (EmptySignConfirm.md:27)", () => {
+    render(<p data-testid="line">{signedLine({ pDirected: 0, pInterest: 0 }, 1, false, "@ada")}</p>);
+    const line = screen.getByTestId("line");
+    expect(line.querySelector('[aria-hidden="true"]')).toHaveTextContent(
+      "Signed, still settling. Current opinion 🤷 (+0.00 / +0.00)",
+    );
+    expect(line).toHaveTextContent("Current opinion: Says nothing");
+    expect(line).not.toHaveTextContent(SEVERED_LABEL);
+  });
+
+  it("give a one-zero standing's snackbar 🤔, never a table face (PadStanding.md:31)", () => {
+    render(<p data-testid="line">{signedLine({ pDirected: 0.4, pInterest: 0 }, 1, false, "@ada")}</p>);
+    expect(screen.getByTestId("line").querySelector('[aria-hidden="true"]')).toHaveTextContent("🤔");
+    expect(screen.getByTestId("line")).toHaveTextContent("Current opinion: For it, no interest either way");
   });
 
   it("build the signed line from spans: the face, a cg-exact pair, a spoken twin", () => {
