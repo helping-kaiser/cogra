@@ -11,11 +11,26 @@ import { describe, expect, it } from "vitest";
 
 import {
   BORROWED_KEPT_LINE,
+  CURRENT_LABEL,
   landingLine,
+  NO_STANDING_LABEL,
+  PICK_LABEL,
+  RESULTING_LABEL,
+  SEVERED_LABEL,
+  signedLine,
   StanceLandingLine,
+  StanceStanding,
   UNREACHABLE_TAIL,
   unreachableHead,
 } from "./stance-readout";
+import {
+  DIRECTED_LABEL,
+  formatDimension,
+  formatStancePair,
+  INTEREST_LABEL,
+  STANCE_SEVERANCE_WORDS,
+} from "./stance-format";
+import { alternatesHelp, padHelp, unreachableHelp } from "./stance-pad-help";
 
 // jsdom's `import.meta.url` is not a file URL; vitest runs from `web/`
 // (seen-tracker.test.tsx's precedent).
@@ -52,13 +67,13 @@ describe("the unreachable landing", () => {
   it("reads under the landing label, wearing 🤔 and never the table's face", () => {
     expect(
       landingLine({ landing: { pDirected: 0, pInterest: 0.4 }, inert: true, severed: false }),
-    ).toBe("This leaves you at: 🤔 Interested, no side taken — this won't shape anyone's feed.");
+    ).toBe("Resulting opinion 🤔 Interested, no side taken — this won't shape anyone's feed.");
   });
 
   it("keeps severance's own line for (0, 0)", () => {
     expect(
       landingLine({ landing: { pDirected: 0, pInterest: 0 }, inert: true, severed: true }),
-    ).toBe("This pick nets everything you've said about it back to nothing.");
+    ).toBe("This takes you back to zero.");
   });
 });
 
@@ -81,5 +96,81 @@ describe("the borrowed-view line", () => {
     unmount();
     render(<StanceLandingLine landing={inert} testIdPrefix="t" />);
     expect(screen.queryByTestId("t-landing-borrowed")).not.toBeInTheDocument();
+  });
+});
+
+// THE PAD'S WORDS ARE THE MASTER'S, read out of it rather than transcribed
+// (padconform round, jakob 2026-10-21): a wording edited there and not here
+// fails here.
+describe("the readouts' words and the family's way out", () => {
+  it("label the three readouts and the zero states as the master does", () => {
+    expect(PICK_LABEL).toBe(masterString("PICK_LABEL"));
+    expect(SEVERED_LABEL).toBe(masterString("SEVERED_LABEL"));
+    expect(NO_STANDING_LABEL).toBe(masterString("NO_STANDING_LABEL"));
+    expect(MASTER).toContain(`(names && names.current) || "${CURRENT_LABEL}"`);
+    expect(MASTER).toContain(`(names && names.resulting) || "${RESULTING_LABEL}"`);
+    expect(DIRECTED_LABEL).toBe(masterString("DIRECTED_LABEL"));
+    expect(INTEREST_LABEL).toBe(masterString("INTEREST_LABEL"));
+  });
+
+  it("carries the person family's severance words verbatim", () => {
+    const words = STANCE_SEVERANCE_WORDS;
+    for (const field of ["control", "busy", "zero", "landing", "help", "helpAlternates"] as const) {
+      expect(MASTER, field).toContain(`${field}: ${field === "zero" ? "SEVERED_LABEL" : JSON.stringify(words[field])}`);
+    }
+    expect(words.title("@ada")).toBe("Walk it all back?");
+    expect(MASTER).toContain(words.effect("${targetLabel}"));
+    expect(MASTER).toContain(words.sum("${targetLabel}", "${total}"));
+    expect(MASTER).toContain(words.gone("${targetLabel}"));
+  });
+
+  it("carries the pad's and the alternates' help lines and the 🤔's three verbatim", () => {
+    for (const line of [...padHelp(), ...alternatesHelp()]) {
+      expect(MASTER).toContain(JSON.stringify(line).slice(1, -1));
+    }
+    const [held, inert, wayOut] = unreachableHelp(undefined, "this post");
+    expect(MASTER).toContain(held);
+    expect(MASTER).toContain(inert);
+    expect(MASTER).toContain(wayOut.replace("Walk it back", "${severanceWords(names).control}"));
+  });
+
+  it("writes a negative pair with U+2212, substituted by part, in en-US", () => {
+    expect(formatStancePair({ pDirected: -0.55, pInterest: 0.2 })).toBe("−0.55 / +0.20");
+    expect(MASTER).toContain('const MINUS_SIGN = "−";');
+    expect(formatDimension(0)).toBe("+0.00");
+    expect(formatDimension(-0.004)).toBe("−0.00");
+  });
+});
+
+describe("the labelled readouts", () => {
+  const live = { landing: { pDirected: 0.6, pInterest: 0.65 }, inert: false, severed: false };
+
+  it("draw the face and a cg-exact pair under the label, the words only in the SR twin", () => {
+    render(<StanceLandingLine landing={live} testIdPrefix="t" />);
+    expect(screen.getByTestId("t-landing-label")).toHaveTextContent("Resulting opinion");
+    expect(screen.getByTestId("t-landing-face")).toHaveTextContent("🤩");
+    const exact = screen.getByTestId("t-landing-exact");
+    expect(exact).toHaveTextContent("+0.60 / +0.65");
+    expect(exact.className).toContain("cg-exact");
+    const twin = screen.getByTestId("t-landing").querySelector(".sr-only");
+    expect(twin).toHaveTextContent(
+      "Resulting opinion: Really into this, For or against +0.60, How much reaches you +0.65",
+    );
+    // The word is never drawn.
+    expect(screen.getByTestId("t-landing-face")).not.toHaveTextContent("Really into this");
+  });
+
+  it("read the standing as a sentence where there is no opinion yet", () => {
+    render(<StanceStanding pick={{ pDirected: 0.1, pInterest: 0.1 }} bundle={null} targetLabel="@ada" testIdPrefix="t" />);
+    expect(screen.getByTestId("t-standing")).toHaveTextContent("🤷 No opinion on @ada yet.");
+  });
+
+  it("build the signed line from spans: the face, a cg-exact pair, a spoken twin", () => {
+    render(<p data-testid="line">{signedLine({ pDirected: 0.55, pInterest: 0.2 }, 3, false, "this post")}</p>);
+    const line = screen.getByTestId("line");
+    expect(line.querySelector(".cg-exact")).toHaveTextContent("(+0.55 / +0.20)");
+    expect(line).toHaveTextContent(
+      "Signed 3 things, still settling. Current opinion: Like this, For or against +0.55, How much reaches you +0.20",
+    );
   });
 });

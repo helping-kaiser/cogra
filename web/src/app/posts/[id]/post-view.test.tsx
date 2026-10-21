@@ -381,11 +381,11 @@ describe("PostView", () => {
       writeSigner: fakeWriteSigner(),
     });
     await openComments();
-    await waitFor(() => expect(screen.getByTestId(byNode("postDetail.card.actionRow.stance.anchor"))).toHaveTextContent("Love this"));
+    await waitFor(() => expect(screen.getByTestId(byNode("postDetail.card.actionRow.stance.anchor"))).toHaveAccessibleName(/Love this/));
     expect(screen.getByTestId(byNode("postDetail.card.actionRow.stance.anchor.exact"))).toHaveTextContent("+0.90 / +0.25");
-    expect(screen.getByTestId("comment-stance-c1")).toHaveTextContent("Don't like this");
+    expect(screen.getByTestId("comment-stance-c1")).toHaveAccessibleName(/Don't like this/);
     expect(screen.getByTestId("comment-stance-c1-resting-exact")).toHaveTextContent(
-      "-0.55 / +0.25",
+      "−0.55 / +0.25",
     );
   });
 
@@ -1443,7 +1443,7 @@ describe("PostView", () => {
     expect(await screen.findByTestId(byNode("postDetail.card.actionRow.stance.anchor.exact"))).toHaveTextContent("+1.00 / +0.20");
     await waitFor(() =>
       expect(screen.getByTestId("comment-stance-c1-resting-exact")).toHaveTextContent(
-        "-0.55 / +0.25",
+        "−0.55 / +0.25",
       ),
     );
     expect(screen.getByTestId(byNode("postDetail.card.actionRow.stance.anchor"))).toHaveAccessibleName(/Love this/);

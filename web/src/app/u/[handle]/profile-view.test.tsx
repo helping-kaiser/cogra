@@ -166,7 +166,7 @@ describe("ProfileScreen", () => {
     );
     renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
     await waitFor(() =>
-      expect(screen.getByTestId("profile-stance")).toHaveTextContent("Really into this"),
+      expect(screen.getByTestId("profile-stance")).toHaveAccessibleName(/Really into this/),
     );
     expect(screen.getByTestId("profile-stance-resting-exact")).toHaveTextContent("+0.60 / +0.65");
   });
@@ -807,7 +807,7 @@ describe("ProfileScreen — the voucher's profile", () => {
     fireEvent.click(await screen.findByTestId("profile-stance"));
     expect(await screen.findByTestId("profile-stance-pad")).toHaveAttribute(
       "aria-label",
-      "Stance pad for @mira",
+      "Opinion pad for @mira",
     );
   });
 });

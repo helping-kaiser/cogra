@@ -98,7 +98,9 @@ export function SeveranceConfirm({
               </p>,
             ]
           : []),
-        sever.effect(targetLabel),
+        <p key="effect" data-testid="severance-consequences" className="m-0">
+          {sever.effect(targetLabel)}
+        </p>,
         // The RAW total leads and the cap is derived from it; the two lines
         // are one statement, so they keep a tight 4px apart.
         "sentence" in read ? (

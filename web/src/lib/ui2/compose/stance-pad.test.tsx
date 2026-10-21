@@ -53,7 +53,7 @@ describe("StancePad", () => {
   it("speaks the pair with its axes named, for a reader who cannot see the knob", () => {
     draw({ value: { pDirected: 0.4, pInterest: -0.2 } });
     expect(screen.getByTestId("stance-pad-reading")).toHaveTextContent(
-      "How you stand +0.40, In your world -0.20",
+      "For or against +0.40, How much reaches you −0.20",
     );
   });
 
