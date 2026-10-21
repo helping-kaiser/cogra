@@ -26,6 +26,8 @@ WHEN tap the pad's ? GIVEN the pad opened plainly -> the pad's four help lines r
 
 WHEN drag on the pad field -> the pick is set AND NEVER anything is signed
 
+ALWAYS feed.vouchCard.stance.pad.standing.pick.face wears 🤔, spoken as the state, never a table face, GIVEN the pick has exactly one number at zero
+
 WHEN tap the pad field without dragging -> NEVER the pick moves
 
 WHEN release a drag on the field -> NEVER the pick is signed
@@ -41,6 +43,8 @@ WHEN tap Set GIVEN the signing does not go through -> the pad stays open at the 
 WHEN tap Set GIVEN the write rule refuses -> nothing is staged or spent AND the notice stands where the landing line and Set were, with Not now, as PadWriteRule draws it
 
 WHEN tap Set GIVEN the key is on another device -> the pick waits as PadKeyAbsent draws it
+
+WHEN tap Set GIVEN the pick lands at exactly (0, 0) -> the dialog Sign an empty opinion? opens over the pad, which stays parked beneath it, as EmptySignConfirm draws it AND NEVER the dialog Walk it all back? opens AND NEVER the pick is refused
 
 WHEN the key comes back GIVEN a vouch-back was kept -> the kept vouch-back surfaces as its own card and signs through this pad, its ceremony kept AND NEVER it joins the kept picks' review
 

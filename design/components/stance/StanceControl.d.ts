@@ -120,6 +120,8 @@ export interface StanceControlProps {
   anchorOpacity?: string | number;
   /** The reader still borrows a view — they hold no outgoing opinion with neither number at zero. An unreachable or severed landing then carries `You'd keep your borrowed view — no feed of your own yet.` Warns, never blocks. */
   borrowed?: boolean;
+  /** The opinion vouches its target in — approving an applicant, answering a vouch asked for. A pick landing (0, 0) with nothing standing then asks `EmptySignConfirm` with its `vouchIn` warning; `Set it anyway` still vouches them in. */
+  vouchesIn?: boolean;
   /** For a board: the pad's body already explaining — `"help"`, the "?"'s lines, or `"zero"`, the unreachable landing's. */
   defaultExplaining?: false | "help" | "zero";
   /** The data-node name its placer gives this control (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `anchor`, the resting control, with its `face` and `exact`; and the open pad (ruling 40, one anatomy for every pad board): `pad`, the dialog, holding `help`, `standing` (`current` and `pick`, each with `label`, `face`, `exact`), `field` (`StancePad`'s `left`, `right`, `top`, `bottom` and `square` with `zeroAcross`, `zeroDown`, `knob`, `knobLayer`), `landing` (`label`, `face`, `exact`; unreachable, `label`, `zero`, `words`; and `borrowed`), `helpPanel` with its `back`, `zeroPanel` with its `back`, `notNow`, `sever`, `cancel` and `set`. A `padNote` is the placer's, named `note` by it. */

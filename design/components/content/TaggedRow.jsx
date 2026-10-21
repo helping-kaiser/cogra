@@ -1,6 +1,6 @@
 import React from "react";
 import { PendingMarker } from "../honesty/PendingMarker.jsx";
-import { formatTagPair, nearestTagAnchor, SR_ONLY } from "../stance/StanceReadout.jsx";
+import { formatTagPair, SR_ONLY, tagReadout } from "../stance/StanceReadout.jsx";
 
 /* One row of a tag's page (readme §13, the tag round): the claim that put this
    content here, and then the content itself.
@@ -51,7 +51,7 @@ import { formatTagPair, nearestTagAnchor, SR_ONLY } from "../stance/StanceReadou
    neighbour. */
 
 export function TaggedRow({ pair, pending = false, children }) {
-  const anchor = nearestTagAnchor(pair);
+  const anchor = tagReadout(pair);
   const exact = formatTagPair(pair);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>

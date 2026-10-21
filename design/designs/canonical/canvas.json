@@ -659,6 +659,15 @@
       "page": "patterns"
     },
     {
+      "file": "EmptySignConfirm.dc.html",
+      "title": "Empty sign · nothing stands",
+      "x": 2880,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
       "file": "ComposeWords.dc.html",
       "title": "Compose · words body",
       "x": 0,
@@ -1695,9 +1704,9 @@
     },
     {
       "file": "MapPatterns.dc.html",
-      "x": -2740,
+      "x": -3030,
       "y": 0,
-      "w": 2320,
+      "w": 2610,
       "h": 2343,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
@@ -2092,7 +2101,7 @@
     {
       "file": "PadPending.dc.html",
       "title": "Key absent · a pick kept pending",
-      "x": 2880,
+      "x": 3360,
       "y": 0,
       "w": 390,
       "h": 844,
@@ -2146,7 +2155,7 @@
     {
       "file": "RowSigning.dc.html",
       "title": "Signing · on the target's row, and a comfort's revert",
-      "x": 2880,
+      "x": 3360,
       "y": 964,
       "w": 390,
       "h": 1600,
@@ -2155,7 +2164,7 @@
     {
       "file": "PadPendingReview.dc.html",
       "title": "Key back · a pick waiting for your review",
-      "x": 2880,
+      "x": 3360,
       "y": 2684,
       "w": 390,
       "h": 844,
@@ -2173,7 +2182,7 @@
     {
       "file": "RowWriteRule.dc.html",
       "title": "Signing · the write rule on the target's row",
-      "x": 3360,
+      "x": 3840,
       "y": 964,
       "w": 390,
       "h": 844,

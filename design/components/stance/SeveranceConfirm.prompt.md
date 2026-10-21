@@ -1,4 +1,4 @@
-`SeveranceConfirm` is the only gate in the stance flow, and it **confirms rather than refuses**. It opens both when the reader deliberately severs and when an ordinary pick happens to net their opinion to (0, 0).
+`SeveranceConfirm` is the only gate in the stance flow, and it **confirms rather than refuses**. It opens both when the reader deliberately severs and when an ordinary pick happens to net their opinion to (0, 0). With nothing standing — never signed, or already walked back — a pick landing (0, 0) has nothing to walk back and asks `EmptySignConfirm` instead, never this dialog.
 
 ```jsx
 <SeveranceConfirm

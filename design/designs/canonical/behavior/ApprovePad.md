@@ -40,6 +40,10 @@ WHEN tap Set GIVEN the signing key is not on this device -> the pad's key notice
 
 WHEN the key is restored GIVEN an approval was kept pending -> the approval surfaces as its own card on Invites and signs through this pad, its ceremony kept AND NEVER it joins the kept picks' batch
 
+WHEN tap Set GIVEN the pick lands at exactly (0, 0) -> the dialog Sign an empty opinion? opens over the pad, which stays parked beneath it, its first line the vouch-in warning, as EmptySignConfirm draws it under its vouchIn chip AND NEVER the dialog Walk it all back? opens AND NEVER the pick is refused
+
+WHEN tap Set it anyway in that dialog -> the vouch lands as Set lands it AND the person is vouched in, starting out cut off AND NEVER the act is blocked
+
 WHEN the signing does not go through -> the pad stays open at the pick AND the line That didn't send. Try again. stands above the commit row AND an outlined Retry takes Set's slot
 
 WHEN the write rule refuses the signing -> the pad stays open at the pick AND the notice You can't sign right now stands where the landing line and Set were, with Not now AND nothing is staged or spent
