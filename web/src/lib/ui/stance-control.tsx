@@ -51,6 +51,7 @@
 
 import {
   useCallback,
+  useEffectEvent,
   useEffect,
   useMemo,
   useRef,
@@ -497,7 +498,7 @@ export function StanceControl({
   };
 
   /** Cancel, the wash, Escape: nothing is staged. */
-  const closeAll = useCallback(() => {
+  const closeAll = () => {
     releasePointer();
     setOpen(false);
     setAlternates(false);
@@ -505,7 +506,11 @@ export function StanceControl({
     setPadFault(null);
     setCoaching(false);
     padOnly?.onClose();
-  }, [releasePointer, padOnly]);
+  };
+
+  // The Escape key's answer reads the latest state without re-subscribing
+  // the listener on every render (react.dev, `useEffectEvent`).
+  const onEscape = useEffectEvent(() => closeAll());
 
   // Escape cancels the open pad — unless the walk-back's dialog stands over
   // it, where Escape is that dialog's `Keep it` and the pad stays parked.
@@ -515,11 +520,11 @@ export function StanceControl({
     if (!open || confirming !== null || noticeHelp !== null) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
-      closeAll();
+      onEscape();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open, confirming, noticeHelp, closeAll]);
+  }, [open, confirming, noticeHelp]);
 
   // THE PAD IS MODAL FOR ASSISTIVE TECH (PadStanding.md): opening moves
   // focus into it — a pad-only host's first paint included — and closing
