@@ -94,6 +94,14 @@ export type WriteSigner = {
    */
   sign(writes: readonly StagedWriteView[], expected: Expectation): Promise<WriteResult[]>;
   /**
+   * Whether this device holds a signing key at all — asked BEFORE a gesture
+   * stages anything, so a surface can say the key is elsewhere instead of
+   * failing a signature (PadKeyAbsent.md). Custody that cannot be reached
+   * answers false: a device that cannot read its key cannot sign. Optional,
+   * so a stand-in that omits it is read as holding one.
+   */
+  hasKey?(): Promise<boolean>;
+  /**
    * Signs the batch carried with this account's application, released by
    * the landing (PR-88). No form is held at the landing, so each write is
    * checked against what was verified at its prepare (carried.ts): a write
@@ -542,6 +550,13 @@ export function createWriteSigner(deps: {
 
     sign(writes, expected) {
       return signChecked(writes, expected);
+    },
+
+    hasKey() {
+      return store.actorKey().then(
+        (key) => key !== null,
+        () => false,
+      );
     },
 
     signCarriedAtLanding(writes) {

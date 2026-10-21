@@ -58,11 +58,13 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
+import Link from "next/link";
 import { createPortal } from "react-dom";
 
 import { hasCode } from "@/lib/api/outcome";
 import { useStanceInputMode } from "@/lib/stance/input-mode";
 import { bundleReadout, RESTING_FACE_EMOJI } from "@/lib/stance/anchors";
+import { useKeptPick } from "@/lib/stance/kept-picks";
 import { localLanding } from "@/lib/stance/landing";
 import { ORIGIN, TAP_DEFAULT, type StancePair } from "@/lib/stance/model";
 import { STANCE_RANGES } from "@/lib/stance/pad-geometry";
@@ -70,7 +72,7 @@ import { useStanceData } from "@/lib/stance/provider";
 import { announceStanceSigned } from "@/lib/stance/signed-events";
 import { useStanceTaught } from "@/lib/stance/stance-coach";
 import type { StanceBundle, StanceLanding, StanceTargetRef } from "@/lib/stance/stance-data";
-import { useAuthPhase } from "@/lib/session/provider";
+import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { BUTTON_CLASS, buttonClassName } from "@/lib/ui/button";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
@@ -81,6 +83,7 @@ import {
   parkedPadStyle,
   useBarBeneath,
 } from "@/lib/ui/pad-parking";
+import { PendingMarker } from "@/lib/ui/pending-marker";
 import { RowLine, type RowLineState } from "@/lib/ui/row-line";
 import { SeveranceConfirm } from "@/lib/ui/severance-confirm";
 import { Snackbar } from "@/lib/ui/snackbar";
@@ -102,8 +105,9 @@ import {
 import { TransportError } from "@/lib/ui/transport-error";
 import { PairField } from "@/lib/ui2/compose/pair-field";
 import { useCoversSurface } from "@/lib/ui2/covering-layer";
-import { HELP_TOPICS, HelpDialog } from "@/lib/ui2/help-dialog";
+import { HELP_TOPICS, HelpDialog, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { HelpDot } from "@/lib/ui2/help-dot";
+import { pillClassName } from "@/lib/ui2/pill-button";
 
 /**
  * How long a press has to be held before it signs the default — the
@@ -300,6 +304,7 @@ export function StanceControl({
 }) {
   const data = useStanceData();
   const phase = useAuthPhase();
+  const accountId = useActiveAccountId();
   const [mode] = useStanceInputMode();
   const [taught, teach] = useStanceTaught();
   const barBeneath = useBarBeneath();
@@ -327,7 +332,7 @@ export function StanceControl({
   /** What did not go through from the open pad or the alternates. */
   const [padFault, setPadFault] = useState<Fault | null>(null);
   /** What did not go through from the hold, on the target's own row. */
-  const [rowFault, setRowFault] = useState<Fault | null>(null);
+  const [rowLine, setRowLine] = useState<RowLineState | null>(null);
   /** A signed act in flight, and where it was made. */
   const [inFlight, setInFlight] = useState<Origin | null>(null);
   /** The act in flight has waited past [SETTING_AFTER_MS]. */
@@ -344,7 +349,10 @@ export function StanceControl({
   const [confirmFailed, setConfirmFailed] = useState(false);
   const [signed, setSigned] = useState<ReactNode | null>(null);
   const [joinPrompt, setJoinPrompt] = useState(false);
-  const [whyWaits, setWhyWaits] = useState(false);
+  /** The dialog a notice's own "?" opens over the pad, if any. */
+  const [noticeHelp, setNoticeHelp] = useState<HelpTopic | null>(null);
+  /** The signing key is not on this device — null until asked. */
+  const [keyAbsent, setKeyAbsent] = useState<boolean | null>(null);
 
   const busy = inFlight !== null;
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -377,6 +385,20 @@ export function StanceControl({
     () => ({ id: target.id, kind: target.kind }),
     [target.id, target.kind],
   );
+
+  const [kept, keep] = useKeptPick(accountId, seamTarget);
+  // A kept pick asks once whether the key is back: the anchor wears it only
+  // while the key is still elsewhere (PadPending.md).
+  useEffect(() => {
+    if (kept === null) return undefined;
+    let live = true;
+    void data.keyOnDevice().then((present) => {
+      if (live) setKeyAbsent(!present);
+    });
+    return () => {
+      live = false;
+    };
+  }, [kept, data]);
 
   const readBundle = useCallback(
     (options: { fresh?: boolean } = {}) => {
@@ -464,7 +486,7 @@ export function StanceControl({
   }, []);
 
   /** Closes the pad and the alternates without telling a pad-only host. */
-  const closeSurfaces = useCallback(() => {
+  const closeSurfaces = () => {
     releasePointer();
     setOpen(false);
     setAlternates(false);
@@ -472,27 +494,32 @@ export function StanceControl({
     setPadFault(null);
     // The coaching lines close with the pad and never show again.
     setCoaching(false);
-  }, [releasePointer]);
+  };
 
   /** Cancel, the wash, Escape: nothing is staged. */
   const closeAll = useCallback(() => {
-    closeSurfaces();
+    releasePointer();
+    setOpen(false);
+    setAlternates(false);
+    setExplaining(false);
+    setPadFault(null);
+    setCoaching(false);
     padOnly?.onClose();
-  }, [closeSurfaces, padOnly]);
+  }, [releasePointer, padOnly]);
 
   // Escape cancels the open pad — unless the walk-back's dialog stands over
   // it, where Escape is that dialog's `Keep it` and the pad stays parked.
   useEffect(() => {
     // Over the walk-back's dialog or the write rule's help, Escape is that
     // dialog's own way out, and the pad stays parked beneath it.
-    if (!open || confirming !== null || whyWaits) return;
+    if (!open || confirming !== null || noticeHelp !== null) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       closeAll();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open, confirming, whyWaits, closeAll]);
+  }, [open, confirming, noticeHelp, closeAll]);
 
   // THE PAD IS MODAL FOR ASSISTIVE TECH (PadStanding.md): opening moves
   // focus into it — a pad-only host's first paint included — and closing
@@ -569,7 +596,12 @@ export function StanceControl({
     // A pad closed while its act was in flight has no surface left to
     // re-raise: the target's row carries it, as a hold's would.
     if (origin === "pad" && openRef.current) setPadFault(fault);
-    else setRowFault(fault);
+    else
+      setRowLine(
+        fault === "failed"
+          ? { kind: "didntSign", onRetry: () => void signPick(TAP_DEFAULT, "row") }
+          : { kind: "writeRule" },
+      );
   };
 
   /**
@@ -581,7 +613,7 @@ export function StanceControl({
     if (busy) return;
     setSigned(null);
     setPadFault(null);
-    setRowFault(null);
+    setRowLine(null);
     setConfirmFailed(false);
     const answer = await runInFlight(origin, async () => {
       const landed = await data.project(seamTarget, chosen);
@@ -659,11 +691,11 @@ export function StanceControl({
    * 2026-10-05). Opening spends the teaching: whatever opens first is the
    * first open ever, and only the pad carries the lines.
    */
-  const openConsidered = (surface: "pad" | "alternates") => {
-    setPick(TAP_DEFAULT);
+  const openConsidered = (surface: "pad" | "alternates", from: StancePair = TAP_DEFAULT) => {
+    setPick(from);
     setSigned(null);
     setPadFault(null);
-    setRowFault(null);
+    setRowLine(null);
     setExplaining(false);
     if (surface === "pad") {
       setCoaching(!taught);
@@ -687,7 +719,23 @@ export function StanceControl({
     }
     // The alternate replaces the pad everywhere (§8.6), the tap that
     // opens it included.
-    openConsidered(mode === "pad" ? "pad" : "alternates");
+    if (mode !== "pad") {
+      openConsidered("alternates");
+      return;
+    }
+    // A KEPT PICK REOPENS HOLDING ITSELF while the key is still elsewhere
+    // (PadPending.md); otherwise the pad blooms at the default.
+    openConsidered("pad", kept !== null && keyAbsent === true ? kept : TAP_DEFAULT);
+    askForKey();
+  };
+
+  /**
+   * WHETHER THE KEY IS HERE is asked as the pad opens, never before: the
+   * pad blooms at once and, where the key is elsewhere, the key notice takes
+   * the landing line's and the commit row's place (PadKeyAbsent.md).
+   */
+  const askForKey = () => {
+    void data.keyOnDevice().then((present) => setKeyAbsent(!present));
   };
 
   /**
@@ -713,7 +761,18 @@ export function StanceControl({
       holdTimer.current = null;
       setHolding(false);
       suppressClick.current = true;
-      void signPick(TAP_DEFAULT, "row");
+      // WITH THE KEY ELSEWHERE THE HOLD OPENS THE PAD, as a tap does, and
+      // signs nothing (PadKeyAbsent.md) — a held finger cannot spend a
+      // signature this device cannot give.
+      void data.keyOnDevice().then((present) => {
+        if (present) {
+          void signPick(TAP_DEFAULT, "row");
+          return;
+        }
+        setKeyAbsent(true);
+        if (mode === "pad") openConsidered("pad", kept ?? TAP_DEFAULT);
+        else openConsidered("alternates");
+      });
     }, LONG_PRESS_MS);
   };
 
@@ -741,8 +800,13 @@ export function StanceControl({
   // The standing the target wears: what a taken signing projected, or the
   // bundle as last read. A standing nobody has taken, and one this session
   // could not read, both show the "no opinion yet" face.
-  const restingPair: StancePair | null =
-    pending !== null
+  // A PICK KEPT PENDING is what the anchor wears while the key is elsewhere
+  // (PadPending.md) — never the bundle's resting face, which it has not
+  // joined.
+  const waitingForKey = kept !== null && keyAbsent === true;
+  const restingPair: StancePair | null = waitingForKey
+    ? kept
+    : pending !== null
       ? pending
       : bundle === null || bundle === undefined || bundle.records === 0
         ? null
@@ -762,13 +826,7 @@ export function StanceControl({
   /** Whose in-flight state shows where: the pad's, the row's, the dialog's. */
   const padSetting = inFlight === "pad" && slow;
   const rowState: RowLineState | null =
-    inFlight === "row" && slow && confirming === null
-      ? { kind: "signing" }
-      : rowFault === "failed"
-        ? { kind: "didntSign", onRetry: () => void signPick(TAP_DEFAULT, "row") }
-        : rowFault === "writeRule"
-          ? { kind: "writeRule" }
-          : null;
+    inFlight === "row" && slow && confirming === null ? { kind: "signing" } : rowLine;
 
   const inset = variant?.padInset ?? (barBeneath ? PAD_ABOVE_BAR_INSET_PX : PAD_PARK_INSET_PX);
   const aboveBar = variant?.padInset !== undefined || barBeneath;
@@ -874,7 +932,7 @@ export function StanceControl({
             ) : (
               coaching && <StanceCoaching testId={`${testIdPrefix}-coaching`} />
             )}
-            {padFault !== "writeRule" && (
+            {padFault !== "writeRule" && keyAbsent !== true && (
               <StanceLandingLine
                 landing={landing}
                 testIdPrefix={testIdPrefix}
@@ -901,7 +959,7 @@ export function StanceControl({
                 <h2 className="m-0 flex-1 text-title-medium">{WRITE_RULE_TITLE}</h2>
                 <HelpDot
                   ariaLabel={WRITE_RULE_HELP}
-                  onOpen={() => setWhyWaits(true)}
+                  onOpen={() => setNoticeHelp(HELP_TOPICS.whySigningWaitsOnPad)}
                   testId={`${testIdPrefix}-write-rule-help`}
                   variant="inverse"
                 />
@@ -918,13 +976,59 @@ export function StanceControl({
             </button>
           </>
         )}
+        {/* THE KEY IS ELSEWHERE (PadKeyAbsent.md): the pad opened anyway and
+            the pick is still made; the notice stands where the landing line
+            and the actions would — no Set, no Cancel, no Walk it back — in
+            the tertiary container, never the error colour. Only `Keep it
+            pending, restore later` keeps the pick; the wash, Back and Escape
+            drop it as Cancel would. */}
+        {keyAbsent === true && explaining === false && (
+          <>
+            <div
+              data-testid={`${testIdPrefix}-key-absent`}
+              className="flex flex-col gap-3 rounded-medium bg-tertiary-container p-4 text-on-tertiary-container"
+            >
+              <div className="flex items-center gap-2">
+                <h2 className="m-0 flex-1 text-title-medium">Your key isn&apos;t on this browser</h2>
+                <HelpDot
+                  ariaLabel="Your key"
+                  onOpen={() => setNoticeHelp(HELP_TOPICS.yourKey)}
+                  testId={`${testIdPrefix}-key-help`}
+                  variant="inverse"
+                />
+              </div>
+              <p className="m-0 text-body-medium">
+                Signing needs your key, which isn&apos;t in this browser — the write waits as pending.
+              </p>
+              <p className="m-0 text-body-medium">Restore the key with your recovery code to finish.</p>
+              <Link
+                href="/restore"
+                data-testid={`${testIdPrefix}-restore`}
+                className={pillClassName({ variant: "inverse", full: true })}
+              >
+                Restore the key
+              </Link>
+            </div>
+            <button
+              type="button"
+              data-testid={`${testIdPrefix}-keep-pending`}
+              onClick={() => {
+                keep(pick);
+                closeAll();
+              }}
+              className={`w-full ${buttonClassName({ variant: "text" })}`}
+            >
+              Keep it pending, restore later
+            </button>
+          </>
+        )}
         {/* A SIGNING THAT DID NOT GO THROUGH says so above the commit row, in
             the failure voice, and Set's slot becomes the outlined Retry — the
             same commitment asked again. */}
         {padFault === "failed" && (
           <TransportError testId={`${testIdPrefix}-pad-failed`} message="That didn't send. Try again." />
         )}
-        {padFault !== "writeRule" && (
+        {padFault !== "writeRule" && keyAbsent !== true && (
           // ONE ROW: the walk-away on the left, pushed away from the two
           // decisions on the right — a walk-away beside a commit is a misfire
           // waiting to happen.
@@ -994,7 +1098,9 @@ export function StanceControl({
             aria-label={
               restingFace === null || restingPair === null
                 ? `Give your opinion on ${target.label}`
-                : `Your opinion on ${target.label}: ${restingFace.label}, ${formatStancePair(restingPair)}. Press and hold to add a positive one.`
+                : waitingForKey
+                  ? `Your opinion on ${target.label}, waiting for your key: ${restingFace.label}, ${formatStancePair(restingPair)}.`
+                  : `Your opinion on ${target.label}: ${restingFace.label}, ${formatStancePair(restingPair)}. Press and hold to add a positive one.`
             }
             aria-busy={inFlight === "row" || undefined}
             onClick={onTap}
@@ -1069,6 +1175,11 @@ export function StanceControl({
       {/* THE ROW LINE (RowSigning.md, RowWriteRule.md): the hold's wait past
           200ms, its failure with Retry, or the write rule's quiet notice —
           under the face, in the slot the pending marker uses. */}
+      {/* A PICK KEPT PENDING says what it waits on, under the face — never
+          `Still settling`, which is a signed record's (PadPending.md). */}
+      {padOnly === undefined && waitingForKey && (
+        <PendingMarker testId={`${testIdPrefix}-kept`} label="Waiting for your key" />
+      )}
       {padOnly === undefined && rowState !== null && (
         <RowLine state={rowState} testId={`${testIdPrefix}-row-line`} />
       )}
@@ -1130,12 +1241,12 @@ export function StanceControl({
       )}
 
       {/* Mounted only when asked for, as the join prompt is. */}
-      {whyWaits && (
+      {noticeHelp !== null && (
         <HelpDialog
           open
-          onClose={() => setWhyWaits(false)}
-          topic={HELP_TOPICS.whySigningWaitsOnPad}
-          testId={`${testIdPrefix}-why-waits`}
+          onClose={() => setNoticeHelp(null)}
+          topic={noticeHelp}
+          testId={`${testIdPrefix}-notice-help`}
         />
       )}
 

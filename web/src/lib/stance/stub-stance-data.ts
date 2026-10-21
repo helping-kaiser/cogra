@@ -66,6 +66,8 @@ export type StubStanceOptions = {
    * (`WRITE_RULE_FAILED`) is a refusal, not a fault.
    */
   readonly refuse?: UserError["code"];
+  /** The signing key is not on this device (PadKeyAbsent). */
+  readonly keyAbsent?: boolean;
   /** Fail every call, for the transport-fault branches. */
   readonly offline?: boolean;
 };
@@ -140,6 +142,10 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
       sent.push({ target: target.id, pick });
       state.set(target.id, [...recordsOf(target.id), pick]);
       return success({ records: 1 });
+    },
+
+    async keyOnDevice(): Promise<boolean> {
+      return options.keyAbsent !== true;
     },
 
     async sever(target: StanceTarget): Promise<Outcome<StanceCommit>> {

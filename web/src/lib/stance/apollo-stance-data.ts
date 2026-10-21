@@ -240,6 +240,12 @@ export function createApolloStanceData(deps: {
       );
     },
 
+    keyOnDevice(): Promise<boolean> {
+      // A signer that cannot say is read as holding one: the signature
+      // itself remains the check.
+      return signer.hasKey?.() ?? Promise.resolve(true);
+    },
+
     async sever(target, shown): Promise<Outcome<StanceCommit>> {
       const node = await graphIdOf(target);
       if (node.kind !== "success") return node;

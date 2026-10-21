@@ -1314,6 +1314,122 @@ describe("the pad as its masters draw it", () => {
   });
 });
 
+// THE KEY ELSEWHERE (PadKeyAbsent.md, PadPending.md) — drawn against stubbed
+// data only: no real key, no restore ever runs here.
+describe("the pad with the signing key elsewhere", () => {
+  beforeEach(() => {
+    alreadyTaught();
+  });
+
+  const keepPending = async () => {
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-keep-pending`));
+    });
+  };
+
+  it("opens anyway, carrying the key notice where the landing and the actions would", async () => {
+    const data = mount({ keyAbsent: true });
+    await settle();
+    await openPad();
+    await settle();
+    const notice = screen.getByTestId(`${PREFIX}-key-absent`);
+    expect(notice).toHaveTextContent("Your key isn't on this browser");
+    expect(notice).toHaveTextContent(
+      "Signing needs your key, which isn't in this browser — the write waits as pending.",
+    );
+    expect(notice).toHaveTextContent("Restore the key with your recovery code to finish.");
+    expect(notice.className).toContain("bg-tertiary-container");
+    expect(notice.innerHTML).not.toContain("error");
+    expect(screen.getByTestId(`${PREFIX}-restore`)).toHaveAttribute("href", "/restore");
+    expect(screen.getByTestId(`${PREFIX}-key-help`)).toHaveAccessibleName("Your key");
+    // No Set, no Cancel, no Walk it back, no landing line.
+    for (const gone of ["set", "cancel", "sever", "landing"]) {
+      expect(screen.queryByTestId(`${PREFIX}-${gone}`)).toBeNull();
+    }
+    // The standing, the pick's readout and the field still stand.
+    expect(screen.getByTestId(`${PREFIX}-standing`)).toBeInTheDocument();
+    expect(screen.getByTestId(`${PREFIX}-pick`)).toBeInTheDocument();
+    expect(screen.getByTestId(FIELD_ID)).toBeInTheDocument();
+    expect(data.sent).toEqual([]);
+  });
+
+  it("opens the pad on a hold too, and signs nothing", async () => {
+    const data = mount({ keyAbsent: true });
+    await settle();
+    await hold();
+    await settle();
+    expect(screen.getByTestId(`${PREFIX}-key-absent`)).toBeInTheDocument();
+    expect(data.sent).toEqual([]);
+  });
+
+  it("moves the pick under a drag, and still signs nothing", async () => {
+    const data = mount({ keyAbsent: true });
+    await settle();
+    await openPad();
+    await settle();
+    layOutPad();
+    moveKnob(HALF / 2, 0);
+    await settle();
+    await release();
+    expect(screen.getByTestId(`${PREFIX}-exact`)).toHaveTextContent("+0.60 / +0.10");
+    expect(data.sent).toEqual([]);
+  });
+
+  it("keeps the pick only by its own words, and the anchor then wears it", async () => {
+    // PadPending.md: the kept pick's face, `Waiting for your key` under it,
+    // and an accessible name that says what it waits on.
+    const data = mount({ keyAbsent: true });
+    await settle();
+    await openPad();
+    await settle();
+    layOutPad();
+    moveKnob(HALF * 0.45, -HALF * 0.1);
+    await settle();
+    await release();
+    await keepPending();
+    await settle();
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    expect(screen.getByTestId(`${PREFIX}-resting-face`)).toHaveTextContent("😊");
+    expect(screen.getByTestId(`${PREFIX}-kept`)).toHaveTextContent("Waiting for your key");
+    expect(screen.getByTestId(`${PREFIX}-kept`)).not.toHaveTextContent("Still settling");
+    expect(control()).toHaveAccessibleName(
+      "Your opinion on this post, waiting for your key: Like this, +0.55 / +0.20.",
+    );
+    expect(data.sent).toEqual([]);
+    // Tapping the kept face opens the pad again, holding the kept pick.
+    await openPad();
+    await settle();
+    expect(screen.getByTestId(`${PREFIX}-exact`)).toHaveTextContent("+0.55 / +0.20");
+    expect(screen.getByTestId(`${PREFIX}-key-absent`)).toBeInTheDocument();
+  });
+
+  it("drops the pick on a press outside, as a Cancel would", async () => {
+    mount({ keyAbsent: true });
+    await settle();
+    await openPad();
+    await settle();
+    await act(async () => {
+      fireEvent.pointerDown(screen.getByTestId(`${PREFIX}-scrim`), { pointerId: 3 });
+    });
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).toBeNull();
+    expect(screen.queryByTestId(`${PREFIX}-kept`)).toBeNull();
+  });
+
+  it("wears the bundle again, the kept pick untouched, once the key is here", async () => {
+    // The kept pick is never destroyed by the key coming back; with the key
+    // here the anchor reads the bundle (the review is its own surface).
+    window.localStorage.setItem(
+      "cogra.keptPicks.u1",
+      JSON.stringify({ "post:post-1": { pDirected: 0.55, pInterest: 0.2 } }),
+    );
+    mount();
+    await settle();
+    expect(screen.queryByTestId(`${PREFIX}-kept`)).toBeNull();
+    expect(screen.getByTestId(`${PREFIX}-resting-face`)).toHaveTextContent("🫥");
+    expect(window.localStorage.getItem("cogra.keptPicks.u1")).toContain("post:post-1");
+  });
+});
+
 describe("the touch path", () => {
   beforeEach(() => {
     alreadyTaught();
