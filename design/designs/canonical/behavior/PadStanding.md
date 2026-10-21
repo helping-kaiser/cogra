@@ -20,6 +20,14 @@ ALWAYS the pad is modal for assistive tech: focus moves into it on open, stays i
 
 ALWAYS the pad reads Current opinion and Your pick above the field and Resulting opinion below it, each a label over its own face and pair, never merged into one line
 
+ALWAYS a face reads the twenty anchors only GIVEN both numbers of its pair are non-zero
+
+ALWAYS Your pick wears 🤔 and is spoken as its state, Interested, no side taken and its siblings, never a table face, GIVEN the pick has exactly one number at zero
+
+ALWAYS Your pick wears 🤷 and is spoken Says nothing GIVEN the pick is exactly (0, 0)
+
+ALWAYS Current opinion, the face on the target and the snackbar's face wear 🤔 and are spoken as the state, never a table face, GIVEN the opinion they read has exactly one number at zero
+
 ALWAYS the pad carries four controls, Walk it back on the left pushed away from Cancel and Set on the right, GIVEN an opinion stands on the target
 
 ALWAYS the pad carries no Walk it back GIVEN nothing was ever signed toward the target

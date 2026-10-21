@@ -1425,6 +1425,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Tobias Lindqvist</span>", tag: "button" },
     { n: 4, find: ">Sol Ferreira</span>", tag: "button" },
     { n: 4, find: ">Mira Voss</span>", tag: "button" },
+    { n: 4, find: ">Kel Moreau</span>", tag: "button" },
     { n: 4, find: ">Juno Baptiste</span>", tag: "button" },
     ...nav(6),
   ],

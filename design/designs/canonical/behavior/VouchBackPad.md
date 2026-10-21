@@ -26,6 +26,8 @@ WHEN tap the pad's ? GIVEN the pad opened plainly -> the pad's four help lines r
 
 WHEN drag on the pad field -> the pick is set AND NEVER anything is signed
 
+ALWAYS feed.vouchCard.stance.pad.standing.pick.face wears 🤔, spoken as the state, never a table face, GIVEN the pick has exactly one number at zero
+
 WHEN tap the pad field without dragging -> NEVER the pick moves
 
 WHEN release a drag on the field -> NEVER the pick is signed

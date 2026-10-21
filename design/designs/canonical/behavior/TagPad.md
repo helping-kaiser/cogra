@@ -8,7 +8,9 @@ ALWAYS the pick's readout stands above the field
 
 ALWAYS relevance runs across the field from +0.01 to 1 and confidence up it from 0 to 1
 
-ALWAYS the readout shows the nearest of the tag's thirteen anchors beside the exact pair, never a stance face
+ALWAYS the readout shows the nearest of the tag's thirteen anchors beside the exact pair, never a stance face, GIVEN neither number is zero
+
+ALWAYS the readout shows 🤔 beside the exact pair, never one of the thirteen, GIVEN How sure you are reads 0.00
 
 ALWAYS the line over the foot reads Signed with the post, as its own action. GIVEN the sheet was opened from the post edit
 

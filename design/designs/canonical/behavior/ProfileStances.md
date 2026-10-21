@@ -8,6 +8,8 @@ ALWAYS the tabs read On them and By them GIVEN the page is another person's
 
 ALWAYS each row is a person with the public opinion the row is about, its face leading and its pair in the reader's reading mode
 
+ALWAYS a row's face is 🤔, spoken as the state, as Interested, no side taken on +0.00 / +0.35, never a table face, GIVEN the row's opinion has exactly one number at zero
+
 ALWAYS a row's opinion is read-only, and no row carries a control that changes it
 
 ALWAYS the rows stand strongest first, by the for-or-against value, down past nothing into the ones held against
