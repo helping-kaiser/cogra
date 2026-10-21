@@ -74,6 +74,7 @@ const {
   StancePad,
   AttachmentPad,
   SeveranceConfirm,
+  EmptySignConfirm,
   StanceReadout,
   AttachmentReadout,
   AttachmentStanding,

@@ -66,6 +66,8 @@ WHEN tap Set GIVEN the pick lands one number at zero -> the opinion is signed li
 
 WHEN tap Set GIVEN the pick nets the standing bundle to (0, 0) -> the dialog Walk it all back? opens over the pad, which stays parked beneath it, with the pick line and its cost of 1 thing AND NEVER the pick is refused
 
+WHEN tap Set GIVEN the pick lands at exactly (0, 0) and nothing stands toward the target, no record ever signed or a bundle walked back to nothing -> the dialog Sign an empty opinion? opens over the pad, which stays parked beneath it AND NEVER the dialog Walk it all back? opens AND NEVER the pick is refused
+
 WHEN tap Set GIVEN the signing key is not on this device -> the pad's notice Your key isn't on this browser stands where the landing line and the actions were AND NEVER anything is signed
 
 WHEN the signing does not go through -> the pad stays open at the pick AND the line That didn't send. Try again. stands above the commit row AND an outlined Retry takes Set's slot

@@ -2409,6 +2409,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Keep it</button>", tag: "button" },
     { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
+  // The empty sign, the walk-back's neighbour: scanExempt the same way, so only
+  // the dialog's own pair and the scrim it sits on carry numbers.
+  EmptySignConfirm: [
+    { n: 1, find: ">Set it anyway</button>", tag: "button" },
+    { n: 2, find: ">Keep it</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
   HelpDialog: [
     { n: 1, find: ">Close</button>", tag: "button" },
     { n: 2, find: "background:var(--scrim-dialog)", tag: "div" },
