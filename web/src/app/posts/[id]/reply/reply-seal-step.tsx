@@ -634,7 +634,9 @@ function StanceValue({
       <span aria-hidden="true" className={large ? "text-headline-small" : "text-body-medium"}>
         {anchor.emoji}
       </span>
-      <span aria-hidden="true" className="text-body-small text-on-surface-variant">
+      {/* The digits are the geek reading (readme §13): drawn in a `cg-exact`
+          span, painted only in geek mode, and spoken in both. */}
+      <span aria-hidden="true" className="cg-exact text-body-small text-on-surface-variant">
         {formatStancePair(pair)}
       </span>
       <span className="sr-only">
