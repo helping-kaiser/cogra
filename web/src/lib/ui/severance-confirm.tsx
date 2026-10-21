@@ -6,6 +6,8 @@
 // confirmed, never refused, because the control never prevents a choice. The
 // two are the SAME dialog, distinguished only by the pick line the second
 // one adds. It asks over the parked pad, so `Keep it` returns to the pick.
+// Both need an opinion standing: a pick landing (0, 0) with nothing standing
+// walks nothing back and asks `EmptySignConfirm` instead.
 //
 // The order is fixed: title · the pick line when it was reached by a pick ·
 // the consequences · what the reader has said in total (and, only when it
@@ -23,7 +25,7 @@
 // it` is filled and keeps the right-hand slot; the walk-back is a text button
 // on the left. Never `error` colouring — severance is a deliberate act.
 
-import { bundleReadout } from "@/lib/stance/anchors";
+import { bundleReadout, EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import { buttonClassName } from "@/lib/ui/button";
 import {
@@ -76,9 +78,11 @@ export function SeveranceConfirm({
     records === 1
       ? "It signs 1 thing, paid on its own."
       : `It signs ${records} things, each paid separately.`;
-  // A pick at exactly (0, 0) never speaks through the table: here it IS the
-  // walk-back, so the zero readout's own face is its honest one.
-  const pickReadout = pick === null ? null : bundleReadout(pick, sever.zero);
+  // The pick wears the face every pair wears: one zero thinks, as on the pad.
+  // A pick of (0, 0) reaches this dialog only over a standing already at
+  // (0, 0) — an empty sign's — and there it says nothing, as on the pad; with
+  // nothing standing it asks `EmptySignConfirm` instead.
+  const pickReadout = pick === null ? null : bundleReadout(pick, EMPTY_PICK_LABEL);
   const read = severanceParts(bundle, targetLabel);
 
   return (

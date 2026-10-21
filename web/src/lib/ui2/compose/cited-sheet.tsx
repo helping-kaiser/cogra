@@ -27,7 +27,7 @@
 import { useState } from "react";
 
 import type { ReferenceDraft, ReferenceTargetView } from "@/lib/references/draft";
-import { nearestAnchor } from "@/lib/stance/anchors";
+import { bundleReadout, EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
 import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
 import { ReferenceParamSliders } from "@/lib/ui/reference-param-sliders";
 import { BottomSheet } from "../bottom-sheet";
@@ -155,7 +155,8 @@ export function CitedSheet({
  */
 function StanceReadout({ relevance, support }: { relevance: number; support: number }) {
   const pair = { pDirected: relevance, pInterest: support };
-  const anchor = nearestAnchor(pair);
+  // `StagedReference`'s face: a pick being staged, its value's own (seam 243).
+  const anchor = bundleReadout(pair, EMPTY_PICK_LABEL);
   return (
     <span className="inline-flex flex-none items-baseline gap-1">
       <span aria-hidden="true" className="text-body-medium">
