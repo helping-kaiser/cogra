@@ -80,11 +80,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationException
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -186,6 +192,24 @@ data class SeverancePrompt(
     val failed: Boolean = false,
     /** The pick that raised it, for the pick line; null on the explicit route. */
     val pick: StancePoint? = null,
+    /**
+     * How many records the bundle holds (`recordCount`). Zero is the one case
+     * with no total to state — `No opinion on … yet.` — and it is decided
+     * here, never by the sum: an empty sign's standing sums to (0, 0) and is
+     * still something said.
+     */
+    val bundleRecords: Int,
+)
+
+/**
+ * The empty sign's ask (`EmptySignConfirm`): a pick landing exactly `(0, 0)`
+ * while nothing stands — no record ever signed, or a bundle already walked
+ * back. Only the signing's progress varies; the words are fixed.
+ */
+@Immutable
+data class EmptySignPrompt(
+    val working: Boolean = false,
+    val failed: Boolean = false,
 )
 
 @Immutable
@@ -194,6 +218,12 @@ data class StanceControlState(
     val pad: StancePadMode = StancePadMode.CLOSED,
     /** The viewer's folded standing; null while unknown or unauthored. */
     val standing: StancePoint? = null,
+    /**
+     * The standing is a bundle WALKED BACK to nothing (`StanceBundle.severed`).
+     * A standing at `(0, 0)` that is not severed is an empty sign's: it says
+     * nothing, and it is never read as a walk-back.
+     */
+    val severed: Boolean = false,
     /** Where [pick] leaves the bundle; null while the fold is in flight. */
     val landing: StanceLanding? = null,
     val busy: Boolean = false,
@@ -203,6 +233,8 @@ data class StanceControlState(
     /** The reader's chosen input surface (design.md §8.6). */
     val inputMode: StanceInputSurface = StanceInputSurface.PAD,
     val severance: SeverancePrompt? = null,
+    /** The empty sign's ask, open over the parked pad; see [EmptySignPrompt]. */
+    val emptySign: EmptySignPrompt? = null,
     /**
      * This open is the account's first-ever pad open, so the pad carries
      * the two coaching lines (stance-control.md "Teaching it").
@@ -210,14 +242,17 @@ data class StanceControlState(
     val coaching: Boolean = false,
     /**
      * A stance just signed, as the standing it left the reader at — the
-     * transient confirmation. A one-shot: the control shows it once and
-     * reports it back through `onConfirmationShown`.
+     * transient confirmation, always the ordinary `Current opinion` line: a
+     * standing at `(0, 0)` here is an empty sign's (jakob 2026-10-21). A
+     * one-shot: the control shows it once and reports it back through
+     * `onConfirmationShown`.
      */
     val confirmation: StancePoint? = null,
     /**
      * A walk-back just taken, as the number of things it signed — the same
      * one-shot as [confirmation], read as `Signed 3 things, still settling.
-     * You've walked … back to nothing.`
+     * You've walked … back to nothing.` A pick that walked the bundle back
+     * confirms here, with 1.
      */
     val walkedBack: Int? = null,
     /**
@@ -326,6 +361,25 @@ internal sealed interface EmptyFace {
 internal fun emptyFaceFor(lineFaceInk: Color?): EmptyFace =
     if (lineFaceInk == null) EmptyFace.MutedEmoji else EmptyFace.Line(lineFaceInk)
 
+/**
+ * The muted face's `filter: grayscale(1)` (StanceControl.jsx:587): drawn
+ * through a layer whose colour matrix has zero saturation — the platform's
+ * own grayscale, the same luminance weights the CSS filter uses — so the
+ * waiting control never carries the emoji's colour as if it were a value.
+ */
+internal fun Modifier.desaturated(): Modifier = drawWithCache {
+    val paint = Paint().apply {
+        colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) })
+    }
+    onDrawWithContent {
+        drawIntoCanvas { canvas ->
+            canvas.saveLayer(Rect(Offset.Zero, size), paint)
+            drawContent()
+            canvas.restore()
+        }
+    }
+}
+
 /** The open pad's width — the master's `17rem` (StanceControl.jsx:661). */
 internal val PAD_WIDTH = 272.dp
 
@@ -350,17 +404,30 @@ private val BLOOM_RISE = 8.dp
  * Press and hold to add a positive one.`
  */
 @Composable
-private fun targetDescription(standing: StancePoint?, target: String): String =
+private fun targetDescription(
+    standing: StancePoint?,
+    severed: Boolean,
+    zeroWords: StanceZeroWords,
+    target: String,
+): String =
     if (standing == null) {
         stringResource(R.string.stance_target_give, target)
     } else {
         stringResource(
             R.string.stance_target_given,
             target,
-            stringResource(standingReadout(standing).label),
+            stringResource(restingReadout(standing, severed, zeroWords).label),
             standing.pair(),
         )
     }
+
+/**
+ * The face the target rests in (`restingFace`): a `(0, 0)` is walked back
+ * only when the bundle says so — the family's own word — and otherwise an
+ * empty sign's, which says nothing.
+ */
+private fun restingReadout(standing: StancePoint, severed: Boolean, zeroWords: StanceZeroWords): StanceAnchor =
+    bundleReadout(standing, if (severed) zeroWords.zeroLabel else EMPTY_PICK_LABEL)
 
 /**
  * The stance control: the resting target, the pad it blooms, the
@@ -429,10 +496,21 @@ fun StanceControl(
      * by default, so every other host keeps the muted face.
      */
     lineFaceInk: Color? = null,
+    /** `Set it anyway` on the empty sign's ask: signs the one empty record. */
+    onConfirmEmptySign: () -> Unit = {},
+    /** `Keep it`, the scrim or Back on the empty sign's ask: the pad keeps its pick. */
+    onDismissEmptySign: () -> Unit = {},
+    /**
+     * THE OPINION VOUCHES ITS TARGET IN (the master's `vouchesIn`, jakob
+     * 2026-10-21): approving an applicant, or answering a vouch asked for. An
+     * empty sign there still vouches them in, so its ask warns that they start
+     * out cut off. Off by default; every other host asks the ordinary way.
+     */
+    vouchesIn: Boolean = false,
 ) {
     val target = targetWords(targetLabel)
     val chooseLabel = stringResource(R.string.stance_target_choose, target)
-    val description = targetDescription(state.standing, target)
+    val description = targetDescription(state.standing, state.severed, zeroWords, target)
     // THE WALK-AWAY NEEDS SOMETHING TO WALK BACK (PadStanding.md:23-25): a
     // pad over nothing signed carries three controls, over a standing four.
     // A VARIANT PAD CARRIES NO WALK IT BACK (VouchBackPad.md:11).
@@ -452,7 +530,7 @@ fun StanceControl(
     // stands: over a post's detail the pad PAUSES its clip and its closing
     // resumes it (PostDetailVideo.md:49/51).
     CoversSurface(open = state.pad != StancePadMode.CLOSED, kind = CoverKind.Pause)
-    CoversSurface(open = state.severance != null, kind = CoverKind.Suspend)
+    CoversSurface(open = state.severance != null || state.emptySign != null, kind = CoverKind.Suspend)
     val anchor = node?.div("anchor")
 
     // The pad is a child of the TARGET: that ties its lifetime to the
@@ -541,7 +619,15 @@ fun StanceControl(
                     }
                     .testTag(anchor?.tag ?: "${testTagPrefix}_stance"),
             ) {
-                StanceRestingFace(state.standing, testTagPrefix, anchor, emptyFaceFor(lineFaceInk), holding, wide)
+                StanceRestingFace(
+                    standing = state.standing,
+                    face = state.standing?.let { restingReadout(it, state.severed, zeroWords) },
+                    testTagPrefix = testTagPrefix,
+                    anchor = anchor,
+                    emptyFace = emptyFaceFor(lineFaceInk),
+                    holding = holding,
+                    wide = wide,
+                )
                 considered()
             }
         }
@@ -562,6 +648,18 @@ fun StanceControl(
                 axes = axes,
                 zeroWords = zeroWords,
                 targetLabel = targetLabel,
+            )
+        }
+        // A (0, 0) WITH NOTHING STANDING IS NOT A WALK-BACK (seam 242): its
+        // own ask, over the parked pad, never the walk-back's dialog.
+        state.emptySign?.let { prompt ->
+            EmptySignConfirm(
+                prompt = prompt,
+                onConfirm = onConfirmEmptySign,
+                onDismiss = onDismissEmptySign,
+                testTagPrefix = testTagPrefix,
+                targetLabel = targetLabel,
+                vouchIn = vouchesIn,
             )
         }
     }
@@ -876,6 +974,7 @@ private fun PadBody(
     StanceStanding(
         pick = state.pick,
         standing = state.standing,
+        severed = state.severed,
         testTagPrefix = testTagPrefix,
         axes = axes,
         zeroWords = zeroWords,
@@ -1220,6 +1319,7 @@ private fun StanceFailure(testTagPrefix: String) {
 @Composable
 private fun StanceRestingFace(
     standing: StancePoint?,
+    face: StanceAnchor?,
     testTagPrefix: String,
     anchor: DataNode?,
     emptyFace: EmptyFace,
@@ -1240,7 +1340,7 @@ private fun StanceRestingFace(
             ),
     ) {
         Box(contentAlignment = Alignment.Center) {
-            if (standing == null) {
+            if (standing == null || face == null) {
                 val faceTag = anchor?.div("face")?.tag ?: "${testTagPrefix}_stance_empty_face"
                 when (emptyFace) {
                     is EmptyFace.Line -> LineFace(ink = emptyFace.ink, modifier = Modifier.testTag(faceTag))
@@ -1249,12 +1349,13 @@ private fun StanceRestingFace(
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier
                             .alpha(RESTING_FACE_ALPHA)
+                            .desaturated()
                             .testTag(faceTag),
                     )
                 }
             } else {
                 Text(
-                    text = standingReadout(standing).emoji,
+                    text = face.emoji,
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.dataNode(anchor?.div("face")),
                 )
@@ -1338,10 +1439,11 @@ private fun StanceConfirmation(
         walkedBack != null -> pluralStringResource(R.plurals.stance_signed_gone, walkedBack, walkedBack, gone)
             .let { SpokenSnackbarVisuals(it, it) }
         confirmation == null -> null
-        confirmation.isZeroBundle -> pluralStringResource(R.plurals.stance_signed_gone, 1, 1, gone)
-            .let { SpokenSnackbarVisuals(it, it) }
         else -> {
-            val anchor = nearestStanceAnchor(confirmation)
+            // Not walked back — that one confirms through [walkedBack] — so
+            // a standing at exactly (0, 0) is an empty sign's: the ordinary
+            // line, its 🤷 saying nothing (jakob 2026-10-21).
+            val anchor = bundleReadout(confirmation, EMPTY_PICK_LABEL)
             val face = if (exact) "${anchor.emoji} (${confirmation.pair()})" else anchor.emoji
             SpokenSnackbarVisuals(
                 message = stringResource(R.string.stance_signed, face),
@@ -1445,7 +1547,7 @@ fun twoPlaces(value: Double): String {
 @Composable
 private fun StanceCoaching(testTagPrefix: String) {
     val default = StancePoint(0.1, 0.1)
-    val face = nearestStanceAnchor(default).emoji
+    val face = bundleReadout(default, EMPTY_PICK_LABEL).emoji
     val drawnFace = if (LocalShowExactValues.current) "$face (${default.pair()})" else face
     val shortcut = stringResource(R.string.stance_coaching_shortcut, drawnFace)
     val shortcutSpoken = stringResource(R.string.stance_coaching_shortcut_spoken)

@@ -186,6 +186,7 @@ private fun AlternatesBody(
             StanceStanding(
                 pick = state.pick,
                 standing = state.standing,
+                severed = state.severed,
                 testTagPrefix = testTagPrefix,
                 axes = axes,
                 zeroWords = zeroWords,

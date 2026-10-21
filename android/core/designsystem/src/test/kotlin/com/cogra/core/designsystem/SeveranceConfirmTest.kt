@@ -55,6 +55,7 @@ class SeveranceConfirmTest {
         standing: StancePoint = StancePoint(1.0, 1.0),
         raw: StancePoint = StancePoint(1.0, 1.0),
         pick: StancePoint? = null,
+        bundleRecords: Int = 1,
     ) = SeverancePrompt(
         standing = standing,
         raw = raw,
@@ -64,6 +65,7 @@ class SeveranceConfirmTest {
         working = working,
         failed = failed,
         pick = pick,
+        bundleRecords = bundleRecords,
     )
 
     /** Every line a tagged block draws, itself and its children, in order. */
@@ -126,6 +128,58 @@ class SeveranceConfirmTest {
             )
     }
 
+    // Faces follow the value (seam 243): the pick line wears the face every
+    // pair wears, never the table at a zero.
+    @Test
+    fun aPickWithOneNumberAtZeroThinksAndNamesItsState() {
+        show(prompt(fromPick = true, pick = StancePoint(0.0, 0.4), standing = StancePoint(0.0, -0.4)))
+        compose.onNodeWithTag("${TAG}_severance_from_pick")
+            .assertTextEquals("Your pick: 🤔 +0.00 / +0.40")
+            .assertContentDescriptionEquals(
+                "Your pick: Interested, no side taken, For or against +0.00, How much reaches you +0.40",
+            )
+    }
+
+    @Test
+    fun aPickOfNothingOverAnEmptySignsStandingSaysNothing() {
+        // The one way a (0, 0) pick reaches this dialog: over a standing an
+        // empty sign left at (0, 0). It says nothing, never `Walked back`.
+        show(
+            prompt(
+                fromPick = true,
+                pick = StancePoint.Origin,
+                standing = StancePoint.Origin,
+                raw = StancePoint.Origin,
+                bundleRecords = 1,
+            ),
+        )
+        compose.onNodeWithTag("${TAG}_severance_from_pick")
+            .assertTextEquals("Your pick: 🤷 +0.00 / +0.00")
+            .assertContentDescriptionEquals(
+                "Your pick: Says nothing, For or against +0.00, How much reaches you +0.00",
+            )
+    }
+
+    @Test
+    fun anEmptySignsStandingStatesItsZeroTotalNeverNoOpinionYet() {
+        // `severanceParts`: the sentence is for a bundle with no record, decided
+        // by the count — an empty sign's (0, 0) is still something said.
+        show(prompt(standing = StancePoint.Origin, raw = StancePoint.Origin, bundleRecords = 1))
+        assertThat(text("${TAG}_severance_standing")).isEqualTo(
+            "Everything you've said about @ada adds up to +0.00 / +0.00, and that is what this walks back.",
+        )
+    }
+
+    @Test
+    fun theBodysParagraphsStandTheDialogSurfacesSixteenApart() {
+        // DialogSurface's body gap is `--space-4`.
+        show(prompt())
+        val body = compose.onNodeWithTag("${TAG}_severance_body").fetchSemanticsNode().boundsInRoot
+        val total = compose.onNodeWithTag("${TAG}_severance_standing").fetchSemanticsNode().boundsInRoot
+        val gap = with(compose.density) { (total.top - body.bottom).toDp() }
+        assertThat(gap.value).isWithin(0.5f).of(16f)
+    }
+
     @Test
     fun theRouteAloneShowsNoPickLine() {
         show(prompt(fromPick = false))
@@ -147,7 +201,15 @@ class SeveranceConfirmTest {
 
     @Test
     fun aBundleAlreadyAtNothingIsSaidSoAndCannotBeWalkedBackAgain() {
-        show(prompt(records = 0, alreadySevered = true, standing = StancePoint.Origin, raw = StancePoint.Origin))
+        show(
+            prompt(
+                records = 0,
+                alreadySevered = true,
+                standing = StancePoint.Origin,
+                raw = StancePoint.Origin,
+                bundleRecords = 0,
+            ),
+        )
         compose.onNodeWithTag("${TAG}_severance_already").assertTextEquals("You are already at nothing here.")
         compose.onNodeWithTag("${TAG}_severance_cost").assertDoesNotExist()
         compose.onNodeWithTag("${TAG}_severance_confirm").assertIsNotEnabled()
@@ -208,5 +270,7 @@ class SeveranceConfirmTest {
         assertThat(master).contains("`It signs \${records} things, each paid separately.`")
         assertThat(master).contains("Your feed reads it capped at {read.folded}.")
         assertThat(master).contains("Keep it")
+        assertThat(master).contains("bundleReadout(pick, EMPTY_PICK_LABEL)")
+        assertThat(readout).contains("if (bundle === null || bundle.records === 0) {")
     }
 }

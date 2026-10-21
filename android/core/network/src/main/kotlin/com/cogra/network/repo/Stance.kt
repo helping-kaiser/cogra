@@ -114,6 +114,7 @@ class StanceRepositoryImpl @Inject constructor(
                 raw = StancePair(fold.rawPDirected, fold.rawPInterest),
                 records = fold.recordCount,
                 includePending = includePending,
+                severed = fold.severed,
             )
         }
 
@@ -150,7 +151,11 @@ class StanceRepositoryImpl @Inject constructor(
                 standing = StancePair(fold.pDirected, fold.pInterest),
                 raw = StancePair(fold.rawPDirected, fold.rawPInterest),
                 records = fold.severanceCost,
-                alreadySevered = fold.severed,
+                // Nothing stands to walk back: no record, or already walked
+                // back. The bundle's `severed` alone is false on an empty
+                // bundle (the API's contract since the empty sign).
+                alreadySevered = fold.recordCount == 0 || fold.severed,
+                bundleRecords = fold.recordCount,
             )
         }
 

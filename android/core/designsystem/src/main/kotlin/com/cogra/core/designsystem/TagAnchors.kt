@@ -55,17 +55,37 @@ val TAG_ANCHORS: List<TagAnchor> = listOf(
 )
 
 /**
- * The readout for [point]: the nearest anchor by Euclidean distance, the same
- * walk [nearestStanceAnchor] takes over the twenty faces. Ties go to the
- * earlier anchor, so the result is a function of the table's order rather than
- * of iteration luck.
+ * The nearest anchor by Euclidean distance, the same walk [nearestStanceAnchor]
+ * takes over the twenty faces. Ties go to the earlier anchor, so the result is
+ * a function of the table's order rather than of iteration luck.
+ *
+ * Internal for [nearestStanceAnchor]'s reason: every tag pair drawn as a face
+ * reads through [tagReadout].
  */
-fun nearestTagAnchor(point: TagPoint): TagAnchor =
+internal fun nearestTagAnchor(point: TagPoint): TagAnchor =
     TAG_ANCHORS.minBy { anchor ->
         val dr = anchor.at.relevance - point.relevance
         val dc = anchor.at.confidence - point.confidence
         dr * dr + dc * dc
     }
+
+/**
+ * A TAG'S PAIR FOLLOWS THE SAME LAW (hashtag.md §4; the master's `tagReadout`,
+ * jakob 2026-10-21): `(0, 0)` is the withdrawal and shrugs; a tag at zero on
+ * one number only is routing-inert but not withdrawn — a claim, not nothing —
+ * so it thinks; the thirteen objects read the rest. The words are the tag
+ * family's, never a stance's.
+ */
+fun tagReadout(point: TagPoint): TagAnchor {
+    val relevanceZero = point.relevance == 0.0
+    val confidenceZero = point.confidence == 0.0
+    return when {
+        relevanceZero && confidenceZero -> TagAnchor(point, ZERO_BUNDLE_READOUT.emoji, R.string.tag_withdrawn)
+        relevanceZero -> TagAnchor(point, UNREACHABLE_EMOJI, R.string.tag_unreachable_not_about)
+        confidenceZero -> TagAnchor(point, UNREACHABLE_EMOJI, R.string.tag_unreachable_no_certainty)
+        else -> nearestTagAnchor(point)
+    }
+}
 
 /**
  * A TAG's pair, `+0.40 / 0.90`-style — and the shape is the point. Relevance

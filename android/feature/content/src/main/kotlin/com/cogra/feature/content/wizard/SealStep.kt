@@ -29,8 +29,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.AttachmentReadout
+import com.cogra.core.designsystem.EMPTY_PICK_LABEL
 import com.cogra.core.designsystem.StancePoint
-import com.cogra.core.designsystem.nearestStanceAnchor
+import com.cogra.core.designsystem.bundleReadout
 import com.cogra.core.designsystem.pair
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
@@ -443,7 +444,7 @@ private fun CitedDoorRow(count: Int, onOpen: () -> Unit, testTag: String) {
  */
 @Composable
 private fun stanceRowReading(pick: StancePoint): String =
-    "${nearestStanceAnchor(pick).emoji} ${pick.pair()}"
+    "${bundleReadout(pick, EMPTY_PICK_LABEL).emoji} ${pick.pair()}"
 
 /**
  * `ComposeKeyAbsent` — this app holds no actor key, so nothing can be

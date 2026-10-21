@@ -131,6 +131,9 @@ query Notifications($after: String) {
             id
             pDirected
             pInterest
+            # Which (0, 0) an opinion row draws (`StanceValue.zeroLabel`):
+            # walked back, or an empty sign that says nothing.
+            severed
           }
           application {
             id

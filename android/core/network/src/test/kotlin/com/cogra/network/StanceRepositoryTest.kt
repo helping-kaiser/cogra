@@ -331,6 +331,47 @@ class StanceRepositoryTest {
         assertThat(quote.records).isEqualTo(0)
     }
 
+    // The API since the empty sign (#283): an EMPTY bundle answers severed
+    // false — nothing stands to walk back all the same.
+    @Test
+    fun `an empty bundle has nothing to walk back though the API says not severed`() = runTest {
+        enqueue(
+            answerJson(
+                "post",
+                bundleJson(pDirected = 0.0, pInterest = 0.0, recordCount = 0, severed = false, severanceCost = 0),
+            ),
+        )
+
+        val quote = (repo().severanceQuote(node("t1")) as Outcome.Success).value
+
+        assertThat(quote.alreadySevered).isTrue()
+        assertThat(quote.bundleRecords).isEqualTo(0)
+    }
+
+    @Test
+    fun `an empty signs standing walks back at its cost of one`() = runTest {
+        enqueue(
+            answerJson(
+                "post",
+                bundleJson(pDirected = 0.0, pInterest = 0.0, recordCount = 1, severed = false, severanceCost = 1),
+            ),
+        )
+
+        val quote = (repo().severanceQuote(node("t1")) as Outcome.Success).value
+
+        assertThat(quote.alreadySevered).isFalse()
+        assertThat(quote.records).isEqualTo(1)
+        assertThat(quote.bundleRecords).isEqualTo(1)
+    }
+
+    @Test
+    fun `the standing carries which zero it is`() = runTest {
+        enqueue(answerJson("post", bundleJson(pDirected = 0.0, pInterest = 0.0, recordCount = 3, severed = true)))
+        assertThat((repo().standing(node("t1")) as Outcome.Success).value.severed).isTrue()
+        enqueue(answerJson("post", bundleJson(pDirected = 0.0, pInterest = 0.0, recordCount = 1, severed = false)))
+        assertThat((repo().standing(node("t1")) as Outcome.Success).value.severed).isFalse()
+    }
+
     @Test
     fun `an id no root answers is refused as not found`() = runTest {
         enqueue(missJson("post"))

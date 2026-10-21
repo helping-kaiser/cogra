@@ -64,14 +64,16 @@ val STANCE_ANCHORS: List<StanceAnchor> = listOf(
 )
 
 /**
- * The readout for [point]: the nearest anchor by Euclidean distance.
- * Ties go to the earlier anchor, which keeps the mapping a pure function
- * of the table's order rather than of iteration luck.
+ * The nearest anchor by Euclidean distance. Ties go to the earlier anchor,
+ * which keeps the mapping a pure function of the table's order rather than
+ * of iteration luck.
  *
- * This reads PICKS and non-zero bundles. A standing goes through
- * [standingReadout] instead, which knows about the zero bundle.
+ * INTERNAL ON PURPOSE: nothing draws a face from the bare table. Every pair
+ * drawn as a face reads through [bundleReadout], which asks the table only
+ * when both numbers are non-zero — the module boundary is what keeps a
+ * surface in another module from bypassing that rule.
  */
-fun nearestStanceAnchor(point: StancePoint): StanceAnchor =
+internal fun nearestStanceAnchor(point: StancePoint): StanceAnchor =
     STANCE_ANCHORS.minBy { anchor ->
         val dd = anchor.at.directed - point.directed
         val di = anchor.at.interest - point.interest
@@ -100,20 +102,54 @@ val ZERO_BUNDLE_READOUT = StanceAnchor(
 const val UNREACHABLE_EMOJI = "🤔"
 
 /**
- * Whether this is the zero bundle: a standing at exactly `(0, 0)`,
- * severed or netted there. Severance produces exact zero by
+ * Whether this pair is exactly `(0, 0)`. Severance produces exact zero by
  * construction — it stages the counter-records that cancel the bundle —
- * so exact equality is the test, not a tolerance.
+ * and so does an empty sign, so exact equality is the test, not a
+ * tolerance. Which of the two a `(0, 0)` is, the pair cannot say: the
+ * bundle's `severed` does.
  */
 val StancePoint.isZeroBundle: Boolean
     get() = directed == 0.0 && interest == 0.0
 
 /**
- * The face a STANDING reads as (design.md §8.4). A bundle standing at
- * exactly `(0, 0)` never speaks through the table: it is the absence of
- * a feeling, and reading it as its nearest neighbour — "🙂 Nice" — is a
- * lie. It gets the shrug and the no-standing wording instead, on every
- * surface that shows a standing.
+ * A PICK OF NOTHING SAYS NOTHING (`EMPTY_PICK_LABEL`): a pick at exactly
+ * `(0, 0)` adds nothing to what stands, and a standing there that was never
+ * walked back — an empty sign joined it (jakob 2026-10-21) — is spoken this
+ * way too. `Walked back` ([R.string.stance_standing_zero]) would be false
+ * of either.
  */
-fun standingReadout(standing: StancePoint): StanceAnchor =
-    if (standing.isZeroBundle) ZERO_BUNDLE_READOUT else nearestStanceAnchor(standing)
+val EMPTY_PICK_LABEL: Int = R.string.stance_says_nothing
+
+/** A standing walked back to nothing, as a label beside the shrug (`SEVERED_LABEL`). */
+val SEVERED_LABEL: Int = R.string.stance_standing_zero
+
+/**
+ * The state a pair with exactly one number at zero reads as, by the sign of
+ * the number that stands (`unreachableHead`).
+ */
+@StringRes
+fun unreachableHeadLabel(pair: StancePoint): Int = when {
+    pair.directed == 0.0 && pair.interest > 0.0 -> R.string.stance_unreachable_interested
+    pair.directed == 0.0 -> R.string.stance_unreachable_rather_not
+    pair.directed > 0.0 -> R.string.stance_unreachable_for
+    else -> R.string.stance_unreachable_against
+}
+
+/**
+ * FACES FOLLOW THE VALUE, EVERYWHERE (jakob 2026-10-21, seam 242; the
+ * master's `bundleReadout`). Any pair drawn as a face — the pick, a standing
+ * opinion, the resting anchor, a record's row, the snackbar — reads here,
+ * and the table reads only a pair with both numbers non-zero: exactly
+ * `(0, 0)` shrugs and speaks [zeroLabel] (the context knows which zero it
+ * is), exactly one zero thinks and names its state. 🫥 stays the control's
+ * own, outside every value.
+ */
+fun bundleReadout(pair: StancePoint, @StringRes zeroLabel: Int = SEVERED_LABEL): StanceAnchor {
+    val directedZero = pair.directed == 0.0
+    val interestZero = pair.interest == 0.0
+    return when {
+        directedZero && interestZero -> ZERO_BUNDLE_READOUT.copy(label = zeroLabel)
+        directedZero || interestZero -> StanceAnchor(pair, UNREACHABLE_EMOJI, unreachableHeadLabel(pair))
+        else -> nearestStanceAnchor(pair)
+    }
+}
