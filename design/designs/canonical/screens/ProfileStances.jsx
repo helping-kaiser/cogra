@@ -7,7 +7,12 @@
 
    THE TAB ROW IS `TabBar` WITH WORDS. Two directions is a choice made in
    words, not glyphs — and a cell whose own words are its name takes no
-   aria-label, which the master derives from the tab rather than a prop. */
+   aria-label, which the master derives from the tab rather than a prop.
+
+   FACES FOLLOW THE VALUE (jakob 2026-10-21, seam 242). Kel's opinion is
+   `+0.00 / +0.35` — interested, no side taken — so the row wears 🤔, the
+   one-zero face, and never a table face; it stands where its for-or-against
+   value puts it, at nothing, between the ones held for and against. */
 export function Screen() {
   return (
     <>
@@ -24,6 +29,7 @@ export function Screen() {
         <StanceRow name="Tobias Lindqvist" handle="tobias" pDirected={0.7} pInterest={0.4} />
         <StanceRow name="Sol Ferreira" handle="sol" pDirected={0.6} pInterest={0.3} />
         <StanceRow name="Mira Voss" handle="mira" src="inviter.jpg" pDirected={0.4} pInterest={0.5} />
+        <StanceRow name="Kel Moreau" handle="kel" pDirected={0} pInterest={0.35} />
         <StanceRow name="Juno Baptiste" handle="juno" pDirected={-0.2} pInterest={0.1} />
       </div>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />

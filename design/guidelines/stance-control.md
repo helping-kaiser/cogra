@@ -241,7 +241,14 @@ instead is explain, and confirm when it matters:
   `Interested, no side taken` and its siblings — say once that it
   shapes no feed, and let the 🤔 explain the rest in place;
 - if the result is `(0, 0)`, name it as severance, say what it costs, and
-  ask whether that was the intent.
+  ask whether that was the intent;
+- if the result is `(0, 0)` while nothing stands — never signed, or
+  already walked back — there is nothing to walk back: ask whether an
+  empty opinion was meant (`Sign an empty opinion?`, jakob 2026-10-21), a
+  priced record that says nothing. Signed, it is an ordinary record: the
+  bundle counts it, stays at `(0, 0)` and is not severed. Where the
+  opinion vouches someone in, the ask warns that they start out cut off,
+  and the vouch-in proceeds.
 
 The cost is legible: each counter-record is its own priced act, so the
 dialog states the count — `It signs 3 things, each paid separately.`
@@ -267,8 +274,14 @@ The readout sits **just above the pad**, never under the knob: a thumb on
 the control covers exactly the spot where feedback would otherwise
 appear.
 
-Twenty anchors; the readout is the nearest by Euclidean distance. Their
-labels below are the ACCESSIBLE names, not on-screen text. See
+Twenty anchors; the readout is the nearest by Euclidean distance, for a
+pair with both numbers non-zero. **Faces follow the value** (jakob
+2026-10-21): any pair drawn as a face — the pick, the standing opinion,
+the resting anchor, a record's row, the snackbar — wears 🤔 when exactly
+one number is zero and 🤷 at exactly `(0, 0)`, never a table face; 🫥
+stays the control at rest. A tag's pair keeps the same law over its
+thirteen objects. The anchors' labels below are the ACCESSIBLE names,
+not on-screen text. See
 `stance-anchors.html` for the field and the full table, which is
 reproduced verbatim in `components/stance/StanceReadout.jsx`. **The table
 is the contract: both clients read these values, and a change here

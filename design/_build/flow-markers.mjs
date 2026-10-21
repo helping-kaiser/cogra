@@ -1425,6 +1425,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Tobias Lindqvist</span>", tag: "button" },
     { n: 4, find: ">Sol Ferreira</span>", tag: "button" },
     { n: 4, find: ">Mira Voss</span>", tag: "button" },
+    { n: 4, find: ">Kel Moreau</span>", tag: "button" },
     { n: 4, find: ">Juno Baptiste</span>", tag: "button" },
     ...nav(6),
   ],
@@ -2407,6 +2408,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: ">Walk it back</button>", tag: "button" },
     { n: 2, find: ">Keep it</button>", tag: "button" },
     { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  // The empty sign, the walk-back's neighbour: scanExempt the same way, so only
+  // the dialog's own pair and the scrim it sits on carry numbers. The
+  // `context` chip draws the dialog twice, one copy shown at a time, and both
+  // copies take the numbers: one edge covers each pair.
+  EmptySignConfirm: [
+    { n: 1, find: ">Set it anyway</button>", tag: "button", all: true },
+    { n: 2, find: ">Keep it</button>", tag: "button", all: true },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div", all: true },
   ],
   HelpDialog: [
     { n: 1, find: ">Close</button>", tag: "button" },

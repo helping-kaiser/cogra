@@ -2,7 +2,7 @@ import React from "react";
 import { NodeMark } from "../content/ReferenceRow.jsx";
 import { Icon } from "../navigation/Icon.jsx";
 import { BUTTON_CLASS } from "../core/Button.jsx";
-import { formatStancePair, formatStanceWords, nearestAnchor, SR_ONLY } from "../stance/StanceReadout.jsx";
+import { bundleReadout, EMPTY_PICK_LABEL, formatStancePair, formatStanceWords, SR_ONLY } from "../stance/StanceReadout.jsx";
 
 /* A reference already staged in a composer (item 17, the conformance round):
    the citation the author has committed to, shown back to them — the kind's
@@ -78,7 +78,7 @@ import { formatStancePair, formatStanceWords, nearestAnchor, SR_ONLY } from "../
    relates` (both blessed, jakob 2026-10-05). */
 function Body({ kind, name, sub, src, pair, stance, removed, consequence, node }) {
   const exact = pair ? formatStancePair(pair) : null;
-  const anchor = pair ? nearestAnchor(pair) : null;
+  const anchor = pair ? bundleReadout(pair, EMPTY_PICK_LABEL) : null;
   const spoken = pair && stance ? `${anchor.label}, ${formatStanceWords(pair)}` : exact;
   return (
     <>

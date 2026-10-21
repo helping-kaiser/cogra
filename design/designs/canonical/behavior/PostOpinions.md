@@ -10,4 +10,6 @@ ALWAYS the opinions sheet holds as many rows as the detail's opinions line count
 
 ALWAYS a row carries the person and their public opinion, its face leading and its pair in the reader's reading mode
 
+ALWAYS a row's face is 🤔, spoken as the state, never a table face, GIVEN the row's opinion has exactly one number at zero
+
 WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND the post stands open beneath it as it was

@@ -1,7 +1,7 @@
 // Checks the hand-drawn pad readouts against the masters' own format contract
 // (backlog item 54.2): `RefPair`, `TagPad`, `TagPadCompose`, `PadKeyAbsent`
 // and the shared `ReplyPadBody` spell their face and their pair as literals,
-// because `nearestAnchor` and the formatters are master-side helpers the bundle
+// because `bundleReadout` and the formatters are master-side helpers the bundle
 // does not expose to screens. Five literals with no compiler
 // between them and the contract is exactly where drift lives: a pad value moves
 // and its readout does not, or a negative pair reaches a board written with an
@@ -9,7 +9,7 @@
 //
 // So the check reads the value each pad is actually set to and asks the MASTERS
 // what that value reads as — `formatStancePair` / `formatTagPair` for the pair,
-// `nearestAnchor` / `nearestTagAnchor` for the face. Nothing here re-implements a rule:
+// `bundleReadout` / `tagReadout` for the face. Nothing here re-implements a rule:
 // every expectation is a helper's return value, so the day a formatter changes,
 // these boards are told.
 //
@@ -133,13 +133,13 @@ for (const site of SITES) {
   const value = { pDirected: Number(pad[1]), pInterest: Number(pad[2]) };
   const tagFamily = pad[3].includes("TAG_RANGES");
   const expectedPair = tagFamily ? ds.formatTagPair(value) : ds.formatStancePair(value);
-  const expectedFace = (tagFamily ? ds.nearestTagAnchor(value) : ds.nearestAnchor(value)).emoji;
+  const expectedFace = (tagFamily ? ds.tagReadout(value) : ds.bundleReadout(value)).emoji;
 
   if (exact[1] !== expectedPair) {
     fails.push(`${name}: the readout says "${exact[1]}" where the pad's value reads "${expectedPair}"`);
   }
   if (face[1] !== expectedFace) {
-    fails.push(`${name}: the face is ${face[1]} where the anchor table answers ${expectedFace}`);
+    fails.push(`${name}: the face is ${face[1]} where the masters answer ${expectedFace}`);
   }
 
   // The spoken reading carries the same numbers in words; a pad value that

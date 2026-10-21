@@ -3,6 +3,7 @@ import { DialogSurface } from "../core/JoinPrompt.jsx";
 import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
 import {
   bundleReadout,
+  EMPTY_PICK_LABEL,
   severanceParts,
   severanceWords,
   formatStancePair,
@@ -15,7 +16,8 @@ import {
 // the explicit gesture, and an ordinary pick that happens to land the bundle
 // there — the second is confirmed, never refused, because the control never
 // prevents a choice (the same section). The two are the SAME dialog, distinguished only by
-// the pick line the second one adds.
+// the pick line the second one adds. Both need an opinion standing: a pick that lands
+// (0, 0) with nothing standing walks nothing back and asks `EmptySignConfirm` instead.
 //
 // The order is fixed (Android parity): title · the pick line when it was reached
 // by a pick · the consequences · what the reader has said in total (and, only when
@@ -67,12 +69,14 @@ export function SeveranceConfirm({
      round). "Signed action" is the repo's word for a record; what the reader
      has is a pile of things they said, each of which has to be said back. */
   const cost = records === 1 ? "It signs 1 thing, paid on its own." : `It signs ${records} things, each paid separately.`;
-  /* A pick at exactly (0, 0) never speaks through the table (readme §8): here
-     it IS the walk-back, so the zero readout's own pair — 🤷, "Walked back" —
-     is its honest face. */
+  /* The pick wears the face every pair wears (`bundleReadout`): a pick with
+     one number at zero thinks, as it does on the pad. A pick of (0, 0) reaches
+     this dialog only over a standing already at (0, 0) — an empty sign's —
+     and there it says nothing, as it does on the pad; with nothing standing it
+     asks `EmptySignConfirm` instead. */
   const sever = severanceWords(names);
   const title = sever.title(targetLabel);
-  const pickAnchor = pick === null ? null : bundleReadout(pick, sever.zero);
+  const pickAnchor = pick === null ? null : bundleReadout(pick, EMPTY_PICK_LABEL);
   const read = severanceParts(bundle, targetLabel);
   return (
     /* THE SHELL LAYS IT OUT (readme §11, *Dialogs*): the order below is the

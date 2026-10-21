@@ -74,6 +74,7 @@ const {
   StancePad,
   AttachmentPad,
   SeveranceConfirm,
+  EmptySignConfirm,
   StanceReadout,
   AttachmentReadout,
   AttachmentStanding,
@@ -5108,6 +5109,7 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
                   targetLabel="@rafa"
                   helpLabel="How vouching works"
                   help={HOW_VOUCHING_WORKS_HELP}
+                  vouchesIn
                   defaultOpen
                   defaultPick={{ pDirected: 0.1, pInterest: 0.1 }}
                   padNote={<ApprovePadNote handle="@rafa" node="note" />}
