@@ -62,9 +62,9 @@ import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.CustomAccessibilityAction
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
@@ -321,7 +321,7 @@ private fun BoxScope.PairPole(text: String, at: Alignment, dx: Dp, align: TextAl
             // Measured inside the field's box, so its alignment is the
             // field's own edge, then drawn shifted out into its gutter.
             .offset(x = dx, y = dy)
-            .clearAndSetSemantics { },
+            .semantics { hideFromAccessibility() },
     )
 }
 

@@ -25,6 +25,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
+import com.cogra.domain.has
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.signing.Expectation
@@ -451,6 +452,12 @@ class StanceViewModel @Inject constructor(
         val expected = Expectation(listOf(stanceRecord(graphId, pick.pDirected, pick.pInterest)))
         val prepared = when (val outcome = stances.prepareStance(target, pick)) {
             is Outcome.Success -> outcome.value
+            // The write rule refuses at staging as well as at the signer.
+            is Outcome.Refused -> return if (outcome.has(ErrorCode.RATE_LIMITED)) {
+                Signed.WriteRule
+            } else {
+                Signed.Failed(needsKey = false)
+            }
             else -> return Signed.Failed(needsKey = false)
         }
         val results = try {

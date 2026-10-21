@@ -45,7 +45,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -105,7 +105,10 @@ internal fun ExactSpan(text: String, color: Color, testTag: String? = null) {
         maxLines = 1,
         softWrap = false,
         overflow = TextOverflow.Visible,
-        modifier = Modifier.clearAndSetSemantics { if (testTag != null) this.testTag = testTag },
+        modifier = Modifier.semantics {
+            hideFromAccessibility()
+            if (testTag != null) this.testTag = testTag
+        },
     )
 }
 
@@ -139,7 +142,7 @@ private fun ReadoutBlock(
             Text(
                 text = emoji,
                 style = if (big) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium,
-                modifier = Modifier.clearAndSetSemantics { },
+                modifier = Modifier.semantics { hideFromAccessibility() },
             )
             ExactSpan(
                 text = pair,
@@ -156,7 +159,7 @@ private fun ReadoutLabel(label: String) {
         text = label,
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.clearAndSetSemantics { },
+        modifier = Modifier.semantics { hideFromAccessibility() },
     )
 }
 
@@ -331,7 +334,7 @@ private fun UnreachableLanding(
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x2)) {
             val face = Modifier.then(
                 if (onExplainZero == null) {
-                    Modifier.clearAndSetSemantics { }
+                    Modifier.semantics { hideFromAccessibility() }
                 } else {
                     // The door, named by the state it explains; 48dp of aim
                     // around a title-medium face (readme §10).
@@ -350,7 +353,7 @@ private fun UnreachableLanding(
                 text = words,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.clearAndSetSemantics { },
+                modifier = Modifier.semantics { hideFromAccessibility() },
             )
         }
     }

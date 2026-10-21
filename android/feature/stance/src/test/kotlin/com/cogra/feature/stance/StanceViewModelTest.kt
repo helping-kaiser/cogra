@@ -365,21 +365,6 @@ class StanceViewModelTest {
         assertThat(entry(vm).pad).isEqualTo(PadMode.CLOSED)
     }
 
-    @Test
-    fun aHuskDeviceIsReportedAsNeedingItsKeyBack() = runTest(dispatcher) {
-        identity.seed = null
-        identity.stancePadTaught = true
-        val vm = viewModel()
-        vm.observe(TARGET)
-        dispatcher.scheduler.advanceUntilIdle()
-
-        vm.onHoldDefault(TARGET)
-        dispatcher.scheduler.advanceUntilIdle()
-
-        assertThat(entry(vm).failed).isTrue()
-        assertThat(entry(vm).needsKey).isTrue()
-    }
-
     // -- The hold answers immediately (design.md §8.3) --
 
     @Test
@@ -669,6 +654,49 @@ class StanceViewModelTest {
         assertThat(entry(vm).pad).isEqualTo(PadMode.ALTERNATES)
         // The coaching lines are the pad's; the alternates carry none.
         assertThat(vm.state.value.coachingTarget).isNull()
+    }
+
+    // -- The notices (PadWriteRule.md, PadKeyAbsent.md) --
+
+    @Test
+    fun aRateLimitedSigningIsTheWriteRulesNoticeNotAFault() = runTest(dispatcher) {
+        identity.stancePadTaught = true
+        stances.prepareOutcome = Outcome.Refused(listOf(UserError(ErrorCode.RATE_LIMITED, "slow down")))
+        stances.net = StancePair(0.4, 0.4)
+        stances.records = 1
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onOpenPad(TARGET)
+        vm.onCommit(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // A notice: the pad stays open at the pick, nothing staged or spent,
+        // and no fault line.
+        assertThat(entry(vm).writeRule).isTrue()
+        assertThat(entry(vm).failed).isFalse()
+        assertThat(entry(vm).busy).isFalse()
+        assertThat(entry(vm).pad).isEqualTo(PadMode.STICKY)
+
+        // Leaving and opening again starts clean.
+        vm.onDismissPad(TARGET)
+        assertThat(entry(vm).writeRule).isFalse()
+    }
+
+    @Test
+    fun aHoldWithTheKeyElsewhereOpensThePadAndSignsNothing() = runTest(dispatcher) {
+        identity.stancePadTaught = true
+        identity.seed = null
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onHoldDefault(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.keyAbsent).isTrue()
+        assertThat(entry(vm).pad).isEqualTo(PadMode.STICKY)
+        assertThat(stances.staged).isEmpty()
     }
 
     // -- The borrowed view (the master's `borrowed`, seam 240) --

@@ -223,25 +223,34 @@ class StancePadTest {
     // -- At rest (StanceControl.prompt.md "At rest it shows the current opinion") --
 
     @Test
-    fun atRestTheFaceStandsAloneAndThePairPaintsOnlyInGeekMode() {
+    fun atRestTheFaceStandsAlone() {
         // (+0.55, +0.20) is 😊 "Like this". The face is the default reading;
         // the pair is the geek one (readme §13, "One markup, two paintings").
         show(StanceControlState(standing = StancePoint(0.55, 0.20)))
         compose.onNodeWithText("😊", useUnmergedTree = true).assertExists()
         compose.onNodeWithText("+0.55 / +0.20", useUnmergedTree = true).assertDoesNotExist()
+    }
 
+    @Test
+    fun atRestThePairPaintsInGeekMode() {
         show(StanceControlState(standing = StancePoint(0.55, 0.20)), geek = true)
         compose.onNodeWithText("+0.55 / +0.20", useUnmergedTree = true).assertExists()
     }
 
+    private val likeThisSpoken =
+        "Your opinion on this post: Like this, +0.55 / +0.20. Press and hold to add a positive one."
+
     @Test
-    fun theFacesNameIsTheSameInBothPaintings() {
+    fun theFacesNameCarriesThePairInTheDefaultPainting() {
         // "Nothing spoken depends on the mode" (readme §13).
-        val spoken = "Your opinion on this post: Like this, +0.55 / +0.20. Press and hold to add a positive one."
         show(StanceControlState(standing = StancePoint(0.55, 0.20)))
-        compose.onNodeWithTag("${TAG}_stance").assertContentDescriptionEquals(spoken)
+        compose.onNodeWithTag("${TAG}_stance").assertContentDescriptionEquals(likeThisSpoken)
+    }
+
+    @Test
+    fun theFacesNameIsTheSameInGeekMode() {
         show(StanceControlState(standing = StancePoint(0.55, 0.20)), geek = true)
-        compose.onNodeWithTag("${TAG}_stance").assertContentDescriptionEquals(spoken)
+        compose.onNodeWithTag("${TAG}_stance").assertContentDescriptionEquals(likeThisSpoken)
     }
 
     @Test
@@ -277,9 +286,13 @@ class StancePadTest {
     }
 
     @Test
-    fun theWideAnchorSaysYourOpinionOnlyWhereThereIsNoPairToShow() {
+    fun theWideAnchorSaysYourOpinionWhereThereIsNoPairToShow() {
         show(StanceControlState(standing = null), wide = true)
         compose.onNodeWithText("Your opinion", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun theWideAnchorDropsItsWordsOnceAnOpinionStands() {
         show(StanceControlState(standing = heldStanding), wide = true)
         compose.onNodeWithText("Your opinion", useUnmergedTree = true).assertDoesNotExist()
     }
@@ -488,18 +501,23 @@ class StancePadTest {
     }
 
     @Test
-    fun theReadoutPairsPaintOnlyInGeekMode() {
-        val state = open.copy(
-            pick = StancePoint(0.4, 0.2),
-            standing = heldStanding,
-            landing = StanceLanding(StancePoint(1.0, 0.55), false, false, false),
-        )
-        show(state)
+    private val threeReadouts = open.copy(
+        pick = StancePoint(0.4, 0.2),
+        standing = heldStanding,
+        landing = StanceLanding(StancePoint(1.0, 0.55), false, false, false),
+    )
+
+    @Test
+    fun theReadoutPairsAreNotPaintedByDefault() {
+        show(threeReadouts)
         compose.exactPair().assertDoesNotExist()
         compose.onNodeWithTag("${TAG}_stance_standing_pair", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithTag("${TAG}_stance_landing_pair", useUnmergedTree = true).assertDoesNotExist()
+    }
 
-        show(state, geek = true)
+    @Test
+    fun theReadoutPairsPaintInGeekMode() {
+        show(threeReadouts, geek = true)
         compose.exactPair().assertTextEquals("+0.40 / +0.20")
         compose.onNodeWithTag("${TAG}_stance_standing_pair", useUnmergedTree = true).assertTextEquals("+0.60 / +0.35")
         compose.onNodeWithTag("${TAG}_stance_landing_pair", useUnmergedTree = true).assertTextEquals("+1.00 / +0.55")
@@ -987,6 +1005,70 @@ class StancePadTest {
         assertThat(confirmationsShown).isEqualTo(0)
     }
 
+    // -- The notices (PadWriteRule.md, PadKeyAbsent.md) --
+
+    @Test
+    fun theWriteRulesNoticeStandsWhereTheLandingAndCommitRowWere() {
+        show(open.copy(writeRule = true, standing = heldStanding))
+        compose.onNodeWithText("You can't sign right now").assertExists()
+        compose.onNodeWithText(
+            "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent.",
+        ).assertExists()
+        compose.onNodeWithTag("${TAG}_stance_set").assertDoesNotExist()
+        compose.onNodeWithTag("${TAG}_stance_cancel").assertDoesNotExist()
+        compose.onNodeWithTag("${TAG}_stance_sever").assertDoesNotExist()
+        compose.onNodeWithTag("${TAG}_stance_landing").assertDoesNotExist()
+        compose.field().assertExists()
+        compose.onNodeWithTag("${TAG}_stance_not_now").assertTextEquals("Not now").performScrollTo().performClick()
+        assertThat(dismissed).isEqualTo(1)
+        assertThat(committed).isEqualTo(0)
+    }
+
+    @Test
+    fun theWriteRulesQuestionMarkOpensWhySigningWaits() {
+        show(open.copy(writeRule = true))
+        compose.onNodeWithTag("${TAG}_stance_write_rule_help").performScrollTo().performClick()
+        compose.onNodeWithText("Why signing waits").assertExists()
+        compose.onNodeWithText("Nothing was signed or spent. Try again in a little while.").assertExists()
+    }
+
+    @Test
+    fun aRefusedHoldSaysSoQuietlyWithNoRetry() {
+        show(StanceControlState(standing = heldStanding, writeRule = true))
+        compose.onNodeWithTag("${TAG}_stance_row").assertTextEquals("You can't sign right now.")
+        compose.onNodeWithTag("${TAG}_stance_row_retry", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun withTheKeyElsewhereThePadCarriesTheKeyNoticeAndNoActions() {
+        var restored = 0
+        compose.setContent {
+            CompositionLocalProvider(LocalOnRestoreKey provides { restored++ }) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    StanceControl(
+                        state = open.copy(keyAbsent = true, standing = heldStanding),
+                        onHoldDefault = {}, onOpenPad = {}, onPick = {}, onCommit = { committed++ },
+                        onDismissPad = {}, onOpenAlternates = {},
+                        onOpenSeverance = {}, onConfirmSeverance = {}, onDismissSeverance = {},
+                        onConfirmationShown = {},
+                        testTagPrefix = TAG,
+                    )
+                }
+            }
+        }
+        compose.onNodeWithText("Your key isn't in this app").assertExists()
+        compose.onNodeWithText("Signing needs your key, which isn't in this app — the write waits as pending.")
+            .assertExists()
+        compose.onNodeWithText("Restore the key with your recovery code to finish.").assertExists()
+        compose.onNodeWithTag("${TAG}_stance_set").assertDoesNotExist()
+        compose.onNodeWithTag("${TAG}_stance_cancel").assertDoesNotExist()
+        compose.onNodeWithTag("${TAG}_stance_sever").assertDoesNotExist()
+        compose.field().assertExists()
+        compose.onNodeWithTag("${TAG}_stance_restore_key").performScrollTo().performClick()
+        assertThat(restored).isEqualTo(1)
+        assertThat(committed).isEqualTo(0)
+    }
+
     // -- The alternates (StanceAlternates.jsx; stance-control.md *Alternate and accessible inputs*) --
 
     private val alternates = StanceControlState(pad = StancePadMode.ALTERNATES, pick = StancePoint(0.1, 0.1))
@@ -1075,7 +1157,7 @@ class StancePadTest {
         assertThat(readout).contains("landing: \"${string("stance_severance_reached")}\"")
         assertThat(readout).contains("return { sentence: \"${string("stance_landing_working")}\" }")
         // The commit's own words: Set, and Retry in its slot after a failure.
-        assertThat(control).contains(": \"${string("stance_retry")}\" : \"${string("stance_set")}\"}")
+        assertThat(control).contains("\"${string("stance_retry")}\" : \"${string("stance_set")}\"}")
         assertThat(control).contains("helpLabel = \"${string("stance_explain")}\"")
         assertThat(control).contains("\"${string("stance_pad_failed")}\"")
         for (head in listOf(

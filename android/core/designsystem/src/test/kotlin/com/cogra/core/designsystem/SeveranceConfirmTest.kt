@@ -6,6 +6,8 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -64,8 +66,12 @@ class SeveranceConfirmTest {
         pick = pick,
     )
 
-    private fun text(tag: String) = compose.onNodeWithTag(tag, useUnmergedTree = true)
-        .fetchSemanticsNode().config[SemanticsProperties.Text].joinToString(" ") { it.text }
+    /** Every line a tagged block draws, itself and its children, in order. */
+    private fun text(tag: String) = compose
+        .onAllNodes(hasTestTag(tag) or hasAnyAncestor(hasTestTag(tag)), useUnmergedTree = true)
+        .fetchSemanticsNodes()
+        .flatMap { it.config.getOrNull(SemanticsProperties.Text).orEmpty() }
+        .joinToString(" ") { it.text }
 
     @Test
     fun theDialogIsTitledWalkItAllBack() {
@@ -90,7 +96,10 @@ class SeveranceConfirmTest {
         )
         compose.onNodeWithTag("${TAG}_severance_capped", useUnmergedTree = true)
             .assertTextEquals("Your feed reads it capped at +1.00 / +0.85.")
+    }
 
+    @Test
+    fun aTotalInsideTheCapCarriesNoCapLine() {
         show(prompt())
         compose.onNodeWithTag("${TAG}_severance_capped", useUnmergedTree = true).assertDoesNotExist()
     }
@@ -99,6 +108,10 @@ class SeveranceConfirmTest {
     fun theCostIsCountedInThings() {
         show(prompt(records = 3))
         compose.onNodeWithTag("${TAG}_severance_cost").assertTextEquals("It signs 3 things, each paid separately.")
+    }
+
+    @Test
+    fun aSingleThingIsCountedInTheSingular() {
         show(prompt(records = 1))
         compose.onNodeWithTag("${TAG}_severance_cost").assertTextEquals("It signs 1 thing, paid on its own.")
     }
