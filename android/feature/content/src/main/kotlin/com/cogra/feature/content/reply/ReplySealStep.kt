@@ -31,7 +31,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.cogra.core.designsystem.StanceFieldLabels
 import com.cogra.core.designsystem.StancePadField
 import com.cogra.core.designsystem.StancePoint
 import com.cogra.core.designsystem.nearestStanceAnchor
@@ -532,14 +531,14 @@ internal fun ReplyPad(
                 testTag = "reply_pad_help",
             )
         }
+        // The master field, stretched (`alignSelf: stretch`): its four pole
+        // words stand in the gutters around it, never inside it where the
+        // knob would cover them (StancePad.jsx, the 2026-09-15 ruling).
         StancePadField(
             pick = StancePoint(pDirected, pInterest),
             onPick = { onChange(it.directed, it.interest) },
-            labels = PAD_LABELS,
             testTag = "reply_pad_field",
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .width(PAD_FIELD_SIZE),
+            modifier = Modifier.fillMaxWidth(),
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -602,22 +601,8 @@ private fun StanceReading(pick: StancePoint) {
     }
 }
 
-private val PAD_LABELS = StanceFieldLabels(
-    start = "Against",
-    end = "For",
-    top = "More",
-    bottom = "Less",
-)
-
 /** `--radius-extra-large`, the rung every parked pad and sheet wears. */
 private val PAD_CORNER = 28.dp
-
-/**
- * The field keeps the hand board's 240px square, centred, rather than
- * filling the panel: the pad is a thumb-sized instrument and the drawing
- * is the one the round inherited (`ReplyPad.jsx`).
- */
-private val PAD_FIELD_SIZE = 240.dp
 
 /** What the readout leaves clear of the `?` in the corner (`_shared.jsx`). */
 private val PAD_HELP_GUTTER = 40.dp

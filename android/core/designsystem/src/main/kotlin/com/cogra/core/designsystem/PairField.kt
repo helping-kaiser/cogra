@@ -191,7 +191,7 @@ internal fun ticksAlong(from: Double, to: Double, range: PairRange): Boolean {
     return crossesZero || meetsEdge
 }
 
-/** One short platform tick — `SEGMENT_TICK`, documented for discrete points on a slider (`CLOCK_TICK` below API 34). */
+/** One short platform tick — `SEGMENT_TICK`, for discrete points on a slider (`CLOCK_TICK` below API 34). */
 internal fun View.knobTick() {
     performHapticFeedback(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {

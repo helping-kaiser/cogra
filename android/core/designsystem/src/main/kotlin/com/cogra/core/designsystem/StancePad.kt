@@ -1048,7 +1048,11 @@ private fun StanceRestingFace(
         modifier = Modifier
             .padding(horizontal = Space.x3)
             .then(
-                if (anchor == null && standing != null) Modifier.testTag("${testTagPrefix}_stance_standing_face") else Modifier,
+                if (anchor == null && standing != null) {
+                    Modifier.testTag("${testTagPrefix}_stance_standing_face")
+                } else {
+                    Modifier
+                },
             ),
     ) {
         Box(contentAlignment = Alignment.Center) {

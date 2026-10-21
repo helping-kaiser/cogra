@@ -24,6 +24,7 @@ package com.cogra.feature.stance
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.domain.Outcome
+import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.StanceRepository
 import com.cogra.domain.signing.Expectation
 import com.cogra.domain.signing.NoActorKeyException
@@ -47,7 +48,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /** Where one control's pad is (mirrors the design system's own mode). */
-enum class PadMode { CLOSED, STICKY }
+enum class PadMode { CLOSED, STICKY, ALTERNATES }
 
 /** One target's control, as the screen renders it. */
 data class TargetStance(
@@ -79,7 +80,6 @@ data class TargetStance(
     val failed: Boolean = false,
     /** The failure is a husk device, not a fault: the key has to come back. */
     val needsKey: Boolean = false,
-    val exactValues: Boolean = false,
     val severance: SeveranceState? = null,
     /**
      * A stance just signed, as the standing it left the reader at. A
@@ -87,6 +87,12 @@ data class TargetStance(
      * [StanceViewModel.onConfirmationShown] (design.md §8.3).
      */
     val confirmation: StancePair? = null,
+    /**
+     * A walk-back just taken, as the number of things it signed — the same
+     * one-shot as [confirmation] (`Signed 3 things, still settling. You've
+     * walked … back to nothing.`).
+     */
+    val walkedBack: Int? = null,
     /**
      * A signing on this target was just taken — by Set or by the hold. A
      * one-shot for a host that routes on it (the vouch-back's ceremony,
@@ -126,6 +132,13 @@ data class StanceUiState(
     val coachingTarget: StanceTarget? = null,
     /** The reader's chosen input surface, the same on every control (design.md §8.6). */
     val inputMode: StanceInputMode = StanceInputMode.Default,
+    /**
+     * The reader still borrows a view (the master's `borrowed`; jakob
+     * 2026-10-20, seam 240): no outgoing opinion with neither number at zero
+     * yet. Read afresh on every open, so an unreachable or severed landing
+     * can warn that the pick would keep the borrowed view.
+     */
+    val borrowed: Boolean = false,
 )
 
 @HiltViewModel
@@ -135,6 +148,8 @@ class StanceViewModel @Inject constructor(
     private val identity: IdentityStore,
     /** Every signing taken here is announced, for the borrowed-view band. */
     private val signals: StanceSignals,
+    /** Whether the reader still borrows a view — `borrowedView`, the band's own read. */
+    private val account: AccountRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StanceUiState())
@@ -204,14 +219,11 @@ class StanceViewModel @Inject constructor(
      * let a restart teach twice.
      */
     fun onOpenPad(target: StanceTarget) {
-        update(target) {
-            it.copy(
-                pad = PadMode.STICKY,
-                pick = StancePair.TapDefault,
-                landing = it.landingFor(StancePair.TapDefault),
-                failed = false,
-            )
-        }
+        // A reader who chose sliders or typed values meets the alternates
+        // wherever the pad would bloom: the choice replaces the pad
+        // everywhere (stance-control.md *Alternate and accessible inputs*).
+        if (_state.value.inputMode != StanceInputMode.PAD) return onOpenAlternates(target)
+        open(target, PadMode.STICKY)
         when (taught) {
             true -> Unit
             false -> teach(target)
@@ -247,12 +259,39 @@ class StanceViewModel @Inject constructor(
         val entry = _state.value.targets[target] ?: return
         if (entry.pad == PadMode.CLOSED) return
         update(target) {
-            it.copy(pad = PadMode.CLOSED, pick = StancePair.Origin, landing = null, exactValues = false)
+            it.copy(pad = PadMode.CLOSED, pick = StancePair.Origin, landing = null)
         }
     }
 
-    fun onToggleExactValues(target: StanceTarget) =
-        update(target) { it.copy(exactValues = !it.exactValues) }
+    /**
+     * The non-drag door, `Choose your opinion on …` (StanceControl.jsx
+     * :601-614): the alternates, at the same default the pad opens at. It
+     * spends the teaching as the master's does — a reader who has found the
+     * considered route has met the gesture — without drawing the lines.
+     */
+    fun onOpenAlternates(target: StanceTarget) {
+        open(target, PadMode.ALTERNATES)
+        if (taught != true) {
+            taught = true
+            viewModelScope.launch { identity.markStancePadTaught() }
+        }
+    }
+
+    /** Opens [target]'s considered route at the default, and asks whether the reader still borrows a view. */
+    private fun open(target: StanceTarget, mode: PadMode) {
+        update(target) {
+            it.copy(
+                pad = mode,
+                pick = StancePair.TapDefault,
+                landing = it.landingFor(StancePair.TapDefault),
+                failed = false,
+            )
+        }
+        viewModelScope.launch {
+            val borrowing = (account.borrowedView() as? Outcome.Success)?.value != null
+            _state.update { it.copy(borrowed = borrowing) }
+        }
+    }
 
     /**
      * Commits the pick — unless it lands on severance, which is asked
@@ -277,6 +316,20 @@ class StanceViewModel @Inject constructor(
         val open = _state.value.targets[target]?.severance ?: return
         if (open.working) return
         update(target) { it.copy(severance = open.copy(working = true, failed = false)) }
+        // THE PICK ROUTE SIGNS EXACTLY ONE RECORD — the pick itself (jakob
+        // 2026-10-05, P5; StanceControl.jsx `commitChecked`): it nets the
+        // bundle to (0, 0) as an ordinary opinion would, and the dialog stays
+        // up until that one signature answers.
+        if (open.fromPick) {
+            val pick = _state.value.targets[target]?.pick ?: return
+            viewModelScope.launch {
+                when (sign(target, pick)) {
+                    Signed.Done -> taken(target, pick)
+                    is Signed.Failed -> failSeverance(target)
+                }
+            }
+            return
+        }
         viewModelScope.launch {
             // The walk-back is checked against the quote the reader
             // confirmed: toward the node the read named, netting exactly
@@ -301,7 +354,17 @@ class StanceViewModel @Inject constructor(
             }
             if (results.all { it is WriteResult.Done }) {
                 signals.announceSigned()
-                update(target) { it.copy(severance = null, pad = PadMode.CLOSED, pick = StancePair.Origin) }
+                update(target) {
+                    it.copy(
+                        severance = null,
+                        pad = PadMode.CLOSED,
+                        pick = StancePair.Origin,
+                        landing = null,
+                        // `Signed 3 things, still settling. You've walked …
+                        // back to nothing.` (SeveranceConfirm.md).
+                        walkedBack = quote.records,
+                    )
+                }
                 readStanding(target)
             } else {
                 failSeverance(target)
@@ -328,7 +391,7 @@ class StanceViewModel @Inject constructor(
     }
 
     /** Consumes the one-shot confirmation once the screen has shown it. */
-    fun onConfirmationShown(target: StanceTarget) = update(target) { it.copy(confirmation = null) }
+    fun onConfirmationShown(target: StanceTarget) = update(target) { it.copy(confirmation = null, walkedBack = null) }
 
     /** Consumes the one-shot [TargetStance.taken] once the host has routed on it. */
     fun onTakenShown(target: StanceTarget) = update(target) { it.copy(taken = false) }
@@ -337,58 +400,76 @@ class StanceViewModel @Inject constructor(
         val entry = _state.value.targets[target]
         if (entry?.busy == true) return
         update(target) { it.copy(busy = true, failed = false, needsKey = false) }
-        // Answer at once (design.md §8.3): the target shows where this
-        // pick leaves the bundle while the record is still being signed.
-        showPendingStanding(target, pick)
         viewModelScope.launch {
-            // The record must come back as exactly the pick, toward the node
-            // the standing read named (Intent.kt).
-            val graphId = when (val read = stances.targetGraphId(target)) {
-                is Outcome.Success -> read.value
-                else -> return@launch fail(target, needsKey = false)
-            }
-            val expected = Expectation(listOf(stanceRecord(graphId, pick.pDirected, pick.pInterest)))
-            // The record carries the pick verbatim; no delta is derived.
-            val prepared = when (val outcome = stances.prepareStance(target, pick)) {
-                is Outcome.Success -> outcome.value
-                else -> return@launch fail(target, needsKey = false)
-            }
-            val results = try {
-                signer.sign(prepared, expected)
-            } catch (_: NoActorKeyException) {
-                // A husk device: the write waits on the reader restoring
-                // the key, not on time passing.
-                return@launch fail(target, needsKey = true)
-            }
-            if (results.all { it is WriteResult.Done }) {
-                signals.announceSigned()
-                update(target) {
-                    it.copy(
-                        busy = false,
-                        taken = true,
-                        pad = PadMode.CLOSED,
-                        pick = StancePair.Origin,
-                        landing = null,
-                        exactValues = false,
-                    )
-                }
-                readStanding(target)
-                // The confirmation carries where the reader now stands,
-                // not what they picked: the pick is one edge, the
-                // standing is what it left them at (design.md §8.1).
-                update(target) { it.copy(confirmation = it.standing ?: pick) }
-            } else {
-                fail(target, needsKey = false)
+            when (val signed = sign(target, pick)) {
+                Signed.Done -> taken(target, pick)
+                is Signed.Failed -> fail(target, needsKey = signed.needsKey)
             }
         }
     }
 
+    /** How one signing of a pick ended. */
+    private sealed interface Signed {
+        data object Done : Signed
+
+        data class Failed(val needsKey: Boolean) : Signed
+    }
+
+    /** Signs [pick] as one stance record toward [target] — the record carries the pick verbatim. */
+    private suspend fun sign(target: StanceTarget, pick: StancePair): Signed {
+        // The record must come back as exactly the pick, toward the node
+        // the standing read named (Intent.kt).
+        val graphId = when (val read = stances.targetGraphId(target)) {
+            is Outcome.Success -> read.value
+            else -> return Signed.Failed(needsKey = false)
+        }
+        val expected = Expectation(listOf(stanceRecord(graphId, pick.pDirected, pick.pInterest)))
+        val prepared = when (val outcome = stances.prepareStance(target, pick)) {
+            is Outcome.Success -> outcome.value
+            else -> return Signed.Failed(needsKey = false)
+        }
+        val results = try {
+            signer.sign(prepared, expected)
+        } catch (_: NoActorKeyException) {
+            // A husk device: the write waits on the reader restoring the
+            // key, not on time passing.
+            return Signed.Failed(needsKey = true)
+        }
+        return if (results.all { it is WriteResult.Done }) Signed.Done else Signed.Failed(needsKey = false)
+    }
+
     /**
-     * Shows where [pick] leaves the bundle as the standing, at once,
-     * while the record is still being signed (design.md §8.3). The same
-     * local fold the landing line uses, so the answer the reader was
-     * looking at when they pressed Set is the answer they get — and it
-     * arrives in the same frame, not a round trip later.
+     * THE SIGNATURE IS TAKEN — and only now does the opinion move (the
+     * failure pack: signed acts are pessimistic; StanceControl.jsx "The
+     * resting target moves to the new opinion when the signature is
+     * taken"). The pad closes back where it bloomed, the pending-inclusive
+     * fold shows at once, and the snackbar says where the reader now
+     * stands — not what they picked: the pick is one edge, the standing is
+     * what it left them at.
+     */
+    private suspend fun taken(target: StanceTarget, pick: StancePair) {
+        signals.announceSigned()
+        showPendingStanding(target, pick)
+        update(target) {
+            it.copy(
+                busy = false,
+                taken = true,
+                pad = PadMode.CLOSED,
+                pick = StancePair.Origin,
+                landing = null,
+                severance = null,
+            )
+        }
+        readStanding(target)
+        update(target) { it.copy(confirmation = it.standing ?: pick) }
+    }
+
+    /**
+     * Shows where [pick] leaves the bundle as the standing, the moment its
+     * signature is taken (design.md §8.3) — before the read that confirms
+     * it lands. The same local fold the landing line uses, so the answer
+     * the reader was looking at when they pressed Set is the answer they
+     * get.
      *
      * The raw sums move with it: a second pick before the read lands
      * must fold onto the first, not onto the history that preceded it.

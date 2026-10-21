@@ -103,7 +103,7 @@ fun StanceControlRoute(
         // signing — the host stops drawing the pad either way.
         var opened by remember(target) { mutableStateOf(false) }
         LaunchedEffect(entry.pad) {
-            if (entry.pad == PadMode.STICKY) {
+            if (entry.pad != PadMode.CLOSED) {
                 opened = true
             } else if (opened) {
                 onPadClosed?.invoke()
@@ -122,6 +122,7 @@ fun StanceControlRoute(
     val controlState = entry.toControlState(
         coaching = state.coachingTarget == target,
         inputMode = state.inputMode,
+        borrowed = state.borrowed,
     )
     StanceControl(
         state = if (onTaken != null) controlState.copy(confirmation = null) else controlState,
@@ -137,7 +138,7 @@ fun StanceControlRoute(
         onPick = { viewModel.onPick(target, it.toPair()) },
         onCommit = { viewModel.onCommit(target) },
         onDismissPad = { viewModel.onDismissPad(target) },
-        onToggleExactValues = { viewModel.onToggleExactValues(target) },
+        onOpenAlternates = onRequireAccount ?: { viewModel.onOpenAlternates(target) },
         onOpenSeverance = { viewModel.onOpenSeverance(target) },
         onConfirmSeverance = { viewModel.onConfirmSeverance(target) },
         onDismissSeverance = { viewModel.onDismissSeverance(target) },
@@ -158,11 +159,13 @@ fun StanceControlRoute(
 internal fun TargetStance.toControlState(
     coaching: Boolean,
     inputMode: StanceInputMode,
+    borrowed: Boolean = false,
 ) = StanceControlState(
     pick = pick.toPoint(),
     pad = when (pad) {
         PadMode.CLOSED -> StancePadMode.CLOSED
         PadMode.STICKY -> StancePadMode.STICKY
+        PadMode.ALTERNATES -> StancePadMode.ALTERNATES
     },
     standing = standing?.toPoint(),
     landing = landing?.let {
@@ -176,7 +179,6 @@ internal fun TargetStance.toControlState(
     busy = busy,
     failed = failed,
     needsKey = needsKey,
-    exactValues = exactValues,
     inputMode = when (inputMode) {
         StanceInputMode.PAD -> StanceInputSurface.PAD
         StanceInputMode.SLIDERS -> StanceInputSurface.SLIDERS
@@ -186,15 +188,19 @@ internal fun TargetStance.toControlState(
         SeverancePrompt(
             standing = it.quote.standing.toPoint(),
             raw = it.quote.raw.toPoint(),
-            records = it.quote.records,
+            // The pick route signs exactly one record, the pick (P5).
+            records = if (it.fromPick) 1 else it.quote.records,
             alreadySevered = it.quote.alreadySevered,
             fromPick = it.fromPick,
             working = it.working,
             failed = it.failed,
+            pick = pick.toPoint().takeIf { _ -> it.fromPick },
         )
     },
     coaching = coaching,
     confirmation = confirmation?.toPoint(),
+    walkedBack = walkedBack,
+    borrowed = borrowed,
 )
 
 internal fun StancePair.toPoint() = StancePoint(pDirected, pInterest)

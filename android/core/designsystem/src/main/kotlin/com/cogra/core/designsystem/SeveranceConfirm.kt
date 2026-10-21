@@ -91,7 +91,7 @@ fun SeveranceConfirm(
                         pluralStringResource(R.plurals.stance_severance_cost, prompt.records, prompt.records)
                     },
                     modifier = Modifier.testTag(
-                        if (prompt.alreadySevered) "${testTagPrefix}_severance_already" else "${testTagPrefix}_severance_cost",
+                        "${testTagPrefix}_severance_" + if (prompt.alreadySevered) "already" else "cost",
                     ),
                 )
                 // A FAILED SIGNING RE-RAISES ITS OWN SURFACE WITH RETRY: the
