@@ -2,6 +2,8 @@
 export interface EmptySignConfirmProps {
   /** Already in the reader's words — "this post", "@ada", "#saltmaps". */
   targetLabel: string;
+  /** The opinion vouches its target in (approving, a vouch asked for): the first line warns that they start cut off. */
+  vouchIn?: boolean;
   /** The signing is in flight (past 200ms): the act reads `Setting…` and goes inert, never dimmed. */
   busy?: boolean;
   /** The signing did not go through; the dialog stays open, says so, and the act's slot reads `Retry`. */
@@ -17,6 +19,7 @@ export interface EmptySignConfirmProps {
 export declare const EMPTY_SIGN_WORDS: {
   title: string;
   effect: (targetLabel: string) => string;
+  vouchIn: (targetLabel: string) => string;
   cost: string;
   confirm: string;
   busy: string;

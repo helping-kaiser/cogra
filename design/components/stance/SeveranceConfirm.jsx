@@ -3,6 +3,7 @@ import { DialogSurface } from "../core/JoinPrompt.jsx";
 import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
 import {
   bundleReadout,
+  EMPTY_PICK_LABEL,
   severanceParts,
   severanceWords,
   formatStancePair,
@@ -69,12 +70,13 @@ export function SeveranceConfirm({
      has is a pile of things they said, each of which has to be said back. */
   const cost = records === 1 ? "It signs 1 thing, paid on its own." : `It signs ${records} things, each paid separately.`;
   /* The pick wears the face every pair wears (`bundleReadout`): a pick with
-     one number at zero thinks, as it does on the pad. A pick of (0, 0) never
-     reaches this dialog — with something standing it lands where the bundle
-     already is, and with nothing standing it asks `EmptySignConfirm`. */
+     one number at zero thinks, as it does on the pad. A pick of (0, 0) reaches
+     this dialog only over a standing already at (0, 0) — an empty sign's —
+     and there it says nothing, as it does on the pad; with nothing standing it
+     asks `EmptySignConfirm` instead. */
   const sever = severanceWords(names);
   const title = sever.title(targetLabel);
-  const pickAnchor = pick === null ? null : bundleReadout(pick, sever.zero);
+  const pickAnchor = pick === null ? null : bundleReadout(pick, EMPTY_PICK_LABEL);
   const read = severanceParts(bundle, targetLabel);
   return (
     /* THE SHELL LAYS IT OUT (readme §11, *Dialogs*): the order below is the

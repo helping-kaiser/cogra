@@ -362,7 +362,9 @@ export function bundleReadout(pair, zeroLabel = SEVERED_LABEL) {
 }
 
 /* A PICK OF NOTHING SAYS NOTHING. A pick at exactly (0, 0) is not a walk-back —
-   it adds nothing to what stands — so its spoken word is its own. */
+   it adds nothing to what stands — so its spoken word is its own. So is a
+   STANDING at (0, 0) that was never walked back: an empty sign joined it
+   (jakob 2026-10-21), and `Walked back` would be false of it. */
 export const EMPTY_PICK_LABEL = "Says nothing";
 
 /* A TAG'S PAIR FOLLOWS THE SAME LAW (hashtag.md §4): `(0, 0)` is the
@@ -584,7 +586,8 @@ export function signedLine(standing, records, severed, targetLabel, names = STAN
   const acts = records === 1 ? "Signed" : `Signed ${records} things`;
   const sever = severanceWords(names);
   if (severed) return `${acts}, still settling. ${sever.gone(targetLabel)}`;
-  const readout = bundleReadout(standing, sever.zero);
+  // Not severed, so a standing at exactly (0, 0) is an empty sign's: it says nothing.
+  const readout = bundleReadout(standing, EMPTY_PICK_LABEL);
   return (
     <>
       <span aria-hidden="true">
@@ -597,14 +600,6 @@ export function signedLine(standing, records, severed, targetLabel, names = STAN
       </span>
     </>
   );
-}
-
-/* THE EMPTY SIGN'S CONFIRMATION (jakob 2026-10-21, seam 242). The record
-   leaves the standing as it was, so the line names where it left the reader
-   the way the pad's own standing line names it: nothing yet, or walked back
-   to nothing. */
-export function emptySignedLine(severed, targetLabel, names = STANCE_AXIS_NAMES) {
-  return `Signed, still settling. ${severed ? severanceWords(names).gone(targetLabel) : `No opinion on ${targetLabel} yet.`}`;
 }
 
 /* ONE LINE, WHATEVER IT READS: face, then the exact figure, then the spoken
@@ -662,7 +657,8 @@ export function standingParts(bundle, targetLabel, names = STANCE_AXIS_NAMES) {
   if (bundle === undefined) return { sentence: "Checking your current opinion…" };
   if (bundle === null || bundle.records === 0) return { sentence: `${ZERO_BUNDLE_EMOJI} No opinion on ${targetLabel} yet.` };
   if (bundle.severed) return { sentence: `${ZERO_BUNDLE_EMOJI} ${sever.gone(targetLabel)}` };
-  const readout = bundleReadout(bundle.current, sever.zero);
+  // Severed is answered above, so a standing at exactly (0, 0) here says nothing.
+  const readout = bundleReadout(bundle.current, EMPTY_PICK_LABEL);
   const words = readoutWords(names);
   return {
     label: words.current,

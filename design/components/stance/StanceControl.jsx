@@ -13,7 +13,7 @@ import { NoticePanel, NoticeLine } from "../honesty/NoticePanel.jsx";
 import {
   bundleReadout,
   clampPair,
-  emptySignedLine,
+  EMPTY_PICK_LABEL,
   formatStancePair,
   helpKey,
   HelpLine,
@@ -98,8 +98,11 @@ import {
    A (0, 0) WITH NOTHING STANDING IS NOT A WALK-BACK (jakob 2026-10-21, seam
    242). A pick landing (0, 0) while the bundle holds no record, or is already
    walked back, has nothing to walk back: it asks `EmptySignConfirm` over the
-   parked pad instead, and `Set it anyway` signs the one record and leaves
-   the standing as it was. An ask, never a block — Set stays enabled.
+   parked pad instead, and `Set it anyway` signs the one record like any
+   other: it counts, the bundle stays at (0, 0) and is not severed, and the
+   ordinary snackbar answers. An ask, never a block — Set stays enabled. Where
+   the opinion vouches its target in (`vouchesIn`), the ask warns harder and
+   the vouch-in still proceeds.
 
    THE CONTROL OWNS ITS TOUCHES. Nothing it receives reaches the card behind it:
    opening the pad must never also open the post.
@@ -330,6 +333,12 @@ export function StanceControl({
      the pick would keep the borrowed view. Warns, never blocks. Additive —
      absent, the control renders exactly as before. */
   borrowed = false,
+  /* THE OPINION VOUCHES ITS TARGET IN (jakob 2026-10-21): approving an
+     applicant, or answering a vouch asked for. An empty sign there still
+     vouches them in, so its ask warns that they start cut off
+     (`EmptySignConfirm`'s `vouchIn`). Additive — absent, the control renders
+     exactly as before. */
+  vouchesIn = false,
   /* A BODY ALREADY EXPLAINING, for a board: `"help"` draws the "?"'s lines
      in place, `"zero"` the unreachable landing's. Additive — absent, the pad
      opens on its field. */
@@ -408,11 +417,10 @@ export function StanceControl({
     if (onCommit) onCommit(clampPair(chosen), next);
   };
 
-  /* The empty sign: one record, the bundle exactly as it stood. */
-  const applyEmpty = (chosen) => {
-    setSigned(emptySignedLine(bundle.severed === true, targetLabel, axes));
-    if (onCommit) onCommit(clampPair(chosen), bundle);
-  };
+  /* The empty sign is an ordinary record (jakob 2026-10-21): it counts, the
+     fold stays at (0, 0), and the bundle is not severed — so the ordinary
+     snackbar answers, and `Walk it back` is there afterwards at its cost. */
+  const applyEmpty = (chosen, landed) => apply(chosen, { ...landed, severed: false });
 
   /* A pick that nets the bundle to (0, 0) asks first with the pad still
      parked beneath, and signs one record; `Keep it` returns to the pick.
@@ -420,7 +428,7 @@ export function StanceControl({
   const commitChecked = (chosen) => {
     const landed = localLanding(bundle.rawSum, chosen);
     if (landed.severed && (bundle.records === 0 || bundle.severed === true)) {
-      setEmptyAsk({ pick: chosen });
+      setEmptyAsk({ pick: chosen, landed });
       return;
     }
     if (landed.severed) {
@@ -477,7 +485,10 @@ export function StanceControl({
   };
 
   const restingPair = pendingPick ?? (bundle.records === 0 && !bundle.severed ? null : bundle.current);
-  const restingFace = restingPair === null ? null : bundleReadout(restingPair);
+  /* A resting (0, 0) is walked back only when the bundle says so; otherwise —
+     an empty sign's standing, or a kept pick — it says nothing. */
+  const restingZero = !pendingPick && bundle.severed ? severanceWords(axes).zero : EMPTY_PICK_LABEL;
+  const restingFace = restingPair === null ? null : bundleReadout(restingPair, restingZero);
   /* Whose state `signing` is: the pad's while it is open, the row's while it
      is not. An anchor whose hold is still signing refuses a second hold. */
   const rowSigning = open ? undefined : signing;
@@ -896,9 +907,10 @@ export function StanceControl({
       {emptyAsk !== null && (
         <EmptySignConfirm
           targetLabel={targetLabel}
+          vouchIn={vouchesIn}
           onCancel={() => setEmptyAsk(null)}
           onConfirm={() => {
-            applyEmpty(emptyAsk.pick);
+            applyEmpty(emptyAsk.pick, emptyAsk.landed);
             setEmptyAsk(null);
             closeAll();
           }}
