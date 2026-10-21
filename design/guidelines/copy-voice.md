@@ -130,7 +130,9 @@ in progress (*In-flight labels*).
 Used for one thing: rendering a value. The stance readout is where that
 happens — twenty anchors, plus 🤷 for an opinion at `(0, 0)`, 🤔 for one
 with a single number at zero (jakob 2026-10-20) and 🫥 for a control at
-rest — and a help, coach or snackbar line that speaks a pair leads
+rest. Faces follow the value (jakob 2026-10-21): the twenty read only a
+pair with both numbers non-zero, so a pick, a standing opinion or a
+record's row at one zero wears 🤔 and is spoken as its state — and a help, coach or snackbar line that speaks a pair leads
 with the same face, because the sentence is a readout too and has to
 hold for a reader who never turns the digits on. The tag table's
 thirteen objects are the same thing for the other family. **Never** in

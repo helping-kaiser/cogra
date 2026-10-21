@@ -267,8 +267,14 @@ The readout sits **just above the pad**, never under the knob: a thumb on
 the control covers exactly the spot where feedback would otherwise
 appear.
 
-Twenty anchors; the readout is the nearest by Euclidean distance. Their
-labels below are the ACCESSIBLE names, not on-screen text. See
+Twenty anchors; the readout is the nearest by Euclidean distance, for a
+pair with both numbers non-zero. **Faces follow the value** (jakob
+2026-10-21): any pair drawn as a face — the pick, the standing opinion,
+the resting anchor, a record's row, the snackbar — wears 🤔 when exactly
+one number is zero and 🤷 at exactly `(0, 0)`, never a table face; 🫥
+stays the control at rest. A tag's pair keeps the same law over its
+thirteen objects. The anchors' labels below are the ACCESSIBLE names,
+not on-screen text. See
 `stance-anchors.html` for the field and the full table, which is
 reproduced verbatim in `components/stance/StanceReadout.jsx`. **The table
 is the contract: both clients read these values, and a change here

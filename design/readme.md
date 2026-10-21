@@ -1029,8 +1029,9 @@ own (§3). All four quadrants are legitimate.
   refused.
 - The emoji face is a **lossy readout of the pick**, nearest of twenty
   anchors by Euclidean distance — dense in the for-it-and-want-it
-  quadrant, sparse at the extremes. `(0, 0)` never speaks through the
-  table: it gets 🤷.
+  quadrant, sparse at the extremes. **Faces follow the value**: the
+  table reads only a pair with both numbers non-zero; any pair drawn as
+  a face wears 🤔 at exactly one zero and 🤷 at `(0, 0)`.
 - **An author reaches their own content by two records: backing and
   opinion** (jakob 2026-10-16, PR-101). The backing — the Publish,
   Owner or Send that creates or edits it — carries one free parameter,
