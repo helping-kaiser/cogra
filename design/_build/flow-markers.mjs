@@ -2410,11 +2410,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   // The empty sign, the walk-back's neighbour: scanExempt the same way, so only
-  // the dialog's own pair and the scrim it sits on carry numbers.
+  // the dialog's own pair and the scrim it sits on carry numbers. The
+  // `context` chip draws the dialog twice, one copy shown at a time, and both
+  // copies take the numbers: one edge covers each pair.
   EmptySignConfirm: [
-    { n: 1, find: ">Set it anyway</button>", tag: "button" },
-    { n: 2, find: ">Keep it</button>", tag: "button" },
-    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+    { n: 1, find: ">Set it anyway</button>", tag: "button", all: true },
+    { n: 2, find: ">Keep it</button>", tag: "button", all: true },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div", all: true },
   ],
   HelpDialog: [
     { n: 1, find: ">Close</button>", tag: "button" },

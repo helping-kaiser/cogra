@@ -17,9 +17,16 @@
    already walked back to nothing — raises the same dialog with the same
    words.
 
-   THE ANCHOR BENEATH IS STILL THE EMPTY FACE. The ask has not signed, and
-   when it does the standing does not move: `Your opinion` with 🫥 is what
-   the profile shows before, during and after.
+   THE ANCHOR BENEATH IS STILL THE EMPTY FACE: the ask has not signed. Once
+   it does, the record joins the bundle like any other (jakob 2026-10-21) —
+   the ordinary snackbar, and a standing at +0.00 / +0.00 that wears 🤷 and
+   says nothing, with `Walk it back` there at its cost of 1.
+
+   THE `context` CHIP DRAWS WHERE THE OPINION VOUCHES SOMEONE IN (jakob
+   2026-10-21). On `ApprovePad` and `VouchAskPad` the same pick asks the same
+   question, and `Set it anyway` still vouches them in — but the first line
+   is the stronger warning: @rafa, on Invites, would start out cut off.
+   `opinion` is @ada's profile, the ordinary ask.
 
    THE SAFE ACTION IS THE FILLED ONE, as on the walk-back: `Keep it` in the
    right-hand slot returns to the pick still parked on the pad, and `Set it
@@ -29,11 +36,20 @@
    THE PAD IS STILL OPEN BEHIND THE WASH, as `SeveranceConfirm`'s board
    explains: the dialog's scrim covers it, and the pad is drawn on its own
    board rather than a second time under a dim. */
+export const PROPS = { context: { editor: "enum", options: ["opinion", "vouchIn"], default: "opinion" } };
+export const VALS = `opinionShown: this.props.context === "opinion" ? "contents" : "none", vouchInShown: this.props.context === "vouchIn" ? "contents" : "none"`;
+
 export function Screen() {
   return (
     <>
-      <ProfileOtherBody />
-      <EmptySignConfirm targetLabel="@ada" />
+      <div style={{ display: "{{opinionShown}}" }}>
+        <ProfileOtherBody />
+        <EmptySignConfirm targetLabel="@ada" />
+      </div>
+      <div style={{ display: "{{vouchInShown}}" }}>
+        <InvitesBody />
+        <EmptySignConfirm targetLabel="@rafa" vouchIn />
+      </div>
     </>
   );
 }
