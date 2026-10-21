@@ -599,6 +599,14 @@ export function signedLine(standing, records, severed, targetLabel, names = STAN
   );
 }
 
+/* THE EMPTY SIGN'S CONFIRMATION (jakob 2026-10-21, seam 242). The record
+   leaves the standing as it was, so the line names where it left the reader
+   the way the pad's own standing line names it: nothing yet, or walked back
+   to nothing. */
+export function emptySignedLine(severed, targetLabel, names = STANCE_AXIS_NAMES) {
+  return `Signed, still settling. ${severed ? severanceWords(names).gone(targetLabel) : `No opinion on ${targetLabel} yet.`}`;
+}
+
 /* ONE LINE, WHATEVER IT READS: face, then the exact figure, then the spoken
    twin. A one-axis readout draws a shorter number, not a different shape — so
    the markup is written once and the two readouts differ only in what they

@@ -6,12 +6,14 @@ import { JoinPrompt } from "../core/JoinPrompt.jsx";
 import { StancePad, STANCE_AXES } from "./StancePad.jsx";
 import { StanceAlternates } from "./StanceAlternates.jsx";
 import { SeveranceConfirm } from "./SeveranceConfirm.jsx";
+import { EmptySignConfirm } from "./EmptySignConfirm.jsx";
 import { PendingMarker } from "../honesty/PendingMarker.jsx";
 import { SigningPending, TransportError } from "../honesty/TransportError.jsx";
 import { NoticePanel, NoticeLine } from "../honesty/NoticePanel.jsx";
 import {
   bundleReadout,
   clampPair,
+  emptySignedLine,
   formatStancePair,
   helpKey,
   HelpLine,
@@ -92,6 +94,12 @@ import {
    pad. ITS COST IS COUNTED THE WAY IT SIGNS (jakob 2026-10-05, P5): the explicit route
    stages `severanceCost` counter-records, ⌈max(|Σd|, |Σi|)⌉ of the raw sums,
    and the pick route signs exactly one record, `1 thing`.
+
+   A (0, 0) WITH NOTHING STANDING IS NOT A WALK-BACK (jakob 2026-10-21, seam
+   242). A pick landing (0, 0) while the bundle holds no record, or is already
+   walked back, has nothing to walk back: it asks `EmptySignConfirm` over the
+   parked pad instead, and `Set it anyway` signs the one record and leaves
+   the standing as it was. An ask, never a block — Set stays enabled.
 
    THE CONTROL OWNS ITS TOUCHES. Nothing it receives reaches the card behind it:
    opening the pad must never also open the post.
@@ -347,6 +355,7 @@ export function StanceControl({
   const [explaining, setExplaining] = React.useState(defaultExplaining);
   const [pick, setPick] = React.useState(defaultPick ?? TAP_DEFAULT);
   const [confirming, setConfirming] = React.useState(null);
+  const [emptyAsk, setEmptyAsk] = React.useState(null);
   const [signed, setSigned] = React.useState(null);
   const [joinPrompt, setJoinPrompt] = React.useState(false);
 
@@ -378,11 +387,12 @@ export function StanceControl({
     const onKey = (event) => {
       if (event.key !== "Escape") return;
       if (confirming !== null) setConfirming(null);
+      else if (emptyAsk !== null) setEmptyAsk(null);
       else closeAll();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open, confirming]);
+  }, [open, confirming, emptyAsk]);
 
   const apply = (chosen, landed, records = 1) => {
     const rawSum = { pDirected: bundle.rawSum.pDirected + chosen.pDirected, pInterest: bundle.rawSum.pInterest + chosen.pInterest };
@@ -398,10 +408,21 @@ export function StanceControl({
     if (onCommit) onCommit(clampPair(chosen), next);
   };
 
+  /* The empty sign: one record, the bundle exactly as it stood. */
+  const applyEmpty = (chosen) => {
+    setSigned(emptySignedLine(bundle.severed === true, targetLabel, axes));
+    if (onCommit) onCommit(clampPair(chosen), bundle);
+  };
+
   /* A pick that nets the bundle to (0, 0) asks first with the pad still
-     parked beneath, and signs one record; `Keep it` returns to the pick. */
+     parked beneath, and signs one record; `Keep it` returns to the pick.
+     With nothing standing the ask is the empty sign's, never the walk-back's. */
   const commitChecked = (chosen) => {
     const landed = localLanding(bundle.rawSum, chosen);
+    if (landed.severed && (bundle.records === 0 || bundle.severed === true)) {
+      setEmptyAsk({ pick: chosen });
+      return;
+    }
     if (landed.severed) {
       setConfirming({ pick: chosen, records: 1, landed });
       return;
@@ -867,6 +888,18 @@ export function StanceControl({
           onConfirm={() => {
             apply(confirming.pick ?? ORIGIN, confirming.landed, Math.max(1, confirming.records));
             setConfirming(null);
+            closeAll();
+          }}
+        />
+      )}
+
+      {emptyAsk !== null && (
+        <EmptySignConfirm
+          targetLabel={targetLabel}
+          onCancel={() => setEmptyAsk(null)}
+          onConfirm={() => {
+            applyEmpty(emptyAsk.pick);
+            setEmptyAsk(null);
             closeAll();
           }}
         />

@@ -234,6 +234,8 @@ export declare function nearestTagAnchor(pair: StancePair): StancePair & { emoji
  *  (with `zeroLabel`) at exactly (0, 0), 🤔 (with `unreachableHead`) at exactly
  *  one zero, the nearest of the twenty otherwise. Every face readout reads here. */
 export declare function bundleReadout(pair: StancePair, zeroLabel?: string): { emoji: string; label: string };
+/** The snackbar after an empty sign: where the unchanged standing leaves the reader. */
+export declare function emptySignedLine(severed: boolean, targetLabel: string, names?: AxisNames): string;
 /** A pick's spoken word at exactly (0, 0): it adds nothing, so it says nothing. */
 export declare const EMPTY_PICK_LABEL: string;
 /** The face a TAG pair wears: 🤷 withdrawn at (0, 0), 🤔 at one zero, the nearest of the thirteen otherwise. */
