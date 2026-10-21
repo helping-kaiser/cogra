@@ -8,7 +8,7 @@
 // — the control never computes a delta, a projection, or a zero test of
 // its own — is unaffected either way.
 
-import { failed, success, type Outcome } from "@/lib/api/outcome";
+import { failed, refused, success, type Outcome, type UserError } from "@/lib/api/outcome";
 import { clampPair, ORIGIN, type StancePair } from "./model";
 import type {
   StanceBundle,
@@ -61,6 +61,11 @@ export type StubStanceOptions = {
    * surface reads sets them apart.
    */
   readonly rawSum?: StubFold;
+  /**
+   * Refuse every signing with this code — the write rule's notice
+   * (`WRITE_RULE_FAILED`) is a refusal, not a fault.
+   */
+  readonly refuse?: UserError["code"];
   /** Fail every call, for the transport-fault branches. */
   readonly offline?: boolean;
 };
@@ -78,6 +83,7 @@ export type StubStanceData = StanceData & {
 };
 
 const OFFLINE = () => failed(new Error("stub stance data is offline"));
+const REFUSED = (code: UserError["code"]) => refused([{ code, message: "stub refusal", field: null }]);
 
 export function createStubStanceData(options: StubStanceOptions = {}): StubStanceData {
   const fold = options.fold ?? sumFold;
@@ -130,6 +136,7 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
 
     async commit(target: StanceTarget, pick): Promise<Outcome<StanceCommit>> {
       if (options.offline === true) return OFFLINE();
+      if (options.refuse !== undefined) return REFUSED(options.refuse);
       sent.push({ target: target.id, pick });
       state.set(target.id, [...recordsOf(target.id), pick]);
       return success({ records: 1 });
@@ -137,6 +144,7 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
 
     async sever(target: StanceTarget): Promise<Outcome<StanceCommit>> {
       if (options.offline === true) return OFFLINE();
+      if (options.refuse !== undefined) return REFUSED(options.refuse);
       const walked = recordsOf(target.id).length;
       severed.push(target.id);
       state.set(target.id, []);

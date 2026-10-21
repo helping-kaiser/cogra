@@ -404,6 +404,32 @@ describe("writing", () => {
     expect(sign.signed).toEqual(["w-1", "w-2", "w-3"]);
   });
 
+  it("keeps a signing refusal's codes, so the write rule reads as a notice", async () => {
+    server.use(
+      postStanceRead(),
+      gqlLink.mutation("PrepareSeverance", () =>
+        HttpResponse.json({
+          data: {
+            prepareSeverance: {
+              __typename: "PreparePayload",
+              writes: prepared(["w-1"]),
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+    );
+    const sign = signer((staged) => ({
+      kind: "refused",
+      id: staged.id,
+      errors: [{ code: "WRITE_RULE_FAILED", message: "write rule", field: null }],
+    }));
+    const data = createApolloStanceData({ client: client(), guard, signer: sign });
+    const outcome = await data.sever(POST, SHOWN);
+    expect(outcome.kind).toBe("refused");
+    expect(outcome.kind === "refused" && outcome.errors[0].code).toBe("WRITE_RULE_FAILED");
+  });
+
   it("surfaces a refusal to sever rather than manufacturing writes", async () => {
     server.use(
       postStanceRead(),
