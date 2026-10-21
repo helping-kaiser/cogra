@@ -117,15 +117,7 @@ fun StanceControlRoute(
             }
         }
     }
-    if (onTaken != null) {
-        LaunchedEffect(entry.taken) {
-            if (entry.taken) {
-                viewModel.onTakenShown(target)
-                viewModel.onConfirmationShown(target)
-                onTaken()
-            }
-        }
-    }
+    if (onTaken != null) TakenEffect(entry.taken, target, viewModel, onTaken)
     val controlState = entry.toControlState(
         coaching = state.coachingTarget == target,
         inputMode = state.inputMode,
@@ -165,6 +157,22 @@ fun StanceControlRoute(
         onDismissEmptySign = { viewModel.onDismissEmptySign(target) },
         vouchesIn = vouchesIn,
     )
+}
+
+/**
+ * A host that routes on a taken signing (the vouch-back's ceremony) consumes
+ * the one-shot here, and the control's own confirmation with it: the
+ * ceremony replaces it (VouchBackPad.md:33).
+ */
+@Composable
+private fun TakenEffect(taken: Boolean, target: StanceTarget, viewModel: StanceViewModel, onTaken: () -> Unit) {
+    LaunchedEffect(taken) {
+        if (taken) {
+            viewModel.onTakenShown(target)
+            viewModel.onConfirmationShown(target)
+            onTaken()
+        }
+    }
 }
 
 internal fun TargetStance.toControlState(

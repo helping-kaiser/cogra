@@ -13,7 +13,10 @@ import org.robolectric.RobolectricTestRunner
 
 private const val TAG = "profile"
 
-/** The empty sign's ask against its master (EmptySignConfirm.jsx; empty-sign.card.html; copy-voice *The empty sign*). */
+/**
+ * The empty sign's ask against its master (EmptySignConfirm.jsx;
+ * empty-sign.card.html; copy-voice *The empty sign*).
+ */
 @RunWith(RobolectricTestRunner::class)
 class EmptySignConfirmTest {
 
