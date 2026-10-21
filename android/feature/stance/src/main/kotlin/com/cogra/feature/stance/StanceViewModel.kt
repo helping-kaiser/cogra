@@ -23,6 +23,7 @@ package com.cogra.feature.stance
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.StanceRepository
@@ -99,6 +100,11 @@ data class TargetStance(
      * VouchBackPad.md:33); consumed by [StanceViewModel.onTakenShown].
      */
     val taken: Boolean = false,
+    /**
+     * The write rule refused the last signing (PadWriteRule.md): a notice,
+     * not a fault — nothing staged, signed or spent.
+     */
+    val writeRule: Boolean = false,
 )
 
 /**
@@ -139,6 +145,11 @@ data class StanceUiState(
      * can warn that the pick would keep the borrowed view.
      */
     val borrowed: Boolean = false,
+    /**
+     * The signing key is not in this app (PadKeyAbsent.md): the pad opens
+     * anyway, carrying the key notice in place of its actions.
+     */
+    val keyAbsent: Boolean = false,
 )
 
 @HiltViewModel
@@ -195,6 +206,9 @@ class StanceViewModel @Inject constructor(
         }
         viewModelScope.launch {
             if (taught == null) taught = identity.stancePadTaught()
+            // Whether the key is here decides what a hold does (PadKeyAbsent.md:5).
+            val keyHere = identity.actorSeed() != null
+            _state.update { it.copy(keyAbsent = !keyHere) }
             readStanding(target)
             reading.remove(target)
         }
@@ -205,7 +219,12 @@ class StanceViewModel @Inject constructor(
      * without opening anything (design/guidelines/stance-control.md "The
      * gesture" — the shortcut that signs takes a held finger).
      */
-    fun onHoldDefault(target: StanceTarget) = commit(target, StancePair.TapDefault)
+    fun onHoldDefault(target: StanceTarget) {
+        // With the key elsewhere a hold opens the pad carrying the key
+        // notice, as a tap does, and signs nothing (PadKeyAbsent.md:5).
+        if (_state.value.keyAbsent) return onOpenPad(target)
+        commit(target, StancePair.TapDefault)
+    }
 
     /**
      * The tap: blooms the pad parked open, and stages nothing. It opens
@@ -259,7 +278,7 @@ class StanceViewModel @Inject constructor(
         val entry = _state.value.targets[target] ?: return
         if (entry.pad == PadMode.CLOSED) return
         update(target) {
-            it.copy(pad = PadMode.CLOSED, pick = StancePair.Origin, landing = null)
+            it.copy(pad = PadMode.CLOSED, pick = StancePair.Origin, landing = null, writeRule = false)
         }
     }
 
@@ -285,11 +304,13 @@ class StanceViewModel @Inject constructor(
                 pick = StancePair.TapDefault,
                 landing = it.landingFor(StancePair.TapDefault),
                 failed = false,
+                writeRule = false,
             )
         }
         viewModelScope.launch {
             val borrowing = (account.borrowedView() as? Outcome.Success)?.value != null
-            _state.update { it.copy(borrowed = borrowing) }
+            val keyHere = identity.actorSeed() != null
+            _state.update { it.copy(borrowed = borrowing, keyAbsent = !keyHere) }
         }
     }
 
@@ -325,7 +346,7 @@ class StanceViewModel @Inject constructor(
             viewModelScope.launch {
                 when (sign(target, pick)) {
                     Signed.Done -> taken(target, pick)
-                    is Signed.Failed -> failSeverance(target)
+                    else -> failSeverance(target)
                 }
             }
             return
@@ -404,6 +425,7 @@ class StanceViewModel @Inject constructor(
             when (val signed = sign(target, pick)) {
                 Signed.Done -> taken(target, pick)
                 is Signed.Failed -> fail(target, needsKey = signed.needsKey)
+                Signed.WriteRule -> update(target) { it.copy(busy = false, writeRule = true) }
             }
         }
     }
@@ -413,6 +435,9 @@ class StanceViewModel @Inject constructor(
         data object Done : Signed
 
         data class Failed(val needsKey: Boolean) : Signed
+
+        /** The write rule refused it — a notice, not a fault. */
+        data object WriteRule : Signed
     }
 
     /** Signs [pick] as one stance record toward [target] — the record carries the pick verbatim. */
@@ -435,7 +460,14 @@ class StanceViewModel @Inject constructor(
             // key, not on time passing.
             return Signed.Failed(needsKey = true)
         }
-        return if (results.all { it is WriteResult.Done }) Signed.Done else Signed.Failed(needsKey = false)
+        val rateLimited = results.any { result ->
+            result is WriteResult.Refused && result.errors.any { it.code == ErrorCode.RATE_LIMITED }
+        }
+        return when {
+            results.all { it is WriteResult.Done } -> Signed.Done
+            rateLimited -> Signed.WriteRule
+            else -> Signed.Failed(needsKey = false)
+        }
     }
 
     /**
@@ -523,6 +555,7 @@ class StanceViewModel @Inject constructor(
     private fun fail(target: StanceTarget, needsKey: Boolean) {
         val pending = _state.value.targets[target]?.standingPending == true
         update(target) { it.copy(busy = false, failed = true, needsKey = needsKey) }
+        if (needsKey) _state.update { it.copy(keyAbsent = true) }
         if (pending) viewModelScope.launch { readStanding(target) }
     }
 

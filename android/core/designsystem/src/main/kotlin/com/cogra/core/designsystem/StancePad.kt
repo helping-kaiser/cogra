@@ -118,6 +118,9 @@ import androidx.compose.ui.window.PopupProperties
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.ButtonSize
 import com.cogra.core.designsystem.v2.atom.CograButton
+import com.cogra.core.designsystem.v2.atom.HelpDialog
+import com.cogra.core.designsystem.v2.atom.NoticeLine
+import com.cogra.core.designsystem.v2.atom.NoticePanel
 import com.cogra.core.designsystem.v2.media.CoverKind
 import com.cogra.core.designsystem.v2.media.CoversSurface
 import com.cogra.core.designsystem.v2.token.Space
@@ -224,7 +227,28 @@ data class StanceControlState(
      * keeps the borrowed view. Warns, never blocks.
      */
     val borrowed: Boolean = false,
+    /**
+     * THE WRITE RULE REFUSED THE SIGNING (PadWriteRule.md): a notice, not a
+     * fault. The pad keeps the pick and its field, and the notice stands
+     * where the landing line and the commit row were, with `Not now`; on the
+     * row, a quiet line and no Retry.
+     */
+    val writeRule: Boolean = false,
+    /**
+     * THE SIGNING KEY IS NOT IN THIS APP (PadKeyAbsent.md): the pad still
+     * opens and the pick is still made, and the key notice stands where the
+     * landing line and the actions would — no Set, no Cancel, no Walk it back.
+     */
+    val keyAbsent: Boolean = false,
 )
+
+/**
+ * Where `Restore the key` goes — the app's own restore route, provided by
+ * the shell the way the snackbar host is: the control is a leaf inside a
+ * card inside a feed, and the route is the navigation graph's. Null where
+ * no shell provides one (a preview, a test).
+ */
+val LocalOnRestoreKey = compositionLocalOf<(() -> Unit)?> { null }
 
 /**
  * A PAD OPENED AS SOMETHING IN PARTICULAR — the vouch-back
@@ -549,6 +573,17 @@ private fun HoldRowLine(state: StanceControlState, onRetry: () -> Unit, testTagP
     val slow = rememberSlow(state.busy)
     when {
         state.busy && slow -> RowLine(RowLineState.Signing, "${testTagPrefix}_stance_row")
+        // The write rule refused the hold: a notice, so the quiet register
+        // and no Retry — asking again at once meets the same answer.
+        state.writeRule -> Text(
+            text = stringResource(R.string.stance_write_rule_row),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            modifier = Modifier
+                .semantics { liveRegion = LiveRegionMode.Polite }
+                .testTag("${testTagPrefix}_stance_row"),
+        )
         // The key notice is the restore flow's (PadKeyAbsent), not this lane's.
         state.failed && state.needsKey -> StanceFailure(testTagPrefix)
         state.failed -> RowLine(RowLineState.DidntSign(onRetry), "${testTagPrefix}_stance_row")
@@ -821,29 +856,39 @@ private fun StancePadCard(
                             node = padNode?.div("field"),
                         )
                         PadNote(variant, state.coaching, testTagPrefix)
-                        StanceLandingLine(
-                            landing = state.landing,
+                        if (!state.writeRule && !state.keyAbsent) {
+                            StanceLandingLine(
+                                landing = state.landing,
+                                testTagPrefix = testTagPrefix,
+                                axes = axes,
+                                zeroWords = zeroWords,
+                                borrowed = state.borrowed,
+                                onExplainZero = { explaining = Explaining.ZERO },
+                                node = padNode?.div("landing"),
+                            )
+                        }
+                    }
+                }
+                when {
+                    // The notices stand where the landing line and the
+                    // commit row would (PadKeyAbsent, PadWriteRule).
+                    state.keyAbsent -> KeyAbsentNotice(testTagPrefix)
+                    state.writeRule -> WriteRuleNotice(onCancel, testTagPrefix, padNode)
+                    else -> {
+                        if (state.failed) PadFault(state.needsKey, testTagPrefix)
+                        PadCommitRow(
+                            state = state,
+                            explaining = explaining != null,
+                            severable = severable,
+                            onCommit = onCommit,
+                            onCancel = onCancel,
+                            onOpenSeverance = onOpenSeverance,
                             testTagPrefix = testTagPrefix,
-                            axes = axes,
                             zeroWords = zeroWords,
-                            borrowed = state.borrowed,
-                            onExplainZero = { explaining = Explaining.ZERO },
-                            node = padNode?.div("landing"),
+                            padNode = padNode,
                         )
                     }
                 }
-                if (state.failed) PadFault(state.needsKey, testTagPrefix)
-                PadCommitRow(
-                    state = state,
-                    explaining = explaining != null,
-                    severable = severable,
-                    onCommit = onCommit,
-                    onCancel = onCancel,
-                    onOpenSeverance = onOpenSeverance,
-                    testTagPrefix = testTagPrefix,
-                    zeroWords = zeroWords,
-                    padNode = padNode,
-                )
             }
             PadHelpButton(
                 label = helpLabel,
@@ -994,6 +1039,81 @@ private fun SetButton(state: StanceControlState, explaining: Boolean, onCommit: 
         enabled = !explaining,
         testTag = tag,
     )
+}
+
+/**
+ * THE WRITE RULE'S NOTICE (StanceControl.jsx:766-783; PadWriteRule.md):
+ * `NoticePanel` with its own "?" — the stopper exception — and `Not now`
+ * under it, which closes the pad keeping nothing. No Retry: asking again at
+ * once meets the same answer.
+ */
+@Composable
+private fun WriteRuleNotice(onNotNow: () -> Unit, testTagPrefix: String, padNode: DataNode?) {
+    var explaining by remember { mutableStateOf(false) }
+    NoticePanel(
+        title = stringResource(R.string.stance_write_rule_title),
+        helpLabel = stringResource(R.string.stance_write_rule_help),
+        onHelp = { explaining = true },
+        helpTestTag = "${testTagPrefix}_stance_write_rule_help",
+        testTag = "${testTagPrefix}_stance_write_rule",
+    ) {
+        NoticeLine(stringResource(R.string.stance_write_rule_fact))
+    }
+    CograButton(
+        text = stringResource(R.string.stance_write_rule_not_now),
+        onClick = onNotNow,
+        kind = ButtonKind.Text,
+        modifier = Modifier.fillMaxWidth(),
+        testTag = padNode?.div("notNow")?.tag ?: "${testTagPrefix}_stance_not_now",
+    )
+    if (explaining) {
+        HelpDialog(
+            title = stringResource(R.string.stance_write_rule_help),
+            paragraphs = listOf(
+                stringResource(R.string.stance_write_rule_help_limit),
+                stringResource(R.string.stance_write_rule_help_later),
+            ),
+            onClose = { explaining = false },
+            testTag = "${testTagPrefix}_stance_write_rule_dialog",
+        )
+    }
+}
+
+/**
+ * THE KEY ISN'T IN THIS APP (PadKeyAbsent.md; `ComposeKeyAbsent`'s panel):
+ * the notice where the landing line and the actions would stand, its "?"
+ * opening the key's own text, and `Restore the key` in the panel's inverse
+ * fill — navigation to the app's restore route ([LocalOnRestoreKey]).
+ */
+@Composable
+private fun KeyAbsentNotice(testTagPrefix: String) {
+    var explaining by remember { mutableStateOf(false) }
+    val restore = LocalOnRestoreKey.current
+    NoticePanel(
+        title = stringResource(R.string.stance_key_absent_title),
+        helpLabel = stringResource(R.string.stance_key_absent_help),
+        onHelp = { explaining = true },
+        helpTestTag = "${testTagPrefix}_stance_key_help",
+        testTag = "${testTagPrefix}_stance_key_absent",
+    ) {
+        NoticeLine(stringResource(R.string.stance_key_absent_waits))
+        NoticeLine(stringResource(R.string.stance_key_absent_restore_line))
+        CograButton(
+            text = stringResource(R.string.stance_key_absent_restore),
+            onClick = { restore?.invoke() },
+            kind = ButtonKind.Inverse,
+            modifier = Modifier.fillMaxWidth(),
+            testTag = "${testTagPrefix}_stance_restore_key",
+        )
+    }
+    if (explaining) {
+        HelpDialog(
+            title = stringResource(R.string.stance_key_absent_help),
+            paragraphs = listOf(stringResource(R.string.stance_key_absent_help_body)),
+            onClose = { explaining = false },
+            testTag = "${testTagPrefix}_stance_key_dialog",
+        )
+    }
 }
 
 /** The fault above the commit row (PadFailed.md): `That didn't send. Try again.`, announced as an alert. */

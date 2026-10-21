@@ -235,6 +235,25 @@
     <string name="stance_setting">Setting…</string>
     <string name="stance_retry">Retry</string>
     <string name="stance_failed_no_key">This device can\'t sign yet. Restore your key first.</string>
+    <!-- The write rule's refusal — a notice, not a fault (StanceControl.jsx
+         WRITE_RULE_*; PadWriteRule.md; copy-voice *Faults by code*). -->
+    <string name="stance_write_rule_title">You can\'t sign right now</string>
+    <string name="stance_write_rule_fact">Each signing is paid for, and there\'s only so much to go around at a time. Nothing was signed or spent.</string>
+    <string name="stance_write_rule_help">Why signing waits</string>
+    <string name="stance_write_rule_help_limit">There\'s a limit to how many signed actions can go through in a short time — it keeps the network safe from flooding. You\'ve hit it for now.</string>
+    <string name="stance_write_rule_help_later">Nothing was signed or spent. Try again in a little while.</string>
+    <string name="stance_write_rule_row">You can\'t sign right now.</string>
+    <string name="stance_write_rule_not_now">Not now</string>
+    <!-- The key elsewhere, on the pad (PadKeyAbsent; copy-voice *Platform
+         nouns*: "this app" on Android, never a bare "device"). -->
+    <string name="stance_key_absent_title">Your key isn\'t in this app</string>
+    <string name="stance_key_absent_waits">Signing needs your key, which isn\'t in this app — the write waits as pending.</string>
+    <string name="stance_key_absent_restore_line">Restore the key with your recovery code to finish.</string>
+    <string name="stance_key_absent_restore">Restore the key</string>
+    <string name="stance_key_absent_help">Your key</string>
+    <!-- The notice's "?" — the key elsewhere's blessed body (copy-voice *The
+         key elsewhere*: KeyElsewhere, PadKeyAbsent, PadPending). -->
+    <string name="stance_key_absent_help_body">Restore it with your recovery code to post, vouch, and act. Until then, anything you sign waits as pending.</string>
 
     <!-- The walk-back, the PERSON family's words (copy-voice *The
          walk-back*; StanceReadout.jsx `STANCE_SEVERANCE_WORDS`). A topic

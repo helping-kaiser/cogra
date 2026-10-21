@@ -123,6 +123,7 @@ fun StanceControlRoute(
         coaching = state.coachingTarget == target,
         inputMode = state.inputMode,
         borrowed = state.borrowed,
+        keyAbsent = state.keyAbsent,
     )
     StanceControl(
         state = if (onTaken != null) controlState.copy(confirmation = null) else controlState,
@@ -160,6 +161,7 @@ internal fun TargetStance.toControlState(
     coaching: Boolean,
     inputMode: StanceInputMode,
     borrowed: Boolean = false,
+    keyAbsent: Boolean = false,
 ) = StanceControlState(
     pick = pick.toPoint(),
     pad = when (pad) {
@@ -201,6 +203,8 @@ internal fun TargetStance.toControlState(
     confirmation = confirmation?.toPoint(),
     walkedBack = walkedBack,
     borrowed = borrowed,
+    writeRule = writeRule,
+    keyAbsent = keyAbsent,
 )
 
 internal fun StancePair.toPoint() = StancePoint(pDirected, pInterest)

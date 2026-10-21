@@ -58,6 +58,7 @@ import com.cogra.app.ui.DeviceLockKeeper
 import com.cogra.app.ui.SecurityNoticeHost
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.LocalOnRestoreKey
 import com.cogra.core.designsystem.LocalPadBottomInset
 import com.cogra.core.designsystem.LocalSnackbarHostState
 import com.cogra.core.designsystem.v2.media.LocalAlwaysUnveil
@@ -540,6 +541,8 @@ fun CograNavGraph(
         LocalSnackbarHostState provides shellSnackbar,
         LocalAlwaysUnveil provides alwaysUnveil,
         LocalPadBottomInset provides if (barShown) PAD_ABOVE_BAR else PAD_OFF_EDGE,
+        // The pad's key notice opens the app's own restore (PadKeyAbsent.md).
+        LocalOnRestoreKey provides { navController.navigate(Restore) },
     ) {
         CograNavGraphContent(navController, shellSnackbar, onBarShown = { barShown = it })
     }
