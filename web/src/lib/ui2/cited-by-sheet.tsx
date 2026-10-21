@@ -27,11 +27,12 @@
 import type { ReactNode } from "react";
 
 import type { CitingRecordView } from "@/lib/api/references-api";
-import { nearestAnchor } from "@/lib/stance/anchors";
+import { bundleReadout } from "@/lib/stance/anchors";
 import { EmptyState } from "@/lib/ui/empty-state";
 import { Icon } from "@/lib/ui/icons";
 import { formatReferenceParamWords } from "@/lib/ui/reference-format";
 import { formatStancePair } from "@/lib/ui/stance-format";
+import { SEVERED_LABEL } from "@/lib/ui/stance-readout";
 import { BottomSheet } from "./bottom-sheet";
 import { ListRow } from "./list-row";
 import { PairReadout } from "./pair-readout";
@@ -132,7 +133,9 @@ export function CitedBySheet({
       {records.map((record) => {
         const view = citingView(record.target);
         const pair = { pDirected: record.pDirected, pInterest: record.pInterest };
-        const anchor = nearestAnchor(pair);
+        // `ReferenceRow`'s face: the value's own (seam 243). Only the glyph
+        // is drawn; a citation's anchor word is never spoken.
+        const anchor = bundleReadout(pair, SEVERED_LABEL);
         return (
           <ListRow
             key={record.id}

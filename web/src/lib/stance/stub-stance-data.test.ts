@@ -21,10 +21,36 @@ describe("the stance stand-in", () => {
         rawSum: ORIGIN,
         records: 0,
         inert: true,
-        severed: true,
+        // PR #283: an empty bundle is not walked back — nothing ever stood.
+        severed: false,
         severance: { records: 0 },
       },
     });
+  });
+
+  it("counts an empty sign and leaves it standing at (0, 0), never severed", async () => {
+    // StanceBundle.severed / severanceCost as the API serves them (#283).
+    const data = createStubStanceData();
+    await data.commit(T, ORIGIN);
+    expect(await data.bundle(T)).toMatchObject({
+      value: { current: ORIGIN, records: 1, severed: false, severance: { records: 1 } },
+    });
+  });
+
+  it("stages one (0, 0) record to walk back an empty sign, as prepareSeverance does", async () => {
+    const data = createStubStanceData({ seed: { t: { records: [ORIGIN] } } });
+    const shown = await data.bundle(T);
+    if (shown.kind !== "success") throw new Error("expected a standing");
+    expect(await data.sever(T, shown.value)).toEqual({ kind: "success", value: { records: 1 } });
+    // The walk-back loop Q60 parks: the newest record says nothing, so not severed.
+    expect(await data.bundle(T)).toMatchObject({ value: { records: 2, severed: false } });
+  });
+
+  it("refuses to walk back what does not stand", async () => {
+    const data = createStubStanceData();
+    const shown = await data.bundle(T);
+    if (shown.kind !== "success") throw new Error("expected a standing");
+    expect((await data.sever(T, shown.value)).kind).toBe("refused");
   });
 
   it("reports the folded standing and what reaching zero would take", async () => {
@@ -118,9 +144,15 @@ describe("the stance stand-in", () => {
 
   it("projects a pick against the standing without writing it", async () => {
     const data = createStubStanceData({ seed: { t: { records: [{ pDirected: 0.5, pInterest: 0.5 }] } } });
-    expect(await data.project(T, { pDirected: -0.5, pInterest: -0.5 })).toEqual({
+    expect(await data.project(T, { pDirected: -0.5, pInterest: -0.5 })).toMatchObject({
       kind: "success",
-      value: { landing: { pDirected: 0, pInterest: 0 }, inert: true, severed: true },
+      value: {
+        landing: { pDirected: 0, pInterest: 0 },
+        inert: true,
+        severed: true,
+        // The standing it lands in rides the same read.
+        standing: { records: 1, severed: false },
+      },
     });
     expect(data.recordsOf("t")).toHaveLength(1);
   });
@@ -133,7 +165,10 @@ describe("the stance stand-in", () => {
     if (shown.kind !== "success") throw new Error("expected a standing");
     expect(await data.sever(T, shown.value)).toEqual({ kind: "success", value: { records: 3 } });
     expect(data.severed).toEqual(["t"]);
-    expect(await data.bundle(T)).toMatchObject({ value: { records: 0, severed: true } });
+    // Layered, never reset: the counter-records join the count.
+    expect(await data.bundle(T)).toMatchObject({
+      value: { current: ORIGIN, records: 6, severed: true, severance: { records: 0 } },
+    });
   });
 
   it("records how each read asked about pending stances", async () => {

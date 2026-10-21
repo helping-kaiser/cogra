@@ -54,7 +54,7 @@ import {
   type StanceBundle,
   type StanceCommit,
   type StanceData,
-  type StanceLanding,
+  type StanceProjection,
   type StanceReadOptions,
   type StanceTarget,
 } from "./stance-data";
@@ -80,6 +80,20 @@ type WireBundle = {
     readonly severed: boolean;
   } | null;
 };
+
+/** The served standing, as the seam carries it. */
+function bundleOf(wire: WireBundle): StanceBundle {
+  return {
+    current: { pDirected: wire.pDirected, pInterest: wire.pInterest },
+    // Carried through unclipped: the landing line folds against these, and
+    // the clip is what would lose the history (§8.3).
+    rawSum: { pDirected: wire.rawPDirected, pInterest: wire.rawPInterest },
+    records: wire.recordCount,
+    inert: wire.inert,
+    severed: wire.severed,
+    severance: { records: wire.severanceCost },
+  };
+}
 
 /** `{ target: id }` for the id-keyed roots; a topic's own name for the rest. */
 function selectorOf(target: StanceTarget): StanceSelector {
@@ -199,20 +213,10 @@ export function createApolloStanceData(deps: {
     async bundle(target, options): Promise<Outcome<StanceBundle>> {
       const outcome = await read(target, null, options);
       if (outcome.kind !== "success") return outcome;
-      const wire = outcome.value;
-      return success({
-        current: { pDirected: wire.pDirected, pInterest: wire.pInterest },
-        // Carried through unclipped: the landing line folds against
-        // these, and the clip is what would lose the history (§8.3).
-        rawSum: { pDirected: wire.rawPDirected, pInterest: wire.rawPInterest },
-        records: wire.recordCount,
-        inert: wire.inert,
-        severed: wire.severed,
-        severance: { records: wire.severanceCost },
-      });
+      return success(bundleOf(outcome.value));
     },
 
-    async project(target, pick, options): Promise<Outcome<StanceLanding>> {
+    async project(target, pick, options): Promise<Outcome<StanceProjection>> {
       const outcome = await read(target, pick, options);
       if (outcome.kind !== "success") return outcome;
       const projected = outcome.value.projected;
@@ -223,6 +227,9 @@ export function createApolloStanceData(deps: {
         landing: { pDirected: projected.pDirected, pInterest: projected.pInterest },
         inert: projected.inert,
         severed: projected.severed,
+        // The standing rode along on the same read: what splits a (0, 0)
+        // landing into a walk-back or an empty sign.
+        standing: bundleOf(outcome.value),
       });
     },
 

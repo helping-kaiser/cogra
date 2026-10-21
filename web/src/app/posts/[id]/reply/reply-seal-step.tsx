@@ -30,7 +30,7 @@ import { UploadStatusLine } from "@/lib/ui2/compose/upload-notice";
 import { LicenseRows } from "@/lib/ui/license-rows";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
-import { nearestAnchor } from "@/lib/stance/anchors";
+import { bundleReadout, EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
 import { licenseReading, type License } from "@/lib/license";
@@ -627,13 +627,16 @@ function StanceValue({
   large?: boolean;
   testId: string;
 }) {
-  const anchor = nearestAnchor(pair);
+  // A pick being staged: its face follows its value (seam 243).
+  const anchor = bundleReadout(pair, EMPTY_PICK_LABEL);
   return (
     <span className="inline-flex items-baseline gap-1" data-testid={testId}>
       <span aria-hidden="true" className={large ? "text-headline-small" : "text-body-medium"}>
         {anchor.emoji}
       </span>
-      <span aria-hidden="true" className="text-body-small text-on-surface-variant">
+      {/* The digits are the geek reading (readme §13): drawn in a `cg-exact`
+          span, painted only in geek mode, and spoken in both. */}
+      <span aria-hidden="true" className="cg-exact text-body-small text-on-surface-variant">
         {formatStancePair(pair)}
       </span>
       <span className="sr-only">

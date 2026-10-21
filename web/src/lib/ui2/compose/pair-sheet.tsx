@@ -30,7 +30,7 @@
 
 import { useId, useRef, useState } from "react";
 
-import { nearestAnchor } from "@/lib/stance/anchors";
+import { bundleReadout, EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import {
   snapToRanges,
@@ -39,7 +39,7 @@ import {
   type AxisRange,
   type PadRanges,
 } from "@/lib/stance/pad-geometry";
-import { nearestTagAnchor } from "@/lib/topics/anchors";
+import { tagReadout } from "@/lib/topics/anchors";
 import { buttonClassName } from "@/lib/ui/button";
 import { formatDimension, formatStancePair, type StanceAxes } from "@/lib/ui/stance-format";
 import { formatConfidence, formatTagPair } from "@/lib/ui/tag-format";
@@ -99,8 +99,9 @@ const TAG_FAMILY_BASE = {
   groupLabel: "The pair this tag signs",
   formatDirected: (value: number) => formatDimension(value),
   formatInterest: formatConfidence,
-  // The tag's own thirteen objects — never a stance face.
-  face: (pair: StancePair) => nearestTagAnchor(pair.pDirected, pair.pInterest).emoji,
+  // The tag's own thirteen objects — never a stance face — read through the
+  // tag twin of the choke point, so a zero line thinks (seam 243).
+  face: (pair: StancePair) => tagReadout(pair.pDirected, pair.pInterest).emoji,
   exact: (pair: StancePair) => formatTagPair(pair.pDirected, pair.pInterest),
 };
 
@@ -111,7 +112,7 @@ const TAG_FAMILY_BASE = {
 export const TAG_FAMILY: PairFamily = {
   ...TAG_FAMILY_BASE,
   spoken: (pair) =>
-    `Your pick: ${nearestTagAnchor(pair.pDirected, pair.pInterest).label}. ${axesSpoken(TAG_FAMILY_BASE, pair)}`,
+    `Your pick: ${tagReadout(pair.pDirected, pair.pInterest).label}. ${axesSpoken(TAG_FAMILY_BASE, pair)}`,
 };
 
 const CITATION_FAMILY_BASE = {
@@ -120,8 +121,9 @@ const CITATION_FAMILY_BASE = {
   groupLabel: "The pair this citation signs",
   formatDirected: (value: number) => formatDimension(value),
   formatInterest: (value: number) => formatDimension(value),
-  // The stance table unchanged: a citation's slots are the slots it is drawn over.
-  face: (pair: StancePair) => nearestAnchor(pair).emoji,
+  // The stance faces unchanged: a citation's slots are the slots it is drawn
+  // over, read through the choke point like every other pair (seam 243).
+  face: (pair: StancePair) => bundleReadout(pair, EMPTY_PICK_LABEL).emoji,
   exact: (pair: StancePair) => formatStancePair(pair),
 };
 

@@ -2118,6 +2118,199 @@ describe("severance", () => {
   });
 });
 
+// THE EMPTY SIGN (EmptySignConfirm.md, PadStanding.md:71; jakob 2026-10-21,
+// seam 242/243): a (0, 0) landing over NOTHING standing — no record, or a
+// bundle already walked back — asks its own question, never the walk-back's;
+// over anything standing, an empty sign's standing included, it is the
+// walk-back's.
+describe("the empty sign", () => {
+  beforeEach(() => {
+    alreadyTaught();
+  });
+
+  /** From the pad's +0.10 / +0.10 to exactly (0, 0), then Set. */
+  const dragToNothing = async () => {
+    await dragAndSet(-0.1 * HALF, 0.1 * HALF);
+  };
+  const isZero = (value: number) => value + 0 === 0;
+
+  it("asks Sign an empty opinion?, never the walk-back, with nothing standing", async () => {
+    const data = mount();
+    await settle();
+    await openPad();
+    await dragToNothing();
+    expect(screen.getByTestId<HTMLDialogElement>("empty-sign-confirm").open).toBe(true);
+    expect(screen.queryByTestId("severance-confirm")).not.toBeInTheDocument();
+    expect(screen.getByTestId("empty-sign-confirm")).toHaveTextContent(
+      "This says nothing about this post, shapes no feed, and leaves you where you are.",
+    );
+    // An ask, never a block: Set stayed enabled and nothing is signed yet.
+    expect(screen.getByTestId<HTMLButtonElement>(`${PREFIX}-set`).disabled).toBe(false);
+    expect(data.sent).toEqual([]);
+  });
+
+  it("asks the same over a bundle already walked back to nothing", async () => {
+    mount({
+      seed: { "post-1": { records: [{ pDirected: 0.5, pInterest: 0.5 }, { pDirected: -0.5, pInterest: -0.5 }] } },
+    });
+    await settle();
+    await openPad();
+    await dragToNothing();
+    expect(screen.getByTestId("empty-sign-confirm")).toBeInTheDocument();
+    expect(screen.queryByTestId("severance-confirm")).not.toBeInTheDocument();
+  });
+
+  it("opens the walk-back, not the ask, over an empty sign's standing (seam 243)", async () => {
+    // records > 0 and not severed: something stands, saying nothing.
+    mount({ seed: { "post-1": { records: [ORIGIN] } } });
+    await settle();
+    await openPad();
+    await dragToNothing();
+    expect(screen.getByTestId("severance-confirm")).toBeInTheDocument();
+    expect(screen.queryByTestId("empty-sign-confirm")).not.toBeInTheDocument();
+  });
+
+  it("signs the one record on Set it anyway and takes the ORDINARY path", async () => {
+    const data = mount();
+    await settle();
+    await openPad();
+    await dragToNothing();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("empty-sign-proceed"));
+    });
+    await settle();
+    // One ordinary record, the pick verbatim.
+    expect(data.sent).toHaveLength(1);
+    expect(isZero(data.sent[0].pick.pDirected) && isZero(data.sent[0].pick.pInterest)).toBe(true);
+    expect(data.severed).toEqual([]);
+    expect(screen.queryByTestId("empty-sign-confirm")).not.toBeInTheDocument();
+    expect(screen.queryByTestId(`${PREFIX}-pad`)).not.toBeInTheDocument();
+    // The ordinary snackbar, 🤷 speaking Says nothing (EmptySignConfirm.md:27).
+    const snackbar = screen.getByTestId(`${PREFIX}-signed`);
+    expect(snackbar).toHaveTextContent("Signed, still settling. Current opinion 🤷");
+    expect(snackbar).toHaveTextContent("Current opinion: Says nothing");
+    expect(snackbar).not.toHaveTextContent("walked");
+    // At rest: 🤷 speaking Says nothing, never Walked back (:29).
+    expect(screen.getByTestId(`${PREFIX}-resting-face`)).toHaveTextContent("🤷");
+    expect(control()).toHaveAccessibleName(/Says nothing, \+0\.00 \/ \+0\.00/);
+    // Walk it back stands on the pad over it, its cost 1 thing (:31).
+    await openPad();
+    expect(screen.getByTestId(`${PREFIX}-standing`).querySelector(".sr-only")).toHaveTextContent(
+      "Current opinion: Says nothing",
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-sever`));
+    });
+    expect(screen.getByTestId("severance-cost")).toHaveTextContent("It signs 1 thing, paid on its own.");
+  });
+
+  it("returns to the parked pick on Keep it, and Escape over the ask keeps the pad", async () => {
+    const data = mount();
+    await settle();
+    await openPad();
+    await dragToNothing();
+    await act(async () => {
+      fireEvent.keyDown(document, { key: "Escape" });
+    });
+    // The pad's own Escape stands down while the ask is up.
+    expect(screen.getByTestId(`${PREFIX}-pad`)).toBeInTheDocument();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("empty-sign-keep"));
+    });
+    expect(screen.queryByTestId("empty-sign-confirm")).not.toBeInTheDocument();
+    expect(screen.getByTestId(`${PREFIX}-pad`)).toBeInTheDocument();
+    expect(screen.getByTestId(`${PREFIX}-exact`)).toHaveTextContent("+0.00 / +0.00");
+    expect(data.sent).toEqual([]);
+  });
+
+  it("keeps the ask up with the fault line and Retry when the signing does not go through", async () => {
+    const data = mount();
+    await settle();
+    await openPad();
+    await dragToNothing();
+    data.commit = createStubStanceData({ offline: true }).commit;
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("empty-sign-proceed"));
+    });
+    expect(screen.getByTestId("empty-sign-failed")).toHaveTextContent("That didn't send. Try again.");
+    expect(screen.getByTestId("empty-sign-proceed")).toHaveTextContent("Retry");
+    expect(screen.getByTestId<HTMLDialogElement>("empty-sign-confirm").open).toBe(true);
+  });
+
+  it("reads Setting… past 200ms and locks its ways out while it signs", async () => {
+    const data = mount();
+    await settle();
+    await openPad();
+    await dragToNothing();
+    const gate: { answer?: () => void } = {};
+    const commit = data.commit;
+    data.commit = (target, pick) =>
+      new Promise((resolve) => {
+        gate.answer = () => resolve(commit(target, pick));
+      });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("empty-sign-proceed"));
+    });
+    await settle(SETTING_AFTER_MS + 1);
+    expect(screen.getByTestId("empty-sign-proceed")).toHaveTextContent("Setting…");
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("empty-sign-keep"));
+    });
+    expect(screen.getByTestId("empty-sign-confirm")).toBeInTheDocument();
+    await act(async () => {
+      gate.answer?.();
+    });
+    await settle();
+    expect(screen.queryByTestId("empty-sign-confirm")).not.toBeInTheDocument();
+  });
+});
+
+// THE VOUCH-IN RIDER (EmptySignConfirm.md:9/:11; ApprovePad.md:43-45,
+// VouchAskPad.md:37-39): where the opinion vouches its target in, the ask's
+// first line warns harder, and `Set it anyway` IS the act.
+describe("the empty sign where the opinion vouches someone in", () => {
+  beforeEach(() => {
+    alreadyTaught();
+  });
+
+  it("warns that they start cut off, and Set it anyway proceeds as the pad's Set", async () => {
+    const onTaken = vi.fn();
+    const data = createStubStanceData();
+    renderWithProviders(
+      <StanceControl
+        target={{ id: "rafa", kind: "profile", label: "@rafa" }}
+        testIdPrefix={PREFIX}
+        vouchesIn
+        variant={{ title: "Your vouch", help: ["Help."], note: "Vouching is the act.", onTaken }}
+      />,
+      { store: signedInStore(), stanceData: data },
+    );
+    await settle();
+    await openPad();
+    await dragAndSet(-0.1 * HALF, 0.1 * HALF);
+    expect(screen.getByTestId("empty-sign-effect")).toHaveTextContent(
+      "@rafa would be vouched in but start out cut off: no feed can carry them, and community funds stay closed to them, until someone gives them an opinion that says something.",
+    );
+    expect(screen.queryByTestId("severance-confirm")).not.toBeInTheDocument();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("empty-sign-proceed"));
+    });
+    await settle();
+    expect(data.sent).toHaveLength(1);
+    expect(onTaken).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the ordinary first line on any other pad", async () => {
+    mount();
+    await settle();
+    await openPad();
+    await dragAndSet(-0.1 * HALF, 0.1 * HALF);
+    expect(screen.getByTestId("empty-sign-effect")).toHaveTextContent(
+      "This says nothing about this post, shapes no feed, and leaves you where you are.",
+    );
+  });
+});
+
 // jakob's I2 ruling (copy-voice.md "Awaiting blessing — the topic
 // disconnects", 2026-09-15): a topic disconnects, never severs. Every
 // other kind above (`describe("severance", ...)`, target kind "post")

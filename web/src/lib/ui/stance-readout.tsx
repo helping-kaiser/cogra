@@ -27,7 +27,13 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 
-import { bundleReadout, nearestAnchor, UNREACHABLE_EMOJI, ZERO_BUNDLE_EMOJI } from "@/lib/stance/anchors";
+import {
+  bundleReadout,
+  EMPTY_PICK_LABEL,
+  UNREACHABLE_EMOJI,
+  unreachableHead,
+  ZERO_BUNDLE_EMOJI,
+} from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import type { StanceBundle, StanceLanding } from "@/lib/stance/stance-data";
 import { part, testAttributes, type DataNode, type DataNodeAttributes } from "@/lib/ui/data-node";
@@ -76,17 +82,13 @@ export function useSettled<T>(value: T, ms: number = SETTLE_MS): T {
  * the master's `UNREACHABLE_TAIL`/`unreachableHead`). A landing with exactly
  * one number at zero is held and shapes no feed — UNREACHABLE — and it is not
  * severance: only `(0, 0)` is, which keeps its own line. The head names the
- * state by the other number's sign; the tail is the one consequence worth
+ * state by the other number's sign (`unreachableHead`, beside the choke point
+ * that every face reads through); the tail is the one consequence worth
  * saying.
  */
 export const UNREACHABLE_TAIL = "this won't shape anyone's feed.";
 
-export function unreachableHead(pair: StancePair): string {
-  if (pair.pDirected === 0) {
-    return pair.pInterest > 0 ? "Interested, no side taken" : "Rather not see it, no side taken";
-  }
-  return pair.pDirected > 0 ? "For it, no interest either way" : "Against it, no interest either way";
-}
+export { EMPTY_PICK_LABEL, unreachableHead };
 
 /**
  * THE BORROWED VIEW HOLDS UNTIL AN OPINION IS LIVE (jakob 2026-10-20; the
@@ -126,8 +128,9 @@ export function standingParts(
     return { sentence: `${ZERO_BUNDLE_EMOJI} No opinion on ${targetLabel} yet.` };
   }
   if (bundle.severed) return { sentence: `${ZERO_BUNDLE_EMOJI} ${sever.gone(targetLabel)}` };
-  // A standing, so the table never speaks for zero (§8.4).
-  const readout = bundleReadout(bundle.current, sever.zero);
+  // Severed is answered above, so a standing at exactly (0, 0) here is an
+  // empty sign's: it says nothing (§8.4), never the walk-back's word.
+  const readout = bundleReadout(bundle.current, EMPTY_PICK_LABEL);
   return {
     label: CURRENT_LABEL,
     emoji: readout.emoji,
@@ -297,7 +300,9 @@ export function StanceStanding({
   node?: DataNode;
   className?: string;
 }) {
-  const anchor = nearestAnchor(pick);
+  // The pick wears the face its value wears (faces follow the value): 🤔 at
+  // one zero, 🤷 speaking "Says nothing" at (0, 0), the table otherwise.
+  const anchor = bundleReadout(pick, EMPTY_PICK_LABEL);
   return (
     <div
       aria-live="polite"
@@ -418,7 +423,9 @@ export function signedLine(
   const acts = records === 1 ? "Signed" : `Signed ${records} things`;
   const sever = severanceWords(axes);
   if (severed) return `${acts}, still settling. ${sever.gone(targetLabel)}`;
-  const readout = bundleReadout(standing, sever.zero);
+  // Not severed, so a standing at exactly (0, 0) is an empty sign's: the
+  // ORDINARY snackbar, its face 🤷 speaking "Says nothing" (jakob 2026-10-21).
+  const readout = bundleReadout(standing, EMPTY_PICK_LABEL);
   return (
     <>
       <span aria-hidden="true">

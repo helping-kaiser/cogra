@@ -191,8 +191,9 @@ describe("TagPadCompose — a staged tag's pair", () => {
     renderTag();
     const tagObjects = new Set(TAG_ANCHORS.map((anchor) => anchor.emoji));
     const stanceFaces = new Set(STANCE_ANCHORS.map((anchor) => anchor.emoji));
+    // Both numbers non-zero: the thirteen objects read it.
     for (const relevance of [0.01, 0.3, 0.6, 0.86, 1]) {
-      for (const confidence of [0, 0.4, 0.75, 0.95]) {
+      for (const confidence of [0.4, 0.75, 0.95]) {
         setThroughTracks({ pDirected: relevance, pInterest: confidence });
         const face = screen.getByTestId("sheet-face").textContent ?? "";
         expect(face).toBe(nearestTagAnchor(relevance, confidence).emoji);
@@ -200,6 +201,17 @@ describe("TagPadCompose — a staged tag's pair", () => {
         expect(stanceFaces.has(face)).toBe(false);
         expect(screen.getByTestId("sheet-exact")).toHaveTextContent(formatTagPair(relevance, confidence));
       }
+    }
+  });
+
+  it("thinks at zero certainty, naming it, never one of the thirteen (faces follow the value)", () => {
+    // The expectation is the rule's (tagReadout's), not the bare table's:
+    // a checker computed from the table would wrongly pass a 🎣 here.
+    renderTag();
+    for (const relevance of [0.01, 0.6, 1]) {
+      setThroughTracks({ pDirected: relevance, pInterest: 0 });
+      expect(screen.getByTestId("sheet-face")).toHaveTextContent("🤔");
+      expect(screen.getByTestId("sheet-spoken")).toHaveTextContent("Your pick: no certainty at all.");
     }
   });
 
@@ -380,13 +392,27 @@ describe("RefPair — a staged citation's pair", () => {
       REF_DEFAULT,
       { pDirected: -0.8, pInterest: 0.6 },
       { pDirected: 0.9, pInterest: -0.9 },
-      { pDirected: 0, pInterest: 0 },
     ]) {
       setThroughTracks(pair);
       const anchor = nearestAnchor(pair);
       expect(screen.getByTestId("sheet-face")).toHaveTextContent(anchor.emoji);
       expect(screen.getByTestId("sheet-exact")).toHaveTextContent(formatStancePair(pair));
       expect(screen.getByTestId("sheet-spoken").textContent).not.toContain(anchor.label);
+    }
+  });
+
+  it("shrugs at (0, 0) and thinks at one zero, never a table face (faces follow the value)", () => {
+    // The expectations are the rule's: the bare table would answer 🙂 at
+    // the origin and 🙂/👀 on the zero lines.
+    renderRef();
+    for (const [pair, face] of [
+      [{ pDirected: 0, pInterest: 0 }, "🤷"],
+      [{ pDirected: 0, pInterest: 0.6 }, "🤔"],
+      [{ pDirected: -0.5, pInterest: 0 }, "🤔"],
+    ] as const) {
+      setThroughTracks(pair);
+      expect(screen.getByTestId("sheet-face")).toHaveTextContent(face);
+      expect(screen.getByTestId("sheet-exact")).toHaveTextContent(formatStancePair(pair));
     }
   });
 

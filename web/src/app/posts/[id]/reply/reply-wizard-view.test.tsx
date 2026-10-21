@@ -312,6 +312,14 @@ describe("the reply wizard", () => {
       expect(screen.getByTestId("reply-stance-value")).toHaveTextContent("+0.10 / +0.10");
     });
 
+    it("draws the stance's digits as the geek reading, in a cg-exact span (readme §13)", async () => {
+      draw();
+      await toSeal();
+      expect(screen.getByTestId("reply-stance-value").querySelector(".cg-exact")).toHaveTextContent(
+        "+0.10 / +0.10",
+      );
+    });
+
     it("carries the license row, on the default", async () => {
       draw();
       await toSeal();

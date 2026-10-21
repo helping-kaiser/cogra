@@ -43,6 +43,10 @@ export const STANCE_ANCHORS: readonly StanceAnchor[] = [
 ];
 
 /**
+ * The bare table walk. Nothing outside this file calls it: every pair drawn
+ * as a face reads through [bundleReadout], which answers the zero lines
+ * first (the master's structure, seam 243).
+ *
  * The nearest anchor by Euclidean distance. Squared distance orders the
  * same way and skips the root; the first of an exact tie wins, so the
  * result is a total function of the pair rather than of iteration luck.
@@ -92,22 +96,45 @@ export type StanceReadout = {
 };
 
 /**
- * The readout a STANDING wears. A bundle at exactly `(0, 0)` is the
- * absence of a feeling, and drawing it as its nearest neighbour — "🙂
- * Nice", which is what the table returns at the origin — is a lie
- * (design.md §8.4). It gets the shrug and the caller's own severed or
- * no-standing wording instead; the table reads picks and non-zero
- * bundles only.
+ * A PICK OF NOTHING SAYS NOTHING (the master's `EMPTY_PICK_LABEL`). A pick
+ * at exactly `(0, 0)` adds nothing to what stands, and a STANDING at
+ * `(0, 0)` that was never walked back — an empty sign joined it (jakob
+ * 2026-10-21) — is the same nothing: `Walked back` would be false of both.
+ */
+export const EMPTY_PICK_LABEL = "Says nothing";
+
+/**
+ * The state a pair with exactly one number at zero is in, named by the
+ * other number's sign (the master's `unreachableHead`, seam 240): held,
+ * shaping no feed, and not severance.
+ */
+export function unreachableHead(pair: StancePair): string {
+  if (pair.pDirected === 0) {
+    return pair.pInterest > 0 ? "Interested, no side taken" : "Rather not see it, no side taken";
+  }
+  return pair.pDirected > 0 ? "For it, no interest either way" : "Against it, no interest either way";
+}
+
+/**
+ * FACES FOLLOW THE VALUE, EVERYWHERE (jakob 2026-10-21, seam 242; the
+ * master's `bundleReadout`). Every pair drawn as a face reads HERE — the
+ * pick, a standing opinion, the resting anchor, a record's row, the
+ * snackbar, a citation's pair — and nothing else on the client reads the
+ * table: exactly `(0, 0)` shrugs and speaks the caller's word for WHICH
+ * zero it is (`Walked back`, `Says nothing`); exactly one zero thinks and
+ * names its state; only a pair with both numbers non-zero reads the
+ * twenty anchors. 🫥 stays the control's own, outside every value.
  *
  * This is not the zero test `stance-data.ts` forbids. That rule is about
  * SEMANTICS: whether a bundle is inert or severed is the fold's
  * statement about itself and still arrives as a flag, never as a
  * comparison made here. This is about which glyph a pair may be drawn
- * as, and the table simply does not cover the origin.
+ * as, and the table does not cover the zero lines.
  */
 export function bundleReadout(pair: StancePair, zeroLabel: string): StanceReadout {
-  if (pair.pDirected === 0 && pair.pInterest === 0) {
-    return { emoji: ZERO_BUNDLE_EMOJI, label: zeroLabel };
-  }
+  const directedZero = pair.pDirected === 0;
+  const interestZero = pair.pInterest === 0;
+  if (directedZero && interestZero) return { emoji: ZERO_BUNDLE_EMOJI, label: zeroLabel };
+  if (directedZero || interestZero) return { emoji: UNREACHABLE_EMOJI, label: unreachableHead(pair) };
   return nearestAnchor(pair);
 }
