@@ -4,10 +4,15 @@
 // settling. Nothing is greyed out or held back: the content is real,
 // only its place in the order is not, so this never carries `error`
 // colouring. The same register as the Edited marker beside it.
+//
+// THE LINE SAYS WHAT IT WAITS ON (`PendingMarker.jsx`'s `label`): a kept
+// pick waits on the reader's key — `Waiting for your key` (PadPending.md) —
+// and never reads `Still settling`, which is a signed record's.
 
 export function PendingMarker({
   testId,
   inline = false,
+  label = "Still settling",
 }: {
   testId: string;
   /**
@@ -17,18 +22,20 @@ export function PendingMarker({
    * words, same two tokens; only the box changes.
    */
   inline?: boolean;
+  /** What the content waits on; `Still settling` for a signed record. */
+  label?: string;
 }) {
   const ink = "text-label-small text-on-surface-variant";
   if (inline) {
     return (
       <span data-testid={testId} className={ink}>
-        Still settling
+        {label}
       </span>
     );
   }
   return (
     <p data-testid={testId} className={ink}>
-      Still settling
+      {label}
     </p>
   );
 }

@@ -39,6 +39,7 @@ const ROOT_SLOT: Record<BellRoot, NavSlot> = {
   wallet: "wallet",
   profile: "profile",
 };
+import { PadParkingProvider } from "@/lib/ui/pad-parking";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -84,6 +85,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-full flex-col">
       <ScrollHostProvider value={scroller}>
+        <PadParkingProvider value={showBar}>
         <div
           ref={scroller}
           data-testid="app-scroller"
@@ -102,6 +104,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             onReselectFeed={pathname === "/feed" ? announceFeedReselect : undefined}
           />
         )}
+        </PadParkingProvider>
       </ScrollHostProvider>
     </div>
   );

@@ -20,6 +20,16 @@ ALWAYS the pad is modal for assistive tech: focus moves into it on open, stays i
 
 ALWAYS the pad reads Current opinion and Your pick above the field and Resulting opinion below it, each a label over its own face and pair, never merged into one line
 
+ALWAYS a face reads the twenty anchors only GIVEN both numbers of its pair are non-zero
+
+ALWAYS Your pick wears 🤔 and is spoken as its state, Interested, no side taken and its siblings, never a table face, GIVEN the pick has exactly one number at zero
+
+ALWAYS Your pick wears 🤷 and is spoken Says nothing GIVEN the pick is exactly (0, 0)
+
+ALWAYS Current opinion and the face on the target wear 🤷 and are spoken Says nothing, never Walked back, GIVEN the bundle nets to exactly (0, 0) and was never walked back
+
+ALWAYS Current opinion, the face on the target and the snackbar's face wear 🤔 and are spoken as the state, never a table face, GIVEN the opinion they read has exactly one number at zero
+
 ALWAYS the pad carries four controls, Walk it back on the left pushed away from Cancel and Set on the right, GIVEN an opinion stands on the target
 
 ALWAYS the pad carries no Walk it back GIVEN nothing was ever signed toward the target
@@ -57,6 +67,8 @@ WHEN tap the landing's 🤔 -> its three lines replace the pad's body in place, 
 WHEN tap Set GIVEN the pick lands one number at zero -> the opinion is signed like any other AND NEVER the dialog Walk it all back? opens
 
 WHEN tap Set GIVEN the pick nets the standing bundle to (0, 0) -> the dialog Walk it all back? opens over the pad, which stays parked beneath it, with the pick line and its cost of 1 thing AND NEVER the pick is refused
+
+WHEN tap Set GIVEN the pick lands at exactly (0, 0) and nothing stands toward the target, no record ever signed or a bundle walked back to nothing -> the dialog Sign an empty opinion? opens over the pad, which stays parked beneath it AND NEVER the dialog Walk it all back? opens AND NEVER the pick is refused
 
 WHEN tap Set GIVEN the signing key is not on this device -> the pad's notice Your key isn't on this browser stands where the landing line and the actions were AND NEVER anything is signed
 

@@ -13,7 +13,7 @@
 // `locked` holds the dialog up while its commitment is in flight: Escape, the
 // scrim and system Back do nothing then — and nothing dims, either.
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, type ReactNode } from "react";
 
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 
@@ -26,17 +26,24 @@ export function DialogSurface({
   onDismiss,
   locked = false,
   node,
+  testId,
   children,
 }: {
   title: string;
-  /** One paragraph per entry, in the secondary ink. */
-  body: readonly string[];
+  /**
+   * One paragraph per entry, in the secondary ink. A string is wrapped in a
+   * paragraph; a node is placed as it is, for a line that carries more than
+   * words (the master's `asParagraphs`).
+   */
+  body: readonly ReactNode[];
   /** The answers, right-aligned on one row. */
   actions: ReactNode;
   /** Scrim, Escape or system Back — ignored while `locked`. */
   onDismiss: () => void;
   locked?: boolean;
   node?: DataNode;
+  /** The dialog's own test id, where no registered node names it. */
+  testId?: string;
   /** Anything the dialog says in itself beyond its body (an offline line). */
   children?: ReactNode;
 }) {
@@ -64,7 +71,7 @@ export function DialogSurface({
       onClick={(event) => {
         if (event.target === ref.current && !locked) onDismiss();
       }}
-      {...testAttributes(node)}
+      {...testAttributes(node, testId)}
       // `min(100vw − 2 × the dialog inset, the dialog's max width)`, the
       // board's own sizing (JoinPrompt.jsx: `--dialog-inset` 32px,
       // `--dialog-max-width` 20rem).
@@ -83,11 +90,15 @@ export function DialogSurface({
         className="mt-4 flex flex-col gap-4 text-body-medium text-on-surface-variant"
         {...testAttributes(part(node, "body"))}
       >
-        {body.map((paragraph) => (
-          <p key={paragraph} className="m-0">
-            {paragraph}
-          </p>
-        ))}
+        {body.map((paragraph, index) =>
+          typeof paragraph === "string" ? (
+            <p key={paragraph} className="m-0">
+              {paragraph}
+            </p>
+          ) : (
+            <Fragment key={index}>{paragraph}</Fragment>
+          ),
+        )}
       </div>
       {children}
       <div className="mt-6 flex flex-wrap items-center justify-end gap-2">{actions}</div>

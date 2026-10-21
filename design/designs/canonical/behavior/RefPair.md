@@ -10,7 +10,9 @@ ALWAYS relevance runs across the field and support up it, each from −1 to +1
 
 ALWAYS the pair stands at +0.10 / +0.10 GIVEN the author has not set it
 
-ALWAYS the readout shows the nearest stance anchor's face beside the exact pair, never the anchor's word
+ALWAYS the readout shows the nearest stance anchor's face beside the exact pair, never the anchor's word, GIVEN neither number is zero
+
+ALWAYS the readout shows 🤔 beside the exact pair, never a table face, GIVEN exactly one number is zero
 
 ALWAYS the readout's spoken reading names both axes with their values
 

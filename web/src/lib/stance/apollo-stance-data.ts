@@ -38,7 +38,7 @@ import {
   PostStanceDocument,
   ProfileStanceDocument,
 } from "@/__generated__/graphql";
-import { failed, success, viewerField, type Outcome } from "@/lib/api/outcome";
+import { failed, refused, success, viewerField, type Outcome } from "@/lib/api/outcome";
 import {
   prepareSeverance,
   prepareStance,
@@ -180,6 +180,13 @@ export function createApolloStanceData(deps: {
   ): Promise<Outcome<StanceCommit>> => {
     const results = await signer.sign(writes, expected);
     const incomplete = results.find((result) => result.kind !== "done");
+    // A REFUSAL KEEPS ITS CODES. The write rule's is a notice and not a
+    // fault (PadWriteRule.md, RowWriteRule.md): the control says `You can't
+    // sign right now` with no Retry, which it can only do if the refusal
+    // reaches it as one rather than as a generic failure.
+    if (incomplete !== undefined && incomplete.kind === "refused") {
+      return refused(incomplete.errors);
+    }
     if (incomplete !== undefined) {
       return failed(
         new Error(`staged write ${incomplete.id} did not complete: ${incomplete.kind}`),
@@ -231,6 +238,12 @@ export function createApolloStanceData(deps: {
         prepared.value,
         expectation([stanceRecord(node.value, pick.pDirected, pick.pInterest)]),
       );
+    },
+
+    keyOnDevice(): Promise<boolean> {
+      // A signer that cannot say is read as holding one: the signature
+      // itself remains the check.
+      return signer.hasKey?.() ?? Promise.resolve(true);
     },
 
     async sever(target, shown): Promise<Outcome<StanceCommit>> {

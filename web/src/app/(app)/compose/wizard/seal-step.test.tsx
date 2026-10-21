@@ -234,7 +234,7 @@ describe("SealStep", () => {
     const readout = screen.getByTestId("wizard-stance-value");
     expect(readout.textContent).toContain("😠");
     expect(
-      within(readout).getByText("Really against this, For or against -0.90"),
+      within(readout).getByText("Really against this, For or against −0.90"),
     ).toBeInTheDocument();
   });
 

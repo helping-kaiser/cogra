@@ -1,26 +1,34 @@
 "use client";
 
-// The alternate inputs of design.md §8.6 — paired sliders and direct
-// entry. Same machinery as the pad, different surface: they write the
-// same two values, and the readout above them is the same lossy face.
+// THE ALTERNATE INPUTS (`design/components/stance/StanceAlternates.jsx` and
+// its prompt) — paired sliders and direct entry. Same machinery as the pad,
+// different surface: they write the same two values, and the readouts above
+// them are the pad's own three.
 //
-// They are also the ACCESSIBLE path (§8.6, §10). The pad is a drag
-// gesture; these give screen-reader and switch users the full range
-// through ordinary, well-supported controls rather than a degraded
-// version of the gesture, which is why the entry into them is present on
-// every stance control regardless of the stored preference.
+// They are also the ACCESSIBLE path (§8.6, §10): the pad is a drag gesture,
+// and these give screen-reader and switch users the full range through
+// ordinary controls — which is why the entry into them is present on every
+// stance control regardless of the stored preference.
 //
-// Which surfaces show follows that preference: choosing one replaces the
-// pad everywhere, and while the pad is still the chosen input neither
-// alternate has been picked, so both are offered here.
+// ONE CONTROL AT A TIME. Sliders lead; `Type exact values` swaps to the typed
+// fields and back. Two controls editing the same two numbers is a needless
+// choice at the moment of a priced act. A reader who chose typed entry in
+// settings opens on the typed fields.
+//
+// THE "?" IS THE PAD'S OWN, and its first line teaches what two sliders
+// cannot: two values, not one. The help — and an unreachable landing's
+// explanation — replace the whole body in place, and the dialog keeps the
+// body's height while they show, so no button moves.
 
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
-import { snapDimension, type StancePair } from "@/lib/stance/model";
 import type { StanceInputMode } from "@/lib/stance/input-mode";
-import { buttonClassName } from "@/lib/ui/button";
-import { STANCE_AXES, type StanceAxes } from "@/lib/ui/stance-format";
+import { snapDimension, type StancePair } from "@/lib/stance/model";
+import { BUTTON_CLASS, buttonClassName } from "@/lib/ui/button";
+import { severanceWords, STANCE_AXES, type StanceAxes } from "@/lib/ui/stance-format";
+import { alternatesHelp } from "@/lib/ui/stance-pad-help";
 import { StanceSlider } from "@/lib/ui/stance-slider";
+import { TransportError } from "@/lib/ui/transport-error";
 import { useCoversSurface } from "@/lib/ui2/covering-layer";
 
 function DirectEntry({
@@ -51,7 +59,7 @@ function DirectEntry({
         value={value}
         // A typed value lands on the hundredths grid, as a released drag does.
         onChange={(event) => onChange(snapDimension(Number(event.target.value)))}
-        className="w-24 rounded-extra-small border border-outline p-2 text-body-medium"
+        className="w-24 rounded-extra-small border border-outline bg-transparent p-2 text-body-medium text-on-surface"
       />
     </div>
   );
@@ -64,10 +72,12 @@ export function StanceAlternates({
   onCommit,
   onCancel,
   onSever,
-  severable = true,
-  severLabel = "Walk it back",
   axes = STANCE_AXES,
   busy = false,
+  fault = null,
+  helpLabel = "How opinions work",
+  zeroHelp = null,
+  onZeroBack,
   children,
   landing,
 }: {
@@ -77,101 +87,167 @@ export function StanceAlternates({
   onCommit: () => void;
   onCancel: () => void;
   /**
-   * Severance is findable from the open pad (design.md §8.5); for anyone
-   * whose input is an alternate, the pad never opens, so it is findable
-   * here instead.
+   * The walk-away, drawn only when handed: there must be something to walk
+   * back, and for anyone whose input is an alternate the pad never opens, so
+   * it is findable here instead.
    */
-  onSever: () => void;
-  /**
-   * Whether there is anything to walk back. The walk-away needs something
-   * to sever: with no records and nothing severed there is no relationship
-   * to leave, and the control led only to a dialog saying so.
-   */
-  severable?: boolean;
-  /**
-   * The way-out's own word: "Walk it back" for every kind but a topic,
-   * "Disconnect" for one (copy-voice.md "the topic disconnects").
-   */
-  severLabel?: string;
-  /**
-   * The record family's own words. They reach the sliders and the typed
-   * fields — the accessible route asks what the drawn one asks.
-   */
+  onSever?: () => void;
+  /** The record family's words — its tracks, poles and way out. */
   axes?: StanceAxes;
   busy?: boolean;
-  /** The standing, rendered above the inputs the way it sits above the pad. */
-  children?: React.ReactNode;
-  /** The landing line, which sits below the inputs as it sits below the field. */
-  landing?: React.ReactNode;
+  /** What did not go through when `Sign it` was pressed. */
+  fault?: "failed" | "writeRule" | null;
+  /** The pad's own `?` name (ruling A7). */
+  helpLabel?: string;
+  /** The unreachable landing's explanation, once its 🤔 is tapped. */
+  zeroHelp?: readonly string[] | null;
+  onZeroBack?: () => void;
+  /** The current opinion and the pick, above the inputs as above the field. */
+  children?: ReactNode;
+  /** The landing, below the inputs as below the field. */
+  landing?: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   // THE PAD IN ITS ALTERNATE FORM, so it announces itself as the pad does — a
-  // PAUSE, not a suspension (Feed.md:39/41; `covering-layer.tsx`). "Choosing
-  // one replaces the pad everywhere" (the header above, §8.6): for a reader
-  // whose input is an alternate, this dialog is the opinion pad. Mounted only
-  // while open, so it covers for as long as it is mounted.
+  // PAUSE, not a suspension (Feed.md:39/41; `covering-layer.tsx`). Mounted
+  // only while open, so it covers for as long as it is mounted.
   useCoversSurface(true, "pause");
   useEffect(() => {
     const dialog = ref.current;
     if (dialog !== null && !dialog.open) dialog.showModal();
   }, []);
 
-  const showSliders = mode !== "entry";
-  const showEntry = mode !== "sliders";
+  const [showing, setShowing] = useState<"sliders" | "entry">(
+    mode === "entry" ? "entry" : "sliders",
+  );
+  const [explaining, setExplaining] = useState(false);
+  const replaced = zeroHelp !== null ? zeroHelp : explaining ? alternatesHelp(axes) : null;
+  const back = zeroHelp !== null ? onZeroBack : () => setExplaining(false);
 
   return (
     <dialog
       ref={ref}
       data-testid="stance-alternates"
+      aria-label="Choose your opinion"
       onClose={onCancel}
-      className="cg-dialog-in m-auto w-[min(90vw,24rem)] rounded-extra-large bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
+      onClick={(event) => {
+        // The scrim is Cancel: nothing is staged by leaving.
+        if (event.target === ref.current) onCancel();
+      }}
+      className="cg-dialog-in m-auto w-[min(calc(100vw_-_4rem),20rem)] overflow-visible rounded-extra-large border-0 bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
     >
-      <h2 className="text-title-large">Choose your stance</h2>
-      {children}
-      <div className="mt-4 flex flex-col gap-4">
-        {showSliders && (
-          <>
-            <StanceSlider
-              label={axes.directed}
-              value={pick.pDirected}
-              onChange={(pDirected) => onPick({ ...pick, pDirected })}
-              testId="stance-alt-directed"
-            />
-            <StanceSlider
-              label={axes.interest}
-              value={pick.pInterest}
-              onChange={(pInterest) => onPick({ ...pick, pInterest })}
-              testId="stance-alt-interest"
-            />
-          </>
-        )}
-        {showEntry && (
-          <>
-            <DirectEntry
-              label={axes.directed}
-              value={pick.pDirected}
-              onChange={(pDirected) => onPick({ ...pick, pDirected })}
-              testId="stance-entry-directed"
-            />
-            <DirectEntry
-              label={axes.interest}
-              value={pick.pInterest}
-              onChange={(pInterest) => onPick({ ...pick, pInterest })}
-              testId="stance-entry-interest"
-            />
-          </>
+      <div className="relative">
+        <button
+          type="button"
+          data-testid="stance-alt-help"
+          aria-expanded={explaining}
+          aria-label={helpLabel}
+          onClick={() => setExplaining((shown) => !shown)}
+          className={`${BUTTON_CLASS} absolute -right-3 -top-3 grid size-12 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0`}
+        >
+          <span
+            aria-hidden="true"
+            className="grid size-8 place-items-center rounded-full border border-outline-variant text-label-large text-primary"
+          >
+            ?
+          </span>
+        </button>
+        <h2 className="m-0 pr-10 text-title-large">Choose your opinion</h2>
+      </div>
+      {/* The help and the 🤔's explanation take the body's place AND its
+          height: both stand in one grid cell, the body kept but invisible,
+          so the centred dialog never resizes and no button moves. */}
+      <div className="grid">
+        <div
+          className={`flex flex-col [grid-area:1/1] ${replaced !== null ? "invisible" : ""}`}
+          aria-hidden={replaced !== null || undefined}
+        >
+          {children}
+          <div className="mt-4 flex flex-col gap-4">
+            {showing === "sliders" ? (
+              <>
+                <StanceSlider
+                  label={axes.directed}
+                  minLabel={axes.left}
+                  maxLabel={axes.right}
+                  value={pick.pDirected}
+                  onChange={(pDirected) => onPick({ ...pick, pDirected })}
+                  testId="stance-alt-directed"
+                />
+                <StanceSlider
+                  label={axes.interest}
+                  minLabel={axes.bottom}
+                  maxLabel={axes.top}
+                  value={pick.pInterest}
+                  onChange={(pInterest) => onPick({ ...pick, pInterest })}
+                  testId="stance-alt-interest"
+                />
+              </>
+            ) : (
+              <>
+                <DirectEntry
+                  label={axes.directed}
+                  value={pick.pDirected}
+                  onChange={(pDirected) => onPick({ ...pick, pDirected })}
+                  testId="stance-entry-directed"
+                />
+                <DirectEntry
+                  label={axes.interest}
+                  value={pick.pInterest}
+                  onChange={(pInterest) => onPick({ ...pick, pInterest })}
+                  testId="stance-entry-interest"
+                />
+              </>
+            )}
+          </div>
+          {/* The other control, one tap away — never beside it. */}
+          <button
+            type="button"
+            data-testid="stance-alt-swap"
+            onClick={() => setShowing((current) => (current === "sliders" ? "entry" : "sliders"))}
+            className={`mt-2 self-start text-label-medium! text-on-surface-variant! ${buttonClassName({ variant: "text", size: "sm" })}`}
+          >
+            {showing === "sliders" ? "Type exact values" : "Use sliders"}
+          </button>
+          {landing}
+        </div>
+        {replaced !== null && (
+          <div data-testid="stance-alt-explanation" className="flex flex-col gap-2 [grid-area:1/1]">
+            {replaced.map((line) => (
+              <p key={line} className="m-0 text-body-small text-on-surface-variant">
+                {line}
+              </p>
+            ))}
+            <button
+              type="button"
+              data-testid="stance-alt-back"
+              onClick={back}
+              className={`self-start ${buttonClassName({ variant: "text", size: "sm" })}`}
+            >
+              Back
+            </button>
+          </div>
         )}
       </div>
-      {landing}
+      {fault === "failed" && (
+        <div className="mt-4">
+          <TransportError testId="stance-alt-failed" message="That didn't send. Try again." />
+        </div>
+      )}
+      {fault === "writeRule" && (
+        <p role="status" data-testid="stance-alt-write-rule" className="m-0 mt-4 text-body-medium text-on-surface-variant">
+          You can&apos;t sign right now.
+        </p>
+      )}
       <div className="mt-6 flex items-center justify-end gap-2">
-        {severable && (
+        {onSever !== undefined && (
           <button
             type="button"
             data-testid="stance-alt-sever"
             onClick={onSever}
             className={`mr-auto ${buttonClassName({ variant: "text", size: "sm" })}`}
           >
-            {severLabel}
+            {severanceWords(axes).control}
           </button>
         )}
         <button
@@ -187,7 +263,7 @@ export function StanceAlternates({
           data-testid="stance-alt-commit"
           disabled={busy}
           onClick={onCommit}
-          className={buttonClassName({ variant: "text", size: "sm" })}
+          className={buttonClassName({ variant: "primary", size: "sm" })}
         >
           Sign it
         </button>

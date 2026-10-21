@@ -6,7 +6,7 @@ Use `TaggedRow` for a row of a tag's page — the claim that put this content he
 </TaggedRow>
 ```
 
-**The pair arrives as numbers, never as a string.** The row reads the nearest of the thirteen `TAG_ANCHORS` and formats the value with `formatTagPair`, so the glyph and the numbers always describe the same claim and no screen hand-types a format the contract does not use.
+**The pair arrives as numbers, never as a string.** The row reads its glyph through `tagReadout` — the nearest of the thirteen `TAG_ANCHORS`, 🤔 at one zero, 🤷 at `(0, 0)` — and formats the value with `formatTagPair`, so the glyph and the numbers always describe the same claim and no screen hand-types a format the contract does not use.
 
 **The glyph carries the reading; the numbers are the geek one.** `🔍 Tagged` is the default flag; the exact `+0.40 / 0.90` rides a `cg-exact` span beside it and paints only when the screen root carries `data-geek="on"` (readme §13). The spoken reading is one screen-reader-only span, the same in both modes — an emoji's own accessible name is "magnifying glass tilted left", not "had to look, but it's in there".
 

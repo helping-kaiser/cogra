@@ -590,7 +590,7 @@ describe("FeedView", () => {
     );
     renderWithProviders(<FeedView />, { store: signedInStore() });
     await waitFor(() =>
-      expect(screen.getByTestId(byNode("feed.card.actionRow.stance.anchor", "p1"))).toHaveTextContent("Like this"),
+      expect(screen.getByTestId(byNode("feed.card.actionRow.stance.anchor", "p1"))).toHaveAccessibleName(/Like this/),
     );
     expect(screen.getByTestId(byNode("feed.card.actionRow.stance.anchor", "p1"))).toHaveTextContent("😊");
     expect(screen.getByTestId(byNode("feed.card.actionRow.stance.anchor.exact", "p1"))).toHaveTextContent("+0.55 / +0.20");
@@ -599,7 +599,9 @@ describe("FeedView", () => {
     // shrug a zero standing owns (design.md §8.3, §8.4).
     expect(screen.getByTestId(byNode("feed.card.actionRow.stance.anchor", "p2"))).toHaveTextContent("🫥");
     expect(screen.getByTestId(byNode("feed.card.actionRow.stance.anchor", "p2"))).not.toHaveTextContent("🤷");
-    expect(screen.getByTestId(byNode("feed.card.actionRow.stance.anchor", "p2"))).toHaveTextContent("No stance yet");
+    // Never a bare word: the word rides the accessible name only.
+    expect(screen.getByTestId(byNode("feed.card.actionRow.stance.anchor", "p2"))).not.toHaveTextContent("No opinion yet");
+    expect(screen.getByTestId(byNode("feed.card.actionRow.stance.anchor", "p2"))).toHaveAccessibleName("Give your opinion on this post");
   });
 
   it("offers a guest the stance control, which asks them to join", async () => {
