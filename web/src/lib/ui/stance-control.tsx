@@ -961,7 +961,7 @@ export function StanceControl({
               className="flex flex-col gap-3 rounded-medium bg-tertiary-container p-4 text-on-tertiary-container"
             >
               <div className="flex items-center gap-2">
-                <h2 className="m-0 flex-1 text-title-medium">{WRITE_RULE_TITLE}</h2>
+                <h3 className="m-0 flex-1 text-title-medium">{WRITE_RULE_TITLE}</h3>
                 <HelpDot
                   ariaLabel={WRITE_RULE_HELP}
                   onOpen={() => setNoticeHelp(HELP_TOPICS.whySigningWaitsOnPad)}
@@ -994,7 +994,7 @@ export function StanceControl({
               className="flex flex-col gap-3 rounded-medium bg-tertiary-container p-4 text-on-tertiary-container"
             >
               <div className="flex items-center gap-2">
-                <h2 className="m-0 flex-1 text-title-medium">Your key isn&apos;t on this browser</h2>
+                <h3 className="m-0 flex-1 text-title-medium">Your key isn&apos;t on this browser</h3>
                 <HelpDot
                   ariaLabel="Your key"
                   onOpen={() => setNoticeHelp(HELP_TOPICS.yourKey)}
@@ -1138,8 +1138,8 @@ export function StanceControl({
                   {...testAttributes(part(node, "anchor.face"), `${testIdPrefix}-resting-face`)}
                   className={
                     restingFace === null
-                      ? "flex-none text-title-large leading-none opacity-40 grayscale"
-                      : "flex-none text-title-large leading-none"
+                      ? "flex-none text-title-large opacity-40 grayscale"
+                      : "flex-none text-title-large"
                   }
                 >
                   {restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}

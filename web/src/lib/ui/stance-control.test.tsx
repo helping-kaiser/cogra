@@ -1287,7 +1287,7 @@ describe("the pad as its masters draw it", () => {
     await act(async () => {
       fireEvent.click(screen.getByTestId(`${PREFIX}-write-rule-help`));
     });
-    expect(screen.getByTestId(`${PREFIX}-why-waits`)).toHaveAttribute("aria-label", "Why signing waits");
+    expect(screen.getByTestId(`${PREFIX}-notice-help`)).toHaveAttribute("aria-label", "Why signing waits");
     await act(async () => {
       fireEvent.click(screen.getByTestId(`${PREFIX}-not-now`));
     });
@@ -1762,7 +1762,9 @@ describe("the readout", () => {
     expect(screen.getByTestId(`${PREFIX}-landing-label`)).toHaveTextContent("Resulting opinion");
     expect(screen.getByTestId(`${PREFIX}-landing-face`)).toHaveTextContent("😑");
     expect(screen.getByTestId(`${PREFIX}-landing-exact`)).toHaveTextContent("−0.10 / −0.10");
-    // The word reaches a screen reader only (StanceReadout.prompt.md).
+    // The word reaches a screen reader only (StanceReadout.prompt.md), once
+    // the pick has rested.
+    await settle(500);
     expect(screen.getByTestId(`${PREFIX}-landing`).querySelector(".sr-only")).toHaveTextContent(
       "Resulting opinion: Meh",
     );
