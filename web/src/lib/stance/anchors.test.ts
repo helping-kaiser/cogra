@@ -112,7 +112,7 @@ describe("stance anchors", () => {
 describe("the zero bundle's readout", () => {
   it("takes its emoji from design.md §8.4 rather than from here", () => {
     const stated = DESIGN.match(
-      /zero bundle never speaks through the table[\s\S]*?It gets its own readout: \*\*(\S+)\*\*/,
+      /zero bundle never speaks through the table[\s\S]*?It\s+gets its own readout: \*\*(\S+)\*\*/,
     );
     expect(stated, "§8.4 no longer states the zero-bundle readout").not.toBeNull();
     expect(ZERO_BUNDLE_EMOJI).toBe(stated![1]);
