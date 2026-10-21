@@ -40,6 +40,14 @@
 // pick that nets the bundle to (0, 0) — asks over the parked pad, so `Keep
 // it` returns to the pick as it was.
 //
+// A (0, 0) WITH NOTHING STANDING IS NOT A WALK-BACK (jakob 2026-10-21, seam
+// 242/243). A pick landing (0, 0) while the bundle holds no record, or is
+// already walked back, has nothing to walk back: it asks `EmptySignConfirm`
+// over the parked pad instead, and `Set it anyway` signs the one record like
+// any other — it counts, the bundle stays at (0, 0) unsevered, and the
+// ordinary snackbar answers. An ask, never a block. Where the opinion vouches
+// its target in (`vouchesIn`), the ask warns harder and the act proceeds.
+//
 // THE CONTROL OWNS ITS TOUCHES: nothing it receives — the open pad included,
 // which is portalled to the document so its wash covers the band and the bar
 // — reaches the card behind it.
@@ -64,7 +72,7 @@ import { createPortal } from "react-dom";
 
 import { hasCode } from "@/lib/api/outcome";
 import { useStanceInputMode } from "@/lib/stance/input-mode";
-import { bundleReadout, RESTING_FACE_EMOJI } from "@/lib/stance/anchors";
+import { bundleReadout, EMPTY_PICK_LABEL, RESTING_FACE_EMOJI } from "@/lib/stance/anchors";
 import { useKeptPick } from "@/lib/stance/kept-picks";
 import { localLanding } from "@/lib/stance/landing";
 import { ORIGIN, TAP_DEFAULT, type StancePair } from "@/lib/stance/model";
@@ -84,6 +92,7 @@ import {
   parkedPadStyle,
   useBarBeneath,
 } from "@/lib/ui/pad-parking";
+import { EmptySignConfirm } from "@/lib/ui/empty-sign-confirm";
 import { PendingMarker } from "@/lib/ui/pending-marker";
 import { RowLine, type RowLineState } from "@/lib/ui/row-line";
 import { SeveranceConfirm } from "@/lib/ui/severance-confirm";
@@ -145,8 +154,26 @@ type Confirming = {
 /** Everything reaching severance lands at the origin, by definition. */
 const SEVERED: StanceLanding = { landing: ORIGIN, inert: true, severed: true };
 
+/**
+ * An open empty-sign ask: the pick that lands (0, 0) over nothing standing.
+ * Signed, it is an ORDINARY record — the fold at (0, 0), never severed.
+ */
+type EmptyAsk = {
+  pick: StancePair;
+  landing: StanceLanding;
+};
+
 /** Where a signed act was made — what re-raises its outcome. */
-type Origin = "pad" | "row" | "confirm";
+type Origin = "pad" | "row" | "confirm" | "empty";
+
+/**
+ * Where a TAKEN signing put the standing, and whether it walked it back —
+ * which word a (0, 0) resting face speaks until a fresh read replaces it.
+ */
+type Pending = {
+  pair: StancePair;
+  severed: boolean;
+};
 
 /** What did not go through on a surface: a fault, or the write rule's notice. */
 type Fault = "failed" | "writeRule";
@@ -255,6 +282,7 @@ export function StanceControl({
   padOnly,
   lineFaceInk,
   borrowed = false,
+  vouchesIn = false,
 }: {
   target: StanceTargetRef;
   /**
@@ -302,6 +330,14 @@ export function StanceControl({
    * keeps the borrowed view. Warns, never blocks.
    */
   borrowed?: boolean;
+  /**
+   * THE OPINION VOUCHES ITS TARGET IN (jakob 2026-10-21; the master's
+   * `vouchesIn`): approving an applicant, or answering a vouch asked for. An
+   * empty sign there still vouches them in, so its ask warns that they start
+   * out cut off (`EmptySignConfirm`'s `vouchIn`), and `Set it anyway` is the
+   * act. Off by default — every other host renders exactly as before.
+   */
+  vouchesIn?: boolean;
 }) {
   const data = useStanceData();
   const phase = useAuthPhase();
@@ -345,9 +381,11 @@ export function StanceControl({
    * holds the resting target until a fresh read replaces it — never before
    * the signature is taken (RowSigning.md: "NEVER the face moves before").
    */
-  const [pending, setPending] = useState<StancePair | null>(null);
+  const [pending, setPending] = useState<Pending | null>(null);
   const [confirming, setConfirming] = useState<Confirming | null>(null);
   const [confirmFailed, setConfirmFailed] = useState(false);
+  const [emptyAsk, setEmptyAsk] = useState<EmptyAsk | null>(null);
+  const [emptyFailed, setEmptyFailed] = useState(false);
   const [signed, setSigned] = useState<ReactNode | null>(null);
   const [joinPrompt, setJoinPrompt] = useState(false);
   /** The dialog a notice's own "?" opens over the pad, if any. */
@@ -515,16 +553,17 @@ export function StanceControl({
   // Escape cancels the open pad — unless the walk-back's dialog stands over
   // it, where Escape is that dialog's `Keep it` and the pad stays parked.
   useEffect(() => {
-    // Over the walk-back's dialog or the write rule's help, Escape is that
-    // dialog's own way out, and the pad stays parked beneath it.
-    if (!open || confirming !== null || noticeHelp !== null) return;
+    // Over the walk-back's dialog, the empty sign's ask or the write rule's
+    // help, Escape is that dialog's own way out, and the pad stays parked
+    // beneath it.
+    if (!open || confirming !== null || emptyAsk !== null || noticeHelp !== null) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       onEscape();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open, confirming, noticeHelp]);
+  }, [open, confirming, emptyAsk, noticeHelp]);
 
   // THE PAD IS MODAL FOR ASSISTIVE TECH (PadStanding.md): opening moves
   // focus into it — a pad-only host's first paint included — and closing
@@ -587,7 +626,7 @@ export function StanceControl({
       variant.onTaken();
       return;
     }
-    setPending(landed.landing);
+    setPending({ pair: landed.landing, severed: landed.severed });
     closeSurfaces();
     setSigned(signedLine(landed.landing, records, landed.severed, target.label, axes));
   };
@@ -611,8 +650,10 @@ export function StanceControl({
 
   /**
    * Every commit route lands here: read where the pick puts the bundle,
-   * and if the fold says that reaches severance, ask over the parked pad
-   * rather than refusing (§8.2). Otherwise sign exactly the pick.
+   * and if the fold says that reaches (0, 0), ask over the parked pad
+   * rather than refusing (§8.2) — the walk-back's dialog over a standing,
+   * the empty sign's ask over nothing standing. Otherwise sign exactly the
+   * pick.
    */
   const signPick = async (chosen: StancePair, origin: "pad" | "row") => {
     if (busy) return;
@@ -620,13 +661,22 @@ export function StanceControl({
     setPadFault(null);
     setRowLine(null);
     setConfirmFailed(false);
+    setEmptyFailed(false);
     const answer = await runInFlight(origin, async () => {
       const landed = await data.project(seamTarget, chosen);
       if (landed.kind !== "success") return { kind: "failed" as const };
-      if (landed.value.severed) return { kind: "severs" as const, landing: landed.value };
+      const { standing, ...landing } = landed.value;
+      if (landing.severed) {
+        // THE LANDING'S `severed` IS THE PAIR ALONE (StanceProjection.severed):
+        // whether it walks something back is the standing's to say, read on
+        // the same round trip — no record, or already walked back, is
+        // nothing to walk back (jakob 2026-10-21).
+        const nothingStands = standing.records === 0 || standing.severed;
+        return { kind: nothingStands ? ("empty" as const) : ("severs" as const), landing };
+      }
       const committed = await data.commit(seamTarget, chosen);
       if (committed.kind === "success") {
-        return { kind: "taken" as const, landing: landed.value, records: committed.value.records };
+        return { kind: "taken" as const, landing, records: committed.value.records };
       }
       return { kind: hasCode(committed, "WRITE_RULE_FAILED") ? ("writeRule" as const) : ("failed" as const) };
     });
@@ -638,9 +688,38 @@ export function StanceControl({
         // Confirmed, never refused — one record, asked over the pad.
         setConfirming({ pick: chosen, records: 1, alreadySevered: false, landing: answer.landing });
         return;
+      case "empty":
+        // Asked, never blocked: an empty sign is an ordinary record, so the
+        // fold it leaves is (0, 0) and NOT severed.
+        setEmptyAsk({ pick: chosen, landing: { ...answer.landing, severed: false } });
+        return;
       default:
         notTaken(origin, answer.kind);
     }
+  };
+
+  /**
+   * `Set it anyway`: the one empty record, signed like any Set. Taken, it is
+   * the ordinary path — the surfaces close, the face moves to 🤷 saying
+   * nothing, and the ordinary snackbar answers (EmptySignConfirm.md:27).
+   * Not taken, the ask stays up with the fault line and Retry (:33).
+   */
+  const onConfirmEmpty = async () => {
+    const asked = emptyAsk;
+    if (asked === null || busy) return;
+    setEmptyFailed(false);
+    const answer = await runInFlight("empty", async () => {
+      const outcome = await data.commit(seamTarget, asked.pick);
+      return outcome.kind === "success"
+        ? { kind: "taken" as const, records: outcome.value.records }
+        : { kind: "failed" as const };
+    });
+    if (answer.kind !== "taken") {
+      setEmptyFailed(true);
+      return;
+    }
+    setEmptyAsk(null);
+    taken(asked.landing, answer.records);
   };
 
   /** The explicit walk-back asks over the parked pad, and costs what it stages. */
@@ -812,18 +891,30 @@ export function StanceControl({
   const restingPair: StancePair | null = waitingForKey
     ? kept
     : pending !== null
-      ? pending
+      ? pending.pair
       : bundle === null || bundle === undefined || bundle.records === 0
         ? null
         : bundle.current;
-  // A standing, so the table is not consulted at the origin (§8.4).
-  const restingFace = restingPair === null ? null : bundleReadout(restingPair, sever.zero);
+  // A resting (0, 0) is walked back only when the bundle — or the signing
+  // just taken — says so; otherwise (an empty sign's standing, a kept pick)
+  // it says nothing (the master's `restingZero`; PadStanding.md:29).
+  const restingSevered = waitingForKey
+    ? false
+    : pending !== null
+      ? pending.severed
+      : bundle !== null && bundle !== undefined && bundle.severed;
+  const restingFace =
+    restingPair === null
+      ? null
+      : bundleReadout(restingPair, restingSevered ? sever.zero : EMPTY_PICK_LABEL);
 
   // THE WALK-AWAY NEEDS SOMETHING TO WALK BACK (the master: "SEVER NEEDS
-  // SOMETHING TO SEVER"). THE COUNT IS THE WHOLE TEST: on the wire `severed`
-  // means "both axes at zero", which a bundle folding no records satisfies
-  // vacuously. A VARIANT PAD CARRIES NO WALK IT BACK (VouchBackPad.md:11):
-  // the vouch-back opens a relationship, it is never the place to leave one.
+  // SOMETHING TO SEVER"): a bundle that folds records — an empty sign's
+  // standing included, whose walk-back costs one record. A walked-back
+  // bundle still folds its records, so it keeps the control and its dialog
+  // says it is already at nothing. A VARIANT PAD CARRIES NO WALK IT BACK
+  // (VouchBackPad.md:11): the vouch-back opens a relationship, it is never
+  // the place to leave one.
   const severable =
     variant === undefined && bundle !== null && bundle !== undefined && bundle.records > 0;
   const padNode = variant?.padNode;
@@ -1242,6 +1333,23 @@ export function StanceControl({
             setConfirmFailed(false);
           }}
           onConfirm={() => void onConfirmSeverance()}
+        />
+      )}
+
+      {/* THE EMPTY SIGN'S ASK, over the parked pad (EmptySignConfirm.md):
+          never the walk-back's dialog, never a block. */}
+      {emptyAsk !== null && (
+        <EmptySignConfirm
+          targetLabel={target.label}
+          vouchIn={vouchesIn}
+          busy={inFlight === "empty"}
+          slow={inFlight === "empty" && slow}
+          failed={emptyFailed}
+          onCancel={() => {
+            setEmptyAsk(null);
+            setEmptyFailed(false);
+          }}
+          onConfirm={() => void onConfirmEmpty()}
         />
       )}
 
