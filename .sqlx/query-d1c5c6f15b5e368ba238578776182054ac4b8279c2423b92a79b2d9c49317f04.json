@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT l.record_id AS \"record_id!\",\n                  (NOT (l.p_d = 0 AND l.p_i = 0)\n                   AND prefix.p_d = 0 AND prefix.p_i = 0) AS \"severed!\"\n           FROM mirror_record_legs l\n           JOIN mirror_records r ON r.record_id = l.record_id\n           CROSS JOIN LATERAL (\n               SELECT COALESCE(SUM(b.p_d::text::numeric), 0) AS p_d,\n                      COALESCE(SUM(b.p_i::text::numeric), 0) AS p_i\n               FROM mirror_record_legs b\n               JOIN mirror_records br ON br.record_id = b.record_id\n               WHERE b.leg = 'binary' AND b.family = l.family\n                 AND b.source = l.source AND b.target = l.target\n                 AND NOT br.payload_marked\n                 AND NOT b.census_unknown\n                 AND (br.epoch, br.act_time, br.position)\n                     <= (r.epoch, r.act_time, r.position)\n           ) prefix\n           WHERE l.record_id = ANY($1)\n             AND l.leg = 'binary' AND l.family IN ('opinion', 'affinity')\n             AND NOT r.payload_marked\n             AND NOT l.census_unknown",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "record_id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "severed!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "d1c5c6f15b5e368ba238578776182054ac4b8279c2423b92a79b2d9c49317f04"
+}

@@ -203,6 +203,101 @@ impl BundleSum {
     }
 }
 
+/// One author's bundle toward one target read as a STANDING — what the
+/// pad's readout, the walk-back and a row's "which `(0, 0)`" read
+/// (api-spec.md `StanceBundle`): the sums the fold clips, plus the one
+/// fact about order the sums cannot carry.
+///
+/// A bundle at `(0, 0)` is one of two things. Walked back — severed —
+/// when the record that brought it there said something: a counter-pick,
+/// a severance batch. Saying nothing when that record was itself
+/// `(0, 0)`: an empty sign, a priced record that says nothing and leaves
+/// the standing where it was (design.md §8.4). The sums are equal; the
+/// newest record is what tells them apart, so a standing carries it.
+///
+/// [`NetStance::is_severed`] stays the LANDING predicate — where a pick
+/// lands is a pair, and a pair at `(0, 0)` reaches severance whatever
+/// came before it. [`Standing::is_severed`] is the BUNDLE's reading.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct Standing {
+    pub sum: BundleSum,
+    /// Whether the bundle's newest record — last in the published order,
+    /// with the author's own acts in flight after everything landed —
+    /// carries a pair other than exactly `(0, 0)`. False on an empty
+    /// bundle, which has no newest record.
+    pub newest_says_something: bool,
+}
+
+impl Standing {
+    /// A standing from its records in published order, oldest first. The
+    /// sums are order-free ([`BundleSum::of_records`]); the last record is
+    /// the newest.
+    pub fn of_records<I: IntoIterator<Item = (f64, f64)>>(
+        records: I,
+    ) -> Result<Standing, NotFinite> {
+        let records: Vec<(f64, f64)> = records.into_iter().collect();
+        let newest_says_something = records.last().is_some_and(|&(d, i)| says_something(d, i));
+        Ok(Standing {
+            sum: BundleSum::of_records(records)?,
+            newest_says_something,
+        })
+    }
+
+    /// The sums sit at exactly zero on both axes. Tested on the raw sums,
+    /// not the fold: the clip keeps zero exact, and a non-finite sum names
+    /// no bundle at zero.
+    fn nets_to_zero(&self) -> bool {
+        self.sum.p_d == 0.0 && self.sum.p_i == 0.0
+    }
+
+    /// Severed: walked back to nothing. The bundle nets to `(0, 0)` and the
+    /// newest record said something — the act that brought it to nothing
+    /// took something back. An empty bundle is not severed (nothing was
+    /// ever walked back), and neither is one an empty sign left at
+    /// `(0, 0)`, over nothing or over a walk-back: that standing says
+    /// nothing. Whether a `(0, 0)` record landing over a standing that
+    /// already says nothing reads as a walk-back is open (open-questions.md
+    /// Q60); this reads it as saying nothing.
+    pub fn is_severed(&self) -> bool {
+        self.newest_says_something && self.nets_to_zero()
+    }
+
+    /// The bundle holds records and stands at `(0, 0)` without being
+    /// severed — the standing an empty sign leaves, which speaks "Says
+    /// nothing" and can still be walked back.
+    pub fn says_nothing(&self) -> bool {
+        self.sum.records > 0 && !self.newest_says_something && self.nets_to_zero()
+    }
+
+    /// The records the walk-back stages: the sum's own counter-records
+    /// ([`BundleSum::severance_batch`]), and for a standing that says
+    /// nothing one `(0, 0)` record — the sum has nothing left to cancel,
+    /// and the walk-back stays available at the cost of one record
+    /// (api-spec.md "The read-side bundle fold").
+    pub fn severance_batch(&self) -> Vec<(f64, f64)> {
+        if self.says_nothing() {
+            return vec![(0.0, 0.0)];
+        }
+        self.sum.severance_batch()
+    }
+
+    /// How many records [`Standing::severance_batch`] stages: the sum's
+    /// `⌈max(|Σ_d|, |Σ_i|)⌉`, 1 for a standing that says nothing, and 0 for
+    /// an empty or severed bundle.
+    pub fn severance_cost(&self) -> usize {
+        if self.says_nothing() {
+            return 1;
+        }
+        self.sum.severance_cost()
+    }
+}
+
+/// A record says something when its pair is anything but exactly `(0, 0)`.
+/// `-0.0` compares equal to `0.0`, so a negative zero says nothing either.
+fn says_something(p_d: f64, p_i: f64) -> bool {
+    p_d != 0.0 || p_i != 0.0
+}
+
 /// One axis's walk-back: `n` values whose decimals sum to exactly `-total`,
 /// each in `[-1, 1]`, front-loaded in whole steps with the remainder last.
 fn walk_back(total: &Decimal, n: usize) -> Vec<f64> {
@@ -522,5 +617,142 @@ mod tests {
             .fold();
         assert!(both.is_inert());
         assert!(both.is_severed());
+    }
+
+    fn standing(records: &[(f64, f64)]) -> Standing {
+        Standing::of_records(records.iter().copied()).expect("finite")
+    }
+
+    /// An empty sign over nothing: one `(0, 0)` record. It counts, the fold
+    /// stays at `(0, 0)`, the bundle is not severed, and the walk-back stays
+    /// available at the cost of one record.
+    ///
+    /// An empty sign counts as a record, leaves the bundle at zero unsevered, and leaves the walk-back available at one record.
+    /// ´claim:fold:an-empty-sign-counts-and-does-not-sever´
+    #[test]
+    fn an_empty_sign_counts_and_does_not_sever() {
+        let s = standing(&[(0.0, 0.0)]);
+        assert_eq!(s.sum.records, 1, "the record counts");
+        assert_eq!(s.sum.fold(), NetStance { p_d: 0.0, p_i: 0.0 });
+        assert!(s.sum.fold().is_severed(), "the pair is (0, 0)…");
+        assert!(!s.is_severed(), "…but nothing was walked back");
+        assert!(s.says_nothing());
+        assert_eq!(s.severance_cost(), 1);
+        assert_eq!(s.severance_batch(), vec![(0.0, 0.0)]);
+        assert!(
+            !s.severance_batch()[0].0.is_sign_negative()
+                && !s.severance_batch()[0].1.is_sign_negative(),
+            "the staged record is a positive zero, never a direction"
+        );
+        let negative_zero = standing(&[(-0.0, 0.0)]);
+        assert!(!negative_zero.is_severed() && negative_zero.says_nothing());
+    }
+
+    /// The ordinary severance: (+1, +1) then (−1, −1). The newest record
+    /// said something and the sum is zero, so the bundle is walked back,
+    /// with nothing left to stage.
+    ///
+    /// A bundle a saying record brings to zero reads severed, with nothing left to stage.
+    /// ´claim:fold:a-walk-back-to-zero-reads-severed´
+    #[test]
+    fn a_walk_back_to_zero_reads_severed() {
+        let s = standing(&[(1.0, 1.0), (-1.0, -1.0)]);
+        assert_eq!(s.sum.records, 2);
+        assert!(s.is_severed());
+        assert!(!s.says_nothing());
+        assert_eq!(s.severance_cost(), 0);
+        assert!(s.severance_batch().is_empty());
+        assert!(
+            standing(&[(0.3, 0.3), (0.0, 0.0), (-0.3, -0.3)]).is_severed(),
+            "a (0, 0) pick over a standing adds nothing and blocks no later walk-back"
+        );
+        assert!(
+            standing(&[(0.0, 0.0), (0.4, 0.2), (-0.4, -0.2)]).is_severed(),
+            "an earlier empty sign does not keep a later walk-back from reading severed"
+        );
+    }
+
+    /// An empty sign over a walked-back bundle: nothing stands, so the
+    /// `(0, 0)` record is the empty sign's, and the bundle stops reading
+    /// severed — it says nothing, and walks back at one record
+    /// (stance-control.md, "while nothing stands — never signed, or already
+    /// walked back").
+    ///
+    /// An empty sign over a walked-back bundle leaves it saying nothing, not severed.
+    /// ´claim:fold:an-empty-sign-over-a-walk-back-says-nothing´
+    #[test]
+    fn an_empty_sign_over_a_walk_back_says_nothing() {
+        let s = standing(&[(0.5, 0.5), (-0.5, -0.5), (0.0, 0.0)]);
+        assert_eq!(s.sum.records, 3);
+        assert!(!s.is_severed());
+        assert!(s.says_nothing());
+        assert_eq!(s.severance_cost(), 1);
+    }
+
+    /// The open case (open-questions.md Q60): every record `(0, 0)`, two or
+    /// more of them — an empty sign, then a confirmed `(0, 0)` landing over
+    /// it. Read as saying nothing: nothing ever stood to be walked back.
+    ///
+    /// A bundle of only empty records, however many, says nothing and is not severed.
+    /// ´claim:fold:a-bundle-of-only-empty-records-says-nothing´
+    #[test]
+    fn a_bundle_of_only_empty_records_says_nothing() {
+        for n in 2..=4 {
+            let s = standing(&vec![(0.0, 0.0); n]);
+            assert_eq!(s.sum.records as usize, n);
+            assert!(!s.is_severed(), "{n} empty records");
+            assert!(s.says_nothing());
+            assert_eq!(s.severance_cost(), 1);
+            assert_eq!(s.severance_batch(), vec![(0.0, 0.0)]);
+        }
+    }
+
+    /// One axis netted to zero is inert and still standing — never severed,
+    /// never saying nothing — and walks back by the sum, as before.
+    ///
+    /// A bundle at zero on one axis only is inert, standing, and walked back by its sum.
+    /// ´claim:fold:a-one-zero-standing-is-inert-not-severed´
+    #[test]
+    fn a_one_zero_standing_is_inert_not_severed() {
+        let s = standing(&[(0.1, 0.5), (-0.1, 0.0)]);
+        assert!(s.sum.fold().is_inert());
+        assert!(!s.is_severed());
+        assert!(!s.says_nothing());
+        assert_eq!(s.severance_cost(), 1, "⌈max(0, 0.5)⌉");
+        assert_eq!(s.severance_batch(), vec![(0.0, -0.5)]);
+        assert!(!s.severance_batch()[0].0.is_sign_negative());
+    }
+
+    /// Nothing signed: not severed, saying nothing of its own, and no walk-back.
+    ///
+    /// An empty bundle is neither severed nor saying nothing, and stages no walk-back.
+    /// ´claim:fold:an-empty-bundle-is-neither-severed-nor-empty-signed´
+    #[test]
+    fn an_empty_bundle_is_neither_severed_nor_empty_signed() {
+        let s = Standing::default();
+        assert_eq!(s, standing(&[]));
+        assert!(!s.is_severed());
+        assert!(!s.says_nothing());
+        assert_eq!(s.severance_cost(), 0);
+        assert!(s.severance_batch().is_empty());
+    }
+
+    /// The standing's quoted cost is the batch it stages, in every state.
+    ///
+    /// (´claim:fold:the-quoted-cost-is-the-batch-it-prices´)
+    #[test]
+    fn the_standing_cost_is_the_length_of_its_batch() {
+        for records in [
+            vec![],
+            vec![(0.0, 0.0)],
+            vec![(0.0, 0.0), (0.0, 0.0)],
+            vec![(1.0, 1.0), (-1.0, -1.0)],
+            vec![(0.5, 0.5), (-0.5, -0.5), (0.0, 0.0)],
+            vec![(0.8, 0.5), (0.8, 0.5), (0.8, 0.5)],
+            vec![(0.1, 0.5), (-0.1, 0.0)],
+        ] {
+            let s = standing(&records);
+            assert_eq!(s.severance_cost(), s.severance_batch().len(), "{records:?}");
+        }
     }
 }

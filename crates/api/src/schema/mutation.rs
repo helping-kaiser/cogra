@@ -3577,7 +3577,9 @@ impl Mutation {
     /// viewer's bundle to `(0, 0)`. Each is its own priced act, so the
     /// batch length is the gesture's cost — a bundle carrying more
     /// conviction than one record can walk back needs several
-    /// (feed-ranking.md §8.1).
+    /// (feed-ranking.md §8.1). A bundle an empty sign left at `(0, 0)`
+    /// walks back in one `(0, 0)` record; one with nothing standing — no
+    /// record, or already severed — is refused.
     async fn prepare_severance(
         &self,
         ctx: &Context<'_>,

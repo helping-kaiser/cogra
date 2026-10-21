@@ -2103,7 +2103,9 @@ type Mutation {
 	viewer's bundle to `(0, 0)`. Each is its own priced act, so the
 	batch length is the gesture's cost — a bundle carrying more
 	conviction than one record can walk back needs several
-	(feed-ranking.md §8.1).
+	(feed-ranking.md §8.1). A bundle an empty sign left at `(0, 0)`
+	walks back in one `(0, 0)` record; one with nothing standing — no
+	record, or already severed — is refused.
 	"""
 	prepareSeverance(input: PrepareSeveranceInput!): PreparePayload!
 	"""
@@ -3480,6 +3482,18 @@ type Record {
 	"""
 	pInterest: Dimension!
 	"""
+	Whether this record left its author's stance bundle toward the
+	target walked back to nothing — `StanceBundle.severed` read as of
+	this record: it says something, and every record of the bundle up
+	to and including it, in the published order, nets to `(0, 0)`. A
+	row drawing the pair without the bundle reads it to speak a
+	walk-back; a record at `(0, 0)` itself is never one — it says
+	nothing. Null on a record that folds into no stance bundle: a
+	family other than Opinion and Affinity, a payload-marked record, a
+	leg with no census spec.
+	"""
+	severed: Boolean
+	"""
 	The landing epoch.
 	"""
 	landingEpoch: Int!
@@ -4353,7 +4367,8 @@ type StanceBundle {
 	"""
 	rawPInterest: Float!
 	"""
-	How many records the bundle folds.
+	How many records the bundle folds — every record counts, an
+	empty sign's `(0, 0)` included.
 	"""
 	recordCount: Int!
 	"""
@@ -4361,14 +4376,19 @@ type StanceBundle {
 	"""
 	inert: Boolean!
 	"""
-	Both axes at zero — the bundle is severed.
+	Walked back to nothing: the bundle nets to `(0, 0)` and its newest
+	record said something. False on an empty bundle, and false on one
+	an empty sign left at `(0, 0)` — over nothing or over a walk-back —
+	which stands at `(0, 0)` saying nothing. The projection's `severed`
+	is the landing's pair alone; this is the bundle's history.
 	"""
 	severed: Boolean!
 	"""
-	How many counter-records severance would stage right now — the
+	How many records the walk-back would stage right now — the
 	gesture's cost, since each is its own priced act
-	(feed-ranking.md §8.1). Zero when the bundle already nets to
-	`(0, 0)`.
+	(feed-ranking.md §8.1): the counter-records that net the sums, or
+	1 for a bundle an empty sign left at `(0, 0)`. Zero when nothing
+	stands, or the bundle is already severed.
 	"""
 	severanceCost: Int!
 	"""
@@ -4404,7 +4424,11 @@ type StanceProjection {
 	"""
 	inert: Boolean!
 	"""
-	Both axes at zero — the pick reaches severance.
+	Both axes at zero — the pick reaches severance. The landing's pair
+	alone: where nothing stands — the bundle holds no record, or is
+	already severed — a pick landing at `(0, 0)` is an empty sign, not
+	a walk-back, so read it beside the bundle's `recordCount` and
+	`severed`.
 	"""
 	severed: Boolean!
 }

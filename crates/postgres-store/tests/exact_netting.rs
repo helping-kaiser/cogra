@@ -9,7 +9,7 @@
 
 use common::l1::Family;
 use common::l1::census::LegRole;
-use common::l1::fold::BundleSum;
+use common::l1::fold::{BundleSum, Standing};
 use common::l1::handshake::{EpochPackage, PublishedLeg, PublishedRecord};
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::mirror;
@@ -80,8 +80,8 @@ async fn stage(pool: &PgPool, seq: i64, person: &str, (p_d, p_i): (f64, f64)) {
     .expect("stages");
 }
 
-async fn read(pool: &PgPool, person: &str, view: BundleView) -> BundleSum {
-    stance::bundle(
+async fn read_standing(pool: &PgPool, person: &str, view: BundleView) -> Standing {
+    stance::standing(
         pool,
         AUTHOR,
         Family::Opinion,
@@ -90,6 +90,10 @@ async fn read(pool: &PgPool, person: &str, view: BundleView) -> BundleSum {
     )
     .await
     .expect("bundle")
+}
+
+async fn read(pool: &PgPool, person: &str, view: BundleView) -> BundleSum {
+    read_standing(pool, person, view).await.sum
 }
 
 /// The same records in several orders, each order its own bundle: the
@@ -152,6 +156,109 @@ async fn a_dirty_walk_back_reads_severed_across_both_halves(pool: PgPool) {
     assert!(with_pending.fold().is_severed());
     assert_eq!(with_pending.records, 3);
     assert_eq!(with_pending.severance_cost(), 0);
+    assert!(
+        read_standing(&pool, "bob", BundleView::IncludingPending)
+            .await
+            .is_severed(),
+        "the walk-back in flight is the newest record, and it said something"
+    );
+}
+
+/// The store reads the newest record the way the bundle will hold it: the
+/// last landed by causal key, and an act in flight after everything
+/// landed. So an empty sign reads as saying nothing and a walk-back as
+/// severed whichever half holds the newest record.
+///
+/// The store's standing reads the newest record across both halves, so an empty sign reads unsevered and a walk-back severed wherever it sits.
+/// ´claim:stance:the-store-reads-the-newest-record-across-both-halves´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_store_reads_the_newest_record_across_both_halves(pool: PgPool) {
+    land(&pool, 0, 1, "eve", (0.0, 0.0)).await;
+    let empty = read_standing(&pool, "eve", BundleView::Landed).await;
+    assert_eq!(empty.sum.records, 1, "the empty sign counts");
+    assert!(!empty.is_severed());
+    assert!(empty.says_nothing());
+    assert_eq!(empty.severance_cost(), 1);
+
+    land(&pool, 1, 2, "bob", (0.5, 0.5)).await;
+    land(&pool, 2, 3, "bob", (-0.5, -0.5)).await;
+    assert!(
+        read_standing(&pool, "bob", BundleView::Landed)
+            .await
+            .is_severed()
+    );
+    land(&pool, 3, 4, "bob", (0.0, 0.0)).await;
+    let over = read_standing(&pool, "bob", BundleView::Landed).await;
+    assert_eq!(over.sum.records, 3);
+    assert!(
+        !over.is_severed(),
+        "an empty sign over a walk-back says nothing"
+    );
+    assert!(over.says_nothing());
+
+    land(&pool, 4, 5, "cy", (0.4, 0.4)).await;
+    stage(&pool, 6, "cy", (0.0, 0.0)).await;
+    stage(&pool, 7, "cy", (-0.4, -0.4)).await;
+    assert!(
+        !read_standing(&pool, "cy", BundleView::Landed)
+            .await
+            .is_severed()
+    );
+    let cy = read_standing(&pool, "cy", BundleView::IncludingPending).await;
+    assert_eq!(cy.sum.records, 3);
+    assert!(cy.is_severed(), "the newest act in flight walked it back");
+
+    land(&pool, 5, 8, "dee", (0.4, 0.4)).await;
+    stage(&pool, 9, "dee", (-0.4, -0.4)).await;
+    stage(&pool, 10, "dee", (0.0, 0.0)).await;
+    let dee = read_standing(&pool, "dee", BundleView::IncludingPending).await;
+    assert!(
+        !dee.is_severed(),
+        "the newest act in flight is an empty sign"
+    );
+    assert!(dee.says_nothing());
+}
+
+/// A record row says whether it left its bundle walked back: it said
+/// something, and the bundle as of it nets to zero. Read at the newest
+/// record, that is the landed bundle's own answer.
+///
+/// A stance record says whether it left its bundle walked back, and the newest record agrees with the bundle.
+/// ´claim:stance:a-row-says-whether-it-walked-the-bundle-back´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_row_says_whether_it_walked_the_bundle_back(pool: PgPool) {
+    let marks = [
+        ("bob", (0.5, 0.5), false),
+        ("bob", (-0.5, -0.5), true),
+        ("bob", (0.0, 0.0), false),
+        ("cy", (0.0, 0.0), false),
+        ("dee", (0.2, 0.2), false),
+        ("dee", (0.0, 0.0), false),
+        ("dee", (-0.2, -0.2), true),
+    ];
+    let mut ids = Vec::new();
+    for (epoch, (person, pair, _)) in marks.iter().enumerate() {
+        land(&pool, epoch as i64, epoch as u64 + 1, person, *pair).await;
+        let mut landed = mirror::record_ids_in_epoch(&pool, epoch as i64)
+            .await
+            .expect("ids");
+        ids.push(landed.pop().expect("one record per epoch"));
+    }
+    let flags = stance::severing_records(&pool, &ids).await.expect("flags");
+    for ((person, pair, expected), id) in marks.iter().zip(&ids) {
+        assert_eq!(flags.get(id), Some(expected), "{person} {pair:?}");
+    }
+    for (person, newest) in [("bob", 2usize), ("cy", 3), ("dee", 6)] {
+        let bundle = read_standing(&pool, person, BundleView::Landed).await;
+        assert_eq!(flags[&ids[newest]], bundle.is_severed(), "{person}");
+    }
+    assert!(
+        stance::severing_records(&pool, &["act:nobody:1:opinion".to_string()])
+            .await
+            .expect("flags")
+            .is_empty(),
+        "a record the mirror does not hold folds into no bundle"
+    );
 }
 
 /// Off-grid values authored before the grid was enforced are held to their
