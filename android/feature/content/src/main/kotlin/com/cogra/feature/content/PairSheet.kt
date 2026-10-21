@@ -49,8 +49,9 @@ import com.cogra.core.designsystem.PairRanges
 import com.cogra.core.designsystem.PairSliders
 import com.cogra.core.designsystem.StancePoint
 import com.cogra.core.designsystem.TagPoint
-import com.cogra.core.designsystem.nearestStanceAnchor
-import com.cogra.core.designsystem.nearestTagAnchor
+import com.cogra.core.designsystem.EMPTY_PICK_LABEL
+import com.cogra.core.designsystem.bundleReadout
+import com.cogra.core.designsystem.tagReadout
 import com.cogra.core.designsystem.pair
 import com.cogra.core.designsystem.twoPlaces
 import com.cogra.core.designsystem.twoPlacesUnsigned
@@ -84,7 +85,7 @@ internal fun TagPairSheet(
         axes = PairAxes.Tag,
         reading = { pick ->
             val at = TagPoint(pick.directed, pick.interest)
-            val anchor = nearestTagAnchor(at)
+            val anchor = tagReadout(at)
             PairReading(
                 face = anchor.emoji,
                 pair = at.pair(),
@@ -120,7 +121,7 @@ internal fun ReferencePairSheet(
             // feeling about a stance, and this record is a citation — so the
             // spoken reading names the two axes instead.
             PairReading(
-                face = nearestStanceAnchor(at).emoji,
+                face = bundleReadout(at, EMPTY_PICK_LABEL).emoji,
                 pair = at.pair(),
                 spoken = "$PICK_LABEL: ${PairAxes.Citation.directed} ${twoPlaces(pick.directed)}, " +
                     "${PairAxes.Citation.interest} ${twoPlaces(pick.interest)}",

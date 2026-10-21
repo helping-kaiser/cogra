@@ -39,6 +39,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.EMPTY_PICK_LABEL
+import com.cogra.core.designsystem.SEVERED_LABEL
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.dataNodeSurface
 import com.cogra.core.designsystem.v2.atom.ContentRow
@@ -225,7 +227,13 @@ private const val TAIL_DISTANCE = 5
 private fun NotificationDisc.toContentRowDisc(): ContentRowDisc = when (this) {
     is NotificationDisc.Picture -> ContentRowDisc.Picture(url, name)
     is NotificationDisc.Monogram -> ContentRowDisc.Monogram(name)
-    is NotificationDisc.Face -> ContentRowDisc.Face(directed, interest)
+    // The row says which (0, 0) it draws (`StanceValue.zeroLabel`): walked back
+    // only when the record says so, otherwise an empty sign's, which says nothing.
+    is NotificationDisc.Face -> ContentRowDisc.Face(
+        directed,
+        interest,
+        zeroLabel = if (severed == true) SEVERED_LABEL else EMPTY_PICK_LABEL,
+    )
     NotificationDisc.WalkedBack -> ContentRowDisc.WalkedBack
     NotificationDisc.Redacted -> ContentRowDisc.Redacted
 }

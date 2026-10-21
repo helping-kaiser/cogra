@@ -77,8 +77,9 @@ fun SeveranceConfirm(
             )
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(Space.x2)) {
-                prompt.pick?.takeIf { prompt.fromPick }?.let { pick -> PickLine(pick, axes, zeroWords, testTagPrefix) }
+            // DialogSurface's body: paragraphs `--space-4` apart.
+            Column(verticalArrangement = Arrangement.spacedBy(Space.x4)) {
+                prompt.pick?.takeIf { prompt.fromPick }?.let { pick -> PickLine(pick, axes, testTagPrefix) }
                 Text(
                     text = stringResource(zeroWords.body, target),
                     modifier = Modifier.testTag("${testTagPrefix}_severance_body"),
@@ -136,9 +137,9 @@ fun SeveranceConfirm(
     )
 }
 
-/** Whether the walk-back's signing has stayed unanswered past [SETTING_AFTER_MS]. */
+/** Whether a dialog's signing has stayed unanswered past [SETTING_AFTER_MS] — the walk-back's and the empty sign's. */
 @Composable
-private fun rememberSlowSignature(working: Boolean): Boolean {
+internal fun rememberSlowSignature(working: Boolean): Boolean {
     var slow by remember { mutableStateOf(false) }
     LaunchedEffect(working) {
         slow = false
@@ -152,15 +153,15 @@ private fun rememberSlowSignature(working: Boolean): Boolean {
 
 /**
  * `Your pick: 🙂 +0.40 / +0.20` — the pick that nets the bundle to nothing,
- * its face and pair painted in both modes, its word spoken. A pick at
- * exactly (0, 0) IS the walk-back here, so the zero readout's own pair — 🤷,
- * `Walked back` — is its honest face.
+ * its face and pair painted in both modes, its word spoken. The pick wears
+ * the face every pair wears: one number at zero thinks, as it does on the
+ * pad. A pick of (0, 0) reaches this dialog only over a standing already at
+ * (0, 0) — an empty sign's — and there it says nothing, as it does on the pad.
  */
 @Composable
-private fun PickLine(pick: StancePoint, axes: StanceAxes, zeroWords: StanceZeroWords, testTagPrefix: String) {
-    val anchor = standingReadout(pick)
-    val word = if (pick.isZeroBundle) stringResource(zeroWords.zeroLabel) else stringResource(anchor.label)
-    val spoken = stringResource(R.string.stance_severance_pick_spoken, word, pick.reading(axes))
+private fun PickLine(pick: StancePoint, axes: StanceAxes, testTagPrefix: String) {
+    val anchor = bundleReadout(pick, EMPTY_PICK_LABEL)
+    val spoken = stringResource(R.string.stance_severance_pick_spoken, stringResource(anchor.label), pick.reading(axes))
     Text(
         text = stringResource(R.string.stance_severance_pick, anchor.emoji, pick.pair()),
         modifier = Modifier
@@ -172,12 +173,14 @@ private fun PickLine(pick: StancePoint, axes: StanceAxes, zeroWords: StanceZeroW
 /**
  * Everything said, raw, then the cap only when the total exceeds it — one
  * statement in two lines, a tight 4dp apart, in `body-small`. With nothing
- * signed there is no total: `🤷 No opinion on this post yet.`
+ * signed there is no total: `🤷 No opinion on this post yet.` — decided by
+ * the bundle's records (`severanceParts`), never by the sum, since an empty
+ * sign's standing sums to (0, 0) and still is something said.
  */
 @Composable
 private fun RawTotal(prompt: SeverancePrompt, target: String, zeroWords: StanceZeroWords, testTagPrefix: String) {
     val tag = "${testTagPrefix}_severance_standing"
-    if (prompt.raw.isZeroBundle) {
+    if (prompt.bundleRecords == 0) {
         Text(
             text = "${ZERO_BUNDLE_READOUT.emoji} ${stringResource(R.string.stance_standing_none, target)}",
             style = MaterialTheme.typography.bodySmall,

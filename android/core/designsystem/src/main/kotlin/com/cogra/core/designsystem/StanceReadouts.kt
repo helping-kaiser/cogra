@@ -182,14 +182,16 @@ private fun ReadoutSentence(sentence: String, testTag: String, modifier: Modifie
 
 /**
  * The current opinion and the pick — everything that sits above the field
- * (`StanceStanding`). [standing] null means nothing was ever signed toward
- * the target; a standing at exactly `(0, 0)` is a bundle walked back to
- * nothing, read as a sentence and never through the table.
+ * (`StanceStanding`, `standingParts`). [standing] null means nothing was ever
+ * signed toward the target; [severed] is a bundle walked back to nothing,
+ * read as a sentence. Any other standing is a readout, faces following the
+ * value — a `(0, 0)` there is an empty sign's, and it says nothing.
  */
 @Composable
 internal fun StanceStanding(
     pick: StancePoint,
     standing: StancePoint?,
+    severed: Boolean,
     testTagPrefix: String,
     axes: StanceAxes,
     zeroWords: StanceZeroWords,
@@ -210,12 +212,14 @@ internal fun StanceStanding(
                 "${ZERO_BUNDLE_READOUT.emoji} ${stringResource(R.string.stance_standing_none, target)}",
                 currentTag,
             )
-            standing.isZeroBundle -> ReadoutSentence(
+            severed -> ReadoutSentence(
                 "${ZERO_BUNDLE_READOUT.emoji} ${stringResource(zeroWords.standingZero, target)}",
                 currentTag,
             )
             else -> {
-                val anchor = nearestStanceAnchor(standing)
+                // Severed is answered above, so a standing at exactly (0, 0)
+                // here is an empty sign's: it says nothing.
+                val anchor = bundleReadout(standing, EMPTY_PICK_LABEL)
                 ReadoutBlock(
                     label = current,
                     emoji = anchor.emoji,
@@ -229,8 +233,9 @@ internal fun StanceStanding(
         }
         // The pick's own readout — above the field, never under the knob,
         // because a thumb on the control covers exactly where feedback would
-        // otherwise sit.
-        val anchor = nearestStanceAnchor(pick)
+        // otherwise sit. It wears the face every pair wears: a pick with one
+        // number at zero thinks, and a pick of (0, 0) says nothing.
+        val anchor = bundleReadout(pick, EMPTY_PICK_LABEL)
         ReadoutBlock(
             label = pickLabel,
             emoji = anchor.emoji,
@@ -245,14 +250,7 @@ internal fun StanceStanding(
 
 /** The state an unreachable landing reads as, by the sign of the number that stands (`unreachableHead`). */
 @Composable
-internal fun unreachableHead(net: StancePoint): String = stringResource(
-    when {
-        net.directed == 0.0 && net.interest > 0.0 -> R.string.stance_unreachable_interested
-        net.directed == 0.0 -> R.string.stance_unreachable_rather_not
-        net.directed > 0.0 -> R.string.stance_unreachable_for
-        else -> R.string.stance_unreachable_against
-    },
-)
+internal fun unreachableHead(net: StancePoint): String = stringResource(unreachableHeadLabel(net))
 
 /**
  * The landing — the one readout below the field (`StanceLandingLine`).
@@ -287,7 +285,7 @@ internal fun StanceLandingLine(
                 UnreachableLanding(landing.net, tag, testTagPrefix, onExplainZero)
             else -> {
                 val resulting = stringResource(R.string.stance_resulting)
-                val anchor = nearestStanceAnchor(landing.net)
+                val anchor = bundleReadout(landing.net, zeroWords.zeroLabel)
                 ReadoutBlock(
                     label = resulting,
                     emoji = anchor.emoji,

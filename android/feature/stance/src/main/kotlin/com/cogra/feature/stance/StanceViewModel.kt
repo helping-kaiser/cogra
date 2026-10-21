@@ -40,6 +40,7 @@ import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceSignals
 import com.cogra.domain.stance.StanceTarget
+import com.cogra.domain.stance.isEmptySign
 import com.cogra.domain.stance.localLanding
 import com.cogra.domain.store.IdentityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -60,10 +61,15 @@ data class TargetStance(
      * The fold's answer, or null when the reader has authored nothing
      * toward this target — which is what the resting target renders as
      * the labelled affordance rather than a folded pair (design.md §8.3).
-     * A bundle folding to the origin is NOT nothing: it is severance, and
-     * [standingRecords] is what tells the two apart.
+     * A bundle folding to the origin is NOT nothing: [standingRecords] is
+     * what tells the two apart, and [standingSevered] which zero it is.
      */
     val standing: StancePair? = null,
+    /**
+     * The bundle is walked back to nothing (`StanceBundle.severed`). A
+     * standing at the origin that is not severed is an empty sign's.
+     */
+    val standingSevered: Boolean = false,
     /**
      * The raw sums behind [standing], before the clip. The landing is
      * folded from THESE, locally and instantly; folding the clipped
@@ -83,6 +89,8 @@ data class TargetStance(
     /** The failure is a husk device, not a fault: the key has to come back. */
     val needsKey: Boolean = false,
     val severance: SeveranceState? = null,
+    /** The empty sign's ask, open over the parked pad (`EmptySignConfirm`). */
+    val emptySign: EmptySignState? = null,
     /**
      * A stance just signed, as the standing it left the reader at. A
      * one-shot: the screen shows it once and calls
@@ -125,6 +133,12 @@ data class SeveranceState(
     val quote: SeveranceQuote,
     /** Reached by an ordinary pick landing on zero rather than by the route. */
     val fromPick: Boolean,
+    val working: Boolean = false,
+    val failed: Boolean = false,
+)
+
+/** An open empty-sign ask and its one signing's progress. */
+data class EmptySignState(
     val working: Boolean = false,
     val failed: Boolean = false,
 )
@@ -224,6 +238,13 @@ class StanceViewModel @Inject constructor(
         // With the key elsewhere a hold opens the pad carrying the key
         // notice, as a tap does, and signs nothing (PadKeyAbsent.md:5).
         if (_state.value.keyAbsent) return onOpenPad(target)
+        // THE HOLD IS CHECKED LIKE SET (the master's `commitChecked(TAP_DEFAULT)`):
+        // a default that nets the bundle to (0, 0) asks before it signs.
+        val landed = _state.value.targets[target]?.landingFor(StancePair.TapDefault)
+        if (landed?.severance == true) {
+            update(target) { it.copy(pick = StancePair.TapDefault, landing = landed) }
+            return askAtZero(target)
+        }
         commit(target, StancePair.TapDefault)
     }
 
@@ -316,17 +337,57 @@ class StanceViewModel @Inject constructor(
     }
 
     /**
-     * Commits the pick — unless it lands on severance, which is asked
-     * about rather than refused, through the same confirmation the
-     * explicit route opens (design.md §8.2, §8.5).
+     * Commits the pick — unless it lands at (0, 0), which is asked about
+     * rather than refused (design.md §8.2, §8.5): over anything standing
+     * through the walk-back's own confirmation, over nothing through the
+     * empty sign's ask.
      */
     fun onCommit(target: StanceTarget) {
         val entry = _state.value.targets[target] ?: return
-        if (entry.landing?.severance == true) {
-            openSeverance(target, fromPick = true)
-            return
-        }
+        if (entry.landing?.severance == true) return askAtZero(target)
         commit(target, entry.pick)
+    }
+
+    /**
+     * THE TRIGGER SPLIT (jakob 2026-10-21, seam 242; StanceControl.jsx
+     * `commitChecked`): a landing at (0, 0) while nothing stands — no record,
+     * or a bundle already walked back — is an empty sign and asks
+     * `EmptySignConfirm`; over anything standing, an empty sign's standing
+     * included, it is severance and asks `SeveranceConfirm`. Never a block.
+     */
+    private fun askAtZero(target: StanceTarget) {
+        val entry = _state.value.targets[target] ?: return
+        val landing = entry.landing ?: return
+        if (isEmptySign(landing, entry.standingRecords, entry.standingSevered)) {
+            update(target) { it.copy(emptySign = EmptySignState()) }
+        } else {
+            openSeverance(target, fromPick = true)
+        }
+    }
+
+    /** `Keep it`, the scrim or Back on the empty sign's ask: the pad keeps its pick. */
+    fun onDismissEmptySign(target: StanceTarget) = update(target) {
+        if (it.emptySign?.working == true) it else it.copy(emptySign = null)
+    }
+
+    /**
+     * `Set it anyway`: signs the one empty record like any Set — it counts,
+     * the fold stays at (0, 0) and is not severed, and the ordinary
+     * confirmation answers (jakob 2026-10-21). The ask stays up until that
+     * one signature answers, and a signing that did not go through keeps it
+     * up with the fault and `Retry`.
+     */
+    fun onConfirmEmptySign(target: StanceTarget) {
+        val open = _state.value.targets[target]?.emptySign ?: return
+        if (open.working) return
+        update(target) { it.copy(emptySign = EmptySignState(working = true)) }
+        val pick = _state.value.targets[target]?.pick ?: return
+        viewModelScope.launch {
+            when (sign(target, pick)) {
+                Signed.Done -> taken(target, pick)
+                else -> update(target) { it.copy(emptySign = EmptySignState(failed = true)) }
+            }
+        }
     }
 
     /** The route for the reader who came to sever (design.md §8.5). */
@@ -497,10 +558,20 @@ class StanceViewModel @Inject constructor(
                 pick = StancePair.Origin,
                 landing = null,
                 severance = null,
+                emptySign = null,
             )
         }
         readStanding(target)
-        update(target) { it.copy(confirmation = it.standing ?: pick) }
+        // A pick that walked the bundle back confirms as the walk-back it was,
+        // one thing signed; everything else — an empty sign's (0, 0) included
+        // — is the ordinary `Current opinion` line.
+        update(target) {
+            if (it.standingSevered) {
+                it.copy(walkedBack = 1)
+            } else {
+                it.copy(confirmation = it.standing ?: pick)
+            }
+        }
     }
 
     /**
@@ -523,6 +594,9 @@ class StanceViewModel @Inject constructor(
                 raw.pInterest + pick.pInterest,
             ),
             standingRecords = it.standingRecords + 1,
+            // `StanceBundle.severed`'s own rule: at (0, 0), and the newest
+            // record — this pick — said something. An empty sign never severs.
+            standingSevered = landed.severance && !(pick.pDirected == 0.0 && pick.pInterest == 0.0),
             standingPending = true,
         )
     }
@@ -540,6 +614,7 @@ class StanceViewModel @Inject constructor(
                     standing = outcome.value.net.takeIf { _ -> outcome.value.records > 0 },
                     standingRaw = outcome.value.raw,
                     standingRecords = outcome.value.records,
+                    standingSevered = outcome.value.severed,
                     standingRead = true,
                     standingPending = false,
                     // The pick standing on an open pad now folds onto a

@@ -48,9 +48,9 @@ import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.R
 import com.cogra.core.designsystem.StancePoint
 import com.cogra.core.designsystem.ZERO_BUNDLE_READOUT
+import com.cogra.core.designsystem.bundleReadout
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.pair
-import com.cogra.core.designsystem.standingReadout
 import com.cogra.core.designsystem.v2.media.CograAvatar
 
 private val DISC = 40.dp
@@ -93,7 +93,7 @@ private fun Disc(disc: ContentRowDisc) {
 @Composable
 private fun FaceDisc(disc: ContentRowDisc.Face) {
     val point = StancePoint(disc.directed, disc.interest)
-    val readout = standingReadout(point)
+    val readout = bundleReadout(point, disc.zeroLabel)
     val spoken = "${stringResource(readout.label)}, ${point.pair()}"
     Box(
         contentAlignment = Alignment.Center,

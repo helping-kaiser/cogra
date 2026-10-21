@@ -33,7 +33,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.StancePadField
 import com.cogra.core.designsystem.StancePoint
-import com.cogra.core.designsystem.nearestStanceAnchor
+import com.cogra.core.designsystem.EMPTY_PICK_LABEL
+import com.cogra.core.designsystem.bundleReadout
 import com.cogra.core.designsystem.pair
 import com.cogra.core.designsystem.reading
 import com.cogra.core.designsystem.v2.atom.ButtonKind
@@ -559,7 +560,7 @@ internal fun ReplyPad(
  */
 @Composable
 private fun stanceRowReading(pick: StancePoint): String =
-    "${nearestStanceAnchor(pick).emoji} ${pick.pair()}"
+    "${bundleReadout(pick, EMPTY_PICK_LABEL).emoji} ${pick.pair()}"
 
 /**
  * THE PAIR WITH THE FACE IT READS AS — the anchor nearest the pick, one
@@ -573,7 +574,7 @@ private fun stanceRowReading(pick: StancePoint): String =
  */
 @Composable
 private fun StanceReading(pick: StancePoint) {
-    val anchor = nearestStanceAnchor(pick)
+    val anchor = bundleReadout(pick, EMPTY_PICK_LABEL)
     val words = stringResource(anchor.label)
     val spoken = pick.reading()
     Row(

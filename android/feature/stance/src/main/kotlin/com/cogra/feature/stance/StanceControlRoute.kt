@@ -17,6 +17,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.EmptySignPrompt
 import com.cogra.core.designsystem.SeverancePrompt
 import com.cogra.core.designsystem.StanceAxes
 import com.cogra.core.designsystem.StanceControl
@@ -77,6 +78,12 @@ fun StanceControlRoute(
     onTaken: (() -> Unit)? = null,
     /** The vouch card's empty face is a line face in this ink; see [StanceControl]. */
     lineFaceInk: Color? = null,
+    /**
+     * The opinion vouches its target in (approving, a vouch asked for): an
+     * empty sign's ask warns that they start out cut off, and `Set it anyway`
+     * still vouches them in. See [StanceControl].
+     */
+    vouchesIn: Boolean = false,
     viewModel: StanceViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -154,6 +161,9 @@ fun StanceControlRoute(
         variant = variant,
         padOnly = padOnly,
         lineFaceInk = lineFaceInk,
+        onConfirmEmptySign = { viewModel.onConfirmEmptySign(target) },
+        onDismissEmptySign = { viewModel.onDismissEmptySign(target) },
+        vouchesIn = vouchesIn,
     )
 }
 
@@ -170,6 +180,7 @@ internal fun TargetStance.toControlState(
         PadMode.ALTERNATES -> StancePadMode.ALTERNATES
     },
     standing = standing?.toPoint(),
+    severed = standingSevered,
     landing = landing?.let {
         StanceLanding(
             net = it.net.toPoint(),
@@ -197,8 +208,10 @@ internal fun TargetStance.toControlState(
             working = it.working,
             failed = it.failed,
             pick = pick.toPoint().takeIf { _ -> it.fromPick },
+            bundleRecords = it.quote.bundleRecords,
         )
     },
+    emptySign = emptySign?.let { EmptySignPrompt(working = it.working, failed = it.failed) },
     coaching = coaching,
     confirmation = confirmation?.toPoint(),
     walkedBack = walkedBack,

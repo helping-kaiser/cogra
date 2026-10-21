@@ -101,7 +101,7 @@ data class StanceStanding(
      * actually walks (design.md §8.3, §8.5).
      */
     val raw: StancePair,
-    /** How many of the viewer's own records the fold covers. */
+    /** How many of the viewer's own records the fold covers — an empty sign's `(0, 0)` included. */
     val records: Int,
     /**
      * Whether records that have not landed on L1 counted. True is the
@@ -109,6 +109,13 @@ data class StanceStanding(
      * still settling is one the author already made (design.md §9).
      */
     val includePending: Boolean,
+    /**
+     * WALKED BACK TO NOTHING (`StanceBundle.severed`): the bundle nets to
+     * `(0, 0)` and its newest record said something. False on an empty
+     * bundle, and false on one an empty sign left at `(0, 0)` — which stands
+     * there saying nothing. The pair alone cannot tell the two zeros apart.
+     */
+    val severed: Boolean,
 )
 
 /**
@@ -207,6 +214,22 @@ data class SeveranceQuote(
     val raw: StancePair,
     /** How many counter-records the batch stages — each its own priced act. */
     val records: Int,
-    /** The bundle already nets to `(0, 0)`; there is nothing to sever. */
+    /** Nothing stands to walk back: the bundle holds no record, or is already severed. */
     val alreadySevered: Boolean,
+    /**
+     * How many records the bundle holds. Zero is the one bundle with no
+     * total to state; an empty sign's standing sums to `(0, 0)` and still
+     * counts.
+     */
+    val bundleRecords: Int,
 )
+
+/**
+ * Where the pick lands the bundle at `(0, 0)` while NOTHING STANDS — no record
+ * ever signed, or a bundle already walked back — the landing is an EMPTY SIGN,
+ * not a walk-back (jakob 2026-10-21, seam 242): it asks its own question, never
+ * the walk-back's. Over anything standing, an empty sign's standing included,
+ * a `(0, 0)` landing is severance (the master's `commitChecked`).
+ */
+fun isEmptySign(landing: StanceProjection, records: Int, severed: Boolean): Boolean =
+    landing.severance && (records == 0 || severed)

@@ -341,6 +341,7 @@ class ScriptedStanceRepository(private val writes: WriteRepository) : ThrowingSt
     var net = StancePair.Origin
     var raw: StancePair? = null
     var records = 0
+    var severed = false
 
     override suspend fun prepareStance(
         target: StanceTarget,
@@ -352,7 +353,7 @@ class ScriptedStanceRepository(private val writes: WriteRepository) : ThrowingSt
 
     override suspend fun standing(target: StanceTarget, includePending: Boolean): Outcome<StanceStanding> =
         Outcome.Success(
-            StanceStanding(target, net, raw ?: net, records, includePending = includePending),
+            StanceStanding(target, net, raw ?: net, records, includePending = includePending, severed = severed),
         )
 
     override suspend fun projection(
@@ -376,7 +377,8 @@ class ScriptedStanceRepository(private val writes: WriteRepository) : ThrowingSt
                 standing = net,
                 raw = raw ?: net,
                 records = records,
-                alreadySevered = net == StancePair.Origin,
+                alreadySevered = records == 0 || severed,
+                bundleRecords = records,
             ),
         )
 }

@@ -113,6 +113,11 @@
     <string name="tag_anchor_fishing_for_it">fishing for it</string>
     <string name="tag_anchor_big_claim_divined">big claim, divined</string>
     <string name="tag_anchor_all_of_it">all of it, full stop</string>
+    <!-- A tag's pair outside the thirteen (StanceReadout.jsx `tagReadout`):
+         (0, 0) is the withdrawal, one zero is a claim that reaches no feed. -->
+    <string name="tag_withdrawn">withdrawn</string>
+    <string name="tag_unreachable_not_about">not about it at all</string>
+    <string name="tag_unreachable_no_certainty">no certainty at all</string>
 
     <!-- The face's names (copy-voice "Carried over — blessed by use", *The
          face's names*; StanceControl.jsx:491-498). The target is the card's:
@@ -177,6 +182,9 @@
     <string name="stance_standing_none">No opinion on %1$s yet.</string>
     <!-- The zero bundle's word beside the shrug (`SEVERED_LABEL`). -->
     <string name="stance_standing_zero">Walked back</string>
+    <!-- A pick at exactly (0, 0), and a standing there never walked back —
+         an empty sign's (`EMPTY_PICK_LABEL`). -->
+    <string name="stance_says_nothing">Says nothing</string>
     <!-- A bundle already at nothing, as a sentence (`gone`). -->
     <string name="stance_standing_gone">You\'ve walked %1$s back to nothing.</string>
     <string name="stance_landing_working">Adding it up…</string>
@@ -277,6 +285,17 @@
     </plurals>
     <string name="stance_severance_already">You are already at nothing here.</string>
     <string name="stance_severance_keep">Keep it</string>
+
+    <!-- The empty sign's ask (copy-voice *The empty sign*; EmptySignConfirm.jsx
+         `EMPTY_SIGN_WORDS`, jakob 2026-10-21): a pick landing (0, 0) while
+         nothing stands. In flight the act reads `stance_setting`; the safe
+         action is `stance_severance_keep`. %1$s is the target. -->
+    <string name="stance_empty_sign_title">Sign an empty opinion?</string>
+    <string name="stance_empty_sign_effect">This says nothing about %1$s, shapes no feed, and leaves you where you are.</string>
+    <!-- Where the opinion vouches its target in (approving, a vouch asked for). -->
+    <string name="stance_empty_sign_vouch_in">%1$s would be vouched in but start out cut off: no feed can carry them, and community funds stay closed to them, until someone gives them an opinion that says something.</string>
+    <string name="stance_empty_sign_cost">It signs 1 thing, paid on its own.</string>
+    <string name="stance_empty_sign_confirm">Set it anyway</string>
     <string name="stance_severance_help">Walk it back takes everything you\'ve said to nothing. It has its own confirmation, and each thing you\'ve said is walked back by its own signature.</string>
     <string name="stance_severance_help_alternates">Walk it back takes everything to nothing, and each thing you\'ve said is walked back by its own signature.</string>
 
