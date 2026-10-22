@@ -1796,6 +1796,8 @@ describe("PostView", () => {
     // then not seeing the corrected version gives the user uncertainty if it
     // even happened." An edited REPLY lives behind its parent's count, so the
     // edit's return unfolds that branch exactly as the reply's does.
+    // Many sequential awaits through MSW: a starved full suite needs more than
+    // the 5 s default (timeout argument below).
     it("unfolds the branch an edited reply lives in, so its author sees it", async () => {
       let reads = 0;
       let branches = 0;
@@ -1836,7 +1838,7 @@ describe("PostView", () => {
         store: storeFor("acct-1"),
         writeSigner: fakeWriteSigner(),
       });
-      await openComments();
+      const sheet = await openComments();
       // The reader unfolds the branch themselves and edits their own reply.
       fireEvent.click(await screen.findByTestId("replies-more-c1"));
       expect(await screen.findByTestId("post-comment-r1")).toHaveTextContent("old words");
@@ -1844,6 +1846,10 @@ describe("PostView", () => {
 
       fireEvent.click(screen.getByTestId("comment-edit-r1"));
       await screen.findByTestId("comment-edit");
+      // The sheet steps aside for the editor and drops on a 200 ms exit timer;
+      // saving before that timer has run lets its close land on top of the
+      // sheet's return (see the reply test above, which waits the same way).
+      await waitFor(() => expect(sheet).not.toBeVisible());
       body.scrollTop = 0;
       fireEvent.change(screen.getByTestId("comment-edit-input"), {
         target: { value: "better words" },
@@ -1852,12 +1858,16 @@ describe("PostView", () => {
 
       // The refetch re-collapsed every branch; this one comes back open,
       // because that is where the words the author just wrote are.
-      expect(await screen.findByTestId("comment-edited-r1")).toBeInTheDocument();
+      // Marker lands after the sign, the thread refetch and the branch read:
+      // three sequential reads, so the default 1 s is too tight under load.
+      expect(
+        await screen.findByTestId("comment-edited-r1", undefined, { timeout: 4000 }),
+      ).toBeInTheDocument();
       expect(screen.getByTestId("post-comment-r1")).toHaveTextContent("better words");
-      expect(screen.getByTestId("comments-sheet")).toBeVisible();
+      await waitFor(() => expect(screen.getByTestId("comments-sheet")).toBeVisible());
       await waitFor(() => expect(reads).toBe(2));
       await waitFor(() => expect(body.scrollTop).toBe(180));
-    });
+    }, 15_000);
 
     // A comment on the POST is already at the top level, so there is no branch
     // to unfold — the place alone is the whole return.
