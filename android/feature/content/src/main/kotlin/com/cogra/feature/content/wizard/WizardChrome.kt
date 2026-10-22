@@ -14,7 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.cogra.core.designsystem.v2.atom.InlineAction
+import com.cogra.core.designsystem.v2.atom.ButtonKind
+import com.cogra.core.designsystem.v2.atom.ButtonSize
+import com.cogra.core.designsystem.v2.atom.CograRowButton
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 
@@ -23,9 +25,11 @@ import com.cogra.core.designsystem.v2.token.Space
  * sentence saying what this stage is for, and the quiet `primary` word
  * that switches to the other half of the body.
  *
- * Geometry is the canonical boards': `padding: 8px 24px`, the sentence
- * in `bodyMedium` on `onSurfaceVariant`, the switch as an
- * [InlineAction].
+ * Geometry is `PickPrompt.jsx`'s: `padding: 8px 24px`, the sentence in
+ * `bodyMedium` on `onSurfaceVariant`, and the switch a TEXT BUTTON at `sm`
+ * (`<Button variant="text" size="sm">`) — deliberately quieter than the
+ * tray, and drawn at its own 32dp with its 48dp target around it
+ * ([CograRowButton]) so the band is the caption's height, not the target's.
  */
 @Composable
 internal fun WizardCaption(
@@ -49,7 +53,13 @@ internal fun WizardCaption(
             modifier = Modifier.weight(1f),
         )
         if (actionText != null && onAction != null) {
-            InlineAction(text = actionText, onClick = onAction, testTag = actionTestTag)
+            CograRowButton(
+                text = actionText,
+                onClick = onAction,
+                size = ButtonSize.Compact,
+                kind = ButtonKind.Text,
+                testTag = actionTestTag,
+            )
         }
     }
 }
