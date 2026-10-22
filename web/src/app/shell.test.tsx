@@ -53,6 +53,8 @@ describe("AppShell", () => {
   it.each([
     ["/feed", "feed.bottomBar"],
     ["/posts/post-1", "postDetail.bottomBar"],
+    ["/profile", "profile.bottomBar"],
+    ["/u/alice", "profile.bottomBar"],
   ])("names the bar on the registered screen %s after it", async (path, bar) => {
     pathname = path;
     renderWithProviders(
@@ -68,7 +70,7 @@ describe("AppShell", () => {
     expect(screen.queryByTestId("bottom-nav")).not.toBeInTheDocument();
   });
 
-  it.each(["/posts/post-1/edit", "/u/alice"])(
+  it.each(["/posts/post-1/edit"])(
     "keeps the bar's own ids on %s, whose screen is not registered",
     async (path) => {
       pathname = path;
@@ -91,7 +93,10 @@ describe("AppShell", () => {
       </AppShell>,
       { store: signedInStore() },
     );
-    expect(await screen.findByTestId("nav-profile")).toHaveAttribute("aria-current", "page");
+    expect(await screen.findByTestId(byNode("profile.bottomBar.profileSlot"))).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
   });
 
   it("frames an anonymous reader with the same bar, gated slots asking instead of bouncing", async () => {
@@ -120,28 +125,20 @@ describe("AppShell", () => {
     expect(prompt.open).toBe(true);
   });
 
-  it("keeps the bar on the read drill-in /u/alice", async () => {
-    pathname = "/u/alice";
-    renderWithProviders(
-      <AppShell>
-        <p>content</p>
-      </AppShell>,
-      { store: signedInStore() },
-    );
-    expect(await screen.findByTestId("nav-feed")).not.toHaveAttribute("aria-current");
-    expect(screen.getByTestId("nav-profile")).not.toHaveAttribute("aria-current");
-  });
-
-  // THE POST DETAIL KEEPS ITS ORIGIN'S ROOT LIT (PostDetail.md:57-59;
-  // BottomNav.prompt.md, jakob 2026-10-06): from the feed, a link or a
-  // notification the Feed; from a Saved row the Profile Saved hangs from.
+  // A DRILL-IN KEEPS ITS ORIGIN'S ROOT LIT (PostDetail.md:57-59;
+  // ProfileOther.md:11; BottomNav.prompt.md, jakob 2026-10-06): from the feed,
+  // a link or a notification the Feed; from a Saved row the Profile Saved
+  // hangs from. Someone's profile is a drill-in exactly as a post is.
   it.each([
-    ["", "feedSlot"],
-    ["from=notifications", "feedSlot"],
-    ["from=saved", "profileSlot"],
-  ])("lights the detail's origin root (%s)", async (query, lit) => {
-    pathname = "/posts/post-1";
+    ["/posts/post-1", "", "feedSlot"],
+    ["/posts/post-1", "from=notifications", "feedSlot"],
+    ["/posts/post-1", "from=saved", "profileSlot"],
+    ["/u/alice", "", "feedSlot"],
+    ["/u/alice", "from=saved", "profileSlot"],
+  ])("lights the drill-in's origin root (%s %s)", async (path, query, lit) => {
+    pathname = path;
     search = query;
+    const bar = path === "/u/alice" ? "profile.bottomBar" : "postDetail.bottomBar";
     renderWithProviders(
       <AppShell>
         <p>content</p>
@@ -149,13 +146,11 @@ describe("AppShell", () => {
       { store: signedInStore() },
     );
     const unlit = lit === "feedSlot" ? "profileSlot" : "feedSlot";
-    expect(await screen.findByTestId(byNode(`postDetail.bottomBar.${lit}`))).toHaveAttribute(
+    expect(await screen.findByTestId(byNode(`${bar}.${lit}`))).toHaveAttribute(
       "aria-current",
       "page",
     );
-    expect(screen.getByTestId(byNode(`postDetail.bottomBar.${unlit}`))).not.toHaveAttribute(
-      "aria-current",
-    );
+    expect(screen.getByTestId(byNode(`${bar}.${unlit}`))).not.toHaveAttribute("aria-current");
   });
 
   // The bar is chrome by structure: a viewport-tall column, a scrolling
