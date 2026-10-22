@@ -103,6 +103,12 @@ fun PostDetailRoute(
     /** `ReplyMedia` 6 — `CommentEdit`, on an own comment. */
     onEditComment: (commentId: String, parentTitle: String) -> Unit,
     onOpenActor: (String) -> Unit,
+    /**
+     * A person tapped inside the comments sheet — its own door, so the
+     * profile it opens can name the sheet as the way back (`Back to the
+     * comments`, ProfileOther.md:73). Null routes it through [onOpenActor].
+     */
+    onOpenCommentActor: ((String) -> Unit)? = null,
     /** A post cited from the tags-and-references sheet. */
     onOpenPost: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
@@ -188,7 +194,7 @@ fun PostDetailRoute(
                 onDismiss = onDismiss,
                 onReply = onReply,
                 onEditComment = onEditComment,
-                onOpenActor = onOpenActor,
+                onOpenActor = onOpenCommentActor ?: onOpenActor,
                 onOpenTopic = onOpenTopic,
                 onReference = onReference,
                 onSignInOrJoin = onSignInOrJoin,

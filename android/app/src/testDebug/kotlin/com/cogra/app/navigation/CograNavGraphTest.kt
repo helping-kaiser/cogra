@@ -12,6 +12,8 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertContentDescriptionEquals
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -48,6 +50,7 @@ import com.cogra.domain.identity.SecurityNotices
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.feature.profile.FEED_ORIGIN
 import java.time.Instant
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -567,12 +570,12 @@ class CograNavGraphTest {
         render()
         waitFor(barSlot("profile"))
         compose.onNode(barSlot("profile")).performClick()
-        waitForTag("profile_display_name")
+        waitForTag("profile.identity.name")
         val entry = navController.currentBackStackEntry
         assertThat(entry?.destination?.hasRoute<Profile>()).isTrue()
         assertThat(entry?.toRoute<Profile>()?.handle).isNull()
         // The own-profile tab carries no back arrow; the bar stays.
-        assertThat(compose.onAllNodesWithTag("profile_back").fetchSemanticsNodes()).isEmpty()
+        assertThat(compose.onAllNodesWithTag("profile.header.back").fetchSemanticsNodes()).isEmpty()
         assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isNotEmpty()
 
         // Back to the feed tab by the bar.
@@ -592,15 +595,19 @@ class CograNavGraphTest {
         render()
         waitForTag("feed.card.authorChip")
         compose.onNodeWithTag("feed.card.authorChip").performClick()
-        waitForTag("profile_display_name")
+        waitForTag("profile.identity.name")
         val entry = navController.currentBackStackEntry
         assertThat(entry?.destination?.hasRoute<Profile>()).isTrue()
         assertThat(entry?.toRoute<Profile>()?.handle).isEqualTo("author")
+        // It names the door it came through (ProfileOther.md:73).
+        assertThat(entry?.toRoute<Profile>()?.from).isEqualTo(FEED_ORIGIN)
         // Another actor's profile is a read drill-in: back arrow, no
-        // edit, and the frame stays with no tab selected.
-        assertThat(compose.onAllNodesWithTag("profile_back").fetchSemanticsNodes()).isNotEmpty()
-        assertThat(compose.onAllNodesWithTag("profile_edit").fetchSemanticsNodes()).isEmpty()
-        assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isNotEmpty()
+        // edit, and the bar keeps lit the root it was opened from
+        // (ProfileOther.md:17) — Feed here, Profile dark.
+        assertThat(compose.onAllNodesWithTag("profile.header.back").fetchSemanticsNodes()).isNotEmpty()
+        assertThat(compose.onAllNodesWithTag("profile.identity.actionRow.edit").fetchSemanticsNodes()).isEmpty()
+        compose.onNode(barSlot("feed")).assertIsSelected()
+        compose.onNode(barSlot("profile")).assertIsNotSelected()
     }
 
     @Test
@@ -611,8 +618,8 @@ class CograNavGraphTest {
         render()
         waitFor(barSlot("profile"))
         compose.onNode(barSlot("profile")).performClick()
-        waitForTag("profile_edit")
-        compose.onNodeWithTag("profile_edit").performScrollTo().performClick()
+        waitForTag("profile.identity.actionRow.edit")
+        compose.onNodeWithTag("profile.identity.actionRow.edit").performScrollTo().performClick()
         waitForTag("profile_edit_bio")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ProfileEdit>()).isTrue()
         assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isEmpty()
@@ -627,13 +634,13 @@ class CograNavGraphTest {
         assertThat(profiles.updates).hasSize(1)
         assertThat(profiles.updates.first().second).contains("Hello")
         compose.waitUntilAtLeastOneExists(
-            hasTestTag("profile_bio") and hasText("Hello", substring = true),
+            hasTestTag("profile.identity.bio") and hasText("Hello", substring = true),
             timeoutMillis = 30_000,
         )
         // The confirmation is the snackbar, and it is the profile's own
         // host that shows it — not the shell's, which outlives the
         // surface and would follow the reader onto another tab (HT-8).
-        compose.waitUntilAtLeastOneExists(hasTestTag("profile_snackbar"), timeoutMillis = 30_000)
+        compose.waitUntilAtLeastOneExists(hasTestTag("profile.snackbar"), timeoutMillis = 30_000)
         assertThat(compose.onAllNodesWithTag("shell_snackbar").fetchSemanticsNodes()).isEmpty()
     }
 
@@ -650,8 +657,8 @@ class CograNavGraphTest {
         render()
         waitFor(barSlot("profile"))
         compose.onNode(barSlot("profile")).performClick()
-        waitForTag("profile_edit")
-        compose.onNodeWithTag("profile_edit").performScrollTo().performClick()
+        waitForTag("profile.identity.actionRow.edit")
+        compose.onNodeWithTag("profile.identity.actionRow.edit").performScrollTo().performClick()
         waitForTag("profile_edit_bio")
 
         // The crop itself draws through GL, which Robolectric cannot host, so
@@ -862,8 +869,8 @@ class CograNavGraphTest {
         compose.onNodeWithTag("wizard_header_back").performClick()
         waitFor(barSlot("profile"))
         compose.onNode(barSlot("profile")).performClick()
-        waitForTag("profile_settings")
-        compose.onNodeWithTag("profile_settings").performClick()
+        waitForTag("profile.band.gear")
+        compose.onNodeWithTag("profile.band.gear").performClick()
         compose.waitUntil(timeoutMillis = 30_000) {
             navController.currentBackStackEntry?.destination?.hasRoute<Settings>() == true
         }
@@ -880,8 +887,8 @@ class CograNavGraphTest {
 
         waitFor(barSlot("profile"))
         compose.onNode(barSlot("profile")).performClick()
-        waitForTag("profile_settings")
-        compose.onNodeWithTag("profile_settings").performClick()
+        waitForTag("profile.band.gear")
+        compose.onNodeWithTag("profile.band.gear").performClick()
         compose.waitForIdle()
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Settings>()).isTrue()
 
@@ -903,7 +910,7 @@ class CograNavGraphTest {
         waitForTag("settings.header.back")
         compose.onNodeWithTag("settings.header.back").performClick()
         compose.waitUntilAtLeastOneExists(
-            hasTestTag("profile_handle") and hasText("renamed", substring = true),
+            hasTestTag("profile.identity.handle") and hasText("renamed", substring = true),
             timeoutMillis = 30_000,
         )
     }
@@ -992,8 +999,8 @@ class CograNavGraphTest {
 
         waitFor(barSlot("profile"))
         compose.onNode(barSlot("profile")).performClick()
-        waitForTag("profile_settings")
-        compose.onNodeWithTag("profile_settings").performClick()
+        waitForTag("profile.band.gear")
+        compose.onNodeWithTag("profile.band.gear").performClick()
         compose.waitForIdle()
         assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isEmpty()
 
@@ -1039,8 +1046,8 @@ class CograNavGraphTest {
 
         waitFor(barSlot("profile"))
         compose.onNode(barSlot("profile")).performClick()
-        waitForTag("profile_settings")
-        compose.onNodeWithTag("profile_settings").performClick()
+        waitForTag("profile.band.gear")
+        compose.onNodeWithTag("profile.band.gear").performClick()
         compose.waitForIdle()
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Settings>()).isTrue()
 

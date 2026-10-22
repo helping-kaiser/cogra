@@ -37,10 +37,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.util.Consumer
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -61,12 +61,14 @@ import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.LocalOnRestoreKey
 import com.cogra.core.designsystem.LocalPadBottomInset
 import com.cogra.core.designsystem.LocalSnackbarHostState
-import com.cogra.core.designsystem.v2.media.LocalAlwaysUnveil
 import com.cogra.core.designsystem.StanceAxes
 import com.cogra.core.designsystem.StanceZeroWords
+import com.cogra.core.designsystem.v2.atom.BandBell
+import com.cogra.core.designsystem.v2.media.LocalAlwaysUnveil
 import com.cogra.core.designsystem.v2.token.NavTransitions
 import com.cogra.domain.deletion.AccountDeletionState
 import com.cogra.domain.media.CropWindow
+import com.cogra.domain.notifications.NotificationTarget
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.store.TokenStore
 import com.cogra.feature.auth.LoginRoute
@@ -75,16 +77,16 @@ import com.cogra.feature.auth.RestoreRoute
 import com.cogra.feature.content.ChatsComingSoonRoute
 import com.cogra.feature.content.CommentsReturn
 import com.cogra.feature.content.CommentsScroll
-import com.cogra.feature.content.edit.PostEditRoute
-import com.cogra.feature.content.wizard.ComposeWizardRoute
 import com.cogra.feature.content.FeedRoute
 import com.cogra.feature.content.PostDetailRoute
 import com.cogra.feature.content.SavedDoors
 import com.cogra.feature.content.SavedRoute
+import com.cogra.feature.content.edit.PostEditRoute
 import com.cogra.feature.content.reply.CommentEditRoute
 import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.content.reply.ReplyTargetKind
 import com.cogra.feature.content.reply.ReplyWizardRoute
+import com.cogra.feature.content.wizard.ComposeWizardRoute
 import com.cogra.feature.home.BorrowedViewBandRoute
 import com.cogra.feature.home.DeletionBandRoute
 import com.cogra.feature.home.KeyRestoreBannerRoute
@@ -94,20 +96,22 @@ import com.cogra.feature.home.VOUCH_CARD
 import com.cogra.feature.home.VouchCardRoute
 import com.cogra.feature.home.VouchedInScreen
 import com.cogra.feature.invites.InvitesRoute
-import com.cogra.feature.onboarding.ApplyRoute
-import com.cogra.feature.onboarding.InviteEntryRoute
-import com.cogra.feature.onboarding.KeyCeremonyRoute
-import com.cogra.feature.profile.FramedPicture
-import com.cogra.feature.profile.ProfileEditRoute
-import com.cogra.feature.profile.ProfileRoute
-import com.cogra.feature.profile.SAVED_ORIGIN
 import com.cogra.feature.notifications.BellViewModel
 import com.cogra.feature.notifications.NotificationsRoute
 import com.cogra.feature.notifications.RootBellViewModel
+import com.cogra.feature.onboarding.ApplyRoute
+import com.cogra.feature.onboarding.InviteEntryRoute
+import com.cogra.feature.onboarding.KeyCeremonyRoute
+import com.cogra.feature.profile.COMMENTS_ORIGIN
+import com.cogra.feature.profile.FEED_ORIGIN
+import com.cogra.feature.profile.FramedPicture
 import com.cogra.feature.profile.NOTIFICATIONS_ORIGIN
-import com.cogra.domain.notifications.NotificationTarget
-import com.cogra.core.designsystem.v2.atom.BandBell
+import com.cogra.feature.profile.POST_ORIGIN
+import com.cogra.feature.profile.ProfileEditRoute
+import com.cogra.feature.profile.ProfileRoute
+import com.cogra.feature.profile.SAVED_ORIGIN
 import com.cogra.feature.profile.avatar.AvatarFlowRoute
+import com.cogra.feature.profile.topicOrigin
 import com.cogra.feature.settings.AboutScreen
 import com.cogra.feature.settings.BackupRoute
 import com.cogra.feature.settings.ChangeEmailConfirmRoute
@@ -129,14 +133,14 @@ import com.cogra.feature.stance.StanceControlRoute
 import com.cogra.feature.stance.vouchBackVariant
 import com.cogra.feature.topics.TopicRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.time.Instant
-import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import java.time.Instant
+import javax.inject.Inject
 
 // The destinations (type-safe routes, Navigation 2.8+).
 @Serializable
@@ -716,20 +720,34 @@ private fun CograNavGraphContent(
     // snackbar host (design.md §6) — one frame for every viewer: the
     // bar rides the read surfaces signed in or out, and a slot that
     // needs an account opens the join prompt on a signed-out tap —
-    // ask, never bounce. A read drill-in keeps the frame but selects
-    // no tab; the task flows drop it for their back arrow.
+    // ask, never bounce. A read drill-in keeps the frame and the root it
+    // was opened from lit; the task flows drop it for their back arrow.
     val onFeedTab = backStackEntry?.destination?.hasRoute(Feed::class) == true
     val onProfile = backStackEntry?.destination?.hasRoute(Profile::class) == true
-    // SAVED KEEPS PROFILE LIT (Saved.md, design digest item 51: the
-    // originating root stays lit on a drill-in) — its one door is the
-    // reader's own profile.
+    // Saved keeps Profile lit (Saved.md, design digest item 51): its one
+    // door is the reader's own profile, so it rides that stack.
     val onSaved = backStackEntry?.destination?.hasRoute(Saved::class) == true
     // NOTIFICATIONS KEEPS LIT THE ROOT THE BELL WAS TAPPED ON (Notifications.md:27).
     val onNotifications = backStackEntry?.destination?.hasRoute(Notifications::class) == true
     val notificationsFrom = if (onNotifications) backStackEntry?.toRoute<Notifications>()?.from else null
-    val onOwnProfileTab = onSaved ||
-        notificationsFrom == "profile" ||
-        (onProfile && backStackEntry?.toRoute<Profile>()?.handle == null)
+    val onOwnProfileRoot = onProfile && backStackEntry?.toRoute<Profile>()?.handle == null
+    // THE ORIGINATING ROOT STAYS LIT ON A DRILL-IN (BottomNav.prompt.md: "a
+    // screen belongs to the stack it was opened from"; ProfileOther.md:17,
+    // PostDetail.md:57, ChatsComingSoon.md:13): the bar lights the root of the
+    // stack the reader is in. A root sets it as it shows, a tab switch as it
+    // is asked for (a restored stack can come back on a drill-in, never
+    // passing its root), and every drill-in keeps the one it was opened on.
+    var stackRoot by rememberSaveable { mutableStateOf(StackRoot.FEED) }
+    val shownRoot = when {
+        onFeedTab -> StackRoot.FEED
+        onOwnProfileRoot -> StackRoot.PROFILE
+        // The bell's list lights the root it was opened on (Notifications.md:27).
+        notificationsFrom == "profile" -> StackRoot.PROFILE
+        notificationsFrom != null -> StackRoot.FEED
+        else -> stackRoot
+    }
+    SideEffect { stackRoot = shownRoot }
+    val onOwnProfileTab = shownRoot == StackRoot.PROFILE
     val onPostDetail = backStackEntry?.destination?.hasRoute(PostDetail::class) == true
     val onChatsComingSoon = backStackEntry?.destination?.hasRoute(ChatsComingSoon::class) == true
     val onReadSurface = onFeedTab || onProfile || onPostDetail || onChatsComingSoon || onSaved || onNotifications
@@ -744,6 +762,7 @@ private fun CograNavGraphContent(
     // The documented tab pattern: pop to the signed-in root saving
     // state, single-top, restoring the target tab's state.
     fun toTab(route: Any) {
+        stackRoot = if (route is Profile) StackRoot.PROFILE else StackRoot.FEED
         navController.navigate(route) {
             popUpTo(Feed) { saveState = true }
             launchSingleTop = true
@@ -853,9 +872,10 @@ private fun CograNavGraphContent(
                         onFeedTab -> DataNode("feed") / "bottomBar"
                         onPostDetail -> DataNode("postDetail") / "bottomBar"
                         onNotifications -> DataNode("notifications") / "bottomBar"
+                        onProfile -> DataNode("profile") / "bottomBar"
                         else -> null
                     },
-                    feedSelected = onFeedTab || notificationsFrom == "feed",
+                    feedSelected = shownRoot == StackRoot.FEED,
                     profileSelected = onOwnProfileTab,
                     // Over the feed's own root the slot is a re-tap the feed
                     // answers (Feed.md:85-91); from anywhere else it is the
@@ -1015,7 +1035,9 @@ private fun CograNavGraphContent(
                         navController.navigate(ComposePost())
                     },
                     onOpenPost = { id -> navController.navigate(PostDetail(id)) },
-                    onOpenActor = { handle -> navController.navigate(Profile(handle)) },
+                    // The profile names its way back by the door it came through.
+                    onOpenActor = { handle -> navController.navigate(Profile(handle, from = FEED_ORIGIN)) },
+                    onOpenCommentActor = { handle -> navController.navigate(Profile(handle, from = COMMENTS_ORIGIN)) },
                     onOpenTopic = { name -> navController.navigate(Topic(name)) },
                     // The card's ⋮ reaches the same two destinations the
                     // detail's menu does: a feed card's rows are the post's
@@ -1149,7 +1171,8 @@ private fun CograNavGraphContent(
                     onEditComment = { commentId, parentTitle ->
                         navController.navigate(EditComment(commentId, parentTitle))
                     },
-                    onOpenActor = { handle -> navController.navigate(Profile(handle)) },
+                    onOpenActor = { handle -> navController.navigate(Profile(handle, from = POST_ORIGIN)) },
+                    onOpenCommentActor = { handle -> navController.navigate(Profile(handle, from = COMMENTS_ORIGIN)) },
                     // A post cited from the tags-and-references sheet; a cited
                     // comment lands on the post carrying it, which has no
                     // permalink of its own.
@@ -1233,7 +1256,7 @@ private fun CograNavGraphContent(
                 TopicRoute(
                     name = topic,
                     onOpenPost = { id -> navController.navigate(PostDetail(id)) },
-                    onOpenActor = { handle -> navController.navigate(Profile(handle)) },
+                    onOpenActor = { handle -> navController.navigate(Profile(handle, from = topicOrigin(topic))) },
                     onBack = { navController.navigateUp() },
                     // The page's one action, wired here because what a
                     // signed-out tap does is the shell's to say — the
@@ -1305,6 +1328,11 @@ private fun CograNavGraphContent(
                     onOpenSaved = { navController.navigate(Saved) },
                     onRequireAccount = { joinPrompt = true }.takeIf { signedIn == false },
                     from = route.from,
+                    // The band's chats on the own root (Profile.md:39), and Message on
+                    // another's: the chats coming-soon; a guest meets the gate
+                    // (ProfileOther.md:51-53).
+                    onChats = { navController.navigate(ChatsComingSoon) }.takeIf { ownRoot },
+                    onMessage = { navController.navigate(ChatsComingSoon) },
                 )
             }
             // NOTIFICATIONS (Notifications.md): reached from the bell on a root
@@ -1653,3 +1681,6 @@ private fun CograNavGraphContent(
         }
     }
 }
+
+/** The root of the stack the reader is in — the slot the bar keeps lit on a drill-in. */
+private enum class StackRoot { FEED, PROFILE }
