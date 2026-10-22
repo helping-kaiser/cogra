@@ -13,6 +13,7 @@
 import type { ReactNode } from "react";
 
 import { Button } from "@/lib/ui/button";
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 
 export function EmptyState({
   title,
@@ -20,6 +21,7 @@ export function EmptyState({
   actionLabel,
   onAction,
   testId,
+  node,
 }: {
   title: string;
   /** A custom action, for a case the two strings below can't express. */
@@ -27,10 +29,14 @@ export function EmptyState({
   actionLabel?: string;
   onAction?: () => void;
   testId: string;
+  /** The registered empty line (`profile.chronicle.empty`), naming its `title`. */
+  node?: DataNode;
 }) {
   return (
-    <div className="flex flex-col items-start gap-3 py-2" data-testid={testId}>
-      <p className="text-body-medium text-on-surface-variant">{title}</p>
+    <div className="flex flex-col items-start gap-3 py-2" {...testAttributes(node, testId)}>
+      <p className="text-body-medium text-on-surface-variant" {...testAttributes(part(node, "title"))}>
+        {title}
+      </p>
       {action ??
         (actionLabel !== undefined && onAction !== undefined ? (
           <Button
