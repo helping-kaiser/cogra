@@ -35,7 +35,6 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,6 +51,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.dataNode
+import com.cogra.core.designsystem.v2.atom.hitTarget
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.feature.content.R
 
@@ -192,6 +192,7 @@ private fun CommentAffordance(
             onClick = onOpen,
             description = spoken,
             testTag = tag,
+            glyphOnly = count == 0,
             content = glyphAndCount,
         )
     }
@@ -237,26 +238,42 @@ internal fun GlyphAffordance(icon: ImageVector, description: String, testTag: St
 /**
  * The row's shared control shape: a pill-shaped target whose glyph is
  * absorbed into one accessible name, so a listener hears "3 comments"
- * rather than a glyph and a number apart. Drawn compact, tapped at the
- * 48dp minimum.
+ * rather than a glyph and a number apart.
+ *
+ * DRAWN COMPACT, TAPPED AT 48 (`ShareButton.jsx`, `GlyphAction.jsx`): the
+ * pill is the glyph on `6px 8px` — 30dp tall, 34dp wide around a lone glyph
+ * — and its 48dp target is an invisible margin ([hitTarget]), so the row's
+ * `space-between` spreads the drawn pills and the last one sits flush with
+ * the card's content edge, as the board draws it.
  */
 @Composable
 private fun GlyphButton(
     onClick: () -> Unit,
     description: String,
     testTag: String,
+    glyphOnly: Boolean = true,
     content: @Composable RowScope.() -> Unit,
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(GLYPH_GAP),
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .minimumInteractiveComponentSize()
-            .clip(CircleShape)
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = Space.x2, vertical = GLYPH_GAP)
             .testTag(testTag)
-            .semantics(mergeDescendants = true) { contentDescription = description },
+            .hitTarget(
+                interactive = Modifier
+                    .clip(CircleShape)
+                    .clickable(role = Role.Button, onClick = onClick)
+                    .semantics(mergeDescendants = true) { contentDescription = description },
+                drawnWidth = if (glyphOnly) PILL_GLYPH_ONLY_WIDTH else null,
+                drawnHeight = PILL_HEIGHT,
+            )
+            .padding(horizontal = Space.x2, vertical = GLYPH_GAP),
         content = content,
     )
 }
+
+/** The pill's drawn height: the 18dp glyph on 6dp above and below. */
+private val PILL_HEIGHT = GLYPH + GLYPH_GAP * 2
+
+/** A lone glyph's pill: the 18dp glyph on 8dp each side. */
+private val PILL_GLYPH_ONLY_WIDTH = GLYPH + Space.x2 * 2
