@@ -13,4 +13,10 @@ object TypeTokens {
 
     /** The monogram's letter at every rung: 500 (`ActorChip.jsx` `MonogramAvatar`). */
     val MonogramWeight = FontWeight.Medium
+
+    /**
+     * A removal's line in a title's place, in the system's voice: `label-large`
+     * dropped to 400 (`CommentCard.jsx` head row, `targetDetail.removed`).
+     */
+    val SystemVoiceWeight = FontWeight.Normal
 }

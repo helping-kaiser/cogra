@@ -56,7 +56,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -66,6 +65,7 @@ import com.cogra.core.designsystem.RowLine
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.media.SensitiveSource
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.core.designsystem.v2.token.TypeTokens
 import com.cogra.domain.CommentView
 import com.cogra.domain.saved.CommentTarget
 import com.cogra.domain.saved.headRowOf
@@ -207,7 +207,7 @@ private fun HeadRow(target: CommentTarget, testTagPrefix: String, onOpen: () -> 
             Text(
                 text = row.title,
                 style = MaterialTheme.typography.labelLarge,
-                fontWeight = if (row.removed) FontWeight.Normal else null,
+                fontWeight = if (row.removed) TypeTokens.SystemVoiceWeight else null,
                 color = quietIf(row.removed),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
