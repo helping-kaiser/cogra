@@ -52,7 +52,11 @@ fun HelpDialog(
                     Text(
                         text = painted,
                         style = MaterialTheme.typography.bodyMedium,
-                        modifier = if (painted == spoken) Modifier else Modifier.semantics { contentDescription = spoken },
+                        modifier = if (painted == spoken) {
+                            Modifier
+                        } else {
+                            Modifier.semantics { contentDescription = spoken }
+                        },
                     )
                 }
             }

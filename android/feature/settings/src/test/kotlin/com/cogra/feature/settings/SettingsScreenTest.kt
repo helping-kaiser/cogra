@@ -643,7 +643,8 @@ class SettingsScreenTest {
     fun theSheetsQuestionMarkIsNamedLicense() {
         render(SettingsUiState(account = account(), now = NOW, licenseSheet = LicenseChoice.PublicDomain))
         val help = node("settings.licenseSheet.title.help").fetchSemanticsNode()
-        assertThat(help.config.getOrNull(androidx.compose.ui.semantics.SemanticsActions.OnClick)?.label)
-            .isEqualTo("License")
+        // The dot is named by the dialog it opens (`HelpDot.jsx` aria-label).
+        assertThat(help.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.ContentDescription))
+            .containsExactly("License")
     }
 }

@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.core.designsystem.hundredth
 import com.cogra.core.designsystem.v2.compose.HelpTopic
-import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
@@ -34,7 +33,6 @@ import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.signing.contentExpectation
 import com.cogra.domain.signing.ledgerFor
 import com.cogra.domain.signing.postExpectation
-import com.cogra.domain.signing.wireReason
 import com.cogra.domain.topics.TagClaim
 import com.cogra.domain.valueOrNull
 import com.cogra.feature.content.ReferenceCandidateRow
@@ -330,14 +328,7 @@ class ComposeWizardViewModel @Inject constructor(
      * something asks first; an empty one switches silently
      * (ComposeBodyDiscard.md).
      */
-    fun onModeChange(mode: BodyMode) = _state.update {
-        when {
-            mode == it.mode -> it
-            it.mode == BodyMode.Words && it.body.isNotBlank() -> it.copy(askingBodySwitch = mode)
-            it.mode == BodyMode.Media && it.picked.isNotEmpty() -> it.copy(askingBodySwitch = mode)
-            else -> it.withMode(mode)
-        }
-    }
+    fun onModeChange(mode: BodyMode) = _state.update { it.switchedOrAsked(mode) }
 
     /** `Keep them` / `Keep it`, the scrim or Back: the stage as it was. */
     fun onKeepBody() = _state.update { it.copy(askingBodySwitch = null) }
@@ -511,10 +502,7 @@ class ComposeWizardViewModel @Inject constructor(
      */
     fun onRemoveTag(name: String) {
         sections.onRemoveTag(name)
-        _state.update { s ->
-            val emptied = s.sheet == SealSheet.Tags && s.tagSection.tags.isEmpty()
-            s.copy(fault = null, sheet = if (emptied) SealSheet.None else s.sheet)
-        }
+        _state.update { it.afterRemoval() }
     }
 
     fun onTuneTag(name: String) = sections.onTuneTag(name)
@@ -543,10 +531,7 @@ class ComposeWizardViewModel @Inject constructor(
      */
     fun onRemoveReference(targetId: String) {
         sections.onRemoveReference(targetId)
-        _state.update { s ->
-            val emptied = s.sheet == SealSheet.Cited && s.referenceSection.references.isEmpty()
-            s.copy(fault = null, sheet = if (emptied) SealSheet.None else s.sheet)
-        }
+        _state.update { it.afterRemoval() }
     }
 
     fun onTuneReference(targetId: String) = sections.onTuneReference(targetId)
@@ -835,47 +820,6 @@ class ComposeWizardViewModel @Inject constructor(
         }
 
     /**
-     * The request the seal sends — read twice: once by the prepare and once
-     * by the payload expectation, so the device checks the envelope against
-     * exactly what it asked for (PayloadExpectation.kt).
-     */
-    private fun sentContent(current: ComposeWizardState): SentContent = SentContent(
-        title = current.title.ifBlank { null },
-        description = current.descriptionContent,
-        // The XOR, structurally: a media post sends no content at all, and
-        // a words post no gallery.
-        content = current.body.takeIf { current.mode == BodyMode.Words },
-        // The poster rides the clip's own placement, never a gallery entry
-        // of its own — which is what keeps "ten pictures or one video" one
-        // counting rule.
-        attachments = if (current.mode == BodyMode.Media) {
-            current.picked.mapNotNull { asset ->
-                asset.mediaId?.let {
-                    AttachmentClaim(
-                        mediaId = it,
-                        altText = asset.altText.ifBlank { null },
-                        coverMediaId = current.coverMediaId.takeIf { _ -> asset.isVideo },
-                        // TAKEN (frame 1, silently) vs CHOSEN — the fact
-                        // `storesFirstFrame` already names, gated the same way
-                        // as the id itself so a picture post never claims it.
-                        coverTaken = current.coverChoice.storesFirstFrame.takeIf { asset.isVideo } ?: false,
-                    )
-                }
-            }
-        } else {
-            emptyList()
-        },
-        // Always sent explicitly, never omitted: an edit payload is the
-        // complete state, so an omitted mark UNMARKS. Sending the switch's
-        // current value is what keeps create and edit the same code.
-        sensitive = current.sensitive,
-        // Blank counts as none, said here rather than left to the transport:
-        // an empty string is a value, and "no reason" is what the author
-        // actually chose.
-        sensitiveReason = wireReason(current.sensitive, current.sensitiveReason.ifBlank { null }),
-    )
-
-    /**
      * What the post orders, as the intent check reads it (Intent.kt), once
      * the prepare named the node: the payload [sent] must decode to — its
      * pictures held to the digests this device computed, the poster read
@@ -944,7 +888,7 @@ class ComposeWizardViewModel @Inject constructor(
             val tags = current.tagSection.tags.map { it.toClaim() }
             val references = current.referenceSection.references.map { it.toClaim() }
             val graphIds = citedGraphIds(references) ?: return@launch
-            val sent = sentContent(current)
+            val sent = current.sentContent()
             val prepared = when (
                 val outcome = content.preparePost(
                     title = sent.title,
@@ -977,38 +921,42 @@ class ComposeWizardViewModel @Inject constructor(
                 return@launch
             }
 
-            when {
-                results.all { it is WriteResult.Done } -> {
-                    // The post is published: this wizard has nothing left
-                    // to keep. Disarming *before* the clear is what makes
-                    // the clear final — `outcome` alone could not, because
-                    // the route consumes it the moment it navigates, and
-                    // the state it leaves behind still holds every word
-                    // and pick of the post that just landed. The next
-                    // `ON_STOP` then wrote them straight back
-                    // (jakob 2026-08-31: "once a post is sent its draft
-                    // should be gone").
-                    armed = false
-                    draftSaveJob?.cancel()
-                    retireDraft(current.toDraft(), prepared.node, prepared.writes.map { it.id }, results)
-                    _state.update {
-                        it.copy(submitting = false, outcome = WizardOutcome.Landed(prepared.node))
-                    }
-                }
-                // A staged act collected before it landed: nothing was
-                // spent, and the draft is what the notice promises.
-                results.any { it.expired() } -> {
-                    keepDraft()
-                    _state.update {
-                        it.copy(submitting = false, outcome = WizardOutcome.Expired(it.draftLabel()))
-                    }
-                }
-                else -> {
-                    keepDraft()
-                    // A refusal reads by its codes; anything else never answered.
-                    val refused = results.filterIsInstance<WriteResult.Refused>().firstOrNull()
-                    fail(refused?.let { sealFaultOf(it.errors, staged) } ?: SealFault.Offline)
-                }
+            settle(results, current, prepared.node, prepared.writes.map { it.id })
+        }
+    }
+
+    /** What the signing's answer makes of the seal: the post, the expiry notice, or a fault. */
+    private suspend fun settle(
+        results: List<WriteResult>,
+        current: ComposeWizardState,
+        node: String,
+        writes: List<String>,
+    ) {
+        when {
+            results.all { it is WriteResult.Done } -> {
+                // The post is published: this wizard has nothing left to
+                // keep. Disarming *before* the clear is what makes the clear
+                // final — `outcome` alone could not, because the route
+                // consumes it the moment it navigates, and the state it
+                // leaves behind still holds every word and pick of the post
+                // that just landed (jakob 2026-08-31: "once a post is sent
+                // its draft should be gone").
+                armed = false
+                draftSaveJob?.cancel()
+                retireDraft(current.toDraft(), node, writes, results)
+                _state.update { it.copy(submitting = false, outcome = WizardOutcome.Landed(node)) }
+            }
+            // A staged act collected before it landed: nothing was spent,
+            // and the draft is what the notice promises.
+            results.any { it.expired() } -> {
+                keepDraft()
+                _state.update { it.copy(submitting = false, outcome = WizardOutcome.Expired(it.draftLabel())) }
+            }
+            else -> {
+                keepDraft()
+                // A refusal reads by its codes; anything else never answered.
+                val refused = results.filterIsInstance<WriteResult.Refused>().firstOrNull()
+                fail(refused?.let { sealFaultOf(it.errors, current.referenceSection.references) } ?: SealFault.Offline)
             }
         }
     }

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,8 +27,11 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -79,20 +81,6 @@ import com.cogra.feature.content.R
 import com.cogra.feature.content.ReferenceRow
 import com.cogra.feature.content.stagedName
 
-/** What the seal's foot and fact rows answer with — one bundle, so the stage stays readable. */
-internal class SealActions(
-    val onOpenSheet: (SealSheet) -> Unit,
-    val onSign: () -> Unit,
-    val onBack: () -> Unit,
-    val onRestoreKey: () -> Unit,
-    val onKeepDraft: () -> Unit,
-    val onHelp: (HelpTopic) -> Unit,
-    val onRetryUploads: () -> Unit,
-    val onRemoveRefused: (String) -> Unit,
-    val onReport: () -> Unit,
-    val onDiscardPost: () -> Unit,
-)
-
 /**
  * `ComposeSeal` — every act with its cost, before a single signature
  * (`_shared.jsx` `ComposeSealBody`): the quiet read-back line, the acts card,
@@ -110,10 +98,29 @@ internal class SealActions(
  * press, a wait for uploads included.
  */
 @Composable
-internal fun ColumnScope.SealStepBody(state: ComposeWizardState, actions: SealActions) {
+internal fun ColumnScope.SealStage(state: ComposeWizardState, actions: SealActions) {
     val participle = rememberParticiple(state.pressed)
     val slow = rememberWaitedPast(state.pressed, SLOW_SIGNING_MS)
+    // THE READ-BACK SCROLLS, THE FOOT STAYS (the crop stage's arrangement):
+    // the board fits its 844 exactly, which is no promise about a short
+    // phone, and a commit below the fold is not one. Where the seal fits,
+    // this is the board — the foot 16 under the facts, 24 over the edge.
+    WizardBody(gap = Space.x4, bottom = 0.dp, scrollable = true) {
+        SealReadBack(state = state, slow = slow, actions = actions)
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = Space.x6, end = Space.x6, top = Space.x4, bottom = Space.x6),
+        verticalArrangement = Arrangement.spacedBy(Space.x4),
+    ) {
+        SealFoot(state = state, participle = participle, actions = actions)
+    }
+}
 
+/** What the seal reads back: the quiet line, the acts card and the facts. */
+@Composable
+private fun ColumnScope.SealReadBack(state: ComposeWizardState, slow: Boolean, actions: SealActions) {
     QuietNote(text = "${state.sealSummary}.", modifier = Modifier.testTag("wizard_seal_summary"))
 
     ActsCard(state = state, slow = slow, onOpenSheet = actions.onOpenSheet, onRemoveRefused = actions.onRemoveRefused)
@@ -154,10 +161,6 @@ internal fun ColumnScope.SealStepBody(state: ComposeWizardState, actions: SealAc
         }
         Hairline()
     }
-
-    Spacer(Modifier.weight(1f))
-
-    SealFoot(state = state, participle = participle, actions = actions)
 }
 
 /** The seal's foot, by what became of the commit (`ComposeSealBody`'s `state`). */
@@ -165,98 +168,111 @@ internal fun ColumnScope.SealStepBody(state: ComposeWizardState, actions: SealAc
 private fun SealFoot(state: ComposeWizardState, participle: Boolean, actions: SealActions) {
     val fault = state.fault
     when {
-        state.keyAbsent -> {
-            // `NoticePanel` with its own "?" by the stopper exception, the
-            // restore in the panel's `inverse` (ComposeKeyAbsent.jsx).
-            NoticePanel(
-                title = "Your key isn't in this app",
-                helpLabel = HelpTopic.Key.title,
-                onHelp = { actions.onHelp(HelpTopic.Key) },
-                helpTestTag = "wizard_key_help",
-                testTag = "wizard_key_absent",
-            ) {
-                CograButton(
-                    text = "Restore the key",
-                    onClick = actions.onRestoreKey,
-                    kind = ButtonKind.Inverse,
-                    modifier = Modifier.fillMaxWidth(),
-                    testTag = "wizard_restore_key",
-                )
-            }
-            WideText("Keep the draft, restore later", actions.onKeepDraft, "wizard_keep_draft")
-        }
+        state.keyAbsent -> KeyAbsentFoot(actions)
+        fault == SealFault.WriteRule -> WriteRuleFoot(actions)
+        fault == SealFault.Bug -> BugFoot(actions)
+        fault == SealFault.Offline -> OfflineFoot(actions)
+        else -> RestingFoot(state, participle, actions)
+    }
+}
 
-        fault == SealFault.WriteRule -> {
-            // A rule working as meant, never the error colour and never Retry.
-            NoticePanel(
-                title = WRITE_RULE_TITLE,
-                helpLabel = HelpTopic.WhySigningWaits.title,
-                onHelp = { actions.onHelp(HelpTopic.WhySigningWaits) },
-                helpTestTag = "wizard_write_rule_help",
-                testTag = "wizard_write_rule",
-            ) { NoticeLine(WRITE_RULE_FACT) }
-            WideText("Keep the draft, sign later", actions.onKeepDraft, "wizard_sign_later")
-        }
-
-        fault == SealFault.Bug -> {
-            // The system telling on itself: the tertiary panel, no row marked.
-            NoticePanel(title = SEAL_BUG_TITLE, testTag = "wizard_seal_bug") {
-                NoticeLine(SEAL_BUG_FACT)
-                CograButton(
-                    text = "Try again",
-                    onClick = actions.onSign,
-                    kind = ButtonKind.Inverse,
-                    modifier = Modifier.fillMaxWidth(),
-                    testTag = "wizard_try_again",
-                )
-            }
-            Column(Modifier.fillMaxWidth()) {
-                // The report page Settings opens is not built on android
-                // (HAND TO FABLE): the word stands where the board draws it.
-                WideText("Report a problem", actions.onReport, "wizard_report")
-                WideText("Discard the post", actions.onDiscardPost, "wizard_discard_post")
-            }
-        }
-
-        fault == SealFault.Offline -> Column(
+/**
+ * `ComposeKeyAbsent`'s foot: `NoticePanel` with its own "?" by the stopper
+ * exception and the restore in the panel's `inverse`, then the way out that
+ * keeps the draft.
+ */
+@Composable
+private fun KeyAbsentFoot(actions: SealActions) {
+    NoticePanel(
+        title = "Your key isn't in this app",
+        helpLabel = HelpTopic.Key.title,
+        onHelp = { actions.onHelp(HelpTopic.Key) },
+        helpTestTag = "wizard_key_help",
+        testTag = "wizard_key_absent",
+    ) {
+        CograButton(
+            text = "Restore the key",
+            onClick = actions.onRestoreKey,
+            kind = ButtonKind.Inverse,
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(Space.x2),
-        ) {
-            // `TransportError`'s line over an outlined Retry and the same way back.
-            Text(
-                text = SEAL_OFFLINE_LINE,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier
-                    .testTag("wizard_seal_offline")
-                    .semantics { liveRegion = LiveRegionMode.Assertive },
-            )
-            CograButton(
-                text = "Retry",
-                onClick = actions.onSign,
-                kind = ButtonKind.Outlined,
-                modifier = Modifier.fillMaxWidth(),
-                testTag = "wizard_retry",
-            )
-            WideText("Back", actions.onBack, "wizard_seal_back")
-        }
+            testTag = "wizard_restore_key",
+        )
+    }
+    WideText("Keep the draft, restore later", actions.onKeepDraft, "wizard_keep_draft")
+}
 
-        else -> {
-            UploadGate(state, actions.onRetryUploads)
-            // `SealFooter`: the commit, filled and first, and Back under it.
-            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.x2)) {
-                CograButton(
-                    text = if (participle) "Signing and publishing…" else "Sign and publish",
-                    // Inert from the press and never dimmed: it refuses a
-                    // second press until the signing answers.
-                    onClick = { if (!state.pressed) actions.onSign() },
-                    enabled = state.signEnabled,
-                    modifier = Modifier.fillMaxWidth(),
-                    testTag = "wizard_sign",
-                )
-                WideText("Back", actions.onBack, "wizard_seal_back")
-            }
-        }
+/** The write rule's notice: a rule working as meant, never the error colour and never Retry. */
+@Composable
+private fun WriteRuleFoot(actions: SealActions) {
+    NoticePanel(
+        title = WRITE_RULE_TITLE,
+        helpLabel = HelpTopic.WhySigningWaits.title,
+        onHelp = { actions.onHelp(HelpTopic.WhySigningWaits) },
+        helpTestTag = "wizard_write_rule_help",
+        testTag = "wizard_write_rule",
+    ) { NoticeLine(WRITE_RULE_FACT) }
+    WideText("Keep the draft, sign later", actions.onKeepDraft, "wizard_sign_later")
+}
+
+/** `SealFaultBug`: the system telling on itself — the tertiary panel, no row marked. */
+@Composable
+private fun BugFoot(actions: SealActions) {
+    NoticePanel(title = SEAL_BUG_TITLE, testTag = "wizard_seal_bug") {
+        NoticeLine(SEAL_BUG_FACT)
+        CograButton(
+            text = "Try again",
+            onClick = actions.onSign,
+            kind = ButtonKind.Inverse,
+            modifier = Modifier.fillMaxWidth(),
+            testTag = "wizard_try_again",
+        )
+    }
+    Column(Modifier.fillMaxWidth()) {
+        // The report page Settings opens is not built on android (HAND TO
+        // FABLE): the word stands where the board draws it.
+        WideText("Report a problem", actions.onReport, "wizard_report")
+        WideText("Discard the post", actions.onDiscardPost, "wizard_discard_post")
+    }
+}
+
+/** No answer reached the seal: `TransportError`'s line over an outlined Retry and the same way back. */
+@Composable
+private fun OfflineFoot(actions: SealActions) {
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.x2)) {
+        Text(
+            text = SEAL_OFFLINE_LINE,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier
+                .testTag("wizard_seal_offline")
+                .semantics { liveRegion = LiveRegionMode.Assertive },
+        )
+        CograButton(
+            text = "Retry",
+            onClick = actions.onSign,
+            kind = ButtonKind.Outlined,
+            modifier = Modifier.fillMaxWidth(),
+            testTag = "wizard_retry",
+        )
+        WideText("Back", actions.onBack, "wizard_seal_back")
+    }
+}
+
+/** The seal at rest or signing: the upload gate over `SealFooter` — the commit, filled and first, and Back. */
+@Composable
+private fun RestingFoot(state: ComposeWizardState, participle: Boolean, actions: SealActions) {
+    UploadGate(state, actions.onRetryUploads)
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.x2)) {
+        CograButton(
+            text = if (participle) "Signing and publishing…" else "Sign and publish",
+            // Inert from the press and never dimmed: it refuses a second
+            // press until the signing answers.
+            onClick = { if (!state.pressed) actions.onSign() },
+            enabled = state.signEnabled,
+            modifier = Modifier.fillMaxWidth(),
+            testTag = "wizard_sign",
+        )
+        WideText("Back", actions.onBack, "wizard_seal_back")
     }
 }
 
@@ -320,38 +336,18 @@ private fun ActsCard(
     onOpenSheet: (SealSheet) -> Unit,
     onRemoveRefused: (String) -> Unit,
 ) {
-    val tags = state.tagSection.tags
     val references = state.referenceSection.references
     val refused = (state.fault as? SealFault.Row)?.targetId?.let { id -> references.firstOrNull { it.targetId == id } }
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .testTag("wizard_seal_acts")
             .clip(MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-            .padding(horizontal = Space.x4, vertical = Space.x1)
-            .testTag("wizard_seal_acts"),
+            .padding(horizontal = Space.x4, vertical = Space.x1),
     ) {
         ActRow(label = "Post", count = 1, noun = "post") { ActValue(state.title.ifBlank { state.sealSummary }) }
-        // THE TAGS ROW IN ITS TWO READINGS (jakob 2026-09-15): the chips while
-        // they fit, past that `N tags` and the row a door to the tags sheet.
-        if (tags.size in 1..TAGS_ROW_HOLDS) {
-            ActRow(label = "Tags", count = tags.size, noun = "tag") {
-                Row(
-                    modifier = Modifier.clipToBounds(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    tags.forEach { CograReadoutChip(label = "#${it.name}") }
-                }
-            }
-        } else if (tags.size > TAGS_ROW_HOLDS) {
-            ActRow(
-                label = "Tags",
-                count = tags.size,
-                noun = "tag",
-                door = Door("Manage the ${tags.size} tags", "wizard_seal_tags") { onOpenSheet(SealSheet.Tags) },
-            ) { ActValue("${tags.size} tags") }
-        }
+        TagsActRow(state.tagSection.tags.map { it.name }, onOpenSheet)
         // THE REFERENCES ROW IN ITS READINGS (jakob 2026-09-14): one citation
         // reads back as itself, name over its pair; two or more as `N cited`
         // with the row a door to the citations sheet. A refused citation is
@@ -360,7 +356,13 @@ private fun ActsCard(
         val fault = refused?.let { RowFault(unlandedLine(it), it) }
         if (references.size == 1) {
             val one = references.first()
-            ActRow(label = "References", count = 1, noun = "citation", fault = fault, onRemoveRefused = onRemoveRefused) {
+            ActRow(
+                label = "References",
+                count = 1,
+                noun = "citation",
+                fault = fault,
+                onRemoveRefused = onRemoveRefused,
+            ) {
                 Column(Modifier.padding(vertical = 6.dp)) {
                     ActValue(stagedName(one.target))
                     Text(
@@ -382,6 +384,32 @@ private fun ActsCard(
             ) { ActValue("$n cited") }
         }
         ActsTotal(acts = state.signedActionCount, slow = slow)
+    }
+}
+
+/**
+ * THE TAGS ROW IN ITS TWO READINGS (jakob 2026-09-15): the chips while they
+ * fit, past that `N tags` and the row a door to the tags sheet.
+ */
+@Composable
+private fun TagsActRow(tags: List<String>, onOpenSheet: (SealSheet) -> Unit) {
+    if (tags.size in 1..TAGS_ROW_HOLDS) {
+        ActRow(label = "Tags", count = tags.size, noun = "tag") {
+            Row(
+                modifier = Modifier.clipToBounds(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                tags.forEach { CograReadoutChip(label = "#$it") }
+            }
+        }
+    } else if (tags.size > TAGS_ROW_HOLDS) {
+        ActRow(
+            label = "Tags",
+            count = tags.size,
+            noun = "tag",
+            door = Door("Manage the ${tags.size} tags", "wizard_seal_tags") { onOpenSheet(SealSheet.Tags) },
+        ) { ActValue("${tags.size} tags") }
     }
 }
 
@@ -419,10 +447,19 @@ private fun ActRow(
                     if (door == null) {
                         Modifier
                     } else {
+                        // The door's name REPLACES what it names (`ActsCard.jsx`
+                        // `aria-label`): the count rides inside it.
                         Modifier
-                            .clickable(role = Role.Button, onClick = door.onOpen)
-                            .semantics { contentDescription = door.name }
                             .testTag(door.testTag)
+                            .clickable(role = Role.Button, onClick = door.onOpen)
+                            .clearAndSetSemantics {
+                                contentDescription = door.name
+                                role = Role.Button
+                                onClick {
+                                    door.onOpen()
+                                    true
+                                }
+                            }
                     },
                 )
                 .defaultMinSize(minHeight = ACT_ROW_MIN),
@@ -438,30 +475,38 @@ private fun ActRow(
             Column(Modifier.weight(1f)) { value() }
             ActsCount(count = count, noun = noun)
         }
-        if (fault != null) {
-            Row(
-                modifier = Modifier
-                    .padding(start = ACT_LABEL + Space.x2, bottom = Space.x2)
-                    .testTag("wizard_seal_refused")
-                    .semantics { liveRegion = LiveRegionMode.Assertive },
-                horizontalArrangement = Arrangement.spacedBy(Space.x1),
-            ) {
-                Text(
-                    text = fault.message,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.weight(1f, fill = false),
-                )
-                InlineAction(
-                    text = "Remove it",
-                    onClick = { onRemoveRefused(fault.row.targetId) },
-                    size = InlineSize.Small,
-                    contentDescription = "Remove ${stagedName(fault.row.target)}",
-                    testTag = "wizard_seal_refused_remove",
-                )
-            }
-        }
+        if (fault != null) RefusedLine(fault, onRemoveRefused)
         Hairline()
+    }
+}
+
+/**
+ * A refused citation's line under its row (`ActsCard`'s `fault`, the
+ * refused-file line): the fact in the failure voice, then `Remove it` — named
+ * for the citation it removes, the only place a counted row names it.
+ */
+@Composable
+private fun RefusedLine(fault: RowFault, onRemoveRefused: (String) -> Unit) {
+    Row(
+        modifier = Modifier
+            .padding(start = ACT_LABEL + Space.x2, bottom = Space.x2)
+            .testTag("wizard_seal_refused")
+            .semantics { liveRegion = LiveRegionMode.Assertive },
+        horizontalArrangement = Arrangement.spacedBy(Space.x1),
+    ) {
+        Text(
+            text = fault.message,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.weight(1f, fill = false),
+        )
+        InlineAction(
+            text = "Remove it",
+            onClick = { onRemoveRefused(fault.row.targetId) },
+            size = InlineSize.Small,
+            contentDescription = "Remove ${stagedName(fault.row.target)}",
+            testTag = "wizard_seal_refused_remove",
+        )
     }
 }
 
@@ -495,7 +540,9 @@ private fun ActsTotal(acts: Int, slow: Boolean) {
     ) {
         Text(
             text = if (acts == 1) "1 thing, signed" else "$acts things, signed together",
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = MaterialTheme.typography.labelLarge.fontWeight),
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = MaterialTheme.typography.labelLarge.fontWeight,
+            ),
             color = MaterialTheme.colorScheme.onSurface,
         )
         val note = when {

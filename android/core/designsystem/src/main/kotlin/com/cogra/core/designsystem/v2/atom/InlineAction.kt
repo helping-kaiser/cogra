@@ -18,14 +18,6 @@ import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.ThemePreviews
 
 /**
- * The bare word's two rungs (`Button.jsx`'s `INLINE_SIZES`): [Large] is the
- * pill's own `label-large`, the word at the end of a line it owns (a seal's
- * fact row); [Small] is `label-small`, the word inside the composer's
- * running text (`+ Add a tag`, `Describe the pictures`, `Remove it`).
- */
-enum class InlineSize { Large, Small }
-
-/**
  * The quiet `primary` word the canvas uses for a secondary route out of a
  * screen — `Write words instead`, `Show all`, `Crop`, `Edit`,
  * `+ Cite something`.

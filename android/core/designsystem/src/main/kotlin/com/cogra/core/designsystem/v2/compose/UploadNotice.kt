@@ -28,7 +28,7 @@ import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
 
-/**
+/*
  * The two upload notices (`design/components/compose/UploadNotice.jsx`).
  *
  * Upload runs in the background from the moment a picture has its crop —
@@ -36,12 +36,6 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  * uploaded — so **most posts never show either**. These appear only when
  * the author outruns the network.
  */
-
-/**
- * What the gate waits for (`UploadStatusLine`'s `media`, jakob 2026-10-02:
- * "per content of course"): pictures by default, a clip as `the video`.
- */
-enum class UploadMedia { Pictures, Video }
 
 /**
  * The seal's gate: nothing signs until the content it signs exists. The

@@ -965,3 +965,25 @@ fun ComposeWizardState.discardedHalf(next: BodyMode): ComposeWizardState = when 
         askingBodySwitch = null,
     )
 }
+
+/**
+ * `Add pictures instead` / `Write words instead` (ComposeBodyDiscard.md): a
+ * body holding something asks first; an empty one switches silently.
+ */
+fun ComposeWizardState.switchedOrAsked(next: BodyMode): ComposeWizardState = when {
+    next == mode -> this
+    mode == BodyMode.Words && body.isNotBlank() -> copy(askingBodySwitch = next)
+    mode == BodyMode.Media && picked.isNotEmpty() -> copy(askingBodySwitch = next)
+    else -> withMode(next)
+}
+
+/**
+ * After a staged tag or citation leaves: a changed fact clears a refusal
+ * reading, and the last removal from an editing sheet closes it to the seal
+ * (ComposeTags.md, ComposeCitations.md).
+ */
+fun ComposeWizardState.afterRemoval(): ComposeWizardState {
+    val emptied = (sheet == SealSheet.Tags && tagSection.tags.isEmpty()) ||
+        (sheet == SealSheet.Cited && referenceSection.references.isEmpty())
+    return copy(fault = null, sheet = if (emptied) SealSheet.None else sheet)
+}

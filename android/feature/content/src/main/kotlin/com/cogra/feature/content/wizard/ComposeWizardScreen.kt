@@ -464,8 +464,8 @@ internal fun ComposeWizardScreen(
                         )
                     }
 
-                    WizardStep.Seal -> WizardBody(gap = Space.x4) {
-                        SealStepBody(
+                    WizardStep.Seal -> {
+                        SealStage(
                             state = state,
                             actions = SealActions(
                                 onOpenSheet = onOpenSheet,
@@ -731,39 +731,49 @@ private fun ColumnScope.BodyStage(
                 onAction = { onModeChange(BodyMode.Words) },
                 actionTestTag = "wizard_switch_words",
             )
-            if (state.draftOffer != null) {
-                // THE ROLL, WAITING (`ComposeDraftBody`): dimmed to 55% and out
-                // of reach, with ONE control over it named for what it will
-                // ask — so a tap, a keyboard and a screen reader reach the same
-                // answer (ComposeDraft.md), and the tiles underneath stay
-                // unreachable.
-                Box(Modifier.fillMaxWidth().weight(1f)) {
-                    Column(
-                        Modifier
-                            .fillMaxSize()
-                            .alpha(DIMMED)
-                            .clearAndSetSemantics { },
-                    ) {
-                        PickStage(
-                            state = state,
-                            permission = permission.permission,
-                            onRequestPermission = permission.request,
-                            onOpenSettings = permission.openSettings,
-                            onOpenPicker = onOpenPicker,
-                            onTogglePick = onTogglePick,
-                            onShowAll = onManagePictures,
-                            onDismissRefusal = onDismissRefusal,
-                        )
-                    }
-                    Box(
-                        Modifier
-                            .matchParentSize()
-                            .clickable(role = Role.Button, onClick = onAskDiscardDraft)
-                            .semantics { contentDescription = "Answer your draft before starting a new post" }
-                            .testTag("wizard_draft_shield"),
-                    )
-                }
-            } else {
+            PickHalf(
+                state = state,
+                permission = permission,
+                onOpenPicker = onOpenPicker,
+                onTogglePick = onTogglePick,
+                onManagePictures = onManagePictures,
+                onDismissRefusal = onDismissRefusal,
+                onNext = onNext,
+                onAskDiscardDraft = onAskDiscardDraft,
+            )
+        }
+    }
+}
+
+/**
+ * The pick stage under its caption: the roll and its Next, or — while a kept
+ * draft is offered — the roll waiting under its shield (`ComposeDraftBody`).
+ */
+@Suppress("LongParameterList") // one callback per thing the stage answers
+@Composable
+private fun ColumnScope.PickHalf(
+    state: ComposeWizardState,
+    permission: MediaPermissionController,
+    onOpenPicker: () -> Unit,
+    onTogglePick: (String) -> Unit,
+    onManagePictures: () -> Unit,
+    onDismissRefusal: (Int) -> Unit,
+    onNext: () -> Unit,
+    onAskDiscardDraft: () -> Unit,
+) {
+    if (state.draftOffer != null) {
+        // THE ROLL, WAITING (`ComposeDraftBody`): dimmed to 55% and out
+        // of reach, with ONE control over it named for what it will
+        // ask — so a tap, a keyboard and a screen reader reach the same
+        // answer (ComposeDraft.md), and the tiles underneath stay
+        // unreachable.
+        Box(Modifier.fillMaxWidth().weight(1f)) {
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .alpha(DIMMED)
+                    .clearAndSetSemantics { },
+            ) {
                 PickStage(
                     state = state,
                     permission = permission.permission,
@@ -774,19 +784,37 @@ private fun ColumnScope.BodyStage(
                     onShowAll = onManagePictures,
                     onDismissRefusal = onDismissRefusal,
                 )
-                // `ComposePick` and `ComposePicked` both close on the pill in
-                // its own band under the grid — the grid runs to its own
-                // margin, so the band carries the screen gutter itself.
-                WizardFooter {
-                    CograButton(
-                        text = "Next",
-                        onClick = onNext,
-                        enabled = state.forwardEnabled(),
-                        modifier = Modifier.fillMaxWidth(),
-                        testTag = "wizard_pick_next",
-                    )
-                }
             }
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .clickable(role = Role.Button, onClick = onAskDiscardDraft)
+                    .semantics { contentDescription = "Answer your draft before starting a new post" }
+                    .testTag("wizard_draft_shield"),
+            )
+        }
+    } else {
+        PickStage(
+            state = state,
+            permission = permission.permission,
+            onRequestPermission = permission.request,
+            onOpenSettings = permission.openSettings,
+            onOpenPicker = onOpenPicker,
+            onTogglePick = onTogglePick,
+            onShowAll = onManagePictures,
+            onDismissRefusal = onDismissRefusal,
+        )
+        // `ComposePick` and `ComposePicked` both close on the pill in
+        // its own band under the grid — the grid runs to its own
+        // margin, so the band carries the screen gutter itself.
+        WizardFooter {
+            CograButton(
+                text = "Next",
+                onClick = onNext,
+                enabled = state.forwardEnabled(),
+                modifier = Modifier.fillMaxWidth(),
+                testTag = "wizard_pick_next",
+            )
         }
     }
 }

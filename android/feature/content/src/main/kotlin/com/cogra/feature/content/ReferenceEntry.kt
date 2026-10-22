@@ -94,13 +94,12 @@ internal fun ReferenceEntry(
      */
     node: DataNode? = null,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(if (staged) 6.dp else 8.dp), modifier = Modifier.dataNode(node)) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(sectionGap(staged)),
+        modifier = Modifier.fillMaxWidth().dataNode(node),
+    ) {
         if (showHeading) {
-            Text(
-                stringResource(R.string.content_references_heading),
-                style = if (staged) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleSmall,
-                modifier = Modifier.dataNode(node?.div("label")),
-            )
+            SectionHeading(stringResource(R.string.content_references_heading), staged, node?.div("label"))
         }
         if (staged) {
             section.references.forEachIndexed { index, row ->

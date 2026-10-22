@@ -98,6 +98,8 @@ internal fun ColumnScope.DetailsStepBody(
                 // (CW-17, web's `details-step.tsx:235` conforms already).
                 subject = if (state.isVideoPost) DescribeSubject.Video else DescribeSubject.Pictures,
                 testTag = "wizard_describe_counter",
+                // The row is a block across the stage (`DescribeCounter.jsx`).
+                modifier = Modifier.fillMaxWidth(),
                 node = COMPOSE_DETAILS / "describeRow",
             )
         }

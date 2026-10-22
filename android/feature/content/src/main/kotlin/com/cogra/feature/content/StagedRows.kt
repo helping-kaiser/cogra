@@ -98,8 +98,6 @@ internal fun StagedReferenceRow(
     val name = stagedName(row.target)
     val kind = stagedKind(row.target)
     val point = StancePoint(row.relevance, row.support)
-    val exact = point.pair()
-    val showExact = LocalShowExactValues.current
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -141,32 +139,7 @@ internal fun StagedReferenceRow(
                     )
                 }
             }
-            Row(
-                modifier = Modifier
-                    .dataNode(node?.div("pair"))
-                    .semantics { contentDescription = exact },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Space.x1),
-            ) {
-                Text(
-                    text = bundleReadout(point, EMPTY_PICK_LABEL).emoji,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier
-                        .dataNode(node?.div("pair")?.div("face"))
-                        .clearAndSetSemantics { },
-                )
-                if (showExact) {
-                    Text(
-                        text = exact,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        modifier = Modifier
-                            .dataNode(node?.div("pair")?.div("exact"))
-                            .clearAndSetSemantics { },
-                    )
-                }
-            }
+            StagedPair(point, node?.div("pair"))
         }
         RemoveCross(
             name = "Remove $name",
@@ -175,6 +148,41 @@ internal fun StagedReferenceRow(
             onRemove = onRemove,
             tag = node?.div("remove")?.tag ?: testTag?.let { "${it}_remove" },
         )
+    }
+}
+
+/**
+ * The pair a staged citation signs: the face always, the digits as a
+ * `cg-exact` tail in geek mode only, and the exact pair spoken either way.
+ */
+@Composable
+private fun StagedPair(point: StancePoint, node: DataNode?) {
+    val exact = point.pair()
+    Row(
+        modifier = Modifier
+            .dataNode(node)
+            .semantics { contentDescription = exact },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.x1),
+    ) {
+        Text(
+            text = bundleReadout(point, EMPTY_PICK_LABEL).emoji,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier
+                .dataNode(node?.div("face"))
+                .clearAndSetSemantics { },
+        )
+        if (LocalShowExactValues.current) {
+            Text(
+                text = exact,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                modifier = Modifier
+                    .dataNode(node?.div("exact"))
+                    .clearAndSetSemantics { },
+            )
+        }
     }
 }
 

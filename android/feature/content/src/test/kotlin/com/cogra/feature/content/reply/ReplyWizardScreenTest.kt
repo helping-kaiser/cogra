@@ -271,7 +271,8 @@ class ReplyWizardScreenTest {
         }
 
         compose.onNodeWithTag("reply_sensitive_sheet").assertExists()
-        compose.onNodeWithTag("reply_sensitive_switch").assertExists()
+        // The sheet opens ON (the `Mark` was the intent); off, the reason is dead.
+        compose.onNodeWithTag("reply_sensitive_switch").assertExists().performClick()
         compose.onNodeWithTag("reply_sensitive_reason").assertIsNotEnabled()
     }
 

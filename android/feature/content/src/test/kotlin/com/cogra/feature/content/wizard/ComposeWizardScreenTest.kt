@@ -393,11 +393,13 @@ class ComposeWizardScreenTest {
     }
 
     @Test
-    fun theKeyStoryOutranksTheSealStoryWhenTheKeyIsGone() {
-        // One `?` per screen: on the key-absent seal it belongs to the key
-        // notice, so the header carries none.
+    fun theKeyNoticeCarriesItsOwnQuestionBesideTheHeaders() {
+        // The stopper exception (ComposeKeyAbsent.jsx): the missing key stops
+        // the seal's one act, so its notice carries `Your key` beside the
+        // header's `How signing works`.
         compose.setContent { Wizard(words.copy(step = WizardStep.Seal, keyAbsent = true)) }
-        compose.onNodeWithTag("wizard_header_help").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_header_help").assertContentDescriptionEquals("How signing works")
+        compose.onNodeWithTag("wizard_key_help").assertContentDescriptionEquals("Your key")
     }
 
     @Test
@@ -638,7 +640,7 @@ class ComposeWizardScreenTest {
      * there to replace the new pictures with the old draft.
      */
     @Test
-    fun pickingAPictureUnderTheOfferAnswersIt() {
+    fun theRollUnderTheOfferIsOutOfReachUntilTheDraftIsAnswered() {
         drafts.held = ComposeDraft(
             bodyKind = DraftBodyKind.Media,
             title = "Salt maps",
@@ -653,11 +655,18 @@ class ComposeWizardScreenTest {
             Wizard(state, onTogglePick = wizard::onTogglePick)
         }
         compose.onNodeWithTag("wizard_draft_offer").assertIsDisplayed()
+        // ComposeDraft.md: the dimmed roll is out of reach — one shield stands
+        // in its place, and a tap on it raises the ask.
+        compose.onNodeWithTag("wizard_grid_a").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_draft_shield").performClick()
+        assertThat(draftAsks).isEqualTo(1)
 
-        compose.onNodeWithTag("wizard_grid_a").performClick()
-
+        // `Discard it`: the pictures come into reach and a fresh pick begins.
+        wizard.onAskDiscardDraft()
+        wizard.onDiscardDraft()
+        compose.waitForIdle()
         compose.onNodeWithTag("wizard_draft_offer").assertDoesNotExist()
-        compose.onNodeWithTag("wizard_pick_next").assertIsEnabled()
+        compose.onNodeWithTag("wizard_grid_a").assertExists()
     }
 
     // -- The crop stage --
@@ -1046,7 +1055,8 @@ class ComposeWizardScreenTest {
             ),
         )
         compose.setContent { Wizard(state) }
-        compose.onNodeWithText("@ada").assertExists()
+        // A person cited reads by their name (`StagedReference`'s `name`).
+        compose.onNodeWithText("Ada").assertExists()
         compose.onNodeWithText("1 cited").assertDoesNotExist()
     }
 
@@ -1059,7 +1069,6 @@ class ComposeWizardScreenTest {
 
         val door = compose.onNodeWithTag("wizard_seal_cited")
         door.assertExists()
-        compose.onNodeWithText("2 cited").assertExists()
         // The name it stopped saying is not said anywhere on the seal.
         compose.onNodeWithText("@ada").assertDoesNotExist()
         // No chevron and no trailing word: the label on the gesture is what
@@ -1097,7 +1106,8 @@ class ComposeWizardScreenTest {
     fun theActsRowsShowTheCountBareAndSpeakItWhole() {
         compose.setContent { Wizard(sealWithTwoCitations()) }
 
-        compose.onNodeWithText("2").assertContentDescriptionContains("2 citations")
+        // A counted row is a door, and its name carries the count.
+        compose.onNodeWithTag("wizard_seal_cited").assertContentDescriptionEquals("Manage the 2 citations")
         compose.onNodeWithText("1").assertContentDescriptionContains("1 post")
     }
 

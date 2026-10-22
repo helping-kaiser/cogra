@@ -46,7 +46,12 @@ internal fun CitedSheet(
     modifier: Modifier = Modifier,
     testTag: String? = null,
 ) {
-    ManagerSheet(title = "Cited · ${section.references.size}", onDone = onDone, testTag = testTag, modifier = modifier) {
+    ManagerSheet(
+        title = "Cited · ${section.references.size}",
+        onDone = onDone,
+        testTag = testTag,
+        modifier = modifier,
+    ) {
         // `CitedSheet.jsx`: the rows 6 apart.
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             section.references.forEachIndexed { index, row ->
@@ -96,7 +101,12 @@ internal fun TagsSheet(
     modifier: Modifier = Modifier,
     testTag: String? = null,
 ) {
-    ManagerSheet(title = "Tags · ${section.tags.size}", onDone = onDone, testTag = testTag, modifier = modifier) {
+    ManagerSheet(
+        title = "Tags · ${section.tags.size}",
+        onDone = onDone,
+        testTag = testTag,
+        modifier = modifier,
+    ) {
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(Space.x2),

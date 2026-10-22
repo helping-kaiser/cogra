@@ -133,6 +133,8 @@ class CommentEditTest {
         compose.setContent { Edit(edited().copy(sensitiveOpen = true)) }
 
         compose.onNodeWithTag("comment_edit_sensitive_sheet").assertExists()
+        // The sheet opens ON (the `Mark` was the intent); off, the reason is dead.
+        compose.onNodeWithTag("comment_edit_sensitive_switch").performClick()
         compose.onNodeWithTag("comment_edit_sensitive_reason").assertIsNotEnabled()
     }
 

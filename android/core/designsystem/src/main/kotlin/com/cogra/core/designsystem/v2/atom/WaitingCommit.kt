@@ -35,9 +35,7 @@ const val PARTICIPLE_DELAY_MS = 200L
  * a spinner and none swaps early.
  */
 @Composable
-fun rememberParticiple(inFlight: Boolean): Boolean {
-    return rememberWaitedPast(inFlight, PARTICIPLE_DELAY_MS)
-}
+fun rememberParticiple(inFlight: Boolean): Boolean = rememberWaitedPast(inFlight, PARTICIPLE_DELAY_MS)
 
 /**
  * How long a signing may go unanswered before the seal says the network is
