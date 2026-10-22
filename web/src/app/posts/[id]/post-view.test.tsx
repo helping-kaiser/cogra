@@ -3297,7 +3297,10 @@ describe("PostView — opened from the feed", () => {
     // full width, and the row itself is the 48px target.
     const card = screen.getByTestId(byNode("postDetail.card"));
     expect(shown.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(shown.closest(".-mx-6")).toContainElement(card);
+    // The block bleeds nowhere: the page itself holds no gutter (the header
+    // owns its own), so the line and the card meet the screen edge as one.
+    expect(shown.parentElement?.parentElement).toContainElement(card);
+    expect(shown.closest(".px-6")).toBeNull();
     expect(shown).toHaveClass("w-full");
     expect(shown.style.minHeight).toBe("var(--touch-target-min)");
   });

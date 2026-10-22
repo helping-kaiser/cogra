@@ -47,7 +47,7 @@ describe("ActorChip", () => {
   it("draws the handle at label-medium's size without the role's weight", () => {
     const { handle } = mount();
     expect(handle.className).toContain("text-[length:var(--text-label-medium)]");
-    expect(handle.className).not.toMatch(/\btext-label-medium\b/);
+    expect(handle.className.split(" ")).not.toContain("text-label-medium");
   });
 
   it("is a pressable surface with a focus ring", () => {
