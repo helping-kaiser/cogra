@@ -239,13 +239,14 @@ export function PostView({
   // pins": the post detail is a pinning surface, and "on web, pinned means
   // `position: sticky` — the bar rides the page's edge and never hides"; the
   // clip detail rulings restate it beside the clip that now scrolls under it).
-  // The wrapper bleeds through the page's gutter so its ground covers the
-  // edge-to-edge clip and card passing beneath, the way `settings-view.tsx`
-  // pins its own.
+  // THE HEADER OWNS ITS BAND, edge to edge (`PageHeader.jsx`: 48px tall, its
+  // own 12px of side padding, the arrow landing on the 24px gutter by itself),
+  // at the screen's top edge — PostDetail draws it at y 0, full width, and the
+  // post 48px down. Its ground covers the edge-to-edge clip and card passing
+  // beneath.
   const header = (menu: boolean) => (
-    <div className="sticky top-0 z-10 -mx-6 bg-surface px-6" data-testid="post-header-bar">
+    <div className="sticky top-0 z-10 bg-surface" data-testid="post-header-bar">
       <PageHeader
-        inGutter
         backHref={back.href}
         // The feed restores the place the reader left it in; scrolling it to
         // the top would land on top of that restore.
@@ -268,19 +269,23 @@ export function PostView({
     </div>
   );
 
+  // The page's own lines — a loading line, a dead end, a fault — keep the 24px
+  // screen gutter under the edge-to-edge header.
   if (loading) {
     return (
-      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
+      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 pb-6">
         {header(false)}
-        <p data-testid="post-loading">Loading…</p>
+        <p className="px-6" data-testid="post-loading">
+          Loading…
+        </p>
       </main>
     );
   }
   if (notFound) {
     return (
-      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
+      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 pb-6">
         {header(false)}
-        <p role="alert" data-testid="post-not-found">
+        <p role="alert" className="px-6" data-testid="post-not-found">
           This post no longer resolves.
         </p>
       </main>
@@ -288,9 +293,9 @@ export function PostView({
   }
   if (post === null) {
     return (
-      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
+      <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 pb-6">
         {header(false)}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 px-6">
           <TransportError testId="post-transport-error" />
           <Button
             testId="post-retry"
@@ -333,22 +338,29 @@ export function PostView({
   const detailClip = clip?.src ? { ...clip, src: clip.src } : undefined;
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
+    // THE DETAIL'S COLUMN (`DetailColumn`): the post stands directly under the
+    // header and the column ends 8px above the bar. No gap of its own between
+    // the header and the post: PostDetail draws the card at y 48.
+    <main className="mx-auto flex w-full max-w-2xl flex-col pb-2">
       {/* A REMOVED POST HAS NO MENU LEFT — back is the whole header
           (`Removed.jsx:5-6`). There is nothing of it to edit, cite or license,
           and the skeleton that holds the thread's place is not a thing a reader
           keeps. */}
       {header(!redacted)}
-      {refreshing && (
-        <p role="status" aria-live="polite" data-testid="post-refreshing">
-          Loading…
-        </p>
-      )}
-      {/* A failed whole-post refresh, where the failed read was asked for —
-          the page, not the thread, which is a sheet the reader may never open.
-          A failed thread read surfaces inside that sheet instead (web.md
-          "Design guidelines", the Android twin). */}
-      {transportFault === "refresh" && <TransportError testId="post-thread-transport-error" />}
+      {/* The page's own lines, in the gutter; empty, the slot is nothing at
+          all to the layout. */}
+      <div className="flex flex-col gap-4 px-6 py-4 empty:hidden">
+        {refreshing && (
+          <p role="status" aria-live="polite" data-testid="post-refreshing">
+            Loading…
+          </p>
+        )}
+        {/* A failed whole-post refresh, where the failed read was asked for —
+            the page, not the thread, which is a sheet the reader may never
+            open. A failed thread read surfaces inside that sheet instead
+            (web.md "Design guidelines", the Android twin). */}
+        {transportFault === "refresh" && <TransportError testId="post-thread-transport-error" />}
+      </div>
       {/* THE POST IS A CARD HERE TOO (`PostCard.jsx:363` — `<Card>` for every
           variant, `detail` included). It was the page ground while its own
           comments sat on cards, which is the inverse of the board's emphasis.
@@ -361,7 +373,7 @@ export function PostView({
           and never between its halves. Edge to edge like the card's own
           media, and in the page's flow — it scrolls with the page
           (PostDetailVideo.md:5). */}
-      <div className="-mx-6 flex flex-col">
+      <div className="flex flex-col">
         {/* BETWEEN THE HEADER AND THE POST (PostDetail.md:7; PostDetailVideo.md
             :65 — "under the header", so above a video post's clip too): the
             line that says a fresh read found another version, and whose tap
