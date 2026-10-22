@@ -1,3 +1,5 @@
+"use client";
+
 // "Show all" — the per-picture manager (design/components/compose/PickedSheet).
 //
 // Opened by the pick step's "Show all" and by the details step's picked row. One
@@ -12,13 +14,17 @@
 // Rows are named ("Cover — shown first", "Picture 2") so a screen-reader pass
 // reads as a list of pictures rather than a list of buttons.
 //
-// THE DRAG HAS A NON-DRAG EQUIVALENT, as every drag in this app must: the handle
-// is a real button and the arrow keys move the picture it holds. The canvas
-// draws a handle rather than up/down controls, so the keyboard route is offered
-// without painting one (web.md §Accessibility).
+// THE HANDLE DRAGS (ComposePicked.md: "drag a picture by its handle to a new
+// place"), and the drag has its non-drag twins: the arrow keys on the focused
+// handle and the row's own `Make it the cover` · `Move up` · `Move down`
+// (PickedSheet.jsx, the K13 round). The web gives the drag no haptic.
+
+import { useState } from "react";
 
 import { BottomSheet } from "../bottom-sheet";
+import { InlineAction } from "../inline-action";
 import { PillButton } from "../pill-button";
+import { LABEL_SMALL_PLAIN } from "../plain-type";
 import { MediaThumb } from "./media-thumb";
 import type { Crop } from "../media/crop";
 
@@ -40,6 +46,15 @@ function rowName(index: number): string {
   return index === 0 ? "Cover — shown first" : `Picture ${index + 1}`;
 }
 
+/**
+ * Where a drag of `travel` pixels from row `from` lands, rows being `pitch`
+ * tall: the nearest row boundary, held inside the list.
+ */
+export function dropIndex(from: number, travel: number, pitch: number, count: number): number {
+  if (pitch <= 0) return from;
+  return Math.max(0, Math.min(count - 1, from + Math.round(travel / pitch)));
+}
+
 export function PickedSheet({
   open,
   onClose,
@@ -58,126 +73,148 @@ export function PickedSheet({
   onMove: (from: number, to: number) => void;
   testId?: string;
 }) {
+  // The row being dragged, where the pointer went down, how far it has
+  // travelled, and the row pitch measured at the press.
+  const [drag, setDrag] = useState<{
+    from: number;
+    startY: number;
+    travel: number;
+    pitch: number;
+  } | null>(null);
+
   return (
     <BottomSheet open={open} onClose={onClose} title={`Picked · ${items.length}`} testId={testId}>
       <ul className="m-0 flex list-none flex-col border-t border-outline-variant p-0">
-        {items.map((item, index) => (
-          <li
-            key={item.id}
-            data-testid={`${testId}-row-${index}`}
-            className="flex min-h-[68px] items-center gap-4 border-b border-outline-variant"
-          >
-            <button
-              type="button"
-              data-testid={`${testId}-move-${index}`}
-              aria-label={`Reorder ${index === 0 ? "the cover" : `picture ${index + 1}`}`}
-              aria-keyshortcuts="ArrowUp ArrowDown"
-              onKeyDown={(event) => {
-                if (event.key === "ArrowUp" && index > 0) {
-                  event.preventDefault();
-                  onMove(index, index - 1);
-                } else if (event.key === "ArrowDown" && index < items.length - 1) {
-                  event.preventDefault();
-                  onMove(index, index + 1);
-                }
-              }}
-              className="cg-focus flex flex-none cursor-grab items-center text-on-surface-variant"
+        {items.map((item, index) => {
+          const lifted = drag !== null && drag.from === index;
+          return (
+            <li
+              key={item.id}
+              data-testid={`${testId}-row-${index}`}
+              style={
+                lifted
+                  ? { transform: `translateY(${drag.travel}px)`, position: "relative", zIndex: 1 }
+                  : undefined
+              }
+              className={`flex min-h-[68px] items-center gap-4 border-b border-outline-variant ${
+                lifted ? "bg-surface-container-highest" : ""
+              }`}
             >
-              <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
-                <path d={DRAG_GLYPH} />
-              </svg>
-            </button>
-            <MediaThumb
-              src={item.src}
-              altText={item.altText}
-              crop={item.crop}
-              size={56}
-              cover={index === 0}
-              testId={`${testId}-thumb-${index}`}
-            />
-            <span className="flex flex-1 flex-col gap-0.5">
-              <span className="text-label-large">{rowName(index)}</span>
-              {/* THE DRAG HAS NON-DRAG TWINS (the K13 round; PickedSheet.jsx):
-                  after Describe, `Make it the cover` · `Move up` · `Move down`,
-                  each only where the move is possible. They wrap at a 24px
-                  pitch, clear under WCAG 2.5.8's spacing rule. */}
-              <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                {item.described ? (
-                  <span
-                    data-testid={`${testId}-described-${index}`}
-                    className="text-label-small text-on-surface-variant"
-                  >
-                    Described
-                  </span>
-                ) : (
-                  <InlineMove testId={`${testId}-describe-${index}`} onClick={() => onDescribe(item.id)}>
-                    Describe
-                  </InlineMove>
-                )}
-                {index > 0 && (
-                  <InlineMove testId={`${testId}-make-cover-${index}`} onClick={() => onMove(index, 0)}>
-                    Make it the cover
-                  </InlineMove>
-                )}
-                {index > 0 && (
-                  <InlineMove testId={`${testId}-up-${index}`} onClick={() => onMove(index, index - 1)}>
-                    Move up
-                  </InlineMove>
-                )}
-                {index < items.length - 1 && (
-                  <InlineMove
-                    testId={`${testId}-down-${index}`}
-                    onClick={() => onMove(index, index + 1)}
-                  >
-                    Move down
-                  </InlineMove>
-                )}
+              <button
+                type="button"
+                data-testid={`${testId}-move-${index}`}
+                aria-label={`Reorder ${index === 0 ? "the cover" : `picture ${index + 1}`}`}
+                aria-keyshortcuts="ArrowUp ArrowDown"
+                onKeyDown={(event) => {
+                  if (event.key === "ArrowUp" && index > 0) {
+                    event.preventDefault();
+                    onMove(index, index - 1);
+                  } else if (event.key === "ArrowDown" && index < items.length - 1) {
+                    event.preventDefault();
+                    onMove(index, index + 1);
+                  }
+                }}
+                // The drag itself. The pointer is captured so the row follows
+                // it past the handle, and the press stops here so the sheet's
+                // own pull-to-dismiss never reads it as a pull.
+                onPointerDown={(event) => {
+                  event.stopPropagation();
+                  const row = event.currentTarget.closest("li");
+                  event.currentTarget.setPointerCapture?.(event.pointerId);
+                  setDrag({
+                    from: index,
+                    startY: event.clientY,
+                    travel: 0,
+                    pitch: row?.getBoundingClientRect().height ?? 0,
+                  });
+                }}
+                onPointerMove={(event) => {
+                  if (drag === null || drag.from !== index) return;
+                  setDrag({ ...drag, travel: event.clientY - drag.startY });
+                }}
+                onPointerUp={() => {
+                  if (drag === null || drag.from !== index) return;
+                  const to = dropIndex(drag.from, drag.travel, drag.pitch, items.length);
+                  setDrag(null);
+                  if (to !== drag.from) onMove(drag.from, to);
+                }}
+                onPointerCancel={() => setDrag(null)}
+                className="cg-state cg-focus cg-hit relative flex flex-none cursor-grab touch-none items-center border-0 bg-transparent p-0 text-on-surface-variant"
+              >
+                <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
+                  <path d={DRAG_GLYPH} />
+                </svg>
+              </button>
+              <MediaThumb
+                src={item.src}
+                altText={item.altText}
+                crop={item.crop}
+                size={56}
+                cover={index === 0}
+                testId={`${testId}-thumb-${index}`}
+              />
+              <span className="flex flex-1 flex-col gap-0.5">
+                <span className="text-label-large">{rowName(index)}</span>
+                {/* THE DRAG HAS NON-DRAG TWINS (the K13 round; PickedSheet.jsx):
+                    after Describe, `Make it the cover` · `Move up` · `Move down`,
+                    each only where the move is possible. They wrap at a 24px
+                    pitch, clear under WCAG 2.5.8's spacing rule. */}
+                <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                  {item.described ? (
+                    <span
+                      data-testid={`${testId}-described-${index}`}
+                      className="text-label-small text-on-surface-variant"
+                    >
+                      Described
+                    </span>
+                  ) : (
+                    <InlineAction size="sm" testId={`${testId}-describe-${index}`} onClick={() => onDescribe(item.id)}>
+                      Describe
+                    </InlineAction>
+                  )}
+                  {index > 0 && (
+                    <InlineAction size="sm" testId={`${testId}-make-cover-${index}`} onClick={() => onMove(index, 0)}>
+                      Make it the cover
+                    </InlineAction>
+                  )}
+                  {index > 0 && (
+                    <InlineAction size="sm" testId={`${testId}-up-${index}`} onClick={() => onMove(index, index - 1)}>
+                      Move up
+                    </InlineAction>
+                  )}
+                  {index < items.length - 1 && (
+                    <InlineAction size="sm" testId={`${testId}-down-${index}`} onClick={() => onMove(index, index + 1)}>
+                      Move down
+                    </InlineAction>
+                  )}
+                </span>
               </span>
-            </span>
-            <button
-              type="button"
-              data-testid={`${testId}-remove-${index}`}
-              aria-label={`Remove ${index === 0 ? "the cover" : `picture ${index + 1}`}`}
-              onClick={() => onRemove(item.id)}
-              className="cg-state cg-focus flex flex-none cursor-pointer items-center text-on-surface-variant"
-            >
-              <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" aria-hidden="true">
-                <path d={CLOSE_GLYPH} />
-              </svg>
-            </button>
-          </li>
-        ))}
+              <button
+                type="button"
+                data-testid={`${testId}-remove-${index}`}
+                aria-label={`Remove ${index === 0 ? "the cover" : `picture ${index + 1}`}`}
+                onClick={() => onRemove(item.id)}
+                className="cg-state cg-focus cg-hit relative flex flex-none cursor-pointer items-center border-0 bg-transparent p-0 text-on-surface-variant"
+              >
+                <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" aria-hidden="true">
+                  <path d={CLOSE_GLYPH} />
+                </svg>
+              </button>
+            </li>
+          );
+        })}
       </ul>
-      <p className="m-0 pt-3 text-label-small text-on-surface-variant">
+      {/* PickedSheet.jsx: the footnote at the body's weight, then the Done row
+          on its own 8 · 16 · 8 inset — 16 from the sheet's edge, not the
+          column's 24. */}
+      <p className={`m-0 pt-3 ${LABEL_SMALL_PLAIN} text-on-surface-variant`}>
         The first one is the cover.
       </p>
-      <div className="flex justify-end pt-2">
+      <div className="-mr-2 flex justify-end py-2">
         <PillButton testId={`${testId}-done`} variant="text" onClick={onClose}>
           Done
         </PillButton>
       </div>
     </BottomSheet>
-  );
-}
-
-/** A small inline action on a row's second line — the board's `InlineAction size="sm"`. */
-function InlineMove({
-  children,
-  testId,
-  onClick,
-}: {
-  children: string;
-  testId: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      data-testid={testId}
-      onClick={onClick}
-      className="cg-state cg-focus cg-hit cursor-pointer border-0 bg-transparent p-0 text-label-small text-primary"
-    >
-      {children}
-    </button>
   );
 }
