@@ -133,6 +133,9 @@ describe("AppShell", () => {
     ["/posts/post-1", "", "feedSlot"],
     ["/posts/post-1", "from=notifications", "feedSlot"],
     ["/posts/post-1", "from=saved", "profileSlot"],
+    // A post opened from your own profile's chronicle hangs off Profile.
+    ["/posts/post-1", "from=profile", "profileSlot"],
+    ["/posts/post-1", "from=u:alice", "feedSlot"],
     ["/u/alice", "", "feedSlot"],
     ["/u/alice", "from=saved", "profileSlot"],
   ])("lights the drill-in's origin root (%s %s)", async (path, query, lit) => {

@@ -46,12 +46,13 @@ import { ScrollHostProvider } from "@/lib/ui/scroll-host";
  * THE ROOT A DRILL-IN KEEPS LIT (PostDetail.md:57-59; ProfileOther.md:11;
  * ProfileDeleted.md:27; `BottomNav.prompt.md`, jakob 2026-10-06): the root a
  * post or someone's profile was opened from stays lit on the drill-in. A
- * Saved row belongs to the Profile stack Saved hangs from; anything else —
+ * Saved row, and your own profile's chronicle, belong to the Profile stack
+ * (`from=saved`, `from=profile`); anything else —
  * the feed, a link, a notification — lights the Feed, where author chips and
  * links land. (`from=explore` arrives with the Explore surface.)
  */
 export function detailRoot(from: string | null): NavSlot {
-  return from === "saved" ? "profile" : "feed";
+  return from === "saved" || from === "profile" ? "profile" : "feed";
 }
 
 /**

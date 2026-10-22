@@ -23,6 +23,17 @@ describe("ChatsView", () => {
     expect(back).toHaveAttribute("aria-label", "Back to feed");
   });
 
+  // ChatsComingSoon.md:15-17: your own profile's band, or a profile's Message.
+  it.each([
+    ["profile", "/profile", "Back to your profile"],
+    ["u:ada", "/u/ada", "Back to the profile"],
+  ])("names the origin it was opened from (%s)", (from, href, label) => {
+    render(<ChatsView from={from} />);
+    const back = screen.getByTestId("chats-back");
+    expect(back).toHaveAttribute("href", href);
+    expect(back).toHaveAttribute("aria-label", label);
+  });
+
   it("offers no action — nothing fills this one yet", () => {
     render(<ChatsView />);
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
