@@ -286,7 +286,7 @@ export function ProfileScreen({
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col pb-2">
-      <CollapsingTop>
+      <CollapsingTop flush>
         {handle === null ? (
           // THE OWN PROFILE ROOT WEARS THE BAND (`ProfileBand`, Profile.md:3):
           // the gear, then chats, then the bell — and no ⋮, which closes the
