@@ -48,7 +48,6 @@ import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.content.MAX_COMMENT_BODY_CHARS
 import com.cogra.domain.media.MAX_ALT_TEXT_CHARS
 import com.cogra.feature.content.R
-import com.cogra.feature.content.wizard.describeTooLong
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceEntry
 import com.cogra.feature.content.TopicEntry
@@ -63,6 +62,7 @@ import com.cogra.feature.content.edit.withdrawn
 import com.cogra.feature.content.wizard.SensitiveSheet
 import com.cogra.feature.content.wizard.WizardBody
 import com.cogra.feature.content.wizard.WizardFooter
+import com.cogra.feature.content.wizard.describeTooLong
 
 /**
  * `CommentEdit`, wired.

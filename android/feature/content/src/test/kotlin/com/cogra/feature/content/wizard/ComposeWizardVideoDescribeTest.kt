@@ -150,7 +150,7 @@ class ComposeWizardVideoDescribeTest {
     fun theVideoTileCarriesNoManagerAndOpensNoSheet() {
         compose.setContent { Wizard(onVideoDetails) }
 
-        compose.onNodeWithTag("composeDetails.mediaRow").assertHasNoClickAction()
+        compose.onNodeWithTag("wizard_video_tile").assertHasNoClickAction()
     }
 
     // Finding 7 (`ComposeDetailsVideo.jsx` lines 23-32): the tile's only

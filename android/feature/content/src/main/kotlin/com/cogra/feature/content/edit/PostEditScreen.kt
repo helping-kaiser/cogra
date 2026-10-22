@@ -53,7 +53,6 @@ import com.cogra.feature.content.BackingEdit
 import com.cogra.feature.content.BackingPad
 import com.cogra.feature.content.ParkedPadWash
 import com.cogra.feature.content.R
-import com.cogra.feature.content.wizard.describeTooLong
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceEntry
 import com.cogra.feature.content.TopicEntry
@@ -62,6 +61,7 @@ import com.cogra.feature.content.toItem
 import com.cogra.feature.content.wizard.SensitiveSheet
 import com.cogra.feature.content.wizard.WizardBody
 import com.cogra.feature.content.wizard.WizardFooter
+import com.cogra.feature.content.wizard.describeTooLong
 
 /** The board's own line under the words when they pass their cap (EditWords.md). */
 const val WORDS_OVER_CAP_LINE = "A post's words are at most 5,000 characters."

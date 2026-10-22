@@ -45,13 +45,13 @@ import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.media.MAX_ALT_TEXT_CHARS
 import com.cogra.feature.content.CitedSheet
 import com.cogra.feature.content.R
-import com.cogra.feature.content.wizard.describeTooLong
 import com.cogra.feature.content.ReferenceEntry
 import com.cogra.feature.content.TopicEntry
 import com.cogra.feature.content.wizard.LicenseSheet
 import com.cogra.feature.content.wizard.SensitiveSheet
 import com.cogra.feature.content.wizard.WizardBody
 import com.cogra.feature.content.wizard.WizardFooter
+import com.cogra.feature.content.wizard.describeTooLong
 
 /**
  * The reply wizard, wired.

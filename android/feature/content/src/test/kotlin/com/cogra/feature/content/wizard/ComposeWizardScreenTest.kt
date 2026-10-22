@@ -486,7 +486,7 @@ class ComposeWizardScreenTest {
         )
         compose.setContent { Wizard(withVideoCover) }
 
-        compose.onNodeWithTag("composeDetails.mediaRow").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_video_tile").assertIsDisplayed()
         compose.onNodeWithTag("media_thumb_cover_mark", useUnmergedTree = true).assertIsDisplayed()
         compose.onNodeWithTag("wizard_cover_door").assertDoesNotExist()
         compose.onNodeWithTag("wizard_cover_face", useUnmergedTree = true).assertDoesNotExist()
@@ -558,7 +558,8 @@ class ComposeWizardScreenTest {
     fun theGridGoesDeadOnceAClipIsStaged() {
         compose.setContent { Wizard(withVideoPicked) }
 
-        compose.onNodeWithTag("wizard_open_picker").assertIsNotEnabled()
+        // The way out to the photos app is gone, not disabled (ComposePickVideo.md).
+        compose.onNodeWithTag("wizard_open_picker").assertDoesNotExist()
         compose.onNodeWithTag("wizard_grid_other").assertHasNoClickAction()
         compose.onNodeWithTag("wizard_grid_clip").assertHasNoClickAction()
     }
