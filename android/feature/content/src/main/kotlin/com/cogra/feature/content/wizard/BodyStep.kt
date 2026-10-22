@@ -317,14 +317,17 @@ private fun PickedTrayHeader(count: Int, showAll: Boolean, onShowAll: () -> Unit
 @Composable
 private fun RefusedFiles(refused: List<RefusedPick>, onDismiss: (Int) -> Unit) {
     if (refused.isEmpty()) return
+    // `ComposePickedErrors`: the list stands `14px 24px 0` under the tray, a
+    // refusal every 10 — the board's own rhythm, off the 4dp grid.
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = Space.x6, end = Space.x6, top = Space.x4),
-        verticalArrangement = Arrangement.spacedBy(Space.x3),
+            .padding(start = Space.x6, end = Space.x6, top = REFUSALS_TOP),
+        verticalArrangement = Arrangement.spacedBy(REFUSALS_GAP),
     ) {
         refused.forEachIndexed { index, file ->
             Row(
+                modifier = Modifier.testTag("wizard_refused_row_$index"),
                 horizontalArrangement = Arrangement.spacedBy(Space.x2),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -388,6 +391,10 @@ private fun PhotosAppTile(onClick: () -> Unit, enabled: Boolean = true, modifier
 
 /** The grid's own margin and seam, read off `ComposePick`. */
 private val GridEdge = 4.dp
+
+/** `ComposePickedErrors.jsx`: the refusals' `14px` lead and `gap: 10`. */
+private val REFUSALS_TOP = 14.dp
+private val REFUSALS_GAP = 10.dp
 
 private const val GRID_COLUMNS = 3
 
