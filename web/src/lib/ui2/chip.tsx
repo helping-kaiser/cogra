@@ -6,8 +6,9 @@
 // `outline` when unselected — and never a check glyph: a check appearing inside
 // a selected chip reflows every label in the row as the reader picks, so the
 // row moves under the thumb that is using it. Measurements are the canvas's
-// (ComposeCrop's ratio row, ComposeDetails' topics row): 32px min height, 4px
-// vertical and 12px horizontal padding, `label-large`.
+// (ComposeCrop's ratio row, ComposeDetails' topics row; `Chip.jsx` SIZES.md): 32px
+// tall, 12px horizontal padding, `label-large`, the unselected word in
+// `--text-body`. A toggling chip is the master's `switch` (`aria-checked`).
 
 import type { ReactNode } from "react";
 
@@ -31,7 +32,7 @@ export function Chip({
 }) {
   const tone = selected
     ? "bg-secondary-container text-on-secondary-container"
-    : "border border-outline text-on-surface-variant";
+    : "border border-outline text-on-surface";
 
   return (
     <span className="relative inline-flex">
@@ -42,9 +43,10 @@ export function Chip({
         // A selectable chip is a toggle, so it reports its state rather than
         // relying on the colour change alone — colour never carries meaning
         // alone (design.md §10).
-        aria-pressed={onClick ? selected : undefined}
+        role={onClick ? "switch" : undefined}
+        aria-checked={onClick ? selected : undefined}
         onClick={onClick}
-        className={`cg-state cg-focus cg-hit box-border inline-flex min-h-8 items-center gap-1.5 rounded-full px-3 py-1 text-label-large disabled:opacity-[var(--state-disabled)] ${tone}`}
+        className={`cg-state cg-focus cg-hit box-border inline-flex h-8 items-center gap-1.5 rounded-full px-3 py-0 text-label-large disabled:opacity-[var(--state-disabled)] ${tone}`}
       >
         {children}
         {onDismiss && (

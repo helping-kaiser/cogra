@@ -46,12 +46,12 @@ describe("ComponentGallery", () => {
 
   it("drives the shape selection through to the crop frame", () => {
     render(<ComponentGallery />);
-    expect(screen.getByTestId("gallery-shape-tall")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId("gallery-shape-tall")).toHaveAttribute("aria-checked", "true");
     expect(screen.getByTestId("crop-frame").style.aspectRatio).toBe(`${4 / 5} / 1`);
 
     fireEvent.click(screen.getByTestId("gallery-shape-wide"));
 
-    expect(screen.getByTestId("gallery-shape-wide")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId("gallery-shape-wide")).toHaveAttribute("aria-checked", "true");
     expect(screen.getByTestId("crop-frame").style.aspectRatio).toBe("1.91 / 1");
   });
 
