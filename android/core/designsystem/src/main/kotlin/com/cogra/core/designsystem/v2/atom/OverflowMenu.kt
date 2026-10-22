@@ -128,23 +128,26 @@ fun CograOverflowMenu(
                 MaterialTheme.colorScheme,
                 MaterialTheme.colorScheme.surfaceContainerHigh,
             ),
-            modifier = Modifier
-                .testTag(sheetNode?.tag ?: "${testTag}_sheet")
-                .semantics { paneTitle = name },
-            // THE MASTER'S GRIP (`BottomSheet.jsx`): 8dp over a 32×4
-            // `border-hairline` handle and 12dp under it, so the first row
-            // starts 24dp down — Material's own handle pads 22dp each side.
-            dragHandle = { SheetGrip(sheetNode?.div("dragHandle")) },
+            // THE MASTER'S GRIP (`BottomSheet.jsx`) is the sheet's own first
+            // child, not Material's handle slot: 8dp over a 32×4 handle and
+            // 12dp under it, so the first row starts 24dp down (Material's
+            // pads 22dp each side) — and a mark, "not a button", as the
+            // master says and `CograSheetSurface` already draws it.
+            dragHandle = null,
         ) {
             // NO TITLE. The rows are the sheet, and the name the trigger
             // already carries reaches a screen reader through the sheet's
-            // pane title.
+            // pane title. The sheet's node rides this column, inside the
+            // sheet's own offset, so it measures where the sheet stands.
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .testTag(sheetNode?.tag ?: "${testTag}_sheet")
+                    .semantics { paneTitle = name }
                     .padding(bottom = Space.x6),
                 verticalArrangement = Arrangement.spacedBy(0.dp),
             ) {
+                SheetGrip(sheetNode?.div("dragHandle"))
                 items.forEach { row ->
                     // `SheetItem`: edge to edge, the 48dp minimum, `0 24`,
                     // its one line centred in the row.
