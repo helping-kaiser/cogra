@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SHEET_OUT_MS } from "@/lib/ui/motion";
@@ -331,6 +332,136 @@ describe("BottomSheet", () => {
     const foot = screen.getByRole("button", { name: "Add a comment" }).parentElement;
     expect(foot?.className).toContain("flex-none");
   });
+
+  // `onClose` IS THE READER'S WORD. The sheet closes its own dialog after the
+  // exit animation once the host has already set `open` false; that close is
+  // the host's own doing and is never reported back, because a host that has
+  // meanwhile asked to reopen would have the stale report override it.
+  describe("who closed it", () => {
+    const sheet = (open: boolean, onClose: () => void) => (
+      <BottomSheet open={open} onClose={onClose} title="Comments">
+        <p>A comment</p>
+      </BottomSheet>
+    );
+
+    it("does not report the close it performs itself after the host dropped it", () => {
+      const onClose = vi.fn();
+      const { rerender } = render(sheet(true, onClose));
+      const dialog = screen.getByTestId("bottom-sheet") as HTMLDialogElement;
+      rerender(sheet(false, onClose));
+      act(() => void vi.advanceTimersByTime(SHEET_OUT_MS));
+      // Let a close event the platform dispatches later arrive too.
+      act(() => void vi.runAllTimers());
+      expect(dialog.open).toBe(false);
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    // THE LOST REOPEN. The platform dispatches `close` as a task of its own, so
+    // the programmatic close's event can arrive after the host has reopened.
+    it("keeps a reopen the host asked for when the programmatic close's event arrives late", () => {
+      function Host() {
+        const [open, setOpen] = useState(true);
+        return (
+          <>
+            <button type="button" onClick={() => setOpen(false)}>
+              drop
+            </button>
+            <button type="button" onClick={() => setOpen(true)}>
+              raise
+            </button>
+            {sheet(open, () => setOpen(false))}
+          </>
+        );
+      }
+      render(<Host />);
+      const dialog = screen.getByTestId("bottom-sheet") as HTMLDialogElement;
+      // The close takes effect now; its event is the platform's to dispatch
+      // later, so the test dispatches it itself, after the reopen.
+      const closed = vi.spyOn(dialog, "close").mockImplementation(() => {
+        dialog.removeAttribute("open");
+      });
+
+      fireEvent.click(screen.getByText("drop"));
+      act(() => void vi.advanceTimersByTime(SHEET_OUT_MS));
+      expect(closed).toHaveBeenCalledOnce();
+      expect(dialog.open).toBe(false);
+      fireEvent.click(screen.getByText("raise"));
+      expect(dialog.open).toBe(true);
+
+      act(() => void fireEvent(dialog, new Event("close")));
+      act(() => void vi.runAllTimers());
+      expect(dialog.open).toBe(true);
+    });
+
+    it("does not close a dialog that was raised again before the exit finished", () => {
+      const onClose = vi.fn();
+      const { rerender } = render(sheet(true, onClose));
+      const dialog = screen.getByTestId("bottom-sheet") as HTMLDialogElement;
+      rerender(sheet(false, onClose));
+      act(() => void vi.advanceTimersByTime(SHEET_OUT_MS - 1));
+      rerender(sheet(true, onClose));
+      act(() => void vi.runAllTimers());
+      expect(dialog.open).toBe(true);
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it("reports the reader's own close — Escape — exactly once", () => {
+      const onClose = vi.fn();
+      render(sheet(true, onClose));
+      const dialog = screen.getByTestId("bottom-sheet") as HTMLDialogElement;
+      // Escape asks the platform to close the dialog: no flag of ours is set.
+      act(() => dialog.close());
+      act(() => void vi.runAllTimers());
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("reports Escape even right after a programmatic close", () => {
+      const onClose = vi.fn();
+      const { rerender } = render(sheet(true, onClose));
+      const dialog = screen.getByTestId("bottom-sheet") as HTMLDialogElement;
+      rerender(sheet(false, onClose));
+      act(() => void vi.runAllTimers());
+      rerender(sheet(true, onClose));
+      expect(dialog.open).toBe(true);
+      act(() => dialog.close());
+      act(() => void vi.runAllTimers());
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("reports Escape pressed while the exit is running exactly once and leaves nothing armed", () => {
+      const onClose = vi.fn();
+      const { rerender } = render(sheet(true, onClose));
+      const dialog = screen.getByTestId("bottom-sheet") as HTMLDialogElement;
+      rerender(sheet(false, onClose));
+      act(() => dialog.close());
+      act(() => void vi.runAllTimers());
+      expect(onClose).toHaveBeenCalledTimes(1);
+      // The timer found it closed and closed nothing, so the next Escape counts.
+      rerender(sheet(true, onClose));
+      act(() => dialog.close());
+      act(() => void vi.runAllTimers());
+      expect(onClose).toHaveBeenCalledTimes(2);
+    });
+
+    it("reports the press outside it exactly once", () => {
+      const onClose = vi.fn();
+      render(sheet(true, onClose));
+      screen.getByTestId("bottom-sheet").click();
+      act(() => void vi.runAllTimers());
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("reports the pull exactly once", () => {
+      const onClose = vi.fn();
+      render(sheet(true, onClose));
+      const dialog = screen.getByTestId("bottom-sheet");
+      fireEvent.pointerDown(dialog, { pointerType: "touch", clientY: 100 });
+      fireEvent.pointerMove(dialog, { pointerType: "touch", clientY: 100 + PULL_THRESHOLD });
+      fireEvent.pointerUp(dialog, { pointerType: "touch", clientY: 100 + PULL_THRESHOLD });
+      act(() => void vi.runAllTimers());
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+  });
 });
 
 describe("SheetItem", () => {
@@ -344,6 +475,7 @@ describe("SheetItem", () => {
     screen.getByTestId("public-domain").click();
     expect(onSelect).toHaveBeenCalledOnce();
   });
+
 
   it("reports the chosen row rather than relying on its colour", () => {
     render(
