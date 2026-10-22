@@ -28,7 +28,7 @@ import { useState } from "react";
 import { type ReferenceDraft } from "@/lib/references/draft";
 import { REFERENCE_BATCH_CAP } from "@/lib/references/normalize";
 import { CITATION_FAMILY, PairSheet } from "@/lib/ui2/compose/pair-sheet";
-import { Button } from "./button";
+import { InlineAction } from "@/lib/ui2/inline-action";
 import { instance, part, testAttributes, type DataNode } from "./data-node";
 import { ReferenceChip } from "./reference-chip";
 import { ReferenceFinder } from "./reference-finder";
@@ -153,16 +153,18 @@ export function ReferenceEntryField({
           ))}
         </ul>
       )}
-      <Button
+      {/* The composers' own word and weight (`ComposeDetailsBody`, `EditCompose`,
+          `ReplySeal`): a quiet "+ Cite something" under the staged rows,
+          opening the finder. */}
+      <InlineAction
         testId={`${testIdPrefix}-reference-add`}
         node={part(node, "add")}
-        variant="outline"
         size="sm"
         onClick={() => setFinding(true)}
         disabled={atCap}
       >
-        Add a reference
-      </Button>
+        + Cite something
+      </InlineAction>
       {atCap && (
         <p
           data-testid={`${testIdPrefix}-reference-cap`}

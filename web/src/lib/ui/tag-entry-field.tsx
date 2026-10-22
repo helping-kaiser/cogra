@@ -120,7 +120,7 @@ export function TagEntryField({
         className="text-label-large"
         {...testAttributes(part(node, "label"))}
       >
-        Topics
+        Tags
       </label>
       {tags.length > 0 && (
         <ul className="flex flex-col gap-2" data-testid={`${testIdPrefix}-tag-list`}>
