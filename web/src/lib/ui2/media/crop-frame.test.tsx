@@ -239,13 +239,40 @@ describe("what the cropper reports back", () => {
   });
 });
 
-// design.md §10: every drag gesture needs a non-drag equivalent, and the
-// fix-round-2 ruling forbids drawing controls for it. The library brings the
-// arrow keys; zoom and recentre are ours, and they may not be dropped.
-describe("the invisible keyboard route", () => {
-  it("leaves the arrow keys to the library", () => {
-    render(<Host />);
-    expect(given().keyboardStep).toBeGreaterThan(1);
+// design.md §10: every drag gesture needs a non-drag equivalent; the K13
+// round drew it (CropViewport.jsx): arrows pan 1 % (10 % with Shift), the
+// slider zooms, and the zoom and recentre keys stay.
+describe("the keyboard route", () => {
+  it("pans by 1 % of the picture an arrow, 10 % with Shift, held at the edge", () => {
+    render(<Host initial={{ ...CENTERED, zoom: 2 }} />);
+    // The library's measurements: a 400×500 picture under a 400×500 cut.
+    (given().onMediaLoaded as (s: unknown) => void)({ width: 400, height: 500, naturalWidth: 800, naturalHeight: 1000 });
+    (given().onCropSizeChange as (s: unknown) => void)({ width: 400, height: 500 });
+    const frame = screen.getByTestId("crop-frame");
+    // 1 % of 400 · 2 = 8px.
+    fireEvent.keyDown(screen.getByTestId("cropper"), { key: "ArrowRight" });
+    expect(readout()).toBe("2.00 8 0");
+    // 10 % of 500 · 2 = 100px up.
+    fireEvent.keyDown(screen.getByTestId("cropper"), { key: "ArrowUp", shiftKey: true });
+    expect(readout()).toBe("2.00 8 -100");
+    // The edge: |400 · 2 / 2 − 400 / 2| = 200.
+    for (let i = 0; i < 5; i += 1) fireEvent.keyDown(frame, { key: "ArrowRight", shiftKey: true });
+    expect(readout()).toBe("2.00 200 -100");
+  });
+
+  it("draws the zoom slider under the cut when the crop asks for it", () => {
+    render(<CropFrame src="blob:x" shape="tall" crop={{ ...CENTERED, zoom: 1.15 }} onChange={() => {}} zoomSlider />);
+    const slider = screen.getByRole("slider", { name: "Zoom" });
+    expect(slider).toHaveAttribute("min", String(MIN_ZOOM));
+    expect(slider).toHaveAttribute("max", "4");
+    expect(slider).toHaveValue("1.15");
+  });
+
+  it("zooms from the slider", () => {
+    const changes: Crop[] = [];
+    render(<CropFrame src="blob:x" shape="tall" crop={CENTERED} onChange={(c) => changes.push(c)} zoomSlider />);
+    fireEvent.change(screen.getByRole("slider", { name: "Zoom" }), { target: { value: "2.5" } });
+    expect(changes.at(-1)!.zoom).toBe(2.5);
   });
 
   it("zooms in and out on plus and minus", () => {
@@ -298,7 +325,9 @@ describe("the invisible keyboard route", () => {
     const description = screen.getByText(/arrow keys/i);
     expect(description).toHaveClass("sr-only");
     expect(screen.getByTestId("cropper")).toHaveAttribute("aria-describedby", description.id);
-    expect(screen.getByTestId("cropper")).toHaveAttribute("aria-label", "The picture's framing");
+    // CropViewport.jsx: the cut takes focus under the master's own name.
+    expect(screen.getByTestId("cropper")).toHaveAttribute("aria-label", "Move the picture");
+    expect(screen.getByTestId("cropper")).toHaveAttribute("role", "group");
   });
 });
 

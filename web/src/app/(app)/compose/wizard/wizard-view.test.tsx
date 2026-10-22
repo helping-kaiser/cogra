@@ -405,6 +405,41 @@ describe("the compose wizard", () => {
     expect(frame.querySelector("img")!.getAttribute("src")).toBe("blob:preview");
   });
 
+  // ComposeCrop.md: the zoom slider under the cut, the cut named for what it
+  // does (crop-frame.test.tsx, where the cut can be measured), and the
+  // QuietNote's how-to line for the device in hand.
+  it("draws the crop's zoom slider and its how-to line", async () => {
+    render();
+    await pick(["one.jpg", "two.jpg"]);
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+
+    expect(screen.getByRole("slider", { name: "Zoom" })).toBeInTheDocument();
+    const note = screen.getByTestId("wizard-crop-note");
+    expect(note.className).toContain("text-label-small");
+    // The phone's sentence where a touch can pinch.
+    expect(note).toHaveTextContent("One shape for the whole post. Drag to move, pinch to zoom.");
+  });
+
+  it("names the desktop's ways to move and zoom where no touch can pinch", async () => {
+    const original = window.matchMedia;
+    window.matchMedia = ((query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    })) as unknown as typeof window.matchMedia;
+    try {
+      render();
+      await pick(["one.jpg"]);
+      fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+      expect(screen.getByTestId("wizard-crop-note")).toHaveTextContent(
+        "One shape for the whole post. Drag or use the arrow keys to move, the slider to zoom.",
+      );
+    } finally {
+      window.matchMedia = original;
+    }
+  });
+
   // ComposeWords.md: an empty body holds Next inert, and nothing else is said
   // — the refusal line and the error outline belong to the cap alone.
   it("refuses to leave the pick screen with no body, saying nothing", async () => {

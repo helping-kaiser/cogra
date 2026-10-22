@@ -19,16 +19,19 @@
 // against the previous crop. Both defects die by construction, which is why the
 // library replaces the model and not just the gestures.
 //
-// THE NON-DRAG ROUTE IS STILL OURS TO FINISH, AND IT IS INVISIBLE ON PURPOSE.
-// design.md §10 requires a non-drag equivalent for every drag gesture, and the
-// fix-round-2 ruling forbids drawing nudge or zoom controls. The library brings
-// half of it — its cropper is focusable and the arrow keys move the framing by
-// `keyboardStep` — but it has no keyboard route for ZOOM, and pinch-to-zoom is
-// a gesture like any other. So `+`/`-`/`Home` are handled here, on top, and a
-// visually hidden paragraph TELLS a reader the keys rather than leaving them to
-// guess at an affordance that is not painted. Anyone changing this file: the
-// keyboard zoom is the accessibility requirement, not a convenience, and
-// `crop-frame.test.tsx` fails if it goes.
+// THE NON-DRAG ROUTE IS OURS TO FINISH (design.md §10: a non-drag equivalent
+// for every drag gesture). The K13 round drew it (CropViewport.jsx, jakob
+// 2026-10-05), superseding the earlier ruling that kept it invisible:
+//
+//  · THE ZOOM IS ON SCREEN — `CropZoom`, a range slider under the cut, between
+//    the fill and about 4×, because a desktop browser has no pinch. A crop
+//    asks for it with `zoomSlider`.
+//  · THE CUT PANS BY KEY, under the master's name `Move the picture`: an arrow
+//    moves the picture 1 % of itself, 10 % with Shift, and never past where an
+//    edge of the picture meets the cut's (ComposeCrop.md). The library's own
+//    arrow handling steps in pixels, so the keys are taken here first.
+//  · `+`/`-`/`Home` stay as the keyboard's zoom, and a visually hidden
+//    paragraph names the keys. `crop-frame.test.tsx` fails if either goes.
 //
 // THE FRAME IS FULL-BLEED (jakob, round 6: "the area for cropping was to
 // small"). ComposeCrop and AvatarCrop both draw the viewport edge to edge —
@@ -81,6 +84,7 @@ export function CropFrame({
   crop = CENTERED,
   onChange,
   alt = "",
+  zoomSlider = false,
   testId = "crop-frame",
 }: {
   src: string;
@@ -88,6 +92,8 @@ export function CropFrame({
   crop?: Crop;
   onChange: (next: Crop) => void;
   alt?: string;
+  /** Draws `CropZoom` under the cut (ComposeCrop: "the zoom slider stands under the crop on both platforms"). */
+  zoomSlider?: boolean;
   testId?: string;
 }) {
   // The library reports position, zoom, and the framed area through three
@@ -152,10 +158,24 @@ export function CropFrame({
         // one the moment it re-renders centred.
         return emit({ x: 0, y: 0, zoom: MIN_ZOOM, area: null, areaPercent: null });
       default:
-        // Arrows belong to the library; swallowing them here would take the
-        // keyboard route away rather than add to it.
         return;
     }
+  };
+
+  // The rendered picture and the cut, as the library measures them — what a
+  // key's 1 % is of, and where the picture's edge meets the cut's.
+  const media = useRef<{ width: number; height: number } | null>(null);
+  const cut = useRef<{ width: number; height: number } | null>(null);
+
+  // THE ARROWS ARE TAKEN BEFORE THE LIBRARY SEES THEM (capture phase): its own
+  // step is a fixed pixel count, the board's is a share of the picture.
+  const onArrow = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const move = ARROWS[event.key];
+    if (move === undefined || media.current === null || cut.current === null) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const now = latest.current;
+    emit(panBy(now, move, event.shiftKey ? PAN_STEP_SHIFT : PAN_STEP, media.current, cut.current));
   };
 
   const round = shape === "avatar";
@@ -173,6 +193,7 @@ export function CropFrame({
         style={{ aspectRatio: cssRatio(SHAPE_RATIO[shape]) }}
         className="relative -mx-6 overflow-hidden bg-surface-container-high"
         onKeyDown={onKeyDown}
+        onKeyDownCapture={onArrow}
       >
         <Cropper
           image={src}
@@ -191,14 +212,72 @@ export function CropFrame({
           onCropChange={onCropChange}
           onZoomChange={onZoomChange}
           onCropComplete={onCropComplete}
+          onMediaLoaded={(size) => {
+            media.current = { width: size.width, height: size.height };
+          }}
+          onCropSizeChange={(size) => {
+            cut.current = size;
+          }}
           mediaProps={{ alt }}
-          cropperProps={{ "aria-label": "The picture's framing", "aria-describedby": describedBy }}
+          cropperProps={{ role: "group", "aria-label": CROP_PAN_NAME, "aria-describedby": describedBy }}
         />
       </div>
       <p id={describedBy} className="sr-only">
         Drag the picture to move it, or use the arrow keys. Press plus to zoom in, minus to zoom
         out, and Home to centre it again.
       </p>
+      {/* `CropZoom` (CropViewport.jsx): the house slider in `primary` at the
+          column's width, 48px tall so the thumb's target is the minimum, no
+          words beside it — its name says what it does. */}
+      {zoomSlider && (
+        <input
+          type="range"
+          data-testid={`${testId}-zoom`}
+          min={MIN_ZOOM}
+          max={MAX_ZOOM}
+          step={0.01}
+          value={clampZoom(crop.zoom)}
+          aria-label={CROP_ZOOM_NAME}
+          onChange={(event) => emit({ zoom: clampZoom(Number(event.target.value)) })}
+          className="cg-focus m-0 block h-12 w-full flex-none accent-primary"
+        />
+      )}
     </>
   );
+}
+
+/** The cut's and the slider's spoken names (CropViewport.jsx; blessed, jakob 2026-10-05). */
+export const CROP_PAN_NAME = "Move the picture";
+export const CROP_ZOOM_NAME = "Zoom";
+
+/** One arrow press moves the picture this share of itself; Shift, ten times it. */
+const PAN_STEP = 0.01;
+const PAN_STEP_SHIFT = 0.1;
+
+const ARROWS: Record<string, readonly [number, number]> = {
+  ArrowLeft: [-1, 0],
+  ArrowRight: [1, 0],
+  ArrowUp: [0, -1],
+  ArrowDown: [0, 1],
+};
+
+/**
+ * The framing one arrow press leaves: the picture moved `share` of its own
+ * rendered size along `move`, held where its edge meets the cut's — the
+ * library's own bound (`restrictPosition`: |offset| ≤ |picture · zoom − cut| / 2).
+ */
+export function panBy(
+  crop: Pick<Crop, "x" | "y" | "zoom">,
+  move: readonly [number, number],
+  share: number,
+  media: { width: number; height: number },
+  cut: { width: number; height: number },
+): { x: number; y: number } {
+  const zoom = clampZoom(crop.zoom);
+  const bound = (picture: number, window: number) => Math.abs((picture * zoom) / 2 - window / 2);
+  const hold = (value: number, limit: number) => Math.max(-limit, Math.min(limit, value));
+  return {
+    x: hold(crop.x + move[0] * share * media.width * zoom, bound(media.width, cut.width)),
+    y: hold(crop.y + move[1] * share * media.height * zoom, bound(media.height, cut.height)),
+  };
 }
