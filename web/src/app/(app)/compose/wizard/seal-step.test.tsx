@@ -10,7 +10,7 @@ import { emptyWizard, type WizardState } from "@/lib/compose/wizard";
 import { newReferenceDraft } from "@/lib/references/draft";
 import { DEFAULT_CONFIDENCE, DEFAULT_RELEVANCE, type TagDraft } from "@/lib/topics/draft";
 import { PUBLIC_DOMAIN } from "@/lib/license";
-import { SealStep, type SealSheet } from "./seal-step";
+import { DISCARD_POST_BODY, SealStep, type SealFault, type SealSheet } from "./seal-step";
 
 function citation(id: string, label: string, relevance = 0.1, support = 0.1) {
   return {
@@ -34,33 +34,45 @@ function renderStep(
   keyOnDevice: boolean | null = true,
   staged = 0.1,
   confirmingUnreachable = false,
+  extra: Partial<{ signing: boolean; swapped: boolean; slow: boolean; fault: SealFault | null; discarding: boolean }> = {},
 ) {
   const props = {
     state: baseState(overrides),
     sheet,
-    blocked: null,
-    busy: false,
+    signing: false,
+    swapped: false,
+    slow: false,
+    fault: null,
+    discarding: false,
     keyOnDevice,
-    refusal: null,
     stagedPDirected: staged,
     confirmingUnreachable,
     onSheet: vi.fn(),
     onLicense: vi.fn(),
     onReferences: vi.fn(),
+    onTags: vi.fn(),
     onStagedPDirected: vi.fn(),
     onSetStance: vi.fn(),
     onKeepAdjusting: vi.fn(),
     onSetAnyway: vi.fn(),
     onStanceHelp: vi.fn(),
     onSensitive: vi.fn(),
-    onSensitiveReason: vi.fn(),
     onHelp: vi.fn(),
     onLicenseHelp: vi.fn(),
     onKeyHelp: vi.fn(),
+    onWriteRuleHelp: vi.fn(),
     onSign: vi.fn(),
+    onRetry: vi.fn(),
+    onRetryUploads: vi.fn(),
     onBack: vi.fn(),
     onRestoreKey: vi.fn(),
     onKeepDraft: vi.fn(),
+    onRemoveRefused: vi.fn(),
+    onReport: vi.fn(),
+    onDiscard: vi.fn(),
+    onDiscardConfirmed: vi.fn(),
+    onKeepDiscarding: vi.fn(),
+    ...extra,
   };
   render(<SealStep {...props} />);
   return props;
@@ -71,10 +83,11 @@ describe("SealStep", () => {
   // never a joined string.
   it("reads tags back as chips under the label 'Tags'", () => {
     renderStep({ tags: [tag("fieldnotes"), tag("coastroad")] });
-    expect(screen.getByText("Tags")).toBeInTheDocument();
+    const acts = within(screen.getByTestId("wizard-seal-acts"));
+    expect(acts.getByText("Tags")).toBeInTheDocument();
     expect(screen.queryByText("Topics")).not.toBeInTheDocument();
-    expect(screen.getByText("#fieldnotes")).toBeInTheDocument();
-    expect(screen.getByText("#coastroad")).toBeInTheDocument();
+    expect(acts.getByText("#fieldnotes")).toBeInTheDocument();
+    expect(acts.getByText("#coastroad")).toBeInTheDocument();
     // Never the old joined string.
     expect(screen.queryByText("#fieldnotes  #coastroad")).not.toBeInTheDocument();
   });
@@ -184,15 +197,20 @@ describe("SealStep", () => {
 
     it("removes into the staged set the details stage owns", () => {
       const { onReferences } = renderStep({ references: two }, "cited");
-      screen.getByTestId("wizard-cited-sheet-remove-0").click();
+      screen.getByTestId("wizard-cited-sheet-0-remove").click();
       expect(onReferences).toHaveBeenCalledWith([two[1]]);
     });
 
-    it("re-pairs one citation without touching the others", () => {
+    // The row opens the citation's pair in a sheet (ComposeCitations.md), and
+    // Done is the one way that pair reaches the staged citation.
+    it("re-pairs one citation in its pair sheet without touching the others", () => {
       const { onReferences } = renderStep({ references: two }, "cited");
-      fireEvent.click(screen.getByTestId("wizard-cited-sheet-repair-1"));
-      const relevance = screen.getByTestId("wizard-cited-sheet-1-relevance");
-      fireEvent.change(relevance, { target: { value: "0.5" } });
+      fireEvent.click(screen.getByTestId("wizard-cited-sheet-1-select"));
+      fireEvent.click(screen.getByTestId("wizard-cited-sheet-pair-exact-route"));
+      fireEvent.change(screen.getByTestId("wizard-cited-sheet-pair-tracks-directed"), {
+        target: { value: "0.5" },
+      });
+      fireEvent.click(screen.getByTestId("wizard-cited-sheet-pair-done"));
       expect(onReferences).toHaveBeenCalledWith([
         two[0],
         { ...two[1], relevance: 0.5, support: 0.1 },
@@ -367,13 +385,21 @@ describe("SealStep", () => {
   // CW-24/CW-25: the acts card's total row is its own column (label +
   // all-or-nothing note stacked), and the per-act rows both read at
   // text-label-small.
-  it("stacks the signed-actions total over its all-or-nothing note", () => {
+  it("stacks the signed-together total over its all-or-nothing note", () => {
     renderStep({ tags: [tag("fieldnotes")] });
-    const total = screen.getByTestId("wizard-signed-actions");
+    const total = screen.getByTestId("wizard-seal-acts-total");
+    expect(total).toHaveTextContent("2 things, signed together");
     const row = total.parentElement;
     expect(row?.className).toContain("flex-col");
     expect(row?.className).toContain("min-h-12");
-    expect(screen.getByText("they land together, or none does")).toBeInTheDocument();
+    expect(screen.getByTestId("wizard-seal-acts-note")).toHaveTextContent("They land together, or none does.");
+  });
+
+  // One act: `1 thing, signed`, and no all-or-nothing line (ComposeSeal.md).
+  it("says one thing, signed, and carries no all-or-nothing line at one act", () => {
+    renderStep();
+    expect(screen.getByTestId("wizard-seal-acts-total")).toHaveTextContent("1 thing, signed");
+    expect(screen.queryByTestId("wizard-seal-acts-note")).toBeNull();
   });
 
   // Item 73 (jakob's ruling 2026-09-14): the digit is what the eye gets, and
@@ -414,7 +440,8 @@ describe("SealStep", () => {
     // and what it spent came out of the value slot. What is DRAWN is the
     // digit; the reading beside it is `sr-only` (item 73).
     expect((count.firstElementChild as HTMLElement).textContent).toBe("1");
-    expect(count.className).toContain("text-label-small");
+    // The count takes label-small's size at the ground's weight (`ActsCard.jsx` COUNT).
+    expect(count.className).toContain("text-[length:var(--text-label-small)]");
   });
 
   // CW-27/CW-28: the license sheet carries its own help dot and the
@@ -505,46 +532,180 @@ describe("SealStep", () => {
     expect(onBack).not.toHaveBeenCalled();
   });
 
-  // THE UPLOAD LINE IS STRICTLY THE IN-FLIGHT GATE (design/components/
-  // compose/UploadNotice.prompt.md lines 1, 11) — it never draws for an
-  // empty batch, and sign stays disabled on `blocked` alone, independent of
-  // whether the line itself ever rendered. `renderStep` fixes `blocked` to
-  // null, so this exercises `SealStep` directly with the props the wizard
-  // passes once `sealGate` refuses an empty media draft.
-  it("draws no upload line and still disables sign at an empty media batch", () => {
-    const props = {
-      state: baseState({ mode: "media", assets: [] }),
-      sheet: "none" as SealSheet,
-      blocked: "Pick at least one picture.",
-      busy: false,
-      keyOnDevice: true,
-      refusal: null,
-      stagedPDirected: 0.1,
-      confirmingUnreachable: false,
-      onSheet: vi.fn(),
-      onLicense: vi.fn(),
-      onReferences: vi.fn(),
-      onStagedPDirected: vi.fn(),
-      onSetStance: vi.fn(),
-      onKeepAdjusting: vi.fn(),
-      onSetAnyway: vi.fn(),
-      onStanceHelp: vi.fn(),
-      onSensitive: vi.fn(),
-      onSensitiveReason: vi.fn(),
-      onHelp: vi.fn(),
-      onLicenseHelp: vi.fn(),
-      onKeyHelp: vi.fn(),
-      onSign: vi.fn(),
-      onBack: vi.fn(),
-      onRestoreKey: vi.fn(),
-      onKeepDraft: vi.fn(),
-    };
-    render(<SealStep {...props} />);
+  // ComposeSealTagged: past what the row holds it counts, and the row is the
+  // door to the sheet that lists them.
+  it("counts the tags past what the row holds, the whole row a door", () => {
+    const { onSheet } = renderStep({
+      tags: [tag("fieldnotes"), tag("coastroad"), tag("saltmaps")],
+    });
+    const door = screen.getByRole("button", { name: "Manage the 3 tags" });
+    expect(door).toHaveTextContent("3 tags");
+    expect(within(screen.getByTestId("wizard-seal-acts")).queryByText("#fieldnotes")).not.toBeInTheDocument();
+    fireEvent.click(door);
+    expect(onSheet).toHaveBeenCalledWith("tags");
+  });
 
-    expect(screen.queryByText(/^Uploading \d+ of \d+/)).not.toBeInTheDocument();
+  it("reads two tags back as chips, no door", () => {
+    renderStep({ tags: [tag("fieldnotes"), tag("coastroad")] });
+    expect(screen.queryByRole("button", { name: /Manage the/ })).toBeNull();
+  });
+
+  // SealSigning: past 200ms the commit reads its participle, inert and never
+  // dimmed; the ways out and the facts' actions refuse a press.
+  describe("while it signs", () => {
+    it("swaps the commit's label in place, never disabling it", () => {
+      const { onSign } = renderStep({}, "none", true, 0.1, false, { signing: true, swapped: true });
+      const commit = screen.getByTestId("wizard-sign");
+      expect(commit).toHaveTextContent("Signing and publishing…");
+      expect(commit).not.toBeDisabled();
+      fireEvent.click(commit);
+      expect(onSign).not.toHaveBeenCalled();
+    });
+
+    it("keeps its resting label inside the first 200ms", () => {
+      renderStep({}, "none", true, 0.1, false, { signing: true });
+      expect(screen.getByTestId("wizard-sign")).toHaveTextContent("Sign and publish");
+    });
+
+    it("locks Back and the facts' actions while the label is swapped", () => {
+      const { onBack, onSheet } = renderStep({}, "none", true, 0.1, false, { signing: true, swapped: true });
+      fireEvent.click(screen.getByTestId("wizard-back"));
+      fireEvent.click(screen.getByTestId("wizard-open-license"));
+      expect(onBack).not.toHaveBeenCalled();
+      expect(onSheet).not.toHaveBeenCalled();
+    });
+
+    // SealSigningSlow: the subline under the total, in the olive, as a status.
+    it("says the network is slow past 5s, in the subline's place", () => {
+      renderStep({}, "none", true, 0.1, false, { signing: true, swapped: true, slow: true });
+      const note = screen.getByTestId("wizard-seal-acts-note");
+      expect(note).toHaveTextContent("Still signing — the network is slow right now.");
+      expect(note).toHaveAttribute("role", "status");
+      expect(note.className).toContain("text-tertiary");
+    });
+  });
+
+  // ComposeSealUploading: the commit stays enabled through the gate.
+  it("keeps the commit enabled while pictures still go up", () => {
+    const crop = { x: 0, y: 0, zoom: 1, area: null, areaPercent: null };
+    renderStep({
+      mode: "media",
+      assets: [
+        { id: "a", file: new Blob(["a"]), crop, altText: "", upload: { kind: "uploading" } },
+        { id: "b", file: new Blob(["b"]), crop, altText: "", upload: { kind: "uploading" } },
+      ],
+    });
     expect(screen.getByTestId("wizard-seal-blocked")).toHaveTextContent(
-      "Pick at least one picture.",
+      "Uploading 0 of 2 — signing waits for the pictures.",
     );
+    expect(screen.getByTestId("wizard-sign")).not.toBeDisabled();
+  });
+
+  it("disables the commit only while a failed upload stands, and says why with Retry", () => {
+    const crop = { x: 0, y: 0, zoom: 1, area: null, areaPercent: null };
+    const { onRetryUploads } = renderStep({
+      mode: "media",
+      assets: [
+        {
+          id: "a",
+          file: new Blob(["a"]),
+          crop,
+          altText: "",
+          upload: { kind: "failed", message: "x", retryable: true },
+        },
+      ],
+    });
+    const line = screen.getByTestId("wizard-seal-blocked");
+    expect(line).toHaveTextContent("One picture didn't upload. Signing waits for it.");
     expect(screen.getByTestId("wizard-sign")).toBeDisabled();
+    fireEvent.click(screen.getByTestId("wizard-seal-blocked-retry"));
+    expect(onRetryUploads).toHaveBeenCalledOnce();
+  });
+
+  // What became of the commit (the failure pack).
+  describe("the faults", () => {
+    it("puts the offline fault, an outlined Retry and Back in the commit's place", () => {
+      const { onRetry } = renderStep({}, "none", true, 0.1, false, { fault: { kind: "offline" } });
+      expect(screen.getByTestId("wizard-transport-error")).toHaveTextContent("That didn't send. Try again.");
+      expect(screen.queryByTestId("wizard-sign")).toBeNull();
+      fireEvent.click(screen.getByTestId("wizard-retry"));
+      expect(onRetry).toHaveBeenCalledOnce();
+      expect(screen.getByTestId("wizard-back")).toBeInTheDocument();
+    });
+
+    it("says a never-landed citation on its own row, with Remove it, and keeps the commit", () => {
+      const only = citation("p-1", "The long way home — @ada");
+      const { onRemoveRefused } = renderStep({ references: [only] }, "none", true, 0.1, false, {
+        fault: { kind: "row", targetId: "p-1" },
+      });
+      const line = screen.getByTestId("wizard-seal-references-fault");
+      expect(line).toHaveTextContent("This post didn't land, so it can't be cited.");
+      fireEvent.click(screen.getByTestId("wizard-seal-references-fault-remove"));
+      expect(onRemoveRefused).toHaveBeenCalledWith("p-1");
+      expect(screen.getByTestId("wizard-sign")).toHaveTextContent("Sign and publish");
+      expect(screen.queryByTestId("wizard-retry")).toBeNull();
+    });
+
+    it("names the refused citation only in Remove it's name under a count", () => {
+      renderStep(
+        { references: [citation("p-1", "One"), citation("p-2", "Two")] },
+        "none",
+        true,
+        0.1,
+        false,
+        { fault: { kind: "row", targetId: "p-2" } },
+      );
+      expect(
+        within(screen.getByTestId("wizard-seal-acts")).getByRole("button", { name: "Remove Two" }),
+      ).toBeInTheDocument();
+    });
+
+    it("draws the bug's notice, never the error colour, with its three ways out", () => {
+      const { onRetry, onDiscard } = renderStep({}, "none", true, 0.1, false, { fault: { kind: "bug" } });
+      const notice = screen.getByTestId("wizard-seal-bug");
+      expect(notice).toHaveTextContent("This shouldn't have happened");
+      expect(notice.className).toContain("bg-tertiary-container");
+      expect(notice.innerHTML).not.toContain("error");
+      fireEvent.click(screen.getByTestId("wizard-try-again"));
+      expect(onRetry).toHaveBeenCalledOnce();
+      expect(screen.getByTestId("wizard-report")).toHaveTextContent("Report a problem");
+      fireEvent.click(screen.getByTestId("wizard-discard"));
+      expect(onDiscard).toHaveBeenCalledOnce();
+    });
+
+    it("asks Discard this post? with Keep the draft filled", () => {
+      const { onDiscardConfirmed, onKeepDiscarding } = renderStep({}, "none", true, 0.1, false, {
+        fault: { kind: "bug" },
+        discarding: true,
+      });
+      expect(screen.getByText("Discard this post?")).toBeInTheDocument();
+      expect(screen.getByText(DISCARD_POST_BODY)).toBeInTheDocument();
+      fireEvent.click(screen.getByTestId("wizard-keep-the-draft"));
+      expect(onKeepDiscarding).toHaveBeenCalledOnce();
+      fireEvent.click(screen.getByTestId("wizard-discard-it"));
+      expect(onDiscardConfirmed).toHaveBeenCalledOnce();
+    });
+
+    it("draws the write rule's notice and keeps the draft, never Retry", () => {
+      const { onKeepDraft, onWriteRuleHelp } = renderStep({}, "none", true, 0.1, false, {
+        fault: { kind: "writeRule" },
+      });
+      expect(screen.getByTestId("wizard-write-rule")).toHaveTextContent("You can't sign right now");
+      fireEvent.click(screen.getByRole("button", { name: "Why signing waits" }));
+      expect(onWriteRuleHelp).toHaveBeenCalledOnce();
+      fireEvent.click(screen.getByTestId("wizard-sign-later"));
+      expect(onKeepDraft).toHaveBeenCalledOnce();
+      expect(screen.queryByTestId("wizard-retry")).toBeNull();
+    });
+  });
+
+  // ComposeLicense: the radios stage and Done commits.
+  it("stages the license in its sheet and commits it on Done", () => {
+    const { onLicense } = renderStep({ license: PUBLIC_DOMAIN }, "license");
+    const sheet = within(screen.getByTestId("wizard-license-sheet"));
+    fireEvent.click(sheet.getByTestId("wizard-license-attribution-1"));
+    expect(onLicense).not.toHaveBeenCalled();
+    fireEvent.click(sheet.getByTestId("wizard-license-done"));
+    expect(onLicense).toHaveBeenCalledWith({ ...PUBLIC_DOMAIN, attribution: 1 });
   });
 });

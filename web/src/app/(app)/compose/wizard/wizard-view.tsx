@@ -23,8 +23,8 @@ import { PillButton } from "@/lib/ui2/pill-button";
 import { preparePost } from "@/lib/api/content-api";
 import { fetchDefaultLicense } from "@/lib/api/settings-api";
 import { isPublicDomain } from "@/lib/license";
-import { hasFieldErrors, partitionFieldErrors } from "@/lib/api/field-errors";
-import { firstRefusalMessage, writeRefusalMessage } from "@/lib/ui/error-messages";
+import { sealFaultOf, type SealFault } from "@/lib/compose/seal-fault";
+import { SLOW_NETWORK_MS, useSlowAnswer, useWaitedPast } from "@/lib/ui2/waiting-commit";
 import { fetchReferenceCandidates } from "@/lib/api/references-api";
 import { newReferenceDraft } from "@/lib/references/draft";
 import { untypedTargetView } from "@/lib/references/normalize";
@@ -38,7 +38,6 @@ import { postExpectation } from "@/lib/compose/intent";
 import { snapDimension } from "@/lib/stance/model";
 import { contentExpectation } from "@/lib/compose/payload-expectation";
 import type { Expectation } from "@/lib/signing/intent";
-import { TransportError } from "@/lib/ui/transport-error";
 import {
   advanceGate,
   attachmentClaims,
@@ -48,9 +47,10 @@ import {
   effectiveCover,
   emptyWizard,
   isVideoPost,
-  sealGate,
   shapeRatio,
   stepIndex,
+  uploadsFailed,
+  uploadsPending,
   wizardLedger,
   wizardReducer,
   type PickedAsset,
@@ -158,8 +158,16 @@ export function ComposeWizard({
   // one can be open at a time and each names its own topic.
   const [help, setHelp] = useState<HelpTopic | null>(null);
   const [busy, setBusy] = useState(false);
-  const [refusal, setRefusal] = useState<string | null>(null);
-  const [transportFailed, setTransportFailed] = useState(false);
+  // A press made while uploads still run is HELD and signs the moment the
+  // last one lands (ComposeSealUploading.md); the commit is inert from the
+  // press either way, and both clocks count from it (SealSigning.md).
+  const [held, setHeld] = useState(false);
+  const signing = busy || held;
+  const swapped = useSlowAnswer(signing);
+  const slow = useWaitedPast(signing, SLOW_NETWORK_MS);
+  // What became of the last press, when it did not leave the seal.
+  const [fault, setFault] = useState<SealFault | null>(null);
+  const [discarding, setDiscarding] = useState(false);
   const [tagErrors, setTagErrors] = useState<Readonly<Record<number, string>>>({});
   const [referenceErrors, setReferenceErrors] = useState<Readonly<Record<number, string>>>({});
 
@@ -625,10 +633,9 @@ export function ComposeWizard({
 
   const submit = async () => {
     setBusy(true);
-    setRefusal(null);
+    setFault(null);
     setTagErrors({});
     setReferenceErrors({});
-    setTransportFailed(false);
 
     // The cited nodes' L1 ids, read before anything is staged: the batch
     // is checked against them before its first pre-signature (intent.ts).
@@ -640,7 +647,7 @@ export function ComposeWizard({
     );
     if (graphIds.kind !== "success") {
       setBusy(false);
-      setTransportFailed(true);
+      setFault({ kind: "offline" });
       return;
     }
 
@@ -663,27 +670,15 @@ export function ComposeWizard({
 
     if (prepared.kind === "failed") {
       setBusy(false);
-      setTransportFailed(true);
+      setFault({ kind: "offline" });
       return;
     }
     if (prepared.kind === "refused") {
+      // A refusal at prepare stages nothing, and the seal says it where it
+      // stands — on the refused citation's row, or in the commit's place —
+      // never by walking the reader back a stage (SealFaultRow.md).
       setBusy(false);
-      const partition = partitionFieldErrors(prepared.errors, (error) =>
-        writeRefusalMessage(error.code),
-      );
-      setTagErrors(partition.perTag);
-      setReferenceErrors(partition.perReference);
-      // A refusal that landed on a section is shown on that section's own chip,
-      // so the seal only speaks when nothing else can.
-      setRefusal(
-        partition.general ??
-          (hasFieldErrors(partition)
-            ? "Something in the details was refused."
-            : "The server refused this write."),
-      );
-      if (hasFieldErrors(partition)) {
-        dispatch({ type: "goto", step: "details" });
-      }
+      setFault(sealFaultOf(prepared.errors, state.references));
       return;
     }
 
@@ -749,22 +744,24 @@ export function ComposeWizard({
       return;
     }
     const refused = results.find((result) => result.kind === "refused");
-    setRefusal(
-      refused && refused.kind === "refused"
-        ? firstRefusalMessage(refused.errors, "The post wasn't signed.")
-        : "The post wasn't signed. Nothing was spent.",
+    setFault(
+      refused !== undefined && refused.kind === "refused"
+        ? sealFaultOf(refused.errors, state.references)
+        : { kind: "offline" },
     );
   };
 
   // ---- rendering -----------------------------------------------------------
 
   const gate = advanceGate(state);
-  const seal = sealGate(state);
 
   // The arrow: ONE STAGE BACK, never out of the flow (jakob, round 4). From the
   // first stage there is no stage to step to, so that one lands on the feed.
   const leave = () => {
     const previous = state.step;
+    // A going stage back clears a refusal reading: the seal shows its plain
+    // commit again until the next press (SealSigning.md).
+    setFault(null);
     // Leaving keeps the draft — written here rather than left to the coalescing
     // timer, which the navigation would otherwise outrun.
     keep();
@@ -795,6 +792,38 @@ export function ComposeWizard({
     router.push("/feed");
   };
 
+  // WHILE IT SIGNS, THE SEAL HOLDS THE READER (jakob 2026-10-01): past the
+  // label swap the header's arrow and X refuse a press and keep their face,
+  // because leaving mid-sign would orphan the outcome (SealSigning.md).
+  const locked = state.step === "seal" && swapped;
+
+  // A HELD PRESS signs the moment the last upload lands, with no second press;
+  // an upload that fails drops it and the commit reads its resting label
+  // again (ComposeSealUploading.md). Nothing signs before the bytes exist.
+  const pendingUploads = uploadsPending(state);
+  const failedUploads = uploadsFailed(state);
+  useEffect(() => {
+    if (!held) return;
+    if (failedUploads > 0) {
+      setHeld(false);
+      return;
+    }
+    if (pendingUploads === 0) {
+      setHeld(false);
+      void submit();
+    }
+    // `submit` reads the state it is handed this render; the press is the
+    // trigger, and the upload counts are what release it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [held, pendingUploads, failedUploads]);
+
+  const sign = () => {
+    if (signing) return;
+    setFault(null);
+    if (uploadsPending(state) > 0) setHeld(true);
+    else void submit();
+  };
+
   if (!loaded) {
     return (
       <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col">
@@ -808,9 +837,13 @@ export function ComposeWizard({
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col">
       <HeaderBar
         title={HEADINGS[state.step]}
-        onBack={leave}
+        onBack={() => {
+          if (!locked) leave();
+        }}
         backLabel={state.step === "pick" ? "Back to feed" : "Back a step"}
-        onLeave={leaveFlow}
+        onLeave={() => {
+          if (!locked) leaveFlow();
+        }}
         // The seal board's `?` (`HelpDot`), opening the house help dialog with
         // copy-voice's "How signing works". One `?` per screen, so only the
         // seal carries one — beside its stage's name, "Last step".
@@ -891,12 +924,6 @@ export function ComposeWizard({
           >
             Or start fresh —
           </p>
-        </div>
-      )}
-
-      {transportFailed && (
-        <div className="px-6">
-          <TransportError testId="wizard-transport-error" />
         </div>
       )}
 
@@ -1004,10 +1031,12 @@ export function ComposeWizard({
         <SealStep
           state={state}
           sheet={sheet}
-          blocked={seal.ok ? null : seal.reason}
-          busy={busy}
+          signing={signing}
+          swapped={swapped}
+          slow={slow}
           keyOnDevice={keyOnDevice}
-          refusal={refusal}
+          fault={fault}
+          discarding={discarding}
           stagedPDirected={stagedPDirected}
           confirmingUnreachable={confirmingUnreachable}
           onSheet={(next) => {
@@ -1017,11 +1046,23 @@ export function ComposeWizard({
             setConfirmingUnreachable(false);
             setSheet(next);
           }}
-          onLicense={(license) => dispatch({ type: "license", license })}
-          // The cited sheet's removals and re-pairs land in the SAME staged
-          // set the details step owns — one reducer action, not a second copy
-          // of the citations kept by the seal.
-          onReferences={(references) => dispatch({ type: "references", references })}
+          // CHANGING A FACT clears a refusal reading (SealSigning.md): the seal
+          // shows its plain commit again until the next press.
+          onLicense={(license) => {
+            setFault(null);
+            dispatch({ type: "license", license });
+          }}
+          // The sheets' removals and re-pairs land in the SAME staged sets the
+          // details step owns — one reducer action, not a second copy kept by
+          // the seal.
+          onReferences={(references) => {
+            setFault(null);
+            dispatch({ type: "references", references });
+          }}
+          onTags={(tags) => {
+            setFault(null);
+            dispatch({ type: "tags", tags });
+          }}
           onStagedPDirected={setStagedPDirected}
           onSetStance={() => {
             // EXACTLY 0.00 ASKS FIRST (ComposePad.md): the post's own path
@@ -1033,31 +1074,71 @@ export function ComposeWizard({
               setConfirmingUnreachable(true);
               return;
             }
+            setFault(null);
             dispatch({ type: "pDirected", pDirected: picked });
             setSheet("none");
           }}
           onKeepAdjusting={() => setConfirmingUnreachable(false)}
           onSetAnyway={() => {
             setConfirmingUnreachable(false);
+            setFault(null);
             dispatch({ type: "pDirected", pDirected: 0 });
             setSheet("none");
           }}
           onStanceHelp={() => setHelp(HELP_TOPICS.yourBackingOnYourPost)}
-          onSensitive={(sensitive) => dispatch({ type: "sensitive", sensitive })}
-          onSensitiveReason={(sensitiveReason) =>
-            dispatch({ type: "sensitiveReason", sensitiveReason })
-          }
+          onSensitive={(next) => {
+            setFault(null);
+            dispatch({ type: "sensitive", sensitive: next.sensitive });
+            dispatch({ type: "sensitiveReason", sensitiveReason: next.sensitiveReason });
+          }}
           onHelp={() => setHelp(HELP_TOPICS.markingAsSensitive)}
           onLicenseHelp={() => setHelp(HELP_TOPICS.license)}
           onKeyHelp={() => setHelp(HELP_TOPICS.yourKey)}
-          onSign={() => void submit()}
-          onBack={() => dispatch({ type: "back" })}
+          onWriteRuleHelp={() => setHelp(HELP_TOPICS.whySigningWaits)}
+          onSign={sign}
+          // The same signing, asked again: Retry is the only re-send, and
+          // past 200ms its slot reads the commit's own in-flight label.
+          onRetry={() => {
+            setFault(null);
+            void submit();
+          }}
+          // The failed upload's Retry re-runs the gate; nothing signs until
+          // the commit is pressed again.
+          onRetryUploads={() => {
+            for (const asset of state.assets) {
+              if (asset.upload.kind === "failed") retry(asset.id);
+            }
+          }}
+          onBack={() => {
+            setFault(null);
+            dispatch({ type: "back" });
+          }}
           onRestoreKey={() => router.push("/restore")}
-          // The key-absent panel's keep-draft LEAVES the wizard (graph:
-          // ComposeKeyAbsent's keep-draft edge is a terminal `back`), not a
-          // step back to the previous stage — `leaveFlow` is the same exit
-          // the header's X already uses.
+          // The key-absent panel's and the write rule's keep-draft LEAVE the
+          // wizard (graph: a terminal `back`), not a step back — `leaveFlow`
+          // is the same exit the header's X already uses.
           onKeepDraft={leaveFlow}
+          onRemoveRefused={(targetId) => {
+            // The citation leaves the staged set, the count and the total
+            // fall by one, and the seal is ready to sign again.
+            setFault(null);
+            dispatch({
+              type: "references",
+              references: state.references.filter((reference) => reference.targetId !== targetId),
+            });
+          }}
+          // The report page Settings opens is not built on the web yet
+          // (HAND TO FABLE): the word stands where the board draws it.
+          onReport={() => {}}
+          onDiscard={() => setDiscarding(true)}
+          onDiscardConfirmed={() => {
+            // The draft goes, with its pictures, tags and citations; nothing
+            // was ever signed. The flow is left for where composing began.
+            setDiscarding(false);
+            landed.current = true;
+            void drafts.clear().then(() => router.push("/feed"));
+          }}
+          onKeepDiscarding={() => setDiscarding(false)}
         />
       )}
 

@@ -28,6 +28,7 @@ function AxisRows({
   testIdPrefix,
   value,
   onChange,
+  flat,
 }: {
   legend: string;
   tiers: readonly LicenseTier[];
@@ -35,10 +36,14 @@ function AxisRows({
   testIdPrefix: string;
   value: number;
   onChange: (value: number) => void;
+  flat: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-1.5" role="radiogroup" aria-label={legend}>
+    <div className={flat ? "contents" : "flex flex-col gap-1.5"}>
+      {/* The axis's label stands BESIDE its group, one item of the sheet's
+          8px column (`LicenseAxisLabel`, `ComposeLicense.jsx`). */}
       <span className="text-label-small text-on-surface-variant">{legend}</span>
+      <div className="flex flex-col gap-1.5" role="radiogroup" aria-label={legend}>
       {tiers.map((tier) => (
         <label
           key={tier.value}
@@ -67,6 +72,7 @@ function AxisRows({
           </span>
         </label>
       ))}
+      </div>
     </div>
   );
 }
@@ -76,13 +82,23 @@ export function LicenseRows({
   value,
   onChange,
   testIdPrefix,
+  flat = false,
 }: {
   value: License;
   onChange: (license: License) => void;
   testIdPrefix: string;
+  /**
+   * The labels and groups become items of the sheet's own column, as the
+   * post's license sheet draws them (8px apart); otherwise the two axes stand
+   * 16px apart in a column of their own.
+   */
+  flat?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-4" data-testid={`${testIdPrefix}-license-rows`}>
+    <div
+      className={flat ? "contents" : "flex flex-col gap-4"}
+      data-testid={`${testIdPrefix}-license-rows`}
+    >
       <AxisRows
         legend="Credit"
         tiers={ATTRIBUTION_TIERS}
@@ -90,6 +106,7 @@ export function LicenseRows({
         testIdPrefix={`${testIdPrefix}-license-attribution`}
         value={value.attribution}
         onChange={(attribution) => onChange({ ...value, attribution })}
+        flat={flat}
       />
       <AxisRows
         legend="Public record of use"
@@ -98,6 +115,7 @@ export function LicenseRows({
         testIdPrefix={`${testIdPrefix}-license-provenance`}
         value={value.provenance}
         onChange={(provenance) => onChange({ ...value, provenance })}
+        flat={flat}
       />
     </div>
   );

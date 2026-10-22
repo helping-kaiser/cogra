@@ -547,8 +547,11 @@ describe("the compose wizard", () => {
     fireEvent.click(screen.getByTestId("wizard-back"));
     fireEvent.click(await screen.findByTestId("wizard-upload-error-retry"));
     fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
-    await waitFor(() => expect(screen.getByTestId("wizard-sign")).not.toBeDisabled());
-    expect(attempts).toBe(2);
+    // The commit stays live while the retried picture goes up (the gate holds a
+    // press, ComposeSealUploading.md); it is the second attempt that lands.
+    await waitFor(() => expect(attempts).toBe(2));
+    await waitFor(() => expect(screen.queryByTestId("wizard-seal-blocked")).toBeNull());
+    expect(screen.getByTestId("wizard-sign")).not.toBeDisabled();
   });
 
   it("keeps the draft and says nothing was spent when the batch expires", async () => {
