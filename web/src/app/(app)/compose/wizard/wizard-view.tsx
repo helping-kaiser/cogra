@@ -984,6 +984,7 @@ export function ComposeWizard({
             error={gate.ok ? null : gate.reason}
             blocked={!gate.ok}
             coverSrc={coverPreview}
+            durationMs={durationMs}
             clipFace={clipFace}
             onWords={(words) => dispatch({ type: "words", words })}
             onMode={switchBody}

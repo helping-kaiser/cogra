@@ -17,14 +17,16 @@
 
 import { useId, useRef, useState } from "react";
 
+import { InlineAction } from "@/lib/ui2/inline-action";
 import { PillButton } from "@/lib/ui2/pill-button";
+import { LABEL_SMALL_PLAIN } from "@/lib/ui2/plain-type";
 import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
 import { UploadErrorLine } from "@/lib/ui2/compose/upload-notice";
 import { countReading, FieldCount } from "@/lib/ui2/text-field";
 import { useObjectUrl } from "@/lib/compose/previews";
 import type { PickRefusal } from "@/lib/compose/pick";
 import type { PickedAsset } from "@/lib/compose/wizard";
-import { BODY_MAX_CHARS, kindOf, POST_ATTACHMENT_CAP } from "@/lib/compose/wizard";
+import { BODY_MAX_CHARS, kindOf } from "@/lib/compose/wizard";
 import { PICKABLE_VIDEO_TYPES } from "@/lib/ui2/media/video";
 
 /**
@@ -36,6 +38,9 @@ import { PICKABLE_VIDEO_TYPES } from "@/lib/ui2/media/video";
  */
 const ACCEPT = `image/*,${PICKABLE_VIDEO_TYPES}`;
 
+/** The staged clip's tile in the tray, as `ComposePickVideo.jsx` draws it. */
+const CLIP_TILE = { width: 114, height: 64 } as const;
+
 export function PickStep({
   mode,
   words,
@@ -45,6 +50,7 @@ export function PickStep({
   error,
   blocked,
   coverSrc,
+  durationMs,
   clipFace,
   onWords,
   onMode,
@@ -68,6 +74,8 @@ export function PickStep({
    * a picture post, and on a video whose cover is not yet settled.
    */
   coverSrc?: string | null;
+  /** The clip's length; with it the tray draws the clip's video tile. */
+  durationMs?: number;
   /**
    * The clip's own first frame — the tray's tile face, extracted as soon as
    * it is picked. Null while extraction has not landed or found nothing; the
@@ -100,6 +108,7 @@ export function PickStep({
       error={error}
       blocked={blocked}
       coverSrc={coverSrc}
+      durationMs={durationMs}
       clipFace={clipFace}
       onMode={onMode}
       onPick={onPick}
@@ -223,6 +232,7 @@ function MediaBody({
   error,
   blocked,
   coverSrc,
+  durationMs,
   clipFace,
   onMode,
   onPick,
@@ -237,6 +247,7 @@ function MediaBody({
   error: string | null;
   blocked: boolean;
   coverSrc?: string | null;
+  durationMs?: number;
   clipFace?: string | null;
   onMode: (next: "words" | "media") => void;
   onPick: (files: readonly File[]) => void;
@@ -252,7 +263,6 @@ function MediaBody({
   // point 3). The body is full in a way a count cannot express: a video takes
   // it whole, so an "add" affordance beside one could only ever be refused.
   const holdsVideo = first !== undefined && kindOf(first) === "video";
-  const full = assets.length >= POST_ATTACHMENT_CAP;
 
   // EVERYTHING PICKED IS HANDED OVER, including files that are obviously
   // neither a picture nor a video. Filtering here is what made a dropped PDF
@@ -270,6 +280,8 @@ function MediaBody({
       </Prompt>
 
       {assets.length > 0 && (
+        // `PickTray.jsx`: the count in label-small, `Show all` as the small
+        // InlineAction, the caption at the body's weight.
         <div className="flex flex-none flex-col gap-1.5 border-b border-outline-variant px-6 pb-3 pt-1">
           {/* NO "Show all" ON A CLIP (ComposePickVideo): that sheet reorders a
               set and names its cover, and one clip is neither — its cover is
@@ -279,7 +291,7 @@ function MediaBody({
           {holdsVideo ? (
             <span
               data-testid="wizard-picked-count"
-              className="text-label-medium text-on-surface-variant"
+              className="text-label-small text-on-surface-variant"
             >
               Picked · {assets.length}
             </span>
@@ -287,20 +299,15 @@ function MediaBody({
             <div className="flex items-baseline gap-2">
               <span
                 data-testid="wizard-picked-count"
-                className="flex-1 text-label-medium text-on-surface-variant"
+                className="flex-1 text-label-small text-on-surface-variant"
               >
                 Picked · {assets.length}
               </span>
               {/* The way into the per-picture manager: reorder (first is the
                   cover), remove, describe. The tray itself stays a summary. */}
-              <button
-                type="button"
-                data-testid="wizard-show-all"
-                onClick={onManage}
-                className="cg-state cg-focus cursor-pointer border-0 bg-transparent p-0 text-label-small text-primary"
-              >
+              <InlineAction size="sm" testId="wizard-show-all" onClick={onManage}>
                 Show all
-              </button>
+              </InlineAction>
             </div>
           )}
           <div className="flex items-center gap-2">
@@ -313,6 +320,12 @@ function MediaBody({
                     // shows the clip's own first frame instead of the raw
                     // preview `usePreviewUrls` mints for every asset.
                     src={holdsVideo ? (clipFace ?? null) : (previews[asset.id] ?? null)}
+                    // THE CLIP'S TILE IS A FRAME, 114 × 64 with its play disc
+                    // (`ComposePickVideo.jsx`, `PickTray.prompt.md`); a
+                    // picture's is the 48px square.
+                    width={holdsVideo ? CLIP_TILE.width : undefined}
+                    height={holdsVideo ? CLIP_TILE.height : undefined}
+                    durationMs={holdsVideo ? durationMs : undefined}
                     crop={asset.crop}
                     // A video is never the post's "cover" picture — that word
                     // names a different, later choice (the video's own face,
@@ -330,13 +343,40 @@ function MediaBody({
                 </li>
               ))}
             </ul>
-            <span className="flex-1 text-label-small text-on-surface-variant">
-              {holdsVideo
-                ? "A video is the whole post. Its cover comes next."
-                : "The first one is the cover."}
+            <span className={`flex-1 ${LABEL_SMALL_PLAIN} text-on-surface-variant`}>
+              {!holdsVideo
+                ? "The first one is the cover."
+                : // THE CAPTION TAKES THE SETTLED FACT once the cover step has
+                  // given the clip its face (`ComposePickVideoCover`).
+                  coverSrc
+                  ? "A video is the whole post. This one has its cover."
+                  : "A video is the whole post. Its cover comes next."}
             </span>
           </div>
         </div>
+      )}
+
+      {/* THE REFUSALS STAND UNDER THE TRAY (ComposePickedErrors.md: "what was
+          accepted stands in the tray and what was refused is listed under
+          it"; padding "14px 24px 0", gap 10), each a `RefusedFile` — the
+          failed thumb beside its own words. They stay until dismissed: a file
+          refused mid-batch is easy to miss, and a banner that faded would
+          leave an author wondering where their picture went. No Retry:
+          retrying cannot make a file smaller or a format readable. */}
+      {refusals.length > 0 && (
+        <ul
+          data-testid="wizard-refusals"
+          className="m-0 flex flex-none list-none flex-col gap-2.5 px-6 pb-0 pt-3.5"
+        >
+          {refusals.map((refusal) => (
+            <li key={refusal.id}>
+              <RefusedFileRow
+                refusal={refusal}
+                onDismiss={() => onDismissRefusal(refusal.id)}
+              />
+            </li>
+          ))}
+        </ul>
       )}
 
       <div
@@ -389,15 +429,17 @@ function MediaBody({
                   <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
                 </svg>
               </span>
+              {/* NEVER SHUT AT TEN: an eleventh picture is refused in words
+                  under the tray (ComposePick.md), which a closed picker would
+                  only hide. */}
               <PillButton
                 testId="wizard-open-picker"
                 variant="outlined"
-                disabled={full}
                 onClick={() => input.current?.click()}
               >
-                {full ? `${POST_ATTACHMENT_CAP} is the most` : "Choose from your files"}
+                Choose from your files
               </PillButton>
-              <span className="text-label-small text-on-surface-variant">…or drop them here.</span>
+              <span className={`${LABEL_SMALL_PLAIN} text-on-surface-variant`}>…or drop them here.</span>
             </>
           )}
           {error && (
@@ -407,28 +449,6 @@ function MediaBody({
           )}
         </div>
 
-        {/* THE REFUSALS, each a `RefusedFile` tile — the failed thumb beside
-            its own words — and the tray above went on holding everything
-            that was accepted. They stay until dismissed: a file refused
-            mid-batch is easy to miss, and a banner that faded would leave an
-            author wondering where their picture went. No Retry: retrying
-            cannot make a file smaller or a format readable
-            (ComposePickedErrors, padding "14px 24px 0", gap 10). */}
-        {refusals.length > 0 && (
-          <ul
-            data-testid="wizard-refusals"
-            className="m-0 mt-3.5 flex list-none flex-col gap-2.5 p-0"
-          >
-            {refusals.map((refusal) => (
-              <li key={refusal.id}>
-                <RefusedFileRow
-                  refusal={refusal}
-                  onDismiss={() => onDismissRefusal(refusal.id)}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
         {/* ComposePickWeb puts it below the drop region, 16px down. */}
         <NextAction disabled={blocked} onNext={onNext} className="pt-4" />
       </div>

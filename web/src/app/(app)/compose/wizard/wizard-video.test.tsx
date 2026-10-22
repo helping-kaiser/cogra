@@ -131,8 +131,8 @@ async function pickFiles(files: readonly File[]) {
 }
 
 const aVideo = () => new File([mp4Bytes() as BlobPart], "clip.mp4", { type: "video/mp4" });
-const aPicture = () =>
-  new File([new Uint8Array([1, 2, 3]) as BlobPart], "shot.jpg", { type: "image/jpeg" });
+const aPicture = (name = "shot.jpg") =>
+  new File([new Uint8Array([1, 2, 3]) as BlobPart], name, { type: "image/jpeg" });
 
 function render() {
   return renderWithProviders(
@@ -352,6 +352,43 @@ describe("picking a video", () => {
 
     fireEvent.click(screen.getAllByText("Remove it")[0]!);
     expect(screen.getByTestId("wizard-refusals").querySelectorAll("li")).toHaveLength(1);
+  });
+
+  // ComposePickedErrors.md: what was refused is listed UNDER THE TRAY, before
+  // the step's own region, not below it.
+  it("lists the refusals between the tray and the drop region", async () => {
+    render();
+    await pickFiles([aPicture()]);
+    await pickFiles([aVideo()]);
+
+    const list = await screen.findByTestId("wizard-refusals");
+    const drop = screen.getByTestId("wizard-drop");
+    expect(list.compareDocumentPosition(drop) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(drop.contains(list)).toBe(false);
+  });
+
+  // ComposePick.md: an eleventh picture is refused in words and NEVER dropped
+  // in silence — and the picker stays open to say so.
+  it("refuses the eleventh picture under the tray, and keeps the picker open", async () => {
+    render();
+    await pickFiles(Array.from({ length: 11 }, (_, i) => aPicture(`p${i}.jpg`)));
+
+    expect(await screen.findByTestId("wizard-refusals")).toHaveTextContent(
+      "That's more than a post carries — up to ten pictures.",
+    );
+    expect(screen.getByTestId("wizard-picked-count")).toHaveTextContent("Picked · 10");
+    expect(screen.getByTestId("wizard-open-picker")).toBeEnabled();
+    expect(screen.getByTestId("wizard-open-picker")).toHaveTextContent("Choose from your files");
+  });
+
+  // ComposePickVideo.jsx: the clip's tile is a 114 × 64 frame, not the
+  // picture's 48px square.
+  it("draws the staged clip as the 114 × 64 frame tile", async () => {
+    render();
+    await pickFiles([aVideo()]);
+    const tile = (await screen.findByLabelText("Remove this video")).parentElement as HTMLElement;
+    expect(tile.style.width).toBe("114px");
+    expect(tile.style.height).toBe("64px");
   });
 
   it("offers no way to add once a video is the body", async () => {
