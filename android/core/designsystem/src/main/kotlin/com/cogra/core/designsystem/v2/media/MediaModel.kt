@@ -50,8 +50,11 @@ data class MediaItem(
  * design/readme.md §9 requires the two to be distinguishable — collapsing
  * them lets a verdict hide behind an author's decision — so the reason is a
  * type rather than a boolean, and each arm carries its own wording.
+ *
+ * [Account] is the third mark (`SensitiveVeil.jsx` `REASONS.account`): a whole
+ * account deleted by the person who had it, standing in a profile's bio place.
  */
-enum class RemovalReason { Author, Platform }
+enum class RemovalReason { Author, Platform, Account }
 
 /**
  * The 4:5 cap of design/readme.md §12, applied to a tile.

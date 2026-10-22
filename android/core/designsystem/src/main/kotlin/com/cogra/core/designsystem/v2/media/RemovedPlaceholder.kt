@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.testTag
+import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
@@ -40,16 +42,28 @@ fun RemovedPlaceholder(
     timestamp: String? = null,
     shape: Shape = MaterialTheme.shapes.medium,
     testTag: String? = null,
+    /**
+     * The mark's data-node on a registered screen
+     * (`profile.identity.removalMark`): it and its `line`, `detail` and
+     * `when` then wear the registered paths in place of [testTag].
+     */
+    node: DataNode? = null,
 ) {
     val headline = when (reason) {
         RemovalReason.Author -> "Removed by its author"
         RemovalReason.Platform -> "Removed under the platform's rules"
+        RemovalReason.Account -> "Deleted by the person whose account it was"
     }
-    // The second line is the same fact in both arms — what survives is the
-    // skeleton either way — so the two are told apart by the headline, which
-    // is the distinction design/readme.md §9 actually requires. The wording
-    // is the canonical `Removed` board's, verbatim.
-    val detail = "The post's place in the thread, and every response, remain."
+    // The second line is the same fact for a post's two reasons — what
+    // survives is the skeleton either way — so those two are told apart by
+    // the headline, which is the distinction design/readme.md §9 actually
+    // requires. The wording is the canonical `Removed` board's, verbatim. A
+    // deleted account's is its own (`REASONS.account`, SensitiveVeil.jsx).
+    val detail = when (reason) {
+        RemovalReason.Account ->
+            "Their name and profile are gone. What they signed stays on the graph and still credits them."
+        else -> "The post's place in the thread, and every response, remain."
+    }
 
     Column(
         modifier = modifier
@@ -57,18 +71,26 @@ fun RemovedPlaceholder(
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .padding(Space.x4)
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+            .then(
+                when {
+                    node != null -> Modifier.dataNode(node)
+                    testTag != null -> Modifier.testTag(testTag)
+                    else -> Modifier
+                },
+            ),
         verticalArrangement = Arrangement.spacedBy(Space.x1),
     ) {
         Text(
             text = headline,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.dataNode(node?.div("line")),
         )
         Text(
             text = detail,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.dataNode(node?.div("detail")),
         )
         // Part of the surviving skeleton: a removal never hides when it
         // happened.
@@ -77,6 +99,7 @@ fun RemovedPlaceholder(
                 text = timestamp,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.dataNode(node?.div("when")),
             )
         }
     }
@@ -89,6 +112,7 @@ private fun RemovedPlaceholderReasons() {
         PreviewMediaColumn {
             RemovedPlaceholder(RemovalReason.Author, timestamp = "today")
             RemovedPlaceholder(RemovalReason.Platform, timestamp = "today")
+            RemovedPlaceholder(RemovalReason.Account)
         }
     }
 }
