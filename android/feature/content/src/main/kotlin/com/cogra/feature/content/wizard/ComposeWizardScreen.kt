@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -18,6 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -180,6 +185,10 @@ fun ComposeWizardRoute(
         onDiscardPost = viewModel::onDiscardPost,
         onKeepPost = viewModel::onKeepPost,
         onDiscardConfirmed = viewModel::onDiscardConfirmed,
+        onKeepBody = viewModel::onKeepBody,
+        onDiscardBody = viewModel::onDiscardBody,
+        onAskDiscardDraft = viewModel::onAskDiscardDraft,
+        onKeepDraftOffer = viewModel::onKeepDraftOffer,
         onContinueDraft = viewModel::onContinueDraft,
         onDiscardDraft = viewModel::onDiscardDraft,
         onRestoreKey = onRestoreKey,
@@ -259,6 +268,10 @@ internal fun ComposeWizardScreen(
     onDiscardPost: () -> Unit,
     onKeepPost: () -> Unit,
     onDiscardConfirmed: () -> Unit,
+    onKeepBody: () -> Unit,
+    onDiscardBody: () -> Unit,
+    onAskDiscardDraft: () -> Unit,
+    onKeepDraftOffer: () -> Unit,
     onContinueDraft: () -> Unit,
     onDiscardDraft: () -> Unit,
     onRestoreKey: () -> Unit,
@@ -327,13 +340,10 @@ internal fun ComposeWizardScreen(
                 DraftOffer(draft = held, onContinue = onContinueDraft, onDiscard = onDiscardDraft)
             }
 
-            // The board dims what is behind the offer: the offer is the
-            // question to answer first.
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
-                    .alpha(if (state.draftOffer != null) DIMMED else 1f),
+                    .weight(1f),
             ) {
                 when (state.step) {
                     WizardStep.Body -> BodyStage(
@@ -346,6 +356,7 @@ internal fun ComposeWizardScreen(
                         onManagePictures = onManagePictures,
                         onDismissRefusal = onDismissRefusal,
                         onNext = onNext,
+                        onAskDiscardDraft = onAskDiscardDraft,
                     )
 
                     WizardStep.Crop -> {
@@ -599,6 +610,39 @@ internal fun ComposeWizardScreen(
         }
     }
 
+    // `Discard the words?` / `the pictures?` / `the video?` — the body fork's
+    // ask (ComposeBodyDiscard.md): the rest of the draft stays.
+    state.askingBodySwitch?.let { next ->
+        val clip = next == BodyMode.Words && state.isVideoPost
+        AskDialog(
+            title = when {
+                next == BodyMode.Media -> "Discard the words?"
+                clip -> "Discard the video?"
+                else -> "Discard the pictures?"
+            },
+            body = "The rest of the draft stays.",
+            keepLabel = if (clip) "Keep it" else "Keep them",
+            discardLabel = "Discard",
+            onKeep = onKeepBody,
+            onDiscard = onDiscardBody,
+            testTag = "wizard_body_discard",
+        )
+    }
+
+    // `Discard your draft?`, raised from the dimmed roll (ComposeDraftDiscard).
+    if (state.askingDraftDiscard) {
+        AskDialog(
+            title = "Discard your draft?",
+            body = "Picking pictures starts a new post, and this draft is what stands in the way. " +
+                "Discarding is the only thing that loses it.",
+            keepLabel = "Keep the draft",
+            discardLabel = "Discard it",
+            onKeep = onKeepDraftOffer,
+            onDiscard = onDiscardDraft,
+            testTag = "wizard_draft_discard_ask",
+        )
+    }
+
     // `Discard this post?` over the seal's bug notice (SealDiscardConfirm):
     // the keep answer filled, the scrim and Back keep the draft.
     if (state.discardingPost) {
@@ -644,6 +688,7 @@ private fun ColumnScope.BodyStage(
     onManagePictures: () -> Unit,
     onDismissRefusal: (Int) -> Unit,
     onNext: () -> Unit,
+    onAskDiscardDraft: () -> Unit,
 ) {
     when (state.mode) {
         BodyMode.Words -> {
@@ -686,27 +731,61 @@ private fun ColumnScope.BodyStage(
                 onAction = { onModeChange(BodyMode.Words) },
                 actionTestTag = "wizard_switch_words",
             )
-            PickStage(
-                state = state,
-                permission = permission.permission,
-                onRequestPermission = permission.request,
-                onOpenSettings = permission.openSettings,
-                onOpenPicker = onOpenPicker,
-                onTogglePick = onTogglePick,
-                onShowAll = onManagePictures,
-                onDismissRefusal = onDismissRefusal,
-            )
-            // `ComposePick` and `ComposePicked` both close on the pill in
-            // its own band under the grid — the grid runs to its own
-            // margin, so the band carries the screen gutter itself.
-            WizardFooter {
-                CograButton(
-                    text = "Next",
-                    onClick = onNext,
-                    enabled = state.forwardEnabled(),
-                    modifier = Modifier.fillMaxWidth(),
-                    testTag = "wizard_pick_next",
+            if (state.draftOffer != null) {
+                // THE ROLL, WAITING (`ComposeDraftBody`): dimmed to 55% and out
+                // of reach, with ONE control over it named for what it will
+                // ask — so a tap, a keyboard and a screen reader reach the same
+                // answer (ComposeDraft.md), and the tiles underneath stay
+                // unreachable.
+                Box(Modifier.fillMaxWidth().weight(1f)) {
+                    Column(
+                        Modifier
+                            .fillMaxSize()
+                            .alpha(DIMMED)
+                            .clearAndSetSemantics { },
+                    ) {
+                        PickStage(
+                            state = state,
+                            permission = permission.permission,
+                            onRequestPermission = permission.request,
+                            onOpenSettings = permission.openSettings,
+                            onOpenPicker = onOpenPicker,
+                            onTogglePick = onTogglePick,
+                            onShowAll = onManagePictures,
+                            onDismissRefusal = onDismissRefusal,
+                        )
+                    }
+                    Box(
+                        Modifier
+                            .matchParentSize()
+                            .clickable(role = Role.Button, onClick = onAskDiscardDraft)
+                            .semantics { contentDescription = "Answer your draft before starting a new post" }
+                            .testTag("wizard_draft_shield"),
+                    )
+                }
+            } else {
+                PickStage(
+                    state = state,
+                    permission = permission.permission,
+                    onRequestPermission = permission.request,
+                    onOpenSettings = permission.openSettings,
+                    onOpenPicker = onOpenPicker,
+                    onTogglePick = onTogglePick,
+                    onShowAll = onManagePictures,
+                    onDismissRefusal = onDismissRefusal,
                 )
+                // `ComposePick` and `ComposePicked` both close on the pill in
+                // its own band under the grid — the grid runs to its own
+                // margin, so the band carries the screen gutter itself.
+                WizardFooter {
+                    CograButton(
+                        text = "Next",
+                        onClick = onNext,
+                        enabled = state.forwardEnabled(),
+                        modifier = Modifier.fillMaxWidth(),
+                        testTag = "wizard_pick_next",
+                    )
+                }
             }
         }
     }

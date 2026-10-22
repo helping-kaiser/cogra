@@ -463,6 +463,14 @@ data class ComposeWizardState(
     val heldPress: Boolean = false,
     /** `Discard this post?` stands over the seal (SealDiscardConfirm). */
     val discardingPost: Boolean = false,
+    /**
+     * The half the body would switch to, while `Discard the words?` (or the
+     * pictures, or the video) asks first — a body holding something never
+     * switches before the ask is answered (ComposeBodyDiscard.md).
+     */
+    val askingBodySwitch: BodyMode? = null,
+    /** `Discard your draft?`, raised by a tap on the dimmed roll (ComposeDraftDiscard). */
+    val askingDraftDiscard: Boolean = false,
     val outcome: WizardOutcome? = null,
 ) {
     /** Every pick that has an id on the server. */
@@ -937,3 +945,23 @@ fun ComposeWizardState.withSourceRatio(uri: String, ratio: Float): ComposeWizard
 
 fun ComposeWizardState.withAltText(uri: String, text: String): ComposeWizardState =
     copy(picked = picked.withAltText(uri, text))
+
+/**
+ * `Discard` on the body-switch ask (ComposeBodyDiscard.md): the half being
+ * left goes and the other opens empty — a post's body is words or pictures,
+ * never both — while the rest of the draft (title, description, tags,
+ * citations) stays.
+ */
+fun ComposeWizardState.discardedHalf(next: BodyMode): ComposeWizardState = when (next) {
+    BodyMode.Media -> copy(body = "", mode = BodyMode.Media, askingBodySwitch = null)
+    BodyMode.Words -> copy(
+        picked = emptyList(),
+        crops = emptyMap(),
+        refused = emptyList(),
+        coverChoice = CoverChoice.None,
+        coverMediaId = null,
+        coverFrames = emptyList(),
+        mode = BodyMode.Words,
+        askingBodySwitch = null,
+    )
+}

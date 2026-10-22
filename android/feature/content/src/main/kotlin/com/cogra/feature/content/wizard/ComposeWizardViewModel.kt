@@ -253,7 +253,7 @@ class ComposeWizardViewModel @Inject constructor(
     }
 
     fun onDiscardDraft() {
-        _state.update { it.copy(draftOffer = null) }
+        _state.update { it.copy(draftOffer = null, askingDraftDiscard = false) }
         armed = true
         viewModelScope.launch { drafts.clear() }
     }
@@ -325,7 +325,38 @@ class ComposeWizardViewModel @Inject constructor(
 
     fun onBodyChange(value: String) = _state.update { it.copy(body = value) }
 
-    fun onModeChange(mode: BodyMode) = _state.update { it.withMode(mode) }
+    /**
+     * `Add pictures instead` / `Write words instead`. A body holding
+     * something asks first; an empty one switches silently
+     * (ComposeBodyDiscard.md).
+     */
+    fun onModeChange(mode: BodyMode) = _state.update {
+        when {
+            mode == it.mode -> it
+            it.mode == BodyMode.Words && it.body.isNotBlank() -> it.copy(askingBodySwitch = mode)
+            it.mode == BodyMode.Media && it.picked.isNotEmpty() -> it.copy(askingBodySwitch = mode)
+            else -> it.withMode(mode)
+        }
+    }
+
+    /** `Keep them` / `Keep it`, the scrim or Back: the stage as it was. */
+    fun onKeepBody() = _state.update { it.copy(askingBodySwitch = null) }
+
+    /**
+     * `Discard`: the half being left goes, the other opens empty, and the
+     * rest of the draft — title, tags, citations — stays.
+     */
+    fun onDiscardBody() {
+        val next = _state.value.askingBodySwitch ?: return
+        if (next == BodyMode.Words) releaseSession()
+        _state.update { it.discardedHalf(next) }
+    }
+
+    /** A tap on the dimmed roll raises `Discard your draft?` (ComposeDraftDiscard.md). */
+    fun onAskDiscardDraft() = _state.update { it.copy(askingDraftDiscard = true) }
+
+    /** `Keep the draft` or the scrim: the screen stands exactly as it was. */
+    fun onKeepDraftOffer() = _state.update { it.copy(askingDraftDiscard = false) }
 
     fun onShapeChange(shape: DraftShape) = _state.update { it.copy(shape = shape) }
 

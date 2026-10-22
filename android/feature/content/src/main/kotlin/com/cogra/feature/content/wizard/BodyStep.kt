@@ -40,6 +40,8 @@ import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.atom.Hairline
 import com.cogra.core.designsystem.v2.atom.InlineAction
+import com.cogra.core.designsystem.v2.atom.taskRing
+import com.cogra.core.designsystem.v2.atom.taskRingColors
 import com.cogra.core.designsystem.v2.compose.UploadErrorLine
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.MediaThumb
@@ -406,15 +408,19 @@ internal fun DraftOffer(
     onDiscard: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // `ComposeDraftBody`: a `Card` (surface-card, the medium rung, padding
+    // 16, gap 12) wearing the task ring OUTSIDE its padding — a 2dp edge in
+    // a border-box — at the `8 24` margin.
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Layout.ScreenGutter, vertical = Space.x2)
+            .testTag("wizard_draft_offer")
             .clip(MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-            .padding(Space.x4)
-            .testTag("wizard_draft_offer"),
-        verticalArrangement = Arrangement.spacedBy(Space.x2),
+            .taskRing(taskRingColors(), MaterialTheme.shapes.medium)
+            .padding(Space.x4 + 2.dp),
+        verticalArrangement = Arrangement.spacedBy(Space.x3),
     ) {
         Text(
             text = "Your draft is here",
