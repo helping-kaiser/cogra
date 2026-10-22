@@ -185,6 +185,23 @@ dialog.cg-sheet-out::backdrop {
   --border-hairline: var(--outline-variant);
   --border-field: var(--outline);
   --scrim-dialog: color-mix(in srgb, var(--scrim) 50%, transparent);
+
+  /* The ring the SYSTEM wears on a card it put in front of a reader (jakob
+     2026-09-15; design/tokens/semantic.css): the ground stays the card's own
+     and the brand travels on the EDGE, in roles, so both themes are this one
+     definition. */
+  --ring-task: linear-gradient(140deg, var(--primary) 0%, var(--primary-container) 46%, var(--secondary-container) 100%);
+  --ring-task-width: 2px;
+}
+
+/* A card wearing the task ring (`TaskCard`, `ComposeDraftBody`): a 2px
+   transparent border the gradient fills through `border-box`, the card's own
+   ground through `padding-box`. */
+.cg-task-ring {
+  border: var(--ring-task-width) solid transparent;
+  background:
+    linear-gradient(var(--surface-card), var(--surface-card)) padding-box,
+    var(--ring-task) border-box;
 }
 
 /* ----------------------------------------------------------------- states --

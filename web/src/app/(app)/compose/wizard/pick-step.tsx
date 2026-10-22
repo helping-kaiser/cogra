@@ -17,7 +17,7 @@
 
 import { useId, useRef, useState } from "react";
 
-import { PillButton, TextAction } from "@/lib/ui2/pill-button";
+import { PillButton } from "@/lib/ui2/pill-button";
 import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
 import { UploadErrorLine } from "@/lib/ui2/compose/upload-notice";
 import { countReading, FieldCount } from "@/lib/ui2/text-field";
@@ -149,9 +149,10 @@ function Prompt({
   return (
     <div className="flex flex-none items-center gap-2 px-6 py-2">
       <p className="m-0 flex-1 text-body-medium text-on-surface-variant">{children}</p>
-      <TextAction testId={actionTestId} onClick={onAction}>
+      {/* `PickPrompt.jsx`: the escape is the small text Button. */}
+      <PillButton testId={actionTestId} variant="text" size="sm" onClick={onAction}>
         {action}
-      </TextAction>
+      </PillButton>
     </div>
   );
 }
@@ -171,6 +172,9 @@ function WordsBody({
   onMode: (next: "words" | "media") => void;
   onNext: () => void;
 }) {
+  // An empty body only holds Next inert (ComposeWords.md); the refusal line
+  // and the error outline are the cap's alone (ComposeWordsCaps).
+  const shown = words.trim() === "" ? null : error;
   const id = useId();
   return (
     <>
@@ -188,17 +192,18 @@ function WordsBody({
           data-testid="wizard-words"
           value={words}
           onChange={(event) => onWords(event.target.value)}
-          className="flex-1 resize-none rounded-extra-small border border-outline p-3 text-body-large"
+          aria-invalid={shown ? true : undefined}
+          className={`flex-1 resize-none rounded-extra-small border p-3 text-body-large ${shown ? "border-error" : "border-outline"}`}
         />
         {/* The composer's growing body box is not a `TextField`, so it draws
             the same supporting-row geometry directly rather than its own
             (design/components/forms/TextField.jsx:117-122): the error and the
             late counter share one row, the count pushed to its far end. */}
-        {(error || countReading(words, BODY_MAX_CHARS)) && (
+        {(shown || countReading(words, BODY_MAX_CHARS)) && (
           <div className="flex items-baseline gap-2">
-            {error && (
-              <p role="alert" data-testid="wizard-body-error" className="m-0 text-body-medium text-error">
-                {error}
+            {shown && (
+              <p role="alert" data-testid="wizard-body-error" className="m-0 text-body-small text-error">
+                {shown}
               </p>
             )}
             <FieldCount value={words} cap={BODY_MAX_CHARS} />

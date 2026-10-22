@@ -4,7 +4,7 @@
 // a batch that expires, a browser with no key, and the draft that outlives all
 // of it.
 
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse } from "msw/http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -405,11 +405,13 @@ describe("the compose wizard", () => {
     expect(frame.querySelector("img")!.getAttribute("src")).toBe("blob:preview");
   });
 
-  it("refuses to leave the pick screen with no body", async () => {
+  // ComposeWords.md: an empty body holds Next inert, and nothing else is said
+  // — the refusal line and the error outline belong to the cap alone.
+  it("refuses to leave the pick screen with no body, saying nothing", async () => {
     render();
     fireEvent.click(await screen.findByTestId("wizard-to-words"));
-    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
-    expect(screen.getByTestId("wizard-body-error")).toHaveTextContent("The post needs a body");
+    expect(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next"))).toBeDisabled();
+    expect(screen.queryByTestId("wizard-body-error")).toBeNull();
     // Still on the pick screen.
     expect(screen.getByTestId("wizard-words")).toBeInTheDocument();
   });
@@ -1364,4 +1366,67 @@ describe("the sealed copy of a staged post (FC-G5)", () => {
     expect(await screen.findByTestId("wizard-draft-card")).toHaveTextContent("A newer draft");
     expect(await seals.list()).toHaveLength(1);
   });
+
+// ComposeBodyDiscard: the body fork asks before it discards a body that holds
+// something, and switches silently when it is empty.
+describe("the body fork", () => {
+  it("asks Discard the words? before trading written words for pictures", async () => {
+    render();
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "Three weekends." } });
+    fireEvent.click(screen.getByTestId("wizard-to-media"));
+    const ask = await screen.findByTestId("wizard-body-discard");
+    expect(within(ask).getByText("Discard the words?")).toBeInTheDocument();
+    expect(within(ask).getByText("The rest of the draft stays.")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("wizard-body-keep"));
+    expect(screen.getByTestId("wizard-words")).toHaveValue("Three weekends.");
+    fireEvent.click(screen.getByTestId("wizard-to-media"));
+    fireEvent.click(await screen.findByTestId("wizard-body-discard-it"));
+    expect(screen.queryByTestId("wizard-words")).toBeNull();
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    expect(screen.getByTestId("wizard-words")).toHaveValue("");
+  });
+
+  it("switches silently while the body is empty", async () => {
+    render();
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    fireEvent.click(screen.getByTestId("wizard-to-media"));
+    expect(screen.queryByTestId("wizard-body-discard")).toBeNull();
+    expect(screen.queryByTestId("wizard-words")).toBeNull();
+  });
+});
+
+// ComposeDraft / ComposeDraftDiscard: the kept draft's card wears the task ring,
+// and a tap on the dimmed roll raises the discard ask instead of finding nothing.
+describe("the kept draft", () => {
+  const held: WizardState = { ...emptyWizard(), mode: "words", words: "an unfinished thought", title: "Salt maps" };
+
+  it("wears the brand's task ring", async () => {
+    render(fakeDrafts(held));
+    expect((await screen.findByTestId("wizard-draft-card")).className).toContain("cg-task-ring");
+  });
+
+  it("shields the dimmed roll with one control named for what comes first", async () => {
+    render(fakeDrafts(held));
+    await screen.findByTestId("wizard-draft-card");
+    const shield = screen.getByRole("button", { name: "Answer your draft before starting a new post" });
+    fireEvent.click(shield);
+    const ask = await screen.findByTestId("wizard-draft-discard-ask");
+    expect(within(ask).getByText("Discard your draft?")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("wizard-draft-keep"));
+    expect(screen.queryByTestId("wizard-draft-discard-ask")).toBeNull();
+    expect(screen.getByTestId("wizard-draft-card")).toBeInTheDocument();
+  });
+
+  it("discards from the ask and gives the pictures back", async () => {
+    const drafts = fakeDrafts(held);
+    render(drafts);
+    await screen.findByTestId("wizard-draft-card");
+    fireEvent.click(screen.getByTestId("wizard-draft-shield"));
+    fireEvent.click(await screen.findByTestId("wizard-draft-discard-it"));
+    await waitFor(() => expect(drafts.held()).toBeNull());
+    expect(screen.queryByTestId("wizard-draft-shield")).toBeNull();
+    expect(screen.getByTestId("wizard-pick-region")).not.toHaveAttribute("inert");
+  });
+});
 });

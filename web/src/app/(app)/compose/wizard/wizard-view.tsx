@@ -19,6 +19,7 @@ import { useApolloClient } from "@apollo/client/react";
 import { HeaderBar } from "@/lib/ui2/header-bar";
 import { HelpDot } from "@/lib/ui2/help-dot";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
+import { DialogSurface } from "@/lib/ui2/dialog-surface";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { preparePost } from "@/lib/api/content-api";
 import { fetchDefaultLicense } from "@/lib/api/settings-api";
@@ -168,6 +169,10 @@ export function ComposeWizard({
   // What became of the last press, when it did not leave the seal.
   const [fault, setFault] = useState<SealFault | null>(null);
   const [discarding, setDiscarding] = useState(false);
+  // `Discard your draft?`, raised by a tap on the roll under a kept draft.
+  const [askingDraft, setAskingDraft] = useState(false);
+  // `Discard the words?` / `the pictures?` / `the video?` — the body fork's ask.
+  const [bodyDiscard, setBodyDiscard] = useState<"words" | "pictures" | "video" | null>(null);
   const [tagErrors, setTagErrors] = useState<Readonly<Record<number, string>>>({});
   const [referenceErrors, setReferenceErrors] = useState<Readonly<Record<number, string>>>({});
 
@@ -792,6 +797,34 @@ export function ComposeWizard({
     router.push("/feed");
   };
 
+  // THE BODY FORK ASKS FIRST WHEN THE BODY HOLDS SOMETHING (jakob 2026-10-02,
+  // ComposeBodyDiscard.md): a post's body is words or pictures, never both,
+  // so switching halves with something in the body discards it — after the
+  // ask. An empty body switches silently.
+  const switchBody = (mode: "words" | "media") => {
+    if (mode === state.mode) return;
+    if (mode === "media" && state.words.trim() !== "") setBodyDiscard("words");
+    else if (mode === "words" && state.assets.length > 0) setBodyDiscard(isVideoPost(state) ? "video" : "pictures");
+    else dispatch({ type: "mode", mode });
+  };
+  const discardBody = () => {
+    // Only the half being left goes: the title, the tags and the citations
+    // ride on (`The rest of the draft stays.`).
+    if (bodyDiscard === "words") {
+      dispatch({ type: "words", words: "" });
+      dispatch({ type: "mode", mode: "media" });
+    } else {
+      for (const asset of state.assets) dispatch({ type: "unpick", id: asset.id });
+      dispatch({ type: "mode", mode: "words" });
+    }
+    setBodyDiscard(null);
+  };
+  const discardOffered = () => {
+    setOffered(null);
+    setAskingDraft(false);
+    void drafts.clear();
+  };
+
   // WHILE IT SIGNS, THE SEAL HOLDS THE READER (jakob 2026-10-01): past the
   // label swap the header's arrow and X refuse a press and keep their face,
   // because leaving mid-sign would orphan the outcome (SealSigning.md).
@@ -905,10 +938,7 @@ export function ComposeWizard({
             }));
             setOffered(null);
           }}
-          onDiscard={() => {
-            setOffered(null);
-            void drafts.clear();
-          }}
+          onDiscard={discardOffered}
         />
       )}
 
@@ -935,6 +965,7 @@ export function ComposeWizard({
         // `draftOffer != null`. `inert` takes pointer, keyboard and AT
         // reach away together; the opacity alone would still let a stray
         // tab or click land on a grid the draft's own pair should decide.
+        <div className="relative flex flex-1 flex-col">
         <div
           data-testid="wizard-pick-region"
           className="flex flex-1 flex-col"
@@ -954,7 +985,7 @@ export function ComposeWizard({
             coverSrc={coverPreview}
             clipFace={clipFace}
             onWords={(words) => dispatch({ type: "words", words })}
-            onMode={(mode) => dispatch({ type: "mode", mode })}
+            onMode={switchBody}
             onPick={(files) => void takeFiles(files)}
             onUnpick={(id) => dispatch({ type: "unpick", id })}
             onDismissRefusal={(id) =>
@@ -963,6 +994,20 @@ export function ComposeWizard({
             onManage={() => setManaging(true)}
             onNext={() => dispatch({ type: "advance" })}
           />
+        </div>
+        {/* THE ROLL'S SHIELD (ComposeDraftDiscard, jakob 2026-09-15): a
+            blocked surface owes an answer, so a tap on the dimmed pictures
+            raises the discard ask instead of finding nothing, and focus
+            meets one control named for what the reader has to do first. */}
+        {offered !== null && (
+          <button
+            type="button"
+            data-testid="wizard-draft-shield"
+            aria-label="Answer your draft before starting a new post"
+            onClick={() => setAskingDraft(true)}
+            className="cg-focus absolute inset-0 cursor-pointer border-0 bg-transparent p-0"
+          />
+        )}
         </div>
       )}
 
@@ -1194,6 +1239,56 @@ export function ComposeWizard({
         testId="wizard-describe-sheet"
       />
 
+      {askingDraft && (
+        // ComposeDraftDiscard: the safe answer is the filled one, both words
+        // take their object, no error colour, and the scrim is Keep's.
+        <DialogSurface
+          title="Discard your draft?"
+          body={[
+            "Picking pictures starts a new post, and this draft is what stands in the way. Discarding is the only thing that loses it.",
+          ]}
+          onDismiss={() => setAskingDraft(false)}
+          testId="wizard-draft-discard-ask"
+          actions={
+            <>
+              <PillButton testId="wizard-draft-discard-it" variant="text" onClick={discardOffered}>
+                Discard it
+              </PillButton>
+              <PillButton testId="wizard-draft-keep" onClick={() => setAskingDraft(false)}>
+                Keep the draft
+              </PillButton>
+            </>
+          }
+        />
+      )}
+
+      {bodyDiscard !== null && (
+        // ComposeBodyDiscard: one dialog for both directions, the body naming
+        // only what goes. Keep is filled; Discard quiet; no error colour.
+        <DialogSurface
+          title={
+            bodyDiscard === "words"
+              ? "Discard the words?"
+              : bodyDiscard === "video"
+                ? "Discard the video?"
+                : "Discard the pictures?"
+          }
+          body={["The rest of the draft stays."]}
+          onDismiss={() => setBodyDiscard(null)}
+          testId="wizard-body-discard"
+          actions={
+            <>
+              <PillButton testId="wizard-body-discard-it" variant="text" onClick={discardBody}>
+                Discard
+              </PillButton>
+              <PillButton testId="wizard-body-keep" onClick={() => setBodyDiscard(null)}>
+                {bodyDiscard === "video" ? "Keep it" : "Keep them"}
+              </PillButton>
+            </>
+          }
+        />
+      )}
+
       <HelpDialog
         open={help !== null}
         onClose={() => setHelp(null)}
@@ -1222,7 +1317,10 @@ function DraftCard({
   return (
     <div
       data-testid="wizard-draft-card"
-      className="mx-6 my-2 flex flex-none flex-col gap-2 rounded-medium bg-surface-container-highest p-4"
+      // A `Card` (gap 12, padding 16) wearing the brand's task ring, so the
+      // reason the screen is held is legible before a word is read
+      // (ComposeDraft.md: "the draft card wears the brand ring").
+      className="cg-task-ring mx-6 my-2 flex flex-none flex-col gap-3 rounded-medium p-4 text-on-surface"
     >
       <h2 className="m-0 text-title-medium">Your draft is here</h2>
       <div className="flex items-center gap-2">
