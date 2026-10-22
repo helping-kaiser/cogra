@@ -329,8 +329,10 @@ describe("the compose wizard", () => {
     expect(screen.getByTestId("wizard-unreachable")).toHaveAttribute("open");
   });
 
-  // CW-26: WizardHeader.jsx's stageLabel slot draws at --text-label-small.
-  it("labels the seal stage at the label-small role, not body-small", async () => {
+  // CW-26: WizardHeader.jsx's stageLabel slot draws at --text-label-small's
+  // size and leading, at the ground's weight (the master sets none), and the
+  // seal's one "?" stands after it, named "How signing works".
+  it("labels the seal stage at the label-small size, then the seal's one help", async () => {
     render();
     fireEvent.click(await screen.findByTestId("wizard-to-words"));
     fireEvent.change(screen.getByTestId("wizard-words"), {
@@ -340,7 +342,11 @@ describe("the compose wizard", () => {
     await screen.findByTestId(byNode("composeDetails.title.input"));
     fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
-    expect(await screen.findByText("Last step")).toHaveClass("text-label-small");
+    const stage = await screen.findByText("Last step");
+    expect(stage.className).toContain("text-[length:var(--text-label-small)]");
+    expect(stage.className).not.toContain("text-label-small ");
+    const help = screen.getByRole("button", { name: "How signing works" });
+    expect(stage.compareDocumentPosition(help) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   // The hand test found framing dead on everything past the first picture, so

@@ -16,7 +16,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
-import { HeaderBar, HelpButton } from "@/lib/ui2/header-bar";
+import { HeaderBar } from "@/lib/ui2/header-bar";
+import { HelpDot } from "@/lib/ui2/help-dot";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { preparePost } from "@/lib/api/content-api";
@@ -810,11 +811,17 @@ export function ComposeWizard({
         onBack={leave}
         backLabel={state.step === "pick" ? "Back to feed" : "Back a step"}
         onLeave={leaveFlow}
-        // The seal board's `?`, opening the house help dialog with copy-voice's
-        // "Signed actions". One `?` per screen, so only the seal carries one.
+        // The seal board's `?` (`HelpDot`), opening the house help dialog with
+        // copy-voice's "How signing works". One `?` per screen, so only the
+        // seal carries one — beside its stage's name, "Last step".
+        stageLabel={state.step === "seal" ? "Last step" : undefined}
         help={
           state.step === "seal" ? (
-            <HelpButton onOpen={() => setHelp(HELP_TOPICS.howSigningWorks)} label="Signed actions" />
+            <HelpDot
+              ariaLabel="How signing works"
+              onOpen={() => setHelp(HELP_TOPICS.howSigningWorks)}
+              testId="header-help"
+            />
           ) : undefined
         }
         // THE HEADER CARRIES ONLY THE WAYS OUT (jakob 2026-09-01). Next lived
@@ -825,9 +832,7 @@ export function ComposeWizard({
         // trailing information — `ComposeSeal` says "Last step", `ComposeCover`
         // says "Video only" (android's `ComposeWizardScreen.kt` trailing note).
         action={
-          state.step === "seal" ? (
-            <span className="text-label-small text-on-surface-variant">Last step</span>
-          ) : state.step === "cover" ? (
+          state.step === "cover" ? (
             <span className="text-label-small text-on-surface-variant">Video only</span>
           ) : undefined
         }
