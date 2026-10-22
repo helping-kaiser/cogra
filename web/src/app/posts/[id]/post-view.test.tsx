@@ -1923,7 +1923,7 @@ describe("PostView", () => {
     expect(await screen.findByTestId(byNode("postDetail.card.tagsLine.tag", "p1/rust"))).toBeInTheDocument();
     expect(screen.getByTestId(byNode("postDetail.card.tagsLine.tag", "p1/wasm"))).toBeInTheDocument();
     expect(screen.queryByTestId(byNode("postDetail.card.tagsLine.tag", "p1/axum"))).not.toBeInTheDocument();
-    expect(screen.getByTestId(byNode("postDetail.card.tagsLine.counts"))).toHaveTextContent("· 1 topic");
+    expect(screen.getByTestId(byNode("postDetail.card.tagsLine.counts"))).toHaveTextContent("· 1 tag");
     expect(screen.queryByTestId("post-topics-reveal")).not.toBeInTheDocument();
   });
 
