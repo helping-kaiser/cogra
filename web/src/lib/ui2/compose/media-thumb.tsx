@@ -43,6 +43,15 @@ const REMOVE_GLYPH =
  */
 const DURATION_BADGE_MIN_TILE = 80;
 
+/**
+ * Every mark the tile lays over its picture — the Cover badge, the play disc,
+ * the duration pill, the remove X — wears the snackbar pair
+ * (`MediaThumb.jsx`: `--surface-snackbar` / `--on-surface-snackbar`), the
+ * inverse surface, so the marks turn with the theme rather than staying a
+ * fixed black wash.
+ */
+const SNACKBAR = "bg-[var(--surface-snackbar)] text-[color:var(--on-surface-snackbar)]";
+
 // THE RING NEVER INVENTS A NUMBER. The upload model reports a state, not a
 // fraction, so an upload in flight draws the ring as a turning arc rather than a
 // made-up percentage — a determinate ring at a guessed value would be a lie
@@ -194,7 +203,10 @@ export function MediaThumb({
         />
       ) : null}
       {cover ? (
-        <span className="absolute bottom-[3px] left-[3px] rounded-full bg-scrim/55 px-[5px] text-label-small text-white">
+        <span
+          data-testid={testId ? `${testId}-cover-badge` : undefined}
+          className={`absolute bottom-[3px] left-[3px] rounded-full px-[5px] text-label-small ${SNACKBAR}`}
+        >
           Cover
         </span>
       ) : null}
@@ -217,7 +229,7 @@ export function MediaThumb({
           aria-hidden="true"
           data-testid={testId ? `${testId}-play` : undefined}
           style={{ width: `${discSize}px`, height: `${discSize}px` }}
-          className="absolute left-1/2 top-1/2 grid -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-scrim/55 text-white"
+          className={`absolute left-1/2 top-1/2 grid -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full ${SNACKBAR}`}
         >
           <svg viewBox="0 0 24 24" width={glyphSize} height={glyphSize} fill="currentColor" aria-hidden="true">
             <path d="M8 5v14l11-7z" />
@@ -227,7 +239,7 @@ export function MediaThumb({
       {isVideo && !failed && durationFits ? (
         <span
           data-testid={testId ? `${testId}-duration` : undefined}
-          className="absolute bottom-[6px] right-[6px] rounded-extra-small bg-scrim/55 px-[5px] text-label-small text-white"
+          className={`absolute bottom-[6px] right-[6px] rounded-small px-[6px] text-label-small ${SNACKBAR}`}
         >
           {formatDuration(durationMs as number)}
         </span>
@@ -247,7 +259,7 @@ export function MediaThumb({
         <span
           aria-label="Didn't upload"
           data-testid={testId ? `${testId}-failed` : undefined}
-          className="absolute right-[3px] top-[3px] grid size-[18px] place-items-center rounded-full bg-error text-label-small text-on-error"
+          className="absolute right-[3px] top-[3px] grid size-[18px] place-items-center rounded-full bg-error text-[length:var(--text-label-medium)]/[var(--text-label-medium--line-height)] [font-weight:700] text-on-error"
         >
           !
         </span>
@@ -260,7 +272,7 @@ export function MediaThumb({
           aria-label={removeLabel}
           data-testid={testId ? `${testId}-remove` : undefined}
           onClick={onRemove}
-          className="cg-focus absolute right-[3px] top-[3px] flex size-4 items-center justify-center rounded-full bg-scrim/55 text-white"
+          className={`cg-state cg-focus cg-hit absolute right-[3px] top-[3px] flex size-4 items-center justify-center rounded-full ${SNACKBAR}`}
         >
           <svg viewBox="0 0 24 24" width={10} height={10} fill="currentColor" aria-hidden="true">
             <path d={REMOVE_GLYPH} />

@@ -24,6 +24,34 @@ describe("MediaThumb", () => {
     expect(screen.queryByText("Cover")).toBeNull();
   });
 
+  it("lays every mark on the snackbar pair, so the marks turn with the theme", () => {
+    // MediaThumb.jsx: the Cover badge, the play disc, the duration pill and
+    // the remove X all wear `--surface-snackbar` / `--on-surface-snackbar`.
+    render(
+      <MediaThumb src="blob:one" cover durationMs={42_000} size={96} onRemove={() => {}} testId="thumb" />,
+    );
+    for (const id of ["thumb-cover-badge", "thumb-play", "thumb-duration", "thumb-remove"]) {
+      const mark = screen.getByTestId(id);
+      expect(mark.className, id).toContain("bg-[var(--surface-snackbar)]");
+      expect(mark.className, id).toContain("text-[color:var(--on-surface-snackbar)]");
+      expect(mark.className, id).not.toContain("bg-scrim");
+    }
+  });
+
+  it("draws the duration pill on the master's own rung and inset", () => {
+    render(<MediaThumb src="blob:one" durationMs={42_000} size={96} testId="thumb" />);
+    const pill = screen.getByTestId("thumb-duration");
+    expect(pill.className).toContain("rounded-small");
+    expect(pill.className).toContain("px-[6px]");
+  });
+
+  it("grows the remove X to the 48px target without growing its ink", () => {
+    render(<MediaThumb src="blob:one" onRemove={() => {}} testId="thumb" />);
+    const remove = screen.getByTestId("thumb-remove");
+    expect(remove.className).toContain("cg-hit");
+    expect(remove.className).toContain("size-4");
+  });
+
   it("says how far an upload has got, in words as well as the ring", () => {
     render(<MediaThumb src="blob:one" progress={0.42} testId="thumb" />);
     expect(screen.getByLabelText("Uploading, 42%")).toBeInTheDocument();
