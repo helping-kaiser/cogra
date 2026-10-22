@@ -21,12 +21,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.cogra.core.designsystem.v2.atom.hitTarget
 import com.cogra.core.designsystem.v2.media.CograAvatar
+import com.cogra.core.designsystem.v2.token.TypeTokens
 
 /**
  * The circular letter avatar: the first grapheme of the display name
@@ -47,12 +48,30 @@ fun MonogramAvatar(
             .background(MaterialTheme.colorScheme.secondaryContainer),
     ) {
         Text(
-            text = name.firstOrNull()?.uppercase() ?: "?",
+            text = name.trim().firstOrNull()?.uppercase() ?: "?",
             color = MaterialTheme.colorScheme.onSecondaryContainer,
-            fontSize = (size.value * 0.45f).sp,
+            style = monogramStyle(size),
+            fontWeight = TypeTokens.MonogramWeight,
         )
     }
 }
+
+/**
+ * The letter's type role at each rung (`ActorChip.jsx` `MonogramAvatar`): the
+ * 24dp `sm` disc reads `label-small`, the 32dp `md` `label-medium`, a disc of
+ * 56dp and up (`lg`) `headline-small`, and any other size `label-large`.
+ */
+@Composable
+private fun monogramStyle(size: Dp): TextStyle = when {
+    size >= MONOGRAM_HEADLINE_FROM -> MaterialTheme.typography.headlineSmall
+    size == MONOGRAM_SM -> MaterialTheme.typography.labelSmall
+    size == MONOGRAM_MD -> MaterialTheme.typography.labelMedium
+    else -> MaterialTheme.typography.labelLarge
+}
+
+private val MONOGRAM_SM = 24.dp
+private val MONOGRAM_MD = 32.dp
+private val MONOGRAM_HEADLINE_FROM = 56.dp
 
 /**
  * A compact actor reference — monogram, display name, handle — that

@@ -1,6 +1,7 @@
 package com.cogra.core.designsystem.v2.atom
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,7 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,9 +25,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.R
@@ -36,6 +36,7 @@ import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
+import com.cogra.core.designsystem.v2.token.TypeTokens
 
 /**
  * The read shell's top-left identity
@@ -114,13 +115,7 @@ data class BandBell(val lit: Boolean, val onOpen: () -> Unit)
 fun CograBandBell(bell: BandBell, testTag: String? = null, node: DataNode? = null) {
     val name = stringResource(if (bell.lit) R.string.cogra_band_bell_lit else R.string.cogra_band_bell)
     val tag = node?.div("bell")?.tag ?: testTag?.let { "${it}_bell" } ?: "cogra_band_bell"
-    IconButton(
-        onClick = bell.onOpen,
-        modifier = Modifier
-            .size(Layout.TouchTargetMin)
-            .testTag(tag)
-            .semantics { contentDescription = name },
-    ) {
+    BandIconButton(onClick = bell.onOpen, testTag = tag, description = name) {
         Box {
             Icon(
                 imageVector = Icons.Filled.Notifications,
@@ -165,7 +160,7 @@ fun CograBandIdentity(modifier: Modifier = Modifier, testTag: String? = null, no
             style = MaterialTheme.typography.titleLarge,
             // The one weight the wordmark takes that the type ramp's title
             // rung does not: the mark's own drawing (§6).
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = TypeTokens.WordmarkWeight,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.testTag(
                 node?.div("wordmark")?.tag ?: testTag?.let { "${it}_wordmark" } ?: "cogra_band_wordmark",
@@ -187,20 +182,53 @@ fun CograBandChats(
     testTag: String? = null,
     node: DataNode? = null,
 ) {
-    IconButton(
+    BandIconButton(
         onClick = onChats,
-        modifier = Modifier
-            .size(Layout.TouchTargetMin)
-            .testTag(node?.div("chats")?.tag ?: testTag?.let { "${it}_chats" } ?: "cogra_band_chats"),
+        testTag = node?.div("chats")?.tag ?: testTag?.let { "${it}_chats" } ?: "cogra_band_chats",
+        description = contentDescription,
     ) {
         Icon(
             imageVector = Icons.Filled.Forum,
-            contentDescription = contentDescription,
+            contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(22.dp),
         )
     }
 }
+
+/**
+ * THE BAND'S ONE ICON-CONTROL SHAPE (`CograBand.jsx` `BandIcon`): 40dp of ink,
+ * no background, and the full 48dp target around it ([hitTarget]) — 48dp of
+ * DRAWN box is what crowded the band, so only the box shrank, never the
+ * target. Its name rides the target.
+ */
+@Composable
+private fun BandIconButton(
+    onClick: () -> Unit,
+    testTag: String,
+    description: String,
+    content: @Composable () -> Unit,
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .testTag(testTag)
+            .hitTarget(
+                interactive = Modifier
+                    .clip(CircleShape)
+                    .clickable(role = Role.Button, onClick = onClick)
+                    .semantics { contentDescription = description },
+                drawnWidth = BAND_ICON,
+                drawnHeight = BAND_ICON,
+            )
+            .size(BAND_ICON),
+    ) {
+        content()
+    }
+}
+
+/** `BandIcon`'s drawn box. */
+private val BAND_ICON = 40.dp
 
 /** Lower case, always: the wordmark is a drawing, not a sentence (§6). */
 private const val WORDMARK = "cogra"

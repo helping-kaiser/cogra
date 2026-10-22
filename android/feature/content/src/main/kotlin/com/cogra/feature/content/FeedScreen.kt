@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -292,7 +294,13 @@ private fun consumeRefreshSignal(signal: Boolean, consume: () -> Unit, refresh: 
 private fun FeedBandActions(onChats: (() -> Unit)?, bell: BandBell?, band: DataNode) {
     onChats?.let { CograBandChats(it, testTag = "feed_band", node = band) }
     bell?.let { CograBandBell(it, testTag = "feed_band", node = band) }
+    // The band's own 16dp end (`CograBand.jsx` `0 var(--space-4)`): the bar's
+    // actions row already insets 4dp, so the cluster's last icon ends 16dp in.
+    Spacer(Modifier.width(BAND_END_INSET))
 }
+
+/** What the top app bar's 4dp actions inset leaves of the band's 16dp end. */
+private val BAND_END_INSET = Space.x3
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
