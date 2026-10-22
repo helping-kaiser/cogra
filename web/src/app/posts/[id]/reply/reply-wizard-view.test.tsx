@@ -359,7 +359,9 @@ describe("the reply wizard", () => {
       fireEvent.click(screen.getByTestId("reply-open-sensitive"));
       const sheet = await screen.findByTestId("reply-sensitive-sheet");
       expect(sheet).toBeInTheDocument();
-      fireEvent.click(screen.getByTestId("reply-sensitive-switch"));
+      // `Mark` opens it marked; Done carries the mark to the row.
+      expect(screen.getByTestId("reply-sensitive-switch")).toHaveAttribute("aria-checked", "true");
+      fireEvent.click(screen.getByTestId("reply-sensitive-done"));
       await waitFor(() =>
         expect(screen.getByTestId("reply-sensitive-value")).toHaveTextContent("Marked"),
       );

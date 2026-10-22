@@ -19,6 +19,7 @@
 // `composeDetails`), so every drawn part carries its node id — see
 // `lib/ui/data-node.ts`.
 
+import { InlineAction } from "@/lib/ui2/inline-action";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { TextField } from "@/lib/ui2/text-field";
 import { DescribeCounter, PickedRow, type PickedThumb } from "@/lib/ui2/compose/picked-row";
@@ -166,11 +167,13 @@ export function DetailsStep({
 
       <div className="flex-1" />
       {/* Why the seal may wait, said before the reader reaches it rather than
-          as a refusal when they get there. */}
-      {mode === "media" && (
+          as a refusal when they get there — and only while something is still
+          going up: `ComposeUploading` draws it, the stage at rest
+          (`ComposeDetails`) does not. */}
+      {mode === "media" && assets.some((asset) => thumbState(asset).progress !== undefined) && (
         <p
           data-testid="wizard-upload-aside"
-          className="m-0 text-center text-label-small text-on-surface-variant"
+          className="m-0 text-center text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] [letter-spacing:var(--text-label-small--letter-spacing)] text-on-surface-variant"
         >
           Pictures upload while you write — signing waits for them.
         </p>
@@ -216,14 +219,9 @@ function CoverField({ onOpen }: { onOpen: () => void }) {
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-label-large">Cover</span>
-      <button
-        type="button"
-        data-testid="wizard-cover-door"
-        onClick={onOpen}
-        className="cg-state cg-focus cg-hit m-0 cursor-pointer self-start border-0 bg-transparent p-0 text-label-small text-primary"
-      >
+      <InlineAction size="sm" testId="wizard-cover-door" onClick={onOpen}>
         Add a cover
-      </button>
+      </InlineAction>
       <p className="m-0 text-label-small text-on-surface-variant">
         It plays the moment it is on screen, so it starts on its own first frame.
       </p>

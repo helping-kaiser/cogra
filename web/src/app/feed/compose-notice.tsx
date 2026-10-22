@@ -16,7 +16,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { Button, buttonClassName } from "@/lib/ui/button";
-import { Card } from "@/lib/ui/card";
+import { Icon } from "@/lib/ui/icons";
 import { composeDraftStore, draftSummary, type ComposeDraftStore } from "@/lib/compose/draft-store";
 
 export type ComposeOutcome = "expired";
@@ -46,11 +46,19 @@ export function ComposeNotice({
     };
   }, [drafts]);
 
+  // `TaskCard` (the system speaking, so it wears the task ring and the mark),
+  // on the feed card's ground: it says how things stand rather than asking
+  // a step the reader owes, so not the notice's olive.
   return (
-    <Card testId="compose-expired">
-      <h2 className="text-title-medium">Your post didn&apos;t land</h2>
-      <p className="text-body-medium text-on-surface-variant">
-        {name === null ? "It" : `“${name}”`} couldn&apos;t finish settling. Nothing was spent —
+    <section data-testid="compose-expired" className="cg-task-ring flex flex-col gap-3 rounded-medium p-4 text-on-surface">
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="m-0 text-title-medium">Your post didn&apos;t land</h2>
+        <span className="flex-none text-primary">
+          <Icon name="mark" size={20} pickColor="var(--primary-container)" />
+        </span>
+      </div>
+      <p className="m-0 text-body-medium text-on-surface-variant">
+        {name === null ? "It" : `"${name}"`} couldn&apos;t finish settling. Nothing was spent —
         your draft is saved.
       </p>
       <div className="flex justify-end gap-2">
@@ -65,6 +73,6 @@ export function ComposeNotice({
           Open the draft
         </Link>
       </div>
-    </Card>
+    </section>
   );
 }

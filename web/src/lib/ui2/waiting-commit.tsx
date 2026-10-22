@@ -28,6 +28,18 @@ export const SLOW_ANSWER_MS = 200;
  * label swaps to its present participle. Resets the instant the answer lands.
  */
 export function useSlowAnswer(busy: boolean): boolean {
+  return useWaitedPast(busy, SLOW_ANSWER_MS);
+}
+
+/** How long a signing may take before the seal says the network is slow (SealSigningSlow.md). */
+export const SLOW_NETWORK_MS = 5000;
+
+/**
+ * True once `busy` has held for `ms`, counted from the moment it turned true;
+ * resets the instant it turns false. The 200ms label swap and the seal's 5s
+ * slow line are this one clock read twice, both counting from the press.
+ */
+export function useWaitedPast(busy: boolean, ms: number): boolean {
   const [slow, setSlow] = useState(false);
   // A new wait starts quick: the flag resets the moment `busy` changes,
   // adjusted during render rather than in an effect (React, "You might not
@@ -39,9 +51,9 @@ export function useSlowAnswer(busy: boolean): boolean {
   }
   useEffect(() => {
     if (!busy) return;
-    const timer = setTimeout(() => setSlow(true), SLOW_ANSWER_MS);
+    const timer = setTimeout(() => setSlow(true), ms);
     return () => clearTimeout(timer);
-  }, [busy]);
+  }, [busy, ms]);
   return busy && slow;
 }
 

@@ -637,16 +637,13 @@ export function FeedView({
           </div>
         </CograBand>
       </CollapsingTop>
-      {/* Empty, the slot is nothing at all to the layout (`empty:hidden`);
-          holding a banner, it keeps the 16px either side it always had. */}
-      <div className="flex flex-col gap-4 px-6 py-4 empty:hidden">
+      {/* Empty, the slot is nothing at all to the layout; holding a banner,
+          it keeps the 16px either side it always had. `StatusBanners` always
+          renders its <section>, so `:empty` alone never matches a signed-in
+          feed: the slot hides while every child is an empty section. */}
+      <div className="flex flex-col gap-4 px-6 py-4 [&:not(:has(>:not(section:empty)))]:hidden">
         {/* The account-status banners ride the active tab (design.md §6). */}
         {phase === "signedIn" && <StatusBanners />}
-        {/* What the wizard just did, if anything. Dismissing drops the query
-            value, so the notice cannot come back on a reload. */}
-        {outcome !== null && (
-          <ComposeNotice onDismiss={() => router.replace("/feed", { scroll: false })} />
-        )}
         {transportFault === "refresh" && (
           <div className="flex items-center gap-3">
             {/* With posts on screen the fault means "stale", not "gone":
@@ -705,6 +702,15 @@ export function FeedView({
               (`VouchBack.jsx`), after the security notice and the key card
               that head the column (ruling 45). */}
           {phase === "signedIn" && <VouchCard refreshSignal={listEra} />}
+          {/* What the wizard just did, if anything: a task card at the head of
+              the list, full width like the posts under it (ComposeExpired).
+              Dismissing drops the query value, so the notice cannot come
+              back on a reload. */}
+          {outcome !== null && (
+            <li>
+              <ComposeNotice onDismiss={() => router.replace("/feed", { scroll: false })} />
+            </li>
+          )}
           {shown.map((post, index) => (
             <Fragment key={post.id}>
               {index === seenFrom && <SeenSeparator />}

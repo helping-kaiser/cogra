@@ -2080,8 +2080,8 @@ describe("PostView", () => {
       // Nothing typed: the row is the only change.
       expect(screen.getByTestId("comment-edit-save")).toBeDisabled();
 
+      // `Mark` opens the sheet already marked (ComposeSensitive.jsx).
       fireEvent.click(screen.getByTestId("comment-edit-open-sensitive"));
-      fireEvent.click(screen.getByTestId("comment-edit-sensitive-switch"));
       fireEvent.change(screen.getByTestId("comment-edit-sensitive-reason"), {
         target: { value: "A dead seabird." },
       });
@@ -2167,19 +2167,17 @@ describe("PostView", () => {
       await openComments();
 
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
+      // The sheet opens marked; over the cap its Done is visible and inert, so
+      // an over-long reason never reaches the edit.
       fireEvent.click(screen.getByTestId("comment-edit-open-sensitive"));
-      fireEvent.click(screen.getByTestId("comment-edit-sensitive-switch"));
       fireEvent.change(screen.getByTestId("comment-edit-sensitive-reason"), {
         target: { value: "x".repeat(SENSITIVE_REASON_MAX_CHARS + 1) },
       });
-      fireEvent.click(screen.getByTestId("comment-edit-sensitive-done"));
+      expect(screen.getByTestId("comment-edit-sensitive-done")).toBeDisabled();
 
-      expect(screen.getByTestId("comment-edit-save")).toBeDisabled();
-
-      // Unmarking again leaves the save free of THIS refusal: the leftover
-      // text is never sent. A words change keeps something staged to sign,
-      // so the assertion is not vacuously true against an empty batch.
-      fireEvent.click(screen.getByTestId("comment-edit-open-sensitive"));
+      // Unmarking leaves Done free of THIS refusal: the leftover text is never
+      // sent. A words change keeps something staged to sign, so the assertion
+      // is not vacuously true against an empty batch.
       fireEvent.click(screen.getByTestId("comment-edit-sensitive-switch"));
       fireEvent.click(screen.getByTestId("comment-edit-sensitive-done"));
       fireEvent.change(screen.getByTestId("comment-edit-input"), {

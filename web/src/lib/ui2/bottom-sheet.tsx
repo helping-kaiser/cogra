@@ -90,7 +90,13 @@ export function BottomSheet({
   focusTitle = false,
   initialFocus,
   rows = false,
+  flush = false,
 }: {
+  /**
+   * The content starts right under the title, as the license and sensitive
+   * sheets draw it (`0 24px`): no 8px of body padding of its own.
+   */
+  flush?: boolean;
   /**
    * A SHEET OF ROWS (BottomSheet.jsx with `SheetItem`s, the ⋮'s menus): the
    * master's own geometry — 8px over the grip, 12 under it, rows edge to edge
@@ -318,21 +324,21 @@ export function BottomSheet({
             backdrop, Escape and the sheet's own action drop it too. */}
         <span
           aria-hidden="true"
-          className={`mx-auto h-1 w-8 flex-none rounded-full bg-outline-variant ${rows ? "mb-3 mt-2" : "mt-3"}`}
+          className="mx-auto mb-3 mt-2 h-1 w-8 flex-none rounded-full bg-outline-variant"
           {...testAttributes(part(node, "dragHandle"))}
         />
         {titleHidden ? null : titleTrailing === undefined ? (
           <h2
             ref={titleRef}
             tabIndex={-1}
-            className="px-6 pt-4 pb-2 text-title-medium outline-none"
+            className="m-0 px-6 pb-2 text-title-medium outline-none"
             {...testAttributes(part(node, "title"))}
           >
             {title}
           </h2>
         ) : (
           <div
-            className="flex items-center gap-2 px-6 pt-4 pb-2"
+            className="flex items-center gap-2 px-6 pb-2"
             {...testAttributes(part(node, "title"))}
           >
             <h2 ref={titleRef} tabIndex={-1} className="m-0 flex-1 text-title-medium outline-none">
@@ -356,7 +362,7 @@ export function BottomSheet({
           // before the body starts scrolling, which is what puts the scroll
           // INSIDE the growing field rather than under the whole sheet. The
           // scroll stays as the fallback for content that cannot shrink.
-          className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${rows ? "pb-6" : `px-6 pt-2 ${foot === undefined ? "pb-8" : "pb-3"}`}`}
+          className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${rows ? "pb-6" : `px-6 ${flush || titleHidden ? "" : "pt-2"} ${foot === undefined ? "pb-6" : "pb-3"}`}`}
         >
           {/* What the sheet holds stands ON the sheet: a stage inside it is
               covered only by a layer raised over the sheet, and its scroller
@@ -366,7 +372,7 @@ export function BottomSheet({
             <ScrollHostProvider value={body}>{children}</ScrollHostProvider>
           </CoveringLayerProvider>
         </div>
-        {foot !== undefined && <div className="flex-none pb-8">{foot}</div>}
+        {foot !== undefined && <div className="flex-none pb-6">{foot}</div>}
       </div>
     </dialog>
   );

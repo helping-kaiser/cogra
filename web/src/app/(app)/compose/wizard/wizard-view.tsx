@@ -16,14 +16,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
-import { HeaderBar, HelpButton } from "@/lib/ui2/header-bar";
+import { HeaderBar } from "@/lib/ui2/header-bar";
+import { HelpDot } from "@/lib/ui2/help-dot";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
+import { DialogSurface } from "@/lib/ui2/dialog-surface";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { preparePost } from "@/lib/api/content-api";
 import { fetchDefaultLicense } from "@/lib/api/settings-api";
 import { isPublicDomain } from "@/lib/license";
-import { hasFieldErrors, partitionFieldErrors } from "@/lib/api/field-errors";
-import { firstRefusalMessage, writeRefusalMessage } from "@/lib/ui/error-messages";
+import { sealFaultOf, type SealFault } from "@/lib/compose/seal-fault";
+import { SLOW_NETWORK_MS, useSlowAnswer, useWaitedPast } from "@/lib/ui2/waiting-commit";
 import { fetchReferenceCandidates } from "@/lib/api/references-api";
 import { newReferenceDraft } from "@/lib/references/draft";
 import { untypedTargetView } from "@/lib/references/normalize";
@@ -37,7 +39,6 @@ import { postExpectation } from "@/lib/compose/intent";
 import { snapDimension } from "@/lib/stance/model";
 import { contentExpectation } from "@/lib/compose/payload-expectation";
 import type { Expectation } from "@/lib/signing/intent";
-import { TransportError } from "@/lib/ui/transport-error";
 import {
   advanceGate,
   attachmentClaims,
@@ -47,9 +48,10 @@ import {
   effectiveCover,
   emptyWizard,
   isVideoPost,
-  sealGate,
   shapeRatio,
   stepIndex,
+  uploadsFailed,
+  uploadsPending,
   wizardLedger,
   wizardReducer,
   type PickedAsset,
@@ -157,8 +159,20 @@ export function ComposeWizard({
   // one can be open at a time and each names its own topic.
   const [help, setHelp] = useState<HelpTopic | null>(null);
   const [busy, setBusy] = useState(false);
-  const [refusal, setRefusal] = useState<string | null>(null);
-  const [transportFailed, setTransportFailed] = useState(false);
+  // A press made while uploads still run is HELD and signs the moment the
+  // last one lands (ComposeSealUploading.md); the commit is inert from the
+  // press either way, and both clocks count from it (SealSigning.md).
+  const [held, setHeld] = useState(false);
+  const signing = busy || held;
+  const swapped = useSlowAnswer(signing);
+  const slow = useWaitedPast(signing, SLOW_NETWORK_MS);
+  // What became of the last press, when it did not leave the seal.
+  const [fault, setFault] = useState<SealFault | null>(null);
+  const [discarding, setDiscarding] = useState(false);
+  // `Discard your draft?`, raised by a tap on the roll under a kept draft.
+  const [askingDraft, setAskingDraft] = useState(false);
+  // `Discard the words?` / `the pictures?` / `the video?` — the body fork's ask.
+  const [bodyDiscard, setBodyDiscard] = useState<"words" | "pictures" | "video" | null>(null);
   const [tagErrors, setTagErrors] = useState<Readonly<Record<number, string>>>({});
   const [referenceErrors, setReferenceErrors] = useState<Readonly<Record<number, string>>>({});
 
@@ -624,10 +638,10 @@ export function ComposeWizard({
 
   const submit = async () => {
     setBusy(true);
-    setRefusal(null);
+    setHeld(false);
+    setFault(null);
     setTagErrors({});
     setReferenceErrors({});
-    setTransportFailed(false);
 
     // The cited nodes' L1 ids, read before anything is staged: the batch
     // is checked against them before its first pre-signature (intent.ts).
@@ -639,7 +653,7 @@ export function ComposeWizard({
     );
     if (graphIds.kind !== "success") {
       setBusy(false);
-      setTransportFailed(true);
+      setFault({ kind: "offline" });
       return;
     }
 
@@ -662,27 +676,15 @@ export function ComposeWizard({
 
     if (prepared.kind === "failed") {
       setBusy(false);
-      setTransportFailed(true);
+      setFault({ kind: "offline" });
       return;
     }
     if (prepared.kind === "refused") {
+      // A refusal at prepare stages nothing, and the seal says it where it
+      // stands — on the refused citation's row, or in the commit's place —
+      // never by walking the reader back a stage (SealFaultRow.md).
       setBusy(false);
-      const partition = partitionFieldErrors(prepared.errors, (error) =>
-        writeRefusalMessage(error.code),
-      );
-      setTagErrors(partition.perTag);
-      setReferenceErrors(partition.perReference);
-      // A refusal that landed on a section is shown on that section's own chip,
-      // so the seal only speaks when nothing else can.
-      setRefusal(
-        partition.general ??
-          (hasFieldErrors(partition)
-            ? "Something in the details was refused."
-            : "The server refused this write."),
-      );
-      if (hasFieldErrors(partition)) {
-        dispatch({ type: "goto", step: "details" });
-      }
+      setFault(sealFaultOf(prepared.errors, state.references));
       return;
     }
 
@@ -748,22 +750,24 @@ export function ComposeWizard({
       return;
     }
     const refused = results.find((result) => result.kind === "refused");
-    setRefusal(
-      refused && refused.kind === "refused"
-        ? firstRefusalMessage(refused.errors, "The post wasn't signed.")
-        : "The post wasn't signed. Nothing was spent.",
+    setFault(
+      refused !== undefined && refused.kind === "refused"
+        ? sealFaultOf(refused.errors, state.references)
+        : { kind: "offline" },
     );
   };
 
   // ---- rendering -----------------------------------------------------------
 
   const gate = advanceGate(state);
-  const seal = sealGate(state);
 
   // The arrow: ONE STAGE BACK, never out of the flow (jakob, round 4). From the
   // first stage there is no stage to step to, so that one lands on the feed.
   const leave = () => {
     const previous = state.step;
+    // A going stage back clears a refusal reading: the seal shows its plain
+    // commit again until the next press (SealSigning.md).
+    setFault(null);
     // Leaving keeps the draft — written here rather than left to the coalescing
     // timer, which the navigation would otherwise outrun.
     keep();
@@ -794,6 +798,66 @@ export function ComposeWizard({
     router.push("/feed");
   };
 
+  // THE BODY FORK ASKS FIRST WHEN THE BODY HOLDS SOMETHING (jakob 2026-10-02,
+  // ComposeBodyDiscard.md): a post's body is words or pictures, never both,
+  // so switching halves with something in the body discards it — after the
+  // ask. An empty body switches silently.
+  const switchBody = (mode: "words" | "media") => {
+    if (mode === state.mode) return;
+    if (mode === "media" && state.words.trim() !== "") setBodyDiscard("words");
+    else if (mode === "words" && state.assets.length > 0) setBodyDiscard(isVideoPost(state) ? "video" : "pictures");
+    else dispatch({ type: "mode", mode });
+  };
+  const discardBody = () => {
+    // Only the half being left goes: the title, the tags and the citations
+    // ride on (`The rest of the draft stays.`).
+    if (bodyDiscard === "words") {
+      dispatch({ type: "words", words: "" });
+      dispatch({ type: "mode", mode: "media" });
+    } else {
+      for (const asset of state.assets) dispatch({ type: "unpick", id: asset.id });
+      dispatch({ type: "mode", mode: "words" });
+    }
+    setBodyDiscard(null);
+  };
+  const discardOffered = () => {
+    setOffered(null);
+    setAskingDraft(false);
+    void drafts.clear();
+  };
+
+  // WHILE IT SIGNS, THE SEAL HOLDS THE READER (jakob 2026-10-01): past the
+  // label swap the header's arrow and X refuse a press and keep their face,
+  // because leaving mid-sign would orphan the outcome (SealSigning.md).
+  const locked = state.step === "seal" && swapped;
+
+  // A HELD PRESS signs the moment the last upload lands, with no second press;
+  // an upload that fails drops it and the commit reads its resting label
+  // again (ComposeSealUploading.md). Nothing signs before the bytes exist.
+  const pendingUploads = uploadsPending(state);
+  const failedUploads = uploadsFailed(state);
+  // A failure drops the press during render, the state an upload's own
+  // outcome leaves behind (React, "adjusting some state when a prop changes").
+  if (held && failedUploads > 0) setHeld(false);
+  // Signing is the side effect: the last upload landing releases the press
+  // into `submit`, which takes the press over as `busy` (it clears `held`).
+  // It starts as a task of its own, as the network answer it waits on is.
+  useEffect(() => {
+    if (!held || pendingUploads > 0 || failedUploads > 0) return;
+    const release = setTimeout(() => void submit(), 0);
+    return () => clearTimeout(release);
+    // `submit` reads the state it is handed this render; the press is the
+    // trigger, and the upload counts are what release it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [held, pendingUploads, failedUploads]);
+
+  const sign = () => {
+    if (signing) return;
+    setFault(null);
+    if (uploadsPending(state) > 0) setHeld(true);
+    else void submit();
+  };
+
   if (!loaded) {
     return (
       <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col">
@@ -807,14 +871,24 @@ export function ComposeWizard({
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col">
       <HeaderBar
         title={HEADINGS[state.step]}
-        onBack={leave}
+        onBack={() => {
+          if (!locked) leave();
+        }}
         backLabel={state.step === "pick" ? "Back to feed" : "Back a step"}
-        onLeave={leaveFlow}
-        // The seal board's `?`, opening the house help dialog with copy-voice's
-        // "Signed actions". One `?` per screen, so only the seal carries one.
+        onLeave={() => {
+          if (!locked) leaveFlow();
+        }}
+        // The seal board's `?` (`HelpDot`), opening the house help dialog with
+        // copy-voice's "How signing works". One `?` per screen, so only the
+        // seal carries one — beside its stage's name, "Last step".
+        stageLabel={state.step === "seal" ? "Last step" : undefined}
         help={
           state.step === "seal" ? (
-            <HelpButton onOpen={() => setHelp(HELP_TOPICS.signedActions)} label="Signed actions" />
+            <HelpDot
+              ariaLabel="How signing works"
+              onOpen={() => setHelp(HELP_TOPICS.howSigningWorks)}
+              testId="header-help"
+            />
           ) : undefined
         }
         // THE HEADER CARRIES ONLY THE WAYS OUT (jakob 2026-09-01). Next lived
@@ -825,9 +899,7 @@ export function ComposeWizard({
         // trailing information — `ComposeSeal` says "Last step", `ComposeCover`
         // says "Video only" (android's `ComposeWizardScreen.kt` trailing note).
         action={
-          state.step === "seal" ? (
-            <span className="text-label-small text-on-surface-variant">Last step</span>
-          ) : state.step === "cover" ? (
+          state.step === "cover" ? (
             <span className="text-label-small text-on-surface-variant">Video only</span>
           ) : undefined
         }
@@ -867,10 +939,7 @@ export function ComposeWizard({
             }));
             setOffered(null);
           }}
-          onDiscard={() => {
-            setOffered(null);
-            void drafts.clear();
-          }}
+          onDiscard={discardOffered}
         />
       )}
 
@@ -889,12 +958,6 @@ export function ComposeWizard({
         </div>
       )}
 
-      {transportFailed && (
-        <div className="px-6">
-          <TransportError testId="wizard-transport-error" />
-        </div>
-      )}
-
       {state.step === "pick" && (
         // CW-42 (ComposeDraft.jsx): while the draft offer shows, the pick
         // step underneath is present, clearly not the subject, and the
@@ -903,6 +966,7 @@ export function ComposeWizard({
         // `draftOffer != null`. `inert` takes pointer, keyboard and AT
         // reach away together; the opacity alone would still let a stray
         // tab or click land on a grid the draft's own pair should decide.
+        <div className="relative flex flex-1 flex-col">
         <div
           data-testid="wizard-pick-region"
           className="flex flex-1 flex-col"
@@ -922,7 +986,7 @@ export function ComposeWizard({
             coverSrc={coverPreview}
             clipFace={clipFace}
             onWords={(words) => dispatch({ type: "words", words })}
-            onMode={(mode) => dispatch({ type: "mode", mode })}
+            onMode={switchBody}
             onPick={(files) => void takeFiles(files)}
             onUnpick={(id) => dispatch({ type: "unpick", id })}
             onDismissRefusal={(id) =>
@@ -931,6 +995,20 @@ export function ComposeWizard({
             onManage={() => setManaging(true)}
             onNext={() => dispatch({ type: "advance" })}
           />
+        </div>
+        {/* THE ROLL'S SHIELD (ComposeDraftDiscard, jakob 2026-09-15): a
+            blocked surface owes an answer, so a tap on the dimmed pictures
+            raises the discard ask instead of finding nothing, and focus
+            meets one control named for what the reader has to do first. */}
+        {offered !== null && (
+          <button
+            type="button"
+            data-testid="wizard-draft-shield"
+            aria-label="Answer your draft before starting a new post"
+            onClick={() => setAskingDraft(true)}
+            className="cg-focus absolute inset-0 cursor-pointer border-0 bg-transparent p-0"
+          />
+        )}
         </div>
       )}
 
@@ -999,10 +1077,12 @@ export function ComposeWizard({
         <SealStep
           state={state}
           sheet={sheet}
-          blocked={seal.ok ? null : seal.reason}
-          busy={busy}
+          signing={signing}
+          swapped={swapped}
+          slow={slow}
           keyOnDevice={keyOnDevice}
-          refusal={refusal}
+          fault={fault}
+          discarding={discarding}
           stagedPDirected={stagedPDirected}
           confirmingUnreachable={confirmingUnreachable}
           onSheet={(next) => {
@@ -1012,11 +1092,23 @@ export function ComposeWizard({
             setConfirmingUnreachable(false);
             setSheet(next);
           }}
-          onLicense={(license) => dispatch({ type: "license", license })}
-          // The cited sheet's removals and re-pairs land in the SAME staged
-          // set the details step owns — one reducer action, not a second copy
-          // of the citations kept by the seal.
-          onReferences={(references) => dispatch({ type: "references", references })}
+          // CHANGING A FACT clears a refusal reading (SealSigning.md): the seal
+          // shows its plain commit again until the next press.
+          onLicense={(license) => {
+            setFault(null);
+            dispatch({ type: "license", license });
+          }}
+          // The sheets' removals and re-pairs land in the SAME staged sets the
+          // details step owns — one reducer action, not a second copy kept by
+          // the seal.
+          onReferences={(references) => {
+            setFault(null);
+            dispatch({ type: "references", references });
+          }}
+          onTags={(tags) => {
+            setFault(null);
+            dispatch({ type: "tags", tags });
+          }}
           onStagedPDirected={setStagedPDirected}
           onSetStance={() => {
             // EXACTLY 0.00 ASKS FIRST (ComposePad.md): the post's own path
@@ -1028,31 +1120,71 @@ export function ComposeWizard({
               setConfirmingUnreachable(true);
               return;
             }
+            setFault(null);
             dispatch({ type: "pDirected", pDirected: picked });
             setSheet("none");
           }}
           onKeepAdjusting={() => setConfirmingUnreachable(false)}
           onSetAnyway={() => {
             setConfirmingUnreachable(false);
+            setFault(null);
             dispatch({ type: "pDirected", pDirected: 0 });
             setSheet("none");
           }}
           onStanceHelp={() => setHelp(HELP_TOPICS.yourBackingOnYourPost)}
-          onSensitive={(sensitive) => dispatch({ type: "sensitive", sensitive })}
-          onSensitiveReason={(sensitiveReason) =>
-            dispatch({ type: "sensitiveReason", sensitiveReason })
-          }
+          onSensitive={(next) => {
+            setFault(null);
+            dispatch({ type: "sensitive", sensitive: next.sensitive });
+            dispatch({ type: "sensitiveReason", sensitiveReason: next.sensitiveReason });
+          }}
           onHelp={() => setHelp(HELP_TOPICS.markingAsSensitive)}
           onLicenseHelp={() => setHelp(HELP_TOPICS.license)}
           onKeyHelp={() => setHelp(HELP_TOPICS.yourKey)}
-          onSign={() => void submit()}
-          onBack={() => dispatch({ type: "back" })}
+          onWriteRuleHelp={() => setHelp(HELP_TOPICS.whySigningWaits)}
+          onSign={sign}
+          // The same signing, asked again: Retry is the only re-send, and
+          // past 200ms its slot reads the commit's own in-flight label.
+          onRetry={() => {
+            setFault(null);
+            void submit();
+          }}
+          // The failed upload's Retry re-runs the gate; nothing signs until
+          // the commit is pressed again.
+          onRetryUploads={() => {
+            for (const asset of state.assets) {
+              if (asset.upload.kind === "failed") retry(asset.id);
+            }
+          }}
+          onBack={() => {
+            setFault(null);
+            dispatch({ type: "back" });
+          }}
           onRestoreKey={() => router.push("/restore")}
-          // The key-absent panel's keep-draft LEAVES the wizard (graph:
-          // ComposeKeyAbsent's keep-draft edge is a terminal `back`), not a
-          // step back to the previous stage — `leaveFlow` is the same exit
-          // the header's X already uses.
+          // The key-absent panel's and the write rule's keep-draft LEAVE the
+          // wizard (graph: a terminal `back`), not a step back — `leaveFlow`
+          // is the same exit the header's X already uses.
           onKeepDraft={leaveFlow}
+          onRemoveRefused={(targetId) => {
+            // The citation leaves the staged set, the count and the total
+            // fall by one, and the seal is ready to sign again.
+            setFault(null);
+            dispatch({
+              type: "references",
+              references: state.references.filter((reference) => reference.targetId !== targetId),
+            });
+          }}
+          // The report page Settings opens is not built on the web yet
+          // (HAND TO FABLE): the word stands where the board draws it.
+          onReport={() => {}}
+          onDiscard={() => setDiscarding(true)}
+          onDiscardConfirmed={() => {
+            // The draft goes, with its pictures, tags and citations; nothing
+            // was ever signed. The flow is left for where composing began.
+            setDiscarding(false);
+            landed.current = true;
+            void drafts.clear().then(() => router.push("/feed"));
+          }}
+          onKeepDiscarding={() => setDiscarding(false)}
         />
       )}
 
@@ -1108,10 +1240,60 @@ export function ComposeWizard({
         testId="wizard-describe-sheet"
       />
 
+      {askingDraft && (
+        // ComposeDraftDiscard: the safe answer is the filled one, both words
+        // take their object, no error colour, and the scrim is Keep's.
+        <DialogSurface
+          title="Discard your draft?"
+          body={[
+            "Picking pictures starts a new post, and this draft is what stands in the way. Discarding is the only thing that loses it.",
+          ]}
+          onDismiss={() => setAskingDraft(false)}
+          testId="wizard-draft-discard-ask"
+          actions={
+            <>
+              <PillButton testId="wizard-draft-discard-it" variant="text" onClick={discardOffered}>
+                Discard it
+              </PillButton>
+              <PillButton testId="wizard-draft-keep" onClick={() => setAskingDraft(false)}>
+                Keep the draft
+              </PillButton>
+            </>
+          }
+        />
+      )}
+
+      {bodyDiscard !== null && (
+        // ComposeBodyDiscard: one dialog for both directions, the body naming
+        // only what goes. Keep is filled; Discard quiet; no error colour.
+        <DialogSurface
+          title={
+            bodyDiscard === "words"
+              ? "Discard the words?"
+              : bodyDiscard === "video"
+                ? "Discard the video?"
+                : "Discard the pictures?"
+          }
+          body={["The rest of the draft stays."]}
+          onDismiss={() => setBodyDiscard(null)}
+          testId="wizard-body-discard"
+          actions={
+            <>
+              <PillButton testId="wizard-body-discard-it" variant="text" onClick={discardBody}>
+                Discard
+              </PillButton>
+              <PillButton testId="wizard-body-keep" onClick={() => setBodyDiscard(null)}>
+                {bodyDiscard === "video" ? "Keep it" : "Keep them"}
+              </PillButton>
+            </>
+          }
+        />
+      )}
+
       <HelpDialog
         open={help !== null}
         onClose={() => setHelp(null)}
-        topic={help ?? HELP_TOPICS.signedActions}
+        topic={help ?? HELP_TOPICS.howSigningWorks}
         testId="wizard-help"
       />
     </main>
@@ -1136,7 +1318,10 @@ function DraftCard({
   return (
     <div
       data-testid="wizard-draft-card"
-      className="mx-6 my-2 flex flex-none flex-col gap-2 rounded-medium bg-surface-container-highest p-4"
+      // A `Card` (gap 12, padding 16) wearing the brand's task ring, so the
+      // reason the screen is held is legible before a word is read
+      // (ComposeDraft.md: "the draft card wears the brand ring").
+      className="cg-task-ring mx-6 my-2 flex flex-none flex-col gap-3 rounded-medium p-4 text-on-surface"
     >
       <h2 className="m-0 text-title-medium">Your draft is here</h2>
       <div className="flex items-center gap-2">

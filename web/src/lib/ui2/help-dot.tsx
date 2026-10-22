@@ -3,8 +3,8 @@
 // The "?" affordance (design/components/core/HelpDot.jsx; readme §13):
 // captions stay to one short line, and the full explanation lives behind a
 // small "?" — at most one per screen, or one per sheet where a sheet is its
-// own screen while it is open. 32px drawn, 48px tapped via `cg-hit`, so a
-// dense header or sheet title never loses the touch target to fit the ring.
+// own screen while it is open. The button IS the 48px target and the ring
+// is drawn 32px inside it, as the master lays it out (`HelpDot.jsx`).
 //
 // `inverse` is the board's word for the same dot standing on a TONAL PANEL
 // instead of the page: the ring takes the panel's own `currentColor` instead
@@ -33,13 +33,20 @@ export function HelpDot({
       {...testAttributes(node, testId)}
       aria-label={ariaLabel}
       onClick={onOpen}
-      className={`cg-state cg-focus cg-hit relative flex size-8 flex-none items-center justify-center rounded-full text-label-large ${
-        variant === "inverse"
-          ? "border border-current text-inherit"
-          : "border border-outline-variant text-primary"
+      className={`cg-state cg-focus grid size-12 flex-none cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 ${
+        variant === "inverse" ? "text-inherit" : ""
       }`}
     >
-      ?
+      <span
+        aria-hidden="true"
+        className={`grid size-8 place-items-center rounded-full font-sans text-label-large ${
+          variant === "inverse"
+            ? "border border-current"
+            : "border border-outline-variant text-primary"
+        }`}
+      >
+        ?
+      </span>
     </button>
   );
 }

@@ -409,10 +409,12 @@ export function ReplySealStep({
           explained one way (design/backlog.md item 42). */}
       <SensitiveSheet
         open={sheet === "sensitive"}
-        marked={state.sensitive}
         reason={state.sensitiveReason}
-        onMarked={onSensitive}
-        onReason={onSensitiveReason}
+        onDone={(next) => {
+          onSensitive(next.sensitive);
+          onSensitiveReason(next.sensitiveReason);
+          onSheet("none");
+        }}
         onClose={() => onSheet("none")}
         onHelp={onSensitiveHelp}
         testIdPrefix="reply"

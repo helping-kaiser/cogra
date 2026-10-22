@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { SENSITIVE_REASON_MAX_CHARS } from "@/lib/compose/wizard";
@@ -7,10 +7,8 @@ import { SensitiveSheet } from "./sensitive-sheet";
 function open(overrides: Partial<Parameters<typeof SensitiveSheet>[0]> = {}) {
   const props = {
     open: true,
-    marked: true,
     reason: "",
-    onMarked: vi.fn(),
-    onReason: vi.fn(),
+    onDone: vi.fn(),
     onClose: vi.fn(),
     onHelp: vi.fn(),
     testIdPrefix: "test",
@@ -45,7 +43,8 @@ describe("SensitiveSheet", () => {
   // too — a reason the contract would refuse still reads as dead until the
   // mark is on.
   it("greys the reason's box out while the mark is off", () => {
-    open({ marked: false });
+    open();
+    fireEvent.click(screen.getByTestId("test-sensitive-switch"));
     expect(screen.getByTestId("test-sensitive-reason")).toBeDisabled();
     expect(screen.getByTestId("growing-box").className).toContain("opacity-[var(--state-disabled)]");
   });
@@ -81,7 +80,8 @@ describe("SensitiveSheet", () => {
   // An over-length leftover from a mark switched back off is never sent
   // (`sensitiveInput`), so it earns no error and never blocks Done.
   it("ignores an over-cap reason while the mark is off", () => {
-    open({ marked: false, reason: "x".repeat(SENSITIVE_REASON_MAX_CHARS + 1) });
+    open({ reason: "x".repeat(SENSITIVE_REASON_MAX_CHARS + 1) });
+    fireEvent.click(screen.getByTestId("test-sensitive-switch"));
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.getByTestId("test-sensitive-done")).toBeEnabled();
   });
@@ -102,5 +102,31 @@ describe("SensitiveSheet", () => {
     expect(titleRow).not.toBeNull();
     expect(titleRow).toContainElement(screen.getByTestId("test-sensitive-help"));
     expect(titleRow).toContainElement(screen.getByTestId("test-sensitive-switch"));
+  });
+
+  // `Mark` opens it with the switch ON (jakob 2026-10-01): the tap was the intent.
+  it("opens marked, the switch on", () => {
+    open();
+    expect(screen.getByTestId("test-sensitive-switch")).toHaveAttribute("aria-checked", "true");
+  });
+
+  // The sheet law (readme §4): the switch and the reason STAGE, Done commits.
+  it("commits the staged mark and reason on Done, and nothing before it", () => {
+    const { onDone } = open();
+    fireEvent.change(screen.getByTestId("test-sensitive-reason"), {
+      target: { value: "One rubbing includes a dead seabird." },
+    });
+    expect(onDone).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId("test-sensitive-done"));
+    expect(onDone).toHaveBeenCalledWith({
+      sensitive: true,
+      sensitiveReason: "One rubbing includes a dead seabird.",
+    });
+  });
+
+  // The "?" is the board's `Sensitive` (ComposeSensitive.jsx).
+  it("names its help Sensitive", () => {
+    open();
+    expect(screen.getByRole("button", { name: "Sensitive" })).toBeInTheDocument();
   });
 });

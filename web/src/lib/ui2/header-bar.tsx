@@ -33,11 +33,14 @@ export function HeaderBar({
   onLeave,
   leaveLabel = "Leave — your draft is kept",
   action,
+  stageLabel,
   help,
   testId,
   node,
 }: {
   title: string;
+  /** The stage's name ("Last step"), set before the help slot as the master orders them. */
+  stageLabel?: string;
   // A screen with no way back — the recovery-code trap — simply passes none,
   // and the slot collapses rather than rendering a dead control.
   onBack?: () => void;
@@ -54,39 +57,65 @@ export function HeaderBar({
    */
   node?: DataNode;
 }) {
+  // THE MASTER'S TWO GROUPS (`PageHeader.jsx`, `WizardHeader.jsx`): the arrow
+  // and the title 8px apart on the left, the ways out and the passive
+  // trailing pair 8px apart on the right, 12px between the groups.
   return (
     <div
       {...testAttributes(node, testId)}
-      className="flex min-h-12 flex-none items-center gap-1 px-3"
+      className="flex min-h-12 flex-none items-center justify-between gap-3 px-3"
     >
-      {onBack && (
-        <button
-          type="button"
-          {...testAttributes(part(node, "back"), "header-back")}
-          aria-label={backLabel}
-          onClick={onBack}
-          className="cg-state cg-focus flex size-12 flex-none items-center justify-center rounded-full text-on-surface-variant"
+      <div className="flex min-w-0 items-center gap-2">
+        {onBack && (
+          <button
+            type="button"
+            {...testAttributes(part(node, "back"), "header-back")}
+            aria-label={backLabel}
+            onClick={onBack}
+            className="cg-state cg-focus flex size-12 flex-none items-center justify-center rounded-full text-on-surface-variant"
+          >
+            <Icon name="arrow_back" />
+          </button>
+        )}
+        <h1
+          className="m-0 min-w-0 truncate whitespace-nowrap text-title-large"
+          {...testAttributes(part(node, "title"))}
         >
-          <Icon name="arrow_back" />
-        </button>
+          {title}
+        </h1>
+      </div>
+      {(onLeave || stageLabel || help || action) && (
+        <span className="flex flex-none items-center gap-2">
+          {onLeave && (
+            <button
+              type="button"
+              {...testAttributes(part(node, "leave"), "header-leave")}
+              aria-label={leaveLabel}
+              onClick={onLeave}
+              className="cg-state cg-focus flex size-12 flex-none items-center justify-center rounded-full text-on-surface-variant"
+            >
+              <Icon name="close" />
+            </button>
+          )}
+          {/* The stage's name, then the screen's one "?" — `WizardHeader`'s
+              own pair, in that order. The label takes the role's size and
+              leading only: the master sets no weight, so it is the ground's. */}
+          {stageLabel ? (
+            <span className="flex items-center gap-2">
+              <span
+                data-testid="header-stage"
+                className="whitespace-nowrap text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] text-on-surface-variant"
+              >
+                {stageLabel}
+              </span>
+              {help}
+            </span>
+          ) : (
+            help
+          )}
+          {action}
+        </span>
       )}
-      <h1 className="m-0 min-w-0 truncate text-title-large" {...testAttributes(part(node, "title"))}>
-        {title}
-      </h1>
-      <span className="flex-1" />
-      {onLeave && (
-        <button
-          type="button"
-          {...testAttributes(part(node, "leave"), "header-leave")}
-          aria-label={leaveLabel}
-          onClick={onLeave}
-          className="cg-state cg-focus flex size-12 flex-none items-center justify-center rounded-full text-on-surface-variant"
-        >
-          <Icon name="close" />
-        </button>
-      )}
-      {help}
-      {action}
     </div>
   );
 }

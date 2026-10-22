@@ -10,52 +10,23 @@
 // collection staged by an author is managed in ONE place rather than in as
 // many places as it appears. Rows, then the word that closes the sheet.
 //
+// THE ROWS ARE `StagedReference`, the composer's own: the details stage draws
+// a staged citation with the kind's mark, the sub-line, the pair, the × and
+// the name that opens the pair — in a sheet of its own (ComposeCitations.md),
+// never sliders unfolding in the row. Each control names its own citation.
+//
 // IT ADDS NOTHING. No "+ Cite something" here — `PickedSheet` manages a pick
 // and never offers another one, and a door out of a seal that grew an add-row
-// would hand the seal a stage's job. Citations are staged where they are
-// staged: the wizard's details step, the reply's own card.
-//
-// EACH CONTROL NAMES ITS OWN CITATION — "Remove <name>", "<name> — set how it
-// relates" — or a block of three is a block of identically-named buttons
-// (`StagedReference.jsx:31-34`).
-//
-// WHAT THE ROW DOES NOT DRAW YET: the master's row opens with `NodeMark`, the
-// kind's mark. Neither platform carries a NodeMark — it belongs to the
-// READING side's `ReferenceRow` family, which this lane is held out of — so
-// the row starts at the name and the mark is parked, not invented.
+// would hand the seal a stage's job. Every change applies the moment it is
+// made; the last × closes the sheet back to the seal.
 
 import { useState } from "react";
 
-import type { ReferenceDraft, ReferenceTargetView } from "@/lib/references/draft";
-import { bundleReadout, EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
-import { formatStancePair } from "@/lib/ui/stance-format";
-import { ReferenceParamSliders } from "@/lib/ui/reference-param-sliders";
+import type { ReferenceDraft } from "@/lib/references/draft";
 import { BottomSheet } from "../bottom-sheet";
 import { PillButton } from "../pill-button";
-
-const CLOSE_GLYPH =
-  "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z";
-
-/**
- * The sub-line: what class of thing is cited, as the master writes it — a
- * post reads "Post" and a person reads "Person", because a cite stages a post
- * and a mention stages a person and the block cannot tell them apart
- * (`_shared.jsx:894-896`). A comment is the class the master does not draw;
- * it takes its own name rather than being folded into one of the two. A
- * target this instance carries no display row for has no class to name.
- */
-function subLine(target: ReferenceTargetView): string | null {
-  switch (target.kind) {
-    case "Post":
-      return "Post";
-    case "Comment":
-      return "Comment";
-    case "User":
-      return "Person";
-    default:
-      return null;
-  }
-}
+import { CITATION_FAMILY, PairSheet } from "./pair-sheet";
+import { StagedReference } from "./staged-reference";
 
 export function CitedSheet({
   open,
@@ -74,101 +45,52 @@ export function CitedSheet({
   onRepair: (targetId: string, next: { relevance: number; support: number }) => void;
   testId?: string;
 }) {
-  // Which row has its pair open. Local, exactly as the details stage's own
-  // section holds it: nothing about which editor is showing is part of what
-  // gets signed.
+  // Which row has its pair open. Local: nothing about which editor is showing
+  // is part of what gets signed.
   const [repairing, setRepairing] = useState<string | null>(null);
+  const repaired = items.find((item) => item.targetId === repairing);
 
   return (
-    <BottomSheet
-      open={open}
-      onClose={onClose}
-      title={`Cited · ${items.length}`}
-      testId={testId}
-    >
-      <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
-        {items.map((item, index) => (
-          <li
-            key={item.targetId}
-            data-testid={`${testId}-row-${index}`}
-            className="flex flex-col gap-1 rounded-small bg-surface-container-highest px-3 py-2"
-          >
-            <div className="flex min-h-12 items-center gap-2">
-              <button
-                type="button"
-                aria-label={`${item.target.label} — set how it relates`}
-                aria-expanded={repairing === item.targetId}
-                data-testid={`${testId}-repair-${index}`}
-                onClick={() =>
-                  setRepairing(repairing === item.targetId ? null : item.targetId)
-                }
-                className="cg-state cg-focus flex min-w-0 flex-1 cursor-pointer flex-col items-start border-0 bg-transparent p-0 text-left"
-              >
-                <span className="w-full truncate text-body-medium">{item.target.label}</span>
-                {subLine(item.target) !== null && (
-                  <span className="text-body-small text-on-surface-variant">
-                    {subLine(item.target)}
-                  </span>
-                )}
-              </button>
-              <StanceReadout relevance={item.relevance} support={item.support} />
-              <button
-                type="button"
-                aria-label={`Remove ${item.target.label}`}
-                data-testid={`${testId}-remove-${index}`}
-                onClick={() => {
-                  if (repairing === item.targetId) setRepairing(null);
-                  onRemove(item.targetId);
-                }}
-                className="cg-state cg-focus flex h-8 w-8 flex-none cursor-pointer items-center justify-center rounded-full text-on-surface-variant"
-              >
-                <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" aria-hidden="true">
-                  <path d={CLOSE_GLYPH} />
-                </svg>
-              </button>
-            </div>
-            {repairing === item.targetId && (
-              <ReferenceParamSliders
+    <>
+      <BottomSheet open={open} onClose={onClose} title={`Cited · ${items.length}`} testId={testId}>
+        <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+          {items.map((item, index) => (
+            <li key={item.targetId} data-testid={`${testId}-row-${index}`}>
+              <StagedReference
+                target={item.target}
                 relevance={item.relevance}
                 support={item.support}
-                onChange={(next) => onRepair(item.targetId, next)}
-                forLabel={item.target.label}
-                testIdPrefix={`${testId}-${index}`}
+                onEdit={() => setRepairing(item.targetId)}
+                onRemove={() => {
+                  onRemove(item.targetId);
+                  // The last × closes the sheet to the seal it opened from.
+                  if (items.length === 1) onClose();
+                }}
+                testId={`${testId}-${index}`}
               />
-            )}
-          </li>
-        ))}
-      </ul>
-      <div className="flex justify-end pt-2">
-        <PillButton testId={`${testId}-done`} variant="text" onClick={onClose}>
-          Done
-        </PillButton>
-      </div>
-    </BottomSheet>
-  );
-}
-
-/**
- * The pair the citation signs, as every staged citation wears it
- * (`StagedReference.jsx`): the face carries the feel, the digits — the geek
- * reading, in a `cg-exact` span — carry the fact, and a screen-reader-only
- * twin says the pair so nothing spoken moves with the geek setting. A
- * citation is not a stance, so the anchor's WORD is withheld (K5.3): the
- * twin speaks the exact pair alone.
- */
-function StanceReadout({ relevance, support }: { relevance: number; support: number }) {
-  const pair = { pDirected: relevance, pInterest: support };
-  // `StagedReference`'s face: a pick being staged, its value's own (seam 243).
-  const anchor = bundleReadout(pair, EMPTY_PICK_LABEL);
-  return (
-    <span className="inline-flex flex-none items-baseline gap-1">
-      <span aria-hidden="true" className="text-body-medium">
-        {anchor.emoji}
-      </span>
-      <span aria-hidden="true" className="cg-exact text-body-small text-on-surface-variant">
-        {formatStancePair(pair)}
-      </span>
-      <span className="sr-only">{formatStancePair(pair)}</span>
-    </span>
+            </li>
+          ))}
+        </ul>
+        <div className="-mx-2 flex justify-end pt-2">
+          <PillButton testId={`${testId}-done`} variant="text" onClick={onClose}>
+            Done
+          </PillButton>
+        </div>
+      </BottomSheet>
+      {repaired !== undefined && (
+        <PairSheet
+          open={repairing !== null}
+          title={repaired.target.label}
+          value={{ pDirected: repaired.relevance, pInterest: repaired.support }}
+          family={CITATION_FAMILY}
+          onDone={(pair) => {
+            onRepair(repaired.targetId, { relevance: pair.pDirected, support: pair.pInterest });
+            setRepairing(null);
+          }}
+          onDiscard={() => setRepairing(null)}
+          testId={`${testId}-pair`}
+        />
+      )}
+    </>
   );
 }
