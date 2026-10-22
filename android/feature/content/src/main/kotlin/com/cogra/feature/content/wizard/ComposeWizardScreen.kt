@@ -43,7 +43,6 @@ import com.cogra.domain.LicenseChoice
 import com.cogra.domain.compose.DraftShape
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MAX_ALT_TEXT_CHARS
-import com.cogra.domain.media.isAltTextTooLong
 import com.cogra.feature.content.CitedSheet
 import com.cogra.feature.content.ParkedPadWash
 import com.cogra.feature.content.R
@@ -385,7 +384,8 @@ internal fun ComposeWizardScreen(
                     }
 
                     WizardStep.Cover -> {
-                        WizardBody(scrollable = true, bottom = 0.dp) {
+                        // `ComposeCover`: the column stands `16px 24px` under the header.
+                        WizardBody(scrollable = true, top = Space.x4, bottom = 0.dp) {
                             CoverStepBody(
                                 state = state,
                                 onPickFrame = onPickCoverFrame,
@@ -541,11 +541,7 @@ internal fun ComposeWizardScreen(
                     onHelp = { onOpenHelp(HelpTopic.DescribingPictures) },
                     video = describing.isVideo,
                     cap = MAX_ALT_TEXT_CHARS,
-                    error = if (isAltTextTooLong(describing.altText)) {
-                        stringResource(R.string.content_error_alt_text_too_long, MAX_ALT_TEXT_CHARS)
-                    } else {
-                        null
-                    },
+                    tooLongMessage = describeTooLong(describing.isVideo),
                     testTag = "wizard_describe_sheet",
                 )
 

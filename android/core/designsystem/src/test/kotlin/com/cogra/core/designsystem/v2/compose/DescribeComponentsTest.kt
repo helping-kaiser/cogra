@@ -1,14 +1,20 @@
 package com.cogra.core.designsystem.v2.compose
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -97,13 +103,74 @@ class DescribeComponentsTest {
                     value = "x".repeat(1001),
                     onValueChange = {},
                     onDone = {},
-                    error = "Too long — at most 1000 characters.",
+                    cap = 1000,
+                    tooLongMessage = TOO_LONG,
                     testTag = "sheet",
                 )
             }
         }
 
         compose.onNodeWithTag("sheet_done").assertExists().assertIsNotEnabled()
+        // copy-voice's own sentence takes the hint's place.
+        compose.onNodeWithText(TOO_LONG).assertExists()
+    }
+
+    // TYPING STAGES; DONE COMMITS (ComposeDescribe.md): nothing leaves the
+    // sheet while the author types, and Done hands out what was typed.
+    @Test
+    fun typingStagesAndOnlyDoneHandsTheWordsOut() {
+        val handed = mutableListOf<String>()
+        var done = 0
+        compose.setContent {
+            Cogra2PreviewTheme {
+                DescribeSheet(
+                    item = MediaItem(null, 1f),
+                    value = "Crates",
+                    onValueChange = { handed += it },
+                    onDone = { done++ },
+                    cap = 1000,
+                    tooLongMessage = TOO_LONG,
+                    testTag = "sheet",
+                )
+            }
+        }
+
+        compose.onNodeWithTag("sheet_field").performTextInput(" of strawberries")
+        assertThat(handed).isEmpty()
+
+        compose.onNodeWithTag("sheet_done").performClick()
+        assertThat(handed).containsExactly("Crates of strawberries")
+        assertThat(done).isEqualTo(1)
+    }
+
+    // A sheet torn down without Done (the scrim, a swipe, Back) handed nothing
+    // out — and a fresh sheet starts from the description as it stands.
+    @Test
+    fun aDismissedSheetDropsWhatWasTyped() {
+        val handed = mutableListOf<String>()
+        var open by mutableStateOf(true)
+        compose.setContent {
+            Cogra2PreviewTheme {
+                if (open) {
+                    DescribeSheet(
+                        item = MediaItem(null, 1f),
+                        value = "Crates",
+                        onValueChange = { handed += it },
+                        onDone = {},
+                        testTag = "sheet",
+                    )
+                }
+            }
+        }
+
+        compose.onNodeWithTag("sheet_field").performTextInput(" of strawberries")
+        open = false
+        compose.waitForIdle()
+        open = true
+        compose.waitForIdle()
+
+        assertThat(handed).isEmpty()
+        compose.onNodeWithText("Crates", substring = false).assertExists()
     }
 
     @Test
@@ -173,5 +240,9 @@ class DescribeComponentsTest {
 
         compose.onNodeWithTag("counter").assertExists()
         compose.onNodeWithText("Read aloud to people who can't see it.").assertExists()
+    }
+
+    private companion object {
+        const val TOO_LONG = "A picture's description is at most 1,000 characters."
     }
 }

@@ -53,6 +53,7 @@ import com.cogra.feature.content.BackingEdit
 import com.cogra.feature.content.BackingPad
 import com.cogra.feature.content.ParkedPadWash
 import com.cogra.feature.content.R
+import com.cogra.feature.content.wizard.describeTooLong
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceEntry
 import com.cogra.feature.content.TopicEntry
@@ -621,6 +622,7 @@ private fun PostEditSheets(state: PostEditUiState, actions: PostEditActions, onH
                 onDone = actions.onCloseSheet,
                 video = describing.isVideo,
                 cap = MAX_ALT_TEXT_CHARS,
+                tooLongMessage = describeTooLong(describing.isVideo),
                 testTag = "post_edit_describe_sheet",
             )
             state.pickedOpen -> PickedSheet(

@@ -43,9 +43,9 @@ import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.media.MAX_ALT_TEXT_CHARS
-import com.cogra.domain.media.isAltTextTooLong
 import com.cogra.feature.content.CitedSheet
 import com.cogra.feature.content.R
+import com.cogra.feature.content.wizard.describeTooLong
 import com.cogra.feature.content.ReferenceEntry
 import com.cogra.feature.content.TopicEntry
 import com.cogra.feature.content.wizard.LicenseSheet
@@ -387,11 +387,7 @@ internal fun ReplyWizardScreen(
                     onHelp = { onOpenHelp(HelpTopic.DescribingPictures) },
                     video = describing.isVideo,
                     cap = MAX_ALT_TEXT_CHARS,
-                    error = if (isAltTextTooLong(describing.altText)) {
-                        stringResource(R.string.content_error_alt_text_too_long, MAX_ALT_TEXT_CHARS)
-                    } else {
-                        null
-                    },
+                    tooLongMessage = describeTooLong(describing.isVideo),
                     testTag = "reply_describe_sheet",
                 )
 
