@@ -10,8 +10,10 @@ package com.cogra.feature.content
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -78,21 +80,30 @@ internal fun ContentCardHeader(
                 )
             }
         }
+        // The chip and the right-hand group keep `--space-2` between them; the
+        // age and the ⋮ keep `--space-3` (`PostCard.jsx:327-329`).
         Text(
             text = compactAge(at, now),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
-                .padding(start = Space.x3)
+                .padding(start = Space.x2)
                 .testTag(node?.div("timestamp")?.tag ?: "${testTagPrefix}_age"),
         )
-        CograOverflowMenu(
-            items = menu,
-            contentDescription = menuContentDescription,
-            testTag = node?.div("menu")?.tag ?: "${testTagPrefix}_menu",
-            stacked = stacked,
-            sheetNode = menuSheetNode,
-        )
+        if (menu.isNotEmpty()) {
+            Spacer(Modifier.width(Space.x3))
+            // THE HEADER PLACEMENT: the ⋮'s 48dp box pulled back by 12dp,
+            // so the row keeps its drawn 24dp line and the dot sits 4dp
+            // from the card's edge (`OverflowMenu.jsx`).
+            CograOverflowMenu(
+                items = menu,
+                contentDescription = menuContentDescription,
+                testTag = node?.div("menu")?.tag ?: "${testTagPrefix}_menu",
+                stacked = stacked,
+                sheetNode = menuSheetNode,
+                pulled = true,
+            )
+        }
     }
 }
 

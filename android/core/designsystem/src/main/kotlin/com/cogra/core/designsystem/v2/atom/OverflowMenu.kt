@@ -2,10 +2,13 @@ package com.cogra.core.designsystem.v2.atom
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.BottomSheetDefaults
@@ -21,9 +24,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.dataNode
@@ -75,20 +83,50 @@ fun CograOverflowMenu(
     modifier: Modifier = Modifier,
     stacked: Boolean = false,
     sheetNode: DataNode? = null,
+    /**
+     * THE HEADER PLACEMENT (`OverflowMenu.jsx` `placement="header"`): a 48dp
+     * box pulled back by 12dp on every side, so it keeps the 24dp line it
+     * rides on — a card's header row, a page header's action. False keeps
+     * the plain 48dp icon button the rows of controls carry.
+     */
+    pulled: Boolean = false,
 ) {
     if (items.isEmpty()) return
     var open by remember { mutableStateOf(false) }
     CoversSurface(open = open, kind = CoverKind.Suspend)
 
-    IconButton(
-        onClick = { open = true },
-        modifier = modifier.testTag(testTag),
-    ) {
-        Icon(
-            Icons.Filled.MoreVert,
-            contentDescription = contentDescription,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+    if (pulled) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = modifier
+                .testTag(testTag)
+                .hitTarget(
+                    interactive = Modifier
+                        .clip(CircleShape)
+                        .clickable(role = Role.Button, onClick = { open = true })
+                        .semantics { this.contentDescription = contentDescription },
+                    drawnWidth = PULLED_INK,
+                    drawnHeight = PULLED_INK,
+                )
+                .size(PULLED_INK),
+        ) {
+            Icon(
+                Icons.Filled.MoreVert,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    } else {
+        IconButton(
+            onClick = { open = true },
+            modifier = modifier.testTag(testTag),
+        ) {
+            Icon(
+                Icons.Filled.MoreVert,
+                contentDescription = contentDescription,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 
     if (open) {
@@ -139,3 +177,6 @@ fun CograOverflowMenu(
         }
     }
 }
+
+/** The header placement's ink: the 24dp line the pulled 48dp box keeps (`OverflowMenu.jsx`). */
+private val PULLED_INK: Dp = 24.dp

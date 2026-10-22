@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cogra.core.designsystem.v2.atom.hitTarget
 import com.cogra.core.designsystem.v2.media.CograAvatar
 
 /**
@@ -55,8 +56,17 @@ fun MonogramAvatar(
 
 /**
  * A compact actor reference — monogram, display name, handle — that
- * opens the actor's profile when [onOpen] is set. The 48dp minimum
- * touch target (design.md §4) rides the tappable variant.
+ * opens the actor's profile when [onOpen] is set.
+ *
+ * **It draws 24dp tall and answers at 48** (`ActorChip.jsx` minHeight 24;
+ * readme §10, *A card's header answers at 48dp*): the tappable variant's
+ * target is an invisible margin centred on the chip ([hitTarget]), so the
+ * header row it leads keeps the board's geometry.
+ *
+ * **The row never wraps and never crowds** (`ActorChip.jsx`, jakob
+ * 2026-09-23): a name too long for the room ellipsizes first, and the handle
+ * — the identity — gives way only once the name is spent. The handle is
+ * measured ahead of the weighted name for exactly that order.
  */
 @Composable
 fun ActorChip(
@@ -85,16 +95,28 @@ fun ActorChip(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
-            .then(if (onOpen != null) Modifier.heightIn(min = 48.dp).clickable(onClick = onOpen) else Modifier)
-            .then(if (tag != null) Modifier.testTag(tag) else Modifier),
+            .then(if (tag != null) Modifier.testTag(tag) else Modifier)
+            .then(
+                if (onOpen != null) {
+                    Modifier.hitTarget(
+                        interactive = Modifier.clip(CircleShape).clickable(onClick = onOpen),
+                        drawnHeight = CHIP_HEIGHT,
+                    )
+                } else {
+                    Modifier
+                },
+            )
+            .heightIn(min = CHIP_HEIGHT),
     ) {
-        CograAvatar(name = name, size = 24.dp, url = avatarUrl, testTag = node?.div("avatar")?.tag)
+        CograAvatar(name = name, size = CHIP_HEIGHT, url = avatarUrl, testTag = node?.div("avatar")?.tag)
         Text(
             text = name,
             style = MaterialTheme.typography.labelLarge,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.dataNode(node?.div("name")),
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .dataNode(node?.div("name")),
         )
         Text(
             text = "@$handle",
@@ -106,3 +128,6 @@ fun ActorChip(
         )
     }
 }
+
+/** The chip's drawn height — the avatar's `sm` rung (`ActorChip.jsx` minHeight 24). */
+private val CHIP_HEIGHT = 24.dp
