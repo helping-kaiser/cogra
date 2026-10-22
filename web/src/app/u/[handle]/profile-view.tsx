@@ -1,11 +1,24 @@
 "use client";
 
-// The profile screen (design.md §6 "Profile header"): monogram
-// avatar, name, handle, bio, link, the primary action — and the
-// authored chronicle under filter chips. The header's connection
-// count and the connections sections wait on the fold
-// open-questions Q35 asks for.
-// Shared by /u/<handle> (public) and /profile (the viewer's own tab).
+// THE PROFILE (design/designs/canonical/screens/Profile.jsx, ProfileOther.jsx,
+// ProfileDeleted.jsx, ProfileApplicant.jsx; `_shared.jsx` `ProfileOwnBody`,
+// `ProfileOtherBody`, `ProfileDeletedBody`). One surface, the `profile`
+// registry prefix, shared by /profile (the reader's own tab ROOT) and
+// /u/<handle> (a drill-in):
+//
+// - The own root wears the band (`ProfileBand`): the mark, then the gear,
+//   chats and the bell. A drill-in wears the header bar, titled with the
+//   person's handle and carrying the way back alone — a deleted account's
+//   titled with nothing, the handle having gone with it.
+// - Under it the compact `ProfileHeader` and its one actions row: Edit
+//   profile, Invites and the ⋮ on your own page; the wide opinion, Message and
+//   the ⋮ on someone else's; the opinion and the ⋮ on a deleted account's.
+// - Then the chronicle's tab row and the chronicle, one act to a card,
+//   newest first, the next page arriving as the reader keeps going.
+//
+// THE COLUMN SPENDS NO GAP. A flex gap is spent on every child, CollapsingTop's
+// zero-height sentinel and the empty slots included, which put 16px of
+// nothing under the header; each slot carries its own spacing instead.
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -27,33 +40,57 @@ import {
   type ProfileView as Profile,
   type RecordRow,
 } from "@/lib/api/profile-api";
+import { EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { StatusBanners } from "@/app/status-banners";
-import { MonogramAvatar } from "@/lib/ui/actor-chip";
 import { Button, buttonClassName } from "@/lib/ui/button";
-import { Card } from "@/lib/ui/card";
+import { CograBand } from "@/lib/ui/cogra-band";
+import { instance, type DataNode } from "@/lib/ui/data-node";
+import { EmptyState } from "@/lib/ui/empty-state";
+import { Icon } from "@/lib/ui/icons";
+import { tailIndexOf, useApproachingTail } from "@/lib/ui/infinite-list";
+import { JoinPrompt } from "@/lib/ui/join-prompt";
 import { PageHeader } from "@/lib/ui/page-header";
+import { ProfileHeader } from "@/lib/ui/profile-header";
 import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
 import { useScrollHost } from "@/lib/ui/scroll-host";
 import { StanceControl } from "@/lib/ui/stance-control";
+import { ladderAge } from "@/lib/ui/timestamp";
 import { TransportError } from "@/lib/ui/transport-error";
+import { ContentRow, type ContentRowDisc } from "@/lib/ui2/content-row";
+import { TabBar, type Tab } from "@/lib/ui2/tab-bar";
 import { opensVouchBackOn, VOUCHED_IN_PATH, vouchBackVariant } from "@/lib/vouch/vouch-back";
 import { useComfortLine } from "@/lib/saved/comfort-line";
 import { useHostSnack } from "@/lib/saved/save-row";
 import { RowLine } from "@/lib/ui/row-line";
 import { Snackbar } from "@/lib/ui/snackbar";
-import { backFor } from "@/lib/ui/back-origin";
-import { BellButton } from "@/lib/ui/cogra-band";
+import { backFor, personOrigin } from "@/lib/ui/back-origin";
 import { notificationsHref } from "@/lib/notifications/origin";
 import { firstArrival, useBellLit, useFreshRootBell } from "@/lib/notifications/bell";
 import { ProfileMenu } from "@/lib/ui2/profile-menu";
 
-const FILTERS: readonly { key: ChronicleFilter; label: string }[] = [
-  { key: "posts", label: "Posts" },
-  { key: "comments", label: "Comments" },
-  { key: "everything", label: "Everything" },
+/** The chronicle's tab row (`_shared.jsx` `CHRONICLE_TABS`, `CHRONICLE_TABS_LABEL`). */
+const CHRONICLE_TABS: readonly Tab<ChronicleFilter>[] = [
+  { id: "posts", icon: "dynamic_feed", label: "Posts" },
+  { id: "comments", icon: "chat_bubble", label: "Comments" },
+  { id: "everything", icon: "history", label: "Everything" },
 ];
+export const CHRONICLE_TABS_LABEL = "What the chronicle shows";
+
+/** ProfileApplicant.md:17. */
+export const INVITE_LOCKED = "You can invite once you're in.";
+/** ProfileApplicant.md:21 — the applicant-foot family's `once you're in`. */
+export const APPLICANT_CHRONICLE_EMPTY =
+  "Nothing here yet. Your posts and opinions show up here once you're in.";
+/** The chronicle page that did not arrive (Profile.md:35; copy-voice.md). */
+export const COULDNT_LOAD_MORE = "Couldn't load more";
+/** How long a next page may take before `Loading…` stands for it (Profile.md:33). */
+export const LOADING_AFTER_MS = 200;
+
+const CHRONICLE: DataNode = { path: "profile.chronicle" };
+const IDENTITY: DataNode = { path: "profile.identity" };
+const ROW = (name: string): DataNode => ({ path: `profile.identity.actionRow.${name}` });
 
 export function ProfileScreen({
   handle,
@@ -67,7 +104,8 @@ export function ProfileScreen({
   from?: string | null;
 }) {
   // THE PAGE'S ONE SNACKBAR (`profile.snackbar`): the ⋮'s aftermath —
-  // `Saved.`, `Removed from Saved.` with `Undo`, a copied link, a report.
+  // `Saved.`, `Removed from Saved.` with `Undo`, a copied link, a report —
+  // and the applicant's locked Invites.
   const { snack, notify, dismiss } = useHostSnack();
   const keyOnDevice = useKeyOnDevice(store);
   const client = useApolloClient();
@@ -90,13 +128,14 @@ export function ProfileScreen({
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [transportFailed, setTransportFailed] = useState(false);
-  const [filter, setFilter] = useState<ChronicleFilter>("posts");
+  // Every profile board draws the reader landing on Everything.
+  const [filter, setFilter] = useState<ChronicleFilter>("everything");
   const [rows, setRows] = useState<readonly RecordRow[]>([]);
   const [rowsLoading, setRowsLoading] = useState(false);
   const [pageFailed, setPageFailed] = useState(false);
   const [endCursor, setEndCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
-  const [invitesLocked, setInvitesLocked] = useState(false);
+  const [joinOpen, setJoinOpen] = useState(false);
   // The viewer's own read, kept for the one profile it changes: the member
   // who vouched them in, whose anchor opens the vouch-back.
   const [viewer, setViewer] = useState<MeUser | null>(null);
@@ -108,18 +147,18 @@ export function ProfileScreen({
   // still find History empty there.
   useSeenOnOpen(profile !== null && handle !== null && !own ? profile.id : null);
 
-  // Which chronicle read is the live one. A filter switch fires a new read
+  // Which chronicle read is the live one. A tab switch fires a new read
   // without cancelling the old, and the old one resolving afterwards would
-  // overwrite the cleared list with the PREVIOUS filter's rows — and set that
-  // filter's cursor, so "Load more" would then walk the wrong connection.
+  // overwrite the cleared list with the PREVIOUS tab's rows — and set that
+  // tab's cursor, so the next page would then walk the wrong connection.
   const rowsRequest = useRef(0);
 
   const loadRows = useCallback(
-    async (authorId: string, which: ChronicleFilter, after: string | null) => {
+    async (authorId: string, which: ChronicleFilter, after: string | null, mine: boolean) => {
       const request = (rowsRequest.current += 1);
       setRowsLoading(true);
       setPageFailed(false);
-      const outcome = await fetchAuthorRecords(client, authorId, which, after);
+      const outcome = await fetchAuthorRecords(client, authorId, which, after, mine);
       if (request !== rowsRequest.current) return;
       setRowsLoading(false);
       if (outcome.kind === "success") {
@@ -160,10 +199,12 @@ export function ProfileScreen({
         setTransportFailed(false);
         setProfile(loaded);
         const me = viewer?.kind === "success" ? viewer.value : null;
+        const mine = me !== null && me.id === loaded.id;
         setViewer(me);
-        setOwn(me !== null && me.id === loaded.id);
+        setOwn(mine);
         setApplicant(me?.accountState === "APPLICANT");
-        void loadRows(loaded.id, "posts", null);
+        setFilter("everything");
+        void loadRows(loaded.id, "everything", null, mine);
       } else if (outcome.kind === "refused") {
         // The own-profile read refused: the session is gone; the
         // phase flip handles it.
@@ -208,60 +249,113 @@ export function ProfileScreen({
     setRows([]);
     setEndCursor(null);
     setHasMore(false);
-    void loadRows(profile.id, next, null);
+    void loadRows(profile.id, next, null, own);
   };
 
-  const name = profile?.displayName.value?.trim() ? profile.displayName.value : profile?.handle;
-  // A DELETED ACCOUNT reads off its REDACTED status (ER-G10, design digest
+  // THE NEXT PAGE ARRIVES IN PLACE as the reader keeps going (Profile.md:29):
+  // no Show more, no page numbers, no count of what is left.
+  const nextPage = useCallback(() => {
+    if (profile === null || rowsLoading || !hasMore || endCursor === null) return;
+    void loadRows(profile.id, filter, endCursor, own);
+  }, [profile, rowsLoading, hasMore, endCursor, loadRows, filter, own]);
+  const tailRef = useApproachingTail({
+    root: host,
+    onReach: nextPage,
+    enabled: hasMore && !pageFailed && !rowsLoading,
+  });
+  const tailIndex = tailIndexOf(rows.length);
+  // `Loading…` stands only once a next page is 200ms late (Profile.md:33).
+  const [loadingShown, setLoadingShown] = useState(false);
+  const paging = rowsLoading && rows.length > 0;
+  useEffect(() => {
+    if (!paging) {
+      setLoadingShown(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setLoadingShown(true), LOADING_AFTER_MS);
+    return () => window.clearTimeout(timer);
+  }, [paging]);
+
+  // A DELETED ACCOUNT READS OFF ITS REDACTED STATUS (ER-G10, design digest
   // item 19): the wire serves null values and the mark.
   const deleted = profile?.displayName.status === "REDACTED";
   const comfort = useComfortLine(profile?.id ?? "");
+  const back = backFor(from);
+  // Where a chronicle card's post, and the chats, say they were opened from.
+  const origin = own && handle === null ? "profile" : profile ? personOrigin(profile.handle) : null;
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
+    <main className="mx-auto flex w-full max-w-2xl flex-col pb-2">
       <CollapsingTop>
-        <PageHeader
-          inGutter
-          title={profile ? `@${profile.handle}` : "Profile"}
-          backHref={handle === null ? undefined : backFor(from).href}
-          backScroll={false}
-          backLabel={backFor(from).label}
-          backTestId="profile-back"
-          action={
-            own ? (
-              <span className="flex items-center">
-                <Link
-                  href="/settings"
-                  aria-label="Settings"
-                  data-testid="profile-settings"
-                  className={buttonClassName({ variant: "text", size: "sm" })}
-                >
-                  Settings
-                </Link>
-                {/* The bell rides the own profile ROOT only, right-most — the
-                    header is not yet the drawn band (N3 conformance). */}
-                {handle === null && (
-                  <BellButton
-                    bell={{ lit: bellIsLit, onOpen: () => router.push(notificationsHref("profile")) }}
-                  />
-                )}
-              </span>
-            ) : undefined
-          }
-        />
-        {own && keyOnDevice === false && <RestoreCard />}
+        {handle === null ? (
+          // THE OWN PROFILE ROOT WEARS THE BAND (`ProfileBand`, Profile.md:3):
+          // the gear, then chats, then the bell — and no ⋮, which closes the
+          // actions row instead.
+          <CograBand
+            node={{ path: "profile.band" }}
+            trailing={
+              <Link
+                href="/settings"
+                aria-label="Settings"
+                data-testid="profile.band.gear"
+                className="cg-state cg-focus cg-hit grid size-10 flex-none place-items-center rounded-full text-on-surface-variant"
+              >
+                <Icon name="settings" size={22} />
+              </Link>
+            }
+            onChats={phase === "signedIn" ? () => router.push("/chats?from=profile") : undefined}
+            bell={
+              phase === "signedIn"
+                ? { lit: bellIsLit, onOpen: () => router.push(notificationsHref("profile")) }
+                : undefined
+            }
+          >
+            {own && keyOnDevice === false && (
+              <div className="flex flex-col gap-4 px-6 pb-2">
+                <RestoreCard />
+              </div>
+            )}
+          </CograBand>
+        ) : (
+          // A DRILL-IN'S BAR CARRIES THE WAY BACK ALONE, titled with the
+          // person's handle (ProfileOther.md:3) — and with nothing on a deleted
+          // account, whose handle went with the rest (ProfileDeleted.md:11).
+          <>
+            <PageHeader
+              node={{ path: "profile.header" }}
+              title={profile === null ? undefined : deleted ? undefined : `@${profile.handle}`}
+              backHref={back.href}
+              backScroll={false}
+              backLabel={back.label}
+              backTestId="profile-back"
+            />
+            {own && keyOnDevice === false && (
+              <div className="flex flex-col gap-4 px-6 pb-2">
+                <RestoreCard />
+              </div>
+            )}
+          </>
+        )}
       </CollapsingTop>
-      {own && <StatusBanners />}
+      {/* The account-status banners ride the reader's own page (design.md §6);
+          an empty section takes no room. */}
+      {own && (
+        <div className="flex flex-col px-4 [&:has(>section:not(:empty))]:py-2">
+          <StatusBanners />
+        </div>
+      )}
       {loading && (
-        <p role="status" aria-live="polite" data-testid="profile-loading">
+        <p role="status" aria-live="polite" data-testid="profile-loading" className="px-4 py-2">
           Loading…
         </p>
       )}
       {notFound && (
-        <p data-testid="profile-not-found">This profile doesn&apos;t exist.</p>
+        <p data-testid="profile-not-found" className="px-4 py-2">
+          This profile doesn&apos;t exist.
+        </p>
       )}
       {transportFailed && profile === null && !loading && !notFound && (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 px-4 py-2">
           <TransportError testId="profile-transport-error" />
           <Button
             testId="profile-retry"
@@ -278,158 +372,175 @@ export function ProfileScreen({
       )}
       {profile && (
         <>
-          <div className="flex flex-col gap-2 px-2">
-            <span data-testid="profile-avatar">
-              <MonogramAvatar name={name ?? "?"} size="lg" src={profile.avatar?.url} />
-            </span>
-            <h2 data-testid="profile-display-name" className="text-headline-small">
-              {name}
-            </h2>
-            <p data-testid="profile-handle" className="text-body-medium text-on-surface-variant">
-              @{profile.handle}
-            </p>
-            {profile.bio.value?.trim() && (
-              <p data-testid="profile-bio" className="text-body-large">
-                {profile.bio.value}
-              </p>
-            )}
-            {profile.websiteUrl.value?.trim() && (
-              <a
-                href={profile.websiteUrl.value}
-                rel="noreferrer nofollow"
-                data-testid="profile-website"
-                className="text-body-medium text-primary underline"
-              >
-                {profile.websiteUrl.value}
-              </a>
-            )}
-            {/* The header's primary action on someone else's profile
-                (design.md §6): the interpersonal stance, the same generic
-                gesture a post or a comment takes. */}
-            {!own && (
-              <div className="flex items-center gap-2 pt-2">
-                <StanceControl
-                  target={{ id: profile.id, kind: "profile", label: `@${profile.handle}` }}
-                  testIdPrefix="profile-stance"
-                  // THE VOUCH-BACK STAYS OPEN FROM HERE (VouchBack.md:51): on
-                  // the member who vouched the reader in, the anchor's tap
-                  // opens the vouch-back pad (ProfileOther.md:35) and any
-                  // signing taken on it — Set or the hold — opens the ceremony
-                  // (:37). Cancel closes back onto this profile (VouchBackPad.md:47).
-                  variant={
-                    viewer !== null && opensVouchBackOn(viewer, profile.id)
-                      ? vouchBackVariant(() => router.push(VOUCHED_IN_PATH))
-                      : undefined
-                  }
-                />
-                {/* THE ⋮ CLOSES THE ACTIONS ROW (`otherProfileMenu`,
-                    `deletedProfileMenu`) — placed at its drawn node without
-                    conforming the rest of the page (SS-6). */}
-                <ProfileMenu
-                  kind={deleted ? "deleted" : "other"}
-                  profile={profile}
-                  signedIn={phase === "signedIn"}
-                  notify={notify}
-                />
-              </div>
-            )}
+          <div className="px-4">
+            <ProfileHeader
+              node={IDENTITY}
+              handle={profile.handle}
+              displayName={profile.displayName.value}
+              avatarSrc={profile.avatar?.url}
+              bio={profile.bio.value}
+              website={profile.websiteUrl.value}
+              redacted={deleted}
+              // The handle repeats only where the bar does not carry it: the
+              // own root's band carries none.
+              showHandle={handle === null}
+            >
+              {own ? (
+                <>
+                  <Link
+                    href="/profile/edit"
+                    data-testid="profile.identity.actionRow.edit"
+                    className={`${buttonClassName({ variant: "outline", size: "sm" })} min-w-0 flex-1`}
+                  >
+                    Edit profile
+                  </Link>
+                  {/* AN APPLICANT'S INVITES IS LOCKED, NOT GONE
+                      (ProfileApplicant.md:15-17; auth.md's locked look): the
+                      disabled opacity, still tappable, the tap answering in
+                      the snackbar — never a gate screen. */}
+                  {applicant ? (
+                    <button
+                      type="button"
+                      data-testid="profile.identity.actionRow.invites"
+                      onClick={() => notify(INVITE_LOCKED)}
+                      className={`${buttonClassName({ variant: "outline", size: "sm" })} min-w-0 flex-1 opacity-[var(--state-disabled)]`}
+                    >
+                      Invites
+                    </button>
+                  ) : (
+                    <Link
+                      href="/invites"
+                      data-testid="profile.identity.actionRow.invites"
+                      className={`${buttonClassName({ variant: "outline", size: "sm" })} min-w-0 flex-1`}
+                    >
+                      Invites
+                    </Link>
+                  )}
+                  {/* YOUR OWN ⋮, closing the actions row (`ownProfileMenu`):
+                      Saved, History, Share your profile. */}
+                  <ProfileMenu kind="own" profile={profile} signedIn notify={notify} />
+                </>
+              ) : (
+                <>
+                  {/* THE OPINION ON THE PERSON LEADS, worn wide (ProfileOther.md:9;
+                      `StanceControl` `wide`): the row's one action, taking what
+                      Message and the ⋮ leave. A deleted account is named `this
+                      account`, never a handle (ProfileDeleted.md:25). */}
+                  <div className="flex min-w-0 flex-1">
+                    <StanceControl
+                      wide
+                      node={ROW("stance")}
+                      target={{
+                        id: profile.id,
+                        kind: "profile",
+                        label: deleted ? "this account" : `@${profile.handle}`,
+                      }}
+                      testIdPrefix="profile-stance"
+                      // THE VOUCH-BACK STAYS OPEN FROM HERE (VouchBack.md:51): on
+                      // the member who vouched the reader in, the anchor's tap
+                      // opens the vouch-back pad (ProfileOther.md:35) and any
+                      // signing taken on it — Set or the hold — opens the
+                      // ceremony (:37). Cancel closes back onto this profile
+                      // (VouchBackPad.md:47).
+                      variant={
+                        viewer !== null && opensVouchBackOn(viewer, profile.id)
+                          ? vouchBackVariant(() => router.push(VOUCHED_IN_PATH))
+                          : undefined
+                      }
+                    />
+                  </div>
+                  {/* MESSAGE, SIZED BY ITS WORD (ProfileHeader.jsx): the chats
+                      coming-soon screen, or the guest gate (ProfileOther.md:53-55).
+                      A deleted account has no person left to address
+                      (ProfileDeleted.md:21). */}
+                  {!deleted && (
+                    <button
+                      type="button"
+                      data-testid="profile.identity.actionRow.message"
+                      onClick={() =>
+                        phase === "signedIn"
+                          ? router.push(`/chats?from=${encodeURIComponent(personOrigin(profile.handle))}`)
+                          : setJoinOpen(true)
+                      }
+                      className={`${buttonClassName({ variant: "outline" })} flex-none`}
+                    >
+                      Message
+                    </button>
+                  )}
+                  {/* THE ⋮ CLOSES THE ACTIONS ROW (`otherProfileMenu`,
+                      `deletedProfileMenu`). */}
+                  <ProfileMenu
+                    kind={deleted ? "deleted" : "other"}
+                    profile={profile}
+                    signedIn={phase === "signedIn"}
+                    notify={notify}
+                  />
+                </>
+              )}
+            </ProfileHeader>
             {/* THE ROW LINE IN THE ACTIONS ROW (design digest item 46): a save or
                 unsave of this person that did not go through. */}
             {comfort !== null && <RowLine state={comfort} testId="profile-row-line" />}
-            {own && (
-              <div className="flex flex-wrap items-center gap-2 pt-2">
-                <Link
-                  href="/profile/edit"
-                  data-testid="profile-edit"
-                  className={buttonClassName({ variant: "outline", size: "sm" })}
-                >
-                  Edit profile
-                </Link>
-                {/* Visible but locked for applicants — the tap explains
-                    (auth.md "Application"). */}
-                {applicant ? (
-                  <Button
-                    testId="profile-invites"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setInvitesLocked(true)}
-                  >
-                    Invites
-                  </Button>
-                ) : (
-                  <Link
-                    href="/invites"
-                    data-testid="profile-invites"
-                    className={buttonClassName({ variant: "outline", size: "sm" })}
-                  >
-                    Invites
-                  </Link>
-                )}
-                {/* YOUR OWN ⋮, closing the actions row after Edit profile and
-                    Invites (`ownProfileMenu`): Saved, History, Share your
-                    profile — the private state's one door. */}
-                <ProfileMenu kind="own" profile={profile} signedIn notify={notify} />
-              </div>
+          </div>
+          <TabBar
+            tabs={CHRONICLE_TABS}
+            value={filter}
+            ariaLabel={CHRONICLE_TABS_LABEL}
+            onSelect={onFilter}
+            node={{ path: "profile.tabRow" }}
+            testId="profile-tabs"
+          />
+          {/* THE CHRONICLE (`ChronicleList`): one act to a card on 8px of
+              surface, newest first, each keyed by its position. */}
+          <div data-testid="profile.chronicle" className="flex flex-col gap-2 px-4 pt-2">
+            {rows.length === 0 && !rowsLoading && !pageFailed && (
+              <EmptyState
+                testId="profile-chronicle-empty"
+                node={applicant && own ? { path: "profile.chronicle.empty" } : undefined}
+                title={applicant && own ? APPLICANT_CHRONICLE_EMPTY : "Nothing here yet."}
+              />
             )}
-            {invitesLocked && (
-              <p role="status" data-testid="profile-invites-locked" className="text-body-small text-on-surface-variant">
-                Inviting unlocks once your application is approved.
+            {rows.length > 0 && (
+              <ul className="m-0 flex list-none flex-col gap-2 p-0" data-testid="profile-chronicle">
+                {rows.map((row, index) => (
+                  <li key={row.id} ref={index === tailIndex ? tailRef : undefined}>
+                    <ChronicleAct row={row} position={index + 1} origin={origin} />
+                  </li>
+                ))}
+              </ul>
+            )}
+            {rowsLoading && rows.length === 0 && (
+              <p role="status" aria-live="polite" data-testid="profile-rows-loading" className="py-2">
+                Loading…
               </p>
             )}
+            {loadingShown && (
+              <p role="status" aria-live="polite" data-testid="profile-rows-loading" className="py-2">
+                Loading…
+              </p>
+            )}
+            {/* THE PAGE THAT DID NOT ARRIVE (Profile.md:35): the quiet line and
+                Retry where the next page would have stood — never the error
+                colour. */}
+            {pageFailed && (
+              <div className="flex items-center gap-3" role="alert">
+                <span className="text-body-medium text-on-surface-variant" data-testid="profile-rows-failed">
+                  {COULDNT_LOAD_MORE}
+                </span>
+                <Button
+                  testId="profile-rows-retry"
+                  variant="text"
+                  size="sm"
+                  onClick={() => profile && void loadRows(profile.id, filter, endCursor, own)}
+                >
+                  Retry
+                </Button>
+              </div>
+            )}
           </div>
-          <div role="group" aria-label="Chronicle filter" className="flex gap-2">
-            {FILTERS.map(({ key, label }) => (
-              <Button
-                key={key}
-                testId={`profile-filter-${key}`}
-                variant={filter === key ? "primary" : "outline"}
-                size="sm"
-                onClick={() => onFilter(key)}
-              >
-                {label}
-              </Button>
-            ))}
-          </div>
-          {rows.length === 0 && !rowsLoading && !pageFailed && (
-            <p data-testid="profile-chronicle-empty" className="text-body-medium text-on-surface-variant">
-              Nothing here yet.
-            </p>
-          )}
-          <ul className="flex flex-col gap-3" data-testid="profile-chronicle">
-            {rows.map((row) => (
-              <li key={row.id} data-testid="chronicle-row">
-                {row.postId ? (
-                  <Link href={`/posts/${row.postId}`}>
-                    <ChronicleCard row={row} />
-                  </Link>
-                ) : (
-                  <ChronicleCard row={row} />
-                )}
-              </li>
-            ))}
-          </ul>
-          {rowsLoading && <p data-testid="profile-rows-loading">Loading…</p>}
-          {pageFailed && (
-            <Button
-              testId="profile-rows-retry"
-              variant="outline"
-              size="sm"
-              onClick={() => profile && void loadRows(profile.id, filter, endCursor)}
-            >
-              Retry
-            </Button>
-          )}
-          {hasMore && !rowsLoading && !pageFailed && (
-            <Button
-              testId="profile-rows-more"
-              variant="outline"
-              onClick={() => profile && void loadRows(profile.id, filter, endCursor)}
-            >
-              Show more
-            </Button>
-          )}
         </>
       )}
+      {joinOpen && <JoinPrompt open onClose={() => setJoinOpen(false)} />}
       <Snackbar
         testId="profile-snackbar"
         node={{ path: "profile.snackbar" }}
@@ -442,13 +553,63 @@ export function ProfileScreen({
   );
 }
 
-function ChronicleCard({ row }: { row: RecordRow }) {
+/** Each act's disc, by kind (`_shared.jsx` `ProfileOwnBody`'s chronicle). */
+function discOf(row: RecordRow): ContentRowDisc {
+  switch (row.kind) {
+    case "post":
+      return { kind: "glyph", glyph: "dynamic_feed" };
+    case "comment":
+      return { kind: "glyph", glyph: "chat_bubble" };
+    case "profile":
+      return { kind: "glyph", glyph: "person" };
+    case "opinion":
+      // The stance record's own face — which (0, 0) it is, from the record's
+      // own `severed` (ContentRow's `face`).
+      return row.face === null
+        ? { kind: "glyph", glyph: "history" }
+        : {
+            kind: "face",
+            pDirected: row.face.pDirected,
+            pInterest: row.face.pInterest,
+            zeroLabel: row.face.severed ? undefined : EMPTY_PICK_LABEL,
+          };
+    default:
+      return { kind: "glyph", glyph: "history" };
+  }
+}
+
+/**
+ * One act (`ContentRow` chronicle): its disc, its verb and snippet, its age on
+ * the trailing edge. A card with somewhere to go opens its post, whose back
+ * arrow names this profile; one with nowhere to go is the same card, inert.
+ */
+function ChronicleAct({
+  row,
+  position,
+  origin,
+}: {
+  row: RecordRow;
+  position: number;
+  origin: string | null;
+}) {
+  const node = instance(CHRONICLE, "act", String(position));
+  const href =
+    row.postId === null
+      ? undefined
+      : origin === null
+        ? `/posts/${row.postId}`
+        : `/posts/${row.postId}?from=${encodeURIComponent(origin)}`;
   return (
-    <Card>
-      <p className="text-label-large">{row.label}</p>
-      {row.snippet?.trim() && (
-        <p className="line-clamp-2 text-body-medium text-on-surface-variant">{row.snippet}</p>
-      )}
-    </Card>
+    <ContentRow
+      variant="chronicle"
+      title={row.label}
+      titleAside={row.aside ?? undefined}
+      second={row.snippet?.trim() ? row.snippet : undefined}
+      trailing={ladderAge(row.landedAt)}
+      disc={discOf(row)}
+      href={href}
+      node={node}
+      testId={`chronicle-row-${row.id}`}
+    />
   );
 }

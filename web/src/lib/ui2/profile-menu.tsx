@@ -188,7 +188,10 @@ export function ProfileMenu({
         open={open}
         onClose={() => setOpen(false)}
         items={items}
-        ariaLabel={ariaLabel}
+        // THE SHEET IS NAMED FOR WHAT IT HOLDS: `Profile actions` over another
+        // person's page or a deleted account's (`ProfileMenu.jsx`,
+        // `ProfileDeletedMenu.jsx`), while the ⋮ names whose they are.
+        ariaLabel={kind === "own" || feed !== undefined ? ariaLabel : "Profile actions"}
         testId={`${prefix}-sheet`}
         node={feed === undefined ? SHEET : undefined}
       />
