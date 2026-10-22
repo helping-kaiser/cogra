@@ -30,7 +30,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import java.util.Locale
 
 /**
  * A citation's two parameters as a chip shows them once a reader asks
@@ -162,5 +161,4 @@ private fun chipTags(node: DataNode?, testTag: String?): Pair<String?, String?> 
     (node?.tag ?: testTag) to (node?.div("remove")?.tag ?: testTag?.let { "${it}_remove" })
 
 /** Both citation parameters are bipolar, so both readings carry their sign. */
-private fun signedValue(value: Double): String =
-    String.format(Locale.getDefault(), "%+.2f", value)
+private fun signedValue(value: Double): String = twoPlaces(value)

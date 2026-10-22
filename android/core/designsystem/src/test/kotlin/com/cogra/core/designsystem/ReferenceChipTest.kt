@@ -61,7 +61,7 @@ class ReferenceChipTest {
     @Test
     fun aRefutingReferenceKeepsItsNegativeSupport() {
         renderReference(values = ReferenceChipValues(relevance = 0.5, support = -0.75))
-        compose.onNodeWithTag("reference").assertTextContains("+0.50 · -0.75")
+        compose.onNodeWithTag("reference").assertTextContains("+0.50 · −0.75")
     }
 
     /** The compact reading is an abbreviation; assistive tech gets the words. */

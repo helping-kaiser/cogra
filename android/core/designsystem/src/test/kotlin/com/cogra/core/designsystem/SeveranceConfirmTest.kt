@@ -122,9 +122,9 @@ class SeveranceConfirmTest {
     fun aPickThatNetsToZeroCarriesItsPickLine() {
         show(prompt(fromPick = true, pick = StancePoint(-1.0, -1.0), standing = StancePoint(1.0, 1.0)))
         compose.onNodeWithTag("${TAG}_severance_from_pick")
-            .assertTextEquals("Your pick: 💀 -1.00 / -1.00")
+            .assertTextEquals("Your pick: 💀 −1.00 / −1.00")
             .assertContentDescriptionEquals(
-                "Your pick: Absolutely not, For or against -1.00, How much reaches you -1.00",
+                "Your pick: Absolutely not, For or against −1.00, How much reaches you −1.00",
             )
     }
 

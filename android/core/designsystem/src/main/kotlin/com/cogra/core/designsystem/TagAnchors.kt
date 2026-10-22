@@ -23,7 +23,6 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.res.stringResource
-import java.util.Locale
 
 /**
  * A place in the tag field: relevance across, confidence up. Relevance is a
@@ -101,4 +100,4 @@ fun TagPoint.pair(): String =
 
 /** Two decimals, no forced sign — the half of the pair that has no poles. */
 fun twoPlacesUnsigned(value: Double): String =
-    String.format(Locale.getDefault(), "%.2f", value)
+    withMinusSign(String.format(NUMBER_LOCALE, "%.2f", value))

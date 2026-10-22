@@ -24,7 +24,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import java.util.Locale
 
 /**
  * A tag claim's two parameters as a chip shows them once a reader asks
@@ -143,7 +142,7 @@ fun TopicChip(
 }
 
 /** Relevance is bipolar, so its sign is part of the reading (F8). */
-private fun signed(value: Double): String = String.format(Locale.getDefault(), "%+.2f", value)
+private fun signed(value: Double): String = twoPlaces(value)
 
 /** Two decimals, as every other parameter readout in the app shows them. */
-private fun plain(value: Double): String = String.format(Locale.getDefault(), "%.2f", value)
+private fun plain(value: Double): String = twoPlacesUnsigned(value)
