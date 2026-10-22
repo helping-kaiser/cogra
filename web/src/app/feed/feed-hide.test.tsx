@@ -126,8 +126,13 @@ function card(id: string) {
   return screen.queryByTestId(byNode("feed.card", id));
 }
 
+// The feed paints after the ranking read, the page read and the hidden-set read,
+// and the first test in a file also pays the cold module load: under a full
+// suite that outruns testing-library's 1 s default, so first paint gets 3 s.
+const FIRST_PAINT = { timeout: 3000 };
+
 async function hideFrom(id: string) {
-  fireEvent.click(await screen.findByTestId(byNode("feed.card.menu", id)));
+  fireEvent.click(await screen.findByTestId(byNode("feed.card.menu", id), undefined, FIRST_PAINT));
   fireEvent.click(screen.getByTestId("feed.menuSheet.hide"));
 }
 
@@ -182,7 +187,7 @@ describe("hiding from the feed", () => {
     const log = hiddenLog();
     server.use(...rankedFeed(FEED), ...hiddenHandlers(log, { failRead: true }));
     renderWithProviders(<FeedView />, { store: signedInStore() });
-    expect(await screen.findByTestId("feed-transport-error")).toBeInTheDocument();
+    expect(await screen.findByTestId("feed-transport-error", undefined, FIRST_PAINT)).toBeInTheDocument();
     expect(card("p1")).toBeNull();
   });
 
@@ -195,7 +200,7 @@ describe("hiding from the feed", () => {
       }),
     );
     renderWithProviders(<FeedView />, { store: signedInStore() });
-    expect(await screen.findByTestId(byNode("feed.card", "p2"))).toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("feed.card", "p2"), undefined, FIRST_PAINT)).toBeInTheDocument();
     expect(card("p1")).toBeNull();
     expect(card("p3")).toBeNull();
   });
