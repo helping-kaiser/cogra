@@ -2813,14 +2813,19 @@ describe("PostView — references", () => {
         const veil = await screen.findByTestId("post-detail-clip-veil");
         fireEvent.click(within(veil).getByRole("button"));
 
-        // The one tap on the clip's own face lifted the card's veil too.
-        expect(screen.queryByTestId("post-detail-clip-veil")).toBeNull();
-        expect(screen.queryByTestId("post-veil")).toBeNull();
+        // The one tap on the clip's own face lifted the card's veil too. The
+        // reveal lands as a store update re-rendering two surfaces, which
+        // under load can commit a beat after the click returns — so it is
+        // waited for rather than read the instant the tap is dispatched.
+        await waitFor(() => {
+          expect(screen.queryByTestId("post-detail-clip-veil")).toBeNull();
+          expect(screen.queryByTestId("post-veil")).toBeNull();
+        });
         expect(screen.getByTestId(byNode("postDetail.card.description"))).toHaveTextContent(
           "One rubbing includes a dead seabird.",
         );
         // Revealed, the clip stands with its ladder's second rung back.
-        expect(screen.getByTestId("post-detail-clip-media-transport")).toBeInTheDocument();
+        expect(await screen.findByTestId("post-detail-clip-media-transport")).toBeInTheDocument();
       });
 
       it("leaves a post of pictures exactly where it was", async () => {
