@@ -15,8 +15,8 @@
 // THE ROW READS OPINION · SCORE · THE COMMENT GLYPH · SHARE (FeedKinds.md).
 // The glyph is the reply: the same comment section at this comment, the
 // composer already aimed at it. The score slot waits with the post card's
-// (`post-card.tsx`): no field carries a card's score until the ranker's
-// figure reaches the contract. REPLIES NEVER APPEAR IN A FEED: the card
+// (`post-card.tsx`): the figure is a door, and the screens it opens are not
+// built yet. REPLIES NEVER APPEAR IN A FEED: the card
 // carries no view-replies line.
 //
 // ITS ⋮ IS THE COMMENT'S MENU (`comment-menu.ts`), the sheet every comment's ⋮
