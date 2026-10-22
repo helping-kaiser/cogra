@@ -4,6 +4,16 @@ import { describe, expect, it, vi } from "vitest";
 import { ALT_TEXT_MAX_CHARS } from "../media/caps";
 import { DescribeSheet } from "./describe-sheet";
 
+function baseProps() {
+  return {
+    open: true,
+    onClose: vi.fn(),
+    src: "blob:a",
+    value: "",
+    onChange: vi.fn(),
+  };
+}
+
 function open(overrides: Partial<Parameters<typeof DescribeSheet>[0]> = {}) {
   const props = {
     open: true,
@@ -56,12 +66,39 @@ describe("DescribeSheet", () => {
     expect(screen.getByDisplayValue("Crates of strawberries.")).toBeInTheDocument();
   });
 
-  it("reports what the author types", () => {
+  // THE SHEET STAGES (ComposeDescribe.md): typing is the sheet's own until
+  // Done hands it out.
+  it("hands out what the author typed when Done is pressed", () => {
     const props = open();
     fireEvent.change(screen.getByTestId("describe-sheet-field"), {
       target: { value: "A jar of honey" },
     });
+    expect(props.onChange).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId("describe-sheet-done"));
     expect(props.onChange).toHaveBeenCalledWith("A jar of honey");
+    expect(props.onClose).toHaveBeenCalled();
+  });
+
+  it("drops what was typed when the sheet is dismissed without Done", () => {
+    const props = { ...baseProps(), value: "Crates." };
+    const { rerender } = render(<DescribeSheet {...props} />);
+    fireEvent.change(screen.getByTestId("describe-sheet-field"), {
+      target: { value: "Crates of strawberries." },
+    });
+    // The scrim, a swipe, Back or Escape: the host closes the sheet.
+    rerender(<DescribeSheet {...props} open={false} />);
+    expect(props.onChange).not.toHaveBeenCalled();
+    // Reopened, it reads the picture's description as it was.
+    rerender(<DescribeSheet {...props} open />);
+    expect(screen.getByDisplayValue("Crates.")).toBeInTheDocument();
+  });
+
+  it("heads the sheet in title-large over its reason, the ? beside the pair", () => {
+    open();
+    const title = screen.getByRole("heading", { name: "Describe this picture" });
+    expect(title.className).toContain("text-title-large");
+    // The house HelpDot: a 48px target round a 32px ring.
+    expect(screen.getByTestId("describe-sheet-help").className).toContain("size-12");
   });
 
   // The server refuses past this length, so the sheet says so where the words
