@@ -89,7 +89,15 @@ export function BottomSheet({
   node,
   focusTitle = false,
   initialFocus,
+  rows = false,
 }: {
+  /**
+   * A SHEET OF ROWS (BottomSheet.jsx with `SheetItem`s, the ⋮'s menus): the
+   * master's own geometry — 8px over the grip, 12 under it, rows edge to edge
+   * carrying their own 24px gutter, and 24 under the last. A sheet that holds
+   * a title, fields or prose keeps the padded body.
+   */
+  rows?: boolean;
   /**
    * Focus lands on the TITLE when the sheet opens, rather than on its first
    * control — for a sheet whose sidecar says so (SettingsLicense.md: "focus
@@ -310,7 +318,7 @@ export function BottomSheet({
             backdrop, Escape and the sheet's own action drop it too. */}
         <span
           aria-hidden="true"
-          className="mx-auto mt-3 h-1 w-8 rounded-full bg-outline-variant"
+          className={`mx-auto h-1 w-8 flex-none rounded-full bg-outline-variant ${rows ? "mb-3 mt-2" : "mt-3"}`}
           {...testAttributes(part(node, "dragHandle"))}
         />
         {titleHidden ? null : titleTrailing === undefined ? (
@@ -348,7 +356,7 @@ export function BottomSheet({
           // before the body starts scrolling, which is what puts the scroll
           // INSIDE the growing field rather than under the whole sheet. The
           // scroll stays as the fallback for content that cannot shrink.
-          className={`flex min-h-0 flex-1 flex-col overflow-y-auto px-6 pt-2 ${foot === undefined ? "pb-8" : "pb-3"}`}
+          className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${rows ? "pb-6" : `px-6 pt-2 ${foot === undefined ? "pb-8" : "pb-3"}`}`}
         >
           {/* What the sheet holds stands ON the sheet: a stage inside it is
               covered only by a layer raised over the sheet, and its scroller
@@ -375,11 +383,14 @@ export function SheetItem({
   onSelect,
   selected = false,
   node,
+  edge = false,
 }: {
   children: ReactNode;
   testId: string;
   onSelect: () => void;
   selected?: boolean;
+  /** Edge to edge in a sheet of `rows`, carrying the 24px gutter itself (`SheetItem`). */
+  edge?: boolean;
   /** The registered row (`feed.menuSheet.save`); it then names the row instead of `testId`. */
   node?: DataNode;
 }) {
@@ -389,7 +400,7 @@ export function SheetItem({
       {...testAttributes(node, testId)}
       onClick={onSelect}
       aria-pressed={selected || undefined}
-      className={`cg-state cg-focus flex min-h-12 w-full items-center gap-3 rounded-small px-2 text-left text-label-large ${
+      className={`cg-state cg-focus flex min-h-12 w-full items-center gap-3 text-left text-label-large ${edge ? "px-6" : "rounded-small px-2"} ${
         selected ? "text-primary" : "text-on-surface"
       }`}
     >

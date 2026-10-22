@@ -43,15 +43,16 @@ import { PadParkingProvider } from "@/lib/ui/pad-parking";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 
 /**
- * THE ROOT A POST DETAIL KEEPS LIT (PostDetail.md:57-59; `BottomNav.prompt.md`,
- * jakob 2026-10-06): the root the post was opened from stays lit on the
- * drill-in. A Saved row's post belongs to the Profile stack Saved hangs from;
- * anything else — the feed, a link, a notification — lights the content's
- * home root, which for a post is the Feed. (`from=explore` arrives with the
- * Explore surface.)
+ * THE ROOT A DRILL-IN KEEPS LIT (PostDetail.md:57-59; ProfileOther.md:11;
+ * ProfileDeleted.md:27; `BottomNav.prompt.md`, jakob 2026-10-06): the root a
+ * post or someone's profile was opened from stays lit on the drill-in. A
+ * Saved row, and your own profile's chronicle, belong to the Profile stack
+ * (`from=saved`, `from=profile`); anything else —
+ * the feed, a link, a notification — lights the Feed, where author chips and
+ * links land. (`from=explore` arrives with the Explore surface.)
  */
 export function detailRoot(from: string | null): NavSlot {
-  return from === "saved" ? "profile" : "feed";
+  return from === "saved" || from === "profile" ? "profile" : "feed";
 }
 
 /**
@@ -91,18 +92,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           : null;
   // The bar is drawn once, here, but its node belongs to the SCREEN it rides
   // (`design/designs/canonical/nodes.json` registers `feed.bottomBar`,
-  // `postDetail.bottomBar` and `saved.bottomBar`), so the registered screens
-  // name it by route.
+  // `postDetail.bottomBar`, `profile.bottomBar` and `saved.bottomBar`), so the
+  // registered screens name it by route. Your own profile and someone else's
+  // are one surface (`Profile`, `ProfileOther`: the `profile` prefix).
   const screen =
     pathname === "/feed"
       ? "feed"
       : /^\/posts\/[^/]+$/.test(pathname)
         ? "postDetail"
-        : pathname === "/saved"
-          ? "saved"
-          : pathname === "/notifications"
-            ? "notifications"
-            : null;
+        : pathname === "/profile" || /^\/u\/[^/]+$/.test(pathname)
+          ? "profile"
+          : pathname === "/saved"
+            ? "saved"
+            : pathname === "/notifications"
+              ? "notifications"
+              : null;
+  // A drill-in — a post's detail or someone's profile — reads its origin off
+  // the URL and keeps that root lit.
+  const drillIn = screen === "postDetail" || (screen === "profile" && pathname !== "/profile");
   const scroller = useRef<HTMLDivElement>(null);
   const bar = (lit: NavSlot | null) => (
     <BottomNav
@@ -127,7 +134,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {children}
         </div>
         {showBar &&
-          (screen === "postDetail" ? (
+          (drillIn ? (
             <Suspense fallback={bar(detailRoot(null))}>
               <DetailBar bar={bar} />
             </Suspense>

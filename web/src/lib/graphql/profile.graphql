@@ -63,7 +63,10 @@ query MyProfile {
 
 # The chronicle rendered as labelled rows: family + genesis mark, a
 # snippet of the touched content, and the post to open. A record is a
-# genesis when its target/terminal is the mint of its own act id.
+# genesis when its target/terminal is the mint of its own act id. The
+# row's age is its landing, an opinion row wears its own face (the pair,
+# and `severed` to tell a walk-back), and an opinion on a person names
+# them (`on @mira`, copy-voice's chronicle rows).
 query AuthorRecords($author: UUID!, $family: RecordFamily, $first: Int!, $after: String) {
   records(author: $author, family: $family, first: $first, after: $after) {
     edges {
@@ -72,8 +75,16 @@ query AuthorRecords($author: UUID!, $family: RecordFamily, $first: Int!, $after:
         family
         targetId
         terminalId
+        landedAt
+        pDirected
+        pInterest
+        severed
         target {
           __typename
+          ... on User {
+            id
+            handle
+          }
           ... on Post {
             id
             title {

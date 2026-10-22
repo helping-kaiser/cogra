@@ -205,7 +205,11 @@ export function ContentRow({
         <span className="flex flex-none flex-col items-end gap-0.5">
           {trailing !== undefined && (
             <span
-              className="text-label-small text-on-surface-variant"
+              // The master sets label-small's SIZE and leading only; the weight
+              // is the ground's (ContentRow.jsx `TYPE`), a quiet fact. The line
+              // height rides the style, read off the role's own token.
+              className="text-[length:var(--text-label-small)] text-on-surface-variant"
+              style={{ lineHeight: "var(--text-label-small--line-height)" }}
               {...testAttributes(part(node, "trailing"), `${testId}-trailing`)}
             >
               {trailing}

@@ -11,6 +11,7 @@ import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { hiddenHandlers, hiddenLog } from "@/test/hidden";
 import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
+import { byNode } from "@/test/data-node";
 import { bookmarkHandlers, bookmarkLog } from "@/test/saved";
 import { stanceBundle, stanceHandlers } from "@/test/stance";
 import { ProfileScreen } from "./profile-view";
@@ -79,7 +80,14 @@ function meHandler(accountState: "APPLICANT" | "MEMBER" = "MEMBER") {
 }
 
 function recordsHandler(
-  rows: { id: string; family: string; targetId?: string; postId?: string }[],
+  rows: {
+    id: string;
+    family: string;
+    targetId?: string;
+    postId?: string;
+    on?: string;
+    pair?: [number, number];
+  }[],
 ) {
   return gqlLink.query("AuthorRecords", () =>
     HttpResponse.json({
@@ -94,6 +102,10 @@ function recordsHandler(
               family: row.family,
               targetId: row.targetId ?? `mint:${row.id}`,
               terminalId: null,
+              landedAt: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+              pDirected: row.pair?.[0] ?? 0,
+              pInterest: row.pair?.[1] ?? 0,
+              severed: row.pair ? false : null,
               target: row.postId
                 ? {
                     __typename: "Post",
@@ -101,7 +113,9 @@ function recordsHandler(
                     title: { __typename: "ModeratedText", value: "Hello world" },
                     content: { __typename: "ModeratedText", value: "Body" },
                   }
-                : null,
+                : row.on
+                  ? { __typename: "User", id: `u-${row.on}`, handle: row.on }
+                  : null,
               terminal: null,
             },
           })),
@@ -127,17 +141,139 @@ describe("ProfileScreen", () => {
       recordsHandler([{ id: "act:a:1:publish", family: "PUBLISH", postId: "p1" }]),
     );
     renderWithProviders(<ProfileScreen handle="ada" />);
-    expect(await screen.findByTestId("profile-display-name")).toHaveTextContent("Ada L");
-    expect(screen.getByTestId("profile-handle")).toHaveTextContent("@ada");
-    expect(screen.getByTestId("profile-bio")).toHaveTextContent("Curious.");
-    expect(screen.getByTestId("profile-website")).toHaveAttribute("href", "https://ada.example");
+    expect(await screen.findByTestId(byNode("profile.identity.name"))).toHaveTextContent("Ada L");
+    // The bar carries the handle, so the header does not repeat it
+    // (ProfileHeader `showHandle`, ProfileOther.md:3).
+    expect(screen.getByTestId(byNode("profile.header.title"))).toHaveTextContent("@ada");
+    expect(screen.queryByTestId(byNode("profile.identity.handle"))).not.toBeInTheDocument();
+    expect(screen.getByTestId(byNode("profile.identity.bio"))).toHaveTextContent("Curious.");
+    expect(screen.getByTestId(byNode("profile.identity.website"))).toHaveAttribute("href", "https://ada.example");
     // Another actor's profile carries no own affordances.
-    expect(screen.queryByTestId("profile-edit")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("profile-settings")).not.toBeInTheDocument();
+    expect(screen.queryByTestId(byNode("profile.identity.actionRow.edit"))).not.toBeInTheDocument();
+    expect(screen.queryByTestId(byNode("profile.band.gear"))).not.toBeInTheDocument();
     // The chronicle row labels and links to the touched post.
-    const row = await screen.findByTestId("chronicle-row");
+    const row = await screen.findByTestId(byNode("profile.chronicle.act", "1"));
     expect(row).toHaveTextContent("Published a post");
     expect(row).toHaveTextContent("Hello world");
+    // Its age on the trailing edge, and its post naming this profile as the
+    // way back (ProfileOther.md:59).
+    expect(screen.getByTestId(byNode("profile.chronicle.act.trailing", "1"))).toHaveTextContent("3d");
+    expect(row.querySelector("a")).toHaveAttribute("href", "/posts/p1?from=u%3Aada");
+  });
+
+  // THE CHRONICLE'S ROWS (copy-voice.md, the profile's carried-over words):
+  // an opinion on a person wears its face and names them, and has nowhere to
+  // open; a profile update is `theirs` on another's page.
+  it("reads an opinion on a person and a profile update in the blessed words", async () => {
+    server.use(
+      gqlLink.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      recordsHandler([
+        { id: "act:a:2:opinion", family: "OPINION", targetId: "prof:mira", on: "mira", pair: [0.4, 0.5] },
+        { id: "act:a:1:registration", family: "REGISTRATION", targetId: "prof:ada" },
+      ]),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    const opinion = await screen.findByTestId(byNode("profile.chronicle.act", "1"));
+    expect(opinion).toHaveTextContent("Gave an opinion");
+    expect(screen.getByTestId(byNode("profile.chronicle.act.aside", "1"))).toHaveTextContent("on @mira");
+    expect(opinion.querySelector("a")).toBeNull();
+    expect(screen.getByTestId(byNode("profile.chronicle.act", "2"))).toHaveTextContent(
+      "Updated their profile",
+    );
+  });
+
+  // THE CHRONICLE'S TAB ROW (TabBar.jsx; Profile.md:21): three glyph toggles
+  // named in the accessibility tree, the reader landing on Everything.
+  it("lands on Everything under the chronicle's glyph tabs", async () => {
+    server.use(
+      gqlLink.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    const tabs = await screen.findByRole("group", { name: "What the chronicle shows" });
+    expect(tabs).toHaveAttribute("data-testid", "profile.tabRow");
+    expect(screen.getByTestId(byNode("profile.tabRow.everythingTab"))).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId(byNode("profile.tabRow.postsTab"))).toHaveAccessibleName("Posts");
+    expect(screen.getByTestId(byNode("profile.tabRow.commentsTab"))).toHaveAccessibleName("Comments");
+  });
+
+  // THE ACTIONS ROW ON SOMEONE ELSE'S PAGE (ProfileHeader.jsx; ProfileOther.md:9,
+  // :53-55): the wide opinion, then Message, then the ⋮.
+  it("leads the row with the wide opinion, then Message, then the ⋮", async () => {
+    push.mockClear();
+    server.use(
+      meHandler(),
+      gqlLink.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
+    const row = await screen.findByTestId(byNode("profile.identity.actionRow"));
+    const anchor = await screen.findByTestId(byNode("profile.identity.actionRow.stance.anchor"));
+    expect(anchor.className).toContain("flex-1");
+    expect(anchor).toHaveTextContent("Your opinion");
+    const wanted = new Set([
+      "profile.identity.actionRow.stance",
+      "profile.identity.actionRow.message",
+      "profile.identity.actionRow.menu",
+    ]);
+    const order = Array.from(row.querySelectorAll("[data-testid]"))
+      .map((el) => el.getAttribute("data-testid"))
+      .filter((id) => id !== null && wanted.has(id));
+    expect(order).toEqual([...wanted]);
+    fireEvent.click(screen.getByTestId(byNode("profile.identity.actionRow.message")));
+    expect(push).toHaveBeenCalledWith("/chats?from=u%3Aada");
+  });
+
+  it("asks a guest to join on Message", async () => {
+    server.use(
+      gqlLink.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      recordsHandler([]),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    fireEvent.click(await screen.findByTestId(byNode("profile.identity.actionRow.message")));
+    expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
+  });
+
+  // A DELETED ACCOUNT KEEPS THE SHELLS (ProfileDeleted.md): the reserved disc,
+  // `Deleted account`, no handle anywhere — the bar's title included — the
+  // mark in the bio's place, the opinion named `this account`, no Message.
+  it("placeholders a deleted account's identity and keeps its shells", async () => {
+    server.use(
+      gqlLink.query("UserProfile", () =>
+        HttpResponse.json({
+          data: {
+            user: {
+              ...profile("u2", "marlow", null),
+              displayName: { __typename: "ModeratedText", value: null, status: "REDACTED" },
+              websiteUrl: moderated(null),
+            },
+          },
+        }),
+      ),
+      recordsHandler([{ id: "act:m:1:publish", family: "PUBLISH", postId: "p1" }]),
+    );
+    renderWithProviders(<ProfileScreen handle="marlow" />);
+    const name = await screen.findByTestId(byNode("profile.identity.name"));
+    expect(name).toHaveTextContent("Deleted account");
+    expect(name.className).toContain("text-on-surface-variant");
+    expect(screen.queryByTestId(byNode("profile.header.title"))).not.toBeInTheDocument();
+    expect(screen.getByTestId(byNode("profile.identity.removalMark.line"))).toHaveTextContent(
+      "Deleted by the person whose account it was",
+    );
+    expect(screen.queryByTestId(byNode("profile.identity.actionRow.message"))).not.toBeInTheDocument();
+    expect(
+      await screen.findByTestId(byNode("profile.identity.actionRow.stance.anchor")),
+    ).toHaveAccessibleName("Give your opinion on this account");
+    expect(await screen.findByTestId(byNode("profile.chronicle.act", "1"))).toBeInTheDocument();
+    expect(screen.getByRole("main")).not.toHaveTextContent("@marlow");
   });
 
   it("makes the stance the header's primary action on another actor", async () => {
@@ -150,7 +286,7 @@ describe("ProfileScreen", () => {
     renderWithProviders(<ProfileScreen handle="ada" />);
     // The interpersonal stance is the same generic gesture a post takes
     // (design.md §6 "Profile header"; api-spec.md "The generic stance").
-    expect(await screen.findByTestId("profile-stance")).toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("profile.identity.actionRow.stance.anchor"))).toBeInTheDocument();
   });
 
   it("wears the viewer's own standing toward that actor", async () => {
@@ -166,9 +302,9 @@ describe("ProfileScreen", () => {
     );
     renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
     await waitFor(() =>
-      expect(screen.getByTestId("profile-stance")).toHaveAccessibleName(/Really into this/),
+      expect(screen.getByTestId(byNode("profile.identity.actionRow.stance.anchor"))).toHaveAccessibleName(/Really into this/),
     );
-    expect(screen.getByTestId("profile-stance-resting-exact")).toHaveTextContent("+0.60 / +0.65");
+    expect(screen.getByTestId(byNode("profile.identity.actionRow.stance.anchor.exact"))).toHaveTextContent("+0.60 / +0.65");
   });
 
   it("wears that standing on a load that starts with no access token", async () => {
@@ -243,7 +379,7 @@ describe("ProfileScreen", () => {
 
     renderWithProviders(<ProfileScreen handle="ada" />, { store });
     await waitFor(() =>
-      expect(screen.getByTestId("profile-stance-resting-exact")).toHaveTextContent(
+      expect(screen.getByTestId(byNode("profile.identity.actionRow.stance.anchor.exact"))).toHaveTextContent(
         "+0.60 / +0.65",
       ),
     );
@@ -258,8 +394,8 @@ describe("ProfileScreen", () => {
       recordsHandler([]),
     );
     renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
-    expect(await screen.findByTestId("profile-edit")).toBeInTheDocument();
-    expect(screen.queryByTestId("profile-stance")).not.toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("profile.identity.actionRow.edit"))).toBeInTheDocument();
+    expect(screen.queryByTestId(byNode("profile.identity.actionRow.stance.anchor"))).not.toBeInTheDocument();
   });
 
   it("adds another's opened profile to History, the profile alone", async () => {
@@ -271,7 +407,7 @@ describe("ProfileScreen", () => {
       recordsHandler([{ id: "act:a:1:publish", family: "PUBLISH", postId: "p1" }]),
     );
     renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
-    await screen.findByTestId("chronicle-row");
+    await screen.findByTestId(byNode("profile.chronicle.act"));
     // The profile, never the chronicle's posts: those join only as a list
     // sees them.
     await waitFor(() => expect(marked).toEqual([["u2"]]));
@@ -285,7 +421,7 @@ describe("ProfileScreen", () => {
       recordsHandler([]),
     );
     renderWithProviders(<ProfileScreen handle="ada" />);
-    await screen.findByTestId("profile-display-name");
+    await screen.findByTestId(byNode("profile.identity.name"));
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(marked).toEqual([]);
   });
@@ -300,10 +436,10 @@ describe("ProfileScreen", () => {
       recordsHandler([]),
     );
     const tab = renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
-    await screen.findByTestId("profile-edit");
+    await screen.findByTestId(byNode("profile.identity.actionRow.edit"));
     tab.unmount();
     renderWithProviders(<ProfileScreen handle="ada" />, { store: signedInStore() });
-    await screen.findByTestId("profile-edit");
+    await screen.findByTestId(byNode("profile.identity.actionRow.edit"));
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(marked).toEqual([]);
   });
@@ -486,7 +622,7 @@ describe("ProfileScreen", () => {
     it("opened_from_saved_the_back_arrow_reads_back_to_saved", async () => {
       server.use(other(), recordsHandler([]));
       renderWithProviders(<ProfileScreen handle="ada" from="saved" />);
-      const back = await screen.findByTestId("profile-back");
+      const back = await screen.findByTestId(byNode("profile.header.back"));
       expect(back).toHaveAttribute("aria-label", "Back to Saved");
       expect(back).toHaveAttribute("href", "/saved");
     });
@@ -509,10 +645,19 @@ describe("ProfileScreen", () => {
       recordsHandler([]),
     );
     renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
-    expect(await screen.findByTestId("profile-edit")).toHaveAttribute("href", "/profile/edit");
-    expect(screen.getByTestId("profile-settings")).toHaveAttribute("href", "/settings");
-    expect(screen.getByTestId("profile-invites")).toHaveAttribute("href", "/invites");
+    expect(await screen.findByTestId(byNode("profile.identity.actionRow.edit"))).toHaveAttribute("href", "/profile/edit");
+    expect(screen.getByTestId(byNode("profile.band.gear"))).toHaveAttribute("href", "/settings");
+    expect(screen.getByTestId(byNode("profile.identity.actionRow.invites"))).toHaveAttribute("href", "/invites");
     expect(screen.getByTestId("profile-chronicle-empty")).toBeInTheDocument();
+    // The root wears the band (`ProfileBand`): gear, then chats, then the bell.
+    expect(screen.getByTestId(byNode("profile.band.gear"))).toHaveAccessibleName("Settings");
+    expect(screen.getByTestId(byNode("profile.band.wordmark"))).toHaveTextContent("cogra");
+    push.mockClear();
+    fireEvent.click(screen.getByTestId(byNode("profile.band.chats")));
+    expect(push).toHaveBeenCalledWith("/chats?from=profile");
+    expect(screen.getByTestId(byNode("profile.band.bell"))).toBeInTheDocument();
+    // Your own page repeats the handle under the name (the band carries none).
+    expect(screen.getByTestId(byNode("profile.identity.handle"))).toHaveTextContent("@ada");
   });
 
   // A signed profile edit is served from its signature on, pending until it
@@ -531,13 +676,13 @@ describe("ProfileScreen", () => {
     );
     const store = signedInStore();
     const first = renderWithProviders(<ProfileScreen handle={null} />, { store, cache });
-    expect(await screen.findByTestId("profile-bio")).toHaveTextContent("Before the edit.");
+    expect(await screen.findByTestId(byNode("profile.identity.bio"))).toHaveTextContent("Before the edit.");
     first.unmount();
 
     served = profile("u1", "ada_renamed", "Signed, not landed.");
     renderWithProviders(<ProfileScreen handle={null} />, { store, cache });
-    expect(await screen.findByTestId("profile-bio")).toHaveTextContent("Signed, not landed.");
-    expect(screen.getByTestId("profile-handle")).toHaveTextContent("@ada_renamed");
+    expect(await screen.findByTestId(byNode("profile.identity.bio"))).toHaveTextContent("Signed, not landed.");
+    expect(screen.getByTestId(byNode("profile.identity.handle"))).toHaveTextContent("@ada_renamed");
   });
 
   it("locks the invites entry for an applicant and explains on tap", async () => {
@@ -549,11 +694,19 @@ describe("ProfileScreen", () => {
       recordsHandler([]),
     );
     renderWithProviders(<ProfileScreen handle={null} />, { store: signedInStore() });
-    const invites = await screen.findByTestId("profile-invites");
-    // Visible but locked (auth.md "Application"): a button, not a link.
+    const invites = await screen.findByTestId(byNode("profile.identity.actionRow.invites"));
+    // Visible but locked (auth.md "Application"; ProfileApplicant.md:15): a
+    // button at the disabled opacity, not a link, answering in the snackbar.
     expect(invites).not.toHaveAttribute("href");
+    expect(invites.className).toContain("opacity-[var(--state-disabled)]");
     fireEvent.click(invites);
-    expect(screen.getByTestId("profile-invites-locked")).toBeInTheDocument();
+    expect(await screen.findByTestId("profile.snackbar.message")).toHaveTextContent(
+      "You can invite once you're in.",
+    );
+    // The applicant's empty chronicle says what fills it, and when.
+    expect(screen.getByTestId(byNode("profile.chronicle.empty.title"))).toHaveTextContent(
+      "Nothing here yet. Your posts and opinions show up here once you're in.",
+    );
   });
 
   it("switches the chronicle filter and refetches", async () => {
@@ -576,11 +729,30 @@ describe("ProfileScreen", () => {
       }),
     );
     renderWithProviders(<ProfileScreen handle="ada" />);
-    await screen.findByTestId("profile-display-name");
-    // Every visitor lands on Posts (decision 2026-08-18).
-    await waitFor(() => expect(families).toEqual(["PUBLISH"]));
-    fireEvent.click(screen.getByTestId("profile-filter-everything"));
-    await waitFor(() => expect(families).toEqual(["PUBLISH", null]));
+    await screen.findByTestId(byNode("profile.identity.name"));
+    // Every visitor lands on Everything, as every profile board draws it.
+    await waitFor(() => expect(families).toEqual([null]));
+    fireEvent.click(screen.getByTestId(byNode("profile.tabRow.postsTab")));
+    await waitFor(() => expect(families).toEqual([null, "PUBLISH"]));
+  });
+
+  // THE PAGE THAT DID NOT ARRIVE (Profile.md:35): the quiet line and Retry
+  // where the page would have stood — never the error colour, never Show more.
+  it("says a chronicle page did not arrive, quietly, with Retry", async () => {
+    server.use(
+      gqlLink.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      gqlLink.query("AuthorRecords", () => HttpResponse.error()),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    const line = await screen.findByTestId("profile-rows-failed");
+    expect(line).toHaveTextContent("Couldn't load more");
+    expect(line.className).not.toContain("text-error");
+    expect(screen.queryByTestId("profile-rows-more")).not.toBeInTheDocument();
+    server.use(recordsHandler([{ id: "act:a:1:publish", family: "PUBLISH", postId: "p1" }]));
+    fireEvent.click(screen.getByTestId("profile-rows-retry"));
+    expect(await screen.findByTestId(byNode("profile.chronicle.act", "1"))).toBeInTheDocument();
   });
 
   it("offers a retry on the nothing-loaded transport fault", async () => {
@@ -594,7 +766,7 @@ describe("ProfileScreen", () => {
       recordsHandler([]),
     );
     fireEvent.click(screen.getByTestId("profile-retry"));
-    expect(await screen.findByTestId("profile-display-name")).toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("profile.identity.name"))).toBeInTheDocument();
   });
 
   // The profile is one of the named surfaces (design/readme.md, "The
@@ -637,14 +809,14 @@ describe("ProfileScreen", () => {
         recordsHandler([]),
       );
       const scroller = profileIn();
-      await screen.findByTestId("profile-display-name");
+      await screen.findByTestId(byNode("profile.identity.name"));
       expect(reads).toBe(1);
 
       pull(scroller);
       await waitFor(() => expect(reads).toBe(2));
       // The already-drawn profile stays — the pull is an indicator, not
       // a blank page (PostDetailViewModel's shared rule, HT-10).
-      expect(screen.getByTestId("profile-display-name")).toBeInTheDocument();
+      expect(screen.getByTestId(byNode("profile.identity.name"))).toBeInTheDocument();
       scroller.remove();
     });
 
@@ -658,7 +830,7 @@ describe("ProfileScreen", () => {
         recordsHandler([]),
       );
       const scroller = profileIn();
-      await screen.findByTestId("profile-display-name");
+      await screen.findByTestId(byNode("profile.identity.name"));
 
       pull(scroller, PULL_THRESHOLD - 1);
       await waitFor(() => expect(reads).toBe(1));
@@ -675,7 +847,7 @@ describe("ProfileScreen", () => {
         recordsHandler([]),
       );
       const scroller = profileIn();
-      await screen.findByTestId("profile-display-name");
+      await screen.findByTestId(byNode("profile.identity.name"));
 
       scroller.scrollTop = 900;
       pull(scroller);
@@ -733,7 +905,7 @@ describe("ProfileScreen — the voucher's profile", () => {
       store: signedInStore(),
       stanceData: createStubStanceData(),
     });
-    fireEvent.click(await screen.findByTestId("profile-stance"));
+    fireEvent.click(await screen.findByTestId(byNode("profile.identity.actionRow.stance.anchor")));
     expect(await screen.findByTestId("profile-stance-pad")).toHaveAttribute(
       "aria-label",
       "Your vouch back",
@@ -751,7 +923,7 @@ describe("ProfileScreen — the voucher's profile", () => {
       store: signedInStore(),
       stanceData: data,
     });
-    fireEvent.click(await screen.findByTestId("profile-stance"));
+    fireEvent.click(await screen.findByTestId(byNode("profile.identity.actionRow.stance.anchor")));
     fireEvent.click(await screen.findByTestId("profile-stance-set"));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/vouched-in"));
     expect(data.sent[0]?.target).toBe("u2");
@@ -765,7 +937,7 @@ describe("ProfileScreen — the voucher's profile", () => {
       store: signedInStore(),
       stanceData: held,
     });
-    const anchor = await screen.findByTestId("profile-stance");
+    const anchor = await screen.findByTestId(byNode("profile.identity.actionRow.stance.anchor"));
     await waitFor(() => expect(anchor).not.toHaveAttribute("aria-busy", "true"));
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {
@@ -789,10 +961,10 @@ describe("ProfileScreen — the voucher's profile", () => {
       store: signedInStore(),
       stanceData: data,
     });
-    fireEvent.click(await screen.findByTestId("profile-stance"));
+    fireEvent.click(await screen.findByTestId(byNode("profile.identity.actionRow.stance.anchor")));
     fireEvent.click(await screen.findByTestId("profile-stance-cancel"));
     expect(screen.queryByTestId("profile-stance-pad")).not.toBeInTheDocument();
-    expect(screen.getByTestId("profile-display-name")).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("profile.identity.name"))).toBeInTheDocument();
     expect(data.sent).toHaveLength(0);
     expect(push).not.toHaveBeenCalled();
   });
@@ -804,7 +976,7 @@ describe("ProfileScreen — the voucher's profile", () => {
       store: signedInStore(),
       stanceData: createStubStanceData(),
     });
-    fireEvent.click(await screen.findByTestId("profile-stance"));
+    fireEvent.click(await screen.findByTestId(byNode("profile.identity.actionRow.stance.anchor")));
     expect(await screen.findByTestId("profile-stance-pad")).toHaveAttribute(
       "aria-label",
       "Opinion pad for @mira",
