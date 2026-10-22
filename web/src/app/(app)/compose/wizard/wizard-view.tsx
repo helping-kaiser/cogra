@@ -814,7 +814,7 @@ export function ComposeWizard({
         // "Signed actions". One `?` per screen, so only the seal carries one.
         help={
           state.step === "seal" ? (
-            <HelpButton onOpen={() => setHelp(HELP_TOPICS.signedActions)} label="Signed actions" />
+            <HelpButton onOpen={() => setHelp(HELP_TOPICS.howSigningWorks)} label="Signed actions" />
           ) : undefined
         }
         // THE HEADER CARRIES ONLY THE WAYS OUT (jakob 2026-09-01). Next lived
@@ -1111,7 +1111,7 @@ export function ComposeWizard({
       <HelpDialog
         open={help !== null}
         onClose={() => setHelp(null)}
-        topic={help ?? HELP_TOPICS.signedActions}
+        topic={help ?? HELP_TOPICS.howSigningWorks}
         testId="wizard-help"
       />
     </main>

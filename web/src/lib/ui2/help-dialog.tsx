@@ -91,11 +91,22 @@ export const HELP_TOPICS = {
       "Nothing was signed or spent. Try again in a little while.",
     ],
   },
-  signedActions: {
-    title: "Signed actions",
+  // The same dialog from the post's seal, whose draft is kept (copy-voice,
+  // *Why signing waits*, blessed jakob 2026-10-01).
+  whySigningWaits: {
+    title: "Why signing waits",
     paragraphs: [
-      "Each piece of a post — the post itself, every topic, every citation — is its own signed action, written in your name. They sign together: all of them land, or none does.",
-      "You don't pay for these — a shared community pool covers members' signings. The pool is real and finite, so each action still counts.",
+      "There's a limit to how many signed actions can go through in a short time — it keeps the network safe from flooding. You've hit it for now.",
+      "Nothing was signed or spent, and your draft is kept. Try again in a little while.",
+    ],
+  },
+  // The seal's own "?" — the post's and the reply's (copy-voice, *How signing
+  // works*; payer-neutral by the v1.0.0 scope cut, jakob 2026-09-25).
+  howSigningWorks: {
+    title: "How signing works",
+    paragraphs: [
+      "Each piece of a post — the post itself, every tag, every citation — is signed on its own, in your name. They sign together: all of them land, or none does.",
+      "Each signing is paid for — the cost is real, so each one still counts.",
     ],
   },
   license: {
@@ -108,22 +119,22 @@ export const HELP_TOPICS = {
   markingAsSensitive: {
     title: "Marking as sensitive",
     paragraphs: [
-      "The mark veils the pictures and the description until a reader chooses to look. The title stays readable, so choosing is informed.",
+      "The mark veils the pictures and the words until a reader chooses to look. The title stays readable, so choosing is informed.",
       "Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.",
     ],
   },
   describingPictures: {
     title: "Describing pictures",
     paragraphs: [
-      "A description is read aloud by screen readers and shown when a picture can't load — plain words about what's there. It travels with the picture, public like the rest of the post.",
+      "A description is read aloud by screen readers and shown when a picture can't load — plain words about what's there. It travels with the picture, public like the rest of the post. A video takes one description for the whole clip; its cover takes none of its own.",
       "Nothing is described for you: a picture without a description is skipped by screen readers, never guessed at.",
     ],
   },
   editing: {
     title: "Editing",
     paragraphs: [
-      'An edit replaces the whole post; earlier versions stay public under "Edited" unless you remove them. An edit never bumps the post as new.',
-      "Topic and citation changes ride the same signing, each as its own signed action. The license never changes.",
+      'An edit signs a full new version on top; earlier versions stay public under "Edited". An edit never bumps it as new.',
+      "Tag and citation changes ride the same signing, each as its own signed action. The license never changes.",
     ],
   },
   changingYourPicture: {
@@ -132,7 +143,7 @@ export const HELP_TOPICS = {
       // Nothing more: the picture changing when it lands is expected, and
       // a "?" explains only what is new (copy-voice, jakob 2026-10-20).
       "Your profile is a public record, and changes to it are signed actions in your name.",
-      "The community pool covers the signing, like your posts. The record that you changed it stays, like every signed action.",
+      "The signing is paid for, like your posts. The record that you changed it stays, like every signed action.",
     ],
   },
   // The one-axis pad on your own post — the seal's and a post edit's
@@ -163,8 +174,8 @@ export const HELP_TOPICS = {
   yourKey: {
     title: "Your key",
     paragraphs: [
-      "Signing needs your key, and it isn't on this browser. Nothing is signed or sent without it — the draft stays on this device.",
-      "Restore the key with your recovery code to finish. Restoring here is the only way to complete this write.",
+      "Signing needs your key, and it isn't on this browser — nothing is signed without it.",
+      "A recovery code brings the key to any device. Until it's here, anything waiting on it stays on this device.",
     ],
   },
 } as const satisfies Record<string, HelpTopic>;

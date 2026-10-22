@@ -538,8 +538,8 @@ export function ReplyWizard({
                 Last step
               </span>
               <HelpButton
-                label="Signed actions"
-                onOpen={() => setHelp(HELP_TOPICS.signedActions)}
+                label="How signing works"
+                onOpen={() => setHelp(HELP_TOPICS.howSigningWorks)}
               />
             </span>
           ) : undefined
@@ -641,7 +641,7 @@ export function ReplyWizard({
       <HelpDialog
         open={help !== null}
         onClose={() => setHelp(null)}
-        topic={help ?? HELP_TOPICS.signedActions}
+        topic={help ?? HELP_TOPICS.howSigningWorks}
         testId="reply-help-dialog"
       />
 
