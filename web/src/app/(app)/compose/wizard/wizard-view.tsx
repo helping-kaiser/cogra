@@ -638,6 +638,7 @@ export function ComposeWizard({
 
   const submit = async () => {
     setBusy(true);
+    setHeld(false);
     setFault(null);
     setTagErrors({});
     setReferenceErrors({});
@@ -835,16 +836,16 @@ export function ComposeWizard({
   // again (ComposeSealUploading.md). Nothing signs before the bytes exist.
   const pendingUploads = uploadsPending(state);
   const failedUploads = uploadsFailed(state);
+  // A failure drops the press during render, the state an upload's own
+  // outcome leaves behind (React, "adjusting some state when a prop changes").
+  if (held && failedUploads > 0) setHeld(false);
+  // Signing is the side effect: the last upload landing releases the press
+  // into `submit`, which takes the press over as `busy` (it clears `held`).
+  // It starts as a task of its own, as the network answer it waits on is.
   useEffect(() => {
-    if (!held) return;
-    if (failedUploads > 0) {
-      setHeld(false);
-      return;
-    }
-    if (pendingUploads === 0) {
-      setHeld(false);
-      void submit();
-    }
+    if (!held || pendingUploads > 0 || failedUploads > 0) return;
+    const release = setTimeout(() => void submit(), 0);
+    return () => clearTimeout(release);
     // `submit` reads the state it is handed this render; the press is the
     // trigger, and the upload counts are what release it.
     // eslint-disable-next-line react-hooks/exhaustive-deps

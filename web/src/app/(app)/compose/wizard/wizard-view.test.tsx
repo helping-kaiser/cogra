@@ -1430,3 +1430,62 @@ describe("the kept draft", () => {
   });
 });
 });
+
+// ComposeSealUploading: the commit stays enabled while the bytes go up; a
+// press is HELD, nothing is prepared or signed before the last upload lands,
+// and the signing then proceeds with no second press.
+describe("a press held on the upload gate", () => {
+  it("signs the moment the last upload lands, with no second press", async () => {
+    let releaseUpload: () => void = () => {};
+    const uploaded = new Promise<void>((resolve) => {
+      releaseUpload = resolve;
+    });
+    let prepared = 0;
+    server.use(
+      gqlLink.mutation("UploadMedia", async () => {
+        await uploaded;
+        return HttpResponse.json({
+          data: {
+            uploadMedia: { __typename: "UploadMediaPayload", media: echoedMedia("m-held"), userErrors: [] },
+          },
+        });
+      }),
+      gqlLink.mutation("PreparePost", () => {
+        prepared += 1;
+        return HttpResponse.json({
+          data: {
+            preparePost: {
+              __typename: "PrepareContentPayload",
+              node: "post-held",
+              writes: [
+                { __typename: "PreparedWrite", id: "w1", family: "PUBLISH", canonicalProposal: "AA==", gcAfterEpochs: 3 },
+              ],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    render();
+
+    await pick(["one.jpg"]);
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+    await screen.findByTestId(byNode("composeDetails.title.input"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+
+    expect(await screen.findByTestId("wizard-seal-blocked")).toHaveTextContent(/^Uploading 0 of 1/);
+    const commit = screen.getByTestId("wizard-sign");
+    expect(commit).not.toBeDisabled();
+    fireEvent.click(commit);
+    // Held: nothing is prepared while the bytes are still moving.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    expect(prepared).toBe(0);
+
+    releaseUpload();
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-held?published=1"));
+    expect(prepared).toBe(1);
+  });
+});
