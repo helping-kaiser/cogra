@@ -21,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.isTraversalGroup
@@ -33,13 +32,6 @@ import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.ThemePreviews
-
-/**
- * One cell of a [TabBar]: a glyph cell when it has an [icon] (named by
- * [label] in the accessibility tree, the only name an icon-only control can
- * have), else [label] as its own words.
- */
-data class TabBarTab(val id: String, val label: String, val icon: ImageVector? = null)
 
 /**
  * THE FULL-WIDTH TAB ROW (`design/components/navigation/TabBar.jsx`): equal

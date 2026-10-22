@@ -60,11 +60,6 @@ internal fun ProfileHeader(
     actions: @Composable RowScope.() -> Unit,
     under: @Composable () -> Unit = {},
 ) {
-    val deleted = profile.deleted
-    val name = when {
-        deleted -> stringResource(DesignR.string.content_row_deleted_account)
-        else -> profile.displayName.value?.takeIf { it.isNotBlank() } ?: profile.handle
-    }
     Column(
         modifier = Modifier
             .padding(horizontal = Space.x4)
@@ -74,73 +69,13 @@ internal fun ProfileHeader(
             .padding(top = Space.x3, bottom = Space.x1),
         verticalArrangement = Arrangement.spacedBy(Space.x3),
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(Space.x4)) {
-            if (deleted) {
-                // THE RESERVED DISC: no monogram (no name to take a letter
-                // from) and no glyph (imagery with no source).
-                Box(
-                    Modifier
-                        .dataNode(node / "avatar")
-                        .size(AVATAR)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                )
-            } else {
-                // The picture when they have one, the monogram when they do not
-                // — and where a load fails, so "none" and "broken" look alike.
-                CograAvatar(
-                    name = name,
-                    size = AVATAR,
-                    url = profile.avatar?.url,
-                    testTag = (node / "avatar").tag,
-                )
-            }
-            // The name column takes what the avatar leaves (`minmax(0, 1fr)`).
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(NAME_GAP)) {
-                Text(
-                    text = name,
-                    style = MaterialTheme.typography.titleLarge,
-                    // `Deleted account` is the system's voice, not a chosen name.
-                    color = if (deleted) {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { heading() }
-                        .dataNode(node / "name"),
-                )
-                if (showHandle && !deleted) {
-                    Text(
-                        text = "@${profile.handle}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.fillMaxWidth().dataNode(node / "handle"),
-                    )
-                }
-            }
-        }
-        if (deleted) {
+        Identity(profile, showHandle, node)
+        if (profile.deleted) {
             // THE MARK STANDS IN THE BIO'S PLACE — a space kept, not lost
             // (ProfileDeleted.md:11). Its moment is not on the wire yet.
             RemovedPlaceholder(RemovalReason.Account, node = node / "removalMark")
         } else {
-            profile.bio.value?.takeIf { it.isNotBlank() }?.let { bio ->
-                Text(
-                    text = bio,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.fillMaxWidth().dataNode(node / "bio"),
-                )
-            }
-            profile.websiteUrl.value?.takeIf { it.isNotBlank() }?.let { url ->
-                Text(
-                    text = url,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.fillMaxWidth().dataNode(node / "website"),
-                )
-            }
+            OwnWords(profile, node)
         }
         Column {
             Row(
@@ -151,6 +86,74 @@ internal fun ProfileHeader(
             )
             under()
         }
+    }
+}
+
+/** The avatar and, beside it, the name over the handle. */
+@Composable
+private fun Identity(profile: ProfileView, showHandle: Boolean, node: DataNode) {
+    val deleted = profile.deleted
+    val name = when {
+        deleted -> stringResource(DesignR.string.content_row_deleted_account)
+        else -> profile.displayName.value?.takeIf { it.isNotBlank() } ?: profile.handle
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(Space.x4)) {
+        if (deleted) {
+            // THE RESERVED DISC: no monogram (no name to take a letter
+            // from) and no glyph (imagery with no source).
+            Box(
+                Modifier
+                    .dataNode(node / "avatar")
+                    .size(AVATAR)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            )
+        } else {
+            // The picture when they have one, the monogram when they do not
+            // — and where a load fails, so "none" and "broken" look alike.
+            CograAvatar(name = name, size = AVATAR, url = profile.avatar?.url, testTag = (node / "avatar").tag)
+        }
+        // The name column takes what the avatar leaves (`minmax(0, 1fr)`).
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(NAME_GAP)) {
+            Text(
+                text = name,
+                style = MaterialTheme.typography.titleLarge,
+                // `Deleted account` is the system's voice, not a chosen name.
+                color = MaterialTheme.colorScheme.let { if (deleted) it.onSurfaceVariant else it.onSurface },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { heading() }
+                    .dataNode(node / "name"),
+            )
+            if (showHandle && !deleted) {
+                Text(
+                    text = "@${profile.handle}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxWidth().dataNode(node / "handle"),
+                )
+            }
+        }
+    }
+}
+
+/** Their own words: the bio, unclamped, then the website in `primary`. */
+@Composable
+private fun OwnWords(profile: ProfileView, node: DataNode) {
+    profile.bio.value?.takeIf { it.isNotBlank() }?.let { bio ->
+        Text(
+            text = bio,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.fillMaxWidth().dataNode(node / "bio"),
+        )
+    }
+    profile.websiteUrl.value?.takeIf { it.isNotBlank() }?.let { url ->
+        Text(
+            text = url,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.fillMaxWidth().dataNode(node / "website"),
+        )
     }
 }
 

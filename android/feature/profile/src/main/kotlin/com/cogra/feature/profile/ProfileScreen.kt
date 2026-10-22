@@ -163,32 +163,7 @@ fun ProfileRoute(
         deletionBand = deletionBand,
         banners = banners,
         stanceControl = { target, label, node ->
-            val profile = state.profile
-            if (state.vouchesBack && profile != null) {
-                // THE VOUCH-BACK STAYS OPEN FROM HERE (VouchBack.md:51): the
-                // tap opens the vouch-back pad, Cancel closes back onto this
-                // profile (VouchBackPad.md:47), and a taken signing opens the
-                // ceremony instead of the control's own confirmation.
-                StanceControlRoute(
-                    target = StanceTarget.Node(target),
-                    testTagPrefix = "profile",
-                    targetLabel = label,
-                    wide = true,
-                    node = node,
-                    variant = vouchBackVariant(),
-                    onTaken = { onVouchedBack(profile) },
-                    onRequireAccount = onRequireAccount,
-                )
-            } else {
-                StanceControlRoute(
-                    target = StanceTarget.Node(target),
-                    testTagPrefix = "profile",
-                    targetLabel = label,
-                    wide = true,
-                    node = node,
-                    onRequireAccount = onRequireAccount,
-                )
-            }
+            ProfileStance(state, target, label, node, onVouchedBack, onRequireAccount)
         },
         saved = rememberSavedWrites(),
         hidden = rememberHiddenSet(),
@@ -302,18 +277,7 @@ fun ProfileScreen(
                 if (onBack == null) {
                     ProfileBand(collapsingTop, onOpenSettings, onChats, bell)
                 } else {
-                    // THE HEADER BAR CARRIES ONLY THE WAY BACK (ProfileOther.md:3),
-                    // and it leaves with the scroll and returns on the way up.
-                    CollapsingTopBand(collapsingTop) {
-                        PageHeader(
-                            // No handle anywhere on a deleted account's page,
-                            // the bar's title included (ProfileDeleted.md:9).
-                            title = state.profile?.takeUnless { it.deleted }?.let { "@${it.handle}" },
-                            onBack = onBack,
-                            backContentDescription = backDescription ?: stringResource(R.string.profile_back_feed),
-                            node = PROFILE / "header",
-                        )
-                    }
+                    ProfileHeaderBar(state.profile, collapsingTop, onBack, backDescription)
                 }
                 // Directly under the header, collapsing with it (FeedDeleting.md:5).
                 CollapsingTopBand(collapsingTop) { deletionBand() }
@@ -493,20 +457,7 @@ private fun ProfileList(
                 under = { savedHost?.comfortLine(profile.id)?.let { RowLine(it, "profile_row_line") } },
             )
         }
-        item(key = "tabs") {
-            val labels = chronicleTabs(
-                posts = stringResource(R.string.profile_filter_posts),
-                comments = stringResource(R.string.profile_filter_comments),
-                everything = stringResource(R.string.profile_filter_everything),
-            )
-            TabBar(
-                tabs = labels,
-                value = state.filter.id,
-                onSelect = { id -> ChronicleFilter.entries.first { it.id == id }.let(actions.onFilterChange) },
-                label = stringResource(R.string.profile_tabs),
-                node = PROFILE / "tabRow",
-            )
-        }
+        item(key = "tabs") { ChronicleTabRow(state.filter, actions.onFilterChange) }
         // The chronicle's column: cards 8dp apart on 8dp of surface
         // (`ChronicleList`), the gap carried by each card's own top.
         item(key = "chronicle-top") {
@@ -643,3 +594,69 @@ private val CHRONICLE_TOP = 8.dp
 
 /** Between two cards (`ChronicleList` `gap: 8`). */
 private val CHRONICLE_GAP = 8.dp
+
+/**
+ * THE HEADER BAR CARRIES ONLY THE WAY BACK (ProfileOther.md:3), and it leaves
+ * with the scroll and returns on the way up. No handle anywhere on a deleted
+ * account's page, the bar's title included (ProfileDeleted.md:9).
+ */
+@Composable
+private fun ProfileHeaderBar(
+    profile: ProfileView?,
+    collapsingTop: CollapsingTop,
+    onBack: () -> Unit,
+    backDescription: String?,
+) {
+    CollapsingTopBand(collapsingTop) {
+        PageHeader(
+            title = profile?.takeUnless { it.deleted }?.let { "@${it.handle}" },
+            onBack = onBack,
+            backContentDescription = backDescription ?: stringResource(R.string.profile_back_feed),
+            node = PROFILE / "header",
+        )
+    }
+}
+
+/** The live opinion on the person: wide, named, on its registered node, the shell's guest gate passed through. */
+@Composable
+private fun ProfileStance(
+    state: ProfileUiState,
+    target: String,
+    label: String,
+    node: DataNode,
+    onVouchedBack: (ProfileView) -> Unit,
+    onRequireAccount: (() -> Unit)?,
+) {
+    val profile = state.profile
+    // THE VOUCH-BACK STAYS OPEN FROM HERE (VouchBack.md:51): the tap opens
+    // the vouch-back pad, Cancel closes back onto this profile
+    // (VouchBackPad.md:47), and a taken signing opens the ceremony instead
+    // of the control's own confirmation.
+    val vouchBack = state.vouchesBack && profile != null
+    StanceControlRoute(
+        target = StanceTarget.Node(target),
+        testTagPrefix = "profile",
+        targetLabel = label,
+        wide = true,
+        node = node,
+        variant = if (vouchBack) vouchBackVariant() else null,
+        onTaken = if (vouchBack && profile != null) ({ onVouchedBack(profile) }) else null,
+        onRequireAccount = onRequireAccount,
+    )
+}
+
+/** The chronicle's tab row: Posts, Comments and Everything, by glyph (Profile.md:21). */
+@Composable
+private fun ChronicleTabRow(filter: ChronicleFilter, onFilterChange: (ChronicleFilter) -> Unit) {
+    TabBar(
+        tabs = chronicleTabs(
+            posts = stringResource(R.string.profile_filter_posts),
+            comments = stringResource(R.string.profile_filter_comments),
+            everything = stringResource(R.string.profile_filter_everything),
+        ),
+        value = filter.id,
+        onSelect = { id -> onFilterChange(ChronicleFilter.entries.first { it.id == id }) },
+        label = stringResource(R.string.profile_tabs),
+        node = PROFILE / "tabRow",
+    )
+}
