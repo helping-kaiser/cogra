@@ -256,7 +256,9 @@ function BodyStrip({
   const isVideo = first !== undefined && kindOf(first) === "video";
 
   return (
-    <div className="flex flex-col gap-2">
+    // ComposeDetails / ComposeUploading: the row, the failure line and the
+    // describe counter stand in the stage's own 14px column rhythm.
+    <div className="flex flex-col gap-3.5">
       <PickedRow
         items={assets.map((asset) => ({
           id: asset.id,
