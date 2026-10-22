@@ -57,6 +57,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.cogra.core.designsystem.CommentStanceTarget
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.RowLine
@@ -145,7 +146,7 @@ internal fun CommentFeedCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                stanceControl(comment.id, testTagPrefix, null)
+                CommentStanceTarget { stanceControl(comment.id, testTagPrefix, null) }
                 val handle = comment.author?.handle
                 GlyphAffordance(
                     icon = Icons.Filled.ChatBubble,
