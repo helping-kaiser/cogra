@@ -28,10 +28,11 @@
 // sheet (`post-menu.ts`). AT 360 the wide row stands — 360dp is mainstream
 // android, so the narrow treatment is for the genuinely small.
 //
-// ONE SLOT IS EMPTY, DELIBERATELY, and says why where it stands: the Post
-// Score, which has no field on the contract until slice 3's ranker. A slot
-// arrives WITH its surface — the `BottomNav` precedent — and a control that
-// goes nowhere is worse than one that is not there.
+// ONE SLOT IS EMPTY, DELIBERATELY: the Feed score. The ranking carries the
+// figure, but the figure is a door (`ExplainableNumber`: "every number is
+// explainable"), and the four screens it opens (`FeedEntry` and below) are not
+// built yet. A slot arrives WITH its surface — the `BottomNav` precedent — and
+// a control that goes nowhere is worse than one that is not there.
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -372,9 +373,19 @@ export function PostCard({
       )}
     </>
   );
+  // TITLE · BODY · DESCRIPTION STAND 4px APART (`PostCard.jsx` `textBlock`,
+  // `--space-1`: "two fields, one visible join"), and the block stands the
+  // card's 12px under the media, as its own child of the card does on the
+  // board. With nothing in it, nothing is drawn — an empty block would still
+  // spend that 12px.
+  const hasText =
+    (!media && heading !== null) ||
+    (words !== null && words !== "") ||
+    (description !== null && description !== "");
+  const textBlock = hasText ? <div className="flex flex-col gap-1">{bodyText}</div> : null;
 
   return (
-    <Card testId={testId} node={node}>
+    <Card testId={testId} node={node} door={!detail && !redacted}>
       {/* AUTHOR, TIMESTAMP, AND THE ⋮ — the card's header line. ON A DETAIL
           SURFACE THE PAGE HEADER OWNS THE ONE OVERFLOW (`_shared.jsx:341-346`
           — the master hides the card's dot in `detail`): two dots would be two
@@ -462,7 +473,7 @@ export function PostCard({
           signature={sensitiveSignature(post)}
         >
           {detail ? (
-            <>
+            <div className="flex flex-col gap-3">
               {drawsMedia && (
                 <PostMedia
                   node={post}
@@ -473,18 +484,24 @@ export function PostCard({
                   onOpen={onOpenMedia}
                 />
               )}
-              {bodyText}
-            </>
+              {textBlock}
+            </div>
           ) : (
             /* TAPPING THE CARD OPENS THE POST — one link over the whole body,
                media included, so there is one tab stop rather than two to the
                same destination. Anything with its own meaning (the author chip,
-               the affordance row, the opener) stands outside it. */
-            <Link href={href} data-testid={`${testId}-link`} className="flex flex-col gap-2">
+               the affordance row, the opener) stands outside it. It is the
+               card's DOOR (`cg-door`): hovered or pressed, the whole card takes
+               the layer (`Card.jsx`, the K13 round). */
+            <Link
+              href={href}
+              data-testid={`${testId}-link`}
+              className="cg-focus cg-door flex flex-col gap-3"
+            >
               {drawsMedia && (
                 <PostMedia node={post} testId={`${testId}-media`} dataNode={part(node, "media")} />
               )}
-              {bodyText}
+              {textBlock}
             </Link>
           )}
         </BodyRegion>
@@ -497,7 +514,7 @@ export function PostCard({
           aria-expanded={open}
           {...testAttributes(part(node, "opener"), `${testId}-opener`)}
           onClick={() => setOpen((shown) => !shown)}
-          className="cg-state cg-focus self-start border-0 bg-transparent px-0 py-1 text-label-medium text-on-surface-variant"
+          className="cg-state cg-focus cg-hit self-start border-0 bg-transparent px-0 py-1 text-label-medium text-on-surface-variant"
         >
           {open ? "Less" : "More"}
         </button>
@@ -545,15 +562,19 @@ export function PostCard({
           tap spent on nothing. The comment's door is its ⋮, where the row
           stands whatever the count is, and that is where the empty sheet
           lives. */}
+      {/* THE COUNT RIDES INSIDE THE NAME (copy-voice, *The opinions list*;
+          `PostCard.jsx`, the K13 round): the line's own words are its
+          accessible name — `Cited by 4` — because a door's name replaces
+          everything in it and the number is why the line exists. Drawn at
+          body-small, it answers to 48px through `cg-hit`, its ink unchanged. */}
       {!redacted && detail && citedBy > 0 && (
         <button
           type="button"
-          className="w-full text-left text-body-small text-on-surface-variant"
+          className="cg-state cg-focus cg-hit flex w-full items-center border-0 bg-transparent p-0 text-left text-body-small text-on-surface-variant"
           {...testAttributes(part(node, "citedBy"), `${testId}-cited-by`)}
-          aria-label="Cited by"
           onClick={onOpenCitedBy}
         >
-          Cited by {citedBy}
+          <span>Cited by {citedBy}</span>
         </button>
       )}
       {/* Shown in full, marked quietly (design.md §9) — a pending post is real
@@ -561,10 +582,14 @@ export function PostCard({
       {isPending(post) && <PendingMarker testId={`${testId}-pending`} />}
       {/* THE AFFORDANCE ROW. Stance leads — it is the gesture the product lives
           on — then the Post Score, then comments, then share. ONE LINE, NEVER
-          WRAPPING. */}
+          WRAPPING. IT SPREADS ACROSS THE CARD (`PostCard.jsx`, jakob's ruling,
+          the geek round): the controls sit at even intervals over the full
+          width, share closing the row at its right edge — the thumb habit
+          every reader has, and the last affordance reachable without crossing
+          the first. Spreading is a distribution, not a re-ranking. */}
       <div
         {...testAttributes(part(node, "actionRow"), `${testId}-affordances`)}
-        className="flex min-w-0 flex-nowrap items-center gap-2"
+        className="flex w-full min-w-0 flex-nowrap items-center justify-between gap-2"
       >
         <StanceControl
           target={{ id: post.id, kind: "post", label: "this post" }}

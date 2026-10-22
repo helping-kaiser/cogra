@@ -799,6 +799,8 @@ describe("PostView", () => {
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     expect(await screen.findByTestId(byNode("postDetail.card.citedBy"))).toHaveTextContent("Cited by 4");
+    // The count rides inside the name: the line's own words are it.
+    expect(screen.getByRole("button", { name: "Cited by 4" })).toBeInTheDocument();
   });
 
   // ReaderPostMenu.md:15 — hiding from the detail keeps the reader on the post;
