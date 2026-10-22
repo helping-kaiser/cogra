@@ -68,20 +68,24 @@ export function TopicChip({
     // the body ink, one line. It answers at 48px through `cg-hit`. A detail's
     // line is ONE control, so there the pill is inert (`href` absent): a link
     // nested in a button is two controls fighting over one press.
-    const pill =
-      "relative inline-flex h-8 box-content flex-none items-center whitespace-nowrap rounded-full border border-outline-variant bg-surface-container-highest px-3 text-label-large text-on-surface";
+    //
+    // The registered node (`….tagsLine.tag`) IS the pill, so the link fills
+    // it: the state layer covers the whole pill, the focus ring rides its edge.
     return (
-      <span {...testAttributes(node, testId)} className="inline-flex flex-none">
+      <span
+        {...testAttributes(node, testId)}
+        className="relative inline-flex h-8 box-content flex-none items-center whitespace-nowrap rounded-full border border-outline-variant bg-surface-container-highest text-label-large text-on-surface"
+      >
         {href !== undefined ? (
           <Link
             href={href}
             data-testid={testId !== undefined ? `${testId}-link` : undefined}
-            className={`cg-state cg-focus cg-hit ${pill}`}
+            className="cg-state cg-focus cg-hit flex h-full items-center rounded-full px-3"
           >
             {label}
           </Link>
         ) : (
-          <span className={pill}>{label}</span>
+          <span className="px-3">{label}</span>
         )}
       </span>
     );

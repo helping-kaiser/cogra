@@ -108,7 +108,7 @@ describe("TopicsLine", () => {
   // drawn), and the 48px target through `cg-hit`.
   it("draws each chip as the master's hairline pill, answering at 48px", () => {
     render(<TopicsLine topics={[topic("rust")]} references={0} testIdPrefix="feed-post-p1" />);
-    const pill = screen.getByTestId("feed-post-p1-topic-rust-link").className;
+    const pill = screen.getByTestId("feed-post-p1-topic-rust").className;
     for (const token of [
       "h-8",
       "box-content",
@@ -116,10 +116,13 @@ describe("TopicsLine", () => {
       "bg-surface-container-highest",
       "text-label-large",
       "text-on-surface",
-      "cg-hit",
     ]) {
       expect(pill).toContain(token);
     }
+    // The link fills the pill, its layer and its 48px target with it.
+    const link = screen.getByTestId("feed-post-p1-topic-rust-link").className;
+    expect(link).toContain("cg-hit");
+    expect(link).toContain("h-full");
   });
 
   // The `…` the pending marker used to append is indistinguishable from a
