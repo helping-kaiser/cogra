@@ -572,8 +572,13 @@ describe("the compose wizard", () => {
     fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
     fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
-    // The server's own words, on the details screen, with the retry beside them.
-    expect(await screen.findByText(/Too many attempts/)).toBeInTheDocument();
+    // ComposeUploading.md: the board's own line on the details screen, with
+    // the retry beside it — a failure that can be tried again is said the
+    // same way whatever the network answered.
+    expect(await screen.findByTestId("wizard-upload-error")).toHaveTextContent(
+      "One picture didn't upload.",
+    );
+    expect(screen.queryByText(/Too many attempts/)).toBeNull();
     fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
     expect(await screen.findByTestId("wizard-seal-blocked")).toHaveTextContent(
       "One picture didn't upload",
