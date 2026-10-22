@@ -2472,7 +2472,7 @@ class ContentScreensTest {
         // The card is one clickable, so its plain text merges into it —
         // the counts are read off the unmerged tree.
         compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.counts", useUnmergedTree = true)
-            .assertTextEquals("· 1 topic")
+            .assertTextEquals("· 1 tag")
     }
 
     /** A card never lists its references inline — it states how many. */
@@ -2513,7 +2513,7 @@ class ContentScreensTest {
             ),
         )
         compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.counts", useUnmergedTree = true)
-            .assertTextEquals("· 3 topics · 1 reference")
+            .assertTextEquals("· 3 tags · 1 reference")
     }
 
     /** Two topics and nothing else leaves no counts to state. */
@@ -2533,9 +2533,13 @@ class ContentScreensTest {
             .assertDoesNotExist()
     }
 
-    /** A chip is never cut — jakob's ruling, 2026-09-09 (HT-14). */
+    /**
+     * A chip is never cut — jakob's ruling, 2026-09-09 (HT-14) — and the shown
+     * chips are always a PREFIX (`TopicsLine.jsx`): a later, shorter tag never
+     * stands where an earlier one folded.
+     */
     @Test
-    fun aNameTooLongForItsPillIsStatedByTheCountsInstead() {
+    fun aNameTooLongForTheLineFoldsItAndEveryTagAfterIt() {
         renderFeed(
             FeedUiState(
                 loading = false,
@@ -2547,9 +2551,30 @@ class ContentScreensTest {
             ),
         )
         compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.tag:$OVERLONG_TOPIC").assertDoesNotExist()
-        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.tag:rust").assertExists()
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.tag:rust").assertDoesNotExist()
         compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.counts", useUnmergedTree = true)
-            .assertTextEquals("· 1 topic")
+            .assertTextEquals("· 2 tags")
+    }
+
+    /** The line keeps two chips whole when they fit beside the counts — the board's own pair, at the board's width. */
+    @Test
+    @Config(qualifiers = "w411dp-h891dp")
+    fun twoChipsThatFitTheLineBothStand() {
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(
+                    testPost("p1").copy(
+                        topics = listOf(testTopicClaim("photography"), testTopicClaim("coastroad")),
+                        references = listOf(testReferenceClaim(testMentionTarget("ada"))),
+                    ),
+                ),
+            ),
+        )
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.tag:photography").assertExists()
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.tag:coastroad").assertExists()
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.counts", useUnmergedTree = true)
+            .assertTextEquals("· 1 reference")
     }
 
     /** Neither fits: the line falls all the way back to the counts. */
@@ -2570,7 +2595,7 @@ class ContentScreensTest {
         )
         compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine", useUnmergedTree = true).assertExists()
         compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.counts", useUnmergedTree = true)
-            .assertTextEquals("· 2 topics")
+            .assertTextEquals("· 2 tags")
     }
 
     /** Nothing to say, nothing drawn. */

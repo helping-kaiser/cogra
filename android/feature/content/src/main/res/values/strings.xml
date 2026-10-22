@@ -41,9 +41,11 @@
          else in words (TopicsLine.jsx). The two counts join with the
          same "·" that opens the string. -->
     <plurals name="content_topics_line_topics">
-        <item quantity="one">%d topic</item>
-        <item quantity="other">%d topics</item>
+        <item quantity="one">%d tag</item>
+        <item quantity="other">%d tags</item>
     </plurals>
+    <!-- The detail's line is one control; its name replaces what is in it (TopicsLine.jsx). -->
+    <string name="content_topics_line_label">Tags and references</string>
     <plurals name="content_topics_line_references">
         <item quantity="one">%d reference</item>
         <item quantity="other">%d references</item>
