@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -571,26 +571,34 @@ fun FeedScreen(
                                     modifier = Modifier
                                         .fillMaxSize()
                                         .testTag("feed_list"),
-                                    contentPadding = PaddingValues(top = Space.x2),
                                     verticalArrangement = Arrangement.spacedBy(Space.x2),
                                 ) {
-                                    item(key = "feed_banners") { Gutter { banners() } }
-                                    // The vouch card is a feed card, full-width,
-                                    // the list's first above the posts (`VouchBack.jsx`).
-                                    item(key = "feed_vouch_card") { vouchCard() }
-                                    // "Your post didn't land." The canonical
-                                    // `ComposeExpired` board puts this here, at
-                                    // the top of the feed the author returns
-                                    // to, rather than in the composer they have
-                                    // already left.
-                                    expiredLabel?.let { label ->
-                                        item(key = "feed_expired") {
-                                            Gutter {
-                                                ExpiredCard(
-                                                    label = label,
-                                                    onDismiss = onExpiredDismissed,
-                                                    onOpenDraft = onOpenDraft,
-                                                )
+                                    // THE LIST'S HEAD IS ONE ROW, and each of its
+                                    // slots spends its 8dp seam only when it draws
+                                    // something: an empty slot is no row at all, so
+                                    // the first card stands 8dp under the band as
+                                    // the board draws it (`_shared.jsx` `FeedList`).
+                                    item(key = "feed_banners") {
+                                        Column {
+                                            SeamedSlot { Gutter { banners() } }
+                                            // The vouch card is a feed card, full-width,
+                                            // the list's first above the posts (`VouchBack.jsx`).
+                                            SeamedSlot { vouchCard() }
+                                            // "Your post didn't land." The canonical
+                                            // `ComposeExpired` board puts this here, at
+                                            // the top of the feed the author returns
+                                            // to, rather than in the composer they have
+                                            // already left.
+                                            expiredLabel?.let { label ->
+                                                SeamedSlot {
+                                                    Gutter {
+                                                        ExpiredCard(
+                                                            label = label,
+                                                            onDismiss = onExpiredDismissed,
+                                                            onOpenDraft = onOpenDraft,
+                                                        )
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -740,6 +748,26 @@ private fun FeedTailSlot(state: FeedUiState, onLoadMore: () -> Unit) {
 @Composable
 private fun Gutter(content: @Composable () -> Unit) {
     Box(Modifier.padding(horizontal = Space.x4)) { content() }
+}
+
+/**
+ * A head slot of the feed's list: whatever it draws stands under the list's
+ * 8dp seam, and a slot that draws nothing takes no room and no seam.
+ */
+@Composable
+private fun SeamedSlot(content: @Composable () -> Unit) {
+    Layout(content = content) { measurables, constraints ->
+        val placeables = measurables.map { it.measure(constraints.copy(minHeight = 0)) }
+        val drawn = placeables.sumOf { it.height }
+        val seam = if (drawn > 0) Space.x2.roundToPx() else 0
+        layout(constraints.maxWidth, drawn + seam) {
+            var y = seam
+            placeables.forEach {
+                it.place(0, y)
+                y += it.height
+            }
+        }
+    }
 }
 
 /** The separator's list key — never a post id, so no post-keyed watch reads it as a card. */
