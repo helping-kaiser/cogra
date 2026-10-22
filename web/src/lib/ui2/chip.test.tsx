@@ -13,7 +13,7 @@ describe("Chip", () => {
     const chip = screen.getByTestId("tall");
     expect(chip.className).toContain("bg-secondary-container");
     // Colour never carries meaning alone.
-    expect(chip).toHaveAttribute("aria-pressed", "true");
+    expect(chip).toHaveAttribute("aria-checked", "true");
   });
 
   it("draws an unselected chip as a hairline outline", () => {
@@ -24,7 +24,11 @@ describe("Chip", () => {
     );
     const chip = screen.getByTestId("square");
     expect(chip.className).toContain("border-outline");
-    expect(chip).toHaveAttribute("aria-pressed", "false");
+    // Chip.jsx: the unselected word is `--text-body`, the on-surface ink.
+    expect(chip.className).toContain("text-on-surface");
+    expect(chip.className).not.toContain("text-on-surface-variant");
+    expect(chip).toHaveAttribute("role", "switch");
+    expect(chip).toHaveAttribute("aria-checked", "false");
   });
 
   it("carries no check glyph, which would reflow the row as the reader picks", () => {
@@ -39,7 +43,8 @@ describe("Chip", () => {
   it("is drawn at 32px and tapped at 48", () => {
     render(<Chip testId="c">Topic</Chip>);
     const chip = screen.getByTestId("c");
-    expect(chip.className).toContain("min-h-8");
+    expect(chip.className).toContain("h-8");
+    expect(chip.className).toContain("py-0");
     expect(chip.className).toContain("cg-hit");
   });
 
@@ -70,7 +75,7 @@ describe("Chip", () => {
 
   it("reports no pressed state when it is not a toggle", () => {
     render(<Chip testId="c">Add a topic</Chip>);
-    expect(screen.getByTestId("c")).not.toHaveAttribute("aria-pressed");
+    expect(screen.getByTestId("c")).not.toHaveAttribute("aria-checked");
   });
 });
 

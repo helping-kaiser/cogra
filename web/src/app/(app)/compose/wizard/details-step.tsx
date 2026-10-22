@@ -256,7 +256,9 @@ function BodyStrip({
   const isVideo = first !== undefined && kindOf(first) === "video";
 
   return (
-    <div className="flex flex-col gap-2">
+    // ComposeDetails / ComposeUploading: the row, the failure line and the
+    // describe counter stand in the stage's own 14px column rhythm.
+    <div className="flex flex-col gap-3.5">
       <PickedRow
         items={assets.map((asset) => ({
           id: asset.id,
@@ -305,13 +307,21 @@ function BodyStrip({
           WHICH ones, so repeating a row per picture would say it twice. */}
       {failed.length > 0 && (
         <UploadErrorLine
-          // One failure keeps the SERVER'S OWN WORDS — "the server refused that
-          // picture" and "too many uploads" are different problems and only one
-          // of them is worth retrying. Several collapse to the count, because a
-          // stack of reasons is not a thing to read while writing a title.
+          // A FAILURE THAT CAN BE TRIED AGAIN READS THE BOARD'S LINE
+          // (ComposeUploading.md: "One picture didn't upload."; copy-voice:
+          // "That video didn't upload." for a clip) — the network's words
+          // ("Couldn't reach the server.") stood in its place. A refusal
+          // that no retry can change keeps its own reason, since that is the
+          // only place the reason is said. Several collapse to the count,
+          // because a stack of reasons is not a thing to read while writing
+          // a title.
           message={
             failed.length === 1 && failed[0].upload.kind === "failed"
-              ? failed[0].upload.message
+              ? failed[0].upload.retryable
+                ? isVideo
+                  ? "That video didn't upload."
+                  : "One picture didn't upload."
+                : failed[0].upload.message
               : `${failed.length} pictures didn't upload.`
           }
           onRetry={() => {

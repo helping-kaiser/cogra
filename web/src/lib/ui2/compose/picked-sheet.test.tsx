@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { PickedSheet, type PickedSheetItem } from "./picked-sheet";
+import { dropIndex, PickedSheet, type PickedSheetItem } from "./picked-sheet";
 
 const items: PickedSheetItem[] = [
   { id: "a", src: "blob:a", described: true },
@@ -86,5 +86,24 @@ describe("PickedSheet", () => {
     const props = open();
     fireEvent.click(screen.getByTestId("picked-sheet-describe-2"));
     expect(props.onDescribe).toHaveBeenCalledWith("c");
+  });
+});
+
+describe("PickedSheet's drag", () => {
+  it("lands a dragged row on the nearest row boundary, inside the list", () => {
+    // 68px rows (PickedSheet.jsx minHeight): half a row or more is a move.
+    expect(dropIndex(2, -70, 68, 3)).toBe(1);
+    expect(dropIndex(2, -140, 68, 3)).toBe(0);
+    expect(dropIndex(0, 30, 68, 3)).toBe(0);
+    expect(dropIndex(0, 35, 68, 3)).toBe(1);
+    expect(dropIndex(0, 999, 68, 3)).toBe(2);
+    expect(dropIndex(1, -999, 68, 3)).toBe(0);
+    expect(dropIndex(1, 50, 0, 3)).toBe(1);
+  });
+
+  it("gives the handle and the remove X the 48px target", () => {
+    open();
+    expect(screen.getByTestId("picked-sheet-move-1").className).toContain("cg-hit");
+    expect(screen.getByTestId("picked-sheet-remove-1").className).toContain("cg-hit");
   });
 });

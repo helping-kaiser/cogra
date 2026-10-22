@@ -405,6 +405,41 @@ describe("the compose wizard", () => {
     expect(frame.querySelector("img")!.getAttribute("src")).toBe("blob:preview");
   });
 
+  // ComposeCrop.md: the zoom slider under the cut, the cut named for what it
+  // does (crop-frame.test.tsx, where the cut can be measured), and the
+  // QuietNote's how-to line for the device in hand.
+  it("draws the crop's zoom slider and its how-to line", async () => {
+    render();
+    await pick(["one.jpg", "two.jpg"]);
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+
+    expect(screen.getByRole("slider", { name: "Zoom" })).toBeInTheDocument();
+    const note = screen.getByTestId("wizard-crop-note");
+    expect(note.className).toContain("text-label-small");
+    // The phone's sentence where a touch can pinch.
+    expect(note).toHaveTextContent("One shape for the whole post. Drag to move, pinch to zoom.");
+  });
+
+  it("names the desktop's ways to move and zoom where no touch can pinch", async () => {
+    const original = window.matchMedia;
+    window.matchMedia = ((query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    })) as unknown as typeof window.matchMedia;
+    try {
+      render();
+      await pick(["one.jpg"]);
+      fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+      expect(screen.getByTestId("wizard-crop-note")).toHaveTextContent(
+        "One shape for the whole post. Drag or use the arrow keys to move, the slider to zoom.",
+      );
+    } finally {
+      window.matchMedia = original;
+    }
+  });
+
   // ComposeWords.md: an empty body holds Next inert, and nothing else is said
   // — the refusal line and the error outline belong to the cap alone.
   it("refuses to leave the pick screen with no body, saying nothing", async () => {
@@ -537,8 +572,13 @@ describe("the compose wizard", () => {
     fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
     fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
-    // The server's own words, on the details screen, with the retry beside them.
-    expect(await screen.findByText(/Too many attempts/)).toBeInTheDocument();
+    // ComposeUploading.md: the board's own line on the details screen, with
+    // the retry beside it — a failure that can be tried again is said the
+    // same way whatever the network answered.
+    expect(await screen.findByTestId("wizard-upload-error")).toHaveTextContent(
+      "One picture didn't upload.",
+    );
+    expect(screen.queryByText(/Too many attempts/)).toBeNull();
     fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
     expect(await screen.findByTestId("wizard-seal-blocked")).toHaveTextContent(
       "One picture didn't upload",

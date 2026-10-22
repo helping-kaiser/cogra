@@ -29,7 +29,7 @@ import {
 } from "@/lib/ui2/media/caps";
 import { pickedContainer } from "@/lib/ui2/media/video";
 import { newComposeId } from "./ids";
-import type { MediaKind } from "./wizard";
+import { POST_ATTACHMENT_CAP, type MediaKind } from "./wizard";
 
 /** One file that did not get in, and the sentence the author reads about it. */
 export type PickRefusal = {
@@ -78,6 +78,8 @@ export const ANIMATED_GIF =
   "That GIF moves, and CoGra can't take a moving GIF here. A still one is fine.";
 export const MIXED_BODY = "A post carries pictures or one video, not both.";
 export const MIXED_BODY_COMMENT = "A comment carries pictures or one video, not both.";
+/** The eleventh picture's line (copy-voice, *Refused files*; ComposePick.md). */
+export const TOO_MANY_POST = "That's more than a post carries — up to ten pictures.";
 
 /**
  * What a surface's video costs and what it says when a file exceeds it.
@@ -97,6 +99,13 @@ export type PickScale = {
   readonly tooBigVideo: string;
   readonly mixedBody: string;
   readonly destination: MediaScale;
+  /**
+   * How many pictures the body holds, and the line a picture past that reads.
+   * NEVER A PICTURE DROPPED IN SILENCE (ComposePick.md, ComposePickedErrors.md):
+   * the overflow is refused in words beside the rest. Omitted where the
+   * surface still caps its batch on its own.
+   */
+  readonly pictureCap?: { readonly count: number; readonly refusal: string };
 };
 
 export const POST_SCALE: PickScale = {
@@ -104,6 +113,7 @@ export const POST_SCALE: PickScale = {
   tooBigVideo: TOO_BIG_VIDEO_POST,
   mixedBody: MIXED_BODY,
   destination: "POST",
+  pictureCap: { count: POST_ATTACHMENT_CAP, refusal: TOO_MANY_POST },
 };
 
 export const COMMENT_SCALE: PickScale = {
@@ -219,5 +229,13 @@ export async function screenPick(
     return { accepted: videos.slice(0, 1), kind: "video", refusals };
   }
 
+  // The grammar's last word: the pictures past the body's cap are refused, one
+  // line each, and the ones that fit still join.
+  const cap = scale.pictureCap;
+  if (cap !== undefined) {
+    const room = Math.max(0, cap.count - held.count);
+    for (const extra of pictures.slice(room)) refuse(extra, cap.refusal);
+    return { accepted: pictures.slice(0, room), kind: "picture", refusals };
+  }
   return { accepted: pictures, kind: "picture", refusals };
 }

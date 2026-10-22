@@ -337,7 +337,8 @@ export function VideoTransport({
         style={{ gap: "24px" }}
       >
         <TransportButton
-          label={`Back ${SKIP_SECONDS} seconds`}
+          // The master's words verbatim (VideoControls.jsx: "Back ten seconds").
+          label="Back ten seconds"
           glyph="fast_rewind"
           size={26}
           box={44}
@@ -354,7 +355,7 @@ export function VideoTransport({
           testId={`${testId}-play`}
         />
         <TransportButton
-          label={`Forward ${SKIP_SECONDS} seconds`}
+          label="Forward ten seconds"
           glyph="fast_forward"
           size={26}
           box={44}
@@ -378,8 +379,10 @@ export function VideoTransport({
           gap: "8px",
         }}
       >
+        {/* `VideoControls.jsx` TIME: label-small's size and leading only — no
+            weight, no tracking — in tabular figures. */}
         <span
-          className="flex-none text-label-small tabular-nums"
+          className="flex-none text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] tabular-nums"
           style={{ color: INK, filter: OVER_MEDIA }}
           data-testid={`${testId}-elapsed`}
         >
@@ -394,7 +397,7 @@ export function VideoTransport({
           testId={`${testId}-timeline`}
         />
         <span
-          className="flex-none text-label-small tabular-nums"
+          className="flex-none text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] tabular-nums"
           style={{ color: INK, opacity: 0.85, filter: OVER_MEDIA }}
           data-testid={`${testId}-duration`}
         >

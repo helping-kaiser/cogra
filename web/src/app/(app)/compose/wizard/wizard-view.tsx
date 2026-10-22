@@ -881,7 +881,11 @@ export function ComposeWizard({
         // The seal board's `?` (`HelpDot`), opening the house help dialog with
         // copy-voice's "How signing works". One `?` per screen, so only the
         // seal carries one — beside its stage's name, "Last step".
-        stageLabel={state.step === "seal" ? "Last step" : undefined}
+        // The stage's name in the header's own slot (WizardHeader's
+        // `stageLabel`): the seal's "Last step", the cover's "Video only".
+        stageLabel={
+          state.step === "seal" ? "Last step" : state.step === "cover" ? "Video only" : undefined
+        }
         help={
           state.step === "seal" ? (
             <HelpDot
@@ -895,14 +899,7 @@ export function ComposeWizard({
         // here on the early stages and moved to the bottom from Details on, so
         // the top-right corner changed meaning mid-flow and an author reaching
         // for Next hit the X instead. Every stage's forward action now sits at
-        // the bottom of its own content column; `action` is left for passive
-        // trailing information — `ComposeSeal` says "Last step", `ComposeCover`
-        // says "Video only" (android's `ComposeWizardScreen.kt` trailing note).
-        action={
-          state.step === "cover" ? (
-            <span className="text-label-small text-on-surface-variant">Video only</span>
-          ) : undefined
-        }
+        // the bottom of its own content column.
         testId="wizard-header"
         // The registered ComposeDetails screen names its band; the other
         // stages' boards are not registered yet and keep the wizard's ids.
@@ -984,6 +981,7 @@ export function ComposeWizard({
             error={gate.ok ? null : gate.reason}
             blocked={!gate.ok}
             coverSrc={coverPreview}
+            durationMs={durationMs}
             clipFace={clipFace}
             onWords={(words) => dispatch({ type: "words", words })}
             onMode={switchBody}
