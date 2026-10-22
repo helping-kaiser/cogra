@@ -2103,7 +2103,9 @@ type Mutation {
 	viewer's bundle to `(0, 0)`. Each is its own priced act, so the
 	batch length is the gesture's cost — a bundle carrying more
 	conviction than one record can walk back needs several
-	(feed-ranking.md §8.1).
+	(feed-ranking.md §8.1). A bundle an empty sign left at `(0, 0)`
+	walks back in one `(0, 0)` record; one with nothing standing — no
+	record, or already severed — is refused.
 	"""
 	prepareSeverance(input: PrepareSeveranceInput!): PreparePayload!
 	"""
@@ -2195,7 +2197,7 @@ type Mutation {
 	"""
 	Prepares one standalone Tag on existing content — the gesture
 	that adds a topic after creation. There is no un-tag mutation:
-	withdrawing a topic is a further Tag at `pDirected: 0`, which the
+	withdrawing a topic is a further Tag at `(0,0)`, which the
 	current-topics fold reads as withdrawn (hashtag.md §4). Tagging
 	is not restricted to the content's author; the read side is what
 	separates the author's own declarations from third-party claims.
@@ -2643,7 +2645,8 @@ type Post implements Node {
 	"""
 	This post's current topics — the author's own declarations, as
 	the current-topics fold reads them: newest record per (author,
-	content, Type), relevance 0 read as withdrawn (hashtag.md §4).
+	content, Type), a winner at `(0,0)` read as withdrawn (hashtag.md
+	§4).
 	
 	Third-party topic claims are deliberately absent: they reach a
 	viewer only through the tagger, at a forward-path weight the
@@ -2950,7 +2953,7 @@ input PrepareReferenceInput {
 """
 Withdrawing one citation. Records are never deleted, and Reference
 withdrawal is per-leg net stance — not the Tag rule beside it, which
-is newest-wins at relevance 0 only because a tag's confidence cannot
+is newest-wins at `(0,0)` only because a tag's confidence cannot
 be netted. Both citation parameters are signed, so a withdrawal is the
 severance shape: counter-records until the bundle reaches `(0, 0)`.
 
@@ -3013,9 +3016,9 @@ input PrepareStanceInput {
 
 """
 One standalone topic declaration on existing content — the gesture
-that adds a topic after creation, and, at `pDirected: 0`, the one
-that withdraws it. Tags are never edit fields: changing a post's
-topics is its own priced act (post.md §3).
+that adds a topic after creation, and, at `(0,0)`, the one that
+withdraws it. Tags are never edit fields: changing a post's topics is
+its own priced act (post.md §3).
 """
 input PrepareTagInput {
 	"""
@@ -3024,7 +3027,8 @@ input PrepareTagInput {
 	target: UUID!
 	name: String!
 	"""
-	Relevance `r`; zero is the un-tag. Required, as on `TagInput`.
+	Relevance `r`. Required, as on `TagInput`. An un-tag signs both
+	parameters at 0.
 	"""
 	pDirected: Dimension!
 	"""
@@ -3141,12 +3145,14 @@ type Query {
 	link they registered through** — whoever's vouch lands them —
 	from the moment
 	the account exists and before either proof is in, whatever they
-	stage — and a **landed member** keeps borrowing it until their
-	first Opinion is signed, toward any target, landed or in flight.
-	An Affinity never ends it; a first Opinion that expires with
-	none landed returns it; an Opinion carried from the application
-	signs with the vouch-in batch, so that member owns their view
-	from landing on.
+	stage — and a **landed member** keeps borrowing it until they
+	hold a live Opinion, signed toward any target, landed or in
+	flight: one whose netted bundle toward its target has neither
+	parameter at zero. An inert Opinion (either parameter zero) and
+	an Affinity never end it; a live Opinion that expires with none
+	landed returns it; an Opinion carried from the application
+	signs with the vouch-in batch, so a member who carried a live
+	one owns their view from landing on.
 	3. A **bare visitor**, with nothing more specific to go on,
 	borrows the **Genesis Moderator's** view. Strictly the
 	fallback: it is the only vantage that names no relationship
@@ -3475,6 +3481,18 @@ type Record {
 	The authored interest parameter, as the actor's leg renders it.
 	"""
 	pInterest: Dimension!
+	"""
+	Whether this record left its author's stance bundle toward the
+	target walked back to nothing — `StanceBundle.severed` read as of
+	this record: it says something, and every record of the bundle up
+	to and including it, in the published order, nets to `(0, 0)`. A
+	row drawing the pair without the bundle reads it to speak a
+	walk-back; a record at `(0, 0)` itself is never one — it says
+	nothing. Null on a record that folds into no stance bundle: a
+	family other than Opinion and Affinity, a payload-marked record, a
+	leg with no census spec.
+	"""
+	severed: Boolean
 	"""
 	The landing epoch.
 	"""
@@ -4349,7 +4367,8 @@ type StanceBundle {
 	"""
 	rawPInterest: Float!
 	"""
-	How many records the bundle folds.
+	How many records the bundle folds — every record counts, an
+	empty sign's `(0, 0)` included.
 	"""
 	recordCount: Int!
 	"""
@@ -4357,14 +4376,19 @@ type StanceBundle {
 	"""
 	inert: Boolean!
 	"""
-	Both axes at zero — the bundle is severed.
+	Walked back to nothing: the bundle nets to `(0, 0)` and its newest
+	record said something. False on an empty bundle, and false on one
+	an empty sign left at `(0, 0)` — over nothing or over a walk-back —
+	which stands at `(0, 0)` saying nothing. The projection's `severed`
+	is the landing's pair alone; this is the bundle's history.
 	"""
 	severed: Boolean!
 	"""
-	How many counter-records severance would stage right now — the
+	How many records the walk-back would stage right now — the
 	gesture's cost, since each is its own priced act
-	(feed-ranking.md §8.1). Zero when the bundle already nets to
-	`(0, 0)`.
+	(feed-ranking.md §8.1): the counter-records that net the sums, or
+	1 for a bundle an empty sign left at `(0, 0)`. Zero when nothing
+	stands, or the bundle is already severed.
 	"""
 	severanceCost: Int!
 	"""
@@ -4400,7 +4424,11 @@ type StanceProjection {
 	"""
 	inert: Boolean!
 	"""
-	Both axes at zero — the pick reaches severance.
+	Both axes at zero — the pick reaches severance. The landing's pair
+	alone: where nothing stands — the bundle holds no record, or is
+	already severed — a pick landing at `(0, 0)` is an empty sign, not
+	a walk-back, so read it beside the bundle's `recordCount` and
+	`severed`.
 	"""
 	severed: Boolean!
 }
@@ -4424,8 +4452,7 @@ Names are normalized by the naming service (lowercase, no `#`, ASCII
 `[a-z0-9._-]`, at most 128 bytes) and a new name needs no creation
 act: Types anchor vacuously (hashtag.md §1, §2). Re-tagging a name
 revises the claim — the newest record per (author, content, Type)
-wins, and relevance 0 is the un-tag, read as withdrawn (hashtag.md
-§4).
+wins, and `(0,0)` is the un-tag, read as withdrawn (hashtag.md §4).
 """
 input TagInput {
 	name: String!
@@ -4455,7 +4482,7 @@ type TaggedContent {
 """
 One current topic claim on a node — a chip in the chip row. The
 bundle key is (author, content, Type) and the newest record in it
-wins; relevance 0 is a withdrawal and never appears here.
+wins; `(0,0)` is a withdrawal and never appears here.
 """
 type TopicClaim {
 	hashtag: Hashtag!
@@ -4567,15 +4594,19 @@ type User implements Node & Actor {
 	"""
 	createdAt: DateTime!
 	"""
-	The most recent profile version's authoring instant; equals
-	`createdAt` for an actor whose profile has never changed.
+	The current profile version's authoring instant — the update's
+	pre-commitment signature, pending or landed alike, so the date
+	never jumps when the update lands; equals `createdAt` for an actor
+	whose profile has never changed.
 	"""
 	updatedAt: DateTime!
 	"""
 	Where this actor's Profile stands relative to L1 finality. A
 	Profile is minted by its own Registration record, so it pends
 	between the key ceremony — which is where the address is bound —
-	and that record landing.
+	and that record landing; and, like any node, an unlanded update
+	leaves it pending, because the profile on screen is the pending
+	version.
 	"""
 	landing: Landing!
 	"""
@@ -4681,12 +4712,15 @@ type User implements Node & Actor {
 	narrowed list can stand another kind beside its people, the people
 	section serves only the three people first seen most recently, and
 	`hasMorePeople` says whether more match — the "See all profiles"
-	door, which is the same query with `kinds: [USER]`. A query past
-	the search length cap is BAD_INPUT. A hidden actor's posts and
-	comments stay out while the actor is hidden, and their own profile
-	stays; a removed thing keeps its place and reads its removal mark;
-	a thing whose node no longer resolves — a pending write that never
-	landed — is skipped. Paging is keyset on `(firstSeenAt, node id)`,
+	door, which is the same query with `kinds: [USER]`. The topics
+	section is capped the same way, to the three topics first seen
+	most recently, and `hasMoreTags` says whether more match — the
+	"See all tags" door, which is the same query with `kinds: [HASHTAG]`.
+	A query past the search length cap is BAD_INPUT. A hidden actor's
+	posts and comments stay out while the actor is hidden, and their
+	own profile stays; a removed thing keeps its place and reads its
+	removal mark; a thing whose node no longer resolves — a pending
+	write that never landed — is skipped. Paging is keyset on `(firstSeenAt, node id)`,
 	so a thing first seen while the reader scrolls sorts above the
 	open page and never shifts the next one. Field-level: viewer-only.
 	"""
@@ -4920,8 +4954,8 @@ type ViewHistoryConnection {
 	edges: [ViewHistoryEdge!]!
 	"""
 	How many things the viewer's seen-list serves, across every page —
-	narrowed by `query` and `kinds` when given, less the people a
-	capped people section leaves behind its door. Priced at zero like
+	narrowed by `query` and `kinds` when given, less the people and
+	topics a capped section leaves behind its door. Priced at zero like
 	every connection count; saturates at [`i32::MAX`].
 	"""
 	totalCount: Int
@@ -4934,6 +4968,15 @@ type ViewHistoryConnection {
 	section is not capped, and on a list no query narrows.
 	"""
 	hasMorePeople: Boolean!
+	"""
+	Whether more seen topics match than the topics section serves —
+	the "See all tags" door. While a narrowed list can stand another
+	kind beside its topics, the topics section serves the three topics
+	first seen most recently; the same query with `kinds: [HASHTAG]`
+	serves every match, uncapped. False when the section is not
+	capped, and on a list no query narrows.
+	"""
+	hasMoreTags: Boolean!
 }
 
 """

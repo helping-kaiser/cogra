@@ -1,11 +1,11 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { BodyRegion, sensitiveSignature } from "@/lib/ui/post-media";
 import { forgetReveals } from "@/lib/ui2/media/reveal";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { AccountPreferencesSync } from "./account-preferences-sync";
 import { accountFilterLevel, setAccountFilterLevel, unveilsSensitive } from "./sensitive-content";
@@ -89,7 +89,7 @@ describe("the account's sensitive-content threshold", () => {
 
 describe("the account's read (me.preferences)", () => {
   function me(level: number | null) {
-    return graphql.query("Me", () =>
+    return gqlLink.query("Me", () =>
       HttpResponse.json({
         data: {
           me: {

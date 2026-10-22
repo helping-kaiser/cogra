@@ -23,6 +23,7 @@ within a phase, order is flexible.
 
 | Phase | # | Question | Why here |
 |:---:|:---:|:---:|---|
+| 0. Now — blocks the empty-sign client follow-up | 1 | **Q60** | A walk-back of an empty sign — whether a `(0, 0)` record landing over a standing that already says nothing reads as severed. The API reads it as saying nothing; the clients' readout words and the walk-back's cost follow the answer. |
 | 1. L1-author discussion | 1 | **Q30** | L1 key model — the signature scheme L1 verifies and same-actor key rotation. Q29's custody resolution leans on both: a Schnorr-family scheme makes the Collective 2-of-2 split an off-the-shelf threshold configuration, and without rotation a compromised creator key is unfixable. Open in discussion with the L1 team. |
 | 2. When multi-device onboarding pain is real | 1 | **Q33** | Cross-device handshake continuation — whether a second device holding the restored actor key may complete a handshake the first device started, instead of waiting out the expiry re-stage. Interim-crypto-scoped (Q30): may dissolve at the substrate swap. |
 | 2a. Profile surface (with slice 2.2) | 3 | **Q35, Q36, Q41** | The profile header's connection count (which fold counts as a connection — answerable now that every passive class rides one stance control), the owner-chosen default filter for the profile chronicle (worth carrying? witnessed payload field or L2 preference?), and whether the chronicle's targets grow a settled-content serving mode. Slice 2.1 ships without all three. |
@@ -674,3 +675,61 @@ is not lost.
 
 Q34 (the current-topics fold, resolved — which Tag records a topic
 surfaces).
+
+## Q60 — A walk-back of an empty sign
+
+**Where it shows up:**
+[api-spec.md "The read-side bundle fold"](implementation/api-spec.md#the-read-side-bundle-fold)
+(`StanceBundle.severed`, `severanceCost`, `Record.severed`),
+[stance-control.md "Severance"](../design/guidelines/stance-control.md#severance)
+**Status:** open (the API reads the case as saying nothing until ruled)
+
+### Context
+
+An empty sign is a `(0, 0)` opinion signed where nothing stands — no
+record yet, or a bundle already walked back. It is an ordinary
+record: the bundle counts it, stays at `(0, 0)`, is not severed, and
+its walk-back stays available at the cost of one record. Severance
+stays a `(0, 0)` landing over anything standing, and an empty-signed
+standing is standing: a `(0, 0)` landing over it raises the walk-back
+dialog, and `Walk it back` there signs one `(0, 0)` record.
+
+The API reads `severed` off the newest record: the bundle nets to
+`(0, 0)` and the record that brought it there said something. That
+settles every ruled case and leaves one open: a `(0, 0)` record that
+lands over a standing that already says nothing — the walk-back of an
+empty sign. Every record involved is `(0, 0)`, so nothing that said
+something was taken back, and the API reads it as saying nothing.
+
+### The question
+
+Does the walk-back of an empty sign read as severed?
+
+- **No — it says nothing (built).** Nothing ever stood, so nothing
+  was walked back, and "Walked back" stays severance's word for
+  taking something back. The cost: the walk-back the dialog confirmed
+  leaves the standing reading exactly as before, `Walk it back` is
+  still offered at one record afterwards, and a second `(0, 0)`
+  landing raises the walk-back dialog again — a loop with nothing to
+  show for it.
+- **Yes — read by replaying the history.** Each `(0, 0)` landing is
+  read by what stood before it: over a standing it is a walk-back,
+  over nothing or a walk-back it is an empty sign. This is the
+  stance-control master's own model (`StanceControl.jsx`, `apply` and
+  `applyEmpty`), and it ends the loop. It needs no stored flag — the
+  ordered records decide it — but the reading becomes a run over the
+  bundle's records in published order (the trailing run of
+  `(0, 0)` landings and its parity) rather than the newest record
+  alone, on the bundle and on every row.
+- **Yes — by a stored act flag.** Mark the acts the severance gesture
+  stages. The reading stops being derivable from the public records:
+  a mirror rebuild or a third party replaying the chronicle cannot
+  reproduce it, against "never treat CoGra's stores as authoritative
+  about the graph", and a pick that walks back through an ordinary
+  stance carries no flag.
+
+### Related
+
+Q11 (severance, resolved — the `(0, 0)` edge and zero-jail; the
+routing math is the same for every `(0, 0)` bundle, whichever way it
+reads).

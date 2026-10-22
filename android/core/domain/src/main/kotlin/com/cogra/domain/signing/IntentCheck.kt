@@ -4,6 +4,7 @@
 package com.cogra.domain.signing
 
 import com.cogra.crypto.Proposal
+import com.cogra.domain.stance.netsToZero
 
 private fun inRange(x: Double): Boolean = x.isFinite() && x >= -1.0 && x <= 1.0
 
@@ -103,8 +104,9 @@ private fun checkCounterRecord(p: Proposal) {
 }
 
 private fun checkNetting(n: ExpectedNetting, batch: List<Proposal>, used: BooleanArray) {
-    var netD = n.rawPDirected
-    var netI = n.rawPInterest
+    if (!n.rawPDirected.isFinite() || !n.rawPInterest.isFinite()) mismatch("the shown bundle is not a finite sum")
+    val netD = mutableListOf(n.rawPDirected)
+    val netI = mutableListOf(n.rawPInterest)
     var count = 0
     for (j in batch.indices) {
         if (used[j] || !counterRecordOf(n, batch[j])) continue
@@ -115,5 +117,8 @@ private fun checkNetting(n: ExpectedNetting, batch: List<Proposal>, used: Boolea
         netI += batch[j].body.pI
     }
     if (count != n.cost) mismatch("the walk-back stages $count records where ${n.cost} were shown")
-    if (netD != 0.0 || netI != 0.0) mismatch("the walk-back does not net the shown bundle to (0, 0)")
+    // Summed as the decimals the values denote, never as doubles
+    // (edges.md §1): the backend nets that way, and floating addition
+    // misses zero on lawful walk-backs.
+    if (!netsToZero(netD) || !netsToZero(netI)) mismatch("the walk-back does not net the shown bundle to (0, 0)")
 }

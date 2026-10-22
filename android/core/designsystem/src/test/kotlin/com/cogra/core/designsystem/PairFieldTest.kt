@@ -52,6 +52,21 @@ class PairFieldTest {
     }
 
     @Test
+    fun theReleaseLandsOnTheGridAndNeverBelowTheRelevanceFloor() {
+        // Relevance to 0.0137 and confidence to 0.4371 under the thumb.
+        val perX = (1.0 - PairRanges.TAG_RELEVANCE_FLOOR) / (2 * half)
+        val travel = Offset(((0.0137 - 0.1) / perX).toFloat(), (-(0.4371 - 0.0) * 2 * half).toFloat())
+        val parked = pairReleased(PairPoint(0.1, 0.0), travel, half, PairRanges.Tag)
+        assertThat(parked).isEqualTo(PairPoint(PairRanges.TAG_RELEVANCE_FLOOR, 0.44))
+    }
+
+    @Test
+    fun aSignedReleaseLandsANearZeroAxisOnPositiveZero() {
+        val parked = pairReleased(PairPoint(0.0, 0.0), Offset(-0.004f * half, -0.0031f * half), half, PairRanges.Signed)
+        assertThat(parked).isEqualTo(PairPoint(0.0, 0.0))
+    }
+
+    @Test
     fun aTagsConfidenceRunsFromZeroToOne() {
         assertThat(pairFrom(PairPoint(0.5, 0.5), Offset(0f, 10_000f), half, PairRanges.Tag).interest).isEqualTo(0.0)
         assertThat(pairFrom(PairPoint(0.5, 0.5), Offset(0f, -10_000f), half, PairRanges.Tag).interest).isEqualTo(1.0)

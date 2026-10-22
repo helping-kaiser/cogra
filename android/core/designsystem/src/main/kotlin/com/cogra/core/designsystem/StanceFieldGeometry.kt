@@ -28,14 +28,18 @@ import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min
 
-/** The drawn field's side. Its own box is the whole `[-1, +1]²`. */
-internal val FIELD_SIZE = 240.dp
+/**
+ * The open pad's field side: the 272dp pad less its 16dp padding and the
+ * 56dp gutter on each side the pole words stand in (StanceControl.jsx
+ * `17rem`, StancePad.jsx `AXIS_GUTTER_X_PX`). The field takes what the
+ * gutters leave — [PairField] draws it at its measured width; this is the
+ * number that width comes to on the pad. Its own box is the whole
+ * `[-1, +1]²`.
+ */
+internal val FIELD_SIZE = PAD_WIDTH - 16.dp * 2 - PAIR_GUTTER_X * 2
 
-/** The knob's outer radius — the 20dp across that web draws it at. */
+/** The knob's radius — one 20dp disc in `primaryContainer` (`KNOB_DIAMETER_PX`). */
 internal val KNOB_RADIUS = 10.dp
-
-/** The knob's filled centre, inside its ring. */
-internal val KNOB_DOT_RADIUS = 6.dp
 
 /** The field's corner rounding: the M3 shape scale's 16dp rung (design.md §4). */
 internal val FIELD_CORNER = 16.dp
@@ -96,6 +100,14 @@ internal fun stancePointFrom(base: StancePoint, travel: Offset, extentPx: Float)
         interest = (base.interest - travel.y / extentPx).coerceIn(-1.0, 1.0),
     )
 }
+
+/**
+ * Where a drag of this much travel PARKS once the finger lifts: [stancePointFrom]
+ * with both axes on the hundredths grid ([hundredth]). The web's twin is
+ * `snapPair` over `padPairFrom`.
+ */
+internal fun stancePointReleased(base: StancePoint, travel: Offset, extentPx: Float): StancePoint =
+    stancePointFrom(base, travel, extentPx).let { StancePoint(hundredth(it.directed), hundredth(it.interest)) }
 
 /** Where the knob's centre sits for [point], offset from the field's centre. */
 internal fun knobOffset(point: StancePoint, extentPx: Float): Offset = Offset(

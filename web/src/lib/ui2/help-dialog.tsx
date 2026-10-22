@@ -76,6 +76,16 @@ export function HelpDialog({
 // component so a screen names a topic rather than retyping the words — a
 // paraphrase here would be a design change made by accident.
 export const HELP_TOPICS = {
+  // The write rule's notice on the opinion pad (copy-voice, *Why signing
+  // waits*; PadWriteRule.md): the pad keeps no draft, so the second
+  // paragraph's clause is the pad's own (blessed jakob 2026-10-01).
+  whySigningWaitsOnPad: {
+    title: "Why signing waits",
+    paragraphs: [
+      "There's a limit to how many signed actions can go through in a short time — it keeps the network safe from flooding. You've hit it for now.",
+      "Nothing was signed or spent. Try again in a little while.",
+    ],
+  },
   signedActions: {
     title: "Signed actions",
     paragraphs: [
@@ -114,7 +124,9 @@ export const HELP_TOPICS = {
   changingYourPicture: {
     title: "Changing your picture",
     paragraphs: [
-      "Your profile is a public record, and changes to it are signed actions in your name — the picture changes the moment yours lands.",
+      // Nothing more: the picture changing when it lands is expected, and
+      // a "?" explains only what is new (copy-voice, jakob 2026-10-20).
+      "Your profile is a public record, and changes to it are signed actions in your name.",
       "The community pool covers the signing, like your posts. The record that you changed it stays, like every signed action.",
     ],
   },

@@ -130,7 +130,9 @@ in progress (*In-flight labels*).
 Used for one thing: rendering a value. The stance readout is where that
 happens — twenty anchors, plus 🤷 for an opinion at `(0, 0)`, 🤔 for one
 with a single number at zero (jakob 2026-10-20) and 🫥 for a control at
-rest — and a help, coach or snackbar line that speaks a pair leads
+rest. Faces follow the value (jakob 2026-10-21): the twenty read only a
+pair with both numbers non-zero, so a pick, a standing opinion or a
+record's row at one zero wears 🤔 and is spoken as its state — and a help, coach or snackbar line that speaks a pair leads
 with the same face, because the sentence is a readout too and has to
 hold for a reader who never turns the digits on. The tag table's
 thirteen objects are the same thing for the other family. **Never** in
@@ -2606,6 +2608,24 @@ tags and citations you sign with it lead to it, until someone gives it
 an opinion.`, with `Keep adjusting` filled and `Set it anyway` quiet
 (*the body blessed, jakob 2026-10-20; the title and both buttons are
 round 13's*).
+
+**The empty sign** (`EmptySignConfirm`; jakob 2026-10-21, seam 242). Set
+on a pick landing `(0, 0)` while nothing stands toward the target — never
+signed, or already walked back — asks its own question, never the
+walk-back's: dialog `Sign an empty opinion?`, body `This says nothing
+about @ada, shapes no feed, and leaves you where you are.` / `It signs 1
+thing, paid on its own.`, with `Keep it` filled and `Set it anyway`
+quiet; in flight `Setting…`. Where the opinion vouches someone in —
+approving, a vouch asked for — the first line is the stronger warning,
+`@rafa would be vouched in but start out cut off: no feed can carry
+them, and community funds stay closed to them, until someone gives them
+an opinion that says something.`, and `Set it anyway` still vouches them
+in. Signed, it is an ordinary record and nothing special answers it: the
+ordinary snackbar, `Signed, still settling. Current opinion 🤷`. A pick at
+exactly `(0, 0)`, and a standing there never walked back, is spoken `Says
+nothing` — never `Walked back`. (*Blessed, jakob 2026-10-21: the words as
+shipped, the vouch-in line drafted from his facts, the ordinary
+snackbar his ruling.*)
 
 **The backing pad's own words** (`ComposePad`, `EditPad`, round 15):
 the readouts `Current backing` · `Your pick` · `Backing after`, the

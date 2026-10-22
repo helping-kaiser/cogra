@@ -1,38 +1,42 @@
 "use client";
 
-// The severance confirmation (design.md §8.5). It serves both routes to
-// `(0, 0)`: the explicit gesture, and an ordinary pick that happens to
-// land the bundle there — the second is confirmed, never refused,
-// because the control never prevents a choice (§8.2). The two are the
-// SAME dialog, distinguished only by the pick line the second one adds.
+// THE SEVERANCE CONFIRMATION (`design/components/stance/SeveranceConfirm.jsx`
+// and its prompt). It serves both routes to `(0, 0)`: the explicit gesture,
+// and an ordinary pick that happens to land the bundle there — the second is
+// confirmed, never refused, because the control never prevents a choice. The
+// two are the SAME dialog, distinguished only by the pick line the second
+// one adds. It asks over the parked pad, so `Keep it` returns to the pick.
+// Both need an opinion standing: a pick landing (0, 0) with nothing standing
+// walks nothing back and asks `EmptySignConfirm` instead.
 //
-// The order is fixed (Android parity): title · the pick line when it was
-// reached by a pick · the consequences · where you stand now · the cost ·
-// the failure line when one exists · Keep it, Sever — the confirming
-// action on the right, the platform convention (F7).
+// The order is fixed: title · the pick line when it was reached by a pick ·
+// the consequences · what the reader has said in total (and, only when it
+// exceeds the clip, the cap as an aside) · the cost in things · the failure
+// line when one exists · the way out.
 //
-// The batch size is the legible cost (api-spec.md "A prepare may stage a
-// batch"): each counter-record is its own priced act, so the count is
-// what the reader needs before signing.
+// EVERY WORD OF IT IS THE RECORD FAMILY'S: a person is walked back, a topic
+// is disconnected from (`severanceWords`). The SHAPE is the control's.
 //
-// A native <dialog>, like the join prompt: focus trapping, Esc, and the
-// backdrop come from the platform rather than from hand-rolled handlers.
+// THE RAW TOTAL LEADS, and these two numbers are THE ONE EXEMPTION FROM GEEK
+// MODE (readme §13): they paint in both modes, because the sheet exists to
+// show the difference between the raw sum and the fold.
+//
+// THE SAFE ACTION CARRIES THE EMPHASIS (the destructive-dialog rule): `Keep
+// it` is filled and keeps the right-hand slot; the walk-back is a text button
+// on the left. Never `error` colouring — severance is a deliberate act.
 
-import { useEffect, useRef } from "react";
-
-import { nearestAnchor } from "@/lib/stance/anchors";
+import { bundleReadout, EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
-import type { StanceTargetKind } from "@/lib/stance/stance-data";
 import { buttonClassName } from "@/lib/ui/button";
 import {
-  DISCONNECT_ZERO,
-  disconnectStandingLine,
-  SEVERANCE_ZERO,
-  severanceStandingLine,
-  standingLine,
-  type BundleState,
-} from "@/lib/ui/stance-readout";
-import { useCoversSurface } from "@/lib/ui2/covering-layer";
+  formatStancePair,
+  formatStanceWords,
+  severanceWords,
+  STANCE_AXES,
+  type StanceAxes,
+} from "@/lib/ui/stance-format";
+import { severanceParts, type BundleState } from "@/lib/ui/stance-readout";
+import { DialogSurface } from "@/lib/ui2/dialog-surface";
 
 export function SeveranceConfirm({
   pick,
@@ -41,8 +45,9 @@ export function SeveranceConfirm({
   records,
   alreadySevered = false,
   busy = false,
+  slow = false,
   failed = false,
-  kind = "post",
+  axes = STANCE_AXES,
   onConfirm,
   onCancel,
 }: {
@@ -50,105 +55,116 @@ export function SeveranceConfirm({
   pick: StancePair | null;
   /** Already in the reader's words — "this post", "@ada", "#saltmaps". */
   targetLabel: string;
-  /** The standing, for the line that states it. */
+  /** The standing, for the line that states its raw total. */
   bundle: BundleState;
-  /** How many signed actions reaching zero takes. */
+  /** How many things reaching zero signs. */
   records: number;
-  /** The fold reports nothing left to walk back — severing is a no-op. */
+  /** The fold reports nothing left to walk back — the one true refusal. */
   alreadySevered?: boolean;
+  /** The signing is in flight: the confirm and the ways out are inert. */
   busy?: boolean;
-  /** The signing pass did not complete; the dialog stays open and says so. */
+  /** …and has waited past 200ms: the confirm says what is happening. */
+  slow?: boolean;
+  /** The signing did not complete; the dialog stays open and says so. */
   failed?: boolean;
-  /**
-   * The target's record family: topics disconnect, everything else
-   * severs verbatim (copy-voice.md "the topic disconnects", jakob
-   * 2026-09-15: "the split is by record family, not by surface").
-   */
-  kind?: StanceTargetKind;
+  /** The record family's words, its way out included. */
+  axes?: StanceAxes;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
-  const isTopic = kind === "topic";
-  const zero = isTopic ? DISCONNECT_ZERO : SEVERANCE_ZERO;
-  const ref = useRef<HTMLDialogElement>(null);
-  // Mounted only while open, so it covers for as long as it is mounted: a
-  // dialog over a surface suspends its stage (Feed.md:31, `covering-layer.tsx`).
-  useCoversSurface(true, "suspend");
-  useEffect(() => {
-    const dialog = ref.current;
-    if (dialog !== null && !dialog.open) dialog.showModal();
-  }, []);
-
-  const actions = records === 1 ? "1 signed action" : `${records} signed actions`;
-  const pickAnchor = pick === null ? null : nearestAnchor(pick);
+  const sever = severanceWords(axes);
+  // THE COST IS COUNTED IN THINGS, NOT IN ACTIONS (the geek round).
+  const cost =
+    records === 1
+      ? "It signs 1 thing, paid on its own."
+      : `It signs ${records} things, each paid separately.`;
+  // The pick wears the face every pair wears: one zero thinks, as on the pad.
+  // A pick of (0, 0) reaches this dialog only over a standing already at
+  // (0, 0) — an empty sign's — and there it says nothing, as on the pad; with
+  // nothing standing it asks `EmptySignConfirm` instead.
+  const pickReadout = pick === null ? null : bundleReadout(pick, EMPTY_PICK_LABEL);
+  const read = severanceParts(bundle, targetLabel);
 
   return (
-    <dialog
-      ref={ref}
-      data-testid="severance-confirm"
-      onClose={onCancel}
-      className="cg-dialog-in m-auto w-[min(90vw,22rem)] rounded-extra-large bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
-    >
-      <h2 className="text-headline-small">
-        {isTopic ? `Disconnect from ${targetLabel}?` : "Sever this?"}
-      </h2>
-      {pickAnchor !== null && (
-        <p data-testid="severance-pick" className="mt-2 text-body-medium">
-          Your pick: {pickAnchor.emoji} {pickAnchor.label}
-        </p>
-      )}
-      {/* Not `error` colouring: severance is a deliberate choice, not a
-          failure (design.md §2.4). */}
-      <p
-        data-testid="severance-consequences"
-        className="mt-2 text-body-medium text-on-surface-variant"
-      >
-        {isTopic
-          ? `You end up with no opinion towards ${targetLabel}. It stops reaching your feed, you stop earning from it, and nothing passes on through you.`
-          : `Your standing toward ${targetLabel} drops to nothing. It stops reaching your feed, you stop earning from it, and nothing passes on through you.`}
-      </p>
-      <p
-        data-testid="severance-standing"
-        className="mt-2 text-body-small text-on-surface-variant"
-      >
-        {standingLine(bundle, targetLabel, zero)}
-      </p>
-      {/* The RAW sums, not the clipped fold: they are what a walk back
-          to zero actually walks (design.md §8.3, §8.5). */}
-      <p data-testid="severance-raw" className="mt-1 text-body-small text-on-surface-variant">
-        {isTopic
-          ? disconnectStandingLine(bundle, targetLabel)
-          : severanceStandingLine(bundle, targetLabel)}
-      </p>
-      <p data-testid="severance-cost" className="mt-2 text-body-medium">
-        {alreadySevered
-          ? "You are already at nothing here."
-          : `It takes ${actions}, each paid for separately.`}
-      </p>
-      {failed && (
-        <p role="alert" data-testid="severance-failed" className="mt-2 text-body-medium text-error">
-          That didn&apos;t send. Try again.
-        </p>
-      )}
-      <div className="mt-6 flex justify-end gap-2">
-        <button
-          type="button"
-          data-testid="severance-cancel"
-          onClick={onCancel}
-          className={buttonClassName({ variant: "text", size: "sm" })}
-        >
-          Keep it
-        </button>
-        <button
-          type="button"
-          data-testid="severance-proceed"
-          disabled={busy || alreadySevered}
-          onClick={onConfirm}
-          className={buttonClassName({ variant: "text", size: "sm" })}
-        >
-          {isTopic ? "Disconnect" : "Sever"}
-        </button>
-      </div>
-    </dialog>
+    <DialogSurface
+      title={sever.title(targetLabel)}
+      locked={busy}
+      onDismiss={onCancel}
+      testId="severance-confirm"
+      body={[
+        ...(pick !== null && pickReadout !== null
+          ? [
+              <p key="pick" data-testid="severance-pick" className="m-0">
+                <span aria-hidden="true">
+                  Your pick: {pickReadout.emoji} {formatStancePair(pick)}
+                </span>
+                <span className="sr-only">{`Your pick: ${pickReadout.label}, ${formatStanceWords(pick, axes)}`}</span>
+              </p>,
+            ]
+          : []),
+        <p key="effect" data-testid="severance-consequences" className="m-0">
+          {sever.effect(targetLabel)}
+        </p>,
+        // The RAW total leads and the cap is derived from it; the two lines
+        // are one statement, so they keep a tight 4px apart.
+        "sentence" in read ? (
+          <p key="total" data-testid="severance-raw" className="m-0 text-body-small">
+            {read.sentence}
+          </p>
+        ) : (
+          <div key="total" data-testid="severance-raw" className="flex flex-col gap-1 text-body-small">
+            <p className="m-0">{sever.sum(targetLabel, read.raw)}</p>
+            {read.capped && <p className="m-0">Your feed reads it capped at {read.folded}.</p>}
+          </div>
+        ),
+        <p key="cost" data-testid="severance-cost" className="m-0">
+          {alreadySevered ? "You are already at nothing here." : cost}
+        </p>,
+        // A FAILED SIGNING RE-RAISES ITS OWN SURFACE WITH RETRY: the fault
+        // stands above the pair, and the confirm's slot reads Retry.
+        ...(failed
+          ? [
+              <p key="failed" role="alert" data-testid="severance-failed" className="m-0 text-error">
+                That didn&apos;t send. Try again.
+              </p>,
+            ]
+          : []),
+      ]}
+      actions={
+        <>
+          {/* IN FLIGHT THE LABEL SAYS WHAT IS HAPPENING — the family's own
+              present participle — and the control is inert, never dimmed.
+              Dimming is kept for the one true refusal, a bundle already at
+              nothing. */}
+          <button
+            type="button"
+            data-testid="severance-proceed"
+            disabled={alreadySevered}
+            aria-disabled={busy || undefined}
+            aria-busy={slow || undefined}
+            onClick={() => {
+              if (!busy) onConfirm();
+            }}
+            className={buttonClassName({ variant: "text" })}
+          >
+            {slow ? sever.busy : failed ? "Retry" : sever.control}
+          </button>
+          {/* THE WAYS OUT ARE LOCKED WHILE IT SIGNS: the act was sent from
+              this dialog, so `Keep it`, the scrim, Escape and Back wait for
+              the answer — locked, never dimmed. */}
+          <button
+            type="button"
+            data-testid="severance-cancel"
+            aria-disabled={busy || undefined}
+            onClick={() => {
+              if (!busy) onCancel();
+            }}
+            className={buttonClassName({ variant: "primary" })}
+          >
+            Keep it
+          </button>
+        </>
+      }
+    />
   );
 }

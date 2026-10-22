@@ -1,10 +1,10 @@
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { describe, expect, it } from "vitest";
 
 import { fetchHashtagDetail, prepareTag } from "./topics-api";
 import { DEFAULT_CONFIDENCE, DEFAULT_RELEVANCE } from "@/lib/topics/draft";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 
 const server = startMswServer();
 
@@ -32,7 +32,7 @@ function hashtag(name: string, taggedContent: unknown[] = []) {
 describe("fetchHashtagDetail", () => {
   it("maps a resolved topic", async () => {
     server.use(
-      graphql.query("HashtagDetail", () =>
+      gqlLink.query("HashtagDetail", () =>
         HttpResponse.json({ data: { hashtag: hashtag("rust") } }),
       ),
     );
@@ -47,14 +47,14 @@ describe("fetchHashtagDetail", () => {
   // name — a well-formed but never-tagged name still resolves.
   it("serves null for a substrate-illegal name", async () => {
     server.use(
-      graphql.query("HashtagDetail", () => HttpResponse.json({ data: { hashtag: null } })),
+      gqlLink.query("HashtagDetail", () => HttpResponse.json({ data: { hashtag: null } })),
     );
     const outcome = await fetchHashtagDetail(client(), "münchen");
     expect(outcome).toEqual({ kind: "success", value: null });
   });
 
   it("fails on a transport fault", async () => {
-    server.use(graphql.query("HashtagDetail", () => HttpResponse.error()));
+    server.use(gqlLink.query("HashtagDetail", () => HttpResponse.error()));
     expect((await fetchHashtagDetail(client(), "rust")).kind).toBe("failed");
   });
 });
@@ -65,7 +65,7 @@ describe("prepareTag", () => {
   it("sends the shown pre-fill, never null, for an untouched chip", async () => {
     let variables: Record<string, unknown> | null = null;
     server.use(
-      graphql.mutation("PrepareTag", ({ variables: v }) => {
+      gqlLink.mutation("PrepareTag", ({ variables: v }) => {
         variables = v;
         return HttpResponse.json({
           data: {
@@ -97,13 +97,13 @@ describe("prepareTag", () => {
     });
   });
 
-  // Un-tagging is a further tag at relevance 0 (hashtag.md §4) — never
+  // Un-tagging is a further tag at (0,0) (hashtag.md §4) — never
   // an erasure, just an ordinary priced record the fold reads as
   // withdrawn.
-  it("sends relevance 0 for the un-tag", async () => {
+  it("sends (0,0) for the un-tag", async () => {
     let variables: Record<string, unknown> | null = null;
     server.use(
-      graphql.mutation("PrepareTag", ({ variables: v }) => {
+      gqlLink.mutation("PrepareTag", ({ variables: v }) => {
         variables = v;
         return HttpResponse.json({
           data: {
@@ -123,17 +123,17 @@ describe("prepareTag", () => {
         });
       }),
     );
-    // The un-tag still signs the confidence its chip showed: relevance is
-    // the only value the removal moves.
-    await prepareTag(client(), { target: "p1", name: "rust", relevance: 0, confidence: 0.8 });
+    // The wrapper sends the pair it is handed; the un-tag hands it (0,0)
+    // (hashtag.md §4).
+    await prepareTag(client(), { target: "p1", name: "rust", relevance: 0, confidence: 0 });
     expect(variables).toEqual({
-      input: { target: "p1", name: "rust", pDirected: 0, pInterest: 0.8 },
+      input: { target: "p1", name: "rust", pDirected: 0, pInterest: 0 },
     });
   });
 
   it("refuses with the payload's userErrors", async () => {
     server.use(
-      graphql.mutation("PrepareTag", () =>
+      gqlLink.mutation("PrepareTag", () =>
         HttpResponse.json({
           data: {
             prepareTag: {

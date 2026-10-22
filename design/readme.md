@@ -1029,8 +1029,9 @@ own (§3). All four quadrants are legitimate.
   refused.
 - The emoji face is a **lossy readout of the pick**, nearest of twenty
   anchors by Euclidean distance — dense in the for-it-and-want-it
-  quadrant, sparse at the extremes. `(0, 0)` never speaks through the
-  table: it gets 🤷.
+  quadrant, sparse at the extremes. **Faces follow the value**: the
+  table reads only a pair with both numbers non-zero; any pair drawn as
+  a face wears 🤔 at exactly one zero and 🤷 at `(0, 0)`.
 - **An author reaches their own content by two records: backing and
   opinion** (jakob 2026-10-16, PR-101). The backing — the Publish,
   Owner or Send that creates or edits it — carries one free parameter,
@@ -10360,6 +10361,44 @@ states the expected.
   flows hold at **227**, none re-blessed. The registry holds at **100
   screens**: every board drawn this round is unregistered, so no path
   joins and none leaves.
+
+### Round 19, faces follow the value and the empty sign — 2026-10-21
+
+jakob's rulings (seam 242, from the round-6 hand test): faces follow the
+value, everywhere — any pair drawn as a face wears 🤔 when exactly one
+number is zero, 🤷 stays exact `(0, 0)`'s, 🫥 the control at rest, and
+the twenty anchors read only pairs with both numbers non-zero; a
+standing one-zero bundle wears 🤔. And a `(0, 0)` landing while nothing
+stands gets its own ask, never the walk-back and never a block.
+
+- **One readout.** `bundleReadout` answers every stance face — the
+  pick (`StanceStanding`, `StanceReadout`), `Current opinion`, the
+  resting anchor, `StanceValue`, the snackbar, `StagedReference` and
+  `ReferenceRow` — and `tagReadout` every tag face (`TaggedRow`, a
+  topic `ReferenceRow`) by the same law, in the tag family's words. A
+  pick at `(0, 0)` is spoken `Says nothing`. `ProfileStances` draws Kel
+  at `+0.00 / +0.35` wearing 🤔.
+- **The empty sign.** `EmptySignConfirm` — `Sign an empty opinion?` ·
+  `This says nothing about @ada, shapes no feed, and leaves you where
+  you are.` · `It signs 1 thing, paid on its own.` · `Set it anyway` /
+  `Keep it` filled — raised by `StanceControl` when a pick lands `(0, 0)`
+  with no record standing or the bundle walked back. Its board stands
+  beside `SeveranceConfirm`, the column right of it one slot over, and
+  `empty-sign.card.html` draws its states.
+- **Ruled at review (jakob 2026-10-21).** Signed, the empty sign is an
+  ordinary record: the bundle counts it, stays at `(0, 0)`, is not
+  severed, and the ordinary snackbar answers; a standing there speaks
+  `Says nothing`, never `Walked back`, and `Walk it back` stands at its
+  cost of 1. Where the opinion vouches someone in — `ApprovePad`,
+  `VouchAskPad`, `StanceControl`'s `vouchesIn` — the ask keeps and the act
+  proceeds, the first line the stronger warning: `@rafa would be vouched
+  in but start out cut off: no feed can carry them, and community funds
+  stay closed to them, until someone gives them an opinion that says
+  something.` The board's `context` chip draws it over Invites.
+- **The gate**: edges **2124 → 2127** (`EmptySignConfirm`'s three; the
+  approval and vouch-ask Sets gain it as an outcome); flows hold at
+  **227**. The registry holds at **100 screens**; the new board is
+  unregistered.
 
 ---
 

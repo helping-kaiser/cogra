@@ -345,10 +345,43 @@ export function nearestValenceAnchor(pDirected) {
   return VALENCE_SIX[VALENCE_SIX.length - 1];
 }
 
-/** The readout a BUNDLE wears. The table never speaks for zero. */
+/* FACES FOLLOW THE VALUE, EVERYWHERE (jakob 2026-10-21, seam 242). Any pair
+   drawn as a face — the pick, a standing opinion, the resting anchor, a
+   record's row, the snackbar — reads here, and the table reads only a pair
+   with both numbers non-zero: exactly (0, 0) shrugs, exactly one zero thinks
+   and names its state (`unreachableHead`). A pick of (+0.10, 0.00) is the
+   held, unreachable state whether it is being picked or already stands, so
+   it wears the face the landing beneath it wears. 🫥 stays the control's
+   own, outside every value. */
 export function bundleReadout(pair, zeroLabel = SEVERED_LABEL) {
-  if (pair.pDirected === 0 && pair.pInterest === 0) return { emoji: ZERO_BUNDLE_EMOJI, label: zeroLabel };
+  const dZero = pair.pDirected === 0;
+  const iZero = pair.pInterest === 0;
+  if (dZero && iZero) return { emoji: ZERO_BUNDLE_EMOJI, label: zeroLabel };
+  if (dZero || iZero) return { emoji: UNREACHABLE_EMOJI, label: unreachableHead(pair) };
   return nearestAnchor(pair);
+}
+
+/* A PICK OF NOTHING SAYS NOTHING. A pick at exactly (0, 0) is not a walk-back —
+   it adds nothing to what stands — so its spoken word is its own. So is a
+   STANDING at (0, 0) that was never walked back: an empty sign joined it
+   (jakob 2026-10-21), and `Walked back` would be false of it. */
+export const EMPTY_PICK_LABEL = "Says nothing";
+
+/* A TAG'S PAIR FOLLOWS THE SAME LAW (hashtag.md §4): `(0, 0)` is the
+   withdrawal, and a tag at zero on one number only is routing-inert but not
+   withdrawn — a claim, not nothing. So a tag's face shrugs at (0, 0), thinks
+   at one zero, and reads the thirteen objects otherwise; the words are the
+   tag family's, never a stance's. */
+export const TAG_WITHDRAWN_LABEL = "withdrawn";
+export function tagUnreachableHead(pair) {
+  return pair.pDirected === 0 ? "not about it at all" : "no certainty at all";
+}
+export function tagReadout(pair) {
+  const rZero = pair.pDirected === 0;
+  const cZero = pair.pInterest === 0;
+  if (rZero && cZero) return { emoji: ZERO_BUNDLE_EMOJI, label: TAG_WITHDRAWN_LABEL };
+  if (rZero || cZero) return { emoji: UNREACHABLE_EMOJI, label: tagUnreachableHead(pair) };
+  return nearestTagAnchor(pair);
 }
 
 /* The read-only value readout (profile round, 2026-09-01): a stance RECORD's
@@ -356,9 +389,12 @@ export function bundleReadout(pair, zeroLabel = SEVERED_LABEL) {
    — the opinions page's rows, the chronicle's opinion entries. Never
    interactive: acting on a person means opening their profile first (jakob —
    giving an opinion here is more deliberate than a follow). */
-export function StanceValue({ pDirected, pInterest, showPair = true, node }) {
+export function StanceValue({ pDirected, pInterest, showPair = true, zeroLabel = SEVERED_LABEL, node }) {
   const pair = { pDirected, pInterest };
-  const readout = bundleReadout(pair);
+  /* A row cannot tell a walked-back (0,0) from an empty-signed one by the
+     numbers — the data says which, through `zeroLabel`: a never-severed
+     standing passes `EMPTY_PICK_LABEL` so it speaks "Says nothing". */
+  const readout = bundleReadout(pair, zeroLabel);
   return (
     <span
       role="img"
@@ -553,7 +589,8 @@ export function signedLine(standing, records, severed, targetLabel, names = STAN
   const acts = records === 1 ? "Signed" : `Signed ${records} things`;
   const sever = severanceWords(names);
   if (severed) return `${acts}, still settling. ${sever.gone(targetLabel)}`;
-  const readout = bundleReadout(standing, sever.zero);
+  // Not severed, so a standing at exactly (0, 0) is an empty sign's: it says nothing.
+  const readout = bundleReadout(standing, EMPTY_PICK_LABEL);
   return (
     <>
       <span aria-hidden="true">
@@ -591,7 +628,7 @@ function ReadoutLine({ emoji, exact, spoken, style }) {
 
 /** Face and pair, and the words for a reader who cannot see the face (readme §10). */
 export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, names = STANCE_AXIS_NAMES, style }) {
-  const readout = kind === "standing" ? bundleReadout(pair, zeroLabel) : nearestAnchor(pair);
+  const readout = bundleReadout(pair, kind === "standing" ? zeroLabel : EMPTY_PICK_LABEL);
   return (
     <ReadoutLine
       emoji={readout.emoji}
@@ -623,7 +660,8 @@ export function standingParts(bundle, targetLabel, names = STANCE_AXIS_NAMES) {
   if (bundle === undefined) return { sentence: "Checking your current opinion…" };
   if (bundle === null || bundle.records === 0) return { sentence: `${ZERO_BUNDLE_EMOJI} No opinion on ${targetLabel} yet.` };
   if (bundle.severed) return { sentence: `${ZERO_BUNDLE_EMOJI} ${sever.gone(targetLabel)}` };
-  const readout = bundleReadout(bundle.current, sever.zero);
+  // Severed is answered above, so a standing at exactly (0, 0) here says nothing.
+  const readout = bundleReadout(bundle.current, EMPTY_PICK_LABEL);
   const words = readoutWords(names);
   return {
     label: words.current,
@@ -768,7 +806,7 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, words, head, onExp
 
 /** The current opinion and the pick — everything that sits above the field. */
 export function StanceStanding({ pick, bundle, targetLabel, names = STANCE_AXIS_NAMES, style, onOpenHistory, node }) {
-  const anchor = nearestAnchor(pick);
+  const anchor = bundleReadout(pick, EMPTY_PICK_LABEL);
   const { anchorWord } = readoutWords(names);
   return (
     <div aria-live="polite" style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", ...style }} data-node={node}>

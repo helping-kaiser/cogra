@@ -5,13 +5,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { CENTERED } from "@/lib/ui2/media/crop";
 import { PICTURE_MAX_BYTES, POST_VIDEO_MAX_BYTES } from "@/lib/ui2/media/caps";
 import { createGuard, type AuthGuard } from "@/lib/session/guard";
 import { createTokenStore } from "@/lib/session/token-store";
 import type { Refresher } from "@/lib/session/refresher";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { COMMENT_SCALE, POST_SCALE, TOO_BIG_PICTURE } from "./pick";
 import { ECHO_MISMATCH, runUpload, runVideoUpload, waitingAssets } from "./uploads";
 import type { AssetUpload, CoverAsset, PickedAsset } from "./wizard";
@@ -437,7 +437,7 @@ describe("runUpload — waiting for a PROCESSING asset", () => {
   it("goes straight to done when the upload answers READY", async () => {
     encodable();
     mswServer.use(
-      graphql.mutation("UploadMedia", () =>
+      gqlLink.mutation("UploadMedia", () =>
         HttpResponse.json({
           data: {
             uploadMedia: {
@@ -459,7 +459,7 @@ describe("runUpload — waiting for a PROCESSING asset", () => {
   it("reports processing, then polls until READY", async () => {
     encodable();
     mswServer.use(
-      graphql.mutation("UploadMedia", () =>
+      gqlLink.mutation("UploadMedia", () =>
         HttpResponse.json({
           data: {
             uploadMedia: {
@@ -474,7 +474,7 @@ describe("runUpload — waiting for a PROCESSING asset", () => {
     let polls = 0;
     const rendition = "cd".repeat(32);
     mswServer.use(
-      graphql.query("MediaAttachmentStatus", () => {
+      gqlLink.query("MediaAttachmentStatus", () => {
         polls += 1;
         // At READY the asset serves its rendition; its upload digest is still
         // the bytes this device sent.
@@ -503,7 +503,7 @@ describe("runUpload — waiting for a PROCESSING asset", () => {
   it("reports the server's own reason, not retryable, when the poll settles FAILED", async () => {
     encodable();
     mswServer.use(
-      graphql.mutation("UploadMedia", () =>
+      gqlLink.mutation("UploadMedia", () =>
         HttpResponse.json({
           data: {
             uploadMedia: {
@@ -514,7 +514,7 @@ describe("runUpload — waiting for a PROCESSING asset", () => {
           },
         }),
       ),
-      graphql.query("MediaAttachmentStatus", () =>
+      gqlLink.query("MediaAttachmentStatus", () =>
         HttpResponse.json({
           data: {
             mediaAttachment: mediaFields("m-bad", {

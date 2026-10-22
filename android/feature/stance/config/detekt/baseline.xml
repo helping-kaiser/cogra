@@ -2,6 +2,7 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
+    <ID>LargeClass:StanceViewModelTest.kt:StanceViewModelTest</ID>
     <ID>TooManyFunctions:StanceViewModel.kt:StanceViewModel : ViewModel</ID>
   </CurrentIssues>
 </SmellBaseline>

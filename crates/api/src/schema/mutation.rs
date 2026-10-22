@@ -630,8 +630,7 @@ impl LicenseInput {
 /// `[a-z0-9._-]`, at most 128 bytes) and a new name needs no creation
 /// act: Types anchor vacuously (hashtag.md §1, §2). Re-tagging a name
 /// revises the claim — the newest record per (author, content, Type)
-/// wins, and relevance 0 is the un-tag, read as withdrawn (hashtag.md
-/// §4).
+/// wins, and `(0,0)` is the un-tag, read as withdrawn (hashtag.md §4).
 #[derive(InputObject)]
 struct TagInput {
     name: String,
@@ -905,15 +904,16 @@ struct PrepareCommentInput {
 }
 
 /// One standalone topic declaration on existing content — the gesture
-/// that adds a topic after creation, and, at `pDirected: 0`, the one
-/// that withdraws it. Tags are never edit fields: changing a post's
-/// topics is its own priced act (post.md §3).
+/// that adds a topic after creation, and, at `(0,0)`, the one that
+/// withdraws it. Tags are never edit fields: changing a post's topics is
+/// its own priced act (post.md §3).
 #[derive(InputObject)]
 struct PrepareTagInput {
     /// The content being tagged.
     target: Uuid,
     name: String,
-    /// Relevance `r`; zero is the un-tag. Required, as on `TagInput`.
+    /// Relevance `r`. Required, as on `TagInput`. An un-tag signs both
+    /// parameters at 0.
     p_directed: Dimension,
     /// Confidence `c`, census-bounded to `[0, 1]`. Required, as on
     /// `TagInput`.
@@ -965,7 +965,7 @@ impl PrepareReferenceInput {
 
 /// Withdrawing one citation. Records are never deleted, and Reference
 /// withdrawal is per-leg net stance — not the Tag rule beside it, which
-/// is newest-wins at relevance 0 only because a tag's confidence cannot
+/// is newest-wins at `(0,0)` only because a tag's confidence cannot
 /// be netted. Both citation parameters are signed, so a withdrawal is the
 /// severance shape: counter-records until the bundle reaches `(0, 0)`.
 ///
@@ -3577,7 +3577,9 @@ impl Mutation {
     /// viewer's bundle to `(0, 0)`. Each is its own priced act, so the
     /// batch length is the gesture's cost — a bundle carrying more
     /// conviction than one record can walk back needs several
-    /// (feed-ranking.md §8.1).
+    /// (feed-ranking.md §8.1). A bundle an empty sign left at `(0, 0)`
+    /// walks back in one `(0, 0)` record; one with nothing standing — no
+    /// record, or already severed — is refused.
     async fn prepare_severance(
         &self,
         ctx: &Context<'_>,
@@ -3937,7 +3939,7 @@ impl Mutation {
 
     /// Prepares one standalone Tag on existing content — the gesture
     /// that adds a topic after creation. There is no un-tag mutation:
-    /// withdrawing a topic is a further Tag at `pDirected: 0`, which the
+    /// withdrawing a topic is a further Tag at `(0,0)`, which the
     /// current-topics fold reads as withdrawn (hashtag.md §4). Tagging
     /// is not restricted to the content's author; the read side is what
     /// separates the author's own declarations from third-party claims.

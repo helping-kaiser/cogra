@@ -32,8 +32,9 @@
 
 import type { ReactNode } from "react";
 
-import { nearestAnchor } from "@/lib/stance/anchors";
-import { nearestTagAnchor } from "@/lib/topics/anchors";
+import { bundleReadout } from "@/lib/stance/anchors";
+import { tagReadout } from "@/lib/topics/anchors";
+import { SEVERED_LABEL } from "@/lib/ui/stance-readout";
 import type { ReferenceClaimNode } from "@/lib/references/claims";
 import { targetView, untypedTargetView } from "@/lib/references/normalize";
 import type { ReferenceTargetView } from "@/lib/references/draft";
@@ -160,7 +161,8 @@ export function RefsSheet({
       {topics.length > 0 && <SectionLabel>{TAGS_LABEL}</SectionLabel>}
       {topics.map((claim) => {
         const name = claim.hashtag.name.value ?? "";
-        const anchor = nearestTagAnchor(claim.relevance, claim.confidence);
+        // `TaggedRow`'s face: the tag twin of the choke point (seam 243).
+        const anchor = tagReadout(claim.relevance, claim.confidence);
         const exact = formatTagPair(claim.relevance, claim.confidence);
         return (
           <ListRow
@@ -196,7 +198,9 @@ export function RefsSheet({
             ? untypedTargetView(claim.targetId)
             : targetView(claim.target, claim.targetId);
         const pair = { pDirected: claim.relevance, pInterest: claim.support };
-        const anchor = nearestAnchor(pair);
+        // `ReferenceRow`'s face: the value's own (seam 243); only the glyph
+        // is drawn, a citation's anchor word is never spoken.
+        const anchor = bundleReadout(pair, SEVERED_LABEL);
         const href = view.href;
         return (
           <ListRow

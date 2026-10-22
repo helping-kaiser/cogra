@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { useRef, useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -15,7 +15,7 @@ import {
   setsPageVisibility,
   whenObserved,
 } from "@/test/media-env";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { resetSeenQueueForTests, seenAnswerOf } from "./seen-queue";
 import {
@@ -36,7 +36,7 @@ let refuseNext = 0;
 // The id the server refuses as BAD_INPUT, whatever batch it rides in.
 let poisonId = "";
 const server = startMswServer(
-  graphql.mutation("MarkSeen", ({ variables }) => {
+  gqlLink.mutation("MarkSeen", ({ variables }) => {
     sent.push(variables.nodes as string[]);
     if ((variables.nodes as string[]).includes(poisonId)) {
       return HttpResponse.json({

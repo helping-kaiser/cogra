@@ -458,7 +458,10 @@ scalar DateTime
  range [-1.0, +1.0]. The range invariant lives in the type rather
  than in a plain Float. (Families outside the stance vocabulary
  restrict the range further per the L1 census — edges.md §1;
- prepare validates per family.)"
+ prepare validates per family.) As an input — a user's pick — it
+ also lies on the hundredths grid, a multiple of 0.01, and an
+ off-grid value is refused at parse time (edges.md §1). As an
+ output it is whatever the graph holds."
 scalar Dimension
 ```
 
@@ -719,6 +722,16 @@ type Record {
   pDirected: Dimension!
   "The authored intensity / connection parameter p_i."
   pInterest: Dimension!
+  "Whether this record left its author's stance bundle toward the
+   target walked back — StanceBundle.severed read as of this
+   record: it says something, and the bundle up to and including
+   it, in the published order, nets to (0, 0). A record at (0, 0)
+   itself is never a walk-back; it says nothing. A row drawing the
+   pair without the bundle reads this to tell the two (0, 0)s
+   apart. Null on a record that folds into no stance bundle (a
+   family other than Opinion and Affinity, payload-marked, or
+   census-unknown)."
+  severed: Boolean
   "The epoch in which the record landed — the graph's own clock;
    epoch ages read against the public epoch certificates."
   landingEpoch: Int!
@@ -1126,7 +1139,11 @@ type User implements Node & Actor {
    narrowed list can stand another kind beside its people, the people
    section serves only the three people first seen most recently, and
    `hasMorePeople` says whether more match — the See all profiles
-   door, which is the same query with only USER in `kinds`. A query
+   door, which is the same query with only USER in `kinds`. The
+   topics section is capped the same way, to the three topics first
+   seen most recently, and `hasMoreTags` says whether more match —
+   the See all tags door, which is the same query with only HASHTAG
+   in `kinds`. A query
    past the search length cap is BAD_INPUT. A hidden actor's posts
    and comments stay out while the actor is hidden, and their own
    profile stays; a removed thing keeps its place and reads its
@@ -1866,6 +1883,10 @@ type ViewHistoryConnection {
    the See all profiles door (Search, The people section). False on a
    list no query narrows."
   hasMorePeople: Boolean!
+  "Whether more seen topics match than the topics section serves —
+   the See all tags door (Search, History). False when the section is
+   not capped, and on a list no query narrows."
+  hasMoreTags: Boolean!
 }
 "What the seen-list holds: the kinds History serves; later slices
  add members as their kinds join. A union, not `Node`: a Hashtag is
@@ -2403,14 +2424,16 @@ type Query {
    Moderator's view; an applicant keeps the view of the issuer of
    the invite link they registered through — whoever's vouch lands
    them — from the moment the account exists, whatever they stage; a
-   landed member keeps that issuer's view until their first
-   **Opinion** is signed, toward
-   any target — landed or in flight (VouchBack.md:15); an Affinity
-   never ends it (VouchBack.md:19); a first Opinion that expires
-   with none landed returns it (VouchBack.md:17). An Opinion staged
-   during the application signs with the vouch-in batch, so a
-   member who carried one owns their view from landing on
-   (VouchBack.md:21). From then on the view is their own and the
+   landed member keeps that issuer's view until they hold a live
+   **Opinion**, signed toward any target — landed or in flight
+   (VouchBack.md:15): one whose netted bundle toward its target has
+   neither parameter at zero. An inert Opinion (either parameter
+   zero) never ends it, since a feed rooted in routing-inert edges
+   ranks nothing; nor does an Affinity (VouchBack.md:19); a live
+   Opinion that expires with none landed returns it
+   (VouchBack.md:17). An Opinion staged during the application
+   signs with the vouch-in batch, so a member who carried a live one
+   owns their view from landing on (VouchBack.md:21). From then on the view is their own and the
    field is null — that rule, not missing data."
   borrowedView: Actor
 
@@ -3038,7 +3061,13 @@ statement bounded by the reader's own saves.
 seen-list by the same law over the seen set: people, then topics,
 then content, newest first seeing first inside a section; the people
 section is capped as above, to the three people first seen most
-recently, and `kinds` narrows as search's does. The seen-list's own
+recently, and `kinds` narrows as search's does. While the narrowed
+list can stand another kind beside its topics, the topics section is
+capped the same way, to the three topics first seen most recently;
+the connection's `hasMoreTags` says whether more match — the See all
+tags door, which re-queries with only `HASHTAG` in `kinds`, where
+every match is served, uncapped. Saved has no topics section and
+search does not cap its own. The seen-list's own
 narrowing holds: a hidden actor's posts and comments match nothing
 while the actor is hidden, and their profile still does. A narrowed
 list pages on cursors of its own, its `totalCount` counts the
@@ -3211,7 +3240,9 @@ These bind every mutation below.
   priced act
   ([feed-ranking.md §8.1](../primitive/feed-ranking.md#81-the-act)).
   The batch is therefore the gesture's cost, legible before
-  signing like any other prepare batch. Severance resolves **one
+  signing like any other prepare batch. A bundle an empty sign left
+  at `(0, 0)` has nothing to net and walks back in one `(0, 0)`
+  record ("The read-side bundle fold"). Severance resolves **one
   family** and nets that family's bundle: severing a person nets
   the Opinion bundle, and a mention of them — a Reference from an
   artifact toward their Profile — is a bundle of its own, keyed by
@@ -3513,8 +3544,9 @@ input PrepareStanceInput {
 "Sever the acting identity's bundle toward a node — the explicit
  gesture that nets it to (0, 0). Stages the counter-records the
  current bundle needs, each its own priced act, so the batch length
- is the gesture's cost (conventions). Refused when the bundle
- already nets to (0, 0)."
+ is the gesture's cost (conventions). A bundle an empty sign left at
+ (0, 0) walks back in one (0, 0) record. Refused when nothing
+ stands to walk back — no record, or already severed."
 input PrepareSeveranceInput {
   target: UUID!
   actAs: UUID
@@ -3561,7 +3593,9 @@ type StanceProjection {
   pInterest: Dimension!
   "Either axis at zero — the stance would carry nothing."
   inert: Boolean!
-  "Both axes at zero — the pick reaches severance."
+  "Both axes at zero — the pick reaches severance. The landing's
+   pair alone: where nothing stands, a pick landing here is an
+   empty sign, read beside the bundle's recordCount and severed."
   severed: Boolean!
 }
 
@@ -3579,12 +3613,18 @@ type StanceBundle {
    Dimension. What a walk back to zero actually walks."
   rawPDirected: Float!
   rawPInterest: Float!
-  "How many records the bundle folds."
+  "How many records the bundle folds, an empty sign's included."
   recordCount: Int!
+  "Either axis at zero — the bundle carries nothing on it."
   inert: Boolean!
+  "Walked back to nothing: the bundle nets to (0, 0) and its
+   newest record said something. False with no record, and false
+   at (0, 0) left by an empty sign."
   severed: Boolean!
-  "How many counter-records severance would stage right now — the
-   gesture's cost. Zero when the bundle already nets to (0, 0)."
+  "How many records the walk-back would stage right now — the
+   gesture's cost: the counter-records that net the sums, or 1 for
+   a bundle an empty sign left at (0, 0). Zero with nothing
+   standing or already severed."
   severanceCost: Int!
   "Where the supplied pick lands the bundle; null without one."
   projected: StanceProjection
@@ -3600,6 +3640,27 @@ Clients recompute the landing the same way, folding `raw + pick`
 locally under the drag so the pad answers with no round trip
 ([stance-control.md "Two numbers, never one"](../../design/guidelines/stance-control.md#two-numbers-never-one)); `projected` gives a caller the same
 fold server-side in the read that already fetched the bundle.
+
+**Severed is the bundle's history, not its pair.** A bundle at
+`(0, 0)` is one of two standings. **Severed** — walked back to
+nothing — when the record that brought it there said something: a
+counter-pick, a severance batch. **Saying nothing** when that
+record was itself `(0, 0)`: an **empty sign**, a `(0, 0)` opinion
+signed where nothing stands — no record yet, or a bundle already
+severed ([stance-control.md "Severance"](../../design/guidelines/stance-control.md#severance)).
+An empty sign is an ordinary record: `recordCount` counts it, the
+pair and the raw sums stay `(0, 0)`, `severed` is false, and the
+walk-back stays available at `severanceCost` 1 — `prepareSeverance`
+stages one `(0, 0)` record for it. So `severed` is read off the
+newest record — last in the published order, the viewer's acts in
+flight after everything landed — and a bundle with no record is
+not severed. Whether a `(0, 0)` record landing over a standing that
+already says nothing reads as a walk-back is open
+([open-questions.md Q60](../open-questions.md));
+it reads as saying nothing. Severance as a gesture is unchanged: a
+`(0, 0)` landing over anything standing. `projected.severed` is
+the landing's pair alone, and a client tells the two asks apart by
+reading it beside `recordCount` and `severed`.
 
 The field is `viewerStance(pick: StancePickInput, includePending:
 Boolean! = true)` on every stance-able node. `includePending`

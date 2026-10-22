@@ -22,7 +22,7 @@
 
 import { useRef, useState } from "react";
 
-import { clampPair, type StancePair } from "@/lib/stance/model";
+import { snapPair, type StancePair } from "@/lib/stance/model";
 import { knobTravelInset, padPairFrom, padPercentOf } from "@/lib/stance/pad-geometry";
 import { formatStanceWords } from "@/lib/ui/stance-format";
 
@@ -66,7 +66,9 @@ export function StancePad({
   testId?: string;
 }) {
   const fieldRef = useRef<HTMLDivElement>(null);
-  const drag = useRef<{ x: number; y: number; base: StancePair } | null>(null);
+  // `last` is the pair the drag most recently reported, held here rather than
+  // read back from `value`: the lift can arrive before the move's render.
+  const drag = useRef<{ x: number; y: number; base: StancePair; last: StancePair | null } | null>(null);
   const [dragging, setDragging] = useState(false);
   const knob = padPercentOf(value);
 
@@ -74,14 +76,26 @@ export function StancePad({
     const from = drag.current;
     const field = fieldRef.current;
     if (from === null || field === null) return;
-    onChange(
-      padPairFrom(
-        from.base,
-        field.getBoundingClientRect(),
-        { dx: event.clientX - from.x, dy: event.clientY - from.y },
-        INSET_PX,
-      ),
+    const next = padPairFrom(
+      from.base,
+      field.getBoundingClientRect(),
+      { dx: event.clientX - from.x, dy: event.clientY - from.y },
+      INSET_PX,
     );
+    from.last = next;
+    onChange(next);
+  };
+
+  /**
+   * The lift lands the pair on the hundredths grid (the value domain, jakob
+   * 2026-10-20): the knob followed the finger, and the pick parks on the
+   * nearest hundredth. A tap that never travelled moves nothing.
+   */
+  const endDrag = () => {
+    const last = drag.current?.last ?? null;
+    drag.current = null;
+    setDragging(false);
+    if (last !== null) onChange(snapPair(last));
   };
 
   const onKeyDown = (event: React.KeyboardEvent) => {
@@ -92,7 +106,7 @@ export function StancePad({
     event.preventDefault();
     const step = event.shiftKey ? COARSE_STEP : STEP;
     onChange(
-      clampPair({
+      snapPair({
         pDirected: value.pDirected + arrow.dx * step,
         pInterest: value.pInterest + arrow.dy * step,
       }),
@@ -112,21 +126,15 @@ export function StancePad({
       aria-label={ariaLabel}
       onKeyDown={onKeyDown}
       onPointerDown={(event) => {
-        drag.current = { x: event.clientX, y: event.clientY, base: value };
+        drag.current = { x: event.clientX, y: event.clientY, base: value, last: null };
         setDragging(true);
         event.currentTarget.setPointerCapture?.(event.pointerId);
       }}
       onPointerMove={(event) => {
         if (dragging) moveTo(event);
       }}
-      onPointerUp={() => {
-        drag.current = null;
-        setDragging(false);
-      }}
-      onPointerCancel={() => {
-        drag.current = null;
-        setDragging(false);
-      }}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
       className="cg-focus relative size-60 touch-none self-center rounded-large bg-surface-container-highest"
     >
       {/* What the knob is worth, for a reader who cannot see where it sits.

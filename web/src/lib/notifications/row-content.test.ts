@@ -113,12 +113,25 @@ describe("notificationRow", () => {
           displayName: moderated("Sol"),
           avatar: { url: "https://media/sol.jpg", status: "NORMAL" },
         },
-        record: { id: "act:x", pDirected: 0.4, pInterest: 0.5 },
+        record: { id: "act:x", pDirected: 0.4, pInterest: 0.5, severed: false },
       } as Partial<Notification>),
     );
-    expect(opinion.disc).toEqual({ kind: "face", pDirected: 0.4, pInterest: 0.5 });
+    expect(opinion.disc).toMatchObject({ kind: "face", pDirected: 0.4, pInterest: 0.5 });
     expect(opinion.second).toBe(undefined);
     expect(opinion.title).not.toMatch(/\d/);
+  });
+
+  // THE ROW SAYS WHICH (0, 0) IT DRAWS (seam 243, design.md §8.4): the
+  // record's own `severed`, never the pair, picks the word.
+  it("the_opinion_row_speaks_a_walked_back_record_as_walked_back_and_an_empty_sign_as_says_nothing", () => {
+    const at = (severed: boolean | null) =>
+      notificationRow(
+        row("PROFILE_OPINION", {
+          record: { id: "act:z", pDirected: 0, pInterest: 0, severed },
+        } as Partial<Notification>),
+      ).disc;
+    expect(at(true)).toEqual({ kind: "face", pDirected: 0, pInterest: 0, zeroLabel: "Walked back" });
+    expect(at(false)).toEqual({ kind: "face", pDirected: 0, pInterest: 0, zeroLabel: "Says nothing" });
   });
 
   // Notifications.md:21: 🤷 where a picture would go, no digits, no second

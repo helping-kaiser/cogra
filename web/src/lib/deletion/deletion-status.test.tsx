@@ -1,12 +1,13 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import { delay, graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
+import { delay } from "msw/utils/delay";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { BorrowedViewBand } from "@/lib/ui/borrowed-view-band";
 import { CograBand } from "@/lib/ui/cogra-band";
 import { PageHeader } from "@/lib/ui/page-header";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 
 import { AccountDeletionProvider, BARE_VIEW, useAccountDeletion } from "./deletion-status";
@@ -23,7 +24,7 @@ const server = startMswServer();
 const DAY = 86_400_000;
 
 function standing(accountDeletion: unknown, deletionPath = "BY_LINK") {
-  return graphql.query("AccountDeletion", () =>
+  return gqlLink.query("AccountDeletion", () =>
     HttpResponse.json({ data: { me: { __typename: "User", id: "u1", deletionPath, accountDeletion } } }),
   );
 }
@@ -72,7 +73,7 @@ describe("the deletion band", () => {
   it("stands_nowhere_before_the_link_is_confirmed", async () => {
     let asked = false;
     server.use(
-      graphql.query("AccountDeletion", () => {
+      gqlLink.query("AccountDeletion", () => {
         asked = true;
         return HttpResponse.json({ data: { me: { __typename: "User", id: "u1", deletionPath: "BY_LINK", accountDeletion: null } } });
       }),
@@ -103,7 +104,7 @@ describe("the deletion band", () => {
   it("cancel_clears_the_band_and_says_so_without_undo", async () => {
     server.use(
       standing(grace(6)),
-      graphql.mutation("CancelAccountDeletion", () =>
+      gqlLink.mutation("CancelAccountDeletion", () =>
         HttpResponse.json({
           data: { cancelAccountDeletion: { __typename: "AccountDeletionPayload", accountDeletion: null, userErrors: [] } },
         }),
@@ -121,7 +122,7 @@ describe("the deletion band", () => {
   it("cancel_with_no_answer_says_the_network_error_and_the_band_stays", async () => {
     server.use(
       standing(grace(6)),
-      graphql.mutation("CancelAccountDeletion", async () => {
+      gqlLink.mutation("CancelAccountDeletion", async () => {
         await delay(1);
         return HttpResponse.error();
       }),
@@ -148,7 +149,7 @@ describe("the band arbitration (ER-G4)", () => {
   it("the_borrowed_view_band_stands_when_no_deletion_does", async () => {
     let asked = false;
     server.use(
-      graphql.query("AccountDeletion", () => {
+      gqlLink.query("AccountDeletion", () => {
         asked = true;
         return HttpResponse.json({ data: { me: { __typename: "User", id: "u1", deletionPath: "BY_LINK", accountDeletion: null } } });
       }),
@@ -183,7 +184,7 @@ describe("the band under a padded host's header", () => {
 
 describe("the deadline met with a session on this device (ER-G6)", () => {
   function sessionRefused() {
-    return graphql.mutation("RefreshSession", () =>
+    return gqlLink.mutation("RefreshSession", () =>
       HttpResponse.json({
         data: {
           refreshSession: {
@@ -199,7 +200,7 @@ describe("the deadline met with a session on this device (ER-G6)", () => {
   it("lands_signed_out_on_the_bare_view_with_its_snackbar_never_the_sign_in", async () => {
     let reads = 0;
     server.use(
-      graphql.query("AccountDeletion", () => {
+      gqlLink.query("AccountDeletion", () => {
         reads += 1;
         // The first read is a grace whose deadline has just passed (the
         // executor not yet run); the due re-read finds the deletion ran: the

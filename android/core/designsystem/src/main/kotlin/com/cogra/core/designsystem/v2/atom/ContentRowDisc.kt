@@ -1,6 +1,8 @@
 package com.cogra.core.designsystem.v2.atom
 
+import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.cogra.core.designsystem.SEVERED_LABEL
 
 /** What fills a [ContentRow]'s disc, by the master's precedence. */
 sealed interface ContentRowDisc {
@@ -10,8 +12,17 @@ sealed interface ContentRowDisc {
 
     data class Monogram(val name: String) : ContentRowDisc
 
-    /** A stance's face where a picture would go, no digits (the chronicle's opinion row). */
-    data class Face(val directed: Double, val interest: Double) : ContentRowDisc
+    /**
+     * A stance's face where a picture would go, no digits (the chronicle's
+     * opinion row) — `StanceValue` with `showPair={false}`. A row cannot tell a
+     * walked-back `(0, 0)` from an empty-signed one by the numbers, so the data
+     * says which through [zeroLabel] (`Walked back` by default, the master's).
+     */
+    data class Face(
+        val directed: Double,
+        val interest: Double,
+        @param:StringRes val zeroLabel: Int = SEVERED_LABEL,
+    ) : ContentRowDisc
 
     /** 🤷 where a picture would go, for a stance walked back (the withdrawal notification). */
     data object WalkedBack : ContentRowDisc

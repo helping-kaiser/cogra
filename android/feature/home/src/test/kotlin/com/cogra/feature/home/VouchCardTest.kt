@@ -44,7 +44,7 @@ class VouchCardTest {
                         onPick = {},
                         onCommit = {},
                         onDismissPad = {},
-                        onToggleExactValues = {},
+                        onOpenAlternates = {},
                         onOpenSeverance = {},
                         onConfirmSeverance = {},
                         onDismissSeverance = {},

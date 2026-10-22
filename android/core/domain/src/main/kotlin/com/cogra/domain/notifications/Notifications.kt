@@ -74,8 +74,12 @@ sealed interface NotificationContext {
     data class Person(val id: String) : NotificationContext
 }
 
-/** An opinion row's pair, read off its record. */
-data class NotificationPair(val directed: Double, val interest: Double)
+/**
+ * An opinion row's pair, read off its record — and which `(0, 0)` it is:
+ * [severed] is `Record.severed`, true when the record walked its author's
+ * bundle back to nothing; null on a record that folds into no bundle.
+ */
+data class NotificationPair(val directed: Double, val interest: Double, val severed: Boolean? = null)
 
 /** One row of the list. */
 data class Notification(

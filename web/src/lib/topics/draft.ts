@@ -5,7 +5,7 @@
 // visible pre-fill, and an untouched slider commits exactly what it shows.
 //
 // A tag is never withdrawn by deletion — a removal is another Tag act at
-// relevance 0 (hashtag.md §4), which is why the edit screen's changes
+// (0,0) (hashtag.md §4), which is why the edit screen's changes
 // come out of here as acts rather than as a diff to apply.
 
 export type TagDraft = {
@@ -24,8 +24,12 @@ export const RELEVANCE_MAX = 1;
 export const CONFIDENCE_MIN = 0;
 export const CONFIDENCE_MAX = 1;
 
-/** The relevance that withdraws a claim (hashtag.md §4). */
-export const WITHDRAWN_RELEVANCE = 0;
+/**
+ * The pair that withdraws a claim: `(0,0)` (hashtag.md §4). Zero on one
+ * parameter only is still a claim — "a gesture and not nothing" — so the
+ * un-tag moves both.
+ */
+export const WITHDRAWN = { relevance: 0, confidence: 0 } as const;
 
 export function newTagDraft(name: string): TagDraft {
   return { name, relevance: DEFAULT_RELEVANCE, confidence: DEFAULT_CONFIDENCE };
@@ -33,12 +37,22 @@ export function newTagDraft(name: string): TagDraft {
 
 /**
  * One staged Tag act the edit screen owes the signing flow. An un-tag
- * carries the chip it takes off, so the withdrawal signs the confidence
- * that chip showed — relevance is the only value the removal moves.
+ * carries the chip it takes off, which names the Type it withdraws; what
+ * it signs is `WITHDRAWN`, never the values the chip showed.
  */
 export type TagChange =
   | { readonly kind: "tag"; readonly tag: TagDraft }
   | { readonly kind: "untag"; readonly tag: TagDraft };
+
+/** The `(relevance, confidence)` a change's Tag act signs. */
+export function signedValues(change: TagChange): {
+  readonly relevance: number;
+  readonly confidence: number;
+} {
+  return change.kind === "tag"
+    ? { relevance: change.tag.relevance, confidence: change.tag.confidence }
+    : WITHDRAWN;
+}
 
 function sameParameters(a: TagDraft, b: TagDraft): boolean {
   return a.relevance === b.relevance && a.confidence === b.confidence;
@@ -47,7 +61,7 @@ function sameParameters(a: TagDraft, b: TagDraft): boolean {
 /**
  * What the edit screen has to stage: a tag the author added, a tag whose
  * parameters they moved (a fresh declaration at the new values), and a
- * tag they took off (relevance 0). Each is its own priced act — the
+ * tag they took off (at (0,0)). Each is its own priced act — the
  * count is what the F4 indicator reports.
  */
 export function tagChanges(

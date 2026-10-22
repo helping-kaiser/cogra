@@ -83,9 +83,26 @@ export type StanceBundle = {
   readonly records: number;
   /** Either axis at zero, as the fold reports it. */
   readonly inert: boolean;
-  /** Both axes at zero, as the fold reports it. */
+  /**
+   * Walked back to nothing — the bundle's HISTORY, as the API serves it: it
+   * nets to `(0, 0)` and its newest record said something. False on a bundle
+   * of no records, and false on one an empty sign left at `(0, 0)`, which
+   * stands there saying nothing (`StanceBundle.severed`, api-spec.md "The
+   * read-side bundle fold").
+   */
   readonly severed: boolean;
   readonly severance: SeveranceCost;
+};
+
+/**
+ * Where a candidate pick lands, and the standing it was read against — one
+ * read answers both (`viewerStance(pick:)`). The landing's `severed` is the
+ * pair alone ("the pick reaches (0, 0)"); whether that is a walk-back or an
+ * empty sign is the standing's to say — its `records` and its `severed`
+ * (`StanceProjection.severed`, schema.graphql).
+ */
+export type StanceProjection = StanceLanding & {
+  readonly standing: StanceBundle;
 };
 
 /** Where a candidate pick lands the bundle — the fold's answer, not a sum. */
@@ -131,12 +148,15 @@ export interface StanceData {
    */
   bundle(target: StanceTarget, options?: StanceReadOptions): Promise<Outcome<StanceBundle>>;
 
-  /** Where `pick` would land the bundle — the fold's answer, not a sum. */
+  /**
+   * Where `pick` would land the bundle — the fold's answer, not a sum — and
+   * the standing it lands in, read in the same round trip.
+   */
   project(
     target: StanceTarget,
     pick: StancePair,
     options?: StanceReadOptions,
-  ): Promise<Outcome<StanceLanding>>;
+  ): Promise<Outcome<StanceProjection>>;
 
   /** Author one edge carrying exactly `pick`, and sign it. */
   commit(target: StanceTarget, pick: StancePair): Promise<Outcome<StanceCommit>>;
@@ -148,4 +168,11 @@ export interface StanceData {
    * its cost stated (intent.ts).
    */
   sever(target: StanceTarget, shown: StanceBundle): Promise<Outcome<StanceCommit>>;
+
+  /**
+   * Whether this device can sign at all — the signing key is here. Asked
+   * before a gesture stages anything, so the pad can carry the key notice
+   * (PadKeyAbsent.md) rather than fail a signature it could never give.
+   */
+  keyOnDevice(): Promise<boolean>;
 }

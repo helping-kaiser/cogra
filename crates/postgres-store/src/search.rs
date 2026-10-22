@@ -47,7 +47,7 @@
 //! "Carries" is the tag page's own set: the current-topics fold over the
 //! content-intrinsic channel (`topics::TagChannel::AuthorOwned`) — a
 //! claim whose author is the content's own author, newest record per
-//! (author, content, Type) bundle, relevance 0 read as withdrawn. The
+//! (author, content, Type) bundle, a winner at `(0,0)` read as withdrawn. The
 //! fold is the one `topics::tagged_with` runs, written out here because
 //! a match joins it rather than lists it.
 
@@ -163,12 +163,12 @@ pub enum SearchRequest {
 }
 
 /// A restriction of one page read to part of the request's matches.
-/// `within`, `excluding`, `section` and `people` narrow what a page may
-/// hold, never what the request matches, so a count never sees them:
-/// ranked search reads its in-slice candidates `within` the viewer's slice
-/// and pages the rest `excluding` what the ranker ordered, one `section`
-/// at a time (ranked-feed-api §4.8); a capped people section serves only
-/// its first few, the API's cap. `list` is Saved's and History's: it
+/// `within`, `excluding`, `section`, `people` and `topics` narrow what a
+/// page may hold, never what the request matches, so a count never sees
+/// them: ranked search reads its in-slice candidates `within` the viewer's
+/// slice and pages the rest `excluding` what the ranker ordered, one
+/// `section` at a time (ranked-feed-api §4.8); a capped people or topics
+/// section serves only its first few, the API's cap. `list` is Saved's and History's: it
 /// confines the request itself, so [`SearchRequest::count`] takes it too.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Window<'a> {
@@ -181,6 +181,9 @@ pub struct Window<'a> {
     /// In the people section, only these people may be served — the other
     /// sections are untouched; None restricts nothing.
     pub people: Option<&'a [Uuid]>,
+    /// In the topics section, only these topics may be served — the other
+    /// sections are untouched; None restricts nothing.
+    pub topics: Option<&'a [Uuid]>,
     /// Only what stands on this reader's own list may be served, in the
     /// narrowed list's order: section, then the list's own time newest
     /// first, then id. A hit's `tier` is then its section's own
@@ -233,19 +236,32 @@ impl SearchRequest {
     /// The same request serving its people section alone — the same
     /// people, in the same order. None when it serves no people.
     pub fn people_only(&self) -> Option<Self> {
-        if !self.kinds().iter().any(|k| k == "user") {
+        self.only("user")
+    }
+
+    /// Whether a result can stand topics beside another section: the
+    /// request serves topics and some other kind.
+    pub fn serves_topics_beside_others(&self) -> bool {
+        let kinds = self.kinds();
+        kinds.iter().any(|k| k == "hashtag") && kinds.iter().any(|k| k != "hashtag")
+    }
+
+    /// The same request serving its topics section alone — the same
+    /// topics, in the same order. None when it serves no topics.
+    pub fn topics_only(&self) -> Option<Self> {
+        self.only("hashtag")
+    }
+
+    /// The same request narrowed to the one index `kind`; None when it
+    /// serves none.
+    fn only(&self, kind: &str) -> Option<Self> {
+        if !self.kinds().iter().any(|k| k == kind) {
             return None;
         }
-        let people = vec!["user".to_string()];
+        let kinds = vec![kind.to_string()];
         Some(match self {
-            Self::Match(q) => Self::Match(MatchQuery {
-                kinds: people,
-                ..q.clone()
-            }),
-            Self::Scoped(q) => Self::Scoped(ScopedQuery {
-                kinds: people,
-                ..q.clone()
-            }),
+            Self::Match(q) => Self::Match(MatchQuery { kinds, ..q.clone() }),
+            Self::Scoped(q) => Self::Scoped(ScopedQuery { kinds, ..q.clone() }),
         })
     }
 
@@ -414,6 +430,7 @@ pub async fn find_in(
                      ON v.user_id = $16 AND v.content_id = h.node_id
                    WHERE ($13::int IS NULL OR h.tier / 2 = $13)
                      AND ($15::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($15))
+                     AND ($17::uuid[] IS NULL OR h.tier / 2 <> 1 OR h.node_id = ANY($17))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
@@ -439,6 +456,7 @@ pub async fn find_in(
             saved_by,
             window.people,
             seen_by,
+            window.topics,
         )
         .fetch_all(pool)
         .await?;
@@ -495,6 +513,7 @@ pub async fn find_in(
                      ON v.user_id = $16 AND v.content_id = h.node_id
                    WHERE ($13::int IS NULL OR h.tier / 2 = $13)
                      AND ($15::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($15))
+                     AND ($17::uuid[] IS NULL OR h.tier / 2 <> 1 OR h.node_id = ANY($17))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
@@ -520,6 +539,7 @@ pub async fn find_in(
             saved_by,
             window.people,
             seen_by,
+            window.topics,
         )
         .fetch_all(pool)
         .await
@@ -624,7 +644,7 @@ pub async fn find_scoped(
                ),
                claims AS (
                    SELECT l.source AS node, r.author AS author, l.target AS target,
-                          l.p_i AS relevance, FALSE AS pending,
+                          l.p_i AS relevance, l.p_d AS confidence, FALSE AS pending,
                           r.epoch AS epoch, r.act_time AS act_time,
                           r.position AS position, NULL::timestamptz AS authored_at
                    FROM mirror_record_legs l
@@ -641,7 +661,7 @@ pub async fn find_scoped(
                              ELSE NULL
                          END
                  UNION ALL
-                   SELECT s.middle, s.author, s.target, s.p_d, TRUE, 0, 0, 0, s.pre_signed_at
+                   SELECT s.middle, s.author, s.target, s.p_d, s.p_i, TRUE, 0, 0, 0, s.pre_signed_at
                    FROM staged_writes s
                    WHERE s.author = $9
                      AND s.family = 'tag'
@@ -661,12 +681,12 @@ pub async fn find_scoped(
                carried AS (
                    SELECT w.node, w.target
                    FROM (
-                       SELECT DISTINCT ON (author, node, target) node, target, relevance
+                       SELECT DISTINCT ON (author, node, target) node, target, relevance, confidence
                        FROM claims
                        ORDER BY author, node, target, pending DESC,
                                 epoch DESC, act_time DESC, position DESC, authored_at DESC
                    ) w
-                   WHERE w.relevance <> 0
+                   WHERE NOT (w.relevance = 0 AND w.confidence = 0)
                ),
                chain AS (
                    SELECT c.id AS comment_id, c.created_at, c.target_id, c.target_type
@@ -776,6 +796,7 @@ pub async fn find_scoped(
                      AND NOT (h.node_id = ANY($16::uuid[]))
                      AND ($17::int IS NULL OR h.tier / 2 = $17)
                      AND ($19::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($19))
+                     AND ($21::uuid[] IS NULL OR h.tier / 2 <> 1 OR h.node_id = ANY($21))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
@@ -805,6 +826,7 @@ pub async fn find_scoped(
             saved_by,
             window.people,
             seen_by,
+            window.topics,
         )
         .fetch_all(pool)
         .await?;
@@ -824,7 +846,7 @@ pub async fn find_scoped(
                ),
                claims AS (
                    SELECT l.source AS node, r.author AS author, l.target AS target,
-                          l.p_i AS relevance, FALSE AS pending,
+                          l.p_i AS relevance, l.p_d AS confidence, FALSE AS pending,
                           r.epoch AS epoch, r.act_time AS act_time,
                           r.position AS position, NULL::timestamptz AS authored_at
                    FROM mirror_record_legs l
@@ -841,7 +863,7 @@ pub async fn find_scoped(
                              ELSE NULL
                          END
                  UNION ALL
-                   SELECT s.middle, s.author, s.target, s.p_d, TRUE, 0, 0, 0, s.pre_signed_at
+                   SELECT s.middle, s.author, s.target, s.p_d, s.p_i, TRUE, 0, 0, 0, s.pre_signed_at
                    FROM staged_writes s
                    WHERE s.author = $9
                      AND s.family = 'tag'
@@ -861,12 +883,12 @@ pub async fn find_scoped(
                carried AS (
                    SELECT w.node, w.target
                    FROM (
-                       SELECT DISTINCT ON (author, node, target) node, target, relevance
+                       SELECT DISTINCT ON (author, node, target) node, target, relevance, confidence
                        FROM claims
                        ORDER BY author, node, target, pending DESC,
                                 epoch DESC, act_time DESC, position DESC, authored_at DESC
                    ) w
-                   WHERE w.relevance <> 0
+                   WHERE NOT (w.relevance = 0 AND w.confidence = 0)
                ),
                chain AS (
                    SELECT c.id AS comment_id, c.created_at, c.target_id, c.target_type
@@ -976,6 +998,7 @@ pub async fn find_scoped(
                      AND NOT (h.node_id = ANY($16::uuid[]))
                      AND ($17::int IS NULL OR h.tier / 2 = $17)
                      AND ($19::uuid[] IS NULL OR h.tier / 2 <> 0 OR h.node_id = ANY($19))
+                     AND ($21::uuid[] IS NULL OR h.tier / 2 <> 1 OR h.node_id = ANY($21))
                )
                SELECT node_id AS "node_id!", kind AS "kind!",
                       tier AS "tier!", created_at AS "created_at!", name
@@ -1005,6 +1028,7 @@ pub async fn find_scoped(
             saved_by,
             window.people,
             seen_by,
+            window.topics,
         )
         .fetch_all(pool)
         .await
@@ -1033,7 +1057,7 @@ pub async fn count_scoped(
            ),
            claims AS (
                SELECT l.source AS node, r.author AS author, l.target AS target,
-                      l.p_i AS relevance, FALSE AS pending,
+                      l.p_i AS relevance, l.p_d AS confidence, FALSE AS pending,
                       r.epoch AS epoch, r.act_time AS act_time,
                       r.position AS position, NULL::timestamptz AS authored_at
                FROM mirror_record_legs l
@@ -1050,7 +1074,7 @@ pub async fn count_scoped(
                          ELSE NULL
                      END
              UNION ALL
-               SELECT s.middle, s.author, s.target, s.p_d, TRUE, 0, 0, 0, s.pre_signed_at
+               SELECT s.middle, s.author, s.target, s.p_d, s.p_i, TRUE, 0, 0, 0, s.pre_signed_at
                FROM staged_writes s
                WHERE s.author = $7
                  AND s.family = 'tag'
@@ -1070,12 +1094,12 @@ pub async fn count_scoped(
            carried AS (
                SELECT w.node, w.target
                FROM (
-                   SELECT DISTINCT ON (author, node, target) node, target, relevance
+                   SELECT DISTINCT ON (author, node, target) node, target, relevance, confidence
                    FROM claims
                    ORDER BY author, node, target, pending DESC,
                             epoch DESC, act_time DESC, position DESC, authored_at DESC
                ) w
-               WHERE w.relevance <> 0
+               WHERE NOT (w.relevance = 0 AND w.confidence = 0)
            ),
            chain AS (
                SELECT c.id AS comment_id, c.target_id, c.target_type

@@ -8,13 +8,13 @@
 // — the control never computes a delta, a projection, or a zero test of
 // its own — is unaffected either way.
 
-import { failed, success, type Outcome } from "@/lib/api/outcome";
+import { failed, refused, success, type Outcome, type UserError } from "@/lib/api/outcome";
 import { clampPair, ORIGIN, type StancePair } from "./model";
 import type {
   StanceBundle,
   StanceCommit,
   StanceData,
-  StanceLanding,
+  StanceProjection,
   StanceReadOptions,
   StanceTarget,
 } from "./stance-data";
@@ -45,9 +45,30 @@ function inertOf(pair: StancePair): boolean {
   return pair.pDirected === 0 || pair.pInterest === 0;
 }
 
-/** The backend's own reading of its fold — "both axes at zero". */
-function severedOf(pair: StancePair): boolean {
+/** "Both axes at zero" — the LANDING's reading (`StanceProjection.severed`). */
+function atZero(pair: StancePair): boolean {
   return pair.pDirected === 0 && pair.pInterest === 0;
+}
+
+/**
+ * The BUNDLE's reading (`StanceBundle.severed`, PR #283): walked back to
+ * nothing — it nets to `(0, 0)` and its newest record said something. A
+ * bundle of no records is not severed, and neither is one an empty sign
+ * left at `(0, 0)`.
+ */
+function bundleSevered(records: readonly StancePair[], net: StancePair): boolean {
+  const newest = records[records.length - 1];
+  return newest !== undefined && atZero(net) && !atZero(newest);
+}
+
+/**
+ * What the walk-back would stage (`severanceCost`): nothing where nothing
+ * stands or it is already walked back; one record over an empty sign's
+ * `(0, 0)`; otherwise the stand-in's own count, one per record.
+ */
+function severanceCostOf(records: readonly StancePair[], net: StancePair): number {
+  if (records.length === 0 || bundleSevered(records, net)) return 0;
+  return atZero(net) ? 1 : records.length;
 }
 
 export type StubStanceOptions = {
@@ -61,6 +82,13 @@ export type StubStanceOptions = {
    * surface reads sets them apart.
    */
   readonly rawSum?: StubFold;
+  /**
+   * Refuse every signing with this code — the write rule's notice
+   * (`WRITE_RULE_FAILED`) is a refusal, not a fault.
+   */
+  readonly refuse?: UserError["code"];
+  /** The signing key is not on this device (PadKeyAbsent). */
+  readonly keyAbsent?: boolean;
   /** Fail every call, for the transport-fault branches. */
   readonly offline?: boolean;
 };
@@ -78,6 +106,7 @@ export type StubStanceData = StanceData & {
 };
 
 const OFFLINE = () => failed(new Error("stub stance data is offline"));
+const REFUSED = (code: UserError["code"]) => refused([{ code, message: "stub refusal", field: null }]);
 
 export function createStubStanceData(options: StubStanceOptions = {}): StubStanceData {
   const fold = options.fold ?? sumFold;
@@ -96,6 +125,22 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
     pendingFlags.push(options?.includePending ?? true);
   };
 
+  const standingOf = (target: StanceTarget): StanceBundle => {
+    const records = recordsOf(target.id);
+    const net = records.length === 0 ? ORIGIN : fold(records);
+    return {
+      current: net,
+      rawSum: rawSum(records),
+      // Every record counts, an empty sign's (0, 0) and every counter-record
+      // of a walk-back included — the API never resets the count.
+      records: records.length,
+      inert: inertOf(net),
+      severed: bundleSevered(records, net),
+      // The real count is the fold's to state; the control only renders it.
+      severance: { records: severanceCostOf(records, net) },
+    };
+  };
+
   return {
     sent,
     severed,
@@ -107,40 +152,52 @@ export function createStubStanceData(options: StubStanceOptions = {}): StubStanc
       if (options.offline === true) return OFFLINE();
       noteRead(readOptions);
       freshFlags.push(readOptions?.fresh === true);
-      const records = recordsOf(target.id);
-      const net = records.length === 0 ? ORIGIN : fold(records);
-      return success({
-        current: net,
-        rawSum: rawSum(records),
-        records: records.length,
-        inert: inertOf(net),
-        severed: severedOf(net),
-        // One counter-record per live record: the real count is the
-        // fold's to state, and the control only ever renders it.
-        severance: { records: severedOf(net) ? 0 : records.length },
-      });
+      return success(standingOf(target));
     },
 
-    async project(target: StanceTarget, pick, readOptions): Promise<Outcome<StanceLanding>> {
+    async project(target: StanceTarget, pick, readOptions): Promise<Outcome<StanceProjection>> {
       if (options.offline === true) return OFFLINE();
       noteRead(readOptions);
       const net = fold([...recordsOf(target.id), pick]);
-      return success({ landing: net, inert: inertOf(net), severed: severedOf(net) });
+      return success({
+        landing: net,
+        inert: inertOf(net),
+        severed: atZero(net),
+        // The standing rides the same read, as `viewerStance(pick:)` serves it.
+        standing: standingOf(target),
+      });
     },
 
     async commit(target: StanceTarget, pick): Promise<Outcome<StanceCommit>> {
       if (options.offline === true) return OFFLINE();
+      if (options.refuse !== undefined) return REFUSED(options.refuse);
       sent.push({ target: target.id, pick });
       state.set(target.id, [...recordsOf(target.id), pick]);
       return success({ records: 1 });
     },
 
+    async keyOnDevice(): Promise<boolean> {
+      return options.keyAbsent !== true;
+    },
+
     async sever(target: StanceTarget): Promise<Outcome<StanceCommit>> {
       if (options.offline === true) return OFFLINE();
-      const walked = recordsOf(target.id).length;
+      if (options.refuse !== undefined) return REFUSED(options.refuse);
+      const records = recordsOf(target.id);
+      const cost = standingOf(target).severance.records;
+      // Nothing standing — no record, or already walked back — is refused,
+      // as `prepareSeverance` refuses it.
+      if (cost === 0) return REFUSED("BAD_INPUT");
       severed.push(target.id);
-      state.set(target.id, []);
-      return success({ records: walked });
+      // THE WALK-BACK IS LAYERED, NEVER A RESET: its counter-records join
+      // the bundle, `cost` of them, the last carrying the whole raw sum's
+      // opposite so the sum lands on exactly (0, 0). Over an empty sign's
+      // (0, 0) that is one (0, 0) record, as the API stages it (Q60).
+      const sum = rawSumOf(records);
+      const counter = { pDirected: -sum.pDirected + 0, pInterest: -sum.pInterest + 0 };
+      const padding = Array.from({ length: cost - 1 }, () => ORIGIN);
+      state.set(target.id, [...records, ...padding, counter]);
+      return success({ records: cost });
     },
   };
 }

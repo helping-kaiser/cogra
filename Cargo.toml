@@ -164,6 +164,15 @@ tempfile = { version = "3" }
 # machine reproduces bit for bit. Already in the tree through num-traits.
 libm = { version = "0.2" }
 
+# Exact decimal netting (common::l1::exact; edges.md §1 "netting is exact
+# decimal arithmetic"). `ryu` renders a double's shortest round-trip decimal
+# with Ryū, the algorithm PostgreSQL's float8 output also uses, so a stored
+# parameter denotes the same digits in SQL and in Rust; `num-bigint` carries
+# a sum whose units outgrow an i128, so no stored value is ever refused or
+# rounded. Both already in the tree (serde_json; sqlx).
+ryu = { version = "1" }
+num-bigint = { version = "0.5" }
+
 # The key-backup blob reference (auth.md "Blob format (v1)") — used only
 # by common's golden-vector export. Pinned to the 0.10-generation
 # RustCrypto stack to stay on the workspace's sha2/digest line.

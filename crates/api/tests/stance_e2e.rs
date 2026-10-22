@@ -368,7 +368,7 @@ impl Rig {
                 None,
                 r#"query($a: UUID!) {
                      records(author: $a, first: 50) {
-                       edges { node { id family pDirected pInterest } }
+                       edges { node { id family pDirected pInterest severed } }
                      }
                    }"#,
                 json!({ "a": author.to_string() }),
@@ -614,7 +614,77 @@ async fn stance_parameters_outside_the_range_are_refused(pool: PgPool) {
     assert!(refused.get("errors").is_some(), "{refused}");
 }
 
-/// An empty bundle reads as zero and costs nothing to sever.
+/// User-authored values lie on the hundredths grid (edges.md §1), and the
+/// server holds the line the clients' snapping draws: an off-grid pick is
+/// refused at parse time, the double one step past a grid point included.
+/// A grid pick — however it was typed — passes.
+///
+/// A stance parameter off the hundredths grid is refused at parse time, and a grid value passes.
+/// ´claim:stance:an-off-grid-parameter-is-a-transport-fault´
+#[sqlx::test(migrations = "../../migrations")]
+async fn stance_parameters_off_the_grid_are_refused(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    rig.seed_member("author", "author@example.com").await;
+    let (target_id, _) = rig.seed_member("target", "target@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    for (p_d, p_i) in [(0.333, 0.1), (0.1, 0.005), (0.30000000000000004, 0.1)] {
+        let refused = rig
+            .gql_raw(
+                Some(&token),
+                PREPARE_STANCE,
+                json!({ "input": {
+                    "target": target_id.to_string(), "pDirected": p_d, "pInterest": p_i
+                }}),
+            )
+            .await;
+        assert!(refused.get("errors").is_some(), "({p_d}, {p_i}): {refused}");
+    }
+    let prepared = rig
+        .prepare_stance(&token, &target_id.to_string(), -0.37, 1.0)
+        .await;
+    assert_eq!(
+        prepared["prepareStance"]["userErrors"],
+        json!([]),
+        "{prepared}"
+    );
+}
+
+/// The known-dirty pattern through the whole stack: two records of 0.1 and
+/// 0.2 sum to exactly 0.3 — floating point says 0.30000000000000004 — so
+/// the readout, the projection and the landed walk-back all reach exact
+/// zero, and the bundle reads severed with nothing left to sever.
+///
+/// A bundle of dirty float members reads, projects and walks back to exact zero.
+/// ´claim:stance:a-dirty-bundle-walks-back-to-exact-zero´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_dirty_bundle_walks_back_to_exact_zero(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    let (target_id, _) = rig.seed_member("target", "target@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let target = target_id.to_string();
+
+    rig.land_stance(&token, &ak, &target, 0.1, 0.1).await;
+    rig.land_stance(&token, &ak, &target, 0.2, 0.2).await;
+    let bundle = rig.user_bundle(&token, &target, Some((-0.3, -0.3))).await;
+    assert_eq!(f(&bundle["rawPDirected"]), 0.3, "{bundle}");
+    assert_eq!(f(&bundle["rawPInterest"]), 0.3);
+    assert_eq!(bundle["projected"]["severed"], true, "{bundle}");
+
+    rig.land_stance(&token, &ak, &target, -0.3, -0.3).await;
+    let bundle = rig.user_bundle(&token, &target, None).await;
+    assert_eq!(f(&bundle["rawPDirected"]), 0.0, "{bundle}");
+    assert_eq!(f(&bundle["rawPInterest"]), 0.0);
+    assert_eq!(bundle["severed"], true);
+    assert_eq!(bundle["severanceCost"], 0);
+    assert_eq!(bundle["recordCount"], 3, "nothing was erased");
+}
+
+/// An empty bundle reads as zero and costs nothing to sever. It is not
+/// severed: nothing was ever walked back.
+///
+/// An empty bundle reads as zero, is not severed, and costs nothing to sever.
 /// ´claim:stance:an-empty-bundle-is-free´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_empty_bundle_reads_as_zero_and_costs_no_severance(pool: PgPool) {
@@ -627,9 +697,188 @@ async fn an_empty_bundle_reads_as_zero_and_costs_no_severance(pool: PgPool) {
     assert_eq!(f(&bundle["pDirected"]), 0.0);
     assert_eq!(bundle["recordCount"], 0);
     assert_eq!(bundle["inert"], true);
-    assert_eq!(bundle["severed"], true);
+    assert_eq!(bundle["severed"], false, "nothing was walked back");
     assert_eq!(bundle["severanceCost"], 0);
     assert!(bundle["projected"].is_null(), "no pick, no projection");
+}
+
+/// The contract after an empty sign (api-spec.md "The read-side bundle
+/// fold"): a `(0, 0)`
+/// opinion signed where nothing stands counts as a record, the bundle
+/// stays at `(0, 0)` and is not severed, and the walk-back stays
+/// available at the cost of one record — which `prepareSeverance` stages
+/// as one `(0, 0)` record.
+///
+/// An empty sign counts as a record, leaves the bundle at zero unsevered, and its walk-back costs and stages one record.
+/// ´claim:stance:an-empty-sign-reads-unsevered-at-cost-one´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_empty_sign_reads_unsevered_at_cost_one(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    let (target_id, _) = rig.seed_member("target", "target@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let target = target_id.to_string();
+
+    let projected = rig.user_bundle(&token, &target, Some((0.0, 0.0))).await;
+    assert_eq!(
+        projected["projected"]["severed"], true,
+        "the landing flag reads the pair alone: {projected}"
+    );
+
+    rig.land_stance(&token, &ak, &target, 0.0, 0.0).await;
+    let bundle = rig.user_bundle(&token, &target, None).await;
+    assert_eq!(bundle["recordCount"], 1, "the record counts: {bundle}");
+    assert_eq!(f(&bundle["pDirected"]), 0.0);
+    assert_eq!(f(&bundle["pInterest"]), 0.0);
+    assert_eq!(f(&bundle["rawPDirected"]), 0.0);
+    assert_eq!(f(&bundle["rawPInterest"]), 0.0);
+    assert_eq!(bundle["severed"], false, "an empty sign walks nothing back");
+    assert_eq!(bundle["severanceCost"], 1, "the walk-back stays available");
+
+    let walk_back = rig.prepare_severance(&token, &target).await;
+    let writes = walk_back["prepareSeverance"]["writes"]
+        .as_array()
+        .unwrap_or_else(|| panic!("the walk-back is refused: {walk_back}"));
+    assert_eq!(writes.len(), 1, "the quoted cost is the batch: {walk_back}");
+}
+
+/// Severance stays a `(0, 0)` landing over anything standing: an ordinary
+/// walk-back reads severed and has nothing left to stage. An empty sign
+/// over it — nothing stands, so the record is the empty sign's — leaves
+/// the bundle saying nothing, walkable at one record. A bundle at zero on
+/// one axis only is inert, standing, never severed.
+///
+/// An empty sign over a walk-back leaves the bundle unsevered, and a one-zero bundle is inert and never severed.
+/// ´claim:stance:an-empty-sign-over-a-walk-back-reads-unsevered´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_empty_sign_over_a_walk_back_reads_unsevered(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    let (target_id, _) = rig.seed_member("target", "target@example.com").await;
+    let (other_id, _) = rig.seed_member("other", "other@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let target = target_id.to_string();
+
+    rig.land_stance(&token, &ak, &target, 1.0, 1.0).await;
+    rig.land_stance(&token, &ak, &target, -1.0, -1.0).await;
+    let severed = rig.user_bundle(&token, &target, None).await;
+    assert_eq!(severed["recordCount"], 2);
+    assert_eq!(severed["severed"], true, "{severed}");
+    assert_eq!(severed["severanceCost"], 0);
+    let refused = rig.prepare_severance(&token, &target).await;
+    assert_eq!(
+        refused["prepareSeverance"]["userErrors"][0]["code"], "BAD_INPUT",
+        "nothing left to walk back: {refused}"
+    );
+
+    rig.land_stance(&token, &ak, &target, 0.0, 0.0).await;
+    let over = rig.user_bundle(&token, &target, None).await;
+    assert_eq!(over["recordCount"], 3);
+    assert_eq!(over["severed"], false, "{over}");
+    assert_eq!(over["severanceCost"], 1);
+
+    let other = other_id.to_string();
+    rig.land_stance(&token, &ak, &other, 0.1, 0.5).await;
+    rig.land_stance(&token, &ak, &other, -0.1, 0.0).await;
+    let one_zero = rig.user_bundle(&token, &other, None).await;
+    assert_eq!(f(&one_zero["pDirected"]), 0.0);
+    assert_eq!(f(&one_zero["pInterest"]), 0.5);
+    assert_eq!(one_zero["inert"], true);
+    assert_eq!(one_zero["severed"], false, "{one_zero}");
+    assert_eq!(one_zero["severanceCost"], 1, "⌈0.5⌉");
+}
+
+/// The open case (open-questions.md Q60): an empty sign, then its
+/// walk-back — a second `(0, 0)` record over a standing that says
+/// nothing. Every record says nothing, so the bundle reads not severed.
+///
+/// (´claim:stance:an-empty-sign-reads-unsevered-at-cost-one´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_bundle_of_only_empty_records_reads_unsevered(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, ak) = rig.seed_member("author", "author@example.com").await;
+    let (target_id, _) = rig.seed_member("target", "target@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let target = target_id.to_string();
+
+    rig.land_stance(&token, &ak, &target, 0.0, 0.0).await;
+    let walk_back = rig.prepare_severance(&token, &target).await;
+    rig.land(&token, &ak, &walk_back["prepareSeverance"]["writes"])
+        .await;
+    let bundle = rig.user_bundle(&token, &target, None).await;
+    assert_eq!(bundle["recordCount"], 2, "{bundle}");
+    assert_eq!(bundle["severed"], false);
+    assert_eq!(bundle["severanceCost"], 1);
+}
+
+/// A row draws one record's pair without the bundle, so the record says
+/// which `(0, 0)` it is: `severed` on the record that walked the bundle
+/// back, never on a record that says nothing, null on a record that
+/// folds into no stance bundle.
+///
+/// A chronicle row says whether its record walked the bundle back, and an empty sign's row never does.
+/// ´claim:stance:a-chronicle-row-says-whether-it-walked-back´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_chronicle_row_says_whether_it_walked_back(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (author_id, ak) = rig.seed_member("author", "author@example.com").await;
+    let (target_id, _) = rig.seed_member("target", "target@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let target = target_id.to_string();
+
+    rig.landed_post(&token, &ak, "A post").await;
+    rig.land_stance(&token, &ak, &target, 0.4, 0.4).await;
+    rig.land_stance(&token, &ak, &target, -0.4, -0.4).await;
+    rig.land_stance(&token, &ak, &target, 0.0, 0.0).await;
+
+    let rows = rig.stance_records(&author_id).await;
+    let read: Vec<(f64, f64, Value)> = rows
+        .iter()
+        .map(|e| {
+            let node = &e["node"];
+            (
+                f(&node["pDirected"]),
+                f(&node["pInterest"]),
+                node["severed"].clone(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        read,
+        vec![
+            (0.0, 0.0, json!(false)),
+            (-0.4, -0.4, json!(true)),
+            (0.4, 0.4, json!(false)),
+        ],
+        "newest first: the empty sign, the walk-back, the opinion"
+    );
+
+    let all = rig
+        .gql(
+            None,
+            r#"query($a: UUID!) {
+                 records(author: $a, first: 50) { edges { node { family severed } } }
+               }"#,
+            json!({ "a": author_id.to_string() }),
+        )
+        .await;
+    let others: Vec<&Value> = all["records"]["edges"]
+        .as_array()
+        .expect("edges")
+        .iter()
+        .map(|edge| &edge["node"])
+        .filter(|node| node["family"] != "OPINION" && node["family"] != "AFFINITY")
+        .collect();
+    assert!(
+        !others.is_empty(),
+        "the post's Publish record is listed: {all}"
+    );
+    for node in others {
+        assert!(
+            node["severed"].is_null(),
+            "folds into no stance bundle: {node}"
+        );
+    }
 }
 
 /// The clip is the read rule, not the storage. A bundle carrying more

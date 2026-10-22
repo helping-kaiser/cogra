@@ -33,7 +33,7 @@ import { AttachmentPad } from "@/lib/ui2/compose/attachment-pad";
 import { UnreachableConfirm } from "@/lib/ui2/compose/unreachable-confirm";
 import { AttachmentReadout, AttachmentStanding } from "@/lib/ui/attachment-readout";
 import { LicenseRows } from "@/lib/ui/license-rows";
-import { nearestAnchor } from "@/lib/stance/anchors";
+import { bundleReadout, EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
 import { licenseReading, type License } from "@/lib/license";
@@ -528,13 +528,16 @@ function TermRow({
  * stays self-contained; a later pass can fold both into one place.
  */
 function StanceReadout({ pair }: { pair: StancePair }) {
-  const anchor = nearestAnchor(pair);
+  // A pick being staged: its face follows its value (seam 243).
+  const anchor = bundleReadout(pair, EMPTY_PICK_LABEL);
   return (
     <span className="inline-flex items-baseline gap-1">
       <span aria-hidden="true" className="text-body-medium">
         {anchor.emoji}
       </span>
-      <span aria-hidden="true" className="text-body-small text-on-surface-variant">
+      {/* The digits are the geek reading (readme §13): drawn in a `cg-exact`
+          span, painted only in geek mode, and spoken in both. */}
+      <span aria-hidden="true" className="cg-exact text-body-small text-on-surface-variant">
         {formatStancePair(pair)}
       </span>
       <span className="sr-only">

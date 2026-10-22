@@ -1,16 +1,17 @@
 //! ´mod:module:topics´
 //!
 //! The current-topics fold (hashtag.md §4): newest-wins per
-//! (author, content, Type) bundle, relevance 0 read as withdrawn.
+//! (author, content, Type) bundle, a winner at `(0,0)` read as withdrawn.
 //!
 //! A Tag is a standing claim, not an event, so an author's latest record
 //! in a bundle is their current claim and the earlier ones are history
-//! (graph-model.md §4). Withdrawal is *declared* — re-tagging at relevance
-//! 0 — rather than netted: the census bounds Tag confidence to c ∈ [0, 1],
-//! so no counter-record could net an accumulated bundle back down. That is
-//! why this module picks a winner instead of summing, and why the
-//! zero-check happens *after* the pick: a newer 0 has to be able to hide
-//! an older non-zero claim.
+//! (graph-model.md §4). Withdrawal is *declared* — re-tagging at
+//! `(r, c) = (0, 0)` — rather than netted: the census bounds Tag
+//! confidence to c ∈ [0, 1], so no counter-record could net an accumulated
+//! bundle back down. That is why this module picks a winner instead of
+//! summing, and why the zero-check happens *after* the pick: a newer
+//! `(0,0)` has to be able to hide an older claim. A winner at zero on one
+//! parameter only is routing-inert but still a claim, and stays.
 //!
 //! # Which column carries relevance
 //!
@@ -61,9 +62,10 @@ pub struct TopicClaim {
     pub name: String,
     /// The claiming author's address atom.
     pub author: String,
-    /// Relevance `r ∈ [−1, 1]`. Never 0: the fold reads 0 as withdrawn.
+    /// Relevance `r ∈ [−1, 1]`.
     pub relevance: f64,
-    /// Confidence `c ∈ [0, 1]`.
+    /// Confidence `c ∈ [0, 1]`. Never zero together with relevance: the
+    /// fold reads `(0,0)` as withdrawn.
     pub confidence: f64,
     /// True when the winning record is still in flight.
     pub pending: bool,
@@ -106,7 +108,7 @@ fn type_name(target: &str) -> Result<String, TopicsError> {
 /// The bundle key is (author, content, Type); this read fixes the first
 /// two, so the newest record per Type is the whole fold. Verdict marks are
 /// excluded — The Moderator's `(0,0)` + payload Tag declares no topic
-/// (hashtag.md §6) — and so is any bundle whose winner sits at relevance 0.
+/// (hashtag.md §6) — and so is any bundle whose winner sits at `(0,0)`.
 ///
 /// `author` is the content's own author for the chip row (D8): the
 /// content-intrinsic channel, the one that needs no forward-path weight.
@@ -168,7 +170,7 @@ pub async fn topics_of(
                   confidence   AS "confidence!",
                   pending      AS "pending!"
            FROM winners
-           WHERE relevance <> 0
+           WHERE NOT (relevance = 0 AND confidence = 0)
            ORDER BY target"#,
         node,
         author,
@@ -273,7 +275,7 @@ pub async fn tagged_with(
                   confidence  AS "confidence!",
                   pending     AS "pending!"
            FROM winners
-           WHERE relevance <> 0
+           WHERE NOT (relevance = 0 AND confidence = 0)
            ORDER BY pending DESC, epoch DESC, act_time DESC, position DESC,
                     authored_at DESC, node
            LIMIT $5"#,

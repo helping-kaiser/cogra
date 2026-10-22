@@ -2,7 +2,8 @@
 // hidden set's read and its two verbs answered over MSW, with a log of what
 // each surface sent, so every host's test pins the one behaviour the same way.
 
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
+import { gqlLink } from "./gql-link";
 
 export type HiddenLog = {
   /** Every `hideActor`: the actor, and the restore time an Undo passed. */
@@ -86,12 +87,12 @@ export function hiddenHandlers(
   } = {},
 ) {
   return [
-    graphql.query("HiddenActorsPage", () => {
+    gqlLink.query("HiddenActorsPage", () => {
       log.reads += 1;
       if (failRead) return HttpResponse.json({ data: null, errors: UNREACHABLE });
       return HttpResponse.json(hiddenPage(entries));
     }),
-    graphql.mutation("HideActor", ({ variables }) => {
+    gqlLink.mutation("HideActor", ({ variables }) => {
       log.hides.push({
         actor: variables.actor as string,
         at: (variables.hiddenAt as string | null) ?? null,
@@ -110,7 +111,7 @@ export function hiddenHandlers(
         },
       });
     }),
-    graphql.mutation("UnhideActor", ({ variables }) => {
+    gqlLink.mutation("UnhideActor", ({ variables }) => {
       log.unhides.push(variables.actor as string);
       if (failUnhide) return HttpResponse.json({ data: null, errors: UNREACHABLE });
       return HttpResponse.json({
@@ -125,6 +126,6 @@ export function hiddenHandlers(
  * set — the default under every MSW server, so a test about something else
  * need not know the hidden set exists.
  */
-export const NOBODY_HIDDEN = graphql.query("HiddenActorsPage", () =>
+export const NOBODY_HIDDEN = gqlLink.query("HiddenActorsPage", () =>
   HttpResponse.json(hiddenPage([])),
 );

@@ -17,6 +17,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.EmptySignPrompt
 import com.cogra.core.designsystem.SeverancePrompt
 import com.cogra.core.designsystem.StanceAxes
 import com.cogra.core.designsystem.StanceControl
@@ -77,6 +78,12 @@ fun StanceControlRoute(
     onTaken: (() -> Unit)? = null,
     /** The vouch card's empty face is a line face in this ink; see [StanceControl]. */
     lineFaceInk: Color? = null,
+    /**
+     * The opinion vouches its target in (approving, a vouch asked for): an
+     * empty sign's ask warns that they start out cut off, and `Set it anyway`
+     * still vouches them in. See [StanceControl].
+     */
+    vouchesIn: Boolean = false,
     viewModel: StanceViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -103,25 +110,19 @@ fun StanceControlRoute(
         // signing — the host stops drawing the pad either way.
         var opened by remember(target) { mutableStateOf(false) }
         LaunchedEffect(entry.pad) {
-            if (entry.pad == PadMode.STICKY) {
+            if (entry.pad != PadMode.CLOSED) {
                 opened = true
             } else if (opened) {
                 onPadClosed?.invoke()
             }
         }
     }
-    if (onTaken != null) {
-        LaunchedEffect(entry.taken) {
-            if (entry.taken) {
-                viewModel.onTakenShown(target)
-                viewModel.onConfirmationShown(target)
-                onTaken()
-            }
-        }
-    }
+    if (onTaken != null) TakenEffect(entry.taken, target, viewModel, onTaken)
     val controlState = entry.toControlState(
         coaching = state.coachingTarget == target,
         inputMode = state.inputMode,
+        borrowed = state.borrowed,
+        keyAbsent = state.keyAbsent,
     )
     StanceControl(
         state = if (onTaken != null) controlState.copy(confirmation = null) else controlState,
@@ -137,7 +138,7 @@ fun StanceControlRoute(
         onPick = { viewModel.onPick(target, it.toPair()) },
         onCommit = { viewModel.onCommit(target) },
         onDismissPad = { viewModel.onDismissPad(target) },
-        onToggleExactValues = { viewModel.onToggleExactValues(target) },
+        onOpenAlternates = onRequireAccount ?: { viewModel.onOpenAlternates(target) },
         onOpenSeverance = { viewModel.onOpenSeverance(target) },
         onConfirmSeverance = { viewModel.onConfirmSeverance(target) },
         onDismissSeverance = { viewModel.onDismissSeverance(target) },
@@ -152,19 +153,42 @@ fun StanceControlRoute(
         variant = variant,
         padOnly = padOnly,
         lineFaceInk = lineFaceInk,
+        onConfirmEmptySign = { viewModel.onConfirmEmptySign(target) },
+        onDismissEmptySign = { viewModel.onDismissEmptySign(target) },
+        vouchesIn = vouchesIn,
     )
+}
+
+/**
+ * A host that routes on a taken signing (the vouch-back's ceremony) consumes
+ * the one-shot here, and the control's own confirmation with it: the
+ * ceremony replaces it (VouchBackPad.md:33).
+ */
+@Composable
+private fun TakenEffect(taken: Boolean, target: StanceTarget, viewModel: StanceViewModel, onTaken: () -> Unit) {
+    LaunchedEffect(taken) {
+        if (taken) {
+            viewModel.onTakenShown(target)
+            viewModel.onConfirmationShown(target)
+            onTaken()
+        }
+    }
 }
 
 internal fun TargetStance.toControlState(
     coaching: Boolean,
     inputMode: StanceInputMode,
+    borrowed: Boolean = false,
+    keyAbsent: Boolean = false,
 ) = StanceControlState(
     pick = pick.toPoint(),
     pad = when (pad) {
         PadMode.CLOSED -> StancePadMode.CLOSED
         PadMode.STICKY -> StancePadMode.STICKY
+        PadMode.ALTERNATES -> StancePadMode.ALTERNATES
     },
     standing = standing?.toPoint(),
+    severed = standingSevered,
     landing = landing?.let {
         StanceLanding(
             net = it.net.toPoint(),
@@ -176,7 +200,6 @@ internal fun TargetStance.toControlState(
     busy = busy,
     failed = failed,
     needsKey = needsKey,
-    exactValues = exactValues,
     inputMode = when (inputMode) {
         StanceInputMode.PAD -> StanceInputSurface.PAD
         StanceInputMode.SLIDERS -> StanceInputSurface.SLIDERS
@@ -186,15 +209,23 @@ internal fun TargetStance.toControlState(
         SeverancePrompt(
             standing = it.quote.standing.toPoint(),
             raw = it.quote.raw.toPoint(),
-            records = it.quote.records,
+            // The pick route signs exactly one record, the pick (P5).
+            records = if (it.fromPick) 1 else it.quote.records,
             alreadySevered = it.quote.alreadySevered,
             fromPick = it.fromPick,
             working = it.working,
             failed = it.failed,
+            pick = pick.toPoint().takeIf { _ -> it.fromPick },
+            bundleRecords = it.quote.bundleRecords,
         )
     },
+    emptySign = emptySign?.let { EmptySignPrompt(working = it.working, failed = it.failed) },
     coaching = coaching,
     confirmation = confirmation?.toPoint(),
+    walkedBack = walkedBack,
+    borrowed = borrowed,
+    writeRule = writeRule,
+    keyAbsent = keyAbsent,
 )
 
 internal fun StancePair.toPoint() = StancePoint(pDirected, pInterest)

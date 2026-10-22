@@ -52,7 +52,8 @@ sealed interface NotificationDisc {
 
     data class Monogram(val name: String) : NotificationDisc
 
-    data class Face(val directed: Double, val interest: Double) : NotificationDisc
+    /** The record's face; [severed] says which `(0, 0)` it would be (`Record.severed`). */
+    data class Face(val directed: Double, val interest: Double, val severed: Boolean? = null) : NotificationDisc
 
     /** 🤷 where the opinion's face would be: a stance walked back (Notifications.md:21). */
     data object WalkedBack : NotificationDisc
@@ -183,7 +184,7 @@ private fun commentTarget(node: SavedNode.Comment): NotificationTarget =
 private fun discOf(row: Notification, deleted: Boolean, name: String): NotificationDisc {
     if (deleted) return NotificationDisc.Redacted
     if (row.kind == NotificationKind.PROFILE_OPINION && row.pair != null) {
-        return NotificationDisc.Face(row.pair.directed, row.pair.interest)
+        return NotificationDisc.Face(row.pair.directed, row.pair.interest, row.pair.severed)
     }
     // The opinion row's sibling: 🤷 where the opinion's face would be.
     if (row.kind == NotificationKind.PROFILE_OPINION_WITHDRAWN) return NotificationDisc.WalkedBack

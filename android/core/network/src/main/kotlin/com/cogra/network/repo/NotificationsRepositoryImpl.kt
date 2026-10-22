@@ -102,7 +102,7 @@ private fun NotificationsQuery.Node.toDomain(): Notification = Notification(
             ?: node.onComment?.let { NotificationContext.Comment(it.id) }
             ?: node.onUser?.let { NotificationContext.Person(it.id) }
     },
-    pair = record?.let { NotificationPair(it.pDirected, it.pInterest) },
+    pair = record?.let { NotificationPair(it.pDirected, it.pInterest, it.severed) },
     applicationId = application?.id,
 )
 

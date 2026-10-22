@@ -2,7 +2,7 @@
 // standalone gestures the edit surfaces stage.
 
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -12,7 +12,7 @@ import {
   prepareReferenceWithdrawal,
 } from "./references-api";
 import { DEFAULT_RELEVANCE, DEFAULT_SUPPORT } from "@/lib/references/draft";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 
 const server = startMswServer();
 
@@ -41,7 +41,7 @@ describe("fetchReferenceCandidates", () => {
   it("answers empty without asking the server for an unresolvable query", async () => {
     let asked = false;
     server.use(
-      graphql.query("ReferenceCandidates", () => {
+      gqlLink.query("ReferenceCandidates", () => {
         asked = true;
         return HttpResponse.json({ data: { referenceCandidates: [] } });
       }),
@@ -61,7 +61,7 @@ describe("fetchReferenceCandidates", () => {
   it("trims the query and asks for the finder's own limit", async () => {
     let variables: { query: string; limit: number } | undefined;
     server.use(
-      graphql.query("ReferenceCandidates", (info) => {
+      gqlLink.query("ReferenceCandidates", (info) => {
         variables = info.variables as { query: string; limit: number };
         return HttpResponse.json({ data: { referenceCandidates: [] } });
       }),
@@ -74,7 +74,7 @@ describe("fetchReferenceCandidates", () => {
   // built ready to draft.
   it("projects a person candidate into a mention draft", async () => {
     server.use(
-      graphql.query("ReferenceCandidates", () =>
+      gqlLink.query("ReferenceCandidates", () =>
         HttpResponse.json({
           data: {
             referenceCandidates: [
@@ -106,7 +106,7 @@ describe("fetchReferenceCandidates", () => {
   });
 
   it("reports a transport fault as failed", async () => {
-    server.use(graphql.query("ReferenceCandidates", () => HttpResponse.error()));
+    server.use(gqlLink.query("ReferenceCandidates", () => HttpResponse.error()));
     expect((await fetchReferenceCandidates(client(), "@ada")).kind).toBe("failed");
   });
 });
@@ -118,7 +118,7 @@ describe("prepareReference", () => {
   it("sends the shown pre-fill for parameters the author left alone", async () => {
     let input: Record<string, unknown> | undefined;
     server.use(
-      graphql.mutation("PrepareReference", ({ variables }) => {
+      gqlLink.mutation("PrepareReference", ({ variables }) => {
         input = (variables as { input: Record<string, unknown> }).input;
         return HttpResponse.json({
           data: {
@@ -151,7 +151,7 @@ describe("prepareReference", () => {
   it("carries the parameters the author did set", async () => {
     let input: Record<string, unknown> | undefined;
     server.use(
-      graphql.mutation("PrepareReference", ({ variables }) => {
+      gqlLink.mutation("PrepareReference", ({ variables }) => {
         input = (variables as { input: Record<string, unknown> }).input;
         return HttpResponse.json({
           data: {
@@ -175,7 +175,7 @@ describe("prepareReference", () => {
 
   it("surfaces a refusal", async () => {
     server.use(
-      graphql.mutation("PrepareReference", () =>
+      gqlLink.mutation("PrepareReference", () =>
         HttpResponse.json({
           data: {
             prepareReference: {
@@ -211,7 +211,7 @@ describe("prepareReferenceWithdrawal", () => {
   // so the returned batch — however long — is the quoted cost.
   it("returns every counter-record the server quoted", async () => {
     server.use(
-      graphql.mutation("PrepareReferenceWithdrawal", () =>
+      gqlLink.mutation("PrepareReferenceWithdrawal", () =>
         HttpResponse.json({
           data: {
             prepareReferenceWithdrawal: {
@@ -248,7 +248,7 @@ describe("prepareReferenceWithdrawal", () => {
   });
 
   it("reports a transport fault as failed", async () => {
-    server.use(graphql.mutation("PrepareReferenceWithdrawal", () => HttpResponse.error()));
+    server.use(gqlLink.mutation("PrepareReferenceWithdrawal", () => HttpResponse.error()));
     expect(
       (await prepareReferenceWithdrawal(client(), { artifact: "p-1", target: "u-1" })).kind,
     ).toBe("failed");

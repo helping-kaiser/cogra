@@ -27,8 +27,8 @@
 import { useState } from "react";
 
 import type { ReferenceDraft, ReferenceTargetView } from "@/lib/references/draft";
-import { nearestAnchor } from "@/lib/stance/anchors";
-import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
+import { bundleReadout, EMPTY_PICK_LABEL } from "@/lib/stance/anchors";
+import { formatStancePair } from "@/lib/ui/stance-format";
 import { ReferenceParamSliders } from "@/lib/ui/reference-param-sliders";
 import { BottomSheet } from "../bottom-sheet";
 import { PillButton } from "../pill-button";
@@ -149,24 +149,26 @@ export function CitedSheet({
 }
 
 /**
- * The pair the citation signs, as every staged citation wears it: the face
- * carries the feel, the digits carry the fact, and a screen-reader-only twin
- * says both so nothing spoken moves with the geek setting.
+ * The pair the citation signs, as every staged citation wears it
+ * (`StagedReference.jsx`): the face carries the feel, the digits — the geek
+ * reading, in a `cg-exact` span — carry the fact, and a screen-reader-only
+ * twin says the pair so nothing spoken moves with the geek setting. A
+ * citation is not a stance, so the anchor's WORD is withheld (K5.3): the
+ * twin speaks the exact pair alone.
  */
 function StanceReadout({ relevance, support }: { relevance: number; support: number }) {
   const pair = { pDirected: relevance, pInterest: support };
-  const anchor = nearestAnchor(pair);
+  // `StagedReference`'s face: a pick being staged, its value's own (seam 243).
+  const anchor = bundleReadout(pair, EMPTY_PICK_LABEL);
   return (
     <span className="inline-flex flex-none items-baseline gap-1">
       <span aria-hidden="true" className="text-body-medium">
         {anchor.emoji}
       </span>
-      <span aria-hidden="true" className="text-body-small text-on-surface-variant">
+      <span aria-hidden="true" className="cg-exact text-body-small text-on-surface-variant">
         {formatStancePair(pair)}
       </span>
-      <span className="sr-only">
-        {anchor.label}, {formatStanceWords(pair)}
-      </span>
+      <span className="sr-only">{formatStancePair(pair)}</span>
     </span>
   );
 }

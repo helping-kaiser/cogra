@@ -5,18 +5,19 @@
 // of it.
 
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
 import { echoedMedia } from "@/test/media-echo";
 import { fakeWriteSigner } from "@/test/registration";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { DEFAULT_P_DIRECTED, emptyWizard, type WizardState } from "@/lib/compose/wizard";
 import { createComposeDraftStore, type ComposeDraftStore } from "@/lib/compose/draft-store";
 import { createSealedDraftStore, type SealedDraftStore } from "@/lib/compose/sealed-draft";
+import { KNOB_TRAVEL_INSET_PX, valenceTravelHalfExtent } from "@/lib/stance/pad-geometry";
 import { IDBFactory } from "fake-indexeddb";
 import { ComposeWizard } from "./wizard-view";
 import { byAnyTestId, byNode } from "@/test/data-node";
@@ -84,7 +85,7 @@ function installEncoder() {
 }
 
 const preparePost = (node = "post-1") =>
-  graphql.mutation("PreparePost", () =>
+  gqlLink.mutation("PreparePost", () =>
     HttpResponse.json({
       data: {
         preparePost: {
@@ -107,7 +108,7 @@ const preparePost = (node = "post-1") =>
 
 const uploadOk = (ids: string[]) => {
   let next = 0;
-  return graphql.mutation("UploadMedia", () =>
+  return gqlLink.mutation("UploadMedia", () =>
     HttpResponse.json({
       data: {
         uploadMedia: {
@@ -179,7 +180,7 @@ describe("the compose wizard", () => {
       input: { content: string | null; attachments: unknown; pDirected: unknown };
     } | null = null;
     server.use(
-      graphql.mutation("PreparePost", ({ variables: v }) => {
+      gqlLink.mutation("PreparePost", ({ variables: v }) => {
         variables = v as never;
         return HttpResponse.json({
           data: {
@@ -229,7 +230,7 @@ describe("the compose wizard", () => {
   it("asks Start it unreachable? at a Set of exactly 0.00, and signs the zero when set anyway", async () => {
     let variables: { input: { pDirected: unknown } } | null = null;
     server.use(
-      graphql.mutation("PreparePost", ({ variables: v }) => {
+      gqlLink.mutation("PreparePost", ({ variables: v }) => {
         variables = v as never;
         return HttpResponse.json({
           data: {
@@ -274,7 +275,7 @@ describe("the compose wizard", () => {
     for (let press = 0; press < 3; press += 1) {
       fireEvent.keyDown(screen.getByTestId("wizard-stance-field-strip"), { key: "ArrowLeft" });
     }
-    expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤷");
+    expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤔");
     fireEvent.click(screen.getByTestId("wizard-stance-set"));
     expect(screen.getByTestId("wizard-unreachable")).toHaveAttribute("open");
     expect(screen.getByTestId("wizard-stance-pad")).toHaveAttribute("open");
@@ -283,7 +284,7 @@ describe("the compose wizard", () => {
     fireEvent.click(screen.getByTestId("wizard-unreachable-keep"));
     expect(screen.getByTestId("wizard-unreachable")).not.toHaveAttribute("open");
     expect(screen.getByTestId("wizard-stance-pad")).toHaveAttribute("open");
-    expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤷");
+    expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤔");
     expect(screen.getByTestId("wizard-stance-value").textContent).toContain("+0.15");
 
     // Set it anyway: both close, and the row reads the zero.
@@ -291,13 +292,41 @@ describe("the compose wizard", () => {
     fireEvent.click(screen.getByTestId("wizard-unreachable-anyway"));
     expect(screen.getByTestId("wizard-unreachable")).not.toHaveAttribute("open");
     expect(screen.getByTestId("wizard-stance-pad")).not.toHaveAttribute("open");
-    expect(screen.getByTestId("wizard-stance-value").textContent).toContain("🤷");
+    expect(screen.getByTestId("wizard-stance-value").textContent).toContain("🤔");
     expect(screen.getByTestId("wizard-stance-value").textContent).toContain("+0.00");
 
     fireEvent.click(screen.getByTestId("wizard-sign"));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-1?published=1"));
     // The pick is never refused: the zero travels as picked.
     expect(variables!.input.pDirected).toBe(0);
+  });
+
+  // ComposePad.md: release lands the pick on the nearest hundredth. The pad
+  // opens at +0.10 and a drag is float travel, so before the snap a drag could
+  // never reach EXACTLY 0 — the 🤔 and the question were unreachable by hand.
+  it("lands a drag released near zero on exactly 0.00, so Set asks Start it unreachable?", async () => {
+    render();
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), {
+      target: { value: "Three weekends at low tide." },
+    });
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+    await screen.findByTestId(byNode("composeDetails.title.input"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+
+    fireEvent.click(await screen.findByTestId("wizard-open-stance"));
+    const strip = screen.getByTestId("wizard-stance-field-strip");
+    const WIDTH = 300;
+    strip.getBoundingClientRect = () => new DOMRect(0, 0, WIDTH, 56);
+    const half = valenceTravelHalfExtent({ left: 0, top: 0, width: WIDTH, height: 56 }, KNOB_TRAVEL_INSET_PX);
+    fireEvent.pointerDown(strip, { pointerId: 1, clientX: 0, clientY: 0 });
+    fireEvent.pointerMove(strip, { pointerId: 1, clientX: (0.0031 - DEFAULT_P_DIRECTED) * half, clientY: 0 });
+    // Under the thumb it is a float that prints +0.00 and smiles.
+    expect(screen.getByTestId("wizard-stance-pick-face").textContent).not.toBe("🤔");
+    fireEvent.pointerUp(strip, { pointerId: 1 });
+    expect(screen.getByTestId("wizard-stance-pick-face").textContent).toBe("🤔");
+    fireEvent.click(screen.getByTestId("wizard-stance-set"));
+    expect(screen.getByTestId("wizard-unreachable")).toHaveAttribute("open");
   });
 
   // CW-26: WizardHeader.jsx's stageLabel slot draws at --text-label-small.
@@ -394,7 +423,7 @@ describe("the compose wizard", () => {
     } | null = null;
     server.use(
       uploadOk(["m-a", "m-b"]),
-      graphql.mutation("PreparePost", ({ variables: v }) => {
+      gqlLink.mutation("PreparePost", ({ variables: v }) => {
         variables = v as never;
         return HttpResponse.json({
           data: {
@@ -468,7 +497,7 @@ describe("the compose wizard", () => {
   it("holds the seal shut while a picture is unresolved, and retries just that one", async () => {
     let attempts = 0;
     server.use(
-      graphql.mutation("UploadMedia", () => {
+      gqlLink.mutation("UploadMedia", () => {
         attempts += 1;
         if (attempts === 1) {
           return HttpResponse.json({
@@ -647,7 +676,7 @@ describe("the compose wizard", () => {
   it("stages the node the cite affordance sent it, and resolves its label", async () => {
     searchParams = new URLSearchParams("reference=p-quoted");
     server.use(
-      graphql.query("ReferenceCandidates", () =>
+      gqlLink.query("ReferenceCandidates", () =>
         HttpResponse.json({
           data: {
             referenceCandidates: [
@@ -684,7 +713,7 @@ describe("the compose wizard", () => {
   it("stages an unresolvable cite target by its id", async () => {
     searchParams = new URLSearchParams("reference=p-quoted");
     server.use(
-      graphql.query("ReferenceCandidates", () =>
+      gqlLink.query("ReferenceCandidates", () =>
         HttpResponse.json({ data: { referenceCandidates: [] } }),
       ),
     );
@@ -703,7 +732,7 @@ describe("the compose wizard", () => {
   it("keeps the staged cite when a held draft is taken up", async () => {
     searchParams = new URLSearchParams("reference=p-quoted");
     server.use(
-      graphql.query("ReferenceCandidates", () =>
+      gqlLink.query("ReferenceCandidates", () =>
         HttpResponse.json({ data: { referenceCandidates: [] } }),
       ),
     );
@@ -1086,7 +1115,7 @@ describe("the compose wizard", () => {
 describe("the license a new post starts from", () => {
   it("new_post_starts_from_the_default", async () => {
     server.use(
-      graphql.query("DefaultLicense", () =>
+      gqlLink.query("DefaultLicense", () =>
         HttpResponse.json({
           data: {
             me: {
@@ -1119,7 +1148,7 @@ describe("the license a new post starts from", () => {
 
   it("a draft taken up keeps the license it was written under", async () => {
     server.use(
-      graphql.query("DefaultLicense", () =>
+      gqlLink.query("DefaultLicense", () =>
         HttpResponse.json({
           data: {
             me: {
@@ -1163,7 +1192,7 @@ describe("the sealed copy of a staged post (FC-G5)", () => {
   });
 
   const stagedWriteIs = (state: string | null) =>
-    graphql.query("StagedWrite", ({ variables }) =>
+    gqlLink.query("StagedWrite", ({ variables }) =>
       HttpResponse.json({
         data: {
           stagedWrite:
@@ -1296,7 +1325,7 @@ describe("the sealed copy of a staged post (FC-G5)", () => {
 
   it("decides nothing when the fate cannot be read, and still opens", async () => {
     await seals.seal(staged, { node: "post-1", writes: ["w1"] });
-    server.use(graphql.query("StagedWrite", () => HttpResponse.error()));
+    server.use(gqlLink.query("StagedWrite", () => HttpResponse.error()));
     mount();
     expect(await screen.findByTestId("wizard-to-words")).toBeInTheDocument();
     expect(screen.queryByTestId("wizard-draft-card")).not.toBeInTheDocument();

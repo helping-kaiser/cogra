@@ -14,6 +14,7 @@ import type { StancePair } from "@/lib/stance/model";
 import {
   KNOB_TRAVEL_INSET_PX,
   rangedPairFrom,
+  snapToRanges,
   STANCE_RANGES,
   TAG_RANGES,
   TAG_RELEVANCE_FLOOR,
@@ -76,8 +77,9 @@ function dragField(dx: number, dy: number, pointerType = "touch") {
   fireEvent.pointerUp(square, { pointerType, pointerId: 1, clientX: 100 + dx, clientY: 100 + dy });
 }
 
+/** Where a released drag parks: the travel's pair, landed on the hundredths grid. */
 const expectedDrag = (base: StancePair, dx: number, dy: number, ranges: PadRanges) =>
-  rangedPairFrom(base, RECT, { dx, dy }, KNOB_TRAVEL_INSET_PX, ranges);
+  snapToRanges(rangedPairFrom(base, RECT, { dx, dy }, KNOB_TRAVEL_INSET_PX, ranges), ranges);
 
 /** A pull on the sheet's own surface — the swipe that drops a drawer. */
 function swipeDown() {
@@ -189,8 +191,9 @@ describe("TagPadCompose — a staged tag's pair", () => {
     renderTag();
     const tagObjects = new Set(TAG_ANCHORS.map((anchor) => anchor.emoji));
     const stanceFaces = new Set(STANCE_ANCHORS.map((anchor) => anchor.emoji));
+    // Both numbers non-zero: the thirteen objects read it.
     for (const relevance of [0.01, 0.3, 0.6, 0.86, 1]) {
-      for (const confidence of [0, 0.4, 0.75, 0.95]) {
+      for (const confidence of [0.4, 0.75, 0.95]) {
         setThroughTracks({ pDirected: relevance, pInterest: confidence });
         const face = screen.getByTestId("sheet-face").textContent ?? "";
         expect(face).toBe(nearestTagAnchor(relevance, confidence).emoji);
@@ -198,6 +201,17 @@ describe("TagPadCompose — a staged tag's pair", () => {
         expect(stanceFaces.has(face)).toBe(false);
         expect(screen.getByTestId("sheet-exact")).toHaveTextContent(formatTagPair(relevance, confidence));
       }
+    }
+  });
+
+  it("thinks at zero certainty, naming it, never one of the thirteen (faces follow the value)", () => {
+    // The expectation is the rule's (tagReadout's), not the bare table's:
+    // a checker computed from the table would wrongly pass a 🎣 here.
+    renderTag();
+    for (const relevance of [0.01, 0.6, 1]) {
+      setThroughTracks({ pDirected: relevance, pInterest: 0 });
+      expect(screen.getByTestId("sheet-face")).toHaveTextContent("🤔");
+      expect(screen.getByTestId("sheet-spoken")).toHaveTextContent("Your pick: no certainty at all.");
     }
   });
 
@@ -224,6 +238,19 @@ describe("TagPadCompose — a staged tag's pair", () => {
     fireEvent.click(screen.getByTestId("sheet-done"));
     expect(held().pDirected).toBe(TAG_RELEVANCE_FLOOR);
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("lands the released pair on the hundredths grid, never below the relevance floor", () => {
+    renderTag();
+    const half = 200 / 2 - KNOB_TRAVEL_INSET_PX;
+    const perX = (1 - TAG_RELEVANCE_FLOOR) / (2 * half);
+    const perY = 1 / (2 * half);
+    // Relevance to 0.0137 and confidence to 0.4371 under the thumb.
+    const dx = (0.0137 - TAG_DEFAULT.pDirected) / perX;
+    const dy = -(0.4371 - TAG_DEFAULT.pInterest) / perY;
+    dragField(dx, dy);
+    fireEvent.click(screen.getByTestId("sheet-done"));
+    expect(held()).toEqual({ pDirected: 0.01, pInterest: 0.44 });
   });
 
   it("owns its pointers — a downward drag on the field moves the knob, never drops the sheet", () => {
@@ -290,10 +317,12 @@ describe("TagPadCompose — a staged tag's pair", () => {
     expect(typed).toHaveAttribute("type", "number");
     fireEvent.change(typed, { target: { value: "-3" } });
     expect(screen.getByTestId("sheet-exact")).toHaveTextContent("+0.01 / 1.00");
-    fireEvent.change(screen.getByTestId("sheet-tracks-interest"), { target: { value: "0.4" } });
+    // A third decimal lands on the nearest hundredth, as a released drag does.
+    fireEvent.change(screen.getByTestId("sheet-tracks-interest"), { target: { value: "0.437" } });
+    expect(screen.getByTestId("sheet-exact")).toHaveTextContent("+0.01 / 0.44");
 
     fireEvent.click(screen.getByTestId("sheet-done"));
-    expect(held()).toEqual({ pDirected: 0.01, pInterest: 0.4 });
+    expect(held()).toEqual({ pDirected: 0.01, pInterest: 0.44 });
   });
 });
 
@@ -363,13 +392,27 @@ describe("RefPair — a staged citation's pair", () => {
       REF_DEFAULT,
       { pDirected: -0.8, pInterest: 0.6 },
       { pDirected: 0.9, pInterest: -0.9 },
-      { pDirected: 0, pInterest: 0 },
     ]) {
       setThroughTracks(pair);
       const anchor = nearestAnchor(pair);
       expect(screen.getByTestId("sheet-face")).toHaveTextContent(anchor.emoji);
       expect(screen.getByTestId("sheet-exact")).toHaveTextContent(formatStancePair(pair));
       expect(screen.getByTestId("sheet-spoken").textContent).not.toContain(anchor.label);
+    }
+  });
+
+  it("shrugs at (0, 0) and thinks at one zero, never a table face (faces follow the value)", () => {
+    // The expectations are the rule's: the bare table would answer 🙂 at
+    // the origin and 🙂/👀 on the zero lines.
+    renderRef();
+    for (const [pair, face] of [
+      [{ pDirected: 0, pInterest: 0 }, "🤷"],
+      [{ pDirected: 0, pInterest: 0.6 }, "🤔"],
+      [{ pDirected: -0.5, pInterest: 0 }, "🤔"],
+    ] as const) {
+      setThroughTracks(pair);
+      expect(screen.getByTestId("sheet-face")).toHaveTextContent(face);
+      expect(screen.getByTestId("sheet-exact")).toHaveTextContent(formatStancePair(pair));
     }
   });
 

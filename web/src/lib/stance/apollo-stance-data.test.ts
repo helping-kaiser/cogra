@@ -4,7 +4,7 @@
 // element by element in one pass.
 
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { describe, expect, it, vi } from "vitest";
 
 import { createGuard, type AuthGuard } from "@/lib/session/guard";
@@ -12,7 +12,7 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { expectation, severance, stanceRecord, type Expectation } from "@/lib/signing/intent";
 import type { WriteResult, WriteSigner } from "@/lib/signing/write-signer";
 import type { StagedWriteView } from "@/lib/api/writes-api";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { createApolloStanceData } from "./apollo-stance-data";
 import type { StanceBundle, StanceTarget } from "./stance-data";
 
@@ -63,7 +63,7 @@ const POST_GRAPH_ID = "mint:act:b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0:3:publi
 
 /** The standing read every gesture's expectation names its node from. */
 function postStanceRead() {
-  return graphql.query("PostStance", () =>
+  return gqlLink.query("PostStance", () =>
     HttpResponse.json({
       data: { post: { __typename: "Post", id: "post-1", viewerStance: bundleFields() } },
     }),
@@ -102,13 +102,13 @@ describe("reading the standing", () => {
   it("enters through the root that matches the target", async () => {
     const asked: string[] = [];
     server.use(
-      graphql.query("PostStance", () => {
+      gqlLink.query("PostStance", () => {
         asked.push("post");
         return HttpResponse.json({
           data: { post: { __typename: "Post", id: "post-1", viewerStance: bundleFields() } },
         });
       }),
-      graphql.query("ProfileStance", () => {
+      gqlLink.query("ProfileStance", () => {
         asked.push("profile");
         return HttpResponse.json({
           data: { user: { __typename: "User", id: "user-1", viewerStance: bundleFields() } },
@@ -123,7 +123,7 @@ describe("reading the standing", () => {
 
   it("carries the fold's own flags rather than any reading of the numbers", async () => {
     server.use(
-      graphql.query("PostStance", () =>
+      gqlLink.query("PostStance", () =>
         HttpResponse.json({
           data: {
             post: {
@@ -154,7 +154,7 @@ describe("reading the standing", () => {
   it("passes a bundle that folds no records through as itself", async () => {
     // A never-stanced target is a real bundle at zero, not an absent one.
     server.use(
-      graphql.query("PostStance", () =>
+      gqlLink.query("PostStance", () =>
         HttpResponse.json({
           data: {
             post: {
@@ -184,7 +184,7 @@ describe("reading the standing", () => {
     // Null covers both a stale token and an account with no actor; the
     // guard's refresh-and-replay handles the common one.
     server.use(
-      graphql.query("PostStance", () =>
+      gqlLink.query("PostStance", () =>
         HttpResponse.json({
           data: { post: { __typename: "Post", id: "post-1", viewerStance: null } },
         }),
@@ -199,7 +199,7 @@ describe("reading the standing", () => {
   it("counts pending stances unless asked otherwise", async () => {
     const flags: unknown[] = [];
     server.use(
-      graphql.query("PostStance", ({ variables }) => {
+      gqlLink.query("PostStance", ({ variables }) => {
         flags.push(variables.includePending);
         return HttpResponse.json({
           data: { post: { __typename: "Post", id: "post-1", viewerStance: bundleFields() } },
@@ -220,7 +220,7 @@ describe("reading the standing", () => {
     // account that earned it left behind.
     let reads = 0;
     server.use(
-      graphql.query("PostStance", () => {
+      gqlLink.query("PostStance", () => {
         reads += 1;
         return HttpResponse.json({
           data: {
@@ -247,7 +247,7 @@ describe("reading the standing", () => {
     // nothing refreshes, and the viewer's standing never appears.
     let reads = 0;
     server.use(
-      graphql.query("PostStance", () => {
+      gqlLink.query("PostStance", () => {
         reads += 1;
         return HttpResponse.json({
           data: {
@@ -274,7 +274,7 @@ describe("projecting a pick", () => {
   it("asks the same field with the pick and reads the landing off it", async () => {
     let sentPick: unknown = null;
     server.use(
-      graphql.query("PostStance", ({ variables }) => {
+      gqlLink.query("PostStance", ({ variables }) => {
         sentPick = variables.pick;
         return HttpResponse.json({
           data: {
@@ -296,16 +296,59 @@ describe("projecting a pick", () => {
       }),
     );
     const data = createApolloStanceData({ client: client(), guard, signer: signer() });
-    expect(await data.project(POST, { pDirected: -0.6, pInterest: -0.1 })).toEqual({
+    expect(await data.project(POST, { pDirected: -0.6, pInterest: -0.1 })).toMatchObject({
       kind: "success",
       value: { landing: { pDirected: 0, pInterest: 0.3 }, inert: true, severed: false },
     });
     expect(sentPick).toEqual({ pDirected: -0.6, pInterest: -0.1 });
   });
 
+  it("carries the standing the pick was read against, as served", async () => {
+    // What splits a (0, 0) landing into a walk-back or an empty sign: the
+    // same read's recordCount and bundle-level severed (StanceProjection.severed).
+    server.use(
+      gqlLink.query("PostStance", () =>
+        HttpResponse.json({
+          data: {
+            post: {
+              __typename: "Post",
+              id: "post-1",
+              viewerStance: bundleFields({
+                pDirected: 0,
+                pInterest: 0,
+                rawPDirected: 0,
+                rawPInterest: 0,
+                recordCount: 1,
+                inert: true,
+                severed: false,
+                severanceCost: 1,
+                projected: {
+                  __typename: "StanceProjection",
+                  pDirected: 0,
+                  pInterest: 0,
+                  inert: true,
+                  severed: true,
+                },
+              }),
+            },
+          },
+        }),
+      ),
+    );
+    const data = createApolloStanceData({ client: client(), guard, signer: signer() });
+    const outcome = await data.project(POST, { pDirected: 0, pInterest: 0 });
+    expect(outcome).toMatchObject({
+      kind: "success",
+      value: {
+        severed: true,
+        standing: { records: 1, severed: false, severance: { records: 1 }, current: { pDirected: 0, pInterest: 0 } },
+      },
+    });
+  });
+
   it("treats a projection the server did not answer as a fault, not as zero", async () => {
     server.use(
-      graphql.query("PostStance", () =>
+      gqlLink.query("PostStance", () =>
         HttpResponse.json({
           data: { post: { __typename: "Post", id: "post-1", viewerStance: bundleFields() } },
         }),
@@ -321,7 +364,7 @@ describe("writing", () => {
     let input: unknown = null;
     server.use(
       postStanceRead(),
-      graphql.mutation("PrepareStance", ({ variables }) => {
+      gqlLink.mutation("PrepareStance", ({ variables }) => {
         input = variables.input;
         return HttpResponse.json({
           data: {
@@ -350,7 +393,7 @@ describe("writing", () => {
   it("signs every counter-record of a severance batch in one pass", async () => {
     server.use(
       postStanceRead(),
-      graphql.mutation("PrepareSeverance", () =>
+      gqlLink.mutation("PrepareSeverance", () =>
         HttpResponse.json({
           data: {
             prepareSeverance: {
@@ -380,7 +423,7 @@ describe("writing", () => {
   it("reports a batch with an element that did not complete as failed", async () => {
     server.use(
       postStanceRead(),
-      graphql.mutation("PrepareSeverance", () =>
+      gqlLink.mutation("PrepareSeverance", () =>
         HttpResponse.json({
           data: {
             prepareSeverance: {
@@ -404,10 +447,36 @@ describe("writing", () => {
     expect(sign.signed).toEqual(["w-1", "w-2", "w-3"]);
   });
 
+  it("keeps a signing refusal's codes, so the write rule reads as a notice", async () => {
+    server.use(
+      postStanceRead(),
+      gqlLink.mutation("PrepareSeverance", () =>
+        HttpResponse.json({
+          data: {
+            prepareSeverance: {
+              __typename: "PreparePayload",
+              writes: prepared(["w-1"]),
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+    );
+    const sign = signer((staged) => ({
+      kind: "refused",
+      id: staged.id,
+      errors: [{ code: "WRITE_RULE_FAILED", message: "write rule", field: null }],
+    }));
+    const data = createApolloStanceData({ client: client(), guard, signer: sign });
+    const outcome = await data.sever(POST, SHOWN);
+    expect(outcome.kind).toBe("refused");
+    expect(outcome.kind === "refused" && outcome.errors[0].code).toBe("WRITE_RULE_FAILED");
+  });
+
   it("surfaces a refusal to sever rather than manufacturing writes", async () => {
     server.use(
       postStanceRead(),
-      graphql.mutation("PrepareSeverance", () =>
+      gqlLink.mutation("PrepareSeverance", () =>
         HttpResponse.json({
           data: {
             prepareSeverance: {

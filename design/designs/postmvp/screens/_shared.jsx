@@ -76,6 +76,8 @@ const {
   QuotedRow,
   NodeMark,
   STANCE_ANCHORS,
+  UNREACHABLE_EMOJI,
+  ZERO_BUNDLE_EMOJI,
   Timeline,
   MoneyFigure,
   CgtMark,
@@ -2588,8 +2590,16 @@ function BubbleQuote({ name, snippet, src }) {
    and not its helpers (canonical's `SR_ONLY` precedent): `nearestAnchor`'s
    walk and `formatStancePair`'s form, both over the exposed `STANCE_ANCHORS`
    table and the system's one number format — the same table, read the same
-   way, never a second one. */
+   way, never a second one. The walk keeps the masters' zero law
+   (`bundleReadout`, jakob 2026-10-21): the table reads only a pair with both
+   numbers non-zero, one zero thinks and says its state as `unreachableHead`
+   says it, and (0, 0) shrugs. */
 function traceAnchor(pair) {
+  const dZero = pair.pDirected === 0;
+  const iZero = pair.pInterest === 0;
+  if (dZero && iZero) return { emoji: ZERO_BUNDLE_EMOJI, label: SEVERED_LABEL };
+  if (dZero) return { emoji: UNREACHABLE_EMOJI, label: pair.pInterest > 0 ? "Interested, no side taken" : "Rather not see it, no side taken" };
+  if (iZero) return { emoji: UNREACHABLE_EMOJI, label: pair.pDirected > 0 ? "For it, no interest either way" : "Against it, no interest either way" };
   let best = STANCE_ANCHORS[0];
   let bestDistance = Number.POSITIVE_INFINITY;
   for (const anchor of STANCE_ANCHORS) {

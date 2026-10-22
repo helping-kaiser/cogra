@@ -64,9 +64,9 @@ import com.cogra.core.designsystem.MonogramAvatar
 import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.StancePoint
 import com.cogra.core.designsystem.TagPoint
-import com.cogra.core.designsystem.nearestStanceAnchor
-import com.cogra.core.designsystem.nearestTagAnchor
+import com.cogra.core.designsystem.bundleReadout
 import com.cogra.core.designsystem.pair
+import com.cogra.core.designsystem.tagReadout
 import com.cogra.core.designsystem.twoPlaces
 import com.cogra.core.designsystem.twoPlacesUnsigned
 import com.cogra.core.designsystem.v2.atom.SheetTitle
@@ -171,7 +171,7 @@ private fun TagRow(
 ) {
     val name = claim.hashtag.name.value.orEmpty()
     val point = TagPoint(claim.relevance, claim.confidence)
-    val anchor = nearestTagAnchor(point)
+    val anchor = tagReadout(point)
     val reading = stringResource(
         R.string.content_refs_row_tag,
         name,
@@ -223,7 +223,7 @@ private fun ReferenceRow(
         mark = { ReferenceMark(target, label) },
         title = label,
         kind = stringResource(referenceKind(target)),
-        emoji = nearestStanceAnchor(point).emoji,
+        emoji = bundleReadout(point).emoji,
         exact = point.pair(),
         pending = claim.pending,
         reading = reading,

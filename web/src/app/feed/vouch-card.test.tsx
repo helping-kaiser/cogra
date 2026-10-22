@@ -1,12 +1,12 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { createStubStanceData } from "@/lib/stance/stub-stance-data";
 import type { StanceData } from "@/lib/stance/stance-data";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { LONG_PRESS_MS, SETTING_AFTER_MS } from "@/lib/ui/stance-control";
 import { VouchCard } from "./vouch-card";
@@ -56,7 +56,7 @@ function me(shape: MeShape = {}) {
 }
 
 function meHandler(read: () => ReturnType<typeof me>) {
-  return graphql.query("Me", () => HttpResponse.json({ data: { me: read() } }));
+  return gqlLink.query("Me", () => HttpResponse.json({ data: { me: read() } }));
 }
 
 function signedInStore() {
@@ -77,7 +77,7 @@ function renderCard(
 }
 
 function dismissHandler(answer: () => "ok" | "fail", calls: { n: number }) {
-  return graphql.mutation("DismissVouchBack", () => {
+  return gqlLink.mutation("DismissVouchBack", () => {
     calls.n += 1;
     if (answer() === "fail") return HttpResponse.error();
     return HttpResponse.json({
@@ -361,7 +361,9 @@ describe("VouchCard", () => {
       );
       expect(screen.getByTestId("feed.vouchCard.stance.pad")).toContainElement(help);
       expect(screen.getByTestId("feed.vouchCard.stance.pad.set")).toBeDisabled();
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      // The pad is the one dialog (it is modal, StanceControl.jsx); the help
+      // opens no second one over it.
+      expect(screen.getAllByRole("dialog")).toEqual([screen.getByTestId("feed.vouchCard.stance.pad")]);
     });
 
     // VouchBackPad.md:11.

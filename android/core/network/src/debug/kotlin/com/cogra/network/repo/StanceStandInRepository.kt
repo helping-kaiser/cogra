@@ -79,6 +79,7 @@ class StanceStandInRepository @Inject constructor(private val writes: WriteRepos
                     raw = rawSum(own),
                     records = own.size,
                     includePending = includePending,
+                    severed = severed(own),
                 ),
             )
         }
@@ -110,10 +111,15 @@ class StanceStandInRepository @Inject constructor(private val writes: WriteRepos
                     standing = net,
                     raw = rawSum(own),
                     records = own.size,
-                    alreadySevered = net == StancePair.Origin,
+                    alreadySevered = own.isEmpty() || severed(own),
+                    bundleRecords = own.size,
                 ),
             )
         }
+
+    /** `StanceBundle.severed`: the raw sums net to (0, 0) and the newest record said something. */
+    private fun severed(pairs: List<StancePair>): Boolean =
+        pairs.isNotEmpty() && rawSum(pairs) == StancePair.Origin && pairs.last() != StancePair.Origin
 
     /**
      * Refused rather than faked: staging real records is the backend's,

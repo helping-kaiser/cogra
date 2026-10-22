@@ -3,6 +3,7 @@ package com.cogra.app
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -11,6 +12,7 @@ import com.cogra.app.ui.StatusBarClearance
 import com.cogra.app.ui.theme.CograTheme
 import com.cogra.app.ui.theme.paintsDark
 import com.cogra.core.designsystem.BarGround
+import com.cogra.core.designsystem.LocalShowExactValues
 import com.cogra.core.designsystem.SystemBarOwner
 import com.cogra.core.designsystem.installEdgeToEdge
 import com.cogra.domain.store.DevicePreferences
@@ -41,16 +43,21 @@ class MainActivity : FragmentActivity() {
         setContent {
             val theme by devicePreferences.theme.collectAsStateWithLifecycle(ThemeChoice.AUTO)
             val appDark = paintsDark(theme, isSystemInDarkTheme())
-            CograTheme(darkTheme = appDark) {
-                // The bars' icons follow the theme the app paints.
-                SystemBarOwner(appGround = if (appDark) BarGround.AppDark else BarGround.AppLight) {
-                    // The app's own ground paints under the status bar and
-                    // nothing it lays out collides with it.
-                    StatusBarClearance {
-                        // The graph publishes its own snackbar host, so the
-                        // surface a leaf confirms through is the one the shell
-                        // actually draws (design.md §8.3).
-                        CograNavGraph()
+            // Show exact values (Settings.md:31-33): the geek painting of every
+            // pair, kept on this device like the theme (readme §13).
+            val exact by devicePreferences.showExactValues.collectAsStateWithLifecycle(false)
+            CompositionLocalProvider(LocalShowExactValues provides exact) {
+                CograTheme(darkTheme = appDark) {
+                    // The bars' icons follow the theme the app paints.
+                    SystemBarOwner(appGround = if (appDark) BarGround.AppDark else BarGround.AppLight) {
+                        // The app's own ground paints under the status bar and
+                        // nothing it lays out collides with it.
+                        StatusBarClearance {
+                            // The graph publishes its own snackbar host, so the
+                            // surface a leaf confirms through is the one the shell
+                            // actually draws (design.md §8.3).
+                            CograNavGraph()
+                        }
                     }
                 }
             }

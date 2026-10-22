@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT display_name, bio, avatar_id, website_url,\n                redaction_reason, pending, created_at\n         FROM actor_profile_versions\n         WHERE actor_id = $1\n         ORDER BY pending DESC,\n                  landed_epoch DESC NULLS LAST,\n                  act_time DESC NULLS LAST,\n                  position DESC NULLS LAST,\n                  created_at DESC, version_id DESC\n         LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "display_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "bio",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "avatar_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "website_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "redaction_reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "pending",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "6f58614f431adbec65ebf628274fa8d00da5cb260947aeb5420cf530a4dfe37b"
+}

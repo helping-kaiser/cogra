@@ -244,10 +244,8 @@ class ScriptedProfileRepository : ThrowingProfileRepository() {
             displayName = testModeratedField(displayName),
             bio = testModeratedField(bio),
             websiteUrl = testModeratedField(websiteUrl),
-            // A landed edit is a NEW profile version, and its instant is
-            // what the screen waits on: a fake that changed the words
-            // without moving this would model a backend that answers
-            // instantly, which is the one thing the real one does not do.
+            // A signed edit is a NEW profile version, served at once and
+            // dated by its signature.
             updatedAt = profile?.updatedAt?.plusSeconds(1) ?: Instant.EPOCH.plusSeconds(1),
         )
         return Outcome.Success(emptyList())
@@ -343,6 +341,7 @@ class ScriptedStanceRepository(private val writes: WriteRepository) : ThrowingSt
     var net = StancePair.Origin
     var raw: StancePair? = null
     var records = 0
+    var severed = false
 
     override suspend fun prepareStance(
         target: StanceTarget,
@@ -354,7 +353,7 @@ class ScriptedStanceRepository(private val writes: WriteRepository) : ThrowingSt
 
     override suspend fun standing(target: StanceTarget, includePending: Boolean): Outcome<StanceStanding> =
         Outcome.Success(
-            StanceStanding(target, net, raw ?: net, records, includePending = includePending),
+            StanceStanding(target, net, raw ?: net, records, includePending = includePending, severed = severed),
         )
 
     override suspend fun projection(
@@ -378,7 +377,8 @@ class ScriptedStanceRepository(private val writes: WriteRepository) : ThrowingSt
                 standing = net,
                 raw = raw ?: net,
                 records = records,
-                alreadySevered = net == StancePair.Origin,
+                alreadySevered = records == 0 || severed,
+                bundleRecords = records,
             ),
         )
 }

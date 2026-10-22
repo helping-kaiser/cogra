@@ -115,15 +115,15 @@ class TopicRepositoryTest {
                           "canonicalProposal":"AA==","gcAfterEpochs":8}],
                "userErrors":[]}}}""",
         )
-        // An un-tag: relevance 0, and the confidence the removed chip showed
-        // rides explicitly — the wire requires it and fills nothing in.
-        val outcome = repo().prepareTag("post-1", "rust", pDirected = 0.0, pInterest = 0.6)
+        // An un-tag: (0,0), both parameters riding explicitly (hashtag.md §4)
+        // — the wire requires them and fills nothing in.
+        val outcome = repo().prepareTag("post-1", "rust", pDirected = 0.0, pInterest = 0.0)
         assertThat(outcome).isInstanceOf(Outcome.Success::class.java)
         val body = server.takeRequest().body.readUtf8()
         assertThat(body).contains("\"target\":\"post-1\"")
         assertThat(body).contains("\"name\":\"rust\"")
         assertThat(body).contains("\"pDirected\":0.0")
-        assertThat(body).contains("\"pInterest\":0.6")
+        assertThat(body).contains("\"pInterest\":0.0")
     }
 
     @Test

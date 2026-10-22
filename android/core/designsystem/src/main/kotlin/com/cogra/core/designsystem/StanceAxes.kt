@@ -11,50 +11,70 @@
 package com.cogra.core.designsystem
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 
 /**
- * The question each axis asks, as this record family words it.
- *
- * **Two words, not the master's six.** `AFFINITY_AXES` on the canvas
- * (`design/designs/canonical/screens/_shared.jsx`) carries the two
- * questions AND the four ends, because the drawn pad's field labels its
- * corners. This pad does not: nothing in [StancePad] or [StanceSlider]
- * renders an end word, so the four have no surface here to reach. The
- * two questions do — they are the sliders' labels, the typed fields'
- * labels, and every spoken readout — which is exactly the half the
- * ruling says the accessible route must ask (`TagPageHeldPad`: "the two
- * questions reach the sliders, the typed fields and every spoken
- * readout"). That this pad draws no ends at all is its own gap, and it
- * predates the Affinity words.
+ * The master's six words (`STANCE_AXES`, `PadAxes` in StancePad.d.ts): the
+ * question each axis asks, and the four ends the field draws in its
+ * gutters. The poles say where an axis ENDS and the questions what it
+ * ASKS; the field draws the ends only, and the questions reach the
+ * sliders, the typed fields and every spoken readout (backlog item 79).
  */
 data class StanceAxes(
     /** What the `p_d` axis asks. */
     @param:StringRes val directed: Int,
     /** What the `p_i` axis asks. */
     @param:StringRes val interest: Int,
+    /** The `p_d` axis's low end, drawn left of the field. */
+    @param:StringRes val left: Int,
+    /** The `p_d` axis's high end, drawn right of the field. */
+    @param:StringRes val right: Int,
+    /** The `p_i` axis's low end, drawn under the field. */
+    @param:StringRes val bottom: Int,
+    /** The `p_i` axis's high end, drawn over the field. */
+    @param:StringRes val top: Int,
 ) {
     companion object {
         /**
-         * An opinion's own words — the default every surface had before
-         * families named theirs, and still the words toward a post, a
-         * comment or a person.
+         * An opinion's own words — `For or against`, `Against`/`For`;
+         * `How much reaches you`, `Less`/`More` — toward a post, a comment
+         * or a person.
          */
         val Opinion = StanceAxes(
             directed = R.string.stance_axis_directed,
             interest = R.string.stance_axis_interest,
+            left = R.string.valence_pole_against,
+            right = R.string.valence_pole_for,
+            bottom = R.string.stance_pole_less,
+            top = R.string.stance_pole_more,
         )
 
         /**
          * An Affinity toward a Type — the gesture a topic's stance row
-         * wears (ruled 2026-09-15, drawn on `TagPageHeldPad`). It fills
-         * the same two signed slots with association and attraction, and
-         * its questions are neither the opinion's: "how you stand" names
-         * a verdict this record does not carry, and "in your world"
-         * names reach rather than closeness.
+         * wears (`AFFINITY_AXES`, ruled 2026-09-15, drawn on
+         * `TagPageHeldPad`): association and attraction in the same two
+         * signed slots, `Dislike`/`Like` across and `Far away`/`Close to
+         * me` up.
          */
         val Affinity = StanceAxes(
             directed = R.string.stance_axis_affinity_directed,
             interest = R.string.stance_axis_affinity_interest,
+            left = R.string.stance_pole_affinity_left,
+            right = R.string.stance_pole_affinity_right,
+            bottom = R.string.stance_pole_affinity_bottom,
+            top = R.string.stance_pole_affinity_top,
         )
     }
 }
+
+/** The family's six words, resolved — the shape the ranged field takes. */
+@Composable
+fun StanceAxes.words(): PairAxes = PairAxes(
+    directed = stringResource(directed),
+    interest = stringResource(interest),
+    left = stringResource(left),
+    right = stringResource(right),
+    bottom = stringResource(bottom),
+    top = stringResource(top),
+)

@@ -1,22 +1,33 @@
 // THE RANGED PAIR FIELD — the master `StancePad` with `ranges` and `axes`
-// (StancePad.jsx), as the composer's pair sheets draw it: `TagPadCompose`
-// over a staged tag and `RefPair` over a staged citation.
+// (StancePad.jsx). One field, three families: the opinion pad over a
+// stance's signed square (`StanceControl`'s `field`), and the composer's
+// pair sheets — `TagPadCompose` over a staged tag and `RefPair` over a
+// staged citation.
 //
 // THE DRAWN FIELD IS THE VALUE SPACE, whatever the census gives the family:
-// a citation's two signed slots fill the square from −1 to +1 on both axes,
-// and a tag's fill it from its +0.01 relevance floor to 1 across and from 0
-// to 1 up — so the knob can never stand on a value the record cannot carry
-// (TagPadCompose.md: "NEVER relevance goes below +0.01"). The pole words sit
-// OUTSIDE the field in the gutters the component reserves (the 2026-09-15
-// ruling); the dead-ground hairline marks an axis's zero only where the
-// range crosses it — a tag's field has none.
+// a stance's and a citation's two signed slots fill the square from −1 to +1
+// on both axes, and a tag's fill it from its +0.01 relevance floor to 1
+// across and from 0 to 1 up — so the knob can never stand on a value the
+// record cannot carry (TagPadCompose.md: "NEVER relevance goes below
+// +0.01"). The pole words sit OUTSIDE the field in the gutters the component
+// reserves (the 2026-09-15 ruling); the dead-ground hairline marks an axis's
+// zero only where the range crosses it — a tag's field has none.
 //
 // THE PICK IS ACCUMULATED TRAVEL from where the value stood, one rule for
 // both axes: `perPixel` is the range's span over the knob's whole travel,
-// and the sum is clamped once, per axis.
+// and the sum is clamped once, per axis. Release lands it on the hundredths
+// grid ([hundredth]), clamped back into the reach.
+//
+// THE KNOB TICKS, ON ANDROID ONLY (readme §4, *Haptics*; PadStanding.md:71):
+// crossing either zero line, and meeting the field's edge where the pick
+// clamps, gives one `SEGMENT_TICK` each (`CLOCK_TICK` below API 34).
+// Nothing else in the drag vibrates.
 
 package com.cogra.core.designsystem
 
+import android.os.Build
+import android.view.HapticFeedbackConstants
+import android.view.View
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -48,11 +59,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.CustomAccessibilityAction
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
@@ -152,6 +164,10 @@ internal fun pairFrom(base: PairPoint, travel: Offset, halfExtentPx: Float, rang
     )
 }
 
+/** Where a drag of this much travel PARKS once the finger lifts: [pairFrom] on the hundredths grid. */
+internal fun pairReleased(base: PairPoint, travel: Offset, halfExtentPx: Float, ranges: PairRanges): PairPoint =
+    ranges.snap(pairFrom(base, travel, halfExtentPx, ranges))
+
 /** The knob's centre for [point], from the field's top-left, in a field [sidePx] across. */
 internal fun pairKnobAt(point: PairPoint, sidePx: Float, insetPx: Float, ranges: PairRanges): Offset {
     val travel = (sidePx - 2 * insetPx).coerceAtLeast(0f)
@@ -162,12 +178,42 @@ internal fun pairKnobAt(point: PairPoint, sidePx: Float, insetPx: Float, ranges:
 }
 
 /**
+ * Whether one step of the knob along an axis earns the platform's tick
+ * (readme §4, *Haptics*): it crossed the axis's zero line — or landed on it
+ * from either side — or it met the field's edge where the pick clamps. A
+ * step that stays on a line or an edge it already stood on ticks nothing,
+ * so a finger pressing past the edge is not a buzz.
+ */
+internal fun ticksAlong(from: Double, to: Double, range: PairRange): Boolean {
+    if (from == to) return false
+    val crossesZero = range.zeroFraction != null && from != 0.0 && (to == 0.0 || (from < 0.0) != (to < 0.0))
+    val meetsEdge = (to == range.min || to == range.max) && from != to
+    return crossesZero || meetsEdge
+}
+
+/** One short platform tick — `SEGMENT_TICK`, for discrete points on a slider (`CLOCK_TICK` below API 34). */
+internal fun View.knobTick() {
+    performHapticFeedback(
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            HapticFeedbackConstants.SEGMENT_TICK
+        } else {
+            HapticFeedbackConstants.CLOCK_TICK
+        },
+    )
+}
+
+/**
  * The ranged pair field, its four pole words outside it.
  *
  * [exactValuesLabel] is the field's non-drag route (audit K10.1): a custom
- * accessibility action that asks the host to swap the field for two
- * tracks — `Set exact values for #coastroad` — since a two-axis drag is not
- * an input a reader who never touches the drawing can perform.
+ * accessibility action that asks the host for the alternates — `Set exact
+ * values for #coastroad` on a sheet, `Choose your opinion on this post` on
+ * the opinion pad — since a two-axis drag is not an input a reader who never
+ * touches the drawing can perform.
+ *
+ * [held] draws the knob's pressed layer for a board, as the master's `held`
+ * does; a live drag draws it on its own. [node] is the placer's name for the
+ * whole field (the open pad's `field`); its value space wears `square`.
  */
 @Composable
 fun PairField(
@@ -179,14 +225,29 @@ fun PairField(
     onExactValues: () -> Unit,
     modifier: Modifier = Modifier,
     testTag: String = "pair_field",
+    enabled: Boolean = true,
+    held: Boolean = false,
+    node: DataNode? = null,
 ) {
-    val held = remember { mutableStateOf(false) }
+    val pressed = remember { mutableStateOf(false) }
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .dataNode(node)
             .padding(horizontal = PAIR_GUTTER_X, vertical = PAIR_GUTTER_Y),
     ) {
-        PairSquare(value, onValueChange, ranges, axes, exactValuesLabel, onExactValues, held, testTag)
+        PairSquare(
+            value = value,
+            onValueChange = onValueChange,
+            ranges = ranges,
+            axes = axes,
+            exactValuesLabel = exactValuesLabel,
+            onExactValues = onExactValues,
+            pressed = pressed,
+            layered = held || pressed.value,
+            enabled = enabled,
+            testTag = node?.div("square")?.tag ?: testTag,
+        )
     }
 }
 
@@ -198,7 +259,9 @@ private fun PairSquare(
     axes: PairAxes,
     exactValuesLabel: String,
     onExactValues: () -> Unit,
-    held: MutableState<Boolean>,
+    pressed: MutableState<Boolean>,
+    layered: Boolean,
+    enabled: Boolean,
     testTag: String,
 ) {
     val ground = MaterialTheme.colorScheme.surfaceContainerHighest
@@ -206,14 +269,20 @@ private fun PairSquare(
     val knob = MaterialTheme.colorScheme.primaryContainer
     val standing = rememberUpdatedState(value)
     val report = rememberUpdatedState(onValueChange)
-    val pressed by held
+    val view = LocalView.current
     val reading = "${axes.directed} ${twoPlaces(value.directed)}, ${axes.interest} ${twoPlaces(value.interest)}"
     Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .pairGesture(knobTravelInset(), standing, report, held, ranges)
+                .then(
+                    if (enabled) {
+                        Modifier.pairGesture(knobTravelInset(), standing, report, pressed, ranges, view)
+                    } else {
+                        Modifier
+                    },
+                )
                 .semantics {
                     contentDescription = "${axes.directed}, ${axes.interest}"
                     stateDescription = reading
@@ -226,7 +295,7 @@ private fun PairSquare(
                 }
                 .testTag(testTag),
         ) {
-            drawPairField(value, pressed, ranges, ground, dead, knob, knobTravelInset().toPx())
+            drawPairField(value, layered, ranges, ground, dead, knob, knobTravelInset().toPx())
         }
         PairPole(axes.left, Alignment.CenterStart, -PAIR_GUTTER_X, TextAlign.End)
         PairPole(axes.right, Alignment.CenterEnd, PAIR_GUTTER_X, TextAlign.Start)
@@ -252,13 +321,13 @@ private fun BoxScope.PairPole(text: String, at: Alignment, dx: Dp, align: TextAl
             // Measured inside the field's box, so its alignment is the
             // field's own edge, then drawn shifted out into its gutter.
             .offset(x = dx, y = dy)
-            .clearAndSetSemantics { },
+            .semantics { hideFromAccessibility() },
     )
 }
 
 private fun DrawScope.drawPairField(
     value: PairPoint,
-    pressed: Boolean,
+    layered: Boolean,
     ranges: PairRanges,
     ground: Color,
     dead: Color,
@@ -277,7 +346,10 @@ private fun DrawScope.drawPairField(
         drawLine(dead, Offset(x, 0f), Offset(x, size.height), strokeWidth = stroke)
     }
     val at = pairKnobAt(value, size.width, insetPx, ranges)
-    if (pressed) {
+    // The pressed state layer (the K13 round): a 40dp disc in the knob's own
+    // colour at the press opacity, for as long as the pointer is down — a
+    // layer, never a scale.
+    if (layered) {
         drawCircle(color = knob.copy(alpha = PAIR_PRESS_ALPHA), radius = PAIR_KNOB_LAYER_RADIUS.toPx(), center = at)
     }
     drawCircle(color = knob, radius = KNOB_RADIUS.toPx(), center = at)
@@ -285,7 +357,8 @@ private fun DrawScope.drawPairField(
 
 /**
  * **The field owns its pointers**: the down and every move are consumed,
- * so a drag on the field moves the knob and never the sheet it stands on.
+ * so a drag on the field moves the knob and never the sheet — or the
+ * scrolling pad — it stands on.
  */
 private fun Modifier.pairGesture(
     inset: Dp,
@@ -293,6 +366,7 @@ private fun Modifier.pairGesture(
     onValueChange: State<(PairPoint) -> Unit>,
     held: MutableState<Boolean>,
     ranges: PairRanges,
+    view: View,
 ): Modifier = pointerInput(inset, ranges) {
     awaitEachGesture {
         val down = awaitFirstDown(requireUnconsumed = false)
@@ -301,12 +375,26 @@ private fun Modifier.pairGesture(
         val base = value.value
         val half = pairHalfExtent(size.width.toFloat(), inset.toPx())
         var travel = Offset.Zero
+        var travelled = false
+        var last = base
         try {
             drag(down.id) { change ->
                 travel += change.positionChange()
                 change.consume()
-                onValueChange.value(pairFrom(base, travel, half, ranges))
+                travelled = true
+                val next = pairFrom(base, travel, half, ranges)
+                if (ticksAlong(last.directed, next.directed, ranges.directed) ||
+                    ticksAlong(last.interest, next.interest, ranges.interest)
+                ) {
+                    view.knobTick()
+                }
+                last = next
+                onValueChange.value(next)
             }
+            // The lift lands the pair on the hundredths grid inside the
+            // field's reach (the value domain, jakob 2026-10-20) — a tag's
+            // relevance never below its floor. A tap moves nothing.
+            if (travelled) onValueChange.value(pairReleased(base, travel, half, ranges))
         } finally {
             held.value = false
         }

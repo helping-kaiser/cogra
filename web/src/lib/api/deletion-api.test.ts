@@ -1,5 +1,5 @@
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -10,7 +10,7 @@ import {
   requestAccountDeletion,
 } from "./deletion-api";
 import { hasCode } from "./outcome";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 
 const server = startMswServer();
 
@@ -34,7 +34,7 @@ function answers(
   { userErrors = [] as object[], seen = [] as unknown[] } = {},
 ) {
   const field = operation.charAt(0).toLowerCase() + operation.slice(1);
-  return graphql.mutation(operation, ({ variables }) => {
+  return gqlLink.mutation(operation, ({ variables }) => {
     seen.push(variables.input);
     return HttpResponse.json({
       data: { [field]: { __typename: "AccountDeletionPayload", accountDeletion, userErrors } },
@@ -45,7 +45,7 @@ function answers(
 describe("fetchDeletionStanding", () => {
   it("reads_the_servers_path_and_the_grace", async () => {
     server.use(
-      graphql.query("AccountDeletion", () =>
+      gqlLink.query("AccountDeletion", () =>
         HttpResponse.json({
           data: { me: { __typename: "User", id: "u1", deletionPath: "BY_LINK", accountDeletion: DELETION } },
         }),
@@ -59,7 +59,7 @@ describe("fetchDeletionStanding", () => {
   });
 
   it("reads_no_viewer_as_unauthenticated", async () => {
-    server.use(graphql.query("AccountDeletion", () => HttpResponse.json({ data: { me: null } })));
+    server.use(gqlLink.query("AccountDeletion", () => HttpResponse.json({ data: { me: null } })));
     expect(hasCode(await fetchDeletionStanding(client()), "UNAUTHENTICATED")).toBe(true);
   });
 });
@@ -74,7 +74,7 @@ describe("requestAccountDeletion", () => {
 
   it("lifts_a_spent_budget_to_rate_limited", async () => {
     server.use(
-      graphql.mutation("RequestAccountDeletion", () =>
+      gqlLink.mutation("RequestAccountDeletion", () =>
         HttpResponse.json({ errors: [{ message: "slow down", extensions: { code: "RATE_LIMITED" } }] }),
       ),
     );
@@ -116,7 +116,7 @@ describe("cancelAccountDeletion", () => {
 describe("deleteApplicantAccount", () => {
   it("answers_ok", async () => {
     server.use(
-      graphql.mutation("DeleteApplicantAccount", () =>
+      gqlLink.mutation("DeleteApplicantAccount", () =>
         HttpResponse.json({
           data: { deleteApplicantAccount: { __typename: "DeleteApplicantAccountPayload", ok: true, userErrors: [] } },
         }),
@@ -127,7 +127,7 @@ describe("deleteApplicantAccount", () => {
 
   it("lifts_a_funded_applicants_forbidden", async () => {
     server.use(
-      graphql.mutation("DeleteApplicantAccount", () =>
+      gqlLink.mutation("DeleteApplicantAccount", () =>
         HttpResponse.json({ errors: [{ message: "no", extensions: { code: "FORBIDDEN" } }] }),
       ),
     );

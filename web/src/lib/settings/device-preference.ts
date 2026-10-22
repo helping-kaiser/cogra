@@ -10,7 +10,7 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
-import { THEME_STORAGE_KEY } from "./theme-boot";
+import { EXACT_VALUES_STORAGE_KEY, THEME_STORAGE_KEY } from "./theme-boot";
 
 type Preference<T extends string> = {
   read(): T;
@@ -70,13 +70,30 @@ export const themePreference = devicePreference<ThemeChoice>(
 
 /**
  * Show exact values (Settings.md: Reading) — off by default, because
- * glyph-first is the product's default. The stance and feed surfaces read it.
+ * glyph-first is the product's default. Nothing reads it directly: it lands
+ * on the document as `data-geek` (`applyExactValues`, `GeekModeSync`), and
+ * one stylesheet rule decides whether every `.cg-exact` span paints.
  */
 export const exactValuesPreference = devicePreference<"on" | "off">(
-  "cogra.exactValues",
+  EXACT_VALUES_STORAGE_KEY,
   ["on", "off"],
   "off",
 );
+
+/**
+ * THE MODE AS THE DOCUMENT CARRIES IT (design/readme.md §13, "One markup,
+ * two paintings"): `data-geek="on"` on the screen root, and its absence is
+ * the glyph-first default. The rule `:root:not([data-geek="on"]) .cg-exact`
+ * hides the digits; every marked span keeps a screen-reader twin, so nothing
+ * spoken depends on the mode.
+ */
+export function applyExactValues(
+  value: "on" | "off",
+  root: HTMLElement = document.documentElement,
+) {
+  if (value === "on") root.dataset.geek = "on";
+  else delete root.dataset.geek;
+}
 
 /**
  * The theme as the document carries it: `data-theme` names a chosen theme,

@@ -34,6 +34,10 @@ WHEN tap Set GIVEN the asker is not fully registered yet -> the application is s
 
 WHEN the asker finishes registering GIVEN a vouch was kept as a kept approval -> it signs only through the approval pad opened from its row on Invites AND NEVER with the kept picks' Sign them
 
+WHEN tap Set GIVEN the pick lands at exactly (0, 0) -> the dialog Sign an empty opinion? opens over the pad, which stays parked beneath it, its first line the vouch-in warning, as EmptySignConfirm draws it under its vouchIn chip AND NEVER the dialog Walk it all back? opens AND NEVER the pick is refused
+
+WHEN tap Set it anyway in that dialog -> the vouch lands as Set lands it AND the person is vouched in, starting out cut off AND NEVER the act is blocked
+
 WHEN tap Set GIVEN the signing does not go through -> the pad stays open at the pick, the fault above the commit row and Retry in Set's place, as PadFailed draws it
 
 WHEN tap Set GIVEN the write rule refuses -> nothing is staged or spent AND the notice stands where the landing line and Set were, with Not now, as PadWriteRule draws it

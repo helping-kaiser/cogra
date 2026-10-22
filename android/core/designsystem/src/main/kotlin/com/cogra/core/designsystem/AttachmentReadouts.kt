@@ -5,7 +5,7 @@
 // The BACKING an author signs with their own content is one number:
 // Publish carries the attachment on `p_d`, and the census pins `p_i` at 1,
 // so a pair would draw a second figure nobody can choose. Every face here
-// reads through the one-axis table, 🤷 at exactly 0.00
+// reads through the one-axis table, 🤔 at exactly 0.00
 // ([nearestValenceAnchor]). Backing is the authoring bundle; OPINION is
 // the face's record, a pair, read by the ordinary stance readouts — the
 // two words never trade places (copy-voice "What an author signs with
@@ -64,10 +64,10 @@ fun attachmentLanding(rawSum: Double, pick: Double): AttachmentLanding {
 /**
  * `Walk it all back`: the pick that parks at the raw sum's opposite,
  * clipped to the strip (EditPad.md). Within ±1 it lands the backing at
- * exactly 0.00; past it, as far as one record reaches — the rest another
- * edit's.
+ * 0.00; past it, as far as one record reaches — the rest another edit's. A
+ * parked pick is a pick, so it lands on the hundredths grid like a release.
  */
-fun walkBackPick(rawSum: Double): Double = (-rawSum).coerceIn(-1.0, 1.0) + 0.0
+fun walkBackPick(rawSum: Double): Double = hundredth(-rawSum)
 
 /**
  * The seal's and an edit's `Your backing` row value: the face and the one
@@ -103,16 +103,16 @@ fun AttachmentReadout(pDirected: Double, modifier: Modifier = Modifier, testTag:
 }
 
 /**
- * What a backing read says while the server has not served it: the
- * current backing, or the raw sum a landing folds from. A placeholder,
- * not a reading — drawn as a bare dash and spoken as unread.
+ * What a backing read says: the current backing, or the raw sum a landing
+ * folds from — or, when the read served none or failed, a placeholder,
+ * not a reading, drawn as a bare dash and spoken as unread.
  */
 @Immutable
 sealed interface BackingValue {
     /** The bundle's net, as read. */
     data class Read(val value: Double) : BackingValue
 
-    /** Not served (yet): nothing to fold from. */
+    /** Not served, or the read failed: nothing to fold from. */
     data object Unread : BackingValue
 }
 

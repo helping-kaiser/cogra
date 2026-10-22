@@ -319,9 +319,9 @@ class PostEditViewModelTest {
         assertThat(actsSheetTitle(vm.state.value.signedActionCount)).isEqualTo("2 things, signed together")
         vm.signed()
         assertThat(content.editCalls).isEqualTo(1)
-        // The un-tag signs the confidence the removed chip showed (0.6) —
-        // relevance is the only value a removal moves; the wire fills nothing.
-        assertThat(topics.calls).containsExactly(TagCall(TEST_POST_ID, "wasm", PostEditViewModel.WITHDRAWN, 0.6))
+        // The un-tag signs (0,0) whatever the removed chip showed (hashtag.md §4)
+        // — the wire fills nothing in.
+        assertThat(topics.calls).containsExactly(TagCall(TEST_POST_ID, "wasm", 0.0, 0.0))
         assertThat(vm.state.value.saved).isTrue()
     }
 
@@ -568,6 +568,9 @@ class PostEditViewModelTest {
         assertThat(vm.state.value.backingPadOpen).isFalse()
         assertThat(vm.state.value.pick).isEqualTo(0.3)
         assertThat(vm.state.value.signedActionCount).isEqualTo(1)
+        // EditPad.md (round 18): a pick alone filling the batch reads the
+        // new version's one record.
+        assertThat(actsFooterLine(vm.state.value.signedActionCount)).isEqualTo("You're signing 1 thing")
         vm.signed()
         assertThat(content.lastEditPick).isEqualTo(0.3)
         assertThat(content.lastEdit).containsExactly(TEST_POST_ID, "Loaded title", null, "Loaded body").inOrder()
@@ -595,6 +598,36 @@ class PostEditViewModelTest {
         assertThat(vm.state.value.backingPadOpen).isFalse()
         assertThat(vm.state.value.pick).isEqualTo(0.0)
         assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+    }
+
+    // EditPad.md: the pick parks on a hundredth, so a pick that READS 0.00 is
+    // 0 and adds no record. The bug this pins: 0.004 printed +0.00 and still
+    // filled the batch with a record.
+    @Test
+    fun aSetThatReadsZeroIsZeroAndAddsNoGhostRecord() = runTest(dispatcher) {
+        val vm = opened()
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(0.004)
+        vm.onSetBacking()
+        assertThat(vm.state.value.pick).isEqualTo(0.0)
+        assertThat(vm.state.value.recordStaged).isFalse()
+        assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(-0.0049)
+        vm.onSetBacking()
+        // Truth compares doubles by `equals`, which tells −0 from +0.
+        assertThat(vm.state.value.pick).isEqualTo(0.0)
+        assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+    }
+
+    @Test
+    fun aSetLandsThePickOnTheHundredthsGrid() = runTest(dispatcher) {
+        val vm = opened()
+        vm.onOpenBackingPad()
+        vm.onBackingPickChange(0.4371)
+        vm.onSetBacking()
+        assertThat(vm.state.value.pick).isEqualTo(0.44)
     }
 
     @Test
@@ -658,8 +691,25 @@ class PostEditViewModelTest {
         assertThat(vm.state.value.stagedPick).isEqualTo(0.2)
     }
 
-    // SERVER GAP (seam 233): nothing serves the backing yet. The edit stands
-    // without it — unread readouts, a greyed walk-back — and never guesses.
+    // Two +1.00 edits over the mint: the raw sum is past the axis, the net
+    // clipped, and one walk-back reaches only as far as one record can.
+    @Test
+    fun aBackingPastTheAxisReadsClippedOverItsRawSum() = runTest(dispatcher) {
+        content.backingOutcome = Outcome.Success(PostBacking(net = 1.0, rawSum = 2.0))
+        val vm = opened()
+        assertThat(vm.state.value.backingCurrent).isEqualTo(BackingValue.Read(1.0))
+        assertThat(vm.state.value.backingRaw).isEqualTo(BackingValue.Read(2.0))
+        assertThat(vm.state.value.backingWithEdit).isEqualTo(BackingValue.Read(1.0))
+        vm.onOpenBackingPad()
+        vm.onWalkBack()
+        vm.onSetBacking()
+        assertThat(vm.state.value.pick).isEqualTo(-1.0)
+        assertThat(vm.state.value.backingWithEdit).isEqualTo(BackingValue.Read(1.0))
+    }
+
+    // No backing served — the server answers only the post's creator. The
+    // edit stands without it — unread readouts, a greyed walk-back — and
+    // never guesses.
     @Test
     fun anUnservedBackingReadsUnreadAndGreysTheWalkBack() = runTest(dispatcher) {
         val vm = opened()
@@ -679,5 +729,17 @@ class PostEditViewModelTest {
         vm.onTitleChange("Retitled")
         vm.signed()
         assertThat(vm.state.value.saved).isTrue()
+    }
+
+    // A refusal the guard could not replay away reads as unread too — never
+    // as the post missing: the backing is beside the edit, not in its way.
+    @Test
+    fun aRefusedBackingReadNeverBlocksTheEdit() = runTest(dispatcher) {
+        content.backingOutcome = Outcome.Refused(listOf(UserError(ErrorCode.UNAUTHENTICATED, "no viewer")))
+        val vm = opened()
+        assertThat(vm.state.value.notFound).isFalse()
+        assertThat(vm.state.value.title).isEqualTo("Loaded title")
+        assertThat(vm.state.value.backingCurrent).isEqualTo(BackingValue.Unread)
+        assertThat(vm.state.value.canWalkBack).isFalse()
     }
 }

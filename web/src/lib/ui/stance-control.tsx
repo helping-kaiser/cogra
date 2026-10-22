@@ -1,108 +1,123 @@
 "use client";
 
-// CoGra's signature interaction (design.md §8), on the web.
+// CoGra's signature interaction, on the web — the master is
+// `design/components/stance/StanceControl.jsx` (with `StancePad.jsx` and
+// `StanceReadout.jsx`), and its behaviour lines are PadStanding.md,
+// PadFailed.md, PadWriteRule.md, RowSigning.md and RowWriteRule.md.
 //
-// AT REST (§8.3) the target shows the standing: a viewer with a bundle
-// toward the thing sees its face, its words, and its folded pair on the
-// target itself; a viewer without one sees a MUTED, TRANSLUCENT FACE —
-// the same control at rest, visibly waiting to be given a value, never a
-// bare word. The bundle is already loaded by the read that rendered the
-// surface (§8.2), so showing it costs nothing and is the difference
-// between a control and a mystery button.
+// AT REST the target shows the opinion: the face, with the exact pair beside
+// it in a `cg-exact` span that paints only in geek mode (readme §13). No
+// opinion yet is a muted, translucent 🫥 — never a bare word, never the 🤷 a
+// zero opinion owns. The anchor's words are never drawn; they ride the
+// button's accessible name, in both modes.
 //
-// A TAP OPENS THE PAD (design/guidelines/stance-control.md "The
-// gesture") and stages nothing. The pad blooms at ONE FIXED SPOT, the
-// lower centre of the viewport, the same place every time
-// (`pad-parking.ts`), and it opens AT THE DEFAULT, +0.10 / +0.10, so Set
-// on a pick never moved signs exactly what the hold would. A drag on the
-// field moves the knob by the accumulated travel from where the thumb
-// went down, so the finger's absolute position never matters, and the
-// drawn field is the value space — the knob never leaves it
-// (`pad-geometry.ts`).
+// A TAP OPENS THE PAD and stages nothing. It blooms at ONE FIXED SPOT, the
+// lower centre of the viewport, 16px above the bottom bar where one stands
+// (`pad-parking.ts`), over the wash, and opens AT THE DEFAULT, +0.10 / +0.10,
+// so Set on a pick never moved signs exactly what the hold would. The field
+// is the master `StancePad` (`PairField`): the four pole words in gutters
+// outside it, the dead-ground hairlines inside, and a 20px knob that moves by
+// the accumulated travel from where the finger went down, wearing the pressed
+// layer while held.
 //
-// PRESS AND HOLD 500ms SIGNS THE DEFAULT, the modest positive verbatim,
-// without opening anything. The light gesture costs nothing and the held
-// one spends: a tap is what a thumb gives by accident, so it opens the
-// surface where a reader chooses; nobody holds a control for half a
-// second by mistake. THE HOLD ANSWERS IMMEDIATELY (§8.3): the resting
-// target moves to the pending-inclusive fold the moment the projection
-// comes back — that number is the backend's, never arithmetic done here
-// — and a snackbar confirms the signature. A gesture that stages a
-// priced act must never be silent: silence reads as failure and invites
-// the same act again.
+// PRESS AND HOLD 500ms SIGNS THE DEFAULT, without opening anything. A ring
+// fills around the face over the 500ms so the reader sees the threshold
+// coming. The light gesture costs nothing and the held one spends.
 //
-// THE PAD IS THE TEACHER (stance-control.md "Teaching it"). The
-// account's first-ever pad open carries two coaching lines — the
-// press-and-hold shortcut, and that nothing is signed until Set — and
-// they close with the pad and never show again. Nothing else teaches it.
+// A SIGNED ACT WAITS FOR ITS SIGNATURE (the failure pack). Set keeps the pad
+// open: past 200ms it reads `Setting…` and goes inert, never dimmed; a
+// failure keeps the pad at the pick with the fault above the commit row and
+// an outlined `Retry` in Set's slot; the write rule's refusal is a notice
+// where the landing line and the commit row stood, with `Not now`. A hold
+// moves the face only once signed: past 200ms the row says `Signing…`, and a
+// failure says `That didn't sign.` with Retry. Never a snackbar for a failure.
 //
-// RELEASING THE FINGER NEVER COMMITS (§8.3). The pad is a considered
-// surface: release leaves the pick standing and the pad open, an
-// explicit SET commits, and CANCEL — or a press outside — dismisses and
-// stages nothing. An accidental lift must never sign a priced act. The
-// small `?` replaces the pad's body with four lines of help, and Set is
-// disabled while they show.
+// THE PAD IS THE TEACHER: the account's first-ever open carries the two
+// coaching lines, and they close with the pad and never show again.
 //
-// THE CONTROL OWNS ITS TOUCHES (§8.3). Nothing it receives — tap, hold,
-// drag, release, or the open pad itself — reaches the surface underneath:
-// opening the pad must never also open the post, and dismissing it must
-// never navigate. One gesture, one meaning. The wrapper stops the
-// propagation, so that is a property of the control rather than of where
-// a host happens to place it.
+// RELEASING THE FINGER NEVER COMMITS. Release parks the pick; Set signs it;
+// Cancel, a press on the wash, or Escape stages nothing. The walk-back — and a
+// pick that nets the bundle to (0, 0) — asks over the parked pad, so `Keep
+// it` returns to the pick as it was.
 //
-// What it writes (§8.1): exactly the pair picked. There is no delta in
-// this file. The current standing is a READ, rendered around the field
-// and never folded into the value. The LANDING is folded here — locally,
-// from the raw sums the same read served, so it keeps up with the drag
-// (`landing.ts`) — but it is display only: `commitChecked` asks the
-// backend for the authoritative projection before anything is signed.
+// A (0, 0) WITH NOTHING STANDING IS NOT A WALK-BACK (jakob 2026-10-21, seam
+// 242/243). A pick landing (0, 0) while the bundle holds no record, or is
+// already walked back, has nothing to walk back: it asks `EmptySignConfirm`
+// over the parked pad instead, and `Set it anyway` signs the one record like
+// any other — it counts, the bundle stays at (0, 0) unsevered, and the
+// ordinary snackbar answers. An ask, never a block. Where the opinion vouches
+// its target in (`vouchesIn`), the ask warns harder and the act proceeds.
 //
-// What it never does (§8.2): prevent a choice. The whole square is
-// reachable, corners included. A pick that nets the bundle to (0, 0) is
-// confirmed rather than refused, through the same dialog the explicit
-// severance gesture uses.
+// THE CONTROL OWNS ITS TOUCHES: nothing it receives — the open pad included,
+// which is portalled to the document so its wash covers the band and the bar
+// — reaches the card behind it.
 //
-// Pointer Events carry mouse, touch, and pen through one set of handlers
-// — the platform's own unification, so there is no second touch path to
-// keep in sync. `touch-action: none` is what stops the browser from
-// claiming the drag as a scroll, pointer capture is what keeps the
-// events coming after the finger leaves the element it started on, and
-// suppressing the callout is what stops a long press from becoming a
-// context menu instead of a gesture.
+// What it writes: exactly the pair picked. There is no delta in this file.
+// The landing is folded here, locally, from the served raw sums so it keeps up
+// with the drag (`landing.ts`) — display only: the projection the backend
+// serves is what answers before anything is signed.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffectEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
+import Link from "next/link";
+import { createPortal } from "react-dom";
 
+import { hasCode } from "@/lib/api/outcome";
 import { useStanceInputMode } from "@/lib/stance/input-mode";
-import { bundleReadout, RESTING_FACE_EMOJI } from "@/lib/stance/anchors";
+import { bundleReadout, EMPTY_PICK_LABEL, RESTING_FACE_EMOJI } from "@/lib/stance/anchors";
+import { useKeptPick } from "@/lib/stance/kept-picks";
 import { localLanding } from "@/lib/stance/landing";
 import { ORIGIN, TAP_DEFAULT, type StancePair } from "@/lib/stance/model";
-import { KNOB_TRAVEL_INSET_PX, padPairFrom, padPercentOf } from "@/lib/stance/pad-geometry";
+import { STANCE_RANGES } from "@/lib/stance/pad-geometry";
 import { useStanceData } from "@/lib/stance/provider";
 import { announceStanceSigned } from "@/lib/stance/signed-events";
 import { useStanceTaught } from "@/lib/stance/stance-coach";
 import type { StanceBundle, StanceLanding, StanceTargetRef } from "@/lib/stance/stance-data";
-import { useAuthPhase } from "@/lib/session/provider";
-import { buttonClassName } from "@/lib/ui/button";
+import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
+import { BUTTON_CLASS, buttonClassName } from "@/lib/ui/button";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
-import { parkedPadStyle } from "@/lib/ui/pad-parking";
+import {
+  PAD_ABOVE_BAR_INSET_PX,
+  PAD_PARK_INSET_PX,
+  parkedPadStyle,
+  useBarBeneath,
+} from "@/lib/ui/pad-parking";
+import { EmptySignConfirm } from "@/lib/ui/empty-sign-confirm";
+import { PendingMarker } from "@/lib/ui/pending-marker";
+import { RowLine, type RowLineState } from "@/lib/ui/row-line";
 import { SeveranceConfirm } from "@/lib/ui/severance-confirm";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { StanceAlternates } from "@/lib/ui/stance-alternates";
-import { padHelp, StanceCoaching } from "@/lib/ui/stance-pad-help";
-import { formatStancePair, STANCE_AXES, type StanceAxes } from "@/lib/ui/stance-format";
+import { padHelp, StanceCoaching, unreachableHelp } from "@/lib/ui/stance-pad-help";
 import {
-  DISCONNECT_ZERO,
-  NO_STANDING_LABEL,
-  SEVERANCE_ZERO,
+  formatStancePair,
+  severanceWords,
+  STANCE_AXES,
+  type StanceAxes,
+} from "@/lib/ui/stance-format";
+import {
+  PICK_LABEL,
   signedLine,
   StanceLandingLine,
   StanceStanding,
   type BundleState,
 } from "@/lib/ui/stance-readout";
 import { TransportError } from "@/lib/ui/transport-error";
+import { PairField } from "@/lib/ui2/compose/pair-field";
 import { useCoversSurface } from "@/lib/ui2/covering-layer";
+import { HELP_TOPICS, HelpDialog, type HelpTopic } from "@/lib/ui2/help-dialog";
+import { HelpDot } from "@/lib/ui2/help-dot";
+import { pillClassName } from "@/lib/ui2/pill-button";
 
 /**
  * How long a press has to be held before it signs the default — the
@@ -110,6 +125,22 @@ import { useCoversSurface } from "@/lib/ui2/covering-layer";
  * the two clients ask the same thing of the same thumb.
  */
 export const LONG_PRESS_MS = 500;
+
+/**
+ * How long a signed act may stay unanswered before it says it is still
+ * working (PadStanding.md, RowSigning.md) — past it, Set reads `Setting…` and
+ * the row says `Signing…`, rather than looking ignored.
+ */
+export const SETTING_AFTER_MS = 200;
+
+/** The ordinary pad's `?` name (the master's `helpLabel` default, ruling A7). */
+export const PAD_HELP_LABEL = "How opinions work";
+
+/** The write rule's words at the pad's scale (copy-voice, *Faults by code*). */
+const WRITE_RULE_TITLE = "You can't sign right now";
+const WRITE_RULE_PAD_FACT =
+  "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent.";
+const WRITE_RULE_HELP = "Why signing waits";
 
 /** An open severance confirmation. A null pick is the explicit gesture. */
 type Confirming = {
@@ -123,15 +154,29 @@ type Confirming = {
 /** Everything reaching severance lands at the origin, by definition. */
 const SEVERED: StanceLanding = { landing: ORIGIN, inert: true, severed: true };
 
-/** A drag in progress: where the pointer went down, and the pick it started from. */
-type Drag = { x: number; y: number; base: StancePair };
+/**
+ * An open empty-sign ask: the pick that lands (0, 0) over nothing standing.
+ * Signed, it is an ORDINARY record — the fold at (0, 0), never severed.
+ */
+type EmptyAsk = {
+  pick: StancePair;
+  landing: StanceLanding;
+};
+
+/** Where a signed act was made — what re-raises its outcome. */
+type Origin = "pad" | "row" | "confirm" | "empty";
 
 /**
- * How long a Set may stay unanswered before it says it is still working
- * (VouchBackPad.md:31) — the 200ms of K4.2, past which a signed act waits
- * visibly rather than looking ignored.
+ * Where a TAKEN signing put the standing, and whether it walked it back —
+ * which word a (0, 0) resting face speaks until a fresh read replaces it.
  */
-export const SETTING_AFTER_MS = 200;
+type Pending = {
+  pair: StancePair;
+  severed: boolean;
+};
+
+/** What did not go through on a surface: a fault, or the write rule's notice. */
+type Fault = "failed" | "writeRule";
 
 /**
  * A PAD OPENED AS SOMETHING IN PARTICULAR — the vouch-back (VouchBackPad.md,
@@ -170,6 +215,63 @@ export type PadVariant = {
   readonly padInset?: number;
 };
 
+/* THE HOLD'S RING: M3's determinate circular indicator — a 40px circle, a
+   4px active stroke in `primary`, no track — drawn around the face from
+   twelve o'clock at the press, filling over the 500ms. Under reduced motion
+   it still fills: it is a reading of the time left (readme §4). */
+const HOLD_RING_PX = 40;
+const HOLD_RING_STROKE_PX = 4;
+
+function HoldRing({ testId }: { testId: string }) {
+  const r = (HOLD_RING_PX - HOLD_RING_STROKE_PX) / 2;
+  const circumference = Math.round(2 * Math.PI * r * 1000) / 1000;
+  return (
+    <svg
+      aria-hidden="true"
+      data-testid={testId}
+      width={HOLD_RING_PX}
+      height={HOLD_RING_PX}
+      viewBox={`0 0 ${HOLD_RING_PX} ${HOLD_RING_PX}`}
+      className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-90 overflow-visible"
+    >
+      <circle
+        cx={HOLD_RING_PX / 2}
+        cy={HOLD_RING_PX / 2}
+        r={r}
+        fill="none"
+        stroke="var(--primary)"
+        strokeWidth={HOLD_RING_STROKE_PX}
+        strokeLinecap="round"
+        strokeDasharray={circumference}
+        strokeDashoffset={circumference}
+      >
+        <animate
+          attributeName="stroke-dashoffset"
+          from={circumference}
+          to="0"
+          dur={`${LONG_PRESS_MS}ms`}
+          fill="freeze"
+        />
+      </circle>
+    </svg>
+  );
+}
+
+const subscribeNothing = () => () => {};
+
+/** Whether this render is in the browser — the portal needs a document. */
+function useInBrowser(): boolean {
+  return useSyncExternalStore(
+    subscribeNothing,
+    () => true,
+    () => false,
+  );
+}
+
+/** What can take focus inside the pad, for the Tab trap. */
+const FOCUSABLE =
+  'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export function StanceControl({
   target,
   bundle: suppliedBundle,
@@ -179,6 +281,8 @@ export function StanceControl({
   variant,
   padOnly,
   lineFaceInk,
+  borrowed = false,
+  vouchesIn = false,
 }: {
   target: StanceTargetRef;
   /**
@@ -197,10 +301,11 @@ export function StanceControl({
    */
   node?: DataNode;
   /**
-   * The record family's own words for the two slots it fills. The control
-   * owns the geometry; the family owns the words, and they are passed
-   * through unchanged to the readouts and the alternates alike so the
-   * drawn route and the accessible one never name the same axis two ways.
+   * The record family's own words for the two slots it fills, and its own
+   * way out (`severance`). The control owns the geometry; the family owns
+   * the words, passed through unchanged to the field, the readouts and the
+   * alternates alike, so the drawn route and the accessible one never name
+   * the same axis two ways.
    */
   axes?: StanceAxes;
   /** The pad opened as something in particular; see [PadVariant]. */
@@ -214,28 +319,34 @@ export function StanceControl({
   padOnly?: { readonly onClose: () => void };
   /**
    * THE VOUCH CARD'S EMPTY FACE IS A LINE FACE IN THE CARD'S INK
-   * (stance-control.md, jakob 2026-10-14; the master's `lineFaceInk`). The
-   * 🫥 emoji draws in its own fixed pale greys and cannot be tinted, so it
-   * never reads on the card's tertiary-container ground. The card's unset
-   * state is the line face, `sentiment_neutral`, drawn in the ink handed
-   * here at full opacity. Only the empty resting face is affected (a set
-   * stance keeps its own emoji); left out, every other host keeps the
-   * muted face.
+   * (stance-control.md, jakob 2026-10-14; the master's `lineFaceInk`). Only
+   * the empty resting face is affected (a set stance keeps its own emoji);
+   * left out, every other host keeps the muted face.
    */
   lineFaceInk?: string;
+  /**
+   * THE READER STILL BORROWS A VIEW (jakob 2026-10-20; the master's
+   * `borrowed`): an unreachable or severed landing then warns that the pick
+   * keeps the borrowed view. Warns, never blocks.
+   */
+  borrowed?: boolean;
+  /**
+   * THE OPINION VOUCHES ITS TARGET IN (jakob 2026-10-21; the master's
+   * `vouchesIn`): approving an applicant, or answering a vouch asked for. An
+   * empty sign there still vouches them in, so its ask warns that they start
+   * out cut off (`EmptySignConfirm`'s `vouchIn`), and `Set it anyway` is the
+   * act. Off by default — every other host renders exactly as before.
+   */
+  vouchesIn?: boolean;
 }) {
   const data = useStanceData();
   const phase = useAuthPhase();
+  const accountId = useActiveAccountId();
   const [mode] = useStanceInputMode();
   const [taught, teach] = useStanceTaught();
-
-  // TOPICS DISCONNECT; EVERYTHING ELSE SEVERS (copy-voice.md "the topic
-  // disconnects", jakob 2026-09-15) — the split is by record family, not
-  // by surface, so every stance kind but `"topic"` keeps the severance
-  // wording verbatim.
-  const isTopic = target.kind === "topic";
-  const zeroWords = isTopic ? DISCONNECT_ZERO : SEVERANCE_ZERO;
-  const severLabel = isTopic ? "Disconnect" : "Walk it back";
+  const barBeneath = useBarBeneath();
+  const inBrowser = useInBrowser();
+  const sever = severanceWords(axes);
 
   /**
    * The control's own read, once it has one. Wrapped rather than bare so
@@ -252,35 +363,52 @@ export function StanceControl({
   const [alternates, setAlternates] = useState(padOnly !== undefined && mode !== "pad");
   /** This open is the account's first-ever, so the pad carries the coaching lines. */
   const [coaching, setCoaching] = useState(padOnly !== undefined && mode === "pad" && !taught);
-  const [explaining, setExplaining] = useState(false);
-  const [pick, setPick] = useState<StancePair>(padOnly !== undefined ? TAP_DEFAULT : ORIGIN);
-  /** A variant's Set did not go through: the pad stays open at the pick (PadFailed). */
-  const [padFailed, setPadFailed] = useState(false);
-  /** A variant's Set has waited past [SETTING_AFTER_MS] (VouchBackPad.md:31). */
-  const [settingSlow, setSettingSlow] = useState(false);
+  /** False, the "?"'s help, or the unreachable landing's 🤔 explanation. */
+  const [explaining, setExplaining] = useState<false | "help" | "zero">(false);
+  const [pick, setPick] = useState<StancePair>(TAP_DEFAULT);
+  /** What did not go through from the open pad or the alternates. */
+  const [padFault, setPadFault] = useState<Fault | null>(null);
+  /** What did not go through from the hold, on the target's own row. */
+  const [rowLine, setRowLine] = useState<RowLineState | null>(null);
+  /** A signed act in flight, and where it was made. */
+  const [inFlight, setInFlight] = useState<Origin | null>(null);
+  /** The act in flight has waited past [SETTING_AFTER_MS]. */
+  const [slow, setSlow] = useState(false);
+  /** The face, ringed while a hold is under way. */
+  const [holding, setHolding] = useState(false);
   /**
-   * Where the gesture just put the standing, as the fold projected it.
-   * It holds the resting target until a fresh read replaces it, which is
-   * what makes the answer visible before the record lands (§8.3).
+   * Where a TAKEN signing put the standing, as the fold projected it. It
+   * holds the resting target until a fresh read replaces it — never before
+   * the signature is taken (RowSigning.md: "NEVER the face moves before").
    */
-  const [pending, setPending] = useState<StancePair | null>(null);
+  const [pending, setPending] = useState<Pending | null>(null);
   const [confirming, setConfirming] = useState<Confirming | null>(null);
   const [confirmFailed, setConfirmFailed] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [signed, setSigned] = useState<string | null>(null);
-  const [failed, setFailed] = useState(false);
+  const [emptyAsk, setEmptyAsk] = useState<EmptyAsk | null>(null);
+  const [emptyFailed, setEmptyFailed] = useState(false);
+  const [signed, setSigned] = useState<ReactNode | null>(null);
   const [joinPrompt, setJoinPrompt] = useState(false);
+  /** The dialog a notice's own "?" opens over the pad, if any. */
+  const [noticeHelp, setNoticeHelp] = useState<HelpTopic | null>(null);
+  /** The signing key is not on this device — null until asked. */
+  const [keyAbsent, setKeyAbsent] = useState<boolean | null>(null);
 
+  const busy = inFlight !== null;
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const fieldRef = useRef<HTMLDivElement>(null);
+  const padRef = useRef<HTMLDivElement>(null);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const slowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const suppressClick = useRef(false);
   /** The element holding the pointer capture, and the pointer it holds. */
   const captured = useRef<{ element: HTMLElement; pointerId: number } | null>(null);
-  const drag = useRef<Drag | null>(null);
   const bundleRead = useRef(0);
+  /** Whether the pad is open right now — read when an act in flight answers. */
+  const openRef = useRef(open || alternates);
 
   const considered = open || alternates;
+  useEffect(() => {
+    openRef.current = considered;
+  }, [considered]);
 
   // THE OPINION PAD PAUSES, IT DOES NOT SUSPEND (Feed.md:39/41,
   // PostDetailVideo.md:39/41): opening it pauses the playing clip on its
@@ -296,6 +424,20 @@ export function StanceControl({
     () => ({ id: target.id, kind: target.kind }),
     [target.id, target.kind],
   );
+
+  const [kept, keep] = useKeptPick(accountId, seamTarget);
+  // A kept pick asks once whether the key is back: the anchor wears it only
+  // while the key is still elsewhere (PadPending.md).
+  useEffect(() => {
+    if (kept === null) return undefined;
+    let live = true;
+    void data.keyOnDevice().then((present) => {
+      if (live) setKeyAbsent(!present);
+    });
+    return () => {
+      live = false;
+    };
+  }, [kept, data]);
 
   const readBundle = useCallback(
     (options: { fresh?: boolean } = {}) => {
@@ -339,28 +481,23 @@ export function StanceControl({
   }, [padOnly, taught, teach]);
 
   // Nothing this control started may answer after it is gone: an armed
-  // hold would open a pad on nothing, and an in-flight standing read
-  // would set state on an unmounted tree (past teardown, the document
-  // itself is gone). Bumping the generation drops every pending read.
+  // hold would sign on nothing, and an in-flight standing read would set
+  // state on an unmounted tree. Bumping the generation drops every read.
   useEffect(
     () => () => {
-      if (holdTimer.current !== null) {
-        clearTimeout(holdTimer.current);
-        holdTimer.current = null;
-      }
+      if (holdTimer.current !== null) clearTimeout(holdTimer.current);
+      if (slowTimer.current !== null) clearTimeout(slowTimer.current);
+      holdTimer.current = null;
+      slowTimer.current = null;
       bundleRead.current += 1;
     },
     [],
   );
 
   /**
-   * Where the pick lands the bundle, folded locally against the SERVED
-   * raw sums and recomputed on every pointer move (§8.3). There is no
-   * round trip on this path and so no lag: the read that rendered the
-   * surface already carried everything the fold needs.
-   *
-   * Null until the standing is known — a landing needs a bundle to land
-   * in, and guessing at one would be worse than saying so.
+   * Where the pick lands the bundle, folded locally against the SERVED raw
+   * sums and recomputed on every pointer move. Null until the standing is
+   * known — a landing needs a bundle to land in.
    */
   const landing: StanceLanding | null =
     !considered || bundle === undefined || bundle === null
@@ -372,12 +509,12 @@ export function StanceControl({
       clearTimeout(holdTimer.current);
       holdTimer.current = null;
     }
+    setHolding(false);
   };
 
   const releasePointer = useCallback(() => {
     const held = captured.current;
     captured.current = null;
-    drag.current = null;
     if (held === null) return;
     if (
       typeof held.element.releasePointerCapture === "function" &&
@@ -387,184 +524,263 @@ export function StanceControl({
     }
   }, []);
 
-  const capturePointer = (element: HTMLElement | null, pointerId: number) => {
-    if (element === null || typeof element.setPointerCapture !== "function") return;
-    element.setPointerCapture(pointerId);
-    captured.current = { element, pointerId };
-  };
-
-  const closeAll = useCallback(() => {
+  /** Closes the pad and the alternates without telling a pad-only host. */
+  const closeSurfaces = () => {
     releasePointer();
-    clearHold();
     setOpen(false);
     setAlternates(false);
     setExplaining(false);
+    setPadFault(null);
     // The coaching lines close with the pad and never show again.
     setCoaching(false);
-    padOnly?.onClose();
-  }, [releasePointer, padOnly]);
+  };
 
-  // Escape cancels the open pad. The pad takes no focus of its own while
-  // a pointer is driving it, so the listener sits on the document rather
-  // than on a node the key would never reach.
+  /** Cancel, the wash, Escape: nothing is staged. */
+  const closeAll = () => {
+    releasePointer();
+    setOpen(false);
+    setAlternates(false);
+    setExplaining(false);
+    setPadFault(null);
+    setCoaching(false);
+    padOnly?.onClose();
+  };
+
+  // The Escape key's answer reads the latest state without re-subscribing
+  // the listener on every render (react.dev, `useEffectEvent`).
+  const onEscape = useEffectEvent(() => closeAll());
+
+  // Escape cancels the open pad — unless the walk-back's dialog stands over
+  // it, where Escape is that dialog's `Keep it` and the pad stays parked.
   useEffect(() => {
-    if (!open) return;
+    // Over the walk-back's dialog, the empty sign's ask or the write rule's
+    // help, Escape is that dialog's own way out, and the pad stays parked
+    // beneath it.
+    if (!open || confirming !== null || emptyAsk !== null || noticeHelp !== null) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
-      closeAll();
+      onEscape();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open, closeAll]);
+  }, [open, confirming, emptyAsk, noticeHelp]);
 
-  /** Signs the picked edge. Reports whether the gesture completed. */
-  const runCommit = async (chosen: StancePair, landed: StanceLanding): Promise<boolean> => {
-    setBusy(true);
-    const outcome = await data.commit(seamTarget, chosen);
-    setBusy(false);
-    if (outcome.kind !== "success") return false;
-    announceStanceSigned();
-    if (variant !== undefined) {
-      readBundle({ fresh: true });
-      variant.onTaken();
-      return true;
+  // THE PAD IS MODAL FOR ASSISTIVE TECH (PadStanding.md): opening moves
+  // focus into it — a pad-only host's first paint included — and closing
+  // returns it to the face that opened it.
+  const focusedIn = useRef(false);
+  useEffect(() => {
+    if (open && inBrowser && !focusedIn.current) {
+      padRef.current?.focus({ preventScroll: true });
+      focusedIn.current = true;
+    } else if (!open && focusedIn.current) {
+      buttonRef.current?.focus({ preventScroll: true });
+      focusedIn.current = false;
     }
-    setSigned(
-      signedLine(
-        landed.landing,
-        outcome.value.records,
-        landed.severed,
-        target.label,
-        axes,
-        zeroWords,
-      ),
-    );
-    readBundle({ fresh: true });
-    return true;
+  }, [open, inBrowser]);
+
+  /** Focus stays inside the pad while it is up. */
+  const trapTab = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "Tab") return;
+    const pad = padRef.current;
+    if (pad === null) return;
+    const focusables = [...pad.querySelectorAll<HTMLElement>(FOCUSABLE)];
+    if (focusables.length === 0) {
+      event.preventDefault();
+      return;
+    }
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = document.activeElement;
+    if (event.shiftKey && (active === first || active === pad)) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
   };
 
-  /** Signs the whole counter-record batch. Reports whether it completed. */
-  const runSever = async (): Promise<boolean> => {
-    // The walk-back is checked against the standing the reader confirmed;
-    // with none known there is nothing it could be checked against.
-    if (bundle === null || bundle === undefined) return false;
-    setBusy(true);
-    const outcome = await data.sever(seamTarget, bundle);
-    setBusy(false);
-    if (outcome.kind !== "success") return false;
+  /**
+   * Runs one signed act: inert at once, saying so past [SETTING_AFTER_MS].
+   */
+  const runInFlight = async <T,>(origin: Origin, work: () => Promise<T>): Promise<T> => {
+    setInFlight(origin);
+    setSlow(false);
+    slowTimer.current = setTimeout(() => setSlow(true), SETTING_AFTER_MS);
+    try {
+      return await work();
+    } finally {
+      if (slowTimer.current !== null) clearTimeout(slowTimer.current);
+      slowTimer.current = null;
+      setSlow(false);
+      setInFlight(null);
+    }
+  };
+
+  /** A signing was taken: the surfaces close and the face moves. */
+  const taken = (landed: StanceLanding, records: number) => {
     announceStanceSigned();
-    setSigned(
-      signedLine(SEVERED.landing, outcome.value.records, true, target.label, axes, zeroWords),
-    );
     readBundle({ fresh: true });
-    return true;
+    if (variant !== undefined) {
+      variant.onTaken();
+      return;
+    }
+    setPending({ pair: landed.landing, severed: landed.severed });
+    closeSurfaces();
+    setSigned(signedLine(landed.landing, records, landed.severed, target.label, axes));
   };
 
-  const openSeverance = () => {
-    closeAll();
+  /** A signing did not go through: its own surface re-raises it. */
+  const notTaken = (origin: Origin, fault: Fault) => {
+    if (origin === "confirm") {
+      setConfirmFailed(true);
+      return;
+    }
+    // A pad closed while its act was in flight has no surface left to
+    // re-raise: the target's row carries it, as a hold's would.
+    if (origin === "pad" && openRef.current) setPadFault(fault);
+    else
+      setRowLine(
+        fault === "failed"
+          ? { kind: "didntSign", onRetry: () => void signPick(TAP_DEFAULT, "row") }
+          : { kind: "writeRule" },
+      );
+  };
+
+  /**
+   * Every commit route lands here: read where the pick puts the bundle,
+   * and if the fold says that reaches (0, 0), ask over the parked pad
+   * rather than refusing (§8.2) — the walk-back's dialog over a standing,
+   * the empty sign's ask over nothing standing. Otherwise sign exactly the
+   * pick.
+   */
+  const signPick = async (chosen: StancePair, origin: "pad" | "row") => {
+    if (busy) return;
     setSigned(null);
-    setFailed(false);
+    setPadFault(null);
+    setRowLine(null);
+    setConfirmFailed(false);
+    setEmptyFailed(false);
+    const answer = await runInFlight(origin, async () => {
+      const landed = await data.project(seamTarget, chosen);
+      if (landed.kind !== "success") return { kind: "failed" as const };
+      const { standing, ...landing } = landed.value;
+      if (landing.severed) {
+        // THE LANDING'S `severed` IS THE PAIR ALONE (StanceProjection.severed):
+        // whether it walks something back is the standing's to say, read on
+        // the same round trip — no record, or already walked back, is
+        // nothing to walk back (jakob 2026-10-21).
+        const nothingStands = standing.records === 0 || standing.severed;
+        return { kind: nothingStands ? ("empty" as const) : ("severs" as const), landing };
+      }
+      const committed = await data.commit(seamTarget, chosen);
+      if (committed.kind === "success") {
+        return { kind: "taken" as const, landing, records: committed.value.records };
+      }
+      return { kind: hasCode(committed, "WRITE_RULE_FAILED") ? ("writeRule" as const) : ("failed" as const) };
+    });
+    switch (answer.kind) {
+      case "taken":
+        taken(answer.landing, answer.records);
+        return;
+      case "severs":
+        // Confirmed, never refused — one record, asked over the pad.
+        setConfirming({ pick: chosen, records: 1, alreadySevered: false, landing: answer.landing });
+        return;
+      case "empty":
+        // Asked, never blocked: an empty sign is an ordinary record, so the
+        // fold it leaves is (0, 0) and NOT severed.
+        setEmptyAsk({ pick: chosen, landing: { ...answer.landing, severed: false } });
+        return;
+      default:
+        notTaken(origin, answer.kind);
+    }
+  };
+
+  /**
+   * `Set it anyway`: the one empty record, signed like any Set. Taken, it is
+   * the ordinary path — the surfaces close, the face moves to 🤷 saying
+   * nothing, and the ordinary snackbar answers (EmptySignConfirm.md:27).
+   * Not taken, the ask stays up with the fault line and Retry (:33).
+   */
+  const onConfirmEmpty = async () => {
+    const asked = emptyAsk;
+    if (asked === null || busy) return;
+    setEmptyFailed(false);
+    const answer = await runInFlight("empty", async () => {
+      const outcome = await data.commit(seamTarget, asked.pick);
+      return outcome.kind === "success"
+        ? { kind: "taken" as const, records: outcome.value.records }
+        : { kind: "failed" as const };
+    });
+    if (answer.kind !== "taken") {
+      setEmptyFailed(true);
+      return;
+    }
+    setEmptyAsk(null);
+    taken(asked.landing, answer.records);
+  };
+
+  /** The explicit walk-back asks over the parked pad, and costs what it stages. */
+  const openSeverance = () => {
+    setSigned(null);
+    setPadFault(null);
     setConfirmFailed(false);
     const records = bundle === null || bundle === undefined ? 0 : bundle.severance.records;
     setConfirming({ pick: null, records, alreadySevered: records === 0, landing: SEVERED });
   };
 
-  /**
-   * Every commit route lands here: read where the pick puts the bundle,
-   * and if the fold says that reaches severance, say so and ask rather
-   * than refusing (§8.2). Otherwise the projection doubles as the
-   * pending-inclusive answer the resting target shows at once (§8.3).
-   *
-   * The backend's projection is the authority here even though the
-   * landing LINE is folded locally under the drag (§8.3): the line is
-   * display, and this is the moment a record gets signed.
-   */
-  const commitChecked = async (chosen: StancePair) => {
-    setSigned(null);
-    setFailed(false);
-    setConfirmFailed(false);
-    if (variant !== undefined) {
-      await commitInVariant(chosen);
-      return;
-    }
-    const landed = await data.project(seamTarget, chosen);
-    if (landed.kind !== "success") {
-      setFailed(true);
-      return;
-    }
-    closeAll();
-    if (landed.value.severed) {
-      setConfirming({ pick: chosen, records: 1, alreadySevered: false, landing: landed.value });
-      return;
-    }
-    setPending(landed.value.landing);
-    if (!(await runCommit(chosen, landed.value))) {
-      // Nothing was staged, so the target must not keep claiming it was.
-      setPending(null);
-      setFailed(true);
-    }
-  };
-
-  /**
-   * THE VARIANT SIGNS FROM INSIDE THE OPEN PAD. A taken signing leaves for
-   * the host's destination (the ceremony), so the pad has nothing to close
-   * back onto first; until then it stays parked at the pick, says it is
-   * still working past [SETTING_AFTER_MS] (VouchBackPad.md:31), and a
-   * signing that did not go through keeps it open at the same pick with
-   * the fault above the commit row and Retry in Set's slot (:37, PadFailed).
-   * From the hold, with no pad open, a failure is the row's own line.
-   */
-  const commitInVariant = async (chosen: StancePair) => {
-    setPadFailed(false);
-    setSettingSlow(false);
-    const slow = setTimeout(() => setSettingSlow(true), SETTING_AFTER_MS);
-    const fail = () => {
-      if (open) setPadFailed(true);
-      else setFailed(true);
-    };
-    try {
-      setBusy(true);
-      const landed = await data.project(seamTarget, chosen);
-      if (landed.kind !== "success") {
-        fail();
-        return;
-      }
-      if (landed.value.severed) {
-        // Asked rather than refused (§8.2); the pad stays parked beneath.
-        setConfirming({ pick: chosen, records: 1, alreadySevered: false, landing: landed.value });
-        return;
-      }
-      if (!(await runCommit(chosen, landed.value))) fail();
-    } finally {
-      clearTimeout(slow);
-      setSettingSlow(false);
-      setBusy(false);
-    }
-  };
-
   const onConfirmSeverance = async () => {
-    const pending = confirming;
-    if (pending === null) return;
+    const asked = confirming;
+    if (asked === null || busy) return;
     setConfirmFailed(false);
-    const completed =
-      pending.pick === null ? await runSever() : await runCommit(pending.pick, pending.landing);
-    // A failure keeps the dialog up and says so, rather than dropping the
-    // reader back to a control that looks like nothing happened.
-    if (completed) setConfirming(null);
-    else setConfirmFailed(true);
+    const answer = await runInFlight("confirm", async () => {
+      if (asked.pick === null) {
+        // The walk-back is checked against the standing the reader
+        // confirmed; with none known there is nothing to check against.
+        if (bundle === null || bundle === undefined) return { kind: "failed" as const };
+        const outcome = await data.sever(seamTarget, bundle);
+        return outcome.kind === "success"
+          ? { kind: "taken" as const, records: outcome.value.records }
+          : { kind: "failed" as const };
+      }
+      const outcome = await data.commit(seamTarget, asked.pick);
+      return outcome.kind === "success"
+        ? { kind: "taken" as const, records: outcome.value.records }
+        : { kind: "failed" as const };
+    });
+    if (answer.kind !== "taken") {
+      // The dialog stays up and says so, its confirm reading Retry.
+      notTaken("confirm", "failed");
+      return;
+    }
+    setConfirming(null);
+    if (asked.pick === null) {
+      announceStanceSigned();
+      readBundle({ fresh: true });
+      if (variant !== undefined) {
+        variant.onTaken();
+        return;
+      }
+      closeSurfaces();
+      setSigned(signedLine(SEVERED.landing, answer.records, true, target.label, axes));
+      return;
+    }
+    taken(asked.landing, answer.records);
   };
 
   /**
    * The considered surface opens AT THE DEFAULT (stance-control.md, jakob
-   * 2026-10-05): the hold's own modest positive, so Set on a pick never
-   * moved signs exactly what the hold would, and never a (0, 0) that asks
-   * to walk back nothing. Opening spends the teaching: whatever opens
-   * first is the first open ever, and only the pad carries the lines.
+   * 2026-10-05). Opening spends the teaching: whatever opens first is the
+   * first open ever, and only the pad carries the lines.
    */
-  const openConsidered = (surface: "pad" | "alternates") => {
-    setPick(TAP_DEFAULT);
+  const openConsidered = (surface: "pad" | "alternates", from: StancePair = TAP_DEFAULT) => {
+    setPick(from);
     setSigned(null);
-    setFailed(false);
+    setPadFault(null);
+    setRowLine(null);
+    setExplaining(false);
     if (surface === "pad") {
       setCoaching(!taught);
       setOpen(true);
@@ -587,7 +803,23 @@ export function StanceControl({
     }
     // The alternate replaces the pad everywhere (§8.6), the tap that
     // opens it included.
-    openConsidered(mode === "pad" ? "pad" : "alternates");
+    if (mode !== "pad") {
+      openConsidered("alternates");
+      return;
+    }
+    // A KEPT PICK REOPENS HOLDING ITSELF while the key is still elsewhere
+    // (PadPending.md); otherwise the pad blooms at the default.
+    openConsidered("pad", kept !== null && keyAbsent === true ? kept : TAP_DEFAULT);
+    askForKey();
+  };
+
+  /**
+   * WHETHER THE KEY IS HERE is asked as the pad opens, never before: the
+   * pad blooms at once and, where the key is elsewhere, the key notice takes
+   * the landing line's and the commit row's place (PadKeyAbsent.md).
+   */
+  const askForKey = () => {
+    void data.keyOnDevice().then((present) => setKeyAbsent(!present));
   };
 
   /**
@@ -601,43 +833,36 @@ export function StanceControl({
     suppressClick.current = false;
     if (phase !== "signedIn" || busy) return;
     clearHold();
-    // Captured, so the lift always reaches the target that armed the
-    // hold: a finger that slides off and lets go must disarm it, never
-    // leave it running to sign after the touch is over.
-    capturePointer(event.currentTarget, event.pointerId);
+    // Captured, so the lift always reaches the target that armed the hold:
+    // a finger that slides off and lets go must disarm it.
+    const element = event.currentTarget;
+    if (typeof element.setPointerCapture === "function") {
+      element.setPointerCapture(event.pointerId);
+      captured.current = { element, pointerId: event.pointerId };
+    }
+    setHolding(true);
     holdTimer.current = setTimeout(() => {
       holdTimer.current = null;
+      setHolding(false);
       suppressClick.current = true;
-      // The anchor goes inert AT the hold, not once the projection has
-      // answered: a second press in that gap must not arm a second
-      // signature (stance-control.md "Confirmation").
-      setBusy(true);
-      void commitChecked(TAP_DEFAULT).finally(() => setBusy(false));
+      // WITH THE KEY ELSEWHERE THE HOLD OPENS THE PAD, as a tap does, and
+      // signs nothing (PadKeyAbsent.md) — a held finger cannot spend a
+      // signature this device cannot give.
+      void data.keyOnDevice().then((present) => {
+        if (present) {
+          void signPick(TAP_DEFAULT, "row");
+          return;
+        }
+        setKeyAbsent(true);
+        if (mode === "pad") openConsidered("pad", kept ?? TAP_DEFAULT);
+        else openConsidered("alternates");
+      });
     }, LONG_PRESS_MS);
-  };
-
-  /** One rule for how a finger moves the knob, wherever the drag began. */
-  const trackDrag = (clientX: number, clientY: number) => {
-    const field = fieldRef.current;
-    const from = drag.current;
-    if (field === null || from === null) return;
-    setPick(
-      padPairFrom(from.base, field.getBoundingClientRect(), {
-        dx: clientX - from.x,
-        dy: clientY - from.y,
-      }),
-    );
-  };
-
-  const onPointerMove = (event: React.PointerEvent) => {
-    if (!open) return;
-    trackDrag(event.clientX, event.clientY);
   };
 
   /**
    * A press that leaves the target is not a hold on it — the platform's
-   * own long press gives up the same way — so travelling off the face
-   * disarms the shortcut rather than signing wherever the finger went.
+   * own long press gives up the same way.
    */
   const onTargetPointerMove = (event: React.PointerEvent<HTMLButtonElement>) => {
     if (holdTimer.current === null) return;
@@ -650,152 +875,308 @@ export function StanceControl({
     if (!inside) clearHold();
   };
 
-  /**
-   * The release ENDS THE DRAG and nothing else (§8.3). The pick stands,
-   * the pad stays open, and Set is what signs it. On the target, a lift
-   * before the hold's time disarms it, and the click that follows is the
-   * tap.
-   */
-  const onPointerUp = () => {
+  /** A lift before the hold's time disarms it; the click that follows is the tap. */
+  const onTargetPointerUp = () => {
     clearHold();
     releasePointer();
   };
 
-  const onPointerCancel = () => {
-    clearHold();
-    // A lost pointer is not a dismissal: the pad parks the way a release
-    // parks it, and the reader still has Set and Cancel in front of them.
-    releasePointer();
-  };
-
-  /**
-   * A second drag, started on the parked field, adjusts the pick that is
-   * already standing rather than starting over.
-   */
-  const onFieldPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (busy) return;
-    drag.current = { x: event.clientX, y: event.clientY, base: pick };
-    capturePointer(event.currentTarget, event.pointerId);
-  };
-
-  // The standing the target wears: what the gesture just projected, or
-  // the bundle as last read. A standing nobody has taken, and one this
-  // session could not read, both show the "no stance yet" affordance.
-  const restingPair: StancePair | null =
-    pending !== null
-      ? pending
+  // The standing the target wears: what a taken signing projected, or the
+  // bundle as last read. A standing nobody has taken, and one this session
+  // could not read, both show the "no opinion yet" face.
+  // A PICK KEPT PENDING is what the anchor wears while the key is elsewhere
+  // (PadPending.md) — never the bundle's resting face, which it has not
+  // joined.
+  const waitingForKey = kept !== null && keyAbsent === true;
+  const restingPair: StancePair | null = waitingForKey
+    ? kept
+    : pending !== null
+      ? pending.pair
       : bundle === null || bundle === undefined || bundle.records === 0
         ? null
         : bundle.current;
-  // A standing, so the table is not consulted at the origin (§8.4).
-  const restingFace = restingPair === null ? null : bundleReadout(restingPair, zeroWords.label);
-  const knob = padPercentOf(pick);
+  // A resting (0, 0) is walked back only when the bundle — or the signing
+  // just taken — says so; otherwise (an empty sign's standing, a kept pick)
+  // it says nothing (the master's `restingZero`; PadStanding.md:29).
+  const restingSevered = waitingForKey
+    ? false
+    : pending !== null
+      ? pending.severed
+      : bundle !== null && bundle !== undefined && bundle.severed;
+  const restingFace =
+    restingPair === null
+      ? null
+      : bundleReadout(restingPair, restingSevered ? sever.zero : EMPTY_PICK_LABEL);
 
-  // THE WALK-AWAY NEEDS SOMETHING TO WALK BACK (design's `StanceControl`,
-  // and the pair `TagPage` / `TagPageHeldPad` draws: the pad over a topic
-  // nobody holds has three controls and the pad over a held one has four).
-  // With nothing said there is no relationship to leave, and the button
-  // led only to a dialog saying so.
-  //
-  // THE COUNT IS THE WHOLE TEST, and `severed` is deliberately not a
-  // second clause: on the wire it means "both axes at zero", which a
-  // bundle folding no records satisfies vacuously. A bundle that HAS
-  // records and nets to zero is already covered by the count, and the
-  // confirmation says so itself through `alreadySevered`.
-  //
-  // A VARIANT PAD CARRIES NO WALK IT BACK (VouchBackPad.md:11): the
-  // vouch-back opens a relationship, it is never the place to leave one.
+  // THE WALK-AWAY NEEDS SOMETHING TO WALK BACK (the master: "SEVER NEEDS
+  // SOMETHING TO SEVER"): a bundle that folds records — an empty sign's
+  // standing included, whose walk-back costs one record. A walked-back
+  // bundle still folds its records, so it keeps the control and its dialog
+  // says it is already at nothing. A VARIANT PAD CARRIES NO WALK IT BACK
+  // (VouchBackPad.md:11): the vouch-back opens a relationship, it is never
+  // the place to leave one.
   const severable =
     variant === undefined && bundle !== null && bundle !== undefined && bundle.records > 0;
   const padNode = variant?.padNode;
 
-  const padBody = (
+  /** Whose in-flight state shows where: the pad's, the row's, the dialog's. */
+  const padSetting = inFlight === "pad" && slow;
+  const rowState: RowLineState | null =
+    inFlight === "row" && slow && confirming === null ? { kind: "signing" } : rowLine;
+
+  const inset = variant?.padInset ?? (barBeneath ? PAD_ABOVE_BAR_INSET_PX : PAD_PARK_INSET_PX);
+  const aboveBar = variant?.padInset !== undefined || barBeneath;
+
+  const helpLines =
+    explaining === "zero" ? unreachableHelp(axes, target.label) : (variant?.help ?? padHelp(axes));
+
+  const pad = (
     <>
-      {/* Above the pad, never under the knob (§8.4). */}
-      <StanceStanding
-        pick={pick}
-        bundle={bundle}
-        targetLabel={target.label}
-        testIdPrefix={testIdPrefix}
-        axes={axes}
-        zero={zeroWords}
-      />
-      {/* A soft rounded square, and the drawn field IS the value
-          space: its corners are (±1, ±1) and the knob never leaves
-          it (§8.3). */}
+      {/* THE WASH (PadStanding.jsx: "the wash sits over the shell; the
+          parked pad stays sharp"). A press on it dismisses and stages
+          nothing, and it is what keeps the surface beneath inert while the
+          pad is up — the band and the bar included. */}
       <div
-        ref={fieldRef}
-        {...testAttributes(part(padNode, "field"), `${testIdPrefix}-field`)}
-        onPointerDown={onFieldPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerCancel}
-        className="relative aspect-square w-full touch-none rounded-large bg-surface-container-highest"
+        data-testid={`${testIdPrefix}-scrim`}
+        aria-hidden="true"
+        onPointerDown={(event) => {
+          event.preventDefault();
+          closeAll();
+        }}
+        className="cg-scrim-in fixed inset-0 z-40 touch-none bg-scrim/50"
+      />
+      <div
+        ref={padRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={variant?.title ?? `Opinion pad for ${target.label}`}
+        tabIndex={-1}
+        onKeyDown={trapTab}
+        {...testAttributes(padNode, `${testIdPrefix}-pad`)}
+        style={parkedPadStyle(inset, aboveBar)}
+        className="cg-dialog-in z-40 flex w-[17rem] touch-none flex-col gap-3 overflow-y-auto rounded-extra-large bg-surface-container-high p-4 text-on-surface outline-none"
       >
-        {/* The inert centre-lines are drawn as visibly dead ground
-            rather than hidden, so the model reads as legible rather
-            than mysterious (§8.3). */}
-        <div aria-hidden="true" className="absolute left-0 top-1/2 h-px w-full bg-outline-variant" />
-        <div aria-hidden="true" className="absolute left-1/2 top-0 h-full w-px bg-outline-variant" />
-        {/* The knob's centre travels this inset box, which is what
-            keeps the knob itself inside the drawn corner. */}
-        <div aria-hidden="true" className="absolute" style={{ inset: `${KNOB_TRAVEL_INSET_PX}px` }}>
-          {/* primaryContainer is the loudest surface in the app and
-              belongs to a committed stance (§2.4). */}
-          <div
-            data-testid={`${testIdPrefix}-knob`}
-            style={{ left: `${knob.x}%`, top: `${knob.y}%` }}
-            className="absolute h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-container"
-          />
-        </div>
+        {/* The help affordance: a circled `?` in the pad's top-right corner,
+            out of the reading order of the three readouts. 48px target,
+            32px ring. Its name is the pad's own (ruling A7). */}
+        <button
+          type="button"
+          {...testAttributes(part(padNode, "help"), `${testIdPrefix}-explain`)}
+          aria-expanded={explaining === "help"}
+          aria-label={variant?.title ?? PAD_HELP_LABEL}
+          onClick={() => setExplaining((shown) => (shown === "help" ? false : "help"))}
+          className={`${BUTTON_CLASS} absolute right-1 top-1 grid size-12 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0`}
+        >
+          <span
+            aria-hidden="true"
+            className="grid size-8 place-items-center rounded-full border border-outline-variant text-label-large text-primary"
+          >
+            ?
+          </span>
+        </button>
+        <StanceStanding
+          pick={pick}
+          bundle={bundle}
+          targetLabel={target.label}
+          testIdPrefix={testIdPrefix}
+          axes={axes}
+          node={part(padNode, "standing")}
+          className="pr-10"
+        />
+        {/* The help and the 🤔's explanation REPLACE the field and the
+            landing rather than growing below them: the pad is parked, and a
+            panel that pushes Set and Cancel away from the thumb defeats the
+            parking. */}
+        {explaining !== false ? (
+          <div data-testid={`${testIdPrefix}-explanation`} className="flex flex-col gap-2">
+            {helpLines.map((line) => (
+              <p key={line} className="m-0 text-body-small text-on-surface-variant">
+                {line}
+              </p>
+            ))}
+            <button
+              type="button"
+              data-testid={`${testIdPrefix}-explain-back`}
+              onClick={() => setExplaining(false)}
+              className={`self-start ${buttonClassName({ variant: "text", size: "sm" })}`}
+            >
+              Back to the pad
+            </button>
+          </div>
+        ) : (
+          <>
+            <PairField
+              value={pick}
+              onChange={setPick}
+              axes={axes}
+              ranges={STANCE_RANGES}
+              ariaLabel={PICK_LABEL}
+              testId={`${testIdPrefix}-field`}
+              node={part(padNode, "field")}
+            />
+            {/* The master's `padNote` slot, between the field and the landing
+                line: a variant's own line on every open, and the first-ever
+                open's two coaching lines. */}
+            {variant !== undefined ? (
+              <div
+                {...testAttributes(part(padNode, "note"), `${testIdPrefix}-note`)}
+                className="flex flex-col gap-1"
+              >
+                <p className="m-0 text-body-small text-on-surface-variant">{variant.note}</p>
+                {coaching && <StanceCoaching testId={`${testIdPrefix}-coaching`} />}
+              </div>
+            ) : (
+              coaching && <StanceCoaching testId={`${testIdPrefix}-coaching`} />
+            )}
+            {padFault !== "writeRule" && keyAbsent !== true && (
+              <StanceLandingLine
+                landing={landing}
+                testIdPrefix={testIdPrefix}
+                axes={axes}
+                borrowed={borrowed}
+                onExplainZero={() => setExplaining("zero")}
+                node={part(padNode, "landing")}
+              />
+            )}
+          </>
+        )}
+        {/* THE WRITE RULE REFUSED SET (PadWriteRule.md): the notice stands
+            where the landing line and the commit row would, with its own "?"
+            and `Not now` under it. No Retry — asking again at once meets the
+            same answer — and no pick is kept. */}
+        {padFault === "writeRule" && (
+          <>
+            <div
+              data-testid={`${testIdPrefix}-write-rule`}
+              role="status"
+              className="flex flex-col gap-3 rounded-medium bg-tertiary-container p-4 text-on-tertiary-container"
+            >
+              <div className="flex items-center gap-2">
+                <h3 className="m-0 flex-1 text-title-medium">{WRITE_RULE_TITLE}</h3>
+                <HelpDot
+                  ariaLabel={WRITE_RULE_HELP}
+                  onOpen={() => setNoticeHelp(HELP_TOPICS.whySigningWaitsOnPad)}
+                  testId={`${testIdPrefix}-write-rule-help`}
+                  variant="inverse"
+                />
+              </div>
+              <p className="m-0 text-body-medium">{WRITE_RULE_PAD_FACT}</p>
+            </div>
+            <button
+              type="button"
+              data-testid={`${testIdPrefix}-not-now`}
+              onClick={closeAll}
+              className={`w-full ${buttonClassName({ variant: "text" })}`}
+            >
+              Not now
+            </button>
+          </>
+        )}
+        {/* THE KEY IS ELSEWHERE (PadKeyAbsent.md): the pad opened anyway and
+            the pick is still made; the notice stands where the landing line
+            and the actions would — no Set, no Cancel, no Walk it back — in
+            the tertiary container, never the error colour. Only `Keep it
+            pending, restore later` keeps the pick; the wash, Back and Escape
+            drop it as Cancel would. */}
+        {keyAbsent === true && explaining === false && (
+          <>
+            <div
+              data-testid={`${testIdPrefix}-key-absent`}
+              className="flex flex-col gap-3 rounded-medium bg-tertiary-container p-4 text-on-tertiary-container"
+            >
+              <div className="flex items-center gap-2">
+                <h3 className="m-0 flex-1 text-title-medium">Your key isn&apos;t on this browser</h3>
+                <HelpDot
+                  ariaLabel="Your key"
+                  onOpen={() => setNoticeHelp(HELP_TOPICS.yourKey)}
+                  testId={`${testIdPrefix}-key-help`}
+                  variant="inverse"
+                />
+              </div>
+              <p className="m-0 text-body-medium">
+                Signing needs your key, which isn&apos;t in this browser — the write waits as pending.
+              </p>
+              <p className="m-0 text-body-medium">Restore the key with your recovery code to finish.</p>
+              <Link
+                href="/restore"
+                data-testid={`${testIdPrefix}-restore`}
+                className={pillClassName({ variant: "inverse", full: true })}
+              >
+                Restore the key
+              </Link>
+            </div>
+            <button
+              type="button"
+              data-testid={`${testIdPrefix}-keep-pending`}
+              onClick={() => {
+                keep(pick);
+                closeAll();
+              }}
+              className={`w-full ${buttonClassName({ variant: "text" })}`}
+            >
+              Keep it pending, restore later
+            </button>
+          </>
+        )}
+        {/* A SIGNING THAT DID NOT GO THROUGH says so above the commit row, in
+            the failure voice, and Set's slot becomes the outlined Retry — the
+            same commitment asked again. */}
+        {padFault === "failed" && (
+          <TransportError testId={`${testIdPrefix}-pad-failed`} message="That didn't send. Try again." />
+        )}
+        {padFault !== "writeRule" && keyAbsent !== true && (
+          // ONE ROW: the walk-away on the left, pushed away from the two
+          // decisions on the right — a walk-away beside a commit is a misfire
+          // waiting to happen.
+          <div className="flex items-center justify-end gap-2">
+            {severable && (
+              <button
+                type="button"
+                {...testAttributes(part(padNode, "sever"), `${testIdPrefix}-sever`)}
+                onClick={openSeverance}
+                className={`mr-auto ${buttonClassName({ variant: "text", size: "sm" })}`}
+              >
+                {sever.control}
+              </button>
+            )}
+            <button
+              type="button"
+              {...testAttributes(part(padNode, "cancel"), `${testIdPrefix}-cancel`)}
+              onClick={closeAll}
+              className={buttonClassName({ variant: "text", size: "sm" })}
+            >
+              Cancel
+            </button>
+            {/* The only thing on the pad that signs anything — never through
+                the help, whose field is not there to check against. Inert
+                while in flight, refusing a second press without dimming. */}
+            <button
+              type="button"
+              {...testAttributes(part(padNode, "set"), `${testIdPrefix}-set`)}
+              disabled={explaining !== false}
+              aria-disabled={busy || undefined}
+              aria-busy={padSetting || undefined}
+              onClick={() => {
+                if (busy) return;
+                void signPick(pick, "pad");
+              }}
+              className={buttonClassName({
+                variant: padFault === "failed" ? "outline" : "primary",
+                size: "sm",
+              })}
+            >
+              {padSetting ? "Setting…" : padFault === "failed" ? "Retry" : "Set"}
+            </button>
+          </div>
+        )}
       </div>
-      {/* Between the field and the landing line: the master's `padNote`
-          slot, where the first-ever open speaks once. */}
-      {variant !== undefined ? (
-        // The variant's own line stands on every open; the first-ever
-        // open's two coaching lines stand under it (VouchBackPad.md:13-15).
-        <div {...testAttributes(part(padNode, "note"), `${testIdPrefix}-note`)} className="flex flex-col gap-1">
-          <p className="m-0 text-body-small text-on-surface-variant">{variant.note}</p>
-          {coaching && <StanceCoaching testId={`${testIdPrefix}-coaching`} />}
-        </div>
-      ) : (
-        coaching && <StanceCoaching testId={`${testIdPrefix}-coaching`} />
-      )}
-      {/* Below the field, and never merged into the line above it. */}
-      <StanceLandingLine landing={landing} testIdPrefix={testIdPrefix} zero={zeroWords} />
     </>
   );
 
-  // THE HELP REPLACES THE PAD'S BODY rather than growing below it: the
-  // pad is parked and operated by muscle memory, and a panel that pushes
-  // Set and Cancel away from the thumb defeats the parking.
-  const helpBody = (
-    <div data-testid={`${testIdPrefix}-explanation`} className="flex flex-col gap-2">
-      {(variant?.help ?? padHelp(isTopic)).map((line) => (
-        <p key={line} className="text-body-small text-on-surface-variant">
-          {line}
-        </p>
-      ))}
-      <button
-        type="button"
-        data-testid={`${testIdPrefix}-explain-back`}
-        onClick={() => setExplaining(false)}
-        className={`self-start ${buttonClassName({ variant: "text", size: "sm" })}`}
-      >
-        Back to the pad
-      </button>
-    </div>
-  );
-
   return (
-    // The control owns its touches (§8.3): nothing it receives reaches
+    // The control owns its touches (§8.3): nothing it receives — the
+    // portalled pad included, whose events bubble through this tree — reaches
     // the card or the link behind it.
-    // THE CARD'S AFFORDANCE ROW IS ONE LINE THAT NEVER WRAPS
-    // (`PostCard.jsx:300-309`, whose row carries `minWidth: 0` for exactly
-    // this): the control is the widest thing in it, so it is the thing that
-    // gives way. The reading's words shorten before the row does; the emoji
-    // and the pair never do, because the numbers are part of the default
-    // reading (§8.3). Standing alone, nothing shrinks it.
     <div
       {...testAttributes(node)}
       className="relative flex min-w-0 flex-col gap-1"
@@ -804,202 +1185,102 @@ export function StanceControl({
       onPointerUp={(event) => event.stopPropagation()}
     >
       {padOnly === undefined && (
-      <div className="flex min-w-0 items-center gap-2">
-        {/* 48px minimum, including at rest (design.md §4). */}
-        <button
-          ref={buttonRef}
-          type="button"
-          {...testAttributes(part(node, "anchor"), testIdPrefix)}
-          aria-label={
-            restingFace === null || restingPair === null
-              ? `Take a stance on ${target.label}`
-              : `Your stance on ${target.label}: ${restingFace.label}, ${formatStancePair(restingPair)}. Press and hold to add a positive one.`
-          }
-          aria-busy={busy}
-          onClick={onTap}
-          onPointerDown={onPointerDown}
-          onPointerMove={onTargetPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerCancel}
-          // A long press is the shortcut, so the platform must not take
-          // it for a selection or a context menu first.
-          onContextMenu={(event) => event.preventDefault()}
-          className="flex min-h-12 min-w-12 touch-none select-none items-center justify-center gap-2 rounded-full px-3 text-label-large text-primary [-webkit-touch-callout:none]"
-        >
-          {/* Never a bare word (§8.3): a viewer with no bundle gets a
-              face outside the table, muted and translucent — the control
-              visibly waiting to be given a value rather than wearing an
-              answer, and never the shrug a zero standing owns (§8.4). */}
-          {restingFace === null && lineFaceInk !== undefined ? (
-            <span
-              aria-hidden="true"
-              {...testAttributes(part(node, "anchor.face"), `${testIdPrefix}-resting-face`)}
-              className="inline-flex flex-none"
-              style={{ color: lineFaceInk }}
-            >
-              <Icon name="sentiment_neutral" size={24} />
-            </span>
-          ) : (
-            <span
-              aria-hidden="true"
-              {...testAttributes(part(node, "anchor.face"), `${testIdPrefix}-resting-face`)}
-              className={
-                restingFace === null
-                  ? "flex-none text-title-large opacity-40 grayscale"
-                  : "flex-none text-title-large"
-              }
-            >
-              {restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}
-            </span>
-          )}
-          {/* Colour never carries stance alone: the words say it too
-              (design.md §10) — and the exact pair with them, because the
-              numbers are part of the default reading (§8.3). The words are
-              what gives way where the affordance row is tight; the face and
-              the pair are the two channels that must not. */}
-          <span aria-hidden="true" className="truncate">
-            {restingFace === null ? NO_STANDING_LABEL : restingFace.label}
-          </span>
-          {restingPair !== null && (
-            <span
-              aria-hidden="true"
-              {...testAttributes(part(node, "anchor.exact"), `${testIdPrefix}-resting-exact`)}
-              className="flex-none text-body-small text-on-surface-variant"
-            >
-              {formatStancePair(restingPair)}
-            </span>
-          )}
-        </button>
-        {/* The non-drag equivalent, present whatever the stored input is
-            (design.md §8.6, §10) — a drag gesture always has one.
-
-            NOT DRAWN, AND RENAMED (design/readme.md §13, the stance round):
-            "`Choose values` was a `primary` text button beside every stance,
-            so a feed of twenty posts carried twenty copies of a control
-            duplicating the one next to it — and 'values' named nothing a
-            reader could place. It is now `Choose your stance`, visually
-            hidden until focused." §10 is satisfied by the equivalent existing
-            and being reachable in one tab, not by it being on screen twenty
-            times — and the affordance row cannot hold its ruled four
-            affordances on one line with a text button in front of them. */}
-        {phase === "signedIn" && (
+        <div className="flex min-w-0 items-center gap-2">
+          {/* 48px minimum, including at rest (design.md §4). */}
           <button
+            ref={buttonRef}
             type="button"
-            data-testid={`${testIdPrefix}-choose`}
-            disabled={busy}
-            onClick={() => openConsidered("alternates")}
-            className={`sr-only focus:not-sr-only ${buttonClassName({ variant: "text", size: "sm" })}`}
+            {...testAttributes(part(node, "anchor"), testIdPrefix)}
+            aria-label={
+              restingFace === null || restingPair === null
+                ? `Give your opinion on ${target.label}`
+                : waitingForKey
+                  ? `Your opinion on ${target.label}, waiting for your key: ${restingFace.label}, ${formatStancePair(restingPair)}.`
+                  : `Your opinion on ${target.label}: ${restingFace.label}, ${formatStancePair(restingPair)}. Press and hold to add a positive one.`
+            }
+            aria-busy={inFlight === "row" || undefined}
+            onClick={onTap}
+            onPointerDown={onPointerDown}
+            onPointerMove={onTargetPointerMove}
+            onPointerUp={onTargetPointerUp}
+            onPointerCancel={onTargetPointerUp}
+            // A long press is the shortcut, so the platform must not take
+            // it for a selection or a context menu first.
+            onContextMenu={(event) => event.preventDefault()}
+            className={`${BUTTON_CLASS} flex min-h-12 min-w-12 cursor-pointer touch-none select-none items-center justify-center gap-2 rounded-full border-0 bg-transparent px-3 text-label-large text-primary [-webkit-touch-callout:none]`}
           >
-            Choose your stance
+            {/* Never a bare word: a viewer with no bundle gets a face outside
+                the table, muted and translucent — the control visibly waiting
+                to be given a value, never the shrug a zero opinion owns. The
+                anchor's words are not drawn; they ride the accessible name. */}
+            <span className="relative inline-grid flex-none place-items-center">
+              {restingFace === null && lineFaceInk !== undefined ? (
+                <span
+                  aria-hidden="true"
+                  {...testAttributes(part(node, "anchor.face"), `${testIdPrefix}-resting-face`)}
+                  className="inline-flex flex-none"
+                  style={{ color: lineFaceInk }}
+                >
+                  <Icon name="sentiment_neutral" size={24} />
+                </span>
+              ) : (
+                <span
+                  aria-hidden="true"
+                  {...testAttributes(part(node, "anchor.face"), `${testIdPrefix}-resting-face`)}
+                  className={
+                    restingFace === null
+                      ? "flex-none text-title-large opacity-40 grayscale"
+                      : "flex-none text-title-large"
+                  }
+                >
+                  {restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}
+                </span>
+              )}
+              {holding && <HoldRing testId={`${testIdPrefix}-hold-ring`} />}
+            </span>
+            {restingPair !== null && (
+              // NEVER WRAPS — the affordance row is one line by rule. The
+              // face is the default reading and these numbers the geek one;
+              // the accessible name carries the values in both modes.
+              <span
+                aria-hidden="true"
+                {...testAttributes(part(node, "anchor.exact"), `${testIdPrefix}-resting-exact`)}
+                className="cg-exact flex-none whitespace-nowrap text-body-small text-on-surface-variant"
+              >
+                {formatStancePair(restingPair)}
+              </span>
+            )}
           </button>
-        )}
-      </div>
+          {/* The non-drag equivalent, present whatever the stored input is
+              (§8.6, §10) — visually hidden until focused, and named for its
+              target so a page with several controls never repeats one
+              anonymous name (the master's `Choose your opinion on {label}`). */}
+          {phase === "signedIn" && (
+            <button
+              type="button"
+              data-testid={`${testIdPrefix}-choose`}
+              disabled={busy}
+              onClick={() => openConsidered("alternates")}
+              className={`sr-only focus:not-sr-only ${buttonClassName({ variant: "text", size: "sm" })}`}
+            >
+              Choose your opinion on {target.label}
+            </button>
+          )}
+        </div>
+      )}
+      {/* THE ROW LINE (RowSigning.md, RowWriteRule.md): the hold's wait past
+          200ms, its failure with Retry, or the write rule's quiet notice —
+          under the face, in the slot the pending marker uses. */}
+      {/* A PICK KEPT PENDING says what it waits on, under the face — never
+          `Still settling`, which is a signed record's (PadPending.md). */}
+      {padOnly === undefined && waitingForKey && (
+        <PendingMarker testId={`${testIdPrefix}-kept`} label="Waiting for your key" />
+      )}
+      {padOnly === undefined && rowState !== null && (
+        <RowLine state={rowState} testId={`${testIdPrefix}-row-line`} />
       )}
 
-      {open && (
-        <>
-          {/* A press outside dismisses and stages nothing (§8.3). The
-              scrim is also what makes the open pad's surroundings inert:
-              a touch meant for the pad's edge cannot reach a card. */}
-          <div
-            data-testid={`${testIdPrefix}-scrim`}
-            aria-hidden="true"
-            onPointerDown={(event) => {
-              event.preventDefault();
-              closeAll();
-            }}
-            // The variant's wash covers the shell (`--scrim-dialog`,
-            // VouchBackPad.md:5); the master pad elsewhere draws none.
-            className={`fixed inset-0 z-10 touch-none${variant !== undefined ? " bg-scrim/50" : ""}`}
-          />
-          <div
-            role="group"
-            aria-label={variant?.title ?? `Stance pad for ${target.label}`}
-            {...testAttributes(padNode, `${testIdPrefix}-pad`)}
-            style={parkedPadStyle(variant?.padInset)}
-            className="z-20 flex w-64 touch-none flex-col gap-2 overflow-y-auto rounded-extra-large bg-surface-container-high p-4"
-          >
-            {explaining ? helpBody : padBody}
-            {/* The fault stands above the commit row, in the failure voice
-                (PadFailed), the pad still parked at the pick. */}
-            {padFailed && (
-              <p
-                role="alert"
-                data-testid={`${testIdPrefix}-pad-failed`}
-                className="m-0 text-body-small text-error"
-              >
-                That didn&apos;t send. Try again.
-              </p>
-            )}
-            <div className="flex items-center justify-between gap-2">
-              <button
-                type="button"
-                {...testAttributes(part(padNode, "help"), `${testIdPrefix}-explain`)}
-                aria-expanded={explaining}
-                aria-label={variant?.title ?? "How stances work"}
-                onClick={() => setExplaining((shown) => !shown)}
-                className={buttonClassName({ variant: "text", size: "sm" })}
-              >
-                ?
-              </button>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  {...testAttributes(part(padNode, "cancel"), `${testIdPrefix}-cancel`)}
-                  onClick={closeAll}
-                  className={buttonClassName({ variant: "text", size: "sm" })}
-                >
-                  Cancel
-                </button>
-                {/* The only thing on the pad that signs anything (§8.3) —
-                    and never through the help, whose field is not there
-                    to check against. */}
-                {variant === undefined ? (
-                  <button
-                    type="button"
-                    data-testid={`${testIdPrefix}-set`}
-                    disabled={busy || explaining}
-                    onClick={() => void commitChecked(pick)}
-                    className={buttonClassName({ variant: "primary", size: "sm" })}
-                  >
-                    Set
-                  </button>
-                ) : (
-                  // A signed act waits rather than answering at once (K4.1):
-                  // inert while in flight — refusing a second press without
-                  // dimming — and saying so past 200ms, never a spinner.
-                  <button
-                    type="button"
-                    {...testAttributes(part(padNode, "set"), `${testIdPrefix}-set`)}
-                    disabled={explaining}
-                    aria-disabled={busy}
-                    onClick={() => {
-                      if (busy) return;
-                      void commitChecked(pick);
-                    }}
-                    className={buttonClassName({
-                      variant: padFailed ? "outline" : "primary",
-                      size: "sm",
-                    })}
-                  >
-                    {busy && settingSlow ? "Setting…" : padFailed ? "Retry" : "Set"}
-                  </button>
-                )}
-              </div>
-            </div>
-            {severable && (
-              <button
-                type="button"
-                data-testid={`${testIdPrefix}-sever`}
-                onClick={openSeverance}
-                className={buttonClassName({ variant: "text", size: "sm" })}
-              >
-                {severLabel}
-              </button>
-            )}
-          </div>
-        </>
-      )}
+      {open && inBrowser && createPortal(pad, document.body)}
 
       {alternates && (
         <StanceAlternates
@@ -1007,13 +1288,24 @@ export function StanceControl({
           pick={pick}
           onPick={setPick}
           busy={busy}
-          onCommit={() => void commitChecked(pick)}
+          fault={padFault}
+          onCommit={() => void signPick(pick, "pad")}
           onCancel={closeAll}
-          onSever={openSeverance}
-          severable={severable}
-          severLabel={severLabel}
+          onSever={severable ? openSeverance : undefined}
           axes={axes}
-          landing={<StanceLandingLine landing={landing} testIdPrefix={testIdPrefix} zero={zeroWords} />}
+          helpLabel={variant?.title ?? PAD_HELP_LABEL}
+          zeroHelp={explaining === "zero" ? unreachableHelp(axes, target.label) : null}
+          onZeroBack={() => setExplaining(false)}
+          landing={
+            <StanceLandingLine
+              landing={landing}
+              testIdPrefix={testIdPrefix}
+              axes={axes}
+              borrowed={borrowed}
+              onExplainZero={() => setExplaining("zero")}
+              zeroShown={explaining === "zero"}
+            />
+          }
         >
           <StanceStanding
             pick={pick}
@@ -1021,7 +1313,6 @@ export function StanceControl({
             targetLabel={target.label}
             testIdPrefix={testIdPrefix}
             axes={axes}
-            zero={zeroWords}
           />
         </StanceAlternates>
       )}
@@ -1033,9 +1324,10 @@ export function StanceControl({
           bundle={bundle}
           records={confirming.records}
           alreadySevered={confirming.alreadySevered}
-          busy={busy}
+          busy={inFlight === "confirm"}
+          slow={inFlight === "confirm" && slow}
           failed={confirmFailed}
-          kind={target.kind}
+          axes={axes}
           onCancel={() => {
             setConfirming(null);
             setConfirmFailed(false);
@@ -1044,14 +1336,37 @@ export function StanceControl({
         />
       )}
 
+      {/* THE EMPTY SIGN'S ASK, over the parked pad (EmptySignConfirm.md):
+          never the walk-back's dialog, never a block. */}
+      {emptyAsk !== null && (
+        <EmptySignConfirm
+          targetLabel={target.label}
+          vouchIn={vouchesIn}
+          busy={inFlight === "empty"}
+          slow={inFlight === "empty" && slow}
+          failed={emptyFailed}
+          onCancel={() => {
+            setEmptyAsk(null);
+            setEmptyFailed(false);
+          }}
+          onConfirm={() => void onConfirmEmpty()}
+        />
+      )}
+
+      {/* Mounted only when asked for, as the join prompt is. */}
+      {noticeHelp !== null && (
+        <HelpDialog
+          open
+          onClose={() => setNoticeHelp(null)}
+          topic={noticeHelp}
+          testId={`${testIdPrefix}-notice-help`}
+        />
+      )}
+
       {/* Fired once per completed action (design.md §6), and mounted
           whether or not it has anything to say so the announcement is
-          heard when it does. */}
+          heard when it does. Never a failure. */}
       <Snackbar message={signed} onDismiss={() => setSigned(null)} testId={`${testIdPrefix}-signed`} />
-
-      {/* A failed write is a composer error beside its control, never a
-          read fault (web.md "Design guidelines"). */}
-      {failed && <TransportError testId={`${testIdPrefix}-error`} message="That didn't send. Try again." />}
 
       {/* Mounted only when asked for: a read surface renders many of
           these controls, and an always-present dialog per card is a

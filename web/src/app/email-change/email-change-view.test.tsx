@@ -1,10 +1,10 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { heldEmailChangeLink } from "@/lib/session/held-link";
 import { createTokenStore } from "@/lib/session/token-store";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { EmailChangeView } from "./email-change-view";
 
@@ -27,7 +27,7 @@ function signedIn() {
 }
 
 function confirmed(user: Record<string, unknown> | null, code?: string) {
-  return graphql.mutation("ConfirmEmailChange", () =>
+  return gqlLink.mutation("ConfirmEmailChange", () =>
     HttpResponse.json({
       data: {
         confirmEmailChange: {
@@ -42,7 +42,7 @@ function confirmed(user: Record<string, unknown> | null, code?: string) {
 }
 
 function accountWith(email: string) {
-  return graphql.query("SettingsAccount", () =>
+  return gqlLink.query("SettingsAccount", () =>
     HttpResponse.json({
       data: {
         me: {
@@ -166,7 +166,7 @@ describe("the link opened signed in", () => {
     let checked = false;
     server.use(
       confirmed({ email: NEW, pendingEmailChange: null }),
-      graphql.query("EmailChangeLinkCheck", () => {
+      gqlLink.query("EmailChangeLinkCheck", () => {
         checked = true;
         return HttpResponse.json({ data: { emailChangeLinkCheck: null } });
       }),
@@ -186,7 +186,7 @@ describe("the link opened signed in", () => {
 
 describe("the link opened signed out", () => {
   function check(answer: Record<string, unknown> | null) {
-    return graphql.query("EmailChangeLinkCheck", () =>
+    return gqlLink.query("EmailChangeLinkCheck", () =>
       HttpResponse.json({
         data: {
           emailChangeLinkCheck: answer === null ? null : { __typename: "EmailChangeLinkCheck", ...answer },
@@ -264,7 +264,7 @@ describe("the link opened signed out", () => {
     window.sessionStorage.setItem("cogra.heldEmailChangeLink", "tok-held");
     let sent: unknown = null;
     server.use(
-      graphql.mutation("ConfirmEmailChange", ({ variables }) => {
+      gqlLink.mutation("ConfirmEmailChange", ({ variables }) => {
         sent = variables;
         return HttpResponse.json({
           data: {

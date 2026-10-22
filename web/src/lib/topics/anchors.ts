@@ -20,6 +20,8 @@
 // `anchors.test.ts` pins them against the design bundle rather than trusting
 // the transcription.
 
+import { UNREACHABLE_EMOJI, ZERO_BUNDLE_EMOJI } from "@/lib/stance/anchors";
+
 /** A place in the tag field, its object, and the words a reader hears. */
 export type TagAnchor = {
   /** Relevance `r` — how much the topic is the content's. */
@@ -47,6 +49,10 @@ export const TAG_ANCHORS: readonly TagAnchor[] = [
 ];
 
 /**
+ * The bare table walk. Nothing outside this file calls it: every tag pair
+ * drawn as a face reads through [tagReadout], which answers the zero lines
+ * first (the master's structure, seam 243).
+ *
  * The nearest tag anchor by Euclidean distance — the same walk the stance
  * table takes, over the thirteen objects rather than the twenty faces.
  * Squared distance orders the same way and skips the root; the first of an
@@ -66,4 +72,39 @@ export function nearestTagAnchor(relevance: number, confidence: number): TagAnch
     }
   }
   return best;
+}
+
+/** What a tag pair reads as wherever a face is drawn: the glyph and the spoken word. */
+export type TagReadout = {
+  readonly emoji: string;
+  readonly label: string;
+};
+
+/** A tag at `(0, 0)` is withdrawn (the master's `TAG_WITHDRAWN_LABEL`). */
+export const TAG_WITHDRAWN_LABEL = "withdrawn";
+
+/**
+ * A tag at zero on ONE number is routing-inert but not withdrawn — a claim,
+ * not nothing — and says which number is the zero (the master's
+ * `tagUnreachableHead`).
+ */
+export function tagUnreachableHead(relevance: number): string {
+  return relevance === 0 ? "not about it at all" : "no certainty at all";
+}
+
+/**
+ * A TAG'S PAIR FOLLOWS THE SAME LAW AS A STANCE'S (jakob 2026-10-21; the
+ * master's `tagReadout`): it shrugs at `(0, 0)`, thinks at exactly one zero,
+ * and reads the thirteen objects otherwise — in the tag family's own words,
+ * never a stance's.
+ */
+export function tagReadout(relevance: number, confidence: number): TagReadout {
+  const relevanceZero = relevance === 0;
+  const confidenceZero = confidence === 0;
+  // The same two zero faces a stance pair wears — outside both tables.
+  if (relevanceZero && confidenceZero) return { emoji: ZERO_BUNDLE_EMOJI, label: TAG_WITHDRAWN_LABEL };
+  if (relevanceZero || confidenceZero) {
+    return { emoji: UNREACHABLE_EMOJI, label: tagUnreachableHead(relevance) };
+  }
+  return nearestTagAnchor(relevance, confidence);
 }

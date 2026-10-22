@@ -13,15 +13,20 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.testTag
+import com.cogra.core.designsystem.v2.token.Space
 import java.util.Locale
 
 /**
- * The house stance editor: a stance dimension over the closed [-1, +1]
- * (api-spec.md § Scalars) with a two-decimal label, the slider named
- * for TalkBack — the web app's `StanceSlider`.
+ * One axis of a stance as an ordinary slider (the master `StanceSlider`):
+ * range [-1, +1], each value on the hundredths grid, the axis's question in
+ * `label-large` with the signed two-decimal value beside it only in geek mode
+ * (`cg-exact`, readme §13), and the two ends named under the track in
+ * `body-small` on `onSurfaceVariant` — a track says nothing about which end
+ * is which. The slider announces its own value in both modes.
  */
 @Composable
 fun StanceSlider(
@@ -30,14 +35,49 @@ fun StanceSlider(
     onChange: (Double) -> Unit,
     testTag: String,
     modifier: Modifier = Modifier,
+    minLabel: String? = null,
+    maxLabel: String? = null,
 ) {
-    LabeledSlider(
-        label = label,
-        value = value,
-        onChange = onChange,
-        testTag = testTag,
-        modifier = modifier,
-    )
+    val reading = twoPlaces(value)
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(Space.x1)) {
+        Text(
+            text = if (LocalShowExactValues.current) "$label $reading" else label,
+            style = MaterialTheme.typography.labelLarge,
+        )
+        Slider(
+            value = value.toFloat(),
+            // The track is continuous and a Float; the pick is a hundredth
+            // (the value domain, jakob 2026-10-20), so every value it reports
+            // lands on the grid.
+            onValueChange = { onChange(hundredth(it.toDouble())) },
+            valueRange = -1f..1f,
+            modifier = Modifier
+                .testTag(testTag)
+                .semantics {
+                    contentDescription = label
+                    stateDescription = reading
+                },
+        )
+        if (minLabel != null || maxLabel != null) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { hideFromAccessibility() },
+            ) {
+                Text(
+                    text = minLabel.orEmpty(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = maxLabel.orEmpty(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
 }
 
 /**
@@ -62,7 +102,10 @@ internal fun LabeledSlider(
         Text("$label: $reading")
         Slider(
             value = value.toFloat(),
-            onValueChange = { onChange(it.toDouble()) },
+            // The track is continuous and a Float; the pick is a hundredth
+            // (the value domain, jakob 2026-10-20), so every value it reports
+            // lands on the grid — what the label prints is what is picked.
+            onValueChange = { onChange(hundredth(it.toDouble())) },
             valueRange = valueRange,
             modifier = Modifier
                 .testTag(testTag)

@@ -4,7 +4,7 @@ import "fake-indexeddb/auto";
 import { IDBFactory } from "fake-indexeddb";
 
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import type { AttachActorKeyMutationVariables } from "@/__generated__/graphql";
@@ -14,7 +14,7 @@ import { openKeyBackup, RecoveryCode } from "@/lib/crypto/key-backup";
 import type { AuthGuard } from "@/lib/session/guard";
 import { createKeyCeremony, type KeyCeremony } from "./key-ceremony";
 import { createIdentityStore, type IdentityStore } from "./store";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 
 const server = startMswServer();
 
@@ -28,7 +28,7 @@ function client() {
 }
 
 function attachOk() {
-  return graphql.mutation("AttachActorKey", () =>
+  return gqlLink.mutation("AttachActorKey", () =>
     HttpResponse.json({
       data: {
         attachActorKey: {
@@ -42,7 +42,7 @@ function attachOk() {
 }
 
 function challengeOk() {
-  return graphql.mutation("CreateKeyBackupChallenge", () =>
+  return gqlLink.mutation("CreateKeyBackupChallenge", () =>
     HttpResponse.json({
       data: {
         createKeyBackupChallenge: {
@@ -56,7 +56,7 @@ function challengeOk() {
 }
 
 function uploadOk() {
-  return graphql.mutation("UploadKeyBackup", () =>
+  return gqlLink.mutation("UploadKeyBackup", () =>
     HttpResponse.json({
       data: {
         uploadKeyBackup: { __typename: "UploadKeyBackupPayload", ok: true, userErrors: [] },
@@ -95,7 +95,7 @@ describe("key ceremony", () => {
   it("attaches the public halves of the persisted key", async () => {
     const captured: AttachActorKeyMutationVariables[] = [];
     server.use(
-      graphql.mutation("AttachActorKey", ({ variables: v }) => {
+      gqlLink.mutation("AttachActorKey", ({ variables: v }) => {
         captured.push(v as AttachActorKeyMutationVariables);
         return HttpResponse.json({
           data: {
@@ -142,7 +142,7 @@ describe("key ceremony", () => {
   });
 
   it("a failed upload keeps the blob parked and the seed intact", async () => {
-    server.use(challengeOk(), graphql.mutation("UploadKeyBackup", () => HttpResponse.error()));
+    server.use(challengeOk(), gqlLink.mutation("UploadKeyBackup", () => HttpResponse.error()));
     await ceremony.createActorKey();
     await ceremony.createPendingBackup();
     expect(await ceremony.uploadPendingBackup()).toBe(false);
@@ -156,7 +156,7 @@ describe("key ceremony", () => {
 
   it("a refused challenge keeps the blob parked", async () => {
     server.use(
-      graphql.mutation("CreateKeyBackupChallenge", () => HttpResponse.error()),
+      gqlLink.mutation("CreateKeyBackupChallenge", () => HttpResponse.error()),
     );
     await ceremony.createActorKey();
     await ceremony.createPendingBackup();

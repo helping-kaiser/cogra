@@ -1445,6 +1445,7 @@ async fn a_carried_act_is_seen_by_its_author_alone(pool: PgPool) {
     let mine = api::stance::bundle(&rig.pool, noa.account, mira.id, true)
         .await
         .expect("bundle")
+        .standing
         .sum;
     assert!(
         (mine.p_d - 0.3).abs() < 1e-9,

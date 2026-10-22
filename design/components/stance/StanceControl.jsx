@@ -6,12 +6,14 @@ import { JoinPrompt } from "../core/JoinPrompt.jsx";
 import { StancePad, STANCE_AXES } from "./StancePad.jsx";
 import { StanceAlternates } from "./StanceAlternates.jsx";
 import { SeveranceConfirm } from "./SeveranceConfirm.jsx";
+import { EmptySignConfirm } from "./EmptySignConfirm.jsx";
 import { PendingMarker } from "../honesty/PendingMarker.jsx";
 import { SigningPending, TransportError } from "../honesty/TransportError.jsx";
 import { NoticePanel, NoticeLine } from "../honesty/NoticePanel.jsx";
 import {
   bundleReadout,
   clampPair,
+  EMPTY_PICK_LABEL,
   formatStancePair,
   helpKey,
   HelpLine,
@@ -92,6 +94,15 @@ import {
    pad. ITS COST IS COUNTED THE WAY IT SIGNS (jakob 2026-10-05, P5): the explicit route
    stages `severanceCost` counter-records, ⌈max(|Σd|, |Σi|)⌉ of the raw sums,
    and the pick route signs exactly one record, `1 thing`.
+
+   A (0, 0) WITH NOTHING STANDING IS NOT A WALK-BACK (jakob 2026-10-21, seam
+   242). A pick landing (0, 0) while the bundle holds no record, or is already
+   walked back, has nothing to walk back: it asks `EmptySignConfirm` over the
+   parked pad instead, and `Set it anyway` signs the one record like any
+   other: it counts, the bundle stays at (0, 0) and is not severed, and the
+   ordinary snackbar answers. An ask, never a block — Set stays enabled. Where
+   the opinion vouches its target in (`vouchesIn`), the ask warns harder and
+   the vouch-in still proceeds.
 
    THE CONTROL OWNS ITS TOUCHES. Nothing it receives reaches the card behind it:
    opening the pad must never also open the post.
@@ -322,6 +333,12 @@ export function StanceControl({
      the pick would keep the borrowed view. Warns, never blocks. Additive —
      absent, the control renders exactly as before. */
   borrowed = false,
+  /* THE OPINION VOUCHES ITS TARGET IN (jakob 2026-10-21): approving an
+     applicant, or answering a vouch asked for. An empty sign there still
+     vouches them in, so its ask warns that they start cut off
+     (`EmptySignConfirm`'s `vouchIn`). Additive — absent, the control renders
+     exactly as before. */
+  vouchesIn = false,
   /* A BODY ALREADY EXPLAINING, for a board: `"help"` draws the "?"'s lines
      in place, `"zero"` the unreachable landing's. Additive — absent, the pad
      opens on its field. */
@@ -347,6 +364,7 @@ export function StanceControl({
   const [explaining, setExplaining] = React.useState(defaultExplaining);
   const [pick, setPick] = React.useState(defaultPick ?? TAP_DEFAULT);
   const [confirming, setConfirming] = React.useState(null);
+  const [emptyAsk, setEmptyAsk] = React.useState(null);
   const [signed, setSigned] = React.useState(null);
   const [joinPrompt, setJoinPrompt] = React.useState(false);
 
@@ -378,11 +396,12 @@ export function StanceControl({
     const onKey = (event) => {
       if (event.key !== "Escape") return;
       if (confirming !== null) setConfirming(null);
+      else if (emptyAsk !== null) setEmptyAsk(null);
       else closeAll();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open, confirming]);
+  }, [open, confirming, emptyAsk]);
 
   const apply = (chosen, landed, records = 1) => {
     const rawSum = { pDirected: bundle.rawSum.pDirected + chosen.pDirected, pInterest: bundle.rawSum.pInterest + chosen.pInterest };
@@ -398,10 +417,20 @@ export function StanceControl({
     if (onCommit) onCommit(clampPair(chosen), next);
   };
 
+  /* The empty sign is an ordinary record (jakob 2026-10-21): it counts, the
+     fold stays at (0, 0), and the bundle is not severed — so the ordinary
+     snackbar answers, and `Walk it back` is there afterwards at its cost. */
+  const applyEmpty = (chosen, landed) => apply(chosen, { ...landed, severed: false });
+
   /* A pick that nets the bundle to (0, 0) asks first with the pad still
-     parked beneath, and signs one record; `Keep it` returns to the pick. */
+     parked beneath, and signs one record; `Keep it` returns to the pick.
+     With nothing standing the ask is the empty sign's, never the walk-back's. */
   const commitChecked = (chosen) => {
     const landed = localLanding(bundle.rawSum, chosen);
+    if (landed.severed && (bundle.records === 0 || bundle.severed === true)) {
+      setEmptyAsk({ pick: chosen, landed });
+      return;
+    }
     if (landed.severed) {
       setConfirming({ pick: chosen, records: 1, landed });
       return;
@@ -456,7 +485,10 @@ export function StanceControl({
   };
 
   const restingPair = pendingPick ?? (bundle.records === 0 && !bundle.severed ? null : bundle.current);
-  const restingFace = restingPair === null ? null : bundleReadout(restingPair);
+  /* A resting (0, 0) is walked back only when the bundle says so; otherwise —
+     an empty sign's standing, or a kept pick — it says nothing. */
+  const restingZero = !pendingPick && bundle.severed ? severanceWords(axes).zero : EMPTY_PICK_LABEL;
+  const restingFace = restingPair === null ? null : bundleReadout(restingPair, restingZero);
   /* Whose state `signing` is: the pad's while it is open, the row's while it
      is not. An anchor whose hold is still signing refuses a second hold. */
   const rowSigning = open ? undefined : signing;
@@ -867,6 +899,19 @@ export function StanceControl({
           onConfirm={() => {
             apply(confirming.pick ?? ORIGIN, confirming.landed, Math.max(1, confirming.records));
             setConfirming(null);
+            closeAll();
+          }}
+        />
+      )}
+
+      {emptyAsk !== null && (
+        <EmptySignConfirm
+          targetLabel={targetLabel}
+          vouchIn={vouchesIn}
+          onCancel={() => setEmptyAsk(null)}
+          onConfirm={() => {
+            applyEmpty(emptyAsk.pick, emptyAsk.landed);
+            setEmptyAsk(null);
             closeAll();
           }}
         />

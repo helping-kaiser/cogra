@@ -44,11 +44,11 @@ pub struct SettlingCandidate {
 ///
 /// Under a `topic` (its Type identifier, `name:<canonical name>`), only
 /// content whose own author declares the topic in a pending Tag — the
-/// newest such declaration per Type, at non-zero relevance — is a
+/// newest such declaration per Type, not withdrawn at `(0,0)` — is a
 /// candidate. A third party's pending tag carries no path weight the
 /// ranker could test, so it never admits one (ranked-feed-api §4.10,
-/// low-confidence #4). A staged Tag's relevance is its `p_d` (see
-/// `topics`).
+/// low-confidence #4). A staged Tag's relevance is its `p_d` and its
+/// confidence its `p_i` (see `topics`).
 ///
 /// The rows come back newest `authoredAt` first, then node id bytes: the
 /// provisional order equal settling keys break in (PR-66). The authoritative
@@ -88,7 +88,7 @@ pub async fn candidates(
              AND ($2::text IS NULL OR EXISTS (
                  SELECT 1
                  FROM (
-                     SELECT DISTINCT ON (t.target) t.p_d AS relevance
+                     SELECT DISTINCT ON (t.target) t.p_d AS relevance, t.p_i AS confidence
                      FROM staged_writes t
                      WHERE t.family = 'tag'
                        AND t.middle = n.l1_node_id
@@ -100,7 +100,7 @@ pub async fn candidates(
                        AND t.state NOT IN ('landed', 'expired')
                      ORDER BY t.target, t.pre_signed_at DESC
                  ) newest
-                 WHERE newest.relevance <> 0
+                 WHERE NOT (newest.relevance = 0 AND newest.confidence = 0)
              ))
            ORDER BY s.pre_signed_at DESC, n.id"#,
         kinds,

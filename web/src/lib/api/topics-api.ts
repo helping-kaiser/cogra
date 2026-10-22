@@ -48,7 +48,7 @@ export async function prepareTag(
   fields: {
     target: string;
     name: string;
-    /** Relevance `r`, as the UI shows it; `0` un-tags. Required. */
+    /** Relevance `r`, as the UI shows it. Required; the un-tag sends `(0,0)`. */
     relevance: number;
     /** Confidence `c`, as the UI shows it. Required. */
     confidence: number;

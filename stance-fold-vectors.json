@@ -271,7 +271,7 @@
         },
         {
           "pDirectedBits": "bff0000000000000",
-          "pInterestBits": "3fc9999999999998"
+          "pInterestBits": "3fc999999999999a"
         },
         {
           "pDirectedBits": "bfe0000000000000",
@@ -297,11 +297,11 @@
         },
         {
           "pDirectedBits": "3ff0000000000000",
-          "pInterestBits": "bfeccccccccccccc"
+          "pInterestBits": "bfeccccccccccccd"
         },
         {
-          "pDirectedBits": "3fd9999999999998",
-          "pInterestBits": "8000000000000000"
+          "pDirectedBits": "3fd999999999999a",
+          "pInterestBits": "0000000000000000"
         }
       ],
       "case": "beyond one record, both axes",

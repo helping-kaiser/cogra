@@ -15,7 +15,7 @@
 // still needs afterwards belongs on the surface it happened on, not
 // here.
 
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import { part, testAttributes, type DataNode } from "./data-node";
 
@@ -43,8 +43,12 @@ export function Snackbar({
   action,
   token,
 }: {
-  /** `null` leaves the region mounted and silent. */
-  message: string | null;
+  /**
+   * `null` leaves the region mounted and silent. A node rather than a string
+   * where the line carries a face and a `cg-exact` pair with a spoken twin
+   * (`signedLine`, readme §13).
+   */
+  message: ReactNode | null;
   onDismiss: () => void;
   testId: string;
   /**

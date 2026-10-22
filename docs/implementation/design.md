@@ -131,13 +131,20 @@ line is display, computed from served numbers.
 
 ### 8.4 The emoji readout
 
-**The zero bundle never speaks through the table.** A bundle
-standing at exactly `(0, 0)` — severed, or netted there — is
-the absence of a feeling, and reading it as its nearest
-neighbour ("🙂 Nice") is a lie. It gets its own readout: **🤷**
-with the severed/no-standing wording, on every surface that
-shows a standing. The anchor table reads picks and non-zero
-bundles only.
+**The zero bundle never speaks through the table.** A pair at
+exactly `(0, 0)` — a bundle walked back there, a bundle an empty
+sign left there, a pick of nothing — is the absence of a feeling,
+and reading it as its nearest neighbour ("🙂 Nice") is a lie. It
+gets its own readout: **🤷**, speaking which zero it is: the
+walk-back's word for a severed bundle, "Says nothing" for an
+empty sign's standing and for a pick. Severed is the bundle's
+history, not its pair — the newest record said something
+([api-spec.md "The read-side bundle fold"](api-spec.md#the-read-side-bundle-fold))
+— so a pair drawn without its bundle, a chronicle entry or an
+opinions-page row, takes the word from the data
+(`Record.severed`). A pair with exactly one number at zero wears
+🤔 and names its state; the anchor table reads only pairs with
+both numbers non-zero.
 
 | `p_d` | `p_i` | Readout | Label |
 |---:|---:|:---:|---|

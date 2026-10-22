@@ -50,6 +50,43 @@ class TagAnchorsTest {
         assertThat(nearestTagAnchor(TagPoint(0.1, 1.0)).emoji).isEqualTo("🔍")
     }
 
+    // -- A tag's pair follows the same law (`tagReadout`, jakob 2026-10-21) --
+
+    @Test
+    fun aTagAtZeroOnBothNumbersIsTheWithdrawalAndShrugs() {
+        val face = tagReadout(TagPoint(0.0, 0.0))
+        assertThat(face.emoji).isEqualTo("🤷")
+        assertThat(face.label).isEqualTo(R.string.tag_withdrawn)
+    }
+
+    @Test
+    fun aTagAtZeroOnOneNumberThinksInTheTagFamilysWords() {
+        // The table alone would hand these an object (❔ for both).
+        assertThat(nearestTagAnchor(TagPoint(0.0, 0.2)).emoji).isEqualTo("❔")
+        assertThat(nearestTagAnchor(TagPoint(0.2, 0.0)).emoji).isEqualTo("❔")
+        val notAbout = tagReadout(TagPoint(0.0, 0.2))
+        assertThat(notAbout.emoji).isEqualTo("🤔")
+        assertThat(notAbout.label).isEqualTo(R.string.tag_unreachable_not_about)
+        val noCertainty = tagReadout(TagPoint(0.2, 0.0))
+        assertThat(noCertainty.emoji).isEqualTo("🤔")
+        assertThat(noCertainty.label).isEqualTo(R.string.tag_unreachable_no_certainty)
+    }
+
+    @Test
+    fun theThirteenReadOnlyAPairWithBothNumbersNonZero() {
+        for (anchor in TAG_ANCHORS) {
+            assertThat(tagReadout(anchor.at)).isEqualTo(anchor)
+        }
+        assertThat(tagReadout(TagPoint(0.4, 0.9)).emoji).isEqualTo("🔗")
+    }
+
+    @Test
+    fun theTagTwinIsTheMasters() {
+        val master = java.io.File("../../../design/components/stance/StanceReadout.jsx").readText()
+        assertThat(master).contains("export const TAG_WITHDRAWN_LABEL = \"withdrawn\";")
+        assertThat(master).contains("return pair.pDirected === 0 ? \"not about it at all\" : \"no certainty at all\";")
+    }
+
     @Test
     fun confidenceIsWrittenWithoutAForcedSign() {
         // The whole difference between a tag's pair and a citation's: the

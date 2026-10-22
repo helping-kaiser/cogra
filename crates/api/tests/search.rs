@@ -1114,9 +1114,9 @@ async fn comment_as(
 }
 
 /// Lands, as epoch `epoch` — the mirror's first is 0 — `handle`'s Tag
-/// claim (act `seq`) that `node` carries `name` at `relevance`: the A-leg
-/// into the content and the transposed T-leg out of it, as the seal
-/// renders a Tag.
+/// claim (act `seq`) that `node` carries `name` at `relevance`, held at
+/// full confidence: the A-leg into the content and the transposed T-leg
+/// out of it, as the seal renders a Tag.
 async fn claim(
     pool: &PgPool,
     epoch: i64,
@@ -1126,10 +1126,28 @@ async fn claim(
     name: &str,
     relevance: f64,
 ) {
+    claim_pair(pool, epoch, handle, seq, node, name, (relevance, 1.0)).await;
+}
+
+/// Lands `handle`'s un-tag: the Tag at `(0,0)` that withdraws
+/// (hashtag.md §4).
+async fn unclaim(pool: &PgPool, epoch: i64, handle: &str, seq: u64, node: &NodeId, name: &str) {
+    claim_pair(pool, epoch, handle, seq, node, name, (0.0, 0.0)).await;
+}
+
+async fn claim_pair(
+    pool: &PgPool,
+    epoch: i64,
+    handle: &str,
+    seq: u64,
+    node: &NodeId,
+    name: &str,
+    (relevance, confidence): (f64, f64),
+) {
     tag(pool, name).await;
     let author = atom(handle);
-    let (a_pd, a_pi) = leg_params(LegRole::A, relevance, 1.0);
-    let (t_pd, t_pi) = leg_params(LegRole::T, relevance, 1.0);
+    let (a_pd, a_pi) = leg_params(LegRole::A, relevance, confidence);
+    let (t_pd, t_pi) = leg_params(LegRole::T, relevance, confidence);
     let record = PublishedRecord {
         act_id: ActId::new(&author, seq, Family::Tag).expect("act id"),
         author: author.clone(),
@@ -1403,7 +1421,7 @@ async fn a_comment_on_a_tagged_post_that_does_not_carry_the_tag_is_not_reached(p
     claim(&rig.pool, 0, "sol", 10, &tagged, "saltmaps", 0.9).await;
     claim(&rig.pool, 1, "sol", 11, &strangers, "saltmaps", 0.9).await;
     claim(&rig.pool, 2, "kel", 10, &withdrawn, "saltmaps", 0.9).await;
-    claim(&rig.pool, 3, "kel", 11, &withdrawn, "saltmaps", 0.0).await;
+    unclaim(&rig.pool, 3, "kel", 11, &withdrawn, "saltmaps").await;
 
     let found = scoped(&rig, None, json!({ "query": "#saltmaps salt" })).await;
     assert_eq!(hits(&found), vec!["Post:Salt maps"]);
@@ -1428,7 +1446,7 @@ async fn a_handle_scoped_query_returns_the_tags_they_tagged_with(pool: PgPool) {
     post_as(&rig.pool, kel, &strangers, 2, Some("Wax charts")).await;
     claim(&rig.pool, 0, "sol", 10, &own, "saltmaps", 0.7).await;
     claim(&rig.pool, 1, "sol", 11, &own, "salty", 0.7).await;
-    claim(&rig.pool, 2, "sol", 12, &own, "salty", 0.0).await;
+    unclaim(&rig.pool, 2, "sol", 12, &own, "salty").await;
     claim(&rig.pool, 3, "kel", 10, &own, "saltpans", 0.7).await;
     claim(&rig.pool, 4, "sol", 13, &own, "tides", 0.7).await;
     claim(&rig.pool, 5, "sol", 14, &strangers, "saltflats", 0.7).await;

@@ -5,12 +5,13 @@
 // id; the structural diff waits on registration.
 
 import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { postBackingHandler } from "@/test/backing";
 import { fakeIdentityStore } from "@/test/identity";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
 import { PostEditRoute } from "./post-edit-route";
@@ -132,12 +133,18 @@ function editablePost({
   };
 }
 
-function serve(data: ReturnType<typeof editablePost>) {
+/**
+ * The edit's two reads. `backing` is the author's raw sum (the wizard's +0.10
+ * pre-fill by default); null answers as the server does for any viewer but the
+ * creator — no backing served.
+ */
+function serve(data: ReturnType<typeof editablePost>, { backing = 0.1 as number | null } = {}) {
   server.use(
-    graphql.query("PostDetail", () => HttpResponse.json({ data })),
+    gqlLink.query("PostDetail", () => HttpResponse.json({ data })),
+    postBackingHandler({ p1: backing }),
     // The kept placements' digests, read back by id at sign time — no
     // gallery read selects them (payload-expectation.ts).
-    graphql.query("MediaAttachmentStatus", ({ variables }) =>
+    gqlLink.query("MediaAttachmentStatus", ({ variables }) =>
       HttpResponse.json({
         data: {
           mediaAttachment: {
@@ -177,7 +184,7 @@ describe("PostEditRoute — the guard is the acts batch (EditComposeUnchanged)",
     let prepared = false;
     serve(editablePost());
     server.use(
-      graphql.mutation("PreparePostEdit", () => {
+      gqlLink.mutation("PreparePostEdit", () => {
         prepared = true;
         return HttpResponse.json({ data: editPrepared() });
       }),
@@ -198,7 +205,7 @@ describe("PostEditRoute — the guard is the acts batch (EditComposeUnchanged)",
     let sent: Record<string, unknown> | null = null;
     serve(editablePost());
     server.use(
-      graphql.mutation("PreparePostEdit", ({ variables }) => {
+      gqlLink.mutation("PreparePostEdit", ({ variables }) => {
         sent = variables.input as Record<string, unknown>;
         return HttpResponse.json({ data: editPrepared() });
       }),
@@ -235,20 +242,149 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
     expect(screen.queryByText(/your opinion/i)).not.toBeInTheDocument();
   });
 
-  // THE SERVER GAP (`fetchPostBacking`): no read serves the author's Publish
-  // bundle, so the row's reading stops at the flagged placeholder.
-  it("stops the row's reading at the placeholder while the backing is unread", async () => {
-    serve(editablePost());
+  // THE LIVE READ (`Post.viewerBacking`): the row reads the backing WITH the
+  // edit — clip(raw sum + pick) — and moves with a Set (EditCompose.md).
+  it("reads the row off the live backing, and a Set moves it by the pick", async () => {
+    serve(editablePost(), { backing: 0.1 });
+    draw();
+    expect(await screen.findByTestId("post-edit-backing-value")).toHaveTextContent("+0.10");
+    expect(screen.queryByTestId("post-edit-backing-unread")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    fireEvent.keyDown(await screen.findByTestId("post-edit-backing-pad-field-strip"), {
+      key: "ArrowRight",
+      shiftKey: true,
+    });
+    fireEvent.click(screen.getByTestId("post-edit-backing-pad-set"));
+    expect(screen.getByTestId("post-edit-backing-value")).toHaveTextContent("+0.30");
+  });
+
+  it("the pad reads Current backing and Backing after off the live read", async () => {
+    serve(editablePost(), { backing: 0.1 });
+    draw();
+    await screen.findByTestId("post-edit");
+    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    await screen.findByTestId("post-edit-backing-pad");
+    expect(screen.getByTestId("post-edit-backing-pad-current-exact")).toHaveTextContent("+0.10");
+    expect(screen.getByTestId("post-edit-backing-pad-after-exact")).toHaveTextContent("+0.10");
+    expect(screen.queryByTestId("post-edit-backing-pad-cap")).not.toBeInTheDocument();
+  });
+
+  // EditPad.md: past ±1 the after is clipped and a quiet line states the total.
+  it("states the raw total and the cap when the live sum is past ±1", async () => {
+    serve(editablePost(), { backing: 2 });
+    draw();
+    expect(await screen.findByTestId("post-edit-backing-value")).toHaveTextContent("+1.00");
+    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    await screen.findByTestId("post-edit-backing-pad");
+    expect(screen.getByTestId("post-edit-backing-pad-current-exact")).toHaveTextContent("+1.00");
+    expect(screen.getByTestId("post-edit-backing-pad-after-exact")).toHaveTextContent("+1.00");
+    expect(screen.getByTestId("post-edit-backing-pad-cap")).toHaveTextContent(
+      "Adds up to +2.00; your feed reads it capped at +1.00.",
+    );
+  });
+
+  it("Walk it all back parks against the live sum, and the edit signs that pick", async () => {
+    let sent: Record<string, unknown> | null = null;
+    serve(editablePost(), { backing: 0.35 });
+    server.use(
+      gqlLink.mutation("PreparePostEdit", ({ variables }) => {
+        sent = variables.input as Record<string, unknown>;
+        return HttpResponse.json({ data: editPrepared() });
+      }),
+    );
+    draw();
+    await screen.findByTestId("post-edit-backing-value");
+    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    const walk = await screen.findByTestId("post-edit-backing-pad-walk-back");
+    expect(walk).not.toBeDisabled();
+    fireEvent.click(walk);
+    expect(screen.getByTestId("post-edit-backing-pad-pick-exact")).toHaveTextContent("−0.35");
+    expect(screen.getByTestId("post-edit-backing-pad-after-exact")).toHaveTextContent("+0.00");
+    fireEvent.click(screen.getByTestId("post-edit-backing-pad-set"));
+    expect(screen.getByTestId("post-edit-backing-value")).toHaveTextContent("+0.00");
+    expect(footer()).toHaveTextContent("You're signing 1 thing");
+    fireEvent.click(sign());
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
+    expect(sent).toMatchObject({ pDirected: -0.35 });
+  });
+
+  it("greys Walk it all back while the live backing already nets 0.00", async () => {
+    serve(editablePost(), { backing: 0 });
+    draw();
+    await screen.findByTestId("post-edit-backing-value");
+    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    expect(await screen.findByTestId("post-edit-backing-pad-walk-back")).toBeDisabled();
+  });
+
+  // No backing served — the server answers only the post's creator.
+  it("stands unread when no backing is served, the walk-back greyed", async () => {
+    serve(editablePost(), { backing: null });
     draw();
     await screen.findByTestId("post-edit");
     expect(screen.getByTestId("post-edit-backing-unread")).toHaveTextContent("Not readable yet");
+    fireEvent.click(screen.getByTestId("post-edit-open-backing"));
+    await screen.findByTestId("post-edit-backing-pad");
+    expect(screen.getByTestId("post-edit-backing-pad-current-unread")).toHaveTextContent("Not readable yet");
+    expect(screen.getByTestId("post-edit-backing-pad-after-unread")).toHaveTextContent("Not readable yet");
+    expect(screen.getByTestId("post-edit-backing-pad-walk-back")).toBeDisabled();
+  });
+
+  it("a failed backing read leaves the readouts unread and the edit opens anyway", async () => {
+    serve(editablePost());
+    server.use(gqlLink.query("PostBacking", () => HttpResponse.error()));
+    draw();
+    expect(await screen.findByTestId("post-edit-title")).toHaveValue("Old title");
+    expect(screen.getByTestId("post-edit-backing-unread")).toHaveTextContent("Not readable yet");
+    expect(screen.queryByTestId("post-edit-load-failed")).not.toBeInTheDocument();
+  });
+
+  // Viewer-scoped, so the read rides the guard: an access token that expired
+  // refreshes and replays rather than reading as no backing at all.
+  it("refreshes and replays the backing read on an expired token", async () => {
+    serve(editablePost());
+    server.use(
+      gqlLink.mutation("RefreshSession", () =>
+        HttpResponse.json({
+          data: {
+            refreshSession: {
+              __typename: "AuthPayload",
+              auth: {
+                __typename: "AuthSession",
+                accessToken: "access-2",
+                refreshToken: "refresh-2",
+                user: { __typename: "User", id: "u1" },
+              },
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+      gqlLink.query("PostBacking", ({ request }) =>
+        request.headers.get("authorization") === "Bearer access-2"
+          ? HttpResponse.json({
+              data: {
+                post: {
+                  __typename: "Post",
+                  id: "p1",
+                  viewerBacking: { __typename: "BackingBundle", rawPDirected: 0.4 },
+                },
+              },
+            })
+          : HttpResponse.json({
+              data: null,
+              errors: [{ message: "expired", extensions: { code: "UNAUTHENTICATED" } }],
+            }),
+      ),
+    );
+    draw();
+    expect(await screen.findByTestId("post-edit-backing-value")).toHaveTextContent("+0.40");
   });
 
   it("an unmoved pick leaves the batch empty and travels as 0 with any change", async () => {
     let sent: Record<string, unknown> | null = null;
     serve(editablePost());
     server.use(
-      graphql.mutation("PreparePostEdit", ({ variables }) => {
+      gqlLink.mutation("PreparePostEdit", ({ variables }) => {
         sent = variables.input as Record<string, unknown>;
         return HttpResponse.json({ data: editPrepared() });
       }),
@@ -268,7 +404,7 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
     let sent: Record<string, unknown> | null = null;
     serve(editablePost());
     server.use(
-      graphql.mutation("PreparePostEdit", ({ variables }) => {
+      gqlLink.mutation("PreparePostEdit", ({ variables }) => {
         sent = variables.input as Record<string, unknown>;
         return HttpResponse.json({ data: editPrepared() });
       }),
@@ -309,11 +445,11 @@ describe("PostEditRoute — your backing (EditCompose, EditPad)", () => {
     fireEvent.keyDown(await screen.findByTestId("post-edit-backing-pad-field-strip"), { key: "ArrowLeft" });
     fireEvent.click(screen.getByTestId("post-edit-backing-pad-set"));
     fireEvent.click(screen.getByTestId("post-edit-open-backing"));
-    expect(await screen.findByTestId("post-edit-backing-pad-pick-exact")).toHaveTextContent("-0.05");
+    expect(await screen.findByTestId("post-edit-backing-pad-pick-exact")).toHaveTextContent("−0.05");
     fireEvent.keyDown(screen.getByTestId("post-edit-backing-pad-field-strip"), { key: "ArrowLeft" });
     fireEvent.click(screen.getByTestId("post-edit-backing-pad-cancel"));
     fireEvent.click(screen.getByTestId("post-edit-open-backing"));
-    expect(await screen.findByTestId("post-edit-backing-pad-pick-exact")).toHaveTextContent("-0.05");
+    expect(await screen.findByTestId("post-edit-backing-pad-pick-exact")).toHaveTextContent("−0.05");
   });
 
   it("a Set at 0.00 asks nothing and adds no record", async () => {
@@ -398,7 +534,7 @@ describe("PostEditRoute — leaving (EditCompose, EditWords, DiscardConfirm): th
     let prepared = false;
     serve(editablePost());
     server.use(
-      graphql.mutation("PreparePostEdit", () => {
+      gqlLink.mutation("PreparePostEdit", () => {
         prepared = true;
         return HttpResponse.json({ data: editPrepared() });
       }),
@@ -498,14 +634,14 @@ describe("PostEditRoute — one batch (EditCompose, EditActs)", () => {
       }),
     );
     server.use(
-      graphql.mutation("PreparePostEdit", () => HttpResponse.json({ data: editPrepared() })),
-      graphql.mutation("PrepareTag", ({ variables }) => {
+      gqlLink.mutation("PreparePostEdit", () => HttpResponse.json({ data: editPrepared() })),
+      gqlLink.mutation("PrepareTag", ({ variables }) => {
         tagInputs.push(variables.input);
         return HttpResponse.json({
           data: { prepareTag: { __typename: "PreparePayload", writes: writes(1, "TAG"), userErrors: [] } },
         });
       }),
-      graphql.mutation("PrepareReferenceWithdrawal", ({ variables }) => {
+      gqlLink.mutation("PrepareReferenceWithdrawal", ({ variables }) => {
         withdrawal = variables.input;
         return HttpResponse.json({
           data: {
@@ -527,9 +663,9 @@ describe("PostEditRoute — one batch (EditCompose, EditActs)", () => {
     // Sign is the confirmation: no dialog asks again (EditActs.jsx).
     fireEvent.click(sign());
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
-    // The un-tag signs the confidence the removed chip showed (0.6), never a
-    // hole the server would fill.
-    expect(tagInputs).toEqual([{ target: "p1", name: "wasm", pDirected: 0, pInterest: 0.6 }]);
+    // The un-tag signs (0,0) whatever the removed chip showed (hashtag.md §4),
+    // never a hole the server would fill.
+    expect(tagInputs).toEqual([{ target: "p1", name: "wasm", pDirected: 0, pInterest: 0 }]);
     expect(withdrawal).toEqual({ artifact: "p1", target: "u-juno" });
     expect(signer.signStaged).toHaveBeenCalledTimes(4);
   });
@@ -569,7 +705,7 @@ describe("PostEditRoute — the body (EditWords, EditPicked)", () => {
     let sent: Record<string, unknown> | null = null;
     serve(editablePost({ attachments: [attachment("m-1", "A jetty"), attachment("m-2")] }));
     server.use(
-      graphql.mutation("PreparePostEdit", ({ variables }) => {
+      gqlLink.mutation("PreparePostEdit", ({ variables }) => {
         sent = variables.input as Record<string, unknown>;
         return HttpResponse.json({ data: editPrepared() });
       }),
@@ -591,7 +727,7 @@ describe("PostEditRoute — the body (EditWords, EditPicked)", () => {
     let sent: Record<string, unknown> | null = null;
     serve(editablePost({ attachments: [attachment("m-1")], description: "Rubbings at low tide." }));
     server.use(
-      graphql.mutation("PreparePostEdit", ({ variables }) => {
+      gqlLink.mutation("PreparePostEdit", ({ variables }) => {
         sent = variables.input as Record<string, unknown>;
         return HttpResponse.json({ data: editPrepared() });
       }),
@@ -618,7 +754,7 @@ describe("PostEditRoute — signing", () => {
     let prepared = false;
     serve(editablePost());
     server.use(
-      graphql.mutation("PreparePostEdit", () => {
+      gqlLink.mutation("PreparePostEdit", () => {
         prepared = true;
         return HttpResponse.json({ data: editPrepared() });
       }),
@@ -633,7 +769,7 @@ describe("PostEditRoute — signing", () => {
   it("takes the commit's place with the write rule's notice and no Retry", async () => {
     serve(editablePost());
     server.use(
-      graphql.mutation("PreparePostEdit", () =>
+      gqlLink.mutation("PreparePostEdit", () =>
         HttpResponse.json({
           data: {
             preparePostEdit: {
@@ -662,7 +798,7 @@ describe("PostEditRoute — signing", () => {
   it("drops the held press when the prepared count is not the one the foot read", async () => {
     serve(editablePost());
     server.use(
-      graphql.mutation("PreparePostEdit", () => HttpResponse.json({ data: editPrepared(2) })),
+      gqlLink.mutation("PreparePostEdit", () => HttpResponse.json({ data: editPrepared(2) })),
     );
     const signer = draw();
     fireEvent.change(await screen.findByTestId("post-edit-words"), { target: { value: "x" } });

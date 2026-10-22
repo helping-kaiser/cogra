@@ -6,8 +6,8 @@
 //
 // Publish is a single-parameter family: `p_d` is the author's attachment,
 // their BACKING, and `p_i` is pinned at 1 by the census, so a pair would draw
-// a second figure nobody can choose. The face comes from `VALENCE_SIX` (🤷 at
-// exactly 0.00, spoken `Nothing`), and the spoken twin names the one axis
+// a second figure nobody can choose. The face comes from `VALENCE_SIX` (🤔 at
+// exactly 0.00, spoken `No side taken`), and the spoken twin names the one axis
 // there is. The author's OPINION on their own post is a different record — the
 // ordinary pair its face takes — read by the stance readouts like any other.
 //
@@ -26,10 +26,10 @@ import { nearestValenceAnchor, PICK_LABEL, VALENCE_LABEL } from "@/lib/stance/va
 import { formatDimension } from "@/lib/ui/stance-format";
 
 /**
- * SERVER GAP PLACEHOLDER — not drawn copy. What a backing readout shows while
- * no read serves the author's Publish bundle toward their own post (see
- * `fetchPostBacking`). It stands where the drawn face and number would, so the
- * gap is visible on the hand test instead of hidden behind a guessed value.
+ * UNREAD PLACEHOLDER — not drawn copy. What a backing readout shows when the
+ * read of the author's Publish bundle toward their own post answered none or
+ * failed (`fetchPostBacking`). It stands where the drawn face and number
+ * would, so an unread backing is visible instead of hidden behind a guess.
  */
 export const BACKING_UNREAD = "Not readable yet";
 
@@ -81,7 +81,7 @@ export function AttachmentReadout({ pDirected, testId }: { pDirected: number; te
 /**
  * One labelled readout: the name of the quantity, then the face and the number
  * on the line below it — formatted identically for all three, so the eye can
- * compare them without reading. `value` null is the server gap's placeholder.
+ * compare them without reading. `value` null reads as the unread placeholder.
  */
 function ReadoutBlock({
   label,
@@ -127,7 +127,7 @@ function ReadoutBlock({
  * Everything above the strip. At compose nothing is standing, so the pick is
  * its own result and `Your pick` reads alone (`current` undefined). An edit
  * reads `Current backing` — the bundle's net — over `Your pick`; `rawSum` null
- * is the server gap, read as the placeholder.
+ * is an unread backing, read as the placeholder.
  */
 export function AttachmentStanding({
   pick,
@@ -163,7 +163,7 @@ export function AttachmentLandingLine({
   pick,
   testIdPrefix,
 }: {
-  /** Null while no read serves the bundle — the server gap's placeholder. */
+  /** Null while the bundle is unread — the placeholder stands. */
   rawSum: number | null;
   pick: number;
   testIdPrefix: string;

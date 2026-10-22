@@ -1,10 +1,10 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw/http";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { RegisterMutationVariables } from "@/__generated__/graphql";
 import { createTokenStore } from "@/lib/session/token-store";
-import { startMswServer } from "@/test/msw";
+import { gqlLink, startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { JoinView } from "./join-view";
 
@@ -17,7 +17,7 @@ const server = startMswServer();
 
 const ID = "0198c9a2-1f6b-7c31-9d70-3a4f5b6c7d8e";
 
-const usableCheck = graphql.query("InviteLinkCheck", () =>
+const usableCheck = gqlLink.query("InviteLinkCheck", () =>
   HttpResponse.json({
     data: {
       inviteLinkCheck: {
@@ -37,7 +37,7 @@ function signedInStore() {
 }
 
 function meHandler(accountState: "APPLICANT" | "MEMBER") {
-  return graphql.query("Me", () =>
+  return gqlLink.query("Me", () =>
     HttpResponse.json({
       data: {
         me: {
@@ -70,7 +70,7 @@ describe("JoinView", () => {
 
   it("refuses an unknown invite before the form", async () => {
     server.use(
-      graphql.query("InviteLinkCheck", () => HttpResponse.json({ data: { inviteLinkCheck: null } })),
+      gqlLink.query("InviteLinkCheck", () => HttpResponse.json({ data: { inviteLinkCheck: null } })),
     );
     renderWithProviders(<JoinView linkId={ID} />);
     expect(await screen.findByTestId("invite_error")).toBeInTheDocument();
@@ -79,7 +79,7 @@ describe("JoinView", () => {
 
   it("refuses an unusable invite before the form", async () => {
     server.use(
-      graphql.query("InviteLinkCheck", () =>
+      gqlLink.query("InviteLinkCheck", () =>
         HttpResponse.json({
           data: {
             inviteLinkCheck: {
@@ -102,7 +102,7 @@ describe("JoinView", () => {
   });
 
   it("surfaces a transport fault on the check", async () => {
-    server.use(graphql.query("InviteLinkCheck", () => HttpResponse.error()));
+    server.use(gqlLink.query("InviteLinkCheck", () => HttpResponse.error()));
     renderWithProviders(<JoinView linkId={ID} />);
     expect(await screen.findByTestId("invite_transport_error")).toBeInTheDocument();
   });
@@ -111,7 +111,7 @@ describe("JoinView", () => {
     const captured: RegisterMutationVariables[] = [];
     server.use(
       usableCheck,
-      graphql.mutation("Register", ({ variables }) => {
+      gqlLink.mutation("Register", ({ variables }) => {
         captured.push(variables as RegisterMutationVariables);
         return HttpResponse.json({
           data: {
@@ -159,7 +159,7 @@ describe("JoinView", () => {
   it("pins a registration refusal to the form", async () => {
     server.use(
       usableCheck,
-      graphql.mutation("Register", () =>
+      gqlLink.mutation("Register", () =>
         HttpResponse.json({
           data: {
             register: {
@@ -193,7 +193,7 @@ describe("JoinView", () => {
   it("renders a rate-limited registration as a backoff, not a connectivity failure", async () => {
     server.use(
       usableCheck,
-      graphql.mutation("Register", () =>
+      gqlLink.mutation("Register", () =>
         HttpResponse.json({
           errors: [{ message: "too many attempts", extensions: { code: "RATE_LIMITED" } }],
         }),
@@ -230,7 +230,7 @@ describe("JoinView", () => {
   });
 
   it("offers no action while the account state is unknown", async () => {
-    server.use(usableCheck, graphql.query("Me", () => HttpResponse.error()));
+    server.use(usableCheck, gqlLink.query("Me", () => HttpResponse.error()));
     renderWithProviders(<JoinView linkId={ID} />, { store: signedInStore() });
     expect(await screen.findByTestId("invite_inviter")).toBeInTheDocument();
     expect(screen.queryByTestId("join_member_note")).not.toBeInTheDocument();

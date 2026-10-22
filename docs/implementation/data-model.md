@@ -495,9 +495,9 @@ pre-commitment and the host-sealed verified act as the handshake
 advances — is one `staged_writes` row from **prepare** until
 **confirm**. Staged payload bytes ride the row; promotion at
 confirm copies them into the carriage tables, which own permanent
-payload storage. A content write's display rows appear earlier, at
-the pre-commitment signature, carrying a pending mark ("Content
-nodes" below); promotion on confirm drops that mark and drives the
+payload storage. A content write's or profile update's display
+rows appear earlier, at the pre-commitment signature, carrying a
+pending mark ("Content nodes" below); promotion on confirm drops that mark and drives the
 flows built on landing (an applicant's Registration and a
 vouch-Opinion both confirming flip their account to member —
 [auth.md](auth.md)). Staged state
@@ -913,18 +913,21 @@ CREATE TABLE user_credentials (
 -- Actor profiles: append-only versions of the profile display
 -- fields, one shape for every kind (see "Display-content
 -- versioning"). A user edits their own via the parallel
--- Registration (prepareProfileUpdate) — the version row is
--- written at confirm, in the same flow as the record that
--- witnesses it (user.md §4), with the envelope carried in
--- act_payloads. Registration seeds the first row with
--- display_name = handle; genesis seeds the system actors'. A
--- Collective's changes land through its governed edit flow
--- (substrate.md §9). Promotion stamps the record's landing
--- coordinates, and they are what order the versions; the seeded
--- first row carries none, since no record stands behind it. The
--- row's own `version_id` is the key, and the last tiebreak: two
--- writes can share one `created_at` — `now()` is the transaction
--- timestamp.
+-- Registration (prepareProfileUpdate) — the merged version row is
+-- written at the pre-commitment signature, marked `pending`, and
+-- served to every reader from then on, exactly as a post edit's
+-- (post_versions below); confirm drops the mark and stamps the
+-- record's landing coordinates (user.md §4), with the envelope
+-- carried in act_payloads, and expiry deletes the pending row so
+-- the previous version renders again. `created_at` is the
+-- update's authoring instant, keyed unique while pending for the
+-- pre-sign leg's retry idempotence. Registration seeds the first
+-- row with display_name = handle; genesis seeds the system
+-- actors'. A Collective's changes land through its governed edit
+-- flow (substrate.md §9). The coordinates are what order the
+-- landed versions; the seeded first row carries none, since no
+-- record stands behind it. The row's own `version_id` is the key,
+-- and the last tiebreak between rows sharing one `created_at`.
 CREATE TABLE actor_profile_versions (
     actor_id         UUID        NOT NULL REFERENCES actors(id),
     display_name     TEXT        NOT NULL,
@@ -932,6 +935,7 @@ CREATE TABLE actor_profile_versions (
     avatar_id        UUID        REFERENCES media_attachments(id),
     website_url      TEXT,
     redaction_reason TEXT,
+    pending          BOOLEAN     NOT NULL DEFAULT FALSE,
     landed_epoch     BIGINT,
     act_time         BIGINT,
     position         BIGINT,
@@ -939,8 +943,11 @@ CREATE TABLE actor_profile_versions (
     version_id       BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     CHECK (num_nonnulls(landed_epoch, act_time, position) IN (0, 3))
 );
+CREATE UNIQUE INDEX actor_profile_versions_pending_instant_key
+    ON actor_profile_versions (actor_id, created_at)
+    WHERE pending;
 CREATE INDEX actor_profile_versions_current_idx
-    ON actor_profile_versions (actor_id,
+    ON actor_profile_versions (actor_id, pending DESC,
                                landed_epoch DESC NULLS LAST,
                                act_time     DESC NULLS LAST,
                                position     DESC NULLS LAST,
@@ -1711,10 +1718,11 @@ CREATE TABLE auth_applications (
     -- the latch cannot diverge; rebuildable from the mirror.
     reciprocated_at TIMESTAMPTZ,
     -- Latched derived cache of an L1 fact: set when the record
-    -- mirror confirms the member's first Opinion, toward any target —
-    -- the end of the borrowed view (api-spec.md Query.borrowedView).
-    -- Only a landed Opinion latches; an in-flight one can still
-    -- expire. Rebuildable from the mirror.
+    -- mirror confirms the member's first live Opinion (a non-inert
+    -- netted bundle), toward any target — the end of the borrowed
+    -- view (api-spec.md Query.borrowedView). Only a landed Opinion
+    -- latches; an in-flight one can still expire. Rebuildable from
+    -- the mirror.
     first_opinion_at TIMESTAMPTZ,
     -- The member's own dismissal of the vouch-back prompt, for good
     -- and on every device (User.vouchBackDismissed). Authoritative L2

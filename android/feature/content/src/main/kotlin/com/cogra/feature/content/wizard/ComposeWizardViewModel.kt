@@ -2,6 +2,7 @@ package com.cogra.feature.content.wizard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cogra.core.designsystem.hundredth
 import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
@@ -695,10 +696,13 @@ class ComposeWizardViewModel @Inject constructor(
      * (ComposePad.md). It warns, never refuses.
      */
     fun onSetStance() = _state.update {
-        if (it.stagedPDirected == 0.0) {
-            it.copy(confirmingUnreachable = true)
+        // The pick is a hundredth (the release lands it there), so one that
+        // reads 0.00 IS 0 and the question is asked.
+        val picked = hundredth(it.stagedPDirected)
+        if (picked == 0.0) {
+            it.copy(stagedPDirected = picked, confirmingUnreachable = true)
         } else {
-            it.copy(pDirected = it.stagedPDirected).closedSheets()
+            it.copy(pDirected = picked).closedSheets()
         }
     }
 

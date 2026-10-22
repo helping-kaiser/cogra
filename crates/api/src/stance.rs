@@ -16,7 +16,7 @@
 
 use common::hashtag::canonicalize;
 use common::l1::census::Family;
-use common::l1::fold::BundleSum;
+use common::l1::fold::{BundleSum, Standing};
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::stance::BundleView;
 use postgres_store::{PgPool, stance as stance_store};
@@ -150,11 +150,13 @@ fn family_for(node: &NodeId) -> Family {
 #[derive(Debug, Clone)]
 pub struct TargetBundle {
     pub node: NodeId,
-    pub sum: BundleSum,
+    pub standing: Standing,
 }
 
 /// The author's bundle toward a target — the read the pad's readout folds
-/// (design.md §8.2). Returns the raw sums; the clip is `BundleSum::fold`.
+/// (design.md §8.2). Returns the raw sums; the clip is `BundleSum::fold`,
+/// and whether the bundle is severed or says nothing is the standing's own
+/// reading (`Standing`).
 pub async fn bundle(
     pool: &PgPool,
     viewer: Uuid,
@@ -163,10 +165,10 @@ pub async fn bundle(
 ) -> Result<TargetBundle, StanceError> {
     let author = author_address(pool, viewer).await?;
     let resolved = resolve_target(pool, &TargetRef::Node(target)).await?;
-    let sum = read_bundle(pool, &author, &resolved, include_pending).await?;
+    let standing = read_standing(pool, &author, &resolved, include_pending).await?;
     Ok(TargetBundle {
         node: resolved.node,
-        sum,
+        standing,
     })
 }
 
@@ -181,10 +183,10 @@ pub async fn topic_bundle(
 ) -> Result<TargetBundle, StanceError> {
     let author = author_address(pool, viewer).await?;
     let resolved = resolve_target(pool, &TargetRef::Topic(canonical_name.to_string())).await?;
-    let sum = read_bundle(pool, &author, &resolved, include_pending).await?;
+    let standing = read_standing(pool, &author, &resolved, include_pending).await?;
     Ok(TargetBundle {
         node: resolved.node,
-        sum,
+        standing,
     })
 }
 
@@ -209,13 +211,13 @@ pub async fn publish_backing(
     .map_err(StanceError::Storage)
 }
 
-async fn read_bundle(
+async fn read_standing(
     pool: &PgPool,
     author: &str,
     resolved: &StanceTarget,
     include_pending: bool,
-) -> Result<BundleSum, StanceError> {
-    stance_store::bundle(
+) -> Result<Standing, StanceError> {
+    stance_store::standing(
         pool,
         author,
         resolved.family,
@@ -270,7 +272,9 @@ pub async fn prepare_stance<B: L1Boundary>(
 }
 
 /// Prepares the severance gesture: the counter-records that net the
-/// author's bundle toward the target to `(0, 0)`.
+/// author's bundle toward the target to `(0, 0)` — or, for a standing an
+/// empty sign left at `(0, 0)`, the one `(0, 0)` record its walk-back
+/// costs (`Standing::severance_batch`).
 ///
 /// The batch is computed against the pending-inclusive view, so a sever
 /// followed by a refetch reads `(0,0)` at once rather than after the acts
@@ -285,8 +289,8 @@ pub async fn prepare_severance<B: L1Boundary>(
 ) -> Result<Vec<prepare::Prepared>, StanceError> {
     let author = author_address(pool, viewer).await?;
     let resolved = resolve_target(pool, target).await?;
-    let sum = read_bundle(pool, &author, &resolved, true).await?;
-    let batch = sum.severance_batch();
+    let standing = read_standing(pool, &author, &resolved, true).await?;
+    let batch = standing.severance_batch();
     if batch.is_empty() {
         return Err(StanceError::BadInput {
             field: "target",

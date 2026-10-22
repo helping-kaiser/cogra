@@ -21,8 +21,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.EMPTY_PICK_LABEL
 import com.cogra.core.designsystem.StancePoint
-import com.cogra.core.designsystem.nearestStanceAnchor
+import com.cogra.core.designsystem.bundleReadout
 import com.cogra.core.designsystem.pair
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
@@ -188,4 +189,4 @@ private fun CitedRow(
  */
 @Composable
 private fun citedPairReading(point: StancePoint): String =
-    "${nearestStanceAnchor(point).emoji} ${point.pair()}"
+    "${bundleReadout(point, EMPTY_PICK_LABEL).emoji} ${point.pair()}"

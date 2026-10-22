@@ -233,6 +233,23 @@ impl Loader<String> for PayloadStateLoader {
     }
 }
 
+/// Whether a stance record left its bundle walked back, keyed on the
+/// record identifier: `Record.severed` on every record of a page asks
+/// once. A record that folds into no stance bundle is absent, which the
+/// resolver reads as null.
+pub struct SeveringRecordLoader(PgPool);
+
+impl Loader<String> for SeveringRecordLoader {
+    type Value = bool;
+    type Error = LoadError;
+
+    async fn load(&self, keys: &[String]) -> Result<HashMap<String, bool>, LoadError> {
+        postgres_store::stance::severing_records(&self.0, keys)
+            .await
+            .map_err(LoadError::from_display)
+    }
+}
+
 /// An epoch's attested boundary timestamp, keyed on the epoch:
 /// `Record.landedAt` on every record of a page asks once per distinct
 /// epoch. An epoch the mirror has not ingested is absent.
@@ -335,6 +352,7 @@ pub struct NodeLoaders {
     pub comment_galleries: DataLoader<CommentGalleryLoader>,
     pub media: DataLoader<MediaByIdLoader>,
     pub payload_states: DataLoader<PayloadStateLoader>,
+    pub severing_records: DataLoader<SeveringRecordLoader>,
     pub epoch_instants: DataLoader<EpochInstantLoader>,
     pub bookmarks: DataLoader<BookmarkLoader>,
     pub thread_posts: DataLoader<ThreadPostLoader>,
@@ -351,6 +369,7 @@ impl NodeLoaders {
             comment_galleries: DataLoader::new(CommentGalleryLoader(pool.clone()), tokio::spawn),
             media: DataLoader::new(MediaByIdLoader(pool.clone()), tokio::spawn),
             payload_states: DataLoader::new(PayloadStateLoader(pool.clone()), tokio::spawn),
+            severing_records: DataLoader::new(SeveringRecordLoader(pool.clone()), tokio::spawn),
             epoch_instants: DataLoader::new(EpochInstantLoader(pool.clone()), tokio::spawn),
             bookmarks: DataLoader::new(BookmarkLoader(pool.clone()), tokio::spawn),
             thread_posts: DataLoader::new(ThreadPostLoader(pool), tokio::spawn),

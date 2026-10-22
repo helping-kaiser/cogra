@@ -40,7 +40,7 @@ import { SensitiveSheet } from "@/lib/ui2/compose/sensitive-sheet";
 import { ActsSheet } from "@/lib/ui2/compose/edit-acts";
 import { BackingEditPad } from "@/lib/ui2/compose/backing-edit-pad";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
-import { WITHDRAWN_RELEVANCE } from "@/lib/topics/draft";
+import { signedValues } from "@/lib/topics/draft";
 import { keptPreviews, pictureAltText, pictureId } from "@/lib/compose/comment-edit";
 import {
   editActCount,
@@ -101,7 +101,8 @@ export function PostEditRoute({
   const [referenceErrors, setReferenceErrors] = useState<Readonly<Record<number, string>>>({});
   const [sheet, setSheet] = useState<"acts" | "pictures" | "sensitive" | "backing" | null>(null);
   // The raw sum of the author's Publish records toward the post — what the
-  // backing row and pad read. Null while unserved (`fetchPostBacking`).
+  // backing row and pad read. Null when the read answered none or failed
+  // (`fetchPostBacking`): the readouts then stand unread.
   const [backingRawSum, setBackingRawSum] = useState<number | null>(null);
   const [describing, setDescribing] = useState<string | null>(null);
   const [help, setHelp] = useState<HelpTopic | null>(null);
@@ -111,25 +112,31 @@ export function PostEditRoute({
 
   useEffect(() => {
     let cancelled = false;
-    void fetchPostDetail(client, postId).then((outcome) => {
+    // The backing is read beside the post and the edit opens once both have
+    // answered, so the readouts never flash unread while the read is in
+    // flight. It never stands in the edit's way: a backing read that fails or
+    // serves nothing leaves the readouts unread, and the edit opens anyway.
+    // Viewer-scoped, so it rides the guard: a token that expired mid-session
+    // refreshes and replays instead of reading as no backing at all.
+    void Promise.all([
+      fetchPostDetail(client, postId),
+      guard.run(() => fetchPostBacking(client, postId)),
+    ]).then(([outcome, backing]) => {
       if (cancelled) return;
       if (outcome.kind !== "success") setLoaded({ kind: "failed" });
       else if (outcome.value === null) setLoaded({ kind: "missing" });
       else {
+        setBackingRawSum(
+          backing.kind === "success" && backing.value !== null ? backing.value.rawSum : null,
+        );
         dispatch({ type: "load", state: postEditOf(outcome.value.post) });
         setLoaded({ kind: "ready" });
       }
     });
-    // SERVER GAP: no read serves the backing yet, so this answers null and
-    // the backing readouts stop at their flagged placeholder.
-    void fetchPostBacking().then((outcome) => {
-      if (cancelled || outcome.kind !== "success") return;
-      setBackingRawSum(outcome.value === null ? null : outcome.value.rawSum);
-    });
     return () => {
       cancelled = true;
     };
-  }, [client, postId]);
+  }, [client, guard, postId]);
 
   useEffect(
     () => () => {
@@ -283,10 +290,8 @@ export function PostEditRoute({
         prepareTag(client, {
           target: postId,
           name: change.tag.name,
-          // Withdrawing is a Tag act at relevance 0 (hashtag.md §4).
-          relevance: change.kind === "tag" ? change.tag.relevance : WITHDRAWN_RELEVANCE,
-          // An un-tag signs the confidence its chip showed; only relevance moves.
-          confidence: change.tag.confidence,
+          // Withdrawing is a Tag act at (0,0) (hashtag.md §4).
+          ...signedValues(change),
         }),
       );
       if (prepared.kind === "failed") {

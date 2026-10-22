@@ -28,7 +28,7 @@ import type { ReactNode } from "react";
 import { bundleReadout, ZERO_BUNDLE_EMOJI } from "@/lib/stance/anchors";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon, type GlyphName } from "@/lib/ui/icons";
-import { formatStancePair } from "@/lib/ui/stance-format";
+import { formatStancePair, STANCE_SEVERANCE_WORDS } from "@/lib/ui/stance-format";
 import { MonogramAvatar } from "./monogram-avatar";
 
 /** The word a deleted account's row reads, in the system's voice (`ActorChip.jsx`). */
@@ -43,14 +43,26 @@ export type ContentRowVariant = "chronicle";
 export type ContentRowDisc =
   | { readonly kind: "picture"; readonly src: string; readonly name: string }
   | { readonly kind: "monogram"; readonly name: string }
-  /** A stance's face where a picture would go, no digits (the chronicle's opinion row). */
-  | { readonly kind: "face"; readonly pDirected: number; readonly pInterest: number }
+  /**
+   * A stance's face where a picture would go, no digits (the chronicle's
+   * opinion row). `zeroLabel` is which (0, 0) it draws, from the record's own
+   * `severed` — the pair alone cannot say (`StanceValue.zeroLabel`).
+   */
+  | {
+      readonly kind: "face";
+      readonly pDirected: number;
+      readonly pInterest: number;
+      readonly zeroLabel?: string;
+    }
   /** 🤷 where a picture would go, for a stance walked back (the withdrawal notification). */
   | { readonly kind: "walkedBack" }
   | { readonly kind: "glyph"; readonly glyph: GlyphName }
   | { readonly kind: "redacted" };
 
-const ELLIPSIS = "min-w-0 overflow-hidden text-ellipsis whitespace-nowrap";
+/** `StanceValue`'s default zero word, the walk-back's (`SEVERED_LABEL`). */
+const SEVERED_LABEL = STANCE_SEVERANCE_WORDS.zero;
+
+const ELLIPSIS ="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap";
 
 function Disc({ disc }: { disc: ContentRowDisc }) {
   switch (disc.kind) {
@@ -64,7 +76,8 @@ function Disc({ disc }: { disc: ContentRowDisc }) {
       // `StanceValue` with `showPair={false}` (StanceReadout.jsx): the face on
       // screen, the label and the exact pair spoken.
       const pair = { pDirected: disc.pDirected, pInterest: disc.pInterest };
-      const readout = bundleReadout(pair, "Severed");
+      // The master's default word is the walk-back's (`StanceValue`).
+      const readout = bundleReadout(pair, disc.zeroLabel ?? SEVERED_LABEL);
       return (
         <span
           role="img"
