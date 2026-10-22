@@ -91,7 +91,7 @@ export function PickedRow({
     return (
       <div {...ids} className="flex min-h-12 w-full items-center gap-2 text-left text-on-surface">
         {thumbs}
-        <span className="flex-1 text-label-small text-on-surface-variant" {...captionIds}>
+        <span className="flex-1 text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] [letter-spacing:var(--text-label-small--letter-spacing)] text-on-surface-variant" {...captionIds}>
           {caption}
         </span>
       </div>
@@ -107,7 +107,7 @@ export function PickedRow({
       className="cg-state cg-focus flex min-h-12 w-full cursor-pointer items-center gap-2 text-left text-on-surface"
     >
       {thumbs}
-      <span className="flex-1 text-label-small text-on-surface-variant" {...captionIds}>
+      <span className="flex-1 text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] [letter-spacing:var(--text-label-small--letter-spacing)] text-on-surface-variant" {...captionIds}>
         {caption}
       </span>
     </button>
@@ -158,7 +158,7 @@ export function DescribeCounter({
 }) {
   return (
     <div className="flex flex-col gap-1" {...testAttributes(node)}>
-      <p className="m-0 text-label-small">
+      <p className="m-0 text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] [letter-spacing:var(--text-label-small--letter-spacing)]">
         <button
           type="button"
           {...testAttributes(part(node, "describe"), testId)}
@@ -171,7 +171,7 @@ export function DescribeCounter({
           · {described} of {total} described
         </span>
       </p>
-      <p className="m-0 text-label-small text-on-surface-variant" {...testAttributes(part(node, "reason"))}>
+      <p className="m-0 text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] [letter-spacing:var(--text-label-small--letter-spacing)] text-on-surface-variant" {...testAttributes(part(node, "reason"))}>
         Read aloud to people who can&apos;t see it.
       </p>
     </div>

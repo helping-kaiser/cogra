@@ -298,4 +298,19 @@ describe("DetailsStep — the staged pairs", () => {
     expect(onReferences).toHaveBeenCalledWith([]);
     expect((screen.getByTestId("wizard-reference-pair") as HTMLDialogElement).open).toBe(false);
   });
+
+  // `ComposeUploading` draws the aside while something is still going up; the
+  // stage at rest (`ComposeDetails`) draws none.
+  it("says pictures upload while you write only while one is still going up", () => {
+    const picture = (upload: PickedAsset["upload"]): PickedAsset => ({ ...VIDEO_ASSET, id: "p0", kind: "picture", upload });
+    renderStep({ mode: "media", assets: [picture({ kind: "uploading" })] });
+    expect(screen.getByTestId("wizard-upload-aside")).toHaveTextContent(
+      "Pictures upload while you write — signing waits for them.",
+    );
+  });
+
+  it("draws no upload aside once every picture has landed", () => {
+    renderStep({ mode: "media", assets: [{ ...VIDEO_ASSET, id: "p0", kind: "picture" }] });
+    expect(screen.queryByTestId("wizard-upload-aside")).toBeNull();
+  });
 });
