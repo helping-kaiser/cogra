@@ -84,23 +84,25 @@ export function Screen() {
       {/* The wash over the shell; the parked pad above it stays sharp. */}
       <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "var(--scrim-dialog)" }} />
 
+      {/* The shell is `StanceControl`'s open pad, geometry and all: 17rem
+          content-box plus the card padding, never border-box — a variant of
+          the pad must sit on the canvas at the pad's own width. */}
       <div
         style={{
           position: "absolute",
           left: "50%",
           bottom: 80,
           transform: "translateX(-50%)",
-          width: 272,
+          width: "17rem",
           maxHeight: 684,
           display: "flex",
           flexDirection: "column",
-          gap: 12,
+          gap: "var(--space-3)",
           overflow: "hidden",
           borderRadius: "var(--radius-extra-large)",
           background: "var(--surface-dialog)",
           color: "var(--on-surface)",
           padding: "var(--card-padding)",
-          boxSizing: "border-box",
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
