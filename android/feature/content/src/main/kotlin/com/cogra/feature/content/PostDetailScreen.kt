@@ -6,10 +6,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -745,8 +743,6 @@ private fun PostDetailBody(
                 // post's clip too), in this same row: in the page's flow, it
                 // scrolls away with the post and is never pinned (:11).
                 NewerVersionLine(state.newer != null, onSwapToNewer, POST_DETAIL / "newerVersion")
-                // `DetailColumn`'s 12dp between the line and the post.
-                if (state.newer != null) Spacer(Modifier.height(Space.x3))
                 if (clip != null) {
                     // The clip's two routes into the viewer — the bar's
                     // fullscreen toggle and the clip's own tap (graph.json,

@@ -71,10 +71,12 @@ fun PageHeader(
     val titleTag = node?.div("title")?.tag ?: testTag?.let { "${it}_title" } ?: "page_header_title"
     val rootTag = node?.tag ?: testTag
     Row(
+        // The band's tag names the whole band (`PageHeader.jsx` `data-node` on
+        // the full-width bar), so it rides outside the band's own padding.
         modifier = modifier
+            .then(if (rootTag != null) Modifier.testTag(rootTag) else Modifier)
             .defaultMinSize(minHeight = Layout.TopBarHeight)
-            .padding(horizontal = Layout.TopBarPadding)
-            .then(if (rootTag != null) Modifier.testTag(rootTag) else Modifier),
+            .padding(horizontal = Layout.TopBarPadding),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
     ) {
