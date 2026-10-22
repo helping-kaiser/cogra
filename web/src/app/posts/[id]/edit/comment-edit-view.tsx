@@ -371,10 +371,12 @@ export function CommentEditView({
 
       <SensitiveSheet
         open={sensitiveOpen}
-        marked={sensitive}
         reason={sensitiveReason}
-        onMarked={onSensitive}
-        onReason={onSensitiveReason}
+        onDone={(next) => {
+          onSensitive(next.sensitive);
+          onSensitiveReason(next.sensitiveReason);
+          onSensitiveOpen(false);
+        }}
         onClose={() => onSensitiveOpen(false)}
         onHelp={onSensitiveHelp}
         testIdPrefix="comment-edit"

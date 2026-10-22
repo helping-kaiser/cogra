@@ -484,10 +484,12 @@ export function PostEditRoute({
       />
       <SensitiveSheet
         open={sheet === "sensitive"}
-        marked={state.sensitive}
         reason={state.sensitiveReason}
-        onMarked={(next) => dispatch({ type: "sensitive", sensitive: next })}
-        onReason={(reason) => dispatch({ type: "sensitiveReason", reason })}
+        onDone={(next) => {
+          dispatch({ type: "sensitive", sensitive: next.sensitive });
+          dispatch({ type: "sensitiveReason", reason: next.sensitiveReason });
+          setSheet(null);
+        }}
         onClose={() => setSheet(null)}
         onHelp={() => setHelp(HELP_TOPICS.markingAsSensitive)}
         testIdPrefix="post-edit"

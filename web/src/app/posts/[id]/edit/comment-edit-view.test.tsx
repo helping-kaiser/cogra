@@ -95,12 +95,15 @@ describe("CommentEdit", () => {
     expect(props.onSensitiveOpen).toHaveBeenCalledWith(true);
   });
 
-  it("the sheet flips the mark, and its reason waits for one", () => {
+  // The sheet opens marked (`Mark` was the intent) and stages; Done commits.
+  it("the sheet stages the mark, and its reason waits for one", () => {
     const props = draw({ sensitiveOpen: true });
     fireEvent.click(screen.getByTestId("comment-edit-sensitive-switch"));
-    expect(props.onSensitive).toHaveBeenCalledWith(true);
     // A reason without the mark is a refusal, so the field waits for it.
     expect(screen.getByTestId("comment-edit-sensitive-reason")).toBeDisabled();
+    expect(props.onSensitive).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId("comment-edit-sensitive-done"));
+    expect(props.onSensitive).toHaveBeenCalledWith(false);
   });
 
   it("the sheet's reason is live once the comment is marked", () => {
@@ -108,6 +111,8 @@ describe("CommentEdit", () => {
     const reason = screen.getByTestId("comment-edit-sensitive-reason");
     expect(reason).not.toBeDisabled();
     fireEvent.change(reason, { target: { value: "A dead seabird." } });
+    fireEvent.click(screen.getByTestId("comment-edit-sensitive-done"));
+    expect(props.onSensitive).toHaveBeenCalledWith(true);
     expect(props.onSensitiveReason).toHaveBeenCalledWith("A dead seabird.");
   });
 
