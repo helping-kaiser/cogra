@@ -1,15 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="profile_title">Profile</string>
-    <string name="profile_back">Back</string>
-    <!-- A Saved row's person reads its origin (the origin-naming table). -->
+    <!-- The way back names its origin (ProfileOther.md:73; copy-voice.md origin nouns);
+         `Back to feed` is also the entry with no history behind it. -->
+    <string name="profile_back_feed">Back to feed</string>
+    <string name="profile_back_post">Back to the post</string>
+    <string name="profile_back_comments">Back to the comments</string>
+    <string name="profile_back_topic">Back to #%1$s</string>
     <string name="profile_back_saved">Back to Saved</string>
+    <!-- The edit screen's arrow (ProfileEdit, outside the profile boards). -->
+    <string name="profile_back">Back</string>
     <string name="profile_back_notifications">Back to Notifications</string>
 
     <!-- The profile's ⋮ (ProfileOwnMenu.md, ProfileMenu.md, ProfileDeletedMenu.md). -->
     <string name="profile_menu_own">More on your profile</string>
     <string name="profile_menu_other">More about %1$s</string>
     <string name="profile_menu_deleted">More about this account</string>
+    <!-- The sheet's own name over another's or a deleted account's page (`ProfileMenu.jsx`). -->
+    <string name="profile_menu_sheet">Profile actions</string>
     <string name="profile_menu_saved">Saved</string>
     <string name="profile_menu_history">History</string>
     <string name="profile_menu_share_yours">Share your profile</string>
@@ -22,23 +29,32 @@
     <string name="profile_not_found">This profile doesn\'t exist.</string>
     <string name="error_transport">Something didn\'t load. Check your connection and try again.</string>
     <string name="profile_retry">Try again</string>
-    <string name="profile_load_more">Show more</string>
     <string name="profile_edit">Edit profile</string>
     <string name="profile_invites">Invites</string>
-    <string name="profile_invites_locked">Inviting unlocks once your application is approved.</string>
+    <string name="profile_invites_locked">You can invite once you\'re in.</string>
+    <string name="profile_message">Message</string>
+    <!-- The wide anchor's target on a deleted account (ProfileDeleted.md:23). -->
+    <string name="profile_target_account">this account</string>
     <string name="profile_open_settings">Settings</string>
     <string name="profile_saved">Profile saved</string>
     <string name="profile_filter_posts">Posts</string>
     <string name="profile_filter_comments">Comments</string>
     <string name="profile_filter_everything">Everything</string>
+    <string name="profile_tabs">What the chronicle shows</string>
     <string name="profile_chronicle_empty">Nothing here yet.</string>
+    <string name="profile_chronicle_empty_applicant">Nothing here yet. Your posts and opinions show up here once you\'re in.</string>
+    <!-- The page that did not arrive (Profile.md:35; copy-voice.md). -->
+    <string name="profile_more_failed">Couldn\'t load more</string>
+    <string name="profile_more_retry">Retry</string>
 
     <string name="chronicle_published">Published a post</string>
     <string name="chronicle_edited_post">Edited a post</string>
     <string name="chronicle_commented">Commented</string>
     <string name="chronicle_edited_comment">Edited a comment</string>
-    <string name="chronicle_profile_record">Profile update</string>
-    <string name="chronicle_stanced">Shared a stance</string>
+    <string name="chronicle_profile_yours">Updated your profile</string>
+    <string name="chronicle_profile_theirs">Updated their profile</string>
+    <string name="chronicle_opinion">Gave an opinion</string>
+    <string name="chronicle_opinion_on">on @%1$s</string>
     <string name="chronicle_acted">Did something</string>
 
     <string name="profile_edit_title">Edit profile</string>

@@ -1,8 +1,13 @@
 package com.cogra.core.designsystem.v2.atom
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -11,11 +16,18 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
+import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
 
 /**
@@ -138,6 +150,72 @@ fun CograButton(
             ),
             contentPadding = padding,
         ) { label() }
+    }
+}
+
+/**
+ * AN OUTLINED PILL STANDING IN A ROW OF CONTROLS, drawn at its own height and
+ * answering at 48 (`Button.jsx`: "the 48px hit expansion — a small button is
+ * 33px of ink and 48px of target"; `ProfileHeader.jsx`'s actions row).
+ *
+ * [CograButton] lets Material grow its LAYOUT to the 48dp minimum, which a
+ * row whose height is its controls' ink cannot afford: a 32dp pair of pills
+ * would stand a 48dp row. Here the pill keeps its drawn box in the layout and
+ * its target is the invisible margin [hitTarget] centres on it — the trade
+ * the band's icons and the card's pills already make.
+ *
+ * [alpha] is the locked look (`StateTokens.DISABLED`): the pill stays
+ * tappable, its tap explaining what unlocks it.
+ */
+@Composable
+fun CograRowButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    size: ButtonSize = ButtonSize.Default,
+    alpha: Float = 1f,
+    contentDescription: String? = null,
+    testTag: String? = null,
+    trailing: @Composable (() -> Unit)? = null,
+) {
+    val height = when (size) {
+        ButtonSize.Default -> Layout.ButtonHeight
+        ButtonSize.Compact -> Layout.ButtonHeightCompact
+    }
+    val sidePadding = when (size) {
+        ButtonSize.Default -> Layout.ButtonPadding
+        ButtonSize.Compact -> Layout.ButtonPaddingCompact
+    }
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(Space.x2, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
+            .hitTarget(
+                interactive = Modifier
+                    .clip(CircleShape)
+                    .clickable(role = Role.Button, onClick = onClick)
+                    .then(
+                        if (contentDescription != null) {
+                            Modifier.semantics { this.contentDescription = contentDescription }
+                        } else {
+                            Modifier
+                        },
+                    ),
+                drawnHeight = height,
+            )
+            .alpha(alpha)
+            .defaultMinSize(minWidth = Layout.ButtonMinWidth, minHeight = height)
+            .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+            .padding(horizontal = sidePadding),
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            maxLines = 1,
+        )
+        trailing?.invoke()
     }
 }
 

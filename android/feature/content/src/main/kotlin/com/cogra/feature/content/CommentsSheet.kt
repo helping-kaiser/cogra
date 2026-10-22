@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.CograSnackbarHost
+import com.cogra.core.designsystem.CommentStanceTarget
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.RowLine
@@ -792,8 +793,9 @@ private fun CommentAffordances(
         verticalArrangement = Arrangement.spacedBy(Space.x1),
         itemVerticalAlignment = Alignment.CenterVertically,
     ) {
-        // A comment carries the control too (design.md §6).
-        stanceControl(comment.id, "comment_${comment.id}")
+        // A comment carries the control too (design.md §6), naming its
+        // target `this comment` (`CommentCard.jsx`).
+        CommentStanceTarget { stanceControl(comment.id, "comment_${comment.id}") }
         if (signedIn == true) {
             // `ReplyEntry` 5 — the composer, pre-targeted.
             TextButton(

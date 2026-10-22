@@ -17,11 +17,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** The chronicle filter chips; every visitor lands on Posts. */
-enum class ChronicleFilter(val family: Family?) {
-    POSTS(Family.PUBLISH),
-    COMMENTS(Family.REVIEW),
-    EVERYTHING(null),
+/**
+ * The chronicle's tab row (`CHRONICLE_TABS`): what each cell filters to, and
+ * the cell's id. Every visitor lands on Everything (every board draws
+ * `value="everything"`).
+ */
+enum class ChronicleFilter(val family: Family?, val id: String) {
+    POSTS(Family.PUBLISH, "posts"),
+    COMMENTS(Family.REVIEW, "comments"),
+    EVERYTHING(null, "everything"),
 }
 
 data class ProfileUiState(
@@ -42,7 +46,7 @@ data class ProfileUiState(
      * the card put away or not (VouchBack.md:51).
      */
     val vouchesBack: Boolean = false,
-    val filter: ChronicleFilter = ChronicleFilter.POSTS,
+    val filter: ChronicleFilter = ChronicleFilter.EVERYTHING,
     val rows: List<RecordRow> = emptyList(),
     val rowsLoading: Boolean = false,
     /** A further page failed — the load-more control shows retry. */
@@ -55,7 +59,7 @@ private const val PAGE = 20
 
 /**
  * One profile — the viewer's own (null handle) or any actor's by
- * handle — with the authored chronicle under the filter chips
+ * handle — with the authored chronicle under its tab row
  * (roadmap "Slice 2.1": the honest labelled history).
  *
  * Opening someone else's profile adds the profile to the reader's History

@@ -2,6 +2,7 @@ package com.cogra.core.designsystem.v2.atom
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -76,6 +77,8 @@ fun EmptyState(
     action: (@Composable () -> Unit)? = null,
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
+    /** The registered state (`profile.chronicle.empty`): [testTag] is its tag, and the title wears `.title`. */
+    registered: Boolean = false,
 ) {
     Column(
         // Merged, so the tag names one unit for a test to assert on — the
@@ -83,13 +86,16 @@ fun EmptyState(
         // than a bare container a text assertion can't see into.
         modifier = modifier
             .testTag(testTag)
-            .semantics(mergeDescendants = true) {},
+            .semantics(mergeDescendants = true) {}
+            // The master's own `8 0` (`EmptyState.jsx`).
+            .padding(vertical = Space.x2),
         verticalArrangement = Arrangement.spacedBy(Space.x3),
     ) {
         Text(
             text = title,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = if (registered) Modifier.testTag("$testTag.title") else Modifier,
         )
         when {
             action != null -> action()
