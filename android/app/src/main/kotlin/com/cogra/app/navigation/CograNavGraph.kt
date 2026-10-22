@@ -720,34 +720,20 @@ private fun CograNavGraphContent(
     // snackbar host (design.md §6) — one frame for every viewer: the
     // bar rides the read surfaces signed in or out, and a slot that
     // needs an account opens the join prompt on a signed-out tap —
-    // ask, never bounce. A read drill-in keeps the frame and the root it
-    // was opened from lit; the task flows drop it for their back arrow.
+    // ask, never bounce. A read drill-in keeps the frame but selects
+    // no tab; the task flows drop it for their back arrow.
     val onFeedTab = backStackEntry?.destination?.hasRoute(Feed::class) == true
     val onProfile = backStackEntry?.destination?.hasRoute(Profile::class) == true
-    // Saved keeps Profile lit (Saved.md, design digest item 51): its one
-    // door is the reader's own profile, so it rides that stack.
+    // SAVED KEEPS PROFILE LIT (Saved.md, design digest item 51: the
+    // originating root stays lit on a drill-in) — its one door is the
+    // reader's own profile.
     val onSaved = backStackEntry?.destination?.hasRoute(Saved::class) == true
     // NOTIFICATIONS KEEPS LIT THE ROOT THE BELL WAS TAPPED ON (Notifications.md:27).
     val onNotifications = backStackEntry?.destination?.hasRoute(Notifications::class) == true
     val notificationsFrom = if (onNotifications) backStackEntry?.toRoute<Notifications>()?.from else null
-    val onOwnProfileRoot = onProfile && backStackEntry?.toRoute<Profile>()?.handle == null
-    // THE ORIGINATING ROOT STAYS LIT ON A DRILL-IN (BottomNav.prompt.md: "a
-    // screen belongs to the stack it was opened from"; ProfileOther.md:17,
-    // PostDetail.md:57, ChatsComingSoon.md:13): the bar lights the root of the
-    // stack the reader is in. A root sets it as it shows, a tab switch as it
-    // is asked for (a restored stack can come back on a drill-in, never
-    // passing its root), and every drill-in keeps the one it was opened on.
-    var stackRoot by rememberSaveable { mutableStateOf(StackRoot.FEED) }
-    val shownRoot = when {
-        onFeedTab -> StackRoot.FEED
-        onOwnProfileRoot -> StackRoot.PROFILE
-        // The bell's list lights the root it was opened on (Notifications.md:27).
-        notificationsFrom == "profile" -> StackRoot.PROFILE
-        notificationsFrom != null -> StackRoot.FEED
-        else -> stackRoot
-    }
-    SideEffect { stackRoot = shownRoot }
-    val onOwnProfileTab = shownRoot == StackRoot.PROFILE
+    val onOwnProfileTab = onSaved ||
+        notificationsFrom == "profile" ||
+        (onProfile && backStackEntry?.toRoute<Profile>()?.handle == null)
     val onPostDetail = backStackEntry?.destination?.hasRoute(PostDetail::class) == true
     val onChatsComingSoon = backStackEntry?.destination?.hasRoute(ChatsComingSoon::class) == true
     val onReadSurface = onFeedTab || onProfile || onPostDetail || onChatsComingSoon || onSaved || onNotifications
@@ -762,7 +748,6 @@ private fun CograNavGraphContent(
     // The documented tab pattern: pop to the signed-in root saving
     // state, single-top, restoring the target tab's state.
     fun toTab(route: Any) {
-        stackRoot = if (route is Profile) StackRoot.PROFILE else StackRoot.FEED
         navController.navigate(route) {
             popUpTo(Feed) { saveState = true }
             launchSingleTop = true
@@ -875,7 +860,7 @@ private fun CograNavGraphContent(
                         onProfile -> DataNode("profile") / "bottomBar"
                         else -> null
                     },
-                    feedSelected = shownRoot == StackRoot.FEED,
+                    feedSelected = onFeedTab || notificationsFrom == "feed",
                     profileSelected = onOwnProfileTab,
                     // Over the feed's own root the slot is a re-tap the feed
                     // answers (Feed.md:85-91); from anywhere else it is the
@@ -1681,6 +1666,3 @@ private fun CograNavGraphContent(
         }
     }
 }
-
-/** The root of the stack the reader is in — the slot the bar keeps lit on a drill-in. */
-private enum class StackRoot { FEED, PROFILE }

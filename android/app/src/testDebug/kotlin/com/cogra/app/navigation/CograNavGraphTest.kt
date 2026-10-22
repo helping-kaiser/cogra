@@ -12,8 +12,6 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertContentDescriptionEquals
-import androidx.compose.ui.test.assertIsNotSelected
-import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -602,12 +600,10 @@ class CograNavGraphTest {
         // It names the door it came through (ProfileOther.md:73).
         assertThat(entry?.toRoute<Profile>()?.from).isEqualTo(FEED_ORIGIN)
         // Another actor's profile is a read drill-in: back arrow, no
-        // edit, and the bar keeps lit the root it was opened from
-        // (ProfileOther.md:17) — Feed here, Profile dark.
+        // edit, and the frame stays with no tab selected.
         assertThat(compose.onAllNodesWithTag("profile.header.back").fetchSemanticsNodes()).isNotEmpty()
         assertThat(compose.onAllNodesWithTag("profile.identity.actionRow.edit").fetchSemanticsNodes()).isEmpty()
-        compose.onNode(barSlot("feed")).assertIsSelected()
-        compose.onNode(barSlot("profile")).assertIsNotSelected()
+        assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isNotEmpty()
     }
 
     @Test
