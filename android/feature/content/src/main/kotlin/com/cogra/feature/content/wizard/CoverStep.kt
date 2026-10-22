@@ -1,6 +1,7 @@
 package com.cogra.feature.content.wizard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,19 +10,24 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -30,9 +36,12 @@ import com.cogra.core.designsystem.v2.atom.InlineAction
 import com.cogra.core.designsystem.v2.atom.InlineSize
 import com.cogra.core.designsystem.v2.media.CoverPick
 import com.cogra.core.designsystem.v2.media.CoverRow
+import com.cogra.core.designsystem.v2.media.VideoControls
+import com.cogra.core.designsystem.v2.media.VideoPlayer
 import com.cogra.core.designsystem.v2.media.cappedToTallestTile
 import com.cogra.core.designsystem.v2.token.MediaShape
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.core.designsystem.v2.token.TypeTokens
 import com.cogra.feature.content.R
 
 /**
@@ -56,15 +65,29 @@ internal fun CoverStepBody(
     modifier: Modifier = Modifier,
 ) {
     val clip = state.video ?: return
+    // THE PLAY TAP IS ONE-WAY (`ComposeCoverPlaying.md`): once the preview
+    // runs, the cover never comes back — a frame tapped while it plays is
+    // chosen, and the strip stands as it did.
+    var playing by rememberSaveable(clip.uri) { mutableStateOf(false) }
+    val ratio = coverPreviewRatio(clip.sourceRatio)
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Space.x4),
     ) {
-        CoverPreview(
-            model = state.coverModel(),
-            durationMs = clip.durationMs ?: 0,
-            ratio = coverPreviewRatio(clip.sourceRatio),
-        )
+        if (playing) {
+            CoverPlaying(clip = clip, poster = state.coverModel() ?: clip.uri, ratio = ratio)
+        } else {
+            CoverPreview(
+                // Nothing chosen is the clip's own frame 0 (the board's
+                // `src` on the unchosen `ComposeCover`), which Coil's video
+                // decoder cuts from the picked file.
+                model = state.coverModel() ?: clip.uri.takeUnless { state.noFrames },
+                durationMs = clip.durationMs ?: 0,
+                ratio = ratio,
+                noFrames = state.noFrames && state.coverModel() == null,
+                onPlay = { playing = true },
+            )
+        }
 
         CoverRow(
             // The frame's own bytes: it has been processed already, so
@@ -76,8 +99,38 @@ internal fun CoverStepBody(
             onPickOwnPicture = onPickPicture,
             ownPicture = (state.coverChoice as? CoverChoice.Picture)?.uri,
             testTagPrefix = "wizard_cover",
+            framesRead = state.coverFramesRead,
         )
     }
+}
+
+/** The device cut no frame from the clip (`ComposeCoverNoFrames`): extraction answered, empty. */
+private val ComposeWizardState.noFrames: Boolean get() = coverFramesRead && coverFrames.isEmpty()
+
+/**
+ * `ComposeCoverPlaying`: the post detail's transport over the running clip —
+ * play and pause between the two skips, elapsed · timeline · total and the
+ * sound on the bar — and NO fullscreen toggle, because the clip is not a
+ * post yet and there is nowhere for that control to go (`onOpenViewer`
+ * null). The sound is the one sticky decision every video shares.
+ */
+@Composable
+private fun CoverPlaying(clip: PickedAsset, poster: Any?, ratio: Float) {
+    VideoPlayer(
+        url = clip.uri,
+        posterUrl = poster,
+        autoplay = true,
+        controls = VideoControls.Full,
+        durationMs = clip.durationMs,
+        videoAspectRatio = ratio,
+        contentScale = ContentScale.Crop,
+        contentDescription = stringResource(R.string.content_tray_video),
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(ratio)
+            .clip(MaterialTheme.shapes.medium),
+        testTag = "wizard_cover_player",
+    )
 }
 
 /**
@@ -101,12 +154,12 @@ internal fun CoverStepBody(
  * F8 ruling (2026-09-17).
  */
 @Composable
-private fun CoverPreview(model: Any?, durationMs: Int, ratio: Float) {
+private fun CoverPreview(model: Any?, durationMs: Int, ratio: Float, noFrames: Boolean, onPlay: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(ratio)
-            .clip(RoundedCornerShape(Space.x3))
+            .clip(MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .testTag("wizard_cover_preview"),
     ) {
@@ -122,29 +175,50 @@ private fun CoverPreview(model: Any?, durationMs: Int, ratio: Float) {
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),
         )
-        Box(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .size(PLAY_DIAMETER)
-                .clip(RoundedCornerShape(PLAY_DIAMETER / 2))
-                .background(MaterialTheme.colorScheme.inverseSurface)
-                .testTag("wizard_cover_play_disc"),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Filled.PlayArrow,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.inverseOnSurface,
-                modifier = Modifier.size(PLAY_GLYPH),
+        if (noFrames) {
+            // THE NEUTRAL TILE (`ComposeCoverNoFrames`, `MediaThumb` `label`):
+            // with no frame there is no still, and a play control drawn on
+            // an empty tile is chrome — the word says what belongs there.
+            Text(
+                text = "No frame",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(horizontal = Space.x2)
+                    .testTag("wizard_cover_no_frame"),
             )
+        } else {
+            // The play disc (`MediaThumb` video state at post scale: 26% of
+            // the short edge, clamped to 56) — and the preview's play, which
+            // gives the cover over to the running clip.
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(PLAY_DIAMETER)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.inverseSurface)
+                    .clickable(role = Role.Button, onClick = onPlay)
+                    .semantics { contentDescription = "Play" }
+                    .testTag("wizard_cover_play_disc"),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.PlayArrow,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.inverseOnSurface,
+                    modifier = Modifier.size(PLAY_GLYPH),
+                )
+            }
         }
         DurationBadge(
             label = formatDuration(durationMs),
-            modifier = Modifier.align(Alignment.BottomEnd).padding(Space.x2),
+            modifier = Modifier.align(Alignment.BottomEnd).padding(PILL_INSET),
         )
     }
 }
 
+/** `MediaThumb`'s corner pill: 6px in, `0 6px`, the small (8dp) radius, the snackbar pair. */
 @Composable
 private fun DurationBadge(label: String, modifier: Modifier = Modifier) {
     // Hoisted: `semantics {}` is not a composable scope.
@@ -154,9 +228,9 @@ private fun DurationBadge(label: String, modifier: Modifier = Modifier) {
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.inverseOnSurface,
         modifier = modifier
-            .clip(RoundedCornerShape(Space.x1))
+            .clip(MaterialTheme.shapes.small)
             .background(MaterialTheme.colorScheme.inverseSurface)
-            .padding(horizontal = Space.x2, vertical = 1.dp)
+            .padding(horizontal = PILL_INSET)
             .semantics { contentDescription = spoken }
             .testTag("wizard_cover_duration"),
     )
@@ -271,3 +345,4 @@ internal fun formatDuration(ms: Int): String {
 
 private val PLAY_DIAMETER = 56.dp
 private val PLAY_GLYPH = 32.dp
+private val PILL_INSET = 6.dp

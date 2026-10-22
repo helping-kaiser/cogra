@@ -46,10 +46,10 @@ internal class WizardMediaReader(
      */
     fun loadCoverFrames() {
         val clip = state.value.video ?: return
-        if (state.value.coverFrames.isNotEmpty()) return
+        if (state.value.coverFramesRead) return
         scope.launch {
             val frames = video.coverFrames(clip.uri, ComposeWizardViewModel.COVER_FRAME_COUNT)
-            state.update { current -> current.copy(coverFrames = frames) }
+            state.update { current -> current.copy(coverFrames = frames, coverFramesRead = true) }
         }
     }
 

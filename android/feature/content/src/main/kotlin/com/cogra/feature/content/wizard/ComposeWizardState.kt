@@ -367,6 +367,14 @@ data class ComposeWizardState(
     val coverFrames: List<VideoFrame> = emptyList(),
 
     /**
+     * Whether the extraction behind [coverFrames] has answered. An empty
+     * [coverFrames] means two things — still reading, or the device cut
+     * nothing (`ComposeCoverNoFrames`) — and only the second draws the
+     * neutral tile and the strip's failure line.
+     */
+    val coverFramesRead: Boolean = false,
+
+    /**
      * Which cover the author settled on.
      *
      * Starts at [CoverChoice.None]: extraction may still be running, may
@@ -878,6 +886,7 @@ private fun ComposeWizardState.refusing(uri: String, reason: UploadFailure, isVi
  */
 fun ComposeWizardState.clearedCover(): ComposeWizardState = copy(
     coverFrames = emptyList(),
+    coverFramesRead = false,
     coverChoice = CoverChoice.None,
     coverMediaId = null,
 )

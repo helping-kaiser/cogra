@@ -1,6 +1,5 @@
 package com.cogra.core.designsystem.v2.media
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,6 +15,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -27,6 +32,7 @@ import com.cogra.core.designsystem.R
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
+import com.cogra.core.designsystem.v2.token.TypeTokens
 
 /**
  * Which cover the author settled on, as the row draws it.
@@ -93,6 +99,12 @@ fun CoverRow(
     ownPicture: Any? = null,
     tileSize: Dp = CoverRowDefaults.TileSize,
     testTagPrefix: String? = null,
+    /**
+     * Whether extraction has answered. An empty [frames] before it has is a
+     * strip still being read, not one that came back with nothing — so the
+     * failure line waits for this.
+     */
+    framesRead: Boolean = true,
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(Space.x2)) {
         Text(
@@ -136,12 +148,12 @@ fun CoverRow(
             // this row for at all. The terminal answer says why the choice
             // is smaller than it was rather than leaving four empty tiles
             // to offer pictures that do not exist.
-            text = if (frames.isEmpty()) {
+            text = if (frames.isEmpty() && framesRead) {
                 "This clip gave no frames — choose a picture of your own, or leave it without one."
             } else {
                 "A frame, or a picture of your own."
             },
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.then(
                 testTagPrefix?.let { Modifier.testTag("${it}_note") } ?: Modifier,
@@ -181,15 +193,27 @@ private fun OwnPictureTile(
     // Hoisted: `semantics {}` is not a composable scope, so the label is
     // read before the modifier chain rather than inside it.
     val label = stringResource(R.string.designsystem_cover_own_action)
+    // `cg-cover-own`: `1px dashed var(--border-field)` — a different kind
+    // of thing from the frames, and it says so by not being a photograph.
+    val field = MaterialTheme.colorScheme.outline
+    val corner = Space.x2
     Column(
         modifier = Modifier
             .size(tileSize)
-            .clip(RoundedCornerShape(Space.x2))
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outline,
-                shape = RoundedCornerShape(Space.x2),
-            )
+            .clip(RoundedCornerShape(corner))
+            .drawBehind {
+                val stroke = 1.dp.toPx()
+                drawRoundRect(
+                    color = field,
+                    topLeft = Offset(stroke / 2f, stroke / 2f),
+                    size = Size(size.width - stroke, size.height - stroke),
+                    cornerRadius = CornerRadius(corner.toPx()),
+                    style = Stroke(
+                        width = stroke,
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(DASH.toPx(), DASH.toPx())),
+                    ),
+                )
+            }
             .clickable(role = Role.Button, onClick = onClick)
             .semantics { contentDescription = label }
             .then(testTag?.let { Modifier.testTag(it) } ?: Modifier),
@@ -219,6 +243,9 @@ object CoverRowDefaults {
 
     val GlyphSize = 20.dp
 }
+
+/** The dashed edge's dash and gap. */
+private val DASH = 4.dp
 
 @ThemePreviews
 @Composable
