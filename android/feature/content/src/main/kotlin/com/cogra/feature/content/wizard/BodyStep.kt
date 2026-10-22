@@ -79,7 +79,7 @@ internal fun ColumnScope.WordsStepBody(
         fillHeight = true,
         cap = MAX_POST_BODY_CHARS,
         error = if (state.bodyTooLong) {
-            stringResource(R.string.content_error_body_too_long, MAX_POST_BODY_CHARS)
+            stringResource(R.string.content_error_body_too_long)
         } else {
             null
         },

@@ -165,7 +165,7 @@ private fun TitleField(value: String, tooLong: Boolean, onValueChange: (String) 
         optional = true,
         cap = MAX_TITLE_CHARS,
         error = if (tooLong) {
-            stringResource(R.string.content_error_title_too_long, MAX_TITLE_CHARS)
+            stringResource(R.string.content_error_title_too_long)
         } else {
             null
         },
@@ -189,7 +189,7 @@ private fun DescriptionField(value: String, tooLong: Boolean, onValueChange: (St
         minLines = 3,
         cap = MAX_DESCRIPTION_CHARS,
         error = if (tooLong) {
-            stringResource(R.string.content_error_description_too_long, MAX_DESCRIPTION_CHARS)
+            stringResource(R.string.content_error_description_too_long)
         } else {
             null
         },

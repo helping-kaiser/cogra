@@ -561,7 +561,7 @@ internal fun SensitiveSheet(
             enabled = marked,
             cap = MAX_SENSITIVE_REASON_CHARS,
             error = if (marked && isSensitiveReasonTooLong(reason)) {
-                stringResource(R.string.content_error_sensitive_reason_too_long, MAX_SENSITIVE_REASON_CHARS)
+                stringResource(R.string.content_error_sensitive_reason_too_long)
             } else {
                 null
             },
