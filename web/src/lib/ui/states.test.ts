@@ -34,6 +34,13 @@ describe("interaction states", () => {
     expect(CSS).toContain("--focus-ring-offset: 2px;");
   });
 
+  // The door card (design/tokens/states.css): the card lights whole while the
+  // door inside it is hovered or pressed, at the same two opacities.
+  it("lights a door card from the door inside it", () => {
+    expect(CSS).toContain(".cg-door-card:has(.cg-door:hover)::after");
+    expect(CSS).toContain(".cg-door-card:has(.cg-door:active)::after");
+  });
+
   it("carries no retired alias", () => {
     expect(CSS).not.toContain("--opacity-disabled");
     expect(CSS).not.toContain("--surface-field");

@@ -5,7 +5,7 @@
 //
 // AT MOST TWO CHIPS, THEN THE COUNTS (design/readme.md §13, 2026-08-28). A
 // clipped parade of half-chips says nothing, so the line shows up to two topics
-// whole and states the rest in words: `· 23 topics · 3 references`. Never a
+// whole and states the rest in words: `· 23 tags · 3 references`. Never a
 // wrap, never a second row: that is the collapse order, and a card never lists
 // its references inline.
 //
@@ -63,7 +63,7 @@ const GAP_PX = 8;
 /** The counts, or null where there is nothing left to state. */
 export function countsText(hiddenTopics: number, references: number): string | null {
   const parts: string[] = [];
-  if (hiddenTopics > 0) parts.push(hiddenTopics === 1 ? "1 topic" : `${hiddenTopics} topics`);
+  if (hiddenTopics > 0) parts.push(hiddenTopics === 1 ? "1 tag" : `${hiddenTopics} tags`);
   if (references > 0) parts.push(references === 1 ? "1 reference" : `${references} references`);
   if (parts.length === 0) return null;
   return `· ${parts.join(" · ")}`;
@@ -99,7 +99,13 @@ export function chipsThatFit(
   return 0;
 }
 
-const LINE = "relative flex min-w-0 flex-nowrap items-center gap-2 overflow-hidden";
+// CLIPPED ACROSS, NEVER DOWN. The line never shows a cut chip sideways, but
+// its doors answer at 48px through `cg-hit` (TopicsLine.jsx; PostDetail.md:
+// "draws at 34dp and answers through an invisible 48dp touch target"), and
+// `overflow: hidden` would clip that target to the 34px — or, counts alone,
+// 16px — line. `overflow-x: clip` is the one value that leaves the other axis
+// visible (CSS Overflow 3, `clip`).
+const LINE = "relative flex min-w-0 flex-nowrap items-center gap-2 overflow-x-clip";
 const COUNTS = "flex-none whitespace-nowrap text-body-small text-on-surface-variant";
 
 export function TopicsLine({
@@ -216,9 +222,9 @@ export function TopicsLine({
         ref={holdLine}
         type="button"
         onClick={onOpen}
-        aria-label="Topics and references"
+        aria-label="Tags and references"
         {...lineIds}
-        className={`cg-state cg-focus w-full text-left ${LINE}`}
+        className={`cg-state cg-focus cg-hit w-full text-left ${LINE}`}
       >
         {probe}
         {chips}
@@ -241,7 +247,7 @@ export function TopicsLine({
             type="button"
             onClick={onOpenReferences}
             {...countsIds}
-            className={`cg-state cg-focus ${COUNTS}`}
+            className={`cg-state cg-focus cg-hit ${COUNTS}`}
           >
             {counts}
           </button>

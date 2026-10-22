@@ -61,14 +61,39 @@ export function TopicChip({
   removeNode?: DataNode;
 }) {
   const label = `#${name}`;
+  if (capped) {
+    // THE CARD LINE'S PILL (`Chip.jsx` `TopicChip`, the `md` rung): 32px of
+    // content in a hairline border — 34 drawn, as the boards and
+    // PostDetail.md measure it — on the card's own surface, `label-large` in
+    // the body ink, one line. It answers at 48px through `cg-hit`. A detail's
+    // line is ONE control, so there the pill is inert (`href` absent): a link
+    // nested in a button is two controls fighting over one press.
+    //
+    // The registered node (`….tagsLine.tag`) IS the pill, so the link fills
+    // it: the state layer covers the whole pill, the focus ring rides its edge.
+    return (
+      <span
+        {...testAttributes(node, testId)}
+        className="relative inline-flex h-8 box-content flex-none items-center whitespace-nowrap rounded-full border border-outline-variant bg-surface-container-highest px-3 text-label-large text-on-surface"
+      >
+        {href !== undefined ? (
+          <Link
+            href={href}
+            data-testid={testId !== undefined ? `${testId}-link` : undefined}
+            className="cg-state cg-focus cg-hit -mx-3 flex h-full items-center rounded-full px-3"
+          >
+            {label}
+          </Link>
+        ) : (
+          <span>{label}</span>
+        )}
+      </span>
+    );
+  }
   return (
     <span
       {...testAttributes(node, testId)}
-      className={
-        capped
-          ? "inline-block flex-none whitespace-nowrap rounded-full bg-secondary-container px-3 py-1 align-middle text-label-medium text-on-secondary-container"
-          : "inline-flex items-center gap-1 rounded-full bg-secondary-container px-3 py-1 text-label-medium text-on-secondary-container"
-      }
+      className="inline-flex items-center gap-1 rounded-full bg-secondary-container px-3 py-1 text-label-medium text-on-secondary-container"
     >
       {href !== undefined ? (
         <Link href={href} data-testid={testId !== undefined ? `${testId}-link` : undefined}>

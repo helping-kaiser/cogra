@@ -22,6 +22,16 @@ describe("BottomNav", () => {
     expect(screen.queryByTestId("nav-wallet")).not.toBeInTheDocument();
   });
 
+  // A label is never shortened to an ellipsis: above 1.3× it wraps and the bar
+  // grows (`BottomNav.jsx`, K13.4).
+  it("wraps a label rather than ellipsizing it", () => {
+    render(<BottomNav active="feed" signedIn />);
+    const slot = screen.getByTestId("nav-feed");
+    expect(slot.className).not.toContain("truncate");
+    expect(slot.className).toContain("whitespace-normal");
+    expect(slot.className).toContain("break-words");
+  });
+
   // 64px band, hairline top border, safe-area padding — and the height read as
   // the token, not respelled.
   it("keeps the 64px band and its hairline", () => {

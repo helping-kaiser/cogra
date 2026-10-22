@@ -21,6 +21,17 @@ describe("page visibility", () => {
     expect(isPageVisible()).toBe(true);
   });
 
+  // The server render has no document; a stage's lazy initializer reads this
+  // there, and a throw switched the whole feed to client rendering.
+  it("answers visible where there is no document, as the server snapshot does", () => {
+    vi.stubGlobal("document", undefined);
+    try {
+      expect(isPageVisible()).toBe(true);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("follows the page as it is hidden and shown again", () => {
     render(<Reader />);
     expect(reads()).toBe("true");

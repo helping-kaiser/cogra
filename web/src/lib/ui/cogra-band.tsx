@@ -89,7 +89,7 @@ export function CograBand({
               {...testAttributes(part(node, "chats"), "band-chats")}
               aria-label={chatsLabel}
               onClick={onChats}
-              className="cg-state cg-focus grid size-12 flex-none place-items-center rounded-full text-on-surface-variant"
+              className="cg-state cg-focus cg-hit grid size-10 flex-none place-items-center rounded-full text-on-surface-variant"
             >
               <Icon name="forum" size={22} />
             </button>
@@ -116,7 +116,7 @@ export function BellButton({ bell, node }: { bell: BandBell; node?: DataNode }) 
       {...testAttributes(node, "band-bell")}
       aria-label={bell.lit ? BELL_LABEL_LIT : BELL_LABEL}
       onClick={bell.onOpen}
-      className="cg-state cg-focus grid size-12 flex-none place-items-center rounded-full text-on-surface-variant"
+      className="cg-state cg-focus cg-hit grid size-10 flex-none place-items-center rounded-full text-on-surface-variant"
     >
       <span className="relative grid place-items-center">
         <Icon name="notifications" size={22} />

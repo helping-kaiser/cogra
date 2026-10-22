@@ -11,8 +11,8 @@ describe("countsText", () => {
   });
 
   it("states hidden topics and references in words, singular and plural", () => {
-    expect(countsText(1, 0)).toBe("· 1 topic");
-    expect(countsText(23, 3)).toBe("· 23 topics · 3 references");
+    expect(countsText(1, 0)).toBe("· 1 tag");
+    expect(countsText(23, 3)).toBe("· 23 tags · 3 references");
     expect(countsText(0, 1)).toBe("· 1 reference");
   });
 });
@@ -75,7 +75,7 @@ describe("TopicsLine", () => {
     expect(screen.getByTestId("post-topic-wasm")).toBeInTheDocument();
     expect(screen.queryByTestId("post-topic-axum")).not.toBeInTheDocument();
     expect(screen.getByTestId("post-topics-counts")).toHaveTextContent(
-      "· 2 topics · 3 references",
+      "· 2 tags · 3 references",
     );
   });
 
@@ -89,7 +89,7 @@ describe("TopicsLine", () => {
   it("keeps the line to one row, never wrapping", () => {
     render(<TopicsLine topics={[topic("rust")]} references={0} testIdPrefix="post" />);
     expect(screen.getByTestId("post-topics").className).toContain("flex-nowrap");
-    expect(screen.getByTestId("post-topics").className).toContain("overflow-hidden");
+    expect(screen.getByTestId("post-topics").className).toContain("overflow-x-clip");
   });
 
   // Jakob's ruling, 2026-09-09: a chip is drawn whole or not at all. The
@@ -101,6 +101,28 @@ describe("TopicsLine", () => {
     expect(chip).not.toContain("max-w-");
     expect(chip).not.toContain("text-ellipsis");
     expect(chip).not.toContain("overflow-hidden");
+  });
+
+  // THE CARD LINE'S PILL (`Chip.jsx` `TopicChip`, md): a hairline border on the
+  // card's own surface, label-large in the body ink, 32px of content (34
+  // drawn), and the 48px target through `cg-hit`.
+  it("draws each chip as the master's hairline pill, answering at 48px", () => {
+    render(<TopicsLine topics={[topic("rust")]} references={0} testIdPrefix="feed-post-p1" />);
+    const pill = screen.getByTestId("feed-post-p1-topic-rust").className;
+    for (const token of [
+      "h-8",
+      "box-content",
+      "border-outline-variant",
+      "bg-surface-container-highest",
+      "text-label-large",
+      "text-on-surface",
+    ]) {
+      expect(pill).toContain(token);
+    }
+    // The link fills the pill, its layer and its 48px target with it.
+    const link = screen.getByTestId("feed-post-p1-topic-rust-link").className;
+    expect(link).toContain("cg-hit");
+    expect(link).toContain("h-full");
   });
 
   // The `…` the pending marker used to append is indistinguishable from a
@@ -141,7 +163,7 @@ describe("TopicsLine", () => {
     render(
       <TopicsLine topics={[topic("rust")]} references={1} testIdPrefix="post" onOpen={onOpen} />,
     );
-    const line = screen.getByLabelText("Topics and references");
+    const line = screen.getByLabelText("Tags and references");
     expect(line.tagName).toBe("BUTTON");
     expect(screen.queryByTestId("post-topic-rust-link")).not.toBeInTheDocument();
     fireEvent.click(line);

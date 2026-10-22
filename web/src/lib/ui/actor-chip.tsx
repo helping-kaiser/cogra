@@ -53,18 +53,31 @@ export function ActorChip({
   node?: DataNode;
 }) {
   const name = displayName?.trim() ? displayName : handle;
+  // THE ROW NEVER WRAPS AND NEVER CROWDS (`ActorChip.jsx`, jakob's ruling
+  // 2026-09-23). A name too long for the room ELLIPSIZES; the handle is the
+  // identity and stays whole until it alone cannot fit, and only then
+  // ellipsizes too. The chip yields (`min-w-0`) and whatever stands beside it
+  // keeps its full width. The two-stage yield is flexbox's own arithmetic: the
+  // name's `flex-shrink: 999` absorbs the squeeze ahead of the handle's 1.
+  //
+  // THE HANDLE IS DRAWN AT LABEL-MEDIUM'S SIZE IN THE READING WEIGHT: the
+  // master sets its size alone and leaves the weight to the ground, so the name
+  // carries the chip's emphasis and the handle reads beside it, quieter.
   return (
     <Link
       href={`/u/${handle}`}
       {...testAttributes(node, testId)}
-      className="inline-flex min-h-6 items-center gap-2"
+      className="cg-state cg-focus inline-flex min-h-6 min-w-0 items-center gap-2 rounded-full text-on-surface"
     >
       <MonogramAvatar name={name} src={avatarUrl} node={part(node, "avatar")} />
-      <span className="text-label-large" {...testAttributes(part(node, "name"))}>
+      <span
+        className="min-w-0 shrink-[999] truncate text-label-large"
+        {...testAttributes(part(node, "name"))}
+      >
         {name}
       </span>
       <span
-        className="text-label-medium text-on-surface-variant"
+        className="min-w-0 shrink truncate text-[length:var(--text-label-medium)] text-on-surface-variant"
         {...testAttributes(part(node, "handle"))}
       >
         @{handle}
