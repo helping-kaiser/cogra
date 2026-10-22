@@ -145,6 +145,12 @@ fun CograSheetSurface(
     testTag: String? = null,
     /** The handle's data-node on a registered sheet (`settings.licenseSheet.dragHandle`). */
     handleTestTag: String? = null,
+    /**
+     * The space between the sheet's children. A sheet whose body keeps its
+     * own rhythm passes less (`SheetTitle` stands 8 over the body, the
+     * master's `0 24 8`); the grip always stands 12 over what follows it.
+     */
+    gap: Dp = Space.x3,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val side = if (tallest) 0.dp else Space.x6
@@ -184,13 +190,13 @@ fun CograSheetSurface(
         // The drawn surface carries no gap of its own (`BottomSheet.jsx`,
         // `gap: 0`); the content class's spacing is the seal board's. The
         // tallest class's handle brings the board's own margin instead.
-        verticalArrangement = if (tallest) Arrangement.Top else Arrangement.spacedBy(Space.x3),
+        verticalArrangement = if (tallest) Arrangement.Top else Arrangement.spacedBy(gap),
     ) {
         if (showHandle) {
             Spacer(
                 Modifier
                     .align(Alignment.CenterHorizontally)
-                    .padding(bottom = if (tallest) Space.x3 else 0.dp)
+                    .padding(bottom = if (tallest) Space.x3 else (Space.x3 - gap).coerceAtLeast(0.dp))
                     .width(32.dp)
                     .height(4.dp)
                     .clip(CircleShape)
@@ -261,7 +267,7 @@ fun SheetTitle(
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f),
         )

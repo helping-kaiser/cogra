@@ -102,9 +102,12 @@ fun SettingRow(
             value = value,
             action = {
                 if (actionText != null && onAction != null) {
+                    // `FactRow.jsx`: the action is `InlineAction` at its `lg` rung,
+                    // whose 48dp target never grows the 44dp row.
                     InlineAction(
                         text = actionText,
                         onClick = onAction,
+                        size = InlineSize.Large,
                         testTag = testTag?.let { "${it}_action" },
                     )
                 }
