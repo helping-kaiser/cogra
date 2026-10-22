@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.R
 import com.cogra.core.designsystem.v2.token.MediaOverlay
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.core.designsystem.v2.token.TypeTokens
 
 /**
  * The control ladder's second rung, laid over the clip it controls
@@ -266,7 +267,7 @@ private fun Bar(
         InRow {
             Text(
                 text = formatRunningTime(elapsedMs.toInt()),
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
                 color = MediaOverlay.BadgeInk,
                 modifier = Modifier.testTag("video_elapsed"),
             )
@@ -284,7 +285,7 @@ private fun Bar(
         InRow {
             Text(
                 text = formatRunningTime(durationMs.toInt()),
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
                 color = MediaOverlay.BadgeInk.copy(alpha = TOTAL_ALPHA),
                 modifier = Modifier.testTag("video_duration"),
             )
