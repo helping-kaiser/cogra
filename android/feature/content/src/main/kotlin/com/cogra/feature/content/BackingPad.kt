@@ -29,6 +29,7 @@ import com.cogra.core.designsystem.AttachmentPad
 import com.cogra.core.designsystem.AttachmentStanding
 import com.cogra.core.designsystem.BackingValue
 import com.cogra.core.designsystem.v2.atom.ButtonKind
+import com.cogra.core.designsystem.v2.atom.ButtonSize
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.HelpDot
 import com.cogra.core.designsystem.v2.compose.HelpTopic
@@ -87,31 +88,51 @@ fun BackingPad(
     modifier: Modifier = Modifier,
     edit: BackingEdit? = null,
 ) {
-    Column(
+    // THE "?" RIDES THE PAD'S OWN CORNER, out of the column's flow
+    // (`ComposePad.jsx`: absolute, top 4 / right 4 of the pad), so its 48dp
+    // target neither pushes the readout down nor sits a gutter in.
+    Box(
         modifier = modifier
             .clip(RoundedCornerShape(PAD_CORNER))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .padding(Space.x4)
             .semantics { paneTitle = BACKING_PAD_NAME }
             .testTag("${testTagPrefix}_pad"),
+    ) {
+        BackingPadBody(pick, onPickChange, onSet, onCancel, testTagPrefix, edit)
+        HelpDot(
+            onHelp = onHelp,
+            contentDescription = HelpTopic.YourBackingOnYourPost.title,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(PAD_HELP_INSET),
+            testTag = "${testTagPrefix}_help",
+        )
+    }
+}
+
+@Composable
+private fun BackingPadBody(
+    pick: Double,
+    onPickChange: (Double) -> Unit,
+    onSet: () -> Unit,
+    onCancel: () -> Unit,
+    testTagPrefix: String,
+    edit: BackingEdit?,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(Space.x4),
         verticalArrangement = Arrangement.spacedBy(Space.x3),
     ) {
-        Box(Modifier.fillMaxWidth()) {
-            // The readouts clear the corner the `?` sits in, so the two
-            // never collide.
-            AttachmentStanding(
-                pick = pick,
-                current = edit?.current,
-                testTagPrefix = testTagPrefix,
-                modifier = Modifier.padding(end = PAD_HELP_GUTTER),
-            )
-            HelpDot(
-                onHelp = onHelp,
-                contentDescription = HelpTopic.YourBackingOnYourPost.title,
-                modifier = Modifier.align(Alignment.TopEnd),
-                testTag = "${testTagPrefix}_help",
-            )
-        }
+        // The readouts clear the corner the `?` sits in, so the two never
+        // collide.
+        AttachmentStanding(
+            pick = pick,
+            current = edit?.current,
+            testTagPrefix = testTagPrefix,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = PAD_HELP_GUTTER),
+        )
         AttachmentPad(
             value = pick,
             onValueChange = onPickChange,
@@ -135,8 +156,15 @@ fun BackingPad(
                 )
             }
             Spacer(Modifier.weight(1f))
-            CograButton("Cancel", onCancel, kind = ButtonKind.Text, testTag = "${testTagPrefix}_cancel")
-            CograButton("Set", onSet, testTag = "${testTagPrefix}_set")
+            // `ComposePad.jsx`: Cancel · Set at the pill's `sm` rung.
+            CograButton(
+                "Cancel",
+                onCancel,
+                kind = ButtonKind.Text,
+                size = ButtonSize.Compact,
+                testTag = "${testTagPrefix}_cancel",
+            )
+            CograButton("Set", onSet, size = ButtonSize.Compact, testTag = "${testTagPrefix}_set")
         }
     }
 }
@@ -225,6 +253,9 @@ private val PAD_CORNER = 28.dp
 
 /** What the readout leaves clear of the `?` in the corner. */
 private val PAD_HELP_GUTTER = 40.dp
+
+/** The "?"'s 48dp box from the pad's corner (`ComposePad.jsx`: top 4, right 4). */
+private val PAD_HELP_INSET = 4.dp
 
 @ThemePreviews
 @Composable
