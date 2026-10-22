@@ -74,18 +74,18 @@ export function TopicChip({
     return (
       <span
         {...testAttributes(node, testId)}
-        className="relative inline-flex h-8 box-content flex-none items-center whitespace-nowrap rounded-full border border-outline-variant bg-surface-container-highest text-label-large text-on-surface"
+        className="relative inline-flex h-8 box-content flex-none items-center whitespace-nowrap rounded-full border border-outline-variant bg-surface-container-highest px-3 text-label-large text-on-surface"
       >
         {href !== undefined ? (
           <Link
             href={href}
             data-testid={testId !== undefined ? `${testId}-link` : undefined}
-            className="cg-state cg-focus cg-hit flex h-full items-center rounded-full px-3"
+            className="cg-state cg-focus cg-hit -mx-3 flex h-full items-center rounded-full px-3"
           >
             {label}
           </Link>
         ) : (
-          <span className="px-3">{label}</span>
+          <span>{label}</span>
         )}
       </span>
     );
