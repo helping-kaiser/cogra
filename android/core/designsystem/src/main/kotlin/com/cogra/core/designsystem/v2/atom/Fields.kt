@@ -3,6 +3,7 @@ package com.cogra.core.designsystem.v2.atom
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -20,15 +21,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.contentType
-import androidx.compose.ui.semantics.error as markError
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -39,6 +39,7 @@ import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
 import com.cogra.core.designsystem.v2.token.TypeTokens
 import kotlin.math.roundToInt
+import androidx.compose.ui.semantics.error as markError
 
 /**
  * THE LATE COUNTER (jakob's ruling, the caps-affordance round,
@@ -289,11 +290,15 @@ private fun FieldInput(
             .border(
                 BorderStroke(1.dp, fieldOutlineColor(colors, error != null, enabled)),
                 MaterialTheme.shapes.extraSmall,
-            )
-            // `TextField.jsx`: 8px of padding inside a 1px border-box border
-            // (`8px 12px` on one line, 8 all round on an area) — a border
-            // drawn INSIDE the box, so each inset is the master's plus 1.
-            .padding(boxPadding ?: if (singleLine) FieldLinePadding else FieldAreaPadding),
+            ),
+        // `TextField.jsx`: 8px of padding inside a 1px border-box border
+        // (`8px 12px` on one line, 8 all round on an area) — a border drawn
+        // INSIDE the box, so each inset is the master's plus 1. The inset is
+        // the decoration's (the documented way to dress a BasicTextField), so
+        // the field's own node spans the whole drawn box.
+        decorationBox = { inner ->
+            Box(Modifier.padding(boxPadding ?: if (singleLine) FieldLinePadding else FieldAreaPadding)) { inner() }
+        },
     )
 }
 

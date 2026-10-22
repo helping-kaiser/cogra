@@ -365,11 +365,7 @@ private fun ActsCard(
             ) {
                 Column(Modifier.padding(vertical = 6.dp)) {
                     ActValue(stagedName(one.target))
-                    Text(
-                        text = citedReading(StancePoint(one.relevance, one.support)),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    CitedReadout(StancePoint(one.relevance, one.support))
                 }
             }
         } else if (references.size > 1) {
@@ -585,10 +581,30 @@ private fun ActsCount(count: Int, noun: String) {
     )
 }
 
-/** A staged citation's reading on the seal: the face, then the pair. */
+/**
+ * A staged citation's reading on the seal (`StanceReadout`'s `ReadoutLine`):
+ * the face at body-medium, then the pair, spoken whole — the line the
+ * backing row's readout draws, with both numbers.
+ */
 @Composable
-private fun citedReading(pick: StancePoint): String =
-    "${bundleReadout(pick, EMPTY_PICK_LABEL).emoji} ${pick.pair()}"
+private fun CitedReadout(pick: StancePoint) {
+    val face = bundleReadout(pick, EMPTY_PICK_LABEL).emoji
+    val pair = pick.pair()
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+        modifier = Modifier.semantics(mergeDescendants = true) { contentDescription = "$face $pair" },
+    ) {
+        Text(text = face, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.clearAndSetSemantics { })
+        Text(
+            text = pair,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            modifier = Modifier.clearAndSetSemantics { },
+        )
+    }
+}
 
 /** `ActsCard.jsx` ROW's 44px floor. */
 private val ACT_ROW_MIN = 44.dp
