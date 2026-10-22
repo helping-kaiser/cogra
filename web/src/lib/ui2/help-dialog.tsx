@@ -9,15 +9,20 @@
 // One `?` per screen (design/readme.md §13), so this is opened from a header's
 // help slot or from a sheet's own `?`, never from both at once.
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
+import { attachmentWords } from "@/lib/ui/attachment-readout";
 import { useCoversSurface } from "./covering-layer";
 import { PillButton } from "./pill-button";
 
 export type HelpTopic = {
   readonly title: string;
-  /** At most two, per the copy rule. */
-  readonly paragraphs: readonly string[];
+  /**
+   * At most two, per the copy rule. A paragraph is words, or words carrying a
+   * `cg-exact` tail (readme §13): copy-voice italicises the digits a reader
+   * sees only in exact mode, and a node is how a paragraph carries that span.
+   */
+  readonly paragraphs: readonly ReactNode[];
 };
 
 export function HelpDialog({
@@ -57,8 +62,8 @@ export function HelpDialog({
     >
       <div className="flex flex-col gap-4">
         <h2 className="m-0 text-headline-small">{topic.title}</h2>
-        {topic.paragraphs.map((paragraph) => (
-          <p key={paragraph} className="m-0 text-body-medium">
+        {topic.paragraphs.map((paragraph, index) => (
+          <p key={index} className="m-0 text-body-medium">
             {paragraph}
           </p>
         ))}
@@ -136,13 +141,22 @@ export const HELP_TOPICS = {
   // opinion on somebody else's post with both axes, and this is the
   // authoring BACKING, one axis.
   //
-  // The parenthesised number is copy-voice's own — the guideline
-  // italicises `(+0.10)` as a `cg-exact` span, and neither app draws geek
-  // mode yet, so the text carries it as written.
+  // copy-voice italicises `(+0.10)`: the italic tails are the `cg-exact`
+  // spans (readme §13), so the face is drawn in both reading modes, the
+  // digits only for a reader who asked for exact values, and the spoken
+  // twin says both either way.
   yourBackingOnYourPost: {
     title: "Your backing on your post",
     paragraphs: [
-      "Publishing also signs your backing of your own post — for or against, from a gentle 🙂 (+0.10) by default. An edit adds to it, starting at nothing, so an edit you don't adjust leaves it as it is.",
+      <>
+        Publishing also signs your backing of your own post — for or against, from a gentle{" "}
+        <span aria-hidden="true">🙂</span>
+        <span aria-hidden="true" className="cg-exact">
+          {" (+0.10)"}
+        </span>
+        <span className="sr-only">{attachmentWords(0.1)}</span> by default. An edit adds to it,
+        starting at nothing, so an edit you don&apos;t adjust leaves it as it is.
+      </>,
       "How much of it reaches you isn't part of publishing: once the post is out, give it an opinion on its face, like anyone's. Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.",
     ],
   },

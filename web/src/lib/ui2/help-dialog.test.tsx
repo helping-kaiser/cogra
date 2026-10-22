@@ -47,6 +47,16 @@ describe("HelpDialog", () => {
     expect(screen.queryByText(/signs your opinion on your own post/)).not.toBeInTheDocument();
   });
 
+  // The italic `(+0.10)` is a `cg-exact` tail (readme §13): the face is drawn
+  // either way, the digits only in exact mode, the spoken twin says both.
+  it("draws the default backing's digits as an exact-mode tail with a spoken twin", () => {
+    render(<HelpDialog open onClose={vi.fn()} topic={HELP_TOPICS.yourBackingOnYourPost} />);
+    const tail = screen.getByText("(+0.10)", { exact: false });
+    expect(tail).toHaveClass("cg-exact");
+    expect(tail).toHaveAttribute("aria-hidden", "true");
+    expect(screen.getByText("Nice, For or against +0.10")).toHaveClass("sr-only");
+  });
+
   it("says at most two things, per the copy rule", () => {
     for (const topic of Object.values(HELP_TOPICS)) {
       expect(topic.paragraphs.length).toBeLessThanOrEqual(2);
