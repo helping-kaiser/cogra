@@ -23,13 +23,16 @@
 // cannot go stale. What the draft DOES keep is the choice: which offer was
 // taken, and the bytes it produced.
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { PillButton } from "@/lib/ui2/pill-button";
 import { CoverRow } from "@/lib/ui2/compose/cover-row";
 import type { CoverAsset } from "@/lib/compose/wizard";
 import { cssRatio, tileRatio } from "@/lib/ui2/media/aspect";
 import { formatDuration } from "@/lib/ui2/media/video";
+import { setMuted, useMuted } from "@/lib/ui2/media/mute";
+import { VideoTransport } from "@/lib/ui2/media/video-transport";
+import { LABEL_SMALL_PLAIN } from "@/lib/ui2/plain-type";
 
 export function CoverStep({
   videoUrl,
@@ -72,7 +75,7 @@ export function CoverStep({
   const [playing, setPlaying] = useState(false);
 
   return (
-    <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 pb-4 pt-2">
+    <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 pb-4 pt-4">
       {/* NO POSTER HERE, deliberately: the element shows its own first frame,
           and which face is chosen is said by the outlined tile below rather
           than by a still laid over the clip the author is previewing. */}
@@ -81,6 +84,8 @@ export function CoverStep({
         url={videoUrl}
         durationMs={durationMs}
         clipRatio={clipRatio}
+        // Extraction is done and came back with nothing (ComposeCoverNoFrames).
+        noFrames={!capturing && framePreviews.length === 0}
         playing={playing}
         onPlaying={setPlaying}
       />
@@ -111,22 +116,32 @@ export function CoverStep({
   );
 }
 
+/** The marks laid over the clip wear the snackbar pair (`MediaThumb.jsx`). */
+const SNACKBAR = "bg-[var(--surface-snackbar)] text-[color:var(--on-surface-snackbar)]";
+
 /**
- * The clip at rest, with the board's play affordance over it and its length in
- * the corner.
+ * The clip at rest — `MediaThumb`'s video state at post scale: the play disc
+ * on its scrim and the duration in the trailing corner — and, once the play is
+ * pressed, the clip running under the house transport.
  *
- * NATIVE CONTROLS ARRIVE WITH PLAYBACK. The board draws only the resting state
- * — one play button, no scrubber — but a preview a reader cannot pause is a
- * worse screen than the board's silence implies, so the element's own controls
- * appear once it is running. Sound is allowed here because the press IS the
- * gesture: autoplay policy gates unmuted playback on user interaction, and
- * there is no autoplay on this screen at all.
+ * THE CHROME WHILE IT RUNS IS THE POST DETAIL'S (ComposeCoverPlaying):
+ * `MediaAttachment`'s transport rung — play/pause between the two skips, the
+ * inset bar with elapsed · timeline · total and the sound control — drawn
+ * revealed, and with NO fullscreen toggle: the clip is not a post yet, so
+ * there is nowhere for that control to go. Once playback has started the
+ * cover never comes back. Sound is the one sticky decision every video
+ * shares (`mute.ts`).
+ *
+ * THE NEUTRAL TILE where the device cut no frames (ComposeCoverNoFrames):
+ * the clip's own shape reserved, `No frame` on it and the duration, and no
+ * play disc — a control drawn on an empty tile is chrome.
  */
 function Preview({
   ref,
   url,
   durationMs,
   clipRatio,
+  noFrames,
   playing,
   onPlaying,
 }: {
@@ -134,25 +149,36 @@ function Preview({
   url: string | null;
   durationMs: number;
   clipRatio: number | null;
+  noFrames: boolean;
   playing: boolean;
   onPlaying: (next: boolean) => void;
 }) {
-  // THE FRAME IS THE OUTPUT FORMAT. The element used to run at `w-full` under a
-  // `max-h-96` with no ratio at all, and a replaced element sizes itself from
-  // its intrinsic shape — so a 480x854 clip wanted 342x608, the cap took the
-  // difference out of the HEIGHT alone, and `object-cover` cropped the result
-  // into 342x384. Every vertical clip previewed as a square that way, and a
-  // landscape one only looked right because it never reached the cap.
-  //
-  // `tileRatio` is the feed's own derivation rather than a second opinion:
-  // whatever the post will be shaped like, this is shaped like it too.
+  // THE FRAME IS THE OUTPUT FORMAT. `tileRatio` is the feed's own derivation
+  // rather than a second opinion: whatever the post will be shaped like, this
+  // is shaped like it too, and the cap narrows the frame instead of
+  // reshaping it.
   const reserved = tileRatio(clipRatio);
+  const muted = useMuted();
+  const [started, setStarted] = useState(false);
+  const [ended, setEnded] = useState(false);
+  const [seconds, setSeconds] = useState(0);
+  const total = durationMs / 1000;
+
+  useEffect(() => {
+    if (ref.current) ref.current.muted = muted;
+  }, [ref, muted]);
+
+  const seekTo = (to: number) => {
+    const video = ref.current;
+    if (!video) return;
+    video.currentTime = Math.max(0, Math.min(total || video.duration || 0, to));
+    setSeconds(video.currentTime);
+  };
+
   return (
     <div
       style={{
         aspectRatio: url === null ? undefined : cssRatio(reserved),
-        // The cap narrows the frame instead of reshaping it — the same bound,
-        // for the same reason, as the feed tile's.
         maxWidth: url === null ? undefined : `calc(24rem * ${reserved})`,
         marginInline: "auto",
       }}
@@ -163,44 +189,77 @@ function Preview({
         <div className="grid h-80 place-items-center text-label-medium text-on-surface-variant">
           Video
         </div>
+      ) : noFrames && !started ? (
+        <div
+          data-testid="wizard-cover-no-frame"
+          className={`grid size-full place-items-center px-2 text-center ${LABEL_SMALL_PLAIN} text-on-surface-variant`}
+        >
+          No frame
+        </div>
       ) : (
         <video
           ref={ref}
           src={url}
-          controls={playing}
           playsInline
+          muted={muted}
           data-testid="wizard-cover-preview"
-          onPlay={() => onPlaying(true)}
+          onPlay={() => {
+            setStarted(true);
+            setEnded(false);
+            onPlaying(true);
+          }}
           onPause={() => onPlaying(false)}
-          onEnded={() => onPlaying(false)}
-          // The frame above owns the shape now; the element fills it. Still
-          // `object-cover`, because a clip taller than 4:5 centre-crops to it —
-          // now against a frame that IS 4:5 rather than against a squashed box.
+          onEnded={() => {
+            setEnded(true);
+            onPlaying(false);
+          }}
+          onTimeUpdate={(event) => setSeconds(event.currentTarget.currentTime)}
+          // The frame above owns the shape; the element fills it, and a clip
+          // taller than 4:5 centre-crops to it.
           className="block size-full object-cover"
         />
       )}
-      {!playing && url !== null && (
+      {!started && url !== null && !noFrames && (
         <button
           type="button"
           data-testid="wizard-cover-play"
           aria-label="Play the video"
           onClick={() => void ref.current?.play()}
-          className="cg-focus absolute left-1/2 top-1/2 flex size-14 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-0 bg-scrim/55 text-white"
+          className={`cg-focus absolute left-1/2 top-1/2 flex size-14 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-0 ${SNACKBAR}`}
         >
           <svg viewBox="0 0 24 24" width={32} height={32} fill="currentColor" aria-hidden="true">
             <path d="M8 5v14l11-7z" />
           </svg>
         </button>
       )}
-      {!playing && (
+      {!started && (
         <span
           data-testid="wizard-cover-duration"
-          className="absolute bottom-2 right-2 rounded-extra-small bg-scrim/55 px-2 py-px text-label-small text-white"
+          className={`absolute bottom-[6px] right-[6px] rounded-small px-[6px] text-label-small ${SNACKBAR}`}
         >
           {formatDuration(durationMs)}
         </span>
       )}
+      {started && url !== null && (
+        <VideoTransport
+          playing={playing}
+          ended={ended}
+          elapsed={formatDuration(seconds * 1000)}
+          duration={formatDuration(durationMs)}
+          progress={total > 0 ? Math.min(1, seconds / total) : 0}
+          muted={muted}
+          onTogglePlay={() => {
+            const video = ref.current;
+            if (!video) return;
+            if (video.paused) void video.play();
+            else video.pause();
+          }}
+          onToggleMute={() => setMuted(!muted)}
+          onSeek={(fraction) => seekTo(fraction * total)}
+          onSkip={(by) => seekTo((ref.current?.currentTime ?? 0) + by)}
+          testId="wizard-cover-transport"
+        />
+      )}
     </div>
   );
 }
-

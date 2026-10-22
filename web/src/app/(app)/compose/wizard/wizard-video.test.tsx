@@ -204,7 +204,50 @@ describe("picking a video", () => {
     await pickFiles([aVideo()]);
     fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
-    expect(await screen.findByText("Video only")).toHaveClass("text-label-small");
+    // WizardHeader's own `stageLabel` slot: the role's size and leading, the
+    // ground's weight — the seal's "Last step" pair.
+    const stage = await screen.findByTestId("header-stage");
+    expect(stage).toHaveTextContent("Video only");
+    expect(stage.className).not.toContain("text-label-small ");
+  });
+
+  // ComposeCoverPlaying: the running preview wears the post detail's
+  // transport, without a fullscreen toggle, and the cover never comes back.
+  it("runs the preview under the house transport, with no fullscreen", async () => {
+    render();
+    await pickFiles([aVideo()]);
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+
+    const video = (await screen.findByTestId("wizard-cover-preview")) as HTMLVideoElement;
+    expect(video).not.toHaveAttribute("controls");
+    fireEvent.play(video);
+
+    expect(screen.getByTestId("wizard-cover-transport")).toBeInTheDocument();
+    expect(screen.getByLabelText("Back ten seconds")).toBeInTheDocument();
+    expect(screen.getByLabelText("Forward ten seconds")).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Turn sound (on|off)$/)).toBeInTheDocument();
+    expect(screen.queryByLabelText("Full screen")).toBeNull();
+    // The cover's resting anatomy has given way for good.
+    expect(screen.queryByTestId("wizard-cover-play")).toBeNull();
+    expect(screen.queryByTestId("wizard-cover-duration")).toBeNull();
+    fireEvent.pause(video);
+    expect(screen.queryByTestId("wizard-cover-play")).toBeNull();
+  });
+
+  // ComposeCoverNoFrames: no frames cut, the preview is the neutral tile —
+  // "No frame", the duration, and no play disc.
+  it("draws the neutral tile when the clip gave no frames", async () => {
+    vi.mocked(captureFrames).mockRejectedValueOnce(new Error("no decode"));
+    render();
+    await pickFiles([aVideo()]);
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+
+    expect(await screen.findByTestId("wizard-cover-no-frame")).toHaveTextContent("No frame");
+    expect(screen.getByTestId("wizard-cover-duration")).toBeInTheDocument();
+    expect(screen.queryByTestId("wizard-cover-play")).toBeNull();
+    expect(screen.getByTestId("wizard-cover-caption")).toHaveTextContent(
+      "This clip gave no frames — choose a picture of your own, or leave it without one.",
+    );
   });
 
   // F3-4, ruled final 2026-09-11: the preview shows the ACTUAL OUTPUT FORMAT.
