@@ -490,8 +490,7 @@ class StancePadTest {
             "Current opinion: All in, For or against +1.00, How much reaches you +1.00",
         )
         compose.onNodeWithTag("${TAG}_stance_readout").assertContentDescriptionEquals(
-            "Your pick: Dislike, keep away, For or against −0.55, How much reaches you −0.15"
-                .replace('−', '-'),
+            "Your pick: Dislike, keep away, For or against −0.55, How much reaches you −0.15",
         )
         compose.onNodeWithTag("${TAG}_stance_landing").assertContentDescriptionEquals(
             "Resulting opinion: Tell me everything, For or against +0.45, How much reaches you +0.85",
@@ -627,7 +626,7 @@ class StancePadTest {
         show(StanceControlState(standing = StancePoint(-0.4, 0.0)), targetLabel = "@ada")
         compose.onNodeWithText("🤔", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag("${TAG}_stance").assertContentDescriptionContains(
-            "Your opinion on @ada: Against it, no interest either way, -0.40 / +0.00.",
+            "Your opinion on @ada: Against it, no interest either way, −0.40 / +0.00.",
             substring = true,
         )
     }

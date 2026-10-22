@@ -50,7 +50,7 @@ class TopicChipTest {
     @Test
     fun aNegativeRelevanceKeepsItsSign() {
         render(TagChipValues(relevance = -0.25, confidence = 1.0))
-        compose.onNodeWithTag("chip").assertTextContains("-0.25 · 1.00")
+        compose.onNodeWithTag("chip").assertTextContains("−0.25 · 1.00")
     }
 
     /** The compact reading is an abbreviation; assistive tech gets the words. */

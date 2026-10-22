@@ -77,7 +77,7 @@ class TagParameterSlidersTest {
             it(-0.5f)
         }
         assertEquals(-0.5, reported, 1e-6)
-        compose.onNodeWithText("Relevance: -0.50").assertExists()
+        compose.onNodeWithText("Relevance: −0.50").assertExists()
     }
 
     /** Confidence is census-bounded to [0, 1] — the slider cannot leave it. */

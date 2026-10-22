@@ -25,6 +25,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -142,9 +143,11 @@ fun CollapsingTopBanner(
             Modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surface)
-                .padding(start = horizontalPadding, end = horizontalPadding, bottom = 8.dp),
+                .padding(start = horizontalPadding, end = horizontalPadding),
         ) {
-            content()
+            // The 8dp under the banners is theirs: with none standing, the
+            // region takes no room and the list meets the band (`FeedList`).
+            BottomSeamed(content)
         }
     }
 }
@@ -172,3 +175,22 @@ private const val REVEAL_FRACTION = 3f
 
 /** Deltas below this are touch jitter, not a direction. */
 private const val SCROLL_JITTER = 4f
+
+/** [content] with an 8dp seam under it — none when it draws nothing. */
+@Composable
+private fun BottomSeamed(content: @Composable () -> Unit) {
+    Layout(content = content) { measurables, constraints ->
+        val placeables = measurables.map { it.measure(constraints.copy(minHeight = 0)) }
+        val drawn = placeables.sumOf { it.height }
+        val seam = if (drawn > 0) BANNER_SEAM.roundToPx() else 0
+        layout(constraints.maxWidth, drawn + seam) {
+            var y = 0
+            placeables.forEach {
+                it.place(0, y)
+                y += it.height
+            }
+        }
+    }
+}
+
+private val BANNER_SEAM = 8.dp

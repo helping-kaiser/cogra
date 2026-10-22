@@ -33,7 +33,7 @@ class ReferenceParameterSlidersTest {
     fun bothCitationParametersRenderWithTheirValues() {
         renderReferenceSliders(relevance = 0.4, support = -0.2)
         compose.onNodeWithText("Relevance: 0.40").assertExists()
-        compose.onNodeWithText("Support: -0.20").assertExists()
+        compose.onNodeWithText("Support: −0.20").assertExists()
     }
 
     /**
@@ -50,7 +50,7 @@ class ReferenceParameterSlidersTest {
     @Test
     fun supportReachesBelowZeroWhereATagsConfidenceCannot() {
         renderReferenceSliders(support = -1.0)
-        compose.onNodeWithText("Support: -1.00").assertExists()
+        compose.onNodeWithText("Support: −1.00").assertExists()
     }
 
     /** TalkBack reads the number, not a bare percentage. */

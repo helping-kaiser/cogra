@@ -8,25 +8,19 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.pullToRefresh
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -60,9 +54,9 @@ import com.cogra.core.designsystem.NodeSnackbarVisuals
 import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.dataNodeSurface
-import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.atom.CograOverflowMenu
 import com.cogra.core.designsystem.v2.atom.LoadingState
+import com.cogra.core.designsystem.v2.atom.PageHeader
 import com.cogra.core.designsystem.v2.media.CoverKind
 import com.cogra.core.designsystem.v2.media.CoveringLayersHost
 import com.cogra.core.designsystem.v2.media.CoversSurface
@@ -70,7 +64,6 @@ import com.cogra.core.designsystem.v2.media.DetailClip
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.MediaViewer
 import com.cogra.core.designsystem.v2.media.SensitiveVeil
-import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.CommentView
 import com.cogra.domain.LicenseChoice
@@ -419,27 +412,16 @@ fun PostDetailScreen(
                 // whole set of acts off screen mid-read, which is not a cost
                 // the collapse was ever meant to buy.
                 Column {
-                    TopAppBar(
-                        // The 48dp band every board draws (`spacing.css`
-                        // `--top-bar-height`, `PageHeader.jsx`); M3's small bar
-                        // defaults to 64dp, which is a rung the design does not
-                        // have. `expandedHeight` is the documented way to set it.
-                        expandedHeight = Layout.TopBarHeight,
-                        colors = surfaceTopAppBarColors(),
-                        modifier = Modifier.dataNode(header),
-                        // No title in the band: the post's title is the card's
-                        // heading, above its media (`_shared.jsx:287-289` — the
-                        // detail header takes no title prop).
-                        title = {},
-                        navigationIcon = {
-                            IconButton(onClick = onBack, modifier = Modifier.dataNode(header / "back")) {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = backLabel(backDescription),
-                                )
-                            }
-                        },
-                        actions = {
+                    // THE HOUSE PAGE HEADER (`_shared.jsx` `DetailHeader` is a
+                    // `PageHeader`): 48dp, 12dp of its own side padding, the
+                    // 48dp back target, and the post's ONE ⋮ in the header
+                    // placement — pulled 12dp into that padding. No title: the
+                    // post's title is the card's heading, above its media.
+                    PageHeader(
+                        onBack = onBack,
+                        backContentDescription = backLabel(backDescription),
+                        node = header,
+                        action = {
                             DetailMenu(
                                 post = state.post,
                                 viewerId = viewerId,
@@ -672,6 +654,7 @@ private fun DetailMenu(
         contentDescription = stringResource(R.string.content_menu_post),
         testTag = node.tag,
         sheetNode = menuSheet,
+        pulled = true,
     )
 }
 
@@ -732,20 +715,18 @@ private fun PostDetailBody(
         onTurn = { if (viewerAt == null) viewerAt = 0 },
     )
 
-    // The post is a card here too, edge to edge with its 8dp seam — on the
-    // boards the post wears the card and the thread stands in its own sheet
-    // over it, not as a second half of this page.
-    val flushTop = clip != null || state.newer != null
+    // The post is a card here too, edge to edge — on the boards the post
+    // wears the card and the thread stands in its own sheet over it, not as
+    // a second half of this page.
     LazyColumn(
         state = listState,
         modifier = Modifier
             .fillMaxSize()
             .testTag("detail_list"),
-        // The clip heads the column flush under the bar, as the board draws
-        // it (`PostDetailVideo.jsx:30-33`); a card alone keeps its seam. The
-        // newer-version line, standing, heads it flush the same way
-        // (`PostDetail.jsx` — the line is `DetailColumn`'s first child).
-        contentPadding = PaddingValues(top = if (flushTop) 0.dp else Space.x2, bottom = Space.x4),
+        // THE POST STANDS FLUSH UNDER THE HEADER (`_shared.jsx` `DetailColumn`,
+        // padding `0 0 8px 0`): the clip, the newer-version line or the card
+        // heads the column with no seam above it.
+        contentPadding = PaddingValues(bottom = Space.x4),
         verticalArrangement = Arrangement.spacedBy(Space.x2),
     ) {
         item {
@@ -882,7 +863,8 @@ private fun DetailCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(Space.x4),
-            verticalArrangement = Arrangement.spacedBy(Space.x1),
+            // The card's one rhythm (`Card.jsx` `--card-gap`), as the feed's.
+            verticalArrangement = Arrangement.spacedBy(Space.x3),
         ) {
             // PEOPLE FIRST: the author leads, above the content and never
             // below it as a byline — including on a media post. On the video
@@ -899,30 +881,34 @@ private fun DetailCard(
             // than in the bar: below the picture it would read as a caption,
             // and the caption as a second one. The detail is the read surface,
             // so it never clamps.
-            post.title.value?.takeIf { it.isNotEmpty() }?.let { title ->
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.dataNode(card / "title"),
-                )
+            val title: @Composable () -> Unit = {
+                post.title.value?.takeIf { it.isNotEmpty() }?.let { title ->
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.dataNode(card / "title"),
+                    )
+                }
             }
             // Media, words and description are one region because the veil
             // covers them as one state (D12); the title stays outside it.
-            PostBody(
-                content = post.content,
-                description = post.description,
-                attachments = post.attachments,
-                attachmentsStatus = post.attachmentsStatus,
-                moderation = post.moderation,
-                testTagPrefix = "detail",
-                node = card,
-                modifier = Modifier.testTag("detail_body"),
-                bleed = Space.x4,
-                mediaAbove = mediaAbove,
-                onOpenMedia = onOpenMedia,
-                revealed = revealed,
-                onReveal = onReveal,
-            )
+            TitledBody(post, title) {
+                PostBody(
+                    content = post.content,
+                    description = post.description,
+                    attachments = post.attachments,
+                    attachmentsStatus = post.attachmentsStatus,
+                    moderation = post.moderation,
+                    testTagPrefix = "detail",
+                    node = card,
+                    modifier = Modifier.testTag("detail_body"),
+                    bleed = Space.x4,
+                    mediaAbove = mediaAbove,
+                    onOpenMedia = onOpenMedia,
+                    revealed = revealed,
+                    onReveal = onReveal,
+                )
+            }
             DetailCardFoot(
                 post = post,
                 removed = removed,

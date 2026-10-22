@@ -219,6 +219,6 @@ class AttachmentPadTest {
         // A set progress lands on the grid: −0.6f is −0.60000002384… as a Double.
         assertThat(picked.single()).isEqualTo(-0.6)
         compose.onNodeWithTag("attachment_pad")
-            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "-0.60"))
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "−0.60"))
     }
 }

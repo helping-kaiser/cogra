@@ -363,8 +363,12 @@
     <!-- A clip under the full transport stops at its end, so the press
          there starts it again rather than resuming it. -->
     <string name="designsystem_video_replay">Replay</string>
-    <string name="designsystem_video_mute">Mute</string>
-    <string name="designsystem_video_unmute">Unmute</string>
+    <!-- The sound disc's name says what the press does to the sound
+         (MediaAttachment.jsx, VideoControls.jsx). -->
+    <string name="designsystem_video_mute">Turn sound off</string>
+    <string name="designsystem_video_unmute">Turn sound on</string>
+    <!-- A single picture's name when its author described nothing (MediaAttachment.jsx PICTURE_NAME). -->
+    <string name="designsystem_gallery_picture">Picture</string>
 
     <!-- The transport's rest, on the surfaces where the clip is the thing
          the reader came for. The skips say their size, because "ten

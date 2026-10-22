@@ -28,14 +28,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChatBubble
@@ -48,6 +44,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
@@ -56,7 +54,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -66,6 +63,7 @@ import com.cogra.core.designsystem.RowLine
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.media.SensitiveSource
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.core.designsystem.v2.token.TypeTokens
 import com.cogra.domain.CommentView
 import com.cogra.domain.saved.CommentTarget
 import com.cogra.domain.saved.headRowOf
@@ -122,19 +120,21 @@ internal fun CommentFeedCard(
                 HeadRow(target, testTagPrefix, onOpenTarget)
                 // THE CONNECTOR: a hairline rule down from the head's mark —
                 // centred on its 32dp tile — to the comment, hung inset beside it.
-                Row(Modifier.height(IntrinsicSize.Min).padding(start = CONNECTOR_INSET)) {
-                    Box(
-                        Modifier
-                            .width(CONNECTOR)
-                            .fillMaxHeight()
-                            .background(MaterialTheme.colorScheme.outlineVariant),
-                    )
-                    Column(
-                        modifier = Modifier.padding(start = HUNG_INSET),
-                        verticalArrangement = Arrangement.spacedBy(Space.x3),
-                    ) {
-                        OwnPart(comment, testTagPrefix, revealed, onReveal, onOpenActor, onOpenTopic, onCite, onLicense)
-                    }
+                // Drawn behind the hung part rather than sized by an intrinsic
+                // pass: the part holds the tags line, whose measured fold reads
+                // its constraints and so answers no intrinsic query.
+                val rule = MaterialTheme.colorScheme.outlineVariant
+                Column(
+                    modifier = Modifier
+                        .padding(start = CONNECTOR_INSET)
+                        .drawBehind {
+                            val x = CONNECTOR.toPx() / 2
+                            drawLine(rule, Offset(x, 0f), Offset(x, size.height), strokeWidth = CONNECTOR.toPx())
+                        }
+                        .padding(start = CONNECTOR + HUNG_INSET),
+                    verticalArrangement = Arrangement.spacedBy(Space.x3),
+                ) {
+                    OwnPart(comment, testTagPrefix, revealed, onReveal, onOpenActor, onOpenTopic, onCite, onLicense)
                 }
             } else {
                 OwnPart(comment, testTagPrefix, revealed, onReveal, onOpenActor, onOpenTopic, onCite, onLicense)
@@ -207,7 +207,7 @@ private fun HeadRow(target: CommentTarget, testTagPrefix: String, onOpen: () -> 
             Text(
                 text = row.title,
                 style = MaterialTheme.typography.labelLarge,
-                fontWeight = if (row.removed) FontWeight.Normal else null,
+                fontWeight = if (row.removed) TypeTokens.SystemVoiceWeight else null,
                 color = quietIf(row.removed),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

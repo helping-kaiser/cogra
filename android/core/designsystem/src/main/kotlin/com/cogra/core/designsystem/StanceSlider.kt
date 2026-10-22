@@ -18,7 +18,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.testTag
 import com.cogra.core.designsystem.v2.token.Space
-import java.util.Locale
 
 /**
  * One axis of a stance as an ordinary slider (the master `StanceSlider`):
@@ -97,7 +96,7 @@ internal fun LabeledSlider(
     valueRange: ClosedFloatingPointRange<Float> = -1f..1f,
     scale: @Composable (() -> Unit)? = null,
 ) {
-    val reading = String.format(Locale.getDefault(), "%.2f", value)
+    val reading = twoPlacesUnsigned(value)
     Column(modifier) {
         Text("$label: $reading")
         Slider(

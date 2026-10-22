@@ -1530,8 +1530,28 @@ fun StancePoint.pair(): String =
  */
 fun twoPlaces(value: Double): String {
     val rounded = (value * 100).roundToInt() / 100.0
-    return String.format(Locale.getDefault(), "%+.2f", if (rounded == 0.0) 0.0 else rounded)
+    return withMinusSign(String.format(NUMBER_LOCALE, "%+.2f", if (rounded == 0.0) 0.0 else rounded))
 }
+
+/**
+ * THE SYSTEM'S ONE NUMBER FORMAT (`StanceReadout.jsx`'s `en-US`
+ * `Intl.NumberFormat`): a point for the decimals on every device, whatever
+ * its locale — a pair read `+0,40` on one phone and `+0.40` on another is
+ * two products.
+ */
+val NUMBER_LOCALE: Locale = Locale.US
+
+/**
+ * THE MINUS IS U+2212, NOT A HYPHEN (design/readme.md §3 *Numbers*; item 59):
+ * MINUS SIGN carries the plus's width and sits on its optical axis, where
+ * U+002D is a narrow word-joining dash and a pair written `x / y` cannot
+ * afford one arm shorter than the other. [NUMBER_LOCALE]'s formats write the
+ * sign as the only hyphen in a number, so the swap never reaches a digit.
+ */
+fun withMinusSign(formatted: String): String = formatted.replace('-', MINUS_SIGN)
+
+/** U+2212 MINUS SIGN. */
+const val MINUS_SIGN = '−'
 
 /**
  * THE PAD IS THE TEACHER (stance-control.md "Teaching it"; copy-voice "The
