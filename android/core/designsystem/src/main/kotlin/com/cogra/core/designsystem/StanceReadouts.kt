@@ -33,11 +33,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -77,10 +79,22 @@ internal fun rememberSettled(value: String): String {
     return settled
 }
 
-/** The target as the face's names and the dialog speak it — the host's, or the master's default `this post`. */
+/**
+ * WHAT A CONTROL STANCES, AS THE SURFACE AROUND IT NAMES IT — `this comment`
+ * on every comment (`CommentCard.jsx` `targetLabel`). A surface that draws a
+ * kind of thing provides the words once around the control it hands a
+ * host-supplied stance slot, so no slot signature has to carry them; an
+ * explicit `targetLabel` on the control still wins.
+ */
+val LocalStanceTargetLabel = staticCompositionLocalOf<String?> { null }
+
+/**
+ * The target as the face's names and the dialog speak it — the host's, the
+ * surface's ([LocalStanceTargetLabel]), or the master's default `this post`.
+ */
 @Composable
 internal fun targetWords(targetLabel: String?): String =
-    targetLabel ?: stringResource(R.string.stance_target_default)
+    targetLabel ?: LocalStanceTargetLabel.current ?: stringResource(R.string.stance_target_default)
 
 /**
  * The spoken twin of a readout: `Label: Word, For or against +x, How much
@@ -418,3 +432,10 @@ internal fun unreachableHelp(zeroWords: StanceZeroWords, targetLabel: String?): 
     stringResource(R.string.stance_zero_help_feed),
     stringResource(R.string.stance_zero_help_way_out, stringResource(zeroWords.open)),
 )
+
+/** [content] — a comment's stance slot — names its target `this comment` (`CommentCard.jsx`). */
+@Composable
+fun CommentStanceTarget(content: @Composable () -> Unit) {
+    val label = stringResource(R.string.stance_target_comment)
+    CompositionLocalProvider(LocalStanceTargetLabel provides label, content = content)
+}

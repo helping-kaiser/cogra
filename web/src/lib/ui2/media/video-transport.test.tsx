@@ -132,6 +132,13 @@ describe("the timeline", () => {
 });
 
 describe("the transport's own controls", () => {
+  // VideoControls.jsx names the skips in words, never digits.
+  it("names the skips as the master does", () => {
+    transportPlayer();
+    expect(screen.getByLabelText("Back ten seconds")).toBeInTheDocument();
+    expect(screen.getByLabelText("Forward ten seconds")).toBeInTheDocument();
+  });
+
   it("steps ten seconds each way, and stops at the ends", () => {
     const video = transportPlayer();
     act(() => {

@@ -59,7 +59,8 @@ export type Crop = {
 };
 
 export const MIN_ZOOM = 1;
-export const MAX_ZOOM = 3;
+/** About 4× — the crop's ceiling (CropViewport.jsx `CROP_ZOOM_MAX`; ComposeCrop.md). */
+export const MAX_ZOOM = 4;
 
 export const CENTERED: Crop = { x: 0, y: 0, zoom: MIN_ZOOM, area: null, areaPercent: null };
 

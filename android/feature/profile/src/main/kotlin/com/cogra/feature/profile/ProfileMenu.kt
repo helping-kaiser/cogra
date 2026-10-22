@@ -95,5 +95,12 @@ internal fun ProfileMenu(
         },
         testTag = (PROFILE / "identity" / "actionRow" / "menu").tag,
         sheetNode = SHEET,
+        // `placement="row"`: 40dp beside the row's buttons, answering at 48.
+        inRow = true,
+        // The sheet's own name (`BottomSheet` `ariaLabel`): `Profile actions` over
+        // another's page or a deleted account's, `More on your profile` over your own.
+        sheetLabel = stringResource(
+            if (kind == ProfileMenuKind.OWN) R.string.profile_menu_own else R.string.profile_menu_sheet,
+        ),
     )
 }

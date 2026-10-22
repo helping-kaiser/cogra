@@ -124,6 +124,8 @@
          `this post`, `this comment`, `@ada`, `#saltmaps`; the master's
          default where a host names none is `this post`. -->
     <string name="stance_target_default">this post</string>
+    <!-- Every comment's control (`CommentCard.jsx` `targetLabel`). -->
+    <string name="stance_target_comment">this comment</string>
     <string name="stance_target_give">Give your opinion on %1$s</string>
     <!-- %1$s the target, %2$s the anchor's word, %3$s the pair. -->
     <string name="stance_target_given">Your opinion on %1$s: %2$s, %3$s. Press and hold to add a positive one.</string>

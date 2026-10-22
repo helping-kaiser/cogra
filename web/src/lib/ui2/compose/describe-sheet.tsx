@@ -17,7 +17,9 @@ import { useState } from "react";
 
 import { BottomSheet } from "../bottom-sheet";
 import { HelpDialog, HELP_TOPICS } from "../help-dialog";
+import { HelpDot } from "../help-dot";
 import { PillButton } from "../pill-button";
+import { LABEL_SMALL_PLAIN } from "../plain-type";
 import { TextField } from "../text-field";
 import { ALT_TEXT_MAX_CHARS, altTextProblem } from "../media/caps";
 import { cropAspect, cropPreviewStyle } from "../media/crop-preview";
@@ -41,7 +43,14 @@ export function DescribeSheet({
   src?: string | null;
   /** The framing the author chose, so the sheet describes what will be seen. */
   crop?: Crop | null;
+  /** The description the picture carries now. */
   value: string;
+  /**
+   * The description Done commits. THE SHEET STAGES (ComposeDescribe.md,
+   * ComposeDescribeVideo.md): typing changes only the sheet's own copy, Done
+   * hands it out, and the scrim, a swipe, Back or Escape close with the
+   * picture's description as it was before the sheet opened.
+   */
   onChange: (next: string) => void;
   /** A clip is ONE thing to describe, never a per-picture walk. */
   video?: boolean;
@@ -49,6 +58,19 @@ export function DescribeSheet({
 }) {
   const subject = video ? "video" : "picture";
   const [help, setHelp] = useState(false);
+  // The staged copy, re-seeded from the picture each time the sheet opens —
+  // adjusted during render as the prop changes rather than in an effect
+  // (react.dev, "Adjusting some state when a prop changes").
+  const [staged, setStaged] = useState(value);
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setStaged(value);
+  }
+  const done = () => {
+    onChange(staged);
+    onClose();
+  };
   // A DESCRIPTION IS OF WHAT WILL BE SEEN, so this shows the framing rather
   // than the source. The picture keeps the sheet's boarded height and takes the
   // framing's own width, which makes the box exactly the framing's shape — so
@@ -59,12 +81,13 @@ export function DescribeSheet({
       ? null
       : { width: Math.round(PREVIEW_HEIGHT * aspect), height: PREVIEW_HEIGHT };
   const framing = box === null ? null : cropPreviewStyle(crop, box);
-  const problem = altTextProblem(value);
+  const problem = altTextProblem(staged);
   return (
     <BottomSheet
       open={open}
       onClose={onClose}
       title={video ? "Describe the video" : "Describe this picture"}
+      titleHidden
       testId={testId}
     >
       {/* `min-h-0` is what lets the field yield: the sheet stops at its
@@ -75,21 +98,23 @@ export function DescribeSheet({
             it rides directly under the title on both shapes, because someone
             deciding whether to write a description needs the reason at the
             moment of deciding. */}
-        <div className="flex flex-none items-start gap-2">
-          <p className="m-0 flex-1 text-label-small text-on-surface-variant">
-            Read aloud to people who can&apos;t see it.
-          </p>
-          {/* The sheet's own `?` — it carries the full explanation, so the
-              field beneath it can stay one short line. */}
-          <button
-            type="button"
-            data-testid={`${testId}-help`}
-            aria-label="Describing pictures"
-            onClick={() => setHelp(true)}
-            className="cg-state cg-focus flex size-8 flex-none items-center justify-center rounded-full border border-outline-variant text-label-large text-primary"
-          >
-            ?
-          </button>
+        {/* THE MASTER'S OWN HEAD (DescribeSheet.jsx): the title in
+            title-large over its sub-line, and the sheet's one `?` beside the
+            pair as the house HelpDot — not the sheet's title-medium heading. */}
+        <div className="flex flex-none items-center gap-2">
+          <div className="flex flex-1 flex-col gap-1">
+            <h2 className="m-0 text-title-large">
+              {video ? "Describe the video" : "Describe this picture"}
+            </h2>
+            <p className={`m-0 ${LABEL_SMALL_PLAIN} text-on-surface-variant`}>
+              Read aloud to people who can&apos;t see it.
+            </p>
+          </div>
+          <HelpDot
+            ariaLabel="Describing pictures"
+            onOpen={() => setHelp(true)}
+            testId={`${testId}-help`}
+          />
         </div>
         <div
           data-testid={`${testId}-strip`}
@@ -116,7 +141,7 @@ export function DescribeSheet({
             <span
               aria-hidden="true"
               data-testid={`${testId}-play-disc`}
-              className="absolute left-1/2 top-1/2 grid size-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-scrim/55 text-white"
+              className="absolute left-1/2 top-1/2 grid size-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-[var(--surface-snackbar)] text-[color:var(--on-surface-snackbar)]"
             >
               <svg viewBox="0 0 24 24" width={28} height={28} fill="currentColor" aria-hidden="true">
                 <path d="M8 5v14l11-7z" />
@@ -129,13 +154,13 @@ export function DescribeSheet({
           optional
           multiline
           rows={2}
-          value={value}
-          onChange={onChange}
+          value={staged}
+          onChange={setStaged}
           testId={`${testId}-field`}
           cap={ALT_TEXT_MAX_CHARS}
           error={problem ?? undefined}
         />
-        <div className="flex flex-none justify-end">
+        <div className="flex flex-none justify-end pb-2">
           {/* Visible but disabled over the cap, never hidden — `problem` is
               only ever the over-cap message on this field, so its presence
               is exactly the signal to gate on. */}
@@ -143,7 +168,7 @@ export function DescribeSheet({
             testId={`${testId}-done`}
             variant="text"
             disabled={problem !== null}
-            onClick={onClose}
+            onClick={done}
           >
             Done
           </PillButton>

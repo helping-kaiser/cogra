@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -189,6 +190,22 @@ fun CograBandChats(
     ) {
         Icon(
             imageVector = Icons.Filled.Forum,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(22.dp),
+        )
+    }
+}
+
+/**
+ * A screen's own control on the band's working edge (`BandIcon`) — the
+ * profile's gear (`ProfileBand`): 40dp of ink, answering at 48.
+ */
+@Composable
+fun CograBandIcon(icon: ImageVector, description: String, onClick: () -> Unit, testTag: String) {
+    BandIconButton(onClick = onClick, testTag = testTag, description = description) {
+        Icon(
+            imageVector = icon,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(22.dp),

@@ -16,6 +16,8 @@
 // details step or an `updateMedia` carries a late description.
 
 import { Chip } from "@/lib/ui2/chip";
+import { QuietNote } from "@/lib/ui2/quiet-note";
+import { useCanPinch } from "@/lib/ui2/media/touch";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
 import { CropFrame } from "@/lib/ui2/media/crop-frame";
@@ -42,14 +44,15 @@ export function CropStep({
   onCrop: (id: string, crop: Crop) => void;
   onNext: () => void;
 }) {
+  const canPinch = useCanPinch();
   const asset = assets[focused];
   if (asset === undefined) return null;
 
   return (
     <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 pb-4 pt-2">
-      {/* A named group of toggles rather than a radiogroup: the chips report
-          `aria-pressed`, and a radiogroup whose children are not radios lies to
-          a screen reader about what it will find inside. */}
+      {/* A named group of the master's switches (`Chip.jsx`) rather than a
+          radiogroup: a radiogroup whose children are not radios lies to a
+          screen reader about what it will find inside. */}
       <div className="flex gap-2" role="group" aria-label="The post's shape">
         {POST_SHAPE_ORDER.map((option) => (
           <Chip
@@ -68,12 +71,18 @@ export function CropStep({
         shape={shape}
         crop={asset.crop}
         onChange={(next) => onCrop(asset.id, next)}
+        zoomSlider
         testId="wizard-crop-frame"
       />
 
-      <p className="m-0 text-body-small text-on-surface-variant">
-        One shape for the whole post. Drag to move, pinch to zoom.
-      </p>
+      {/* The QuietNote under the zoom (ComposeCrop.jsx), its second sentence
+          naming the gestures this device has (ComposeCrop.md; copy-voice,
+          *The crops' how-to line*). */}
+      <QuietNote testId="wizard-crop-note">
+        {canPinch
+          ? "One shape for the whole post. Drag to move, pinch to zoom."
+          : "One shape for the whole post. Drag or use the arrow keys to move, the slider to zoom."}
+      </QuietNote>
 
       {assets.length > 1 && (
         <ul className="m-0 flex list-none gap-2 overflow-x-auto p-0">

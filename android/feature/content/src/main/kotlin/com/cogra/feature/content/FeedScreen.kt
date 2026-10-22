@@ -122,6 +122,12 @@ fun FeedRoute(
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     /**
+     * A person tapped inside the comments sheet — its own door, so the
+     * profile it opens can name the sheet as the way back (`Back to the
+     * comments`, ProfileOther.md:73). Null routes it through [onOpenActor].
+     */
+    onOpenCommentActor: ((String) -> Unit)? = null,
+    /**
      * The band's chats affordance. Null draws no control: the signed-in
      * reader's chat surface is an explicit gap on the canvas
      * (`graph.json`, `"the chat surface (not designed)"`), and a control
@@ -199,7 +205,7 @@ fun FeedRoute(
                 onDismiss = onDismiss,
                 onReply = { request -> (request.comment?.asReplyTarget() ?: post?.asReplyTarget())?.let(onReply) },
                 onEditComment = { commentId -> onEditComment(commentId, post?.title?.value.orEmpty()) },
-                onOpenActor = onOpenActor,
+                onOpenActor = onOpenCommentActor ?: onOpenActor,
                 onOpenTopic = onOpenTopic,
                 onReference = onCitePost,
                 onSignInOrJoin = onSignInOrJoin,

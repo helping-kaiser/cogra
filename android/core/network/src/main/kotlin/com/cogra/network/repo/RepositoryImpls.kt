@@ -27,6 +27,7 @@ import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordLink
+import com.cogra.domain.RecordOpinion
 import com.cogra.domain.RecordRow
 import com.cogra.domain.SelfMarkView
 import com.cogra.domain.StagedWriteView
@@ -1046,11 +1047,17 @@ private fun AuthorRecordsQuery.Node.toRow(): RecordRow {
         targetComment != null -> targetComment.target?.onPost?.id?.let { RecordLink.ToPost(it) }
         else -> null
     }
+    val kind = family.toDomain()
     return RecordRow(
         id = id,
-        family = family.toDomain(),
+        family = kind,
         genesis = targetId == mint || terminalId == mint,
         snippet = snippet,
         link = link,
+        landedAt = landedAt,
+        // Both stance families wear their own face (the chronicle's opinion card).
+        opinion = RecordOpinion(pDirected, pInterest, severed == true)
+            .takeIf { kind == Family.OPINION || kind == Family.AFFINITY },
+        targetHandle = target?.onUser?.handle,
     )
 }

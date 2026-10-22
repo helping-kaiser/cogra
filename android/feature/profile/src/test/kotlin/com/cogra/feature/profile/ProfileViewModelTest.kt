@@ -83,7 +83,7 @@ class ProfileViewModelTest {
     fun resetDispatcher() = Dispatchers.resetMain()
 
     @Test
-    fun theOwnProfileLoadsAndLandsOnThePostsFilter() = runTest(dispatcher) {
+    fun theOwnProfileLoadsAndLandsOnEverything() = runTest(dispatcher) {
         val vm = viewModel()
         vm.start(null)
         dispatcher.scheduler.advanceUntilIdle()
@@ -91,9 +91,10 @@ class ProfileViewModelTest {
         assertThat(s.loading).isFalse()
         assertThat(s.profile?.handle).isEqualTo("jakob")
         assertThat(s.own).isTrue()
-        assertThat(s.filter).isEqualTo(ChronicleFilter.POSTS)
-        // Every visitor lands on Posts (decision D3).
-        assertThat(profiles.rowRequests).containsExactly(Family.PUBLISH)
+        assertThat(s.filter).isEqualTo(ChronicleFilter.EVERYTHING)
+        // Every visitor lands on Everything: every profile board draws the
+        // tab row at `value="everything"` (Profile.md:21).
+        assertThat(profiles.rowRequests).containsExactly(null)
     }
 
     /**
@@ -198,9 +199,9 @@ class ProfileViewModelTest {
         val vm = viewModel()
         vm.start(null)
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onFilterChange(ChronicleFilter.EVERYTHING)
+        vm.onFilterChange(ChronicleFilter.POSTS)
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(profiles.rowRequests).containsExactly(Family.PUBLISH, null).inOrder()
+        assertThat(profiles.rowRequests).containsExactly(null, Family.PUBLISH).inOrder()
     }
 
     @Test

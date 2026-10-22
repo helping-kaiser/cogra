@@ -131,8 +131,8 @@ async function pickFiles(files: readonly File[]) {
 }
 
 const aVideo = () => new File([mp4Bytes() as BlobPart], "clip.mp4", { type: "video/mp4" });
-const aPicture = () =>
-  new File([new Uint8Array([1, 2, 3]) as BlobPart], "shot.jpg", { type: "image/jpeg" });
+const aPicture = (name = "shot.jpg") =>
+  new File([new Uint8Array([1, 2, 3]) as BlobPart], name, { type: "image/jpeg" });
 
 function render() {
   return renderWithProviders(
@@ -204,7 +204,50 @@ describe("picking a video", () => {
     await pickFiles([aVideo()]);
     fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
-    expect(await screen.findByText("Video only")).toHaveClass("text-label-small");
+    // WizardHeader's own `stageLabel` slot: the role's size and leading, the
+    // ground's weight — the seal's "Last step" pair.
+    const stage = await screen.findByTestId("header-stage");
+    expect(stage).toHaveTextContent("Video only");
+    expect(stage.className).not.toContain("text-label-small ");
+  });
+
+  // ComposeCoverPlaying: the running preview wears the post detail's
+  // transport, without a fullscreen toggle, and the cover never comes back.
+  it("runs the preview under the house transport, with no fullscreen", async () => {
+    render();
+    await pickFiles([aVideo()]);
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+
+    const video = (await screen.findByTestId("wizard-cover-preview")) as HTMLVideoElement;
+    expect(video).not.toHaveAttribute("controls");
+    fireEvent.play(video);
+
+    expect(screen.getByTestId("wizard-cover-transport")).toBeInTheDocument();
+    expect(screen.getByLabelText("Back ten seconds")).toBeInTheDocument();
+    expect(screen.getByLabelText("Forward ten seconds")).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Turn sound (on|off)$/)).toBeInTheDocument();
+    expect(screen.queryByLabelText("Full screen")).toBeNull();
+    // The cover's resting anatomy has given way for good.
+    expect(screen.queryByTestId("wizard-cover-play")).toBeNull();
+    expect(screen.queryByTestId("wizard-cover-duration")).toBeNull();
+    fireEvent.pause(video);
+    expect(screen.queryByTestId("wizard-cover-play")).toBeNull();
+  });
+
+  // ComposeCoverNoFrames: no frames cut, the preview is the neutral tile —
+  // "No frame", the duration, and no play disc.
+  it("draws the neutral tile when the clip gave no frames", async () => {
+    vi.mocked(captureFrames).mockRejectedValueOnce(new Error("no decode"));
+    render();
+    await pickFiles([aVideo()]);
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+
+    expect(await screen.findByTestId("wizard-cover-no-frame")).toHaveTextContent("No frame");
+    expect(screen.getByTestId("wizard-cover-duration")).toBeInTheDocument();
+    expect(screen.queryByTestId("wizard-cover-play")).toBeNull();
+    expect(screen.getByTestId("wizard-cover-caption")).toHaveTextContent(
+      "This clip gave no frames — choose a picture of your own, or leave it without one.",
+    );
   });
 
   // F3-4, ruled final 2026-09-11: the preview shows the ACTUAL OUTPUT FORMAT.
@@ -352,6 +395,43 @@ describe("picking a video", () => {
 
     fireEvent.click(screen.getAllByText("Remove it")[0]!);
     expect(screen.getByTestId("wizard-refusals").querySelectorAll("li")).toHaveLength(1);
+  });
+
+  // ComposePickedErrors.md: what was refused is listed UNDER THE TRAY, before
+  // the step's own region, not below it.
+  it("lists the refusals between the tray and the drop region", async () => {
+    render();
+    await pickFiles([aPicture()]);
+    await pickFiles([aVideo()]);
+
+    const list = await screen.findByTestId("wizard-refusals");
+    const drop = screen.getByTestId("wizard-drop");
+    expect(list.compareDocumentPosition(drop) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(drop.contains(list)).toBe(false);
+  });
+
+  // ComposePick.md: an eleventh picture is refused in words and NEVER dropped
+  // in silence — and the picker stays open to say so.
+  it("refuses the eleventh picture under the tray, and keeps the picker open", async () => {
+    render();
+    await pickFiles(Array.from({ length: 11 }, (_, i) => aPicture(`p${i}.jpg`)));
+
+    expect(await screen.findByTestId("wizard-refusals")).toHaveTextContent(
+      "That's more than a post carries — up to ten pictures.",
+    );
+    expect(screen.getByTestId("wizard-picked-count")).toHaveTextContent("Picked · 10");
+    expect(screen.getByTestId("wizard-open-picker")).toBeEnabled();
+    expect(screen.getByTestId("wizard-open-picker")).toHaveTextContent("Choose from your files");
+  });
+
+  // ComposePickVideo.jsx: the clip's tile is a 114 × 64 frame, not the
+  // picture's 48px square.
+  it("draws the staged clip as the 114 × 64 frame tile", async () => {
+    render();
+    await pickFiles([aVideo()]);
+    const tile = (await screen.findByLabelText("Remove this video")).parentElement as HTMLElement;
+    expect(tile.style.width).toBe("114px");
+    expect(tile.style.height).toBe("64px");
   });
 
   it("offers no way to add once a video is the body", async () => {

@@ -18,6 +18,7 @@
 import { useRef } from "react";
 
 import { COVER_FROM_PICTURE, type CoverAsset } from "@/lib/compose/wizard";
+import { LABEL_SMALL_PLAIN } from "../plain-type";
 
 export function CoverRow({
   framePreviews,
@@ -137,7 +138,8 @@ export function CoverRow({
           )}
         </button>
       </div>
-      <p className="m-0 text-body-small text-on-surface-variant">
+      {/* CoverRow.jsx: the line in label-small's size and leading, at the body's weight. */}
+      <p data-testid={`${testIdPrefix}-cover-caption`} className={`m-0 ${LABEL_SMALL_PLAIN} text-on-surface-variant`}>
         {noFrames
           ? "This clip gave no frames — choose a picture of your own, or leave it without one."
           : "A frame, or a picture of your own."}
