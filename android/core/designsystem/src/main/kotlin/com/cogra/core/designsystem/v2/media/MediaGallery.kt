@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -26,14 +27,18 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.R
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.MediaFrame
@@ -97,6 +102,7 @@ fun MediaGallery(
     // the gallery's own when it stands in none.
     val stage = LocalScrollStage.current ?: rememberScrollStage()
     val tag = node?.tag ?: testTag
+    val picture = stringResource(R.string.designsystem_gallery_picture)
 
     Column(
         modifier = modifier
@@ -120,7 +126,7 @@ fun MediaGallery(
             // conformance harness, which a pager clearing every page at
             // once would hide.
             modifier = Modifier.semantics {
-                contentDescription = galleryDescription(items)
+                galleryDescription(items[pagerState.currentPage], picture)?.let { contentDescription = it }
             },
         ) { page ->
             GalleryFrame(
@@ -191,6 +197,10 @@ private fun GalleryFrame(
     // playback and no sound disc behind the blur the reader chose.
     val veiled = LocalStageVeil.current
     val playing = onStage && !veiled
+    val muted by VideoSound.muted.collectAsState()
+    val soundLabel = stringResource(
+        if (muted) R.string.designsystem_video_unmute else R.string.designsystem_video_mute,
+    )
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -210,7 +220,20 @@ private fun GalleryFrame(
             // The pager above speaks for the whole set, so a page announces
             // nothing of its own — the poster's description would be read a
             // second time. It keeps only its name.
-            .clearAndSetSemantics { node?.let { testTag = it.tag } },
+            // ON ANDROID A PLAYING CLIP'S SOUND IS A CUSTOM ACTION ON ITS FRAME
+            // (FeedCover.md): the traversal inside the gallery stays cleared,
+            // and the action names what the press does to the sound.
+            .clearAndSetSemantics {
+                node?.let { testTag = it.tag }
+                if (videoUrl != null && playing) {
+                    customActions = listOf(
+                        CustomAccessibilityAction(soundLabel) {
+                            VideoSound.toggle()
+                            true
+                        },
+                    )
+                }
+            },
     ) {
         // Symptom (b) is about this number on the way back: the clip
         // should resume if it is in the viewport and must not start if
@@ -295,15 +318,14 @@ fun mediaMaxHeight(): Dp {
 }
 
 /**
- * One description for the whole set. Authored alt text is used where it
- * exists; the count is stated either way, so a reader always learns how
- * much is there even when nothing was described.
+ * The name the frame on screen is heard by (`MediaAttachment.jsx`
+ * `MediaGallery`): its author's description, else `Picture` for a picture —
+ * never a clip counted as one, and no invented name for a clip nobody
+ * described. Where there are several, the dot row below says which one of
+ * how many ([PagerDots]).
  */
-private fun galleryDescription(items: List<MediaItem>): String {
-    val described = items.mapNotNull { it.altText }
-    val count = if (items.size == 1) "1 picture" else "${items.size} pictures"
-    return if (described.isEmpty()) count else "$count: " + described.joinToString(". ")
-}
+private fun galleryDescription(item: MediaItem, picture: String): String? =
+    item.altText?.takeIf { it.isNotBlank() } ?: picture.takeIf { item.videoUrl == null }
 
 @ThemePreviews
 @Composable

@@ -560,24 +560,39 @@ class MediaComponentsTest {
     }
 
     @Test
-    fun theWholeSetIsDescribedOnceRatherThanPerPage() {
+    fun theFrameOnScreenIsHeardByItsAuthorsDescription() {
         gallery(2)
 
-        // One description for the set — the gallery is one tap target
-        // opening the post, not two pictures to hunt through.
-        compose.onNodeWithContentDescription("2 pictures: Picture 1. Picture 2")
-            .assertIsDisplayed()
+        // One node for the set — the gallery is one tap target opening the
+        // post — named by the frame on screen; the dots say which of how many.
+        compose.onNodeWithContentDescription("Picture 1").assertIsDisplayed()
+        compose.onNodeWithContentDescription("2 pictures: Picture 1. Picture 2").assertDoesNotExist()
     }
 
     @Test
-    fun anUndescribedSetStillStatesHowMuchIsThere() {
+    fun anUndescribedPictureIsHeardAsAPictureAndTheDotsSayHowMany() {
         compose.setContent {
             Cogra2PreviewTheme {
                 MediaGallery(items = List(3) { MediaItem(null, 1f) }, testTag = "g")
             }
         }
 
-        compose.onNodeWithContentDescription("3 pictures").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Picture").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Picture 1 of 3", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun aClipIsNeverCountedAsAPicture() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                MediaGallery(
+                    items = listOf(MediaItem(url = null, aspectRatio = 0.8f, videoUrl = "https://example.invalid/c.mp4")),
+                    testTag = "g",
+                )
+            }
+        }
+
+        compose.onNodeWithContentDescription("Picture").assertDoesNotExist()
     }
 
     // ---- The crop stage's size, and the framing every later preview
