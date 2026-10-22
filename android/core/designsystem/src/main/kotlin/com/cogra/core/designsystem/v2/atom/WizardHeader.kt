@@ -1,6 +1,5 @@
 package com.cogra.core.designsystem.v2.atom
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
@@ -18,12 +17,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
+import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
+import com.cogra.core.designsystem.v2.token.TypeTokens
 
 /**
  * The wizard's header band, as every canonical Compose board draws it: a 48dp
@@ -83,7 +83,6 @@ fun WizardHeader(
             .padding(horizontal = Layout.TopBarPadding)
             .then(if (tag != null) Modifier.testTag(tag) else Modifier),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         if (onBack != null) {
             IconButton(
@@ -105,26 +104,32 @@ fun WizardHeader(
             Box(Modifier.size(Layout.TouchTargetMin))
         }
 
-        // The board gives the title its natural width and lets a `flex: 1`
-        // spacer absorb the rest, which puts the trailing pill hard against
-        // the right edge. One filling weight does both jobs: the title draws
-        // at the start of the space it is given, the leftover stays inside
-        // it, and the pill is pushed flush right whatever the title's length.
+        // THE HEADER IS `PageHeader`'S TWO GROUPS (`WizardHeader.jsx` →
+        // `PageHeader.jsx`): the arrow and the title share one `gap: 8`
+        // group, the trailing group stands at least 12 from it
+        // (`space-between`, `gap: 12`), and inside the trailing group the X,
+        // the stage and the `?` sit 8 apart. The title's filling weight is the
+        // space-between: it draws at the start of its space and pushes the
+        // trailing group flush right.
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f).dataNode(node?.div("title")),
+            modifier = Modifier
+                .padding(start = Space.x2)
+                .weight(1f)
+                .dataNode(node?.div("title")),
         )
 
         // The X: out of the flow entirely, from any stage, with the draft
-        // kept and nothing to confirm. Nothing actionable follows it.
+        // kept and nothing to confirm.
         if (onLeave != null) {
             IconButton(
                 onClick = onLeave,
                 modifier = Modifier
+                    .padding(start = Space.x3)
                     .size(Layout.TouchTargetMin)
                     .testTag(partTag(node, testTag, "leave")),
             ) {
@@ -137,12 +142,15 @@ fun WizardHeader(
         }
 
         // The seal's "Last step" — the one place a wizard header states where
-        // the reader is, and it is a plain note rather than a step count.
+        // the reader is, a plain note rather than a step count: `label-small`
+        // by its size and leading alone, in the secondary ink.
         if (trailingNote != null) {
             Text(
                 text = trailingNote,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                modifier = Modifier.padding(start = Space.x2),
             )
         }
 
@@ -151,6 +159,7 @@ fun WizardHeader(
             HelpDot(
                 onHelp = onHelp,
                 contentDescription = helpContentDescription,
+                modifier = Modifier.padding(start = Space.x2),
                 testTag = testTag?.let { "${it}_help" } ?: "wizard_help",
             )
         }
