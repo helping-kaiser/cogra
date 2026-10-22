@@ -882,7 +882,8 @@ private fun DetailCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(Space.x4),
-            verticalArrangement = Arrangement.spacedBy(Space.x1),
+            // The card's one rhythm (`Card.jsx` `--card-gap`), as the feed's.
+            verticalArrangement = Arrangement.spacedBy(Space.x3),
         ) {
             // PEOPLE FIRST: the author leads, above the content and never
             // below it as a byline — including on a media post. On the video
@@ -899,30 +900,34 @@ private fun DetailCard(
             // than in the bar: below the picture it would read as a caption,
             // and the caption as a second one. The detail is the read surface,
             // so it never clamps.
-            post.title.value?.takeIf { it.isNotEmpty() }?.let { title ->
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.dataNode(card / "title"),
-                )
+            val title: @Composable () -> Unit = {
+                post.title.value?.takeIf { it.isNotEmpty() }?.let { title ->
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.dataNode(card / "title"),
+                    )
+                }
             }
             // Media, words and description are one region because the veil
             // covers them as one state (D12); the title stays outside it.
-            PostBody(
-                content = post.content,
-                description = post.description,
-                attachments = post.attachments,
-                attachmentsStatus = post.attachmentsStatus,
-                moderation = post.moderation,
-                testTagPrefix = "detail",
-                node = card,
-                modifier = Modifier.testTag("detail_body"),
-                bleed = Space.x4,
-                mediaAbove = mediaAbove,
-                onOpenMedia = onOpenMedia,
-                revealed = revealed,
-                onReveal = onReveal,
-            )
+            TitledBody(post, title) {
+                PostBody(
+                    content = post.content,
+                    description = post.description,
+                    attachments = post.attachments,
+                    attachmentsStatus = post.attachmentsStatus,
+                    moderation = post.moderation,
+                    testTagPrefix = "detail",
+                    node = card,
+                    modifier = Modifier.testTag("detail_body"),
+                    bleed = Space.x4,
+                    mediaAbove = mediaAbove,
+                    onOpenMedia = onOpenMedia,
+                    revealed = revealed,
+                    onReveal = onReveal,
+                )
+            }
             DetailCardFoot(
                 post = post,
                 removed = removed,

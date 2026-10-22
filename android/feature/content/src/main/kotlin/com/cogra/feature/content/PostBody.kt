@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,11 +21,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.v2.atom.bleedHorizontally
+import com.cogra.core.designsystem.v2.atom.hitTarget
 import com.cogra.core.designsystem.v2.media.MediaGallery
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.RemovalReason
@@ -34,6 +38,7 @@ import com.cogra.core.designsystem.v2.media.SensitiveVeil
 import com.cogra.core.designsystem.v2.media.SensitiveVeilCompact
 import com.cogra.core.designsystem.v2.token.MediaFrame
 import com.cogra.core.designsystem.v2.token.MediaShape
+import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.CommentView
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetView
@@ -170,7 +175,10 @@ internal fun PostBody(
     val body: @Composable () -> Unit = {
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            // A POST'S BODY STANDS IN THE CARD'S OWN RHYTHM (`Card.jsx`
+            // `--card-gap`, 12dp): the gallery, the words and the opener are
+            // the card's children on the board. A comment keeps its own.
+            verticalArrangement = Arrangement.spacedBy(if (surface == BodySurface.Post) Space.x3 else 8.dp),
         ) {
             val gallery: @Composable () -> Unit = {
                 if (attachments.isNotEmpty() && !mediaAbove) {
@@ -178,7 +186,23 @@ internal fun PostBody(
                 }
             }
             val caption: @Composable () -> Unit = {
-                Caption(words, description?.value, collapsed, testTagPrefix, node, wordsClampLines)
+                Caption(
+                    words = words,
+                    description = description?.value,
+                    collapsed = collapsed,
+                    testTagPrefix = testTagPrefix,
+                    node = node,
+                    wordsClampLines = wordsClampLines,
+                    // `PostCard.jsx:265`: a media post's caption is clamped
+                    // to two lines and ALWAYS carries the opener.
+                    alwaysOpenable = mediaIsTheBody && !description?.value.isNullOrEmpty(),
+                    // The detail reads its words at `body-large` (`PostCard.jsx:235`).
+                    wordsStyle = if (surface == BodySurface.Post && !collapsed) {
+                        MaterialTheme.typography.bodyLarge
+                    } else {
+                        MaterialTheme.typography.bodyMedium
+                    },
+                )
             }
 
             // A post leads with its pictures; a comment leads with its
@@ -222,6 +246,26 @@ internal fun PostBody(
 }
 
 /**
+ * A post's title and its body, in the order and the rhythm the board draws
+ * them (`PostCard.jsx:294-299, 338`): a media post's title stands above its
+ * media as one of the card's own children, the card's 12dp clear of it; a
+ * words post's title opens its text block, the block's 4dp seam above the
+ * words. Either way the title stays outside the veil (D12).
+ */
+@Composable
+internal fun TitledBody(post: PostView, title: @Composable () -> Unit, body: @Composable () -> Unit) {
+    if (post.isMediaPost) {
+        title()
+        body()
+    } else {
+        Column(verticalArrangement = Arrangement.spacedBy(Space.x1)) {
+            title()
+            body()
+        }
+    }
+}
+
+/**
  * The body's words and the caption under them, with the opener that
  * unfolds whatever the clamp hid.
  *
@@ -236,6 +280,8 @@ private fun Caption(
     testTagPrefix: String,
     node: DataNode?,
     wordsClampLines: Int,
+    alwaysOpenable: Boolean,
+    wordsStyle: TextStyle,
 ) {
     // What the clamp hid, remembered from the reading that hid it: once
     // the opener has unfolded the text nothing overflows any more, so a
@@ -243,38 +289,56 @@ private fun Caption(
     var folded by remember(testTagPrefix) { mutableStateOf(false) }
     var open by remember(testTagPrefix) { mutableStateOf(false) }
     val clamping = collapsed && !open
+    val shownDescription = description?.takeIf { it.isNotEmpty() }
 
-    words?.let {
-        ClampedText(
-            text = it,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = if (clamping) wordsClampLines else Int.MAX_VALUE,
-            onOverflow = { folded = true },
-            testTag = node?.div("body")?.tag ?: "${testTagPrefix}_words",
-        )
+    // BODY FIRST, DESCRIPTION UNDER IT: two fields, one visible join — the
+    // text block's `--space-1` seam (`PostCard.jsx:252-253, 295`).
+    if (words != null || shownDescription != null) {
+        Column(verticalArrangement = Arrangement.spacedBy(Space.x1)) {
+            words?.let {
+                ClampedText(
+                    text = it,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = wordsStyle,
+                    maxLines = if (clamping) wordsClampLines else Int.MAX_VALUE,
+                    onOverflow = { folded = true },
+                    testTag = node?.div("body")?.tag ?: "${testTagPrefix}_words",
+                )
+            }
+            shownDescription?.let {
+                ClampedText(
+                    text = it,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = if (clamping) DESCRIPTION_CLAMP_LINES else Int.MAX_VALUE,
+                    onOverflow = { folded = true },
+                    testTag = node?.div("description")?.tag ?: "${testTagPrefix}_description",
+                )
+            }
+        }
     }
-    description?.takeIf { it.isNotEmpty() }?.let {
-        ClampedText(
-            text = it,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = if (clamping) DESCRIPTION_CLAMP_LINES else Int.MAX_VALUE,
-            onOverflow = { folded = true },
-            testTag = node?.div("description")?.tag ?: "${testTagPrefix}_description",
-        )
-    }
-    // Only where there is something folded away. A text control, not a
-    // link: it opens the text in place and never navigates.
-    if (collapsed && folded) {
+    // Only where there is something folded away — and always under a media
+    // post's caption. A text control, not a link: it opens the text in place
+    // and never navigates. Drawn on its `4px 0` padding, it answers at 48dp
+    // (`PostCard.jsx:269-291`, `cg-hit`).
+    if (collapsed && (folded || alwaysOpenable)) {
         Text(
             text = stringResource(if (open) R.string.content_less else R.string.content_more),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
-                .clickable { open = !open }
-                .testTag(node?.div("opener")?.tag ?: "${testTagPrefix}_opener"),
+                .testTag(node?.div("opener")?.tag ?: "${testTagPrefix}_opener")
+                .hitTarget(
+                    interactive = Modifier.clickable(role = Role.Button) { open = !open },
+                    drawnHeight = OPENER_HEIGHT,
+                )
+                .padding(vertical = Space.x1),
         )
     }
 }
+
+/** The opener's drawn height: `label-medium`'s 16dp line on its `4px 0` padding. */
+private val OPENER_HEIGHT = 24.dp
 
 /**
  * THE DESCRIPTION IS TWO LINES in the feed, on both kinds of post. It is
@@ -303,13 +367,14 @@ internal const val TEXT_BODY_CLAMP_LINES = 18
 private fun ClampedText(
     text: String,
     color: Color,
+    style: TextStyle,
     maxLines: Int,
     onOverflow: () -> Unit,
     testTag: String,
 ) {
     Text(
         text = text,
-        style = MaterialTheme.typography.bodyMedium,
+        style = style,
         color = color,
         maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,

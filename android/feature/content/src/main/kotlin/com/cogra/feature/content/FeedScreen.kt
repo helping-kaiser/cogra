@@ -923,7 +923,10 @@ internal fun PostCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            // THE CARD'S ONE RHYTHM (`Card.jsx` `--card-gap`): 12dp between
+            // its children, and the 4dp seam only inside a words post's text
+            // block (`TitledBody`).
+            verticalArrangement = Arrangement.spacedBy(Space.x3),
         ) {
             CardMenuHeader(
                 post = post,
@@ -936,27 +939,28 @@ internal fun PostCard(
                 node = card,
                 placement = placement,
             )
-            SummaryTitle(post, card / "title")
-            PostBody(
-                content = post.content,
-                description = post.description,
-                attachments = post.attachments,
-                attachmentsStatus = post.attachmentsStatus,
-                moderation = post.moderation,
-                testTagPrefix = tag,
-                node = card,
-                collapsed = true,
-                bleed = Space.x4,
-                // The whole gallery is one target opening the post: a
-                // reader scrolling the feed is choosing between posts,
-                // not looking at one picture. Which page they were on is
-                // the DETAIL's question — "the card's tap opens the post,
-                // the post's tap opens the frame"
-                // (`ViewerPicture.jsx:2-3`) — so it is dropped here.
-                onOpenMedia = { onClick() },
-                revealed = revealed,
-                onReveal = onReveal,
-            )
+            TitledBody(post, title = { SummaryTitle(post, card / "title") }) {
+                PostBody(
+                    content = post.content,
+                    description = post.description,
+                    attachments = post.attachments,
+                    attachmentsStatus = post.attachmentsStatus,
+                    moderation = post.moderation,
+                    testTagPrefix = tag,
+                    node = card,
+                    collapsed = true,
+                    bleed = Space.x4,
+                    // The whole gallery is one target opening the post: a
+                    // reader scrolling the feed is choosing between posts,
+                    // not looking at one picture. Which page they were on is
+                    // the DETAIL's question — "the card's tap opens the post,
+                    // the post's tap opens the frame"
+                    // (`ViewerPicture.jsx:2-3`) — so it is dropped here.
+                    onOpenMedia = { onClick() },
+                    revealed = revealed,
+                    onReveal = onReveal,
+                )
+            }
             if (post.landing.isPending) PendingMarker(testTag = "${placement.tag}_post_pending_${post.id}")
             CardTopicsLine(
                 post = post,
