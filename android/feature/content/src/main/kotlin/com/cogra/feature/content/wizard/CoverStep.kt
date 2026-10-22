@@ -230,9 +230,9 @@ private fun DurationBadge(label: String, modifier: Modifier = Modifier) {
         modifier = modifier
             .clip(MaterialTheme.shapes.small)
             .background(MaterialTheme.colorScheme.inverseSurface)
-            .padding(horizontal = PILL_INSET)
             .semantics { contentDescription = spoken }
-            .testTag("wizard_cover_duration"),
+            .testTag("wizard_cover_duration")
+            .padding(horizontal = PILL_INSET),
     )
 }
 

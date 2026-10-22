@@ -536,8 +536,8 @@ private fun BoxScope.CoverBadge() {
             .padding(MARK_INSET)
             .clip(CircleShape)
             .background(MaterialTheme.colorScheme.inverseSurface)
-            .padding(horizontal = 5.dp)
-            .testTag("media_thumb_cover_badge"),
+            .testTag("media_thumb_cover_badge")
+            .padding(horizontal = 5.dp),
     )
 }
 
@@ -595,8 +595,8 @@ private fun BoxScope.DurationBadge(label: String, pill: DurationPill) {
                 .padding(PILL_INSET)
                 .clip(MaterialTheme.shapes.small)
                 .background(MaterialTheme.colorScheme.inverseSurface)
-                .padding(horizontal = PILL_INSET)
-                .testTag("media_thumb_duration_badge"),
+                .testTag("media_thumb_duration_badge")
+                .padding(horizontal = PILL_INSET),
         )
         DurationPill.Picker -> Row(
             modifier = Modifier
@@ -604,8 +604,8 @@ private fun BoxScope.DurationBadge(label: String, pill: DurationPill) {
                 .padding(PILL_INSET)
                 .clip(MaterialTheme.shapes.extraSmall)
                 .background(MaterialTheme.colorScheme.inverseSurface)
-                .padding(horizontal = PILL_INSET, vertical = 1.dp)
-                .testTag("media_thumb_duration_badge"),
+                .testTag("media_thumb_duration_badge")
+                .padding(horizontal = PILL_INSET, vertical = 1.dp),
             horizontalArrangement = Arrangement.spacedBy(3.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
