@@ -1,6 +1,7 @@
 package com.cogra.core.designsystem.v2.media
 
 import android.net.Uri
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,12 +9,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Slider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
@@ -24,6 +32,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.canhub.cropper.CropImageView
 import com.cogra.core.designsystem.v2.atom.CograChip
+import com.cogra.core.designsystem.v2.atom.QuietNote
 import com.cogra.core.designsystem.v2.atom.bleedHorizontally
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
@@ -44,14 +53,17 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  * shape's framing into the new one instead of starting over
  * (jakob 2026-08-31).
  *
- * **The non-gesture route is required, and it is invisible.** D17 makes
- * the requirement explicit — "the crop step must be completable without a
- * gesture" — and design/readme.md §10 requires a non-drag equivalent for
- * every drag. The canonical board draws no controls under the crop, so
- * the equivalent stays entirely in the semantics tree: named custom
- * actions for nudge, zoom and reset, plus a state description that reads
- * the framing back. The library's own view has no notion of any of them,
- * so they drive its window directly.
+ * **THE ZOOM IS ON SCREEN, AND THE CUT PANS BY KEY** (the K13 round;
+ * `CropViewport.jsx` `CropZoom`, ComposeCrop.md). Under the cut stands the
+ * zoom slider on every crop — its thumb at the framing's zoom between the
+ * fill (1×) and about 4×, named `Zoom`, 48dp tall — and a pinch moves it with
+ * the window (`setMultiTouchEnabled`). The cut takes focus under the name
+ * `Move the picture`; its arrow keys move the window 1 % of the picture a
+ * press, 10 % with Shift, never past the picture's edge. TalkBack keeps its
+ * named custom actions for nudge, zoom and reset, and a state description
+ * that reads the framing back. The ceiling holds for every route: the
+ * slider, the actions and the library's own handles and pinch
+ * (`CropState.holdCeiling`).
  */
 @Composable
 fun MediaCrop(
@@ -76,11 +88,10 @@ fun MediaCrop(
     ) {
         CropViewport(item, shape, state, mask, bleed, testTag)
 
-        Text(
-            text = caption,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        CropZoom(state = state, testTag = testTag?.let { "${it}_zoom" })
+
+        // `QuietNote` (ComposeCrop.jsx:63): what the crop decides and how it moves.
+        QuietNote(text = caption)
     }
 }
 
@@ -104,15 +115,7 @@ private fun CropViewport(
     bleed: Dp,
     testTag: String?,
 ) {
-    val actions = listOf(
-        CustomAccessibilityAction("Nudge left") { state.nudge(NudgeDirection.Left); true },
-        CustomAccessibilityAction("Nudge right") { state.nudge(NudgeDirection.Right); true },
-        CustomAccessibilityAction("Nudge up") { state.nudge(NudgeDirection.Up); true },
-        CustomAccessibilityAction("Nudge down") { state.nudge(NudgeDirection.Down); true },
-        CustomAccessibilityAction("Zoom in") { state.stepZoom(inward = true); true },
-        CustomAccessibilityAction("Zoom out") { state.stepZoom(inward = false); true },
-        CustomAccessibilityAction("Reset framing") { state.reset(); true },
-    )
+    val actions = cropActions(state)
 
     // The view outlives individual compositions but not the state it is
     // driving: dropping the reference on dispose is what keeps a stale
@@ -141,8 +144,12 @@ private fun CropViewport(
             // shape, so the stage looks the way the board draws it; the
             // picture inside it is fitted whole rather than filling it.
             .aspectRatio(shape.ratio)
+            .onPreviewKeyEvent { event -> panByKey(event, state) }
+            .focusable()
             .semantics {
-                contentDescription = item.altText ?: "The picture being framed"
+                // `CROP_PAN_NAME` (CropViewport.jsx; blessed 2026-10-05): what
+                // the focused cut is for, in the reader's words.
+                contentDescription = CROP_PAN_NAME
                 // The invisible half of the non-gesture route: what the
                 // framing currently is, so the actions are not fired blind.
                 stateDescription = state.framingDescription()
@@ -158,6 +165,9 @@ private fun CropViewport(
                     // makes "nothing is cut off at rest" true.
                     scaleType = CropImageView.ScaleType.FIT_CENTER
                     setFixedAspectRatio(true)
+                    // The pinch the board's note promises: two fingers resize the
+                    // window, held under the ceiling like every other route.
+                    setMultiTouchEnabled(true)
                     // The decode is the only moment a framing can be put
                     // back, so the library's own decode-complete callback
                     // is what places it. Nothing the library reports
@@ -249,6 +259,69 @@ private class CropBinding {
             whole.width().toFloat() / whole.height().toFloat(),
         )
     }
+}
+
+/** The non-gesture route as TalkBack custom actions: nudge, zoom, reset. */
+private fun cropActions(state: CropState): List<CustomAccessibilityAction> {
+    fun action(label: String, run: () -> Unit) = CustomAccessibilityAction(label) {
+        run()
+        true
+    }
+    return listOf(
+        action("Nudge left") { state.nudge(NudgeDirection.Left) },
+        action("Nudge right") { state.nudge(NudgeDirection.Right) },
+        action("Nudge up") { state.nudge(NudgeDirection.Up) },
+        action("Nudge down") { state.nudge(NudgeDirection.Down) },
+        action("Zoom in") { state.stepZoom(inward = true) },
+        action("Zoom out") { state.stepZoom(inward = false) },
+        action("Reset framing") { state.reset() },
+    )
+}
+
+/** The cut's spoken name (`CROP_PAN_NAME`, CropViewport.jsx). */
+const val CROP_PAN_NAME = "Move the picture"
+
+/** The slider's spoken name (`CROP_ZOOM_NAME`). */
+const val CROP_ZOOM_NAME = "Zoom"
+
+/** ComposeCrop.md: an arrow moves the picture 1 % a press, 10 % with Shift. */
+private const val KEY_STEP = 0.01f
+private const val KEY_STEP_SHIFTED = 0.1f
+
+/** The arrow keys on the focused cut; anything else falls through. */
+private fun panByKey(event: KeyEvent, state: CropState): Boolean {
+    if (event.type != KeyEventType.KeyDown) return false
+    val step = if (event.isShiftPressed) KEY_STEP_SHIFTED else KEY_STEP
+    when (event.key) {
+        Key.DirectionLeft -> state.panBy(-step, 0f)
+        Key.DirectionRight -> state.panBy(step, 0f)
+        Key.DirectionUp -> state.panBy(0f, -step)
+        Key.DirectionDown -> state.panBy(0f, step)
+        else -> return false
+    }
+    return true
+}
+
+/**
+ * THE ZOOM, ON SCREEN (`CropViewport.jsx` `CropZoom`): Material's slider in
+ * `primary` at the column's full width, 48dp tall so its thumb answers at
+ * the system minimum, its value the framing's zoom between the fill and
+ * about 4×. No words beside it — the cut above is what it acts on, and its
+ * name carries what it does. One value, two ways to set it: the pinch moves
+ * the slider, the slider moves the window.
+ */
+@Composable
+private fun CropZoom(state: CropState, testTag: String?) {
+    Slider(
+        value = state.zoom,
+        onValueChange = state::zoomTo,
+        valueRange = CROP_ZOOM_MIN..CROP_ZOOM_MAX,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(Layout.TouchTargetMin)
+            .semantics { contentDescription = CROP_ZOOM_NAME }
+            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+    )
 }
 
 /** The three shapes, as the canonical board draws them. */

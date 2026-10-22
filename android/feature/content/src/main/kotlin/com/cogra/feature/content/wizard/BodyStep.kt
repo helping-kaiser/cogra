@@ -1,9 +1,11 @@
 package com.cogra.feature.content.wizard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,7 +19,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PermMedia
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,6 +35,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.atom.ButtonKind
@@ -40,16 +43,20 @@ import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.atom.Hairline
 import com.cogra.core.designsystem.v2.atom.InlineAction
+import com.cogra.core.designsystem.v2.atom.InlineSize
 import com.cogra.core.designsystem.v2.atom.taskRing
 import com.cogra.core.designsystem.v2.atom.taskRingColors
 import com.cogra.core.designsystem.v2.compose.UploadErrorLine
+import com.cogra.core.designsystem.v2.media.DurationPill
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.MediaThumb
+import com.cogra.core.designsystem.v2.media.REMOVE_VIDEO
 import com.cogra.core.designsystem.v2.media.ThumbBadge
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
+import com.cogra.core.designsystem.v2.token.TypeTokens
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
@@ -122,7 +129,9 @@ internal fun ColumnScope.PickStage(
     onDismissRefusal: (Int) -> Unit,
 ) {
     if (state.picked.isNotEmpty()) {
-        PickedTray(state = state, onShowAll = onShowAll)
+        // The tray's × gives the pick back, the same toggle the grid's tile
+        // answers (`ComposePick.md`: "tap a tray thumbnail's remove control").
+        PickedTray(state = state, onShowAll = onShowAll, onRemove = onTogglePick)
         Hairline()
     }
 
@@ -130,11 +139,15 @@ internal fun ColumnScope.PickStage(
 
     // DEAD, NOT GONE (`ComposePickVideo`'s `DeadGrid`). A post carries
     // pictures OR one video, so once a clip is staged the grid has nothing
-    // left to offer: it dims to 45% and stops taking picks, escape to the
-    // photos app included, rather than disappearing — which would read as
-    // the step itself failing rather than as "nothing else can join".
+    // left to offer: it dims to 45% and stops taking picks rather than
+    // disappearing — which would read as the step itself failing rather
+    // than as "nothing else can join". The way out to the photos app goes
+    // with it (ComposePickVideo.md: "the way out to the photos app is
+    // gone"), and so do the selection rings: a tile that takes no pick
+    // offers none, and wears the board's hairline instead.
     val gridLive = !state.isVideoPost
     val picks = state.picked.map { it.uri }
+    val hairline = MaterialTheme.colorScheme.outlineVariant
     LazyVerticalGrid(
         // Three columns is the board's own grid: at its 390dp width a
         // third of the row inside a 4dp margin and 3dp seams is 125dp,
@@ -151,8 +164,10 @@ internal fun ColumnScope.PickStage(
         horizontalArrangement = Arrangement.spacedBy(GridSeam),
         verticalArrangement = Arrangement.spacedBy(GridSeam),
     ) {
-        item(key = "photos_app") {
-            PhotosAppTile(onClick = onOpenPicker, enabled = gridLive)
+        if (gridLive) {
+            item(key = "photos_app") {
+                PhotosAppTile(onClick = onOpenPicker)
+            }
         }
 
         if (permission is MediaPermission.Granted) {
@@ -161,14 +176,25 @@ internal fun ColumnScope.PickStage(
                 val noun = if (item.isVideo) "video" else "picture"
                 MediaThumb(
                     item = MediaItem(item.uri, item.aspectRatio),
+                    modifier = if (gridLive) {
+                        Modifier
+                    } else {
+                        // `DeadGrid`: `outline: 1px solid var(--border-hairline)`, inset.
+                        Modifier.border(1.dp, hairline)
+                    },
                     size = null,
                     corner = 0.dp,
                     // A filled numbered disc for a pick, an empty ring for
                     // the rest — the board's whole selection language.
-                    badge = ThumbBadge.Order(order?.plus(1)),
-                    // A clip says how long it is, under a play glyph, at
-                    // the opposite corner — `ComposePick`'s video tile.
+                    badge = ThumbBadge.Order(order?.plus(1)).takeIf { gridLive },
+                    // A clip says how long it is, behind a play glyph, at
+                    // the bottom-left — `ComposePick`'s own video tile; the
+                    // ring owns the top-right.
                     duration = item.durationMs?.let { formatDuration(it) },
+                    durationPill = DurationPill.Picker,
+                    // The grid's tile is a candidate, not the composer's
+                    // clip preview: it wears the pill's glyph, never a disc.
+                    video = false,
                     // `null` is how `MediaThumb` itself goes inert — it skips
                     // the `clickable` modifier entirely rather than merely
                     // ignoring taps, which is what keeps a dead tile out of
@@ -193,45 +219,115 @@ internal fun ColumnScope.PickStage(
 }
 
 /**
- * The picked tray (`ComposePicked`): the count, `Show all` beside it, and
- * the picks in order below.
+ * The picked tray (`PickTray.jsx`): the count, `Show all` beside it, and
+ * the picks in order below — the band that does not change across the four
+ * pick boards.
  *
- * **The tray shows; the sheet manages.** Order, cover, remove and describe
- * all live in `PickedSheet`, which `Show all` opens — so the tray carries
- * no badges and no per-thumbnail controls, and the cover rule is stated
- * where it can be acted on rather than here.
+ * **The tray is the board's, tile for tile** (`ComposePick`): the first
+ * picture wears the "Cover" badge — the first one IS the cover, and the
+ * badge travels with reorder — and every tile carries its × (the law's
+ * "tap a tray thumbnail's remove control"; the cover's own × is design gap
+ * GAP-B, drawn here as `ComposePickedErrors` draws it, on every tile).
+ * Order, describe and the rest still live in `PickedSheet`.
  *
- * **A STAGED CLIP IS THE ONE EXCEPTION** (`ComposePickVideo`). A video takes
- * the body whole, so there is no set left for `Show all` to reorder — the
- * button drops and the count is the only thing on its line. In its place the
- * tray carries the line the picture case leaves to the sheet: "A video is the
- * whole post. Its cover comes next." An absent control explains nothing on
- * its own, so the tray says why nothing else can join and what happens next.
+ * **"The first one is the cover." rides beside the tiles while they leave it
+ * room** (`ComposePick` draws it at two; GAP-C): past that the row scrolls
+ * and the sheet is where the rule is read.
  *
- * **THE CAPTION IS THE SHAPE'S** (jakob 2026-09-24, backlog item 104). A
- * vertical clip skips the cover step ([ComposeWizardState.skipsCoverStep]),
- * so its second sentence would preview a step that never comes — the tray
- * wears the trim `content_video_body_caption_vertical` instead, the same
- * trim the edit screen already wears. Landscape and square clips keep the
- * full caption above unchanged.
+ * **A STAGED CLIP** (`ComposePickVideo`). A video takes the body whole, so
+ * there is no set left for `Show all` to reorder — the button drops and the
+ * count is the only thing on its line. The clip is one 114×64 tile with its
+ * play disc and its own × (`Remove this video`), and beside it the line that
+ * says why nothing else can join and what comes next.
+ *
+ * **THE CAPTION IS THE SHAPE'S AND THE STEP'S** (jakob 2026-09-24, backlog
+ * item 104; `ComposePickVideoCover`). A vertical clip skips the cover step
+ * ([ComposeWizardState.skipsCoverStep]), so it wears the trim
+ * `content_video_body_caption_vertical`; a clip whose cover was chosen
+ * reads the settled fact, `A video is the whole post. This one has its
+ * cover.`, because the promise of a cover step has been kept.
  */
 @Composable
 private fun PickedTray(
     state: ComposeWizardState,
     onShowAll: () -> Unit,
+    onRemove: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .testTag("wizard_tray")
             .padding(start = Layout.ScreenGutter, end = Layout.ScreenGutter, top = 4.dp, bottom = Space.x3),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         PickedTrayHeader(count = state.picked.size, showAll = !state.isVideoPost, onShowAll = onShowAll)
+        val clip = state.video
+        if (clip != null) {
+            ClipTrayRow(state, clip, onRemove)
+        } else {
+            PictureTrayRow(state, onRemove)
+        }
+    }
+}
+
+/** `ComposePickVideo`: one 114×64 clip tile, its disc and ×, and the line beside it. */
+@Composable
+private fun ClipTrayRow(state: ComposeWizardState, clip: PickedAsset, onRemove: (String) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        MediaThumb(
+            item = MediaItem(clip.uri, clip.sourceRatio ?: 1f, clip.altText.ifBlank { null }),
+            width = TRAY_CLIP_WIDTH,
+            height = TRAY_CLIP_HEIGHT,
+            video = true,
+            // The clip's own chosen face, once there is one: back from the
+            // cover stage the tile says so rather than reading coverless
+            // again (`ComposePickVideoCover`, design/backlog.md 2026-09-15).
+            coverSrc = state.coverModel(),
+            onRemove = { onRemove(clip.uri) },
+            removeLabel = REMOVE_VIDEO,
+            removeTestTag = "wizard_tray_0_remove",
+            contentDescription = stringResource(R.string.content_tray_video),
+            testTag = "wizard_tray_0",
+        )
+        Text(
+            text = when {
+                state.coverModel() != null -> "A video is the whole post. This one has its cover."
+                state.skipsCoverStep -> stringResource(R.string.content_video_body_caption_vertical)
+                else -> "A video is the whole post. Its cover comes next."
+            },
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .weight(1f)
+                .testTag("wizard_video_body_caption"),
+        )
+    }
+}
+
+/**
+ * The pictures: the cover badge on the first, a × on each, and the cover
+ * rule beside them while the tiles leave it a line of its own.
+ */
+@Composable
+private fun PictureTrayRow(state: ComposeWizardState, onRemove: (String) -> Unit) {
+    val caption = "The first one is the cover."
+    val style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight)
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val captionWidth = with(density) { measurer.measure(caption, style).size.width.toDp() }
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val count = state.picked.size
+        val tiles = Layout.ThumbSize * count + Space.x2 * count
+        val fits = maxWidth - tiles >= captionWidth
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
+                .then(if (fits) Modifier else Modifier.horizontalScroll(rememberScrollState())),
             horizontalArrangement = Arrangement.spacedBy(Space.x2),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -241,32 +337,28 @@ private fun PickedTray(
                         asset.uri,
                         asset.sourceRatio ?: 1f,
                         asset.altText.ifBlank { null },
-                        // An author who cropped, stepped back here, and
-                        // is on their way forward again sees the crop
-                        // they made rather than the original.
+                        // An author who cropped, stepped back here, and is on
+                        // their way forward again sees the crop they made
+                        // rather than the original.
                         state.crops[asset.uri].toFraming(),
                     ),
-                    // The clip's own chosen face, once there is one: back
-                    // from the cover stage, the tray says so rather than
-                    // reading coverless again (`ComposePickVideoCover`,
-                    // design/backlog.md intake 2026-09-15).
-                    coverSrc = if (state.isVideoPost) state.coverModel() else null,
+                    badge = ThumbBadge.Cover.takeIf { index == 0 },
+                    onRemove = { onRemove(asset.uri) },
+                    removeTestTag = "wizard_tray_${index}_remove",
                     contentDescription = stringResource(R.string.content_picture_at, index + 1),
                     testTag = "wizard_tray_$index",
                 )
             }
-        }
-        if (state.isVideoPost) {
-            Text(
-                text = if (state.skipsCoverStep) {
-                    stringResource(R.string.content_video_body_caption_vertical)
-                } else {
-                    "A video is the whole post. Its cover comes next."
-                },
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.testTag("wizard_video_body_caption"),
-            )
+            if (fits) {
+                Text(
+                    text = caption,
+                    style = style,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("wizard_tray_caption"),
+                )
+            }
         }
     }
 }
@@ -293,7 +385,10 @@ private fun PickedTrayHeader(count: Int, showAll: Boolean, onShowAll: () -> Unit
                     .weight(1f)
                     .testTag("wizard_picked_count"),
             )
-            InlineAction(text = "Show all", onClick = onShowAll, testTag = "wizard_show_all")
+            // `InlineAction size="sm"` is its resting look, value for value
+            // (PickTray.jsx; jakob's ruling D): a real button with a 48dp
+            // target that leaves the band's line alone.
+            InlineAction(text = "Show all", onClick = onShowAll, size = InlineSize.Small, testTag = "wizard_show_all")
         }
     } else {
         Text(
@@ -317,20 +412,24 @@ private fun PickedTrayHeader(count: Int, showAll: Boolean, onShowAll: () -> Unit
 @Composable
 private fun RefusedFiles(refused: List<RefusedPick>, onDismiss: (Int) -> Unit) {
     if (refused.isEmpty()) return
+    // `ComposePickedErrors`: the list stands `14px 24px 0` under the tray, a
+    // refusal every 10 — the board's own rhythm, off the 4dp grid.
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = Space.x6, end = Space.x6, top = Space.x4),
-        verticalArrangement = Arrangement.spacedBy(Space.x3),
+            .padding(start = Space.x6, end = Space.x6, top = REFUSALS_TOP),
+        verticalArrangement = Arrangement.spacedBy(REFUSALS_GAP),
     ) {
         refused.forEachIndexed { index, file ->
             Row(
+                modifier = Modifier.testTag("wizard_refused_row_$index"),
                 horizontalArrangement = Arrangement.spacedBy(Space.x2),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 MediaThumb(
                     item = MediaItem(file.uri, 1f),
                     badge = ThumbBadge.Failed,
+                    video = file.isVideo,
                     contentDescription = stringResource(R.string.content_refused_file),
                     testTag = "wizard_refused_thumb_$index",
                 )
@@ -352,7 +451,7 @@ private fun RefusedFiles(refused: List<RefusedPick>, onDismiss: (Int) -> Unit) {
  * all, so it is also the way through when the grid's own is refused.
  */
 @Composable
-private fun PhotosAppTile(onClick: () -> Unit, enabled: Boolean = true, modifier: Modifier = Modifier) {
+private fun PhotosAppTile(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val outline = MaterialTheme.colorScheme.outline
     val dash = with(LocalDensity.current) {
         Stroke(
@@ -365,13 +464,13 @@ private fun PhotosAppTile(onClick: () -> Unit, enabled: Boolean = true, modifier
             .fillMaxWidth()
             .aspectRatio(1f)
             .drawBehind { drawRect(color = outline, style = dash) }
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .clickable(role = Role.Button, onClick = onClick)
             .testTag("wizard_open_picker"),
         verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
-            imageVector = Icons.Filled.PermMedia,
+            imageVector = Icons.Filled.Image,
             // The label below carries the meaning; the glyph repeats it.
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
@@ -388,6 +487,14 @@ private fun PhotosAppTile(onClick: () -> Unit, enabled: Boolean = true, modifier
 
 /** The grid's own margin and seam, read off `ComposePick`. */
 private val GridEdge = 4.dp
+
+/** `ComposePickedErrors.jsx`: the refusals' `14px` lead and `gap: 10`. */
+private val REFUSALS_TOP = 14.dp
+private val REFUSALS_GAP = 10.dp
+
+/** `ComposePickVideo.jsx`: the staged clip's tray tile, `width={114} height={64}`. */
+private val TRAY_CLIP_WIDTH = 114.dp
+private val TRAY_CLIP_HEIGHT = 64.dp
 
 private const val GRID_COLUMNS = 3
 

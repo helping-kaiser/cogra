@@ -367,6 +367,14 @@ data class ComposeWizardState(
     val coverFrames: List<VideoFrame> = emptyList(),
 
     /**
+     * Whether the extraction behind [coverFrames] has answered. An empty
+     * [coverFrames] means two things — still reading, or the device cut
+     * nothing (`ComposeCoverNoFrames`) — and only the second draws the
+     * neutral tile and the strip's failure line.
+     */
+    val coverFramesRead: Boolean = false,
+
+    /**
      * Which cover the author settled on.
      *
      * Starts at [CoverChoice.None]: extraction may still be running, may
@@ -837,8 +845,18 @@ fun ComposeWizardState.withMode(next: BodyMode): ComposeWizardState =
  * list's own order, so nothing here carries an index that could
  * disagree with itself.
  *
- * A pick past the cap is refused rather than dropped silently: the
- * caller surfaces it.
+ * **A pick the body cannot take is REFUSED IN WORDS, never dropped and
+ * never swapped in** (`ComposePick.md`, `ComposePickedErrors.md`; copy-voice
+ * "Refused files"): one line per file, listed under the tray.
+ *
+ * - An eleventh picture: `That's more than a post carries — up to ten
+ *   pictures.` — NEVER a picture dropped in silence.
+ * - A clip beside pictures, or a picture beside a staged clip: `A post
+ *   carries pictures or one video, not both.` — the pictures (or the clip)
+ *   stay. A body is a video *or* a gallery, never a mixture.
+ * - A clip over a staged clip has no refusal in the vocabulary and stays the
+ *   one the author picked last: the grid is dead then, so only a photos-app
+ *   batch carrying two clips reaches this.
  */
 fun ComposeWizardState.togglePick(
     uri: String,
@@ -847,16 +865,17 @@ fun ComposeWizardState.togglePick(
 ): ComposeWizardState {
     if (picked.any { it.uri == uri }) return removePick(uri)
     val picking = PickedAsset(uri, sourceRatio, durationMs = durationMs)
-    // "One video or up to ten pictures" (`ComposePick`, tile toggle). A
-    // clip replaces whatever was picked rather than being refused beside
-    // it: the grid tile the author just tapped is the one they meant,
-    // and a body is a video *or* a gallery, never a mixture (D16, and
-    // the ruling's "one video plus a cover").
-    if (picking.isVideo) return copy(picked = listOf(picking)).clearedCover()
-    if (isVideoPost) return copy(picked = listOf(picking)).clearedCover()
-    if (picked.size >= ComposeWizardState.MAX_POST_ASSETS) return this
-    return copy(picked = picked + picking)
+    return when {
+        picking.isVideo && (picked.isEmpty() || isVideoPost) -> copy(picked = listOf(picking)).clearedCover()
+        picking.isVideo || isVideoPost -> refusing(uri, UploadFailure.POST_MIXED_BODY, picking.isVideo)
+        picked.size >= ComposeWizardState.MAX_POST_ASSETS -> refusing(uri, UploadFailure.POST_PICTURE_COUNT, false)
+        else -> copy(picked = picked + picking)
+    }
 }
+
+/** One more line under the tray, for a file that never joined the batch. */
+private fun ComposeWizardState.refusing(uri: String, reason: UploadFailure, isVideo: Boolean): ComposeWizardState =
+    copy(refused = refused + RefusedPick(uri, reason, isVideo))
 
 /**
  * Forgets a previous clip's face.
@@ -867,6 +886,7 @@ fun ComposeWizardState.togglePick(
  */
 fun ComposeWizardState.clearedCover(): ComposeWizardState = copy(
     coverFrames = emptyList(),
+    coverFramesRead = false,
     coverChoice = CoverChoice.None,
     coverMediaId = null,
 )

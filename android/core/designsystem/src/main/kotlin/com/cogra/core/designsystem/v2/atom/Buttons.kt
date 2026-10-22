@@ -166,6 +166,10 @@ fun CograButton(
  *
  * [alpha] is the locked look (`StateTokens.DISABLED`): the pill stays
  * tappable, its tap explaining what unlocks it.
+ *
+ * [kind] takes the outlined pill (the default) or the bare text button
+ * (`Button.jsx` `variant="text"`: a transparent border, `primary` ink) — the
+ * pick prompt's escape is the text one at `sm` (`PickPrompt.jsx`).
  */
 @Composable
 fun CograRowButton(
@@ -173,6 +177,7 @@ fun CograRowButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     size: ButtonSize = ButtonSize.Default,
+    kind: ButtonKind = ButtonKind.Outlined,
     alpha: Float = 1f,
     contentDescription: String? = null,
     testTag: String? = null,
@@ -206,7 +211,13 @@ fun CograRowButton(
             )
             .alpha(alpha)
             .defaultMinSize(minWidth = Layout.ButtonMinWidth, minHeight = height)
-            .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+            .then(
+                if (kind == ButtonKind.Text) {
+                    Modifier
+                } else {
+                    Modifier.border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                },
+            )
             .padding(horizontal = sidePadding),
     ) {
         Text(

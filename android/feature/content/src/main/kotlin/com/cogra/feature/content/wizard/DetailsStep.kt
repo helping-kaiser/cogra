@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -19,10 +18,13 @@ import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.compose.DescribeCounter
 import com.cogra.core.designsystem.v2.compose.DescribeSubject
-import com.cogra.core.designsystem.v2.compose.PickedPicture
 import com.cogra.core.designsystem.v2.compose.PickedRow
 import com.cogra.core.designsystem.v2.compose.UploadErrorLine
-import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.core.designsystem.v2.media.MediaItem
+import com.cogra.core.designsystem.v2.media.MediaThumb
+import com.cogra.core.designsystem.v2.media.REMOVE_VIDEO
+import com.cogra.core.designsystem.v2.media.ThumbBadge
+import com.cogra.core.designsystem.v2.token.TypeTokens
 import com.cogra.domain.content.MAX_DESCRIPTION_CHARS
 import com.cogra.domain.content.MAX_TITLE_CHARS
 import com.cogra.feature.content.R
@@ -59,33 +61,16 @@ internal fun ColumnScope.DetailsStepBody(
         // The details board's own rhythm, which sits off the 4dp grid.
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        if (state.mode == BodyMode.Media) {
+        val clip = state.video
+        if (state.mode == BodyMode.Media && clip != null) {
+            ClipBlock(state, clip, onRetryUpload, onRemovePick, onDescribePictures)
+        } else if (state.mode == BodyMode.Media) {
+            // A gallery: the row opens the Show all sheet (a clip has its own
+            // block above — one clip is not a set).
             PickedRow(
-                // ONE ATTACHMENT IS ONE TILE (`ComposePickVideoCover.jsx:
-                // 12-19`): a chosen cover rides the clip's own tile as its
-                // inset corner mark rather than a second attachment.
-                pictures = state.pickedRowPictures(),
-                // THE BOARD NAMES THE CLIP, IT DOES NOT COUNT IT
-                // (`ComposeDetailsVideo`). A gallery reads "3 pictures —
-                // the body" because the count is the thing to know; a clip
-                // is the whole body and there is only ever one of it, so
-                // the label is the word "Video". Counting it as a picture
-                // presented a video post as a picture post.
-                caption = if (state.isVideoPost) {
-                    "Video"
-                } else {
-                    "${ComposeWizardState.pictureCount(state.picked.size)} — the body"
-                },
-                // A CLIP HAS NO MANAGER (jakob's ruling 2026-09-15: "one
-                // clip is not a set") — the row opens the Show all sheet
-                // for a gallery only; the video tile wears its own × via
-                // onRemove instead (`ComposeDetailsVideo.jsx` 23-32).
-                onManage = if (state.isVideoPost) null else onManagePictures,
-                onRemove = if (state.isVideoPost) {
-                    { onRemovePick(0) }
-                } else {
-                    null
-                },
+                pictures = state.pickedPictures(),
+                caption = "${ComposeWizardState.pictureCount(state.picked.size)} — the body",
+                onManage = onManagePictures,
                 testTag = "wizard_picked_row",
                 node = COMPOSE_DETAILS / "mediaRow",
             )
@@ -94,9 +79,7 @@ internal fun ColumnScope.DetailsStepBody(
                 described = state.describedCount,
                 total = state.picked.size,
                 onDescribe = onDescribePictures,
-                // A clip takes one description for the whole thing
-                // (CW-17, web's `details-step.tsx:235` conforms already).
-                subject = if (state.isVideoPost) DescribeSubject.Video else DescribeSubject.Pictures,
+                subject = DescribeSubject.Pictures,
                 testTag = "wizard_describe_counter",
                 // The row is a block across the stage (`DescribeCounter.jsx`).
                 modifier = Modifier.fillMaxWidth(),
@@ -126,33 +109,83 @@ internal fun ColumnScope.DetailsStepBody(
 
         topics()
         references()
-
-        // The aside stands only while an upload runs (`ComposeUploading`);
-        // the details stage at rest draws none.
-        if (state.mode == BodyMode.Media && state.uploadsRunning) {
-            Text(
-                text = "Pictures upload while you write — signing waits for them.",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = Space.x2)
-                    .testTag("wizard_upload_footnote"),
-            )
-        }
     }
 }
 
 /**
- * The picked row's pictures, plus a video's chosen cover riding the
- * clip's own tile as its inset corner mark (`state.coverModel()`) —
- * never a second attachment. Only a video post ever carries one.
+ * `ComposeDetailsVideo`'s clip block: `FieldLabel` `Video`, the clip as one
+ * 54×96 tile wearing its play disc and its own × (`Remove this video`) —
+ * one clip is not a set, so no manager opens from it — and the describe row
+ * reading the clip, 6 apart. A chosen cover rides the tile's corner, and a
+ * failed upload says so under it (`That video didn't upload.`, Retry).
  */
-private fun ComposeWizardState.pickedRowPictures(): List<PickedPicture> {
-    val pictures = pickedPictures()
-    return if (isVideoPost) pictures.map { it.copy(coverSrc = coverModel()) } else pictures
+@Composable
+private fun ClipBlock(
+    state: ComposeWizardState,
+    clip: PickedAsset,
+    onRetry: (String) -> Unit,
+    onRemove: (Int) -> Unit,
+    onDescribe: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = "Video",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.testTag("wizard_video_label"),
+        )
+        val failed = clip.upload is AssetUpload.Failed
+        MediaThumb(
+            item = MediaItem(clip.uri, clip.sourceRatio ?: 1f, clip.altText.ifBlank { null }),
+            width = CLIP_TILE_WIDTH,
+            height = CLIP_TILE_HEIGHT,
+            video = true,
+            badge = ThumbBadge.Failed.takeIf { failed },
+            uploading = clip.upload.inFlight,
+            progress = clip.upload.percentOrNull?.let { it / PERCENT },
+            coverSrc = state.coverModel(),
+            onRemove = { onRemove(0) },
+            removeLabel = REMOVE_VIDEO,
+            removeTestTag = "wizard_video_remove",
+            contentDescription = stringResource(R.string.content_tray_video),
+            testTag = "wizard_video_tile",
+        )
+        UploadFailures(state, onRetry, onRemove)
+        DescribeCounter(
+            described = state.describedCount,
+            total = 1,
+            onDescribe = onDescribe,
+            subject = DescribeSubject.Video,
+            testTag = "wizard_describe_counter",
+            modifier = Modifier.fillMaxWidth(),
+            node = COMPOSE_DETAILS / "describeRow",
+        )
+    }
 }
+
+/**
+ * `ComposeUploading`'s aside: `Pictures upload while you write — signing
+ * waits for them.`, label-small at the ground weight, centred, standing
+ * directly above Next while an upload runs (the board's `flex: 1` pushes it
+ * there).
+ */
+@Composable
+internal fun UploadAside() {
+    Text(
+        text = "Pictures upload while you write — signing waits for them.",
+        style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("wizard_upload_footnote"),
+    )
+}
+
+/** `ComposeDetailsVideo.jsx`: the clip tile, `width={54} height={96}`. */
+private val CLIP_TILE_WIDTH = 54.dp
+private val CLIP_TILE_HEIGHT = 96.dp
+private const val PERCENT = 100f
 
 /**
  * The title and the one refusal it can earn — the field's own cap
@@ -226,9 +259,16 @@ private fun UploadFailures(
     state.picked.forEachIndexed { index, asset ->
         val failure = asset.upload as? AssetUpload.Failed ?: return@forEachIndexed
         UploadErrorLine(
-            // The server's own words where it gave any, so a refusal that
-            // names the file says so rather than reading as a generic fault.
-            message = failure.text(),
+            // A FAULT reads the board's line (`ComposeUploading`: `One picture
+            // didn't upload.`; copy-voice: `That video didn't upload.`) — Retry
+            // stands beside it, so it never says "try again" twice. A
+            // REFUSAL no retry can change keeps its own reason, the server's
+            // words where it gave any.
+            message = if (failure.reason == UploadFailure.TRANSPORT) {
+                if (asset.isVideo) "That video didn't upload." else "One picture didn't upload."
+            } else {
+                failure.text()
+            },
             // Not retryable once the server accepted the bytes and only
             // then refused them on inspection (a PROCESSING asset gone
             // FAILED): the same bytes would only earn the same answer, so

@@ -32,4 +32,7 @@ object TypeTokens {
      * `Last step`) and a text field's corner word (`FieldLabel`'s `corner`).
      */
     val QuietLabelWeight = FontWeight.Normal
+
+    /** The failed tile's `!`: `label-medium` at 700 (`MediaThumb.jsx:266-268`). */
+    val FailedMarkWeight = FontWeight.Bold
 }

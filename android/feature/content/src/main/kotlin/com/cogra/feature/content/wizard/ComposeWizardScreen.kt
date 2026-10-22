@@ -43,7 +43,6 @@ import com.cogra.domain.LicenseChoice
 import com.cogra.domain.compose.DraftShape
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MAX_ALT_TEXT_CHARS
-import com.cogra.domain.media.isAltTextTooLong
 import com.cogra.feature.content.CitedSheet
 import com.cogra.feature.content.ParkedPadWash
 import com.cogra.feature.content.R
@@ -116,7 +115,7 @@ fun ComposeWizardRoute(
     // stays stateless and previewable.
     val picker = rememberLauncherForActivityResult(
         ActivityResultContracts.PickMultipleVisualMedia(ComposeWizardState.MAX_POST_ASSETS),
-    ) { uris -> uris.forEach { viewModel.onTogglePick(it.toString()) } }
+    ) { uris -> viewModel.onPickBatch(uris.map { it.toString() }) }
 
     // `ComposeCover`'s "A picture" tile: one picture, images only. A
     // cover is a still by contract — "it must be an image rather than
@@ -385,7 +384,8 @@ internal fun ComposeWizardScreen(
                     }
 
                     WizardStep.Cover -> {
-                        WizardBody(scrollable = true, bottom = 0.dp) {
+                        // `ComposeCover`: the column stands `16px 24px` under the header.
+                        WizardBody(scrollable = true, top = Space.x4, bottom = 0.dp) {
                             CoverStepBody(
                                 state = state,
                                 onPickFrame = onPickCoverFrame,
@@ -455,6 +455,9 @@ internal fun ComposeWizardScreen(
                                 )
                             },
                         )
+                        // `ComposeUploading`: the aside stands ABOVE Next, out of the
+                        // scrolling body, only while an upload runs.
+                        if (state.mode == BodyMode.Media && state.uploadsRunning) UploadAside()
                         CograButton(
                             text = "Next",
                             onClick = onNext,
@@ -541,11 +544,7 @@ internal fun ComposeWizardScreen(
                     onHelp = { onOpenHelp(HelpTopic.DescribingPictures) },
                     video = describing.isVideo,
                     cap = MAX_ALT_TEXT_CHARS,
-                    error = if (isAltTextTooLong(describing.altText)) {
-                        stringResource(R.string.content_error_alt_text_too_long, MAX_ALT_TEXT_CHARS)
-                    } else {
-                        null
-                    },
+                    tooLongMessage = describeTooLong(describing.isVideo),
                     testTag = "wizard_describe_sheet",
                 )
 

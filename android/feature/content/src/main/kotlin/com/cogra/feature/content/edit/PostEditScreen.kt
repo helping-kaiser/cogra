@@ -61,6 +61,7 @@ import com.cogra.feature.content.toItem
 import com.cogra.feature.content.wizard.SensitiveSheet
 import com.cogra.feature.content.wizard.WizardBody
 import com.cogra.feature.content.wizard.WizardFooter
+import com.cogra.feature.content.wizard.describeTooLong
 
 /** The board's own line under the words when they pass their cap (EditWords.md). */
 const val WORDS_OVER_CAP_LINE = "A post's words are at most 5,000 characters."
@@ -621,6 +622,7 @@ private fun PostEditSheets(state: PostEditUiState, actions: PostEditActions, onH
                 onDone = actions.onCloseSheet,
                 video = describing.isVideo,
                 cap = MAX_ALT_TEXT_CHARS,
+                tooLongMessage = describeTooLong(describing.isVideo),
                 testTag = "post_edit_describe_sheet",
             )
             state.pickedOpen -> PickedSheet(

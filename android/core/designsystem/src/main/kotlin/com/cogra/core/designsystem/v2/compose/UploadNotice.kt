@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
+import com.cogra.core.designsystem.v2.token.TypeTokens
 
 /*
  * The two upload notices (`design/components/compose/UploadNotice.jsx`).
@@ -165,7 +166,7 @@ fun UploadErrorLine(
     }
     Text(
         text = text,
-        style = MaterialTheme.typography.labelSmall,
+        style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
         modifier = modifier
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
             // A refusal has to reach a reader who is not looking at it.

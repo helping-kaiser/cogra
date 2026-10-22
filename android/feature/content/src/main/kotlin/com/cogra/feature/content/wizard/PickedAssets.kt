@@ -51,6 +51,9 @@ fun List<PickedAsset>.pickedPictures(
         ),
         described = asset.altText.isNotBlank(),
         uploading = asset.upload.inFlight,
+        // A transport that can say how far it has got draws the
+        // determinate ring; one that cannot draws the honest spinner.
+        progress = asset.upload.percentOrNull?.let { it / PERCENT_F },
         failed = asset.upload is AssetUpload.Failed,
         // A clip's tile says it is a clip. Without this the composer's
         // summary drew a video body as an undated square and read it out
@@ -170,3 +173,5 @@ internal fun MediaAssetView.toResolvedUpload(refused: UploadFailure): AssetUploa
         AssetUpload.Failed(refused, failureReason, retryable = false)
     MediaAssetState.PROCESSING -> error("awaitReady never returns Success while PROCESSING")
 }
+
+private const val PERCENT_F = 100f

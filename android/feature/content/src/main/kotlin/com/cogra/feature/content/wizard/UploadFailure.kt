@@ -44,6 +44,12 @@ enum class UploadFailure {
     /** Over a comment's clip cap — half a post's. */
     COMMENT_VIDEO_TOO_BIG,
 
+    /** An eleventh picture: a post carries ten (`ComposePickedErrors`, copy-voice "Refused files"). */
+    POST_PICTURE_COUNT,
+
+    /** Pictures and a clip in one body: a post carries one or the other. */
+    POST_MIXED_BODY,
+
     /** The upload never reached the server. */
     TRANSPORT,
 }

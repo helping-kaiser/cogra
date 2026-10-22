@@ -259,11 +259,14 @@ class ComposeWizardStateTest {
     }
 
     @Test
-    fun theTenthPickIsTheLastOneTaken() {
+    fun theTenthPickIsTheLastOneTakenAndEveryOneAfterIsRefusedInWords() {
         var state = ComposeWizardState(mode = BodyMode.Media)
         repeat(ComposeWizardState.MAX_POST_ASSETS + 3) { state = state.togglePick("a$it") }
         assertThat(state.picked).hasSize(ComposeWizardState.MAX_POST_ASSETS)
         assertThat(state.bodyReady).isTrue()
+        // NEVER a picture dropped in silence (ComposePick.md): one line per file.
+        assertThat(state.refused.map { it.uri }).containsExactly("a10", "a11", "a12").inOrder()
+        assertThat(state.refused.map { it.reason }.toSet()).containsExactly(UploadFailure.POST_PICTURE_COUNT)
     }
 
     @Test
@@ -540,14 +543,26 @@ class ComposeWizardStateTest {
     }
 
     @Test
-    fun aClipReplacesAGalleryAndAGalleryReplacesAClip() {
-        val gallery = media.togglePick("clip", durationMs = 4_000)
-        assertThat(gallery.picked.map { it.uri }).containsExactly("clip")
-        assertThat(gallery.isVideoPost).isTrue()
+    fun aClipBesidePicturesIsRefusedAndThePicturesStay() {
+        // ComposePick.md: "a video is picked GIVEN pictures are in the tray →
+        // the video is refused … AND the pictures stay in the tray".
+        val refused = media.togglePick("clip", durationMs = 4_000)
+        assertThat(refused.picked.map { it.uri }).containsExactly("a", "b").inOrder()
+        assertThat(refused.refused).containsExactly(RefusedPick("clip", UploadFailure.POST_MIXED_BODY, isVideo = true))
+    }
 
-        val backToPictures = gallery.togglePick("c")
-        assertThat(backToPictures.picked.map { it.uri }).containsExactly("c")
-        assertThat(backToPictures.isVideoPost).isFalse()
+    @Test
+    fun aPictureBesideAStagedClipIsRefusedAndTheClipStays() {
+        val refused = video.togglePick("c")
+        assertThat(refused.picked.map { it.uri }).containsExactly("clip")
+        assertThat(refused.refused).containsExactly(RefusedPick("c", UploadFailure.POST_MIXED_BODY, isVideo = false))
+    }
+
+    @Test
+    fun aClipIntoAnEmptyTrayIsTheWholeBody() {
+        val staged = ComposeWizardState(mode = BodyMode.Media).togglePick("clip", durationMs = 4_000)
+        assertThat(staged.isVideoPost).isTrue()
+        assertThat(staged.refused).isEmpty()
     }
 
     @Test

@@ -17,6 +17,15 @@ import com.cogra.feature.content.R
 @Composable
 fun AssetUpload.Failed.text(): String = serverMessage ?: reason.text()
 
+/**
+ * The describe sheet's refusal past its 1,000 characters (copy-voice, the caps
+ * refusals): `A picture's description…`, or `A video's…` on its other shape.
+ */
+@Composable
+fun describeTooLong(video: Boolean): String = stringResource(
+    if (video) R.string.content_error_alt_text_too_long_video else R.string.content_error_alt_text_too_long_picture,
+)
+
 /** The line for a reason on its own — a refused pick has no upload. */
 @Composable
 fun UploadFailure.text(): String = stringResource(label())
@@ -32,5 +41,7 @@ private fun UploadFailure.label(): Int = when (this) {
     UploadFailure.PICTURE_TOO_BIG -> R.string.content_upload_picture_too_big
     UploadFailure.POST_VIDEO_TOO_BIG -> R.string.content_upload_post_video_too_big
     UploadFailure.COMMENT_VIDEO_TOO_BIG -> R.string.content_upload_comment_video_too_big
+    UploadFailure.POST_PICTURE_COUNT -> R.string.content_upload_post_picture_count
+    UploadFailure.POST_MIXED_BODY -> R.string.content_upload_post_mixed_body
     UploadFailure.TRANSPORT -> R.string.content_upload_transport
 }

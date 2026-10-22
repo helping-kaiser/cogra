@@ -4,10 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -16,22 +18,30 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
 import com.cogra.core.designsystem.v2.atom.CograTextField
-import com.cogra.core.designsystem.v2.atom.SheetTitle
+import com.cogra.core.designsystem.v2.atom.HelpDot
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.imageModel
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
+import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
+import com.cogra.core.designsystem.v2.token.TypeTokens
 
 /**
  * Writing a description — a picture's alt text, or a clip's one description
@@ -56,7 +66,15 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  * **THE REASON IS PERMANENT, NOT BEHIND THE `?`** — it rides directly under
  * the title on both shapes: someone deciding whether to write a description
  * needs the reason at the moment of deciding, not behind a `?` they will
- * not open.
+ * not open. The title is the sheet's `h2` at `title-large`, the reason 4dp
+ * under it, and the `?` stands beside the PAIR (`DescribeSheet.jsx:45-71`).
+ *
+ * **TYPING STAGES; DONE COMMITS** (`ComposeDescribe.md`,
+ * `ComposeDescribeVideo.md`). What is typed lives in the sheet until Done
+ * hands it out through [onValueChange]; the scrim, a swipe down, system Back
+ * and Escape drop it, and the description is what it was before the sheet
+ * opened. The over-cap line is the sheet's own reading of what it holds, so
+ * the caller hands the words ([tooLongMessage]) rather than a verdict.
  */
 @Composable
 fun DescribeSheet(
@@ -69,22 +87,22 @@ fun DescribeSheet(
     video: Boolean = false,
     /** The field's ruled length cap, in Unicode scalar values — drives the late counter. */
     cap: Int? = null,
-    /** The field's one refusal, worded by the caller — replaces the hint were there one. */
-    error: String? = null,
+    /**
+     * The refusal past [cap] (copy-voice: `A picture's description is at most
+     * 1,000 characters.` / `A video's description…`), shown — and Done made
+     * inert — while the staged words run over.
+     */
+    tooLongMessage: String? = null,
     testTag: String? = null,
 ) {
     val subject = if (video) "video" else "picture"
+    // The staged words, kept across a rotation; a reopened sheet starts from
+    // the description as it stands.
+    var staged by rememberSaveable { mutableStateOf(value) }
+    val over = cap != null && staged.trim().let { it.codePointCount(0, it.length) } > cap
+    val error = tooLongMessage.takeIf { over }
     CograSheetSurface(modifier = modifier, testTag = testTag) {
-        SheetTitle(
-            text = if (video) "Describe the video" else "Describe this picture",
-            onHelp = onHelp,
-            helpContentDescription = "Describing pictures",
-        )
-        Text(
-            text = "Read aloud to people who can't see it.",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        DescribeHeader(video = video, onHelp = onHelp)
 
         // The whole frame on the reserved surface: the author is checking
         // what they are describing, so it fits rather than crops.
@@ -123,8 +141,8 @@ fun DescribeSheet(
         // pixel sum: everything else in this column is unweighted, so the
         // leftover IS the maximum.
         CograTextField(
-            value = value,
-            onValueChange = onValueChange,
+            value = staged,
+            onValueChange = { staged = it },
             label = "What's in the $subject",
             optional = true,
             singleLine = false,
@@ -135,19 +153,50 @@ fun DescribeSheet(
             error = error,
             testTag = testTag?.let { "${it}_field" },
         )
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+        // `padding: 0 0 var(--space-2)`: Done's row ends 8 above the sheet's foot.
+        Row(Modifier.fillMaxWidth().padding(bottom = Space.x2), horizontalArrangement = Arrangement.End) {
             // Visible but disabled over the cap, never hidden (the
-            // caps-affordance round's ruling, PR #755's pattern) — [error]
-            // is only ever the caller's over-cap message on this sheet, so
-            // its presence is exactly the signal to gate on.
+            // caps-affordance round's ruling, PR #755's pattern).
             CograButton(
                 text = "Done",
-                onClick = onDone,
-                enabled = error == null,
+                onClick = {
+                    // Done is the one way the staged words become the picture's.
+                    onValueChange(staged)
+                    onDone()
+                },
+                enabled = !over,
                 kind = ButtonKind.Text,
                 testTag = testTag?.let { "${it}_done" },
             )
         }
+    }
+}
+
+/**
+ * The sheet's head (`DescribeSheet.jsx:45-71`): the `h2` at title-large over
+ * the permanent reason, 4 apart, and the "?" beside the pair.
+ */
+@Composable
+private fun DescribeHeader(video: Boolean, onHelp: (() -> Unit)?) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.x1)) {
+            Text(
+                text = if (video) "Describe the video" else "Describe this picture",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.semantics { heading() },
+            )
+            Text(
+                text = "Read aloud to people who can't see it.",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (onHelp != null) HelpDot(onHelp = onHelp, contentDescription = "Describing pictures")
     }
 }
 

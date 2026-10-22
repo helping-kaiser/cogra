@@ -1,9 +1,12 @@
 package com.cogra.core.designsystem.v2.compose
 
+import android.os.Build
+import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -13,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DragIndicator
@@ -20,21 +24,43 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
+import com.cogra.core.designsystem.v2.atom.SheetTitle
+import com.cogra.core.designsystem.v2.atom.bleedHorizontally
 import com.cogra.core.designsystem.v2.atom.hitTarget
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.MediaThumb
@@ -43,6 +69,8 @@ import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
+import com.cogra.core.designsystem.v2.token.TypeTokens
+import kotlin.math.abs
 
 /**
  * One picked picture, as the composer's surfaces see it.
@@ -148,7 +176,7 @@ fun PickedRow(
         }
         Text(
             text = caption,
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f).dataNode(node?.div("caption")),
         )
@@ -222,14 +250,14 @@ fun DescribeCounter(
             )
             Text(
                 text = "· $described of $total described",
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.dataNode(node?.div("count")),
             )
         }
         Text(
             text = "Read aloud to people who can't see it.",
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.dataNode(node?.div("reason")),
         )
@@ -237,17 +265,28 @@ fun DescribeCounter(
 }
 
 /**
- * **The** per-picture manager (`design/components/compose/PickedSheet.prompt.md`)
+ * **The** per-picture manager (`design/components/compose/PickedSheet.jsx`)
  * — opened by the pick step's "Show all" and by [PickedRow] everywhere else.
- * Order, cover, remove and describe live here and nowhere else.
+ * Order, cover, remove and describe live here and nowhere else. It is an
+ * EDITING SHEET: every change applies the moment it is made, so Done, the
+ * scrim, a swipe and Back all just close it.
  *
  * **The first one is the cover, and the badge travels with reorder.** There
  * is no separate cover control; the order is the answer.
  *
- * Reordering is a drag on the canvas. Dragging is not an accessible route,
- * so each row also carries move-up / move-down as custom accessibility
- * actions — design/readme.md §10's non-gesture requirement, met invisibly
- * the way the crop step meets it.
+ * **The drag rides the handle, and it has non-drag twins** (the K13 round,
+ * PickedSheet.jsx). The handle is focusable and named for its picture
+ * (`Reorder the cover`, `Reorder picture 2`); dragging it lifts the row —
+ * with the platform's one lift pulse, `DRAG_START` (`LONG_PRESS` below API
+ * 34) — and drops it at the nearest place; ↑ / ↓ on a focused handle move it
+ * one place, focus riding along; and the row's second line carries `Make it
+ * the cover` · `Move up` · `Move down`, also offered as TalkBack custom
+ * actions.
+ *
+ * Geometry is the master's, child by child, because the sheet's surface
+ * carries no gap of its own there: `SheetTitle` (`0 24 8`), the list with a
+ * hairline above and under every row, the footnote `12 24 0`, and Done's row
+ * `8 16 8` — Done held 16 off the edge rather than the body's 24.
  */
 @Composable
 fun PickedSheet(
@@ -259,12 +298,18 @@ fun PickedSheet(
     modifier: Modifier = Modifier,
     testTag: String? = null,
 ) {
-    CograSheetSurface(modifier = modifier, testTag = testTag) {
-        Text(
-            text = "Picked · ${pictures.size}",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
+    // Each handle's focus, so a keyboard move can hand focus to the row the
+    // picture moved to ("focus rides along").
+    val handles = remember(pictures.size) { List(pictures.size) { FocusRequester() } }
+    var focusAfterMove by remember { mutableStateOf<Int?>(null) }
+    LaunchedEffect(pictures) {
+        focusAfterMove?.let { handles.getOrNull(it)?.requestFocus() }
+        focusAfterMove = null
+    }
+    val drag = remember { RowDrag() }
+    val view = LocalView.current
+    CograSheetSurface(modifier = modifier, testTag = testTag, gap = 0.dp) {
+        SheetTitle(text = "Picked · ${pictures.size}", modifier = Modifier.padding(bottom = Space.x2))
         Column(Modifier.fillMaxWidth()) {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             pictures.forEachIndexed { index, picture ->
@@ -275,26 +320,128 @@ fun PickedSheet(
                     onDescribe = { onDescribe(index) },
                     onRemove = { onRemove(index) },
                     onMove = onMove,
+                    handle = HandleWiring(
+                        focus = handles[index],
+                        onKeyMove = { to ->
+                            focusAfterMove = to
+                            onMove(index, to)
+                        },
+                        onDragStart = {
+                            drag.start(index)
+                            view.performHapticFeedback(liftPulse())
+                        },
+                        onDrag = drag::by,
+                        onDragEnd = { drag.end()?.let { (from, to) -> if (from != to) onMove(from, to) } },
+                    ),
+                    lift = drag.offsetFor(index),
+                    onPlaced = { height -> drag.measure(index, height) },
                     testTag = testTag?.let { "${it}_row_$index" },
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             }
         }
-        Text(
-            text = "The first one is the cover.",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            CograButton(
-                text = "Done",
-                onClick = onDone,
-                kind = ButtonKind.Text,
-                testTag = testTag?.let { "${it}_done" },
-            )
-        }
+        PickedSheetFoot(onDone = onDone, testTag = testTag)
     }
 }
+
+/** The footnote `12 24 0` and Done's row `8 16 8` (`PickedSheet.jsx:134-150`). */
+@Composable
+private fun PickedSheetFoot(onDone: () -> Unit, testTag: String?) {
+    Text(
+        text = "The first one is the cover.",
+        style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(top = Space.x3),
+    )
+    Row(
+        Modifier
+            .fillMaxWidth()
+            // Done stands 16 off the sheet's edge, inside the body's own 24 —
+            // so its row reaches 8 past it.
+            .padding(top = Space.x2, bottom = Space.x2)
+            .bleedHorizontally(Space.x6 - Space.x4),
+        horizontalArrangement = Arrangement.End,
+    ) {
+        CograButton(
+            text = "Done",
+            onClick = onDone,
+            kind = ButtonKind.Text,
+            testTag = testTag?.let { "${it}_done" },
+        )
+    }
+}
+
+/** The handle's three routes, as one row receives them. */
+private class HandleWiring(
+    val focus: FocusRequester,
+    val onKeyMove: (to: Int) -> Unit,
+    val onDragStart: () -> Unit,
+    val onDrag: (Float) -> Unit,
+    val onDragEnd: () -> Unit,
+)
+
+/**
+ * One drag in flight: which row was lifted, how far it has travelled, and
+ * where it lands — the nearest place by the rows' own measured heights.
+ */
+@Stable
+private class RowDrag {
+    private val heights = mutableMapOf<Int, Int>()
+    var from by mutableStateOf<Int?>(null)
+        private set
+    var travelled by mutableFloatStateOf(0f)
+        private set
+
+    fun measure(index: Int, height: Int) {
+        heights[index] = height
+    }
+
+    fun start(index: Int) {
+        from = index
+        travelled = 0f
+    }
+
+    fun by(dy: Float) {
+        travelled += dy
+    }
+
+    fun offsetFor(index: Int): Float = if (index == from) travelled else 0f
+
+    /** The move the drop makes, or null when nothing was lifted. */
+    fun end(): Pair<Int, Int>? {
+        val lifted = from ?: return null
+        from = null
+        val to = dropIndex(lifted, travelled, heights)
+        travelled = 0f
+        return lifted to to
+    }
+}
+
+/**
+ * Where a row lifted from [from] and moved [dy] pixels lands: the place
+ * whose centre the row's own centre passed, counting each row by its
+ * measured height (a wrapped row is taller).
+ */
+internal fun dropIndex(from: Int, dy: Float, heights: Map<Int, Int>): Int {
+    val step = if (dy >= 0f) 1 else -1
+    var to = from
+    var rest = abs(dy)
+    var neighbour = heights[to + step]
+    while (neighbour != null && rest >= neighbour / 2f) {
+        rest -= neighbour
+        to += step
+        neighbour = heights[to + step]
+    }
+    return to
+}
+
+/** The platform's one lift pulse (readme §4, *Haptics*): `DRAG_START`, `LONG_PRESS` below API 34. */
+private fun liftPulse(): Int =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        HapticFeedbackConstants.DRAG_START
+    } else {
+        HapticFeedbackConstants.LONG_PRESS
+    }
 
 @Composable
 private fun PickedSheetRow(
@@ -304,6 +451,9 @@ private fun PickedSheetRow(
     onDescribe: () -> Unit,
     onRemove: () -> Unit,
     onMove: (Int, Int) -> Unit,
+    handle: HandleWiring,
+    lift: Float,
+    onPlaced: (Int) -> Unit,
     testTag: String?,
 ) {
     val cover = index == 0
@@ -313,6 +463,9 @@ private fun PickedSheetRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .onSizeChanged { onPlaced(it.height) }
+            .zIndex(if (lift != 0f) 1f else 0f)
+            .graphicsLayer { translationY = lift }
             // A minimum, as the master draws it (`minHeight: 68px`): a row whose
             // move twins wrap grows rather than clipping them.
             .heightIn(min = Layout.PickedRowHeight)
@@ -321,14 +474,7 @@ private fun PickedSheetRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.x4),
     ) {
-        Icon(
-            imageVector = Icons.Filled.DragIndicator,
-            // The handle is the drag's affordance; the reorder itself is
-            // announced through the row's custom actions instead.
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(20.dp),
-        )
+        ReorderHandle(name = name, index = index, total = total, wiring = handle, testTag = testTag)
         MediaThumb(
             item = picture.item,
             size = Layout.ThumbSizeSheet,
@@ -336,6 +482,7 @@ private fun PickedSheetRow(
             uploading = picture.uploading,
             progress = picture.progress,
             contentDescription = null,
+            testTag = testTag?.let { "${it}_thumb" },
         )
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
@@ -345,21 +492,70 @@ private fun PickedSheetRow(
             )
             RowActions(picture, index, total, name, onDescribe, onMove, testTag)
         }
-        Box(
+        // The ×: an 18dp glyph answering at 48 (`cg-hit`), named for its
+        // picture (`Remove the cover`, `Remove picture 2`).
+        Icon(
+            imageVector = Icons.Filled.Close,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
-                .minimumInteractiveComponentSize()
-                .clickable(role = Role.Button, onClickLabel = "Remove $name", onClick = onRemove)
-                .then(if (testTag != null) Modifier.testTag("${testTag}_remove") else Modifier),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Close,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(18.dp),
-            )
-        }
+                .hitTarget(
+                    interactive = Modifier
+                        .clip(CircleShape)
+                        .clickable(role = Role.Button, onClick = onRemove)
+                        .semantics { contentDescription = "Remove $name" }
+                        .then(if (testTag != null) Modifier.testTag("${testTag}_remove") else Modifier),
+                    drawnWidth = REMOVE_GLYPH,
+                    drawnHeight = REMOVE_GLYPH,
+                )
+                .size(REMOVE_GLYPH),
+        )
     }
+}
+
+/**
+ * The drag handle (`PickedSheet.jsx:62-80`): a 20dp glyph answering at 48,
+ * focusable and named `Reorder the cover` / `Reorder picture N`, moved by
+ * its drag or by ↑ / ↓.
+ */
+@Composable
+private fun ReorderHandle(name: String, index: Int, total: Int, wiring: HandleWiring, testTag: String?) {
+    Icon(
+        imageVector = Icons.Filled.DragIndicator,
+        contentDescription = null,
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier
+            .hitTarget(
+                interactive = Modifier
+                    .focusRequester(wiring.focus)
+                    .onPreviewKeyEvent { event ->
+                        if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                        val to = when (event.key) {
+                            Key.DirectionUp -> index - 1
+                            Key.DirectionDown -> index + 1
+                            else -> return@onPreviewKeyEvent false
+                        }
+                        if (to in 0 until total) wiring.onKeyMove(to)
+                        true
+                    }
+                    .focusable()
+                    .pointerInput(index) {
+                        detectDragGestures(
+                            onDragStart = { wiring.onDragStart() },
+                            onDragEnd = wiring.onDragEnd,
+                            onDragCancel = wiring.onDragEnd,
+                        ) { change, amount ->
+                            change.consume()
+                            wiring.onDrag(amount.y)
+                        }
+                    }
+                    .semantics { contentDescription = "Reorder $name" }
+                    .then(if (testTag != null) Modifier.testTag("${testTag}_handle") else Modifier),
+                drawnWidth = HANDLE_GLYPH,
+                drawnHeight = HANDLE_GLYPH,
+            )
+            .size(HANDLE_GLYPH),
+    )
 }
 
 /** The same moves as TalkBack custom actions (PickedSheet.jsx), each only where it is possible. */
@@ -413,7 +609,7 @@ private fun RowActions(
         if (picture.described) {
             Text(
                 text = "Described",
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         } else {
@@ -429,7 +625,11 @@ private fun RowActions(
     }
 }
 
-/** A small inline action on a row's second line — the board's `InlineAction size="sm"`. */
+/**
+ * A small inline action on a row's second line — the board's `InlineAction
+ * size="sm"`: the word's own label-small line in the layout, its 48dp target
+ * around it (`cg-hit`), so a wrapped line keeps the master's 24dp pitch.
+ */
 @Composable
 private fun RowAction(text: String, clickLabel: String?, onClick: () -> Unit, testTag: String?) {
     Text(
@@ -437,12 +637,17 @@ private fun RowAction(text: String, clickLabel: String?, onClick: () -> Unit, te
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier
-            .minimumInteractiveComponentSize()
-            .defaultMinSize(minHeight = 0.dp)
-            .clickable(role = Role.Button, onClickLabel = clickLabel, onClick = onClick)
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
+            .hitTarget(
+                interactive = Modifier.clickable(role = Role.Button, onClickLabel = clickLabel, onClick = onClick),
+                drawnHeight = DESCRIBE_LINE,
+            ),
     )
 }
+
+/** The sheet's × glyph (`PickedSheet.jsx`: `close` at 18) and handle (`drag_indicator` at 20). */
+private val REMOVE_GLYPH = 18.dp
+private val HANDLE_GLYPH = 20.dp
 
 @ThemePreviews
 @Composable

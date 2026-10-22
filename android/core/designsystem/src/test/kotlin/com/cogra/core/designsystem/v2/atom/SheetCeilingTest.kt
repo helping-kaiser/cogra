@@ -14,6 +14,7 @@ import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.unit.Dp
 import com.cogra.core.designsystem.v2.compose.DescribeSheet
 import com.cogra.core.designsystem.v2.media.MediaItem
@@ -127,10 +128,11 @@ class SheetCeilingTest {
     // (b) The field takes a line at a time as the writing needs one…
     @Test
     fun theFieldGrowsWithTheWriting() {
-        val value = describeSheet("")
+        describeSheet("")
         val opened = heightOf("sheet_field")
 
-        compose.runOnUiThread { value.value = "one\ntwo\nthree\nfour\nfive" }
+        // Typed, not handed in: the sheet stages its own words until Done.
+        compose.onNodeWithTag("sheet_field").performTextReplacement("one\ntwo\nthree\nfour\nfive")
         compose.waitForIdle()
 
         assertThat(heightOf("sheet_field")).isGreaterThan(opened)
@@ -140,10 +142,10 @@ class SheetCeilingTest {
     // scrolls inside itself rather than carrying the sheet past the ceiling.
     @Test
     fun theFieldStopsAtTheRoomTheSheetHasLeft() {
-        val value = describeSheet("one\ntwo\nthree\nfour\nfive")
+        describeSheet("one\ntwo\nthree\nfour\nfive")
         val fiveLines = heightOf("sheet_field")
 
-        compose.runOnUiThread { value.value = enormous }
+        compose.onNodeWithTag("sheet_field").performTextReplacement(enormous)
         compose.waitForIdle()
 
         val capped = heightOf("sheet_field")
