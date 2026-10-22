@@ -171,6 +171,15 @@ internal fun PostBody(
     // exclusion is a post's alone.
     val mediaIsTheBody = surface == BodySurface.Post && attachments.isNotEmpty()
     val words = content.value?.takeIf { it.isNotEmpty() && !mediaIsTheBody }
+    val reading = CaptionReading(
+        collapsed = collapsed,
+        wordsClampLines = wordsClampLines,
+        // `PostCard.jsx:265`: a media post's caption is clamped to two lines
+        // and ALWAYS carries the opener.
+        alwaysOpenable = mediaIsTheBody && !description?.value.isNullOrEmpty(),
+        // The detail reads its words at `body-large` (`PostCard.jsx:235`).
+        detailWords = surface == BodySurface.Post && !collapsed,
+    )
 
     val body: @Composable () -> Unit = {
         Column(
@@ -180,40 +189,13 @@ internal fun PostBody(
             // the card's children on the board. A comment keeps its own.
             verticalArrangement = Arrangement.spacedBy(if (surface == BodySurface.Post) Space.x3 else 8.dp),
         ) {
-            val gallery: @Composable () -> Unit = {
-                if (attachments.isNotEmpty() && !mediaAbove) {
-                    Gallery(attachments, surface, onOpenMedia, bleed, "${testTagPrefix}_gallery", node?.div("media"))
-                }
-            }
-            val caption: @Composable () -> Unit = {
-                Caption(
-                    words = words,
-                    description = description?.value,
-                    collapsed = collapsed,
-                    testTagPrefix = testTagPrefix,
-                    node = node,
-                    wordsClampLines = wordsClampLines,
-                    // `PostCard.jsx:265`: a media post's caption is clamped
-                    // to two lines and ALWAYS carries the opener.
-                    alwaysOpenable = mediaIsTheBody && !description?.value.isNullOrEmpty(),
-                    // The detail reads its words at `body-large` (`PostCard.jsx:235`).
-                    wordsStyle = if (surface == BodySurface.Post && !collapsed) {
-                        MaterialTheme.typography.bodyLarge
-                    } else {
-                        MaterialTheme.typography.bodyMedium
-                    },
-                )
-            }
-
             // A post leads with its pictures; a comment leads with its
             // words and its pictures join them.
-            if (surface == BodySurface.Post) {
-                gallery()
-                caption()
-            } else {
-                caption()
-                gallery()
+            if (surface == BodySurface.Comment) Caption(words, description?.value, testTagPrefix, node, reading)
+            if (attachments.isNotEmpty() && !mediaAbove) {
+                Gallery(attachments, surface, onOpenMedia, bleed, "${testTagPrefix}_gallery", node?.div("media"))
             }
+            if (surface == BodySurface.Post) Caption(words, description?.value, testTagPrefix, node, reading)
         }
     }
 
@@ -276,13 +258,13 @@ internal fun TitledBody(post: PostView, title: @Composable () -> Unit, body: @Co
 private fun Caption(
     words: String?,
     description: String?,
-    collapsed: Boolean,
     testTagPrefix: String,
     node: DataNode?,
-    wordsClampLines: Int,
-    alwaysOpenable: Boolean,
-    wordsStyle: TextStyle,
+    reading: CaptionReading,
 ) {
+    val collapsed = reading.collapsed
+    val type = MaterialTheme.typography
+    val wordsStyle = if (reading.detailWords) type.bodyLarge else type.bodyMedium
     // What the clamp hid, remembered from the reading that hid it: once
     // the opener has unfolded the text nothing overflows any more, so a
     // live measurement would take the opener away with the fold.
@@ -300,7 +282,7 @@ private fun Caption(
                     text = it,
                     color = MaterialTheme.colorScheme.onSurface,
                     style = wordsStyle,
-                    maxLines = if (clamping) wordsClampLines else Int.MAX_VALUE,
+                    maxLines = if (clamping) reading.wordsClampLines else Int.MAX_VALUE,
                     onOverflow = { folded = true },
                     testTag = node?.div("body")?.tag ?: "${testTagPrefix}_words",
                 )
@@ -321,19 +303,8 @@ private fun Caption(
     // post's caption. A text control, not a link: it opens the text in place
     // and never navigates. Drawn on its `4px 0` padding, it answers at 48dp
     // (`PostCard.jsx:269-291`, `cg-hit`).
-    if (collapsed && (folded || alwaysOpenable)) {
-        Text(
-            text = stringResource(if (open) R.string.content_less else R.string.content_more),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier
-                .testTag(node?.div("opener")?.tag ?: "${testTagPrefix}_opener")
-                .hitTarget(
-                    interactive = Modifier.clickable(role = Role.Button) { open = !open },
-                    drawnHeight = OPENER_HEIGHT,
-                )
-                .padding(vertical = Space.x1),
-        )
+    if (collapsed && (folded || reading.alwaysOpenable)) {
+        Opener(open, onToggle = { open = !open }, testTag = node?.div("opener")?.tag ?: "${testTagPrefix}_opener")
     }
 }
 
@@ -519,3 +490,32 @@ internal fun isSensitive(
 
 private fun FieldStatus.hidden(): Boolean =
     this == FieldStatus.REDACTED || this == FieldStatus.UNKNOWN
+
+/**
+ * How a caption reads where it stands: [collapsed] on a summary card, folding
+ * its words at [wordsClampLines]; [alwaysOpenable] under a media post's
+ * caption; [detailWords] at the detail's `body-large`.
+ */
+private data class CaptionReading(
+    val collapsed: Boolean,
+    val wordsClampLines: Int,
+    val alwaysOpenable: Boolean,
+    val detailWords: Boolean,
+)
+
+/** `More` / `Less`: drawn on its `4px 0` padding, answering at 48dp (`PostCard.jsx:269-291`, `cg-hit`). */
+@Composable
+private fun Opener(open: Boolean, onToggle: () -> Unit, testTag: String) {
+    Text(
+        text = stringResource(if (open) R.string.content_less else R.string.content_more),
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier
+            .testTag(testTag)
+            .hitTarget(
+                interactive = Modifier.clickable(role = Role.Button, onClick = onToggle),
+                drawnHeight = OPENER_HEIGHT,
+            )
+            .padding(vertical = Space.x1),
+    )
+}

@@ -137,30 +137,37 @@ internal fun TopicsLine(
                 )
             }
             counts?.let {
-                Text(
-                    text = it,
-                    style = countsStyle,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    softWrap = false,
-                    modifier = Modifier
-                        .testTag(node?.div("counts")?.tag ?: "${testTagPrefix}_topics_counts")
-                        .then(
-                            // THE COUNT IS A DOOR on every feed card (K13.3),
-                            // grown to 48dp without moving its ink.
-                            if (onOpenReferences != null) {
-                                Modifier.hitTarget(
-                                    interactive = Modifier.clickable(role = Role.Button, onClick = onOpenReferences),
-                                    drawnHeight = COUNTS_LINE,
-                                )
-                            } else {
-                                Modifier
-                            },
-                        ),
-                )
+                TopicsCounts(it, onOpenReferences, node?.div("counts")?.tag ?: "${testTagPrefix}_topics_counts")
             }
         }
     }
+}
+
+/**
+ * The counts in words. THE COUNT IS A DOOR on every feed card (K13.3): given
+ * [onOpen] it opens the sheet, grown to 48dp without moving its ink.
+ */
+@Composable
+private fun TopicsCounts(text: String, onOpen: (() -> Unit)?, testTag: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+        softWrap = false,
+        modifier = Modifier
+            .testTag(testTag)
+            .then(
+                if (onOpen != null) {
+                    Modifier.hitTarget(
+                        interactive = Modifier.clickable(role = Role.Button, onClick = onOpen),
+                        drawnHeight = COUNTS_LINE,
+                    )
+                } else {
+                    Modifier
+                },
+            ),
+    )
 }
 
 /** `body-small`'s line: the counts' drawn height. */

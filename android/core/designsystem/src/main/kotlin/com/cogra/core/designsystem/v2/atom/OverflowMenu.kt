@@ -95,39 +95,7 @@ fun CograOverflowMenu(
     var open by remember { mutableStateOf(false) }
     CoversSurface(open = open, kind = CoverKind.Suspend)
 
-    if (pulled) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = modifier
-                .testTag(testTag)
-                .hitTarget(
-                    interactive = Modifier
-                        .clip(CircleShape)
-                        .clickable(role = Role.Button, onClick = { open = true })
-                        .semantics { this.contentDescription = contentDescription },
-                    drawnWidth = PULLED_INK,
-                    drawnHeight = PULLED_INK,
-                )
-                .size(PULLED_INK),
-        ) {
-            Icon(
-                Icons.Filled.MoreVert,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    } else {
-        IconButton(
-            onClick = { open = true },
-            modifier = modifier.testTag(testTag),
-        ) {
-            Icon(
-                Icons.Filled.MoreVert,
-                contentDescription = contentDescription,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
+    OverflowTrigger(pulled, contentDescription, testTag, modifier) { open = true }
 
     if (open) {
         val state = rememberModalBottomSheetState()
@@ -174,6 +142,50 @@ fun CograOverflowMenu(
                     )
                 }
             }
+        }
+    }
+}
+
+/** The ⋮ itself: the header placement's pulled box, or the row's plain icon button. */
+@Composable
+private fun OverflowTrigger(
+    pulled: Boolean,
+    contentDescription: String,
+    testTag: String,
+    modifier: Modifier,
+    onOpen: () -> Unit,
+) {
+    if (pulled) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = modifier
+                .testTag(testTag)
+                .hitTarget(
+                    interactive = Modifier
+                        .clip(CircleShape)
+                        .clickable(role = Role.Button, onClick = onOpen)
+                        .semantics { this.contentDescription = contentDescription },
+                    drawnWidth = PULLED_INK,
+                    drawnHeight = PULLED_INK,
+                )
+                .size(PULLED_INK),
+        ) {
+            Icon(
+                Icons.Filled.MoreVert,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    } else {
+        IconButton(
+            onClick = onOpen,
+            modifier = modifier.testTag(testTag),
+        ) {
+            Icon(
+                Icons.Filled.MoreVert,
+                contentDescription = contentDescription,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
