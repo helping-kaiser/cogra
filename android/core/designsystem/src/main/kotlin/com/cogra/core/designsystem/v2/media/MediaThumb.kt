@@ -31,6 +31,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
@@ -239,22 +240,33 @@ fun MediaThumb(
             if (item.url == null && label != null) NeutralLabel(label)
             if (playable && geometry.discSize != null) MediaDisc(geometry.discSize)
             if (uploading) UploadRing(progress)
-            when (badge) {
-                is ThumbBadge.Order -> OrderBadge(badge.position)
-                ThumbBadge.Cover -> CoverBadge()
-                is ThumbBadge.Duration -> if (geometry.durationFits) DurationBadge(badge.label, DurationPill.Corner)
-                ThumbBadge.Failed -> FailedBadge()
-                is ThumbBadge.Remove, null -> Unit
-            }
-            // A clip's running time rides *beside* whatever the tile already
-            // says about itself: `ComposePick` draws a video tile with the
-            // selection ring at one corner and the time at another, so the
-            // two are not alternatives.
-            if (geometry.durationFits) duration?.let { DurationBadge(it, durationPill) }
-            if (coverSrc != null && geometry.coverMarkSize != null) CoverMark(coverSrc, geometry.coverMarkSize)
+            CornerMarks(badge, geometry, duration, durationPill, coverSrc)
         }
         if (remove != null && !failed) RemoveButton(remove, removeLabel, removeTestTag)
     }
+}
+
+/** The tile's corner marks: its badge, a clip's running time, a clip's chosen face. */
+@Composable
+private fun BoxScope.CornerMarks(
+    badge: ThumbBadge?,
+    geometry: ThumbGeometry,
+    duration: String?,
+    durationPill: DurationPill,
+    coverSrc: Any?,
+) {
+    when (badge) {
+        is ThumbBadge.Order -> OrderBadge(badge.position)
+        ThumbBadge.Cover -> CoverBadge()
+        is ThumbBadge.Duration -> if (geometry.durationFits) DurationBadge(badge.label, DurationPill.Corner)
+        ThumbBadge.Failed -> FailedBadge()
+        is ThumbBadge.Remove, null -> Unit
+    }
+    // A clip's running time rides *beside* whatever the tile already says
+    // about itself: `ComposePick` draws a video tile with the selection ring
+    // at one corner and the time at another, so the two are not alternatives.
+    if (geometry.durationFits) duration?.let { DurationBadge(it, durationPill) }
+    if (coverSrc != null && geometry.coverMarkSize != null) CoverMark(coverSrc, geometry.coverMarkSize)
 }
 
 /**
@@ -263,7 +275,7 @@ fun MediaThumb(
  * the stroke's centre line runs 2dp out. Drawn behind the tile rather than
  * as a border, which would eat into the picture it marks.
  */
-private fun Modifier.outsideRing(color: androidx.compose.ui.graphics.Color, corner: Dp): Modifier = drawBehind {
+private fun Modifier.outsideRing(color: Color, corner: Dp): Modifier = drawBehind {
     val out = RING_OFFSET.toPx() + RING_WIDTH.toPx() / 2f
     drawRoundRect(
         color = color,
@@ -640,7 +652,13 @@ private fun MediaThumbBadges() {
             }
             Row(horizontalArrangement = Arrangement.spacedBy(Space.x2)) {
                 MediaThumb(item, size = 125.dp, badge = ThumbBadge.Order(1))
-                MediaThumb(item, size = 125.dp, badge = ThumbBadge.Order(null), duration = "0:42", durationPill = DurationPill.Picker)
+                MediaThumb(
+                    item,
+                    size = 125.dp,
+                    badge = ThumbBadge.Order(null),
+                    duration = "0:42",
+                    durationPill = DurationPill.Picker,
+                )
                 MediaThumb(item, size = 125.dp, badge = ThumbBadge.Duration("0:42"))
             }
         }

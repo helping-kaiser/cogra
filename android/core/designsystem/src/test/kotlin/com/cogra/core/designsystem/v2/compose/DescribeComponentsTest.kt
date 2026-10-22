@@ -10,7 +10,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
@@ -135,7 +135,7 @@ class DescribeComponentsTest {
             }
         }
 
-        compose.onNodeWithTag("sheet_field").performTextInput(" of strawberries")
+        compose.onNodeWithTag("sheet_field").performTextReplacement("Crates of strawberries")
         assertThat(handed).isEmpty()
 
         compose.onNodeWithTag("sheet_done").performClick()
@@ -163,7 +163,7 @@ class DescribeComponentsTest {
             }
         }
 
-        compose.onNodeWithTag("sheet_field").performTextInput(" of strawberries")
+        compose.onNodeWithTag("sheet_field").performTextReplacement("Crates of strawberries")
         open = false
         compose.waitForIdle()
         open = true

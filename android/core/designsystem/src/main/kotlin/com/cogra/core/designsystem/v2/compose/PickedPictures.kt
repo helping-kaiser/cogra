@@ -70,6 +70,7 @@ import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
 import com.cogra.core.designsystem.v2.token.TypeTokens
+import kotlin.math.abs
 
 /**
  * One picked picture, as the composer's surfaces see it.
@@ -339,28 +340,34 @@ fun PickedSheet(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             }
         }
-        Text(
-            text = "The first one is the cover.",
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = Space.x3),
+        PickedSheetFoot(onDone = onDone, testTag = testTag)
+    }
+}
+
+/** The footnote `12 24 0` and Done's row `8 16 8` (`PickedSheet.jsx:134-150`). */
+@Composable
+private fun PickedSheetFoot(onDone: () -> Unit, testTag: String?) {
+    Text(
+        text = "The first one is the cover.",
+        style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(top = Space.x3),
+    )
+    Row(
+        Modifier
+            .fillMaxWidth()
+            // Done stands 16 off the sheet's edge, inside the body's own 24 —
+            // so its row reaches 8 past it.
+            .padding(top = Space.x2, bottom = Space.x2)
+            .bleedHorizontally(Space.x6 - Space.x4),
+        horizontalArrangement = Arrangement.End,
+    ) {
+        CograButton(
+            text = "Done",
+            onClick = onDone,
+            kind = ButtonKind.Text,
+            testTag = testTag?.let { "${it}_done" },
         )
-        Row(
-            Modifier
-                .fillMaxWidth()
-                // `8 16 8`: Done stands 16 off the sheet's edge, inside the
-                // body's own 24 — so it reaches 8 past it.
-                .padding(top = Space.x2, bottom = Space.x2)
-                .bleedHorizontally(Space.x6 - Space.x4),
-            horizontalArrangement = Arrangement.End,
-        ) {
-            CograButton(
-                text = "Done",
-                onClick = onDone,
-                kind = ButtonKind.Text,
-                testTag = testTag?.let { "${it}_done" },
-            )
-        }
     }
 }
 
@@ -416,19 +423,14 @@ private class RowDrag {
  * measured height (a wrapped row is taller).
  */
 internal fun dropIndex(from: Int, dy: Float, heights: Map<Int, Int>): Int {
+    val step = if (dy >= 0f) 1 else -1
     var to = from
-    var rest = dy
-    while (rest > 0f) {
-        val next = heights[to + 1] ?: break
-        if (rest < next / 2f) break
-        rest -= next
-        to += 1
-    }
-    while (rest < 0f) {
-        val previous = heights[to - 1] ?: break
-        if (-rest < previous / 2f) break
-        rest += previous
-        to -= 1
+    var rest = abs(dy)
+    var neighbour = heights[to + step]
+    while (neighbour != null && rest >= neighbour / 2f) {
+        rest -= neighbour
+        to += step
+        neighbour = heights[to + step]
     }
     return to
 }

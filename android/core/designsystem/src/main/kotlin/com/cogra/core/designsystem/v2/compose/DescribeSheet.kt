@@ -102,26 +102,7 @@ fun DescribeSheet(
     val over = cap != null && staged.trim().let { it.codePointCount(0, it.length) } > cap
     val error = tooLongMessage.takeIf { over }
     CograSheetSurface(modifier = modifier, testTag = testTag) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Space.x2),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.x1)) {
-                Text(
-                    text = if (video) "Describe the video" else "Describe this picture",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.semantics { heading() },
-                )
-                Text(
-                    text = "Read aloud to people who can't see it.",
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            if (onHelp != null) HelpDot(onHelp = onHelp, contentDescription = "Describing pictures")
-        }
+        DescribeHeader(video = video, onHelp = onHelp)
 
         // The whole frame on the reserved surface: the author is checking
         // what they are describing, so it fits rather than crops.
@@ -188,6 +169,34 @@ fun DescribeSheet(
                 testTag = testTag?.let { "${it}_done" },
             )
         }
+    }
+}
+
+/**
+ * The sheet's head (`DescribeSheet.jsx:45-71`): the `h2` at title-large over
+ * the permanent reason, 4 apart, and the "?" beside the pair.
+ */
+@Composable
+private fun DescribeHeader(video: Boolean, onHelp: (() -> Unit)?) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.x1)) {
+            Text(
+                text = if (video) "Describe the video" else "Describe this picture",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.semantics { heading() },
+            )
+            Text(
+                text = "Read aloud to people who can't see it.",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (onHelp != null) HelpDot(onHelp = onHelp, contentDescription = "Describing pictures")
     }
 }
 

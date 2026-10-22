@@ -115,15 +115,7 @@ private fun CropViewport(
     bleed: Dp,
     testTag: String?,
 ) {
-    val actions = listOf(
-        CustomAccessibilityAction("Nudge left") { state.nudge(NudgeDirection.Left); true },
-        CustomAccessibilityAction("Nudge right") { state.nudge(NudgeDirection.Right); true },
-        CustomAccessibilityAction("Nudge up") { state.nudge(NudgeDirection.Up); true },
-        CustomAccessibilityAction("Nudge down") { state.nudge(NudgeDirection.Down); true },
-        CustomAccessibilityAction("Zoom in") { state.stepZoom(inward = true); true },
-        CustomAccessibilityAction("Zoom out") { state.stepZoom(inward = false); true },
-        CustomAccessibilityAction("Reset framing") { state.reset(); true },
-    )
+    val actions = cropActions(state)
 
     // The view outlives individual compositions but not the state it is
     // driving: dropping the reference on dispose is what keeps a stale
@@ -267,6 +259,23 @@ private class CropBinding {
             whole.width().toFloat() / whole.height().toFloat(),
         )
     }
+}
+
+/** The non-gesture route as TalkBack custom actions: nudge, zoom, reset. */
+private fun cropActions(state: CropState): List<CustomAccessibilityAction> {
+    fun action(label: String, run: () -> Unit) = CustomAccessibilityAction(label) {
+        run()
+        true
+    }
+    return listOf(
+        action("Nudge left") { state.nudge(NudgeDirection.Left) },
+        action("Nudge right") { state.nudge(NudgeDirection.Right) },
+        action("Nudge up") { state.nudge(NudgeDirection.Up) },
+        action("Nudge down") { state.nudge(NudgeDirection.Down) },
+        action("Zoom in") { state.stepZoom(inward = true) },
+        action("Zoom out") { state.stepZoom(inward = false) },
+        action("Reset framing") { state.reset() },
+    )
 }
 
 /** The cut's spoken name (`CROP_PAN_NAME`, CropViewport.jsx). */

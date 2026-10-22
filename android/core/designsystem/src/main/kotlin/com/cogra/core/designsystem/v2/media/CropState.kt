@@ -328,16 +328,7 @@ class CropState internal constructor(initial: CropFraming) {
      */
     fun zoomTo(scale: Float) {
         val fill = fill() ?: return
-        val at = scale.coerceIn(CROP_ZOOM_MIN, CROP_ZOOM_MAX)
-        val width = fill.width / at
-        val height = fill.height / at
-        val cx = (framing.left + framing.right) / 2f
-        val cy = (framing.top + framing.bottom) / 2f
-        moveTo(
-            CropWindowMath.slidInside(
-                CropFraming(cx - width / 2f, cy - height / 2f, cx + width / 2f, cy + height / 2f),
-            ),
-        )
+        moveTo(windowAt(fill, scale.coerceIn(CROP_ZOOM_MIN, CROP_ZOOM_MAX), framing))
     }
 
     /**
@@ -351,15 +342,22 @@ class CropState internal constructor(initial: CropFraming) {
         ),
     )
 
+    /** The window at [scale] of [fill], about [around]'s centre, slid inside the picture. */
+    private fun windowAt(fill: CropFraming, scale: Float, around: CropFraming): CropFraming {
+        val width = fill.width / scale
+        val height = fill.height / scale
+        val cx = (around.left + around.right) / 2f
+        val cy = (around.top + around.bottom) / 2f
+        return CropWindowMath.slidInside(
+            CropFraming(cx - width / 2f, cy - height / 2f, cx + width / 2f, cy + height / 2f),
+        )
+    }
+
     /** A window no smaller than the ceiling allows. */
     private fun ceiled(next: CropFraming): CropFraming {
         val fill = fill() ?: return next
         if (next.width <= 0f || fill.width / next.width <= CROP_ZOOM_MAX) return next
-        val width = fill.width / CROP_ZOOM_MAX
-        val height = fill.height / CROP_ZOOM_MAX
-        val cx = (next.left + next.right) / 2f
-        val cy = (next.top + next.bottom) / 2f
-        return CropWindowMath.slidInside(CropFraming(cx - width / 2f, cy - height / 2f, cx + width / 2f, cy + height / 2f))
+        return windowAt(fill, CROP_ZOOM_MAX, next)
     }
 
     /**
