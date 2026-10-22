@@ -33,6 +33,7 @@ import {
   TOO_BIG_PICTURE,
   TOO_BIG_VIDEO_COMMENT,
   TOO_BIG_VIDEO_POST,
+  TOO_MANY_POST,
   UNREADABLE,
 } from "./pick";
 
@@ -95,6 +96,26 @@ describe("the board's own words", () => {
     // …and the enforced figure is the larger, mebibyte one.
     expect(POST_VIDEO_MAX_BYTES).toBe(100 * 1024 * 1024);
     expect(PICTURE_MAX_BYTES).toBe(10 * 1024 * 1024);
+  });
+});
+
+describe("screenPick — the post's ten", () => {
+  it("refuses the eleventh picture in words, never dropping it in silence", async () => {
+    // ComposePick.md / ComposePickedErrors.md: the tray holds ten, so a
+    // picture past them reads the count line and the rest still join.
+    const outcome = await screenPick([picture("i.jpg"), picture("j.jpg"), picture("k.jpg")], {
+      hasVideo: false,
+      count: 8,
+    });
+    expect(outcome.accepted.map((f) => f.name)).toEqual(["i.jpg", "j.jpg"]);
+    expect(outcome.refusals.map((r) => [r.name, r.reason])).toEqual([["k.jpg", TOO_MANY_POST]]);
+    expect(TOO_MANY_POST).toBe("That's more than a post carries — up to ten pictures.");
+  });
+
+  it("refuses every picture offered to a full tray", async () => {
+    const outcome = await screenPick([picture("x.jpg")], { hasVideo: false, count: 10 });
+    expect(outcome.accepted).toEqual([]);
+    expect(outcome.refusals.map((r) => r.reason)).toEqual([TOO_MANY_POST]);
   });
 });
 
