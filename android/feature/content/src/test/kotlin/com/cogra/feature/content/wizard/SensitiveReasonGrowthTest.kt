@@ -11,6 +11,7 @@ import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performTextReplacement
 import com.cogra.core.designsystem.v2.atom.SheetCeilingSliver
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.google.common.truth.Truth.assertThat
@@ -68,14 +69,16 @@ class SensitiveReasonGrowthTest {
      */
     @Test
     fun theReasonOpensAtOneLineAndTakesALineAtATime() {
-        val reason = sheet("")
+        sheet("")
         val opened = heightOf("wizard_sensitive_reason")
 
-        compose.runOnUiThread { reason.value = "one\ntwo" }
+        // The sheet stages its own reason (ComposeSensitive.md), so the words
+        // arrive as typed ones.
+        compose.onNodeWithTag("wizard_sensitive_reason").performTextReplacement("one\ntwo")
         compose.waitForIdle()
         val two = heightOf("wizard_sensitive_reason")
 
-        compose.runOnUiThread { reason.value = "one\ntwo\nthree\nfour" }
+        compose.onNodeWithTag("wizard_sensitive_reason").performTextReplacement("one\ntwo\nthree\nfour")
         compose.waitForIdle()
         val four = heightOf("wizard_sensitive_reason")
 

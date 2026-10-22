@@ -6,7 +6,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsActions
-import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertContentDescriptionEquals
@@ -16,7 +15,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
-import androidx.compose.ui.test.filterToOne
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasTestTag
@@ -84,6 +82,7 @@ class ComposeWizardScreenTest {
     private var sheets = mutableListOf<SealSheet>()
     private var draftContinues = 0
     private var draftDiscards = 0
+    private var draftAsks = 0
 
     private var permissionRequests = 0
     private var leaves = 0
@@ -157,6 +156,14 @@ class ComposeWizardScreenTest {
             onMovePick = { from, to -> moves += (from to to) },
             onRemovePickAt = onRemovePickAt,
             onSign = { signs += 1 },
+            onRetryFailedUploads = {},
+            onDiscardPost = {},
+            onKeepPost = {},
+            onDiscardConfirmed = {},
+            onKeepBody = {},
+            onDiscardBody = {},
+            onAskDiscardDraft = { draftAsks += 1 },
+            onKeepDraftOffer = {},
             onContinueDraft = { draftContinues += 1 },
             onDiscardDraft = { draftDiscards += 1 },
             onRestoreKey = { restoreKeys += 1 },
@@ -315,12 +322,14 @@ class ComposeWizardScreenTest {
     }
 
     @Test
-    fun theReasonIsOnlyLiveOnceTheMarkIs() {
-        // The contract refuses a reason without the mark, so the field is
-        // not offered before the switch is on.
+    fun theSheetOpensOnAndTheReasonGoesInertWithTheSwitch() {
+        // `Mark` opens it ON (jakob 2026-10-01); the contract refuses a reason
+        // without the mark, so switching off disables the field.
         compose.setContent {
             Wizard(words.copy(step = WizardStep.Seal, sheet = SealSheet.Sensitive))
         }
+        compose.onNodeWithTag("wizard_sensitive_reason").assertIsEnabled()
+        compose.onNodeWithTag("wizard_sensitive_switch").performClick()
         compose.onNodeWithTag("wizard_sensitive_reason").assertIsNotEnabled()
 
         compose.onNodeWithText(
@@ -873,9 +882,77 @@ class ComposeWizardScreenTest {
     }
 
     @Test
-    fun theSealRefusesToSignWhileAPictureIsStillOnItsWay() {
+    fun theSealsCommitStaysEnabledThroughTheUploadGate() {
+        // ComposeSealUploading.md: enabled while the uploads run, the gate line
+        // above it; a press is held by the ViewModel until the bytes land.
         compose.setContent { Wizard(withPicks.copy(step = WizardStep.Seal)) }
+        compose.onNodeWithTag("wizard_seal_uploading").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_sign").assertIsEnabled().performClick()
+        assertThat(signs).isEqualTo(1)
+    }
+
+    @Test
+    fun aFailedUploadStopsTheCommitAndTheGateSaysWhy() {
+        val failed = withPicks.copy(step = WizardStep.Seal)
+            .withUpload("a", AssetUpload.Done("m1"))
+            .withUpload("b", AssetUpload.Failed(UploadFailure.TRANSPORT))
+        compose.setContent { Wizard(failed) }
+        compose.onNodeWithTag("wizard_seal_upload_failed").assertIsDisplayed()
         compose.onNodeWithTag("wizard_sign").assertIsNotEnabled()
+    }
+
+    @Test
+    fun aPressedCommitRefusesASecondPressAndSaysSoPast200ms() {
+        compose.mainClock.autoAdvance = false
+        compose.setContent { Wizard(words.copy(body = "x", step = WizardStep.Seal, submitting = true)) }
+        compose.mainClock.advanceTimeBy(300)
+        compose.onNodeWithText("Signing and publishing…").assertExists()
+        compose.onNodeWithTag("wizard_sign").assertIsEnabled().performClick()
+        assertThat(signs).isEqualTo(0)
+        compose.onNodeWithTag("wizard_seal_slow").assertDoesNotExist()
+        compose.mainClock.advanceTimeBy(5_000)
+        compose.onNodeWithTag("wizard_seal_slow").assertExists()
+    }
+
+    @Test
+    fun eachFaultTakesTheCommitsPlace() {
+        var fault by mutableStateOf<SealFault?>(SealFault.Bug)
+        compose.setContent { Wizard(words.copy(body = "x", step = WizardStep.Seal, fault = fault)) }
+        compose.onNodeWithTag("wizard_seal_bug").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_sign").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_try_again").performClick()
+        assertThat(signs).isEqualTo(1)
+
+        fault = SealFault.WriteRule
+        compose.onNodeWithTag("wizard_write_rule").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_retry").assertDoesNotExist()
+
+        fault = SealFault.Offline
+        compose.onNodeWithTag("wizard_seal_offline").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_retry").performClick()
+        assertThat(signs).isEqualTo(2)
+    }
+
+    @Test
+    fun aRefusedCitationIsSaidOnItsOwnRowWithRemoveIt() {
+        val seal = sealWithTwoCitations().copy(fault = SealFault.Row("u1"))
+        compose.setContent { Wizard(seal) }
+        compose.onNodeWithTag("wizard_seal_refused").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_sign").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_seal_refused_remove").performClick()
+        assertThat(referenceRemovals).containsExactly("u1")
+    }
+
+    @Test
+    fun theDimmedRollIsOneShieldThatAsksAboutTheDraft() {
+        val offered = withPicks.copy(
+            draftOffer = ComposeDraft(bodyKind = DraftBodyKind.Media, assets = listOf(DraftAsset("a"))),
+        )
+        compose.setContent { Wizard(offered) }
+        compose.onNodeWithTag("wizard_draft_shield")
+            .assertContentDescriptionEquals("Answer your draft before starting a new post")
+            .performClick()
+        assertThat(draftAsks).isEqualTo(1)
     }
 
     @Test
@@ -988,8 +1065,7 @@ class ComposeWizardScreenTest {
         // No chevron and no trailing word: the label on the gesture is what
         // says the line is a door at all, count folded in — "Manage the N
         // citations", and at one "Manage the 1 citation" (copy-voice.md:409-419).
-        assertThat(door.fetchSemanticsNode().config[SemanticsActions.OnClick].label)
-            .isEqualTo("Manage the 2 citations")
+        door.assertContentDescriptionEquals("Manage the 2 citations")
 
         door.performClick()
         assertThat(sheets).containsExactly(SealSheet.Cited)
@@ -1099,11 +1175,7 @@ class ComposeWizardScreenTest {
         // The "?" is heard by what it opens (copy-voice: the pad's "?" is
         // `Your backing on your post`).
         compose.onNodeWithTag("wizard_stance_help")
-            .assert(
-                SemanticsMatcher("its click is labelled Your backing on your post") {
-                    it.config[SemanticsActions.OnClick].label == "Your backing on your post"
-                },
-            )
+            .assertContentDescriptionEquals("Your backing on your post")
             .performClick()
         assertThat(helps).containsExactly(HelpTopic.YourBackingOnYourPost)
     }
@@ -1182,7 +1254,7 @@ class ComposeWizardScreenTest {
     fun theLicenseSheetsHelpOpensItsTopic() {
         val state = ComposeWizardState(body = "x", step = WizardStep.Seal, sheet = SealSheet.License)
         compose.setContent { Wizard(state) }
-        compose.onAllNodesWithText("?").filterToOne(hasTestTag("wizard_header_help").not()).performClick()
+        compose.onNodeWithTag("wizard_license_help").assertContentDescriptionEquals("License").performClick()
         assertThat(helps).containsExactly(HelpTopic.License)
     }
 
@@ -1261,11 +1333,11 @@ class ComposeWizardScreenTest {
     }
 
     @Test
-    fun aRefusalIsShownWhereTheReaderIs() {
-        val state = ComposeWizardState(body = "x", step = WizardStep.Seal, refusal = "no balance")
+    fun theBugNoticesDiscardAsksFirst() {
+        val state = ComposeWizardState(body = "x", step = WizardStep.Seal, fault = SealFault.Bug, discardingPost = true)
         compose.setContent { Wizard(state) }
-        compose.onNodeWithTag("wizard_problem").assertIsDisplayed()
-        compose.onNodeWithText("no balance").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_discard_post_ask").assertExists()
+        compose.onNodeWithText("Discard this post?").assertExists()
     }
 
     // -- The cover stage (`ComposeCover`) --

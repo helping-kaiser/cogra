@@ -1,6 +1,8 @@
 package com.cogra.feature.content.wizard
 
 import com.cogra.core.designsystem.v2.media.CropFraming
+import com.cogra.domain.ErrorCode
+import com.cogra.domain.UserError
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
@@ -9,6 +11,7 @@ import com.cogra.domain.content.MAX_DESCRIPTION_CHARS
 import com.cogra.domain.content.MAX_TITLE_CHARS
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.CropWindow
+import com.cogra.feature.content.ReferenceRow
 import com.cogra.feature.content.TagRow
 import com.cogra.feature.content.TagSectionState
 import com.google.common.truth.Truth.assertThat
@@ -465,13 +468,54 @@ class ComposeWizardStateTest {
     }
 
     @Test
-    fun aProblemLineSpeaksOnceAndInPriorityOrder() {
-        assertThat(words.problem()).isNull()
-        assertThat(words.copy(transportFailed = true).problem()).contains("reach the server")
-        assertThat(words.copy(signingFailed = true).problem()).contains("Nothing was published")
-        // A named refusal wins: it is the server's own words.
-        assertThat(words.copy(refusal = "too many", transportFailed = true).problem())
-            .isEqualTo("too many")
+    fun aRefusalReadsByItsCodesNotItsSentence() {
+        val ada = ReferenceRow("p-ada", null)
+        assertThat(sealFaultOf(listOf(UserError(ErrorCode.WRITE_RULE_FAILED, "x")), listOf(ada)))
+            .isEqualTo(SealFault.WriteRule)
+        assertThat(
+            sealFaultOf(listOf(UserError(ErrorCode.NOT_FOUND, "x", listOf("references", "0", "target"))), listOf(ada)),
+        ).isEqualTo(SealFault.Row("p-ada"))
+        // A refusal of anything else the picking stage should have blocked.
+        assertThat(sealFaultOf(listOf(UserError(ErrorCode.BAD_INPUT, "x", listOf("tags", "0"))), listOf(ada)))
+            .isEqualTo(SealFault.Bug)
+        val elsewhere = UserError(ErrorCode.NOT_FOUND, "x", listOf("references", "3", "target"))
+        assertThat(sealFaultOf(listOf(elsewhere), listOf(ada))).isEqualTo(SealFault.Bug)
+    }
+
+    @Test
+    fun goingAStageBackClearsARefusalReading() {
+        val refused = words.copy(step = WizardStep.Seal, fault = SealFault.Bug)
+        assertThat(refused.retreated()?.fault).isNull()
+    }
+
+    @Test
+    fun theCommitStaysEnabledWhileUploadsRunAndStopsOnlyOnAFailure() {
+        val running = ComposeWizardState(
+            mode = BodyMode.Media,
+            picked = listOf(PickedAsset("a", 1f, upload = AssetUpload.Running)),
+        )
+        assertThat(running.signEnabled).isTrue()
+        assertThat(running.canSign).isFalse()
+        val failed = running.copy(
+            picked = listOf(PickedAsset("a", 1f, upload = AssetUpload.Failed(UploadFailure.UNREADABLE_PICTURE))),
+        )
+        assertThat(failed.signEnabled).isFalse()
+    }
+
+    @Test
+    fun discardingAHalfKeepsTheRestOfTheDraft() {
+        val wordsDraft = words.copy(body = "Salt maps", title = "T", askingBodySwitch = BodyMode.Media)
+        val toPictures = wordsDraft.discardedHalf(BodyMode.Media)
+        assertThat(toPictures.body).isEmpty()
+        assertThat(toPictures.title).isEqualTo("T")
+        assertThat(toPictures.mode).isEqualTo(BodyMode.Media)
+        assertThat(toPictures.askingBodySwitch).isNull()
+
+        val pictures = ComposeWizardState(mode = BodyMode.Media, title = "T", picked = listOf(PickedAsset("a", 1f)))
+        val toWords = pictures.discardedHalf(BodyMode.Words)
+        assertThat(toWords.picked).isEmpty()
+        assertThat(toWords.title).isEqualTo("T")
+        assertThat(toWords.mode).isEqualTo(BodyMode.Words)
     }
 
     // -- The video path (`ComposeCover`) --
