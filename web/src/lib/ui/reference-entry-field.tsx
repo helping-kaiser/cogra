@@ -30,7 +30,7 @@ import { REFERENCE_BATCH_CAP } from "@/lib/references/normalize";
 import { CITATION_FAMILY, PairSheet } from "@/lib/ui2/compose/pair-sheet";
 import { InlineAction } from "@/lib/ui2/inline-action";
 import { instance, part, testAttributes, type DataNode } from "./data-node";
-import { ReferenceChip } from "./reference-chip";
+import { StagedReference } from "@/lib/ui2/compose/staged-reference";
 import { ReferenceFinder } from "./reference-finder";
 import { ReferenceParamSliders } from "./reference-param-sliders";
 
@@ -111,22 +111,22 @@ export function ReferenceEntryField({
 
   return (
     <div
-      className="flex flex-col gap-2"
+      className="flex flex-col gap-1.5"
       {...testAttributes(node, `${testIdPrefix}-reference-entry`)}
     >
       <span className="text-label-large" {...testAttributes(part(node, "label"))}>
         References
       </span>
       {references.length > 0 && (
-        <ul className="flex flex-col gap-2" data-testid={`${testIdPrefix}-reference-list`}>
+        <ul className="m-0 flex list-none flex-col gap-1.5 p-0" data-testid={`${testIdPrefix}-reference-list`}>
           {references.map((reference, index) => (
             <li key={reference.targetId} className="flex flex-col gap-1">
-              <ReferenceChip
+              <StagedReference
                 target={reference.target}
+                relevance={reference.relevance}
+                support={reference.support}
                 onRemove={() => removeAt(index)}
-                removeLabel={`Remove the reference to ${reference.target.label}`}
-                onSelect={() => select(index)}
-                selectLabel={`Adjust the reference to ${reference.target.label}`}
+                onEdit={() => select(index)}
                 expanded={adjusting === index}
                 testId={`${testIdPrefix}-reference-${index}`}
                 node={instance(node, "stagedReference", String(index + 1))}

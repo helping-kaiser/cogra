@@ -123,13 +123,15 @@ describe("ReplySealStep — the citations' three readings", () => {
     expect(within(sheet).getByText("Cited · 2")).toBeInTheDocument();
     expect(within(sheet).queryByText(/Cite something/)).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByTestId("reply-cited-sheet-remove-0"));
+    fireEvent.click(screen.getByTestId("reply-cited-sheet-0-remove"));
     expect(onReferences).toHaveBeenCalledWith([two[1]]);
 
-    fireEvent.click(screen.getByTestId("reply-cited-sheet-repair-1"));
-    fireEvent.change(screen.getByTestId("reply-cited-sheet-1-relevance"), {
+    fireEvent.click(screen.getByTestId("reply-cited-sheet-1-select"));
+    fireEvent.click(screen.getByTestId("reply-cited-sheet-pair-exact-route"));
+    fireEvent.change(screen.getByTestId("reply-cited-sheet-pair-tracks-directed"), {
       target: { value: "0.5" },
     });
+    fireEvent.click(screen.getByTestId("reply-cited-sheet-pair-done"));
     expect(onReferences).toHaveBeenCalledWith([two[0], { ...two[1], relevance: 0.5, support: 0.1 }]);
 
     fireEvent.click(screen.getByTestId("reply-cited-sheet-done"));

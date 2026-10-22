@@ -32,7 +32,7 @@ import { PairSheet, TAG_FAMILY } from "@/lib/ui2/compose/pair-sheet";
 import { Button } from "./button";
 import { instance, part, testAttributes, type DataNode } from "./data-node";
 import { TagParamSliders } from "./tag-param-sliders";
-import { TopicChip } from "./topic-chip";
+import { TopicRemovable } from "@/lib/ui2/compose/topic-removable";
 
 export function TagEntryField({
   tags,
@@ -114,7 +114,7 @@ export function TagEntryField({
   };
 
   return (
-    <div className="flex flex-col gap-2" {...testAttributes(node, `${testIdPrefix}-tag-entry`)}>
+    <div className="flex flex-col gap-1.5" {...testAttributes(node, `${testIdPrefix}-tag-entry`)}>
       <label
         htmlFor={`${testIdPrefix}-tag-input`}
         className="text-label-large"
@@ -123,15 +123,13 @@ export function TagEntryField({
         Tags
       </label>
       {tags.length > 0 && (
-        <ul className="flex flex-col gap-2" data-testid={`${testIdPrefix}-tag-list`}>
+        <ul className="m-0 flex list-none flex-wrap gap-2 p-0" data-testid={`${testIdPrefix}-tag-list`}>
           {tags.map((tag, index) => (
             <li key={`${tag.name}-${index}`} className="flex flex-col gap-1">
-              <TopicChip
+              <TopicRemovable
                 name={tag.name}
                 onRemove={() => removeAt(index)}
-                removeLabel={`Remove topic #${tag.name}`}
-                onSelect={() => select(index)}
-                selectLabel={`Adjust #${tag.name}`}
+                onEdit={() => select(index)}
                 expanded={adjusting === index}
                 testId={`${testIdPrefix}-tag-${index}`}
                 node={instance(node, "tag", tag.name)}
