@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -94,7 +95,8 @@ internal fun ProfileHeader(
                     testTag = (node / "avatar").tag,
                 )
             }
-            Column(verticalArrangement = Arrangement.spacedBy(NAME_GAP)) {
+            // The name column takes what the avatar leaves (`minmax(0, 1fr)`).
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(NAME_GAP)) {
                 Text(
                     text = name,
                     style = MaterialTheme.typography.titleLarge,
@@ -105,6 +107,7 @@ internal fun ProfileHeader(
                         MaterialTheme.colorScheme.onSurface
                     },
                     modifier = Modifier
+                        .fillMaxWidth()
                         .semantics { heading() }
                         .dataNode(node / "name"),
                 )
@@ -113,7 +116,7 @@ internal fun ProfileHeader(
                         text = "@${profile.handle}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.dataNode(node / "handle"),
+                        modifier = Modifier.fillMaxWidth().dataNode(node / "handle"),
                     )
                 }
             }
@@ -127,7 +130,7 @@ internal fun ProfileHeader(
                 Text(
                     text = bio,
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.dataNode(node / "bio"),
+                    modifier = Modifier.fillMaxWidth().dataNode(node / "bio"),
                 )
             }
             profile.websiteUrl.value?.takeIf { it.isNotBlank() }?.let { url ->
@@ -135,7 +138,7 @@ internal fun ProfileHeader(
                     text = url,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.dataNode(node / "website"),
+                    modifier = Modifier.fillMaxWidth().dataNode(node / "website"),
                 )
             }
         }

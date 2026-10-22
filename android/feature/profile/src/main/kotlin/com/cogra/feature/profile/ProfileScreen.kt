@@ -542,6 +542,7 @@ private fun ChronicleEmpty(applicant: Boolean, chronicle: DataNode) {
             testTag = (chronicle / "empty").tag,
             title = stringResource(R.string.profile_chronicle_empty_applicant),
             modifier = Modifier.padding(horizontal = Space.x4),
+            registered = true,
         )
     } else {
         Text(
