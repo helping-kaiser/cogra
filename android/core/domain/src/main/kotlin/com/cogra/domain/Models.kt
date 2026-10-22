@@ -883,4 +883,19 @@ data class RecordRow(
     val genesis: Boolean,
     val snippet: String?,
     val link: RecordLink?,
+    /** When the record landed — the age on the chronicle card's trailing edge. */
+    val landedAt: Instant? = null,
+    /**
+     * An opinion record's own pair, for the face its disc wears; null on
+     * every other family.
+     */
+    val opinion: RecordOpinion? = null,
+    /** The person an opinion was given on (`on @mira`); null when the target is not a person. */
+    val targetHandle: String? = null,
 )
+
+/**
+ * An opinion record's pair as signed, and whether the bundle it lands in was
+ * walked back to nothing ([severed]) — which (0, 0) its face reads.
+ */
+data class RecordOpinion(val directed: Double, val interest: Double, val severed: Boolean)

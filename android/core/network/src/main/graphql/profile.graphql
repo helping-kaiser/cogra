@@ -57,8 +57,17 @@ query AuthorRecords($author: UUID!, $family: RecordFamily, $first: Int!, $after:
         family
         targetId
         terminalId
+        # The chronicle card's age, and an opinion's own face (Profile.md:23).
+        landedAt
+        pDirected
+        pInterest
+        severed
         target {
           __typename
+          # The person an opinion was given on: the card's `on @mira`.
+          ... on User {
+            handle
+          }
           ... on Post {
             id
             title {
