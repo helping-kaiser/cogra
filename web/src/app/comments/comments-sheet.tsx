@@ -1547,9 +1547,16 @@ export function CommentsSheet({
             refusal={editRefusedMessage}
             failed={editFailed}
             onWords={(draft) => setEditing({ ...editing, draft, recordStaged: true })}
-            onSensitive={(sensitive) => setEditing({ ...editing, sensitive, recordStaged: true })}
+            // Functional updates: the sheet's Done hands the mark and its reason
+            // over in one gesture, and a second spread of `editing` would
+            // drop the first.
+            onSensitive={(sensitive) =>
+              setEditing((current) => (current === null ? current : { ...current, sensitive, recordStaged: true }))
+            }
             onSensitiveReason={(sensitiveReason) =>
-              setEditing({ ...editing, sensitiveReason, recordStaged: true })
+              setEditing((current) =>
+                current === null ? current : { ...current, sensitiveReason, recordStaged: true },
+              )
             }
             onSensitiveOpen={setEditSensitiveOpen}
             onSensitiveHelp={() => setEditHelp(HELP_TOPICS.markingAsSensitive)}
