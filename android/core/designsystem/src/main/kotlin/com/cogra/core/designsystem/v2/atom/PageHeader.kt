@@ -111,9 +111,10 @@ fun PageHeader(
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                // 8dp after the arrow and nothing more (`PageHeader.jsx`: the
+                // arrow and the title share one `gap: 8` group).
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = Space.x1)
                     .testTag(titleTag),
             )
         }

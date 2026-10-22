@@ -117,7 +117,8 @@ fun CograSnackbar(data: SnackbarData, testTag: String? = null) {
         else -> Modifier
     }
     Surface(
-        modifier = tagged.padding(12.dp),
+        // The node is the drawn surface; the 12dp is the host's inset around it.
+        modifier = Modifier.padding(12.dp).then(tagged),
         shape = SnackbarDefaults.shape,
         color = SnackbarDefaults.color,
         contentColor = SnackbarDefaults.contentColor,

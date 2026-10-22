@@ -70,27 +70,23 @@ fun RemovedPlaceholder(
             .fillMaxWidth()
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            // The registered node is the mark's whole box (`RedactedContent`).
+            .dataNode(node)
             .padding(Space.x4)
-            .then(
-                when {
-                    node != null -> Modifier.dataNode(node)
-                    testTag != null -> Modifier.testTag(testTag)
-                    else -> Modifier
-                },
-            ),
+            .then(if (node == null && testTag != null) Modifier.testTag(testTag) else Modifier),
         verticalArrangement = Arrangement.spacedBy(Space.x1),
     ) {
         Text(
             text = headline,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.dataNode(node?.div("line")),
+            modifier = Modifier.fillMaxWidth().dataNode(node?.div("line")),
         )
         Text(
             text = detail,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.dataNode(node?.div("detail")),
+            modifier = Modifier.fillMaxWidth().dataNode(node?.div("detail")),
         )
         // Part of the surviving skeleton: a removal never hides when it
         // happened.
