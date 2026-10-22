@@ -181,6 +181,8 @@ export function ProfileMenu({
         ariaLabel={ariaLabel}
         testId={prefix}
         node={feed === undefined ? { path: "profile.identity.actionRow.menu" } : feed.trigger}
+        // On the page the dot closes the actions row (`placement="row"`).
+        placement={feed === undefined ? "row" : "header"}
         expanded={open}
         onOpen={() => setOpen(true)}
       />
@@ -188,7 +190,10 @@ export function ProfileMenu({
         open={open}
         onClose={() => setOpen(false)}
         items={items}
-        ariaLabel={ariaLabel}
+        // THE SHEET IS NAMED FOR WHAT IT HOLDS: `Profile actions` over another
+        // person's page or a deleted account's (`ProfileMenu.jsx`,
+        // `ProfileDeletedMenu.jsx`), while the ⋮ names whose they are.
+        ariaLabel={kind === "own" || feed !== undefined ? ariaLabel : "Profile actions"}
         testId={`${prefix}-sheet`}
         node={feed === undefined ? SHEET : undefined}
       />

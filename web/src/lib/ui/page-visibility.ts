@@ -22,8 +22,14 @@ function subscribe(listener: () => void): () => void {
   return () => document.removeEventListener("visibilitychange", listener);
 }
 
-/** Whether the page is visible right now. Only `"hidden"` hides it. */
+/**
+ * Whether the page is visible right now. Only `"hidden"` hides it. On the
+ * server there is no document, and the answer is the server snapshot's: a page
+ * being rendered is a page about to be shown (a stage's lazy initializer reads
+ * this during the server render).
+ */
 export function isPageVisible(): boolean {
+  if (typeof document === "undefined") return true;
   return document.visibilityState !== "hidden";
 }
 

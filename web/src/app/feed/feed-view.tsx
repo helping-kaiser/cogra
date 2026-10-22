@@ -581,7 +581,14 @@ export function FeedView({
   return (
     // The band is chrome and full-bleed, so the gutter belongs to the content
     // below it rather than to the column that holds both.
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 pb-6">
+    //
+    // THE COLUMN HAS NO GAP OF ITS OWN (Feed: the band at the screen's top
+    // edge, the first card 8px under it — `FeedList`'s `padding: 8px 0 0`,
+    // which the collapsing region's own `pb-2` already is). A column gap
+    // spent itself on the collapsing region's zero-height sentinel and on the
+    // banners' slot while empty, dropping the band 16px and the list 32px.
+    // The slots that hold something carry their own spacing instead.
+    <main className="mx-auto flex w-full max-w-2xl flex-col pb-6">
       <CollapsingTop
         // Mirrors `scroll-pin.ts`'s own "nothing is anchored at the origin":
         // a restored offset of 0 is a top arrival, so the header stays. Read
@@ -630,7 +637,9 @@ export function FeedView({
           </div>
         </CograBand>
       </CollapsingTop>
-      <div className="flex flex-col gap-4 px-6">
+      {/* Empty, the slot is nothing at all to the layout (`empty:hidden`);
+          holding a banner, it keeps the 16px either side it always had. */}
+      <div className="flex flex-col gap-4 px-6 py-4 empty:hidden">
         {/* The account-status banners ride the active tab (design.md §6). */}
         {phase === "signedIn" && <StatusBanners />}
         {/* What the wizard just did, if anything. Dismissing drops the query
@@ -741,7 +750,7 @@ export function FeedView({
           ))}
         </ul>
       </StageHost>
-      <div className="flex flex-col gap-4 px-6">
+      <div className="flex flex-col gap-4 px-6 pt-4">
         {/* The slot the next page fills. At rest it is empty — the page comes
             because the reader kept going. In flight it is the list's own
             loading line, and a page that did not arrive stands here with its

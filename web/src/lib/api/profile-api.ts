@@ -21,7 +21,10 @@ import type { Page } from "./content-api";
 
 export type ProfileView = NonNullable<UserProfileQuery["user"]>;
 
-/** The profile filter chips; every visitor lands on posts. */
+/**
+ * The chronicle's tabs (`CHRONICLE_TABS`). Every profile board draws the
+ * reader landing on Everything.
+ */
 export type ChronicleFilter = "posts" | "comments" | "everything";
 
 const FILTER_FAMILY: Record<ChronicleFilter, RecordFamily | null> = {
@@ -30,16 +33,26 @@ const FILTER_FAMILY: Record<ChronicleFilter, RecordFamily | null> = {
   everything: null,
 };
 
+/** What a chronicle act is, which picks its disc (`_shared.jsx` `ProfileOwnBody`). */
+export type ActKind = "post" | "comment" | "opinion" | "profile" | "other";
+
 /**
  * One row of the actor's chronicle — the honest labelled history
  * (roadmap "Slice 2.1"): what the record did, a snippet of what it
- * touched, and the post it opens where CoGra carries one.
+ * touched, the post it opens where CoGra carries one, when it landed, and —
+ * for an opinion — its own face and the person it was on.
  */
 export type RecordRow = {
   id: string;
+  kind: ActKind;
   label: string;
+  /** The word riding the title, `on @mira` (an opinion on a person). */
+  aside: string | null;
   snippet: string | null;
   postId: string | null;
+  landedAt: string;
+  /** The opinion's own pair, for the face its disc wears. */
+  face: { pDirected: number; pInterest: number; severed: boolean } | null;
 };
 
 /**
@@ -79,32 +92,44 @@ export async function fetchMyProfile(
 export type RecordNode = AuthorRecordsQuery["records"]["edges"][number]["node"];
 
 /**
- * The honest label for one chronicle row.
+ * The honest label for one chronicle row, in the profile's blessed words
+ * (copy-voice.md "Carried over", the profile: `Published a post`,
+ * `Commented`, `Gave an opinion`, `Updated your profile` · `Updated their
+ * profile`). An opinion is the reader's word for both stance families —
+ * "stance" belongs to the docs, never to a screen (copy-voice.md, "What a
+ * reader gives is an OPINION").
  *
- * Exported because it is a pure decision over the record family and the
- * genesis mark, and a branch matrix that reads wrong is the whole defect —
- * pinning it directly costs nothing, while reaching all six arms through a
- * query fixture costs six fixtures.
+ * Exported because it is a pure decision over the record family, the
+ * genesis mark and whose chronicle it is, and a branch matrix that reads
+ * wrong is the whole defect.
  */
-export function rowLabel(node: RecordNode, genesis: boolean): string {
+export function rowLabel(node: RecordNode, genesis: boolean, own = false): string {
   switch (node.family) {
     case "PUBLISH":
       return genesis ? "Published a post" : "Edited a post";
     case "REVIEW":
       return genesis ? "Commented" : "Edited a comment";
-    // The anchoring record and its updates share one honest label —
-    // the chain shape is not visible per-row.
+    // The anchoring record and its updates share one label — the chain
+    // shape is not visible per-row.
     case "REGISTRATION":
-      return "Profile update";
+      return own ? "Updated your profile" : "Updated their profile";
     case "OPINION":
     case "AFFINITY":
-      return "Shared a stance";
+      return "Gave an opinion";
     default:
       return "Did something";
   }
 }
 
-function toRow(node: RecordNode): RecordRow {
+const KIND: Record<string, ActKind> = {
+  PUBLISH: "post",
+  REVIEW: "comment",
+  OPINION: "opinion",
+  AFFINITY: "opinion",
+  REGISTRATION: "profile",
+};
+
+function toRow(node: RecordNode, own: boolean): RecordRow {
   const mint = `mint:${node.id}`;
   const genesis = node.targetId === mint || node.terminalId === mint;
   const terminalComment =
@@ -125,7 +150,21 @@ function toRow(node: RecordNode): RecordRow {
     targetPost?.id ??
     (targetComment?.target?.__typename === "Post" ? targetComment.target.id : null) ??
     null;
-  return { id: node.id, label: rowLabel(node, genesis), snippet, postId };
+  const kind = KIND[node.family] ?? "other";
+  const targetUser = node.target?.__typename === "User" ? node.target : null;
+  return {
+    id: node.id,
+    kind,
+    label: rowLabel(node, genesis, own),
+    aside: kind === "opinion" && targetUser !== null ? `on @${targetUser.handle}` : null,
+    snippet,
+    postId,
+    landedAt: node.landedAt,
+    face:
+      kind === "opinion"
+        ? { pDirected: node.pDirected, pInterest: node.pInterest, severed: node.severed === true }
+        : null,
+  };
 }
 
 export async function fetchAuthorRecords(
@@ -133,6 +172,8 @@ export async function fetchAuthorRecords(
   authorId: string,
   filter: ChronicleFilter,
   after: string | null = null,
+  /** The reader's own chronicle, whose profile updates say `your`. */
+  own = false,
 ): Promise<Outcome<Page<RecordRow>>> {
   const fetched = await fetchOutcome(() =>
     client.query({
@@ -149,7 +190,7 @@ export async function fetchAuthorRecords(
   if (fetched.kind !== "success") return fetched;
   const records = fetched.value.records;
   return success({
-    items: records.edges.map((edge) => toRow(edge.node)),
+    items: records.edges.map((edge) => toRow(edge.node, own)),
     endCursor: records.pageInfo.endCursor ?? null,
     hasNextPage: records.pageInfo.hasNextPage,
   });

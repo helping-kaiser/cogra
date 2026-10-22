@@ -799,6 +799,8 @@ describe("PostView", () => {
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     expect(await screen.findByTestId(byNode("postDetail.card.citedBy"))).toHaveTextContent("Cited by 4");
+    // The count rides inside the name: the line's own words are it.
+    expect(screen.getByRole("button", { name: "Cited by 4" })).toBeInTheDocument();
   });
 
   // ReaderPostMenu.md:15 — hiding from the detail keeps the reader on the post;
@@ -1921,7 +1923,7 @@ describe("PostView", () => {
     expect(await screen.findByTestId(byNode("postDetail.card.tagsLine.tag", "p1/rust"))).toBeInTheDocument();
     expect(screen.getByTestId(byNode("postDetail.card.tagsLine.tag", "p1/wasm"))).toBeInTheDocument();
     expect(screen.queryByTestId(byNode("postDetail.card.tagsLine.tag", "p1/axum"))).not.toBeInTheDocument();
-    expect(screen.getByTestId(byNode("postDetail.card.tagsLine.counts"))).toHaveTextContent("· 1 topic");
+    expect(screen.getByTestId(byNode("postDetail.card.tagsLine.counts"))).toHaveTextContent("· 1 tag");
     expect(screen.queryByTestId("post-topics-reveal")).not.toBeInTheDocument();
   });
 
@@ -3295,7 +3297,10 @@ describe("PostView — opened from the feed", () => {
     // full width, and the row itself is the 48px target.
     const card = screen.getByTestId(byNode("postDetail.card"));
     expect(shown.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(shown.closest(".-mx-6")).toContainElement(card);
+    // The block bleeds nowhere: the page itself holds no gutter (the header
+    // owns its own), so the line and the card meet the screen edge as one.
+    expect(shown.parentElement?.parentElement).toContainElement(card);
+    expect(shown.closest(".px-6")).toBeNull();
     expect(shown).toHaveClass("w-full");
     expect(shown.style.minHeight).toBe("var(--touch-target-min)");
   });

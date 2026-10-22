@@ -226,6 +226,23 @@ describe("PostCard", () => {
     expect(link).not.toContainElement(screen.getByTestId("card-author"));
   });
 
+  // THE LINK IS THE CARD'S DOOR (`Card.jsx`, the K13 round): hovered or
+  // pressed, the whole card takes the layer — the controls keep their own.
+  it("lights the whole card from its door", () => {
+    mount(post());
+    expect(screen.getByTestId("card-link").className).toContain("cg-door");
+    expect(screen.getByTestId("card").className).toContain("cg-door-card");
+  });
+
+  // TITLE · BODY · DESCRIPTION, one visible join apart (`PostCard.jsx`
+  // `textBlock`, `--space-1`).
+  it("stands title, body and description 4px apart", () => {
+    mount(post({ title: moderated("A title"), content: moderated("Words") }));
+    const block = screen.getByTestId("card-body").parentElement!;
+    expect(block.className).toContain("gap-1");
+    expect(block).toContainElement(screen.getByTestId("card-title"));
+  });
+
   // REDACTION IS RECORD-GRANULAR: every authored field goes at once, and the
   // skeleton is what is left.
   it("replaces the whole payload with the Removed mark, keeping the skeleton", () => {
@@ -403,6 +420,10 @@ describe("PostCard", () => {
     mount(post({ comments: { __typename: "CommentConnection", totalCount: 3 } }), { comments: 3 });
     const row = screen.getByTestId("card-affordances");
     expect(row.className).toContain("flex-nowrap");
+    // It spreads across the card, share closing it at the right edge
+    // (`PostCard.jsx`, the geek round).
+    expect(row.className).toContain("justify-between");
+    expect(row.className).toContain("w-full");
     expect(row).toContainElement(screen.getByTestId("card-stance"));
     expect(row).toContainElement(screen.getByTestId("card-comments"));
     expect(row).toContainElement(screen.getByTestId("card-share"));

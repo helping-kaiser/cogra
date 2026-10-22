@@ -8,21 +8,23 @@
 // (design/guidelines/copy-voice.md "The coming-soon surfaces"), and no
 // action — nothing fills this one, not yet anything at all.
 //
-// Reachable only from the feed's chats affordance today (`cogra-band.tsx`
-// is the one caller that passes `onChats`), so the back arrow's one
-// destination is the feed.
+// Reached from a root band's chats affordance (the feed's, your own
+// profile's) and from a profile's Message; the back arrow names where it was
+// opened from (ChatsComingSoon.md:15-17), the feed when nothing says.
 
 import { EmptyState } from "@/lib/ui/empty-state";
+import { backFor } from "@/lib/ui/back-origin";
 import { PageHeader } from "@/lib/ui/page-header";
 
-export function ChatsView() {
+export function ChatsView({ from = null }: { from?: string | null }) {
+  const back = backFor(from);
   return (
     <main className="flex w-full flex-col">
       <PageHeader
         title="Chats"
-        backHref="/feed"
+        backHref={back.href}
         backScroll={false}
-        backLabel="Back to feed"
+        backLabel={back.label}
         backTestId="chats-back"
       />
       <div className="flex flex-col px-6 py-2">

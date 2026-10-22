@@ -74,10 +74,11 @@ const DESTINATIONS: Partial<Record<NavSlot, string>> = {
   profile: "/profile",
 };
 
-// Five labelled slots on a narrow phone: the label shortens rather than
-// wrapping to a second line, which would push the bar past 64px.
+// TEXT SCALE IS NEVER CAPPED (`BottomNav.jsx`; readme §4 *Type*, K13.4): above
+// 1.3× a label may wrap to a second line, and the bar grows past its 64px
+// minimum to hold it — a label is never shortened to an ellipsis.
 const ITEM =
-  "cg-state cg-focus flex min-w-0 flex-1 flex-col items-center gap-1 truncate rounded-medium px-0.5 py-2 text-label-medium";
+  "cg-state cg-focus flex min-w-0 flex-1 flex-col items-center gap-1 whitespace-normal break-words rounded-medium px-0.5 py-2 text-center text-label-medium";
 
 export function BottomNav({
   active,

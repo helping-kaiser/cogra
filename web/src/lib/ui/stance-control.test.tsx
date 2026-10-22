@@ -364,6 +364,33 @@ describe("the stance control at rest", () => {
     expect(control().className).toContain("min-w-12");
   });
 
+  // THE WIDE ANCHOR (StanceControl.jsx `wide`; ProfileHeader.jsx): the row's
+  // one action on a profile, stretched in the outline button's clothes, its
+  // words drawn beside the face only while there is no pair to show.
+  it("wears the wide anchor's outline and words where the profile asks for it", async () => {
+    renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} wide />, {
+      store: signedInStore(),
+      stanceData: createStubStanceData({}),
+    });
+    await settle();
+    expect(control().className).toContain("flex-1");
+    expect(control().className).toContain("border-outline");
+    expect(control().className).toContain("min-h-10");
+    expect(screen.getByTestId(`${PREFIX}-words`)).toHaveTextContent("Your opinion");
+    // The words are drawn, never a second name.
+    expect(control()).toHaveAccessibleName("Give your opinion on this post");
+  });
+
+  it("drops the wide anchor's words once there is a pair to show", async () => {
+    renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} wide />, {
+      store: signedInStore(),
+      stanceData: createStubStanceData({ seed: { "post-1": { records: [{ pDirected: 0.55, pInterest: 0.2 }] } } }),
+    });
+    await settle();
+    expect(screen.queryByTestId(`${PREFIX}-words`)).toBeNull();
+    expect(screen.getByTestId(`${PREFIX}-resting-exact`)).toHaveTextContent("+0.55 / +0.20");
+  });
+
   it("keeps the standing it has when a re-read faults", async () => {
     const data = mount({ seed: { "post-1": { records: [{ pDirected: 0.55, pInterest: 0.2 }] } } });
     await settle();

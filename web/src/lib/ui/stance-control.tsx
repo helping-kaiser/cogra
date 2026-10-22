@@ -283,6 +283,7 @@ export function StanceControl({
   lineFaceInk,
   borrowed = false,
   vouchesIn = false,
+  wide = false,
 }: {
   target: StanceTargetRef;
   /**
@@ -338,6 +339,15 @@ export function StanceControl({
    * act. Off by default — every other host renders exactly as before.
    */
   vouchesIn?: boolean;
+  /**
+   * THE WIDE ANCHOR (the master's `wide`, profile round 2026-09-01): the
+   * presentational variant a profile header wears — the same anchor stretched
+   * to the row in the outline button's clothes, the words `Your opinion`
+   * drawn beside the face where there is no pair to show, because there the
+   * opinion IS the row's one action and a lone face at full width reads as
+   * lost. Tap, hold, pad and severance are unchanged.
+   */
+  wide?: boolean;
 }) {
   const data = useStanceData();
   const phase = useAuthPhase();
@@ -1179,14 +1189,15 @@ export function StanceControl({
     // the card or the link behind it.
     <div
       {...testAttributes(node)}
-      className="relative flex min-w-0 flex-col gap-1"
+      className={`relative flex min-w-0 flex-col gap-1${wide ? " w-full" : ""}`}
       onClick={(event) => event.stopPropagation()}
       onPointerDown={(event) => event.stopPropagation()}
       onPointerUp={(event) => event.stopPropagation()}
     >
       {padOnly === undefined && (
-        <div className="flex min-w-0 items-center gap-2">
-          {/* 48px minimum, including at rest (design.md §4). */}
+        <div className={`flex min-w-0 items-center gap-2${wide ? " w-full" : ""}`}>
+          {/* 48px minimum, including at rest (design.md §4); the wide anchor
+              draws 40 and answers to 48 through `cg-hit`. */}
           <button
             ref={buttonRef}
             type="button"
@@ -1207,7 +1218,9 @@ export function StanceControl({
             // A long press is the shortcut, so the platform must not take
             // it for a selection or a context menu first.
             onContextMenu={(event) => event.preventDefault()}
-            className={`${BUTTON_CLASS} flex min-h-12 min-w-12 cursor-pointer touch-none select-none items-center justify-center gap-2 rounded-full border-0 bg-transparent px-3 text-label-large text-primary [-webkit-touch-callout:none]`}
+            className={`${BUTTON_CLASS} flex cursor-pointer touch-none select-none items-center justify-center gap-2 rounded-full bg-transparent px-3 text-label-large text-primary [-webkit-touch-callout:none] ${
+              wide ? "min-h-10 min-w-0 flex-1 border border-solid border-outline" : "min-h-12 min-w-12 border-0"
+            }`}
           >
             {/* Never a bare word: a viewer with no bundle gets a face outside
                 the table, muted and translucent — the control visibly waiting
@@ -1238,6 +1251,13 @@ export function StanceControl({
               )}
               {holding && <HoldRing testId={`${testIdPrefix}-hold-ring`} />}
             </span>
+            {wide && restingPair === null && (
+              // The wide anchor's words — only where there is no pair to show.
+              // Drawn, not spoken: the button's name already says it.
+              <span aria-hidden="true" className="whitespace-nowrap" data-testid={`${testIdPrefix}-words`}>
+                Your opinion
+              </span>
+            )}
             {restingPair !== null && (
               // NEVER WRAPS — the affordance row is one line by rule. The
               // face is the default reading and these numbers the geek one;

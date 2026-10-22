@@ -9,11 +9,31 @@ export type BackTarget = { readonly href: string; readonly label: string };
 const ORIGINS: Record<string, BackTarget> = {
   saved: { href: "/saved", label: "Back to Saved" },
   notifications: { href: "/notifications", label: "Back to Notifications" },
+  // The reader's own profile (Profile.md: a chronicle card's post reads
+  // `Back to your profile`; ChatsComingSoon.md:15, the band's chats).
+  profile: { href: "/profile", label: "Back to your profile" },
 };
+
+/** Someone else's profile as an origin: `from=u:<handle>`. */
+export const PERSON_ORIGIN = "u:";
+
+/** The `from` a surface opened from someone's profile carries. */
+export function personOrigin(handle: string): string {
+  return `${PERSON_ORIGIN}${handle}`;
+}
 
 const FEED: BackTarget = { href: "/feed", label: "Back to feed" };
 
 /** Where the back arrow goes and what it reads, by the `from` the page was opened with. */
 export function backFor(from: string | null | undefined): BackTarget {
-  return (from !== null && from !== undefined && ORIGINS[from]) || FEED;
+  if (from === null || from === undefined) return FEED;
+  // Someone else's profile reads `Back to the profile` (ProfileOther.md:63;
+  // ChatsComingSoon.md:17, a profile's Message).
+  if (from.startsWith(PERSON_ORIGIN) && from.length > PERSON_ORIGIN.length) {
+    return {
+      href: `/u/${encodeURIComponent(from.slice(PERSON_ORIGIN.length))}`,
+      label: "Back to the profile",
+    };
+  }
+  return ORIGINS[from] ?? FEED;
 }

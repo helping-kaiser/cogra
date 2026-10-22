@@ -9,8 +9,10 @@ import { renderWithProviders } from "@/test/providers";
 import { AppShell } from "./shell";
 
 let pathname = "/feed";
+let search = "";
 vi.mock("next/navigation", () => ({
   usePathname: () => pathname,
+  useSearchParams: () => new URLSearchParams(search),
 }));
 
 startMswServer();
@@ -24,6 +26,7 @@ function signedInStore() {
 beforeEach(() => {
   window.localStorage.clear();
   pathname = "/feed";
+  search = "";
 });
 
 describe("AppShell", () => {
@@ -50,6 +53,8 @@ describe("AppShell", () => {
   it.each([
     ["/feed", "feed.bottomBar"],
     ["/posts/post-1", "postDetail.bottomBar"],
+    ["/profile", "profile.bottomBar"],
+    ["/u/alice", "profile.bottomBar"],
   ])("names the bar on the registered screen %s after it", async (path, bar) => {
     pathname = path;
     renderWithProviders(
@@ -65,7 +70,7 @@ describe("AppShell", () => {
     expect(screen.queryByTestId("bottom-nav")).not.toBeInTheDocument();
   });
 
-  it.each(["/posts/post-1/edit", "/u/alice"])(
+  it.each(["/posts/post-1/edit"])(
     "keeps the bar's own ids on %s, whose screen is not registered",
     async (path) => {
       pathname = path;
@@ -88,7 +93,10 @@ describe("AppShell", () => {
       </AppShell>,
       { store: signedInStore() },
     );
-    expect(await screen.findByTestId("nav-profile")).toHaveAttribute("aria-current", "page");
+    expect(await screen.findByTestId(byNode("profile.bottomBar.profileSlot"))).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
   });
 
   it("frames an anonymous reader with the same bar, gated slots asking instead of bouncing", async () => {
@@ -117,20 +125,35 @@ describe("AppShell", () => {
     expect(prompt.open).toBe(true);
   });
 
+  // A DRILL-IN KEEPS ITS ORIGIN'S ROOT LIT (PostDetail.md:57-59;
+  // ProfileOther.md:11; BottomNav.prompt.md, jakob 2026-10-06): from the feed,
+  // a link or a notification the Feed; from a Saved row the Profile Saved
+  // hangs from. Someone's profile is a drill-in exactly as a post is.
   it.each([
-    ["/posts/post-1", "postDetail.bottomBar.feedSlot", "postDetail.bottomBar.profileSlot"],
-    ["/u/alice", "nav-feed", "nav-profile"],
-  ])("keeps the bar on the read drill-in %s", async (path, feedSlot, profileSlot) => {
+    ["/posts/post-1", "", "feedSlot"],
+    ["/posts/post-1", "from=notifications", "feedSlot"],
+    ["/posts/post-1", "from=saved", "profileSlot"],
+    // A post opened from your own profile's chronicle hangs off Profile.
+    ["/posts/post-1", "from=profile", "profileSlot"],
+    ["/posts/post-1", "from=u:alice", "feedSlot"],
+    ["/u/alice", "", "feedSlot"],
+    ["/u/alice", "from=saved", "profileSlot"],
+  ])("lights the drill-in's origin root (%s %s)", async (path, query, lit) => {
     pathname = path;
+    search = query;
+    const bar = path === "/u/alice" ? "profile.bottomBar" : "postDetail.bottomBar";
     renderWithProviders(
       <AppShell>
         <p>content</p>
       </AppShell>,
       { store: signedInStore() },
     );
-    // A drill-in selects no tab.
-    expect(await screen.findByTestId(feedSlot)).not.toHaveAttribute("aria-current");
-    expect(screen.getByTestId(profileSlot)).not.toHaveAttribute("aria-current");
+    const unlit = lit === "feedSlot" ? "profileSlot" : "feedSlot";
+    expect(await screen.findByTestId(byNode(`${bar}.${lit}`))).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByTestId(byNode(`${bar}.${unlit}`))).not.toHaveAttribute("aria-current");
   });
 
   // The bar is chrome by structure: a viewport-tall column, a scrolling

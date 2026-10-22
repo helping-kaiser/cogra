@@ -49,16 +49,19 @@ describe("rowLabel", () => {
     expect(rowLabel(node("REVIEW"), false)).toBe("Edited a comment");
   });
 
-  // The anchoring record and its updates share one honest label — the chain
-  // shape is not visible per row.
-  it("gives the registration chain one label either way", () => {
-    expect(rowLabel(node("REGISTRATION"), true)).toBe("Profile update");
-    expect(rowLabel(node("REGISTRATION"), false)).toBe("Profile update");
+  // The anchoring record and its updates share one label — the chain shape
+  // is not visible per row — in whose words the page is (copy-voice.md, the
+  // profile's carried-over rows).
+  it("gives the registration chain one label either way, yours or theirs", () => {
+    expect(rowLabel(node("REGISTRATION"), true)).toBe("Updated their profile");
+    expect(rowLabel(node("REGISTRATION"), false)).toBe("Updated their profile");
+    expect(rowLabel(node("REGISTRATION"), true, true)).toBe("Updated your profile");
   });
 
-  it("reads both stance families as one gesture", () => {
-    expect(rowLabel(node("OPINION"), true)).toBe("Shared a stance");
-    expect(rowLabel(node("AFFINITY"), false)).toBe("Shared a stance");
+  // The reader's word is opinion; "stance" never reaches a screen.
+  it("reads both stance families as one gesture, in the reader's word", () => {
+    expect(rowLabel(node("OPINION"), true)).toBe("Gave an opinion");
+    expect(rowLabel(node("AFFINITY"), false)).toBe("Gave an opinion");
   });
 
   // A family this build does not know still gets a row rather than an empty
@@ -144,6 +147,10 @@ describe("fetchAuthorRecords", () => {
                     family: "PUBLISH",
                     targetId: "mint:r-1",
                     terminalId: null,
+                    landedAt: "2026-10-20T10:00:00Z",
+                    pDirected: 0,
+                    pInterest: 0,
+                    severed: null,
                     target: {
                       __typename: "Post",
                       id: "p-1",
@@ -165,10 +172,60 @@ describe("fetchAuthorRecords", () => {
     expect(outcome.kind).toBe("success");
     if (outcome.kind !== "success") return;
     expect(outcome.value.items).toEqual([
-      { id: "r-1", label: "Published a post", snippet: "A title", postId: "p-1" },
+      {
+        id: "r-1",
+        kind: "post",
+        label: "Published a post",
+        aside: null,
+        snippet: "A title",
+        postId: "p-1",
+        landedAt: "2026-10-20T10:00:00Z",
+        face: null,
+      },
     ]);
     expect(outcome.value.endCursor).toBe("cursor-1");
     expect(outcome.value.hasNextPage).toBe(true);
+  });
+
+  // An opinion on a person wears its own face and names them (`on @mira`);
+  // it has nowhere to open.
+  it("gives an opinion on a person its face and its name", async () => {
+    server.use(
+      gqlLink.query("AuthorRecords", () =>
+        HttpResponse.json({
+          data: {
+            records: records([
+              {
+                __typename: "RecordEdge",
+                node: {
+                  __typename: "Record",
+                  id: "r-2",
+                  family: "OPINION",
+                  targetId: "prof:mira",
+                  terminalId: null,
+                  landedAt: "2026-10-19T10:00:00Z",
+                  pDirected: 0.4,
+                  pInterest: 0.5,
+                  severed: false,
+                  target: { __typename: "User", id: "u-9", handle: "mira" },
+                  terminal: null,
+                },
+              },
+            ]),
+          },
+        }),
+      ),
+    );
+    const outcome = await fetchAuthorRecords(client(), "u-1", "everything", null, true);
+    if (outcome.kind !== "success") throw new Error(outcome.kind);
+    expect(outcome.value.items[0]).toMatchObject({
+      kind: "opinion",
+      label: "Gave an opinion",
+      aside: "on @mira",
+      snippet: null,
+      postId: null,
+      face: { pDirected: 0.4, pInterest: 0.5, severed: false },
+    });
   });
 
   // The chips are a family filter, and "everything" is the absence of one —

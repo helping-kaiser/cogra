@@ -23,8 +23,8 @@
 // (`design/designs/canonical/screens/_shared.jsx`: a `flex: 1` scroller with
 // the nav as a static sibling) and what the ruling asks for.
 
-import { usePathname } from "next/navigation";
-import { useRef } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense, useRef, type ReactNode } from "react";
 
 import { announceFeedReselect } from "@/lib/feed/feed-reselect";
 import { notificationsOrigin } from "@/lib/notifications/origin";
@@ -41,6 +41,29 @@ const ROOT_SLOT: Record<BellRoot, NavSlot> = {
 };
 import { PadParkingProvider } from "@/lib/ui/pad-parking";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
+
+/**
+ * THE ROOT A DRILL-IN KEEPS LIT (PostDetail.md:57-59; ProfileOther.md:11;
+ * ProfileDeleted.md:27; `BottomNav.prompt.md`, jakob 2026-10-06): the root a
+ * post or someone's profile was opened from stays lit on the drill-in. A
+ * Saved row, and your own profile's chronicle, belong to the Profile stack
+ * (`from=saved`, `from=profile`); anything else —
+ * the feed, a link, a notification — lights the Feed, where author chips and
+ * links land. (`from=explore` arrives with the Explore surface.)
+ */
+export function detailRoot(from: string | null): NavSlot {
+  return from === "saved" || from === "profile" ? "profile" : "feed";
+}
+
+/**
+ * Reads the detail's origin off the URL. `useSearchParams` opts its subtree
+ * into client rendering up to the nearest Suspense boundary
+ * (node_modules/next/dist/docs/.../use-search-params.md, "Prerendering"), so
+ * the caller bounds it to the bar and hands the fallback the home root.
+ */
+function DetailBar({ bar }: { bar: (active: NavSlot) => ReactNode }) {
+  return bar(detailRoot(useSearchParams().get("from")));
+}
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const phase = useAuthPhase();
@@ -69,19 +92,36 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           : null;
   // The bar is drawn once, here, but its node belongs to the SCREEN it rides
   // (`design/designs/canonical/nodes.json` registers `feed.bottomBar`,
-  // `postDetail.bottomBar` and `saved.bottomBar`), so the registered screens
-  // name it by route.
+  // `postDetail.bottomBar`, `profile.bottomBar` and `saved.bottomBar`), so the
+  // registered screens name it by route. Your own profile and someone else's
+  // are one surface (`Profile`, `ProfileOther`: the `profile` prefix).
   const screen =
     pathname === "/feed"
       ? "feed"
       : /^\/posts\/[^/]+$/.test(pathname)
         ? "postDetail"
-        : pathname === "/saved"
-          ? "saved"
-          : pathname === "/notifications"
-            ? "notifications"
-            : null;
+        : pathname === "/profile" || /^\/u\/[^/]+$/.test(pathname)
+          ? "profile"
+          : pathname === "/saved"
+            ? "saved"
+            : pathname === "/notifications"
+              ? "notifications"
+              : null;
+  // A drill-in — a post's detail or someone's profile — reads its origin off
+  // the URL and keeps that root lit.
+  const drillIn = screen === "postDetail" || (screen === "profile" && pathname !== "/profile");
   const scroller = useRef<HTMLDivElement>(null);
+  const bar = (lit: NavSlot | null) => (
+    <BottomNav
+      active={lit}
+      signedIn={signedIn}
+      node={screen === null ? undefined : { path: `${screen}.bottomBar` }}
+      // Over the feed's own root the Feed slot is a re-tap the feed
+      // answers; from anywhere deeper it is the way back to the root,
+      // which comes back at the scroll it was left (Feed.md:85).
+      onReselectFeed={pathname === "/feed" ? announceFeedReselect : undefined}
+    />
+  );
   return (
     <div className="flex h-full flex-col">
       <ScrollHostProvider value={scroller}>
@@ -93,17 +133,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         >
           {children}
         </div>
-        {showBar && (
-          <BottomNav
-            active={active}
-            signedIn={signedIn}
-            node={screen === null ? undefined : { path: `${screen}.bottomBar` }}
-            // Over the feed's own root the Feed slot is a re-tap the feed
-            // answers; from anywhere deeper it is the way back to the root,
-            // which comes back at the scroll it was left (Feed.md:85).
-            onReselectFeed={pathname === "/feed" ? announceFeedReselect : undefined}
-          />
-        )}
+        {showBar &&
+          (drillIn ? (
+            <Suspense fallback={bar(detailRoot(null))}>
+              <DetailBar bar={bar} />
+            </Suspense>
+          ) : (
+            bar(active)
+          ))}
         </PadParkingProvider>
       </ScrollHostProvider>
     </div>

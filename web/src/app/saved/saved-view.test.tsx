@@ -275,6 +275,8 @@ describe("SavedScreen — a feed of kept things", () => {
     const reply = screen.getByTestId("saved-comment-c1-reply");
     expect(reply).toHaveAttribute("href", "/posts/p1?comment=c1&from=saved&reply=1");
     expect(reply).toHaveAccessibleName("Reply to @tobias");
+    // Its row spreads across the card, as the post card's does (CommentCard.jsx).
+    expect(screen.getByTestId("saved-comment-c1-affordances").className).toContain("justify-between");
     expect(screen.getByTestId("saved-person-u3-link")).toHaveAttribute("href", "/u/mira?from=saved");
   });
 

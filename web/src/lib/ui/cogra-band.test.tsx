@@ -40,7 +40,9 @@ describe("CograBand", () => {
     rerender(<CograBand onChats={onChats} />);
     const chats = screen.getByTestId("band-chats");
     expect(chats).toHaveAttribute("aria-label", "Chats");
-    expect(chats.className).toContain("size-12");
+    // `BandIcon`: 40px of ink, the 48px target through `cg-hit`.
+    expect(chats.className).toContain("size-10");
+    expect(chats.className).toContain("cg-hit");
     fireEvent.click(chats);
     expect(onChats).toHaveBeenCalledOnce();
   });

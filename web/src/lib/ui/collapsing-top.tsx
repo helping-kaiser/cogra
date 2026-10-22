@@ -47,7 +47,14 @@ export function CollapsingTop({
   children,
   initiallyHidden = false,
   onBackToTop,
+  flush = false,
 }: {
+  /**
+   * No 8px under the region. The feed, Saved and Notifications draw their
+   * list's 8px top padding here; the profile's header stands directly under
+   * its bar (`ProfileOwnBody`, `ProfileOtherBody`).
+   */
+  flush?: boolean;
   children: React.ReactNode;
   /** Whether the first paint should already show this region gone. */
   initiallyHidden?: boolean;
@@ -120,7 +127,7 @@ export function CollapsingTop({
         // The duration is the token, not a literal, so a reader who asked for
         // stillness is answered by `tokens-2.css` zeroing it rather than by
         // this component remembering to ask.
-        className={`sticky top-0 z-20 flex flex-col gap-4 bg-surface pb-2 transition-transform duration-[var(--duration-collapsing-top)] ${
+        className={`sticky top-0 z-20 flex flex-col gap-4 bg-surface ${flush ? "" : "pb-2"} transition-transform duration-[var(--duration-collapsing-top)] ${
           hidden ? "-translate-y-[110%]" : "translate-y-0"
         }`}
       >
