@@ -736,6 +736,25 @@ describe("ProfileScreen", () => {
     await waitFor(() => expect(families).toEqual([null, "PUBLISH"]));
   });
 
+  // THE PAGE THAT DID NOT ARRIVE (Profile.md:35): the quiet line and Retry
+  // where the page would have stood — never the error colour, never Show more.
+  it("says a chronicle page did not arrive, quietly, with Retry", async () => {
+    server.use(
+      gqlLink.query("UserProfile", () =>
+        HttpResponse.json({ data: { user: profile("u2", "ada") } }),
+      ),
+      gqlLink.query("AuthorRecords", () => HttpResponse.error()),
+    );
+    renderWithProviders(<ProfileScreen handle="ada" />);
+    const line = await screen.findByTestId("profile-rows-failed");
+    expect(line).toHaveTextContent("Couldn't load more");
+    expect(line.className).not.toContain("text-error");
+    expect(screen.queryByTestId("profile-rows-more")).not.toBeInTheDocument();
+    server.use(recordsHandler([{ id: "act:a:1:publish", family: "PUBLISH", postId: "p1" }]));
+    fireEvent.click(screen.getByTestId("profile-rows-retry"));
+    expect(await screen.findByTestId(byNode("profile.chronicle.act", "1"))).toBeInTheDocument();
+  });
+
   it("offers a retry on the nothing-loaded transport fault", async () => {
     server.use(gqlLink.query("UserProfile", () => HttpResponse.error()));
     renderWithProviders(<ProfileScreen handle="ada" />);

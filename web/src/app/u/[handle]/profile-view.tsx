@@ -132,6 +132,8 @@ export function ProfileScreen({
   const [filter, setFilter] = useState<ChronicleFilter>("everything");
   const [rows, setRows] = useState<readonly RecordRow[]>([]);
   const [rowsLoading, setRowsLoading] = useState(false);
+  // Which read the chronicle last asked for, as state the render can read.
+  const [pageAsk, setPageAsk] = useState(0);
   const [pageFailed, setPageFailed] = useState(false);
   const [endCursor, setEndCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
@@ -156,6 +158,7 @@ export function ProfileScreen({
   const loadRows = useCallback(
     async (authorId: string, which: ChronicleFilter, after: string | null, mine: boolean) => {
       const request = (rowsRequest.current += 1);
+      setPageAsk(request);
       setRowsLoading(true);
       setPageFailed(false);
       const outcome = await fetchAuthorRecords(client, authorId, which, after, mine);
@@ -264,17 +267,17 @@ export function ProfileScreen({
     enabled: hasMore && !pageFailed && !rowsLoading,
   });
   const tailIndex = tailIndexOf(rows.length);
-  // `Loading…` stands only once a next page is 200ms late (Profile.md:33).
-  const [loadingShown, setLoadingShown] = useState(false);
+  // `Loading…` stands only once a next page is 200ms late (Profile.md:33):
+  // the timer marks the read it was started for, so an answered read — or the
+  // next one — is never shown late.
+  const [lateRead, setLateRead] = useState<number | null>(null);
   const paging = rowsLoading && rows.length > 0;
   useEffect(() => {
-    if (!paging) {
-      setLoadingShown(false);
-      return;
-    }
-    const timer = window.setTimeout(() => setLoadingShown(true), LOADING_AFTER_MS);
+    if (!paging) return;
+    const timer = window.setTimeout(() => setLateRead(pageAsk), LOADING_AFTER_MS);
     return () => window.clearTimeout(timer);
-  }, [paging]);
+  }, [paging, pageAsk]);
+  const loadingShown = paging && lateRead === pageAsk;
 
   // A DELETED ACCOUNT READS OFF ITS REDACTED STATUS (ER-G10, design digest
   // item 19): the wire serves null values and the mark.
