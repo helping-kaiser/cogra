@@ -455,6 +455,9 @@ internal fun ComposeWizardScreen(
                                 )
                             },
                         )
+                        // `ComposeUploading`: the aside stands ABOVE Next, out of the
+                        // scrolling body, only while an upload runs.
+                        if (state.mode == BodyMode.Media && state.uploadsRunning) UploadAside()
                         CograButton(
                             text = "Next",
                             onClick = onNext,

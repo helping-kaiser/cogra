@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -25,7 +24,7 @@ import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.MediaThumb
 import com.cogra.core.designsystem.v2.media.REMOVE_VIDEO
 import com.cogra.core.designsystem.v2.media.ThumbBadge
-import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.core.designsystem.v2.token.TypeTokens
 import com.cogra.domain.content.MAX_DESCRIPTION_CHARS
 import com.cogra.domain.content.MAX_TITLE_CHARS
 import com.cogra.feature.content.R
@@ -110,21 +109,6 @@ internal fun ColumnScope.DetailsStepBody(
 
         topics()
         references()
-
-        // The aside stands only while an upload runs (`ComposeUploading`);
-        // the details stage at rest draws none.
-        if (state.mode == BodyMode.Media && state.uploadsRunning) {
-            Text(
-                text = "Pictures upload while you write — signing waits for them.",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = Space.x2)
-                    .testTag("wizard_upload_footnote"),
-            )
-        }
     }
 }
 
@@ -174,8 +158,28 @@ private fun ClipBlock(
             subject = DescribeSubject.Video,
             testTag = "wizard_describe_counter",
             modifier = Modifier.fillMaxWidth(),
+            node = COMPOSE_DETAILS / "describeRow",
         )
     }
+}
+
+/**
+ * `ComposeUploading`'s aside: `Pictures upload while you write — signing
+ * waits for them.`, label-small at the ground weight, centred, standing
+ * directly above Next while an upload runs (the board's `flex: 1` pushes it
+ * there).
+ */
+@Composable
+internal fun UploadAside() {
+    Text(
+        text = "Pictures upload while you write — signing waits for them.",
+        style = MaterialTheme.typography.labelSmall.copy(fontWeight = TypeTokens.QuietLabelWeight),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("wizard_upload_footnote"),
+    )
 }
 
 /** `ComposeDetailsVideo.jsx`: the clip tile, `width={54} height={96}`. */
