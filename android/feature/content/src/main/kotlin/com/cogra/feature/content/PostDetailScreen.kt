@@ -142,6 +142,8 @@ fun PostDetailRoute(
     landOn: String? = null,
     /** The landing opens the reply composer aimed at that comment (a comment card's glyph). */
     aimReply: Boolean = false,
+    /** Just signed here (`ComposeLanded`): the snackbar says so once. */
+    published: Boolean = false,
     viewModel: PostDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -169,6 +171,7 @@ fun PostDetailRoute(
     PostDetailScreen(
         state = state,
         viewerId = viewerId,
+        published = published,
         deletionBand = deletionBand,
         onRefresh = {
             threadToken++
@@ -361,6 +364,11 @@ fun PostDetailScreen(
      * the person leaves the feed, never this page.
      */
     hidden: HiddenSet? = null,
+    /**
+     * The post was just signed here (`ComposeLanded`): the page opens wearing
+     * Still settling and says so once on its snackbar.
+     */
+    published: Boolean = false,
 ) {
     val snackbar = remember { SnackbarHostState() }
     // THE PAGE'S SNACKBAR (`postDetail.snackbar`): the scope is the screen's,
@@ -368,6 +376,15 @@ fun PostDetailScreen(
     val scope = rememberCoroutineScope()
     val notify: (String) -> Unit = { text ->
         scope.launch { snackbar.showSnackbar(NodeSnackbarVisuals(text, POST_DETAIL / "snackbar")) }
+    }
+    // ComposeLanded.md: ONE confirmation per signing — saved, so a return to
+    // this page down the back stack never says it twice.
+    var landedSaid by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(published) {
+        if (published && !landedSaid) {
+            landedSaid = true
+            notify(LANDED_SNACKBAR)
+        }
     }
     // THE MENU SAVES THROUGH THE ONE OVERLAY AND HIDES THROUGH THE ONE SET, its
     // aftermath on this page's snackbar — `Undo` on `postDetail.snackbar.action`.
@@ -1050,3 +1067,6 @@ internal const val DETAIL_BLOCK_TAG = "detail_block"
 
 private const val TARGET_TITLE_CHARS = 48
 private const val TARGET_SNIPPET_CHARS = 120
+
+/** `ComposeLanded`'s snackbar, verbatim. */
+const val LANDED_SNACKBAR = "Signed — it's in the thread now, still settling."
