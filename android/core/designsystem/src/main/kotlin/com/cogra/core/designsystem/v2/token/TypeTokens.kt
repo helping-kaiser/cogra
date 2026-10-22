@@ -19,4 +19,10 @@ object TypeTokens {
      * dropped to 400 (`CommentCard.jsx` head row, `targetDetail.removed`).
      */
     val SystemVoiceWeight = FontWeight.Normal
+
+    /**
+     * A row's trailing time at the ground's weight: `ContentRow.jsx`'s
+     * `label-small` carries its size and leading only, never the rung's 500.
+     */
+    val RowTrailingWeight = FontWeight.Normal
 }

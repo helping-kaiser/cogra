@@ -52,6 +52,7 @@ import com.cogra.core.designsystem.bundleReadout
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.pair
 import com.cogra.core.designsystem.v2.media.CograAvatar
+import com.cogra.core.designsystem.v2.token.TypeTokens
 
 private val DISC = 40.dp
 
@@ -212,6 +213,7 @@ private fun TrailingEdge(trailing: String?, unread: Boolean, part: (String) -> D
             Text(
                 text = it,
                 style = MaterialTheme.typography.labelSmall,
+                fontWeight = TypeTokens.RowTrailingWeight,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.dataNode(part("trailing")),
             )
@@ -247,8 +249,11 @@ private fun TitleLine(title: String, quiet: Boolean, aside: String?, part: (Stri
             color = if (quiet) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+            // The heading spans its column, unless an aside rides its baseline
+            // (`ContentRow.jsx`: a block in the column, content-width beside
+            // the aside).
             modifier = Modifier
-                .weight(1f, fill = false)
+                .weight(1f, fill = aside == null)
                 .dataNode(part("title")),
         )
         aside?.let {
