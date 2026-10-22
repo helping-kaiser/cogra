@@ -12,21 +12,27 @@ import { useId, type ReactNode } from "react";
 
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 
-/**
- * The box itself, without the label above it.
- *
- * Exported because one composer draws its own: the reply's words are the
- * screen and carry no label (the target sits above them and names what is
- * being answered — `ReplyCompose`), but the BOX is not theirs to redraw. The
- * master's own note about the same escape hatch,
- * `design/designs/canonical/screens/ComposeWords.jsx:7-13`: spell the box "at
- * `TextField`'s own values" rather than invent one, and never drop it —
- * a borderless field says nothing about where the writing goes.
- */
-export const FIELD_BOX =
-  "cg-focus box-border w-full rounded-extra-small border border-outline bg-transparent px-3 py-2.5 text-body-large text-on-surface placeholder:text-on-surface-variant disabled:opacity-[var(--state-disabled)]";
+/** The box's ground, whatever its shape: the corner, the field border, body-large. */
+const FIELD_GROUND =
+  "cg-focus box-border w-full rounded-extra-small border bg-transparent text-body-large text-on-surface placeholder:text-on-surface-variant disabled:opacity-[var(--state-disabled)]";
 
-const FIELD = FIELD_BOX;
+/**
+ * A box without the label above it, for the one composer that draws its own:
+ * the reply's words are the screen and carry no label (the target sits above
+ * them and names what is being answered — `ReplyCompose`). It keeps the
+ * padding it was built at; the reply's board draws `WordsBody`, whose box
+ * pads 12 all round, and conforming it is the reply surface's own audit.
+ */
+export const FIELD_BOX = `${FIELD_GROUND} border-outline px-3 py-2.5`;
+
+/**
+ * `TextField.jsx`'s two boxes: one line pads `8px 12px` (42px tall over a
+ * 24px line), a multi-line box pads 8 all round. Over its cap the border takes
+ * the error colour, the master's `error` outline.
+ */
+const FIELD_LINE = `${FIELD_GROUND} px-3 py-2`;
+const FIELD_AREA = `${FIELD_GROUND} p-2`;
+const fieldBorder = (error: boolean) => (error ? "border-error" : "border-outline");
 
 /**
  * THE GROWTH LAW, AS A BOX (jakob 2026-09-22).
@@ -54,26 +60,28 @@ export const GROWING_FIELD =
   "col-start-1 row-start-1 resize-none overflow-hidden border-0 bg-transparent p-0 [font:inherit] text-on-surface outline-none placeholder:text-on-surface-variant";
 
 /**
- * What the box draws AROUND its lines: `py-2.5` on both edges (0.625rem
- * each, so 1.25rem) and the 1px border on both (2px), as FIELD spells them.
- * It is written out once here because the floor below is a `min-height` and
- * FIELD is a border box — a floor of N lines that did not clear the chrome
- * would land inside the text instead of under it. Summed rather than left as
- * `0.625rem * 2` because that is how a style declaration serialises, and a
+ * What the box draws AROUND its lines: `p-2` on both edges (0.5rem each, so
+ * 1rem) and the 1px border on both (2px), as FIELD_AREA spells them. It is
+ * written out once here because the floor below is a `min-height` and the box
+ * is a border box — a floor of N lines that did not clear the chrome would
+ * land inside the text instead of under it. Summed rather than left as
+ * `0.5rem * 2` because that is how a style declaration serialises, and a
  * constant that does not read back as it was written is one a test has to
  * spell a second way.
  */
-const FIELD_CHROME = "calc(1.25rem + 2px)";
+const FIELD_CHROME = "calc(1rem + 2px)";
 
 function GrowingBox({
   value,
   minRows,
   disabled,
+  error,
   children,
 }: {
   value: string;
   minRows: number;
   disabled: boolean;
+  error: boolean;
   children: ReactNode;
 }) {
   return (
@@ -109,7 +117,7 @@ function GrowingBox({
       // for the same reason: `disabled:` is a state of the CONTROL, and the
       // control is no longer what carries the border (the sensitive sheet's
       // reason is greyed out until its mark is on).
-      className={`${FIELD} cg-focus-within grid min-h-0 overflow-y-auto ${
+      className={`${FIELD_AREA} cg-focus-within grid min-h-0 overflow-y-auto ${fieldBorder(error)} ${
         disabled ? "opacity-[var(--state-disabled)]" : ""
       }`}
     >
@@ -249,7 +257,7 @@ export function TextField({
       <div className="flex flex-none items-baseline gap-2">
         <label
           htmlFor={id}
-          className="flex-1 text-label-large text-on-surface"
+          className={`flex-1 text-label-large ${error ? "text-error" : "text-on-surface"}`}
           {...testAttributes(part(node, "label"))}
         >
           {label}
@@ -258,7 +266,7 @@ export function TextField({
           // Some corners say more than "Optional" — where the words land is
           // what makes them worth writing (the sensitive sheet's reason).
           <span
-            className="text-body-small text-on-surface-variant"
+            className="text-[length:var(--text-label-small)]/[var(--text-label-small--line-height)] text-on-surface-variant"
             {...testAttributes(part(node, "corner"))}
           >
             {optionalLabel}
@@ -266,7 +274,7 @@ export function TextField({
         )}
       </div>
       {multiline ? (
-        <GrowingBox value={value} minRows={rows} disabled={disabled}>
+        <GrowingBox value={value} minRows={rows} disabled={disabled} error={Boolean(error)}>
           <textarea
             id={id}
             {...testAttributes(part(node, "input"), testId)}
@@ -291,7 +299,7 @@ export function TextField({
           aria-invalid={error ? true : undefined}
           aria-describedby={described}
           onChange={(event) => onChange(event.target.value)}
-          className={`${FIELD} min-h-11`}
+          className={`${FIELD_LINE} ${fieldBorder(Boolean(error))}`}
         />
       )}
       {/* `error` is the one place the failure role is spent. A validation

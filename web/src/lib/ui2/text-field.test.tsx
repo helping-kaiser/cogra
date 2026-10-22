@@ -95,14 +95,14 @@ describe("TextField", () => {
       <TextField label="Why?" multiline rows={1} value="" onChange={() => {}} testId="why" />,
     );
     expect(screen.getByTestId("growing-box").style.minHeight).toBe(
-      "calc(1lh + calc(1.25rem + 2px))",
+      "calc(1lh + calc(1rem + 2px))",
     );
 
     rerender(
       <TextField label="What's in the picture" multiline rows={3} value="" onChange={() => {}} testId="why" />,
     );
     expect(screen.getByTestId("growing-box").style.minHeight).toBe(
-      "calc(3lh + calc(1.25rem + 2px))",
+      "calc(3lh + calc(1rem + 2px))",
     );
   });
 
@@ -228,6 +228,27 @@ describe("TextField", () => {
 
     it("`used` overrides the arithmetic for a fixture drawing only a tail", () => {
       expect(countReading("only the tail", 500, 507)).toEqual({ text: "7 over", over: true });
+    });
+  });
+
+  // `TextField.jsx`: one line pads `8px 12px`, a multi-line box pads 8 all
+  // round, and over the cap the border and the label take the error colour.
+  describe("the box, at the master's values", () => {
+    it("pads a single line 8 by 12 and a multi-line box 8 all round", () => {
+      const { rerender } = render(<TextField label="Title" value="" onChange={() => {}} testId="t" />);
+      expect(screen.getByTestId("t").className).toContain("px-3 py-2");
+      expect(screen.getByTestId("t").className).not.toContain("min-h-11");
+      rerender(<TextField label="Description" multiline value="" onChange={() => {}} testId="t" />);
+      expect(screen.getByTestId("growing-box").className).toContain("p-2");
+    });
+
+    it("takes the error outline and an error label over its cap", () => {
+      render(
+        <TextField label="Title" value="x" onChange={() => {}} testId="t" error="A title is at most 100 characters." />,
+      );
+      expect(screen.getByTestId("t").className).toContain("border-error");
+      expect(screen.getByTestId("t").className).not.toContain("border-outline");
+      expect(screen.getByText("Title").className).toContain("text-error");
     });
   });
 });
