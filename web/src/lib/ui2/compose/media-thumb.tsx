@@ -272,7 +272,11 @@ export function MediaThumb({
           aria-label={removeLabel}
           data-testid={testId ? `${testId}-remove` : undefined}
           onClick={onRemove}
-          className={`cg-state cg-focus cg-hit absolute right-[3px] top-[3px] flex size-4 items-center justify-center rounded-full ${SNACKBAR}`}
+          // Inline, because `.cg-state` (unlayered) sets `position: relative`
+          // and would win over the `absolute` utility — the X would drop into
+          // the tile's flow instead of riding its corner.
+          style={{ position: "absolute" }}
+          className={`cg-state cg-focus cg-hit right-[3px] top-[3px] flex size-4 items-center justify-center rounded-full ${SNACKBAR}`}
         >
           <svg viewBox="0 0 24 24" width={10} height={10} fill="currentColor" aria-hidden="true">
             <path d={REMOVE_GLYPH} />

@@ -50,6 +50,8 @@ describe("MediaThumb", () => {
     const remove = screen.getByTestId("thumb-remove");
     expect(remove.className).toContain("cg-hit");
     expect(remove.className).toContain("size-4");
+    // `.cg-state` would make it relative; the X rides the corner.
+    expect(remove.style.position).toBe("absolute");
   });
 
   it("says how far an upload has got, in words as well as the ring", () => {
