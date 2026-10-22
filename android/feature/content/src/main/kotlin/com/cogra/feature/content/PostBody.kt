@@ -284,7 +284,7 @@ private fun Caption(
                     style = wordsStyle,
                     maxLines = if (clamping) reading.wordsClampLines else Int.MAX_VALUE,
                     onOverflow = { folded = true },
-                    testTag = node?.div("body")?.tag ?: "${testTagPrefix}_words",
+                    testTag = node.partTag("body", "${testTagPrefix}_words"),
                 )
             }
             shownDescription?.let {
@@ -294,7 +294,7 @@ private fun Caption(
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = if (clamping) DESCRIPTION_CLAMP_LINES else Int.MAX_VALUE,
                     onOverflow = { folded = true },
-                    testTag = node?.div("description")?.tag ?: "${testTagPrefix}_description",
+                    testTag = node.partTag("description", "${testTagPrefix}_description"),
                 )
             }
         }
@@ -304,7 +304,7 @@ private fun Caption(
     // and never navigates. Drawn on its `4px 0` padding, it answers at 48dp
     // (`PostCard.jsx:269-291`, `cg-hit`).
     if (collapsed && (folded || reading.alwaysOpenable)) {
-        Opener(open, onToggle = { open = !open }, testTag = node?.div("opener")?.tag ?: "${testTagPrefix}_opener")
+        Opener(open, onToggle = { open = !open }, testTag = node.partTag("opener", "${testTagPrefix}_opener"))
     }
 }
 
@@ -490,6 +490,9 @@ internal fun isSensitive(
 
 private fun FieldStatus.hidden(): Boolean =
     this == FieldStatus.REDACTED || this == FieldStatus.UNKNOWN
+
+/** [part]'s registered tag on a registered card, else the [fallback] the unregistered surfaces bind to. */
+private fun DataNode?.partTag(part: String, fallback: String): String = this?.div(part)?.tag ?: fallback
 
 /**
  * How a caption reads where it stands: [collapsed] on a summary card, folding

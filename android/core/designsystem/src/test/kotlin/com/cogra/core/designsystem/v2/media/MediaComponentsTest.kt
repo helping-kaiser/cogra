@@ -586,7 +586,7 @@ class MediaComponentsTest {
         compose.setContent {
             Cogra2PreviewTheme {
                 MediaGallery(
-                    items = listOf(MediaItem(url = null, aspectRatio = 0.8f, videoUrl = "https://example.invalid/c.mp4")),
+                    items = listOf(CLIP_WITHOUT_ALT),
                     testTag = "g",
                 )
             }
@@ -698,3 +698,6 @@ class MediaComponentsTest {
         const val TOLERANCE = 0.5f
     }
 }
+
+/** A clip nobody described. */
+private val CLIP_WITHOUT_ALT = MediaItem(url = null, aspectRatio = 0.8f, videoUrl = "https://example.invalid/c.mp4")

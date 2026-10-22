@@ -2538,7 +2538,9 @@ class ContentScreensTest {
      * chips are always a PREFIX (`TopicsLine.jsx`): a later, shorter tag never
      * stands where an earlier one folded.
      */
+    // The fold is measured, so it needs real glyph widths (the legacy mode's are a stub).
     @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     fun aNameTooLongForTheLineFoldsItAndEveryTagAfterIt() {
         renderFeed(
             FeedUiState(
@@ -2557,7 +2559,9 @@ class ContentScreensTest {
     }
 
     /** The line keeps two chips whole when they fit beside the counts — the board's own pair, at the board's width. */
+    // The fold is measured, so it needs real glyph widths (the legacy mode's are a stub).
     @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(qualifiers = "w411dp-h891dp")
     fun twoChipsThatFitTheLineBothStand() {
         renderFeed(
@@ -2578,7 +2582,9 @@ class ContentScreensTest {
     }
 
     /** Neither fits: the line falls all the way back to the counts. */
+    // The fold is measured, so it needs real glyph widths (the legacy mode's are a stub).
     @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     fun twoUnfittableNamesLeaveTheCountsAlone() {
         renderFeed(
             FeedUiState(
@@ -2636,7 +2642,7 @@ class ContentScreensTest {
             ),
             onOpenTopic = { opened = it },
         )
-        compose.onNodeWithTag("postDetail.card.tagsLine.tag:rust").performClick()
+        compose.onNodeWithTag("postDetail.card.tagsLine.tag:rust", useUnmergedTree = true).performClick()
         assertThat(opened).isNull()
         compose.onNodeWithTag("detail_post_refs_sheet").assertExists()
     }

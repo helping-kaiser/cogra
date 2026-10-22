@@ -153,7 +153,7 @@ class ValenceBandsTest {
     @Test
     fun theOneNumberIsWrittenTheWayThePairWritesItsHalf() {
         assertThat(valenceExact(0.1)).isEqualTo("+0.10")
-        assertThat(valenceExact(-0.9)).isEqualTo("-0.90")
+        assertThat(valenceExact(-0.9)).isEqualTo("−0.90")
         assertThat(valenceExact(0.0)).isEqualTo("+0.00")
     }
 }

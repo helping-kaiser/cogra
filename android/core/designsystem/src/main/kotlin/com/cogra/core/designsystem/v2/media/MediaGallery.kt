@@ -197,10 +197,7 @@ private fun GalleryFrame(
     // playback and no sound disc behind the blur the reader chose.
     val veiled = LocalStageVeil.current
     val playing = onStage && !veiled
-    val muted by VideoSound.muted.collectAsState()
-    val soundLabel = stringResource(
-        if (muted) R.string.designsystem_video_unmute else R.string.designsystem_video_mute,
-    )
+    val soundAction = soundLabel().takeIf { videoUrl != null && playing }
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -223,17 +220,7 @@ private fun GalleryFrame(
             // ON ANDROID A PLAYING CLIP'S SOUND IS A CUSTOM ACTION ON ITS FRAME
             // (FeedCover.md): the traversal inside the gallery stays cleared,
             // and the action names what the press does to the sound.
-            .clearAndSetSemantics {
-                node?.let { testTag = it.tag }
-                if (videoUrl != null && playing) {
-                    customActions = listOf(
-                        CustomAccessibilityAction(soundLabel) {
-                            VideoSound.toggle()
-                            true
-                        },
-                    )
-                }
-            },
+            .frameSemantics(node, soundAction),
     ) {
         // Symptom (b) is about this number on the way back: the clip
         // should resume if it is in the viewport and must not start if
@@ -294,6 +281,31 @@ private fun GalleryFrame(
                 modifier = Modifier.fillMaxSize(),
             )
         }
+    }
+}
+
+/** What the press on the shared sound does now: `Turn sound on` while muted, else `Turn sound off`. */
+@Composable
+private fun soundLabel(): String {
+    val muted by VideoSound.muted.collectAsState()
+    return stringResource(if (muted) R.string.designsystem_video_unmute else R.string.designsystem_video_mute)
+}
+
+/**
+ * A page keeps only its name — the pager speaks for the set — and, ON ANDROID,
+ * a playing clip's sound as a custom action on its frame (FeedCover.md): the
+ * traversal inside the gallery stays cleared. [soundAction] is null for a
+ * picture and a clip off the stage.
+ */
+private fun Modifier.frameSemantics(node: DataNode?, soundAction: String?): Modifier = clearAndSetSemantics {
+    node?.let { testTag = it.tag }
+    soundAction?.let { label ->
+        customActions = listOf(
+            CustomAccessibilityAction(label) {
+                VideoSound.toggle()
+                true
+            },
+        )
     }
 }
 
