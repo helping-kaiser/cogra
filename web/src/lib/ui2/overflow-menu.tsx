@@ -43,6 +43,10 @@ export type MenuItem = {
  * It draws a 24px glyph inside the full 48px target, pulled back by -12px so it
  * keeps the 24px line it rides on, which is what a card header and a page
  * header's action are.
+ *
+ * `placement="row"` (OverflowMenu.jsx) is the dot standing in a ROW OF
+ * CONTROLS — the profile's actions row — where there is no line to keep: a
+ * 40px circle in the row's own flow, answering to 48 through `cg-hit`.
  */
 export function OverflowTrigger({
   ariaLabel,
@@ -50,7 +54,9 @@ export function OverflowTrigger({
   node,
   expanded,
   onOpen,
+  placement = "header",
 }: {
+  placement?: "header" | "row";
   ariaLabel: string;
   testId: string;
   /** The registered node the trigger is; it then names the trigger instead of `testId`. */
@@ -66,7 +72,9 @@ export function OverflowTrigger({
       aria-haspopup="menu"
       {...testAttributes(node, testId)}
       onClick={onOpen}
-      className="cg-state cg-focus -m-3 flex size-12 flex-none items-center justify-center rounded-full text-on-surface-variant"
+      className={`cg-state cg-focus flex flex-none items-center justify-center rounded-full text-on-surface-variant ${
+        placement === "row" ? "cg-hit size-10" : "-m-3 size-12"
+      }`}
     >
       <Icon name="more_vert" size={24} />
     </button>
@@ -105,6 +113,7 @@ export function MenuSheet({
       testId={testId}
       node={node}
       stacked={stacked}
+      rows
     >
       <div className="flex flex-col">
         {items.map((item) => (
@@ -112,6 +121,7 @@ export function MenuSheet({
             key={item.label}
             testId={item.testId}
             node={item.node}
+            edge
             onSelect={() => {
               onClose();
               item.onSelect();

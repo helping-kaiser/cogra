@@ -181,6 +181,8 @@ export function ProfileMenu({
         ariaLabel={ariaLabel}
         testId={prefix}
         node={feed === undefined ? { path: "profile.identity.actionRow.menu" } : feed.trigger}
+        // On the page the dot closes the actions row (`placement="row"`).
+        placement={feed === undefined ? "row" : "header"}
         expanded={open}
         onOpen={() => setOpen(true)}
       />
